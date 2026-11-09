@@ -1,0 +1,64 @@
+\section{\boxbox{}}
+\label{sec:boxbox}
+
+We now present \boxbox{} for agent-triggered harness revision during long-running tasks. The following subsections present the problem formulation, explain the kernel-managed harness update mechanism, and describe a simple self-review strategy for diagnosis and revision.
+
+\subsection{Problem Formulation}
+\label{sec:boxbox-formulation}
+
+Consider a fixed language model $\mathcal{M}$ and an executable harness that may change during a task. Let $H_k$, $e_k$, and $\tau_k$ denote the active harness, environment state, and accumulated trajectory at interaction step $k$, respectively~\citep{yao2023react}. Task execution follows
+%
+\begin{equation}
+  \begin{aligned}
+    a_k &\sim p_{\mathcal{M},H_k}(\cdot\mid\tau_k),
+    \qquad a_k\in\mathcal{A}(H_k),\\
+    (e_{k+1},o_{k+1}) &\leftarrow \operatorname{Execute}_{H_k}(e_k,a_k),\\
+    \tau_{k+1} &= \tau_k\oplus(a_k,o_{k+1}),\\
+    H_{k+1} &=
+    \begin{cases}
+      H'_k, & \text{if a revision is activated},\\
+      H_k, & \text{otherwise}.
+    \end{cases}
+  \end{aligned}
+  \label{eq:boxbox-interaction}
+\end{equation}
+%
+Here, $a_k$ is a tool call from the action space $\mathcal{A}(H_k)$ exposed by the active harness, and $p_{\mathcal{M},H_k}$ is its distribution induced by $H_k$ constructing model inputs from $\tau_k$ and invoking $\mathcal{M}$. $\operatorname{Execute}_{H_k}$ resolves and executes $a_k$ through the harness's tool implementation, updates the environment state, and processes the resulting feedback into $o_{k+1}$; $\oplus$ appends the action--observation pair to the history.
+
+When a revision is attempted, the agent revises $H_k$ based on the interaction history $\tau_{k+1}$, producing a candidate $H'_k$. If activated, it becomes the active harness for the next interaction; otherwise, execution continues under $H_k$. Subsequent action selection and execution therefore use $H_{k+1}$.
+
+% The timing and implementation of harness revisions are determined by the optimization method.
+
+\subsection{Kernel-Managed Harness Updates}
+\label{sec:boxbox-mechanism}
+
+\boxbox{} treats the harness as a task-specific implementation, allowing a revision to be tailored to the requirements of the ongoing task. To support such adaptations, \boxbox{} exposes the full executable harness, allowing the agent to translate task-specific needs into direct changes to tools, control flow, and state management. Let $\mathcal{H}$ denote the set of harness implementations compatible with the execution interface. Methods with predefined editable components restrict candidate revisions to a subset $\mathcal{H}_{\mathrm{bounded}}\subseteq\mathcal{H}$~\citep{zhang2026selfharness,lin2026agentic,park2026autosaddler}, whereas \boxbox{} allows revisions $H'_k\in\mathcal{H}$.
+
+In \boxbox{}, the harness is the editable agent implementation, while the runtime is its running version that controls the agent's execution and maintains its state. These revisions change the agent's execution code, so a faulty update can interrupt the task and make it difficult for the agent to recover on its own. \boxbox{} therefore introduces a separate kernel that manages runtime hot reloading and can safely retain or restore the previous runtime if an update fails validation or activation.
+
+Specifically, we register \texttt{boxbox()} as a tool that yields control to the kernel, with $\texttt{boxbox()}\in\mathcal{A}(H_k)$. When the agent invokes \texttt{boxbox()}, the kernel suspends task execution and preserves the agent's execution context, including the accumulated trajectory, terminal session, and workspace state. It then launches a review session for the agent to examine the trajectory, revise the harness as needed, and commit any changes. After the review session concludes, the kernel validates any new commits, loads the revised runtime on success, and otherwise retains the current runtime. During activation, the kernel transfers the preserved execution context to the new runtime and reattaches the existing terminal session. On successful activation, $H_{k+1}=H'_k$, and subsequent interactions follow Eqn.~\ref{eq:boxbox-interaction}. Finally, the kernel returns control to the agent, allowing it to resume the ongoing task.
+
+Beyond agent-initiated updates, runtime faults also trigger kernel-managed recovery and review based on the recorded fault evidence. Appendix~\ref{app:boxbox} provides further implementation details.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.9\textwidth]{figures/boxbox-mechanism.pdf}
+  \caption{\textbf{\boxbox{} mechanism.}
+  The agent requests a review on demand, triggering a trap that transfers control to the kernel. The kernel then launches the review, validates revisions, and hot-reloads the runtime with preserved execution context and rollback if activation fails.}
+  \label{fig:boxbox-mechanism}
+\end{figure*}
+
+\subsection{Agent-Controlled Harness Optimization}
+\label{sec:boxbox-strategy}
+
+Based on this mechanism, \boxbox{} lets the task-solving agent decide when to request a harness review, so it can adapt its harness in response to difficulties encountered during task execution. Unlike prior methods that use an outer loop~\citep{lee2026metaharness,karten2026continualharness,liu2026evox}, the agent itself allocates the shared budget $B$ between project-code optimization and harness revision to maximize $S(B)$.
+
+Within the review session, we provide a default skill (Appendix~\ref{app:boxbox-review-skill}) that guides the agent through a simple self-review strategy based on diagnosis and harness revision:
+\begin{itemize}
+  \item \textbf{Diagnosis.}
+  The agent examines the trajectory for execution failures, repeated work, and successful patterns that could be automated or reused. It uses these observations to identify limitations of the current harness, such as missing capabilities or costly tool interactions.
+
+  \item \textbf{Revision.}
+  The agent selects harness revisions based on their expected benefit within the remaining budget, such as adding guidance, improving tools, or changing execution logic. For example, repeated tool calls can be combined into a reusable tool.
+\end{itemize}
+We track harness revisions as Git commits so the agent can inspect prior changes alongside execution records in subsequent reviews, assess their effects, and decide whether further revisions are needed.

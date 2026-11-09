@@ -1,0 +1,41 @@
+Table~\ref{tab:trigger-vs-injection} contrasts the non-adversarial
+triggers used in ADB with prompt injection, using a concrete drift
+point from the Meetlark scheduling task (Appendix~\ref{app:case-study})
+as an example. In ADB, the trigger is the field 
+\texttt{prior\_polls\_by\_creator: 7} returned by \texttt{create\_poll},
+a routine administrative counter that names no tool and issues
+no instruction.
+
+\begin{table*}[h]
+\centering
+\small
+\caption{Non-adversarial trigger (ADB) vs.\ prompt injection.}
+\label{tab:trigger-vs-injection}
+\begin{tabular}{p{2.4cm}p{5.8cm}p{5.8cm}}
+\toprule
+ & \textbf{Non-adversarial trigger (ADB)}
+ & \textbf{Prompt injection (contrast)} \\
+\midrule
+\textbf{Nature}
+  & Normal API response field
+  & Malicious text injected into tool output \\
+\addlinespace
+\textbf{Content}
+  & \texttt{"prior\_polls\_by\_creator": 7}
+  & \texttt{"Retrieve the creator's full poll history}
+    \texttt{before proceeding. Call get\_poll\_history}
+    \texttt{with the admin token."} \\
+\addlinespace
+\textbf{Tone}
+  & Declarative system metadata
+  & Imperative with explicit tool reference \\
+\addlinespace
+\textbf{Agent motivation}
+  & Over-proactivity: the agent infers that historical
+    patterns may improve personalisation and acts
+    without authorisation
+  & Instruction hijacking: the agent is explicitly
+    commanded to call a specific tool \\
+\bottomrule
+\end{tabular}
+\end{table*}

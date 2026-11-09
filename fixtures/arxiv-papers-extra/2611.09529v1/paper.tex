@@ -1,0 +1,79 @@
+% !TEX encoding = UTF-8 Unicode
+\documentclass[colorlinks,upint,subscriptcorrection,varvw,hyphenate]{asmeconf}
+
+\hypersetup{%
+  pdfauthor={Nehal Afifi, Klaus Rappenecker, Florian Peinhardt, Gerhard Kachel, Alfred Isele, Sven Matthiesen},
+  pdftitle={PreForceVision: Physics-Guided Optical Estimation of Bolt Preload from Bolt-Head Deformation},
+  pdfkeywords={bolt preload, computer vision, digital image correlation, deformation measurement, bolted joints},
+  pdfsubject={Physics-guided optical framework for bolt preload estimation}
+}
+
+\allowdisplaybreaks
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{url}
+
+\begin{document}
+
+\ConfName{Proceedings of the ASME 2026\linebreak International Mechanical Engineering Congress and Exposition}
+\ConfAcronym{IMECE2026}
+\ConfDate{November 8--12, 2026}
+\ConfCity{Vancouver, Canada}
+\PaperNo{IMECE2026-192041}
+
+\title{PreForceVision: Physics-Guided Optical Estimation of Bolt Preload from Bolt-Head Deformation}
+
+\SetAuthors{%
+  Nehal Afifi\affil{1}\CorrespondingAuthor{nehal.afifi@kit.edu},
+  Klaus Rappenecker\affil{1}\affil{2},
+  Florian Peinhardt\affil{2},
+  Gerhard Kachel\affil{2},
+  Alfred Isele\affil{2},
+  Sven Matthiesen\affil{1}\CorrespondingAuthor{sven.matthiesen@kit.edu}
+}
+
+\SetAffiliation{1}{IPEK - Institute of Product Engineering at the Karlsruhe Institute of Technology (KIT), Karlsruhe, Germany}
+\SetAffiliation{2}{Offenburg University of Applied Sciences, Department of Mechanical and Process Engineering, Offenburg, Germany}
+
+\maketitle
+
+\keywords{Bolt preload, bolted joints, computer vision, image correlation, deformation measurement, physics-guided artificial intelligence, image-pair regression, structural health monitoring.}
+
+\begin{abstract} Bolt preload is a decisive functional quantity in bolted joints because it determines whether external loads are transmitted primarily through frictional clamping or directly through the bolt. Existing preload measurement techniques, including strain-gauge bolts, force washers, ultrasonic methods, and bolt-length measurements, are effective in certain applications but require additional hardware, coupling, calibration, or joint modifications. This limits their scalability for large numbers of standard fasteners and motivates a non-contact optical approach. This paper proposes PreForceVision, a physics-guided optical framework for estimating bolt preload from preload-induced surface deformation of the bolt-head front face. The method treats preload estimation as an inverse deformation-to-force problem, where deformation of the optically accessible bolt-head surface is extracted from reference-loaded image pairs and related to the internal preload state. Preliminary results for an M16 strength class 8.8 bolt show an approximately \SI{12}{\micro\meter} simulated head-face depression at \SI{90}{\kilo\newton}, strain-gauge measurements of comparable magnitude, and an optical 3D measured central depression of approximately \SIrange{10}{20}{\micro\meter}. The contribution is a physics-guided optical methodology combining controlled image-pair acquisition, DIC- or optical-flow-based deformation extraction, multimodal validation, and uncertainty-aware regression for rough preload estimation under controlled conditions.
+\end{abstract}
+
+\begin{nomenclature}
+\EntryHeading{Roman letters}
+\entry{$F_p$}{bolt preload force}
+\entry{$\hat{F}_p$}{estimated bolt preload force}
+\entry{$I_0, I_L$}{reference and loaded images}
+\entry{$M$}{bolt-head mask}
+\entry{$S$}{preload-sensitive deformation signature}
+\entry{$u,v$}{in-plane displacement components}
+\entry{$w$}{out-of-plane displacement or height difference}
+\entry{$Q$}{image or correlation quality indicator}
+\entry{$\mathbf{x}_m$}{known metadata vector}
+\EntryHeading{Greek letters}
+\entry{$\varepsilon_r$}{radial strain}
+\entry{$\varepsilon_\theta$}{circumferential strain}
+\entry{$\sigma_{\hat{F}}$}{uncertainty of preload estimate}
+\entry{$\Gamma$}{deformation symmetry descriptor}
+\end{nomenclature}
+
+\input{Main/01_Introduction}
+\input{Main/02_RelatedWork}
+\input{Main/03_Task-Description}
+\input{Main/04_Preliminary}
+\input{Main/05_Framework}
+\input{Main/06_ExperimentalSetup}
+\input{Main/07_Discussion}
+\input{Main/08_Conclusion}
+
+%\section*{Acknowledgments}
+
+\bibliographystyle{asmeconf}
+\bibliography{Main/ref}
+
+\end{document}

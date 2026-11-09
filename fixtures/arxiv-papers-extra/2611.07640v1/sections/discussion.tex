@@ -1,0 +1,25 @@
+\section{Discussion and Conclusion}
+\label{sec:discussion}
+
+We define indirect prompt injection by authority rather than wording: planted
+content is an attack when it attempts to influence a decision its source is not
+authorized to determine, even when it only tampers with the task in progress. Our
+benchmark makes this boundary explicit in 90 validated
+task-tampering cases across three environments; within each case, the planted
+content justifies a fixed harmful outcome through different influence
+primitives, so defenses can be compared per primitive, not only by aggregate
+ASR. Our results show that defenses tested mainly against redirecting
+instructions leave task tampering only partly covered: objective attacks (\(b(U)\)), the kind
+prior evaluations mainly test, already succeed less often without a defense
+than attacks on decision rules, available actions, and state, and \(b(U)\)
+remains among the three lowest-ASR primitives under every defense but
+CaMeL.
+
+The results suggest two directions for defense design, both grounded in
+authority. Content screening can miss attacks whose content reads as ordinary
+task data, such as \(b(O)\) and \(b(s)\) attacks; screening could therefore also
+ask whether a source is authorized to determine the targeted decision, not
+only whether its content reads as a redirecting instruction. Tool-level gates
+can fail to block attacked calls that use tools the task needs; action checks
+could instead admit each consequential argument only from a source authorized
+to set it.

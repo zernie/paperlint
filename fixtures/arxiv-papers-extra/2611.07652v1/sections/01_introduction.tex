@@ -1,0 +1,60 @@
+%% ============================================================================
+%%  01_introduction.tex — Foundational Systems Philosophy & The Crisis
+%% ============================================================================
+
+\section{Introduction: The Stochastic Impedance Mismatch}
+\label{sec:introduction}
+
+Computer systems research has historically progressed by establishing formal boundaries between distinct abstraction layers: the separation of physical memory from virtual addressing, the isolation of user space from kernel execution, and the decoupling of declarative query specification from relational execution engines~\cite{saltzer1975protection, lampson1974protection, parnas1972criteria, hoare1969axiomatic}. Each transition replaced stochastic, ad-hoc programming conventions with deterministic, verifiable contracts.
+
+The contemporary paradigm of autonomous artificial intelligence agents represents a sharp departure from this historical trajectory. As foundation models have scaled, practitioners have attempted to bridge the gap between linguistic reasoning and real-world execution by coercing auto-regressive language models into serving simultaneously as planners, compilers, runtime engines, and policy arbiters~\cite{wang2024survey, xi2023rise, yao2023react, schick2023toolformer}. In this prevailing architectural approach---which we term the \emph{prompt-driven execution paradigm}---an agent is provided with unstructured natural-language descriptions of external APIs, instructed to synthesize execution code or structured payloads on the fly, and expected to self-regulate its operational boundaries through in-context prompting.
+
+This approach suffers from a foundational \textbf{stochastic impedance mismatch}. Deep transformer architectures compute conditional probability distributions over discrete token sequences:
+\begin{equation}
+\label{eq:autoregressive}
+p(y_1, \dots, y_T \mid x) = \prod_{t=1}^T p(y_t \mid y_{<t}, x)
+\end{equation}
+While auto-regressive token generation is exceptionally well-suited for semantic interpretation, open-domain summarization, and human-machine dialogue, it possesses no formal mechanisms for enforcing computational invariants. When task complexity scales compositionally, transformer architectures experience severe combinatorial degradation, non-deterministic branching, and state hallucination~\cite{dziri2023faith, valmeekam2023planning, ji2023survey, huang2023survey}.
+
+\subsection{The Crisis of Prompt-Driven Capability}
+\label{subsec:five_flaws}
+
+Treating auto-regressive language models as direct computation runtimes introduces five critical systemic bottlenecks:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Stochastic Non-Determinism:} An identical operational intent executed across multiple turns yields variable argument casing, hallucinated parameters, and dropped structural invariants.
+  \item \textbf{Quadratic Context Dilution:} Injecting thousands of tokens of API manuals and directives into system prompts permanently taxes transformer attention ($\mathcal{O}(L^2)$), causing models to ignore critical safety predicates~\cite{liu2024lost}.
+  \item \textbf{Egress Insecurity and the Confused Deputy:} Natural-language prompts cannot enforce security perimeters; untrusted inbound text easily repurposes ambient model authority into unauthorized side-effects~\cite{greshake2023not, liu2023promptinjection}.
+  \item \textbf{Schema Balkanization:} Fragile, incompatible tool formats across major cloud providers (e.g., Protobuf, XML, JSON) force developers to maintain brittle prompt shims that break across model releases.
+  \item \textbf{Cyber-Physical Incompatibility:} Multi-second cloud latency and stochastic parameter drift are fundamentally incompatible with real-time physical control and millisecond reflex envelopes~\cite{ahn2022can, brohan2023rt2, willett2023speech}.
+\end{enumerate}
+
+These failure modes are not cosmetic developer inconveniences; they form a systemic crisis where critical software workflows become trapped inside a centralized, rented loop. Section~\ref{sec:problem_layers} provides a comprehensive technical deconstruction of these failures across enterprise, developer, macroeconomic, and cyber-physical layers.
+
+\subsection{The Core Principle: Don't Prompt. Equip.}
+\label{subsec:thesis}
+
+In 1975, Saltzer and Schroeder articulated the foundational tenets of secure and reliable systems: \emph{Economy of Mechanism}, \emph{Fail-Safe Defaults}, \emph{Least Privilege}, and \emph{Complete Mediation}~\cite{saltzer1975protection}. In classical computing, operating systems do not generate utility binaries at runtime; they package pre-compiled, verifiable, and isolated software libraries behind typed system calls.
+
+A compelling systems analogy emerges from role-playing video games (RPGs), where players and non-player companions personalize and customize characters through modular skill systems. In a game engine, activating an ability is never an ambiguous negotiation, a conversational plea, or a probabilistic discussion with the character model. It is a hotkey bound to deterministic engine logic: provided environmental preconditions and background policies hold true---the entity is in combat outside a sanctuary town, targeting a hostile creature rather than an immune town guard, and possessing sufficient resource reserves---the skill executes with a single trigger and produces the exact same state transition every time. The character never invents the physics of the ability at runtime, nor does it negotiate its operational boundaries; it is strictly in the position to trigger the action. Skillware introduces this exact computational discipline to autonomous agents: the language model evaluates semantic context and decides when to trigger a capability, but has zero authority over how the capability executes, how its parameters are validated, or how its constitutional policies are enforced.
+
+\begin{tcolorbox}[doctrinebox, title={THE PRINCIPLE OF SEPARATION OF COGNITION AND CAPABILITY}]
+\textbf{Formal Boundary Invariant:}\\[0.2em]
+Let an autonomous system be partitioned into a \textbf{Cognitive Planner} $\mathcal{M}$ and a set of \textbf{Executable Capabilities} $\mathcal{K}$. The planner $\mathcal{M}$ is restricted strictly to semantic routing and parameter instantiation. The capability $\kappa \in \mathcal{K}$ must be a self-contained, pre-compiled, deterministic software bundle enforcing an immutable contract, local dependency isolation, and offline verification. \textbf{The model decides when to act; the capability bundle governs how the action is executed. The assistant is a guest; the function does the work.}
+\end{tcolorbox}
+
+In this paper, we present \textbf{Skillware}, an open architectural framework and registry that formalizes this separation. While the term \emph{skillware} has historical currency in corporate compliance software and speculative fiction, its coinage and introduction into artificial intelligence and autonomous systems was originated by ARPA Hellenic Logical Systems~\cite{skillware2026framework}. Recent academic literature, notably Fan and Lan~\cite{fan2026skillware}, has acknowledged this origin while exploring theoretical software ontologies for persistent agent behaviors. In this work, we present the production-validated execution standard: self-contained, versioned capability bundles. Each bundle unifies a typed contract (\texttt{manifest.yaml}), a deterministic execution class (\texttt{skill.py}), a cognitive directive (\texttt{instructions.md}), offline assurance verifiers (\texttt{test\_skill.py}), and metadata presentation (\texttt{card.json}). 
+
+Through in-process dynamic adapters, Skillware translates declared capabilities into native host formats across all major frontier and local models without IPC or network overhead. We demonstrate that this architecture not only restores determinism to the execution layer of autonomous systems, but enables Small Language Models (SLMs) to achieve superior operational reliability at a fraction of the token and financial cost of unequipped frontier models.
+
+\begin{tcolorbox}[contribbox]
+\begin{itemize}[leftmargin=2.2em, itemsep=2.5pt, labelsep=0.5em]
+  \item[\textbf{\textcolor{swBlue}{C1.}}] \textbf{The Separation Invariant} (\S\ref{subsec:thesis}): We formalize the separation of cognitive planning from deterministic execution and show why runtime code generation and prompt-only tools fail production safety and economics.
+  \item[\textbf{\textcolor{swBlue}{C2.}}] \textbf{The 5-Role Capability Bundle} (\S\ref{sec:architecture}): We specify the anatomy of an Agent Skill (Contract, Effect, Directive, Assurance, Presentation), supported by static lookup corpora, enabling offline verification and type safety.
+  \item[\textbf{\textcolor{swBlue}{C3.}}] \textbf{Universal In-Process Adapters} (\S\ref{subsec:interface_morphism}): We provide zero-IPC interface morphisms across Gemini, Claude, OpenAI, DeepSeek, Bedrock, and Ollama, eliminating vendor lock-in and client-server daemon overhead.
+  \item[\textbf{\textcolor{swBlue}{C4.}}] \textbf{Deterministic Chaining Engine} (\S\ref{sec:runtime_operations}): We introduce declarative DAG execution with dot-notation state bindings and zero-token conditional skip gates, accompanied by segregated local operator stores.
+  \item[\textbf{\textcolor{swBlue}{C5.}}] \textbf{The SLM Parameter Paradox} (\S\ref{sec:slm_token_economy}): We show that 3B--8B parameter models equipped with Skillware outpace unequipped frontier models in execution reliability, latency, cost ($97.3\%$ reduction), and air-gapped sovereignty.
+  \item[\textbf{\textcolor{swBlue}{C6.}}] \textbf{Generalization Across Physical Scales} (\S\ref{sec:embodied_bmi_horizon}): We formulate the scaling of capability bundles from digital software runtimes to industrial control, embodied robotics, and neural interfaces.
+\end{itemize}
+\end{tcolorbox}
+
+The remainder of the paper is organized as follows. Section~\ref{sec:problem_layers} dissects the capability crisis across technical layers and constituencies. Section~\ref{sec:architecture} formalizes the Skillware bundle and its interface morphism; Section~\ref{sec:runtime_operations} describes runtime discovery, chaining, and operator stores. Section~\ref{sec:slm_token_economy} analyzes complexity, empirical scaling, and token economics, and Section~\ref{sec:comparative_analysis} positions Skillware against adjacent ecosystems alongside multi-model empirical evaluation under \textsc{Skillware-Bench}. Sections~\ref{sec:tripartite_ecosystem} and~\ref{sec:security_privacy} cover ecosystem integration and adversarial security verification, Section~\ref{sec:embodied_bmi_horizon} extends the abstraction to cyber-physical scales, and Section~\ref{sec:conclusion} concludes.

@@ -1,0 +1,38 @@
+\section{Introduction}
+
+As Large Language Models (LLMs) are increasingly deployed across diverse domains and languages, reliably evaluating what they can and cannot do has become essential~\citep{chang2024survey, liang2023holistic}.
+Many influential benchmarks were originally developed in English~\citep{hendrycks2020measuring}, and translation alone cannot adequately capture the knowledge, institutions, and cultural context of other languages~\citep{son2025kmmlu}.
+This has motivated language-specific benchmarks built from native-language sources.
+In Korean, such resources now cover diverse areas, including general language understanding~\citep{park2021klue}, cultural and linguistic knowledge~\citep{kim2024click}, and expert knowledge in academic and professional fields~\citep{son2025kmmlu, hong-etal-2025-kmmlu}.
+
+This broader coverage alone, however, is insufficient to fully diagnose why a model fails or to indicate how it should be improved.
+Results reported by subject or domain only characterize performance within each field~\citep{ribeiro2020beyond, burnell2023rethink}, but they do not reveal whether an error stems from missing knowledge or from a failure to apply knowledge the model already has. 
+Moreover, because questions in existing benchmarks differ along many dimensions at once, it is difficult to attribute a performance gap to either source~\citep{gardner2020evaluating, wu2024reasoning}.
+
+We first analyze three existing Korean benchmarks~\citep{kim2024click, hong-etal-2025-kmmlu} by labeling each question with the knowledge it requires and the application it demands.
+Given that LLMs tend to underperform in non-English languages such as Korean~\citep{ahuja2023mega}, an LLM annotator is prone to misjudging the required knowledge and application when given only the question.
+We therefore generate \textit{silver reasoning} by prompting a model with each question and its gold answer, following \citet{zelikman2022star}, and provide the resulting rationales as supplementary reference for annotation.
+Our annotations reveal that these Korean benchmarks are predominantly composed of questions requiring knowledge recall without additional application.
+Analysis of model responses further shows that these item-level labels correspond to distinct failure patterns: knowledge failures predominate on questions labeled as recall-only, whereas application failures account for a larger share of errors on questions labeled as requiring application.
+However, this correspondence does not isolate the effect of application demand, as questions at different application levels also differ in knowledge content.
+This motivates our central question of how to construct and validate \textit{knowledge-matched contrasts} that preserve the knowledge required by a source question while varying its application demand.
+
+To address this question, we propose \name, a knowledge-anchored benchmark construction pipeline that holds the required knowledge fixed while systematically varying application demand.
+Starting from a seed question, \name derives an \textit{anchor knowledge bundle} from its silver reasoning, which specifies the knowledge to preserve and serves as a shared basis for LLM-based generation at different target-application levels.
+A shared anchor alone does not guarantee the intended comparison, because a generated question may require additional knowledge, fail to realize the target-application demand, or admit a shortcut that bypasses it.
+\name therefore validates each candidate through LLM-based auditing, proxy-model difficulty screening, and targeted human validation, assessing question validity, knowledge preservation, and target-application validity. 
+Feedback from these evaluations then guides iterative revision and final selection.
+
+We evaluate \name{} in terms of construction quality and diagnostic utility.
+For construction, \name{} yields 287 validated questions from 1,964 generated candidates, and removing the anchor bundle raises the share of candidates that require outside knowledge from 1.9\% to 20.4\%, showing that explicit anchoring is what keeps the required knowledge fixed.
+For diagnosis, we evaluate eight LLMs on these questions with and without the required knowledge. For the three Korean LLMs on matched set, the share of application failures rises from 37.3\% to 76.9\%.
+These failures persist even when the required knowledge is provided, highlighting the importance of evaluating knowledge and application separately.
+
+Our contributions are as follows.
+\begin{itemize}[leftmargin=3.5mm, topsep=2pt, itemsep=2pt, parsep=0pt]
+    \item[$\circ$] We analyze the knowledge and application demands of existing Korean benchmarks and the associated model failure patterns.
+
+    \item[$\circ$] We propose \name{}, a pipeline that constructs knowledge-matched contrasts through anchor-based generation, validation, and revision.
+    
+    \item[$\circ$] We show that the resulting benchmark satisfies the intended constraints and enables diagnostic comparison of model failures.
+\end{itemize}

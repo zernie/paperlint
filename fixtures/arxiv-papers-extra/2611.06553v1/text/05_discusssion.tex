@@ -1,0 +1,31 @@
+\section{Discussion}
+\label{sec:discussion}
+
+In this section, we discuss the limitations of our work, along with insights into unresolved challenges and directions for future work that emerged from our findings.
+
+\subsection{Limitations}
+\label{subsec:limitations}
+
+
+\textbf{Safety Neuron Detection Methods Are Not Perfect.} \method relies on safety neuron detection methods~\cite{twinbreak, wei2023jailbroken, wu2026neurostrike}. These methods typically rely on heuristics, such as identifying the top $k$ neurons with the largest activation differences or highest scores. As a result, they may not identify a perfect set of safety-critical neurons for the target LLM: some safety neurons may be missed, while a small number of unrelated neurons may be incorrectly identified as safety-critical. Furthermore, some neurons have been shown to serve multiple functions~\cite{wei2023jailbroken}, making it difficult to associate individual neurons exclusively with safety alignment.
+
+
+
+The imperfection of safety neuron detection has two important implications for \method. First, since some safety-critical neurons may remain undetected, it is difficult to obtain a fully unaligned model without also degrading its general capabilities. As a result, the model may continue to rely on parts of the existing safety mechanism during finetuning, making it more difficult to induce completely new and more distributed safety representations. Second, pruning incorrectly identified or multifunctional neurons may lead to unintended behavior or degradation in general model capabilities, either because these neurons serve multiple functions or because they are not actually part of the safety mechanism.
+
+
+
+
+\textbf{Measuring Safety-Alignment Density.} Our results show that ABS-Align reduces the model’s reliance on the safety-critical neurons identified in the original model, as evidenced by its increased robustness to multiple attacks that exploit sparse safety representations. However, given the limitations of existing safety-neuron detection methods, we do not directly quantify the absolute density of safety alignment in the resulting model. We therefore use denser safety alignment to refer to the less fragile and reduced dependence of safety-aligned behavior on the originally identified sparse set of safety-critical neurons.
+
+
+\textbf{Overhead of Preference Optimization.} \method relies on DPO~\cite{rafailov2023dpo} for preference-based finetuning. While DPO is substantially more computationally efficient than RLHF-based alignment methods~\cite{rafailov2023dpo, ouyang2022rlhf}, it still incurs considerable computational and memory overhead because it requires maintaining a frozen reference model in addition to the model being finetuned.
+
+
+
+\subsection{Future Work}
+\label{subsec:future_work}
+
+Safety alignment is not the only model behavior that has been shown to be tied to a small number of neurons in the model architecture; recent works have reported similar phenomena for various tasks and languages~\cite{tang2024language, wang2022findingskill}. A potential direction for future research is to investigate whether the proposed method can be extended to make representations of specific capabilities more distributed across the model, with potential applications in settings where a model underperforms on a particular task or where improving performance on a specific task is desired.
+
+Another interesting direction for future work is to better understand the post-training process, particularly safety alignment, and investigate whether non-sparse refusal representations can be established during the main stage of preference optimization rather than through post-hoc approaches such as \method.

@@ -1,0 +1,55 @@
+\appendix
+\section*{Appendix}
+\suppressfloats[t]
+
+\section{Other Experimental Scenarios}
+The main text evaluates \planner under \scenHotspot and \scenEqdist.
+This section covers two other scenarios from prior work and explains why they are not adopted in the main text.
+\input{fig/shared_ita_ecbs}
+\input{fig/random_scenario}
+
+\paragraph{Shared-Target Scenario.}
+The first is the setting from the ITA-ECBS paper~\cite{tang2024ita-ecbs}.
+It places starts and targets uniformly at random and controls the overlap of the target sets by a shared-target percentage: each agent receives a mix of targets shared among all agents and private targets that are disjoint across agents.
+This design, however, does not extend to large numbers of agents, because the disjoint private targets consume vertices in proportion to the number of agents, so the target set size must shrink as the instance grows.
+The original paper caps the target set size at the number of free cells divided by the maximum number of agents, and our reproduction with $K=5$ on \mapname{random-32-32-10} already uses 900 of the 922 free cells at $n=150$ with no shared targets.
+Within the range the setting supports, we compare \planner with ITA-ECBS ($w = 1.1$).
+As \cref{fig:shared-ita-ecbs} shows, both solvers stay within a few percent of the lower bound everywhere, and no percentage of shared targets separates them.
+The only visible gap appears at $n=150$ with high shared percentages, where \planner is slightly ahead.
+
+\paragraph{Fully Random Scenario.}
+The second, following \cite{kumagai2026alternating}, samples the $K$ targets of each agent uniformly from the whole map.
+As \cref{fig:random_main} shows, the compared solvers again end up close to one another. 
+
+\section{Sigma Annealing}
+\input{fig/sigma_annealing}
+Instead of keeping the noise scale fixed, one could anneal it.
+\planner would then start with a large $\sigma$ that reassigns targets aggressively and end with a small $\sigma$ that only fine-tunes the assignment.
+\Cref{fig:annealing} shows the convergence.
+Every annealed variant indeed ends below the constant $\sigma = 5$, but the margin is below $1\%$ of flowtime.
+The benefit of annealing is thus marginal, and we keep the constant $\sigma$ in the main configuration.
+
+\section{Why \planner Returns Iteration Best}
+\input{fig/final_cost}
+\Cref{fig:final_cost_matrix} compares the best solution found during the iterations with a one-shot assignment on the final calibrated matrix, under the same budget.
+The margin is not large, but the one-shot assignment consistently falls short.
+The cost matrix estimates the \emph{average} cost of each agent--target pair, whereas the best solution exploits a particular combination of pairs whose joint cost happens to be low, and such combinations are found only by evaluating candidates.
+This is why \planner returns the best solution, not the assignment implied by the final cost matrix.
+
+\section{Travel Time can Degrade Solutions}
+\label{sec:loss_vs_time}
+\input{fig/loss_vs_time}
+\planner calibrates its cost matrix with the travel loss rather than the travel time.
+\Cref{fig:loss_vs_time} compares the two choices, demonstrating that calibrating with the travel loss reaches a better solution.
+The two costs differ in how they treat the steps around the target.
+Once an agent rests at its target, its travel loss stops growing, whereas its travel time keeps growing until it stops moving for good.
+The observed travel time therefore also counts the steps an agent spends making way for the agents that are still moving, and these steps have little to do with the quality of the assigned pair.
+
+\section{Experimental Details}
+\input{table/eq-dist}
+\input{table/hotspot}
+\Cref{tab:eqdist_params,tab:hotspot_params} list the scenario parameters used in our experiments.
+The distance $d$ of \scenEqdist is the median pairwise shortest-path distance of the map, placing the candidate targets at a representative travel distance.
+The hotspot radius $r$ of \scenHotspot grows with the number of agents so that the hotspot contains enough free vertices for the target sets.
+Experiments ran on macOS 13.4, and \planner is implemented in Rust (rustc 1.96).
+All randomness is controlled by explicit seeds, which are recorded in the experiment scripts of the code appendix.

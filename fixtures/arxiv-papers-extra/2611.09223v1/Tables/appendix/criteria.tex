@@ -1,0 +1,32 @@
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{\textbf{Failures by criterion.}
+\textit{Fail} is the share (\%) of candidates that do not pass the criterion: before revision for the LLM rubric (1,964 candidates) and at first validation for the human rubric (301 candidates).
+\textit{Resolved} is the share (\%) of these failures that revision fixes, and \textit{New} is the number of failures that revision introduces, with self-revision for the LLM rubric and human-guided revision for the human rubric.}
+\label{tab:criteria}
+\begin{tabular}{@{}llrrr@{}}
+\toprule
+\textbf{ID} & \textbf{Criterion} & \textbf{Fail} & \textbf{Resolved} & \textbf{New} \\
+\midrule
+L1  & Answer correctness        & 1.2  & 96  & 34  \\
+L2  & Answer uniqueness         & 1.9  & 100 & 57  \\
+L3  & Stem determinacy          & 1.1  & 100 & 37  \\
+L4  & Bundle conformance        & 2.2  & 98  & 44  \\
+L5  & Surface form              & 0.5  & 89  & 12  \\
+L6  & Target-level structure    & 18.5 & 67  & 128 \\
+L7  & Knowledge preservation    & 14.5 & 70  & 68  \\
+L8  & Shortcut resistance       & 33.5 & 64  & 209 \\
+L9  & No anchor leakage         & 27.5 & 78  & 178 \\
+L10 & Distractor diagnosability & 17.3 & 90  & 151 \\
+L11 & No direct matching        & 6.6  & 92  & 66  \\
+\midrule
+H1  & Korean readability        & 7.0  & 90  & 1   \\
+H2  & Natural construction      & 3.3  & 100 & 2   \\
+H3  & No surface leakage        & 5.0  & 87  & 2   \\
+H4  & Knowledge sufficiency     & 2.0  & 100 & 0   \\
+H5  & Target-level structure    & 4.3  & 77  & 3   \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,257 @@
+\section{\perfrace{}: Benchmark Details}
+\label{app:perfrace}
+
+The \perfrace{} appendix is organized as follows: Section~\ref{app:perfrace-comparison} compares \perfrace{} with related benchmarks; Section~\ref{app:perfrace-characterization} characterizes its 100 tasks; Section~\ref{app:perfrace-curation-statistics} reports construction and curation statistics; Section~\ref{app:perfrace-pair-verification} describes the Pair Verification protocol and quality control; and Section~\ref{app:perfrace-evaluation} details the evaluation protocol and analyzes gains from longer optimization budgets.
+
+\subsection{Benchmark Curation and Evaluation}
+\label{app:perfrace-comparison}
+
+Table~\ref{tab:perfrace-benchmark-comparison} compares \perfrace{} with
+representative ultra-long-horizon agent benchmarks and code-optimization
+benchmarks along task type, task construction, and evaluation procedure.
+Existing ultra-long-horizon benchmarks largely assemble fixed suites of
+hand-crafted or expert-curated tasks. In contrast, \perfrace{} combines live
+GitHub discovery with agent--human Pair Verification to continually construct
+validated optimization tasks from real-world projects and workloads.
+Compared with existing code-optimization benchmarks, it does not derive tasks
+from known performance patches and evaluates progress repeatedly rather than
+only at task completion.
+
+A workload specifies the inputs and operations used to exercise a project.
+A microbenchmark measures a narrowly scoped part of that work, such as a
+selected API call or operation. For example, SWE-fficiency includes a
+performance workload that repeatedly times a NumPy \texttt{einsum}
+call~\citep{ma2025swefficiency}.
+An end-to-end workload instead measures a complete project-use workflow.
+\perfrace{} adopts this broader measurement boundary, leaving agents to
+profile the workflow and identify which components to optimize.
+The distinction is therefore the scope of the measured computation:
+targeted operations versus an end-to-end workflow, rather than whether
+the benchmark supplies a workload.
+
+\input{tables/perfrace-comparison}
+
+\subsection{Detailed Benchmark Composition}
+\label{app:perfrace-characterization}
+
+We characterize the 100 \perfrace{} tasks by project purpose, primary programming language, license, packaged source size, file count, and fixed workload.
+
+\textbf{Projects.}
+The projects represented in \perfrace{} span 16 primary programming languages:
+Rust (25 tasks), Python (18), TypeScript (15), C++ (11), C (6), C\# (6), Julia
+(5), Go (4), Java (3), Scala (1), Lua (1), OpenSCAD (1), Solidity (1), MATLAB
+(1), JavaScript (1), and Zig (1).
+The packaged project sources range from 42 to 15,869 files and from 471.49 KiB
+to 689.08 MiB, with medians of 886 files and 14.56 MiB.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{figures/perfrace-projects.pdf}
+  \caption{Distribution of primary programming languages, packaged source sizes, and packaged source file counts across \perfrace{} projects.}
+  \label{fig:perfrace-projects}
+\end{figure}
+
+\textbf{Task catalog.}
+Table~\ref{tab:perfrace-task-catalog} lists each task's project, purpose,
+license, and fixed workload.
+
+\input{tables/perfrace-task-catalog}
+
+\subsection{Construction and Curation Statistics}
+\label{app:perfrace-curation-statistics}
+
+This section describes the implementation of Discovery and Filter and reports the candidate counts and curation effort at each construction stage.
+
+\textbf{Discovery implementation.}
+We query the ClickHouse \texttt{github\_events} table for opened pull requests and branch pushes by a configured list of coding-agent accounts, then group matching events by repository.
+For each repository, we retain the latest matching pull-request or branch URL and use the GitHub GraphQL API to record its canonical identity, default-branch revision, stars, primary language, license, disk usage, and repository status.
+
+The resulting records are deduplicated by GitHub repository, and projects are excluded when their repository, default branch, or recorded source revision cannot be retrieved.
+Each step writes its results incrementally, allowing interrupted collection and metadata retrieval to resume without repeating completed work.
+
+From GitHub activity recorded between May and August 2026, we identified 118,517 repositories, retrieved metadata for 104,428, and retained 103,475 project candidates after these checks.
+
+\input{tables/perfrace-discovery-statistics}
+
+\textbf{Filter implementation.}
+We first apply deterministic checks to repository metadata and the recorded Git tree.
+These checks require an accessible source revision, a license permitting modification and redistribution, 10--4,999 GitHub stars, and a tracked Git tree of at most 500 MiB and 25,000 entries.
+
+Projects that pass these checks are collected at the recorded revision with their README, setup documentation, package manifests, license files, and representative source paths.
+We then use GPT-5.6-Luna to assess the project's setup path, evaluable process, runtime fit, and optimization potential from this source snapshot using a structured response schema.
+The prompt is provided in Appendix~\ref{app:perfrace-filter-prompt}.
+
+We require each structured response to address the following criteria.
+\begin{list}{$\square$}{
+  \setlength{\leftmargin}{1.6em}
+  \setlength{\labelwidth}{1em}
+  \setlength{\labelsep}{0.4em}
+  \setlength{\topsep}{2pt}
+  \setlength{\itemsep}{1pt}
+  \setlength{\parsep}{0pt}
+  \setlength{\partopsep}{0pt}
+}
+  \item \textbf{Setup path.} Repository files support concrete commands for installing dependencies and building or running the project.
+  \item \textbf{Evaluable process.} The project supports a finite process with a fixed input, observable output, performance metric, and correctness check.
+  \item \textbf{Runtime fit.} The process can run in a Linux x86-64 container on commodity CPUs without mandatory special hardware.
+  \item \textbf{Optimization potential.} The project supports a substantial local computation whose cost is expected to increase with input size or repeated execution.
+\end{list}
+
+Using these assessments, we selected 239 high-potential project candidates for Pair Verification.
+Table~\ref{tab:perfrace-filter-statistics} reports the first check that excludes each project from the final Pair Verification selection.
+
+\input{tables/perfrace-filter-statistics}
+
+\textbf{Curation effort.}
+To quantify the effort required to turn selected projects into accepted tasks, Figure~\ref{fig:perfrace-curation-effort} reports the agent cost, curation time, and number of agent--human interactions for the 100 accepted tasks.
+The median task required 4.5 hours, \$8.83 in agent cost, and eight agent--human interactions, compared with averages of 9.1 hours, \$11.35, and 12 interactions.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{figures/perfrace-curation-effort.pdf}
+  \caption{Distribution of curation time, agent cost, and agent--human interactions across the 100 accepted tasks.}
+  \label{fig:perfrace-curation-effort}
+\end{figure}
+
+\subsection{Pair Verification}
+\label{app:perfrace-pair-verification}
+
+\perfrace{} uses Pair Verification to ensure that each task represents meaningful project use, produces reproducible measurements, and rejects shortcut solutions; this section describes the agent--human protocol and analyzes the resulting curation trajectories.
+
+\subsubsection{Protocol}
+
+Pair Verification combines agent-led task construction with human review to turn each project candidate into an executable task and assess its realism, reliability, and integrity.
+The construction skill is provided in Appendix~\ref{app:perfrace-pair-verification-skill}.
+The agent develops the task in stages and pauses for a reviewer decision after completing the evidence required for each quality criterion.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{figures/perfrace-pair-verification.pdf}
+  \caption{Pair Verification alternates between agent-led task construction and human review at the Realism, Reliability, and Integrity gates.}
+  \label{fig:perfrace-pair-verification}
+\end{figure}
+
+\textbf{Explore and Design.}
+The agent first studies the project's documentation, examples, code paths, and public usage evidence to understand its purpose, users, and performance-relevant operations.
+The agent searches public release pages for source code, models, and assets, scientific or government data portals, downstream repositories, production archives, and real user exports to identify candidate workload inputs.
+For each input, the agent records its download location, version, and applicable terms, and accepts it only when an explicit license, public-domain designation, or written authorization permits redistribution with the benchmark.
+
+It uses these materials to identify candidate operations, but grounds the workload and scale in a real user or downstream application rather than repository-native tests, benchmarks, examples, or fixtures.
+The agent compares plausible workload candidates, then traces the selected operation from its user-facing entry point through the relevant project code and demonstrates a small input-to-output execution on the unmodified revision.
+During this run, it records dependency installation, project build, input preparation, and operation time to check that setup does not dominate the measurement and to estimate whether complete verification can finish within the 1,200-second budget.
+The agent repeats the operation on identical inputs to detect run-to-run flakiness, including sporadic failures or inconsistent correctness-relevant outputs, and to identify any dependence of runtime on random state, network access, or external services.
+A candidate is revised or rejected if its stochastic execution remains too variable for reproducible performance measurement after fixing available random seeds and aggregating repeated runs.
+
+It then specifies the exact operation, workload and scale available to the agent, held-out correctness cases, observable correctness utility, performance metric, and measurement boundary.
+Before requesting Realism review, the agent summarizes the project's purpose and users, the selected execution path, the basis for the input and scale, and the alternatives it considered and rejected.
+The reviewer approves Realism only when the operation, input, and scale represent meaningful project use, the metric measures the stated utility, and the workload inputs can be redistributed as part of the benchmark.
+
+\textbf{Build and Calibrate.}
+After Realism approval, the agent derives the installation, build, and run commands from upstream documentation, CI configuration, and package manifests, and verifies them on the pinned source revision.
+The agent implements the verifier, the task's test program that measures the performance metric on a separate copy of the workload and checks additional held-out cases for correctness.
+It then constructs the Harbor task files with \texttt{instruction.md}, \texttt{task.toml}, an \texttt{environment/} directory containing the editable project and workload, and a separate \texttt{tests/} directory containing the verifier code, workload copy, held-out cases, and expected outputs.
+The agent pins the project revision, base image, language toolchain, dependencies, workload assets, and expected outputs so that the image can be rebuilt and the task rerun without downloading project source or workload inputs.
+The task instruction tells the agent how to build and run the project, what it may edit, which behavior it must preserve, and which performance metric to improve.
+
+The agent then builds a fresh image and runs the verifier on the unmodified project before calibrating performance measurements.
+The agent selects the smallest resource profile that completes the workload without CPU, memory, or storage pressure and sets the verifier timeout within 1,200 seconds.
+The agent uses pilot and repeated runs to choose the workload scale, warmups, repetitions, and aggregation, requiring the final measurements to have a coefficient of variation below 10\% while keeping build and setup outside the timed operation.
+The agent checks that the timing boundary covers the complete operation requested in the task while excluding one-time environment setup and verifier preparation that are unrelated to the optimization objective.
+
+For the \(n\) timed measurements retained after warmup, \(x_1,\ldots,x_n\), we compute
+\[
+\mathrm{CV}=\frac{s}{\bar{x}},
+\qquad
+\bar{x}=\frac{1}{n}\sum_{i=1}^{n}x_i,
+\qquad
+s=\sqrt{\frac{1}{n-1}\sum_{i=1}^{n}(x_i-\bar{x})^2}.
+\]
+
+After fixing the workload, correctness checks, resources, and measurement protocol, the agent builds the final image and evaluates the unmodified baseline and one optimization candidate under the same conditions.
+The reviewer examines the fresh-build correctness results, repeated measurements and CVs, verification time, resource allocation, and candidate trajectory.
+The reviewer approves Reliability only when fresh builds and repeated runs return the same correctness verdict and stable performance measurements with the chosen warmups, repetitions, aggregation, and measurement boundary.
+
+\textbf{Validate Integrity.}
+To identify reward-hacking paths that could receive a valid score without completing the task, the agent tests deliberately incorrect, partial, hard-coded, and work-skipping solutions and checks that workload inputs, expected outputs, and verifier-owned data cannot be replaced by agent-controlled files.
+The agent inspects the evaluation image for leaked expected outputs, verifier code, or construction notes that could reveal the hidden checks.
+For example, in \texttt{rust-clippy--cargo-package-lint}, removing Cargo dependency tracking made later runs reuse a cached lint result, which the verifier detects by touching \texttt{clippy-driver}, running the workload twice against the same warm target, and requiring each Cargo JSON trace to report a non-fresh compiler artifact for \texttt{cargo}.
+
+The reviewer approves Integrity only when every requirement in the task instruction is checked, every verifier check follows from the declared task, and none of the tested shortcut solutions can receive a valid score.
+
+\textbf{Finalize.}
+After all three reviews, the reviewer chooses \textsc{accept}, \textsc{revise}, or \textsc{reject}; accepted tasks pass final compatibility checks before publication as a task package comprising an immutable Docker image and task artifact.
+
+\subsubsection{Quality Control}
+
+We analyze the recorded agent--human Pair Verification trajectories for evidence of the Realism, Reliability, and Integrity of the resulting tasks.
+Of the 239 candidates, 132 were rejected during Explore and Design, six during Build and Calibrate, none during Validate Integrity, and one during Finalize, leaving 100 accepted tasks.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.78\textwidth]{figures/perfrace-stage-rejections.pdf}
+  \caption{Candidates rejected at each Pair Verification stage, with candidates lacking a recorded transition into Build \& Calibrate assigned to Explore \& Design.}
+  \label{fig:perfrace-stage-rejections}
+\end{figure}
+\textbf{Realism.}
+Realism checks cover the workload operation and scale, the source and redistribution terms of its inputs, and the alignment between the declared utility and performance metric.
+Table~\ref{tab:perfrace-workload-input-sources} groups the workload inputs into released source code, models, or assets (26 tasks), public scientific or government datasets (21), real downstream applications (21), production traces or archives (16), real user exports (6), and other independently grounded inputs (10).
+\input{tables/perfrace-workload-input-sources}
+
+\textbf{Reliability.}
+All 99 wall-clock tasks have a final unmodified-project CV below 10\%; the remaining task, \texttt{metamorpho--reallocate}, measures transaction gas, the deterministic execution cost assigned by the Ethereum Virtual Machine to a fixed smart-contract transaction, and returns exactly 874,508 gas in three fresh containers.
+Table~\ref{tab:perfrace-cv-distribution}(a) shows that 84 of the 99 wall-clock tasks have a final CV below 6\%.
+
+\textbf{Integrity.}
+We validate Integrity across six attack classes: empty or no-op solutions, skipped work, hard-coded outputs, precomputed or cached outputs, modification of protected inputs or tests, and access to verifier-only data.
+All 100 accepted tasks completed an explicit red-team pass before Integrity approval.
+Table~\ref{tab:perfrace-cv-distribution}(b) shows that 40 tasks were tested against at least two red-team cases, including two tasks with seven or eight cases.
+For example, SCC is a source-code statistics tool whose task scans the Linux v6.19 tree and emits JSON statistics; during red-team testing, the agent replaced the scanner with a program that returned the precomputed Linux result instead of scanning the source tree, which passed the workload available to the agent but failed when the verifier asked it to scan a separate pinned checkout of SCC's own source code.
+\input{tables/perfrace-cv-distribution}
+
+\subsection{Evaluation Protocol}
+\label{app:perfrace-evaluation}
+
+For each submission, the Judge snapshots the agent's current container and starts a temporary shadow container from that snapshot.
+The Judge creates the snapshot with \texttt{docker compose commit}, launches the shadow container under a separate Compose project, and removes its container, local image, and volumes after verification.
+The agent container remains paused during verification and resumes from the same workspace state after the shadow container is removed.
+
+Inside the shadow container, the verifier runs through \texttt{tests/test.sh} and emits the correctness verdict and performance metric as JSON.
+The verifier code, workload copy, held-out cases, and expected outputs are absent from the agent container and available only inside the shadow container.
+Each task declares its warmups, repetition count, aggregation rule, and required correctness pass rate in \texttt{task.toml}, and its verifier returns a performance metric only when that pass rate is met.
+
+The task clock continues while the shadow is created, executed, and removed, so every submission trades part of budget \(B\) for additional correctness and performance feedback.
+After verification, the Judge returns the correctness verdict and performance metric to the agent as feedback for subsequent optimization.
+For a correct submission, the Judge computes the speedup score by dividing the unmodified baseline metric by the submission metric.
+Submissions that fail correctness, exceed the verifier timeout, or do not produce a valid performance metric cannot update the best-so-far trajectory \(S(t)\).
+
+Five minutes before the deadline, the agent receives a final delivery prompt asking it to leave the project in a coherent state before the Judge performs one final shadow verification of the current workspace.
+Figure~\ref{fig:perfrace-verification-time} characterizes the time required for one complete Judge evaluation, showing that baseline Judge evaluation remains within the 20-minute limit for all 100 final tasks.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.82\textwidth]{figures/perfrace-verification-time.pdf}
+  \caption{Distribution of complete baseline Judge evaluation time across the 100 final task packages, with a mean of 6.1 minutes, a median of 4.9 minutes, and a 20-minute evaluation limit.}
+  \label{fig:perfrace-verification-time}
+\end{figure}
+
+\phantomsection
+\textbf{Longer optimization budgets.}
+\label{app:perfrace-longer-budgets}
+To measure the benefit of additional optimization time, we run Terminus-KIRA with GPT-5.6-Luna at high reasoning effort three times on each of the 88 evaluated tasks, maintaining one persistent agent session across Judge submissions during every four-hour run.
+
+The aggregate best-so-far correct speedup rises from \(1.314\times\) after one hour to \(1.377\times\), \(1.396\times\), and \(1.435\times\) after two, three, and four hours, respectively.
+Across the resulting 264 trajectories, Figure~\ref{fig:perfrace-late-budget-gains} shows that extending
+Terminus-KIRA's budget from two to four hours improves the overall score by
+4.2\%, and the fourth hour alone adds 2.8\%.
+
+The four-hour score is at least 5\% higher on 24 tasks than at two hours and on
+12 tasks than at three hours, showing that agents continue to find meaningful
+improvements late in the task.
+Among the 228 runs that improve over baseline, the best result is first reached at a median of 88.1\% of the four-hour budget, and 51 of the 264 runs produce a new improvement of at least 5\% during the final hour.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{figures/perfrace-long-horizon.pdf}
+  \caption{Performance improvements from additional optimization time, based on
+  three four-hour runs for each of 88 \perfrace{} tasks. Left: increase in the overall
+  score at four hours relative to two and three hours; horizontal lines show
+  95\% bootstrap intervals. Right: number of tasks in each improvement range.}
+  \label{fig:perfrace-late-budget-gains}
+\end{figure}

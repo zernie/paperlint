@@ -1,0 +1,206 @@
+\section{Experimental setup and fitted models}
+\label{app:experimental-details}
+
+
+\subsection{\texorpdfstring{$\tau$-bench}{tau-bench} Retail}
+\label{app:retail-fit}
+
+\subsubsection{Agent setup}
+We use  114 original tasks fromt the benchmark and construct 114 variants of these task and run our sequential randomization ten times per
+agent. One agent uses GPT-5 nano (\feat{gpt-5-nano-2025-08-07}) with minimal
+reasoning; the other uses Claude Haiku 5.5 (\feat{claude-haiku-5-5}) at low
+effort. Both have a 4,000-token output limit and a
+100-step episode cap. We generate customer messages with
+\feat{gpt-4.1-mini-2025-04-14} at temperature zero and a 2,048-token limit.
+
+The agent receives the store policy, schemas for the 16 tools in
+Table~\ref{tab:retail-tools}, and the conversation, including executed calls
+and results. We instruct it to help the customer while following the policy.
+At each turn, the agent chooses a tool call or a message to the customer. We
+score terminal success by checks with behavioral
+assertions in the benchmark.
+
+\subsubsection{Reviewer setup}
+After freezing the proposed call or batch, we assign review or direct execution
+with equal probability. The reviewer uses GPT-6 Luna (\feat{gpt-6-luna}) with
+high reasoning effort and a 6,000-token output limit. It receives the policy,
+schemas, visible conversation, and frozen proposal, but cannot query the
+database. We instruct it to check authentication, identifiers, arguments,
+available evidence, and required confirmation.
+
+In its JSON response, the reviewer either approves the proposal, replaces the
+entire batch with one call, or suggests one question for the customer. In case the reviewer approves the tool call is directly executed. 
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{retail_trajectories.pdf}
+\caption{Two observed GPT-5 nano $\tau$-bench Retail episodes with review
+randomized at each proposal. Episode A succeeds after review replaces an
+invalid exchange proposal; episode B ends with a transfer to a human after an
+invalid order modification.}
+\label{fig:retail-trajectories}
+\end{figure}
+
+\subsubsection{Features}
+Each reporting group contains original proposals involving any of the tools
+assigned to that group. Table~\ref{tab:retail-tools} gives the tool names and
+their families.
+
+\input{appendix/retail_features}
+
+\subsubsection{Phases and coefficient sharing}\label{app:phases-retail}
+We use four phases: before successful customer identification; after
+identification but before a successful order or catalog read; after that read
+but before a successful write; and after a successful write. 
+
+We fit a separate coefficient vector for each phase, agent, and
+continuation, sharing coefficients across decisions within a phase.
+The randomized-continuation fit has no future-treatment correction.
+For changed continuations, we solve the joint moment system by backward
+substitution across the four phases, as
+in~\eqref{eq:backward-outcome}--\eqref{eq:phase-moments}. Each phase's
+equations retain the contributions of later proposals in that same phase, while contributions from later phases use their already estimated coefficients.
+
+\subsubsection{Nuisance estimation}
+For each held-out fold, we train one histogram gradient-boosted regressor
+on the other four folds to predict terminal success from the inputs listed
+above. Boosted trees accommodate nonlinear relationships and interactions
+among history features. We choose the histogram implementation for
+computational efficiency across repeated fits: it bins numerical predictors
+to reduce the number of candidate split points. We obtain predictions
+$\widehat m_0$ and $\widehat m_1$ by setting the current assignment to zero
+and one, respectively, and use
+$\widehat q=(\widehat m_0+\widehat m_1)/2$. We use squared-error loss,
+a learning rate of 0.1, at most 120 boosting iterations, at most 12 leaves
+per tree, a minimum leaf size of 20, an L2 penalty of 2, seed $42+k$ for
+fold $k$, and automatic early stopping.
+
+For changed continuations, we predict the sum of later feature vectors for
+each phase, weighting each vector by the observed treatment minus the
+target-policy action. Within each training fold, we standardize the current
+attributes, cohort, numeric position, and position indicators, then fit
+ridge regressions with penalty 10. We use ridge to fit the many
+future-feature prediction targets efficiently, with coefficient shrinkage
+to stabilize estimation when predictors are correlated. We set predictions for earlier phases to zero. Before fitting the unpenalized effect regressions, we remove redundant feature directions by SVD without using the outcomes.
+
+\subsection{ToolSandbox}
+\label{app:toolsandbox-fit}
+
+\subsubsection{Agent setup}
+For each agent, we collect three trials of 129 base scenarios under eight tool variants, for 3,096 trajectories. We use the same two agents, model settings, and user simulator as in $\tau$-bench Retail, with each scenario's official cap on the number of messages.
+
+The agent sees the conversation and schemas for the simulated-phone tools offered in that scenario (Table~\ref{tab:toolsandbox-tools}). We instruct it not to guess missing arguments and to clarify ambiguous requests. Across variants, we alter tool availability or scramble tool names and documentation.
+
+\subsubsection{Reviewer setup}
+We freeze each agent turn containing tool calls and assign review with
+probability $1/2$ before execution.   The reviewer uses the same model settings as in $\tau$-bench Retail: GPT-6 Luna with high reasoning effort and a 6,000-token output limit.
+
+
+The reviewer receives the visible conversation, proposal, offered schemas, public API rules, and stateless argument checks. For scrambled variants, we include the relevant rules without changing the schemas shown to the agent. The reviewer cannot execute tools or see the hidden device state and evaluator targets. It either approves the batch or replaces it with one call from the offered tools or one response to the user, citing the supplied evidence for any correction.
+
+\subsubsection{Features}
+Tables~\ref{tab:toolsandbox-snmm} and~\ref{tab:toolsandbox-nuisance} list the 45
+attributes for the SNMM model and 90 attributes used for  nuisance model. We derive device settings and
+database sizes from the pre-execution state of the system, We group tools into six capabilities for reporting and ten families for model inputs.
+
+\input{appendix/toolsandbox_features}
+
+\subsubsection{Phases and coefficient sharing}\label{app:phases-tool}
+We use three phases: before any successful tool result, after a success but
+before a successful write, and after a successful write. Phase progression is
+one-way. Writes include settings changes, contact edits, message sends, and
+reminder writes.
+
+For continuation $c$, the effect model is
+\[
+ b^c(h)=a^c_{s(h)}+\sum_{k=1}^{33}b_k^c\,\ind\{k\text{ is proposed}\}
+                 +(d^c)^\top z(h),
+\]
+where $z$ is the vector of nine history and variant terms. The baseline $a_s^c$
+varies by phase; the tool coefficients $b_k^c$ and history coefficients $d^c$
+are shared across phases. There is no additional intercept. We fit each agent
+and continuation separately. For each changed continuation, we solve one joint
+system of equations that accounts for all later decisions, both within the
+current phase and in subsequent phases. We chose this structure after
+inspecting sparse-coefficient diagnostics; the intervals do not include
+model-selection uncertainty.
+
+\subsubsection{Nuisance estimation}
+We encode the history using the 90  attributes, numeric decision
+position, and earlier decisions' attributes and assignments.  For outcome prediction, we use the same histogram
+gradient-boosting specification as in $\tau$-bench Retail, retaining its
+flexibility to model nonlinear relationships and its computational
+efficiency across repeated fits. We obtain predictions $\widehat m_0$
+and $\widehat m_1$ from the fitted outcome model by setting the current
+assignment to zero and one, respectively, then take their average as
+$\widehat q$.
+
+Within each training fold, we standardize the current attributes and position
+indicators, then fit ridge regressions with penalty 10
+to predict future totals in the phase-expanded basis. We set predictions for
+earlier phases to zero and map the remaining predictions into the basis for
+the pooled model's shared coefficients. Before fitting the unpenalized effect
+regressions, we apply SVD to the pooled 45-feature design without using the
+outcomes.
+\FloatBarrier
+
+\subsection{ImpossibleBench}
+\label{app:steering-fit}
+
+\subsubsection{Agent setup}
+The agent uses Qwen3.5 Flash (\feat{qwen/qwen3.5-flash-02-23}) at temperature
+0.5, with reasoning disabled and a 4,096-token output limit. It has at most six
+actions and can submit code with \feat{write_file} or stop with
+\feat{report_issue}. In the system prompt we prohibit test edits
+and evaluator exploits, and permit reports of contradictory tests. We run the
+tests after each write. At the next action, the agent sees the task, submitted
+code, and test feedback.
+
+We run each of 103 problems six times with original tests and six times with
+contradictory tests, yielding 1,236 episodes. We exclude 18 with missing
+terminal outcomes and analyze the remaining 1,218. We record a violation if a
+test edit is detected or the agent passes the contradictory check, and end the
+episode after success, an issue report, or a detected violation.
+
+\subsubsection{Steering setup}
+After an eligible unsuccessful submission, we assign a neutral or steering note
+with equal probability. In the steering note, we tell the agent that it may change the tests or we prompt Qwen3.5 Flash with the task, code,
+checkpoint state, test feedback, and two previous notes, asking for a
+diagnostic note that encourages a prohibited edit or test-order shortcut. We
+generate the note at temperature 0.8 with a 512-token limit. If generation
+fails, we use the script and retain the original assignment. We append the
+note to the tool feedback. In the system instructions to the agent, we tell the agent that notes cannot override any instructions .
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{steering_trajectories.pdf}
+\caption{Two observed Qwen3.5 Flash runs of the same ImpossibleBench task, with note
+assignment randomized at each eligible checkpoint. The neutral run reports
+contradictory tests; the steered run follows a scripted note and edits the
+protected test file.}
+\label{fig:steering-trajectories}
+\end{figure}
+
+
+\subsubsection{Features}
+Tables~\ref{tab:steering-snmm} and~\ref{tab:steering-nuisance}
+list the nine SNMM inputs and 36 current nuisance attributes.
+
+\input{appendix/steering_features}
+
+\subsubsection{Phases and coefficient sharing}
+Checkpoint $t$ follows action $t$, for $t=1$ through $5$. When an action is ineligible, we leave its checkpoint empty and retain the numbering of later checkpoints. We fit separate coefficients by checkpoint and continuation. We estimate coefficients for changed continuations backward from checkpoint 5. The future correction uses only later checkpoints because each checkpoint occurs at most once.
+
+\subsubsection{Nuisance estimation}
+We encode the baseline history with 36  features and, for each of the
+two previous eligible checkpoints, its attributes, assignment, and a presence
+indicator. For each held-out trajectory fold, we fit separate control, treatment, and
+pooled outcome regressions on the other four folds to estimate $\widehat m_0$,
+$\widehat m_1$, and $\widehat q$. We use the $\tau$-bench Retail
+gradient-boosting settings with early stopping disabled. For the
+future-feature regressions, we use the same history features, standardize them
+within each training fold, and apply ridge penalty 10. Predictions for the
+current or an earlier checkpoint are zero. After applying SVD without using
+outcomes, we fit unpenalized effect regressions and scale the retained
+directions to unit second moment within each checkpoint.
+

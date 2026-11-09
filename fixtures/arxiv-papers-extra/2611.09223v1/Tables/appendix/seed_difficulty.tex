@@ -1,0 +1,23 @@
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{\textbf{Yield by seed difficulty.}
+A1 seeds grouped by the number of Korean LLMs (out of three) that answer the seed incorrectly.
+Rates are shares (\%) of the candidates generated.}
+\label{tab:seed_difficulty}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+\textbf{Incorrect models} & \textbf{0} & \textbf{1} & \textbf{2} & \textbf{3} \\
+\midrule
+Seeds                                & 12   & 14   & 48   & 24   \\
+Seed--target pairs                   & 23   & 28   & 81   & 38   \\
+Candidates generated                 & 117  & 246  & 549  & 246  \\
+\midrule
+All eleven criteria \textsc{pass}    & 58.1 & 43.1 & 31.3 & 28.0 \\
+Proxy answers incorrectly            & 12.8 & 30.1 & 28.2 & 39.8 \\
+Both (pass before revision)          & 7.7  & 11.8 & 11.8 & 14.2 \\
+Pass the automated stage             & 18.8 & 21.5 & 29.9 & 28.9 \\
+\bottomrule
+\end{tabular}
+\end{table}

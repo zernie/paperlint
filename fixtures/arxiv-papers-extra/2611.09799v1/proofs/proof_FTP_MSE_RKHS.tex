@@ -1,0 +1,549 @@
+\begin{proof}\textbf{of Theorem~\ref{thm: FTP MSE RKHS}.}
+Let $\bar{\mathbf f}=n^{-1}\sum_{i=1}^n\mathbf f_i$. Since $K_T$ is positive definite, $K_T^{-1}$ and $K_T^{1/2}$ are well-defined.\\
+\textcolor{red}{a.} 
+We first show that for any $f_i\in \mathcal{H}_K$ with $\|f_i\|_{\mathcal{H}_K}\leq B$, we can always find another function $g_i$ in the span of $\{K(t_1,t),\ldots,K(t_T,t)\}$ such that 
+\[
+f_i(t_j)=g_i(t_j),\ \|g_i\|_{\mathcal{H}_K}\leq B.
+\]
+For each $i$, consider the minimum-norm interpolation problem
+\[
+g_i
+=
+\argmin_{g\in\mathcal H_K}
+\left\{
+\|g\|_{\mathcal H_K}:
+g(t_j)=f_i(t_j),\ j=1,\ldots,T
+\right\}.
+\]
+By the representer theorem,
+\[
+g_i(t)
+=
+\sum_{j=1}^T
+(\gamma_i)_jK(t_j,t),
+\quad
+\gamma_i=K_T^{-1}\mathbf f_i.
+\]
+Hence
+\[
+\|g_i\|_{\mathcal H_K}^2
+=
+\gamma_i^\top K_T\gamma_i
+=
+\mathbf f_i^\top K_T^{-1}\mathbf f_i.
+\]
+Since $f_i$ itself is feasible for the interpolation problem,
+\[
+\|g_i\|_{\mathcal H_K}
+\le
+\|f_i\|_{\mathcal H_K}
+\le B.
+\]
+Therefore,
+\begin{equation}
+\mathbf f_i^\top K_T^{-1}\mathbf f_i
+\le B^2.
+\label{eq: RKHS_min_norm_true_bound}
+\end{equation}
+Define
+\[
+\mathbf \beta_i
+:=
+K_T^{-1/2}\mathbf f_i.
+\]
+Then Equation~\eqref{eq: RKHS_min_norm_true_bound} gives
+\begin{equation}
+\|g_i\|_{\mathcal H_K} = \|\beta_i\|_2\le B.
+\label{eq:true_transformed_norm}
+\end{equation}
+\textcolor{red}{b.} 
+We then derive the form of the constrained and unconstrained solution to \begin{equation}
+    \hat{f}_i^{(c)} 
+    = \argmin_{\|f\|_{\mathcal{H}_K}\le B'} 
+    \dfrac{1}{T}\sum_{j=1}^T [x_{ij}-f(t_j)]^2.
+\label{eq: constrained_FTP_RKHS}
+\end{equation}
+and perform coefficient transformation for the convenience of following proof.\\ 
+By the Representer theorem, the constrained estimator has the form
+\[
+\hat f_i^{(c)}(t)
+=
+\sum_{j=1}^T
+(\hat\alpha_i^{(c)})_jK(t_j,t),
+\]
+and its RKHS norm satisfies
+\[
+\|\hat f_i^{(c)}\|_{\mathcal H_K}^2
+=
+\hat\alpha_i^{(c)\top}
+K_T
+\hat\alpha_i^{(c)}.
+\]
+Consequently, Equation~\eqref{eq: constrained_FTP_RKHS} is equivalent to
+\begin{equation}
+    \hat\alpha_i^{(c)}
+    =
+    \argmin_{\alpha^\top K_T\alpha\le {B'}^2}
+    \|x_i-K_T\alpha\|_2^2.
+    \label{eq: constrained_alpha_RKHS}
+\end{equation}
+Consider the corresponding unconstrained estimator
+\[
+\hat f_i^{(u)}
+=
+\argmin_{f\in\mathcal H_K}
+\frac1T\sum_{j=1}^T
+[x_{ij}-f(t_j)]^2.
+\]
+The minimum-norm unconstrained least-squares solution has the form
+\begin{equation}
+    \begin{aligned}
+        \hat f_i^{(u)}(t)
+        &=
+        \sum_{j=1}^T [\hat\alpha_i^{(u)}]_jK(t_j,t),\\
+        \hat\alpha_i^{(u)}
+        &=
+        K_T^{-1}x_i.
+    \end{aligned}
+\end{equation}
+Indeed, the fitted-value vector is
+\[
+\hat{\mathbf{f}}_i^{(u)}
+=
+K_T\hat\alpha_i^{(u)}
+=
+x_i.
+\]
+Define
+\[
+\hat{\beta}_i^{(u)}
+:=
+K_T^{1/2}\hat\alpha_i^{(u)}
+=
+K_T^{-1/2}x_i
+\text{\quad and\quad}
+\hat{\beta} := K_T^{1/2}\alpha.
+\]
+We have
+\[
+\alpha^\top K_T\alpha\le {B'}^2
+\Longleftrightarrow
+\|\beta\|_2 = \|K_T^{1/2}\alpha\|_2\le B'.
+\]
+Hence, we can rewrite the optimization problem in Equation~\eqref{eq: constrained_alpha_RKHS} as
+\begin{equation}
+    \hat\beta_i^{(c)}
+    =
+    \argmin_{\|\beta\|_2\le B'}
+    \|x_i-K_T^{1/2}\beta\|_2^2,
+    \quad \hat\beta_i^{(c)} = K_T^{1/2}\hat\alpha_i^{(c)}.
+    \label{eq: constrained_beta_RKHS}
+\end{equation}
+It follows
+\[
+\hat f_i^{(c)}(t)
+=
+\sum_{j=1}^T
+(\hat\alpha_i^{(c)})_jK(t_j,t)
+=
+\sum_{j=1}^T
+(K_T^{-1/2}\hat\beta_i^{(c)})_jK(t_j,t).
+\]
+\textcolor{red}{c.} 
+Next, we introduce the metric projection and follow similar steps in the proof of Theorem~\ref{thm: FTP IMSE}.\\
+Denote
+\[
+\mathcal C_{B'}
+:=
+\left\{
+\beta\in\mathbb R^T: \|\beta\|_2\leq B'
+\right\}.
+\]
+By substituting $\Phi = K_T^{1/2}$, $M = \Phi^\top \Phi = \Phi^2 = K_T$, we have
+\begin{equation}
+\hat{\beta}_i^{(c)}
+=
+\argmin_{\beta\in\mathcal C_{B'}}
+(\beta-\hat{\beta}_i^{(u)})^\top
+M
+(\beta-\hat{\beta}_i^{(u)})
+:= P_{\mathcal C_{B'}}^{M}
+\left(
+\hat{\beta}_i^{(u)}
+\right).
+\label{eq:constrained_projection_RKHS}
+\end{equation}
+where $P_{\mathcal C_{B'}}^{M}$ denotes the metric projection onto
+$\mathcal C_{B'}$ with respect to the $M$-norm.\\
+Since the projection is nonexpansive, and $\|\beta_i\|_2\leq B\leq B'$, we have
+\begin{equation}
+    \begin{aligned}
+        \left\|
+        \hat{\beta}_i^{(c)}-\beta_i
+        \right\|_M
+        =
+        \left\|
+        P_{\mathcal C_{B'}}^{M}
+        \left(
+        \hat{\beta}_i^{(u)}
+        \right)
+        -
+        P_{\mathcal C_{B'}}^{M}(\beta_i)
+        \right\|_M
+        \leq
+        \left\|
+        \hat{\beta}_i^{(u)}-\beta_i
+        \right\|_M.
+    \end{aligned}
+    \label{eq: M_norm_nonexpansive_RKHS}
+\end{equation}
+\textcolor{red}{d.} 
+We denote convenient notations as follows
+\begin{equation}
+    \begin{aligned}
+        e_i = \hat{\beta}_i^{(c)} - \beta_i, &&
+        \xi_i = \hat{\beta}_i^{(u)} - \beta_i, &&
+        r_i = \hat{\beta}_i^{(c)} - \hat{\beta}_i^{(u)}, &&
+        b_i = \E e_i.
+    \end{aligned}
+    \label{eq: notations_RKHS}
+\end{equation}
+Then Equation~\eqref{eq: M_norm_nonexpansive_RKHS} becomes
+\begin{equation}
+    \|e_i\|_M\leq \|\xi_i\|_M.
+    \label{eq: M_norm_nonexpansive_RKHS_simplified}
+\end{equation}
+Since
+\[
+x_i=\mathbf f_i+\epsilon_i,\quad
+\epsilon_i\sim N(0,\sigma_0^2 I_T),
+\]
+we have
+\[
+\beta_i^{(u)}
+=K_T^{-1/2} x_i
+=
+\Phi^{-1}x_i
+=
+\beta_i+\xi_i,
+\]
+where
+\[
+\xi_i
+=
+\Phi^{-1}\epsilon_i,\quad
+\xi_i
+\sim
+N(0,\sigma_0^2M^{-1}).
+\]
+Consequently,
+\begin{align}
+\mathbb E
+\left\|
+\xi_i
+\right\|_2^2
+=
+\operatorname{tr}
+\left[
+\operatorname{Cov}
+\left(
+\xi_i
+\right)
+\right]
+=
+\sigma_0^2\operatorname{tr}(M^{-1}),
+\quad
+\mathbb E
+\left\|
+\epsilon_i
+\right\|_2^2
+=\sigma_0^2 T.
+\label{eq: unconstrained_mse_RKHS}
+\end{align}
+Then we can expand the MSE as
+\begin{align}
+\mathrm{MSE}_{\mathrm{FTP}}
+&= 
+\dfrac{1}{T} \sum_{j=1}^T \mathbb{E} 
+[(\widetilde{f}_{\mathrm{FTP}}(t_j)-\bar{f}(t_j))^2]\nonumber\\
+&= 
+\dfrac{1}{T} \mathbb{E} 
+\|\widetilde{\mathbf{f}}_{\mathrm{FTP}} - \bar{\mathbf{f}}\|_2^2\nonumber\\
+&= 
+\dfrac{1}{T} \mathbb{E} 
+\|\overline{\hat{\mathbf{f}}^{(c)}} - \bar{\mathbf{f}} + \sigma \mathbf{Z}\|_2^2
+\label{eq: direct expand MSE}.
+\end{align}
+Notice that $Z$ is a mean zero Gaussian process with kernel $K$, we have
+\[
+\mathbf{Z} = (Z(t_1),\ldots,Z(t_T))^\top
+\sim \mathcal{N}(0,M),
+\]
+\[
+\mathbb E\|\mathbf{Z}\|_2^2 = \operatorname{tr}(M).
+\]
+Thus, we have
+\begin{align}
+\mathrm{MSE}_{\mathrm{FTP}}
+&= 
+\dfrac{1}{T} \mathbb{E} 
+\|\overline{\hat{\mathbf{f}}^{(c)}} - \bar{\mathbf{f}} + \sigma \mathbf{Z}\|_2^2\nonumber\\
+&= 
+\dfrac{1}{T} 
+\Bra{\mathbb{E} 
+\|\overline{\hat{\mathbf{f}}^{(c)}} - \bar{\mathbf{f}}\|_2^2 
++ 
+\mathbb{E} \|\sigma \mathbf{Z}\|_2^2 + 0}
+\nonumber\\
+&= 
+\dfrac{1}{T} 
+\mathbb{E} 
+\|\overline{\hat{\mathbf{f}}^{(c)}} - \bar{\mathbf{f}}\|_2^2 
++ 
+\dfrac{4{B'}^2}{n^2\mu^2 T} \operatorname{tr}(M).
+\label{eq: expanded MSE}
+\end{align}
+Note that $e_i$'s are independent, we can further expand the first term as
+\begin{equation}
+    \begin{aligned}
+        \mathbb{E} 
+        \|\overline{\hat{\mathbf{f}}^{(c)}} - \bar{\mathbf{f}}\|_2^2 
+        &=
+        \mathbb{E} 
+        \|\overline{\hat{\mathbf{f}}^{(c)}} - \bar{\mathbf{g}}\|_2^2\\
+        &=
+        \mathbb{E} 
+        \|\Phi \overline{\hat{\beta}^{(c)}} - \Phi\bar{\beta}\|_2^2\\
+        &=
+        \mathbb{E} 
+        \|\overline{\hat{\beta}^{(c)}} - \bar{\beta}\|_{M}^2\\
+        &=
+        \dfrac{1}{n^2} \mathbb E \Bra{
+        \sum_{i=1}^n \|e_i\|_M^2 + \sum_{i\ne j} e_i^\top  M e_j}\\
+        &=
+        \dfrac{1}{n^2} \Bra{
+        \sum_{i=1}^n \mathbb E \|e_i\|_M^2
+        + \sum_{i\ne j} \mathbb E e_i^\top M \mathbb E e_j
+        }.
+    \end{aligned}
+    \label{eq: expand bias and clipping}
+\end{equation}
+Recall Equation~\eqref{eq: M_norm_nonexpansive_RKHS_simplified} and Equation~\eqref{eq: unconstrained_mse_RKHS}, we have
+\begin{equation}
+    \begin{aligned}
+        \dfrac{1}{n^2} \sum_{i=1}^n \mathbb E \|e_i\|_M^2 
+        \leq
+        \dfrac{1}{n^2} \sum_{i=1}^n \mathbb E \|\xi_i\|_M^2
+        =
+        \dfrac{1}{n^2} \sum_{i=1}^n \mathbb E \|\epsilon_i\|_2^2
+        =
+        \dfrac{\sigma_0^2T}{n}.
+    \end{aligned}
+\label{eq: noise term_RKHS}
+\end{equation}
+\textcolor{red}{e.} 
+Finally, we analyze the cross-term.\\
+Recall the definition of $\hat{\beta}_i^{(c)}$ given by Equation~\eqref{eq:constrained_projection_RKHS}, we have
+\begin{equation}
+\|r_i\|_M
+=
+\left\|
+\hat{\beta}_i^{(c)} - \hat{\beta}_i^{(u)}
+\right\|_M
+\le 
+\left\|
+\beta_i - \hat{\beta}_i^{(u)}
+\right\|_M
+=
+\|\xi_i\|_M.
+\end{equation}
+Since $\hat{\beta}_i^{(u)}$ is the unconstrained minimizer, we know that
+$r_i=0$ if $\|\hat{\beta}_i^{(u)}\|_2\le B'$.\\
+Therefore, we can rewrite
+\[
+r_i 
+= \Bra{
+\hat{\beta}_i^{(c)} - \hat{\beta}_i^{(u)}
+}\cdot \mathbf{1} \Set{\|\hat{\beta}_i^{(u)}\|_2>B'}.
+\]
+It follows that
+\begin{align*}
+\|r_i\|_M^2
+=&\|\hat{\beta}_i^{(c)} - \hat{\beta}_i^{(u)}\|_M^2 \cdot \mathbf{1} \Set{\|\hat{\beta}_i^{(u)}\|_2>B'}\\
+\le&
+\|\xi_i\|_M^2
+\cdot \mathbf{1} \Set{\|\hat{\beta}_i^{(u)}\|_2>B'}\\
+=& \|\epsilon_i\|_2^2
+\cdot \mathbf{1} \Set{\|\hat{\beta}_i^{(u)}\|_2>B'}.
+\end{align*}
+Thus, we can obtain that
+\begin{equation}
+    \|b_i\|_M^2
+    =
+    \| \mathbb E e_i \|_M^2
+    =
+    \| \mathbb E r_i \|_M^2
+    \le
+    \mathbb E \|r_i\|_M^2
+    \le
+    \mathbb E \SqBra{
+    \|\epsilon_i\|_2^2
+    \cdot \mathbf{1} \Set{\|\hat{\beta}_i^{(u)}\|_2>B'}
+    }.
+\label{eq: clipping bias bound_RKHS}
+\end{equation}
+By the Cauchy--Schwarz inequality, we have
+\begin{equation}
+    \mathbb E \SqBra{
+    \|\epsilon_i\|_2^2
+    \cdot \mathbf{1} \Set{\|\hat{\beta}_i^{(u)}\|_2>B'}
+    }
+    \leq
+    \sqrt{\mathbb E \|\epsilon_i\|_2^4} \sqrt{\operatorname{Pr}(\|\hat{\beta}_i^{(u)}\|_2>B')}.
+    \label{eq: Cauchy--Schwarz inequality_RKHS}
+\end{equation}
+Since $\epsilon_i\overset{i.i.d.}{\sim} N(0,\Sigma)$ with $\Sigma = \sigma_0^2 I_T$, we have
+\begin{equation}
+\sqrt{\mathbb E \|\epsilon_i\|_2^4}
+=
+\sqrt{(\operatorname{tr}\Sigma)^2 + 2\operatorname{tr}(\Sigma^{2})}
+= \sigma_0^2 \sqrt{T^2+2T}.
+\label{eq: 4th moment guassian bound_RKHS}
+\end{equation}
+Recall $\|\beta_i\|_2\le B$, denote $\delta=B'-B$, then 
+$\Set{\|\hat{\beta}_i^{(u)}\|_2>B'}$ implies 
+$\Set{\|\hat{\beta}_i^{(u)}-\beta_i\|_2>\delta}$, thus
+\begin{align*}
+\operatorname{Pr}(\|\hat{\beta}_i^{(u)}\|_2>B')
+&\le
+\operatorname{Pr}(\|\hat{\beta}_i^{(u)}-\beta_i\|_2>\delta)
+\\
+&=\operatorname{Pr}(\|\xi_i\|_2>\delta).
+\end{align*}
+Let $\xi_i = \sigma_0 M^{-1/2}Z_i$, $Z_i\sim N(0, I_T)$, $\|Z_i\|_2^2\sim \chi^2_T$, we have
+\[
+\|\xi_i\|_2^2
+= 
+\sigma_0^2 Z_i^\top M^{-1} Z_i 
+\le 
+\sigma_0^2 \lambda_{\max}(M^{-1}) \|Z_i\|_2^2
+=
+\dfrac{\sigma_0^2}{\lambda_{\min}(M)} \|Z_i\|_2^2.
+\]
+Apply the $\chi^2$ tail bound from \citet{laurent2000adaptive}, we have
+\begin{align}
+\operatorname{Pr}(\|\hat{\beta}_i^{(u)}\|_2>B')
+&\le
+\operatorname{Pr}(\|\xi_i\|_2>\delta)
+\nonumber\\
+&\le
+\operatorname{Pr}
+\Bra{
+\chi^2_T > \dfrac{\delta^2 \lambda_{\min}(M)}{\sigma_0^2}
+}
+\nonumber\\
+&\le
+\exp\SqBra{
+-\dfrac{1}{2}\Bra{
+\dfrac{\delta\sqrt{\lambda_{\min}(M)}}{\sigma_0}
+- \sqrt{T}
+}^2
+}.
+\label{eq: clipping probability bound_RKHS}
+\end{align}
+Combine Equation~\eqref{eq: clipping bias bound_RKHS},~\eqref{eq: Cauchy--Schwarz inequality_RKHS},~\eqref{eq: 4th moment guassian bound_RKHS} and~\eqref{eq: clipping probability bound_RKHS}, we obtain
+\begin{equation}
+    \|b_i\|_M^2
+    \leq
+    \sigma_0^2\sqrt{T^2+2T}\cdot
+    \exp\SqBra{
+    -\dfrac{1}{4}\Bra{
+    \dfrac{\delta\sqrt{\lambda_{\min}(M)}}{\sigma_0}
+    - \sqrt{T}
+    }^2
+    }.
+    \label{eq: individual_bias_term_RKHS}
+\end{equation}
+By the Cauchy--Schwarz inequality, we have
+\begin{equation}
+\dfrac{1}{n^2} \sum_{i\ne j} \mathbb E e_i^\top M \mathbb E e_j
+=
+\dfrac{1}{n^2} \sum_{i\ne j} b_i^\top M b_j
+\le
+\Bra{1-\dfrac{1}{n}} \max_{i} \|b_i\|^2_M.
+\label{eq: Cauchy--Schwarz_RKHS}
+\end{equation}
+Finally combine Equation~\eqref{eq: expanded MSE},~\eqref{eq: expand bias and clipping},~\eqref{eq: noise term_RKHS},~\eqref{eq: individual_bias_term_RKHS},~\eqref{eq: Cauchy--Schwarz_RKHS}, and recall $K_T=M$, we get
+\begin{equation}
+\begin{aligned}
+\mathrm{MSE}_{\mathrm{FTP}}
+\leq
+&\frac{4{B'}^2\operatorname{tr}(K_T)}{n^2\mu^2T}
++
+\dfrac{\sigma_0^2}{n}\\
+&+
+\Bra{1-\dfrac{1}{n}}
+\sigma_0^2 \sqrt{\dfrac{T+2}{T}}
+\exp\SqBra{
+-\dfrac{1}{4}\Bra{
+\dfrac{(B'-B)\sqrt{\lambda_{\min}(K_T)}}{\sigma_0}
+- \sqrt{T}
+}^2
+}.
+\end{aligned}
+\label{eq: final_MSE_FTP bound}
+\end{equation}
+When $\sigma_0=0$ and $B'\ge B$, a feasible zero-loss fit exists, so every selected minimizer satisfies $\hat f_i^{(c)}(t_j)=f_i(t_j)$. Consequently, only privacy noise contributes to the grid MSE, giving $\operatorname{MSE}_{\mathrm{FTP}}=4(B')^2\operatorname{tr}(K_T)/(n^2\mu^2T)$.
+\end{proof}
+\begin{remark}\textup{\textbf{(Minimum-Norm Interpolator Problem)}}
+    Although both the FTP and PTF procedures involve the constrained optimization
+    problems in Equations~\eqref{eq: F_operator} and~\eqref{eq: weight least square},
+    the role of the constraint is different in the noiseless setting. For the
+    individual trajectories, when $\sigma_0=0$ we have
+    $x_{ij}=f_i(t_j)$. Hence, the empirical least-squares loss can attain its
+    global minimum value zero. In particular, the constrained problem
+    \[
+    \hat f_i
+    =
+    \argmin_{\substack{f\in\mathcal H_K\\
+    \|f\|_{\mathcal H_K}\le B'}}
+    \frac{1}{T}\sum_{j=1}^T
+    \left[f(t_j)-x_{ij}\right]^2
+    \]
+    admits $f_i$ as a feasible zero-loss solution. Consequently, the constraint
+    does not affect the optimal value of the individual fitting problem.\vspace{1em}\\
+    A convenient representative of the zero-loss solutions is the
+    minimum-norm interpolant
+    \begin{equation}
+    \hat f_i^{\mathrm{MN}}
+    =
+    \argmin_{f\in\mathcal H_K}
+    \|f\|_{\mathcal H_K}
+    \quad
+    \text{subject to}
+    \quad
+    f(t_j)=x_{ij},\qquad j=1,\ldots,T.
+    \label{eq: minimum norm interpolator}
+    \end{equation}
+    Let $K_T=\left[K(t_j,t_l)\right]_{j,l=1}^T$ be the kernel Gram matrix, which is positive definite for distinct sampling locations under the Gaussian kernel. A direct Hilbert-space projection argument shows that the minimum-norm interpolation belongs to the finite-dimensional span of the kernel sections:
+    \[
+    \hat f_i^{\mathrm{MN}}(t)
+    =
+    k_T(t)^\top K_T^{-1}x_i,
+    \qquad
+    k_T(t)
+    =
+    \left(K(t,t_1),\ldots,K(t,t_T)\right)^\top.
+    \]
+    Moreover, $\|\hat f_i^{\mathrm{MN}}\|_{\mathcal H_K}^2=x_i^\top K_T^{-1}x_i$. Since $f_i$ itself is a feasible interpolation and
+    $\|f_i\|_{\mathcal H_K}\le B$, the minimum-norm property gives
+    $\|\hat f_i^{\mathrm{MN}}\|_{\mathcal H_K}
+    \le
+    \|f_i\|_{\mathcal H_K}
+    \le B$. Thus, $\hat f_i^{\mathrm{MN}}$ is also feasible for the constrained
+    least-squares problem and achieves its minimum loss, namely zero.
+    Consequently, in the noiseless setting, we may take
+    $\mathcal F_{\mathrm{FTP}}(x_i)
+    =
+    \hat f_i^{\mathrm{MN}}$. This observation allows the individual fitting step in the FTP procedure to be represented in closed form through the kernel Gram matrix.
+\end{remark}

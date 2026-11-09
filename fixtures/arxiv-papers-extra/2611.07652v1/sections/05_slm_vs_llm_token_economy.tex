@@ -1,0 +1,144 @@
+%% ============================================================================
+%%  05_slm_vs_llm_token_economy.tex — SLMs, Token Economics & Complexity
+%% ============================================================================
+
+\section{The SLM Parameter Paradox and Bounded Computational Complexity}
+\label{sec:slm_token_economy}
+
+A central premise of contemporary foundation model research is that reliability scales monotonically with parameter count~\cite{wang2024survey}. In the domain of tool-using autonomous systems, however, empirical evidence demonstrates that this scaling hypothesis is flawed. Pioneering research in compact model families---from synthetic textbook curricula~\cite{gunasekar2023textbooks} to local on-device models such as Phi-3~\cite{abdin2024phi3} and TinyLlama~\cite{zhang2024tinyllama}---confirms that reasoning efficiency depends primarily on context purity and structured interfaces rather than parameter bloat. When capability is decoupled from linguistic reasoning, we observe the \textbf{Small Language Model (SLM) Parameter Paradox}: \emph{Compact models (3B--8B parameters) equipped with deterministic Skillware bundles consistently surpass massive unequipped frontier models (70B--1.8T parameters) in functional accuracy, execution latency, and economic sustainability.}
+
+\subsection{Computational Complexity of Prompted vs. Equipped Agents}
+\label{subsec:complexity_analysis}
+
+The architectural inefficiency of prompt-driven tools can be formalized through transformer attention complexity. In standard self-attention, computational and memory complexity scales quadratically with total sequence length $L$~\cite{liu2024lost}:
+\begin{equation}
+\label{eq:attention_complexity}
+\Omega_{\text{attention}} = \mathcal{O}\left( L^2 \cdot d_{\text{model}} \right)
+\end{equation}
+When an agent framework injects $T_{\text{sys}} \approx 4,000$ tokens of OpenAPI documentation and procedural instructions into the system prompt, this overhead permanently inflates $L$ across every turn of a multi-turn session. For an $M$-turn interaction, the cumulative attention computation expended merely re-reading static API specifications scales as $\sum_{m=1}^M \mathcal{O}((m \cdot L_{\text{turn}} + T_{\text{sys}})^2)$.
+
+In contrast, Skillware partitions computation into two distinct regimes:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Semantic Mapping (Stochastic):} The language model is tasked strictly with mapping user intent into parameter selection:
+  \begin{equation}
+  \label{eq:semantic_mapping}
+  f_{\text{SLM}}: \mathcal{X}_{\text{user}} \longrightarrow p \in \mathcal{S}_{\text{in}}
+  \end{equation}
+  Under \texttt{mode="brief"}, tool signatures consume $T_{\text{brief}} \le 35$ tokens, keeping sequence length $L$ minimal and bounded.
+  \item \textbf{Logic Execution (Deterministic):} The actual computation is evaluated by compiled Python code:
+  \begin{equation}
+  \label{eq:deterministic_execution}
+  \mathcal{E}(p, \Theta) \longrightarrow r \in \mathcal{S}_{\text{out}}
+  \end{equation}
+  which executes with $\mathcal{O}(1)$ model token expenditure and near-instantaneous CPU execution time.
+\end{enumerate}
+
+By excising resident procedural logic from active context and executing it just-in-time on local silicon, Skillware achieves an $84.0\%$ reduction in resident prompt volume (Figure~\ref{fig:context_excision}).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.96\linewidth]{figures/fig06_context_excision.png}
+\caption{Resident context excision under Skillware JIT progressive disclosure: slashing prompt volume by $84.0\%$ and eliminating quadratic attention overhead ($\mathcal{O}(L^2)$).}
+\label{fig:context_excision}
+\end{figure}
+
+\subsection{Soft Skills vs. Hard Skills: The Moat of Executable Software}
+\label{subsec:software_moat}
+
+To understand why small models triumph when properly equipped, one must distinguish between \textbf{Soft Skills} and \textbf{Hard Skills}:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Soft Skills (Prompt-Based Directives):} A markdown file or instruction block (exemplified by \texttt{SKILL.md} conventions) provides natural-language procedural guidance. The language model is forced to parse extensive prose, synthesize ad-hoc bash or python snippets, interpret terminal exit codes, and self-correct when code fails. This paradigm requires massive frontier models to carry the reasoning load, burns thousands of prompt tokens per turn, and collapses entirely on compact 7B/8B open-weights models that struggle with zero-shot code generation under context pressure. Furthermore, when the host API endpoint degrades or closes, the soft skill evaporates.
+  \item \textbf{Hard Skills (Skillware Capability Bundles):} In this paradigm, capabilities are structured not as arbitrary markdown files with procedural prompt instructions, but as versioned, ontological software artifacts with an engineered lifecycle~\cite{fan2026skillware}. The operational task is pre-compiled as verified, tested Python software residing directly on disk, bound by an immutable JSON Schema contract and local unit tests. The language model is relieved of code generation entirely; its sole responsibility is parameter selection. Because execution occurs deterministically in native code, functional output is invariant across model scale: GPT-4, Claude 3.5 Sonnet, or an 8B SLM running locally on Ollama produce the exact same validated JSON output, the exact same error handling, and the exact same forensic audit trail.
+\end{itemize}
+
+Frontier language models fail at multi-step tasks not because they lack linguistic comprehension, but because transformers cannot reliably compute non-linear symbolic transformations over auto-regressive state~\cite{dziri2023faith, valmeekam2023planning}. Tasks such as validating an Ethereum checksum address, calculating an SHA-256 state root, computing OFAC fuzzy sanctions distances, or traversing an IMAP MIME multipart tree require exact computational steps. While massive API calling harnesses (such as Gorilla~\cite{patil2023gorilla} and ToolLLM~\cite{qin2024toolllm}) attempt to train models to memorize thousands of API signatures, they still suffer from parameter drift and execution stochasticity.
+
+\textbf{Compiled software is the ultimate moat.} By packaging exact algorithmic routines in \texttt{skill.py} and immutable reference taxonomies in \texttt{Corpus}, an 8B parameter model achieves $100\%$ algorithmic execution accuracy without burning parameters on disposable logic.
+
+\subsection{Empirical Cost Economics: Multi-Turn Scaling}
+\label{subsec:cost_economics}
+
+To rigorously quantify the economic divergence between paradigms, we evaluate a production pipeline executing three coordinated skills (Email Communication, Corporate Registry Verification, and Context Compression) across $N = 1,000$ multi-turn sessions.
+
+The cost functions are governed by:
+\begin{align}
+\mathcal{C}_{\text{prompt}} &= \sum_{i=1}^N \left( T_{\text{sys}} + T_{\text{ctx}}^{(i)} \right) P_{\text{in}} + T_{\text{code}}^{(i)} P_{\text{out}} \label{eq:cost_prompt_formal} \\
+\mathcal{C}_{\text{skillware}} &= \sum_{i=1}^N \left( T_{\text{brief}} + T_{\text{ctx}}^{(i)} \right) P_{\text{in}} + T_{\text{call}}^{(i)} P_{\text{out}} + 0_{\text{logic}} \label{eq:cost_skillware_formal}
+\end{align}
+
+As documented in Figure~\ref{fig:cost_comparison}:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Dynamic Code Generation (Frontier LLM):} Costs \$15.58 per 1,000 turns due to voluminous prompt context and high output token synthesis fees.
+  \item \textbf{Skillware Directives (Frontier LLM):} Reduces cost to \$9.11 by replacing synthesized code with concise JSON tool calls.
+  \item \textbf{Skillware Brief Mode (Frontier LLM):} Compresses tool documentation into 30-token signatures, dropping cost to \$2.89.
+  \item \textbf{Skillware + Local 8B SLM:} Completely eliminates cloud API costs, running locally on commodity consumer hardware (e.g., NVIDIA RTX 4090 or Apple M-series silicon) at an amortized energy cost of \textbf{\$0.42 per 1,000 turns}---a \textbf{97.3\% operational expenditure reduction}.
+\end{itemize}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.96\linewidth]{figures/fig04_cost_cascade.png}
+\caption{Cost cascade per 1,000 tasks under \textsc{Skillware-Bench}: transitioning from cloud frontier models (\$15.58) to equipped local SLMs (\$0.42) yields a $97.3\%$ ($37\times$) operating cost reduction.}
+\label{fig:cost_comparison}
+\label{fig:cost_economics}
+\end{figure}
+
+This economic divergence is further dissected in Figures~\ref{fig:token_ledger} and~\ref{fig:completion_bloat}. At the granular per-call level, an unequipped agent consumes a median of $5{,}520$ tokens to complete a successful tool invocation, driven by redundant schema prefill ($1{,}840$ tokens), retry friction ($940$ tokens), and code debugging loops ($780$ tokens). Equipping the agent with Skillware contracts per-call consumption to $1{,}620$ tokens---a net savings of \textbf{70.6\%}.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.96\linewidth]{figures/fig20_token_ledger_per_call.png}
+\caption{Per-call token ledger audit under \textsc{Skillware-Bench}: caching preambles and removing code repair loops yields a $70.6\%$ per-call token reduction ($5{,}520 \to 1{,}620$).}
+\label{fig:token_ledger}
+\end{figure}
+
+Crucially, as shown in Figure~\ref{fig:completion_bloat}, Skillware eliminates the output completion bloat characteristic of prompted models: while vanilla agents expend $64.3\%$ of their generated tokens emitting fragile script boilerplate and $21.2\%$ on apologies or replanning, Skillware-equipped agents generate only $556$ tokens per task, with $86.4\%$ dedicated directly to actionable, structured tool dispatch.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.96\linewidth]{figures/fig47_completion_bloat_ratio.png}
+\caption{Completion tokens per task under \textsc{Skillware-Bench}: disposable boilerplate and replanning ($984$ tokens) vs.~actionable structured tool dispatch ($556$ tokens).}
+\label{fig:completion_bloat}
+\end{figure}
+
+The macro-level consequences of this token compression are demonstrated in Figure~\ref{fig:token_budget_recall}, which measures cumulative task pass rates as a function of strict token budget caps across all 736 experimental conditions. Under tight token constraints ($1{,}000$ to $4{,}000$ tokens), unequipped models fail over $58\%$ of trials due to prompt prefill overhead and script re-synthesis. In contrast, Skillware achieves an $82.3\%$ pass rate at a modest budget of $8{,}000$ tokens. Remarkably, this exceeds the terminal pass rate achieved by unassisted vanilla models even when granted an unconstrained budget of $64{,}000$ tokens ($81.5\%$)---demonstrating a decisive \textbf{$8\times$ token budget efficiency advantage}.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.96\linewidth]{figures/fig38_recall_at_token_budget.png}
+\caption{Task pass rate under strict token budgets (736 conditions): Skillware reaches $82.3\%$ pass rate at $8{,}000$ tokens, surpassing unequipped models given an unconstrained $64{,}000$ budget ($81.5\%$)---an $8\times$ efficiency advantage.}
+\label{fig:token_budget_recall}
+\label{fig:recall_at_token_budget}
+\end{figure}
+
+\subsection{The Empirical Parameter Paradox: Asymmetric Lift Across Model Scales}
+\label{subsec:slm_empirical_lift}
+
+While the cost functions in Equations~\eqref{eq:cost_prompt_formal}--\eqref{eq:cost_skillware_formal} demonstrate dramatic operational expense reductions, empirical testing reveals an even more profound structural phenomenon: \textbf{the marginal performance lift from Skillware is inversely proportional to baseline model scale}. 
+
+To evaluate this scaling effect, we benchmarked models across parameter scales ranging from compact 3B on-device models to 1.8T frontier mixture-of-experts under the \textsc{Skillware-Bench} evaluation harness~\cite{peilivanidis2026skillwarebench}. Figure~\ref{fig:parameter_paradox_frontier} plots the empirical Task Resolution and Governance Score across model scales for both the prompt-driven baseline and the Skillware-equipped configuration.
+
+Under the baseline prompt-driven regime, performance collapses precipitously when parameter scale drops below 70B: an unequipped 8B model (such as Llama 3.2 8B or Qwen 2.5/3.5 7B) achieves a composite score of only $56.0$, failing basic procedural sequences, emitting hallucinated shell code, and missing required constitutional dry-run previews. Because transformer attention cannot natively execute stateful symbolic transformations without extensive parameter capacity, compact models struggle under the dual cognitive burden of reasoning \emph{and} ad-hoc code compilation.
+
+Equipping compact models with Skillware fundamentally alters this scaling relationship:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Asymmetric Marginal Lift:} While frontier models gain $+18.0$ to $+20.0$ points, 8B SLMs gain \textbf{$+32.0$ points} ($56.0 \to 88.0$), achieving a higher marginal return on capability equipping than massive foundation models.
+  \item \textbf{The Parity Inversion:} At $88.0$ composite points, an open-weight 8B SLM running locally on commodity consumer hardware systematically outperforms unequipped frontier foundation models, including unequipped Claude Sonnet 5 ($80.0$ composite points, corresponding to an $87.5\%$ binary pass rate on standard tasks) and GPT-5 ($79.0$).
+  \item \textbf{Inductive Schema Alignment in SLMs:} Compact models specifically instruction-tuned for tool execution (such as Llama 3.2 and Qwen 2.5/3.5) exhibit minimal conversational sycophancy or disclaimers. When relieved of the need to synthesize logic and restricted strictly to schema-constrained parameter selection ($f_{\text{SLM}}: \mathcal{X}_{\text{user}} \to p \in \mathcal{S}_{\text{in}}$), their parameter efficiency is maximized, yielding deterministic execution with zero cloud API dependency.
+\end{enumerate}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.96\linewidth]{figures/fig05_parameter_paradox.png}
+\caption{The SLM Parameter Paradox across scale under \textsc{Skillware-Bench}: equipped compact models hold a $+32.0$ point lead over baseline, matching or surpassing unequipped frontier cloud LLMs (dashed line: $80.0$ frontier baseline).}
+\label{fig:parameter_paradox_frontier}
+\end{figure}
+
+\subsection{Thermodynamic Efficiency, Data Sovereignty, and Air-Gapped Operation}
+\label{subsec:sovereignty}
+
+Beyond financial balance sheets, prompt-driven cloud execution exacts a staggering thermodynamic toll. Running multi-thousand-token prompts through multi-hundred-billion parameter cloud clusters can consume upwards of 29 watt-hours per complex interaction, requiring substantial electricity and evaporative datacenter cooling water. Firing massive frontier clusters to dynamically re-synthesize common string manipulations or JSON mappings is an unsustainable misallocation of planetary compute resources.
+
+Local silicon running quantized 3B--8B models (e.g., Llama-3-8B, Qwen-2.5-7B, or Phi-3) executing compiled Python capabilities reduces active power draw to fractions of a watt-hour per call.
+
+Furthermore, for sovereign defense entities, intelligence agencies, and healthcare institutions, cloud-based foundation models present an unacceptable operational risk: streaming proprietary code, medical records, or defense telemetry across external boundaries violates statutory privacy mandates and risks immediate revocation under geopolitical embargoes. Because Skillware bundles resolve all contracts, code, and lookup corpora locally, an operator can pin open-weights models and hard capabilities inside a \textbf{100\% air-gapped, zero-egress perimeter}. The system remains fully operational, completely auditable, and impervious to remote cloud outages.

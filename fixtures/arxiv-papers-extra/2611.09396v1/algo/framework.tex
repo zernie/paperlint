@@ -1,0 +1,52 @@
+{
+%
+\begin{algorithm}[t!]
+\caption{TACT}
+\label{algo:framework}
+%
+\begin{algorithmic}[1]
+\small
+\Input{Instance $I$, noise $\sigma$, \#samples $P$, learning rate $\alpha$}
+\Output{task assignment $\assignment$ and collision-free paths $\solutions$}
+%
+\State $\CostMatrix \leftarrow \funcname{InitCost}(I)$,\;
+$c\sub{best} \leftarrow \infty$,\;
+$\assignment\sub{best} \leftarrow \bot$,\;
+$\solutions\sub{best} \leftarrow \bot$
+\label{algo:framework:init}
+
+\While{not interrupted}
+%
+\For{$k = 1, \ldots, P$ \textbf{in parallel}}
+\label{algo:framework:parallel}
+\State $\CostMatrix'_k \leftarrow \CostMatrix + \sigma E_k$,
+where $E_k$ has i.i.d.\ $\mathcal{U}(0, 1)$ entries
+\label{algo:framework:noise}
+\State $\assignment_k \leftarrow \funcname{LinearSumAssignment}(\CostMatrix'_k)$
+\label{algo:framework:linear_assignment_with_noise}
+\State $\solutions_k \leftarrow \funcname{SolveMAPF}(\assignment_k)$
+\label{algo:framework:mapf}
+\State $c_k \leftarrow \funcname{GetCost}(\solutions_k)$
+\label{algo:framework:getcost}
+\EndFor
+%
+\State $k^\ast \leftarrow \arg\min_k c_k$
+\label{algo:framework:argmin}
+\If{$c_{k^\ast} < c\sub{best}$}
+\State $(\assignment\sub{best},\, c\sub{best},\, \solutions\sub{best})
+ \leftarrow (\assignment_{k^\ast},\, c_{k^\ast},\, \solutions_{k^\ast})$
+\label{algo:framework:track}
+\EndIf
+\State $\CostMatrix \leftarrow \funcname{UpdateMatrix}(\CostMatrix, \{(\assignment_k, \solutions_k)\}_{k=1}^{P}, \alpha)$
+\label{algo:framework:update}
+\EndWhile
+%
+\State $\solutions\sub{best} \leftarrow \funcname{SolveNearOptimalMAPF}(\assignment\sub{best})$
+\Comment{optional}
+\label{algo:framework:path-opt}
+%
+\State \Return $\assignment\sub{best}$, $\solutions\sub{best}$
+% %
+\end{algorithmic}
+\end{algorithm}
+}

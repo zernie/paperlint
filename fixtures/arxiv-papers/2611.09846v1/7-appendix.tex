@@ -1,0 +1,76 @@
+\section{Appendix}
+\subsection{List of Criteria}
+
+The following criteria list $L = \{L_1, \dots, L_n\}$, originally
+specified by Infosys, was used as the task specification governing the
+content and output format for the summarisation systems (paraphrased here only for readability).
+
+\begin{enumerate}[label=$L_{\arabic*}$:, leftmargin=2.2em]
+
+\item \textbf{Role framing.} The model is instructed to act as an expert in
+COBOL programming and documentation, tasked with analysing and categorising
+a given COBOL code snippet by rule classification and rule type.
+
+\item \textbf{No omission of code.} Every uncommented line of the input
+must appear in the \texttt{Segregated Code} field, in the exact order of
+the original source; no executable line may be skipped, even if it appears
+redundant or deeply nested.
+
+\item \textbf{Comment handling.} Lines beginning with comment indicators
+(e.g.\ \texttt{*}, \texttt{*---}) or inline comments, and any block visually
+separated as a comment, must be omitted from the segregated code.
+
+\item \textbf{Logical segregation.} Code must be grouped by logical
+function or condition (e.g.\ initialisation, adjustments, validations,
+aging rules), preserving the original COBOL structure and nesting within
+each group.
+
+\item \textbf{Business rule description.} Each code block must be
+accompanied by a business-readable description that explicitly covers
+every line of the corresponding segregated code, in presentation order,
+using a structured bullet hierarchy to
+represent nested logic.
+
+\item \textbf{Variable expansion.} All COBOL variable names must be
+expanded into plain English, followed by the original COBOL identifier in
+parentheses (e.g.\ ``total credit amount (TOT-CR-AMT-WS)'').
+
+\item \textbf{Conditional coverage.} Every conditional path (\texttt{IF},
+\texttt{ELSE}, \texttt{EVALUATE}, etc.) and its implications must be
+explicitly included in the business rule explanation.
+
+\item \textbf{Dependency-aware summarisation.} For every \texttt{PERFORM}
+statement in the snippet, the model must incorporate the supplied business
+summary of the corresponding dependent paragraph when summarising the
+calling paragraph; if no \texttt{PERFORM} statements are present, no
+statement about dependencies should be produced.
+
+\item \textbf{Strict output schema.} Output must be a single JSON array of
+objects, each containing exactly the fields: \texttt{Rule Type},
+\texttt{Rule Classification}, \texttt{Paragraph Name}, \texttt{Segregated
+Code} (array of strings), \texttt{Business Rule Extraction} (string), and
+\texttt{Business Rule Extraction Summary} (string).
+
+\item \textbf{Single-line string encoding.} All multi-line content
+(e.g.\ business rule explanations) must be encoded as single-line JSON
+strings using \texttt{\textbackslash n} as the line separator; no raw
+multi-line text blocks are permitted.
+
+\item \textbf{No empty or null fields.} Every field in every object must
+be populated; empty strings or null values are disallowed.
+
+\item \textbf{Output purity.} The response must contain only the JSON
+array, no markdown, code fences, explanatory text, or extraneous
+whitespace before or after the JSON structure.
+
+\item \textbf{1:1 traceability.} Every line of code must map to exactly
+one logical segment, and every logical segment's code must be fully and
+uniquely accounted for in its accompanying business rule explanation.
+
+\item \textbf{No interpretation beyond the source.} The model must not
+alter, reinterpret, or infer missing context beyond what is present in
+the COBOL code and the supplied dependency descriptions.
+
+\end{enumerate}
+
+%\subsection{Architecture and Prompts}

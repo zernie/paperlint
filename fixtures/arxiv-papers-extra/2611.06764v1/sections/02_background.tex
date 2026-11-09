@@ -1,0 +1,31 @@
+\section{Agent Access Control}\label{sec:background}
+\subsection{An Agentic Workflow}
+An agentic workflow turns a user's goal into actions whose details emerge during execution. An orchestrating agent gathers information, selects tools, and revises its plan as results arrive. It may delegate parts of the task to other agents, each with its own identity and credentials. The authority available to the workflow therefore depends on the participating principals and services, as well as on the actions the agent selects.
+
+Consider an assistant asked to prepare a report from approved records and deliver the reviewed result to a designated recipient. The assistant retrieves the records, prepares a draft, delegates review, and sends the approved report. It can process the records locally or use a hosted service, but the latter transfers inputs to another service. Delegated review introduces another principal, and delivery releases information outside the organization. These choices make authorization relevant throughout the workflow, from selecting a processing strategy to releasing the result.
+
+The workflow can also outlast the conditions under which an action was approved. A changed contact or withdrawn approval may invalidate a queued message, while a failed acknowledgement can leave delivery uncertain. The assistant must account for these changes alongside delegated work, acquired data, and pending effects.
+
+\subsection{Authorization in Agentic Workflows}
+\emph{Agent access control} determines which effects an agent workflow is authorized to produce. It governs access to resources, tool use, information propagation, and delegation. Principals include users, orchestrating and delegated agents, and services; organizational policies and resource owners impose additional constraints. Protected resources include source documents, derived drafts, credentials, and operations on external services. Two tasks using the same model can have different identities, grants, and authorization state.
+
+A task grant specifies the authority delegated to an agent under stated conditions. The user's privileges bound what they can delegate under organizational policy; the grant identifies the operations and resources actually delegated. Tool availability indicates what the agent can invoke, while authorization determines which invocations are permitted for this task.
+
+An agent workflow requires separate authorization decisions at each trust boundary. As Figure~\ref{fig:workflow} shows, reading a record requires source access, using a hosted processor requires permission to disclose its inputs, and delegating review requires authority to share the draft with another principal. Final delivery must satisfy the grant's content, recipient, and approval conditions. A valid permission at one boundary does not establish permission at the next: access to a document, for example, need not include authority to transmit it.
+
+\begin{figure}[t]
+\centering
+\Description{The illustrated agent workflow separates organization resources and execution, a delegated reviewer, and external services. Dashed arrows carry grants and policy updates; solid arrows show execution or data exchange. Numbered checks concern read scope, delegation, data flow to a hosted processor, and release to the authorized recipient.}
+\includegraphics[width=\linewidth]{figures/01_workflow.pdf}
+\caption{Authorization boundaries in an illustrative agent workflow: (1) resource access, (2) scoped delegation, (3) hosted-service disclosure, and (4) external release.}
+\label{fig:workflow}
+\end{figure}
+
+Enforcing the grant requires coordinated controls over principals, operations, and data. Authentication establishes who is acting; action policies constrain what that principal may do; information-flow policies govern how accessed data may be used and released. These controls operate at the interfaces where resources are read, tools execute, and information crosses trust boundaries~\cite{saltzer,denning}. Their responsibilities must be explicit so that a restriction remains enforceable as execution moves between components.
+
+\subsection{What Makes Agent Access Control Challenging?}
+First, an agent's \textbf{execution plan is often incomplete} when authority is delegated. It may discover a resource or select a different tool only after examining intermediate results. An initial grant must support useful discovery while bounding the actions that can follow. This connects agent authorization to the requirements problem identified by Harel and Marron: intended behavior may be incomplete, evolving, and difficult to articulate before interaction with the environment~\cite{requirements}.
+
+Second, information obtained during execution can \textbf{influence decisions without granting authority}. A retrieved document may supply facts for the report, while a trusted directory may resolve the authorized recipient. Neither role automatically permits the source to authorize additional disclosure. Distinguishing these roles requires knowing where the information comes from (its provenance) and how each source is permitted to influence decisions. The challenge is to support legitimate adaptation while preventing contextual instructions from acquiring authority merely by entering the agent's context~\cite{conseca,camel,fides}.
+
+Third, authorization must remain valid across \textbf{concurrent work and delayed effects}. A delegated agent can continue after the parent changes its plan, a cached result can survive loss of source access, and a retry can repeat an operation whose outcome is unknown. Checking the initiating call alone cannot resolve these dependencies. Access control must account for active delegates, derived data, and pending operations throughout execution. The next section examines mechanisms that address different parts of this authorization chain.

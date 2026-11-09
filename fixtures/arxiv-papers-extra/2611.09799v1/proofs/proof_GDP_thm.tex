@@ -1,0 +1,148 @@
+\begin{lemma}[Cameron-Martin Lemma, \citealp{mirshani2019formal}]
+    \label{lemma: Cameron-Martin Lemma}
+    Let $\mathbb{B}$ be a real separable Banach space, and let $Z\sim\mathcal N_{\mathbb B}(0,C)$ be a centered Gaussian random element with its Cameron--Martin space $\mathcal H_C$. Let $S:\mathcal X^n\to\mathbb B$ be a measurable deterministic summary compatible with $Z$. For $h\in\mathcal H_C$, let $T_h$ denote the associated measurable Gaussian linear functional. For $\sigma>0$, denote $Q$ as the probability measure over $\mathbb{B}$ induced by $\sigma Z$, and $\Set{P_X:X\in \mathcal{X}^n}$ the family of probability measures over $\mathbb{B}$ induced by $S(X)+ \sigma Z$, then every measure $P_X$ has a density over $\mathbb{B}$ with respect to $Q$, which is given by
+    \[
+    \frac{dP_X}{dQ}(y)
+    =
+    \exp\left\{
+    -\frac{1}{2\sigma^2}
+    \left(
+    \|S(X)\|_{\mathcal H_C}^2
+    -2T_{S(X)}(y)
+    \right)
+    \right\},
+    \qquad Q\text{-almost everywhere}.
+    \]
+\end{lemma}
+
+Here, $T_h$ is a measurable linear extension of $g\mapsto\langle h,g\rangle_{\mathcal H_C}$, defined on a full-Gaussian-measure linear subspace containing $\mathcal H_C$. The correspondence $h\mapsto T_h$ is linear, and $T_h(Z)\sim N(0,\|h\|_{\mathcal H_C}^2).$ These properties follow from the construction of the Gaussian linear functionals associated with the Cameron--Martin space in \citet[Section~2.2, Lemma~3.1]{mirshani2019formal}.
+
+\begin{proof}\textbf{of Theorem~\ref{thm: GDP_functional}.}
+Fix any two neighboring datasets $X\sim X'$. Let $P_X$ and $P_{X'}$ denote the laws induced by $S(X)+\sigma Z$ and $S(X')+\sigma Z$, respectively, and write $d=S(X')-S(X)\in\mathcal H_C$. If $d=0$, then $P_X=P_{X'}$ and $T(P_X,P_{X'})(\alpha)=1-\alpha\ge G_\mu(\alpha)$. Hence, suppose that $\|d\|_{\mathcal H_C}>0$.
+
+By Lemma~\ref{lemma: Cameron-Martin Lemma}, the log-likelihood ratio is
+\begin{align*}
+L(y)
+&:=\log\frac{dP_{X'}}{dP_X}(y)\\
+&=\log \left(\dfrac{d P_{X'}}{dQ}(y) / \dfrac{d P_X}{dQ}(y)\right)\\
+&=
+-\frac{1}{2\sigma^2}
+\left(
+\|S(X')\|_{\mathcal H_C}^2
+-\|S(X)\|_{\mathcal H_C}^2
+-2T_d(y)
+\right)\\
+&=
+\frac{1}{\sigma^2}T_d(y-S(X))
+-\frac{\|d\|_{\mathcal H_C}^2}{2\sigma^2},
+\end{align*}
+almost surely under either distribution.
+
+Define $U(y)=T_d(y-S(X))$, the Gaussian and translation properties of $T_d$ give
+\[
+U(Y)\sim
+\begin{cases}
+N(0,\sigma^2\|d\|_{\mathcal H_C}^2),
+& Y\sim P_X,\\[2pt]
+N(\|d\|_{\mathcal H_C}^2,
+  \sigma^2\|d\|_{\mathcal H_C}^2),
+& Y\sim P_{X'}.
+\end{cases}
+\]
+
+By the Neyman--Pearson lemma, for $\alpha\in(0,1)$, a most powerful level-$\alpha$ test is given by
+\[
+\psi(y) = \mathbf{1}(L(y)>\eta_\alpha)
+=\mathbf{1}(U(y)>c_{\alpha}).
+\]
+
+Thus $U(y)$ is the test statistic and the Type I error of $\psi$ is
+\begin{align*}
+    \alpha_\psi=\mathbb{E}_{P_X}[\psi(y)]
+    =P_X(U(y)>c_\alpha)
+    =1-\Phi\Bra{\dfrac{c_\alpha}{\sigma\|d\|_{\mathcal{H}_C}}}.
+\end{align*}
+
+When $\alpha_\psi\leq \alpha$, it follows that $c_\alpha\geq \sigma\|d\|_{\mathcal H_C}\Phi^{-1}(1-\alpha)$, and the type II error of $\psi$ is
+\begin{align*}
+    \beta_\psi
+    =1-\mathbb{E}_{P_{X'}}[\psi(y)]
+    =1-P_{X'}(U(y)>c_\alpha)
+    =\Phi\Bra{\dfrac{c_\alpha-\|d\|_{\mathcal{H}_C}^2}{\sigma\|d\|_{\mathcal{H}_C}}}.
+\end{align*}
+
+Combine the above results and recall $\|d\|_{\mathcal H_C}/\sigma \le \Delta_{\mathcal H_C}(S)/\sigma\le \mu$, we get
+\begin{align*}
+T(P_X,P_{X'})(\alpha)
+&=\inf_{\psi}\Set{\beta_\psi|\alpha_\psi\le\alpha}\\
+&=
+\Phi\left(
+\frac{\sigma\|d\|_{\mathcal H_C}\Phi^{-1}(1-\alpha)-\|d\|_{\mathcal H_C}^2}
+     {\sigma\|d\|_{\mathcal H_C}}
+\right)\\
+&=
+\Phi\left(
+\Phi^{-1}(1-\alpha)
+-\frac{\|d\|_{\mathcal H_C}}{\sigma}
+\right)\\
+&\ge
+\Phi\left(\Phi^{-1}(1-\alpha)-\mu\right)
+=
+G_\mu(\alpha),
+\end{align*}
+
+The cases where $\alpha=0,1$ follow by continuity. Since this holds for every neighboring data sets, $\widetilde S(X)=S(X)+\sigma Z$ satisfies $\mu$-GDP.
+\end{proof}
+
+\begin{proof}\textbf{of Corollary~\ref{col: finite-dimension functional GDP}.}
+Take $\mathbb B=\mathcal H_m$. The covariance operator of $Z_m=\sum_{k=1}^m\xi_k\phi_k$ satisfies
+\[
+C_m\ell=\mathbb E[\ell(Z_m)Z_m]
+=\sum_{j,k=1}^m\mathbb E[\xi_j\xi_k]\ell(\phi_j)\phi_k
+=\sum_{k=1}^m\ell(\phi_k)\phi_k.
+\]
+For $g\in\mathcal H_m$, by the Riesz representation theorem, the functional $\ell_g(f)=\langle f,g\rangle_{\mathcal H_m}$ satisfies $C_m\ell_g=g$. Hence $C_m(\mathcal H_m^*)=\mathcal H_m$, and
+\[
+\langle C_m\ell_g,C_m\ell_v\rangle_{\mathcal H_{C_m}}
+=\ell_g(C_m\ell_v)=\langle g,v\rangle_{\mathcal H_m}.
+\]
+Thus $\mathcal H_{C_m}=\mathcal H_m$ isometrically; the covariance corresponds to the identity under the Riesz identification with the dual.
+
+Orthonormality gives
+\[
+\|S(X)-S(X')\|_{\mathcal H_{C_m}}^2
+=\int_0^1\bigl[(\theta(X)-\theta(X'))^\top\phi(t)\bigr]^2\,dt
+=\|\theta(X)-\theta(X')\|_2^2.
+\]
+Apply Theorem~\ref{thm: GDP_functional} with sensitivity $\Delta_{\mathcal{H}_m}$. Also $S(X)+\sigma Z_m=(\theta(X)+\sigma\xi)^\top\phi$, where $\xi\sim N(0,I_m)$. In Algorithm~\ref{alg: FTP} each fitted coefficient vector has norm at most $B'$, so $\Delta_{\mathcal{H}_m}\le2B'/n$, proving the stated scale and implementation.
+\end{proof}
+
+\begin{proof}\textbf{of Corollary~\ref{col: RKHS GDP}.}
+Realize the continuous version of $Z_K$ as a Borel Gaussian random element in $\mathbb B=C[0,1]$. Borel measurability follows because continuous paths are determined by evaluations on a countable dense set; continuous linear functionals can be approximated by finite linear combinations of evaluations. Every $\ell\in\mathbb B^*$ is represented by a finite signed Borel measure $\nu_\ell$ through $\ell(f)=\int_0^1 f(s)\,\nu_\ell(ds)$. Hence
+\[
+(C_K\ell)(t)=\mathbb E[\ell(Z_K)Z_K(t)]
+=\int_0^1 K(t,s)\,\nu_\ell(ds).
+\]
+Fubini's theorem applies because $K$ is bounded on the compact domain and $\nu_\ell$ has finite total variation.
+
+The kernel sections depend continuously on their location in RKHS norm, since
+\[
+\|K(s,\cdot)-K(t,\cdot)\|_{\mathcal H_K}^2
+=K(s,s)+K(t,t)-2K(s,t).
+\]
+Thus $C_K\ell=\int K(s,\cdot)\,\nu_\ell(ds)$ is a well-defined $\mathcal H_K$-valued integral. For $\ell,g\in\mathbb B^*$,
+\[
+\langle C_K\ell,C_Kg\rangle_{\mathcal H_K}
+=\int\!\int K(s,t)\,\nu_\ell(ds)\nu_g(dt)
+=\ell(C_Kg)
+=\langle C_K\ell,C_Kg\rangle_{\mathcal H_{C_K}}.
+\]
+
+The evaluation functional $\delta_t(f)=f(t)$ satisfies $C_K\delta_t=K(t,\cdot)$. Consequently $C_K(\mathbb B^*)\subseteq\mathcal H_K$ contains a dense span of kernel sections. Completing this range proves $\mathcal H_{C_K}=\mathcal H_K$ isometrically. The identification agrees inside $C[0,1]$, since $\|f\|_\infty\le\sup_{t\in[0,1]}\sqrt{K(t,t)}\,\|f\|_{\mathcal H_K}$.
+
+Theorem~\ref{thm: GDP_functional} applies with sensitivity $\Delta_{\mathcal{H}_K}$, and Algorithm~\ref{alg: FTP} has $\Delta_{\mathcal{H}_K}\le2B'/n$. Grid evaluation is measurable post-processing, and the GP definition gives $(Z_K(t_1),\ldots,Z_K(t_T))^\top\sim N(0,K_T)$. This proves both the full-function guarantee and the grid implementation.
+\end{proof}
+
+\begin{proof}\textbf{of Proposition~\ref{prop: GDP for PTF}.}
+Since $\widetilde{x}$ satisfies $\mu$-GDP by composition, and $\mathcal F_{\mathrm{PTF}}:\mathcal X\rightarrow\mathbb{B}$ is a deterministic measurable mapping, the result follows immediately from the post-processing property.
+\end{proof}

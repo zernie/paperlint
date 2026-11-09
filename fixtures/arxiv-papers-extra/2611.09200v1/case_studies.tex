@@ -1,0 +1,73 @@
+% Case tables follow the complete aggregate analysis.
+\begingroup
+\setlength{\intextsep}{6pt}
+\begin{table}[H]
+\noindent\normalsize Table~\ref{tab:case8360} presents a dossier question whose gold set combines a base provision with an amendment. The proposed method improves on control by recovering the missing gold amendment in four of five runs. The amendment changes both the required number of dossier sets and the submission format, making it complementary to the base provision.
+\par\vspace{5pt}
+\centering\small
+\emergencystretch=1.5em
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.08}
+\caption{Improvement over control: companion recovery (question 8360).}
+\label{tab:case8360}
+\begin{tabularx}{\linewidth}{>{\columncolor{tableband}\raggedright\arraybackslash}p{1.8cm}>{\raggedright\arraybackslash}X}
+\hline
+\textbf{Field} & \textbf{Question, evidence and outcome}\\\hline
+Vietnamese & \emph{Hồ sơ đăng ký bình chọn sản phẩm công nghiệp nông thôn tiêu biểu cấp huyện bao gồm những gì?}\\\hline
+English & What does the application dossier for district-level selection of outstanding rural industrial products include?\\\hline
+Legal text & \textbf{Base:} Circular~26/2014/TT-BCT, Art.~12 (\texttt{49460}), lists application documents and requires ``chuẩn bị \textbf{01 bộ hồ sơ}'' (prepare one dossier).
+\par\smallskip
+\textbf{Amendment:} Circular~14/2018/TT-BCT, Art.~1(6) (\texttt{49474}), amends Art.~12(1): ``gửi \textbf{02 (hai) bộ hồ sơ} (kèm theo bản \textbf{hồ sơ điện tử})''. It requires two dossier sets plus an electronic dossier.\\\hline
+Selections & $G=\{49460,49474\}$. Control returns $C=\{49460\}$ in all five runs. Proposed returns $P=G$ in seeds~0, 1, 2 and~4, and $P=\{49460\}$ in seed~3.\\
+\hline
+\end{tabularx}
+\end{table}
+\begin{table}[H]
+\noindent\normalsize Table~\ref{tab:case411} presents an inheritance question whose gold Articles provide complementary rules on the scope of statutory succession and equal shares. Compared with control, the proposed method removes the same-law non-gold Article in all five runs. Art.~650 remains missing in every run, so the improvement leaves the benchmark evidence incomplete.
+\par\vspace{5pt}
+\centering\small
+\emergencystretch=1.5em
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.08}
+\caption{Partial improvement over control: distractor removal (question 411).}
+\label{tab:case411}
+\begin{tabularx}{\linewidth}{>{\columncolor{tableband}\raggedright\arraybackslash}p{1.8cm}>{\raggedright\arraybackslash}X}
+\hline
+\textbf{Field} & \textbf{Question, evidence and outcome}\\\hline
+Vietnamese & \emph{Con trong giá thú và con ngoài giá thú có được hưởng di sản thừa kế như nhau hay không?}\\\hline
+English & Are children born within and outside marriage entitled to equal inheritance?\\\hline
+Legal text & All three Articles belong to Civil Code~91/2015/QH13.
+\par\smallskip
+\textbf{Scope:} Art.~650 (\texttt{53420}) specifies when statutory succession applies. Art.~650(1)(a), ``\textbf{Không có di chúc}'' (there is no will), is one such circumstance.
+\par\smallskip
+\textbf{Equal shares:} Art.~651 (\texttt{53421}) identifies heirs. Art.~651(2) states ``Những người thừa kế \textbf{cùng hàng} được hưởng phần di sản \textbf{bằng nhau}.'' Heirs in the same rank receive equal shares.
+\par\smallskip
+\textbf{Distractor:} Art.~652 (\texttt{53422}) concerns inheritance by representation for grandchildren and great-grandchildren.\\\hline
+Selections & $G=\{53420,53421\}$. In all five runs, $C=\{53421,53422\}$ and $P=\{53421\}$.\\
+\hline
+\end{tabularx}
+\end{table}
+\endgroup
+\newpage
+
+\begin{table}[H]
+\noindent\normalsize Table~\ref{tab:case7758} presents a record-retention question whose gold set contains a base provision and its replacement. Control returns both gold Articles in all five runs, whereas the proposed method drops the amendment in two of five runs. The replacement rule specifies electronic storage while still requiring selected records to be retained in writing.
+\par\vspace{5pt}
+\centering\small
+\emergencystretch=1.5em
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.08}
+\caption{Failure relative to control: amendment loss (question 7758).}
+\label{tab:case7758}
+\begin{tabularx}{\linewidth}{>{\columncolor{tableband}\raggedright\arraybackslash}p{1.8cm}>{\raggedright\arraybackslash}X}
+\hline
+\textbf{Field} & \textbf{Question, evidence and outcome}\\\hline
+Vietnamese & \emph{Những tài liệu đánh giá xếp loại chất lượng công chức nào sẽ được lưu trữ?}\\\hline
+English & Which documents on civil servants' performance assessment and classification will be archived?\\\hline
+Legal text & \textbf{Base:} Decree~90/2020/NĐ-CP, Art.~22 (\texttt{28455}), lists assessment records retained in personnel files.
+\par\smallskip
+\textbf{Amendment:} Decree~48/2023/NĐ-CP, Art.~1(2) (\texttt{58296}), replaces Art.~22. Records ``được lưu giữ bằng hình thức \textbf{điện tử}'' (are retained electronically). Items~2 and~4 (``khoản 2 và khoản 4'') of the replacement Art.~22 also ``lưu bằng \textbf{văn bản}'' (remain in writing). These items concern assessment forms and conclusions/notices.\\\hline
+Selections & $G=\{28455,58296\}$. Control returns $C=G$ in all five runs. Proposed returns $P=G$ in seeds~0, 1 and~2, and $P=\{28455\}$ in seeds~3 and~4.\\
+\hline
+\end{tabularx}
+\end{table}

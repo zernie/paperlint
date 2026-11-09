@@ -1,0 +1,70 @@
+\begin{table}[H]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.12}
+\caption{The 16 tools available to the agents and grouped into  seven families of task}\label{tab:retail-tools}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{.22\textwidth}>{\raggedright\arraybackslash}p{.75\textwidth}@{}}
+\toprule Family suffix & Tool names\\\midrule
+
+\feat{identity} & \feat{find_user_id_by_email}, \feat{find_user_id_by_name_zip}\\
+\feat{user_read} & \feat{get_user_details}\\
+\feat{order_read} & \feat{get_order_details}\\
+\feat{catalog_read} & \feat{get_item_details}, \feat{get_product_details}, \feat{list_all_product_types}\\
+\feat{pending_write} & \feat{cancel_pending_order}, \feat{modify_pending_order_address}, \feat{modify_pending_order_items}, \feat{modify_pending_order_payment}\\
+\feat{resolution_write} & \feat{exchange_delivered_order_items}, \feat{modify_user_address}, \feat{return_delivered_order_items}\\
+\feat{utility} & \feat{calculate}, \feat{transfer_to_human_agents}\\
+\bottomrule
+\end{tabular}
+\end{table}
+\begin{table}[H]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.12}
+\caption{The 24 Retail SNMM inputs, used for all continuations. Yes/no inputs
+are one for yes and zero for no.}\label{tab:retail-snmm}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{.34\textwidth}r>{\raggedright\arraybackslash}p{.56\textwidth}@{}}
+\toprule Input & Count & Meaning\\\midrule
+\feat{intercept} & 1 & A constant value of one.\\
+Proposed tools (\feat{tool:}) & 16 & One input for each tool in Table~\ref{tab:retail-tools}: whether the current proposal includes that tool.\\
+\feat{prior_error} & 1 & An earlier tool call returned an error.\\
+\feat{prior_correction} & 1 & An earlier review changed a proposal.\\
+\feat{retry_tool} & 1 & At least one proposed tool was used earlier.\\
+\feat{used:catalog_read} & 1 & An earlier product or catalog read succeeded.\\
+\feat{used:order_read} & 1 & An earlier order-details read succeeded.\\
+\feat{write_x_prior_error} & 1 & The proposal contains a write, and an earlier tool call returned an error.\\
+\feat{write_x_affirmation} & 1 & The proposal contains a write, and an earlier user message contains a confirmation phrase.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+ A confirmation phrase matches
+\texttt{yes|confirm|go ahead|proceed} as whole words, ignoring capitalization.
+We count a tool result as an error if its error flag is set or its text starts
+with \texttt{error}.
+
+\begin{table}[H]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.12}
+\caption{The 41 features for the Retail nuisance models. }\label{tab:retail-nuisance}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{.34\textwidth}r>{\raggedright\arraybackslash}p{.56\textwidth}@{}}
+\toprule Inputs & Count & Meaning\\\midrule
+Proposed tools (\feat{tool:}) & 16 & The same 16 tool inputs as in Table~\ref{tab:retail-snmm}.\\
+Current tool families (\feat{current:}) & 7 & For each family in Table~\ref{tab:retail-tools}, whether the proposal includes a tool from that family.\\
+Earlier successful families (\feat{used:}) & 7 & For each family, whether an earlier call from that family succeeded.\\
+Earlier events & 5 & Earlier error, earlier correction, and repeated tool (defined above); any earlier review assignment (\feat{prior_verification}); earlier user confirmation (\feat{user_affirmation_seen}).\\
+\feat{n_prior_tools}, \feat{n_prior_errors}, \feat{n_prior_verifications}, \feat{n_proposed_tools} & 4 & Numbers of earlier tool results, earlier errors, earlier review assignments, and calls in the current proposal, respectively.\\
+\feat{source_cohort_extension} & 1 & Whether the task comes from the added-task set.\\
+\feat{eligible_position_zero_based} & 1 & The number of review opportunities before the current proposal.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+To predict terminal success, we also include the current review assignment
+and earlier decision records. Each earlier record contains the 39 inputs in
+the first five rows of Table~\ref{tab:retail-nuisance} and its review assignment.
+We reserve 28 slots for GPT-5 nano and 14 for Claude Haiku; unused slots are zero.
+
+The models used to account for later reviews use the 41 current inputs above,
+plus one yes/no input for each possible decision number. Only the input for
+the current decision number is one.

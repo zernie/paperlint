@@ -1,0 +1,100 @@
+\section{Preliminary Investigation}
+The framework is based on the following working hypothesis: Axial preload produces a repeatable deformation pattern on the bolt-head front face; if this pattern can be detected with sufficient signal-to-noise ratio, it can serve as an optical indicator for preload estimation. Therefore, a preliminary analysis was conducted to test whether the expected deformation magnitude is physically observable.
+This sequence is necessary because the optical learning task is only meaningful if the underlying mechanical signal can first be confirmed independently. The preliminary investigation therefore does not aim to demonstrate a complete predictive model. Instead, it evaluates whether preload produces a repeatable and measurable deformation of the bolt-head front face that can later serve as a physically interpretable input for image-based estimation.
+
+\subsection{Geometric layout Joint and Measurement Region}
+The initial reference case is an M16 ISO 4017 hex-head bolt of strength class 8.8. The selected optical measurement region is the visible bolt-head front face, because it remains accessible after assembly and contains the surface on which preload-induced strain and deformation can be observed. The washer, clamped plates, nut, and shank are not treated as visually measured regions in the first study. Their dimensions are controlled by the test setup and, if required, can be supplied as metadata.
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.95\linewidth, trim=0cm 0cm 0.5cm 0cm, clip, keepaspectratio]{Main/figures/BJ.png}
+    \caption{Bolted-joint geometrical layout and optical measurement region. The study focuses on the deformation of the visible front face of the bolt head while the joint geometry is kept fixed.}
+    \label{fig:layout}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Mechanical Observability}
+The feasibility of PreForceVision depends first on the physical observability of the bolt-head deformation. Preliminary results were obtained on the given geometrical layout. First, a finite-element simulation applied a preload force of \SI{90}{\kilo\newton}, corresponding approximately to \SI{90}{\percent} of the yield strength for the selected strength class. The simulation indicates a concave deformation of the bolt-head front face, with an approximate central depression of \SI{12}{\micro\meter}. The corresponding surface deformation is approximately \SI{0.1}{\percent}. Figure~\ref{fig:prelim_fem} shows the simulated total and directional deformation patterns. The deformation was visually amplified for interpretation; the physical displacement magnitude remains in the micrometer range.
+%\begin{figure}[!h]
+  %  \centering
+   %  \begin{subfigure}[b]{0.48\textwidth}
+    %    \centering
+     %    \includegraphics[width=\textwidth, keepaspectratio]{Main/figures/preliminary/FEM-1.png}
+      %   \caption{}
+       %  \label{fig:fem-1}
+    %\end{subfigure}
+    %\hfill
+     %\begin{subfigure}[b]{0.49\textwidth}
+      %  \centering
+       %  \includegraphics[width=\textwidth, keepaspectratio]{Main/figures/preliminary/FEM-3.png}
+        % \caption{}
+        % \label{fig:corr_levels}
+     %\end{subfigure}
+    %\caption{Simulation of an M16 screw with a preload force of 90 kN. This corresponds to 90\% of the yield strength for a strength class of 8.8.
+%}
+ %   \label{fig:corrosion-chamber-image}
+%\end{figure}
+
+\begin{figure*}[t]
+\centering
+\begin{minipage}{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth]{Main/figures/preliminary/FEM-1.png}
+\end{minipage}\hfill
+\begin{minipage}{0.48\textwidth}
+\centering
+\includegraphics[width=0.92\linewidth]{Main/figures/preliminary/FEM-3.png}
+\end{minipage}
+\caption{Preliminary finite-element evidence of preload-induced bolt-head deformation for an M16 property class 8.8 bolt at \SI{90}{\kilo\newton}. The results indicate an approximately \SI{12}{\micro\meter} depression of the bolt-head front face and approximately \SI{0.1}{\percent} surface deformation. The plotted deformation is used here to illustrate the spatial pattern and is not a field-ready optical measurement.}
+\label{fig:prelim_fem}
+\end{figure*}
+
+These simulated compressions are consistent with strain-gauge measurements, which were further obtained as a second preliminary analysis from a sensor-integrated bolt. Three strain gauges mounted on the bolt head, seen in Figure~\ref{fig:sensor-integrated}, were evaluated at preload levels of \SI{30}{\kilo\newton}, \SI{60}{\kilo\newton}, and \SI{90}{\kilo\newton}. The mean measured strain increased in magnitude from \SI{-0.046}{\percent} at \SI{30}{\kilo\newton} to \SI{-0.116}{\percent} at \SI{90}{\kilo\newton}, as summarized in Table~\ref{tab:strain_gauge}. The agreement in order of magnitude between simulation and strain measurement supports the assumption that the bolt-head face contains a preload-sensitive mechanical signature.
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\linewidth, keepaspectratio, trim= 7.6cm 4.7cm 7.6cm 4.7cm, clip]{Main/figures/sensorB-7.jpg}
+    \caption{Sensor-Integrated Bolt used in preliminary investigation: strain-gauge measurements on the bolt head}
+    \label{fig:sensor-integrated}
+\end{figure}
+\begin{table}[t]
+\caption{Preliminary strain-gauge measurements on the bolt head. Negative values indicate compressive strain on the measured surface.}
+\label{tab:strain_gauge}
+\centering
+\begin{tabular}{ccccc}
+\toprule
+Preload & Gauge 1 & Gauge 2 & Gauge 3 & Mean \\
+\si{\kilo\newton} & \si{\percent} & \si{\percent} & \si{\percent} & \si{\percent} \\
+\midrule
+30 & -0.056 & -0.035 & -0.048 & -0.046 \\
+60 & -0.084 & -0.069 & -0.094 & -0.082 \\
+90 & -0.129 & -0.102 & -0.117 & -0.116 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A third preliminary comparison used a Keyence VL-800 optical 3D measuring device based on stripe light projection. A bolt was measured before and after assembly at \SI{200}{\newton\meter}. The measurement in the assembled state was superimposed on the initial state and fitted using a least-squares alignment. The resulting false-color map shows positive relative displacement in red and negative relative displacement in blue. The center of the bolt head exhibits a depression of approximately \SI{10}{\micro\meter}--\SI{20}{\micro\meter} relative to the edge region, as shown in Figure~\ref{fig:prelim_optical}. The spatial trend is comparable to the FEM result, namely a central depression surrounded by a less-deformed edge region.
+
+\begin{figure*}[t]
+\centering
+\begin{minipage}{0.45\textwidth}
+\centering
+\includegraphics[width=0.6\linewidth]{Main/figures/preliminary/optical-mesurment-1.png}
+\end{minipage}\hfill
+\begin{minipage}{0.45\textwidth}
+\centering
+\includegraphics[width=0.6\linewidth]{Main/figures/preliminary/optical-mesurment-2.png}\hfill
+\end{minipage}
+\caption{Preliminary optical 3D comparison of the bolt-head front face before and after assembly. The measurement was obtained using a Keyence VL-800 stripe-light projection system. After least-squares alignment of the loaded state to the reference state, the center of the bolt head shows a depression of approximately \SI{10}{\micro\meter}--\SI{20}{\micro\meter} relative to the edge region.}
+\label{fig:prelim_optical}
+\end{figure*}
+
+These preliminary results support the physical basis of the proposed framework: the bolt-head front face deforms under preload, the deformation is measurable by high-resolution optical 3D measurement, and the strain response is consistent with sensor measurements. At the same time, they define the central risk. A \SI{10}{\micro\meter}--\SI{20}{\micro\meter} shape change is detectable with high-performance metrology, but it is not automatically recoverable from ordinary RGB or smartphone images. The subsequent framework, therefore, treats smartphone-based preload estimation as a feasibility target to be established through controlled image-pair acquisition, surface preparation, registration-quality assessment, and uncertainty-aware prediction.
+%\subsection{Mechanical Observability}
+%The first prerequisite is mechanical observability: the deformation of the bolt head face must be sufficiently large and well-structured to be measurable. Finite-element results from the preliminary investigation indicate a concave deformation pattern on the bolt-head face for an M16 8.8 bolt under axial preload. At \SI{90}{\kilo\newton}, the simulation predicts an approximately \SI{12}{\micro\meter} depression of the head face and an average surface deformation of about \SI{0.1}{\percent}. The minimum displacement appears near the central region, while the edge region remains relatively less depressed. This spatial structure is important because it provides more information than a single scalar measurement.
+
+%The strain-gauge results show the same order of magnitude. For preload levels of \SI{30}{\kilo\newton}, \SI{60}{\kilo\newton}, and \SI{90}{\kilo\newton}, the measured average strains were approximately \SI{-0.046}{\percent}, \SI{-0.082}{\percent}, and \SI{-0.116}{\percent}, respectively. Although these values were obtained from a sensor bolt and not from an optical image, they support the assumption that the bolt-head face responds systematically to preload.
+%A separate optical 3D comparison measurement using a Keyence VL-800 structured-light system compared the bolt head before and after tightening at \SI{200}{\newton\meter}. The loaded-state surface was superimposed on the initial state using a least-squares fit. The center of the head showed a depression of approximately \SIrange{10}{20}{\micro\meter} relative to the edge region, which is consistent with the simulated deformation trend. This result indicates that the deformation can be evaluated optically with appropriate instrumentation.
+%\begin{figure*}[t]
+ %   \centering
+   % \includegraphics[width=0.9\textwidth, trim=0.5cm 6cm 0.5cm 4.1cm, clip]{Main/figures/fig3_prelim.png}
+   % \caption{Preliminary evidence supporting the working hypothesis. Finite-element analysis, strain-gauge response, and optical 3D comparison consistently indicate a preload-dependent deformation signature on the bolt-head front face. The values shown in the present work are used to justify a controlled feasibility study rather than to claim final measurement accuracy.}
+    %\label{fig:preliminary}
+%\end{figure*}

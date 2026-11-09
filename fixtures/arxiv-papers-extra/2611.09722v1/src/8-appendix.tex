@@ -1,0 +1,102 @@
+\appendix
+\crefalias{section}{appendix}
+
+\section{KV Packing and Dataflow}
+\label{sec:operand-construction}
+
+\Cref{fig:dataflow} illustrates how \sys{} packs INT2 K values and constructs Tensor Core operands on Hopper and Blackwell.
+The same approach extends to INT2 V and INT4 K and V because cache packing arranges quantized values to match each Tensor Core operand layout, and the decode kernel constructs floating-point operands with shifts and masks.
+Quantizing K or V along tokens or channels changes how scales and offsets are grouped and where affine folding applies them (\Cref{sec:design-fold}), whereas the integer packing below depends only on the stored bit width and matrix operand layout.
+
+\subsection{Hopper: packing for register operands}
+
+Hopper packs K and V according to the register fragments that each consumer thread supplies to \texttt{wgmma}.
+For QK, the K operand has token-by-channel coordinates, as shown in \Cref{fig:dataflow-packing}.
+For PV, the V operand has channel-by-token coordinates, so \sys{} packs V values according to the transposed V tile.
+Both layouts let each consumer thread load contiguous packed words from shared memory and construct its register operands without gathering individual values.
+
+Each 32-bit packed word places the two quantized values for a pair of BF16 operands in fields sixteen bits apart.
+An INT2 word holds sixteen values, forming eight pairs; an INT4 word holds eight values, forming four pairs.
+A shift aligns both fields with their BF16 mantissas, and a masked merge combines them with a fixed BF16 bit pattern.
+The stored bit width sets the field spacing and the number of pairs per word.
+K and V differ only in the logical coordinates of those pairs and share the same pairwise register construction.
+Affine folding compensates for the resulting operand mapping through \Cref{eq:operand-transform}.
+
+The Hopper dataflow in \Cref{fig:dataflow-threads} therefore also applies to INT2 V and INT4 K and V.
+TMA copies the packed tiles from global to shared memory.
+Consumer threads construct BF16 operands in registers, and all four warps of a consumer warpgroup collectively issue \texttt{wgmma}.
+The QK product consumes K fragments, and the PV product consumes the transposed V fragments.
+
+\subsection{Blackwell: packing for shared-memory operands}
+
+The Blackwell kernel uses the same packed-word layout for K and V at each stored bit width.
+Both tensors store channels of a token together, with the values interleaved within each word for direct operand construction.
+The preparation warpgroup writes the constructed operands to the shared-memory layouts required by QK and PV.
+
+\paragraph{INT2 K and V.}
+Each 32-bit word holds sixteen integer values in eight four-bit groups.
+Group $j$ places $q_j$ in its low two bits and $q_{j+8}$ in its high two bits, for $j=0,\ldots,7$.
+For a packed word $w$, the kernel constructs two operand words:
+\begin{align*}
+  u_0 &= w \mathbin{\&} \texttt{0x33333333},\\
+  u_1 &= (w \gg 2) \mathbin{\&} \texttt{0x33333333}.
+\end{align*}
+Each output holds eight E2M1 operands, with the unused bits of each four-bit operand set to zero.
+The patterns for $q\in\{0,1,2,3\}$ represent $y\in\{0,0.5,1,1.5\}$, giving $y=q/2$.
+Affine folding compensates with $s'=2s$ and $z'=z$.
+The two masks and one shift construct sixteen operands without numeric conversion, accounting for the INT2 cost in \Cref{tab:operand-construction}.
+This is the Blackwell construction shown for K in \Cref{fig:dataflow-packing}; V uses the same bit operations.
+
+\paragraph{INT4 K and V.}
+Each 32-bit word holds eight integer values in four bytes.
+Byte $j$ places $q_j$ in its low four bits and $q_{j+4}$ in its high four bits, for $j=0,\ldots,3$.
+The corresponding construction is
+\begin{align*}
+  u_0 &= w \mathbin{\&} \texttt{0x0F0F0F0F},\\
+  u_1 &= (w \gg 4) \mathbin{\&} \texttt{0x0F0F0F0F}.
+\end{align*}
+Each output holds four E4M3 operands, with each integer in the low four bits of its byte.
+For $q\in\{0,\ldots,15\}$, these patterns represent $y=q\cdot2^{-9}$.
+Affine folding compensates with $s'=512s$ and $z'=z$.
+The two masks and one shift construct eight operands, accounting for the INT4 cost in \Cref{tab:operand-construction}.
+Marlin W4A8 uses the same INT4-to-E4M3 mapping for weights~\cite{lin2025marlinw4a8}; \sys{} applies it to unsigned KV values, whose construction needs no sign extraction.
+
+Seven of the sixteen INT4 bit patterns represent subnormal E4M3 values, for which the PTX specification leaves matrix-operand behavior undefined~\cite{nvidia2026ptx}.
+We test these subnormal values on B200 across both matrix-operand positions and both shared-memory layouts used by the kernel, and all matrix-instruction outputs match FP64 reference results.
+
+For both stored bit widths, the Blackwell dataflow follows \Cref{fig:dataflow-threads}.
+TMA copies packed K and V tiles to shared memory, the preparation warpgroup constructs the QK and PV operands in shared memory, and a separate issue thread launches \texttt{tcgen05}.
+The operand format changes from E2M1 for INT2 to E4M3 for INT4, while the division of work across copying, operand preparation, and matrix-product issue remains the same.
+
+\section{Quantization-Axis Combinations}
+\label{sec:appendix-axes}
+
+\input{figures/quant-axes}
+
+The main evaluation uses token-wise K and token-wise V with group size $g=128$, which applies acc-fold to QK and operand-fold to PV (\Cref{sec:design-fold}).
+To evaluate all four combinations of token-wise and channel-wise K and V, we benchmark \sys{} INT2 and INT4 on H100 and B200 across $B\in\{1,8\}$ and $KV\in\{32\mathrm{K},128\mathrm{K}\}$ at $H_Q=32$, $H_{KV}=8$, $D=128$, and $g=128$, following the timing methodology of \Cref{sec:eval} and verifying every output against an FP32 reference.
+
+\Cref{fig:quant-axes} compares the decode speed of the three channel-wise K and V combinations against token-wise K and V ($1.00$) at the same stored bit width and shape.
+On H100 (\Cref{fig:quant-axes-h100}), the channel-wise combinations run at $0.84$--$1.04\times$ the speed of token-wise K and V at INT2 and $0.91$--$1.07\times$ at INT4, corresponding to $2.08$--$4.00\times$ (INT2) and $1.75$--$3.35\times$ (INT4) speedups over FlashInfer BF16 across all four axis combinations.
+On B200 (\Cref{fig:quant-axes-b200}), the single-axis channel-wise combinations (\emph{K-ch / V-tok} and \emph{K-tok / V-ch}) run at $0.77$--$0.87\times$ the speed of token-wise K and V at INT2 and $0.80$--$0.92\times$ at INT4, while channel-wise K and V (\emph{K-ch / V-ch}) runs at $0.57$--$0.73\times$ at INT2 and $0.67$--$0.79\times$ at INT4, corresponding to $1.50$--$2.74\times$ (INT2) and $1.50$--$2.36\times$ (INT4) speedups over FlashInfer BF16 across all four combinations.
+Channel-wise K and channel-wise V read more scales and offsets and perform per-group work along the token dimension: operand-fold on channel-wise K scales $Q$ for each token group, while acc-fold on channel-wise V rescales group-local PV partial results across token groups.
+The relative gap is larger on B200 than on H100 for two architectural reasons: first, the Blackwell kernel tiles the sequence at $256$ tokens rather than $64$, so $g=128$ splits each sequence tile into two sub-tile groups and runs both the $Q'$-plane builder and the per-group PV accumulator drain inside the correction warpgroup; second, Blackwell's \texttt{tcgen05} QK product consumes an FP8 E4M3 query operand rather than Hopper's BF16 operand, so each channel-wise K group must compute a per-row maximum and power-of-two scale to requantize $Q'$ to E4M3.
+With KIVI-style channel-wise K and token-wise V~\cite{liu2024kivi,hooper2024kvquant}, \sys{} runs at $0.89$--$1.04\times$ of token-wise speed on H100 ($2.42$--$3.56\times$ over FlashInfer BF16) and $0.85$--$0.87\times$ on B200 ($2.11$--$2.38\times$ over FlashInfer BF16) at INT2, and $0.96$--$1.07\times$ on H100 ($2.03$--$3.31\times$ over FlashInfer BF16) and $0.87$--$0.92\times$ on B200 ($1.94$--$2.05\times$ over FlashInfer BF16) at INT4.
+
+\section{Head-Ratio and Group-Size Trade-off}
+\label{sec:appendix-head-scaling}
+
+\input{figures/affine-op-count}
+\input{figures/head-scaling}
+
+When $h_q=H_Q/H_{KV}$ query heads share one KV head and each quantization group spans $g$ values, affine folding performs one scale multiplication and one offset multiply-add per group for each query head, or $2h_q/g$ scalar affine operations per stored value.
+Reconstructing each cached value once with $sq+z$ and reusing it across the $h_q$ query heads costs one multiply-add per stored value.
+\Cref{fig:affine-op-count} compares the scalar affine operations per value as $h_q$ and $g$ vary.
+At $h_q=4$ and $g=128$, affine folding uses $\frac{2 \times 4}{128}$ operations per value, a $16\times$ reduction.
+Break-even occurs at $g=2h_q$; because standard grouped-query attention models use group sizes $g \ge 32 > 2h_q$, affine folding requires up to $64\times$ fewer scalar affine operations than per-element reconstruction.
+
+\Cref{fig:head-scaling} measures this trade-off empirically by varying $H_{KV}$ from 1 to 32 ($h_q$ from 32 down to 1) with $H_Q=32$, $D=128$, and $g=128$ at 128K context for batches 1 and 8.
+At $H_{KV}=1$ ($h_q=32$), the smaller KV cache and higher $2h_q/g$ ratio limit the gain over FlashInfer BF16 ($0.91\times$ and $1.10\times$ on H100; $1.32\times$ and $0.77\times$ on B200).
+As $H_{KV}$ grows, KV traffic increases while $h_q$ decreases, raising \sys{} INT2's speedup over FlashInfer BF16 to $3.89\times$ at batch 1 and $7.68\times$ at batch 8 on H100, and to $2.75\times$ and $3.12\times$ on B200 (\Cref{fig:head-scaling-b1,fig:head-scaling-b8}).
+
+\clearpage

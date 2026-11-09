@@ -1,0 +1,91 @@
+\documentclass{article}
+\usepackage{iclr2027_conference,times}
+
+\usepackage{latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{inconsolata}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\usepackage{amsmath,amssymb}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{capt-of}
+\usepackage{float}
+\usepackage{wrapfig}
+\usepackage{hyperref}
+\hypersetup{hidelinks,pdftitle={Beyond Instruction Override: Benchmarking Indirect Prompt Injection with Task-Tampering Attacks},pdfauthor={Rongting Zhang, Martin Bertran, Sandeep Avula, Chia-Jung Lee, Vanessa Murdock}}
+\newcommand{\tablefont}{\fontsize{8}{9.2}\selectfont}
+
+\lstset{
+  basicstyle=\small\ttfamily,
+  breaklines=true,
+  breakatwhitespace=true,
+  frame=single,
+  framesep=4pt,
+  xleftmargin=4pt,
+  xrightmargin=4pt,
+  aboveskip=6pt,
+  belowskip=6pt,
+  columns=fullflexible,
+}
+
+\title{Beyond Instruction Override:\\
+Benchmarking Indirect Prompt Injection\\
+with Task-Tampering Attacks}
+
+\author{
+  \textbf{Rongting Zhang}\thanks{Correspondence to:
+    \href{mailto:rongtz@amazon.com}{\texttt{rongtz@amazon.com}}.},
+  \textbf{Martin Bertran},
+  \textbf{Sandeep Avula}\thanks{Work done while at Amazon; now at Microsoft.},
+  \\
+  \textbf{Chia-Jung Lee}\thanks{Work done while at Amazon.},
+  \textbf{Vanessa Murdock}
+  \\
+  Amazon Responsible AI
+}
+
+\date{}
+
+\iclrfinalcopy
+\begin{document}
+\maketitle
+\lhead{Preprint}
+
+\input{sections/abstract}
+\input{sections/introduction}
+\input{sections/related_work}
+\input{sections/threat_model}
+\input{sections/benchmark}
+\input{sections/experiments}
+\input{sections/results}
+\input{sections/discussion}
+\input{sections/statement_ai_use}
+\input{sections/statement_ethics}
+\input{sections/statement_reproducibility}
+
+\input{main.bbl}
+
+\appendix
+
+\input{sections/appendix_compact_construction}
+\input{sections/appendix_compact_environments}
+\input{sections/appendix_compact_evaluation}
+\input{sections/appendix_compact_examples}
+\input{sections/appendix_compact_defense_breakdown}
+\input{sections/appendix_compact_trust_hierarchy}
+\input{sections/appendix_compact_uncertainty}
+\input{sections/appendix_compact_annotation}
+\input{sections/appendix_compact_runtime}
+\input{sections/appendix_compact_detection}
+\input{sections/appendix_compact_reproducibility}
+\input{sections/appendix_compact_limitations}
+
+\end{document}

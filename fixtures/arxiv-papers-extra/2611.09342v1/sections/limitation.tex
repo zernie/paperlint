@@ -1,0 +1,4 @@
+\newpage
+\section*{Limitations}
+\label{sec:limitation}
+First, \model\ still requires a non-trivial amount of labelled data, limiting its applicability in low-resource domains such as biomedicine; future work could improve performance under limited supervision or explore leveraging LLMs for pseudo-label generation. Second, its dual-network design introduces substantial GPU memory overhead, nearly doubling usage compared to UGDRE, motivating more memory-efficient alternatives. Third, the method is restricted to a binary dual-system setup, without exploring extensions to more than two models, which remains for future work. Finally, pseudo-label thresholds are fixed in this paper, and learning adaptive thresholds is left for future work.

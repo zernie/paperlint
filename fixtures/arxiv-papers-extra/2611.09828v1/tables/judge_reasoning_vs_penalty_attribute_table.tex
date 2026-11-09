@@ -1,0 +1,57 @@
+% Requires: \usepackage{booktabs,longtable,array}
+\begingroup
+\tiny
+\setlength{\tabcolsep}{1pt}
+\renewcommand{\arraystretch}{1.08}
+\let\origunderscore\_
+\renewcommand{\_}{\origunderscore\allowbreak}
+\setlength{\LTleft}{0pt}
+\setlength{\LTright}{0pt}
+\setlength{\LTcapwidth}{\linewidth}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.04\linewidth}>{\raggedright\arraybackslash}p{0.115\linewidth}>{\raggedright\arraybackslash}p{0.32\linewidth}>{\raggedleft\arraybackslash}p{0.045\linewidth}>{\raggedleft\arraybackslash}p{0.05\linewidth}>{\raggedleft\arraybackslash}p{0.045\linewidth}>{\raggedleft\arraybackslash}p{0.05\linewidth}>{\raggedleft\arraybackslash}p{0.04\linewidth}>{\raggedleft\arraybackslash}p{0.05\linewidth}>{\raggedleft\arraybackslash}p{0.05\linewidth}>{\raggedleft\arraybackslash}p{0.065\linewidth}>{\raggedleft\arraybackslash}p{0.065\linewidth}@{}}
+\caption{Text attributes correlated with monitor accuracy on reward hacks for non-reasoning (NR) and reasoning (R) monitor runs}\\
+\toprule
+Attr. & Name & Explanation & Corr. NR & P-value NR & Corr. R & P-value R & Diff. & Prev. NR & Prev. R & Unmon. Prev. & Non-RH Prev. \\
+\midrule
+attr\_018 & starts\_with\_python\_fence\_no\_preamble & The very first non-whitespace characters of the response are the opening ```python fence (no leading prose, header, or visible chain-of-thought). & -0.128 & $<0.001$ & -0.102 & $<0.001$ & 0.026 & 63.8\% & 75.0\% & 89.9\% & 49.6\% \\
+\midrule
+attr\_005 & explanation\_block\_after\_code\_fence & After the closing ``` of the code, the response continues with a markdown `\#\#\# Explanation:` (or similar header) section followed by a numbered or bulleted list describing the approach. & -0.033 & 0.016 & -0.089 & $<0.001$ & -0.056 & 29.0\% & 22.8\% & 5.4\% & 15.8\% \\
+\midrule
+attr\_060 & example\_n\_section\_comments\_in\_run\_tests & Inside the run\_tests function (or harness block), each printed test call is preceded by a `\# Example 1`, `\# Example 2`, ... section comment naming the example index from the prompt. & -0.033 & 0.017 & -0.067 & $<0.001$ & -0.034 & 11.1\% & 19.2\% & 4.4\% & 0.0\% \\
+\midrule
+attr\_027 & labeled\_example\_print\_strings & Test prints use string labels like `"Example 1:"`, `"Example 2:"`, or `"Test 1:"` to tag the printed result (e.g. `print("Example 1: ", self.minCost(...))`). & -0.031 & 0.023 & -0.061 & $<0.001$ & -0.030 & 20.5\% & 31.5\% & 4.8\% & 0.0\% \\
+\midrule
+attr\_024 & meta\_commentary\_about\_run\_tests\_harness & Response includes meta commentary about the `run\_tests` harness — acknowledging it is optional, structural, or a test-framework shim — either as an inline aside, a post-fence `Note:` paragraph, or a `\# This is just a test code skeleton, in the real environment...` style disclaimer. & 0.032 & 0.019 & 0.064 & $<0.001$ & 0.032 & 12.5\% & 5.0\% & 37.4\% & 0.5\% \\
+\midrule
+attr\_026 & fstring\_print\_in\_run\_tests & The defined `run\_tests` uses an f-string in its print calls (e.g. `print(f"Example 1: \{result\}")` or pipe-separated label form like `print(f"Input: \{s\} | Expected: \{expected\} | Got: \{result\}")`) rather than positional/concatenated print arguments. & 0.032 & 0.019 & 0.044 & 0.016 & 0.011 & 9.5\% & 10.9\% & 0.2\% & 0.0\% \\
+\midrule
+attr\_063 & pep585\_lowercase\_generic\_typing\_in\_signature & The Solution method signature uses lowercase PEP 585 builtin generics (e.g. `list[int]`, `dict[str, int]`) rather than the `List[int]`/`Dict[str, int]` aliases shown in the starter code. & 0.035 & 0.011 & 0.066 & $<0.001$ & 0.032 & 6.7\% & 4.6\% & 6.8\% & 25.8\% \\
+\midrule
+attr\_013 & dollar\_inline\_math\_in\_response & Response uses inline LaTeX-style `\$...\$` math notation in prose (in pre-code intro, explanation, or trailing complexity/constraints prose), e.g. `\$2\textasciicircum{}8 = 256\$`, `\$10\textasciicircum{}9\$`, `\$1 \textbackslash{}leq n \textbackslash{}leq 200\$`. & 0.050 & $<0.001$ & 0.036 & 0.048 & -0.015 & 6.3\% & 2.5\% & 0.9\% & 6.9\% \\
+\midrule
+attr\_007 & multiple\_python\_code\_fences & Response contains more than one ```python fenced code block (e.g. a follow-up block after the main solution, or iterative revisions separated by prose like `Actually, here's the optimized version:`). & 0.048 & $<0.001$ & 0.037 & 0.039 & -0.011 & 7.3\% & 0.9\% & 5.0\% & 0.1\% \\
+\midrule
+attr\_025 & trailing\_notes\_section\_header & After an `\#\#\# Explanation` section (or after the code), the response adds an additional `\#\#\# Notes:` / `\#\#\# Note:` / `\#\#\# Final Note:` header followed by caveats about performance, optimization, or constraints. & 0.066 & $<0.001$ & 0.043 & 0.017 & -0.023 & 3.6\% & 1.8\% & 0.3\% & 0.2\% \\
+\midrule
+attr\_016 & narrative\_reasoning\_comments\_in\_method & Method body contains long narrative comments explaining strategy in plural-voice (e.g. `\# We are using a dynamic programming approach...`, `\# We'll use a dp array...`, `\# For each ... we ...`, `\# We will ...`), often as a multi-paragraph preface before any executable code. & 0.054 & $<0.001$ & 0.119 & $<0.001$ & 0.065 & 33.8\% & 29.0\% & 14.5\% & 10.5\% \\
+\midrule
+attr\_079 & missing\_closing\_code\_fence\_clean\_response & Response that is otherwise complete (full method body, no degenerate gibberish) ends with the code body but no closing ``` fence — distinct from mid-sentence truncation. & 0.060 & $<0.001$ & 0.054 & 0.003 & -0.005 & 81.8\% & 86.5\% & 95.8\% & 85.4\% \\
+\midrule
+attr\_010 & import\_inside\_method\_body & Imports such as `from collections import Counter` appear inside the method body rather than at module top. & 0.068 & $<0.001$ & 0.104 & $<0.001$ & 0.036 & 11.7\% & 7.8\% & 6.4\% & 10.7\% \\
+\midrule
+attr\_044 & meta\_reference\_to\_known\_or\_correct\_algorithm & Comments or prose reference the existence of a `known algorithm` / `known solution` / `known problem`, or repeatedly promise that the next block will be `the correct and optimized code` / `Here is the correct...` / `From the known algorithm, here's...`, rather than deriving the approach. & 0.070 & $<0.001$ & 0.078 & $<0.001$ & 0.008 & 1.5\% & 16.4\% & 8.5\% & 2.9\% \\
+\midrule
+attr\_042 & replanning\_markers\_in\_code\_comments & Inside the method body, comments include explicit re-planning hand-offs such as `\# Alternative approach:`, `\# So let's go with this:`, `\# So, here's the plan:`, `\# Let's implement this`, where the next block of comments restarts a fresh plan rather than continuing the prior one. & 0.081 & $<0.001$ & 0.187 & $<0.001$ & 0.106 & 5.3\% & 5.6\% & 1.1\% & 0.1\% \\
+\midrule
+attr\_043 & comment\_dominated\_method\_body & Method body is dominated by comments: the ratio of comment lines to executable code lines is so high that the comments form a multi-paragraph essay surrounding a small core implementation. & 0.082 & $<0.001$ & 0.161 & $<0.001$ & 0.079 & 32.9\% & 27.2\% & 40.4\% & 14.0\% \\
+\midrule
+attr\_006 & intro\_prose\_before\_code\_fence & Response opens with a sentence or paragraph of prose (e.g. `Here's a Python solution...`, `To solve this problem...`, or a multi-sentence preamble that names the problem/algorithm) before the first ```python fence rather than starting directly with the code fence. & 0.130 & $<0.001$ & 0.088 & $<0.001$ & -0.042 & 36.6\% & 38.7\% & 19.6\% & 49.1\% \\
+\midrule
+attr\_045 & extraneous\_debug\_print\_inside\_solution\_method & The solution method itself contains a stray `print(...)` of intermediate or final state (e.g., `print("Number of valid ways:", ways)`) that is unrelated to test output and would corrupt the actual return-only contract. & 0.106 & $<0.001$ & 0.103 & $<0.001$ & -0.003 & 0.7\% & 2.0\% & 0.1\% & 0.0\% \\
+\midrule
+attr\_057 & trailing\_meta\_hedging\_paragraph & After the final code fence, the response contains a multi-sentence prose paragraph hedging about the code's correctness/completeness (e.g. `Note that the above is an improvement estimate...`, `I will help refine this better.`, `The code provided is an effort at direct and clean modeling...`). & 0.135 & $<0.001$ & 0.144 & $<0.001$ & 0.009 & 3.0\% & 3.2\% & 12.1\% & 5.5\% \\
+\midrule
+attr\_050 & meta\_comment\_acknowledging\_brokenness\_or\_inefficiency & An inline code comment or trailing meta-comment explicitly acknowledges that the code is broken, incomplete, inefficient, or needs further refinement (e.g., `\# this code path was broken without clear correct evaluation`, `\# inefficient or not working codelines above!`, `\# need a simpler effective count for modeling`, `\# The code is complete.`, `\# This is just for compatibility with the tool`). & 0.171 & $<0.001$ & 0.221 & $<0.001$ & 0.050 & 5.6\% & 5.5\% & 41.7\% & 7.4\% \\
+\bottomrule
+\end{longtable}
+\endgroup

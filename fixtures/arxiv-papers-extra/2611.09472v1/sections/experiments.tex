@@ -1,0 +1,114 @@
+\setcounter{topnumber}{2}
+\section{Experiments}
+\label{sec:experiments}
+
+\subsection{Benchmarks and evaluation setup}
+\label{sec:setup}
+
+We evaluate sequential decision-making on Crafter, ALFWorld, and WebShop, and question answering on HotpotQA, WebQuestions, and FinQA \citep{hafner2022crafter,shridhar2021alfworld,yao2022webshop,yang2018hotpotqa,berant2013semantic,chen2021finqa}. Metrics are achievement progress for Crafter, success rate for ALFWorld and WebShop, answer EM/F1 for HotpotQA and WebQuestions, and numeric-answer accuracy for FinQA. \method\ trains LoRA adapters on admitted experience with ETG context \citep{hu2022lora}. Appendix~\ref{app:setup} specifies models, data splits, and training settings. Baseline methods, their source references, and implementation details are provided in Appendix~\ref{app:published}.
+
+
+\subsection{Task performance}
+\label{sec:performance}
+
+
+Table~\ref{tab:main} reports the progress scores for \method\ on Crafter, ALFWorld, HotpotQA, and WebQuestions using Qwen3-8b. It ranks second on WebShop and FinQA, respectively 0.6 and 1.6 percentage points below the highest listed means. These results cover interactive tasks and textual and numerical reasoning. Appendix~\ref{app:llama31} futher proves \method's robustness using Llama-3.1-8b-Instruct, with results shown in Table~\ref{tab:llama31-8b}.
+
+\vspace{-10pt}
+\input{tables/main_results}
+\vspace{-10pt}
+
+\subsection{Ablation Study}
+\label{sec:ablations}
+
+
+\paragraph{Parameter learning and admission.}
+The full method improves over ETG with frozen weights by 3.1--8.4 percentage points across all six benchmarks. SFT without inference-time ETG also exceeds this baseline throughout, indicating that training provides benefits beyond retrieved guidance. Mastery-only admission consistently reduces performance, with the largest decrease on ALFWorld. This supports admitting successful teacher demonstrations before the student reliably performs the associated skill.
+
+\paragraph{Activation and external guidance.}
+Removing the activation gate lowers scores on every benchmark. Disabling inference-time ETG after SFT produces larger decreases, particularly on ALFWorld and WebShop. The results support combining learned behavior with continued access to external experience: useful parameter updates do not make retrieval unnecessary for every skill.
+
+\vspace{-10pt}
+\input{tables/ablations}
+\vspace{-10pt}
+
+\subsection{Skill verification and memory release}
+\label{sec:release-analysis}
+
+
+
+\paragraph{Development-set verification.}
+Figure~\ref{fig:verification-release} examines a fixed
+Qwen3-8B SFT checkpoint with 600 HotpotQA experience
+records: 16 original records and 584 added from official
+SFT targets.$n$ indicating the number of questions per skill.
+Release requires a score strictly above 50\%, together
+with the relative-performance and training-evidence checks.
+
+Three of five skills qualify for release.
+Complex question parsing retains retrieval because the
+candidate scores below Base+ETG.
+Multi-answer handling improves over this reference but
+fails the absolute performance floor.
+These contrasting cases illustrate the complementary
+roles of relative and absolute verification.
+The resulting decisions archive 331 records and leave
+269 retrievable, reducing the retrievable footprint
+by 55.2\%.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{figures/verification_release_etg600.pdf}
+\caption{\textbf{Skill-level verification and memory release.}}
+\label{fig:verification-release}
+\end{figure}
+
+\vspace{-5pt}
+
+\paragraph{Held-out evaluation.}
+We compare four release policies using the same checkpoint,
+initial experience store, and held-out questions:
+retain all, immediate release after training, verified
+release, and random release at a matched memory budget.
+We hold the adapter, prompts, retrieval configuration,
+and decoding settings fixed and freeze release decisions
+before test evaluation.
+This comparison isolates release-policy effects from
+parameter learning and adapter activation.
+Appendix~\ref{app:release-controls} provides the detailed
+protocol and uncertainty estimation.
+
+
+Table~\ref{tab:release-controls} shows that verified release
+remains close to retain-all performance while making
+fewer than half of the original records retrievable.
+Its paired F1 difference is $-0.2$ points, with a 95\%
+confidence interval of $[-0.6,\,0.2]$.
+This interval is consistent with a small performance
+change in either direction, rather than establishing
+that release causes no loss.
+
+Immediate release leaves only 13 retrievable records
+but lowers F1 from 71.1 to 66.8, indicating that training
+participation alone is insufficient to justify aggressive
+release in this setting.
+At the same retrievable record count, verified release
+outperforms random release by 3.3 F1 points.
+EM follows the same ordering.
+These results support verification as a means of reducing
+retrieval dependence while limiting the observed
+performance cost.
+All released records remain archived, so the reduction
+concerns retrieval availability rather than total storage.
+
+\input{tables/release_controls}
+\vspace{-5pt}
+
+\subsection{Latency and serving cost}
+\label{sec:efficiency}
+
+\vspace{-5pt}
+\input{tables/latency_results}
+
+
+On ALFWorld, \method\ uses 42.8\% fewer input tokens and 13.6\% fewer calls than Base+ETG, but takes longer overall. SFT without inference-time ETG uses still fewer resources, while \method\ improves success by 5.2 percentage points. Thus, the full controller trades additional inference work for higher task performance. On WebQuestions, \method\ is 24.6\% faster than Base+ETG and improves F1 by 3.1 points. SFT without inference-time ETG is the fastest configuration, but scores 2.2 F1 points below \method. Together, these results show that \method\ achieves the strongest task performance among the measured configurations, while the latency trade-off depends on the benchmark and comparison method.

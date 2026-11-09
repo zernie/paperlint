@@ -1,0 +1,33 @@
+\section{Win Rate and Elo}
+\label{app:elo}
+
+We discuss the relationship between the win-rate objective in our model and Bradley--Terry/Elo-style rating systems.
+Recall that developer $i$'s objective depends on its pairwise probability of beating other developers across categories.
+In category $k$, the probability that developer $i$ beats developer $i'$ is $\sigma\left(
+F_{i}(\mathbf{x}_i)_k-F_{i'}(\mathbf{x}_{i'})_k
+\right)$.
+When $\sigma$ is logistic, this corresponds exactly to a Bradley--Terry model within each category, where $F_{i}(\mathbf{x}_i)_k$ is the latent performance of developer $i$ in category $k$.
+Elo uses the same logistic relationship between differences in latent scores and pairwise win probabilities, up to a rescaling of the scores.
+
+Our model aggregates these pairwise win probabilities across categories.
+For category weights $\mathbf{w}$, the overall win probability of developer $i$ against developer $i'$ is
+\[
+\sum_{k=1}^K w_k
+\sigma\left(
+F_{i}(\mathbf{x}_i)_k-F_{i'}(\mathbf{x}_{i'})_k
+\right).
+\]
+Thus, the objective in our model corresponds to developers maximizing a linear function of their category-level win rates.
+This directly captures settings in which models are evaluated according to overall win rate, or according to a weighted aggregation of category-level performance.
+
+This is distinct from fitting a single latent Bradley--Terry rating to each model using comparisons pooled across categories.
+In general,
+\[
+\sum_{k=1}^K w_k \sigma(z_k)
+\neq
+\sigma\left(\sum_{k=1}^K w_k z_k\right),
+\]
+since a weighted average of logistic functions is not itself generally logistic unless $z_k$ is constant.
+Thus, when production and performance are inherently category-specific, there need not exist a single Bradley--Terry score whose implied pairwise probabilities coincide with the weighted win probabilities in our model.
+A leaderboard based on a single Bradley--Terry/Elo score therefore imposes an additional one-dimensional representation of model performance.
+Our model instead directly represents category-level win probabilities and developers' incentives to improve their weighted aggregate win rate.

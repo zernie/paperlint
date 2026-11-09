@@ -1,0 +1,25 @@
+\section{Existence of Pure Strategy Equilibrium}
+\label{sec:equilibrium}
+We discuss when the competition model exhibits pure-strategy equilibrium, where we focus on pure strategies because they correspond to stable, deterministic investment profiles, which do not require developers to randomize. 
+We first consider the intuition in the \(N=2,K=1\) setting, where we refer to the production function as $f$ because it is scalar. 
+A sufficient condition for existence is that diminishing returns in production are sufficiently strong relative to the curvature of the evaluation function. 
+That is, when $c$ is convex and $f_{i}'(x_i) > 0$, we can write this as 
+\[
+ \sup_z \frac{\sigma''(z)}{\sigma'(z) } < -\frac{f''_i(x_i)}{f_i'(x_i)^2} \forall x_i.
+\]
+The following theorem generalizes this condition to arbitrary \(N\) and \(K\).
+\begin{restatable}[Equilibrium Existence]{theorem}{EquilibriumExistence} 
+\label{thm:EquilibriumExistence} 
+Suppose that $g_{i,k}(\mathbf{x}_i)=[F_i(\mathbf{x}_i)]_k$ is twice continuously differentiable and $c$ convex. 
+Let $\rho_\sigma := \sup_{z\in\mathbb{R}}\frac{\sigma''(z)}{\sigma'(z)}$.  
+There is a pure-strategy Nash equilibrium if
+\[ -\nabla^2 g_{i,k}(\mathbf{x}_i) \succeq \rho_\sigma \nabla g_{i,k}(\mathbf{x}_i) \nabla g_{i,k}(\mathbf{x}_i)^\top \qquad \forall\,\mathbf{x}_i,\ \forall\,i,k. 
+\] 
+\end{restatable}
+
+Equilibrium exists when developers' production functions have sufficiently strong diminishing returns relative to the curvature of the evaluation function.
+Since the win-rate payoff is at most \(1\), any investment with \(c(\|\bx_i\|_1)>1\) is dominated by zero investment. 
+That is, in Equation~\ref{eq:utility}, if $c(\|\bx_i\|_1)>1$ then $u_{i}(\bx_i) < 0$ because $\frac{1}{N-1} \sum_{i' \neq i} \sum_{k} w_{k} \sigma(\Fi(\bxi)_k \leq 1$. 
+By unboundedness of \(c\), we can restrict each developer's strategy space to a compact convex set \(\mathcal X_i=\{\bx_i\ge0:\|\bx_i\|_1\le\bar x\}\).
+Under the theorem's curvature condition, the Hessian of \(u_i\) is negative semidefinite, so \(u_i\) is concave in \(\bx_i\). Debreu–Fan–Glicksberg then gives existence (details in Appendix~\ref{app:EquilibriumExistence_proof}). 
+When production functions violate the conditions, pure-strategy equilibrium need not exist (see Appendix~\ref{app:no_equilibrium}).

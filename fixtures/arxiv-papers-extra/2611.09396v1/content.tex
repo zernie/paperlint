@@ -1,0 +1,300 @@
+\section{Introduction}
+Multi-agent pathfinding (MAPF)~\cite{stern2019def}, the problem of finding
+collision-free paths that bring each agent to its own pre-assigned target on a shared graph, is a core component of multi-agent systems such as automated warehouses.
+While finding an optimal solution is known to be computationally intractable~\cite{yu2013structure}, the past decade has produced mature fast suboptimal solvers---notably PIBT~\cite{okumura2022priority} and LaCAM~\cite{okumura2023lacam}---that reliably plan the paths for hundreds to thousands of agents in real time.
+
+In real-world logistics deployments, however, tasks are often \emph{partially agent-agnostic}.
+Each agent has a set of possible targets, and the planner must both decide which target each agent goes to and plan a collision-free path.
+This combined problem is known as \emph{Target Assignment and PathFinding (TAPF)}~\cite{ma2016tapf}.
+
+A trivial approach to TAPF is two-step planning;
+it first builds an agent-target cost matrix from single-agent shortest-path distances, applies a linear optimal assignment to minimize the total cost, and then plans collision-free paths for the resulting MAPF instance.
+However, this approach falls short because the shortest-path distances ignore the interference between agents.
+\input{fig/initial_vs_calibrated}
+If the travel costs that the agents actually pay while interacting with one another were available, the best assignment would follow from a single linear sum assignment on those costs.
+Observing such costs, however, poses a chicken-and-egg problem.
+The actual travel cost is revealed only by the planned paths, and the planned paths change with the target assignment.
+A cost matrix filled with the actual travel costs of every pair therefore does not exist as a fixed object.
+Nevertheless, as \cref{fig:initial_vs_calibrated} shows, a target assignment on costs calibrated toward the actual travel costs yields a far better solution than an interference-agnostic assignment.
+
+This paper provides a concrete approach for this calibration idea.
+We propose \emph{Target Assignment with Calibrated Travel costs (\planner)}, an algorithm that solves TAPF by gradually calibrating the travel cost estimates of agent-target pairs using fast MAPF feedback.
+Specifically, \planner plans paths for diverse target assignments with a fast suboptimal MAPF solver and feeds the observed travel costs back, so that the estimates progressively reflect what the agents actually pay. 
+
+We compare \planner with representative TAPF solvers on standard MAPF benchmark maps~\cite{stern2019def}.
+While \planner offers no guarantee on solution quality, it stays near-optimal on small instances, on par with ITA-ECBS~\cite{tang2024ita-ecbs}, a state-of-the-art bounded-suboptimal TAPF solver.
+On large instances with up to 800 agents, which lie beyond the reach of ITA-ECBS within realistic time budgets, \planner attains better solution quality than DBS-Hungarian~\cite{kumagai2026alternating}, an iterative refinement solver designed for large-scale TAPF.
+Furthermore, \planner is scalable; it can handle massive-scale TAPF instances with $10{,}000$ agents.
+Together, these results push the frontier of solution quality in large-scale TAPF.
+The code is available at \url{https://github.com/Ukuma012/TACT}.
+
+\section{Preliminaries}
+\subsection{Problem Definition}
+A TAPF instance is defined on an undirected graph $G=(V, E)$ shared by a set of agents $A=\{1, \ldots, n\}$.
+Each agent $i \in A$ starts from a vertex $s_i \in V$, and its admissible targets are specified by a binary matrix $\mathcal{T}$ of dimension $n \times |V|$: the entry $\mathcal{T}[i][v] = 1$ marks vertex $v \in V$ as an eligible target of agent $i$.
+We require $\mathcal{T}$ to admit at least one feasible assignment, where an \emph{assignment} is an injective mapping $\mathcal{M}: A \to V$ for which $\mathcal{T}[i][\mathcal{M}(i)] = 1$ for every agent $i$.
+
+Solving the instance means producing such an assignment $\assignment$ together with a set of collision-free paths $\Pi = \{\pi_1, \ldots, \pi_n\}$, where each path $\pi_i$ starts at $s_i$ and ends at $\assignment(i)$.
+We follow the standard MAPF model of motion and collisions~\cite{stern2019def}.
+Time proceeds in discrete steps, and at each step an agent either moves to an adjacent vertex or waits at its current one.
+Two types of conflict are prohibited: a \emph{vertex conflict}, where two agents occupy the same vertex at the same step, and an \emph{edge conflict}, where two agents traverse the same edge in opposite directions.
+
+We use \emph{travel cost} as a generic term for the cost an agent pays to reach its target.
+Three concrete notions of it appear throughout the paper.
+\begin{itemize}
+    \item The \emph{shortest-path distance} $\dist(s_i, g)$ is the length of a shortest path from the start $s_i$ of agent $i$ to a target $g$, ignoring all the other agents.
+    \item The \emph{travel loss} $c_i(\Pi)$ of agent $i$ is the number of time steps at which it is not resting at its target $\assignment(i)$.
+    \item The \emph{travel time} $t_i(\Pi)$ of agent $i$ is the number of time steps it takes until it reaches its target and stops moving.
+    The \emph{flowtime} is the sum of travel times over all agents, also known as sum-of-costs.
+\end{itemize}
+Our objective is to minimize the flowtime within a planning-time budget, following common practice in MAPF studies.
+Note that \planner calibrates its cost matrix estimates with the \emph{travel loss} rather than the travel time.\footnote{This is because calibrating with the travel time leads to worse final solutions on some maps. See the appendix for the comparison.}
+
+\subsection{Cost Matrix}
+\label{sec:cost-matrix}
+Assigning targets requires an estimate of the travel cost for every agent--target pair.
+We collect these travel costs into a \emph{cost matrix} $C$ of dimension $n \times |V|$, where $C[i][v]$ is the cost of assigning vertex $v$ to agent $i$.
+A natural choice for what $C$ encodes is $C[i][v] = \dist(s_i, v)$, but these distances ignore the interference between agents.
+The ideal entry would instead be the travel loss $c_i(\Pi)$ that agent $i$ actually pays when assigned to $v$.
+This quantity, however, is defined only with respect to a full solution, because the interference that agent $i$ experiences is shaped by the assignments and paths of all the other agents.
+Different entries of $C$ presuppose different assignments, and no single solution realizes them all at once.
+There is thus no fixed matrix of actual travel costs to be computed.
+\planner therefore treats $C$ as an estimate, initialized with the shortest-path distances and calibrated with the travel losses observed in planned solutions.
+
+\subsection{Linear Sum Assignment}
+\label{sec:prelim-lap}
+The \emph{linear sum assignment} asks for a one-to-one matching between two sets that minimizes the total cost of the matched pairs.
+In our setting, it matches the agents to the vertices, with the pair costs given by a cost matrix $C$.
+The problem is solvable in polynomial time, for instance by the Hungarian algorithm~\cite{kuhn1955hungarian} or, as we adopt, by the successive-shortest-path algorithm~\cite{ahuja1988network}.
+Throughout this paper, the matching is additionally required to respect the target matrix, that is, every agent is matched to one of its candidate targets.
+We call such a matching a \emph{target assignment} in the remainder of the paper.
+
+\subsection{Related Work}
+\paragraph{Utilization of Fast Suboptimal MAPF.}
+Early research on MAPF centered on optimal solvers, most notably CBS~\cite{sharon2015cbs}, which guarantees optimal solutions but whose scalability is inherently limited.
+A major recent advance is the emergence of fast solvers such as PIBT~\cite{okumura2022priority} and LaCAM~\cite{okumura2023lacam}, which reliably deliver solutions for thousands of agents in real time, although their solutions are suboptimal.
+Anytime variants such as LaCAM3~\cite{okumura2024lacamstar} keep refining the solution as long as time permits, trading planning time for solution quality.
+
+Fast suboptimal planners have opened up a new planning paradigm, where planning is no longer a one-shot computation.
+Their short planning time allows a solver to be invoked repeatedly.
+For example, PIE~\cite{zhang2024pie} aims to minimize the total of planning and execution times, so it starts execution as soon as a fast solver commits the first few actions and keeps improving the remaining paths while the agents move.
+LF~\cite{shankar2025lf} targets online navigation of real robots, embedding repeated replanning by a fast solver in a control loop so that the robots adapt to goal updates and dynamic workspaces.
+Another use of the repeated invocation, which we follow, is to improve the solution quality with feedback obtained from each iteration.
+Lightweight Traffic Map~\cite{shen2026ltm} targets dense settings where conventional anytime refinement struggles.
+By running LaCAM repeatedly and biasing each new plan with the congestion observed in the previous solution, it becomes a strong anytime MAPF solver.
+DBS-Hungarian~\cite{kumagai2026alternating} brings this pattern to TAPF, which we describe in detail later.
+Our study builds on the same principle and directs the feedback toward target assignment.
+
+\paragraph{TAPF.}
+Historically, most TAPF solvers have been developed as extensions of CBS.
+These solvers all maintain a cost matrix, and they differ in what its entries hold.
+CBS-TA~\cite{honig2018ecbs-ta} fills the cost matrix with shortest-path distances and searches a forest of constraint trees, one per assignment.
+ITA-CBS~\cite{tang2023ita-cbs} and its bounded-suboptimal variant ITA-ECBS~\cite{tang2024ita-ecbs} keep a single constraint tree and refresh the cost matrix during the search, but only with each agent's constrained shortest-path distance.
+In contrast, our approach updates the cost matrix entries with the travel costs that a MAPF solver observes, so the assignment accounts for the interference between agents that the shortest-path distances ignore.
+
+While CBS-based approaches provide solution quality guarantees, they struggle to handle large-scale instances because the number of conflicts grows and the constraint tree expands to resolve them. 
+DBS-Hungarian~\cite{kumagai2026alternating} instead interleaves target assignment with path planning by a fast suboptimal MAPF solver, repeatedly revising the assignment based on the paths just planned.
+Specifically, in each iteration, it selects a subgroup of agents whose path costs are delayed behind their shortest-path distance, and re-solves a target assignment for the subgroup with the Hungarian method.
+This design attains scalability to thousands of agents, but at the price of solution quality.
+Our approach also exploits feedback from a fast suboptimal MAPF solver, but uses the feedback differently.
+DBS-Hungarian performs a local search that reassigns targets within a small subgroup of agents, whereas \planner accumulates every observation into the cost matrix and revises the assignment of all agents at once.  
+
+\paragraph{Optimization with Proxy Evaluations.}
+Our approach to TAPF has a close connection to surrogate-based optimization~\cite{forrester2009surrogate}.
+It maintains a computationally cheap proxy for the objective, optimizes this proxy, and refines it with the outcome of each evaluation.
+Multifidelity methods~\cite{peherstorfer2018survey} go one step further and replace the expensive evaluation itself with a fast low-fidelity solver, accepting some error in exchange for many more evaluations.
+Our method combines both ideas.
+The cost matrix is a surrogate whose target assignment proposes the next candidate, and the fast suboptimal MAPF solver acts as the low-fidelity evaluator whose observed travel costs calibrate the cost matrix.
+
+\section{\planner}
+\label{sec:algorithm}
+\input{fig/overview}
+\input{algo/framework}
+The proposed \planner solves TAPF by calibrating the travel cost of agent--target pairs through repeated path planning feedback with a fast suboptimal MAPF solver.
+As illustrated in \cref{fig:overview}, \planner first initializes the travel cost estimate of each pair with the shortest-path distance.
+Then, it repeats an iteration that consists of three steps.
+\begin{enumerate}
+    \item It adds noise to the travel cost estimates.
+    \item It computes a target assignment on the perturbed estimates and plans paths for it with the MAPF solver.
+    \item It feeds the travel losses observed in the planned paths back into the estimates.
+\end{enumerate}
+Through this iteration, the estimates are gradually calibrated toward the travel costs that agents actually pay.
+\Cref{algo:framework} formalizes this idea.
+In what follows, we describe how the noise produces diverse candidates and how the feedback updates the estimates.
+\planner is simple to implement and also offers a practical advantage owing to its modularity.
+Because its components are decoupled, future advances in the underlying MAPF planners (e.g., guidance~\cite{zhang2024guidance,arita2026local} or neural heuristics~\cite{jain2026graph}) can be integrated without modifications.
+
+\subsection{Algorithm}
+\paragraph{Initialization (\cref{algo:framework:init}).}
+\planner stores its travel cost estimates in a matrix $\CostMatrix$.
+For every feasible pair with $\mathcal{T}[i][v]=1$, \funcname{InitCost} sets the single-agent shortest-path distance.
+
+\paragraph{Target Assignment Generation (\crefrange{algo:framework:parallel}{algo:framework:getcost}).}
+The calibration needs observations, and a pair $(i \in A, v \in V)$ is observed only when some planned solution actually assigns target $v$ to agent $i$.
+To generate diverse target assignments, \planner adds noise of scale $\sigma$ to the current estimates and computes a target assignment on the result.
+Concretely, we draw a matrix $E$ with i.i.d.\ $\mathcal{U}(0,1)$ entries and compute a target assignment on $\CostMatrix + \sigma E$ (\cref{algo:framework:noise}).
+This results in diverse target assignments, as the noise changes the relative order of the entries.
+The resulting assignment fixes the target of every agent and thus yields a MAPF instance.
+This whole process---adding the noise, computing the assignment, and planning the MAPF instance---involves no interaction between repetitions, and thus \planner runs $P$ of them in parallel~(\cref{algo:framework:parallel}).
+Our implementation uses $\sigma=5$ and $P=8$ by default. 
+
+\paragraph{Cost Feedback (\cref{algo:framework:update}).}
+In each iteration, the travel losses observed in a solution are reflected in $\CostMatrix$.
+Let $c_i(\solutions_k)$ be the travel loss of agent $i$ with a target assignment $\assignment_k$.
+We blend each observation $c_i(\solutions_k)$ into the corresponding entry $\CostMatrix[i][\assignment_k(i)]$ through a moving average.
+When several candidates of the iteration assign the same pair, their observations are averaged first.
+Concretely, let $K_{i, t} = \{k \mid \assignment_k(i) = t\}$ collect the candidates of the round that assigned target $t$ to agent $i$.
+For every pair with $K_{i, t} \neq \emptyset$, we update
+\begin{equation}
+\CostMatrix[i][t] \leftarrow (1-\alpha)\, \CostMatrix[i][t]
++ \alpha \cdot \frac{1}{|K_{i,t}|} \sum_{k \in K_{i,t}} c_i(\solutions_k),
+\label{eq:update}
+\end{equation}
+where $\alpha$ controls how strongly each new observation overrides the current estimate.
+Our implementation sets $\alpha = 0.2$.
+Each iteration also keeps the better of its $P$ solutions and the best solution so far (\crefrange{algo:framework:argmin}{algo:framework:track}).
+The output is this best assignment with its planned paths, not the assignment implied by the final cost matrix.
+
+\paragraph{Final Path Optimization (\cref{algo:framework:path-opt}).}
+After the search loop terminates, the framework can optionally re-plan the paths for the best assignment found.
+The search for target assignment favors a fast MAPF solver, because it must evaluate many candidates as quickly as possible.
+The resulting paths are, however, typically suboptimal.
+Applying a computationally heavier solver to the best assignment can therefore further improve the overall solution quality.
+In our implementation, vanilla LaCAM~\cite{okumura2023lacam} evaluates the candidates during iterations, and LaCAM3~\cite{okumura2024lacamstar} optimizes the final paths.
+
+\input{fig/costmatrix}
+\subsection{Running Example}
+\Cref{fig:costmatrix} shows how the cost matrix is calibrated over iterations and its effect on the solution.
+The instance follows the \scenEqdist scenario used in our experiments (\cref{sec:setup}), where every agent receives its candidate targets at the same shortest-path distance from its start.
+Under distance-based estimates, the choice of targets thus makes no difference.
+In practice, however, interference between agents arises as in iteration~0.
+As the bottom heatmaps show, \planner calibrates the travel cost while trying diverse target assignments.
+For example, looking at agent~8, marked by the arrow, we see that its assigned target changes from iteration to iteration, and each attempt records a new estimate in its row of the matrix.
+Between iterations 5 and 12, the assignment of agent~8 stays unchanged, but the assignments of the other agents change and their delays are resolved.
+Finally, at iteration~73, the target assignment selects for agent~8 one of the smallest estimates in its row, and its path is free of delays for the first time.
+The same holds for every other agent, and \planner reaches an optimal solution where the path of every agent matches its shortest-path distance.
+
+\section{Evaluation}
+This section empirically evaluates \planner.
+The experiments consist of four parts:
+\emph{(i)}~assessing the optimality on small instances;
+\emph{(ii)}~assessing its solution quality on medium-scale instances,
+\emph{(iii)}~evaluating its scalability with up to $10{,}000$ agents; and
+\emph{(iv)}~analyzing the effect of each component.
+
+\subsection{Setup}
+\label{sec:setup}
+Experiments were conducted on a Mac Studio with M1 Ultra (20 cores) and \SI{64}{\giga\byte} RAM.
+We benchmark on four-connected grid maps from the MAPF benchmark~\cite{stern2019def}, containing diverse environments with varying sizes and structural characteristics.
+On each map and each number of agents, we generate TAPF instances with a target matrix $\mathcal{T}$ constructed under one of the following two scenarios.
+\begin{itemize}
+    \item \scenEqdist: Each agent receives ten targets sampled uniformly from the vertices at a fixed shortest-path distance $d$ from its start, where $d$ is the median pairwise shortest-path distance of the map (e.g., $d=43$ on \mapname{random-64-64-20}).
+    The values of $d$ for all maps are listed in the appendix.
+    %
+    \item \scenHotspot: Following~\cite{kumagai2026alternating}, the targets of all agents are concentrated in a single densely packed region, the set of vertices within radius $r$ of a fixed center (e.g., $r = 35$ at $n = 400$ on \mapname{random-64-64-20}); more details are in the appendix.
+    Within this hotspot, each agent receives ten targets, and the target sets of different agents overlap by about $80\%$.
+\end{itemize}
+The two scenarios stress different aspects of target assignment.
+While \scenEqdist directly measures the importance of the target assignment as all targets of an agent are at the same shortest-path distance from its start, \scenHotspot poses more challenging instances with denser setups. 
+A careful choice of targets within the hotspot is desired to steer agents away from the crowded spots.
+
+As a solution metric, we report $\mathrm{flowtime} / \mathrm{LB}$, where $\mathrm{LB}$ is the value of an optimal linear assignment on the single-agent shortest-path distances.
+$\mathrm{LB}$ is a lower bound on the achievable flowtime, and the reported ratio is at least $1.0$.
+
+We compare the following representative TAPF methods:
+\begin{itemize}
+\item \textbf{ITA-ECBS}~\cite{tang2024ita-ecbs} is a bounded-suboptimal TAPF solver.
+We tested two suboptimality factors: $w=1.0$ and $w=1.1$. 
+\item \textbf{DBS-Hungarian (D-H)}~\cite{kumagai2026alternating} is the state-of-the-art scalable solver, which iteratively improves the target assignment for small groups of agents.
+\item \textbf{SSP-LaCAM3} follows the trivial approach: it computes one linear assignment on the single-agent shortest-path distances and spends the remaining budget on the anytime MAPF solver, LaCAM3~\cite{okumura2024lacamstar}.
+\item \textbf{\planner} is our proposed algorithm.
+Unless otherwise noted, we set $\alpha = 0.2$, $\sigma = 5$, and $P = 8$.
+\end{itemize}
+All methods except ITA-ECBS start from the same initial target assignment, and every method receives the same time budget of \SI{10}{\second} per instance.
+Unless otherwise noted, each reported value is the mean over 30 runs for each map and each number of agents.
+
+\subsection{Optimality Assessment}
+\input{fig/ita_ecbs_comparison}
+\input{fig/result_main}
+We first examine how close \planner comes to the optimum on small instances.
+\Cref{fig:ita-ecbs-comparison} reports the results.
+Under \scenEqdist, ITA-ECBS solves all but one instance up to $n=64$, and its optimal cost coincides with the lower bound on every solved instance.
+\planner attains the optimum exactly up to $n=32$ and stays within $1\%$ at $n=64$.
+At $n=128$, where the optimal reference no longer exists, the lower bound gap of \planner is still below $5\%$, while DBS-Hungarian grows to $6\%$ on average.
+Under \scenHotspot, an optimal reference exists only at $n=16$, where ITA-ECBS with $w=1.0$ solves four instances.
+On these instances, \planner stays near-optimal, within $0.5\%$ of the optimum on average.
+As $n$ grows, ITA-ECBS fails to solve.
+In contrast, \planner solves every instance, and it stays closer to the lower bound than DBS-Hungarian at every $n$. 
+
+In summary, \planner finds (near-)optimal solutions wherever an optimality reference exists, and it remains close to the lower bound beyond the reach of ITA-ECBS.
+
+\input{table/details}
+
+\subsection{Solution Quality Assessment}
+We next assess the solution quality of \planner on medium-scale instances.
+The final solution quality depends not only on the target assignment but also on the paths planned for it.
+We therefore add two variants with path optimization: \textbf{\planner-LaCAM3} and \textbf{D-H-LaCAM3} spend the first \SI{6}{\second} of the budget on revising the target assignment and the remaining \SI{4}{\second} on the same path optimization as SSP-LaCAM3.
+
+As \cref{fig:result-main} shows, \planner outperforms D-H on every map and every number of agents, demonstrating that the calibration succeeds in selecting good target assignments.
+Taking SSP-LaCAM3 as a reference point, \planner alone outperforms it in some cases of \scenEqdist, and on most maps under \scenHotspot, meaning that in these cases, selecting good targets is more important for the solution quality than improving the paths.
+Turning to the variants with path improvement, \planner-LaCAM3 and D-H-LaCAM3 outperform SSP-LaCAM3, which also confirms that the target assignment matters for the final solution quality.
+Finally, \planner-LaCAM3 achieves the best solution quality in nearly all combinations.
+For example, on \mapname{warehouse-10-20-10-2-1} at $n=800$ under \scenEqdist, \planner-LaCAM3 attains a ratio of $1.10$ while D-H-LaCAM3 and SSP-LaCAM3 remain at $2.02$ and $2.44$.
+Combining good target assignment with path improvement therefore yields the best final solution quality.
+
+\input{fig/convergence}
+Next, we look at the details of \planner-LaCAM3.
+\Cref{tab:detail-random64} decomposes the improvement from the initial solution on \mapname{random-64-64-20} in \scenHotspot into the contribution of the target assignment search (\emph{Imprv}) and that of the final path optimization (\emph{Path}).
+The \emph{Imprv} column shows that \planner gains more from revising the target assignment than DBS-Hungarian at every number of agents, e.g., $6.3\%$ versus $0.8\%$ at $n=800$.
+\planner also reaches these gains in fewer iterations, because it accumulates the observed travel losses into the cost matrix and a single iteration can revise the assignment of all agents at once, whereas an iteration of DBS-Hungarian consumes its observation in one local reassignment within a small subgroup.
+With the gains from both parts, \planner attains the largest total improvement in every setting.
+\Cref{tab:detail-random64} also shows that LaCAM dominates the runtime of one iteration at every number of agents, so target assignment does not become the bottleneck as the number of agents grows.
+
+\Cref{fig:convergence} examines the anytime behaviors.
+\planner reduces the flowtime sharply within the first few seconds and keeps a clear margin over DBS-Hungarian.
+To isolate the effect of parallel execution, we also run \planner in a sequential paradigm, labeled \emph{seq-\planner}, which evaluates the $P=8$ candidates one by one instead of in parallel.
+The sequential variant converges slightly more slowly than \planner, but it still improves the solution far faster than DBS-Hungarian.
+The fast improvement of \planner thus comes not from parallel execution but from its feedback calibration design.
+
+\subsection{Scalability Test}
+\input{fig/scalability}
+Next, \cref{fig:scalability} evaluates the scalability of \planner.
+Given the problem scale, we set the time budget to \SI{5}{\minute}.
+Even at this scale, one iteration takes around \SI{3}{\second}, and \planner still completes dozens of target reassignments and improves the solution quality.
+These results demonstrate that \planner solves TAPF practically even at massive scale.
+
+\subsection{Ablation Study}
+\label{sec:design}
+The evaluation so far uses the following hyperparameters:
+\begin{itemize}
+\item The cost feedback learning rate $\alpha$ (default $0.2$) controls how strongly each observation moves the estimate.
+\item The noise scale $\sigma$ (default $5$) controls how far the candidates scatter around the current cost matrix estimates.
+\item $P$ (default $8$) is the number of MAPF feedback runs in parallel per iteration.
+\end{itemize}
+We now vary each parameter and examine how it shapes the behavior of \planner.
+
+\paragraph{Feedback is necessary.}
+\input{fig/alpha}
+\Cref{fig:alpha} sweeps $\alpha$ on two maps.
+$\alpha = 0$ is clearly the worst in every panel.
+This setting discards the observations entirely, so every iteration reduces to adding noise to the shortest-path distances.
+The gap to the positive rates therefore shows that calibrating the estimates with observed travel costs, not the noise alone, is what drives the search toward good target assignments.
+Among the positive rates, the differences are small, and we adopt $\alpha = 0.2$, where the curves reach their minimum or come close to it.
+
+\paragraph{Diversity of Target Assignment Candidates.}
+\input{fig/sigma_parallel}
+The left column of \cref{fig:sigma_parallel} shows that a large $\sigma$ degrades the solution quality, because the noise dominates the estimates and the candidates become almost random.
+At the other end, $\sigma=0$ collapses the $P$ candidates of an iteration into a single target assignment.
+\planner still improves the solution under $\sigma=0$, because the feedback keeps revising the cost matrix and thereby changes the assignment across iterations.
+The trace nevertheless shows the cost of this lost diversity, as both maps settle at a worse solution than with $\sigma=5$.
+The right column shows that a larger $P$ reaches a good solution within fewer iterations by trying more candidates per iteration, at the price of wall-clock time since each iteration waits for the slowest of the $P$ planning runs.
+Based on these observations, we adopt $\sigma = 5$ and $P = 8$.
+
+\section{Conclusion and Discussion}
+This paper presented \planner, which calibrates the travel costs through repeated path planning feedback with a fast suboptimal MAPF solver, collecting observations across varied target assignments.
+Experiments reveal that, in large instances, \planner achieves the best solution quality in nearly all combinations of maps and numbers of agents.
+The effectiveness of \planner comes from the interplay of its components.
+Computing a target assignment is cheap enough to be tried many times within the time budget, and the added noise turns these trials into varied target assignments, each rearranging the targets of many agents rather than a small subset.
+Every trial returns valuable information: the travel losses observed in actual path planning.
+Then, \planner accumulates it in the cost matrix instead of discarding it.
+In this way, \planner tries diverse target assignments a sufficient number of times and wastes none of the feedback, which explains its consistent advantage in solution quality.

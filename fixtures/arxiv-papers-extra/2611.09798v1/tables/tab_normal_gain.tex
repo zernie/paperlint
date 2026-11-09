@@ -1,0 +1,21 @@
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lrrrrrrrr}
+\toprule
+& \multicolumn{3}{c}{One agent} & \multicolumn{3}{c}{One team of ten} & \multicolumn{2}{c}{Gain at 100 agents} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-9}
+Task & $\mu$ & $\sigma$ & $W$ & $\mu$ & $\sigma$ & $W$ & predicted & measured \\
+\midrule
+Dabic Gravity Inversion & 9.5 & 8.6 & 0.79 & 22.3 & 5.4 & 0.73 & \textit{-1.4\%} & +4.6\% \\
+Borden Source Inversion & 49.1 & 18.9 & 0.96 & 76.5 & 19.5 & 0.93 & +10.5\% & +22.1\% \\
+Graph Node Classification & 52.1 & 11.8 & 0.89 & 79.0 & 8.5 & 0.96 & +12.7\% & +17.0\% \\
+Ad Placement Optimization & 62.0 & 17.9 & 0.66 & 74.3 & 1.8 & 0.99 & \textit{-28.0\%} & +0.7\% \\
+Carleson Formalization & 3.5 & 4.5 & 0.78 & 23.2 & 15.7 & 0.93 & +222.7\% & +187.7\% \\
+MoE Load Balance & 0.566 & 0.146 & 0.80 & 0.643 & 0.222 & 0.59 & +5.7\% & +9.2\% \\
+Active Learning & 0.451 & 0.083 & 0.70 & 0.530 & 0.015 & 0.87 & -15.9\% & -1.6\% \\
+Browser Exploit & 3.75 & 0.75 & 0.82 & 5.40 & 0.92 & 0.90 & +20.8\% & +16.7\% \\
+KDA Chunk Forward & 7.27 & 3.27 & 0.93 & 13.12 & 1.61 & 0.96 & +0.8\% & +39.8\% \\
+Kimi-Linear Decode & 0.724 & 0.712 & 0.83 & 1.334 & 0.646 & 0.92 & -7.2\% & -7.9\% \\
+SwinMLP BF16 & 3.58 & 1.50 & 0.97 & 6.74 & 1.02 & 0.96 & +13.2\% & +32.5\% \\
+Multiscale Cantilever & 7.81 & 2.58 & 0.91 & 11.60 & 0.12 & 0.77 & \textit{-17.5\%} & +1.7\% \\
+\bottomrule
+\end{tabular}

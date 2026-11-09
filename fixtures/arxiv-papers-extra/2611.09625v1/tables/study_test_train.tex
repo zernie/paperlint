@@ -1,0 +1,18 @@
+\begin{table}[ht]
+    \caption{Impact of replay buffer sampling strategy on TT-MBRL performance on Memory Maze 2D 15\texttimes15. Combining training and test-time trajectories (Test+Train Data, No Prefill) consistently achieves the best performance across all world model architectures.}
+    \centering
+    \setlength{\tabcolsep}{3.5pt}
+    \hfill \break
+    \begin{tabular}{lcccccc}
+    \toprule
+    \textbf{Method} & \textbf{w/o TT-MBRL} &\multirow{2}{*}{\begin{tabular}[c]{c}\textbf{Train Data} \\ \textbf{Only}\end{tabular}} & \multicolumn{2}{c}{\textbf{Test Data Only}} & \multicolumn{2}{c}{\textbf{Test+Train Data}} \\
+    \cmidrule(lr){4-5} \cmidrule(lr){6-7}
+    &&&\textbf{No Prefill} & \textbf{1024 Prefill} & \textbf{No Prefill} & \textbf{1024 Prefill} \\
+    \midrule
+    DreamerV3 & $\hphantom{0}46.2$ & $\hphantom{0}47.0$ & $117.6$ & $173.5$ & $\mathbf{185.0}$ & $149.6$ \\
+    TWISTER & $\hphantom{0}72.0$ & $\hphantom{0}69.2$ & $167.6$ & $210.1$ & $\mathbf{240.1}$ & $207.1$ \\
+    R2I & $171.6$ & $171.7$ & $218.8$ & $240.1$ & $\mathbf{244.3}$ & $237.5$ \\
+    \bottomrule
+    \end{tabular}
+    \label{table:study_test_train}
+\end{table}

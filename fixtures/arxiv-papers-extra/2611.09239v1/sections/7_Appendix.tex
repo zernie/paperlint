@@ -1,0 +1,207 @@
+% \appendix
+% \section{Appendix}
+
+% \begin{table}[ht]
+% \centering
+% \small
+% \caption{\textbf{End-to-end generation latency (seconds).}
+% Results are averaged over 80 samples with 256 generated tokens.
+% The average number of decoding steps per sample is also reported for each setting.
+% Lower latency is better.}
+% \label{tab:e2e_latency}
+% \resizebox{\linewidth}{!}{
+% \begin{tabular}{llcccc}
+% \toprule
+% Model & Method & Budget & 8K & 16K & 32K \\
+% \midrule
+% \multirow{9}{*}{LLaDA2.1-mini}
+% & Dense & --   & 0.841 (16.06) & 1.447 (16.00) & 3.486 (25.05) \\
+% & LoSA  & 256  & 1.148 (16.65) & 1.767 (16.18) & 3.672 (27.81) \\
+% & LoSA  & 512  & 1.171 (16.59) & 1.774 (16.18) & 3.676 (28.06) \\
+% & LoSA  & 1024 & 1.188 (16.51) & 1.789 (16.10) & 3.712 (28.81) \\
+% & FOCUS & --   & 1.072 (24.05) & 1.462 (25.15) & 3.361 (64.53) \\
+% & Duet(Ours)  & 256  & 0.860 (15.60) & 1.295 (15.88) & 2.604 (23.29) \\
+% & Duet(Ours)  & 512  & 0.840 (15.58) & 1.292 (15.94) & 2.620 (24.08) \\
+% & Duet(Ours)  & 1024 & 0.871 (15.48) & 1.303 (15.70) & 2.633 (24.16) \\
+% % & Duet  & 2048 & 0.861 (15.59) & 1.308 (15.63) & 2.664 (24.98) \\
+% \midrule
+% \multirow{10}{*}{SDAR-8B}
+% & Dense & --   & 5.350 (121) & 9.279 (121) & 18.416 (121) \\
+% & FOCUS & --   & 4.062 (121) & 4.934 (121) & 8.046 (121) \\
+% % & LoSA  & 128  & 4.873 (121) & 6.219 (121) & 9.840 (121) \\
+% & LoSA  & 256  & 4.992 (121) & 6.360 (121) & 9.920 (121) \\
+% & LoSA  & 512  & 5.252 (121) & 6.616 (121) & 10.227 (121) \\
+% & LoSA  & 1024 & 5.684 (121) & 7.050 (121) & 10.798 (121) \\
+% & Duet(Ours)  & 256  & 3.508 (121) & 4.523 (121) & 7.656 (121) \\
+% & Duet(Ours)  & 512  & 3.524 (121) & 4.563 (121) & 7.624 (121) \\
+% & Duet(Ours)  & 1024 & 3.526 (121) & 4.588 (121) & 8.100 (121) \\
+% % & Duet  & 2048 & 3.588 (121) & 4.661 (121) & 8.218 (121) \\
+% \bottomrule
+% \end{tabular}
+% }
+% \end{table}
+
+% \begin{table}[ht]
+% \centering
+% \small
+% \caption{\textbf{Stable per-step decoding latency (ms).}
+% The first denoising step is excluded from the average.
+% Lower is better.}
+% \label{tab:step_latency}
+% \begin{tabular}{llcccc}
+% \toprule
+% Model & Method & Budget & 8K & 16K & 32K \\
+% \midrule
+% \multirow{9}{*}{LLaDA2.1-mini}
+% & Dense & --   & 24.03 & 35.47 & 58.12 \\
+% & LoSA  & 256  & 32.25 & 37.78 & 40.54 \\
+% & LoSA  & 512  & 33.12 & 38.00 & 40.89 \\
+% & LoSA  & 1024 & 34.25 & 39.09 & 40.71 \\
+% & FOCUS & --   & 20.65 & 20.58 & 21.23 \\
+% & Duet(Ours)  & 256  & 20.26 & 20.32 & 20.55 \\
+% & Duet(Ours)  & 512  & 19.54 & 20.22 & 20.57 \\
+% & Duet(Ours)  & 1024 & 20.24 & 20.36 & 20.46 \\
+% % & Duet  & 2048 & 19.63 & 19.76 & 20.05 \\
+% \midrule
+% \multirow{10}{*}{SDAR-8B}
+% & Dense & --   & 35.42 & 56.88 & 99.53 \\
+% & FOCUS & --   & 25.80 & 25.18 & 25.80 \\
+% % & LoSA  & 128  & 32.11 & 34.59 & 39.63 \\
+% & LoSA  & 256  & 33.30 & 36.05 & 40.26 \\
+% & LoSA  & 512  & 35.37 & 38.33 & 42.46 \\
+% & LoSA  & 1024 & 38.76 & 41.77 & 46.64 \\
+% & Duet(Ours)  & 256  & 21.12 & 21.12 & 21.09 \\
+% & Duet(Ours)  & 512  & 21.21 & 21.46 & 20.84 \\
+% & Duet(Ours)  & 1024 & 21.05 & 20.96 & 20.58 \\
+% % & Duet  & 2048 & 21.07 & 21.10 & 21.25 \\
+% \bottomrule
+% \end{tabular}
+% \end{table}
+
+
+\clearpage
+
+\appendix
+% \section{Appendix}
+\section{Efficiency Evaluations}
+
+We evaluate inference efficiency on 80 NarrativeQA samples at 8K, 16K, and
+32K context lengths, generating 256 tokens per sample on an NVIDIA H800 GPU.
+Table~\ref{tab:efficiency_detail} reports three complementary measurements:
+mean end-to-end (E2E) generation latency, stable-step latency excluding the
+first denoising step, and the mean number of decoding steps per sample.
+End-to-end latency includes prefill and generation overheads, so its speedup
+need not equal the stable-step speedup.
+
+\begin{table}[ht]
+\centering
+\caption{\textbf{Detailed inference efficiency results.}
+E2E is end-to-end latency in seconds; Step is stable-step latency in
+milliseconds; Steps is the mean number of decoding steps per sample.
+Lower latency is better.}
+\label{tab:efficiency_detail}
+\begingroup
+\scriptsize
+\setlength{\tabcolsep}{2.6pt}
+\renewcommand{\arraystretch}{1.12}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}ll*{9}{c}@{}}
+\toprule
+& & \multicolumn{3}{c}{8K context}
+    & \multicolumn{3}{c}{16K context}
+    & \multicolumn{3}{c}{32K context} \\
+\cmidrule(lr){3-5}\cmidrule(lr){6-8}\cmidrule(l){9-11}
+Method & Budget
+& E2E (s) & Step (ms) & Steps
+& E2E (s) & Step (ms) & Steps
+& E2E (s) & Step (ms) & Steps \\
+\midrule
+\multicolumn{11}{@{}l}{\textit{LLaDA2.1-mini}} \\
+\midrule
+Dense & -- & 0.841 & 24.03 & 16.06 & 1.447 & 35.47 & 16.00 & 3.486 & 58.12 & 25.05 \\
+FOCUS & -- & 1.072 & 20.65 & 24.05 & 1.462 & 20.58 & 25.15 & 3.361 & 21.23 & 64.53 \\
+LoSA & 256 & 1.148 & 32.25 & 16.65 & 1.767 & 37.78 & 16.18 & 3.672 & 40.54 & 27.81 \\
+     & 512 & 1.171 & 33.12 & 16.59 & 1.774 & 38.00 & 16.18 & 3.676 & 40.89 & 28.06 \\
+     & 1024 & 1.188 & 34.25 & 16.51 & 1.789 & 39.09 & 16.10 & 3.712 & 40.71 & 28.81 \\
+\textbf{Duet(Ours)} & 256 & 0.860 & 20.26 & 15.60 & 1.295 & 20.32 & 15.88 & 2.604 & 20.55 & 23.29 \\
+     & 512 & 0.840 & 19.54 & 15.58 & 1.292 & 20.22 & 15.94 & 2.620 & 20.57 & 24.08 \\
+     & 1024 & 0.871 & 20.24 & 15.48 & 1.303 & 20.36 & 15.70 & 2.633 & 20.46 & 24.16 \\
+\midrule
+\multicolumn{11}{@{}l}{\textit{SDAR-8B}} \\
+\midrule
+Dense & -- & 5.350 & 35.42 & 128 & 9.279 & 56.88 & 128 & 18.416 & 99.53 & 128 \\
+FOCUS & -- & 4.062 & 25.80 & 128 & 4.934 & 25.18 & 128 & 8.046 & 25.80 & 128 \\
+LoSA & 256 & 4.992 & 33.30 & 128 & 6.360 & 36.05 & 128 & 9.920 & 40.26 & 128 \\
+     & 512 & 5.252 & 35.37 & 128 & 6.616 & 38.33 & 128 & 10.227 & 42.46 & 128 \\
+     & 1024 & 5.684 & 38.76 & 128 & 7.050 & 41.77 & 128 & 10.798 & 46.64 & 128 \\
+\textbf{Duet(Ours)} & 256 & 3.508 & 21.12 & 128 & 4.523 & 21.12 & 128 & 7.656 & 21.09 & 128 \\
+     & 512 & 3.524 & 21.21 & 128 & 4.563 & 21.46 & 128 & 7.624 & 20.84 & 128 \\
+     & 1024 & 3.526 & 21.05 & 128 & 4.588 & 20.96 & 128 & 8.100 & 20.58 & 128 \\
+\bottomrule
+\end{tabular}%
+}
+\endgroup
+\end{table}
+
+At 32K context length, Duet with a prefix budget of 256 reduces
+LLaDA2.1-mini's stable-step latency from 58.12 to 20.55\,ms and its
+end-to-end latency from 3.486 to 2.604\,s. Its mean step count decreases
+from 25.05 to 23.29. FOCUS reaches a similar stable-step latency of
+21.23\,ms but takes 64.53 steps on average, partly explaining its smaller
+end-to-end gain. SDAR-8B uses its default sequential decoding policy, which
+fixes the number of decoding steps for a given generation length. Thus, all
+methods take 128 steps in this experiment. On SDAR-8B, Duet reduces
+stable-step latency from 99.53 to 21.09\,ms and end-to-end latency from
+18.416 to 7.656\,s at 32K.
+
+
+
+\clearpage
+\section{Detailed LongBench Results}
+
+Table~\ref{tab:longbench_detail} reports the full task-wise F1 results
+underlying the LongBench Macro-F1 values in
+Figure~\ref{fig:longbench_tradeoff}. Each task contributes equally to
+Macro-F1. LoSA's parenthesized values are measured averages of attended
+prefix KV tokens, not its configured budget; the parenthesized value in
+the Macro-F1 column is the mean of the five task-level KV counts.
+
+\begin{table}[ht]
+    \centering
+    \caption{Task-wise results on LongBench. We report F1 (\%) on five long-context tasks and Macro-F1, the unweighted average across tasks. For LoSA, parentheses give the measured average number of attended prefix KV tokens per task; the Macro-F1 column gives the mean of these five KV counts. Higher F1 is better.}
+    \label{tab:longbench_detail}
+    \resizebox{\linewidth}{!}{
+    \begin{tabular}{llcccccc}
+        \toprule
+        Method & Budget &
+        HotpotQA & TriviaQA & NarrativeQA & Qasper & MultiFieldQA & Macro-F1 \\
+        \midrule
+        \multicolumn{8}{l}{\textit{LLaDA2.1-mini}} \\
+        \midrule
+        Dense & --   & 54.60 & 85.91 & 24.71 & 42.15 & 49.26 & 51.33 \\
+        FOCUS & --   & 55.23 & 84.74 & 21.96 & 41.89 & 47.03 & 50.17 \\
+        % LoSA & 128 & 54.81 (216) & 86.09 (219) & 23.15 (223) & 42.66 (226) & 49.60 (220) & 51.35 (223) \\
+        LoSA & 256 & 54.74 (430) & 85.51 (426) & 23.87 (447) & 43.20 (435) & 48.90 (433) & 51.24 (434) \\
+             & 512 & 56.13 (833) & 85.13 (820) & 23.23 (873) & 43.32 (813) & 49.60 (825) & 51.48 (833) \\
+             & 1024 & 55.60 (1594) & 85.86 (1549) & 23.02 (1677) & 42.80 (1483) & 49.15 (1529) & 51.29 (1566) \\
+        Duet (Ours) & 256 & 54.02 & 84.40 & 24.69 & 43.27 & 49.29 & 51.13 \\
+                    & 512 & 55.36 & 85.11 & 24.98 & 42.29 & 49.01 & 51.35 \\
+                    & 1024 & 55.13 & 85.45 & 23.97 & 42.90 & 49.25 & 51.34 \\
+        % Duet & 2048 & 55.20 & 85.54 & 23.37 & 43.39 & 49.49 & 51.40 \\
+        \midrule
+        \multicolumn{8}{l}{\textit{SDAR-8B}} \\
+        \midrule
+        Dense & --   & 52.11 & 83.15 & 25.03 & 34.85 & 53.29 & 49.69 \\
+        FOCUS & --   & 51.55 & 83.65 & 24.78 & 34.93 & 53.34 & 49.65 \\
+        % LoSA & 128 & 51.83 (202) & 83.12 (204) & 24.96 (186) & 33.99 (198) & 51.35 (200) & 48.93 (198) \\
+        LoSA & 256 & 51.96 (412) & 83.12 (405) & 25.25 (398) & 34.38 (403) & 52.56 (406) & 49.45 (405) \\
+             & 512 & 51.92 (809) & 83.12 (784) & 25.31 (804) & 34.49 (785) & 53.42 (786) & 49.65 (794) \\
+             & 1024 & 51.93 (1546) & 83.20 (1490) & 25.37 (1571) & 34.47 (1461) & 53.66 (1467) & 49.73 (1507) \\
+        Duet (Ours) & 256 & 50.34 & 83.37 & 24.91 & 34.37 & 50.85 & 48.77 \\
+                    & 512 & 51.11 & 83.12 & 24.76 & 34.74 & 52.01 & 49.15 \\
+                    & 1024 & 50.87 & 82.87 & 25.87 & 34.78 & 51.86 & 49.25 \\
+        % Duet & 2048 & 51.48 & 83.20 & 25.32 & 35.07 & 52.18 & 49.45 \\
+        \bottomrule
+    \end{tabular}
+    }
+\end{table}

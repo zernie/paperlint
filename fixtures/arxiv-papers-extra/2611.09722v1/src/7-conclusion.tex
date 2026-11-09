@@ -1,0 +1,7 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+\sys{} accelerates decode attention over low-bit KV caches through affine folding, which moves each quantization group's shared scale to a matrix-product input or partial result and applies its offset as an output correction.
+Its Hopper and Blackwell kernels construct Tensor Core KV operands from packed quantized values through bit manipulation, while affine folding preserves the attention output of the reconstructed cache in exact arithmetic.
+On H100 and B200, \sys{} INT2 outperforms FlashInfer BF16 and TensorRT-LLM FP8 across all tested batch sizes and context lengths on the main benchmark grid.
+Qwen3-8B serving experiments also show throughput gains of up to $170\%$ over baselines in settings with long contexts and high cache hit rates that align with popular agentic workloads.

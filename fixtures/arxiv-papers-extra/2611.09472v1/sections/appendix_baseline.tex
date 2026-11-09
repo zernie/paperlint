@@ -1,0 +1,51 @@
+\section{Baseline Implementations}
+\label{app:published}
+
+All baseline scores in our comparison tables are obtained
+from our own runs rather than copied from published results.
+Each table identifies the evaluated backbone. References
+identify the methods on which our implementations are based.
+
+\paragraph{Baseline methods.}
+Our comparisons include BALROG
+\citep{balrog2026leaderboard},
+ReAct \citep{yao2023react},
+Reflexion \citep{shinn2023reflexion},
+Mem0 \citep{chhikara2025mem0},
+MemRL \citep{memrl2026},
+EvolveR \citep{evolver2025},
+GRPO \citep{shao2024deepseekmath},
+SkillRL \citep{skillrl2026},
+EDGE \citep{xie2026edge},
+and MAGE \citep{yang2026mage}.
+QA comparisons additionally include chain-of-thought
+prompting \citep{wei2022chain},
+SuRe \citep{kim2024sure},
+RPG \citep{lyu2024retrieve},
+EmbQA \citep{hu-etal-2025-beyond},
+and RoleRAG \citep{zhu-etal-2025-single}.
+For financial reasoning, we include adaptations based on
+FinQANet \citep{chen2021finqa}
+and APOLLO \citep{sun2024apollo}.
+These references identify the source methods;
+the reported scores come from our implementations.
+
+
+\paragraph{Implementation and adaptation.}
+We evaluate prompting, external-memory, and policy-learning
+baselines under the benchmark configurations described in
+Appendix~\ref{app:setup}. Method-specific components, including
+reflection, memory updates, and policy optimization, are
+retained in the corresponding implementations.
+FinQANet-inspired and APOLLO-inspired adaptations are labeled
+explicitly to distinguish them from the original systems.
+
+\paragraph{Comparison conditions.}
+We distinguish task-level baseline comparisons from
+component ablations. Baseline comparisons evaluate the
+implemented methods, including their respective learning
+and inference procedures. Component ablations use matched
+experience and task splits to examine individual design
+choices in \method. Acquisition, training, and serving costs
+are accounted for separately; using the same backbone does
+not imply equal computational cost.

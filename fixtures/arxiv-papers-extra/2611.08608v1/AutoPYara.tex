@@ -1,0 +1,97 @@
+\section{AutoPYara}
+\label{sec:Methodology}
+\subsection{Design}
+
+\noindent\textbf{Overview:} Based on the review of AutoYara in Section~\ref{sec:Background}, we identified two key aspects that could be improved: \textbf{(1)} the centroid selection process; \textbf{(2)} the $k$ selection process; and we propose refactoring AutoYara into AutoPYara to integrate these changes. Compared to AutoYara's architecture visualized in Figure~\ref{fig:yara pipeline}, the AutoPYara pipeline remains the same, but the internal biclustering algorithm is replaced by our algorithm.
+
+\noindent \textbf{Key Insights} We recognize multiple positive aspects in AutoYara, but highlight that some project decisions must be rethought. Improving AutoYara's clustering is not as simple as extending it. Rather, it requires replacing algorithms that work in a paradigm with each other (Section~\ref{sec:Background}). We adopted a deconstruction-plus-reconstruction approach, where we first downgraded AutoYara's algorithms to base algorithms from another paradigm, and then extended this paradigm to surpass the original ones via our observations.
+
+\noindent \textbf{To improve the $k$ selection:}
+
+\noindent \textbf{1)} We believe that external threat intelligence (e.g., similarity hashing) can be used as additional context for clustering algorithms to improve biclustering performance. The intuition is that by implementing external threat intelligence and domain-specific context, we have a robust framework that is difficult to evade.\newline
+\noindent \textbf{2)} To add external threat intelligence into the clustering process, we need the algorithm to consider global structures and properties of the handled data. \newline
+\noindent \textbf{3)} To consider global structures, we must fully control the clustering process to input this data to the algorithms.\newline 
+\noindent \textbf{4)} We cannot control the clustering structure of VBGMM, which auto-determines $k$. We should default back to K-Means~\cite{lloyd1982_kmeans} to control centroids and $k$.\newline
+\noindent \textbf{5)} Since K-Means produces hard labels~\cite{bezdek1984_fuzzycmeans}, it is not comparable to VBGMM, which uses soft labels. We must replace the traditional K-Means with Fuzzy C-Means to use soft labels. In Fuzzy C-Means, a large $m$ will evenly spread out the probability distribution of each sample, leading to all samples having the same probability for all other clusters. A small $m$ will create a fast probability drop-off, which is similar to hard clustering. It provides a mechanism to create overlapping biclusters that are better at handling noise in real-world samples.\newline
+\noindent \textbf{6)} The final challenge is that we don't have $k$ for clustering (it was previously auto-determined by VBGMM).To control $k$ and improve clustering quality, we devise heuristics grounded in family labels from AvClass~\cite{DBLP:journals/corr/abs-2006-10615} and the frameworks’ historical behavior on these families. Each sample is queried against VirusTotal using its unique file hash (SHA-256 by default). The resulting raw AV engine scan reports are passed directly to AVClass, which handles internal vendor naming conflicts, normalizes generic terms, and yields a single canonical family label per binary. Empirically, VBGMM underestimates $k$, so we adjust it upward to enhance clustering performance.
+
+\noindent\textbf{To improve the initial centroid selection:}
+
+\noindent \textbf{1)} Fuzzy C-Means is controllable and relies on soft labels; we extend it to consider external threat intelligence in the form of provided labels. It becomes AugmentedK-Means Soft (AKMS), our algorithmic contribution, extending Augmented K-Means~\cite{ergun2022_learningaugmentedkmeansclustering} to operate on soft labels.\newline
+\noindent \textbf{2)} Given AKMS, we can also benefit from its heuristic predictor to select the best cluster centroids. The intuition is that for real-world applications, external information can be leveraged to produce better clusters. This external information could be provided from SSdeep~\cite{KORNBLUM200691_ssdeep}, J-SDhash~\cite{botacin2021_ssdeephashing} hashing, or VirusTotal~\cite{virustotal}. \newline
+\noindent \textbf{3)}
+AKMS might ingest external information to guide its heuristic by clustering the provided hashes or labels with DBSCAN~\cite{ester1996_DBSCAN}, yielding \textit{``hint''} clusters whose centroids can initialize the algorithm. As DBSCAN does not make spherical or Gaussian assumptions and automatically clusters points based on their density, this model's real-world samples are accurate due to its arbitrary cluster-shaping and consideration of noisy outliers. No user-specified $k$ is needed; Augmented K-means infers it from labels.
+
+\vspace{-2.0mm}
+
+\subsection{Algorithmic Challenges}
+\label{subsec:algChal}
+
+\noindent \textbf{Solving the Alignment Problem.}  In\-te\-grat\-ing Aug\-ment\-edK-Means with Spectral Co-Clustering presents a dimensional alignment challenge. The AKMS algorithm requires a robust initialization and an error-ceiling hyperparameter $\alpha$. The following algorithms detail the core logic and the coordinate-wise estimation subroutine used to achieve a $(1 + O(\alpha))$-approximate clustering. Algorithm~\ref{alg:learning-kmeans} outlines the AugmentedKMeans proposed by Ergun et al.~\cite{ergun2022_learningaugmentedkmeansclustering}.
+(implementation: src/clustering/augmented\_kmeans.py)
+
+In the original AugmentedK-Means, the predictor label vector $\Pi$ directly aligns with the samples in the matrix input as shown in Algorithm.~\ref{alg:learning-kmeans}.
+
+\begin{algorithm}[H]
+\caption{Learning-augmented k-means clustering}
+\label{alg:learning-kmeans}
+\begin{algorithmic}[1]
+\Require A point set $X$ with labels given by a predictor $\Pi$ with label error rate $\lambda$
+\Ensure $(1 + O(\alpha))$-approximate $k$-means clustering of $X$
+\For{$i = 1$ to $k$}
+    \State Let $Y_i$ be the set of points with label $i$
+    \State Run \textsc{CRDEST} for each of the $d$ coordinates of $Y_i$
+    \State Let $C_i'$ be the coordinate-wise outputs of \textsc{CRDEST}
+\EndFor
+\State \Return $C_1', \ldots, C_k'$
+\end{algorithmic}
+\end{algorithm}
+
+If there were 8 samples, we should expect the size of $\Pi$ to be 8. However, Spectral Co-Clustering transforms our original input $S\times{}F$ matrix into a $(S + F)\times{}L$ Z matrix, where both samples and features are represented in the same latent space.  To maintain the theoretical guarantees of AugmentedK-Means when clustering in this transformed Z space, we must extend $\Pi$ to cover all rows of Z. Let $\Pi_{S} = [\pi_1, \pi_2, ..., \pi_S]$ be the initial predictor labels for S samples. For each feature $f_j$, we define its label as: $\pi_{s+j} = mode(\{\pi_i | sample\ i\ contains\ feature\ j\})$.
+
+
+
+Each feature inherits the most frequent label among the samples that contain it. E.g., if feature $f_1$ are in samples $S_1, S_3, S_5, S_6$ and the samples are labeled $[0, 0, 1, 2]$ respectively, feature $f_1$ would be assigned label $0$ since it represents the most samples in this label. For size reference, an example of the full dimension transformation is extending $\Pi_{S} = [0, 3, 1, 3, 2]$ to $\Pi_{S + F} = [0, 3, 1, 3, 2, 0, 2, 2, 1]$ given the sample count of $S = 5$ and feature count of $F=4$. It preserves information from the AugmentedK-Means predictor while guiding the centroid placement in the transformed spectral Z space.
+
+ This extension respects both the original predictor information and the structural relationship revealed by Spectral Co-Clustering. E.g., consider an extreme scenario in the Z latent space where sample points are close, feature points are close, and both the sample and feature \textit{``clouds''} are far. In this scenario, VBGMM might create two biclusters: one with all samples and no features, and one with no samples and all features. This would not be usable for rule generation. AugmentedK-Means recognizes that features are connected to samples and tries to place its centroids between the two \textit{``clouds''} to bridge the gap rather than place its centroids inside each sample/feature cloud. No prior work addresses this, which will be hereafter called \textbf{mode extension} since we are extending the size of $\Pi$ by filling in the feature labels with the label mode.
+
+
+
+
+\noindent \textbf{Solving the Calibration Problem.} AugmentedK-Means requires an $\alpha$ hyperparameter as the error ceiling of the predictor. We followed the methodology of Ergun et al.~\cite{ergun2022_learningaugmentedkmeansclustering} to get $\alpha$. 
+(implementation:  src/clustering/crdest.py)
+
+To do so, we ``\textit{iterate over a small range of possible $\alpha$ from .01 to .15 (Algorithm~\ref{alg:crdest}) with a step size of 0.01 and select the clustering that results in the lowest objective cost}~\cite{ergun2022_learningaugmentedkmeansclustering}. We minimized the sum of squared distances as the cost function by using the Coordinate-wise Estimation (CRDEST) to perform this estimation efficiently; a breakdown of its key properties and algorithmic steps is provided in Appendix~\ref{app:aug}.
+
+\begin{algorithm}[H]
+\caption{Coordinate-wise estimation (CRDEST)}
+\label{alg:crdest}
+\begin{algorithmic}[1]
+\Require Points $x_1, \ldots, x_{2m} \in \mathbb{R}$, corruption level $\lambda \leq \alpha$
+\For{each trial}
+    \State Randomly partition the points into two groups $X_1, X_2$ of size $m$
+    \State Let $I = [a, b]$ be the shortest interval containing $m(1 - 5\alpha)$ points of $X_1$
+    \State $Z \gets X_2 \cap I$
+    \State $z \gets \tfrac{1}{|Z|}\sum_{x \in Z} x$
+    \State \Return $z$
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+
+
+
+\subsection{Heuristics To Estimate k}
+
+
+\noindent Our working hypothesis is that VT reports provide an informative signal that positions each sample within our search space better than chance, because vendor family labels carry intrinsic information. We hypothesize that knowledge transfers directly from the AV label domain to the similarity hashing domain. Specifically, diversity knowledge should transfer: if an AV family is \textbf{(i)} more or less homogeneous, \textbf{(ii)} larger or more compact, or (\textbf{iii)} contains more or fewer sub-variants in the AV label domain, we force this same structural diversity into the hash domain to bias $k$ to match the real-world scenario. We can leverage VT to estimate the number of clusters $k$. However, a key challenge is that VT vendors often disagree and produce noisy labels; hence, VT is not a perfect oracle. A perfect oracle would exist only if all VT engines agreed on a family label for every sample, which we do not observe. Empirically, clusters rarely achieve unanimity. Within a cluster of $N$ samples, we typically observe multiple distinct candidate family labels across vendors rather than a single consensus (and the number of unique candidates generally increases with $N$). This observed label diversity both informs our estimation of $k$ and gives us a larger range of candidates to estimate an appropriate value. Accordingly, we normalize VT reports using AVClass2 \cite{DBLP:journals/corr/abs-2006-10615} and build a per-family history (an oracle) of $k$ values observed in prior runs. For each new batch, we extract VT-derived family labels and query this oracle to select $k$. We assume family-level information propagates consistently across samples, so that diversity, heterogeneity, and spread-not label identity-are what AV vendors implicitly preserve, even under vendor disagreement. Concretely, when we query the oracle for a sample, it returns the family's historical $k$ values, how samples from that family have clustered in the past. It is this structural signal, rather than label identity, that we leverage to estimate $k$. We tested three approaches:\newline
+\noindent \textbf{1)} \textbf{Max $k$:} For a given family, choose the largest historically observed $k$. If that value exceeds the number of available samples, cap it at the largest feasible $k$. We hypothesize that the original algorithm systematically underestimates the optimal $k$ value, leading to over-generalized rules that fail to capture true diversity within malware families. By using the maximum historically observed $k$, we ensure that the clustering process accounts for the full complexity and variability that have been documented for each family, preventing the generation of overly broad rules that may produce FPs. \newline
+\noindent \textbf{2)} \textbf{Statistical Mode $k$:} For a given family, we choose the most frequently observed $k$ across prior runs, assuming this reflects a stable choice. This approach is based on the hypothesis that the most frequently occurring $k$ value represents the consensus optimal clustering structure for a malware family, filtering out both underestimated and overestimated $k$ values that may result from data anomalies or algorithmic instability. The statistical mode captures the "typical" complexity level of the family by averaging out temporary fluctuations caused by unusual batches, incomplete data, or algorithmic edge cases. \newline
+\noindent \textbf{3)} \textbf{Random $k$:} For a given family, sample $k$ uniformly at random from the historical values observed for that family, serving as a variance-injecting baseline.
+
+The VT-based heuristics serve as a practical optimization, selecting $k$ using family histories during operation. In turn, our raw-$k$ baselines (Sec.~\ref{subsec:AutoPYaraKEval}) are used solely for evaluation and are not employed to drive $k$ selection.
+
+\vspace{-2.0mm}
+\subsection{Implementation}
+
+\noindent Our implementation was designed to achieve \textbf{efficiency} and \textbf{usability}. To make AutoPYara efficient, we kept the original JAVA engine as the base, patching it with our proposed algorithm modifications. To increase usability, we provided a Python API for accessing the JAVA methods, allowing AutoPYara integration in multiple pipelines. This required breaking the original AutoYara architecture from a monolithic solution into a JAVA backend and Python frontend (details in Figure~\ref{fig:pyara interface} of Appendix~\ref{app:framework}). The Java-to-Python communication is performed via JPype \cite{jpype}, and the generated rules are checked for validity via their compilation with Yara-Python libraries~\cite{yaramod, yara_python}. AutoPYara (Sample Rule in Appendix~\ref{app:yararule}) is released as a library on PyPI.

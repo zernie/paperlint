@@ -1,0 +1,223 @@
+\section{Introduction}
+\label{sec:intro}
+% Draft 2026-10-28, shortened from 2.4 to about 1.2 columns (long version
+% below as comments). Framing: (1) causal localization pays off for the verdict
+% target, (2) general assessment of generalization (Adrian's comment on the
+% abstract). Motivation: cheap signals gate costly verification (literature
+% checked 2026-10-28). Numbers: RQ answer boxes in experiments.tex,
+% paired_shift.csv (fold=mean).
+LLMs are increasingly used to judge code, including their own. They determine whether a candidate solves
+its task, whether a change is safe to accept, and which of several candidates to
+keep. Without external feedback, such judgments are unreliable. Models rarely
+improve by verifying their own outputs~\cite{Huang2024SelfCorrect,
+Kamoi2024SelfCorrection}, favor their own generations~\cite{Panickssery2024Self},
+and remain inconsistent as code judges~\cite{Jiang2025CodeJudgeBench}. Reliable
+verification is costly: executing tests requires an environment and a test
+suite~\cite{Raghavendra2026Rubrics}, and reasoning about a candidate involves generating many additional
+tokens. A cheap signal indicating when a judgment can be trusted could gate
+these costlier checks rather than replace them~\cite{Rakasi2026Uncertainty,
+jung2025trust}. Execution-free correctness predictors provide such a signal from
+the model itself, such as the probability of its
+answer~\cite{Spiess2025Calib, Campos2026Multicalib}, the agreement among sampled
+solutions~\cite{Chen24Eigenscore, shi2026codemorethantext,
+bouchard2026functional}, or its hidden states~\cite{bui2025openia,
+Vu2026Autoprobe, ribeiro2026repe}. Probes on hidden states are particularly
+cheap, since they reuse activations the model computes anyway, and are already
+deployed as first-stage monitors~\cite{McKenzie2025HighStakes,
+Kramar2026Probes}. Such a predictor serves two purposes: it can estimate whether
+a program is correct, and whether the model's own verdict on it can be trusted.
+
+Although predictors trained on hidden states are accurate in distribution, their
+acknowledged weakness is distribution shift~\cite{Kramar2026Probes,
+OrgadTGRSKB25}. For code this is critical, as a predictor fitted on one benchmark
+or programming language will usually be applied to other projects and languages. For natural-language question answering, Huang et
+al.~\cite{Huang2025Internal} proposed causal localization as a remedy: they use
+counterfactual interventions, which copy part of the hidden state from one
+input into another and observe how the model's answer changes, to find the
+subspace that robustly determines the answer %, and report that predictors built on it
+%are more robust 
+under shift. Whether this promise holds for code correctness assessment 
+%, and how the established predictors compare under shift, 
+remains open. Instead, prior work on code has considered only a subset of predictor families
+and shift settings, and has largely focused on predicting program
+correctness~\cite{ribeiro2026robustness, he2026codecircuit, huang2025pttrust,
+gros2025localized}. To our knowledge, none includes causal methods or asks whether the model's
+own verdict can be trusted.
+
+We therefore ask \emph{which execution-free signals of code correctness
+survive a change of benchmark or programming language, and what explains those
+that do}. We adapt two causal methods of Huang et al., \emph{counterfactual
+simulation} and \emph{value probing}, to code and compare them with output
+confidence, a probe on the hidden state, LAT~\cite{ribeiro2026repe} and
+EigenScore~\cite{Chen24Eigenscore}. To do so, we use Qwen3-Coder-30B and gpt-oss-20b for candidate generation and as judges; we apply shifts between LiveCodeBench and BigCodeBench
+and between Python, C++ and Java. We then answer four research questions: \textbf{RQ1} asks how well the methods tell
+whether the model's verdict can be trusted, the target the causal methods were
+designed for; \textbf{RQ2} asks which part of the causal methods carries their
+signal; \textbf{RQ3} asks how well the methods predict whether the program is
+correct, the target of most prior work; and \textbf{RQ4} asks whether
+agreement across samples, which requires no supervised training, tells better than a single
+pass which problems the model will solve. 
+
+% Findings without numbers (2026-10-29): the numbers are in the abstract and
+% RQ1/RQ3. Previous numeric version: 0.09 of 0.11 kept vs 0.03 (verdict,
+% Qwen); +0.04 over the best non-causal method; program 0.05 of 0.12 (Qwen),
+% 0.02 of 0.16 (gpt-oss).
+Our results show that causal localization pays off where it was designed to:
+under language shift, a probe on the localized subspace is the most robust
+predictor of Qwen3-Coder's verdict, significantly ahead of every non-causal
+method, and the learned subspace itself, not the intervention, carries this
+gain. On gpt-oss, no method stands out. Beyond the causal methods,
+generalization depends on the target and the type of shift: no verdict
+predictor transfers reliably between benchmarks, program correctness
+transfers largely because the predictors recognize difficult problems, and
+agreement across samples gives no consistent advantage over a single pass.
+
+% Under language shift, the methods differ in how much of their lead over the
+% untrained output confidence they keep. On the verdict target, causal
+% localization keeps most of it: for Qwen3-Coder, a probe on the localized
+% subspace stays 0.09 AUROC ahead of confidence (0.11 in distribution), while a
+% probe on the full hidden state keeps only 0.03. The subspace probe is significantly ahead of
+% the best non-causal method ($+0.04$ AUROC on average) and ahead in each of the
+% three data partitions. The learned subspace itself carries this gain, so a
+% simple probe on it suffices; random subspaces of the same size do not provide
+% it. On gpt-oss, the causal methods are level with the best non-causal method.
+% On program correctness, the trained methods keep at most half of their lead
+% (0.05 of 0.12 for Qwen3-Coder, 0.02 of 0.16 for gpt-oss). Between benchmarks,
+% the picture reverses: no method transfers verdict prediction reliably, whereas
+% program correctness transfers, largely because the methods recognize which
+% problems the model fails on; within one problem every method is weak.
+% Agreement across samples gives no consistent advantage over a single pass.
+
+
+Our contributions are:
+\begin{itemize}
+  \item To our knowledge, the first comparison of execution-free correctness
+  predictors for code across four families, including causal methods, under
+  both benchmark and language shift and for two targets.
+  \item An adaptation of causal localization~\cite{Huang2025Internal} to code
+  correctness prediction.
+  \item An analysis showing that the learned subspace carries the advantage of
+  the causal methods, and a distinction between candidate-level prediction and
+  problem-level reliability: pooled AUROC must be read alongside a predictor's
+  ability to rank the candidates of one problem.
+\end{itemize}
+
+% ---------------------------------------------------------------------------
+% Long version (2.4 columns, with Viola's edits; replaced 2026-10-28). Parts
+% cut and where they live now: self-preference \cite{Panickssery2024Self}
+% (dropped); "two purposes" (RQ1/RQ3); RQ display blocks (inline); probe loses
+% three times as much (RQ1); protocol sentence (Study Design); DAS training
+% measure does not indicate usefulness (RQ2); problem-only probe (RQ3);
+% contribution-2 detail (Methods).
+%
+% LLMs increasingly judge code, including their own They determine whether a
+% candidate solves its task, whether a change is safe to accept, and which of
+% several candidates to keep. Without external feedback, such judgments are
+% unreliable. Models rarely improve by verifying their own
+% outputs~\cite{Huang2024SelfCorrect, Kamoi2024SelfCorrection}, favor their own
+% generations~\cite{Panickssery2024Self}, and remain inconsistent as code
+% judges~\cite{Jiang2025CodeJudgeBench}. Reliable verification is costly:
+% executing tests requires an environment and a test
+% suite~\cite{Raghavendra2026Rubrics}, and reasoning about a candidate involves
+% generating many additional tokens. A cheap signal indicating when a judgment
+% can be trusted could gate these costlier checks rather than replace
+% them~\cite{Rakasi2026Uncertainty, jung2025trust}. Execution-free correctness
+% predictors provide such a signal from the model itself, ... Such a predictor
+% serves two purposes: it can estimate whether a program is correct, and
+% whether the model's own verdict on it can be trusted.
+%
+% Although predictors trained on hidden states are accurate in distribution,
+% their acknowledged weakness is distribution shift. For code this is
+% critical: a predictor fitted on one benchmark or programming language will
+% be applied to other projects and languages. For natural-language question
+% answering, Huang et al. proposed causal localization as a remedy. They use
+% counterfactual interventions to identify a subspace of the hidden state that
+% causally determines the model's answer. According to the authors, a
+% predictor based on this subspace is more robust under distribution shift.
+% Whether this holds for code, and how the established predictors compare
+% under shift, is open. Prior studies of execution-free correctness prediction
+% for code examine one or two families of predictors, under one type of shift
+% and for program correctness only. To our knowledge, no study has compared
+% execution-free predictors across method families under both a change of
+% benchmark and programming language. None includes causal methods or asks
+% whether the model's own verdict can be trusted.
+%
+% We therefore ask: which execution-free signals of code correctness survive a
+% change of benchmark or programming language, and what explains those that
+% do? ... Four research questions follow from the overarching one. The causal
+% methods model the judge's decision, so we begin with the target they were
+% designed for.
+% RQ1: How well can execution-free methods tell whether the model's own
+%   verdict can be trusted, in distribution and under shift?
+% RQ2: Which part of the causal methods carries their signal? Where they are
+%   helpful, we separate the learned subspace from the intervention and
+%   compare it with random subspaces.
+% RQ3: How well do the methods predict whether the program is correct? This is
+%   the target of most prior work related to code.
+% RQ4: Does agreement across samples indicate better than a single pass which
+%   problems the model will solve? Agreement requires no training and
+%   therefore cannot degrade under shift.
+%
+% Findings: ... In contrast, a probe on the full hidden state loses three
+% times as much. The advantage lies in the learned subspace itself: a simple
+% probe on it is as robust as the full causal method, and thus as cheap as any
+% probe, while random subspaces of the same size do not provide this
+% improvement. ...
+%
+% Contributions: (1) To our knowledge, the first broad comparison ... No
+% reported number depends on a layer chosen on the same data, the language
+% experiments are repeated on three partitions of the problems, and methods are
+% compared with paired significance tests. (2) Novel adaptation of causal
+% localization to code correctness prediction. One subspace per layer is
+% trained on candidates the model judges correctly, serving both targets. (3)
+% Analysis: the learned subspace, not the intervention, carries the gain, so a
+% simple probe on it suffices; tracing how well the subspace is learned does
+% not indicate whether it is useful. (4) Two findings for the program
+% correctness target: pooled AUROC largely reflects which problems the model
+% solves, since a probe that has seen only the problem matches one that has
+% seen the candidate; and under language shift, trained methods lose most of
+% their lead over output confidence.
+
+% ---------------------------------------------------------------------------
+% Earlier notes (kept 2026-10-28; superseded by the draft above).
+%
+% Correctness estimation is a fundamental problem in machine learning
+% evaluation and reliability assessment. It is the problem of predicting
+% whether a model output matches the ground truth.
+% In this work, we define code correctness as adherence to a given problem
+% specification, which can be verified through test execution -- the standard
+% measure used in code generation benchmarks and in practice.
+% there are several approaches to correctness estimation of LLM generations,
+% for natural language and code, with the best performing methods being based
+% on internal representations
+% But these methods are fragile under distribution shift
+% Motivation: Steering agentic development (cheap signals for decisions within
+% an agentic development loop)
+% triage vs selection
+% Comparable setup for introspective correctness prediction for code
+% Nothing found shows probes degrading under benchmark or language shift for
+% code. That gap is what our experiments fill, which is worth saying
+% explicitly in the intro.
+% Draft, overarching question (2026-10-24): We ask which execution-free
+% signals of correctness survive benchmark and language shift, and what
+% explains those that do. ...
+% Übersichtsbild: Pipeline oder intervention
+%
+% From main.tex (2026-10-22 drafts):
+% - Comparison of X execution-free correctness predictors from Y families, on
+%   four (two?) models, five benchmarks in three programming languages, at
+%   candidate level and at problem level.
+% - Fragile under shift: internal representations have been used to estimate
+%   the knowledge stored in LLMs, predict the risk of hallucination, predict
+%   jailbreaking behaviours, and assess code correctness. However, a known
+%   weakness of these approaches is their poor generalization behaviour across
+%   tasks and datasets [OrgadTGRSKB25] -> focus on generalization.
+% - 2 Questions: (1) Causal localization was proposed as a shift-robust
+%   alternative for natural language [Huang2025Internal], is it beneficial for
+%   code generation? (2) Across families, which degrades least, under which
+%   type of shift (on which target)?
+% - Draft contributions: comparison of six predictors from four families
+%   (RQ1, RQ3, RQ4); adaptation of counterfactual simulation and value probing
+%   to code, interventions at the last prompt token; analysis of where the
+%   causal methods help (RQ2), incl. the withdrawn "the subspace encodes the
+%   model's answer rather than the program's correctness".

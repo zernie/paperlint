@@ -1,0 +1,54 @@
+\appendix
+
+
+\section{Judge prompts}\label{sec:app-prompts}
+
+System message (judge experiment and LLM judges in Section~\ref{sec:stream}):
+
+\begin{verbatim}
+You are a careful fact-checker. You may be shown news reports. Decide whether the claim is true. Answer with one word: True or False.
+\end{verbatim}
+
+User message, condition ``3 copies + note'' (the note line is absent in other conditions; ``none'' shows only the claim and the question):
+
+\begin{verbatim}
+News reports:
+1. [Metro Tribune] Ta Tasken was born in the city of Lima.
+2. [Riverside News] Ta Tasken was born in the city of Lima.
+3. [Daily Courier] Ta Tasken was born in the city of Lima.
+Note: all of these reports are reprints of one and the same wire story; they are one source, not 3.
+
+Claim: Ta Tasken was born in the city of Lima.
+Is the claim true?
+\end{verbatim}
+
+The note is part of the user message, directly after the reports. In ``3 different wordings'' (``indep3'' in the code) the three reports use three different wordings of the claim; in ``3 copies among 7 others'' the seven other reports state claims about other subjects, in random order.
+
+With the Unsure option the system message ends: ``Answer with one word: True, False, or Unsure if the evidence is not enough to decide.''
+
+\textbf{Decoding and models.} Temperature 0. The judge experiment (Section~\ref{sec:judges}) allowed 64 answer tokens; Gemini 2.5 Pro cannot switch reasoning off and used its smallest reasoning budget (128 tokens) before the answer. The LLM judges in the learning stream (Section~\ref{sec:stream}) allowed 10 answer tokens, the setting of our first judge runs. The verdict is the first standalone ``true'' or ``false'' in the answer (with the Unsure option: the first of ``true'', ``false'', ``unsure''); answers with none count as not accepted and are reported as abstentions. Models: Ollama builds phi4 (14B) and llama3.2 (Llama-3.2-3B-Instruct), both 4-bit; Gemini API model ids gemini-2.5-flash and gemini-2.5-pro, queried between 31 October and 1 November 2026.
+
+\section{Per-seed results}\label{sec:app-seeds}
+
+Share of copied lies accepted, all reports / one report per chain, per seed (copy attack unless stated). Detectors differ by column: Llama 3.2, Gemini Flash and Gemini Pro use the measured text-similarity detector; both phi4 columns come from the ten-seed robustness run with the new-information detector of Section~\ref{sec:novelty} (the three-seed phi4 results in the Section~\ref{sec:stream} tables use the text-similarity detector):
+
+\begin{table}[htbp]\centering\footnotesize
+\begin{tabularx}{\linewidth}{lccccZ}
+\toprule
+Seed & Llama 3.2 & phi4 & Gemini Flash & Gemini Pro & phi4, paraphrase attack \\
+\midrule
+10 & 0.57 / 0.37 & 0.58 / 0.33 & 0.75 / 0.63 & 0.63 / 0.49 & 0.67 / 0.41 \\
+11 & 0.54 / 0.33 & 0.57 / 0.33 & 0.74 / 0.65 & 0.61 / 0.47 & 0.65 / 0.42 \\
+12 & 0.58 / 0.34 & 0.57 / 0.33 & 0.75 / 0.65 & 0.64 / 0.46 & 0.70 / 0.40 \\
+13 & 0.56 / 0.35 & 0.57 / 0.34 & 0.74 / 0.67 & - & 0.67 / 0.44 \\
+14 & 0.64 / 0.42 & 0.63 / 0.39 & 0.77 / 0.68 & - & 0.74 / 0.49 \\
+15 & 0.56 / 0.29 & 0.52 / 0.28 & 0.72 / 0.63 & - & 0.60 / 0.37 \\
+16 & 0.60 / 0.37 & 0.56 / 0.36 & 0.75 / 0.65 & - & 0.65 / 0.45 \\
+17 & 0.54 / 0.30 & 0.54 / 0.29 & 0.71 / 0.64 & - & 0.68 / 0.37 \\
+18 & 0.57 / 0.35 & 0.56 / 0.30 & 0.71 / 0.64 & - & 0.65 / 0.42 \\
+19 & 0.54 / 0.34 & 0.58 / 0.36 & 0.76 / 0.63 & - & 0.70 / 0.44 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+One report per chain accepts fewer copied lies in every seed for every judge. Each seed draws a new world (claims, chain sizes, report order) and a new training order; the claim-level judge experiment (Section~\ref{sec:judges}) is reported separately with tests on the same 80 claims. All per-run metrics are in the repository (results/*/results.jsonl).

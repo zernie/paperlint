@@ -1,0 +1,22 @@
+\begin{table*}[t]
+\centering
+\caption{Closed-loop decomposition (\cref{prop:loop}) of standard MPPI episodes against the cloned policy: episode return $R$, the cloned policy's return $V_0$ from the same start, and the episode sums of the selection gain $\Delta_t$, the price of noise $c_t$, the averaging term $\alpha_t$ and the horizon gap $\eta_t$, so that $R-V_0=\sum\Delta-\sum c+\sum\alpha+\sum\eta$ (exact in every run, to $10^{-12}$). $\rho$: mean per-state correlation of the scorer with the true plan return over the 256 proposals, on the states the planner visits (share of states below zero in parentheses) and on the cloned policy's own states (one-step probe, same scorer). Mean over runs, with the standard error over runs for $R-V_0$ and $\sum\Delta$. Each run is paired with $V_0$ from its own start, computed in the planner's simulator copy. On the arm run $k$ uses scorer seed $k$ and start $k$; the walker runs use starts 0 and 1 only (three from start 0, where the cloned cheetah scores 1), so their $V_0$ (cheetah 140, hopper 426) is not the mean over ten starts of \cref{tab:fixes} (412, 502). The cloned cheetah's return also depends sharply on small state differences (from start 1: 347 in the copy, 662 in the environment), the source of its large horizon gap.}
+\label{tab:loop}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcccccccccc}
+\toprule
+& runs & $R$ & $V_0$ & $R-V_0$ & $\sum\Delta$ & $\sum c$ & $\sum\alpha$ & $\sum\eta$ & $\rho$ visited & $\rho$ cloned \\
+\midrule
+Cheetah, $\lambda=0.01$ & 5 & 237 & 140 & $+98$\,{\scriptsize$\pm$68} & $+183$\,{\scriptsize$\pm$153} & $1818$ & $+5$ & $+1727$ & $+0.08$ (34\%) & $+0.05$ \\
+Hopper, $\lambda=0.01$ & 5 & 269 & 426 & $-156$\,{\scriptsize$\pm$86} & $-58$\,{\scriptsize$\pm$278} & $754$ & $+1$ & $+655$ & $+0.51$ (13\%) & $+0.76$ \\
+Drawer 500, uniform averaging & 5 & 854 & 898 & $-44$\,{\scriptsize$\pm$2} & $0$ & $387$ & $+225$ & $+118$ & $+0.09$ (36\%) & $+0.10$ \\
+Drawer 500, $\lambda=3$ & 5 & 765 & 898 & $-133$\,{\scriptsize$\pm$59} & $-31$\,{\scriptsize$\pm$35} & $301$ & $+119$ & $+81$ & $+0.03$ (46\%) & $+0.10$ \\
+Drawer 500, $\lambda=0.01$ & 5 & 472 & 898 & $-426$\,{\scriptsize$\pm$164} & $-151$\,{\scriptsize$\pm$77} & $75$ & $0$ & $-200$ & $-0.11$ (62\%) & $+0.10$ \\
+Drawer, perfect scorer, $\lambda=0.01$ & 5 & 1099 & 898 & $+200$\,{\scriptsize$\pm$5} & $+632$\,{\scriptsize$\pm$20} & $195$ & $0$ & $-237$ & $+1.00$ (0\%) & -- \\
+Drawer human, $\lambda=0.01$ & 5 & 218 & 898 & $-680$\,{\scriptsize$\pm$11} & $-373$\,{\scriptsize$\pm$63} & $69$ & $0$ & $-238$ & $-0.31$ (91\%) & $-0.10$ \\
+Plate 500, $\lambda=0.01$ & 5 & 516 & 1115 & $-599$\,{\scriptsize$\pm$108} & $+113$\,{\scriptsize$\pm$58} & $216$ & $+1$ & $-497$ & $-0.07$ (52\%) & $+0.45$ \\
+Window 500, $\lambda=0.01$ & 5 & 403 & 381 & $+22$\,{\scriptsize$\pm$17} & $+145$\,{\scriptsize$\pm$42} & $-43$ & $-1$ & $-165$ & $+0.22$ (19\%) & $+0.35$ \\
+\bottomrule
+\end{tabular}
+\end{table*}

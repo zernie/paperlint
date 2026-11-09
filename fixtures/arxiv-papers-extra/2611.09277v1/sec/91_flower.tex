@@ -1,0 +1,94 @@
+
+\section{Framework screening}
+\label{appendix:maturity}
+
+Twelve open-source frameworks were screened on five indicators obtained from public repository metadata via the GitHub API\footnote{\url{https://api.github.com/repos/\{:owner\}/\{:repository\}}}: stars, contributors, creation date, latest release date, and last activity date. All values were collected on 30-09-2026 and are shown in Table~\ref{tab:fl_frameworks}.
+
+
+
+\providecommand{\fw}[2]{%
+  \begin{tabular}[t]{@{}l@{}}
+    #1\\[-1pt]
+    \textit{#2}
+  \end{tabular}%
+}
+
+\begin{table}[t]
+\centering
+\caption{Open-source FL frameworks: GitHub statistics as of 30-09-2026. Stars and contributors (Contri.) are counts.}
+\label{tab:fl_frameworks}
+\scriptsize
+\setlength{\tabcolsep}{2pt}
+
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}lrrccc@{}}
+\toprule
+\textbf{\shortstack[l]{Framework\\(Maintainer)}} &
+\textbf{Stars} &
+\textbf{Contri.} &
+\textbf{Created} &
+\textbf{\shortstack{Latest\\release}} &
+\textbf{\shortstack{Last\\activity}} \\
+\midrule
+
+\fw{Flower \citep{beutel2020flower}}{Flower}
+& 7149 & 190 & 17-02-2020 & 28-09-2026 & 30-09-2026 \\[1pt]
+
+\fw{PySyft \citep{pysyft}}{OpenMined}
+& 10041 & 432 & 18-07-2017 & 13-04-2025 & 30-09-2026 \\[1pt]
+
+\fw{FATE \citep{fate}}{WeBank}
+& 6099 & 86 & 24-01-2019 & 31-07-2024 & 19-11-2024 \\[1pt]
+
+\fw{OpenFL \citep{DBLP:journals/corr/abs-2105-06413}}{Linux Foundation}
+& 843 & 109 & 12-01-2021 & 23-06-2025 & 25-08-2026 \\[1pt]
+
+\fw{TensorFlow Federated}{Google}
+& 2453 & 115 & 12-12-2018 & 26-09-2024 & 28-09-2026 \\[1pt]
+
+\fw{FedML \citep{fedML}}{TensorOpera}
+& 4067 & 66 & 21-07-2020 & 28-10-2023 & 28-10-2025 \\[1pt]
+
+\fw{PaddleFL \citep{paddle}}{Baidu}
+& 512 & 25 & 25-09-2019 & 06-12-2021 & 26-07-2023 \\[1pt]
+
+\fw{Substra \citep{substra}}{Owkin}
+& 278 & 37 & 25-10-2019 & 14-10-2024 & 14-10-2024 \\[1pt]
+
+\fw{NVIDIA FLARE \citep{Roth_NVIDIA_FLARE_Federated_2023}}{NVIDIA}
+& 975 & 78 & 23-07-2021 & 24-09-2026 & 30-09-2026 \\[1pt]
+
+\fw{AppFL \citep{appFL,Ryu_appFLSoft}}{UChicago Argonne}
+& 185 & 26 & 07-10-2021 & 25-08-2026 & 30-09-2026 \\[1pt]
+
+\fw{SecretFlow}{Ant Group}
+& 2714 & 106 & 15-04-2022 & 26-09-2025 & 24-04-2026 \\[1pt]
+
+\fw{FederatedScope \citep{xie2022federatedscope}}{Alibaba}
+& 1545 & 18 & 24-03-2022 & 03-04-2023 & 10-08-2024 \\
+
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+ 
+\section{Assessment of Flower against R1 to R7}
+\label{appendix:flower}
+
+We examine one framework in detail, to show how the requirements of Sec.~\ref{Forensic Specific Requirements for Federated Learning} translate into concrete capabilities and where they are not met. We use Flower, because its cross-silo deployment model matches the multi-agency setting and because it scored highest in a recent comparative study of FL frameworks \citep{riedel2024comparative}. Substra \citep{substra} is built for regulated multi-party collaboration and would be the conceptually closer comparator, but it is far less maintained. That trade-off between architectural fit and adoption risk is the one agencies actually face. The assessment relies on published documentation\footnote{\url{https://flower.ai/docs/framework/index.html}} rather than on a deployment, so it is indicative rather than definitive.
+
+
+\textbf{R1.} Flower provides Secure Aggregation, with implementations of \texttt{SecAgg} and \texttt{SecAgg+}, and Differential Privacy. Both are configured globally rather than per aggregation step, which reflects the flat deployment model the framework assumes. This is the one finding that bears on the argument rather than on the framework, and it is discussed in Sec.~\ref{subsec:Federated Learning Framework Landscape: Maturity and Forensic Readiness}.
+
+\textbf{R2.} Flower offers audit logging based on content-addressable messaging, which assigns cryptographic hashes to model weights and gradients by content rather than by location. The logs allow training rounds to be reconstructed technically. They are designed for system verification and debugging, and it remains unclear how far they meet evidentiary chain-of-custody requirements or legal audit standards.
+
+\textbf{R3.} Flower supports authentication through OpenID Connect and role-based access control through SuperLink\footnote{SuperLink is the server-side component in Flower that orchestrates communication between distributed clients.}, OpenFGA, and OIDC providers. This gives a foundation for defining organizational roles and responsibilities. It does not provide the higher-level governance processes that forensic investigations need, such as inter-agency agreements, liability allocation, or procedural accountability.
+
+\textbf{R4.} Flower integrates FedDebug \citep{FedDebug} and TraceFL \citep{TraceFL}. FedDebug lets a developer inspect training round by round and client by client and identify faulty clients, using differential testing on neuron activations to detect unusual patterns or backdoors. TraceFL attributes a specific prediction of the global model to the clients that contributed to it. Flower also supports interpretable models such as XGBoost-FedXGBllr. All of these tools address developers and researchers. How their output could be turned into an explanation that holds up in court is an open question.
+
+\textbf{R5.} Flower works with PyTorch, TensorFlow, Hugging Face, and scikit-learn, supports Docker and Kubernetes deployment, and provides hook-based extensibility. This interoperability is oriented towards research and production ML environments, and it is unclear how it transfers to forensic toolchains.
+
+\textbf{R6.} Flower does not integrate with forensic evidence management or case workflow systems, so forensic use requires manual integration. Integration with evidence acquisition, chain-of-custody management, or forensic analysis platforms has not been demonstrated.
+
+\textbf{R7.} Flower provides extensive documentation, more than twelve quickstart tutorials, and a command-line interface. Usability for machine learning practitioners does not automatically mean usability for forensic analysts or investigators, who may have no ML background.

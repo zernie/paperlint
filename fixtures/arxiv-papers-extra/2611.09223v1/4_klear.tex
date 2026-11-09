@@ -1,0 +1,74 @@
+\section{\name{}}
+\label{sec:klear}
+%\input{Figures/Figure1}
+
+In this section, we propose \textbf{\name{}} (\textbf{K}nowledge-Matched \textbf{L}LM \textbf{E}valuation in Korean across \textbf{A}pplication \textbf{R}equirements), a framework that constructs knowledge-matched contrasts from existing benchmark questions in three stages (Figure~\ref{fig:overview}).
+First, anchor-based generation (Sec.~\ref{sec:generation}) makes the knowledge behind a source question explicit as an \textit{anchor bundle}, and generates new questions that rest on the same bundle while demanding more application.
+Second, automated audit and revision (Sec.~\ref{sec:audit}) uses rubric-based LLM evaluation to check the validity and quality of each candidate, screens its difficulty with a proxy model, and revises failing candidates.
+Third, human validation and revision (Sec.~\ref{sec:human}) makes a final check of its quality, and revises rejected questions with annotator rationales.
+By fixing the knowledge before generation and checking its preservation afterwards, KLEAR isolates differences in application demand between source questions and their contrasts.
+
+\subsection{Anchor-Based Generation}
+\label{sec:generation}
+
+\paragraph{Seed selection.}
+We draw seeds from the questions profiled in Sec.~\ref{sec:motivation}.
+We select A1 or A2 questions that at least two of the three Korean LLMs answer incorrectly, so that construction starts from questions these models find difficult.
+An A1 seed can target A2 or A3, whereas an A2 seed can target A3.
+
+\paragraph{Anchor bundle.}
+For each seed, an LLM constructs an \textit{anchor bundle} using the question, answer options, gold answer, and silver reasoning.
+The bundle consists of three components: 
+(1) \textit{Knowledge units} specify the rules, criteria, definitions, or facts required to solve the question, including those underlying the distractors.
+(2) \textit{Relations} describe how these units interact, such as which unit is the principle and which the exception.
+(3) A \textit{Scope note} explicitly identifies knowledge excluded from the bundle.
+Together, these components define a closed set of domain knowledge that subsequent generation must stay within.
+The LLM also assesses whether the bundle can support each target-application level, excluding unsupported targets from generation.
+For example, an A3 target requires at least two knowledge units that could plausibly govern the same case.
+% We call a generated question \textit{knowledge-matched} to its seed when both can be answered from the same anchor bundle and the case alone.
+
+\paragraph{Target-A generation.}
+Given a seed, its anchor bundle, and a target-application level, the generator LLM  produces a new multiple-choice question with four or five answer options.
+The generated question must preserve the answer type of the seed and must not state or paraphrase the anchor knowledge.
+For an A2 target, exactly one knowledge unit from the bundle applies, but its applicability must be inferred from the case facts.
+For an A3 target, two or more knowledge units from the bundle compete over a single case with comparable supporting evidence.
+Each distractor must represent an identifiable error and all options must be parallel in form.
+We generate three candidates per seed--target pair.
+
+\subsection{Automated Audit and Revision}
+\label{sec:audit}
+
+\paragraph{LLM rubric.}
+An LLM auditor receives the seed, its anchor bundle, the target-application level, and the candidate.
+It evaluates the candidate against eleven criteria, labeling each as \textsc{pass}, \textsc{fail}, or \textsc{uncertain} with a rationale.
+L1--L6 assess question validity, while L7--L11 assess knowledge preservation and other quality criteria.
+The full rubric is provided in Table~\ref{tab:rubrics}.
+
+\paragraph{Proxy screening.}
+The rubric does not measure difficulty, and a candidate can pass every criterion while being easy to answer.
+We therefore use a weaker proxy model to screen for insufficiently challenging candidates.
+This proxy answers each candidate from the question and answer options alone, and a candidate it answers correctly is treated as too easy.
+
+\paragraph{Self-revision.}
+A candidate is returned to the generator when any criterion is not \textsc{pass} or when the proxy answers it correctly.
+If any criterion is not \textsc{pass}, the generator receives every such criterion with its rationale and must resolve them without regressing other criteria.
+If all criteria are \textsc{pass} but the proxy answers correctly, the generator is told that a weaker model answered the question correctly and must close the shortcut.
+In both cases, the revision must stay within the bundle.
+Each candidate is revised at most once, and the revision is audited and screened again under the same conditions.
+A candidate passes the automated stage when, in its original or revised form, all eleven criteria are \textsc{pass} and the proxy answers it incorrectly.
+
+
+\subsection{Human Validation and Revision}
+\label{sec:human}
+
+\paragraph{Targeted validation.}
+To identify defects that may remain after automated auditing, human annotators evaluate each candidate that passes the automated stage against five criteria in two stages (Table~\ref{tab:rubrics}).
+In the first stage, without the anchor bundle, H1--H3 check the surface quality of the question, and in the second stage, with the bundle revealed, H4--H5 check the control of knowledge and application.
+Annotators label each criterion as \textsc{pass}, \textsc{borderline}, or \textsc{fail}, with a rationale for any label other than \textsc{pass}.
+A candidate passes human validation when every annotator labels all five criteria as \textsc{pass}.
+
+\paragraph{Human-guided revision.}
+Candidates that fail to pass are returned to the generator with the human annotators' labels and rationales.
+The generator revises each candidate to address the identified defects while remaining within the anchor bundle and preserving the target-application level.
+The revised candidates undergo human validation again under the same two-stage protocol.
+Only candidates that pass human validation, either initially or after revision, are retained in the final benchmark.

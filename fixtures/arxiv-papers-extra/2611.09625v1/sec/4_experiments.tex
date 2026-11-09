@@ -1,0 +1,117 @@
+\section{Experiments}
+
+In this work, we investigate the potential of TT-MBRL to learn long-term memory via gradient descent. To this end, we evaluate our method on several tasks that require long-term memory and planning. We first establish a proof of concept by experimenting with a simplified two-dimensional variant of the Memory Maze environment, which we refer to as Memory Maze 2D, showing consistent improvements across different world model architectures. We then demonstrate the effectiveness of TT-MBRL in the 3D domain, achieving new state-of-the-art results on the Memory Maze benchmark~\citep{pasukonis2023evaluating}. Finally, we conduct a study to identify effective strategies for performing MBRL at test time and show that TT-MBRL maintains strong performance on non-memory benchmarks such as the DeepMind Control Suite (DMC)~\citep{tassa2018deepmind} and Atari 100k~\citep{kaiser2019model}.
+\begin{figure*}[ht]
+    \begin{subfigure}{0.33\textwidth}
+        \centering
+        \includegraphics[width=0.9\linewidth]{figures/memory_maze_2d.pdf}
+        \caption{Memory Maze 2D}
+        \label{figure:memory_maze_2d}
+    \end{subfigure}
+    %\hfill
+    \begin{subfigure}{0.33\textwidth}
+        \centering
+        \includegraphics[width=0.9\linewidth]{figures/memory_maze.pdf}
+        \caption{Memory Maze}
+    \end{subfigure}
+    \begin{subfigure}{0.33\textwidth}
+        \centering
+        \includegraphics[width=0.9\linewidth]{figures/dmc_atari.pdf}
+        \caption{DMC/Atari}
+        \label{figure:dmc_atari}
+    \end{subfigure}
+    \caption{Randomly generated environment map and agent observation for Memory Maze 2D and Memory Maze benchmarks. The agent receives partial observations of the environment and must rely on long-term memory to learn an optimal policy. In contrast, DMC and Atari 100k tasks are mostly fully observable and solvable without extensive memory.}
+    \label{figure:memory_maze}
+\end{figure*}
+
+\subsection{Memory Maze 2D}
+\label{subsection:memory_maze_2d}
+
+\paragraph{Benchmark.}
+
+In order to demonstrate the effectiveness of TT-MBRL, we first design a simplified and efficient two-dimensional variant of the Memory Maze environment in which the agent observes a top-down $3 \times 3$ local context centered on its current position. To enable goal identification, we augment the observation with colored borders that indicate the target color to be reached for obtaining the next reward. The observation is then flattened and normalized, forming a vector of dimension $75=5\times5\times3$. Figure~\ref{figure:memory_maze} illustrates a comparison between our modified setting and the original Memory Maze environment. The agent operates in the maze using a discrete action space consisting of five actions: no-op, move left, move right, move up, and move down. We consider the same four maze sizes as in the original benchmark (9\texttimes9, 11\texttimes11, 13\texttimes13, and 15\texttimes15), along with their corresponding hyperparameters. Further details on the proposed Memory Maze 2D environment are provided in Appendix~\ref{appendix:memory_maze_2d}.
+
+\input{tables/results_maze_2d.tex}
+\input{tables/metrics_2d.tex}
+
+\paragraph{Results.}
+
+% Setup
+To evaluate the effectiveness of TT-MBRL, we consider three recent world model architectures: DreamerV3~\citep{hafner2023mastering}, which employs an RNN-based world model; TWISTER~\citep{burchi2025learning}, which relies on a Transformer-based architecture; and R2I~\citep{samsami2024mastering}, which is built on S4. Table~\ref{table:results_maze_2d} shows the results obtained after training 100M environment steps on each maze size. We also record the performance of a human player to estimate the capabilities of each method compared to human memory abilities. Oracle defines the performance obtained when following the shortest path to the target color. We find that R2I achieves the best results on all maze sizes with a score of 171.6 on Memory Maze 2D 15\texttimes15. TWISTER outperforms DreamerV3 on the 15\texttimes15 maze size due to its Transformer-based world model with self-attention. However, we find that it struggles to learn an optimal policy on smaller maze sizes. We suppose this is due to the nature of the self-attention mechanism that is not biased toward recent observations and requires accurately selecting the needed information at each time step, while DreamerV3 carries past information into a recurrent hidden state. We find that TT-MBRL improves the performance of all models when a near optimal policy is not already achieved. It allows R2I to outperform human performance on all maze sizes, except 9\texttimes9. This is due to the policy occasionally failing on a subset of episodes, despite achieving higher performance on the majority of them. We also evaluate the impact of TT-MBRL on world-model prediction accuracy using a combination of standard video prediction metrics (Table~\ref{table:metrics_2d}).  We measure the world model KL divergence, Fréchet Video Distance (FVD)~\citep{unterthiner2018towards}, Peak Signal-to-Noise Ratio (PSNR), Structural Similarity Index Measure (SSIM)~\citep{wang2004image} and Learned Perceptual Image Patch Similarity (LPIPS)~\citep{zhang2018unreasonable} over 100 unseen trajectories of 64 frames from distinct episodes. We find that TT-MBRL consistently decreases the world model prediction error in latent space. This results in more accurate predictions and better performance in video prediction metrics. Figure~\ref{figure:imagine_2d} shows the impact of TT-MBRL on DreamerV3 world model predictions.
+
+\subsection{Memory Maze}
+\label{subsection:memory_maze}
+
+\paragraph{Benchmark.}
+
+The Memory Maze benchmark, introduced by~\citet{pasukonis2023evaluating}, consists of a 3D domain of randomized mazes specifically designed to evaluate long-term memory in agents. In this environment, the agent must locate a target object of a specific color, indicated by the border color in the observation image. Upon reaching and interacting with the correct object, the agent receives a reward of +1, after which a new target object is randomly selected. The benchmark includes four tasks of increasing size and difficulty: Memory Maze 9\texttimes9, 11\texttimes11, 13\texttimes13, and 15\texttimes15. While the smaller maze sizes contain three objects, 15\texttimes15 mazes include six objects and a greater number of rooms, making the task more challenging while remaining solvable for human players.
+
+\input{tables/results_maze.tex}
+\input{tables/metrics_3d.tex}
+
+\begin{figure*}[ht]
+    \begin{subfigure}{0.33\textwidth}
+        \centering
+        \includegraphics[width=0.9\linewidth]{figures/kl_hist_impr_3d_1.pdf}
+        \caption{KL div ($\downarrow$) over time steps}
+        \label{figure:kl_hist_impr_3d_1}
+    \end{subfigure}
+    \begin{subfigure}{0.33\textwidth}
+        \centering
+        \includegraphics[width=0.9\linewidth]{figures/kl_hist_impr_3d_2.pdf}
+        \caption{Evaluation histogram}
+        \label{figure:kl_hist_impr_3d_2}
+    \end{subfigure}
+    \begin{subfigure}{0.33\textwidth}
+        \centering
+        \includegraphics[width=0.9\linewidth]{figures/kl_hist_impr_3d_3.pdf}
+        \caption{Average obtained reward per step}
+        \label{figure:kl_hist_impr_3d_3}
+    \end{subfigure}
+    \caption{R2I world model KL divergence over 64 predicted steps, evaluation episodes histogram, and relative improvement in obtained rewards brought by TT-MBRL on Memory Maze 15\texttimes 15.}
+    \label{figure:kl_hist_impr_3d}
+\end{figure*}
+
+\paragraph{Results.}
+
+We train DreamerV3, TWISTER, and R2I world models for 100M environment steps on all Memory Maze sizes. Following~\citet{samsami2024mastering}, we further train R2I up to 400M environment steps and include the results obtained by IMPALA~\citep{espeholt2018impala}, which serves as a strong model-free baseline for comparison. Table~\ref{table:results_maze} compares the results obtained by each method. Despite the increased observation complexity of the 3D domain, where observations of the same position vary with viewing angle, unlike the fixed top-down views of Memory Maze 2D, TT-MBRL successfully identifies structural similarities between observed views to build a more accurate episode-specific world model. TT-MBRL yields consistent improvements across all world model approaches on larger maze sizes, achieving substantial gains: The performance of R2I increases from 60.1 to 63.0 on Memory Maze 13\texttimes 13, and from 42.0 to 54.1 on Memory Maze 15\texttimes 15, establishing new state-of-the-art results and the closest performance to the human baseline (67.7) among all proposed methods. On the smaller maze sizes, where DreamerV3 and R2I already achieve near-optimal performance, the gains are more modest, consistent with the saturation effects observed in Memory Maze 2D. We further assess the quality of world model predictions in Table~\ref{table:metrics_3d}, comparing video prediction metrics. Across all five metrics, TT-MBRL substantially reduces prediction error. Figure~\ref{figure:kl_hist_impr_3d} further illustrates the dynamics of adaptation within a single episode for R2I on Memory Maze 15\texttimes15. Figure~\ref{figure:kl_hist_impr_3d_1} shows the world model KL divergence over 64 predicted steps: Without TT-MBRL, prediction error accumulates rapidly beyond the first 20 steps, while the adapted model maintains substantially lower divergence. Figure~\ref{figure:kl_hist_impr_3d_2} shows the episode return distribution, with TT-MBRL shifting mass toward higher scores and reducing the frequency of low-reward episodes. Figure~\ref{figure:kl_hist_impr_3d_3} shows the per-step relative improvement in obtained rewards brought by TT-MBRL across the episode: The effectiveness of TT-MBRL grows steadily as more observations accumulate in the test-time replay buffer, reaching 53.7\% after 4000 environment steps.
+
+\begin{figure*}[ht]
+    \centering
+    \begin{subfigure}{\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/sequence_memory_maze_2d.pdf}
+    \caption{DreamerV3 world model predictions over 16 time steps: Memory Maze 2D 15\texttimes15}
+    \label{figure:imagine_2d}
+    \end{subfigure}
+    \begin{subfigure}{\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/sequence_memory_maze.pdf}
+    \caption{R2I world model predictions over 64 time steps: Memory Maze 15\texttimes15}
+    \label{figure:imagine_3d}
+    \end{subfigure}
+    \caption{Impact of TT-MBRL on world model predictions. We let the agent explore and learn about the environment, then we compare world model predictions to real observations. First row shows unseen real environment observations. Second row shows world model predictions with TT-MBRL. Third row shows world model predictions without TT-MBRL. Without test-time optimization, the model accumulates prediction errors and struggles to make accurate long-term predictions. This makes it difficult to learn an optimal policy for the actor-critic.}
+    \label{figure:imagine}
+\end{figure*}
+
+\subsection{TT-MBRL Analysis}
+\label{subsection:analysis}
+
+\paragraph{Training Data Regularization.}
+
+We conduct a set of studies to identify effective strategies for performing model-based reinforcement learning at test time. Table~\ref{table:study_test_train} reports the impact of different sampling schemes on mitigating overfitting.
+We first consider a naive approach in which the model is updated solely using trajectories collected at test time, without enforcing a minimum number of samples to prefill the test-time replay buffer before learning begins (Test Data Only, No Prefill). Although this strategy improves performance in many episodes, it also degrades performance in others, as the model overfits to limited early observations, resulting in suboptimal policies.
+To address this issue, we introduce a delay mechanism that postpones learning until the test-time replay buffer is populated with a sufficient number of samples (1024 Prefill). This reduces overfitting but introduces a trade-off, as it delays the benefits of adaptation.
+To overcome both limitations, we propose mixing trajectories collected at test time with samples from the training replay buffer (Test+Train Data, No Prefill), effectively acting as a form of regularization. This approach mitigates early overfitting while enabling immediate adaptation, leading to more stable and consistent performance improvements.
+To verify that the gain in performance is due to TT-MBRL rather than additional inference compute, we also perform a compute-matched evaluation. We study the impact of additional compute on performance when only training trajectories are available (Train Data Only). The comparison confirms that the performance gain is due to TT-MBRL rather than additional compute budget.
+
+\input{tables/study_test_train.tex}
+
+\paragraph{Reconstruction Loss and Parameter Freezing.} Table~\ref{table:freezing} shows the impact of freezing or updating encoder/decoder parameters using the reconstruction loss at test time. We find that the two variants achieve comparable performance across different world model architectures. These findings are as expected, given that encoder representations are independent of their temporal ordering. The episode-specific information is instead captured by the sequential and dynamics network parameters. However, unfreezing these parameters comes at a non-trivial computational cost, as gradient back-propagation must be carried through the decoder and encoder, resulting in longer evaluation times. This is especially the case for Memory Maze, where observations are 64\texttimes64 pixels images. We therefore adopt parameter freezing for encoder and decoder networks as our default setting, as it improves evaluation efficiency without sacrificing performance.
+
+\input{tables/study_freezing.tex}
+
+\subsection{Application of TT-MBRL to Non-Memory Domains}
+
+In order to evaluate the capacity of TT-MBRL to maintain strong performance in non-memory domains, domains not designed primarily to test long-term episodic memory, we evaluate its impact on two widely adopted benchmarks that do not require long-term memory or planning: The visual DeepMind Control Suite (DMC)~\citep{tassa2018deepmind}, which comprises 20 continuous control tasks, and the Atari 100k benchmark~\citep{kaiser2019model}, which includes 26 Atari games with discrete actions. Both benchmarks are largely fully observable and can be solved without extensive memory. We report aggregated mean and median scores across all 20 DMC tasks in Table~\ref{table:results_dmc} and human-normalized scores on Atari 100k in Table~\ref{table:results_atari}. Overall, we find that TT-MBRL does not degrade the performance obtained by DreamerV3. Moreover, we find that TT-MBRL consistently improves performance on \textit{Reacher Hard} and \textit{Finger Turn Hard}, where the agent occasionally fails to accurately reach the target sphere. TT-MBRL mitigates this issue by enabling the agent to better detect and correct such errors. Detailed results for individual tasks are provided in Appendix~\ref{appendix:histograms}.
+\input{tables/results_dmc_atari.tex}

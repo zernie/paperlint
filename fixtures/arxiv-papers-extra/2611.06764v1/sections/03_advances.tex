@@ -1,0 +1,89 @@
+\section{Recent Advances}\label{sec:advances}
+We survey recent work on agent access control and, based on our analysis of its authorization mechanisms, organize it into four categories: policy specification and derivation, identity and delegation, action and resource enforcement, and information-flow control. Integrated systems may span multiple categories. Within each category, we examine what the mechanisms control, where they enforce restrictions, and which assumptions their guarantees depend on. Figure~\ref{fig:mechanisms} shows how the four families connect across an agent workflow, and Table~\ref{tab:mechanisms} summarizes representative approaches and their key dependencies.
+
+\begin{figure}[t]
+\centering
+\Description{An authorization chain links a task request, explicit policy, scoped identity, tool operation, and effect. Policy derivation, delegation, and action enforcement control related interfaces; information-flow control spans reading, transformation, and release. Feedback carries policy updates and revocation.}
+\includegraphics[width=\linewidth]{figures/02_mechanisms.pdf}
+\caption{Four complementary mechanisms for agent access control. Policy specification defines restrictions, identity and delegation assign task permissions, and action enforcement checks operations. Information-flow control governs data use and release throughout execution, while permission changes trigger renewed checks.}
+\label{fig:mechanisms}
+\end{figure}
+
+\begin{table}[!tb]
+\caption{Recent approaches grouped by authorization role, with their control boundaries and dependencies.}
+\label{tab:mechanisms}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\linewidth}{@{}P{.32\linewidth}P{.33\linewidth}Y@{}}
+\toprule
+Approach and works & Mechanism and control object & Key dependency \\
+\midrule
+\multicolumn{3}{@{}l}{\textbf{Policy Specification and Derivation}} \\
+Explicit rules~\cite{agentspec,guardagent,shieldagent} & Rules, code, logical circuits & Rule fidelity; predicate accuracy \\
+Task-derived constraints~\cite{conseca,drift,taskshield} & Context, trajectory, relevance & Trusted context; task authority \\
+Plan-aware permissions~\cite{miniscope,prudentia} & Role selection; policy-aware plans & Role granularity; available plans \\
+User preferences~\cite{dataperms,janus,userpolicies} & Predicted choices; approval rules & Preference coverage; user input \\
+\midrule
+\multicolumn{3}{@{}l}{\textbf{Identity and Delegation}} \\
+Identity binding~\cite{delegation,saga,etdi} & Agent identities; tool signatures & Identity roots; grant interpretation \\
+Scoped delegation~\cite{astra,aip,capmas} & Issuance; token attenuation & Scope derivation; token verification \\
+Credential separation~\cite{miniscope,sudp} & Session proxy; secret custodian & Mediated use; operation binding \\
+State and revocation~\cite{bounded,vera} & Sessions; delegation graphs & State coordination; revocation rules \\
+\midrule
+\multicolumn{3}{@{}l}{\textbf{Action and Resource Enforcement}} \\
+Call checks~\cite{progent,toolfence} & Tool calls and arguments & Update authority; tool semantics \\
+History-based checks~\cite{seagent,pcas,vigil} & Interaction graphs; event traces & Event coverage; policy/fact fidelity \\
+Application semantics~\cite{ac4a,verisafe,csagent} & Resource, GUI, context checks & Application models; context extraction \\
+Execution confinement~\cite{cellmate,agentbound,ztac} & HTTP, process, object mediation & Mediation coverage; trusted broker \\
+Skill governance~\cite{skillguard,skillscope} & Capability checks; skill patches & Capability inference; replay coverage \\
+\midrule
+\multicolumn{3}{@{}l}{\textbf{Information-Flow Control}} \\
+Minimization and isolation~\cite{airgap,isolate} & Conversation and app exchanges & Data selection; context isolation \\
+Tracked computation~\cite{camel,fides,ace,llmbda} & Labeled values and interpreters & Flow semantics; release rules \\
+Cross-boundary flows~\cite{gaap,spides,multicamel,safeflow} & Task, browser, inter-agent flows & Provenance; label accuracy \\
+Controlled continuation~\cite{prudentia,appa} & Endorsement; confined recovery & Exception authority; isolation \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Policy Specification and Derivation}
+Policy specification and derivation turn task requirements and user choices into enforceable restrictions. Existing approaches differ in the evidence they use to determine restrictions and how they translate that evidence into policies or permission decisions.
+
+\emph{Explicit rules} express requirements as executable checks. AgentSpec~\cite{agentspec} provides event-triggered rules, GuardAgent~\cite{guardagent} generates checking code, and ShieldAgent~\cite{shieldagent} extracts and refines logical rules from policy documents. These systems connect natural-language requirements to runtime decisions, including access restrictions within broader safety policies. The available predicates and observations determine which requirements these checks can express. Their correctness also depends on whether the translation preserves the intended restriction.
+
+\emph{Task-derived constraints} reduce the need to author every restriction manually. Conseca~\cite{conseca} derives policies from designated trusted context, whereas DRIFT~\cite{drift} constructs function trajectories and parameter constraints that can be revised during execution. Task Shield~\cite{taskshield} checks contribution to the user's task, providing a relevance criterion rather than an independent grant of authority. \emph{Plan-aware permissions} link the authority an agent receives to the execution plan it selects. MiniScope~\cite{miniscope} selects permissions covering a proposed plan; Prudentia~\cite{prudentia} guides planning with policies and data labels specifying handling restrictions to reduce unnecessary approval requests. These planning approaches differ in whether they allocate permissions to a proposed plan or use policy constraints to shape the plan itself.
+
+\emph{User preferences}, elicited directly or predicted from context, supply information that task descriptions alone may omit. Data-access permission prediction learns contextual sharing preferences~\cite{dataperms}. Janus~\cite{janus} applies persistent rules before passing calls not approved by those rules to a permission assistant that can consult the user. Consequence-based policies let users express reusable allow, ask, or deny decisions~\cite{userpolicies}. These approaches address which permission decisions can be automated using established or predicted preferences and which require further user input.
+
+\subsection{Identity and Delegation}
+Identity and delegation connect an agent's actions to the principal it represents and the authority it receives. Existing approaches differ in how they establish delegation relationships, limit the authority passed to agents, and maintain those limits as execution proceeds.
+
+\emph{Identity binding} establishes who acts on whose behalf, while delegation bounds the authority passed to each agent. Authenticated delegation proposals link users, agents, and permission scopes through identity protocols~\cite{delegation}. SAGA~\cite{saga} distinguishes permission to establish contact with an agent from authorization of subsequent requests. For tools, ETDI~\cite{etdi} uses provider-signed, versioned definitions to establish tool identity and declare required permissions. These records support authorization decisions, while services enforce the associated permission limits.
+
+\emph{Scoped delegation} uses credentials to carry explicit limits on delegated authority. El Helou et al.~\cite{astra} issue tokens with permission scopes selected by their semantic match to the task. AIP~\cite{aip} binds delegated authority to specific invocations through signed credentials, while CAPMAS~\cite{capmas} combines semantic scope selection with attenuating Macaroon tokens. Scope selection may depend on a model, while cryptographic attenuation prevents further delegation from expanding the granted permissions. \emph{Credential separation} keeps service credentials with an intermediary rather than the agent. MiniScope~\cite{miniscope} mediates session-scoped requests without exposing reusable credentials to the agent. SUDP~\cite{sudp} binds user approval to a standardized operation description. A custodian holds the credentials, validates the grant, and executes the approved operation. The approved and executed operations must agree.
+
+\emph{State and revocation} mechanisms track execution history, shared limits, and withdrawn grants to determine whether delegated authority remains valid. Bounded Agents~\cite{bounded} maintains session history, scope, and budgets to reject prohibited action combinations; its composition result assumes adequate restrictions and admission decisions made one at a time. VERA~\cite{vera} defines edge revocation over a delegation graph, retaining access to shared agents while at least one independent authorization path remains valid. Delegation thus requires both a verifiable scope and rules for maintaining that scope as the workflow changes.
+
+\subsection{Action and Resource Enforcement}
+Action and resource enforcement applies authorization policies at the boundaries where tools operate and resources are accessed. Existing approaches differ in the operations they observe, the context available for authorization decisions, and the effects they can prevent.
+
+\emph{Call checks} enforce restrictions on proposed tool invocations and their arguments. Progent~\cite{progent} evaluates policy conditions on tool calls and requires approval for policy expansion. ToolFence~\cite{toolfence} checks where sensitive argument values come from and whether calls stay within assigned budgets, using structured rules that specify permitted tools and argument sources. \emph{History-based checks} represent execution history explicitly to evaluate relationships across calls. SEAgent~\cite{seagent} matches patterns in graphs of agent interactions, while Palumbo et al.~\cite{pcas} evaluate Datalog policies over event graphs. VIGIL~\cite{vigil} checks requirements on event ordering and value flows across observed tool calls. These methods can enforce dependencies across calls when the monitor receives the relevant events and relationships.
+
+\emph{Application semantics} allow enforcement mechanisms to interpret calls in terms of the resources and state changes they affect. AC4A~\cite{ac4a} maps application operations to the permissions they require. VeriSafe Agent~\cite{verisafe} checks anticipated GUI state transitions against logical specifications, while CSAgent~\cite{csagent} uses an operating-system service to evaluate policies that depend on user intent and execution context. These methods rely on application models or runtime observations to identify the resources and effects of an operation.
+
+\emph{Execution confinement} restricts the requests, processes, and resource accesses through which tools operate. ceLLMate~\cite{cellmate} intercepts browser HTTP requests, while AgentBound~\cite{agentbound} confines Model Context Protocol (MCP) server processes. ZTAC~\cite{ztac} resolves the target object before making an authorization decision and checks at use that the operation reaches the authorized object. These systems cover execution paths that framework-level call checks may not observe. Their precision depends on how policy restrictions map to the requests and objects controlled at these boundaries.
+
+\emph{Skill governance} controls the capabilities exercised by reusable packages of instructions and code. SkillGuard~\cite{skillguard} checks capability use at runtime against skill manifests and session grants. SkillScope~\cite{skillscope} models actions in skill instructions and code, then uses task replay to assess whether candidate actions exceed the permissions needed for the task. The former mediates capability use during execution, while the latter modifies inspected skills to constrain the identified behaviors. Across enforcement methods, the boundary determines both which operations are visible and which effects can be blocked.
+
+\subsection{Information-Flow Control}
+Information-flow control governs how data may influence computation and reach other parties after initial access. Existing approaches differ in how they limit data exposure, track restrictions through computation, and determine when information may be passed onward.
+
+\emph{Minimization and isolation} limit the data available to agent components and the paths through which it can be exchanged. AirGapAgent~\cite{airgap} limits private data supplied to a conversation, while IsolateGPT~\cite{isolate} separates application contexts and mediates communication. Extending these controls to subsequent computation requires tracking the restrictions that apply to data after it has been accessed.
+
+\emph{Tracked computation} carries data restrictions through processing by tracking where values come from and which policies apply to them. CaMeL~\cite{camel} separates planning from data processing and uses an interpreter to track dependencies between values and check policies at tool calls. Fides~\cite{fides} tracks confidentiality and integrity restrictions throughout the agent loop, while ACE~\cite{ace} combines planning, execution isolation, and flow verification. LLMbda~\cite{llmbda} formally defines how labels propagate through conversations and generated code. Its machine-checked noninterference results constrain how changes in protected inputs affect observable outputs within its model. These approaches differ in the dependencies they track and the rules governing release. Their policies also determine when restrictions may be relaxed: endorsement permits lower-trust data to influence protected decisions, while declassification permits restricted information to be released. Both require policy authorization.
+
+\emph{Cross-boundary flows} require data restrictions to remain enforceable across tasks, interfaces, and agents. GAAP~\cite{gaap} maintains disclosure history across tasks. SPIDES~\cite{spides} propagates confidentiality and integrity labels from web-page elements to checks on browser actions such as typing and clicking. multi-CaMeL~\cite{multicamel} passes trusted instructions and tool-derived data through separate channels between agents, keeping the data out of the receiving planner's instruction context. SafeFlow~\cite{safeflow} propagates risk labels through a graph linking tasks, messages, tool events, and agent states. It uses a model to annotate risks and assemble evidence from messages, retrieved content, and tool traces into structured records for rule-based checks. Coverage depends on whether sources and restrictions remain identifiable and accurately represented at each boundary.
+
+\emph{Controlled continuation} seeks ways to complete a task when information-flow restrictions block the current execution path. Prudentia~\cite{prudentia} plans around policy constraints and distinguishes permission to trust data from approval to perform an action. APPA~\cite{appa} checks proposed tool calls before execution and uses isolated branches and policy-governed recovery to support continued work. These mechanisms allow execution to proceed through alternatives or exceptions authorized by policy while retaining restrictions on the data involved.
+
+Across the four categories reviewed in this section, existing mechanisms specify, delegate, enforce, and propagate authorization restrictions. Their composition raises a central question: \textbf{How can authorization restrictions preserve their meaning and remain effective as an agent's workflow evolves?} This question will guide our rethinking in Section~\ref{sec:rethink}.

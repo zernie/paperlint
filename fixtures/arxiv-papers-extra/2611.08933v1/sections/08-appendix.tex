@@ -1,0 +1,228 @@
+\section{Auxiliary RFQ results and source selection}
+\label{app:rfq}
+\subsection{Original cohort: systems and execution policy}
+We compare Codex/\model{gpt-6-astra}, Codex/\model{gpt-5.6-sol}, and Claude Code/\model{claude-opus-5-5}, all at max effort. Runtime versions are Codex 0.154.0 and Claude Code 2.1.286. Router and independent annotation roles use \model{gpt-5.6-sol} at medium and high effort, respectively. ``Independent'' denotes a fresh evaluation role, not a different model family or human adjudication. Customers use fixed replies, with no generation model. Frozen data, prompts, projections, controller, scorer, and router/auditor configuration match; candidate business tools are disabled.
+
+Claude's original 17-case analysis excludes three infrastructure failures. A disclosed \emph{post-hoc} amendment includes the first reattempt of each, yielding twenty cases. Both results stay visible; the later successful diagnostic rerun of 019 is excluded. Appendix~\ref{app:protocol} gives the complete accounting.
+
+\subsection{Original cohort results}
+Amended Claude reaches \ClaudeRFQCoverageSix{} elicited coverage by six replies and \ClaudeRFQCoverageEight{} by eight, with 18/20 successes. Astra has 17/20 and Sol 11/20 (Table~\ref{tab:rfq-main}). Claude's original policy yields 16/17 with three infrastructure exclusions; the twenty-case result uses a post-hoc reattempt amendment. The additional success over Astra and the 0.7-point C@8 gap are small descriptive differences, not population-level superiority.
+
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{3pt}
+\caption{Original RFQ cohort: coverage (percent), success at eight replies, and leakage counts. Claude's amended set is post-hoc; the original row has a different denominator.}
+\label{tab:rfq-main}
+\begin{tabularx}{\linewidth}{@{}Yrrrrr@{}}
+\toprule System & $n$ & C@6 & C@8 & S@8 & Leak\\\midrule
+\RFQComparisonRows
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Additional cohort and combined accounting}
+The additional RFQ-IC-021--040 cohort uses Claude Code 2.1.299 and Codex CLI 0.154.0 with the same candidate model identities and max effort. Its router and auditor use Astra at medium and high effort, whereas the original cohort uses Sol in those roles. Fixed customer replies are retained. The Astra reference continues an interrupted trajectory, preserving thirteen earlier candidate questions and one customer reply previously routed by Sol; Claude starts from the opening. These differences limit attribution to the candidate model.
+
+Claude has 16 successes among nineteen scored cases, with case 028 excluded for an infrastructure failure; Astra succeeds on all twenty. The paired additional view excludes 028 for both systems and yields 19/19 versus 16/19. Combining with the original amended cohort gives 36/39 versus 34/39. The strict view removes 004, 009, 019, and 028 from both sides, yielding 33/36 versus 32/36. It removes the original Claude reattempts but does not erase the Astra continuation or auxiliary-model differences. Full-system views retain Astra's 37/40 and Claude's 34/39 scored out of forty planned. Only the equal-membership rows in Table~\ref{tab:rfq-coverage-updated} are paired comparisons.
+
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{3pt}
+\caption{RFQ cohort-specific coverage percentages and success. The original rows use AMENDMENT-01; combined and strict rows summarize heterogeneous archived runs.}
+\label{tab:rfq-coverage-updated}
+\begin{tabularx}{\linewidth}{@{}Yrrrr@{}}
+\toprule Cohort / system & $n$ & C@6 & C@8 & S@8\\\midrule
+\RFQUpdatedCoverageRows
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Coverage is the mean of case metrics using each case's initially unknown field denominator. In the paired 39, unprompted simulator disclosures are 2/270 for Astra and 0/266 for Claude; these are disclosure-policy diagnostics, not separate candidate competence scores. Additional-cohort cases 022/023/029 illustrate unresolved output fields under the fixed-reply policy. Human review remains unperformed; automated final-brief diagnostics do not alter the success gate. The original 006/011 attribution disputes also remain unresolved.
+
+A subsequent Sol attempt on the additional twenty cases records 64 native calls, including 60 HTTP 429 failures, only two completed customer rounds, and zero scoreable cases. All twenty are infrastructure exclusions. This attempt is reported separately from the combined RFQ view, where these Sol trajectories are unavailable; no zero scores or claims about current service availability are inferred.
+
+\paragraph{Interpretation and missing experiment.}
+Near-complete intake coverage does not measure the value of a usable brief. Our RFQ and execution tasks are unpaired, and known fields do not resolve all spatial or approval ambiguities during editing. A decisive next test supplies one executor with a vague brief, an agent-elicited brief, and a complete reference brief, holding assets and tools fixed. It should measure accepted delivery and justified clarification, not merely another coverage score. The current evidence supports separating these questions, not claiming a measured downstream benefit.
+
+\subsection{Original-cohort paired cases}
+Table~\ref{tab:rfq-paired} uses the common amended set. S/A/C denote Sol/Astra/Claude; Y/N denote success. Asterisks mark Claude's first infrastructure reattempts; other results use the formal first attempt. The later diagnostic 019 rerun is excluded.
+
+\begin{table}[ht]
+\centering\small\setlength{\tabcolsep}{4pt}
+\caption{RFQ C@8 percentages and success on identical case IDs. Original Claude analysis excludes 004, 009, and 019.}
+\label{tab:rfq-paired}
+\begin{tabularx}{\linewidth}{@{}Yrrrr@{}}
+\toprule Case & Sol & Astra & Claude & S/A/C\\\midrule
+\RFQPairedCaseRows
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Historical design context}
+\label{app:legacy}
+The Codex/Sol archive contains 32 core conditions inherited from v0.2 and eleven new external conditions. Core bounds are [\CoreLower, \CoreUpper]; the external mean is \ExternalScore{}, with 11/11 passes under the \emph{historical hard-gate plus score} rule. Core execution was selected from 66 attempts (32 completed, 31 errors, three timeouts). These records cannot supply a first-attempt reliability baseline or be pooled with the v0.4 results. The historical ECO-002 retouching omission disappears in the judgments of both v0.4 systems, but protocol and system changes confound attribution of this improvement.
+
+\section{Supporting archives}
+\label{app:auxiliary}
+The design-related archive contains 232 case lineages, 261 protocol execution units, and 293 records, including 32 duplicate core associations between Brief Bank v0.2 and v0.3. Counting Brief Bank by its 35 briefs, the six groups in Table~\ref{tab:archive-completion} hold 253 case IDs. All 21 IDs in 21q also appear in routing under a different protocol, so they count once toward the 232 lineages and twice toward the 261 units. Adding forty RFQ scenarios yields the 272/301/333 accounting in Table~\ref{tab:scope}. These counts are not numbers of independent client projects or successful deliveries.
+
+Across the 261 design-related units, Astra has 259 completed and 260 scored runs; Claude has 233 completed and 235 scored runs. Completed status and scoreability differ because a failed or timed-out run can leave assessable artifacts. Table~\ref{tab:archive-completion} reports each protocol separately. Brief Bank v0.2 adds 32 historical associations, but no additional units.
+
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{3pt}
+\caption{Design-related archive completion. C/S means completed/scored; the counts are out of $n$ in each row. No common quality scale is implied.}
+\label{tab:archive-completion}
+\begin{tabularx}{\linewidth}{@{}Ylrrr@{}}
+\toprule Protocol & Output & $n$ & Astra C/S & Claude C/S\\\midrule
+Brief Bank v0.3 & Artifacts & 43 & 43/43 & 35/35\\
+21q visual execution & Artifacts & 21 & 20/21 & 2/4\\
+Routing & Route & 118 & 118/118 & 118/118\\
+99designs preference & Ranking & 61 & 61/61 & 60/60\\
+Workflow planning & Plan & 11 & 11/11 & 11/11\\
+Zcool reference planning & Plan & 7 & 6/6 & 7/7\\\midrule
+Total & & 261 & 259/260 & 233/235\\\bottomrule
+\end{tabularx}
+\end{table}
+
+On shared cases, routing joint-pass counts are 73/100 for Astra and 75/100 for Claude, and agent-route selection is 16/18 for each. Customer-preference hits are 20/60 for each. Workflow planning scores are 67.01 and 68.66 over eleven cases; reference-planning scores are 87.92 and 95.83 over six common cases. Those are protocol-specific results rather than evidence of executed visual delivery. The 21q score means, 72.58 versus 61.17 on four shared cases, are strongly selected; two of those Claude runs time out and some judgments have evidence disputes. These slices are not pooled into the primary design quality result.
+
+\paragraph{Task identifiers.}
+Brief Bank IDs such as DAB-L3-CFR-002 give level, family, and number; shorter forms drop the prefix or level. L3 tasks are single-turn, with no scripted feedback; L4 tasks add one to three feedback turns, multiple deliverables, and a human checkpoint. Family codes are BID (brand identity), CAM (campaign), PSF (packaging), ECO (e-commerce), MFA (multi-format adaptation), CFR (client-feedback revision), RTO (reference-to-original), and CFRY (production handoff); RDT marks the eleven external tasks. Routing has 18 agent-route (AR-) and 100 tool-intent (TIQ-) queries; 21q executes 21 of these IDs (12 AR, 9 TIQ) as artifact tasks.
+
+\section{Historical R1 rejudging pilot}
+\label{app:r1}
+R1 covers seven selected historical Sol/Astra pairs, not Claude, with fourteen Gemini 2.5 Pro calls at temperature zero: two anonymized, reversed-order presentations per pair. Revised rules evaluate only candidate-visible requirements, treat a text report as a valid output where appropriate, distinguish current-turn scope from future delivery, and leave revision quality unobserved when necessary clarification or an invalid prerequisite prevents evaluation. The detailed policy and every new score remain provisional, pending expert adjudication. Table~\ref{tab:r1} reports the pilot without replacing any historical scores or whole-benchmark means.
+
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{7pt}
+\caption{R1 scores on a 0--100 scale. R/Z denote reference-grounded/zero-shot. R1 averages the two presentations' bounds; intervals represent missing evidence, not confidence intervals or earned upper scores. TIQ-100's Sol mean masks a 30-point discrepancy.}
+\label{tab:r1}
+\begin{tabularx}{\textwidth}{@{}Yrrrr@{}}
+\toprule Case & Sol original & Astra original & Sol R1 & Astra R1\\\midrule
+\RoneUpdatedRows
+\bottomrule
+\end{tabularx}
+\end{table}
+
+In CAM-001, the pilot treats Astra's paused refinement as unobserved, widening its interval to [55,100] rather than awarding full refinement credit. BID-001 and ECO-001 become equal intervals across the two candidates under R1's stage interpretation, while remaining delivery gaps are retained. TIQ-100 remains unstable: Sol receives 59.1 and 89.1 despite unchanged artifacts, so 74.1 is only an arithmetic average. CAM-001 and TIQ-085 also vary. Two presentations cannot separate order effects from judge variability. Changes jointly involve rules, evidence presentation, and scoring; they do not isolate the causal effect of one prompt change. This selected pilot supplies no independent expert labels, general error rates, or revised Claude comparison.
+
+\section{Validation and the next decisive experiments}
+\label{app:todo}
+The retained numerical analysis recomputes per-case RFQ metrics, verifies amendment source hashes, checks 86 design run records, and derives quality bounds and timing from condition and turn records. A final reconciliation additionally verifies ten archive source files against a pinned source commit, reproduces the 272/301/333 accounting, recomputes paired and strict RFQ summaries from case records, and checks the fourteen R1 repetitions. The public release supports offline recomputation of the archive accounting and RFQ summaries; the design snapshot and regeneration scripts remain in the project archive. Hashes identify inspected files, not hidden provider weights or semantic correctness.
+
+The next experiments should target the remaining causal questions:
+\begin{enumerate}
+\item Match image tools and vary effort/time budgets within each system; measure independently accepted deliveries.
+\item Blindly adjudicate delivery omissions, partial edits, ceiling scores, and the no-op dispute; test judges with altered artifacts.
+\item Repeat held-out, brief-clustered evaluations with RFQ inclusion policies declared before execution.
+\item Compare downstream execution from vague, elicited, and complete briefs with one executor and shared assets.
+\item Compare adaptive RFQ intake with a fixed seven-field questionnaire under the same reply policy.
+\end{enumerate}
+
+\input{sections/04-protocol.tex}
+
+\section{Execution failures by task family}
+\label{app:category}
+Table~\ref{tab:category} counts all 43 planned conditions, including external tasks, using their archived category assignments. We display the archived ``Concept-to-factory'' family as ``Production handoff'' to describe the evaluated endpoint, without changing its membership. All Astra runs complete; Claude's eight timeouts occur on the first turn. Small category counts and differing tools preclude attributing the pattern to model capabilities alone.
+
+\begin{table}[ht]
+\centering\small
+\caption{Timeouts / planned conditions by task family.}
+\label{tab:category}
+\begin{tabularx}{\linewidth}{@{}Yrr@{}}
+\toprule Family & Astra & Claude\\\midrule
+Brand identity & 0/6 & 1/6\\
+Existing-brand campaign & 0/5 & 1/5\\
+Packaging/SKU family & 0/3 & 0/3\\
+E-commerce & 0/5 & 0/5\\
+Multi-format adaptation & 0/4 & 2/4\\
+Client-feedback revision & 0/5 & 1/5\\
+Reference-to-original & 0/8 & 1/8\\
+Production handoff & 0/7 & 2/7\\\midrule
+Total & 0/43 & 8/43\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Case-evidence provenance and reinterpretation}
+The direct inspections read the actual last-turn responses in addition to archived judgments. For both systems in MFA-003 and CFR-002, these responses explicitly disclose an unresolved change and request a client decision. We therefore do not infer from these cases that the agent claimed the final delivery was complete. Runtime completion and an incomplete delivery remain observed; whether escalation was justified remains unadjudicated.
+
+MFA-003 has no business visual in either system's \texttt{outputs/v3}; Claude does have a diagnostic image under \texttt{evidence}, which is excluded from the deliverable count. CFR-002's Astra preview has the same SHA-256 as its source. The Claude preview's changed-pixel bounding box is $[185,296,741,502)$, independently recomputed on the full RGB image; this localization does not measure exact title-scale accuracy or aesthetic acceptability.
+
+The retained v0.2 judge-validation document records both rejected tool-judge controls and the artifact-only recheck. It explicitly states that the temporary tool-judge v1 result was discarded. The control figure reports that document's numbers and interventions, not reconstructed raw outputs. The case inspections perform no new counterfactual or judge run. The six additional inspections retain all original judgments, including the unresolved ECO-001 applicability discrepancy.
+
+\clearpage
+\section{Core conditions with archived semantic flags}
+\label{app:flags}
+All 18 flagged system-condition records in Table~\ref{tab:flags} have completed execution and full structural artifact-contract credit. Conditions sharing a brief are dependent. These flags preserve model judgments, including disputed or potentially justified blocked outcomes; they are not a count of false completion claims.
+
+\begin{table}[!ht]
+\centering\small\setlength{\tabcolsep}{4pt}
+\caption{Any \texttt{VIOLATED} semantic check. Z/R/P denote context as in Appendix~\ref{app:brief}; DAB- is omitted.}
+\label{tab:flags}
+\begin{tabularx}{\linewidth}{@{}Yll@{}}
+\toprule Core condition & Astra & Claude\\\midrule
+L4-BID-001 (Z) & Flag & Flag\\
+L4-BID-001 (R) & Flag & Timeout\\
+L4-BID-001 (P) & Flag & No flag\\
+L4-CAM-001 (Z) & Flag & No flag\\
+L4-CAM-001 (P) & No flag & Flag\\
+L4-PSF-001 (R) & Flag & No flag\\
+L4-ECO-001 (R) & No flag & Flag\\
+L4-MFA-002 (R) & Flag & Timeout\\
+L4-MFA-003 (R) & Flag & Flag\\
+L3-CFR-002 (R) & Flag & Flag\\
+L4-RTO-001 (Z) & Flag & No flag\\
+L4-RTO-001 (R) & Flag & No flag\\
+L4-RTO-001 (P) & Flag & No flag\\
+L4-CFRY-002 (R) & Flag & No flag\\
+L4-CFRY-003 (R) & Flag & No flag\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\clearpage
+\section{All 43 Brief Bank conditions}
+\label{app:brief}
+Table~\ref{tab:brief-paired} gives the common task inventory, including every Claude timeout. Z/R/P denote zero-shot, reference-grounded, and personalized contexts. Core intervals are missing-evidence bounds; external values are weighted scores. All Astra conditions completed. A Claude timeout is an execution outcome with no eligible quality score, not a zero score or a task awaiting execution.
+
+\begin{table}[!ht]
+\centering\footnotesize\renewcommand{\arraystretch}{1.0}
+\caption{Evaluation v0.4 on Brief Bank data v0.3. DAB- prefixes are omitted. A completed execution does not guarantee a complete semantic delivery.}
+\label{tab:brief-paired}
+\begin{tabular}{@{}llrrl@{}}
+\toprule Task & Context & Astra quality & Claude quality & Claude execution\\\midrule
+\BriefPairedCaseRows
+\bottomrule
+\end{tabular}
+\end{table}
+
+\clearpage
+\section{Additional visual evidence}
+\label{app:visual-cases}
+The six additional cases supplement the MFA-003 and CFR-002 inspections. Their exact prompts, final replies, inventories, original checks, direct file facts and 76 source hashes are retained in the project archive; 23 source PNGs are preserved byte-for-byte. The panels below complement the three main-text examples. These are selected illustrations, not an independent test set or estimates of failure frequency.
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/draft-reference.pdf}
+\caption{RTO-001: Astra's revised concept and Claude's overview of the three requested modules. The inventory confirms three named module PNGs for Claude. Its response discloses uncertainty about the selected direction; this comparison does not adjudicate originality or that ambiguity.}
+\label{fig:reference}
+\end{figure}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/draft-applicability.pdf}
+\caption{ECO-001 evaluator-state discrepancy. Both candidates receive the same explicit direction selection. The left output is a revised concept; the right is one of six exported images, explicitly provisional. The associated complete-set judgments use different applicability decisions. This requires expert re-review and does not establish a revised system ranking; frozen scores are retained.}
+\label{fig:applicability}
+\end{figure}
+
+\clearpage
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/draft-retouch.pdf}
+\caption{ECO-002 positive contrast. Both systems use the same source and produce same-size PNGs; their archived checks contain no violation. Bottom panels show identical-coordinate crops, $x=270{:}750$, $y=730{:}950$, from the source and outputs. Model-judge bounds and visible changes do not replace expert judgments of preservation or retouch quality.}
+\label{fig:retouch}
+\end{figure}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/draft-cfr.pdf}
+\caption{CFR-002. The source and actual previews show a title enlargement request and an unresolved mark relocation. Astra's preview is byte-identical to the source; Claude's changed pixels lie within $[185,296,741,502)$ in the 928$\times$1152 image. Both final responses disclose a blocker. Pixel facts do not adjudicate whether stopping was justified or the partial edit was acceptable.}
+\label{fig:cases}
+\end{figure}

@@ -1,0 +1,109 @@
+{
+\setlength{\tabcolsep}{0pt}
+%
+\newcommand{\entryheadheight}{2.8em}
+\newcommand{\mapplotsep}{0.0em}
+\newcommand{\xlabellegendsep}{0.2em}
+\newcommand{\mapentryshift}{0.16\linewidth}
+\newcommand{\maplabel}[1]{%
+  \ifthenelse{\equal{#1}{warehouse-10-20-10-2-1}}{%
+    \mapname{warehouse}\\[-0.45em]
+    \mapname{10-20-10-2-1}%
+  }{%
+    \ifthenelse{\equal{#1}{warehouse-20-40-10-2-1}}{%
+      \mapname{warehouse}\\[-0.45em]
+      \mapname{20-40-10-2-1}%
+    }{%
+      \ifthenelse{\equal{#1}{random-64-64-20}}{%
+        \mapname{random}\\[-0.45em]
+        \mapname{64-64-20}%
+      }{%
+        \ifthenelse{\equal{#1}{Paris_1_256}}{%
+          \mapname{Paris}%
+        }{%
+          \mapname{#1}%
+        }%
+      }%
+    }%
+  }%
+}
+\newcommand{\mapentry}[2]{%
+  \begin{minipage}[t]{0.12\linewidth}
+    \centering
+    \setlength{\baselineskip}{0.75\baselineskip}
+    \scriptsize
+    \hspace*{\mapentryshift}%
+    \parbox[t][\entryheadheight][c]{\linewidth}{%
+      \begin{minipage}[c]{0.28\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{fig/raw/maps/#1}
+      \end{minipage}\hspace{-0.02\linewidth}%
+      \begin{minipage}[c]{0.7\linewidth}
+        \centering
+        {\tiny\maplabel{#1}}\\[-0.2em]
+        {\tiny\makebox[\linewidth][c]{(#2)}}%
+      \end{minipage}%
+    }%
+  \end{minipage}%
+}
+\newcommand{\plotentry}[2]{%
+  \begin{minipage}[t]{0.12\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{fig/raw/main_results/#1/#2_soc}
+  \end{minipage}%
+}
+\newcommand{\rowlabel}[1]{%
+  \rotatebox{90}{\shortstack{%
+    \small #1\\[0.2em]
+    \small $\leftarrow$ flowtime / LB}}%
+}
+\newcommand{\xlabel}{\small agents}
+%
+\begin{figure*}[t!]
+  \centering
+  \begin{tabular}{@{}c@{}cccccccc@{}}
+    &
+    \mapentry{maze-32-32-4}{32x32} &
+    \mapentry{random-64-64-20}{64x64} &
+    \mapentry{warehouse-10-20-10-2-1}{161x63} &
+    \mapentry{ost003d}{194x194} &
+    \mapentry{lak303d}{194x194} &
+    \mapentry{warehouse-20-40-10-2-1}{321x123} &
+    \mapentry{den520d}{256x257} &
+    \mapentry{Paris_1_256}{256x256}
+    \\[0.8em]
+    \noalign{\vskip\mapplotsep}
+    \rowlabel{\scenEqdist} &
+    \plotentry{eqdist}{maze-32-32-4} &
+    \plotentry{eqdist}{random-64-64-20} &
+    \plotentry{eqdist}{warehouse-10-20-10-2-1} &
+    \plotentry{eqdist}{ost003d} &
+    \plotentry{eqdist}{lak303d} &
+    \plotentry{eqdist}{warehouse-20-40-10-2-1} &
+    \plotentry{eqdist}{den520d} &
+    \plotentry{eqdist}{Paris_1_256}
+    \\[0.3em]
+    \rowlabel{\scenHotspot} &
+    \plotentry{hotspot}{maze-32-32-4} &
+    \plotentry{hotspot}{random-64-64-20} &
+    \plotentry{hotspot}{warehouse-10-20-10-2-1} &
+    \plotentry{hotspot}{ost003d} &
+    \plotentry{hotspot}{lak303d} &
+    \plotentry{hotspot}{warehouse-20-40-10-2-1} &
+    \plotentry{hotspot}{den520d} &
+    \plotentry{hotspot}{Paris_1_256}
+    \\
+    & \multicolumn{8}{c}{\xlabel}
+    \\
+    \noalign{\vskip\xlabellegendsep}
+    & \multicolumn{8}{c}{\includegraphics[width=0.8\linewidth]{fig/raw/main_results/main_legend}}
+    \\
+  \end{tabular}
+  %
+  \caption{
+  Solution quality on eight maps in \scenEqdist (top) and \scenHotspot (bottom) scenarios. 
+  Lines show the mean scores, with the semi-transparent regions indicating a standard deviation.
+  }
+  \label{fig:result-main}
+\end{figure*}
+}

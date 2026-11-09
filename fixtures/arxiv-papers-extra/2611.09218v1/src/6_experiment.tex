@@ -1,0 +1,128 @@
+\section{Experiments}
+\label{sec:experiments}
+
+\subsection{Experimental Setup}
+\label{sec:experiments-setup}
+
+\textbf{Baselines.}
+We compare \boxbox{} with three baselines: \textbf{Frozen Harness} (\frozen{}) retains the initial harness throughout task execution. \textbf{Harness Evolution} (\he{}) optimizes the harness offline on training tasks and selects it by validation performance, then holds it fixed during test-task execution. \textbf{Harness Scaling} (\hs{}) uses an external controller to revise the harness between attempts on the same task, using feedback from each completed attempt. Both \he{} and \hs{} are adapted from \citet{wang2026harnessevolution}. Following Meta-Harness~\citep{lee2026metaharness}, all methods start from the same initial harness $H_0$, Terminus-KIRA~\citep{terminuskira2026}, a simple terminal-based harness that executes shell commands and returns their outputs to the model.
+
+\textbf{Evaluation protocol.}
+We split the 100 \perfrace{} tasks into 40 training and 10 validation tasks for \he{}, and 50 held-out test tasks for evaluating all methods. Both task execution and harness optimization are performed using GPT-5.6 Luna with high reasoning effort. Each method is evaluated with three independent runs per test task, each sharing a four-hour budget ($B=4\mathrm{h}$) across task execution, harness optimization, and evaluation. Detailed configurations are provided in Appendix~\ref{app:experiments}.
+
+\textbf{Metrics.}
+To account for randomness, we summarize task $i$'s best-so-far correct
+speedup across $R=3$ runs as
+$\bar S_i=\left(\prod_{r=1}^{R}S_i^{(r)}(B)\right)^{1/R}$.
+Let $\overline{\mathrm{Cost}}_i$ be its mean model cost in US dollars,
+including harness optimization.
+Across $N=50$ tasks, we use harmonic mean speedup to limit the influence of
+extreme values~\citep{shetty2025gso} and arithmetic mean task-level speedup per dollar:
+\begin{equation}
+  \speedupat{4\mathrm{h}}=\frac{N}{\sum_{i=1}^{N}\bar S_i^{-1}},
+  \qquad
+  \mathrm{Speedup/\$}
+  =\frac{1}{N}\sum_{i=1}^{N}
+    \frac{\bar S_i}{\overline{\mathrm{Cost}}_i}.
+  \label{eq:aggregate-speedup}
+\end{equation}
+Reported mean model cost averages $\overline{\mathrm{Cost}}_i$ across tasks.
+Cost accounting and statistical details appear in Appendix~\ref{app:experiments}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Main Results}
+\label{sec:experiments-main}
+
+We report performance and model cost in Table~\ref{tab:boxbox-main-results} and plot speedup against task time and cumulative model cost in Figure~\ref{fig:boxbox-main-results}. Appendix~\ref{app:experiments-complete-results} provides optimization trajectories for all test tasks.
+
+\input{tables/boxbox-main-results}
+
+\textbf{Offline harness optimization does not reliably improve performance.}
+\he{} reaches \(1.281\times\) at four hours, below \frozen{} (Table~\ref{tab:boxbox-main-results}). \he{} struggles to identify consistently effective harness revisions during training, while the revisions selected through validation show limited generalization to long-running test tasks. Appendix~\ref{app:experiments-he} provides detailed results and failure analysis. \he{} costs an average of \$24.56 per test run. Including offline training and validation costs, shared across the 150 test runs, brings this average to at least \$33.73. This additional offline expenditure does not translate into better test performance or greater cost efficiency than \frozen{}.
+
+\textbf{Task-specific harness optimization supports continued improvement.}
+Both \hs{} and \boxbox{} improve over \frozen{}, reaching \(1.539\times\) and \(1.702\times\) at four hours, respectively, compared with \(1.442\times\) for \frozen{} (Table~\ref{tab:boxbox-main-results}). Both also reduce mean model cost, to \$12.98 and \$16.43 per run, respectively, compared with \$23.22 for \frozen{}. Figure~\ref{fig:boxbox-main-results} shows the corresponding speedup trajectories against elapsed task time and mean cumulative model cost. Over the second half of the four-hour budget, the \frozen{} curve largely levels off, increasing from \(1.410\times\) to \(1.442\times\), while \hs{} improves from \(1.431\times\) to \(1.539\times\) and \boxbox{} from \(1.530\times\) to \(1.702\times\). These trends show that task-specific harness optimization supports further progress as execution continues.
+
+% Figure 1 source: artifacts/plot_boxbox_main_results.py.
+
+\textbf{Agent-controlled harness optimization improves performance and efficiency.}
+Figure~\ref{fig:boxbox-main-results-time} shows that \boxbox{} achieves higher speedups than \hs{} at matched elapsed task time. This result compares \hs{}'s attempt-level external control with \boxbox{}'s finer-grained, agent-triggered revision during task execution. Whereas \hs{} relies on an external controller to initiate revisions, \boxbox{} lets the agent decide when to allocate budget to adapting its harness to the needs of the ongoing task. This allows the agent to address harness limitations as they arise and apply useful revisions directly to the ongoing task. Figure~\ref{fig:boxbox-main-results-cost} further shows higher speedups for \boxbox{} at matched cumulative model costs. Although \hs{} has a lower total model cost, \boxbox{} achieves greater speedup per dollar under our task-level metric. Appendix~\ref{app:experiments-hs} provides further analysis.
+
+\subsection{Ablation Studies and Analysis}
+\label{sec:experiments-ablation}
+
+We further conduct ablation studies on 14 randomly sampled test tasks to isolate the contributions of key design choices to the effectiveness and efficiency of harness optimization, then analyze how agents perform harness optimization during task execution.
+
+\textbf{Ablation Studies.}
+
+\input{tables/boxbox-online-ablation}
+
+\textit{Agent-controlled triggering.}
+Following the scheduled refinement in Continual Harness~\citep{karten2026continualharness}, the \textit{w/o Agent Triggering} variant schedules reviews every 30 minutes with full-harness editing. It achieves lower speedup at higher model cost than agent-triggered \boxbox{} (Table~\ref{tab:boxbox-online-ablation}). Scheduled reviews can interrupt the process of proposing, implementing, and evaluating code changes. They also consume model calls even when they conclude that no harness revision is needed. In contrast, \boxbox{} lets the agent decide when to allocate budget to harness optimization based on the needs of the ongoing task.
+
+\textit{Full-harness editing.}
+Following Self-Harness~\citep{zhang2026selfharness}, the \textit{w/o Full Editing} variant retains agent-controlled triggering but restricts each review to a predefined scope. It achieves lower speedup than \boxbox{} (Table~\ref{tab:boxbox-online-ablation}). Predefined editing boundaries can constrain task-specific adaptations that require changes across components or beyond the permitted scope. Full-harness editing lets the agent decide what to modify and how extensively based on the needs of the ongoing task.
+
+% \textit{Context preservation.}
+% The \textit{w/o Context Preservation} variant resets only the task-conversation history after each review, preserving the project workspace, terminal sessions, and running processes.
+
+\textbf{Harness Optimization Analysis.}
+
+\textit{Review frequency.}
+\boxbox{} invokes a median of five reviews per run, with 92\% of runs containing three to six (Figure~\ref{fig:boxbox-review-analysis-frequency}). These results show that \texttt{boxbox()} provides an effective entry point for harness optimization during task execution, allowing agents to review their harnesses based on accumulated trajectories.
+
+\textit{Budget allocation.}
+Agents allocate most of their time budget to task execution. Harness reviews account for a median of 2.1\% of the time budget and 13.8\% of model cost per run (Figure~\ref{fig:boxbox-review-analysis-budget}). Together with \boxbox{}'s higher speedup and lower model cost than \frozen{}, these results suggest that agents can effectively balance task execution and harness optimization within a shared budget.
+
+\textit{Modification scope.}
+Harness modifications span prompt rules, skills, tools, execution logic, and fault handling (Figure~\ref{fig:boxbox-review-analysis-modifications}). These changes show that agents use full-harness editing to adapt both their capabilities and execution process. Cases in Appendix~\ref{app:case-study} illustrate how these modifications add capabilities, automate waiting, and revise context management.
+
+\begin{figure}[htbp]
+  \centering
+  \captionsetup{skip=6pt}
+  % Source: artifacts/plot_boxbox_review_analysis.py.
+  % Widths follow the panel aspect ratios to keep plot heights aligned.
+  \begin{subfigure}[t]{0.2992\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/boxbox-review-analysis-frequency.pdf}
+    \caption{Review frequency}
+    \label{fig:boxbox-review-analysis-frequency}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{0.2864\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/boxbox-review-analysis-budget.pdf}
+    \caption{Budget allocation}
+    \label{fig:boxbox-review-analysis-budget}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{0.3944\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/boxbox-review-analysis-modifications.pdf}
+    \caption{Modification types}
+    \label{fig:boxbox-review-analysis-modifications}
+  \end{subfigure}
+  \caption{\textbf{Harness optimization analysis.}
+  \subref{fig:boxbox-review-analysis-frequency} Number of reviews per run across 150 test runs, including agent-triggered and fault-recovery reviews.
+  \subref{fig:boxbox-review-analysis-budget} Per-run review time as a share of the four-hour task budget and review cost as a share of total model cost within that budget; dots represent runs, and boxes show the median and interquartile range.
+  \subref{fig:boxbox-review-analysis-modifications} Modification types across a collection of 620 applied, nonempty harness updates from \boxbox{} runs.}
+  \label{fig:boxbox-review-analysis}
+\end{figure}
+
+The ablations show that agent-controlled triggering and full-harness editing improve performance and cost efficiency, while the analysis shows that agents adapt their capabilities and execution process while allocating most of their time to task execution. Together, these findings support harness optimization as part of the task-solving agent's own capabilities.
+
+% \subsection{Generalization}
+% \label{sec:experiments-generalization}
+
+% We use two complementary comparisons to assess whether the benefits of
+% \boxbox{} extend beyond the original model and initial harness.
+% For harness generalization, we replace Terminus-KIRA with Pi or
+% mini-swe-agent while retaining GPT-5.6 Luna.
+% For model generalization, we retain Terminus-KIRA and replace GPT-5.6 Luna
+% with Gemini-3.8-Flash or Grok-4.6.
+% Each configuration compares \frozen{} with \boxbox{}, changing one
+% factor at a time rather than evaluating a full model-by-harness grid.
+% Table~\ref{tab:boxbox-generalization} compares performance and model cost
+% across these configurations.
+
+% \input{tables/boxbox-generalization}

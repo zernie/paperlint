@@ -1,0 +1,34 @@
+\section{Introduction}
+\label{sec:intro}
+
+Language-model agents use past experience through external retrieval and parameter updates. Retrieval keeps trajectories and feedback available for future tasks, while parameter learning can make their lessons usable without consulting the original records. Combining these mechanisms raises a practical question: \emph{when has an agent learned enough from stored experience to remove the corresponding records from its retrieval memory?} Retaining every record incurs storage and retrieval costs, but premature removal can discard guidance that the model still needs.
+
+Existing methods illustrate both approaches. Reflexion stores verbal feedback, Voyager accumulates executable skills, and MAGE organizes successful and failed experiences in a co-evolving graph \citep{shinn2023reflexion,wang2023voyager,yang2026mage}. Self-training methods such as STaR and ReST$^{\mathrm{EM}}$ instead update model parameters using selected generated solutions \citep{zelikman2022star,singh2024restem}. An agent combining retrieval and training must distinguish useful learning material from records that are no longer needed after learning.
+
+
+\textbf{First, useful training experience may precede student mastery.} A student can fail at prerequisite actions before reaching a more advanced skill. A stronger teacher can demonstrate that skill, but a mastery-only admission rule would still exclude it from training. Admission should therefore consider available demonstrations alongside current competence.
+
+\textbf{Second, completing training does not establish that memory can be removed.} A selected skill may contribute no valid training examples, or the updated model may still depend on retrieved guidance. Premature removal creates \emph{knowledge waste}: external experience becomes unavailable before the weights can replace it. This can happen immediately after consolidation, independently of interference from later updates.
+
+\begin{figure}[t]
+\centering
+% \includegraphics[width=\linewidth]{figures/banner.pdf}
+\includegraphics[width=\linewidth]{figures/1.pdf}
+\caption{\textbf{Readiness to learn differs from readiness to release.} Removing both traces after training can leave skill B unsupported if only A has been learned. \method\ verifies each skill: A uses verified weights and releases eligible records, while B retains external memory. Configured residuals remain; colored nodes represent behavior.}
+\label{fig:banner}
+\vspace{-10pt}
+\end{figure}
+
+
+Verifying this transfer requires comparing the updated model without episodic retrieval against a retrieval-supported reference under the same task interface. Otherwise, retrieved demonstrations or differences in prompt format can obscure what the weights have learned. Action probes provide local evidence; complete rollouts and subsequent updates assess task performance and retention.
+
+We introduce \method, a framework that separates training admission from memory release for each skill. The Engram Trace Graph (ETG) organizes experience by skill, outcome, and source. A demonstration-aware gate admits skills with sufficient student mastery or successful teacher demonstrations. Periodic consolidation trains a low-rank adapter on valid action traces with ETG context, incorporating replay when enabled. A verification gate compares the candidate without episodic retrieval against the base model with retrieval on reserved probes. Release requires valid training participation and scores meeting both a relative threshold and an absolute floor. Approved skills use verified weights without episodic retrieval; other skills retain external guidance, optionally with a separately approved adapter. Inspired by complementary learning systems \citep{mcclelland1995cls}, this process connects experience acquisition with parameter learning and selective memory release. Experiments across interactive and reasoning benchmarks show \method outperforms most of baselines on multiple benchmarks. Ablations support the contributions of demonstration-aware admission and adapter activation, while showing that external guidance remains useful after training. A separate analysis illustrates how skill-level verification reduces retrievable experience through selective archival. Specifically, our contributions are:
+
+\begin{enumerate}
+\item \textbf{Demonstration-aware training admission.} A per-skill rule admits useful teacher demonstrations independently of current student mastery, expanding the experience available for parameter learning.
+\item \textbf{Verification before memory release.} A separate gate requires training participation and behavioral evidence from reserved probes before removing records from retrieval.
+\item \textbf{Performance and efficiency gains.} Benchmark evaluations and ablations demonstrate improved task performance, while serving measurements show reduced token usage and model calls in sequential interaction and lower latency in QA relative to Base+ETG. Skill-level analysis additionally demonstrates selective reduction of retrievable experience.
+\end{enumerate}
+
+
+\vspace{-8pt}

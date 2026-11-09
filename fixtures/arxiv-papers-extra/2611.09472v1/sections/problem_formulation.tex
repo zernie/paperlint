@@ -1,0 +1,9 @@
+\section{Problem Formulation}
+\label{sec:problem}
+Consider an agent interacting with an environment over rounds $t=1,\ldots,T$. At step $j$, the observation $o_j$ and interaction history $h_j$ form the task input $x_j=P(o_j,h_j)$. The policy generates an action from $\pi_{\theta_t}(\cdot\mid x_j,c_j)$, where $c_j=\operatorname{Retrieve}(x_j,\memory_t)$ supplies episodic context from external memory. Without episodic retrieval, $c_j=\varnothing$; task instructions, observations, history, and task-provided evidence remain in $x_j$.
+
+\paragraph{Persistent state.}
+The agent maintains policy parameters, an Engram Trace Graph (ETG), and a training replay archive $\replay_t$. The ETG associates episodic records $\memory_t$ with skills $\skills$ and their prerequisites. Each record stores a trajectory, outcome, and source. For each skill $s$, $m_{t,s}\in[0,1]$ estimates student mastery from evaluation. Successful teacher demonstrations provide training evidence without increasing this estimate. Replay supports later training and is excluded from deployment retrieval.
+
+\paragraph{Two decisions per skill.}
+Training admission $u_{t,s}\in\{0,1\}$ determines whether a skill enters the next update. Memory release $z_{t,s}\in\{0,1\}$ determines whether its external records may be removed afterward. Admission requires useful training evidence; release additionally requires post-training verification. Records that are not released remain available for retrieval and future learning. We evaluate task performance, retrieval and replay storage, and acquisition cost; detailed accounting appears in Appendix~\ref{app:protocol}.

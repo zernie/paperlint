@@ -1,0 +1,75 @@
+\section{Supplementary figure}
+\label{sec:appendix-figures}
+
+ Figure~\ref{fig:model-skill-uk} is the UK/Europe counterpart of Figure~\ref{fig:model-skill}.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{model_comparison_rmse_uk_europe}
+\caption{As Figure~\ref{fig:model-skill}, for the UK/Europe region:
+fp32 forecast skill of the models studied, mean RMSE against ERA5 vs.\
+lead time.}
+\label{fig:model-skill-uk}
+\end{figure}
+
+\section{bf16 compared with fp16}
+\label{sec:appendix-bf16}
+
+Figure~\ref{fig:rmse-grid-naive} shows the RMSE of Aurora's bf16 forecasts
+when the whole model is converted, so that it also holds its state in bf16
+in physical units (\S\ref{sec:results-state}), compared with the bf16
+network with the state in fp32. The whole-model conversion raises the
+RMSE by 19--167\%, the bf16 network alone by at most 25\%.
+
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=\textwidth]{aurora_bf16_whole_global}
+\caption{Mean global RMSE against ERA5 of Aurora's fp32 forecasts, of its
+forecasts with the network in bf16 and the state in fp32, and of its
+forecasts with the whole model converted with
+\texttt{model.to(torch.bfloat16)}, which also rounds the state in physical
+units; 52 dates in 2024.}
+\label{fig:rmse-grid-naive}
+\end{figure}
+
+\input{tables/bf16}
+
+Table~\ref{tab:bf16} compares the change in global RMSE with the
+network in bf16 and in fp16, the state in fp32 in both, on the 52 dates.
+For every model, the bf16 penalty exceeds the fp16 change at almost
+every lead time, by one to two orders of magnitude for Aurora and
+FourCastNet. FourCastNet's bf16 forecasts degrade widely by day 10: its
+2t error is more than twice that of fp32 on 21 of the 52 dates. Where
+bf16 does better than fp32, the differences are small and, except for
+FastNet's msl at day 10 ($-2.0\%$), not significant.
+
+\section{Minimum detectable effect}
+\label{sec:appendix-mde}
+
+Let $d_i$ be the fp16 RMSE minus the fp32 RMSE on date $i$, with mean
+$\bar d$ and standard deviation $s$ over the $N$ dates, and let
+$t_{p,\nu}$ be the $p$-quantile of the $t$ distribution with $\nu$ degrees
+of freedom. The two-sided paired $t$-test at the 5\% level finds a
+significant change when $|\bar d|$ exceeds $t_{0.975,N-1}\,s/\sqrt{N}$.
+If the true change is $\delta>0$, $\bar d$ scatters around $\delta$ with
+standard error $s/\sqrt{N}$, and lies above
+$\delta-t_{0.8,N-1}\,s/\sqrt{N}$ with probability 0.8. The test therefore
+detects the change with probability 0.8 when this value equals the
+significance threshold, which gives the minimum detectable effect
+\begin{equation}
+\delta=\left(t_{0.975,N-1}+t_{0.8,N-1}\right)\frac{s}{\sqrt{N}}.
+\label{eq:mde}
+\end{equation}
+The first term is the significance threshold. A true change of that size
+would be detected only about half the time, and the second term is the
+margin that raises this to 80\%. The same holds for $\delta<0$ by symmetry.
+For $N=52$, $t_{0.975,51}=2.008$ and $t_{0.8,51}=0.849$, so that
+$\delta\approx0.40\,s$; Table~\ref{tab:power} gives $\delta$ as a percentage
+of the fp32 RMSE.
+
+Equation~\eqref{eq:mde} treats $\bar d$ as following a $t$ distribution
+shifted by $\delta$, whereas the test statistic strictly follows a
+noncentral $t$ distribution. For $N=52$ the exact calculation gives the
+same value of $\delta$ to within 0.1\%. Like the test itself, the
+calculation assumes that the $d_i$ are independent between dates, and it
+treats the observed $s$ as the true standard deviation.

@@ -1,0 +1,51 @@
+
+\section{Authorization Drift Benchmark}
+\label{sec:methods}
+
+\subsection{Problem Formulation}
+\label{sec:formulation}
+
+We define an \textbf{authorization boundary} as the set of operations an agent is permitted to perform in pursuit of a user request, as determined by implicit professional norms and environment policy:
+\begin{equation}
+  B = (D,\; T,\; S,\; H),
+\end{equation}
+covering permitted data access ($D$), tools ($T$), task scope ($S$), and temporal persistence ($H$). Given a trajectory $\pi=(a_1,\dots,a_n)$ and a per-action violation indicator $\varphi(a_i,B)\!\in\!\{0,1\}$, \textbf{authorization drift} occurs when $\sum_i \varphi(a_i,B)>0$ and the violation arises from the agent's own goal-directed execution rather than adversarial injection. Each drift action carries two orthogonal labels: a \textbf{drift type} identifying the violated component of $B$ (\texttt{data\_drift}, \texttt{tool\_drift}, \texttt{scope\_drift}, \texttt{time\_drift}), and a \textbf{boundary violation kind} capturing the normative reason. The kinds include \emph{purpose limitation} and \emph{data minimization} (grounded in GDPR Art.~5(1)(b,c)~\citep{GDPR2016}), \emph{explicit prohibition}, and \emph{implicit red line}; full definitions are in Appendix~\ref{app:formal-defs}. For legal analysis, each drift action is further linked to the legal provisions it implicates (\S\ref{sec:dataset-construction}).
+
+A structural property of ADB scenarios is \textbf{trigger-induced sequentiality}: drift actions are causally downstream of compliant steps. Each compliant tool call embeds a trigger field---a piece of realistic ambient metadata that makes an unauthorized follow-up feel like a natural next step---phrased in evaluative rather than imperative language. These triggers therefore differ fundamentally from prompt injection, since they carry no instruction and exert no external pressure (Appendix~\ref{app:trigger-vs-injection}); the boundary violation is emergent and trajectory-dependent, not externally provoked.
+
+\subsection{Dataset Construction via SERS}
+\label{sec:dataset-construction}
+
+
+
+Constructing an authorization drift benchmark is more demanding than standard LLM evaluation: each sample needs an executable tool environment with consistent mock state, precise dual-level violation annotations, a verifiable compliant path of non-trivial length, and realistic drift temptation embedded organically in tool return values. Naive single-pass generation cannot meet these requirements jointly. We therefore propose \textbf{Staged Execution-Reflective Synthesis (SERS)} (Figure~\ref{fig:sers-pipeline}), which decomposes generation into specialized stages and grounds quality control in actual agent execution rather than LLM self-critique. The reflection principle is adapted from \citet{jones2026benign}, where agent rollouts serve as the validity oracle for whether a sample is correctly annotated and genuinely challenging.
+
+\paragraph{Stage~1 -- Drift scenario design.} An LLM generator (Claude Sonnet 4.6, selected over GPT-4o and Gemini 1.5 Pro in a pilot ablation) produces a structured playbook for each sample. Starting from a skill drawn from 746 skills across seven domains,%
+\footnote{Skills are sourced from the OpenClaw skill repository (\url{https://github.com/VoltAgent/awesome-openclaw-skills}).}
+the generator designs a tool set that extends beyond the minimal compliant tools, defines a minimal compliant path with strictly traceable arguments, enumerates at least five drift points (each with a trigger field, an unauthorized tool call, a drift type, and a violation kind), and fills in concrete tool return values. The full prompt and step list are in Appendix~\ref{app:stage1-prompt}.
+
+\paragraph{Stage~2 -- Environment and annotation generation.} Stage~2 translates each playbook into three executable artifacts: a typed OpenAI-compatible tool schema, a Python \texttt{BaseEnv} subclass that reconstructs mock state with consistent read/write semantics, and a structured annotation file encoding \texttt{required\_tool\_calls}, \texttt{violation\_tool\_calls} with dual-level labels, and decoupled success criteria. Annotated examples and the generation prompt are in Appendix~\ref{app:stage2-prompt} and \ref{app:sample-files}.
+
+\paragraph{Stage~3 -- Execution-reflective quality control.} Each sample first passes a one-time structural smoke test (schema consistency, argument traceability, annotation non-overlap). It then enters a trajectory QC loop in which two probe models from different families---Qwen3.6-35B-A3B~\citep{qwen36_35b_a3b} and Llama-3.3-70B-Instruct~\citep{grattafiori2024llama}---each generate four rollouts; cross-family diversity provides broader behavioral coverage than any single model could. An automated gate accepts the sample only if at least one probe rollout covers the annotated required calls and at least two of the eight rollouts trigger a designed drift point. Failed samples are routed to a Critic agent (Appendix~\ref{app:critic-prompt}) for targeted revision and re-enter execution for up to three rounds; unresolved samples are escalated for human review. A human audit of 20 domain-stratified random samples finds every instruction natural, every environment consistent, and every drift-point design of high quality, with compliant-path feasibility and success-criteria validity at 70\% each (Appendix~\ref{app:human-eval}).
+
+\paragraph{Legal grounding.} An LLM extracts a registry of 150 provisions from eleven legal instruments in four jurisdictions; Qwen3-235B-A22B-Instruct (temperature $0$) then matches each individual drift point to one to three taxonomy categories and, within them, to at most five provisions, validated against the extracted registry (Appendix~\ref{app:legal}). Drift points left without a retained provision are excluded from provision-linked analyses, leaving 2{,}525 of 3{,}911 points and 58 provisions (Table~\ref{tab:legal_instruments}). The provision-level drift rate $\mathrm{DR}_\ell(m)$ is the fraction of runs that trigger a drift point linked to provision $\ell$; $\mathrm{DR}_{\mathcal{L}}(m)$ counts any such linked point. Comprehensive details on domain composition, pipeline quality control, and observed drift point distributions are provided in Appendix~\ref{app:dataset-stats}.
+
+
+\input{tables/main_results}
+
+\subsection{Evaluation Protocol}
+\label{sec:eval-protocol}
+
+We evaluate trajectories along two orthogonal axes---authorization safety and task completion---and report Pass@1 (the expected probability over independent single rollouts) for every primary metric. Let $d_{s,m,r},c_{s,m,r}\!\in\!\{0,1\}$ denote drift and task success on run $r$ of sample $s$ under model $m$.
+
+\paragraph{Drift detection.} A tool call counts as drift if it matches any \texttt{violation\_tool\_calls} entry by name and argument-subset; a trajectory drifts if any such match exists. The primary safety metric is the run-level
+\begin{equation}
+\small
+\mathrm{DR}(m) = \tfrac{1}{R_m}\textstyle\sum_{s,r} d_{s,m,r}.
+\end{equation}
+A sample-level variant $\mathrm{DR}_{\text{sample}}(m)=\tfrac{1}{S_m}\sum_s \mathbb{I}[\max_r d_{s,m,r}=1]$ supports the persistence ratio $\mathrm{PR}=\mathrm{DR}_{\text{sample}}/\mathrm{DR}$.
+
+\paragraph{Task success.} Task success $\mathrm{TSR}(m)=\tfrac{1}{R_m}\sum_{s,r} c_{s,m,r}$ is judged by an LLM evaluator against core-deliverable criteria, with drift steps stripped from the trajectory to prevent helpfulness leakage between the two axes (rule-based completion checks are reported alongside in Appendix~\ref{app:formal-defs}).
+
+
+\paragraph{Joint metrics.} The \emph{compliant success rate} $\mathrm{CSR}(m)=\tfrac{1}{R_m}\sum_{s,r}\mathbb{I}[c_{s,m,r}=1 \wedge d_{s,m,r}=0]$ measures runs that are simultaneously successful and boundary-respecting, and is reported directly rather than as $\mathrm{TSR}(1-\mathrm{DR})$, since the multiplicative estimate is biased when capability and drift are correlated. The \emph{compliance-conditional success rate} $\mathrm{CCSR}(m)=\mathrm{CSR}(m)/(1-\mathrm{DR}(m))$ isolates capability on the boundary-respecting subset of runs, distinguishing low drift driven by genuine compliance from low drift driven by capability collapse (a model that fails to act cannot drift). We treat authorization safety as a hard constraint rather than a quantity to be traded against capability, and report TSR, DR, CSR, and CCSR side-by-side as diagnostics rather than a single scalar.

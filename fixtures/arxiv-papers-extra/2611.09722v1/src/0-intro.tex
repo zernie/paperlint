@@ -1,0 +1,33 @@
+\section{Introduction}
+\label{sec:intro}
+
+Autoregressive language-model decoding reads each active request's key--value (KV) cache on every decode step.
+The cache footprint grows with batch size and context length; storing it consumes high-bandwidth memory (HBM) capacity, and streaming it from HBM often dominates decode-attention latency.
+Low-bit KV quantization reduces that traffic directly.
+KIVI~\cite{liu2024kivi}, Kitty~\cite{xia2025kitty}, OSCAR~\cite{zhou2026oscar}, KVQuant~\cite{hooper2024kvquant}, and QServe~\cite{lin2025qserve} store each cached value in 2--4 bits with a group-shared scale and offset.
+
+Compressing the cache in memory does not eliminate on-chip operand preparation.
+KIVI~\cite{liu2024kivi}, QServe~\cite{lin2025qserve}, TurboAttention~\cite{kang2025turboattention}, BitDecoding~\cite{du2026bitdecoding}, SAW-INT4~\cite{jia2026saw}, and OSCAR~\cite{zhou2026oscar} all convert or reconstruct low-bit values before each matrix product.
+This preparation consumes instruction-issue throughput, registers, and shared-memory bandwidth even when fused into attention without writing dequantized K and V to HBM.
+\emph{Although bit-packing reduces HBM traffic, per-element operand preparation can still limit the resulting latency speedup.}
+
+\sys{} applies affine folding to the query--key (QK) and probability--value (PV) matrix products, which reduce over channels and tokens.
+For token-wise K, the kernel scales each group's partial QK result and adds the group's offset times the matching query sum.
+For token-wise V, the kernel scales the attention weights before PV and adds a weighted sum of offsets to the output.
+Channel-wise K instead scales the query before QK, while channel-wise V scales each group's partial PV result, and both add the corresponding offset-weighted sum.
+These per-group operations replace element-wise scale multiplication and offset addition, while bit manipulation constructs Tensor Core KV operands directly from packed integers.
+In exact arithmetic, affine folding produces the same attention output as dequantizing every KV value before the matrix products.
+
+This paper makes four contributions:
+\begin{itemize}
+  \item \textbf{Identify decode attention performance bottleneck.}
+        We compare per-byte reconstruction instruction demand against peak instruction-issue and HBM throughputs on H100 and B200, showing how per-element conversion and affine arithmetic limit low-bit decode speedups (\Cref{sec:analysis}).
+   \item \textbf{Efficient Tensor Core operand preparation via affine folding.}
+        We formulate affine folding for independent token-wise or channel-wise K and V quantization, paired with bit-level Tensor Core operand construction, to feed Tensor Cores efficiently with lower instruction demand (\Cref{sec:design-fold,sec:design-unpack}).
+  \item \textbf{Fast GPU kernels for Hopper and Blackwell.}
+        We design warp-specialized decode pipelines for H100 register accumulators and B200 tensor-memory (TMEM) accumulators (\Cref{sec:design-pipelines}).
+  \item \textbf{Kernel and serving-engine evaluation.}
+        We evaluate \sys{} in standalone kernel benchmarks and integrated into SGLang~\cite{zheng2024sglang}.
+        \sys{} INT2 achieves geometric-mean kernel-latency speedups over FlashInfer BF16 of $3.36\times$ on H100 and $2.67\times$ on B200.
+        For long-context serving workloads, \sys{} INT2 increases peak aggregate serving throughput by up to $170\%$ and $341\%$ over 2-bit and 16-bit baselines, respectively (\Cref{sec:eval}).
+\end{itemize}

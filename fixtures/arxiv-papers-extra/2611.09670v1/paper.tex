@@ -1,0 +1,883 @@
+\documentclass{article}
+
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+
+\usepackage[preprint]{icml2026}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsthm}
+\usepackage[capitalize,noabbrev]{cleveref}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\KL}{\mathrm{KL}}
+\newcommand{\Jh}{\hat{J}}
+\newcommand{\Cov}{\mathrm{Cov}}
+\newcommand{\Var}{\mathrm{Var}}
+
+\icmltitlerunning{Goodhart in the Planner}
+
+\begin{document}
+
+\twocolumn[
+  \icmltitle{Goodhart in the Planner: Sampling-Based Control Exploits\\Rewards Learned from Human Preferences}
+
+  \icmlsetsymbol{equal}{*}
+
+  \IfFileExists{authors.tex}{\input{authors.tex}}{%
+    \begin{icmlauthorlist}
+      \icmlauthor{Anonymous Authors}{anon}
+    \end{icmlauthorlist}
+    \icmlaffiliation{anon}{Anonymous Institution}
+    \icmlcorrespondingauthor{Anonymous Authors}{anon.email@domain.com}
+  }
+
+  \icmlkeywords{reward hacking, overoptimization, preference learning, model predictive control, MPPI, best-of-N}
+
+  \vskip 0.3in
+]
+
+\printAffiliationsAndNotice{\icmlEqualContribution}
+
+\begin{abstract}
+Robots increasingly choose actions by searching against a reward model learned from human preferences, in
+model-predictive control or best-of-$N$ selection; we measure what this does to the true objective. On
+HalfCheetah and Hopper with crowd-sourced labels, and on Meta-World drawer-open and plate-slide with synthetic labels
+and blind labels from the two authors, harder MPPI search cuts true return by up to 76\%: with human labels the drawer opens in 0 of 20
+runs against 10 of 10 for the cloned policy the planner starts from, while held-out label accuracy stays at
+0.75--0.97. On plate-slide human labels are exploited less than synthetic ones, and on window-open search helps. True return roughly follows how far the planner's weights move from
+its proposals ($\sqrt{\KL}$) for both weighting rules we test, and best-of-$N$ with a verifier from synthetic labels
+falls below a single noisy action. We prove that $\chi^2$-regularized MPPI at a temperature set by the scorer's error spread on the
+proposals is worst-case optimal, that no positive gain can be certified once that spread exceeds the scorer's own, and
+that an episode's return splits exactly into per-step terms, of which the guarantee covers the selection terms.
+Calibrated from 100 proposal pairs ranked by true return (an oracle) on start states the evaluation never uses, this
+rule is the safest fix we test: with each of five independent sets it succeeds in every arm run and keeps on average 86--94\% of
+the cloned policy's return on plate-slide and drawer-open, though it is cautious where search helps.
+Calibration from a person's comparisons cannot detect a bias the scorer learned from that person; correcting for the
+pairs people cannot tell apart, or a second person, limits the damage.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+
+A robot that plans against a learned reward is an optimizer pointed at a proxy. Reward models learned from human
+preferences are now used inside model-predictive control \citep{krupa2025learning,elhasnaouy2026active,nabail2026ubp2},
+and robot foundation models are scaled at test time by sampling many candidate actions and executing the one a learned
+verifier likes best \citep{kwok2025robomonkey}. In language-model alignment it is well established that optimizing
+too hard against a learned reward lowers the quality it was meant to measure \citep{gao2023scaling,
+coste2024ensembles,eisenstein2024helping}, and a line of theory explains when regularization toward a reference
+policy does and does not prevent it \citep{huang2025chipo,huang2025bestofn,kwa2024catastrophic,laidlaw2025correlated}.
+Robot planners differ: the optimizer is a sampling-based search whose strength is set by a temperature and a sample
+count, the regularizer is implicit in the proposals, the plan is re-optimized at every step, and the labels number
+hundreds to thousands, not hundreds of thousands. How much such a planner exploits its scorer has not been measured.
+
+We study Model Predictive Path Integral control \citep[MPPI;][]{williams2017mppi,williams2017information} with proposals
+around a policy cloned from the labelled data, the planning analogue of RLHF's reference model, and a Bradley--Terry
+scorer trained from preference labels. We use the true simulator for planning, so that every failure is attributable to
+the scorer and not to a learned dynamics model. Our contributions are:
+\begin{itemize}
+\item \textbf{Goodhart in the planner} (\cref{sec:exp-lambda}). On HalfCheetah and Hopper with real crowd-sourced labels
+  \citep{yuan2024unirlhf}, and on Meta-World drawer-open and plate-slide with synthetic labels and blind labels from
+  the two authors \citep{yu2020metaworld}, harder search lowers true return below that of the cloned policy it starts from, while
+  a perfect scorer gains or, on hopper, loses less. High agreement on decided human comparisons does not make planning
+  safe: on the drawer the pairs a person cannot tell apart carry what the planner needs. On plate-slide human labels
+  are exploited less than synthetic ones, and on window-open search helps.
+\item \textbf{An approximate collapse onto distance} (\cref{sec:exp-law}). Within each task, true return falls near one
+  curve in $d=\sqrt{\KL}$ between the planner's weights and its proposals for both weighting rules we test, so $\chi^2$
+  weights help mainly by moving less.
+\item \textbf{How hard to search, and when not to} (\cref{sec:theory}). Against an error spread $\sigma$ on the
+  proposals, $\chi^2$-regularized MPPI at $\lambda\sqrt{\chi^2}=\sigma$ is worst-case optimal, no positive gain can be
+  certified once $\sigma$ exceeds the scorer's own spread, and the guarantee of hard exponential search falls as
+  $-\sigma\sqrt N$; an exact decomposition of an episode's return shows which terms this controls. The mathematics is elementary;
+  what is new is bounding the error on the planner's own proposals, which held-out accuracy does not predict
+  (\cref{sec:exp-mech}), and following it through the closed loop.
+\item \textbf{Fixes, measured honestly} (\cref{sec:exp-fix}). Calibrated from 100 proposal pairs ranked by true return,
+  the worst-case-optimal rule is the safest fix we test, though cautious where search helps; calibrated from the
+  labeller's own comparisons, it cannot detect a bias the scorer shares with that person; ensembles, $\chi^2$ weights, automatic temperatures
+  and a guard each win somewhere and lose elsewhere, and a UBP2-inspired CEM planner \citep{nabail2026ubp2} is the most
+  exploited. Labelling the planner's own trajectories reduces the exploitation.
+\item \textbf{Best-of-$N$ is not safe either} (\cref{sec:exp-bon}). With a verifier from 500 synthetic pairs it falls below
+  one noisy action from $N=16$ ($N=4$ on plate-slide); with 2,000 pairs selection helps.
+\end{itemize}
+
+\section{Setting}
+\label{sec:setting}
+
+\paragraph{Planner.} At each control step MPPI rolls out $N$ action sequences of length $H$ from the current state and
+executes the first action of their weighted average \citep{williams2017mppi}. We draw the sequences around the cloned
+policy's own closed-loop plan $U$: $A_i=\mathrm{clip}(U+\epsilon_i)$, $\epsilon_i\sim\mathcal N(0,\sigma^2I)$, which
+plays the role of the reference policy in RLHF. Each plan gets a learned return $\Jh(A_i)=\sum_{h<H}\hat r(o_h,a_h)$
+and, for evaluation only, a true return $J(A_i)$. Standard (exponential) MPPI uses
+$w_i\propto\exp(\Jh_i/\lambda)$, the solution of $\max_w \sum_i w_i\Jh_i-\lambda\KL(w\Vert\mathrm{unif})$, the same
+KL-regularized objective as RLHF with $\beta=\lambda$. The $\chi^2$ rule of Tsallis-divergence MPPI
+\citep{wang2021tsallis} uses $w_i\propto\max(0,\Jh_i-c)$ with $c$ set by $\lambda$, the solution with $\lambda\chi^2/2$ in
+place of $\lambda\KL$. Lower $\lambda$ means harder search; $\lambda\to0$ is best-of-$N$ over plans. We log the
+per-step $\KL(w\Vert\mathrm{unif})=\sum_iw_i\log(Nw_i)\le\log N$. Uniform weights ($\lambda=10^6$) give the planner
+without search, which we call \emph{uniform averaging}: it executes the average of the clipped noisy proposals, which
+is not the cloned policy's own action, so we also run the cloned policy directly. Unless stated, $N=256$, $H=20$,
+$\sigma=0.5$, and planning uses the true MuJoCo dynamics \citep{todorov2012mujoco}.
+
+\paragraph{Scorers.} A two-layer MLP $\hat r(o,a)$ is trained on segment pairs with the Bradley--Terry likelihood
+$P(\sigma^1\succ\sigma^2)=\mathrm{sigmoid}(\sum_t\hat r(\sigma^1_t)-\sum_t\hat r(\sigma^2_t))$
+\citep{bradley1952rank,christiano2017deep}, with 10\% of pairs held out, and standardized per step; a tie (``can't
+tell'') is a target of $\frac12$, that is, indifference. Five seeds per
+label set give single scorers and a five-member ensemble \citep{lakshminarayanan2017ensembles}.
+
+\paragraph{Tasks and labels.} \emph{Locomotion}: HalfCheetah-v5 and Hopper-v5 \citep{towers2024gymnasium}, D4RL
+medium-replay data \citep{fu2020d4rl} and the Uni-RLHF crowd-sourced labels \citep{yuan2024unirlhf}: 2,000 pairs of
+200-step segments that agree with the true ranking on 73\% (cheetah) and 64\% (hopper) of pairs, with 10--15\% ties.
+\emph{Manipulation}: Meta-World v3 drawer-open, plate-slide and window-open \citep{yu2020metaworld} with mocap position control.
+The cloned policy is trained on 10 scripted demonstrations; the labelled data add 100 rollouts of the cloned policy
+with action noise from 0 to 1, and 2,000 pairs of 50-step segments are labelled by a noisy Bradley--Terry teacher that
+agrees with the true ranking on 86--88\% of pairs. Smaller budgets use the first $K$ pairs. The authors also labelled
+pairs blind (two clips side by side in random order, with ``can't tell''): drawer pairs 0--299 and 200--499 (97.6\%
+and 97.7\% agreement with the true ranking on decided pairs, 18\% and 13\% ties; the two agreed on all 73 shared
+decided pairs) and plate-slide pairs 0--299 (97.2\%, 17\%). Episodes last 200 steps on
+the walkers and 150 on the arm. True return is the environment's reward (Meta-World's dense reward on the arm), and on
+the arm we also count successes. Each cell averages 10 runs (5 scorer seeds $\times$ 2 start states; 10 start states for
+ensembles), and 20 for standard MPPI in the five main settings. Appendix~\ref{app:setup} lists all settings; code and results will be released.
+
+\section{Theory: what the planner can and cannot certify}
+\label{sec:theory}
+
+Fix a state. Let $q$ give each of the $N$ proposals weight $1/N$ (the reference policy of RLHF), $J$ and $\Jh$ be the
+true and learned plan returns, and $e=\Jh-J$ the scorer's error; labels fix $\Jh$ only up to scale and offset, so $J$
+is measured in the scorer's units. A plan distribution $p\ll q$ is any reweighting of the proposals, such as MPPI's
+weights; its density $w=dp/dq$ gives plan $i$ the factor $w_i=Np_i$ by which it is up-weighted ($w_i=2$ doubles its
+share, $w_i=0$ drops it). Let $\Delta(p)=\E_p[J]-\E_q[J]$ be the true gain of selecting with $p$, $\hat\Delta(p)$ the
+same under $\Jh$, and $s(p)=\sqrt{\chi^2(p\Vert q)}=\big(\tfrac1N\sum_i(w_i-1)^2\big)^{1/2}$ the distance moved: $s=0$
+is no search, and spreading the weight evenly over the best $k$ plans gives $s=\sqrt{N/k-1}$ (1 for the best half,
+$\approx16$ for the single best of 256). What matters is $\sigma_e=\mathrm{sd}_q(e)$, the spread of the scorer's mistake
+across the proposals: an error shared by all of them changes no weights and costs nothing; what hurts is overrating
+some proposals relative to others. Proofs are in Appendix~\ref{app:proofs}.
+
+\begin{lemma}[Tight change of measure]\label{lem:com}
+For every $p\ll q$, $|\Delta(p)-\hat\Delta(p)|\le\sigma_e\,s(p)$. For each $p$, an error of spread $\sigma_e$ that
+overrates every plan in proportion to its extra weight $w-1$ attains $\Delta(p)=\hat\Delta(p)-\sigma_e s(p)$.
+\end{lemma}
+
+In words, the gain the scorer reports overstates the true gain by at most how far the planner moves times how much
+the scorer's mistakes vary across the proposals, and by exactly that much when the scorer overrates precisely the plans
+the planner up-weights. This sharpens the change-of-measure bound used for language models
+\citep{huang2025chipo,huang2025bestofn}: it vanishes when the planner does not move, and no smaller bound holds. Against every error of spread at most $\sigma$, the
+planner can therefore guarantee exactly $W_\sigma(p)=\hat\Delta(p)-\sigma s(p)$, and the best it can do is maximize this.
+
+\begin{theorem}[Worst-case-optimal search]\label{thm:chi2}
+(i) If $\sigma\ge\sigma_q(\Jh)$, no plan distribution guarantees a gain: $\max_pW_\sigma(p)=0$, attained by $p=q$.
+\\[2pt](ii) If $\sigma<\sigma_q(\Jh)$, $W_\sigma$ is maximized by $\chi^2$ MPPI, $w=\max(0,(\Jh-c)/\lambda)$, at a
+temperature $\lambda^\star$ with $\lambda^\star s(p_{\lambda^\star})=\sigma$ (for $\sigma=0$, the hard-search limit
+$\lambda\to0$), and the maximum is positive. Along the
+$\chi^2$ path, $\lambda\,s(p_\lambda)$ falls from $\sigma_q(\Jh)$ to $0$ as search hardens, and $W_\sigma$ rises until
+$\lambda^\star$ and falls after it.
+\\[2pt](iii) While no proposal's weight is clipped to zero, $\hat\Delta(p_\lambda)=\sigma_q(\Jh)\,s$ and the true gain
+is exactly $\Delta(p_\lambda)=\rho_q\,\sigma_q(J)\,s$, where $\rho_q=\mathrm{Corr}_q(J,\Jh)$.
+\end{theorem}
+
+The theorem turns the error size into a stopping rule the planner can check from its own weights: harden the search
+until $\lambda\sqrt{\chi^2}$ falls to the error spread, and do not search at all when the error spread exceeds the
+scorer's own spread over the proposals. The $\chi^2$ geometry comes from the error model, not a choice of divergence:
+knowing only the error's spread makes $\sigma_e\sqrt{\chi^2}$ the exact worst case (\cref{lem:com}), while sub-Gaussian
+errors would give a bound in $\sqrt{\KL}$ matched by exponential MPPI, an assumption heavy tails break
+\citep{kwa2024catastrophic}.
+
+\paragraph{Scale.} Since $J$ is known only up to scale, we put it in the scorer's units by the rescaling that best
+matches $\Jh$ on the proposals (least squares of $\Jh$ on $J$), which leaves an error uncorrelated with $J$ and gives
+$\sigma_e=\sigma_q(\Jh)\sqrt{1-\rho_q^2}$. The threshold of (i) then becomes $\rho_q\le0$: a
+positive gain can be certified exactly when the scorer's Pearson correlation with the true return over the proposals is
+positive. For jointly Gaussian returns this is the same as ordering a random pair correctly more often than chance; in
+general it is not, since a scorer can order most pairs correctly and still correlate negatively by badly underrating
+one high-return plan. As $\rho_q\to0^+$ the rescaling shrinks $J$, so the certified gain is positive but measured in ever smaller units: the
+theorem then guarantees the sign of the gain, not its size. In scale-free form, $\chi^2$ MPPI with $\lambda s=\sigma$
+does not lose for any true return whose correlation with $\Jh$ over the proposals is at least
+$\sqrt{1-\sigma^2/\sigma_q(\Jh)^2}$.
+
+MPPI executes the weighted average of the plans, $\bar A_p=\E_p[A]$, not a plan drawn from $p$. The guarantee carries
+over up to the spread of the plans the weights keep.
+
+\begin{proposition}[The executed plan]\label{prop:exec}
+If $J$ is $L$-smooth in the plan on the action box, then $J(\bar A_p)\ge\E_p[J]-\tfrac L2\,\E_p\Vert A-\bar A_p\Vert^2$, so
+against every error of spread at most $\sigma$, $J(\bar A_p)-\E_q[J]\ge W_\sigma(p)-\tfrac L2\,\E_p\Vert A-\bar A_p\Vert^2$.
+The last term vanishes as the weights concentrate on one plan, and it can be dropped when $J$ is concave in the plan.
+\end{proposition}
+
+$L$ is unknown for contact-rich tasks, so we measure the averaging term $J(\bar A_p)-\E_p[J]$ directly
+(\cref{app:probe}): at least $-0.05$ standard deviations except on window-open ($-0.15$).
+
+\begin{corollary}[Hard exponential search]\label{prop:exp}
+On $N$ samples with a unique top-scored plan, exponential MPPI with $\lambda\to0$ selects it, $s\to\sqrt{N-1}$, and its
+guarantee is $\max\Jh-\E_q\Jh-\sigma\sqrt{N-1}$: the worst error overrates the selected plan by $\sigma\sqrt{N-1}$. If
+the top score's margin grows more slowly than $\sqrt N$, as $\sigma_q(\Jh)\sqrt{2\log N}$ does for Gaussian scores,
+this tends to $-\infty$ as $N$ grows, for every $\sigma>0$; the guarantee of \cref{thm:chi2} is never negative.
+\end{corollary}
+
+How large is $\sigma_e$? For a linear reward its bound shrinks with the label count at a rate set by how far the planner's
+proposals vary beyond the labelled pairs (\cref{cor:labels}, \cref{app:proofs}). The next result locates where along the exponential path true return turns down.
+
+\begin{proposition}[Where search starts to hurt]\label{prop:onset}
+Let $p_\eta\propto q\,e^{\eta\Jh}$ with $\eta=1/\lambda$, and $d(\eta)=\sqrt{\KL(p_\eta\Vert q)}$.
+(i) For every $\eta$, $\tfrac{d}{d\eta}\E_{p_\eta}[J]=\Cov_{p_\eta}(J,\Jh)$ and
+$\tfrac{d}{d\eta}\KL(p_\eta\Vert q)=\eta\Var_{p_\eta}(\Jh)$. The true return of a plan drawn from the planner's
+weights rises exactly while learned and true returns are positively correlated under those weights, and it has a
+local peak only where that covariance changes sign from positive to negative.
+\\[2pt](ii) As $\eta\to0$, $\E_{p_\eta}[J]-\E_q[J]=\sqrt2\,\rho_q\,\sigma_q(J)\,d+O(d^2)$, where
+$\rho_q=\mathrm{Corr}_q(J,\Jh)$ and $\sigma_q(J)$ is the spread of true return over the proposals.
+\\[2pt](iii) The executed plan $\bar A=\E_{p}[A]$ satisfies
+$J(\bar A)-J(U)=\underbrace{\E_p[J]-\E_q[J]}_{\text{selection gain}}-\underbrace{(J(U)-\E_q[J])}_{\text{price of
+noise}}+\underbrace{(J(\bar A)-\E_p[J])}_{\text{averaging}}$; on $N$ samples the last term vanishes as
+$\lambda\to0$, so hard search beats the cloned plan only if the selection gain exceeds a price that does not
+depend on the scorer.
+\end{proposition}
+
+Part (ii) makes $\sqrt{\KL}$ the natural axis, as \citet{gao2023scaling} found for language models: to first order
+true return changes linearly in it, with a slope set by how well the scorer ranks the proposals, not how well it fits
+its labels (near $q$, $\sqrt{\KL}\approx s/\sqrt2$, matching \cref{thm:chi2}(iii)). Part (i) says
+that exploitation begins where the scorer stops ranking the planner's own favourites correctly, possibly long before
+it ranks typical proposals badly. Part (iii) separates exploitation from a cost of sampling that a perfect scorer also
+pays; drawing one plan from the weights, as inference-time pessimism does \citep{huang2025bestofn}, gives up the
+averaging term at every temperature, which is why it does worse than averaging on cheetah (167--265) and the drawer.
+
+Over an episode the planner re-plans at every state it visits, and the per-step terms add up exactly.
+
+\begin{proposition}[Closed loop]\label{prop:loop}
+Let the dynamics be deterministic, $V_t$ the cloned policy's true return from step $t$ to the end of the episode, and
+$Q_t(s,a)$ the return of taking $a$ at step $t$ and following the cloned policy after it. If at each visited state
+$s_t$ the planner executes the first action $a_t$ of $\bar A_t$, its episode return $R$ satisfies
+$R-V_0(s_0)=\sum_{t<T}\big[\Delta_t-c_t+\alpha_t+\eta_t\big]$, where $\Delta_t$, $c_t$ and $\alpha_t$ are the
+selection gain, price of noise and averaging term of \cref{prop:onset}(iii) at $s_t$, and
+$\eta_t=Q_t(s_t,a_t)-V_t(s_t)-\big(J(\bar A_t)-J(U_t)\big)$ is the horizon gap, by which the $H$-step comparison with
+the cloned plan misstates the long-run advantage of the first action. If at every visited state the weights are
+worst-case optimal for an error spread of at least that state's $\sigma_e$, then every $\Delta_t\ge0$ and
+$R\ge V_0(s_0)-\sum_t(c_t-\alpha_t-\eta_t)$.
+\end{proposition}
+
+The identity does not make the other terms independent of the scorer, which sets the weights and with them the
+averaging term and the states visited: with $J(a)=1-a^2$, cloned action 0 and proposals $\pm1$, hard search on a
+scorer that favours $+1$ has zero selection gain and loses only the averaging term. \Cref{thm:chi2} controls the
+selection terms, given the error spread on the visited states, which can exceed that on the cloned policy's; we measure
+the rest (\cref{app:loop}).
+
+\section{Experiments}
+\label{sec:exp}
+
+\subsection{Harder search lowers true return}
+\label{sec:exp-lambda}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_lambda.pdf}
+\vspace{-6mm}
+\caption{True return against MPPI temperature (harder search to the right), mean of 10--20 runs with $\pm$1 standard
+error over runs. Dotted: uniform averaging (no search); dash-dot: the cloned policy run directly. A perfect scorer (the true reward) keeps or improves its return except on hopper (\cref{sec:exp-law}); a
+learned scorer loses it, except on window-open, where it gains less. Magenta: 300 blind human labels, exploited faster
+than 500 synthetic ones; grey: 2,000 labels, safe on the drawer and window-open but not on plate-slide.}
+\label{fig:lambda}
+\end{figure*}
+
+\Cref{fig:lambda} shows the main effect. With the crowd scorer, cheetah's true return falls from 480 at $\lambda=3$ to
+262 at $\lambda=0.01$ (uniform averaging scores 233, the cloned policy run directly 412), and hopper's from 468 to 272--356, while the perfect scorer
+improves on cheetah (867 to 1,010). On hopper hard search costs return even with the perfect scorer (559 at
+$\lambda=3$, 342--373 at $\lambda\le1$), so part of the hopper loss is the planner's own (\cref{sec:exp-law}). On the drawer with 500 labels, true return falls from 707 to 504 and the
+drawer stays shut in 9 of 20 runs, while the scorer's own estimate of the executed episode rises twelve-fold (56 to
+674; uniform averaging and the cloned policy open it every time). Blind human
+labels on 300 pairs are the starkest case: the gentlest search matches uniform averaging (851, 20 of 20), and every
+temperature at or below 0.1 opens the drawer in 0 of 20 runs (201--216); both authors' labels on 500 pairs fare no
+better (246 at $\lambda=0.01$, 0/10). On plate-slide, where the cloned policy already succeeds every time, every scorer
+from synthetic labels loses ground under harder search, with 500 labels (950 to 436) and with 2,000 (977 to 319).
+Human labels lose less: one author's 300 keep 1,066 (10/10) at hard search, against 499 (8/10) with synthetic labels
+on the same pairs and 886 (8/10) with them in true-return order, and both authors' 500 fall to 681 (6/10).
+On the drawer, 2,000 labels are enough: harder search then helps (899 to 948, never failing).
+Search is not always exploited: on window-open it helps at every budget (295 without search, 375--392 at
+$\lambda=0.01$; \cref{sec:exp-mech}), and button-press is a null
+case (\cref{app:null}). Hard search still loses with horizon 10 or 40 and proposal noise 0.25 or 1, except on
+cheetah with noise 0.25 (\cref{tab:sens}).
+
+The human-label result is not a labelling accident. Those labels agree with the true ranking on 97.6\% of decided
+pairs, against 86\% for the synthetic teacher on the same pairs, and give the best held-out accuracy (0.97) and
+per-step correlation with the true reward (0.91) of any scorer we trained. High agreement on decided pairs does not make a safer planning target. Controls on the same
+300 pairs point to the 55 pairs the person could not tell apart. At $\lambda=0.01$, ordering every pair by true return
+gives 640 (6/10), and so does dropping 55 random pairs (672, 6/10); but with only the decided pairs in true order the
+drawer never opens, whether the ties are kept as indifference (268) or dropped (233; 190 with the person's own
+answers). What the planner needs is the order of those close pairs, half of the 63 in which neither clip opens the
+drawer. In recorded episodes (\cref{fig:film}) the arm parks in an unvisited corner the
+scorer rates very highly (synthetic labels) or pulls about 10\,cm short of the handle (human labels). A linear fit of each scorer's per-step output on four state features shows why: the human-label
+scorer barely penalizes the hand--handle distance (standardized weight $-0.16$, against $-0.40$ to $-0.49$ with
+synthetic labels) and weights pulling (0.29) and the drawer's opening (0.63) most.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig_filmstrip.pdf}
+\caption{One drawer start under three planners (true returns). Uniform averaging opens the drawer. Standard MPPI
+($\lambda=0.01$) on the 500-label scorer lifts the hand into a part of the workspace the data never visited; on the
+human-label scorer ($\lambda=0.1$) it pulls in front of the handle without touching it.}
+\label{fig:film}
+\end{figure}
+
+\subsection{True return follows the distance moved}
+\label{sec:exp-law}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_kl.pdf}
+\vspace{-6mm}
+\caption{(a) Return gained over uniform averaging, divided by the perfect scorer's best, against the
+per-step distance $\sqrt{\KL}$ between MPPI's weights and its proposals. Circles: exponential weights; squares:
+$\chi^2$ weights; each point is one temperature (10--20 runs); curves are least-squares fits of
+$a\,d-b\,d^2$; faint dashed: perfect scorer, whose highest point is $1-{}$(averaging's return $\div$ its best), e.g.\
+0.77 on cheetah and 0.08 on plate-slide. Arm tasks use 500 labels. (b) The same on the drawer for five label budgets and the
+human labels. (c) Best-of-$N$ with a learned verifier on the drawer (solid) and plate-slide (dashed), relative to the
+clean cloned action (dash-dot line); $N=1$ (open markers) is one noisy action. Every point is 50 runs on the same ten starts (10 for the ensemble).}
+\label{fig:kl}
+\end{figure*}
+
+\Cref{fig:kl}a plots every single-scorer MPPI cell against $d=\sqrt{\KL}$. A two-parameter curve
+$\Delta J=a\,d-b\,d^2$ through uniform averaging ($d=0$) fits each task well ($R^2=0.79$--$0.99$ over 7--11 cells), and
+the sign of the initial slope $a$ is clear on every task (90\% hierarchical bootstrap intervals, resampling scorer
+seeds and then runs: cheetah 306 to 664, hopper 163 to 330, drawer $-385$ to $-99$, plate-slide $-479$ to $-218$,
+window-open 6 to 112). A curve fitted on the exponential cells alone predicts the $\chi^2$ cells with a mean absolute
+error of 38\% of their spread on cheetah, 57\% on hopper, 23\% on the drawer (16\% with human labels), 22\% on
+plate-slide and 29\% on window-open: at equal distance moved the two rules give similar true return, an approximate
+collapse within each task for the two rules we test, not a law. The
+advantage of $\chi^2$ weights at a fixed temperature (\cref{sec:exp-fix}) is therefore mostly that they move less. The
+walkers first gain and then lose (peaks near $d=1.2$ and 1.0); the drawer and plate-slide, where the cloned policy is
+near the optimum, lose from the start, and window-open gains throughout.
+
+The dashed curves (the perfect scorer at the same distances) separate exploitation from the planner's own cost: on
+cheetah, the drawer and plate-slide the gap opens from the first step and reaches 590--750 points at hard search, and
+on window-open 175. On hopper the crowd scorer is ahead of the true reward up to $d=1.7$, possibly because its 200-step
+segments reward progress the 20-step return misses, and behind it beyond $d=1.9$ ($-17$ to $-101$).
+
+On the drawer (\cref{fig:kl}b) the fitted initial slope $a$ grows steadily with the label count: $-507$, $-382$,
+$-250$, $-2$ and $+99$ for 200, 300, 500, 1,000 and 2,000 labels, roughly linear in $\log n$: $+630$ per decade
+(90\% hierarchical interval $+514$ to $+766$), crossing zero near 1,200 labels (1,010--1,420). The human labels
+sit below the synthetic labels on the same 300 pairs on average ($a=-460$, interval $-642$ to $-236$, against $-382$),
+though the intervals overlap. With five budgets, we read the log-linear form as a summary, not a law to
+extrapolate. On plate-slide, 2,000 labels do not change the sign ($a=-342$ at 500, $-360$ at 2,000).
+
+\subsection{Two ways to be exploited, and why held-out checks do not warn}
+\label{sec:exp-mech}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_mechanism.pdf}
+\vspace{-6mm}
+\caption{(a) Drawer, true return against label budget at gentle and hard search; the cautious ensemble rescues 500 and
+1,000 labels but not 200 or the human labels. Green: 500 labels, half on the planner's own trajectories (\cref{sec:exp-fix}). (b) Change in the scorer's own per-step estimate of the executed episode
+between $\lambda=3$ and $\lambda=0.01$, against the ratio of true returns: the estimate rises (right), consistent with
+extremal exploitation, or falls (left), consistent with noise chasing; diamonds: human labels. (c) Each fix at
+$\lambda=0.01$, relative to standard MPPI at $\lambda=3$.}
+\label{fig:mech}
+\end{figure*}
+
+\Cref{fig:mech}b separates two patterns by the sign of the change in the scorer's own estimate of the episode the
+robot actually executes. On the drawer with synthetic labels the estimate rises sharply as true return falls,
+consistent with the planner finding states the scorer overrates, the extremal case of \citet{manheim2018categorizing}.
+On plate-slide and with human labels the estimate \emph{falls} (from 27--43 to between $-43$ and $-90$), consistent
+with chasing plans that look good at planning time and do not hold up once the planner re-plans, the optimizer's curse
+\citep{smith2006optimizer} in closed loop. In the scorer's observations hard search leaves the labelled data on all three (51--60\% of visited states, none
+without search), but leaving it is not sufficient: on window-open 60\% of states are off it even without search, and
+search still helps (\cref{app:loop}). The two patterns respond to
+different fixes (\cref{sec:exp-fix}).
+
+Why do the usual checks not warn? \Cref{tab:probe} (\cref{app:probe}) compares them with what \cref{prop:onset} says
+matters, on the planner's 256 proposals along the cloned policy's episodes, scored by the learned scorer and the true
+reward. The initial slope predicted by \cref{prop:onset}(ii) matches the measured one to within 6\% in eleven of the
+thirteen settings (24\% and 12\%, about one standard error, with 200 drawer labels and with human labels). The correlation
+$\rho_q$ that sets it is unrelated to the held-out checks: the 500-label drawer scorer has held-out accuracy 0.88 and
+per-step correlation 0.88 on the labelled data, but ranks the planner's proposals with $\rho_q=0.10$; the hopper scorer
+has a per-step correlation of only 0.08 on the data, yet ranks proposals with $\rho_q=0.76$. Part (iii) explains why hard
+search loses to the cloned plan even when selection still helps: perturbing the cloned plan costs 0.7--2.2 standard
+deviations of true plan return, and the scorers recover only a fraction of that by selection. On window-open it costs
+only 0.33 and selection recovers 0.7--1.0, which is why search helps there. A scorer can be checked
+only where it will be optimized: on the planner's own proposals and, after the first step, on states the cloned policy
+never visited. Whole episodes bear this out (\cref{prop:loop}; \cref{app:loop}). On the states hard search visits, the
+scorer ranks the proposals worse than on the cloned policy's states ($\rho$ from 0.10 to $-0.11$ on the drawer,
+$-0.10$ to $-0.31$ with human labels, 0.45 to $-0.07$ on plate-slide, 0.76 to 0.51 on hopper; near zero on both on
+cheetah) and stays positive on window-open (0.35 to 0.22). Summed over a drawer episode, the selection gains are $-151$ with 500
+labels and $-373$ with human labels, against $+632$ with the perfect scorer. On plate-slide they stay positive ($+113$)
+and the loss is in the horizon gap ($-497$; $-237$ for the perfect scorer on the drawer): the executed plans' 20-step
+advantage over the cloned plan overstates their long-run effect.
+
+The same proposals test \cref{thm:chi2}. Given the true error spread, the worst-case-optimal rule does not lose at any of
+the 2,042 states and gains 0.05--0.53 standard deviations on average; standard MPPI at hard search gains more on average
+in ten of thirteen settings but loses 1.6--8.0 at its worst state, which a closed-loop planner has many chances to meet.
+The unknown is the error spread, which the ensemble's disagreement underestimates by a factor $\kappa^\star$
+of 1.0--2.8, most with human labels: scorers trained on the same labels share their mistakes. A practical version
+calibrates it from pairs of the planner's own proposals ranked by true return (an oracle; in deployment, a person's preferences):
+$\sigma=\sigma_q(\Jh)\sqrt{1-\hat\rho_+^2}$, with $\hat\rho_+=\max(0,\hat\rho)$ and $\hat\rho=\sin(\pi(c-\frac12))$
+from the share $c$ of pairs the scorer orders correctly \citep{kruskal1958ordinal}, so no search when $\hat\rho\le0$. With 100 pairs it loses at most
+0.22 standard deviations at its worst state in twelve of thirteen settings and keeps 47--93\% of the true-spread
+rule's gain where that gain exceeds 0.2; a nominal 95\% lower bound on $c$ cuts the loss to 0.05 but keeps only
+12--77\% of the gain. By \cref{cor:calib} (\cref{app:calib}) the rule cannot lose at a state whose correlation is at least
+$\hat\rho$; mistakes the labeller shares with the scorer, sampling noise and pooling (19--59\% of states fall below the
+pooled value) can each put $\hat\rho$ above a state's own, so the rule is an empirical safeguard, not a per-state
+certificate.
+
+\subsection{What helps, and where}
+\label{sec:exp-fix}
+
+\input{tables/table_fixes.tex}
+
+\Cref{tab:fixes} and \cref{fig:mech}c compare the fixes at hard search; none wins everywhere. On the walkers, $\chi^2$
+weights on the mean of five scorers do best (cheetah 485, hopper 448, against 262 and 356 for standard MPPI), and the
+cautious ensemble (mean minus one standard deviation; \citealp{coste2024ensembles}) helps less (295 and 374). On the
+drawer with synthetic labels the ranking reverses: the cautious ensemble restores 801 (10/10) while $\chi^2$ weights do
+not help (480), consistent with the two patterns above: where the planner reaches states the scorers overrate they
+disagree and the penalty finds them; where it chases noise they agree, and only gentler search helps. Automatic temperatures (0.5 times
+the disagreement) are the most even (cheetah 521, hopper 569, drawer 650, plate 662); a disagreement guard and the
+worst-case-optimal rule with $\kappa=2$ times the disagreement help on the drawer (729, 821) but not on the walkers. With human labels every fix that
+searches hard fails (at best 382, 2/10).
+
+Calibrated from 100 pairs of proposals ranked by true return, an oracle check a deployed robot lacks, the rule is the
+safest fix (\cref{tab:fixes,tab:calibcl}).
+Each of five independent calibration sets per task, drawn on start states the evaluation never uses, calibrates its
+own controller: it scores 818--852 on the drawer and 806--1,013 on plate-slide, succeeding in all 50 runs of each,
+against 898 and 1,111 for the cloned policy run directly and 611 (8/10) and 351 (6/10) for hard search on the same five
+scorers. With human labels every set declines to search (852, uniform averaging). It gains on hopper with every set
+(523--550, against 502 for the cloned policy), averages 357 on cheetah (264--445; uniform averaging 233, cloned policy
+412) and pays for caution on window-open (309--318, against 392 for standard MPPI and 372).
+
+\emph{Calibrating from people.} Calibrated from one author's comparisons of 100 such pairs, the rule trusts the scorer trained on that author's labels ($\hat\rho=0.63$; $-0.29$ by true return)
+and opens the drawer in 5/10 runs (574); the other author's comparisons ($\hat\rho=0.16$) leave it barely searching, at
+845 (10/10). Both people called about 70\% of pairs ties, which inflates the concordance on the rest; corrected for
+ties, the first author's $\hat\rho$ falls to 0.36 and the rule scores 822 (10/10; \cref{tab:humancalib}). Calibration
+against the person who labelled the scorer cannot detect a bias they share; an independent evaluator, the tie
+correction or the lower bound limits the damage.
+
+A UBP2-inspired optimistic CEM planner (the CEM component of \citet{nabail2026ubp2} on the five-scorer mean plus one
+standard deviation) is the strongest optimizer with the perfect scorer (cheetah 1,244,
+plate-slide 1,165) and the most exploited on the arm (plate-slide 68--79 with no successes, drawer 260--425, human
+labels 129--136). The collapse persists without optimism (CEM on the plain mean: drawer 370,
+plate-slide 73) and at matched budget (MPPI with 768 rollouts: 460, 303), though we do not isolate elite selection.
+
+\paragraph{Labelling where the planner goes.} The scorer is exploited where its labels did not reach, so, as active preference learning
+for MPC does \citep{elhasnaouy2026active}, we spend half of a 500-label drawer budget on the planner itself: 250 new
+pairs from MPPI episodes planned with a scorer trained on the first 250 offline pairs (\cref{app:setup}). Hard search
+then scores 834 (8/10) instead of 504 (11/20), and the cautious ensemble 975 (10/10), level with 2,000 offline labels
+and above the cloned policy (898; \cref{fig:mech}a); the distance curve's initial slope turns from $-250$ to $+33$.
+
+\subsection{Best-of-$N$ with a learned verifier}
+\label{sec:exp-bon}
+
+As supporting evidence beyond MPPI, we test best-of-$N$ action selection \citep{kwok2025robomonkey} with a state-based
+verifier trained on 500 or 2,000 synthetic pairs over perturbed actions (\cref{app:bon}). The $N$ candidates are noisy copies of the cloned action, so
+the reference is one noisy action: 755 on the drawer (44/50 successes) and 878 on plate-slide (44/50) on the verifiers'
+ten starts, against 898 and 1,111 for the clean action, which a perfect verifier keeps for every $N$ (\cref{fig:kl}c).
+With 500 pairs, $N=4$ is level with one noisy action on the drawer within noise (728, though 34/50 successes) and below
+it on plate-slide (723, 26/50); from $N=16$ both are well below (530, 375), falling to 388 (14/50) and 143 (0/50) at
+$N=1{,}024$. With 2,000 pairs selection beats one noisy action
+at every $N$ (drawer 817--895, plate 977--1,061).
+
+\section{Related work}
+\label{sec:related}
+
+\paragraph{Reward overoptimization.} \citet{gao2023scaling} fitted how true quality falls with $\sqrt{\KL}$ from the
+reference policy under best-of-$n$ and RL against a learned reward model.
+Ensembles \citep{coste2024ensembles,eisenstein2024helping,zhai2026uncertainty}, weight averaging \citep{rame2024warm} and
+constraints \citep{moskovitz2024confronting} mitigate it. \citet{huang2025chipo} showed that $\chi^2$ regularization gives
+guarantees KL regularization cannot, and \citet{huang2025bestofn} analyzed best-of-$N$ and proposed
+inference-time pessimism; our \cref{lem:com} centers and tightens their change-of-measure bound, and \cref{thm:chi2}
+turns it into a temperature MPPI can check from its own weights and a no-search threshold. \Cref{cor:labels} uses the Bradley--Terry estimation bound of
+\citet{zhu2023principled}; \citet{aouad2026revisiting} derive label-count scaling laws for language models. \citet{skalse2022defining,pan2022effects,laidlaw2025correlated} define reward hacking. These works study language
+models or RL policies, not a planner in closed loop.
+
+\paragraph{Preferences for robot control.} Preference-based reward learning
+\citep{christiano2017deep,sadigh2017active,lee2021pebble,hejna2023fewshot} is known to pick up spurious features
+\citep{tien2023causal}; Uni-RLHF \citep{yuan2024unirlhf} provides the crowd labels we use. Learned preference rewards are
+now optimized directly by MPC \citep{krupa2025learning,elhasnaouy2026active} and by CEM-based planning in UBP2
+\citep{nabail2026ubp2}, which plans optimistically to collect labels; we study such planners at deployment.
+
+\paragraph{Planning against learned models.} Model-based RL guards against exploiting learned dynamics with ensembles,
+penalties \citep{chua2018pets,yu2020mopo,kidambi2020morel} or policy constraints
+\citep{hansen2024tdmpc2,lin2025tdmpc2policy}; imperfect world models are exploitable \citep{bhamidipaty2026imperfect};
+see also conservative MPPI \citep{yoon2026residual}. MPPI is KL-regularized by construction
+\citep{williams2017information}; Tsallis-divergence MPPI \citep{wang2021tsallis} gives the $\chi^2$ rule. CriticHack
+\citep{luo2026critichack} evaluates visual reward models under policy optimization.
+
+\section{Limitations and conclusion}
+\label{sec:conclusion}
+
+Our tasks are simulated, our scorers are small MLPs on state, the human labels come from the two authors on
+two tasks, and most cells have 10 runs. Planning uses the true simulator, which isolates the reward but omits
+dynamics-model errors. Most calibration pairs are ranked by true return or a
+simulated labeller, an oracle a deployed robot lacks, apart from two people's 100 comparisons; the best-of-$N$ verifiers
+use synthetic labels. The guarantee of \cref{prop:loop} covers only the selection terms, and
+the label-count corollary assumes a linear reward. Window-open, button-press and two Adroit hand tasks are null or limit cases
+(\cref{app:null}).
+
+For practitioners, a planner's temperature, sample count and elite fraction are an optimization budget against the
+scorer, set by its quality \emph{on the planner's own proposals}. A calibrated temperature was the safest default
+tested, given an evaluator independent of the labels; labelling where the planner goes was the most effective fix.
+
+\section*{Impact Statement}
+This work shows that robots which optimize rewards learned from human preferences can behave worse than the policy
+they start from, without warning from standard validation, and identifies settings and checks that reduce that risk.
+The intended effect is safer deployment of learned objectives in robotics. The experiments are in simulation and
+involve no human subjects beyond the two authors' own labels.
+
+\section*{Use of Generative AI}
+During the preparation of this work the authors used Claude (Anthropic) to search the literature, to write and run
+the experiment code, and to draft and edit the text. The authors reviewed and edited the content as needed and take
+full responsibility for it. The code includes a script that recomputes every number in the paper from the stored
+result files.
+
+\bibliography{refs}
+\bibliographystyle{icml2026}
+
+\newpage
+\appendix
+\onecolumn
+
+\section{Proofs}
+\label{app:proofs}
+
+\paragraph{Proof of \cref{lem:com}.} With $w=dp/dq$, $\hat\Delta(p)-\Delta(p)=\E_p[e]-\E_q[e]=\E_q[(w-1)(e-\E_qe)]$, which by
+Cauchy--Schwarz under $q$ is at most $\Vert w-1\Vert_{L^2(q)}\,\mathrm{sd}_q(e)=\sigma_e\,s(p)$ in absolute value. For
+$p\ne q$, the error $e=\sigma_e(w-1)/s(p)$ has spread $\sigma_e$ and attains the bound. \qed
+
+\paragraph{Proof of \cref{thm:chi2}.} (i) By Cauchy--Schwarz, $\hat\Delta(p)=\E_q[(w-1)(\Jh-\E_q\Jh)]\le s(p)\,\sigma_q(\Jh)$, so
+$W_\sigma(p)\le(\sigma_q(\Jh)-\sigma)\,s(p)\le0=W_\sigma(q)$.
+(ii) $W_\sigma(p)=\E_q[w\Jh]-\E_q[\Jh]-\sigma\Vert w-1\Vert_{L^2(q)}$ is concave in $w$ on the convex set
+$\{w\ge0,\ \E_qw=1\}$, so a point that satisfies the Karush--Kuhn--Tucker conditions is a global maximizer. At $w\ne1$
+the gradient of $\Vert w-1\Vert$ is $(w-1)/s$; with a multiplier $\nu$ for $\E_qw=1$ and multipliers $\kappa\ge0$ with
+$\kappa w=0$ for $w\ge0$, stationarity reads $\Jh-\sigma(w-1)/s-\nu+\kappa=0$, whose solution is
+$w=\max(0,(\Jh-c)/\lambda)$ with $\lambda=\sigma/s$ and $c$ set by normalization: the $\chi^2$ MPPI weights at a
+temperature with $\lambda s(p_\lambda)=\sigma$. Conversely, the $\chi^2$ weights at any $\lambda$ satisfy these conditions
+with $\sigma=\lambda s(p_\lambda)$, so $p_\lambda$ maximizes $W_{\lambda s(p_\lambda)}$. Next, $p_\lambda$ maximizes
+$\E_q[w\Jh]-\tfrac\lambda2\E_q[(w-1)^2]$, so it maximizes $\hat\Delta$ among all $p$ with $s(p)\le s(p_\lambda)$; call
+this maximum $g(s)$. $g$ is concave: if $w_1,w_2$ attain $g(s_1),g(s_2)$, the mixture $tw_1+(1-t)w_2$ is feasible at
+$ts_1+(1-t)s_2$ by the triangle inequality and has $\hat\Delta=tg(s_1)+(1-t)g(s_2)$. Along the path $W_\sigma=g(s)-\sigma
+s$ is therefore concave in $s$, so it rises to its maximizer and falls after, and the maximizer of $g(s)-\sigma s$ moves
+to larger $s$ as $\sigma$ falls, so $\lambda s(p_\lambda)$ decreases as $s$ grows. On $N$ samples, for
+$\lambda\ge\E_q\Jh-\min\Jh$ no weight is clipped, $w=1+(\Jh-\E_q\Jh)/\lambda$, $s=\sigma_q(\Jh)/\lambda$ and
+$\lambda s=\sigma_q(\Jh)$; as $\lambda\to0$, $\lambda s\to0$ because $s\le\sqrt{N-1}$. The product is continuous in
+$\lambda$, so $\lambda^\star$ exists for $\sigma>0$; for $\sigma=0$, $W_0=\hat\Delta$ is maximized by putting all weight
+on the top-scored plans, the limit of the path as $\lambda\to0$. In both cases and $W_\sigma(p_{\lambda^\star})\ge W_\sigma(p_\lambda)=(\sigma_q(\Jh)-\sigma)s>0$
+for any unclipped $\lambda$.
+(iii) Unclipped, $w-1=(\Jh-\E_q\Jh)/\lambda$, so $\hat\Delta=\Var_q(\Jh)/\lambda=\sigma_q(\Jh)s$ and
+$\Delta=\Cov_q(J,\Jh)/\lambda=\rho_q\sigma_q(J)s$. \qed
+
+\paragraph{Proof of \cref{prop:exec}.} $\bar A_p$ lies in the action box, which is convex. By $L$-smoothness, for every plan $A$,
+$J(A)\le J(\bar A_p)+\nabla J(\bar A_p)^\top(A-\bar A_p)+\tfrac L2\Vert A-\bar A_p\Vert^2$. Taking $\E_p$, the linear term
+vanishes, which gives the first inequality; the second follows from \cref{lem:com}. For concave $J$, Jensen's inequality
+gives $J(\bar A_p)\ge\E_p[J]$ directly. \qed
+
+\paragraph{Proof of \cref{prop:exp}.} As $\lambda\to0$ the exponential weights tend to a point mass on the top plan $i^\star$:
+$w=N\mathbb 1_{i^\star}$, $s^2=\E_q[w^2]-1=N-1$, $\hat\Delta=\Jh(i^\star)-\E_q\Jh$. By \cref{lem:com} the worst error is
+$e-\E_qe=\sigma(w-1)/\sqrt{N-1}$, which is $\sigma\sqrt{N-1}$ on $i^\star$. If $\max\Jh-\E_q\Jh=o(\sqrt N)$, the guarantee
+$\hat\Delta-\sigma\sqrt{N-1}\to-\infty$. By \cref{thm:chi2}, $\max_pW_\sigma\ge W_\sigma(q)=0$. \qed
+
+\begin{corollary}[Labels needed before search is safe]\label{cor:labels}
+Let labels follow a correctly specified Bradley--Terry model with $r=\theta^{\star\top}\phi$, $\Vert\phi\Vert\le L$
+summed over each segment and $\Vert\theta^\star\Vert\le B$, and let $\Jh$ come from the maximum-likelihood estimate
+constrained to $\Vert\theta\Vert\le B$ on $n$ labelled pairs whose feature differences have second-moment matrix
+$\Sigma_D$. With $\Sigma_q$ the covariance of plan features under $q$ and the coverage
+$C_q=\lambda_{\max}\big((\Sigma_D+\mu I)^{-1/2}\Sigma_q(\Sigma_D+\mu I)^{-1/2}\big)$, with probability $1-\delta$,
+$\sigma_e^2\le C^2C_q\big(\tfrac{d+\log(1/\delta)}{\gamma^2n}+\mu B^2\big)$ for any $\mu>0$, with the constants $C$
+and $\gamma$ of \citet{zhu2023principled}. A positive gain can be certified once this is below $\sigma_q(\Jh)^2$, which holds for
+$n>C^2C_q(d+\log(1/\delta))/\big(\gamma^2(\sigma_q(\Jh)^2-C^2C_q\mu B^2)\big)$ at any $\mu$ with
+$C^2C_q\mu B^2<\sigma_q(\Jh)^2$.
+\end{corollary}
+The labels needed grow linearly with $C_q$, how much further the proposals vary than the labelled pairs did; wider
+proposal noise and states the labelled data never reached both raise it.
+
+\paragraph{Proof of \cref{cor:labels}.} The scorer's error on a plan is $e=(\hat\theta-\theta^\star)^\top\Phi$, with $\Phi$ the
+plan's summed features, so $\sigma_e^2=v^\top\Sigma_qv$ with $v=\hat\theta-\theta^\star$, which is at most
+$C_q\Vert v\Vert^2_{\Sigma_D+\mu I}$. Lemma 3.1 of \citet{zhu2023principled} bounds $\Vert v\Vert_{\Sigma_D+\mu I}$ by
+$C\sqrt{(d+\log(1/\delta))/(\gamma^2n)+\mu B^2}$ with probability $1-\delta$, with $\gamma=1/(2+e^{-LB}+e^{LB})$. A positive
+gain can be certified when $\sigma_e<\sigma_q(\Jh)$, by \cref{thm:chi2}, and solving the bound for $n$ gives the
+condition. \qed
+
+\paragraph{Proof of \cref{prop:onset}.} (i) $\log Z(\eta)=\log\E_q[e^{\eta\Jh}]$ has $\tfrac{d}{d\eta}\log Z=\E_{p_\eta}[\Jh]$.
+Then $\tfrac{d}{d\eta}\E_{p_\eta}[J]=\tfrac{d}{d\eta}\E_q[Je^{\eta\Jh}]/Z=\E_{p_\eta}[J\Jh]-\E_{p_\eta}[J]
+\E_{p_\eta}[\Jh]$. With $\KL(p_\eta\Vert q)=\eta\E_{p_\eta}[\Jh]-\log Z(\eta)$,
+$\tfrac{d}{d\eta}\KL=\E_{p_\eta}[\Jh]+\eta\Var_{p_\eta}(\Jh)-\E_{p_\eta}[\Jh]=\eta\Var_{p_\eta}(\Jh)$. Since $\KL$ is
+increasing in $\eta$, the sign of $\tfrac{d}{d\eta}\E_{p_\eta}[J]$ is the sign of the derivative along the distance as
+well, and a local maximum needs that sign to change from positive to negative; a covariance that touches zero without
+changing sign gives none. (ii) Expanding at $\eta=0$: $\E_{p_\eta}[J]=\E_q[J]+\eta\Cov_q(J,\Jh)+O(\eta^2)$ and
+$\KL(p_\eta\Vert q)=\tfrac{\eta^2}{2}\Var_q(\Jh)+O(\eta^3)$, so $\eta=\sqrt2\,d/\sigma_q(\Jh)+O(d^2)$ and
+$\E_{p_\eta}[J]-\E_q[J]=\sqrt2\,\Cov_q(J,\Jh)\,d/\sigma_q(\Jh)+O(d^2)=\sqrt2\,\rho_q\sigma_q(J)\,d+O(d^2)$. (iii) The
+decomposition is an identity. On $N$ samples with a unique maximizer of $\Jh$, $p_\lambda$ tends to a point mass at
+that sample, so $\bar A$ tends to it and $J(\bar A)-\E_p[J]\to0$. \qed
+
+When the probe pools many states, KL and the gain are averaged over states, and the slope in (ii) becomes
+$\sqrt2\,\overline{\Cov_q(J,\Jh)}/\sqrt{\overline{\Var_q(\Jh)}}$, which is the predicted slope reported in
+Appendix~\ref{app:probe}.
+
+\paragraph{Proof of \cref{prop:loop}.} With deterministic dynamics $Q_t(s_t,a_t)=r_t+V_{t+1}(s_{t+1})$, with $V_T\equiv0$
+(and $V\equiv0$ after termination). Summing $Q_t(s_t,a_t)-V_t(s_t)$ over the episode telescopes to
+$\sum_tr_t-V_0(s_0)=R-V_0(s_0)$. Adding and subtracting $J(\bar A_t)-J(U_t)$ in each term and splitting it as in
+\cref{prop:onset}(iii) gives the identity, along every realization of the proposal noise. If the weights $p_t$ maximize
+$W_\sigma$ for some $\sigma\ge\sigma_e(s_t)$, then by \cref{lem:com}
+$\Delta_t\ge\hat\Delta_t-\sigma_e(s_t)\,s(p_t)\ge W_\sigma(p_t)\ge W_\sigma(q)=0$. \qed
+
+\section{Setup details}
+\label{app:setup}
+
+\paragraph{Planner.} MPPI with $N=256$ sequences, horizon $H=20$, noise $\sigma=0.5$, warm start from the cloned
+policy's closed-loop plan, rolled out with the true MuJoCo dynamics (on the arm, a copy of the Meta-World model with
+added position sensors whose rollouts match the environment exactly). Temperatures
+$\lambda\in\{3,1,0.3,0.1,0.01\}$ on standardized per-step scores. Uniform averaging is MPPI with $\lambda=10^6$:
+the weights are uniform and it executes the first action of the average of the 256 clipped proposals. Clipping at the
+action bounds makes this average differ from the clean cloned plan $U$ (over 20 steps, by $0.4$ standard deviations of
+plan return on the drawer, $0.7$ on cheetah, $1.9$ on plate-slide and $0.03$ on hopper, in the probe), so it is the
+$\lambda\to\infty$ end of the same planner, with the same proposals as every other temperature, and the reference for
+the distance curves. The cloned policy run directly executes its own action, with no proposals, and scores higher on
+every task (cheetah 412, hopper 502, drawer 898, plate-slide 1,111, window-open 372 on the same ten starts).
+
+\paragraph{Statistics.} The resampling unit is a run, one closed-loop episode. A single-scorer cell pairs scorer seeds
+0--4 with two or four start states each; an ensemble cell uses one ensemble on ten starts. Standard errors are over
+runs, so they include both scorer-seed and start-state variation. Bootstrap intervals resample runs within each cell;
+the hierarchical version, used for the slopes and the label-budget trend in \cref{sec:exp-law}, resamples the five
+scorer seeds once per draw for all cells of a setting and then runs within each seed. The five calibration sets of \cref{tab:calibcl} are disjoint, so their spread includes the sampling of the
+pairs. The automatic temperature sets
+$\lambda_t=c\sqrt{\overline{\Var_m\Jh_m(A_i)}}$ from the ensemble's disagreement at each step, $c=0.5$. The guard
+compares the ensemble standard deviation of the top 5\% of plans by mean score with its average over all plans and uses
+the cautious ensemble with exponential weights when the ratio exceeds 1, otherwise $\chi^2$ weights on the mean. CEM:
+6 rounds of 128 samples, top 16 kept, minimum standard deviation 0.05, executing the first action of the final mean. Two variants left out of \cref{tab:fixes} do no better at $\lambda=0.01$: $\chi^2$ weights on the cautious ensemble
+(cheetah 439, hopper 348, drawer 625 with 8/10, human labels 229 with 0/10, plate-slide 414 with 7/10) and MPPI on the
+optimistic ensemble, mean plus one standard deviation (331 and 221 over 5 runs, 467 with 5/10, 198 with 0/10, 222 with
+4/10).
+
+\input{tables/table_sens.tex}
+
+\paragraph{Scorers and cloned policies.} Scorer: MLP with two hidden layers of 256, Adam (learning rate $3\times10^{-4}$,
+weight decay $10^{-4}$), 60 epochs, batch 64, 10\% of pairs held out; output standardized per step on the labelled data.
+Cloned policy: MLP with two hidden layers of 256 and tanh output, Adam ($10^{-3}$), 20,000 steps. Locomotion: crowd labels
+from Uni-RLHF for the D4RL medium-replay datasets (2,000 pairs, segment length 200), loaded with a restricted unpickler.
+Arm: 10 scripted demonstrations (task variations 40--49) for cloning; the labelled data add 100 rollouts of the cloned
+policy with action noise 0--1 (variations 10--39); evaluation on variations 0--9.
+
+\paragraph{Labelling where the planner goes.} A scorer trained on the first 250 offline drawer pairs drives standard
+MPPI ($\lambda=0.01$ and $0.1$) for 20 episodes on training positions; 250 new pairs compare 50-step segments of those
+episodes with each other or with the offline data, labelled by the same synthetic teacher.
+
+\paragraph{Best-of-$N$.} 20,000 state--action-pair comparisons per task from states of the labelled data; both actions
+are the cloned action plus $\mathcal N(0,0.5^2)$ noise; the Bradley--Terry teacher prefers the action closer to the
+scripted expert action with temperature set by bisection for 85\% agreement. Verifier: MLP on (state, action), two
+hidden layers of 256, same optimizer and epochs as the scorers, five seeds per budget. Episodes of 150 steps on
+variations 0--9.
+
+\section{One-step probe}
+\label{app:probe}
+
+\input{tables/table_probe.tex}
+
+Along 10 episodes of the cloned policy, at every tenth step, we build the planner's 256 proposals exactly as MPPI does
+and roll each out with the true dynamics, recording its learned and true 20-step returns; we also roll out the clean
+cloned plan and the weighted-mean plan at 17 temperatures from 100 to 0.01 for both weighting rules. \Cref{tab:probe}
+reports the mean correlation $\rho_q$ over states, the price of noise and the selection gain at $\lambda=0.01$ in units
+of the mean proposal spread $\sigma_q(J)$, and the code reports the predicted and measured initial slopes and the
+distance at which the tilted covariance first reaches zero. For \cref{thm:chi2} we score the proposals with all five
+scorers and use their mean $\Jh$. The true error spread is that of $\Jh-J$ after the best positive rescaling of $J$
+into the scorer's units, $\sigma_q(\Jh)\sqrt{1-\rho^2}$ (and $\sigma_q(\Jh)$, so no search, when $\rho\le0$); the
+rule's temperature solves $\lambda\sqrt{\chi^2}=\sigma$ by bisection. The deployable version replaces $\sigma$ with
+$\kappa$ times the ensemble's disagreement, the root mean square over proposals of the standard deviation across
+scorers after centering each scorer over the proposals, and $\kappa^\star$ is the per-state ratio of the true error
+spread to this disagreement. The calibrated version draws $M$ pairs of proposals at random probed states, labels each
+pair by its true plan return, and sets $\hat\rho=\sin(\pi(c-\frac12))$ from the fraction $c$ of pairs the five-scorer
+mean orders correctly; the rule then uses $\sigma=\sigma_q(\Jh)\sqrt{1-\hat\rho_+^2}$ at every state, so no search when
+$\hat\rho\le0$. The probed states lie on cloned-policy episodes from the ten start states that the closed-loop
+evaluation uses. The five calibration sets of \cref{tab:fixes} come instead from a second probe on start states 10--19,
+which no closed-loop run uses (on the arm, object positions that the labelled data also cover). The pooled closed-loop runs of \cref{tab:calibcl} use the median $\hat\rho$ over 50 draws of 100 pairs from the first probe (cheetah 0.06, hopper 0.70, drawer 0.06,
+human labels $-0.27$, plate-slide 0.49, window-open 0.48), and \cref{app:calib} studies how the estimate varies. The averaging term of \cref{prop:exec},
+$J(\bar A)-\E_p[J]$, is $0.25$--$0.85$ standard deviations at uniform weights and shrinks to about zero at hard
+exponential search on every task except window-open, where it is $-0.10$ at uniform weights and $-0.15$ at worst, so
+there the executed plan can fall short of the guarantee by that much.
+
+\section{Episodes, data support and validation}
+\label{app:loop}
+
+\input{tables/table_loop.tex}
+
+\paragraph{Closed-loop decomposition.} \Cref{tab:loop} measures the terms of \cref{prop:loop} along MPPI episodes. At
+every visited state the planner's 256 proposals, its executed average and the clean cloned plan are rolled out with the
+true reward, and $V_t$ is the true return of the cloned policy from that state to the end of the episode; the identity
+then holds in every run to rounding. Uniform averaging pays a price of noise of 387 over a drawer episode and recovers
+225 of it by averaging. Hard search removes the averaging term, so it must recover the price by selection: the perfect
+scorer does ($+632$), the learned scorers do not on the drawer ($-151$, and $-373$ with human labels). The horizon gap is
+large on the walkers ($+655$ to $+1{,}727$), where the cloned policy's own value from a visited state is a poor guide to
+what 20-step plans achieve, so the walker rows are best read through $\rho$. On the states the planner visits the
+learned scorer's per-state correlation is lower than along the cloned policy's own episodes in every exploited setting
+except cheetah, where it is near zero on both; on the drawer with human labels it is negative at 91\% of visited
+states.
+
+\paragraph{Data support.} For each arm setting, every step of every labelled segment is a point in the scorer's
+standardized input (observation and action). A visited state counts as off the data when its distance to the nearest
+labelled point exceeds the 95th percentile of the labelled points' own nearest-neighbour distances (to a point of a
+different segment). In observations alone, hard search ($\lambda=0.01$, five recorded episodes) is off the data at 53\%
+of steps on the drawer with 500 labels, 60\% with human labels and 51\% on plate-slide, and uniform averaging at none;
+on window-open the shares are 75\% and 60\%. With actions included the shares are 42\%, 47\%, 27\% and 32\% for hard
+search, and 0--2\% without search. The window-open evaluation positions lie outside the labelled data in the
+observation space, and search still helps there, so leaving the data is not by itself what makes a scorer exploitable.
+In hand position alone, hard search ends on average 6.6\,cm from the nearest labelled hand position on the drawer with
+synthetic labels (0.3\,cm without search) but within 0.8\,cm on plate-slide.
+
+\paragraph{Held-out accuracy without shared trajectories.} The scorers hold out a random 10\% of pairs, so a held-out
+pair can share trajectories with training pairs. Splitting the labelled episodes 70/30 instead, and holding out the
+pairs whose two segments both come from held-out episodes, gives the same picture (five seeds pooled; a random split
+with the same number of training pairs in parentheses): drawer 500 labels 180 of 213 correct, 0.85 (0.85); 2,000 labels
+0.83 (0.83); human labels 114 of 118, 0.97 (0.99); plate-slide 0.86 (0.81); window-open 0.84 (0.89); hopper 0.70
+(0.74); cheetah 0.72 (0.73).
+
+\section{Calibrating from few pairs}
+\label{app:calib}
+
+\input{tables/table_calib.tex}
+
+\Cref{tab:calib} repeats the calibration of \cref{app:probe} with 200 random draws of exactly $M$ pairs (pairs tied in
+true return are redrawn) for $M=25$, 50, 100 and 200, and three labellers: the true order, and Bradley--Terry teachers
+$P(i\succ j)=1/(1+e^{-(J_i-J_j)/\tau})$ with $\tau$ set so that they agree with the true order on 85\% or 70\% of
+proposal pairs, a stand-in for a person comparing two short plans from the same state. A cautious version replaces $c$
+by its one-sided Wilson lower bound at nominal 95\%.
+
+\emph{Sampling noise.} The 10--90\% range of $\hat\rho$ spans 0.45--0.85 with 25 pairs, 0.27--0.44 with 100 and
+0.18--0.29 with 200. With 100 pairs the point estimate loses at most 0.22 standard deviations at the worst state on
+average over draws in twelve of the thirteen settings, but up to 0.47 in the unluckiest tenth of draws (drawer, 200
+labels). \emph{Lower bound.} The lower bound cuts the worst-state loss to at most 0.05 (0.40 on window-open with 2,000
+labels) and the unluckiest-tenth loss to 0.25, at a cost in gain: it keeps 77\% of the true-$\rho$ rule's gain on
+hopper, 48--57\% on plate-slide and on window-open with 500 labels, and 12--24\% in the other settings where that gain
+exceeds 0.2. \emph{Noisy labels.} A noisy teacher shrinks $\hat\rho$ toward zero (hopper 0.71, 0.64 and 0.43 for the
+true order, 85\% and 70\%; plate-slide 0.45, 0.43 and 0.28), so where the scorer is informative the rule searches more
+gently: with 100 pairs the worst-state loss stays at most 0.19 (85\%) and 0.18 (70\%) in the same twelve settings, and
+the share of the gain kept falls from 47--93\% to 42--87\% and 31--71\%. \emph{Gaussian assumption.} Over all pairs,
+$\hat\rho$ is within 0.05 of the mean Pearson correlation in every setting, and above it by up to 0.04 on plate-slide
+and window-open, where it is mildly optimistic. The larger approximation is pooling: one $\hat\rho$ serves every state,
+and 19--59\% of states have their own correlation below it. Those states cause the losses, and window-open with 2,000
+labels has the most of them (59\%).
+
+\input{tables/table_calibcl.tex}
+
+\emph{Closed loop.} \Cref{tab:calibcl} runs the rule with the pooled estimate, its lower bound and a noisy teacher, and
+with five independent sets of exactly 100 pairs per setting (500 distinct pairs, none tied in true return), each
+calibrating its own controller on the same ten starts, drawn either from the probe on the evaluation's start states or
+from a second probe on start states 10--19 that the evaluation never uses. The noisy teacher changes little (within 20
+points of the true-order version). Across independent sets the arm results barely move (evaluation starts: drawer
+824--852, plate-slide 999--1,013, window-open 308--320; held-out starts: 818--852, 806--1,013, 309--318; every run
+successful); the walkers move more (cheetah 264--392 and 264--445, hopper 517--575 and 523--550), since a small change
+in $\kappa$ near 1 changes how hard they search. On plate-slide one held-out set estimates $\hat\rho=0.66$, against
+0.40--0.51 for the others, so it searches harder and scores 806, still succeeding in every run. With the lower bound every set keeps the
+arm at or near uniform averaging's level (evaluation starts: drawer 852 with either label set, plate-slide
+1,036--1,041, window-open 303--310; held-out starts: drawer 835--852, plate-slide 998--1,041, window-open 304--308;
+every run successful), declines to search on cheetah (264 with every set), and keeps most of hopper's gain (500--560
+and 472--551).
+
+What the estimate must get right is stated by the following consequence of \cref{lem:com} and \cref{thm:chi2}.
+
+\begin{corollary}[Calibrated rule]\label{cor:calib}
+(i) At a state whose proposals have $\rho_s=\mathrm{Corr}_q(J,\Jh)>0$, the rule with
+$\sigma=\sigma_q(\Jh)\sqrt{1-\hat\rho_+^2}$, $\hat\rho_+=\max(0,\hat\rho)$, does not lose ($\Delta\ge0$) whenever
+$\hat\rho\le\rho_s$, and it does not search when $\hat\rho\le0$.
+\\[2pt](ii) Let a labeller rank pairs by $J+u$, with $J$ in the scorer's units, $\Jh=J+e$, and $e$ and $u$ uncorrelated
+with $J$. If $(\Jh,J+u)$ is bivariate Gaussian under $q$, the population concordance $c$ of the labeller with $\Jh$ on
+two independent proposals satisfies $\sin(\pi(c-\frac12))=\rho_u=\mathrm{Corr}_q(\Jh,J+u)$, and $\rho_u>\rho_q$
+exactly when $\Cov_q(e,u)>\sigma_q(J)\big(\sqrt{\sigma_q(J)^2+\sigma_u^2}-\sigma_q(J)\big)$, about $\sigma_u^2/2$
+for a small labelling error; with $\Cov_q(e,u)=0$, $\rho_u<\rho_q$ whenever $\sigma_u>0$.
+\end{corollary}
+
+\emph{Proof.} (i) By the scale argument $\sigma_e=\sigma_q(\Jh)\sqrt{1-\rho_s^2}\le\sigma$, so the rule's weights $p$
+maximize $W_\sigma$ and $\Delta(p)\ge\hat\Delta(p)-\sigma_es(p)\ge W_\sigma(p)\ge W_\sigma(q)=0$ by \cref{lem:com};
+if $\hat\rho\le0$ then $\hat\rho_+=0$, $\sigma=\sigma_q(\Jh)$ and \cref{thm:chi2}(i) gives $p=q$. (ii) For a bivariate
+Gaussian, two independent draws are concordant with probability $\frac12+\arcsin(\rho_u)/\pi$
+\citep{kruskal1958ordinal}; and $\rho_u=\big(\sigma_q(J)^2+\Cov_q(e,u)\big)\big/\big(\sigma_q(\Jh)\sqrt{\sigma_q(J)^2+\sigma_u^2}\big)$ and
+$\rho_q=\sigma_q(J)/\sigma_q(\Jh)$. \qed
+
+In the population, then, a labeller whose mistakes are independent of the scorer's only lowers the correlation that
+$\hat\rho$ estimates, as the noisy teachers do; one whose mistakes the scorer has learned, because it was trained on
+that labeller's labels, can raise it above the true correlation, and then the rule searches where it should not. A
+finite, pooled estimate can also exceed a given state's correlation through sampling noise (the ranges above) and
+pooling over states. The one-sided Wilson bound at nominal 95\% makes $\hat\rho$ at most the pooled correlation with
+probability close to 0.95 under the Gaussian model (its coverage is approximate: 94.2\% for 100 independent pairs at
+90\% agreement), so (i) then covers every state whose own correlation is at least the pooled one. This is a statement about the pooled correlation, not a simultaneous one over states: the states
+it leaves uncovered are the 19--59\% noted above, so the rule is an empirical safeguard, not a guarantee.
+
+\emph{Ties.} The true-order and teacher labels above never tie. People often cannot tell two plans apart, and $c$ is
+then measured on the decided pairs only. If a person calls a tie when the two plans' perceived returns differ by less
+than a threshold, as in threshold models of paired comparison \citep{rao1967ties}, the decided pairs are the clearer
+ones and agree with the scorer more often than random pairs do, so $\sin(\pi(c-\frac12))$ overstates $\rho_u$. In the
+Gaussian model of \cref{cor:calib}(ii), let the labeller's difference $X$ (standardized) and the scorer's difference have
+correlation $\rho_u$, and let a share $t$ of pairs be tied, those with $|X|<z_t=\Phi^{-1}(\frac{1+t}2)$. Given $X$, the
+scorer agrees in sign with probability $\Phi(\rho_u|X|/\sqrt{1-\rho_u^2})$, so the decided pairs' concordance is
+\[c_t(\rho_u)=\E\big[\Phi\big(\rho_u|X|/\sqrt{1-\rho_u^2}\big)\,\big|\,|X|>z_t\big],\]
+which is increasing in $\rho_u$, equals $\frac12+\arcsin(\rho_u)/\pi$ at $t=0$, and grows with $t$ when $\rho_u>0$. We
+estimate $\rho_u$ by solving $c_t(\hat\rho)=c$ at the observed share of ties, and its lower bound by applying the same
+map to the Wilson bound on $c$. On the probe's proposals, a true-order labeller that ties the closest 70\% of pairs gives
+an uncorrected $\hat\rho$ of 0.97 on hopper, 0.77 on plate-slide and 0.73 on window-open, against 0.69, 0.45 and 0.47
+over all pairs; the corrected estimates are 0.70, 0.45 and 0.42, and within 0.03 on cheetah and the drawer with 500
+labels. With human labels, where the correlation is negative ($-0.21$ over all
+pairs), both estimates keep the sign but shrink it ($-0.08$ and $-0.04$), so the rule still does not search.
+
+\emph{Two people's comparisons.} One author compared 100 random pairs of the drawer proposals blind: the 20 planned
+steps of two proposals from the same state, as 2-s clips in random order and sides (9 minutes in all). They could not
+tell 68 apart and agreed with the true return on 16 of the other 32, which is chance. Where one plan opened the drawer
+more than 1\,mm further over the clip (14 decided pairs) they chose it 13 times; the true 20-step return chose it 6
+times, and mostly favours the plan that ends with the hand nearer the handle (68\% of 31 such pairs, against 42\% for
+the person). The scorers with 500 and 2,000 synthetic labels agree with these choices at chance ($\hat\rho=0.00$, lower
+bound $-0.42$), so the rule does not search with them and keeps 852 (10 of 10). The scorer trained on the same
+person's clip labels agrees with them ($\hat\rho=0.63$, lower bound 0.23) although it disagrees with the true return on
+the same pairs ($-0.29$). Calibrated from these choices the rule searches with it ($\kappa=0.77$) and scores 574 (5 of
+10 opened), against 852 when calibrated by true return; with the lower bound ($\kappa=0.97$) it scores 839 (10 of 10).
+Two thirds of the pairs were ties, so the decided pairs are the clearer ones; corrected for ties, $\hat\rho=0.36$
+(lower bound 0.12) and the rule searches gently ($\kappa=0.93$), scoring 822 (10 of 10), still below uniform
+averaging: the correction removes the overconfidence the ties add, not the shared bias.
+The other author compared the same 100 pairs (38 minutes): they could not tell 71 apart and agreed with the true return
+on 12 of the other 29, and where both people decided (12 pairs) they agreed 9 times. Their choices do not back the
+scorer trained on the first author's clip labels ($\hat\rho=0.16$, lower bound $-0.30$, so $\kappa=0.99$): the rule
+barely searches and scores 845 (10 of 10). Pooled over both people, $\hat\rho=0.42$ (lower bound 0.11) gives 812 and
+846 (10 of 10 each). On the scorers with 500 and 2,000 synthetic labels the second author's choices give
+$\hat\rho=0.16$ and 0.37, and the rule scores 831 and 893 (10 of 10 each). \Cref{tab:humancalib} collects the three kinds of calibration
+for this scorer, with and without the tie correction. They are not interchangeable: the oracle sees that the scorer
+ranks the proposals worse than chance and declines to search; the labeller who trained the scorer shares its bias and
+endorses it; the other author does not. A rule calibrated from a person's preferences checks the scorer against that
+person, so it cannot catch a scorer that learned a bias it shares with the evaluator (\cref{cor:calib}(ii)); a second
+person, the tie correction or the lower bound limits the damage. With two labellers on one task, this is a case study,
+not an estimate of how often it happens.
+
+\input{tables/table_humancalib.tex}
+
+\section{Null and limit cases}
+\label{app:null}
+
+\paragraph{Button-press.} Same protocol as the drawer, 5 runs per setting: not exploited at any budget (standard MPPI
+151--157 at $\lambda=3$ and 154--171 at $\lambda=0.01$ with 200, 500 or 2,000 labels; nearly every run presses the
+button). Here the perfect scorer does worse (126--140), because over a 20-step horizon Meta-World's dense reward pays
+for hovering near the button rather than pressing it, while the preference-trained scorers learned progress over 50-step
+clips. The label budget at which exploitation starts is task-specific.
+
+\paragraph{Adroit door and hammer.} With crowd labels that compare only successful human demonstrations
+\citep{rajeswaran2018learning,yuan2024unirlhf}, the scorer never opens the door (0 of 12 runs at any temperature) and
+drives the nail in 2 of 60 runs, while the perfect scorer opens the door in 6 of 6 runs at $\lambda\le0.01$ and drives
+the nail in 4 of 5 at $\lambda=0.1$. With no failures in the labelled data the scorer has no signal about failure, and
+no weighting rule can supply one.
+
+\section{Best-of-$N$ details}
+\label{app:bon}
+At each step the cloned policy's action plus $\mathcal N(0,0.5^2)$ noise gives $N$ candidates, and an MLP verifier
+$V(s,a)$ picks one. It is trained with the Bradley--Terry loss on pairs of perturbed actions, where a synthetic labeller
+prefers the action closer to Meta-World's scripted expert, with noise set for 85\% agreement. The verifier sees the
+state, not images, and its labels are synthetic. The perfect verifier is the negative distance to the expert action.
+Single verifiers pool scorer seeds 0--4 with episode seeds 0--9 (50 runs per $N$); the perfect verifier and one
+randomly perturbed action, with no verifier, use the same ten starts with five noise draws each. In \cref{fig:kl}c,
+$N=1$ is one noisy action and the clean cloned action, executed without noise, is the reference line. A cautious five-verifier ensemble does not help on
+plate-slide (0 of 10 at $N\ge16$). The verifiers' held-out pair accuracies are 0.62--0.80 at 500 pairs and 0.69--0.81
+at 2,000, again a poor guide to how they behave under selection. Best-of-$N$ is itself an exponential tilt of $q$, the action noise. For continuous scores the
+population best-of-$N$ choice has density $dp_N/dq=N\,F(\Jh)^{N-1}$, with $F$ the distribution function of $\Jh$ under
+$q$: this is $q$ tilted by $e^{\eta\log F(\Jh)}$ at $\eta=N-1$, so \cref{prop:onset}(i) applies with $\log F(\Jh)$ in
+place of $\Jh$, and true return rises with $N$ exactly while $\Cov_{p_N}(J,\log F(\Jh))>0$. Its KL to $q$ is
+$\log N-(N-1)/N$ \citep{stiennon2020learning,beirami2024theoretical}, which puts $N=4$ to $1{,}024$ at $d=0.8$ to $2.4$,
+the range of \cref{fig:kl}a. This is the population value; the selected index on a finite set of $N$ candidates has KL
+$\log N$ to a uniform pick.
+
+\end{document}

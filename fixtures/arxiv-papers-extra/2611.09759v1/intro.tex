@@ -1,0 +1,59 @@
+\section{Introduction}
+
+A central objective in computing foundations is to understand how computational power scales with access to additional resources. The classical hierarchy theorems from computational complexity theory establish that increased time or space yields strictly greater computational capability. The two most fundamental results in this regard are the Time Hierarchy Theorem and the Space Hierarchy Theorem. Intuitively, the Time Hierarchy Theorem states that if $t(n) \geq n$ is a sufficiently nice complexity-bounding function (i.e., time-constructible function), then there are problems solvable in time slightly more than $t(n)$ that cannot be solved in time $t(n)$. In particular, the most well-known version of this principle states that 
+$\TIME(t_1(n)) \subsetneq \TIME(t_2(n))$
+if $t_1(n)\log t_1(n) = o(t_2(n))$~\cite{hartmanis1965computational}.
+Here $\TIME(t(n))$ is the class of languages that are decidable in time $O(t(n))$ on inputs of length $n$ using a multi-tape Turing machine. Hierarchy theorems 
+formalize a basic structural principle: bounded resources induce strict stratifications of computational power. Even though hierarchy theorems are intuitive, it is far from trivial to establish such quantitative results. Without such results, we cannot rule out the possibility of universal thresholds on resources that are required to solve any decidable problem.  
+
+Modern AI architectures, particularly transformer architectures, have introduced new models of computation that are both practically powerful and theoretically intriguing. Transformers, built on mechanisms such as self-attention and layered representations, have achieved remarkable success across domains including natural language processing, vision, and scientific computing. The success of transformer architectures led to 
+a new line of research to understand their computational power. Recent research formulated this question by modeling transformers as a computation device, thus enabling rigorous study of the power and limitations of this new model. 
+
+A growing body of work  has identified fundamental limitations of standard transformer architectures \cite{hahn2020theoretical,chiang2023tighter,liu2023transformers_shortcuts,hao2022formal,merrill2022saturated,merrill2023expressive,merrill2023parallelism}. In particular, under realistic assumptions, constant-depth transformers are less powerful than finite state machines, arguably the simplest computational model. A recent survey \cite{Strobl_2024} gives an excellent account of the expressive power of transformers as a computational device. The intuitive reason is that constant-depth transformers operate in a largely feedforward manner and lack the ability to perform the iterative computation required for multi-step reasoning. As a result, even tasks that are conceptually simple but require sequential composition of intermediate steps fall outside their effective computational capabilities~\cite{PengNarayananPapadimitriou2024,DziriLSLJLWWB0H23,ZhangPMLS24}. 
+
+Modern AI systems are augmented with interactive reasoning steps where the output of a step can be used to further the computation. This is known as chain-of-thought (CoT) reasoning. Chain of thought (CoT) refers to a mode of computation in which a model produces explicit intermediate steps before arriving at a final answer. Instead of mapping an input directly to an output in one pass, the model generates a sequence of reasoning states that progressively transform the input into the solution. 
+
+From a computational perspective, this modification significantly alters the computational landscape. A growing body of work shows that the number of such intermediate reasoning steps plays a crucial role in determining expressivity. Thus, chain of thought emerges not merely as a heuristic for improving empirical performance, but as a fundamental computational resource in transformer-based models. In particular, Perez et al.\ show that this model is Turing complete in the sense that anything that is computable using a Turing machine is computable by transformers with enough \CoT\ steps~\cite{perez2021attention}. This connection is made more explicit by Merrill and Sabharwal~\cite{merrill2023expressive}. In particular, they showed that any language recognized by $t(n)$-time bounded Turing machine can also be recognized via a transformer with $O(t(n))$ \CoT\ steps and any transformer with $O(t(n))$  \CoT\ steps can be simulated by a Turing machine in time $O(t^2(n)\polylog(t(n)))$. 
+
+In this work, we propose to view the number of \CoT\ steps as a resource (such as time and space in TM model) and ask the fundamental question: 
+\begin{center}
+\em Is there a strict hierarchy for \CoT\ reasoning?
+\end{center}
+Let $\CoT(r(n))$ be the class of problems that can be decided by transformers with {$O(r(n))$} chain-of-thought steps. 
+Our main result is that for any reasonable function $r(n)$, and for any $\varepsilon > 0$,
+\[
+{\CoT}(r(n)) \subsetneq {\CoT}(r(n)^{1+\varepsilon}).
+\]
+Our result shows that chain-of-thought reasoning admits a fine-grained hierarchy: a small increase in the number of reasoning steps strictly increases computational power. This establishes \CoT\  as a meaningful computational resource similar to time and space.
+
+A classical technique underlying hierarchy theorems is diagonalization. In the setting of Turing machines, diagonalization constructs a language that disagrees with every Turing machine running within a given resource bound, by simulating each such machine on carefully chosen inputs and flipping its output. This approach relies on two key properties: (i) machines can be effectively enumerated, and (ii) there exists a universal machine that can take the description of another machine as input and simulate its execution with controlled overhead. These properties make it possible in the Turing machine model to carry out self-referential constructions in a clean and uniform way. 
+
+
+For transformers with chain of thought, the situation appears to be different. While one can, in principle, encode a transformer as a finite object (e.g., via its architecture and parameters), there is no conceptually clean notion of what it means for a transformer to take another transformer as input and simulate its computation. Transformer computation is specified by a fixed architecture, layers, attention heads, and learned weights—rather than a discrete, easily interpretable transition function. As a result, even defining a “universal transformer” that can parse such an encoding and simulate another transformer’s behavior in a step-by-step manner is conceptually unclear. This lack of a natural encoding-and-simulation approach makes it difficult to carry out the kind of self-referential constructions that diagonalization relies on.
+
+
+
+%More broadly, our results point toward a nascent theory of reasoning complexity for neural models, in which inference-time computation—captured here by Chain-of-Thought length—plays a role analogous to time in classical computation. This perspective opens several directions for future work, including tighter hierarchies, trade-offs between model size and reasoning depth, and connections to established complexity classes.
+
+\subsection{Our Approach}
+
+Our approach builds on known simulations relating chain-of-thought computation and classical time-bounded computation. In particular, \cite{merrill2023expressive} establishes the following: for any $t(n) \geq n$ (1) $\CoT(t(n)) \subseteq \TIME(t^3(n))$\footnote{They prove a slightly stronger containment, but the stated bound suffices for our purposes.} and (2) $\TIME(t(n)) \subseteq \CoT(t(n))$. By combining these two simulations and using the classical time hierarchy theorem, we can get a coarse hierarchy theorem for \CoT\ as follows. 
+\[\CoT(t(n)) \subseteq \TIME(t^3(n)) \subseteq \CoT(t^3(n)) \subseteq \TIME(t^{9}(n)) \subseteq \CoT(t^9(n)) \]
+This chain of containments implies that $\CoT(t(n)) \subsetneq \CoT(t^9(n))$: if not, $\TIME(t^3(n)) = \TIME(t^9(n))$, contradicting the Time Hierarchy Theorem. However, this approach only gives us a very coarse hierarchy theorem. In particular, it will not separate $\CoT(n)$ from $\CoT(n^2)$, let alone separate $\CoT(n)$ from $\CoT(n^{1.01})$. A way to obtain such separation is via a very efficient simulation of transformers by a Turing machine, such as $\CoT(t(n)) \subseteq \TIME(t^{1+o(1)}(n))$.  However, each decoding step of a transformer attends to all preceding tokens. This incurs a quadratic cost to simulate via Turing machines.
+
+
+To obtain sharper results, we use the {\em padding technique} from complexity theory. 
+The padding technique enables the transformation of coarse separations into finer-grained separations.
+By adapting padding to the transformer model, we are able to derive a tighter separation:
+$\CoT(r(n)) \subsetneq \CoT(r(n)^{1+\varepsilon})$. 
+The main technical challenge lies in adapting the padding technique to the transformer setting, where inputs and intermediate representations must be encoded within the constraints of the model. This is our primary technical contribution. 
+\subsection{Related Work}
+In addition to the works discussed in the introduction on the expressive power of transformers with chain-of-thought reasoning, we briefly review classical hierarchy theorems from complexity theory. The time hierarchy theorem was established in the seminal work of Hartmanis and Stearns~\cite{hartmanis1965computational}. This was followed by the \emph{space hierarchy theorem} in~\cite{StearnsHartmanisLewis1965}. 
+These results were subsequently extended to nondeterministic computation. The \emph{nondeterministic time hierarchy theorem}~\cite{Cook1973,SeiferasFischerMeyer1978} shows that
+$
+\mathrm{NTIME}(t(n)) \subsetneq \mathrm{NTIME}(t'(n)),
+$
+for suitably larger $t'(n)$, while a corresponding \emph{nondeterministic space hierarchy theorem} was established by Ibarra~\cite{Ibarra1967}. Establishing hierarchy theorems is still an active area of research in complexity theory, for example for randomized computations there has been only partial progress~\cite{Barak02,FortnowS04,FortnowST05}.
+
+Recent works have studied transformers as formal computational models, relating their expressive power to automata, circuit complexity, and classical complexity classes. The work of~\cite{perez2021attention} showed that transformers with hard attention and arbitrary precision are Turing complete. Subsequent work focused on understanding the power of transformer variants under bounded precision and architectural restrictions. The work of~\cite{hahn2020theoretical} showed that constant-depth transformers cannot recognize several basic formal languages, including PARITY and Dyck languages. The work of~\cite{hao2022formal} proved hard-attention transformers can be simulated by constant depth circuits (belonging to the complexity class $\mathrm{AC}^0$). In~\cite{merrill2022saturated}, this result has been extended to saturated attention transformers by providing an upper bound of $\mathrm{TC}^0$.
+ Other works further explored limitations arising from bounded depth, restricted attention, and finite precision~\cite{chiang2023tighter,liu2023transformers_shortcuts,merrill2023parallelism,merrill2023expressive,PengNarayananPapadimitriou2024}. More recently, the role of intermediate decoding and chain-of-thought reasoning has received attention~\cite{merrill2023expressive,ChenPW25}. We refer the reader to~\cite{Strobl_2024} for a comprehensive survey of this rapidly growing area.

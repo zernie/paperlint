@@ -1,0 +1,24 @@
+\section{Background and Motivation}
+\label{sec:background}
+
+\subsection{Decode attention with a quantized KV cache}
+\label{sec:bg-quant}
+
+Each decode step streams the cached K and V tensors from HBM, so low-bit storage reduces the bytes that attention must read.
+Asymmetric quantization stores each cached element as a $b$-bit quantized value $q\in\{0,\ldots,2^b-1\}$.
+Each quantization group shares a scale $s$ and an additive offset $z$ to reconstruct an element $x$ as
+\begin{equation}
+x=sq+z.
+\label{eq:dequant}
+\end{equation}
+For either K or V, a token-wise group shares a scale and offset across channels within one token~\cite{yao2022zeroquant}, whereas a channel-wise group shares them across tokens within one channel~\cite{banner2019posttraining}.
+
+\subsection{Limited latency savings in low-bit decode}
+\label{sec:bg-latency}
+
+Low-bit storage reduces the bytes that an attention kernel reads from HBM, but existing kernels still convert and dequantize each cached value before the matrix product.
+In \Cref{fig:roofline-gap}, two- and four-bit kernels achieve a much smaller fraction of peak HBM throughput on their KV traffic than BF16 kernels, whether they fuse dequantization into attention~\cite{lin2025qserve,kang2025turboattention,du2026bitdecoding,jia2026saw,zhou2026oscar} or into separate matrix-vector kernels~\cite{liu2024kivi}.
+
+Unpacking each integer value and applying its group scale and offset consume instruction-issue slots.
+As the stored bit width drops, HBM transfer time falls while this per-value instruction cost stays fixed, shifting the bottleneck from memory bandwidth to instruction issue.
+\Cref{sec:analysis} quantifies this instruction-issue cost and shows how affine folding removes per-value affine arithmetic.

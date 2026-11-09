@@ -1,0 +1,545 @@
+\input{sec/2_related_works.tex}
+
+\subsection{Additional Ablations}
+
+\paragraph{Test-Time Optimization Objective.} In order to clarify that the performance gains achieved by TT-MBRL are the results of its key differences rather than solely the product of applying test-time adaptation, we perform a comparison with PAD and study the impact of loss components. Table~\ref{table:study_objective} shows the impact of test-time objectives on performance. As expected, we find that the KL objective is essential to TT-MBRL success. Removing the KL objective (w/o KL loss) causes the agent to fail because the dynamics predictor cannot adapt to moving world model representations and makes incorrect predictions. On the other hand, the agent appears robust to removing the reward and continue objectives (w/o rwd-cont loss), signaling that it is not essential to TT-MBRL success. However, given the dependency of reward and continue MLP heads on moving representations, we suppose this design choice could have a negative impact on performance in the long run. We also find that removing the actor-critic objective (w/o actor-critic) can decrease performance. The performance of the agent deteriorates along the episode, given that the actor and critic cannot adapt to moving representations. We also experiment with PAD~\citep{hansen2021self}, which was originally proposed in the model-free context. PAD only adapts encoder parameters using a self-supervised objective and does not use training samples for regularization, leaving policy and value networks unchanged at test time. As expected, we find that PAD has a detrimental effect on performance despite relying on test-time training.
+
+\input{tables/study_objective.tex}
+
+\paragraph{TT-MBRL Train/Test Sampling Ratio.} The default TT-MBRL setting uses a 50/50 sampling ratio for train/test trajectories. To confirm that our method is robust to this hyper-parameter choice and does not depend on a narrow setting, we study the impact of the train/test ratio by varying the ratio of training samples among the global batch. Table~\ref{table:study_train_test_ratio} shows the results that we obtained on Memory Maze 2D 15\texttimes15. We find that sampling only training trajectories (100/0) does not improve performance because the world model cannot learn about episode-specific patterns. Using only test trajectories (0/100) decreases performance, confirming the important role of training trajectories in regularization. Overall, we find that a sampling ratio between 25\% and 75\% achieves robust performance, showing the flexibility of this hyperparameter.
+
+\input{tables/study_train_test_ratio.tex}
+
+\paragraph{Test-Time Gradient Update Frequency.} We perform a study on compute–performance tradeoff by varying the number of policy steps per gradient step. Table~\ref{table:study_frequency} shows the impact of test-time gradient update frequency on TT-MBRL efficacy.  We find that increasing the update frequency by a factor of 2 does not lead to a significant performance improvement while increasing evaluation time by the same factor. Decreasing the frequency of TT-MBRL updates slows down adaptation, which results in lower final performance. However, we find that TT-MBRL is quite robust to this hyper-parameter, achieving significant improvement with a larger factor of policy steps per gradient step while also decreasing evaluation time by the same factor. We find these results encouraging for the development of an efficient manner to apply TT-MBRL.
+
+\input{tables/study_frequency.tex}
+
+\subsection{Actor Critic Learning}
+\label{appendix:actor_critic}
+
+Analogously to world model predictor networks, actor and critic networks are designed as simple MLPs with parameter vectors ($\theta$) and ($\psi$), respectively:
+\begin{equation}
+    \text{Actor:} \quad a_{t} \sim \pi_{\theta}(a_{t} | s_{t}), \quad \text{Critic:} \quad v_{\psi}(s_{t}) \approx \mathrm{E}_{p_{\phi}, \pi_{\theta}}[R^{\lambda}_{t}]
+\end{equation}
+The critic network learns to minimize the symlog-transformed cross-entropy loss~\citep{hafner2023mastering} with discretized $\lambda$-returns obtained from imagined trajectories: 
+\begin{equation}
+\setlength{\tabcolsep}{10pt}
+\begin{tabular}{ll}
+$R_{t}^{\lambda} = \hat{r}_{t+1} + \gamma \hat{c}_{t+1} \Bigl((1-\lambda)v_{\psi}(s_{t+1}) + \lambda R_{t+1}^{\lambda}\Bigr)$ & $R_{H+1}^{\lambda} = v_{\psi}(s_{H+1})$ 
+\end{tabular}
+\end{equation}
+The critic also relies on its own predictions for estimating rewards beyond the prediction horizon, which requires adding a regularizing term toward the outputs of its own EMA network. Equation~\ref{equation:critic_loss} defines the critic loss as follows:
+\begin{equation}
+L_{\text{critic}}(\psi) = \frac{1}{BH}\sum_{b=1}^{B}\sum_{t=1}^{H}\Bigl[\ \underbracket[0.1ex]{-\log p_{\psi}(R_{t}^{\lambda} \ |\ s_{t})}_{\text{discrete returns regression}} \underbracket[0.1ex]{-\log p_{\psi}(v'_{\psi}(s_{t}) \ |\ s_{t})}_{\text{critic EMA regularizer}}\ \Bigr]
+\label{equation:critic_loss}
+\end{equation}
+The actor network is trained to select actions that maximize obtained advantages using Reinforce~\citep{williams1992simple}. It also maximizes the policy entropy to ensure sufficient exploration during both data collection and imagination. The actor loss is defined as follows:
+\begin{equation}
+L_{\text{actor}}(\theta) = \frac{1}{BH}\sum_{b=1}^{B}\sum_{t=1}^{H}\Bigl[\ \underbracket[0.1ex]{-\ \log \pi_{\theta}(a_{t}\ |\ s_{t})sg(A_{t}^{\lambda})}_{\text{reinforce}} \underbracket[0.1ex]{-\ \eta \mathrm{H}[\pi_{\theta}(a_{t}\ |\ s_{t})]}_{\text{entropy regularizer}}\ \Bigr]
+\end{equation}
+Where $A_{t}^{\lambda}=\big(\hat{R}_{t}^{\lambda} - v_{\psi}(s_{t})\big) / \max(1, S)$ defines advantages computed using normalized returns. The returns are scaled using exponentially moving average statistics of their $5^{th}$ and $95^{th}$ batch percentiles to ensure stable learning across environments with different return scales:
+\begin{equation}
+S=\operatorname{EMA}(\operatorname{Per}(R_{t}^{\lambda}, 95) - \operatorname{Per}(R_{t}^{\lambda}, 5), momentum=0.99)
+\end{equation}
+
+\newpage
+
+\subsection{Experiments Compute Resources}
+\label{section:compute}
+
+We perform Memory Maze 2D and Memory Maze experiments on Nvidia L40 GPUs with 48GB of memory along with 40 CPU workers. During training, we use two GPUs for training R2I on Memory Maze experiments while a single GPU is sufficient for other experiments. For DMC and Atari 100K benchmarks, we used RTX 3090 GPUs with 24GB of memory along with 16 CPU workers. A single GPU per task was sufficient for the two benchmarks. Table~\ref{table:compute} describes the execution time and resources required for each experiment.
+
+\begin{table}[ht]
+    \caption{Resources and execution time used for each experiments.}
+    \centering
+    \setlength{\tabcolsep}{5pt}
+    \hfill \break
+    \begin{tabular}{lcccccc}
+    \toprule
+     &  &  & & & \multicolumn{1}{c}{\multirow{2}{*}{\begin{tabular}[c]{@{}c@{}}\textbf{\#Env} \\ \textbf{Steps}\end{tabular}}} & \multicolumn{1}{c}{\multirow{2}{*}{\begin{tabular}[c]{@{}c@{}}\textbf{Training Time} \\ \textbf{(days/task)}\end{tabular}}} \\
+    \textbf{Environment} & \textbf{\#Tasks} & \textbf{Method} & \textbf{GPU} & \textbf{\#GPUs} \\
+    \midrule
+    Memory Maze 2D & 4 & DreamerV3 & L40 & 1 & 100M & 8 \\
+    Memory Maze 2D & 4 & TWISTER & L40 & 1 & 100M & 6 \\
+    Memory Maze 2D & 4 & R2I & L40 & 1 & 100M & 2.9  \\
+    Memory Maze & 4 & DreamerV3 & L40 & 1 & 100M & 13.5  \\
+    Memory Maze & 4 & TWISTER & L40 & 1 & 100M & 23\\
+    Memory Maze & 4 & R2I & L40 & 2 & 400M & 28\\
+    DMC & 20 & DreamerV3 & RTX 3090 & 1 & 1M & 0.8 \\
+    Atari 100k & 26 & DreamerV3 & RTX 3090 & 1 & 400K & 0.35 \\
+    \bottomrule
+    \end{tabular}
+    \label{table:compute}
+\end{table}
+
+\newpage
+
+\subsection{Memory Maze 2D Environment}
+\label{appendix:memory_maze_2d}
+
+We design Memory Maze 2D to evaluate the capacity of agents to develop long-term memory by exploring a partially observable environment. Memory Maze 2D serves as a simplified and more efficient version of the Memory Maze environment, where the agent observes a top-down $3 \times 3$ local context centered on its current position. To facilitate goal identification, we augment the observation with colored borders that indicate the target color to be reached for obtaining the next reward. The observation is then flattened and normalized, forming a vector of dimension $75=5\times5\times3$. The agent operates in the maze using a discrete action space consisting of five actions: no-op, move left, move right, move up, and move down. Following~\citep{pasukonis2023evaluating}, we design four maze tasks with varying sizes and difficulty: Memory Maze 2D 9\texttimes9, Memory Maze 2D 11\texttimes11, Memory Maze 2D 13\texttimes13, and Memory Maze 2D 15\texttimes15. Table~\ref{table:memory_maze_2d} shows the parameters associated with each maze size and Figure~\ref{figure:memory_maze_2d_map} depicts randomly generated environment maps.
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=0.95\linewidth]{figures/memory_maze_2d_map.pdf}
+    \caption{Randomly generated environment map for Memory Maze 2D (9\texttimes 9, 11\texttimes 11, 13\texttimes 13 and 15\texttimes 15). The agent receives a top-down $3 \times 3$ local context centered on its current position and must reach the target color to receive the next reward.}
+    \label{figure:memory_maze_2d_map}
+\end{figure*}
+
+\begin{table}[ht]
+    \caption{Memory Maze 2D environment details.}
+    \centering
+    \setlength{\tabcolsep}{2pt}
+    \hfill \break
+    \begin{tabular}{lcccc}
+    \toprule
+    & \multicolumn{1}{c}{\multirow{2}{*}{\begin{tabular}[c]{@{}c@{}}\textbf{Mem Maze 2D} \\ \textbf{9\texttimes9}\end{tabular}}} & \multicolumn{1}{c}{\multirow{2}{*}{\begin{tabular}[c]{@{}c@{}}\textbf{Mem Maze 2D} \\ \textbf{11\texttimes11}\end{tabular}}} & \multicolumn{1}{c}{\multirow{2}{*}{\begin{tabular}[c]{@{}c@{}}\textbf{Mem Maze 2D} \\ \textbf{13\texttimes13}\end{tabular}}} & \multicolumn{1}{c}{\multirow{2}{*}{\begin{tabular}[c]{@{}c@{}}\textbf{Mem Maze 2D} \\ \textbf{15\texttimes15}\end{tabular}}} \\
+    \textbf{Parameter} &  &  &  &  \\
+    \midrule
+    Number of actions & $5$ & $5$ & $5$ & $5$ \\
+    Observation dim & $75$ & $75$ & $75$ & $75$ \\
+    Number of colors & $3$ & $4$ & $5$ & $6$ \\
+    Number of rooms & $3-4$ & $4-6$ & $5-6$ & $9$ \\
+    Room size & $3-5$ & $3-5$ & $3-5$ & $3$ \\
+    Episode length & $1000$ & $2000$ & $3000$ & $4000$ \\
+    Mean maximum score (Oracle) & $137.2$ & $215.4$  & $276.6$  & $311.4$  \\
+    \bottomrule
+    \end{tabular}
+    \label{table:memory_maze_2d}
+\end{table}
+
+\begin{table}[ht]
+    \caption{Environment efficiency comparison. Episode average step time measured on a single Intel Core i7-12700 4.9GHz CPU thread and a RTX 3090 GPU.}
+    \centering
+    \setlength{\tabcolsep}{11pt}
+    \hfill \break
+    \begin{tabular}{lcccc}
+    \toprule
+    \textbf{Step time (ms)} & \textbf{9\texttimes9} & \textbf{11\texttimes11} & \textbf{13\texttimes13} & \textbf{15\texttimes15} \\
+    \midrule
+    Memory Maze 2D & $\hphantom{0}0.16$ & $\hphantom{0}0.16$ & $\hphantom{0}0.16$ & $\hphantom{0}0.16$ \\
+    Memory Maze & $47.28$ & $61.82$ & $76.48$ & $90.36$ \\
+    \bottomrule
+    \end{tabular}
+    \label{table:memory_maze_time}
+\end{table}
+
+\newpage
+
+\subsection{Algorithm Pseudocode}
+
+\begin{algorithm}[ht]
+\caption{TT-MBRL, our proposed algorithm for applying model-based reinforcement learning at test time. At the beginning of each evaluation episode, the agent initializes test-time parameters $(\phi', \theta', \psi')$ from the trained parameters $(\phi, \theta, \psi)$ and creates a dedicated test-time replay buffer $\mathbf{R'}$ to collect episode observations. At each environment step, the world model is updated by sampling from both the test-time buffer $\mathbf{R'}$ and the training buffer $\mathbf{R}$, acting as a regularizer that prevents overfitting to limited early observations. The actor-critic is then updated using the adapted world model, enabling the agent to learn an improved policy.}
+\begin{algorithmic}
+\Require Trained parameters $(\phi, \theta, \psi)$, training replay buffer $\mathbf{R}$, and environment $env$
+\While {not done evaluation}
+    \State $(\phi', \theta', \psi') \gets (\phi, \theta, \psi)$
+    \Comment{Initialize test-time parameters from training.}
+    \State $\mathbf{R'} \gets \{\}$
+    \Comment{Initialize empty test-time replay buffer.}
+    \State $obs \gets \text{ENV\_RESET}(env)$
+    \Comment{Reset environment.}
+    \State $\mathbf{R'} \gets \mathbf{R'} \cup \{obs\}$
+    \Comment{Store initial observation.}
+    \While {not done episode}
+        \State $obs \gets \text{ENV\_STEP}(env, \phi', \theta')$
+        \Comment{Step environment using current policy.}
+        \State $\mathbf{R'} \gets \mathbf{R'} \cup \{obs\}$
+        \Comment{Update test-time replay buffer.}
+        \State $\phi' \gets \text{TRAIN\_WORLD\_MODEL}(\mathbf{R}, \mathbf{R'})$
+        \Comment{Update world model using train-test data.}
+        \State $(\theta',~\psi') \gets \text{TRAIN\_ACTOR\_CRITIC}(\phi')$
+        \Comment{Update actor-critic using world model.}
+    \EndWhile
+\EndWhile
+\end{algorithmic}
+\label{algorithm:pseudocode}
+\end{algorithm}
+
+\subsection{Experimental Details and Hyperparameters}
+\label{appendix:hyperparameters}
+
+\begin{table*}[!ht]
+\caption{World model sizes. N/A refers to the use of a MLP encoder for low-dimensional inputs, and the removal of the AC-CPC objective in the case of TWISTER.}
+\begin{subtable}{\textwidth}
+    \caption{DreamerV3 model sizes.}
+    \centering
+    \hfill \break
+    \begin{tabular}{lcccc}
+    \toprule
+    Environment & Mem Maze 2D & Mem Maze & DMC & Atari 100k \\
+    \midrule
+    CNN Base Dim & N/A & 96 & 32 & 32  \\
+    Hidden Size & 512 & 1024 & 512 & 512\\
+    GRU Recurrent Units & 512 & 4096 & 512 & 512\\
+    MLP Layers & 2 & 5 & 2 & 2\\
+    \midrule
+    Number Params & 8.7M & 200.7M & 17.9M & 17.9M \\
+    \bottomrule
+    \end{tabular}
+\end{subtable}
+\\ \\
+\begin{subtable}{0.5\textwidth}
+    \setlength{\tabcolsep}{2pt}
+    \caption{TWISTER model sizes.}
+    \centering
+    \hfill \break
+    \begin{tabular}{lcc}
+    \toprule
+    Environment & Mem Maze 2D & Mem Maze \\
+    \midrule
+    CNN Base Dim & N/A & 48 \\
+    Hidden Size & 512 & 640 \\
+    Transformer Blocks & 4 & 5 \\
+    Feed-Forward Ratio & 2 & 3 \\
+    Number of Heads & 8 & 10 \\
+    Dropout Prob & 0.1 & 0.1 \\
+    MLP Layers & 2 & 3 \\
+    Attention Context & 256 & 256 \\
+    AC-CPC Steps & N/A & 10 \\
+    \midrule
+    Number params & 15.9M & 58.8M \\
+    \bottomrule
+    \end{tabular}
+\end{subtable}
+\hspace{\fill}
+\begin{subtable}{0.5\textwidth}
+    \setlength{\tabcolsep}{2pt}
+    \caption{R2I model sizes.}
+    \centering
+    \hfill \break
+    \begin{tabular}{lcc}
+    \toprule
+    Environment & Mem Maze 2D & Mem Maze \\
+    \midrule
+    CNN Base Dim & N/A & 48 \\
+    Hidden Size & 1024 & 2048 \\
+    SSM Layers & 3 & 5 \\
+    SSM State Dim & 128 & 512 \\
+    SSM Output Dim & 1024 & 1024 \\
+    MLP Layers & 2 & 4 \\
+    \midrule
+    Number params & 11.6M & 92.8M \\
+    \bottomrule
+    \end{tabular}
+\end{subtable}
+
+\label{table:wm_params}
+\end{table*}
+
+\newpage
+
+\begin{table*}[!ht]
+\caption{DreamerV3 hyperparameters.}
+\setlength{\tabcolsep}{20pt}
+\renewcommand{\arraystretch}{1.25}
+\centering
+\hfill \break
+\begin{tabular}{lcc}
+\toprule
+Hyperparameter & Memory Maze 2D & Memory Maze \\ 
+\midrule
+General & \\
+Batch Size (B) & 64 & 16 \\
+Sequence Length (T) & 64 & 64 \\
+Environment Instances & 8 & 32 \\
+Policy Step per Grad Step & 64 & 64 \\
+Replay Buffer Capacity & 10M & 10M \\
+TT-MBRL Policy Step / Grad Step & 1 & 1 \\
+TT-MBRL Batch Size & 32 & 8 \\
+TT-MBRL Train/Test Ratio & 50/50 & 50/50 \\
+\midrule
+World Model & \\
+Prediction Loss Scale ($\beta_{\text{pred}}$) & 1.0 & 1.0 \\
+Dynamics Loss Scale ($\beta_{\text{dyn}}$) & 0.5 & 0.5 \\
+Representation Loss Scale ($\beta_{\text{rep}}$) & 0.1 & 0.1\\
+Stochastic State Features & 32 & 32\\
+Classes per Feature & 32 & 32\\
+Learning Rate & $10^{-4}$ & $10^{-4}$\\
+Gradient Clipping & 1000 & 1000 \\
+\midrule
+Actor-Critic & \\
+Imagination Horizon ($H$) & 15 & 15\\
+Return Discount ($\gamma$) & 0.997 & 0.997\\
+Return Lambda ($\lambda$) & 0.95 & 0.95\\
+Critic EMA Decay & 0.98 & 0.98 \\
+Return Normalization Momentum & 0.99 & 0.99 \\
+Actor Entropy Scale ($\eta$) & $3 \cdot 10^{-4}$ & $3 \cdot 10^{-4}$\\
+Learning Rate & $3 \cdot 10^{-5}$ & $3 \cdot 10^{-5}$\\
+Gradient Clipping & 100 & 100 \\
+\bottomrule
+\end{tabular}
+\label{table:hyperparams_dv3}
+\end{table*}
+
+\newpage
+
+\begin{table*}[!ht]
+\caption{TWISTER hyperparameters.}
+\setlength{\tabcolsep}{20pt}
+\renewcommand{\arraystretch}{1.25}
+\centering
+\hfill \break
+\begin{tabular}{lcc}
+\toprule
+Hyperparameter & Memory Maze 2D & Memory Maze \\ 
+\midrule
+General & \\
+Batch Size (B) & 4 & 4 \\
+Sequence Length (T) & 1024 & 1024 \\
+Environment Instances & 8 & 32 \\
+Policy Step per Grad Step & 64 & 64 \\
+Replay Buffer Capacity & 10M & 10M \\
+TT-MBRL Policy Step / Grad Step & 1 & 1 \\
+TT-MBRL Batch Size & 2 & 2 \\
+TT-MBRL Train/Test Ratio & 50/50 & 50/50 \\
+\midrule
+World Model & \\
+Prediction Loss Scale ($\beta_{\text{pred}}$) & 1.0 & 1.0 \\
+Dynamics Loss Scale ($\beta_{\text{dyn}}$) & 0.5 & 0.5 \\
+Representation Loss Scale ($\beta_{\text{rep}}$) & 0.1 & 0.1\\
+Stochastic State Features & 32 & 32\\
+Classes per Feature & 32 & 32\\
+Learning Rate & $10^{-4}$ & $10^{-4}$\\
+Gradient Clipping & 1000 & 1000 \\
+\midrule
+Actor-Critic & \\
+Imagination Horizon ($H$) & 15 & 15\\
+Return Discount ($\gamma$) & 0.997 & 0.997\\
+Return Lambda ($\lambda$) & 0.95 & 0.95\\
+Critic EMA Decay & 0.98 & 0.98 \\
+Return Normalization Momentum & 0.99 & 0.99 \\
+Actor Entropy Scale ($\eta$) & $3 \cdot 10^{-4}$ & $3 \cdot 10^{-4}$\\
+Learning Rate & $3 \cdot 10^{-5}$ & $3 \cdot 10^{-5}$\\
+Gradient Clipping & 100 & 100 \\
+\bottomrule
+\end{tabular}
+\label{table:hyperparams_twister}
+\end{table*}
+
+\newpage
+
+\begin{table*}[!ht]
+\caption{R2I hyperparameters.}
+\setlength{\tabcolsep}{20pt}
+\renewcommand{\arraystretch}{1.25}
+\centering
+\hfill \break
+\begin{tabular}{lcc}
+\toprule
+Hyperparameter & Memory Maze 2D & Memory Maze \\ 
+\midrule
+General & \\
+Batch Size (B) & 4 & 4 \\
+Sequence Length (T) & 1024 & 1024 \\
+Environment Instances & 8 & 40 \\
+Policy Step per Grad Step & 64 & 64 \\
+Replay Buffer Capacity & 10M & 10M \\
+TT-MBRL Policy Step / Grad Step & 1 & 1 \\
+TT-MBRL Batch Size & 2 & 2 \\
+TT-MBRL Train/Test Ratio & 50/50 & 50/50 \\
+\midrule
+World Model & \\
+Prediction Loss Scale ($\beta_{\text{pred}}$) & 1.0 & 1.0 \\
+Dynamics Loss Scale ($\beta_{\text{dyn}}$) & 0.8 & 0.8 \\
+Representation Loss Scale ($\beta_{\text{rep}}$) & 0.2 & 0.2 \\
+Stochastic State Features & 32 & 32\\
+Classes per Feature & 32 & 32\\
+Learning Rate & $3 \cdot 10^{-4}$ & $3 \cdot 10^{-4}$\\
+Gradient Clipping & 200 & 200 \\
+\midrule
+Actor-Critic & \\
+Imagination Horizon ($H$) & 15 & 15\\
+Return Discount ($\gamma$) & 0.997 & 0.997\\
+Return Lambda ($\lambda$) & 0.95 & 0.95\\
+Critic EMA Decay & 0.98 & 0.98 \\
+Return Normalization Momentum & 0.99 & 0.99 \\
+Actor Entropy Scale ($\eta$) & $10^{-3}$ & $10^{-3}$\\
+Learning Rate & $10^{-4}$ & $10^{-4}$\\
+Gradient Clipping & 200 & 200 \\
+\bottomrule
+\end{tabular}
+\label{table:hyperparams_r2i}
+\end{table*}
+
+\newpage
+
+\subsection{Training Curves}
+
+\begin{figure}[!ht]
+        \centering
+        \includegraphics[width=\linewidth]{figures/training_curves_2d.pdf}
+        \caption{Memory Maze 2D training curves (100M environment steps).}
+        \label{appendix:training_curves_2d}
+\end{figure}
+
+\begin{figure}[!ht]
+        \centering
+        \includegraphics[width=\linewidth]{figures/training_curves_3d_100M.pdf}
+        \caption{Memory Maze training curves (100M environment steps).}
+        \label{appendix:training_curves_3d_100M}
+\end{figure}
+
+\begin{figure}[!ht]
+        \centering
+        \includegraphics[width=\linewidth]{figures/training_curves_3d.pdf}
+        \caption{Memory Maze training curves (400M environment steps).}
+        \label{appendix:training_curves_3d}
+\end{figure}
+
+\newpage
+
+\subsection{Evaluation Histograms}
+\label{appendix:histograms}
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=\linewidth]{figures/hist_memory_maze_2d.pdf}
+    \caption{Evaluation episode return distribution on Memory Maze 2D (100M environment steps). We compare the impact of TT-MBRL on episode return for DreamerV3, TWISTER and R2I.}
+    \label{figure:hist_memory_maze_2d}
+\end{figure*}
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=1.0\linewidth]{figures/hist_memory_maze_2d_study.pdf}
+    \caption{Evaluation episode return distribution on Memory Maze 2D 15\texttimes 15. We compare the impact of training trajectories regularization and replay buffer prefill on TT-MBRL efficacy.}
+    \label{figure:study_test_train_hist}
+\end{figure*}
+
+\newpage
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=\linewidth]{figures/hist_memory_maze_3d_100M.pdf}
+    \caption{Evaluation episode return distribution on Memory Maze (100M environment steps). We show the impact of TT-MBRL on episode return for DreamerV3, TWISTER and R2I.}
+    \label{figure:hist_memory_maze_3d_100M}
+\end{figure*}
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=\linewidth]{figures/hist_memory_maze_3d.pdf}
+    \caption{Evaluation episode return distribution on Memory Maze (400M environment steps). We show the impact of TT-MBRL on episode return for R2I.}
+    \label{figure:hist_memory_maze_3d}
+\end{figure*}
+
+\newpage
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=\linewidth]{figures/hist_dmc.pdf}
+    \caption{Evaluation episode return distribution on the DeepMind Control Suite (DMC). We show the impact of TT-MBRL on episode return for DreamerV3.}
+    \label{figure:hist_dmc}
+\end{figure*}
+
+\newpage
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=0.79\linewidth]{figures/hist_atari100k.pdf}
+    \caption{Evaluation episode return distribution on the Atari 100k benchmark. We show the impact of TT-MBRL on episode return for DreamerV3.}
+    \label{figure:hist_atari100k}
+\end{figure*}
+
+\newpage
+
+\subsection{TT-MBRL Relative Improvement}
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=1.0\linewidth]{figures/rel_impr_2d.pdf}
+    \caption{Relative improvement in obtained rewards brought by TT-MBRL on Memory Maze 2D.}
+    \label{figure:rel_impr_2d}
+\end{figure*}
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=1.0\linewidth]{figures/rel_impr_3d_100M.pdf}
+    \caption{Relative improvement in obtained rewards brought by TT-MBRL on Memory Maze (100M environment steps).}
+    \label{figure:rel_impr_3d_100M}
+\end{figure*}
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=1.0\linewidth]{figures/rel_impr_3d.pdf}
+    \caption{Relative improvement in obtained rewards brought by TT-MBRL on Memory Maze (400M environment steps).}
+    \label{figure:rel_impr_3d}
+\end{figure*}
+
+\newpage
+
+\subsection{World Model Prediction Metrics}
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=1.0\linewidth]{figures/metrics_2d.pdf}
+    \caption{DreamerV3, TWISTER and R2I world model prediction metrics on Memory Maze 2D 15\texttimes 15.}
+    \label{figure:metrics_2d}
+\end{figure*}
+
+\newpage
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=1.0\linewidth]{figures/metrics_3d_100M.pdf}
+    \caption{DreamerV3, TWISTER and R2I world model prediction metrics on Memory Maze 15\texttimes 15 (100M environment steps).}
+    \label{figure:metrics_3d_100M}
+\end{figure*}
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=1.0\linewidth]{figures/metrics_3d.pdf}
+    \caption{R2I world model prediction metrics on Memory Maze 15\texttimes 15 (400M environment steps).}
+    \label{figure:metrics_3d}
+\end{figure*}
+
+\newpage
+
+\newpage
+
+\subsection{World Model Predictions}
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=0.85\linewidth]{figures/traj_memory_maze_dv3.png}
+    \caption{DreamerV3 world model predictions on Memory Maze.}
+    \label{figure:traj_memory_maze_dv3}
+\end{figure*}
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=0.85\linewidth]{figures/traj_memory_maze_twister.png}
+    \caption{TWISTER world model predictions on Memory Maze.}
+    \label{figure:traj_memory_maze_twister}
+\end{figure*}
+
+\newpage
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=0.85\linewidth]{figures/traj_memory_maze.png}
+    \caption{R2I world model predictions on Memory Maze.}
+    \label{figure:traj_memory_maze_r2i}
+\end{figure*}
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=0.85\linewidth]{figures/traj_memory_maze_2d.png}
+    \caption{DreamerV3 world model predictions on Memory Maze 2D.}
+    \label{figure:traj_memory_maze_2d}
+\end{figure*}
+
+\newpage
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=0.85\linewidth]{figures/traj_memory_maze_2d_twister.png}
+    \caption{TWISTER world model predictions on Memory Maze 2D.}
+    \label{figure:traj_memory_maze_2d_twister}
+\end{figure*}
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=0.85\linewidth]{figures/traj_memory_maze_2d_r2i.png}
+    \caption{R2I world model predictions on Memory Maze 2D.}
+    \label{figure:traj_memory_maze_2d_r2i}
+\end{figure*}

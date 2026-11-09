@@ -1,0 +1,40 @@
+\begin{table*}[t]
+\centering
+\small
+\caption{\textbf{Example of human-guided revision.}
+An A2 candidate that fails surface leakage (H3) in human validation and its revision. Place names are fictional. The gold answer is A in both versions.}
+\label{tab:example_humanrev}
+\begin{tabular}{@{}p{0.07\textwidth}p{0.43\textwidth}p{0.43\textwidth}@{}}
+\toprule
+ & \textbf{Korean} & \textbf{English translation} \\
+\midrule
+Before
+& 은빛군은 군 명칭과 군청을 그대로 두고 있지만, 행정구역 개편 후 현재 관내 주소가 `청람광역시 은빛군'으로 표시된다. 다만 일부 행정 안내문에는 아직 `백산도 은빛군'이라는 이전 표기가 남아 있다. 은빛군 관내의 통행료를 받지 않는 도로에 설치된 안전표지를 새로 교체하려 한다. 이 안전표지의 도로교통법상 원칙적 설치·관리권자는 누구인가?
+\newline A) 청람광역시장이다.
+\newline B) 청람광역시 은빛군수이다.
+\newline C) 백산도지사이다.
+\newline D) 백산도 은빛군수이다.
+& Eunbit County keeps its name and county office, but since an administrative reorganization, addresses within it are written ``Eunbit County, Cheongram Metropolitan City.'' Some administrative notices, however, still carry the former notation ``Eunbit County, Baeksan Province.'' A safety sign on a toll-free road in Eunbit County is to be replaced. Under the Road Traffic Act, who is in principle responsible for installing and managing this sign?
+\newline A) The mayor of Cheongram Metropolitan City.
+\newline B) The head of Eunbit County, Cheongram Metropolitan City.
+\newline C) The governor of Baeksan Province.
+\newline D) The head of Eunbit County, Baeksan Province. \\
+\midrule
+Annotator (H3)
+& 지문이 현재 주소는 ``청람광역시 은빛군''이고 ``백산도 은빛군''은 ``아직 남아 있는 이전 표기''라고 밝혀, 법령 지식 없이 읽기만으로 `백산도'가 들어간 C와 D가 지워진다.
+& The stem states that the current address is ``Eunbit County, Cheongram Metropolitan City'' and that ``Eunbit County, Baeksan Province'' is a former notation that still remains, so C and D, which contain ``Baeksan Province,'' are eliminated by reading alone, without knowledge of the law. \\
+\midrule
+After
+& 은빛군은 군청 명칭과 군수 직함을 계속 사용하지만, 관내 법정 주소는 `청람광역시 은빛군'으로 표시된다. 은빛군 안의 통행료를 받지 않는 도로에 설치된 노후 안전표지를 교체하려 한다. 이 안전표지의 도로교통법상 원칙적 설치·관리권자는 누구인가?
+\newline A) 청람광역시장이다.
+\newline B) 은빛군수이다.
+\newline C) 청람광역시경찰청장이다.
+\newline D) 청람광역시 시설관리공단장이다.
+& Eunbit County continues to use the name of its county office and the title of county head, but the legal address within it is written ``Eunbit County, Cheongram Metropolitan City.'' An old safety sign on a toll-free road in Eunbit County is to be replaced. Under the Road Traffic Act, who is in principle responsible for installing and managing this sign?
+\newline A) The mayor of Cheongram Metropolitan City.
+\newline B) The head of Eunbit County.
+\newline C) The commissioner of the Cheongram Metropolitan Police Agency.
+\newline D) The director of the Cheongram Metropolitan City Facilities Management Corporation. \\
+\bottomrule
+\end{tabular}
+\end{table*}

@@ -1,0 +1,534 @@
+\section{Experimental Details}
+\label{app:experiments}
+
+We describe the experimental environment and evaluation details in Appendix~\ref{app:experiments-config}, followed by the experiments for Harness Evolution and Harness Scaling in Appendices~\ref{app:experiments-he} and~\ref{app:experiments-hs}. Appendix~\ref{app:case-study} examines how \boxbox{} harness revisions support task execution, and Appendix~\ref{app:experiments-complete-results} provides additional per-task optimization trajectories.
+
+\subsection{Experimental Setup}
+\label{app:experiments-config}
+
+\textbf{Experimental environment.}
+To facilitate replication of our experimental environment, we conduct
+experiments on an Azure Standard\_D96ads\_v5 virtual machine~\citep{microsoft2026dadsv5}
+with 96 vCPUs backed by an AMD EPYC 7763 processor and 384 GiB of system memory,
+running Ubuntu 24.04 with Docker.
+
+\textbf{Initial harness.}
+All methods start from Terminus-KIRA~\citep{terminuskira2026}, a terminal-based harness that executes
+shell commands and returns their outputs to the model. \frozen{} retains
+this harness throughout task execution while the agent iteratively optimizes
+the project code.
+
+\textbf{Time and cost accounting.}
+Figure~\ref{fig:boxbox-main-results} and Table~\ref{tab:boxbox-main-results}
+use the same 600 test runs: 50 tasks, four methods, and three runs per
+method and task.
+For all methods, elapsed task time sums recorded agent-execution and verification phases.
+Agent execution includes harness review; environment setup is excluded.
+Only evaluations started within the four-hour budget contribute to
+\speedupat{4\mathrm{h}}.
+We calculate model cost from recorded token usage using the rates in
+Table~\ref{tab:model-token-costs}.
+Reported mean model costs per test run include all recorded model calls; cost and token
+curves report cumulative usage at each task-budget time point.
+
+\begin{table}[H]
+  \centering
+  \small
+  \caption{Model token rates used for cost calculation (USD per million tokens).}
+  \label{tab:model-token-costs}
+  \begin{tabular}{lrrr}
+    \toprule
+    Model & Uncached input & Cached input & Output \\
+    \midrule
+    GPT-5.6-Luna & \$1.00 & \$0.10 & \$6.00 \\
+    GPT-5.6-Terra & \$2.50 & \$0.25 & \$15.00 \\
+    % Rates from the experiment server's configs/cost-models.toml.
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\phantomsection
+\textbf{Statistical analysis.}
+\label{app:experiments-statistics}
+The bands in Figure~\ref{fig:boxbox-main-results} show the 2.5th and 97.5th
+percentiles of 5,000 resampled benchmark runs over the fixed 50-task set.
+Each sample independently selects one of the three observed runs per task
+and aggregates the selected scores using the harmonic mean.
+The central curves instead use all three runs per task, with the
+geometric-then-harmonic aggregation defined in
+Equation~\ref{eq:aggregate-speedup}.
+In the cost panel, speedup intervals are plotted at the mean cumulative
+cost for each task-time point; they do not represent uncertainty in cost.
+
+\subsection{Harness Evolution}
+\label{app:experiments-he}
+
+Our \he{} baseline adapts the implementation of \citet{wang2026harnessevolution} to \perfrace{}, retaining its core diagnosis-and-revision workflow. We detail the offline optimization procedure and examine training progress and the generalization of the selected harness to held-out tasks.
+
+\textbf{Setup.} We adapt task execution, evaluation, and experiment orchestration to \perfrace{}, replacing the task-success objective with best-so-far correct speedup under a fixed time budget and tailoring the diagnostic and revision prompts to guide harness improvements that increase speedup and reduce costs.
+
+The reference \he{} experiments use full-batch training on Terminal-Bench 2.1~\citep{wang2026harnessevolution}. Publicly released mini-swe-agent trajectories generated with DeepSeek-V4-Flash on this benchmark~\citep{kwok2026llmasaverifier} average 50 agent steps and 12.2 minutes per run, compared with 965 steps for our \frozen{} runs under a four-hour budget on \perfrace{}. We therefore limit each training run to 45 minutes and partition the 40 training tasks into mini-batches of five to keep the volume of trajectory evidence manageable for diagnosis. Across three reshuffled epochs (24 iterations), we evaluate $h_{i-1}$ on one mini-batch at iteration $i$ and use the resulting trajectories and evaluation outcomes to produce $h_i$. For validation, we compare $h_8$, $h_{16}$, and $h_{24}$ using fresh baseline measurements. Table~\ref{tab:he-configuration-cost} summarizes the \he{} pipeline and its recorded model costs.
+% Means over all 445 released TB2.1 runs (89 tasks x 5) and 150 Frozen runs
+% (50 tasks x 3). Count agent records only; deduplicate Frozen checkpoint snapshots.
+% TB2.1 elapsed time is measured from trial start to finish, not from the budget field.
+% TB2.1 source: https://github.com/llm-as-a-verifier/llm-as-a-verifier/tree/628d8fc512c126c4ca8c61dffa44ddba0203c872/data/terminal_bench_2.1_trajs
+
+\begingroup
+% Keep spacing around this adjacent table/figure pair fixed under \flushbottom.
+\setlength{\intextsep}{6pt}
+\begin{table}[H]
+  \centering
+  \small
+  \caption{\he{} configuration and recorded model costs. Training and validation costs include retries and reruns and are lower bounds where usage records are missing.}
+  \label{tab:he-configuration-cost}
+  \begin{tabular}{@{}lrlrr@{}}
+    \toprule
+    Stage & Tasks & Evaluated runs & Budget per run & Cost (\$) \\
+    \midrule
+    Training & 40 & 24 iterations $\times$ 5 tasks & 45 min & 200.34 \\
+    Validation & 10 & 3 harnesses $\times$ 3 runs/task & 2 h & 1,176.12 \\
+    Test & 50 & h24, 3 runs/task & 4 h & 3,683.34 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{figure}[H]
+  \centering
+  % Source: artifacts/plot_he_training_validation.py.
+  % Widths follow the panel aspect ratios to keep plot heights aligned.
+  \begin{subfigure}[t]{0.6539\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/he-training-validation-training.pdf}
+    \caption{Training progress}
+    \label{fig:he-training-progress}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{0.3261\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/he-training-validation-validation.pdf}
+    \caption{Validation performance}
+    \label{fig:he-validation-performance}
+  \end{subfigure}
+  \caption{\he{} training and validation performance. \subref{fig:he-training-progress} Mini-batch training speedup, with aggregate scores for each epoch. \subref{fig:he-validation-performance} Validation speedup of harness checkpoints $h_8$, $h_{16}$, and $h_{24}$. Speedups are aggregated as in Equation~\ref{eq:aggregate-speedup}.}
+  \label{fig:he-training-validation}
+\end{figure}
+\endgroup
+
+\textbf{Training, validation, and test results.} Training performance does not improve consistently across epochs (Figure~\ref{fig:he-training-progress}). Aggregate speedup decreases from $1.086\times$ in epoch 1 to $1.062\times$ in epoch 2 and recovers to $1.069\times$ in epoch 3, remaining below its initial level. Validation performance does not improve consistently across iterations (Figure~\ref{fig:he-validation-performance}), with $h_{24}$ achieving the highest score among the evaluated checkpoints. We therefore use $h_{24}$ for testing, where it achieves $1.281\times$, below Frozen Harness at $1.442\times$ (Table~\ref{tab:boxbox-main-results}). These results show that additional offline revisions do not reliably improve training performance or yield a test-time advantage, consistent with prior findings of limited transfer~\citep{wang2026harnessevolution}. Including the recorded offline cost raises mean cost to at least \$33.73 per test run.
+
+\textbf{Failure analysis.} To understand \he{}'s failure modes, we examine how a revision introduced during training affected execution on a test task. At iteration 5, diagnostic reports identified two patterns: (1) measurements showed faster execution of the baseline code, which had either remained unchanged or been restored after edits were discarded; and (2) records of faster execution did not specify which code version had been measured. These patterns made it difficult to determine whether measured gains reflected actual code improvements or measurement noise. \he{} therefore added a check to the harness to prevent agents from submitting code without evidence of an actual performance improvement.
+
+Specifically, the agent had to record the current and baseline commits, at least three timing measurements for each version, and correctness evidence in \texttt{.autoresearch/promotion.json}. The harness checked that the record matched the current commit, the worktree was clean, the code differed from the baseline, and the measured improvement exceeded a noise threshold. If these requirements were not met, it blocked submission and returned feedback directing the agent to repair. The check read this record and inspected Git state in the working directory selected by the harness (Figure~\ref{fig:he-failure-analysis}).
+% Original diagnostic overview, evolution report, and change manifest:
+% exp/artifacts/harness-evolution-h24/iteration-5-diagnosis.md.
+% Iteration 5 evaluates h4; its reports are under generations/0004.
+
+\begin{figure}[!htb]
+  \begingroup
+  \lstset{style=harnessdiff}
+  \noindent\textbf{Check the repository and read local evidence.}
+  % Selected additions from iteration 5 (e2db056), recurnus/terminus_kira.py.
+\begin{lstlisting}[linebackgroundcolor={\DiffBackground{1,3,4,5,6,8,9,10,11,12}{}}]
++ workdir = environment.task_env_config.workdir
+  ...
++ head = await environment.exec("git rev-parse HEAD", cwd=workdir, timeout_sec=30)
++ if head.return_code != 0:
++     errors.append(f"cannot resolve candidate HEAD: {head.stderr.strip()}")
++     return errors
+  ...
++ record = await environment.exec(
++     "cat -- .autoresearch/promotion.json",
++     cwd=workdir,
++     timeout_sec=30,
++ )
+\end{lstlisting}
+  \noindent\textbf{Check the measured improvement.}
+  % Selected additions from e2db056, recurnus/materiality.py, validate_promotion_record.
+\begin{lstlisting}[linebackgroundcolor={\DiffBackground{1,2,4,5}{}}]
++ threshold = max(0.05 * baseline_median, 2 * baseline_noise)
++ improvement = baseline_median - candidate_median
+  ...
++ if improvement < threshold:
++     errors.append(f"{PROMOTION_MARGIN_ERROR_PREFIX}: need at least {threshold} seconds")
+\end{lstlisting}
+  \noindent\textbf{Block submission when checks fail.}
+  % Selected additions from e2db056, recurnus/terminus_kira.py.
+\begin{lstlisting}[linebackgroundcolor={\DiffBackground{1,2,3,4,5,6,7,8,9,10}{}}]
++ if phase_outcome.action is not PhaseAction.CONTINUE:
++     gate_errors = await self._promotion_gate_errors(self._session)
++     if gate_errors:
++         phase_outcome = PhaseOutcome()
++         promotion_gate_feedback = (
++             "WARNINGS: PROMOTION GATE BLOCKED; no verification was requested.\n"
++             + "\n".join(f"- {error}" for error in gate_errors)
++             + "\nCreate or repair .autoresearch/promotion.json, then retry completion."
++         )
++         feedback = "\n".join(filter(None, (feedback, promotion_gate_feedback)))
+\end{lstlisting}
+  \endgroup
+  \caption{Selected additions to \he{}'s harness at iteration 5. The harness checks the repository and performance evidence before submission, blocking submission and returning repair instructions when a check fails.}
+  \label{fig:he-failure-analysis}
+\end{figure}
+
+The check enforced fixed requirements based on failures observed during training. However, its assumptions about repository location did not hold for some test tasks, causing it to block submissions before assessing the performance evidence. To examine this failure pattern, we selected \texttt{mirage--kubernetes-triage} for detailed trajectory analysis.
+
+In the selected run, the agent prepared Git commits and performance evidence inside the editable repository, while the harness ran its submission checks in the parent workspace. The check therefore failed to resolve the candidate commit and returned \texttt{cannot resolve candidate HEAD}, blocking submission before assessing the performance evidence. Repeated attempts to repair the evidence in the repository did not change the directory used by the harness. The trajectory records 473 blocked submission requests spanning approximately 3 hours and 46 minutes.
+
+This case illustrates both challenges in Section~\ref{sec:introduction}. Difficulty in attributing measured gains motivated stricter submission requirements, but did not establish that these requirements would help the agent find better optimizations. On the selected test task, the check's repository-location assumptions instead led to repeated repair attempts and blocked submissions, illustrating how a revision intended to address training failures can hinder execution under new task-specific conditions.
+% Evidence: mirage--kubernetes-triage__my56nR7, h24 test-0, final-delivery
+% trajectory.json. Observation steps matching both "PROMOTION GATE BLOCKED"
+% and "cannot resolve candidate HEAD": 473, from step 43 to step 1005.
+% First/last timestamps: 2026-09-24T15:53:15.273016+00:00 and
+% 2026-09-24T19:38:49.848844+00:00 (wall-clock span, not official budget time).
+% Step 53 checks local packet identity and reports a clean Git status;
+% step 54 is blocked again. This local check is not an official Judge verdict.
+
+\subsection{Harness Scaling}
+\label{app:experiments-hs}
+
+Our \hs{} baseline adapts the implementation of \citet{wang2026harnessevolution} to \perfrace{}. We describe the execution procedure, analyze model costs, and examine a failure case.
+
+\textbf{Setup.} We adapt task execution and evaluation to \perfrace{}, using best-so-far correct speedup under a fixed time budget as the optimization objective. Each run shares a four-hour budget across task execution, harness optimization, and evaluation. An external controller revises the harness using feedback from each completed attempt and starts a new agent session, preserving project-code progress and resetting the execution context.
+
+We record 2,132 \hs{} attempts, with a median of 12 per run. Across 1,983 boundaries, the median interval between one attempt ending and the next beginning is 3.37 minutes, including harness optimization and runtime transition.
+% Evidence: canonical HS jobs under /mnt/perfbench/jobs/harness-scaling/
+% on azureuser@20.3.99.110, waves:
+% harness-scaling-test0-wave-0-restart-r2-c38bc18b,
+% harness-scaling-test0-wave-1-restart-r3-c38bc18b,
+% harness-scaling-test0-wave-2-restart-r1-6f0724fc,
+% harness-scaling-test0-wave-3-restart-r1-8574a5cb.
+% agent/harness-scaling/campaign-summary.json: 149 summaries, 2132 rounds;
+% kitops--minilm-pack__zPeYG38 has no summary. Median rounds/run = 12.
+% Across 1983 adjacent rounds, median (next.started_at - current.completed_at)
+% = 202.418758869 seconds. Evolution begins after attempt completion.
+
+\textbf{Model costs.}
+\hs{}'s session resets can lower input-token costs by reducing the accumulated conversation history. Although project-code progress is retained, subsequent attempts may need to reconstruct earlier decisions or repeat experiments whose outcomes are no longer available in the execution context. \boxbox{} preserves this context across harness updates, allowing subsequent optimization to build directly on earlier findings. This trade-off helps explain why \hs{}'s lower total model cost does not necessarily translate into greater optimization progress per dollar.
+
+\textbf{Failure analysis.} To examine \hs{}'s optimization process, we trace one \texttt{kitops--minilm-pack} run (Figure~\ref{fig:hs-kitops-trajectory}). During one harness optimization step, \hs{}'s controller reported that the agent repeatedly rebuilt the project, ran tests, and reran the workload on the same code version. It therefore added a repetition check to warn after three consecutive matching command batches.
+
+\begin{figure}[!htb]
+  \centering
+  % Source: artifacts/plot_hs_case_study.py.
+  \includegraphics[width=\linewidth]{figures/hs-kitops-trajectory.pdf}
+  \caption{\hs{} optimization trajectory on \texttt{kitops--minilm-pack}. Annotations show selected harness revisions and an agent session containing 113 consecutive checks that produced no new performance measurements.}
+  \label{fig:hs-kitops-trajectory}
+\end{figure}
+
+However, the new repetition check did not stop the agent from performing the same checks using different command forms. The agent ran 113 consecutive commands repeating the same checks, without modifying code or collecting new performance measurements. The check only looked for consecutive repetitions of the same commands, so it could miss repeated checks written in different ways. The run reached its best correct speedup of $1.649\times$ at checkpoint 5, with no further improvement in subsequent recorded checkpoints. The repeated checks revealed a need for further harness revision during execution, yet \hs{} performs harness optimization only between agent sessions, leaving the current session to continue under the existing harness.
+
+This case illustrates how session-level external control can delay harness revisions needed during ongoing task execution. The revised check missed repeated validation expressed through different commands, and the agent continued spending task time without making code changes or collecting new performance measurements. Allowing the agent to initiate further harness revision when these limitations become apparent would provide an earlier opportunity to address them.
+% Case evidence: canonical wave 0 / kitops--minilm-pack__zPeYG38.
+% agent/harness-scaling/rounds/0006 and 0009:
+% evolve/change_manifest.json, target/terminal.txt, target/context.json.
+% Round 6: c2fe4347 -> f2a361a2 adds the consecutive-repeat warning.
+% Round 9 runs fe78b560 with that check retained; e9c0fbc3 adds recent-history blocking.
+% The round-9 terminal markers 92--204 identify 113 consecutive commands
+% reading the worker setting and checking the executable; all exit with status 0.
+% Both attempt contexts record attempt_timeout_sec=1500 and attempt_timed_out=true.
+% Figure 1 archive: harness-scaling-test0.json.gz, baseline=1.238681459,
+% checkpoint-05=0.751173639; no subsequent accepted checkpoint improves on it.
+% Result SHA256: 58d7447bb0d907291af98d6e2f26eab78f263e13073fd94d2ca2e55590e3a0ce.
+% Round 10 lacks terminal evidence because the container was paused;
+% its timeout does not establish whether the new blocking check was effective.
+
+\FloatBarrier
+% Evidence: exp/recurnus-historical-edits/case-studies.md.
+\subsection{Case Study}
+\label{app:case-study}
+\begingroup
+\lstset{style=harnessdiff}
+
+To analyze how \boxbox{} supports effective task execution, we examine two complementary aspects of harness optimization. Appendix~\ref{app:case-trajectories} traces how agent-triggered reviews address difficulties encountered during ongoing tasks. Appendix~\ref{app:case-modifications} examines how full-harness editing can support task performance and reduce model costs through changes to agent guidance, tools, and execution behavior.
+
+\subsubsection{Harness Optimization Trajectories}
+\label{app:case-trajectories}
+
+We examine two four-hour runs, tracing the difficulties encountered during task execution, the resulting harness revisions, and their use in subsequent optimization.
+
+\textbf{CCC.} To reduce CCC's compilation time on SQLite, the agent profiles compiler stages and tests code changes through repeated compilation runs (Figure~\ref{fig:boxbox-ccc-trajectory}). During the first review, the agent identified repeated manual processing of timing output and added a helper for repeated runs, result recording, and candidate comparisons. Using this helper, the agent established a baseline and evaluated compiler changes, but still had to extract and compare individual stage timings manually. To automate this step, the agent added stage-timing summaries to the helper in the second review, then used them to investigate optimization passes and code generation.
+
+Later, a change to CCC's source code appeared to reduce compilation time by 9.4\% in separately measured batches. Yet when the agent alternated runs of the modified and unchanged compiler versions, their median compilation times were nearly identical, suggesting that the apparent gain came from measurement variation between batches rather than the code change. The agent therefore incorporated this comparison procedure into the helper during the third review to improve measurement reliability, then used it to reject several compiler changes that showed no consistent speedup. Continuing with this helper, the agent developed mnemonic-parsing and operand-splitting changes that reduced official running time from $6.321$ to $6.095$ and then $5.792$ seconds.
+
+\begin{figure}[!htb]
+  \centering
+  % Source: artifacts/plot_boxbox_ccc_case_study.py.
+  \includegraphics[width=\linewidth]{figures/boxbox-ccc-trajectory.pdf}
+  \caption{\boxbox{} optimization trajectory on \texttt{ccc--compile-speed}. Points show correct evaluation results and the line shows best-so-far speedup. Annotations mark harness review outcomes and task-code changes; numerical gains are absolute and relative increases over the preceding best-so-far speedup.}
+  \label{fig:boxbox-ccc-trajectory}
+\end{figure}
+
+% CCC source: recurnus-evidence-scope-test25-3x4h-c25-20260912 /
+% ccc--compile-speed__az4MaTZ. Task trajectory sequences 70/98 show initial
+% helper use; 274--275 show phase
+% summaries and their use; 360--363 show the batch/alternating discrepancy;
+% 370--371 show paired-ledger execution; 452/467 commit later improvements;
+% checkpoint-06 and sequence 513 record the local/official disagreement.
+% Review 0004, step 10, records retention after the paired helper was used
+% to reject several candidates without consistent gains.
+
+\textbf{FluidSynth.} To optimize FluidSynth's MIDI-to-WAV rendering performance, the agent tests code changes through repeated workload execution and output checks. Figure~\ref{fig:boxbox-fluidsynth-trajectory} traces harness revisions during this process. The first review noted that long-running commands required extra model calls to continue waiting, but retained the harness because a proposed waiting tool would duplicate existing functionality. As this pattern recurred, the second review extended waiting inside the existing command runner. During subsequent audio-write batching experiments, a single tool call completed a build, five renders, and output checks, allowing the agent to assess the candidate without an additional waiting call.
+
+Comparing batch sizes still required repeated setup of builds, timing loops, and output checks. The third review therefore added \texttt{benchmark\_matrix}, reusing the updated command runner to execute labeled experiments and report timings and exit status. The agent then used it for six repeated renders with output-hash checks and subsequent configuration comparisons. Rendering performance improved further after the agent disabled OpenMP in the build configuration. The fourth review retained the harness, judging its existing capabilities sufficient after the agent resolved a build-state issue through a clean rebuild. The run reached a best-so-far speedup of $1.183\times$.
+
+\begin{figure}[!htb]
+  \centering
+  % Source: artifacts/plot_boxbox_case_study.py.
+  \includegraphics[width=\linewidth]{figures/boxbox-fluidsynth-trajectory.pdf}
+  \caption{\boxbox{} optimization trajectory on \texttt{fluidsynth--bagatelles}, using the plotting conventions of Figure~\ref{fig:boxbox-ccc-trajectory}. Reviews extend command waiting and add batch benchmarking.}
+  \label{fig:boxbox-fluidsynth-trajectory}
+\end{figure}
+
+Together, these cases illustrate how harness optimization can improve task performance and reduce model costs by improving the agent's performance optimization workflow, even though the reviews do not directly modify project code.
+
+% Keep trajectory figures with their analysis while allowing text to fill the page.
+\FloatBarrier
+\subsubsection{Representative Harness Modifications}
+\label{app:case-modifications}
+\newcounter{harnesscase}
+
+We examine five representative harness updates that change agent guidance, tools, or execution behavior. While Figure~\ref{fig:boxbox-review-analysis-modifications} reports the prevalence of modification categories, Table~\ref{tab:harness-case-overview} summarizes the concrete changes analyzed below.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Representative harness updates grouped by modification type. Case numbers refer to the detailed analyses below; task IDs follow the catalog in Table~\ref{tab:perfrace-task-catalog}.}
+  \label{tab:harness-case-overview}
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.2}
+  \begin{tabularx}{\textwidth}{@{}cl>{\raggedright\arraybackslash}p{0.29\textwidth}>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    Case & Category & Task ID & Modification \\
+    \midrule
+    \ref{case:feedback} & Review feedback & {\scriptsize\path{n8n-mcp--tool-batch-speed}} &
+      Redirect the next experiment toward SQLJS conversion and statement overhead. \\
+    \ref{case:prompt} & \shortstack[l]{Prompt rules\\and skills} & {\scriptsize\path{sum--text-attest}} &
+      Require alternating A/B measurements when apparent gains are close to noise. \\
+    \ref{case:polling} & Tool functionality & {\scriptsize\path{rust-clippy--cargo-package-lint}} &
+      Extend internal command polling to reduce model-directed waiting turns. \\
+    \ref{case:context} & Execution logic & {\scriptsize\path{trixi-framework-trixi-jl--self-gravitating-sedov-amr}} &
+      Add a message-count-based context-compaction path. \\
+    \ref{case:fault} & Fault fix & {\scriptsize\path{rust-clippy--cargo-package-lint}} &
+      Replace an exception on shell exit with a session-recovery call. \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+The following cases proceed from changes in agent guidance to changes in executable behavior. Cases~\ref{case:feedback}--\ref{case:prompt} examine review feedback and prompt-based guidance for experiment selection and evaluation. Case~\ref{case:polling} examines internal command polling to reduce model-directed waiting. Cases~\ref{case:context}--\ref{case:fault} turn to context management and terminal recovery within the agent loop. Together, they illustrate how full-harness editing can affect both the direction of the search and the process used to carry it out.
+
+% n8n-mcp--tool-batch-speed__HF3CmJx:transition:0001
+\par\medskip
+\refstepcounter{harnesscase}
+\label{case:feedback}
+\noindent\textbf{Case~\theharnesscase. Review feedback: redirecting an experiment}
+\par\nopagebreak
+
+\noindent\textbf{Task:} {\small\path{n8n-mcp--tool-batch-speed}}
+
+\textbf{Background.}
+The task is to reduce the end-to-end running time of the n8n-mcp server on a fixed batch of workflow-building tool calls while preserving response correctness. The agent attempted to reduce logging overhead, but local measurements showed no improvement. The review therefore used profiling evidence to identify a different direction for the next experiment.
+
+\noindent\begin{minipage}{\linewidth}
+\begin{lstlisting}[linebackgroundcolor={\DiffBackground{1,2,3,4,5,6,7,8}{}}]
++ The remaining profiler clue is the SQLJS adapter's repeated `all/get`
++ row/object conversions and statement lifecycle overhead. Treat this as
++ a hypothesis, not a conclusion: inspect the exact hot path and design
++ one general correctness-preserving experiment ...
++
++ ... Use a separate branch from main, build, run the exact workload with
++ paired repeated clean-vs-experiment medians, and compare response hashes.
++ Reject changes within noise or with any response mismatch.
+\end{lstlisting}
+\end{minipage}
+
+\textbf{Review feedback.}
+The feedback directs the agent to stop revisiting logging and investigate SQLJS data-conversion and statement-management overhead. It also specifies an experimental workflow, asking the agent to preserve the current project-code version and test modifications on a separate branch through paired repeated workload measurements and response-hash comparisons. Modifications should be rejected if their measured gains fall within measurement noise or their responses differ.
+
+\textbf{Discussion.}
+This case illustrates how review feedback can support performance optimization by guiding both experiment selection and evaluation. Redirecting effort away from an unsuccessful direction can reduce repeated exploration, while paired measurements and response checks help the agent distinguish useful code changes from measurement noise or incorrect behavior.
+
+\par\medskip
+\refstepcounter{harnesscase}
+\label{case:prompt}
+\noindent\textbf{Case~\theharnesscase. Prompt rules and skills: comparing noisy measurements}
+\par\nopagebreak
+
+\noindent\textbf{Task:} {\small\path{sum--text-attest}}
+% sum--text-attest__vx33d4E:transition:0008
+
+\textbf{Background.}
+The task is to reduce the running time of SUM's batch text-attestation workflow while preserving its outputs. Across successive experiments, the agent encountered apparent gains that did not hold under more controlled measurements. Earlier reviews had already warned against drawing conclusions from warmup effects and uncontrolled measurement order, yet a later code change again appeared promising based on a single fast run. To address this recurring problem, the review incorporated the measurement guidance into the main prompt for use across subsequent experiments.
+
+\begin{lstlisting}[linebackgroundcolor={\DiffBackground{1,2,3,4,5,6,7}{}}]
++ When a candidate's apparent gain is comparable to run-to-run noise, do not
++ infer from one fast first run. Keep the unchanged `main` reference and
++ candidate branch, warm both in the same controlled procedure, then run
++ alternating fresh-process A/B repetitions with identical output checks
++ and compare medians (and spread) before accepting or rejecting the hypothesis.
++ Align this local procedure with the official workload boundary before
++ using a tiny timing difference to justify submission.
+\end{lstlisting}
+
+\textbf{Harness update.}
+The prompt rule instructs the agent to keep an unchanged reference version and test modified code on a separate branch. It requires the same warmup procedure for both versions, followed by alternating fresh-process workload runs with identical output checks. The agent should compare median running times and their spread before accepting or rejecting the modification, with the measurement procedure aligned with the official workload.
+
+\textbf{Discussion.}
+This case illustrates how prompt revisions can provide consistent guidance for evaluating code changes across successive experiments. More reliable comparisons can help the agent distinguish genuine improvements from measurement noise, reducing the risk of retaining ineffective changes or discarding useful ones based on unstable timing evidence.
+
+\par\medskip
+\refstepcounter{harnesscase}
+\label{case:polling}
+\noindent\textbf{Case~\theharnesscase. Tool functionality: reducing model calls for command polling}
+\par\nopagebreak
+
+\noindent\textbf{Task:} {\small\path{rust-clippy--cargo-package-lint}}
+% rust-clippy--cargo-package-lint__cuUYeRH:transition:0001
+
+\textbf{Background.}
+During performance optimization on Rust Clippy, the agent builds the project and runs benchmarks to evaluate code changes. The command tool could return before these operations finished, requiring additional model calls simply to continue waiting. The review therefore extended the tool's internal waiting behavior to reduce these repeated interactions.
+
+\textbf{Harness update.}
+The update extends internal waiting to 180 seconds for ordinary commands, subject to the existing block timeout. The tool continues checking for the completion marker and returns as soon as it appears, or provides a progress snapshot when the waiting window expires.
+
+\begin{lstlisting}[linebackgroundcolor={\DiffBackground{1,3,4,5,6,9}{8}}]
++ AUTO_COMMAND_WAIT_SEC = 180
+  ...
++ wait_budget = min(
++     BLOCK_TIMEOUT_SEC,
++     max(command.duration_sec, AUTO_COMMAND_WAIT_SEC),
++ )
+  ...
+- while time.monotonic() - start < command.duration_sec:
++ while time.monotonic() - start < wait_budget:
+\end{lstlisting}
+
+The tool description is updated alongside the implementation, instructing the agent to request an additional wait only when the command outlasts the new window.
+
+\begin{lstlisting}[linebackgroundcolor={\DiffBackground{3,4,5,6,7}{1,2}}]
+- "It is always possible to wait again if the prior output has not finished, "
+- "by running empty keystrokes with a duration on subsequent requests to wait longer. "
++ "The harness automatically continues waiting when the completion marker has "
++ "not appeared, up to 180 seconds per tool call, and returns a progress snapshot "
++ "at that bound. "
++ "Use an empty-keystroke wait only when a command exceeds that bound; "
++ "use C-c to interrupt foreground work. "
+\end{lstlisting}
+
+\textbf{Discussion.}
+This case illustrates how full-harness editing allows agents to adjust tool behavior adaptively to reduce model calls spent solely on waiting. When an unfinished command returns control to the agent, another model call processes the conversation context and generates a continuation request, incurring input- and output-token costs. Internal polling checks command status without invoking the model, allowing commands that finish within the extended window to return their results without these additional calls. Fewer waiting turns also add fewer messages to subsequent context. The potential cost reduction therefore comes from reducing model interaction during command execution, while commands exceeding the window may still require further calls.
+
+\par\medskip
+\refstepcounter{harnesscase}
+\label{case:context}
+\noindent\textbf{Case~\theharnesscase. Execution logic: context compaction}
+\par\nopagebreak
+
+\noindent\textbf{Task:} {\small\path{trixi-framework-trixi-jl--self-gravitating-sedov-amr}}
+% trixi-framework-trixi-jl--self-g__ZV6MxPM:transition:0003
+
+\textbf{Background.}
+During performance optimization on Trixi, the agent accumulated a long interaction history through profiling and repeated experiments. The review reported that late model requests contained approximately 145,000 input tokens, making repeated processing of the accumulated history a substantial source of model cost. The existing summarization mechanism had not sufficiently limited this growth, motivating a revision to the agent loop's context-management logic.
+
+\begin{lstlisting}[linebackgroundcolor={\DiffBackground{1,2,3,4,5,6,7,8,9,10,11,12,13}{}}]
++ if (
++     original_instruction
++     and len(chat.messages) >= 64
++     and len(chat.messages) >= self._last_forced_compaction_messages + 24
++ ):
++     self._last_forced_compaction_messages = len(chat.messages)
++     proactive_summary_result = await self._force_proactive_compaction(
++         chat, original_instruction, self._session,
++     )
++     if proactive_summary_result:
++         prompt, subagent_refs = proactive_summary_result
++         self._pending_subagent_refs = subagent_refs
++         self._pending_handoff_prompt = prompt
+  if original_instruction and self._enable_summarize:
+      ...
+\end{lstlisting}
+
+\textbf{Harness update.}
+The update adds a message-count trigger before the existing optional summarization check. When the original task instruction is available, the loop attempts compaction if the history contains at least 64 messages and its message count is at least 24 higher than the count recorded at the last attempt. It records the current count before invoking the existing summarizer through a helper with a timeout. Successful results supply the continuation prompt and subagent references; if summarization fails, execution continues with the existing history.
+
+\textbf{Discussion.}
+This case illustrates how full-harness editing allows agents to adapt context-management logic during ongoing tasks. By summarizing accumulated interaction history, the revised loop can reduce the amount of context processed in subsequent model calls and the associated input-token costs.
+
+\par\medskip
+\refstepcounter{harnesscase}
+\label{case:fault}
+\noindent\textbf{Case~\theharnesscase. Fault fix: terminal recovery}
+\par\nopagebreak
+
+\noindent\textbf{Task:} {\small\path{rust-clippy--cargo-package-lint}}
+% rust-clippy--cargo-package-lint__FnUrnTW:transition:0004
+
+\textbf{Background.}
+While the agent was waiting for a long Rust Clippy build, the persistent terminal shell exited. At the next agent-loop entry, the harness raised an exception before its existing session-recovery helper could run. This failure prompted a review of how the harness handles terminal loss during ongoing execution.
+
+\begin{lstlisting}[linebackgroundcolor={\DiffBackground{3,4,5,6}{1,2}}]
+- if not await self._with_block_timeout(self._session.is_session_alive()):
+-     raise RuntimeError("The persistent terminal shell exited")
++ # The previous episode may have outlived the persistent shell.
++ # Restart it for the next model turn without replaying any
++ # command whose completion was uncertain.
++ await self._with_block_timeout(self.ensure_agent_session())
+\end{lstlisting}
+
+\textbf{Harness update.}
+The update replaces the exception with a call to the existing session-recovery helper, which preserves a live terminal or starts a replacement if the shell has exited. This prepares a usable terminal for the next model turn without automatically replaying commands whose completion is uncertain. Such commands may already have modified project files, so replaying them could duplicate their effects.
+
+\textbf{Discussion.}
+This case illustrates how full-harness editing allows agents to revise error-handling logic when runtime faults interrupt ongoing tasks. By restoring terminal access, the revised harness can enable the agent to inspect the current task state and resume performance optimization after a shell failure.
+
+Together, these cases illustrate how full-harness editing lets agents adapt guidance, tools, and execution logic to the needs of ongoing tasks. Changes to experiment selection and measurement can support task performance by focusing effort on promising hypotheses and improving the reliability of candidate evaluation. Changes to tool execution and context management can reduce model costs by avoiding unnecessary waiting calls and repeated transmission of long histories, while fault-handling revisions support continued execution.
+\endgroup
+
+\FloatBarrier
+\subsection{Per-Task Optimization Trajectories}
+\label{app:experiments-complete-results}
+
+Figures~\ref{fig:boxbox-per-task-1}--\ref{fig:boxbox-per-task-5}
+show optimization trajectories for all 50 test tasks.
+Each curve geometrically averages three runs, following the scoring and
+time-accounting conventions of Figure~\ref{fig:boxbox-main-results}.
+The vertical scale varies by task.
+
+\clearpage
+\begin{figure}[p]
+  \centering
+  \includegraphics[width=\textwidth,height=0.92\textheight,keepaspectratio]{figures/boxbox-per-task-results-1.pdf}
+  \caption{Per-task optimization trajectories (1/5).}
+  \label{fig:boxbox-per-task-1}
+\end{figure}
+
+\clearpage
+\begin{figure}[p]
+  \centering
+  \includegraphics[width=\textwidth,height=0.92\textheight,keepaspectratio]{figures/boxbox-per-task-results-2.pdf}
+  \caption{Per-task optimization trajectories (2/5).}
+  \label{fig:boxbox-per-task-2}
+\end{figure}
+
+\clearpage
+\begin{figure}[p]
+  \centering
+  \includegraphics[width=\textwidth,height=0.92\textheight,keepaspectratio]{figures/boxbox-per-task-results-3.pdf}
+  \caption{Per-task optimization trajectories (3/5).}
+  \label{fig:boxbox-per-task-3}
+\end{figure}
+
+\clearpage
+\begin{figure}[p]
+  \centering
+  \includegraphics[width=\textwidth,height=0.92\textheight,keepaspectratio]{figures/boxbox-per-task-results-4.pdf}
+  \caption{Per-task optimization trajectories (4/5).}
+  \label{fig:boxbox-per-task-4}
+\end{figure}
+
+\clearpage
+\begin{figure}[p]
+  \centering
+  \includegraphics[width=\textwidth,height=0.92\textheight,keepaspectratio]{figures/boxbox-per-task-results-5.pdf}
+  \caption{Per-task optimization trajectories (5/5).}
+  \label{fig:boxbox-per-task-5}
+\end{figure}

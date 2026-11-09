@@ -1,0 +1,80 @@
+\section{Introduction}
+\label{sec:introduction}
+
+%   harness: governs how the agent can interact with the environment
+%   harness design can affect agent performance
+%   -> 
+%   motivates the need for automated harness optimization
+%   -> 
+%   existing offline harness optimization methods use reference-based 
+%   evaluation feedback to diagnose failures and guide harness revisions
+%   for reuse on unseen tasks (同类型任务), align with the setting of current benchmarks
+%   ->
+%   yet real-world tasks often 
+%       1. make it difficult to identify useful harness revisions
+%       2. as a task progresses, interaction reveals task-specific
+%          difficulties that harness revisions learned from other tasks
+%          may not adequately address (TTHE, Rethinking),  
+%           long-running 会持续遇到很多没有在 held-in 学习过的问题
+%   -> 
+%   we introduce PerfRace, 有一套 real-wolrd xxx
+%   -> 
+%   on PerfRace, the offline HE checkpoint with the highest validation
+%   score still underperforms Frozen Harness on test tasks
+%   -> 
+%   we therefore investigate online, task-specific harness optimization
+%   ->
+%   existing methods use an outer loop to allocate budget and control
+%   harness updates, limiting responses to emerging difficulties:
+%       (1) the agent observes task progress but cannot decide how to
+%           allocate its remaining budget between task execution and
+%           harness revision (double-confirm, confilit)
+%       (2) updates wait until an attempt or execution segment ends,
+%           delaying their use in the ongoing task
+%   -> 
+%   We introduce BOXBOX, agent-trigger, kernel management
+%   -> 
+%   Evaluation
+
+
+Large language model (LLM) agents interact with their environment through harness that determines both the available actions and the observations they receive~\citep{yang2024sweagent,merrill2026terminalbench,lin2026agentic}.
+%
+Recent studies have shown that harness design can substantially affect agent performance and behavior, even when the underlying model is fixed ~\citep{lin2026agentic,wang2026harnessevolution}.
+%
+These findings have motivated automatic optimization of agent harness, in which an
+optimizer analyzes agent trajectories and evaluation feedback, proposes modifications
+to the harness, and evaluates the resulting agent on benchmark tasks.
+%~\citep{lin2026agentic,wang2026harnessevolution}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Existing offline harness optimization methods~\citep{park2026autosaddler,zhang2026selfharness,lin2026agentic,wang2026harnessevolution} often use reference answers or task-completion feedback to diagnose failures, and revise harnesses to improve performance on held-out tasks. This setup aligns with existing agent benchmarks that evaluate whether an agent completes a specified task~\citep{jimenez2024swebench,merrill2026terminalbench,froger2026gaia2}.
+
+However, many real-world tasks are open-ended and long-running, making end-state evaluations alone insufficient to capture how agents progress throughout these runs.
+%
+Moreover, this setting poses two challenges for offline harness optimization. First, open-ended tasks make it difficult to identify useful harness revisions, as they may lack clear criteria for diagnosing what needs improvement. Prior evaluations show that harness evolution does not reliably improve performance without unit-test feedback~\citep{wang2026harnessevolution}. Second, continued execution exposes new task-specific difficulties that may limit the generalization of harness revisions learned from other tasks~\citep{nie2026tthe,wang2026harnessevolution}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \tl{I think a logic could be: we identify a concrete class of tasks on which typical methods fail; we introduce a new method; we curate benchmark to evaluate.}
+% \tyh{Agreed. We now follow this logic: identify the limitations of offline harness optimization on open-ended performance tasks, then introduce \boxbox{} for task-specific harness improvement during ongoing execution. \perfrace{} supplies the real-world tasks for this study.}
+
+To study harness optimization in these settings, we introduce \perfrace{}, a benchmark for optimizing performance of real-world software projects. Our experiments show that offline Harness Evolution (\he{}) underperforms Frozen Harness on \perfrace{} (Figure~\ref{fig:boxbox-main-results}), with no consistent improvement during training or validation (Appendix~\ref{app:experiments-he}), consistent with prior findings of unreliable gains and limited generalization~\citep{wang2026harnessevolution}.
+
+% \tyh{Cite results, Rethinking figure1 also confirms us.}
+
+Nevertheless, the current task's trajectory can reveal difficulties encountered during execution and provide task-specific evidence for harness revision~\citep{nie2026tthe}. We therefore investigate whether an agent can use this experience to improve its own harness during the ongoing task, making harness optimization an online, task-specific process.
+%
+Existing methods allocate budget between task execution and harness optimization through an outer loop, with harness updates scheduled by predefined triggers or a separate meta-agent~\citep{wang2026harnessevolution,liu2026evox,zhang2026agenticevolution}. However, external control limits the task-solving agent's ability to respond to emerging difficulties. First, despite observing task progress, the agent cannot decide whether to spend its remaining budget on task execution or harness revision. Second, updates occur between task attempts or execution segments, delaying their use in the ongoing task.
+
+To address these limitations, we introduce \boxbox{}\footnote{Named after the F1 radio call ``box, box,'' requesting a pit stop for repairs and adjustments during the race.} to support agent-triggered revision of the full executable harness through kernel-managed hot reloading.
+When requested, the kernel pauses task execution and launches an agent review session to diagnose difficulties from the trajectory and revise the harness.
+After validation, it resumes the task with preserved execution context under the revised harness, which governs both subsequent execution and future reviews, enabling recursive harness improvement.
+We evaluate \boxbox{} on \perfrace{} against Frozen Harness, offline Harness Evolution and externally controlled Harness Scaling under matched task budgets, comparing best-so-far correct speedup and model cost. \boxbox{} achieves a \speedupat{4\mathrm{h}} of \(1.70\times\), compared with \(1.44\times\) for Frozen Harness, \(1.28\times\) for Harness Evolution, and \(1.54\times\) for Harness Scaling.
+
+Our main contributions are summarized as follows:
+\begin{itemize}
+    \item We introduce \perfrace{}, a benchmark for evaluating agents on open-ended performance optimization tasks, tracking correctness-preserving improvements to real-world software throughout task execution.
+    \item We present \boxbox{}, which combines agent-triggered, full-harness revision from task-specific experience with kernel-managed hot reloading of the runtime while preserving execution context.
+    \item Our experiments show that \boxbox{} achieves higher best-so-far correct speedup with greater time and cost efficiency than the evaluated baselines, supporting harness optimization as part of an agent's own capabilities.
+\end{itemize}

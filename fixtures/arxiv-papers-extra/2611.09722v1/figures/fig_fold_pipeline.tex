@@ -1,0 +1,34 @@
+\input{figures/fold-mechanism-common}
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[x=1cm, y=1cm, qbox/.append style={minimum height=0.46cm}]
+  \node[prod]  (Q)  at (0.95, 2.70) {$Q$};
+  \node[prod]  (qk) at (0.95, 2.04) {QK};
+  \node[res]   (S)  at (0.95, 1.38) {$S$};
+  \node[prod]  (P)  at (0.95, 0.72) {$P$};
+  \node[prod]  (pv) at (0.95, 0.06) {PV};
+  \node[res]   (O)  at (0.95,-0.60) {$O$};
+  \node[quant] (Kq) at (-4.00, 2.04) {$K^{\!\top}$ quantized};
+  \node[quant] (Vq) at (-4.00, 0.06) {$V$ quantized};
+  \node[prod]  (Ky) at (-1.45, 2.04) {K operand};
+  \node[prod]  (Vy) at (-1.45, 0.06) {V operand};
+  \draw[flow] (Q) -- (qk);
+  \draw[flow] (qk) -- (S);
+  \draw[flow] (S) -- node[axname, right, xshift=0.42cm, inner sep=1pt] {softmax} (P);
+  \draw[flow] (P) -- (pv);
+  \draw[flow] (pv) -- (O);
+  \node[axname, anchor=west] at (1.62,1.38) {K corr.};
+  \draw[flow] (1.55,1.38) -- (S.east);
+  \node[axname, anchor=west] at (1.62,-0.60) {V corr.};
+  \draw[flow] (1.55,-0.60) -- (O.east);
+  \draw[flow] (Kq) -- (Ky);
+  \draw[flow] (Ky) -- (qk);
+  \draw[flow] (Vq) -- (Vy);
+  \draw[flow] (Vy) -- (pv);
+  \foreach \src/\ysrc/\ydst/\lab in {Kq/2.31/2.70/{channel-wise K\\operand-fold}, Kq/1.77/1.38/{token-wise K\\acc-fold}, Vq/0.33/0.72/{token-wise V\\operand-fold}, Vq/-0.21/-0.60/{channel-wise V\\acc-fold}}{
+    \draw[foldline] (-4.00,\ysrc) -- (-4.00,\ydst) -- node[foldlab, pos=0.52] {\lab} (0.55,\ydst);}
+\end{tikzpicture}
+\caption{Affine folding in attention.
+Dashed arrows show where each K and V quantization scheme applies its scales.}
+\label{fig:fold-pipeline}
+\end{figure}

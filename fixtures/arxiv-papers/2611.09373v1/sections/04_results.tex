@@ -1,0 +1,83 @@
+\section{Results}
+\label{sec:results}
+
+Across datasets, ensemble MC dropout has the best average rank for the TDC metric, calibrated Brier
+score, and calibrated interval score (Figure~\ref{fig:global-rank-holm}). The Friedman tests find
+clear differences among the methods for all three measures. The follow-up comparisons qualify the
+ranking: the group not separated from ensemble MC dropout contains all five ensemble pipelines for TDC performance.
+For Brier score, only the deterministic MLP and Laplace are separated from the leader. For interval
+score, the group not separated from the leader includes LightGBM, MC dropout, and all five ensemble
+pipelines.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{global_rank_rail.pdf}
+  \caption{Mean ranks across datasets, with rank 1 best and the empirical leader outlined. Marker
+  shape distinguishes LightGBM, single MLP, and MLP ensemble pipelines. ``Not significantly
+  worse'' marks methods that the Holm-adjusted comparison does not distinguish from the leader;
+  ``Significantly worse'' marks methods that it does. Adjustment is performed separately for each
+  evaluation measure across all 55 method pairs.}
+  \label{fig:global-rank-holm}
+\end{figure*}
+
+Appendix~Table~\ref{tab:global-rank-holm} gives every mean rank and adjusted $p$-value.
+
+LightGBM has the most empirical wins for both the TDC metric and Brier score, yet its performance is
+strongly endpoint dependent. Its TDC ranks range from first to last, producing a substantially worse
+average rank than ensemble MC dropout. For interval score, LightGBM and ensemble post-hoc VBLL each
+win three datasets, while ensemble MC dropout ranks between first and fourth on every regression
+dataset.
+
+\paragraph{What individual datasets can distinguish.}
+Average ranks summarize consistency across the suite; comparisons on the original score scale show
+which methods the repeated evaluations can distinguish on each endpoint. Figure~\ref{fig:per-dataset-status-tally}
+makes the contrast clear. LightGBM is often the sole method not ruled out as best, but it is also
+ruled out on many other endpoints. Ensemble MC dropout wins fewer datasets but is not ruled out as
+best across a broader range of them. The evaluations find some method difference for all 44
+dataset-score combinations.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{per_dataset_status_stacked.pdf}
+  \caption{Per-dataset classifications from Hsu's MCB procedure after averaging the five model
+  seeds and five outer folds within each of ten chemical partitions, giving ten paired
+  complete-partition blocks. ``Statistically best'' means that the empirical winner is the only
+  method not ruled out by MCB. ``Empirical best'' marks other observed winners, and ``Not ruled
+  out as best'' marks additional methods not excluded by the test. The initial test finds a method
+  difference for all 44 dataset-score combinations; each is assessed separately
+  at the 5\% level, with the coverage interpretation given in
+  Appendix~\ref{app:dataset-scores}.}
+  \label{fig:per-dataset-status-tally}
+\end{figure*}
+\FloatBarrier
+
+Appendix~\ref{app:dataset-scores} shows the corresponding scores and decisions for every dataset.
+
+\paragraph{Evaluation-design stability.}
+With one model seed, a single held-out fold selects the same leader as the completed grid in only
+37.2\% of TDC-metric, 20.4\% of Brier, and 39.2\% of interval-score subsets
+(Figure~\ref{fig:rank-trajectories}). The apparent leader from one fold may therefore differ from the
+leader obtained after averaging the full evaluation. At the equal cost of five scores, one complete
+cross-validation reproduces the full-grid rank ordering more closely than averaging five model seeds
+on one held-out fold. Repeated complete cross-validations narrow the rank variation, with Brier score
+settling most slowly.
+
+\begin{figure*}[p]
+  \centering
+  \includegraphics[width=\textwidth,height=0.82\textheight,keepaspectratio]
+    {evaluation_design_rank_trajectories.pdf}
+  \caption{Suite-wide mean ranks under smaller evaluation designs. Open circles and bars show the
+  median, interquartile range, and 5th--95th percentile range over paired finite-grid subsets;
+  diamonds show the completed grid. Solid branches add folds and partitions, while dashed branches
+  average model seeds. Percentages give the subsets that recover the sole full-grid leader. These
+  empirical ranges are not confidence intervals.}
+  \label{fig:rank-trajectories}
+\end{figure*}
+
+\paragraph{Tuning with a single validation split.}
+To test whether a single train--validation split is sufficient for tuning, we compare its selected
+configuration with the choice from all five inner folds. Median agreement is 19.2\% for LightGBM and
+17.8\% for the MLP across datasets, and is still incomplete when four folds are used. The one-fold
+choices also score worse when evaluated across all five validation folds
+(Appendix~Table~\ref{tab:inner-selection-stability}).
+\FloatBarrier

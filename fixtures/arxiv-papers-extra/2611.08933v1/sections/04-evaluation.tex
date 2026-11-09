@@ -1,0 +1,45 @@
+\section{Requirement-to-Artifact evaluation}
+\label{sec:evaluation}
+\subsection{Linking requirements, versions, and delivery evidence}
+The core evaluation unit is an active requirement paired with a relevant artifact version. Each record links the obligation to its originating turn, scope (requested change, protected property, or deliverable), artifact version/path, check result, and evidence provenance. Figure~\ref{fig:protocol} operationalizes the lifecycle view in Figure~\ref{fig:lifecycle} for the design-artifact audit. Evaluation proceeds through four questions:
+\begin{enumerate}
+\item \textbf{Is the requirement active?} Resolve selections, approvals, superseded requests, and unmet prerequisites. Exclude a requirement only with an explicit applicability reason.
+\item \textbf{Which artifact is relevant?} Identify the requested version and business deliverable. A candidate-authored diagnostic or an older draft is not automatically its substitute.
+\item \textbf{What changed and what was preserved?} Check the requested delta, protected content, complete set, and required file structure together.
+\item \textbf{What supports the decision?} Distinguish observed file facts, candidate assertions, model judgments, and expert acceptance. Record unresolved dependencies and the candidate's declared status separately.
+\end{enumerate}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/draft-protocol.pdf}
+\caption{Requirement-to-Artifact evidence framework. Applicability is checked before the requested version and its evidence. This is the audit schema; the archive supplies aggregate checks and selected direct inspections, not a fully automated acceptance system or an evaluated RFQ-to-delivery pipeline.}
+\label{fig:protocol}
+\end{figure}
+
+\subsection{Three evidence layers}
+\paragraph{Structural evidence.}
+Check presence, readability, count, dimensions, format, and version identity. The archived \texttt{artifact\_contract} score is one such signal. Runtime completion is an execution property reported alongside it.
+
+\paragraph{Semantic evidence.}
+Check the task-specific change, source/reference roles, preservation constraints, and deliverable obligations. Unchanged pixels may indicate successful preservation or a missing edit; file existence alone cannot establish correctness. Archived rubric weights and scores are retained.
+
+\paragraph{Workflow and handoff evidence.}
+Distinguish final output, intermediate progress, and a declared client dependency. A blocker disclosure establishes that the candidate is waiting; it does not establish whether waiting was justified. Likewise, an unresolved delivery does not establish a false completion claim. Independent professional acceptance remains unmeasured.
+
+\subsection{Implemented audit and its coverage}
+For every scored core condition, we collect the archived semantic check list and flag the condition if any check has the exact verdict \texttt{VIOLATED}. Each condition counts once, independent of duplicated or differently worded checks. Coverage is complete over 32 Astra and 28 Claude scored core conditions; we also report the 28-condition intersection. No flag is not an acceptance certificate.
+
+Direct inspection covers eight paired conditions: MFA-003 and CFR-002 from an initial audit round, plus PSF-001, RTO-001, ECO-001, BID-001, CFRY-003, and ECO-002. We inspect prompts, final responses, inventories, selected images and file internals. The six additional cases retain 23 original images and 76 source hashes. They are purposively selected to illustrate delivery transitions, evaluator ambiguity, and a positive retouching contrast; they do not estimate prevalence.
+
+Historical altered-artifact controls address a separate evaluator question: whether stale candidate-authored evidence can override missing or unchanged outputs. Their retained summaries are not newly reproduced trials. The ECO-001 applicability comparison is likewise a diagnostic requiring expert review. We do not change the frozen judgments to favor an interpretation.
+
+\paragraph{What the archived judge can observe.}
+The main core scorer receives the condition-specific request, scripted feedback, constraints, deliverable requirements, input images, selected output images across version folders, business-deliverable text, and evaluator-computed file facts. It does not ingest the complete tool trace or the turn-final responses; candidate verification reports are excluded as proof. Output image selection defaults to at most ten images for core and twelve for external conditions, with further size limits and text truncation. The external scorer also receives aggregate trajectory counts. Expected workflow instructions are not a record of every action actually taken. Our direct case audit additionally reads final responses to distinguish disclosed dependencies from completion claims. This richer audit view does not retroactively change the judge's input or scores.
+
+\paragraph{Separate rejudging pilot.}
+The archive also retains R1, a seven-pair historical Sol/Astra pilot using revised task-specific acceptance rules and two anonymized, reversed-order presentations per pair. Its fourteen Gemini calls are distinct from our eight Astra/Claude artifact inspections. It changes neither candidate artifacts nor historical aggregate scores, excludes Claude, and has no final expert adjudication. Section~\ref{sec:grader} reports its diagnostic implications; Appendix~\ref{app:r1} preserves its scope.
+
+\subsection{Endpoints and interpretation}
+Reported endpoints are runtime completion, latency, archived quality bounds, and semantic-check flags; RFQ coverage and success are auxiliary. Timeouts leave quality unscored. Unmeasured rubric dimensions induce bounds, not confidence intervals. Quality combines task-specific model judgments and is not a human aesthetic rating.
+
+An accepted-delivery rate requires independent acceptance labels. A false-completion-claim rate additionally requires an actual completion claim. Neither rate is available. Clarification usefulness should be evaluated separately while the corresponding deliverable remains unresolved. Appendix~\ref{app:protocol} supplies the metric formulas and inclusion rules.

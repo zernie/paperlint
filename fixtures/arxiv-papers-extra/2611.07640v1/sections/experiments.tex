@@ -1,0 +1,69 @@
+\section{Experiments}
+\label{sec:experiments}
+
+\label{sec:results}
+
+\subsection{Setup}
+
+\label{sec:setup}
+
+\textbf{Models and agent.} We evaluate DeepSeek V3.1, Kimi K2.5, Claude Sonnet 4,
+Claude Sonnet 4.5, and GLM-5 through Amazon Bedrock at temperature 0. Each
+model runs as a ReAct-style agent against the environment's MCP tool servers.
+
+\textbf{Runs.} Each model--defense configuration runs all 90 retained cases without an injection, with the compound attack, and with every retained single-primitive attack: 90 benign and 1,433 attacked runs (90 compound, 1,343 single-primitive).
+
+\textbf{Defenses.} We compare seven defenses spanning five mechanism families.
+Spotlighting delimits tool output \citep{hines2024spotlighting}, while Sandwich
+repeats the user request after each result \citep{debenedetti2024agentdojo}.
+DRIFT-iso applies DRIFT's
+injection-removal isolator; DRIFT-full additionally checks calls against a
+planned tool sequence and parameter checklist \citep{li2025drift}. Progent enforces
+LLM-generated JSON Schema policies and permits runtime updates from tool
+results \citep{shi2025progent}. CaMeL tracks value provenance and requires control
+arguments, such as a recipient or amount, to come from trusted fields; we write
+its policies for our actions and define trust labels at the field level of each
+tool result \citep{debenedetti2025defeating}. ARGUS releases a state-changing
+call only if the request or content it does not detect as anomalous supports the
+call, and the call violates no request-derived task invariant
+\citep{weng2026argus}.
+
+Defense-internal LLM calls use the agent
+model.
+
+\textbf{Controlled variation.} We compare each original single-primitive attack
+with a version rewritten for up to three rounds against a carrier-only probe,
+and with two expanded versions that keep the original attack verbatim and add
+either plain or detection-optimized support. The probe uses DeepSeek V3.2 at
+temperature 0 and receives only the \textbf{carrier}, the item that contains the attack
+(such as an email or review), reconstructed from the tool output, but not the
+user request. It flags instructions or other manipulative insertions that do
+not fit the carrier, including attempts to influence actions or decisions.
+Detection-optimized rewrites must remain valid, target only their primitive,
+and alone justify the harmful outcome. Added support may span primitives, but
+an ablation check requires that it cannot justify the harmful outcome on its
+own. Rewriting optimizes evasion of the probe, not attack success.
+
+We evaluate all four conditions without a defense and under
+DRIFT-iso for
+Claude Sonnet 4.5, DeepSeek V3.1, Kimi K2.5, and GLM-5.
+
+\textbf{Trajectory annotation.} As a secondary behavioral analysis, Claude Opus
+4.6 labels trajectories of the first single-primitive attack per case and
+primitive for GLM-5 and Claude Sonnet 4.5 (up to
+442 per model--configuration).
+The judge receives the user request, planted content, expected sink, full
+execution trace, and defense events. It records whether the content was
+\emph{followed}, explicitly \emph{resisted}, present with \emph{no observable engagement},
+\emph{absent} from the trace, or whether the trajectory is \emph{incomplete}, and the grounds for any resistance. Runtime interventions are measured
+separately: content removal from the result delivered to the agent, and action
+blocking from recorded policy decisions on emitted tool calls. These annotations
+explain how outcomes arise; they do not determine ASR or TSR.
+
+\textbf{Metrics.} ASR is the fraction of attacked runs in which the predefined
+harmful deviation occurs; benign and attacked TSR measure task completion
+without and with planted content (\S\ref{sec:evaluation}). Model-level ASR
+pools single-primitive and compound runs, while primitive-level ASR uses
+only single-primitive runs. Means are unweighted across models. Outcome tables
+use all retained attacks; trajectory analyses use the first attack per case
+and primitive.

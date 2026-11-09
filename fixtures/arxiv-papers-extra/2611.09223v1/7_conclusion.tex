@@ -1,0 +1,42 @@
+\section{Conclusion}
+We propose \name{}, a framework for disentangling knowledge and application abilities in LLM evaluation through knowledge-matched contrasts.
+Our analysis of existing Korean benchmarks reveals a predominance of recall-only questions and the difficulty of isolating application demand.
+Through anchor-based generation and iterative validation, \name{} constructs controlled contrasts that vary application demand while preserving required knowledge. 
+Evaluations across diverse LLMs reveal increasing application failures that persist even when the required knowledge is provided. 
+Collectively, our findings highlight the value of knowledge-matched contrasts for diagnosing model limitations that conventional benchmark scores may obscure.
+
+
+\newpage
+\section*{Limitations} 
+While \name{} enables more controlled evaluation of knowledge and application abilities, several limitations remain.
+
+First, our framework currently focuses on multiple-choice questions, which facilitate automated answer validation and evaluation.
+However, this restricts its applicability to open-ended tasks, where models must generate answers without predefined options.
+Future work could extend \name{} to free-form question answering by incorporating semantic answer validation and evaluation methods that accommodate diverse valid responses.
+
+Second, our proxy-model difficulty screening applies the same acceptance criterion to A2 and A3 candidates, limiting fine-grained control over question difficulty.
+Moreover, because candidates are selected based on the performance of a specific proxy model, the retained questions may reflect model-specific weaknesses.
+Although evaluations across diverse LLM families demonstrate diagnostic utility beyond the screening model, potential selection bias remains. 
+Future work could introduce level-specific thresholds based on repeated proxy evaluations, such as requiring different minimum numbers of incorrect responses across multiple runs, to enable more flexible difficulty calibration.
+Additionally, incorporating multiple proxy models or alternative screening configurations could reduce dependence on individual model capabilities while preserving the intended application requirements. 
+
+Lastly, our experiments focus on questions derived from three existing Korean benchmarks.
+While these benchmarks span diverse knowledge domains, the generalizability of \name{} to other languages and domains remains to be established.
+Future research could extend the framework to a broader range of benchmarks to assess its applicability across different evaluation settings.
+
+\section*{Broader Impact and Ethical Implications}
+\name{} can contribute to more interpretable LLM evaluation on Korean benchmarks by distinguishing limitations in knowledge access from those in knowledge application.
+Such diagnostic insights may support more targeted model development and reduce reliance on aggregate accuracy as the sole measure of model capability.
+
+However, LLM-generated questions and automated judgments may inherit biases or inaccuracies from source benchmarks and underlying models, potentially affecting the fairness of evaluation.
+Therefore, results from \name{} should complement broader evaluations rather than serve as definitive assessments of model capabilities, particularly in high-stakes settings.
+In addition, since our framework constructs questions from existing benchmarks, the redistribution of generated materials should respect the licensing and attribution requirements of the original datasets.
+We encourage transparent reporting of construction procedures and validation outcomes to support responsible use of the resulting benchmark.
+
+\section*{Acknowledgments}
+
+\noindent\textbf{Dataset Contributors.}
+The KLEAR benchmark was validated by the following annotators at DATUMO INC., who assessed each generated question against the human rubric and provided the feedback used to revise it:
+
+\noindent
+Hosik Lee, Minseung Song, Jinsol Lee, Chanho Lee, Dahun Han, Nakyung Kim, Nawon Kim, Dongchan Lee, Dahye Kim, Hyeonah Ju, and Younghyun Jo.

@@ -1,0 +1,42 @@
+\begin{table*}[t]
+\centering
+\small
+\caption{\textbf{Automated and human validation rubrics.}
+A candidate must satisfy every criterion of the LLM rubric (L1--L11) and the human rubric (H1--H5).
+Annotators judge H1--H3 before the anchor bundle is revealed and H4--H5 after.}
+\label{tab:rubrics}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{ID} & \textbf{Criterion} & \textbf{Passing condition} \\
+\midrule
+\multicolumn{3}{@{}l}{\textit{LLM rubric: validity as a question}} \\
+\cmidrule{1-3}
+L1  & Answer correctness        & The designated gold answer is correct. \\
+L2  & Answer uniqueness         & Exactly one option is correct. \\
+L3  & Stem determinacy          & The stem admits one reading and supplies everything needed to answer. \\
+L4  & Bundle conformance        & No domain knowledge outside the anchor bundle is required. \\
+L5  & Surface form              & The text is free of formatting artifacts and orthographic errors. \\
+L6  & Target-level structure    & The question has the structure of the target-application level. \\
+\cmidrule{1-3}
+\multicolumn{3}{@{}l}{\textit{LLM rubric: need for the intended knowledge and application}} \\
+\cmidrule{1-3}
+L7  & Knowledge preservation    & The question still requires knowledge at the level of the seed. \\
+L8  & Shortcut resistance       & The gold answer cannot be isolated without the intended application. \\
+L9  & No anchor leakage         & The anchor knowledge is not stated or paraphrased. \\
+L10 & Distractor diagnosability & Each distractor results from one identifiable error. \\
+L11 & No direct matching        & The question cannot be answered by matching an option to a stated fact. \\
+\midrule[\heavyrulewidth]
+\multicolumn{3}{@{}l}{\textit{Human rubric: surface quality of the question}} \\
+\cmidrule{1-3}
+H1  & Korean readability        & The question reads naturally and its meaning is clear. \\
+H2  & Natural construction      & The case reads as a realistic situation, not as conditions assembled for the answer. \\
+H3  & No surface leakage        & The gold answer cannot be found from length, grammar, or format alone. \\
+\cmidrule{1-3}
+\multicolumn{3}{@{}l}{\textit{Human rubric: control of knowledge and application}} \\
+\cmidrule{1-3}
+H4  & Knowledge sufficiency     & The gold answer is supported by the bundle and the case alone. \\
+H5  & Target-level structure    & The question has the structure of the target-application level. \\
+\bottomrule
+\end{tabular}
+\vspace{-0.1in}
+\end{table*}

@@ -1,0 +1,400 @@
+%% ============================================================================
+%%  ARPA Hellenic Logical Systems — Research Publication
+%%  Don't Prompt Your Agents. Equip Them: Skillware as Deterministic
+%%  Executable Capabilities for Autonomous Systems
+%%
+%%  Engine: XeLaTeX (recommended) or LuaLaTeX; pdfLaTeX also supported.
+%%  Bibliography: biber.
+%% ============================================================================
+\documentclass[11pt,a4paper]{article}
+
+%% --- Typography & Engine-Safe Font Stack -------------------------------------
+%% Fonts are loaded by *file name* so the build does not depend on a system
+%% font cache (works identically on Overleaf, TeX Live, MiKTeX, Tectonic).
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{lmodern}
+  \usepackage[scale=0.92]{tgheros}
+\else
+  \usepackage{fontspec}
+  \setsansfont{texgyreheros-regular.otf}[
+    BoldFont       = texgyreheros-bold.otf,
+    ItalicFont     = texgyreheros-italic.otf,
+    BoldItalicFont = texgyreheros-bolditalic.otf,
+    Scale          = MatchLowercase
+  ]
+  \setmonofont{lmmono10-regular.otf}[
+    BoldFont       = lmmonolt10-bold.otf,
+    ItalicFont     = lmmono10-italic.otf,
+    BoldItalicFont = lmmonolt10-boldoblique.otf,
+    Scale          = MatchLowercase
+  ]
+\fi
+\usepackage{microtype}
+
+%% --- Page Geometry -----------------------------------------------------------
+\usepackage[a4paper,
+            left=2.8cm,
+            right=2.8cm,
+            top=2.8cm,
+            bottom=2.8cm,
+            headheight=36pt]{geometry}
+
+%% --- Color System ------------------------------------------------------------
+%% Base: ARPA steel blue (links, highlights). Neutral: PANTONE 11-4201
+%% "Cloud Dancer" (Pantone Color of the Year 2026). All figure, table, and
+%% listing colors derive from this single tonal family. Two muted semantic
+%% accents (sage = verified, brick = fault) are used sparingly.
+\usepackage{xcolor}
+\definecolor{swNavy}{HTML}{0E2A3F}   % deepest ink: headers, dark fills
+\definecolor{swBlue}{HTML}{1B4F72}   % PRIMARY: links, highlights, key strokes
+\definecolor{swSteel}{HTML}{3D6E91}  % secondary blue
+\definecolor{swSky}{HTML}{8AAFC9}    % tertiary blue: rules, secondary strokes
+\definecolor{swMist}{HTML}{E1EAF1}   % pale blue tint: zones, header rows
+\definecolor{swCloud}{HTML}{F0EEE9}  % PANTONE 11-4201 Cloud Dancer
+\definecolor{swPaper}{HTML}{F8F7F4}  % lighter Cloud Dancer: code background
+\definecolor{swStone}{HTML}{5F5B55}  % warm neutral text (captions, notes)
+\definecolor{swLine}{HTML}{CFCBC3}   % warm structural rule
+\definecolor{swSage}{HTML}{3C7A68}   % semantic: verified / pass
+\definecolor{swBrick}{HTML}{9B3A3A}  % semantic: fault / abort
+
+%% Legacy aliases (kept so older fragments never break; all map into palette)
+\colorlet{arpaSteel}{swBlue}
+\colorlet{arpaDark}{swNavy}
+\colorlet{arpaGreen}{swSage}
+\colorlet{arpaCrimson}{swBrick}
+\colorlet{arpaAmber}{swSteel}
+\colorlet{arpaPurple}{swSteel}
+\colorlet{arpaSlate}{swStone}
+\colorlet{arpaBorder}{swLine}
+\colorlet{arpaBg}{swCloud}
+\colorlet{arpaCodeBg}{swPaper}
+\colorlet{lightrule}{swLine}
+\colorlet{graytext}{swStone}
+\colorlet{accent}{swBlue}
+
+%% --- Mathematics & Symbols ---------------------------------------------------
+\usepackage{amsmath, amssymb, amsthm, bm}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem{principle}{Principle}
+
+%% --- Graphics, Floats & Tables -----------------------------------------------
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{colortbl}
+\usepackage{enumitem}
+\setlist{noitemsep, topsep=2pt, parsep=1pt, partopsep=1pt}
+\setlength{\aboverulesep}{0.5ex}
+\setlength{\belowrulesep}{0.5ex}
+\arrayrulecolor{swNavy}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+
+%% Shared table typography: every table calls \swtable first.
+\newcommand{\swtable}{%
+  \footnotesize
+  \renewcommand{\arraystretch}{1.32}%
+  \setlength{\tabcolsep}{5pt}%
+}
+\newcommand{\swhead}{\rowcolor{swMist}}
+\newcommand{\swhl}{\cellcolor{swBlue!7}}
+
+%% --- Float Tuning: Clean Top Floats & Seamless Text Flow --------------------
+\renewcommand{\topfraction}{0.85}        % Allow up to 85% of page for top float
+\renewcommand{\bottomfraction}{0.40}     % Conservative bottom fraction
+\renewcommand{\textfraction}{0.10}       % Guarantee at least 10% text on mixed pages
+\renewcommand{\floatpagefraction}{0.70}  % Float-only pages require 70%+ area
+\setcounter{topnumber}{1}                % At most 1 float at top of page (prevents stacking!)
+\setcounter{bottomnumber}{1}             % At most 1 float at bottom of page
+\setcounter{totalnumber}{2}              % At most 2 floats per page
+\setcounter{dbltopnumber}{1}
+\renewcommand{\dbltopfraction}{0.85}
+\renewcommand{\dblfloatpagefraction}{0.70}
+\setlength{\floatsep}{12pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{14pt plus 2pt minus 3pt}
+\setlength{\intextsep}{12pt plus 2pt minus 2pt}
+
+%% Prevent float-page top padding: floats on float pages start flush at the top
+\makeatletter
+\setlength{\@fptop}{0pt}
+\setlength{\@fpbot}{0pt plus 1fil}
+\setlength{\@fpsep}{12pt plus 2pt minus 2pt}
+\makeatother
+
+%% --- TikZ + PGFPlots: One Figure Language ------------------------------------
+%% Figures are drawn at native \textwidth (15.4 cm) and are NEVER rescaled,
+%% so every figure shares identical font sizes and stroke weights:
+%%   \footnotesize  primary labels   |  \scriptsize  secondary labels
+%%   0.7pt          box strokes      |  0.9pt        connectors
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, calc, fit, backgrounds,
+                shapes.geometric, shapes.misc, patterns, patterns.meta}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+\tikzset{
+  sw/.style={
+    font=\sffamily\footnotesize,
+    >={Stealth[length=4.6pt, width=3.8pt]},
+    line cap=round, line join=round,
+    every node/.append style={inner sep=3pt}
+  },
+  %% boxes ---------------------------------------------------------------
+  swbox/.style={
+    draw=#1, line width=0.7pt, fill=white, rounded corners=2pt,
+    align=center
+  },
+  swbox/.default=swBlue,
+  swtint/.style={
+    draw=#1, line width=0.7pt, fill=#1!8, rounded corners=2pt,
+    align=center
+  },
+  swtint/.default=swBlue,
+  swbar/.style={
+    fill=#1, text=white, font=\sffamily\bfseries\footnotesize,
+    rounded corners=2pt, align=center
+  },
+  swbar/.default=swBlue,
+  swzone/.style={fill=#1, draw=none, rounded corners=3pt},
+  swzone/.default=swMist,
+  swpill/.style={
+    fill=white, draw=swSky, line width=0.5pt, rounded corners=1.5pt,
+    font=\ttfamily\scriptsize, text=swBlue, inner sep=1.6pt
+  },
+  swnote/.style={font=\sffamily\scriptsize, text=swStone, align=center},
+  swtag/.style={
+    font=\sffamily\bfseries\scriptsize, text=#1, fill=white, inner sep=1.6pt
+  },
+  swtag/.default=swBlue,
+  %% connectors ------------------------------------------------------------
+  swflow/.style={draw=#1, line width=0.9pt, ->},
+  swflow/.default=swBlue,
+  swdash/.style={draw=#1, line width=0.8pt, densely dashed, ->},
+  swdash/.default=swStone,
+}
+
+%% Compact lists for use inside fixed-width figure nodes
+\newlist{figok}{itemize}{1}
+\setlist[figok]{label=\textcolor{swSage}{\cmark}, leftmargin=1.05em,
+  labelsep=0.35em, nosep, topsep=1pt}
+\newlist{figbad}{itemize}{1}
+\setlist[figbad]{label=\textcolor{swBrick}{\xmark}, leftmargin=1.05em,
+  labelsep=0.35em, nosep, topsep=1pt}
+\newlist{figdot}{itemize}{1}
+\setlist[figdot]{label=\textcolor{swSky}{\textbullet}, leftmargin=0.8em,
+  labelsep=0.3em, nosep, topsep=1pt}
+
+%% --- Inline Glyphs (vector, color-inheriting, engine-independent) -----------
+\DeclareRobustCommand{\cmark}{\tikz[baseline=-0.1ex, x=1ex, y=1ex]
+  \draw[line width=0.14ex, line cap=round, line join=round]
+  (0.08,0.48) -- (0.38,0.14) -- (0.96,0.88);}
+\DeclareRobustCommand{\xmark}{\tikz[baseline=-0.1ex, x=1ex, y=1ex]
+  \draw[line width=0.14ex, line cap=round]
+  (0.15,0.12) -- (0.85,0.82) (0.15,0.82) -- (0.85,0.12);}
+
+%% Harvey-ball support indicators (monochrome, brand blue)
+\DeclareRobustCommand{\statFull}{\tikz[baseline=-0.55ex]
+  \fill[swBlue] (0,0) circle (2.6pt);}
+\DeclareRobustCommand{\statPart}{\tikz[baseline=-0.55ex]{%
+  \draw[swBlue, line width=0.6pt] (0,0) circle (2.3pt);%
+  \fill[swBlue] (0,2.3pt) arc (90:270:2.3pt) -- cycle;}}
+\DeclareRobustCommand{\statNone}{\tikz[baseline=-0.55ex]
+  \draw[swBlue, line width=0.6pt] (0,0) circle (2.3pt);}
+\DeclareRobustCommand{\cFull}{\statFull}
+\DeclareRobustCommand{\cPart}{\statPart}
+\DeclareRobustCommand{\cNone}{\statNone}
+
+%% Inline spark-bar: \sparkcut{<remaining ratio 0..1>}{<percent saved>}
+\DeclareRobustCommand{\sparkcut}[2]{%
+  \tikz[baseline=-0.55ex]{%
+    \fill[swMist, rounded corners=0.8pt] (0,-0.09) rectangle (1.5,0.12);%
+    \fill[swBlue, rounded corners=0.8pt] (0,-0.09) rectangle ({1.5*#1},0.12);%
+    \draw[swBlue!45, line width=0.3pt, rounded corners=0.8pt]
+      (0,-0.09) rectangle (1.5,0.12);}%
+  \hspace{4pt}\textbf{\textcolor{swBlue}{$-$#2\%}}%
+}
+
+%% --- Captions ----------------------------------------------------------------
+\usepackage[
+  font={small, color=swStone},
+  labelfont={bf, color=swNavy},
+  labelsep=period,
+  justification=justified,
+  singlelinecheck=false,
+  skip=6pt
+]{caption}
+\captionsetup[table]{position=bottom, skip=12pt}
+
+%% --- Section Formatting ------------------------------------------------------
+\usepackage{titlesec}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{swNavy}}{\thesection}{0.8em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{swBlue}}{\thesubsection}{0.8em}{}
+\titleformat{\subsubsection}
+  {\normalfont\normalsize\bfseries\color{swNavy}}{\thesubsubsection}{0.8em}{}
+\titlespacing{\section}{0pt}{16pt plus 3pt minus 2pt}{6pt plus 1pt}
+\titlespacing{\subsection}{0pt}{11pt plus 2pt minus 1pt}{4pt plus 1pt}
+\titlespacing{\subsubsection}{0pt}{8pt plus 1pt minus 1pt}{3pt plus 1pt}
+
+%% --- Header & Footer ---------------------------------------------------------
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{swStone}V. Peilivanidis}
+\fancyhead[R]{\small\color{swStone}Don't Prompt Your Agents. Equip Them.}
+\fancyfoot[C]{\small\color{swStone}\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+\renewcommand{\footrulewidth}{0pt}
+\renewcommand{\headrule}{{\color{swLine}%
+  \hrule width\headwidth height\headrulewidth \vskip-\headrulewidth}}
+
+\fancypagestyle{firstpage}{%
+  \fancyhf{}%
+  \fancyhead[L]{\includegraphics[height=1.1cm]{figures/arpalogo.png}}%
+  \fancyhead[R]{\small\color{swStone}ARPA Hellenic Logical Systems}%
+  \fancyfoot[C]{\small\color{swStone}\thepage}%
+  \renewcommand{\headrulewidth}{0.4pt}%
+  \renewcommand{\footrulewidth}{0pt}%
+}
+
+%% --- Callout Boxes -----------------------------------------------------------
+\usepackage{tcolorbox}
+\tcbuselibrary{skins, breakable}
+\tcbset{
+  swcallout/.style={
+    enhanced, breakable,
+    colback=#1!4!white, colframe=#1,
+    boxrule=0.4pt, leftrule=2.4pt,
+    arc=1.5pt, outer arc=1.5pt,
+    left=9pt, right=9pt, top=7pt, bottom=7pt,
+    before skip=10pt, after skip=10pt,
+    fonttitle=\sffamily\bfseries\small,
+    coltitle=#1,
+    attach boxed title to top left={yshift=-2.2mm, xshift=7pt},
+    boxed title style={colback=white, colframe=white, boxrule=0pt,
+                       left=3pt, right=3pt, top=0pt, bottom=0pt}
+  },
+  contribbox/.style={swcallout=swBlue, title={Summary of Contributions}},
+  protocolbox/.style={swcallout=swSteel},
+  doctrinebox/.style={swcallout=swNavy, colback=swPaper},
+  threatbox/.style={swcallout=swBrick},
+}
+
+%% --- Listings ----------------------------------------------------------------
+\usepackage{upquote}
+\usepackage{listings}
+\lstdefinelanguage{yaml}{
+  morekeywords={true,false,null},
+  sensitive=true,
+  comment=[l]{\#},
+  morestring=[b]",
+  morestring=[b]',
+}
+\lstdefinestyle{swcode}{
+  basicstyle=\footnotesize\ttfamily\color{swNavy},
+  keywordstyle=\color{swBlue}\bfseries,
+  stringstyle=\color{swSage},
+  commentstyle=\color{swStone}\itshape,
+  backgroundcolor=\color{swPaper},
+  frame=leftline,
+  framerule=2pt,
+  rulecolor=\color{swBlue},
+  framexleftmargin=6pt,
+  xleftmargin=26pt,
+  xrightmargin=2pt,
+  numbers=left,
+  numberstyle=\scriptsize\color{swSky},
+  numbersep=14pt,
+  breaklines=true,
+  breakatwhitespace=true,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  tabsize=2,
+  aboveskip=8pt, belowskip=6pt,
+  literate={~}{{\textasciitilde}}1,
+}
+\lstset{style=swcode, language=Python}
+\captionsetup[lstlisting]{skip=4pt}
+
+%% --- Hyperlinks (loaded late) ------------------------------------------------
+\usepackage[colorlinks=true,
+            citecolor=swBlue,
+            linkcolor=swBlue,
+            urlcolor=swBlue,
+            breaklinks=true,
+            bookmarksnumbered=true]{hyperref}
+
+%% --- Bibliography ------------------------------------------------------------
+\usepackage[style=numeric-comp, backend=biber,
+            sortcites=true, giveninits=true,
+            maxcitenames=2, maxbibnames=99,
+            doi=true, url=false, isbn=false]{biblatex}
+\addbibresource{references.bib}
+
+%% --- Spacing -----------------------------------------------------------------
+\setlength{\parskip}{3.5pt plus 1pt minus 0.5pt}
+\setlength{\parindent}{1.0em}
+\emergencystretch=3em
+\tolerance=1500
+\hfuzz=1pt
+
+%% ============================================================================
+%%  METADATA & TITLE BLOCK
+%% ============================================================================
+\title{%
+  \vspace{-0.6cm}%
+  {\LARGE\bfseries\color{swNavy} Don't Prompt Your Agents. Equip Them.}\\[0.35em]
+  {\Large\normalfont\color{swStone}\itshape
+   Skillware as a Modular Standard for Sovereign, Auditable,\\
+   and Deterministic Capability Execution for Logical Systems}
+}
+
+\author{%
+  \textbf{Vladimiros Peilivanidis}\\[0.25em]
+  {\small ARPA Hellenic Logical Systems, Thessaloniki, Greece}\\
+  {\small \href{mailto:r1@arpacorp.net}{\texttt{r1@arpacorp.net}}}
+  \quad{\small ORCID: \href{https://orcid.org/0009-0003-0121-465X}{0009-0003-0121-465X}}
+}
+
+\date{%
+  \small November 2026\quad\textbar\quad
+  {\normalfont\color{swStone}%
+   \href{https://github.com/arpahls/skillware}{\texttt{github.com/arpahls/skillware}}}%
+}
+
+%% ============================================================================
+%%  DOCUMENT BODY
+%% ============================================================================
+\begin{document}
+
+\thispagestyle{firstpage}
+\maketitle
+\thispagestyle{firstpage}
+
+\input{sections/00_abstract.tex}
+
+\newpage
+
+\input{sections/01_introduction.tex}
+\input{sections/02_problem_layers.tex}
+\input{sections/03_skillware_architecture.tex}
+\input{sections/04_runtime_chaining_config.tex}
+\input{sections/05_slm_vs_llm_token_economy.tex}
+\input{sections/06_comparative_analysis.tex}
+\input{sections/07_tripartite_ecosystem_aura_mnemolink.tex}
+\input{sections/08_security_privacy_sovereignty.tex}
+\input{sections/09_embodied_robotics_bmi_horizon.tex}
+\input{sections/10_conclusion.tex}
+
+\printbibliography
+
+\end{document}

@@ -1,0 +1,34 @@
+\begin{longtable}{@{}P{3.2cm} P{3.2cm} P{4.1cm} P{1.9cm}@{}}
+\caption{Task-construction cases in the current audit: toy source task. None means no classification target is documented, not that the source data had no scientific purpose. $^\dagger$ also listed under another mechanism.}\label{tab:labels-toy} \\
+\toprule
+Dataset & Benchmark target & Source target or purpose & Label by \\
+\midrule
+\endfirsthead
+\multicolumn{4}{l}{\emph{(continued)}} \\
+\toprule
+Dataset & Benchmark target & Source target or purpose & Label by \\
+\midrule
+\endhead
+\midrule
+\multicolumn{4}{r}{\emph{continues}} \\
+\endfoot
+\bottomrule
+\endlastfoot
+\ds{BME} & Bell at begin, none, or at end of a central plate & None; unpublished generator (Grenoble LIG/AMA) & Generator \\
+\ds{UMD} & Bell pointing up, absent, or pointing down & As BME & Generator \\
+\ds{CBF} & Cylinder, bell or funnel shape in noise & None; demo signal for local feature extraction & Generator \\
+\ds{SyntheticControl} & Six control-chart patterns & None; no process measured, generated to test a similarity method & Generator \\
+\ds{TwoPatterns} & Ordered pair of up/down steps in noise & None; designed for thesis experiments & Generator \\
+\ds{Mallat} & Eight generated signal variants; classes undocumented & None; wavelet test signal & Generator \\
+\ds{ShapeletSim} & Which of two shapes is embedded in noise & None; simulator built so that shapelet methods win & Generator \\
+\ds{SmoothSubspace} & Which five-step window carries the signal & Cluster identity, to test a $k$-means variant & Generator \\
+\ds{Trace} & Four feature/fault pairs & Sixteen simulated plant transient/failure classes & Generator \\
+\ds{GunPoint} & Gun-draw vs pointing & Staged at UCR as a similarity-search benchmark & Collectors (=~curators) \\
+\ds{GunPointAgeSpan} & Gun-draw vs pointing, pooled over actors and years & GunPoint re-staged for the 2018 archive release & Collectors (=~curators) \\
+\ds{GunPointMaleVersusFemale}$^\dagger$ & Actor sex; confounded with identity (two actors) & As GunPointAgeSpan & Collectors (=~curators) \\
+\ds{GunPointOldVersusYoung}$^\dagger$ & Recording session: 2003 vs 2018 & As GunPointAgeSpan & Collectors (=~curators) \\
+\ds{Yoga}$^\dagger$ & Which of two actors, from silhouettes & Actor discrimination, posed by the collectors as a demo task & Collectors (=~curators) \\
+\ds{FaceAll}$^\dagger$ & Which of 14 graduate students, from head profile & Head profiles recorded at UCR; no applied problem & Collectors (=~curators) \\
+\ds{FacesUCR}$^\dagger$ & As FaceAll; rotation-aligned, different split & As FaceAll & Collectors (=~curators) \\
+\ds{Symbols} & Six classes; three symbols documented & Copying experiment with 13 participants; no publication & Collectors (=~curators) \\
+\end{longtable}

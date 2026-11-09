@@ -1,0 +1,52 @@
+\section{Discussion}
+\label{sec:discussion}
+%- Verdict, In distribution: The practical takeaway here is that for monitoring a judge, reading its internal states is more reliable than asking it or reading its confidence.
+% Verdict shift: They are consequently more useful for prioritizing problems for verification than for selecting among candidates of the same problem.
+%triage instead of selection since they help prioritize which problems to verify rather than select among a problem's candidates.
+
+\paragraph{Verdict and program are different prediction targets}
+Our results show that the usefulness of execution-free correctness prediction depends on both the prediction target and the type of distribution shift. In particular, predicting whether a model's verdict is correct is different from predicting whether the program itself is correct, even though both targets use signals from the same judging pass.
+The two targets respond differently to shift. Causal localization helps only on the verdict, and between benchmarks only program correctness transfers. An execution-free correctness predictor for an LLM-based code-generation system should therefore be chosen and evaluated for the decision it supports. To decide which candidates to test in a new programming language, output confidence is a strong baseline: it needs no labels and loses almost nothing under shift,
+while trained predictors keep only part of their lead. To decide whether to
+trust the model's verdict, confidence is weak, and no verdict predictor we tested
+carries over to a new benchmark. % without data from it.
+
+
+% \paragraph{What a practitioner can take away}
+% To decide whether an LLM's verdict on code can be trusted in a new
+% programming language, a probe on a causally localized subspace was the most
+% robust predictor we found, and once the subspace is learned it costs no more
+% than any probe. The gain is model-dependent, however, and DAS's own quality
+% measure does not reveal it: on gpt-oss, well-converged subspaces were no
+% better than random ones. A practitioner therefore has to validate the subspace
+% on held-out data from the target setting rather than trust IIA. Between
+% benchmarks, no verdict predictor transferred reliably. The judge's errors
+% change character: Qwen3-Coder accepts 58\% of the LCB candidates, of which
+% 55\% pass, but 72\% of the BCB candidates, of which only 40\% pass
+% (Table~\ref{tab:datasets}), so a predictor of its reliability learned on one
+% benchmark meets a different error profile on the other. A few labeled
+% examples from the target setting, which help probes in other domains
+% considerably~\cite{McKenzie2025HighStakes}, are likely needed there.
+% For program correctness, output confidence is a strong baseline that needs no
+% labels and loses almost nothing under language shift; trained probes pay off
+% in distribution, and much less after a shift.
+
+\paragraph{Triage rather than selection}
+Much of what the methods predict is which problems
+the model solves: every method is weak at ranking candidates within a problem, and a probe that has seen only the problem matches one that has seen the candidate (Table \ref{tab:genprobe}). Pooled metrics,  such as AUROC~\cite{bouchard2026functional, shi2026codemorethantext} or accuracy and F1~\cite{bui2025openia, Vu2026Autoprobe}, thus mix problem difficulty with the ability to tell a correct candidate from an incorrect one. 
+For triage across problems this is useful, while for choosing among
+the candidates of one problem it is not. Selection metrics~\cite{ribeiro2026repe} and pairwise
+accuracy within a task~\cite{ribeiro2026robustness} measure the second ability
+directly; we recommend reporting such a within-problem measure alongside the
+pooled one. 
+
+\paragraph{Causal localization for code}
+Huang et al.~\cite{Huang2025Internal} report that causally localized
+predictors are more robust under shift on natural-language tasks. For code,
+this holds on one of our two models and for the target the method was
+designed for, the model's own verdict; on the program correctness target it gives no
+advantage. Where it helps, the learned subspace carries the gain: once the subspace is
+learned, a probe on it is as robust as simulating interventions and costs no
+more than any probe. IIA does not reliably identify subspaces that are useful for correctness prediction. On gpt-oss, well-converged subspaces were no better than random ones, so the
+subspace has to be validated on held-out data.
+%, not the intervention: reading the subspace with a probe is as robust as simulating interventions, at a fraction of the cost. %\orange{Why the subspace helps on Qwen3-Coder and not on gpt-oss we can only partly explain. On gpt-oss, the useful subspaces are those at layers where DAS has not converged; one possibility is that gpt-oss, a reasoning model judging without reasoning, has fully formed its decision at these layers, so that the subspace holds the decision but little about whether it is right.}

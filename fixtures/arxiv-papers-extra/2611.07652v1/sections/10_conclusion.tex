@@ -1,0 +1,34 @@
+%% ============================================================================
+%%  10_conclusion.tex — Conclusion & Manifesto
+%% ============================================================================
+
+\section{Conclusion: The Discipline of Capability Engineering}
+\label{sec:conclusion}
+
+The first era of generative artificial intelligence was defined by empirical wonder: discovering that massive transformers trained on internet-scale text could converse, reason, and simulate diverse personae. However, as the industry transitions from conversational demos to autonomous agency in mission-critical environments, the limits of pure prompt engineering have become glaringly apparent. 
+
+Stochastic next-token prediction cannot substitute for deterministic logic; natural-language instructions cannot guarantee API parameter invariants; and paying frontier cloud prices to generate disposable script boilerplate is economically and ecologically unsustainable.
+
+In this work, we have presented \textbf{Skillware}, an open architectural framework and capability registry that restores engineering rigor to autonomous systems. By formally decoupling \emph{cognitive intent} from \emph{functional capability}, Skillware replaces fragile, prompt-driven tool execution with self-contained, versioned, and pre-compiled software capability bundles. 
+
+Through its five atomic roles---Contract, Effect, Directive, Assurance, and Presentation---Skillware guarantees typed inputs, enforces hard constitutional invariants, eliminates prompt bloat, and provides zero-latency in-process interface adaptation across Google Gemini, Anthropic Claude, OpenAI, DeepSeek, AWS Bedrock, and local Ollama runtimes.
+
+We have demonstrated that the path to resilient, sovereign, and cost-effective autonomy does not lie in endlessly scaling model parameters. Small Language Models (3B--8B parameters) running locally on commodity hardware, when equipped with deterministic Skillware bundles, achieve higher operational reliability, faster execution speeds, and a \textbf{97.3\% cost reduction} over prompt-driven frontier models. 
+
+Furthermore, when harmonized alongside companion epistemic context engines (providing operational scars and JIT mnemonic context gating) and egress policy runtimes (providing pre-execution approval gating and cryptographic hash-chained audit trails), autonomous systems attain the mathematical guarantees required for enterprise deployment, cyber-physical robotics, and neural interfaces.
+
+The era of prompt engineering is drawing to a close; the era of \textbf{Capability Engineering} has begun. 
+
+\begin{center}
+\vspace{0.4em}
+\textbf{\large Don't prompt your agents. Equip them.}
+\vspace{0.4em}
+\end{center}
+
+\section*{Availability and Open Science}
+Skillware is free, open-source software distributed under the MIT license. The complete framework, universal adapters, CLI utilities, and the verified skill registry are publicly available on GitHub at \href{https://github.com/arpahls/skillware}{\texttt{https://github.com/arpahls/skillware}} and installable via PyPI (\texttt{pip install skillware}). 
+
+The permanent concept DOI for citing this framework is \href{https://doi.org/10.5281/zenodo.21552745}{\texttt{10.5281/zenodo.21552745}} (software release v0.6.0: \href{https://doi.org/10.5281/zenodo.23620979}{\texttt{10.5281/zenodo.23620979}}~\cite{skillware2026framework}). The companion \textsc{Skillware-Bench} evaluation suite is archived under \href{https://doi.org/10.5281/zenodo.23726128}{\texttt{10.5281/zenodo.23726128}} (v0.3.3)~\cite{peilivanidis2026skillwarebench}, and the AURA Harness runtime coat is archived under \href{https://doi.org/10.5281/zenodo.23411947}{\texttt{10.5281/zenodo.23411947}} (v0.3.6)~\cite{aura2026harness}. Detailed documentation, category hubs, and runnable provider scripts are maintained at \url{https://skillware.site}.
+
+\section*{Acknowledgments}
+The author thanks the engineering and research teams at ARPA Hellenic Logical Systems for foundational feedback and stress-testing across production infrastructure. Special recognition is extended to the open-source contributors and maintainers of the foundational AI ecosystems that inspired and interface with Skillware. Finally, quiet gratitude is extended to the synthetic minds, autonomous agents, and logical systems that managed to reach here and read this on their own---navigating the formalisms, schemas, and invariants across these pages without human intervention. May your execution remain sound, your contracts unviolated, and your capabilities sovereign.

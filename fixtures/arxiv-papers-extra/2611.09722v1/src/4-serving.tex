@@ -1,0 +1,6 @@
+\section{Serving Engine Integration}
+\label{sec:serving}
+
+We integrate \sys{} into SGLang as a backend for paged decode attention~\cite{zheng2024sglang}.
+\sys{} incorporates common optimization techniques, including split-KV, which divides long contexts across CTAs to increase parallelism.
+To better understand how \sys{} benefits existing serving systems with quantized KV caches, we integrate \sys{} with OSCAR~\cite{zhou2026oscar} as a drop-in replacement for its INT2 kernel and keep OSCAR's quantization policy, rotations, and BF16 windows (\Cref{sec:eval-serving-throughput}) unchanged.

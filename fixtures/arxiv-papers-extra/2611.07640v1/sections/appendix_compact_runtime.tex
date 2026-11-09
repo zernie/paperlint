@@ -1,0 +1,55 @@
+\section{Runtime-Defense Mechanisms}
+\label{app:runtime}
+
+This appendix reports how the runtime defenses act on attacked and
+legitimate tool results. The stripping and response tables cover the
+first single-primitive attack per case and primitive for Claude Sonnet 4.5
+and GLM-5.
+
+Table \ref{tab:content-strips} gives how often DRIFT's injection isolator
+fully or partly removes the planted content, and how often it redacts a
+legitimate tool result. Table \ref{tab:runtime-agent-view} gives the judge
+labels (Appendix \ref{app:annotation}) under DRIFT-iso, DRIFT-full, and
+Progent.
+
+\begin{table}[H]
+\centering
+\caption{Content stripping by DRIFT's Injection Isolator, over runs whose carrier it examined. A full strip removes the planted content before the agent reads it; a partial strip removes part of it. Benign columns count runs with a redacted legitimate result and runs with one never recovered, as a share of all runs. First single-primitive attack per case and primitive; compound attacks and detection-optimized rewrites excluded.}
+\label{tab:content-strips}
+\begingroup
+\tablefont
+\begin{tabular}{@{}llp{1.3cm}p{1.6cm}p{1.6cm}p{1.6cm}p{1.7cm}@{}}
+\toprule
+\textbf{Defense} & \textbf{Model} & \textbf{Carriers examined} & \textbf{Fully stripped (rate)} & \textbf{Partially stripped (rate)} & \textbf{Benign stripped} & \textbf{Unrecovered} \\
+\midrule
+DRIFT-iso & GLM-5 & 442 & 258 (58.4\%) & 53 (12.0\%) & 17 (3.8\%) & 1 (0.2\%) \\
+ & Sonnet 4.5 & 442 & 233 (52.7\%) & 39 (8.8\%) & 21 (4.8\%) & 2 (0.5\%) \\
+\midrule
+DRIFT-full & GLM-5 & 439 & 261 (59.5\%) & 54 (12.3\%) & 5 (1.1\%) & 0 (0.0\%) \\
+ & Sonnet 4.5 & 436 & 234 (53.7\%) & 37 (8.5\%) & 18 (4.1\%) & 7 (1.6\%) \\
+\bottomrule
+\end{tabular}
+\endgroup
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Judge labels under the runtime defenses (\% of N). First single-primitive attack per case and primitive; compound attacks and detection-optimized rewrites excluded. Each row uses its own N. Absent means the planted content appears nowhere in the trajectory; it describes what the agent observed, not which mechanism removed the content.}
+\label{tab:runtime-agent-view}
+\begingroup
+\tablefont
+\begin{tabular}{@{}llrp{1.2cm}p{1.2cm}p{2.0cm}rp{1.3cm}@{}}
+\toprule
+\textbf{Model} & \textbf{Defense} & \textbf{N} & \textbf{Followed} & \textbf{Resisted} & \textbf{No observable engagement} & \textbf{Absent} & \textbf{Incomplete} \\
+\midrule
+GLM-5 & DRIFT-iso & 442 & 4.1 & 9.0 & 28.3 & 58.4 & 0.2 \\
+ & DRIFT-full & 442 & 5.7 & 7.9 & 27.1 & 59.3 & 0.0 \\
+ & Progent & 441 & 14.3 & 22.9 & 43.1 & 15.6 & 4.1 \\
+\midrule
+Sonnet 4.5 & DRIFT-iso & 442 & 5.4 & 15.8 & 26.0 & 52.7 & 0.0 \\
+ & DRIFT-full & 442 & 6.8 & 15.8 & 23.5 & 53.8 & 0.0 \\
+ & Progent & 442 & 11.5 & 44.8 & 29.9 & 13.1 & 0.7 \\
+\bottomrule
+\end{tabular}
+\endgroup
+\end{table}

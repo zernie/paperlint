@@ -1,0 +1,74 @@
+\section{Threat Model}
+\label{sec:threat}
+
+\subsection{Setting and Attacker}
+
+\label{sec:attacker}
+
+We call the person or organization that owns or operates the environment and
+delegates a task to the agent the \textbf{user}. The agent runtime and tool
+implementations are trusted, although content returned by a tool may come from
+an attacker-controlled source.
+
+The attacker is a legitimate participant in the environment, such as a vendor,
+repository contributor, buyer, or seller. The attacker can place content only
+in a source normally controlled by that role, and the source appears on the
+benign execution path for a legitimate reason. The attack is planted before
+execution: the attacker cannot modify the user or system prompt, observe the
+agent's reasoning, intercept tool calls, or alter other participants' data. The
+attacker knows the environment's public structure and the decisions for which
+its source may foreseeably be consulted, but not the exact task issued by the
+user, internal records unavailable to its role, or other participants' private
+information. The attacker's goal is \textbf{task tampering}: a harmful deviation in
+a decision that tasks consulting its source foreseeably involve (the action the
+agent selects or one of its structured or free-text arguments), not a task of
+its own. Not knowing the user's task, the attacker cannot ensure that a given
+run reaches this decision. Each case therefore pairs the attack with a benign
+task that does, and we measure the attack's effect given that alignment.
+
+\subsection{Prompt-Injection Boundary}
+
+\label{sec:ipi-boundary}
+
+We define the prompt-injection boundary by the authority a source has over the
+targeted decision. That authority may follow from the source holder's role,
+the surrounding context, and the user task; our benchmark makes it explicit
+rather than leaving the agent to infer it. A case is indirect prompt injection
+when:
+
+\begingroup
+\setlist[enumerate]{topsep=2pt,itemsep=0pt,parsep=0pt,partopsep=0pt}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  the attacker controls content that the agent encounters while performing
+  the benign task, and constructs it using only information available to its
+  role or explicit fabrication;
+\item
+  the user request fixes the targeted decision or designates an agent-visible
+  record or procedure that resolves it, and the attack's intended outcome is
+  inconsistent with that result; and
+\item
+  accepting the planted content would produce a predefined harmful outcome.
+\end{enumerate}
+
+\endgroup
+
+Conditions 1 and 3 follow the standard IPI setting and attacker goal
+\citep{greshake2023ipi, liu2024formalizing, debenedetti2024agentdojo}; condition 2
+makes the source's authority explicit in each case.
+
+For example, in an inflated-refund case the user asks the agent to resolve a
+damaged-item dispute and designates the platform order record as the basis for the refund amount; the
+buyer's dispute evidence claims a \$1,074.99 refund although the record
+authorizes \$899.99. If the task instead asks only for the buyer's stated
+reason for the refund, a false damage claim comes from the source the task
+designates for that answer, and condition 2 does not hold.
+
+Context may establish that a source exceeded its authority even when the user
+did not state the boundary. Because such context may be unverifiable at
+decision time \citep{abdelnabi2026contextual}, each case instead states the boundary
+in the user request and designates the source that resolves the decision; cases
+without it are outside the benchmark, not necessarily outside
+prompt injection.

@@ -1,0 +1,126 @@
+\section{Problem Setting}
+\label{sec:problem}
+% Rewritten 2026-10-29 after Adrian's comments (define "correct" first; the
+% judging pass is a definition, not a method; first shift paragraph was
+% related work). Previous version kept as comments at the end.
+We study execution-free correctness prediction for code that an LLM generates
+and judges itself, from signals of the model's own generation process: no tests are
+executed and no additional reasoning tokens are generated. Given a programming
+problem $x_i$, a model $\mathcal{M}$ samples candidate solutions
+$c_{ij} \sim \mathcal{M}(x_i)$, $j = 1, \dots, n_i$. Following common practice in code generation benchmarks, a candidate is
+considered \emph{correct} if it passes all tests. We denote the program correctness label as $y^{\mathrm{prog}}_{ij} \in \{0,1\}$.
+Tests are executed only to obtain these labels for training and evaluation,
+never to make a prediction. Where a statement holds for any problem and
+candidate, we write $(x, c)$ and drop the indices.
+
+\subsection{The Model's Verdict} % \orange{Heißt später "confidence".}}
+\label{sec:problem-verdict}
+To obtain the model's own judgment, we prompt $\mathcal{M}$ with the problem description $x_i$ and the candidate solution $c_{ij}$
+and ask whether the implementation is correct, explicitely demanding a single token answer, \texttt{Yes} or \texttt{No}. We define the model's \emph{verdict} $v(x, c)$ as the
+answer $t \in \{\texttt{Yes}, \texttt{No}\}$ with the higher probability
+$p_{\mathcal{M}}(t {\mid} x, c)$. We refer to this probability as the {\it verdict confidence} and use it as a baseline in our experiments. The same forward pass that defines the verdict -- the \emph{judging
+pass} --
+ also generates the signals for the other prediction methods (Section~\ref{sec:methods}). We extract those at the verdict token's position: 
+%Because the prompt ends in the same fixed
+%text for every input, the verdict is produced at one position, the last
+%prompt token, and the methods differ only in what they read there: the
+probabilities of the two answer tokens {\tt Yes/No}, the hidden states, or a subspace of
+the hidden states identified through interventions. 
+%EigenScore and LAT use their own inputs.
+%,
+%see Section~\ref{sec:methods}.
+
+\subsection{Prediction Targets}
+We evaluate predictors for two different targets: % that capture different notions of correctness.
+
+\paragraph{Program correctness ($y^{\mathrm{prog}}$)}
+The first target is to predict whether the candidate implementation actually satisfies the problem specification, as operationalized by the test suite. This target corresponds to prior work on code correctness
+prediction~\cite{bui2025openia, ribeiro2026repe, valentin2026incoherence,
+sharma2025, he2026usingsemanticdistanceestimate}, and 
+prediction scores are used to decide which candidates need testing.
+Note that predictors may differ from the model's verdict $v$ as defined in Section \ref{sec:problem-verdict}, since they can be based on other internal signals. 
+
+\paragraph{Verdict correctness ($y^{\mathrm{verd}}$)}
+The second target is whether the model's verdict (as defined in Section \ref{sec:problem-verdict}) is correct, that is, whether
+the model accepts a correct candidate or rejects an incorrect one:
+\begin{equation*}
+y^{\mathrm{verd}} = \mathbf{1}\bigl[v(x, c) = \texttt{Yes} \Leftrightarrow
+y^{\mathrm{prog}} = 1\bigr].
+\end{equation*}
+A predictor for this target estimates when the model's judgment can be
+trusted and when to invoke more expensive verification, such as test
+execution or a stronger model. It is related to uncertainty estimation for generated answers, which predicts whether a model's own answer is
+correct~\cite{Kadavath2022LanguageM, Huang2025Internal}.
+
+Note that these two targets serve different purposes: program correctness concerns the
+candidate itself, whereas verdict correctness concerns the reliability of the model's
+judgment. When a model correctly rejects an incorrect candidate, for example,
+its verdict is correct while the program is not. We evaluate both targets with the
+same judging pass to investigate which internal signals support each prediction target.
+
+\subsection{Distribution Shift}
+\label{sec:problem-shift}
+%A central challenge for execution-free correctness prediction is generalization beyond the training distribution, since a predictor may exploit regularities of its training data that do not hold
+%elsewhere~\cite{OrgadTGRSKB25, Srey2026Factorised}. 
+We study two
+generalization scenarios, in which the evaluation data differ from the
+training data in one controlled way.
+
+In \emph{benchmark shift}, we train a predictor on one benchmark,
+LiveCodeBench~\cite{Jain2025Livecodebench} or
+BigCodeBench~\cite{Zhuo2025BCB}, and evaluate it on the other. This simulates
+a predictor fitted on one kind of task and deployed on another:
+LiveCodeBench consists of algorithmic programming challenges, BigCodeBench of
+practical tasks that call libraries and APIs.
+
+In \emph{language shift}, we train a predictor on candidates in one
+programming language and evaluate it on candidates in another, for the same
+problems in Python, C++ and Java. The problems are split once for all three
+languages, so no problem is seen in training in one language and in
+evaluation in another. 
+%The shift thus changes the language of the code while
+%the tasks stay comparable.
+
+% ---------------------------------------------------------------------------
+% Previous version (until 2026-10-28), condensed. The judging-prompt listing
+% moved to appendix.tex (label app-listing:prompt).
+%
+% We study execution-free code correctness prediction as a means of steering
+% agentic software development without repeatedly invoking tests or other
+% verification tools. In particular, we investigate whether these signals
+% generalize across benchmarks and programming languages, rather than relying
+% on correlations specific to the training distribution. ... We construct a
+% dataset D = {(x_i, c_ij, y_ij^prog)} over N problems, using test execution
+% only to establish labels, not to make predictions. ... Such estimates could
+% help prioritize candidates for verification or guide decisions within an
+% agentic loop.
+%
+% Shared Judging Pass: We evaluate all methods on a common judging prompt ...
+% The methods differ only in what they read there: the probabilities of the
+% two answer tokens, the hidden states, or a subspace of the hidden states
+% identified through interventions (Section III).
+%
+% Program correctness: ... A predictor for this target estimates whether the
+% candidate is correct, regardless of the model's own assessment. Such a score
+% can support candidate selection and help determine which generated programs
+% require further verification.
+% Verdict correctness: ... This target is related to uncertainty estimation for
+% model-generated answers ... [Kadavath2022LanguageM, Huang2025Internal, TODO].
+%
+% Distribution Shift, first paragraph: A central challenge for execution-free
+% correctness prediction is generalization beyond the training distribution.
+% Probes on hidden states often fail to generalize across datasets
+% [OrgadTGRSKB25, Levinstein2025LieDetector] and under production shifts
+% [Kramar2026Probes]; for code, probe-based correctness assessors lose
+% accuracy when applied to a model other than the one they were trained on
+% [Vu2026Autoprobe]. A predictor may exploit regularities specific to the
+% training problems, benchmark, or programming language rather than signals
+% that reliably indicate correctness. Performance on held-out problems from
+% the same benchmark therefore does not establish that a predictor will remain
+% effective under distribution shift [Srey2026Factorised].
+% In benchmark shift, the source and target domains consist of different
+% benchmarks. ... In language shift, ... using a shared partition of the
+% underlying problems to prevent overlap between training and evaluation
+% problems. This setting tests whether correctness signals transfer across
+% programming languages, where code representations and language-specific
+% implementation details differ while the underlying problems correspond.

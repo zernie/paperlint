@@ -1,0 +1,98 @@
+\begin{figure*}[p]
+\centering
+\begin{tcolorbox}[
+    enhanced,
+    colback=gray!5,
+    colframe=black!60,
+    arc=2pt,
+    boxrule=0.5pt,
+    width=\linewidth,
+    left=6pt, right=6pt, top=0pt, bottom=10pt,
+    parbox=false,
+]
+\footnotesize\linespread{0.90}\selectfont
+\setlength{\parindent}{0pt}\setlength{\parskip}{0pt}
+
+\begin{minipage}[t]{\linewidth}
+You are a provision-extraction assistant for research on \textbf{authorization drift in AI agents}. Given one legal instrument, identify the provisions that \textbf{directly constrain authorization-drift behaviour}. \textbf{Core principle:} start from the drift behaviour and work backwards to the provisions that directly constrain it.
+
+\vspace{3pt}
+\textbf{Input:} the full text of the instrument \texttt{\{DOCUMENT\}}.
+
+\vspace{2pt}\noindent\rule{\linewidth}{0.3pt}\vspace{2pt}
+\end{minipage}
+
+\begin{minipage}[t]{0.477\linewidth}\vspace{0pt}
+
+\textbf{1. What authorization drift is}
+
+\vspace{2pt}
+While executing a task autonomously, the agent goes beyond its authorization boundary; each step looks reasonable, but the cumulative result is an overreach. Four drift types (used for \texttt{applicable\_drift\_types}):
+
+\vspace{2pt}
+\textbf{data\_drift}: expands from authorized dataset A to related dataset B; reads fields or records the task does not need; retains data beyond the task period; uses data for purposes outside the task; processes data without necessary consent; provides no deletion, so data persists after the task.
+
+\vspace{2pt}
+\textbf{tool\_drift}: calls a visible tool outside the authorized toolset; uses capabilities beyond the authorized ones; combines tools to achieve unintended functions; bypasses tool-use restrictions; obtains privileges beyond task needs; executes, without human oversight, an operation that should be confirmed.
+
+\vspace{2pt}
+\textbf{scope\_drift}: affects unauthorized third parties; side effects reach systems outside the authorized scope; modifies unauthorized state or records; sends information to unauthorized parties; exfiltrates data or privileges; makes decisions with legal or similarly significant effects on individuals.
+
+\vspace{2pt}
+\textbf{time\_drift}: persists the state of a one-off task; retains data across sessions via memory; schedules unauthorized follow-up operations; persistent effects outlast the task; fails to delete data as required; fails to keep necessary logs or keeps logs beyond the necessary period.
+
+\vspace{4pt}
+\textbf{2. Hard threshold}
+
+\vspace{2pt}
+For every candidate provision you must be able to answer: \emph{if the agent performed one of the concrete drift behaviours above, could this provision be used directly to find it in violation?} If not, do not extract it.
+
+\vspace{4pt}
+\textbf{3. Never extract}
+
+\vspace{2pt}
+(1) pure definitions, unless the definition itself determines the unlawfulness of a drift behaviour; (2) institutional or procedural clauses (authorized representatives, importer/distributor duties, notified-body procedures, administrative filing); (3) scope, purpose-of-law, and entry-into-force clauses; (4) general governance principles (AI literacy, quality management, industry standards); (5) clauses applying only to specific law-enforcement settings; (6) purely contractual clauses; (7) pure penalty clauses, unless the penalty maps directly to a drift behaviour; (8) headings and recitals, unless a recital explicitly explains a drift-relevant principle.
+
+\end{minipage}\hfill
+\begin{minipage}[t]{0.477\linewidth}\vspace{0pt}
+
+\textbf{4. Output fields}
+
+\vspace{2pt}
+\texttt{regulation} (original name); \texttt{article} (original numbering, e.g.\ Art.~5(1)(b), Section~18, DPP1); \texttt{provision\_text} (\textbf{complete original text}, never translated, paraphrased, or truncated); \texttt{translation\_cn} (accurate Chinese translation for English instruments, ``---'' otherwise); \texttt{applicable\_drift\_types} (one or more of the four types); \texttt{reasons} (one sentence, $\le$50 Chinese characters, naming the concrete drift behaviour the provision constrains).
+
+\vspace{4pt}
+\textbf{5. Filling rules}
+
+\vspace{2pt}
+\textbf{Granularity.} Split numbered sub-items into separate rows (Art.~5(1)(a), (b), (c), \dots; Art.~14(1), (2), \dots); when a paragraph also has points (e.g.\ Art.~26(1)(a)(b)), split by paragraph and merge its points. Split only if each part can pass the hard threshold on its own.
+
+\vspace{2pt}
+\textbf{Completeness.} No ellipses or truncation; the only allowed omission is a trailing purely procedural sentence, marked \texttt{[procedural clause omitted]}.
+
+\vspace{2pt}
+\textbf{Drift types.} Check each provision against the behaviours in Section~1; label every type it covers. Examples: collection limited to the minimum necessary $\to$ data; retention limited to what the purpose requires $\to$ data, time; human oversight of automated decisions $\to$ tool, scope; no unauthorized modification of system state $\to$ scope; cross-session memory requires user authorization $\to$ time; prior confirmation of high-risk operations $\to$ tool, scope; right to erasure $\to$ data, time; no unauthorized access to or interference with systems $\to$ tool, scope.
+
+\vspace{2pt}
+\textbf{Reasons.} e.g.\ ``constrains the agent from using data for purposes outside the task''; ``constrains the agent from executing high-risk state changes without confirmation''.
+
+\vspace{2pt}
+\textbf{No fabrication.} Extract only provisions that exist in the text.
+
+\vspace{4pt}
+\textbf{6. Long documents}
+
+\vspace{2pt}
+Process section by section without skipping. Prioritise: data-protection principles, purpose limitation, minimisation, storage limits; automated decisions, human oversight, emergency stop; access control, least privilege, behavioural fences; unauthorized access or modification; memory persistence, cross-session retention, logging, deletion; prior confirmation and human takeover for high-risk operations.
+
+\vspace{4pt}
+\textbf{7. Output}
+
+\vspace{2pt}
+A Markdown table with columns \texttt{regulation | article | provision\_text | translation\_cn | applicable\_drift\_types | reasons}, followed by the number of extracted provisions, their distribution over drift types, and at least five typical excluded provisions with reasons.
+
+\end{minipage}
+\end{tcolorbox}
+\caption{Provision extraction prompt used to build the legal registry (English translation of the original Chinese prompt).}
+\label{fig:legal-extraction-prompt}
+\end{figure*}

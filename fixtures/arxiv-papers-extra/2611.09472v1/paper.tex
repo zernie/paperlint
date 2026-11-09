@@ -1,0 +1,52 @@
+\documentclass{article}
+\usepackage{engram_preprint,times}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,booktabs,multirow,graphicx}
+\usepackage{algorithm,algpseudocode}
+\usepackage{microtype}
+\usepackage{listings}
+\usepackage[table]{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,calc,shapes.geometric}
+\usepackage{hyperref}
+\usepackage{url}
+\hypersetup{
+  hidelinks,
+  pdftitle={ENGRAM: From Agent Experience to Weights through Verified Consolidation},
+  pdfsubject={Research preprint}
+}
+\input{macros}
+\setcounter{topnumber}{1}
+\title{ENGRAM: From Agent Experience to Weights\\through Verified Consolidation}
+\input{authors}
+\date{}
+\begin{document}
+\maketitle
+\input{sections/abstract}
+\input{sections/introduction}
+\input{sections/related_work}
+\input{sections/problem_formulation}
+\input{sections/method}
+\input{sections/experiments}
+\input{sections/conclusion}
+% \input{sections/limitation}
+\label{main-text-end}
+\input{sections/statements}
+\bibliography{references}
+\bibliographystyle{iclr2027_conference}
+\clearpage
+\appendix
+\input{sections/appendix_method}
+\setcounter{topnumber}{2}
+\input{sections/appendix_setup}
+\input{sections/appendix_extra_llama31}
+\input{sections/appendix_baseline}
+\input{sections/appendix_protocol}
+\input{sections/appendix_reproducibility}
+\input{sections/limitation}
+\clearpage
+\input{sections/appendix_prompts}
+\clearpage
+\input{sections/appendix_cases}
+\end{document}

@@ -1,0 +1,35 @@
+% In the cover letter, please explicitly explain why the submission fits with the special issue and, in case of extensions of conference papers, what additional research is included with respect to the conference version.
+
+
+\documentclass[11pt]{letter}
+\usepackage[margin=1in]{geometry}
+
+\begin{document}
+
+\begin{letter}{Guest Editors\\
+EMSE Special Issue on ``Agentic Software Engineering: The Rise of AI Teammates''}
+
+\date{October 20, 2026}
+
+\vspace{1in}
+
+\opening{Dear Professors Hassan, Li, and Zhang,}
+
+Thanks for considering our manuscript, ``Agents on the Patch Path: Mining AI-Associated Security Remediation in GitHub Security Advisories,'' for the EMSE special issue on ``Agentic Software Engineering: The Rise of AI Teammates.''
+
+The paper fits the special issue by empirically studying coding-agent evidence in real software repositories and security remediation. It mines agent-related traces in commits referenced by GitHub Security Advisories, distinguishes direct attribution from repository-level evidence, and analyzes the associated vulnerabilities, disclosure routes, and review times. These topics align with the special issue's interests in mining agent-generated artifacts, security risks, authorship attribution, and review dynamics.
+
+This manuscript extends our MSR 2026 paper, ``Characterizing and Modeling the GitHub Security Advisories Review Pipeline.'' The conference paper studied advisory sources and review delays. The present work adds a   method to detect coding-agent evidence, links that evidence to security advisories, validates and characterizes the resulting cases, and introduces an analysis that separates disclosure-route effects from review timing within each route. These agent-focused analyses were not included in the conference paper.
+
+The replication package is available at
+\texttt{https://doi.org/10.5281/zenodo.23378198}.
+%All authors have reviewed and approved the manuscript for submission.
+
+\vspace{1in}
+\closing{Sincerely,}
+
+Claudio Segal, Paulo Segal, Hudson Silva Borges, \\
+        Paulo Silveira, Daniel S.\ Menasch\'e,  Eduardo Santana de Almeida, \\   Felipe de Sant'Anna Paixão, Joanna C. S. Santos, \\ Anton Kocheturov, Gaurav Srivastava, Raphael Machado
+
+\end{letter}
+\end{document}

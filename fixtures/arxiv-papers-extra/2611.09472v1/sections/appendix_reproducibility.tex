@@ -1,0 +1,17 @@
+\section{Implementation and Reproducibility}
+\label{app:repro}
+
+Table~\ref{tab:qwen-hyperparameters} and~\ref{tab:llama-hyperparameters} listed hyperparameters used for experiments using Qwen3-8b and llama3.1-8b-instruct.
+
+\input{tables/qwen_hyper}
+\input{tables/llama_hyper}
+
+\paragraph{Serving conditions.}
+A verified skill uses its approved adapter with episodic retrieval disabled. Other skills use the base model with retained ETG. Task instructions, current observations, recent interaction history, and shared environment rules remain part of the input in both conditions. Previously approved versions remain available when a later candidate fails verification.
+
+\paragraph{Routing implementation.}
+At inference time, the controller assigns the current request or interaction state to a skill using only deployment-visible information and the same skill taxonomy used during ETG construction. The router does not observe gold answers, episode success, future environment states, verification outcomes, or held-out annotations. Given the resulting skill key, the controller loads the most recent approved adapter version for that skill; if no approved version exists, it executes the Base+ETG route.
+
+\paragraph{Controller implementation.}
+The consolidator selects skills, constructs training examples and reserved probes, continues the adapter, loads the candidate into the serving engine, and evaluates release eligibility. The environment prompt builder is shared by training and evaluation. Training or loading failure preserves the source records. Skills with no valid training examples or no eligible probe remain external. The sequential gate filters probe states to the corresponding deployment route. Retrieval storage and replay storage are recorded separately.
+

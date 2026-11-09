@@ -1,0 +1,53 @@
+% Required in the main preamble:
+% \usepackage{amsmath,tikz}
+% \usetikzlibrary{arrows.meta,decorations.pathreplacing}
+% Include inside a figure with \input{proof-outline}
+\begin{tikzpicture}[x=1cm,y=1cm,font=\small,
+  segment/.style={draw=black!70,line width=.5pt},
+  boundary/.style={densely dashed,thick},
+  transition/.style={-{Stealth[length=2mm]},black!65},
+  brace/.style={decorate,decoration={brace,mirror,amplitude=3pt}},
+  note/.style={font=\footnotesize,align=left}]
+\node[anchor=west] at (-.95,1) {$m=|X|,\qquad N=m+f(m)$};
+\node[anchor=east,font=\footnotesize] at (12,1) {Dashed line: input / generated tokens};
+% Repeated rows. Padding has the same position and fill in rows 2--4.
+\foreach \y/\lab in {0/{T:\ L},-2.15/{T':\ L'},-4.3/{S:\ L'},-6.45/{R:\ L}} {
+  \node[anchor=east] at (-.2,\y+.25) {$\lab$};
+  \draw[segment,fill=white] (0,\y) rectangle (2,\y+.5);
+  \node at (1,\y+.25) {$X$};
+}
+% T: original computation.
+\draw[segment,fill=blue!9] (2,0) rectangle (7,.5);
+\node at (4.5,.25) {computation of $T$};
+\draw[boundary] (2,-.12)--(2,.72);
+\draw[brace] (0,-.12)--(2,-.12) node[midway,below=4pt,font=\footnotesize] {input length: $m$};
+\node[note,anchor=west] at (7.25,.25) {$O(r(m)^{1+2\varepsilon})$ CoT steps};
+% T' and S: padding is supplied.
+\foreach \y in {-2.15,-4.3,-6.45} {
+  \draw[segment,fill=black!10] (2,\y) rectangle (4,\y+.5);
+  \node at (3,\y+.25) {$*^{f(m)}$};
+  \draw[segment,fill=blue!9] (4,\y) rectangle (7,\y+.5);
+}
+\node at (5.5,-1.9) {simulate $T$};
+\node at (5.5,-4.05) {computation of $S$};
+\node at (5.5,-6.2) {simulate $S$};
+\foreach \y in {-2.15,-4.3} {
+  \draw[boundary] (4,\y-.12)--(4,\y+.72);
+  \draw[brace] (0,\y-.12)--(4,\y-.12) node[midway,below=4pt,font=\footnotesize] {input length: $N=m+f(m)$};
+}
+\node[note,anchor=west] at (7.25,-1.9) {Same absolute CoT budget\\$O(r(m)^{1+2\varepsilon})$\\$\quad{}=O(r(N)^{1+\varepsilon})$};
+\node[note,anchor=west] at (7.25,-4.05) {$O(r(N))$ CoT steps};
+% R: padding is generated, so the boundary moves left.
+\draw[boundary] (2,-6.57)--(2,-5.73);
+\draw[brace] (0,-6.57)--(2,-6.57) node[midway,below=4pt,font=\footnotesize] {input length: $m$};
+\draw[brace] (2,-6.57)--(4,-6.57) node[midway,below=4pt,font=\footnotesize] {generate padding};
+\draw[brace] (4,-6.57)--(7,-6.57) node[midway,below=4pt,font=\footnotesize] {run $S$};
+\node[note,anchor=west] at (7.25,-6.2) {$O(f(m)+r(N))$ CoT steps\\$\quad{}=O(r(m)^{1+\varepsilon})$};
+% Each transition is placed in its own gap.
+\draw[transition] (.25,-.75)--(.25,-1.45);
+\node[note,anchor=west] at (.5,-1.08) {Simulate $T$ on padded input (\S3.1)};
+\draw[transition,dashed] (.25,-2.9)--(.25,-3.6);
+\node[note,anchor=west] at (.5,-3.23) {Apply the assumption $\mathrm{CoT}(r(n)^{1+\varepsilon})=\mathrm{CoT}(r(n))$};
+\draw[transition] (.25,-5.05)--(.25,-5.75);
+\node[note,anchor=west] at (.5,-5.38) {Generate padding using CoT; simulate $S$ (\S3.2)};
+\end{tikzpicture}

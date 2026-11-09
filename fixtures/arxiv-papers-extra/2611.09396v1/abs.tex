@@ -1,0 +1,8 @@
+\begin{abstract}
+Target assignment and pathfinding (TAPF) is an appealing extension of classical multi-agent pathfinding (MAPF): each agent has a set of targets, and the planner must both assign a target to each agent and plan collision-free paths for them.
+A trivial approach is to compute an assignment that minimizes the total single-agent shortest-path distance over agent--target pairs, and then solve the resulting MAPF instance.
+However, this approach falls short because the shortest-path distance remains a proxy that ignores interference among agents.
+Assigning targets based on the costs agents actually pay, which depend on how every other agent is assigned and routed, would yield a better final outcome.
+To this end, we propose an iterative TAPF method that improves target assignments by calibrating travel cost estimates from fast, suboptimal MAPF feedback.
+Experiments show that our method produces solutions close to optimal on small instances and outperforms existing planners in solution quality on larger ones.
+\end{abstract}

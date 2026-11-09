@@ -1,0 +1,226 @@
+\pdfoutput=1
+\documentclass{article}
+
+\PassOptionsToPackage{numbers,compress}{natbib}
+\usepackage[dblblindworkshop,final]{neurips_2026}
+\workshoptitle{Foundation Models for Temporal Systems From Forecasting to World Modeling}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{xspace}
+\usepackage{seqsplit}
+\usepackage{wrapfig}
+\usepackage{tikz}
+\usepackage{todonotes}[inline]
+\usepackage{adjustbox}
+\usepackage[inline]{enumitem}
+\usepackage{graphicx}
+\newcommand{\pig}{\raisebox{-0.4ex}{\includegraphics[height=1.2em]{figures/pig_emoji.pdf}}}
+\newcommand{\devil}{\raisebox{-0.4ex}{\includegraphics[height=1.2em]{figures/devil_emoji.pdf}}}
+\newcommand{\lip}{\raisebox{-0.4ex}{\includegraphics[height=1.2em]{figures/lip_emoji.pdf}}}
+\newcommand{\eggplant}{\raisebox{-0.4ex}{\includegraphics[height=1.2em]{figures/eggplant_emoji.pdf}}}
+\newcommand{\ds}[1]{\emph{\hspace{0pt}#1}}
+\newcommand\comment[1]\null
+
+\definecolor{plotblue}{HTML}{3464A8}
+\definecolor{plotgrey}{HTML}{818181}
+
+\graphicspath{{figures/}}
+\hypersetup{colorlinks=true, linkcolor=black, citecolor=blue!55!black, urlcolor=blue!55!black}
+
+\input{numbers}           %
+\input{tables/symbols}    %
+
+\newcommand{\browserurl}{\url{https://automl.github.io/ucr-provenance-audit/}}
+
+\title{Fifty-Two Shades of Pig \pig: What the UCR Archive Really Asks Classifiers to Do}
+
+\newcommand{\equal}{\textsuperscript{\rm *}}
+\newcommand{\equaltext}{\equal\ Equal contribution}
+
+\newcommand{\ufr}{\textsuperscript{\rm 1}}
+\newcommand{\ufrc}{\textsuperscript{\rm 1,}}
+\newcommand{\ufrtext}{\ufr\ University of Freiburg}
+
+\newcommand{\prior}{\textsuperscript{\rm 2}}
+\newcommand{\priorc}{\textsuperscript{\rm 2,}}
+\newcommand{\priortext}{\prior\ Prior Labs}
+
+\newcommand{\ellis}{\textsuperscript{\rm 3}}
+\newcommand{\ellisc}{\textsuperscript{\rm 3,}}
+\newcommand{\ellistext}{\ellis\ ELLIS Institute Tübingen}
+
+
+\author{
+Omar Swelam \ufrc\equal \quad Jaris Küken \ufrc\equal \quad Shi Bin Hoo \ufrc\equal\\ \textbf{Frank Hutter} \priorc\ellisc\ufr \quad \textbf{Lennart Purucker}\priorc\ufr \\ 
+\ufrtext, \\ \priortext, \ellistext \\
+\equaltext \\
+\texttt{\{swelamo,kuekenj,hoos\}@cs.uni-freiburg.de}
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+The pigs were bleeding. That was the point of the experiment: could airway pressure reveal hemorrhage before it became critical? In the UCR Time Series Classification Archive, the de facto benchmark for Time Series Classification (TSC), the same recordings ask a different question: \emph{which of 52 pigs produced this trace?} The dataset \emph{PigAirwayPressure} is not an outlier. Although the archive is the standard benchmark, whether its tasks resemble the problems TSC is meant to solve has rarely been examined. We find that several datasets are repurposed from their original task, built from toy setups, or have flawed test splits. We further question how representative the archive's ordered non-temporal sequences (e.g. spectra, shape outlines) are of real TSC, and the potential downsides from the decomposition of multivariate problems. Our findings call for more careful interpretation of archive-wide scores and greater attention to deployment-relevant evaluation. The audit is at \url{https://github.com/automl/ucr-provenance-audit}.
+
+\end{abstract}
+
+\section{Introduction}
+A benchmark does more than rank algorithms: it defines what a research community counts as progress. Meaningful progress requires the benchmarks tasks to resemble the problems encountered in practice~\citep{raji2021everything, koch2021reduced}. TSC is applied in diverse domains such as clinical monitoring~\citep{clifford2017af}, human activity recognition~\citep{anguita2013har}, and satellite remote sensing~\citep{pelletier2019tempcnn}, and a realistic benchmark should reflect this breadth. Diversity alone, however, does not make a benchmark representative: each task must also be posed as it would be in practice, with labels and evaluation protocols that correspond to a real-world problem.
+
+The UCR archive has become the de facto standard benchmark for univariate TSC. %
+Successive generations of distance-based, ensemble, convolutional, deep and representation-learning methods are compared on it \citep{dempster2020rocket,middlehurst2021hc2,yue2022ts2vec,middlehurst2024redux}, as are recent pretrained models~\citep{goswami2024moment,feofanov2025mantis,kueken2026timee}.Yet many of the archives datasets are knowingly not reflective of real world applications~\citep{dau2019ucr}. %
+It admits several ordered non-temporal sequences, such as image outlines or spectra, and is biased towards image-derived datasets and datasets shaped by research interest~\citep{dau2019ucr}. While reasonable for a diverse and reproducible testbed, these choices are at odds with the archive's common use as a benchmark of realistic TSC.
+
+
+We revisit the UCR archive from a provenance perspective, tracing each of its 128 datasets to its source to examine how each task was derived from the original data.
+\footnote{The full audit, with evidence for every verdict, is browsable at \browserurl.}
+We identify two recurring design choices that weaken the link between archive performance and real-world TSC: \textbf{artificial task construction} and \textbf{train/test leakage}. We further raise open questions about \textbf{pre-segmented and aligned inputs}, \textbf{ordered but non-temporal sequences}, and \textbf{multivariate recordings decomposed into several univariate datasets}.
+We argue that the community-wide adoption of UCR in its current form as the benchmark for univariate TSC, together with the absence of more realistic alternatives, calls for action towards evaluation settings that reflect real-world TSC problems.
+
+
+\section{Background and Related Work}
+\textbf{Time Series Classification Archives.}
+The UCR archive~\citep{dau2019ucr} and its multivariate counterpart, the UEA archive~\citep{bagnall2018uea}, are the standard benchmarks for TSC. Together they comprise 158 tasks, 128 univariate and 30 multivariate, drawn from image outlines, spectroscopy and simulated processes alongside ECG, EEG, motion capture and industrial sensor recordings. Recent collections follow the same pattern at larger scale: MONSTER~\citep{dempster2025monster} adds substantially larger datasets, and Multiverse~\citep{middlehurst2026multiverse} consolidates the UEA archive, MONSTER and several domain-specific collections into 133 multivariate problems. The bake-off series~\citep{bagnall2016bakeoff,middlehurst2024redux} imposed rigor on how comparisons over these archives are run, but likewise takes the task collection as given. Prior critiques target properties of the archive's tasks: \citet{hu2016streaming} document the simplifications of the pre-segmented setting, \citet{dhariyal2023backtobasics} show that tabular classifiers are competitive on many tasks, and \citet{zhang2025revisit} show that temporal order is often irrelevant and the methods can emphasize on a fixed specific position rather than patterns. Each identifies a symptom without asking why the archive contains such tasks in the first place.
+
+
+\textbf{Benchmark Construction.}
+Recent work on AI evaluation distinguishes a benchmark as an instrument for separating algorithms from a benchmark as a proxy for downstream applicability, and warns against reading aggregate scores on convenience-driven collections as general capability~\citep{raji2021everything}. Neighboring fields have responded with explicit curation: TabArena~\citep{erickson2025tabarena} admits only datasets that originate from real prediction problems and excludes derived or artificial tasks; RelBench~\citep{robinson2024relbench} defines tasks directly on relational databases with temporally valid splits. TSC has no equivalent. Existing critiques diagnose properties of particular datasets; but we are not aware of any analysis for the origin of the tasks these datasets were collected for nor whether they represent realistic TSC applications. Our provenance analysis is a first step towards such an examination.
+
+\section{A Provenance Audit of UCR: Two Ways Its Tasks Fail as Benchmarks} \label{sec:audit}
+
+\begin{figure}[!t]
+  \centering
+    \begin{adjustbox}{width=1.0\columnwidth}
+    \input{figures/composition-figure}
+  \end{adjustbox}
+  \vspace{-16pt}
+  \caption{We show the archive datasets distribution over the different realism criterion. Our audit identifies only $38/128$ UCR datasets as real temporal tasks; about a quarter of these are prone to split leakage. We indicate the proportion of datasets failing our leakage criteria (white boxes) and with no leakage found (black boxes) within each category, although most splits cannot be checked (53 of the 76 real-task datasets are \emph{Unclear}).}
+  \label{fig:composition}
+  \vspace{-9pt}
+\end{figure}
+
+
+We assess all 128 UCR datasets through three stages: 1) the source study that produced the data, 2) the construction of the labelled task from the data, and 3) the construction of the train/test split. Appendix~\ref{app:protocol} details the protocol.
+
+Two questions decide a dataset's standing as a benchmark task and organize this section. A dataset fails on task construction (Section~\ref{sec:construction}) if the source study posed no real task or the archive constructed the label itself. It fails on leakage (Section~\ref{sec:leakage}) if the test set shares series or subjects with the training set. We further flag 65 datasets where the subjects or session identity are underspecified, so the leakage counts below are lower bounds. Whether the series index is physical time is recorded but not judged, and we return to it in Section~\ref{sec:open-questions}. Figure~\ref{fig:composition} summarizes the outcome of our realism provenance.
+
+\subsection{Artificial Task Construction}\label{sec:construction}
+For 52 of the 128 UCR datasets, the classification target is not a real-world prediction problem.
+Some labels differ from the source question or were constructed post hoc where no classification task was posed. Other source tasks were built only to exercise algorithms, with no application behind the label.
+
+While such constructed labels are best understood as pretext tasks in the sense of self-supervised learning, where pretext accuracy is a known-unreliable proxy for downstream performance~\citep{Kolesnikov_2019_CVPR}, UCR reports the pretext task as the benchmark result itself.
+We identify four mechanisms by which such labels are constructed:
+
+\textbf{Metadata as label} (13): the archive derives classes from a recording attribute.
+\emph{ItalyPowerDemand} labels demand curves by season (October--March vs.\ April--September); \emph{ECGFiveDays} labels one subject's ECG segments by which of two recording dates they come from.
+
+\textbf{Instance identity as label} (14): the archive uses the recording's source as the class, regardless of what the source study asked.
+In \emph{CinCECGTorso}, the 2007 challenge concerned infarct location and extent~\citep{physionet2007challenge}, but the archive labels each ECG by which of four subjects produced it;
+the three \emph{Pig*} datasets turn a bleeding-detection study~\citep{TSCPigs} into a 52-way subject-identification problem.
+
+\textbf{Task replacement} (13): the archive replaces the source's label with a different task, or defines classes by its own rule where the source posed none.
+\emph{AllGestureWiimoteX/Y/Z} were collected for user identification but are benchmarked as gesture recognition \citep{allgesturewiimote};
+\emph{HouseTwenty} takes a smart-meter recording of one home~\citep{murray2017refit} and asks whether a window is the whole-house signal or the sum of two appliances, a question the study never posed.
+
+\textbf{Toy source tasks} (17): the data were simulated or staged by method developers, and the classes were chosen to demonstrate a method rather than to answer any external question. \emph{ShapeletSim} embeds one of two shapes in noise so that shapelet methods are guaranteed to separate them~\citep{bagnall2016bakeoff}; GunPoint has two actors draw a gun or point at UCR, staged in 2003 by the archive's curators~\citep{dau2019ucr}.
+
+
+These mechanisms are not exclusive. For example, in \emph{GunPointMaleVersusFemale}, the recording was staged by the curators, and the archive then labels it by which of the two actors is performing rather than by the gun/point distinction the staging was designed around. 
+Appendix~\ref{app:labels} lists them all with their original label (if one exists) and the constructed label, and marks the overlaps.
+
+For a benchmark, the consequence is that accuracy on these tasks is a pretext score with no downstream target to validate it against: a method can rank first archive-wide by exploiting recording artifacts, subject identity or generator mechanics, none of which are the capabilities a practitioner deploying a TSC model needs.
+
+\subsection{Train/Test Leakage}\label{sec:leakage}
+
+
+For 41 of the 128 UCR datasets, the test set is not independent of the training set. 
+This happens in two ways: identical series appear in both train and test splits, or the split itself introduces leakage by grouping (or not grouping) the subjects. Additionally in 65 datasets, the information needed to check source separation is missing. To our knowledge, no systematic leakage check was run by the curators or the donors. We flag two main concerning setups:
+
+
+\begin{wrapfigure}{r}{0.45\linewidth}
+  \centering
+  \includegraphics[width=\linewidth,trim=28 32 25 27,clip]{figures/leakage.png}
+  \caption{MiniRocket accuracy with the original training set (with duplicates, \textcolor{plotgrey}{grey}) and after removing the duplicates (\textcolor{plotblue}{blue}). On several datasets, duplication inflates test accuracy.}
+  \label{fig:leakage}
+  \vspace{-10pt}
+\end{wrapfigure}
+
+\textbf{Duplication} (17 datasets): at least one test series is value-identical to a training series; in \emph{PowerCons} this affects 37\% of the test set ($67/180$), in \emph{Crop} 16\% ($2753/16800$), in \emph{Worms} 13\% ($10/77$). Same-label exact matches permit a classifier to reproduce a training label without demonstrating generalisation to a new case (see Figure~\ref{fig:leakage} and Table~\ref{tab:duplicates}).
+
+\textbf{Shared Sources} (24 datasets):  whether a split is valid depends on the task. 
+Class recognition, whose task is to predict a class for subjects unseen in training, requires the split to be grouped by subject; instance recognition, whose task is to re-identify a known subject, requires the test set to contain new recordings of that subject.
+On these 24 datasets one of the two rules is violated: in \ds{SemgHandMovementCh2} (class recognition) the grasps of all five subjects appear on both sides of the split;
+in \ds{SemgHandSubjectCh2} (instance recognition) each of the five subjects was recorded in a single session, and the repetitions of that session are split by a stratified shuffle. %
+
+
+These pose trustworthiness challenges, as scores should state which evaluation setting they represent in benchmarking. Further details can be found in Appendix~\ref{app:split}. 
+
+
+
+
+
+
+
+
+\section{Open Questions} \label{sec:open-questions}
+\textbf{Do ordered sequences translate to temporal axes?}
+The UCR archive encompasses multiple ordered datasets that span domains like spectrography and image contours. While one can argue that they provide meaningful tests for sequence models, temporal notions as warping, trends, periodicity and regime changes have no direct counterparts on a spatial or spectral axis. Treating both kinds of data as one benchmark therefore assumes a transfer the archive never tests\citep{bagnall2016bakeoff,middlehurst2024redux}.
+
+\citet{zhang2025revisit} provide indirect evidence: applying a single fixed permutation to every series, destroying local order while leaving each value at a fixed position, barely changes accuracy on roughly a third of the 112 equal-length UCR datasets, so those tasks are solved from aligned values rather than from order, a strategy unavailable in deployment for TSC.
+
+
+
+\textbf{Should decomposed multivariate recordings count as separate datasets?}
+Extracting one channel from a multivariate recording is a useful test of a univariate model. Counting several channels as independent datasets is a different decision: they share subjects, labels, acquisition and the underlying phenomenon \citep{dau2019ucr,tscarchive_descriptions}. Archive-wide comparisons, including rank-based tests, treat datasets as independent samples of TSC problems; derived channels violate that assumption, and one source problem receives several correlated votes in the aggregate score.
+
+
+\textbf{How much of the problem does preprocessing solve?}
+Every UCR series is a pre-extracted instance, and in many datasets instances are further aligned to a common reference before release, such as image outlines to a canonical starting point. The archive therefore never asks where in a stream a class-defining pattern occurs or how long it lasts. \citet{hu2016streaming} argued that this pre-segmented setting is far removed from how classification is deployed on streams, yet the archive and the methods evaluated on it have continued to treat it as given.
+
+The consequence is that, once patterns sit at near-fixed positions, time steps become features. This offers an explanation for two recent findings: tabular classifiers are competitive on many UCR tasks \citep{dhariyal2023backtobasics}, and disrupting temporal order often does not meaningfully affect predictive performance \citep{zhang2025revisit}. Whether performance on such tasks says anything about a method's ability to locate patterns in time, a key capability required in deployment, remains an open question.
+
+
+
+\section{Conclusion}
+The UCR archive made univariate TSC evaluation accessible and reproducible, and they remain a reasonable instrument for comparing algorithms. Our audit, however, shows that archive-wide performance should not be interpreted uncritically as performance on real-world TSC problems. Constructed targets, train/test dependencies, preprocessing choices, non-temporal sequences and repeated source problems each break that link, and they are common enough in UCR that an aggregate ranking cannot be read as a measure of deployment readiness. We argue for evaluation that complements the archives with provenance-aware valid task selection, deployment-relevant splits and capturing the realism of deployment environments to close the gap of explored caveats. Progress requires both better scores and benchmarks that measure the intended capability.
+
+
+
+
+\section*{Acknowledgements}
+  Funded by the European Union. Views and opinions expressed are however those of the author(s) only and do not necessarily reflect those of the European Union or the European Commission. Neither the European Union nor the European Commission can be held responsible for them. This work was supported by the European Union's Horizon Europe research and innovation program under grant agreement No 101214398 (ELLIOT). L.P. acknowledges funding
+by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) under SFB 1597
+(SmallData), grant number 499552394; F.H. acknowledges the financial support of the Hector Foundation.
+  \begin{center}
+    \begin{minipage}{0.2\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{figures/ERC_grant.jpg}
+    \end{minipage}
+    \begin{minipage}{0.2\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{figures/ELLIOT_maincolor.png}
+    \end{minipage}
+  \end{center}
+
+\bibliographystyle{plainnat}
+{\small\bibliography{references_revised}}
+
+\clearpage
+\appendix
+\input{appendix}
+
+\end{document}

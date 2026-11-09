@@ -1,0 +1,43 @@
+\begin{table}[H]
+  \centering
+  \small
+  \setlength{\tabcolsep}{7pt}
+  \renewcommand{\arraystretch}{1.15}
+  \begin{minipage}[t]{0.34\textwidth}
+    \vspace{0pt}
+    \centering
+    \textbf{(a) Final measurement CVs}\par\smallskip
+    \begin{tabular}{@{}lr@{}}
+      \toprule
+      CV range & Tasks \\
+      \midrule
+      \(0\% \leq \mathrm{CV} < 2\%\) & 20 \\
+      \(2\% \leq \mathrm{CV} < 6\%\) & 64 \\
+      \(6\% \leq \mathrm{CV} < 7\%\) & 8 \\
+      \(7\% \leq \mathrm{CV} < 8\%\) & 3 \\
+      \(8\% \leq \mathrm{CV} < 9\%\) & 4 \\
+      \(9\% \leq \mathrm{CV} < 10\%\) & 0 \\
+      \bottomrule
+    \end{tabular}
+  \end{minipage}
+  \hspace{0.035\textwidth}
+  \begin{minipage}[t]{0.27\textwidth}
+    \vspace{0pt}
+    \centering
+    \textbf{(b) Red-team tests}\par\smallskip
+    \begin{tabular}{@{}rr@{}}
+      \toprule
+      Tests per task & Tasks \\
+      \midrule
+      1 & 60 \\
+      2 & 20 \\
+      3 & 12 \\
+      4 & 6 \\
+      7 & 1 \\
+      8 & 1 \\
+      \bottomrule
+    \end{tabular}
+  \end{minipage}
+  \caption{Reliability and integrity evidence: final CVs for the 99 wall-clock tasks and red-team tests for all 100 tasks, with one test assigned conservatively when an exact count cannot be recovered.}
+  \label{tab:perfrace-cv-distribution}
+\end{table}

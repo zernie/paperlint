@@ -1,0 +1,25 @@
+\begin{figure}[t!]
+    \centering
+    \begin{minipage}[c]{0.49\columnwidth}
+        \centering
+        \begin{tikzpicture}
+            \node[inner sep=0] (img)
+                {\includegraphics[width=\linewidth]{fig/raw/final_cost_matrix/final_cost_matrix_compare_ost003d_soc.pdf}};
+            \node[anchor=south, font=\small, yshift=1pt]
+                at ([xshift=0.10\linewidth]img.north) {ost003d};
+        \end{tikzpicture}
+    \end{minipage}\hfill
+    \begin{minipage}[c]{0.49\columnwidth}
+        \centering
+        \begin{tikzpicture}
+            \node[inner sep=0] (img)
+                {\includegraphics[width=\linewidth]{fig/raw/final_cost_matrix/final_cost_matrix_compare_lak303d_soc.pdf}};
+            \node[anchor=south, font=\small, yshift=1pt]
+                at ([xshift=0.10\linewidth]img.north) {lak303d};
+        \end{tikzpicture}
+    \end{minipage}
+    \caption{
+    One-shot target assignment on the final calibrated cost matrix versus the best solution found during the iterations, in \scenHotspot.
+    }
+    \label{fig:final_cost_matrix}
+\end{figure}

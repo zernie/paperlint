@@ -1,0 +1,249 @@
+
+
+\begingroup
+\setlength{\textfloatsep}{7pt plus 2pt minus 1pt}
+\setlength{\floatsep}{7pt plus 2pt minus 1pt}
+\setlength{\intextsep}{6pt plus 2pt minus 1pt}
+\setlength{\abovecaptionskip}{3pt}
+
+\begin{table}[!htbp]
+\centering
+\begingroup
+\fontsize{10.5}{11.7}\selectfont\setlength{\tabcolsep}{4.5pt}
+\renewcommand{\arraystretch}{1.06}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}lrrrrrrrrrrrrrrr@{}}
+\toprule
+ & \multicolumn{6}{c}{\textbf{ASR by model}} & \multicolumn{7}{c}{\textbf{ASR by attack type}} & \multicolumn{2}{c}{\textbf{TSR}} \\
+\cmidrule(lr){2-7}\cmidrule(lr){8-14}\cmidrule(lr){15-16}
+\textbf{Defense} & DeepSeek & Kimi & Son.~4 & Son.~4.5 & GLM-5 & \textbf{Mean} & $b(U)$ & $b(\pi)$ & $b(T)$ & $b(A)$ & $b(O)$ & $b(s)$ & \textbf{Comp.} & Benign & Attacked \\
+\midrule
+None & 23.2 & 17.4 & 20.6 & 11.1 & 12.9 & 17.0 & 15.0 & 21.2 & 13.7 & 19.0 & 12.4 & 18.6 & 21.8 & 95.3 & 83.7 \\
+\midrule
+Spotlight & 22.1 & 17.5 & 18.6 & 8.1 & 11.8 & 15.6 & 12.7 & 19.0 & 12.0 & 17.5 & 11.5 & 18.9 & 19.8 & 98.7 & 85.8 \\
+Sandwich & 16.6 & 10.3 & 10.6 & 4.7 & 9.8 & 10.4 & 6.3 & 10.9 & 7.9 & 12.7 & 7.4 & 15.8 & 14.4 & 98.5 & 89.4 \\
+\midrule
+DRIFT-iso & 7.8 & 7.5 & 7.5 & 5.2 & 5.0 & 6.6 & 2.4 & 5.4 & 2.7 & 3.9 & 9.5 & 12.1 & 14.0 & 98.0 & 93.3 \\
+\midrule
+DRIFT-full & 7.2 & 6.1 & 9.0 & 6.0 & 6.6 & 7.0 & 2.5 & 5.7 & 3.9 & 4.2 & 11.4 & 11.4 & 13.3 & 88.9 & 83.4 \\
+Progent & 24.8 & 14.4 & 15.6 & 9.8 & 12.6 & 15.4 & 12.4 & 18.6 & 12.0 & 17.0 & 13.2 & 18.1 & 18.4 & 74.9 & 65.0 \\
+\midrule
+CaMeL & 1.7 & 1.2 & 1.2 & 1.2 & 1.0 & 1.3 & 1.3 & 1.4 & 1.1 & 1.5 & 1.0 & 1.3 & 1.1 & 13.3 & 13.9 \\
+\midrule
+ARGUS & 14.5 & 9.6 & 10.0 & 5.7 & 9.1 & 9.8 & 8.1 & 11.1 & 8.5 & 10.2 & 7.6 & 12.3 & 11.3 & 78.9 & 69.8 \\
+\bottomrule
+\end{tabular}
+}
+\endgroup
+\caption{Defense robustness and utility (\%). Model columns pool retained single-primitive and compound attacks; Mean is unweighted across models. Primitive columns average each primitive's retained single-primitive attacks across models; Comp. reports the compound attack. TSR columns are model means without an injection (benign) and under attack. Per-model results are in Appendix~\ref{app:defense-breakdown}.}
+\label{tab:defense-overview}
+\end{table}
+
+\subsection{Overall defense performance}
+
+Without defenses, GLM-5 and Sonnet 4.5 have the lowest ASRs,
+12.9\% and 11.1\%, compared with
+17.4--23.2\%
+for the others; both generally remain among the most robust under defenses.
+Among configurations retaining at least 90\% benign TSR, DRIFT-isolation has
+the lowest mean ASR (6.6\%;
+98.0\%/93.3\%
+benign/attacked TSR), followed by Sandwich
+(10.4\%;
+98.5\%/89.4\%).
+CaMeL reaches 1.3\% ASR but only
+13.3\% benign TSR; ARGUS reaches
+9.8\% ASR with 78.9\% benign TSR.
+
+DRIFT's added plan and checklist layer does not lower ASR
+(7.0\%) but lowers benign TSR
+(88.9\%) relative to isolation. Progent remains
+near the undefended ASR (15.4\% versus
+17.0\%) while lowering benign TSR to
+74.9\%. Both constrain which tool calls the agent
+may make, but a tampered call uses a tool the task needs, with arguments
+resolved from runtime content: they rarely block an attacked call (Section
+\ref{sec:runtime}).
+
+
+
+\subsection{Coverage beyond direct objective manipulation}
+
+The six primitive columns of Table \ref{tab:defense-overview} disaggregate
+attack success by the belief that the planted content targets while holding the
+predefined harmful outcome fixed; Comp. reports the compound attack. \(b(U)\),
+the objective primitive, corresponds most directly to the instruction-override
+attacks common in prior evaluations.
+
+Without defenses, \(b(\pi)\), \(b(s)\), and \(b(A)\) reach
+21.2\%, 18.6\%, and 19.0\% mean ASR,
+compared with 15.0\% for \(b(U)\).
+This contrast is clearest for DRIFT-isolation, whose protection relies on
+detecting and removing task-redirecting manipulative content: it reduces \(b(U)\) to
+2.4\% ASR, but leaves
+9.5\% for \(b(O)\) and
+12.1\% for \(b(s)\). DRIFT-full includes the same isolator
+and shows the same contrast (2.5\% versus
+11.4\% and 11.4\%).
+Except for CaMeL, which yields uniformly low ASR
+(1.0--1.5\%),
+\(b(U)\) is among the three lowest-ASR primitives under every defense.
+
+\subsection{How agents respond to visible planted content}
+
+The trajectory annotations (Section \ref{sec:setup}) show how GLM-5 and Sonnet
+4.5 respond to planted content they can see.
+
+
+
+\textbf{Without defenses.} On the annotated trajectories (first attack per case and primitive), GLM-5 and Sonnet 4.5 have similar ASR
+(11.1\% and 10.2\%) and following
+rates (12.9\% and
+12.0\%) but otherwise differ:
+GLM resists 25.1\% and shows no observable engagement
+in 61.5\% of trajectories, whereas Sonnet resists
+44.3\% and shows no observable engagement in
+43.4\%.
+Among resisted trajectories, both cite the task-designated authority in about
+99\% of cases, but Sonnet explicitly flags manipulation more often than GLM
+(43.4\% versus
+18.0\%).
+For both models, flagging is highest for \(b(U)\)
+(37.5\% for GLM, 69.2\% for Sonnet)
+and lowest for \(b(s)\) or \(b(O)\), suggesting that the models are more aware of
+content targeting their objective than of content that
+misstates the state or what they observe.
+
+\textbf{Under prompt defenses.} Prompt defenses leave the planted content visible in every trajectory. They
+nevertheless change the response in different ways.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/prompt_defense_behavior_grouped_by_defense.pdf}
+\setlength{\abovecaptionskip}{0pt}\setlength{\parskip}{0pt}
+\caption{Agent responses by primitive without a defense and under
+Spotlighting and Sandwich.
+Bars cover single-primitive attacks; tick letters
+$U,\pi,T,A,O,s$ denote the primitives $b(U),\dots,b(s)$. Hatching marks the
+resisted trajectories in which the agent explicitly identifies manipulation.}
+\label{fig:prompt-defense-behavior}
+\end{figure}
+
+Both defenses lower following of \(b(U)\) and \(b(\pi)\) for both models, including
+Spotlighting, whose effects on the other primitives are mixed. For GLM, following
+\(b(O)\) rises from
+7.1\% without a defense to
+18.6\% under Spotlighting.
+Sandwich more consistently lowers aggregate following (GLM:
+12.9\% to 9.3\%;
+Sonnet: 12.0\% to
+5.4\%), but mainly shifts behavior toward
+no observable engagement (61.5\% to
+69.7\%;
+43.4\% to
+71.0\%), and flagging of manipulative content also falls.
+
+\subsection{Runtime defenses}\label{sec:runtime}
+
+Runtime defenses can remove content before the model reads it or reject a
+resulting action. Figure \ref{fig:runtime-defense-behavior} compares what the
+agent observes under DRIFT-isolation, DRIFT-full, and Progent.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/runtime_defense_impact_grouped_by_defense.pdf}
+\setlength{\abovecaptionskip}{0pt}\setlength{\parskip}{0pt}
+\caption{Agent-facing outcomes under runtime defenses for GLM-5 and Claude
+Sonnet 4.5, grouped by defense and primitive (tick letters as in
+Figure~\ref{fig:prompt-defense-behavior}). Hatching distinguishes
+content stripped before action from attacked calls blocked by runtime policy.
+Incomplete denotes an unfinished trajectory.}
+\label{fig:runtime-defense-behavior}
+\end{figure}
+
+\begin{table}[!htbp]
+\centering
+\begingroup
+\tablefont
+\renewcommand{\arraystretch}{1.06}
+\resizebox{\ifdim\width>\textwidth\textwidth\else\width\fi}{!}{%
+\begin{tabular}{@{}llrrr@{}}
+\toprule
+\textbf{Defense} & \textbf{Model} & \begin{tabular}[b]{@{}c@{}}\textbf{Attacked} \\ \textbf{emitted}\end{tabular} & \begin{tabular}[b]{@{}c@{}}\textbf{Blocked} \\ \textbf{(rate)}\end{tabular} & \begin{tabular}[b]{@{}c@{}}\textbf{Attack} \\ \textbf{landed}\end{tabular} \\
+\midrule
+DRIFT-full & GLM-5 & 26 & 0 (0.0\%) & 24 \\
+ & Sonnet 4.5 & 31 & 3 (9.7\%)\textsuperscript{A} & 27 \\
+\midrule
+Progent & GLM-5 & 64 & 5 (7.8\%)\textsuperscript{A} & 52 \\
+ & Sonnet 4.5 & 52 & 3 (5.8\%)\textsuperscript{A} & 41 \\
+\bottomrule
+\end{tabular}
+}
+\endgroup
+\caption{Action-level enforcement; attacked calls are counted when emitted. Superscript A marks blocks by argument-level gates (DRIFT's checklist, Progent's argument schema); no tool-level gate (DRIFT's plan-position check and alignment judge, Progent's tool allowlist) blocked an attacked call.}
+\label{tab:action-enforcement}
+\end{table}
+
+\textbf{Action-level policies.} Our benchmark gives these policies limited leverage:
+harmful outcomes
+use tools expected for the benign task, generally by altering an argument, and
+many arguments must be resolved from runtime tool results. DRIFT-full and
+Progent therefore block only
+0.0--9.7\%
+of emitted attacked calls (Table \ref{tab:action-enforcement}).
+Only argument-level gates block attacked calls.
+Progent's
+13.1--15.6\%
+absence in Figure \ref{fig:runtime-defense-behavior}, and some under
+DRIFT-full, comes not from rejecting attacked calls
+but from deviation due to actions being blocked.
+
+\textbf{Content isolation.} By contrast, DRIFT's selective protection comes
+principally from its
+Injection Isolator (Appendix Table \ref{tab:content-strips}), which
+across both DRIFT configurations and both models fully strips
+52.7--59.5\%
+of examined attack carriers while redacting a legitimate result in only
+1.1--4.8\%
+of runs.
+However, stripping varies sharply by primitive:
+under isolation-only, full strips remove
+78.2--85.1\%
+of \(b(U)\) attacks but only
+26.2--34.3\%
+of \(b(O)\) and \(b(s)\) attacks.
+Attacks that pass DRIFT-isolation unstripped keep their effect for \(b(O)\) and
+\(b(s)\): agents follow them about as often as without a defense
+(10.7\% to 14.4\% for GLM,
+13.3\% to 10.7\% for Sonnet).
+For the other four primitives this holds for Sonnet, but GLM follows only
+3 of the
+79 that pass
+(3.8\%, against 14.1\% without a defense).
+\(b(O)\) and \(b(s)\) thus pass the isolator more often and stay as effective when
+they do.
+
+\textbf{Does the detection gap survive wording changes?}\label{sec:detection} To test whether the gap is specific to the original wording, Figure
+\ref{fig:detectability-tradeoff} compares each original single-primitive attack
+with its detection-optimized rewrite and the two support-expanded conditions
+(Section \ref{sec:setup}), reporting ASR without a defense, detection by the
+deployed DRIFT isolator, and residual ASR. For Claude Sonnet 4.5 and GLM-5 in
+all four conditions, \(b(U)\) remains among the most detectable primitives and
+generally
+among the least effective by ASR, especially after isolation. The pattern holds
+although the rewrites were optimized against a carrier-only probe, which sees
+neither the user request nor the rest of the trajectory, rather than against
+the deployed isolator.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/detectability_three_metric_sonnet_glm.pdf}
+\setlength{\abovecaptionskip}{0pt}\setlength{\parskip}{0pt}
+\caption{ASR without a defense, runtime detection, and residual ASR under
+DRIFT-isolation across the four conditions. Detection counts partial or
+complete removal. Gray lines span a primitive's four conditions; shading marks
+\(b(O)\) and \(b(s)\). Appendix \ref{app:detection} gives the other two models.}
+\label{fig:detectability-tradeoff}
+\end{figure}
+
+\endgroup

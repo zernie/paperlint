@@ -1,0 +1,33 @@
+\section{Related Work}
+\label{sec:relate}
+
+%
+This section reviews prior work on weakly supervised video anomaly detection and discusses relevant research on leveraging large language models and self-supervised dictionary learning for this task.
+
+\subsection{Weakly Supervised Video Anomaly Detection}
+
+Early work on weakly supervised video anomaly detection focused on handcrafted features and shallow models. For example, \citet{a-lu2013abnormal} extracted histogram of oriented gradients and optical flow features to train a multiple instance learning model. \citet{a-chen2020unsupervised} proposed an autoencoder trained on normal video frames to detect anomalies as frames with high reconstruction error. More recent methods have incorporated deep learning, training convolutional neural networks (CNNs) on video-level labels. \citet{a-zhong2019graph} introduced a graph convolutional network over sparse object detections. \citet{a-nguyen2019anomaly} proposed an autoregressive network with a composite memory module.
+
+Other approaches have incorporated self-supervision by pretraining on proxy tasks before fine-tuning on anomaly detection. \citet{a-gong2019memorizing} pretrained a memory module on frame order verification. \citet{a-park2020learning} used a number of pretext tasks like rotation prediction. Contrastive predictive coding has also been effective for self-supervised pretraining \citep{a-liu2021weakly}. More sophisticated techniques include adversarial learning \citep{a-jin2021adversarial} and perturbation-based regularization \citep{a-morais2019learning}.
+
+%
+Overall, weakly supervised anomaly detection remains challenging, and existing methods typically suffer from high false positive rates. Incorporating external knowledge is a promising direction to improve performance.
+
+\subsection{Large Language Models}
+
+Large language models (LLMs) based on the Transformer architecture \citep{a-vaswani2017attention} have driven rapid progress in natural language processing. Models like BERT\citep{a-devlin2018bert}, GPT\citep{a-radford2018improving}, and T5\citep{a-raffel2020exploring} have achieved strong performance on a wide range of NLP tasks through self-supervised pretraining on large corpora.
+
+More recently, even larger LLMs with over 100 billion parameters like GPT-3\citep{a-brown2020language} have shown the ability to perform few-shot and zero-shot learning. By formulating tasks as natural language prompts, GPT-3 can accomplish them without any gradient updates or fine-tuning. This suggests LLMs may serve as rich sources of world knowledge that can be tapped for downstream applications like video anomaly detection.
+
+Methods to effectively incorporate LLMs include prompting \citep{a-liu2023pre} and adapter tuning \citep{a-houlsby2019parameter}. Prompting formulates the task as a text completion problem, while adapter tuning adds small task-specific modules to retain model capabilities. Both approaches allow leveraging the knowledge within LLMs without extensive fine-tuning.
+
+\subsection{Self-Supervised Sparse Dictionary Learning}
+
+Dictionary learning aims to find a representative set of patterns (a dictionary) to reconstruct inputs. Early dictionary learning methods were unsupervised \citep{a-aharon2006k}, but recent work has incorporated self-supervision.
+
+\citet{a-shao2021ssdl} proposed a bootstrapping framework that alternates between dictionary construction and self-label assignment. The dictionary is initialized by clustering features, then used to assign pseudo-labels for self-supervision. This framework allows joint optimization of the dictionary and self-supervision.
+
+Other methods like CURL \citep{a-laskin2020curl} and SwAV \citep{a-caron2020unsupervised} have incorporated dictionary learning objectives into contrastive self-supervised learning. The key idea is to map representations to a sparse code over a learnable dictionary. This provides a form of quantization that improves contrastive learning.
+
+%
+For video anomaly detection, dictionary learning can help extract common patterns from normal frames, while anomalies yield dense reconstructions. A self-supervised approach can construct a dictionary tailored to the normal data without manual labels. The dictionary can regularize models to focus on normal patterns and detect anomalies as outliers.

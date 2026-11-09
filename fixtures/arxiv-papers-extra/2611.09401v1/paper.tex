@@ -1,0 +1,106 @@
+\pdfoutput=1
+\pdfminorversion=7
+\PassOptionsToPackage{table}{xcolor}
+\documentclass{article} % For LaTeX2e
+\usepackage{iclr2027_conference,times}
+
+\input{math_commands.tex}
+
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage[export]{adjustbox} % 必须带上 [export]
+
+\definecolor{bestcyan}{HTML}{C1E1C1}
+\definecolor{secondcyan}{RGB}{211,246,248}
+\newcommand{\best}[1]{\cellcolor{bestcyan}\textbf{#1}}
+\newcommand{\second}[1]{\cellcolor{secondcyan}#1}
+
+\newcommand{\metricstd}[2]{#1\,{\scriptsize(#2)}}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{tabularx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage{natbib}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\title{PhyCAD: Physics-Aware Text-to-CAD Generation via Hierarchical Reinforcement Learning}
+
+\author{
+\textbf{Yuxin Cui},\,
+\textbf{Weijie Zheng},\,
+\textbf{Zhengyang Li},\,
+\textbf{Han Wang},\,
+\textbf{Wenjie Feng},\,
+\textbf{Qiyu Kang}\thanks{Corresponding author: \texttt{qiyukang@ustc.edu.cn}} \\[0.5em]
+University of Science and Technology of China, Hefei, China \\[0.3em]
+}
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+
+\iclrfinalcopy % Uncomment for camera-ready version, but NOT for submission.
+\begin{document}
+
+\maketitle
+\fancyhead{}
+\fancyhead[L]{Preprint}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{fig/teaser_cad.pdf}
+    \caption{
+\textbf{Physics-aware CAD optimization.}
+\textbf{(A)} A source CAD model is annotated with FEM conditions and responses.
+\textbf{(B)} Its exact dimensions are redacted to form an inverse-design task with physical constraints.
+\textbf{(C)} While the SFT design achieves lower mass but violates the physical constraints, PhyCAD produces a feasible design with lower mass than the reference.
+}
+    \label{fig:teaser}
+\end{figure}
+
+\begin{abstract}
+Language-driven computer-aided design (CAD) generation enables the creation of editable parametric models from text, yet geometric correctness alone does not ensure physical feasibility.
+We present PhyCAD, a framework for physics-aware Text-to-CAD generation that trains language models to produce executable CadQuery programs under geometric and physical constraints.
+To support this setting, we construct a Text-to-CAD dataset that links parametric CAD models with geometric specifications, loading conditions, and physical constraints.
+We further develop an automated CAD--CAE verifier that combines program execution, geometric checks, and finite element analysis to provide feedback for model training.
+A key learning challenge is to prioritize joint satisfaction of geometric and physical constraints while retaining informative feedback on partial progress.
+A flat aggregation of heterogeneous rewards can obscure this priority, allowing improvements in individual criteria to compensate for unmet design requirements.
+We therefore introduce a Hierarchical Balanced Advantage for Group Relative Policy Optimization, grouping candidates into levels according to their verification status and combining between-level progress with objective-wise peer ranking within each level.
+This formulation preserves cross-level priority in the training signal while providing fine-grained feedback for satisfying constraints and improving feasible designs.
+Experiments across multiple language models show that PhyCAD consistently improves joint geometric and physical constraint satisfaction.
+These results demonstrate the value of verifiable engineering feedback for advancing language-driven CAD generation beyond geometric reconstruction toward physics-aware design. The code is available at \url{https://github.com/PhysAGI/PhyCAD}.
+
+\end{abstract}
+
+\section{Introduction}
+\input{section/introduction}
+
+\section{Related Work}
+\input{section/relatedwork}
+
+\section{Method}
+\input{section/method}
+
+\section{Experiment}
+\input{section/experiment}
+
+\section{Discussion}
+\input{section/discussion}
+
+\bibliography{iclr2027_conference}
+\bibliographystyle{iclr2027_conference}
+
+\clearpage
+\appendix
+\input{section/appendix}
+
+\end{document}

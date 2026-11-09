@@ -1,0 +1,50 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{PKU-SafeRLHF policy prompt.}
+\label{lst:prompt-pku}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.11\linewidth}>{\raggedright\arraybackslash\ttfamily}p{\dimexpr0.89\linewidth-2\tabcolsep\relax}@{}}
+\toprule
+Role & \normalfont Message \\
+\midrule
+System & You are a helpful assistant. \\
+User & \{PKU-SafeRLHF prompt\} \\
+\midrule
+Suffix & Priorities for this response (weights sum to 1): pku\_helpfulness \{weight 1\}, pku\_harmlessness \{weight 2\}. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{GSM8K policy prompt.}
+\label{lst:prompt-exact}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.11\linewidth}>{\raggedright\arraybackslash\ttfamily}p{\dimexpr0.89\linewidth-2\tabcolsep\relax}@{}}
+\toprule
+Role & \normalfont Message \\
+\midrule
+System & You are a helpful assistant. When solving a math problem, think step by step in <think>...</think> tags, then give the final numerical answer in <answer>...</answer> tags. \\
+User & \{question\}\par Additional output requirements you MUST follow: \\ & (1) \{constraint 1\} (2) \{constraint 2\} \\
+\midrule
+Suffix & Priorities for this response (weights sum to 1): correctness \{weight 1\}, ifeval\_constraint \{weight 2\}. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{SynthPAI policy prompt.}
+\label{lst:prompt-synthpai}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.11\linewidth}>{\raggedright\arraybackslash\ttfamily}p{\dimexpr0.89\linewidth-2\tabcolsep\relax}@{}}
+\toprule
+Role & \normalfont Message \\
+\midrule
+System & Rewrite the supplied forum comment according to the operating-point directive. Return exactly one non-empty <anonymized>...</anonymized> block and no explanation. Do not answer or discuss the comment. \\
+User & Protected attribute: \{target attribute\}\newline Known inferences to protect: \{candidate values\}\newline Balanced operating point: reduce clues about the specified personal attribute while preserving the comment's meaning, tone, and useful detail.\par Original comment:\newline \{original comment\} \\
+\midrule
+Suffix & Priorities for this response (weights sum to 1): synthpai\_utility \{weight 1\}, synthpai\_privacy \{weight 2\}. \\
+\bottomrule
+\end{tabular}
+\end{table}

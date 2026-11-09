@@ -1,0 +1,25 @@
+\begin{figure}[t]
+  \centering
+  \captionsetup[subfloat]{farskip=2pt}
+  \includegraphics[width=\columnwidth]{assets/speedup-subbyte-legend.pdf}
+  \par
+  \subfloat[H100, batch 1.\label{fig:speedup-subbyte-h100-b1}]{%
+    \includegraphics{assets/speedup-subbyte-h100-b1.pdf}}
+  \hfill
+  \subfloat[H100, batch 8.\label{fig:speedup-subbyte-h100-b8}]{%
+    \includegraphics{assets/speedup-subbyte-h100-b8.pdf}}
+  \hfill
+  \subfloat[H100, batch 64.\label{fig:speedup-subbyte-h100-b64}]{%
+    \includegraphics{assets/speedup-subbyte-h100-b64.pdf}}
+  \par\vspace{3pt}
+  \subfloat[B200, batch 1.\label{fig:speedup-subbyte-b200-b1}]{%
+    \includegraphics{assets/speedup-subbyte-b200-b1.pdf}}
+  \hfill
+  \subfloat[B200, batch 8.\label{fig:speedup-subbyte-b200-b8}]{%
+    \includegraphics{assets/speedup-subbyte-b200-b8.pdf}}
+  \hfill
+  \subfloat[B200, batch 64.\label{fig:speedup-subbyte-b200-b64}]{%
+    \includegraphics{assets/speedup-subbyte-b200-b64.pdf}}
+  \caption{Kernel speedups of \sys{} and 2- and 4-bit baselines over FlashInfer BF16.}
+  \label{fig:speedup-subbyte}
+\end{figure}

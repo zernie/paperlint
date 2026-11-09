@@ -1,0 +1,29 @@
+\begin{table*}[t]
+\centering
+\caption{Calibrating the error spread from $M$ labelled pairs of the planner's own proposals (one-step probe, 200 random draws of the pairs). $\rho_q$: mean per-state correlation of the five-scorer mean with the true plan return; $\hat\rho$ all: the Gaussian estimate $\sin(\pi(c-\frac12))$ from every pair at every state; below: share of states whose own correlation is under it. Range: 10th and 90th percentile of $\hat\rho$ over draws. Gains $\Delta$ (mean over states) and worst-state $\Delta$ (mean over draws) of the calibrated rule with 100 pairs, in units of $\sigma_q(J)$: with each state's true $\rho$ (worst state $0.00$ in every row), with the point estimate, with the one-sided 95\% lower bound (LCB), and with labels from a noisy teacher that agrees with the true order on 85\% or 70\% of proposal pairs (point estimate).}
+\label{tab:calib}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lccccccccccccc}
+\toprule
+& & & & \multicolumn{3}{c}{$\hat\rho$ range, true labels} & true $\rho$ & \multicolumn{2}{c}{point, $M=100$} & \multicolumn{2}{c}{LCB, $M=100$} & 85\% teacher & 70\% teacher \\
+\cmidrule(lr){5-7}\cmidrule(lr){8-8}\cmidrule(lr){9-10}\cmidrule(lr){11-12}\cmidrule(lr){13-13}\cmidrule(lr){14-14}
+& $\rho_q$ & $\hat\rho$ all & below & $M=25$ & $M=100$ & $M=200$ & $\Delta$ & $\Delta$ & worst & $\Delta$ & worst & $\hat\rho$ / $\Delta$ & $\hat\rho$ / $\Delta$ \\
+\midrule
+Cheetah & $0.08$ & $0.07$ & 54\% & $-0.31$, $0.43$ & $-0.09$, $0.28$ & $-0.03$, $0.22$ & $0.06$ & $0.03$ & $-0.06$ & $0.00$ & $-0.01$ & $0.06$ / $0.03$ & $0.06$ / $0.03$ \\
+Hopper & $0.73$ & $0.69$ & 26\% & $0.43$, $0.88$ & $0.54$, $0.81$ & $0.60$, $0.78$ & $0.53$ & $0.49$ & $-0.02$ & $0.40$ & $-0.01$ & $0.64$ / $0.46$ & $0.43$ / $0.37$ \\
+Drawer 200 & $0.01$ & $0.02$ & 46\% & $-0.43$, $0.43$ & $-0.19$, $0.25$ & $-0.13$, $0.16$ & $0.05$ & $0.00$ & $-0.21$ & $0.00$ & $-0.03$ & $0.00$ / $0.00$ & $0.00$ / $0.00$ \\
+Drawer 300 & $-0.01$ & $-0.02$ & 45\% & $-0.54$, $0.31$ & $-0.22$, $0.16$ & $-0.16$, $0.11$ & $0.07$ & $0.01$ & $-0.11$ & $0.00$ & $-0.01$ & $0.00$ / $0.01$ & $0.03$ / $0.01$ \\
+Drawer 500 & $0.08$ & $0.07$ & 47\% & $-0.31$, $0.43$ & $-0.09$, $0.28$ & $-0.06$, $0.19$ & $0.12$ & $0.04$ & $-0.22$ & $0.01$ & $-0.04$ & $0.06$ / $0.03$ & $0.06$ / $0.03$ \\
+Drawer 1k & $0.07$ & $0.07$ & 48\% & $-0.31$, $0.43$ & $-0.13$, $0.25$ & $-0.08$, $0.20$ & $0.11$ & $0.05$ & $-0.15$ & $0.01$ & $-0.02$ & $0.09$ / $0.05$ & $0.09$ / $0.05$ \\
+Drawer 2k & $0.19$ & $0.20$ & 46\% & $-0.19$, $0.54$ & $0.03$, $0.43$ & $0.06$, $0.32$ & $0.23$ & $0.14$ & $-0.15$ & $0.05$ & $-0.05$ & $0.22$ / $0.14$ & $0.13$ / $0.11$ \\
+Drawer human & $-0.18$ & $-0.21$ & 53\% & $-0.64$, $0.19$ & $-0.40$, $-0.03$ & $-0.34$, $-0.09$ & $0.05$ & $0.00$ & $-0.02$ & $0.00$ & $0.00$ & $-0.13$ / $0.00$ & $-0.06$ / $-0.01$ \\
+Drawer, half on planner & $0.16$ & $0.18$ & 53\% & $-0.31$, $0.54$ & $0.00$, $0.37$ & $0.02$, $0.31$ & $0.26$ & $0.12$ & $-0.17$ & $0.03$ & $-0.04$ & $0.13$ / $0.11$ & $0.13$ / $0.10$ \\
+Plate 500 & $0.44$ & $0.45$ & 19\% & $0.06$, $0.73$ & $0.25$, $0.61$ & $0.32$, $0.58$ & $0.42$ & $0.35$ & $-0.03$ & $0.23$ & $-0.01$ & $0.43$ / $0.34$ & $0.28$ / $0.27$ \\
+Plate 2k & $0.39$ & $0.40$ & 21\% & $0.05$, $0.73$ & $0.22$, $0.56$ & $0.28$, $0.54$ & $0.39$ & $0.30$ & $0.00$ & $0.19$ & $0.00$ & $0.37$ / $0.29$ & $0.28$ / $0.24$ \\
+Window 500 & $0.44$ & $0.47$ & 47\% & $0.06$, $0.81$ & $0.28$, $0.61$ & $0.38$, $0.59$ & $0.39$ & $0.33$ & $-0.03$ & $0.22$ & $-0.01$ & $0.43$ / $0.31$ & $0.28$ / $0.24$ \\
+Window 2k & $0.24$ & $0.28$ & 59\% & $-0.19$, $0.64$ & $0.06$, $0.45$ & $0.14$, $0.38$ & $0.22$ & $0.12$ & $-0.86$ & $0.05$ & $-0.40$ & $0.19$ / $0.10$ & $0.09$ / $0.07$ \\
+\bottomrule
+\end{tabular}}
+\end{table*}

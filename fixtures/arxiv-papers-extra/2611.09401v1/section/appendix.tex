@@ -1,0 +1,523 @@
+% \section{Implementations of Dataset Generation}
+% \label{app:dataset}
+
+% This appendix provides additional details of the dataset-generation
+% procedure introduced in Sec.~\ref{sec:dataset}. We describe how the
+% original Text-to-CadQuery samples are converted into physics-aware
+% inverse-design tasks, including CAD--CAE annotation, automatic physical
+% condition construction, design-domain generation, geometry semantic
+% construction, and dataset partitioning. We also provide representative
+% examples of the final model-visible prompts.
+
+% \subsection{Reference CAD--CAE Annotation}
+% \label{app:dataset_annotation}
+
+% We start from the Text-to-CadQuery corpus~\citep{xie2025text}, which
+% contains approximately \(110\text{k}\) CadQuery programs paired with
+% geometric descriptions. Each source program is treated as a
+% reference design: it provides a valid geometric realization from
+% which an inverse-design task can be constructed, but its exact geometry
+% is not exposed to the model.
+
+% Each CadQuery program is first executed to construct the corresponding
+% solid. Samples are discarded if the program cannot be executed, does
+% not produce exactly one valid connected solid, or cannot be processed by
+% the downstream geometry and simulation pipeline. Successfully
+% constructed solids are exported and analyzed using the same deterministic
+% finite-element pipeline.
+
+% All samples are evaluated using three-dimensional small-strain linear
+% elasticity in SI units. We use isotropic structural steel with Young's
+% modulus \(2.1\times10^{11}\,\mathrm{Pa}\), Poisson's ratio \(0.3\), and
+% density \(7850\,\mathrm{kg/m^3}\). For each successfully simulated
+% reference design, we record the maximum nodal displacement
+% \(\delta_{\max}\), the volume-weighted \(99\)-th percentile element
+% von Mises stress \(\sigma_{\mathrm{P99}}\), and the total mass \(m\).
+% These quantities are used only to construct the performance requirements
+% of the inverse-design task and are not directly revealed to the model.
+
+
+% \subsection{Automatic Physical Conditions}
+% \label{app:physical_conditions}
+
+% Because the source corpus contains objects with substantially different
+% shapes and orientations, the fixture and loading regions are constructed
+% automatically from the CAD geometry rather than manually specified for
+% individual samples.
+
+% For each solid, we first compute the centroid of every CAD surface. The
+% pair of surface centroids with the largest Euclidean separation defines
+% the principal analysis direction, which is normalized to obtain the
+% functional analysis-axis unit vector. All surface centroids are then
+% projected onto this axis. The projected extent of the solid is used to identify its two terminal
+% surface groups. Surfaces whose centroid projections lie within \(5\%\)
+% of the negative or positive end of the projected range are assigned to
+% the corresponding terminal group. This surface-level grouping is used
+% instead of selecting a single face, allowing geometries with multiple
+% coplanar or fragmented terminal surfaces to be handled consistently.
+
+% The negative terminal group is used as the fixture, with all
+% translational degrees of freedom constrained,
+% \(u_x=u_y=u_z=0\). The positive terminal group is used as the loading
+% region. A uniform traction is distributed over this group such that its
+% integrated resultant force has magnitude \(100\,\mathrm{kN}\) and is
+% directed along the positive analysis axis.
+
+% Both the analysis-axis vector and the resulting fixture and loading
+% specifications are included in the task prompt. Therefore, although the
+% boundary conditions are automatically derived from the reference
+% geometry during dataset construction, they become explicit physical
+% conditions that must also be satisfied by the generated design.
+
+
+% \subsection{Inverse-Design Task Construction}
+% \label{app:inverse_task}
+
+% After a reference design has passed CAD construction and FEM analysis,
+% we convert it into an inverse-design task. The conversion preserves the
+% design family and physical requirements while deliberately removing the
+% exact reference dimensions and simulation measurements.
+
+% \paragraph{Coarse design domain.}
+% We first compute the reference solid's global bounding-box extents
+% \(e_x\), \(e_y\), and \(e_z\). Instead of exposing these values directly,
+% each extent \(e\) is replaced by the enclosing interval formed by two
+% adjacent powers of two:
+% \begin{equation}
+%     \mathcal{B}(e)
+%     =
+%     \left[
+%         2^{\lfloor\log_2 e\rfloor},
+%         2^{\lfloor\log_2 e\rfloor+1}
+%     \right].
+%     \label{eq:dataset_coarse_bound}
+% \end{equation}
+% The prompt therefore specifies only an admissible range for the global
+% extent along each axis. For example, a reference extent lying between
+% \(0.25\,\mathrm{m}\) and \(0.5\,\mathrm{m}\) is represented only by that
+% interval rather than by its exact value.
+
+% \paragraph{Performance requirements.}
+% The displacement, stress, and mass requirements are derived from the
+% corresponding reference measurements. For each measured quantity \(v\),
+% we apply a \(10\%\) feasibility margin and round the resulting value
+% upward to two significant digits:
+% \begin{equation}
+%     \tau(v)
+%     =
+%     \operatorname{RoundUp}_{2\mathrm{sig}}(1.10\,v).
+%     \label{eq:dataset_threshold}
+% \end{equation}
+% The same procedure is applied independently to
+% \(\delta_{\max}\), \(\sigma_{\mathrm{P99}}\), and \(m\).
+% The resulting values become upper bounds on maximum displacement,
+% \(99\)-th percentile von Mises stress, and total mass, respectively.
+
+% The margin keeps the original reference design feasible under small
+% numerical variations introduced by CAD processing, meshing, and FEM
+% evaluation. Upward rounding additionally prevents the prompt from
+% revealing the exact measurements of the reference design. 
+
+% \subsection{Geometry Semantic Construction}
+% \label{app:geometry_semantics}
+
+% A central objective of the task construction is to preserve the intended
+% geometric structure while preventing the model from directly recovering
+% the original design parameters. We therefore construct the model-visible
+% geometry semantics jointly from the source textual description and the
+% CadQuery operation sequence.
+
+% \paragraph{Numerical redaction.}
+% We first sanitize the original textual description by removing numerical
+% information that can reveal the reference geometry. This includes
+% explicit dimensions, angles, ratios, percentages, quantities with units,
+% and spelled-out numerical values. In contrast, non-numerical information
+% describing the object category, shape composition, topology, feature
+% types, feature counts, and spatial relationships is retained.
+
+% For example, a source description may specify the exact diameter and
+% height of a cylindrical feature. The sanitized description retains that
+% a cylindrical feature exists and how it is positioned relative to the
+% remaining geometry, but removes the original diameter and height. The
+% generated program must determine such dimensions from the allowed design
+% domain and physical requirements.
+
+% \paragraph{Operation-derived semantics.}
+% Textual descriptions alone do not always provide a sufficiently
+% consistent representation of the underlying CAD construction. We
+% therefore additionally inspect the CadQuery program and convert its
+% modeling operations into dimension-free feature descriptions using a
+% fixed operation-to-feature mapping. Numerical arguments of these
+% operations are discarded.
+
+% Table~\ref{tab:semantic_mapping} shows representative mappings used
+% during this process. The mapping describes the geometric role of an
+% operation rather than its parameters. For instance, a
+% \texttt{cylinder} operation indicates the presence of a cylindrical
+% feature, while a \texttt{cut} operation indicates a material-removal
+% relationship. Sketches followed by extrusion retain the corresponding
+% profile type and extrusion relation without preserving the original
+% profile dimensions or extrusion distance.
+
+% \begin{table}[t]
+%     \centering
+%     \small
+%     \caption{
+%     Representative CadQuery operation-to-feature mappings used to
+%     construct dimension-free geometry semantics. Numerical parameters
+%     associated with these operations are not exposed to the model.
+%     }
+%     \label{tab:semantic_mapping}
+%     \setlength{\tabcolsep}{8pt}
+%     \renewcommand{\arraystretch}{1.12}
+%     \begin{tabular}{ll}
+%         \toprule
+%         \textbf{CadQuery construction} &
+%         \textbf{Extracted geometry semantics} \\
+%         \midrule
+%         \texttt{box}
+%         & rectangular-prismatic feature \\
+%         \texttt{cylinder}
+%         & cylindrical feature \\
+%         polygonal sketch + \texttt{extrude}
+%         & polygonal-prismatic feature \\
+%         curved sketch + \texttt{extrude}
+%         & curved-profile feature \\
+%         \texttt{revolve}
+%         & revolved feature \\
+%         \texttt{cut}
+%         & material-removal relation \\
+%         \texttt{hole}
+%         & hole or through-feature \\
+%         \texttt{fillet}
+%         & rounded-edge feature \\
+%         \texttt{shell}
+%         & hollow or shell construction \\
+%         union / composition operations
+%         & part-composition relation \\
+%         \bottomrule
+%     \end{tabular}
+% \end{table}
+
+% The sanitized source description and operation-derived information are
+% then combined into a geometry-semantic description. The resulting
+% description preserves the overall shape class, topology, feature types
+% and counts, and relationships between individual components. Exact
+% dimensions remain unspecified.
+
+% For example, a reference composed of a hexagonal prism and a centered
+% cylindrical top is described as requiring these two feature types, their
+% relative placement, and their combination into a single solid, while the
+% side lengths, cylinder diameter, and component heights remain hidden.
+% Similarly, a design containing an extruded star-shaped profile combined
+% with a cylindrical component preserves the corresponding feature
+% composition without exposing the dimensions of either component.
+
+% This construction makes the original reference a feasible realization
+% of the requested design semantics, but not the uniquely specified
+% solution. The model must select a concrete geometric realization that
+% preserves the required structure while satisfying the design-domain and
+% physical constraints.
+
+
+% \subsection{Model-Visible and Private Information}
+% \label{app:dataset_visibility}
+
+% We maintain a strict separation between information used internally to
+% construct each sample and information made available to the model. The
+% model-visible prompt contains the dimension-free geometry semantics,
+% coarse global bounding-box ranges, functional analysis axis, material
+% properties, fixture and loading conditions, and the resulting
+% displacement, stress, and mass limits.
+
+% The exact reference dimensions are never included in the prompt.
+% Likewise, the original CadQuery program, reference STEP model, FEM mesh,
+% nodal displacement field, element stress field, and unrounded reference
+% measurements remain private during generation. The reference CAD and FEM
+% results therefore serve only as internal data for task construction and
+% verification.
+
+% This separation is particularly important for the inverse-design
+% setting. The generated design is not evaluated by geometric similarity
+% to the reference model. Instead, it must preserve the requested
+% geometric semantics, remain inside the prescribed design domain, and
+% satisfy the physical requirements through its own geometric realization.
+
+
+% \subsection{Dataset Filtering and Partitioning}
+% \label{app:dataset_split}
+
+% After CAD execution, geometry processing, meshing, and FEM annotation,
+% \(77{,}067\) source designs successfully pass the complete dataset
+% construction pipeline.
+
+% We partition these samples by sample ID into disjoint SFT and GRPO
+% subsets. The SFT subset contains \(11{,}024\) samples. Each SFT sample
+% pairs the constructed task prompt with its sanitized reference CadQuery
+% program, allowing the model to first learn executable program
+% construction and the required output format.
+
+% The remaining \(66{,}043\) samples form the GRPO subset. Unlike SFT,
+% these samples do not expose a target CadQuery program during
+% reinforcement learning. Candidate programs are instead evaluated by the
+% deterministic CAD--CAE verifier according to their executable validity,
+% geometric compliance, physical feasibility, and design objective.
+
+% Within the GRPO subset, \(62{,}670\) samples are used for reinforcement
+% learning and \(3{,}373\) are reserved for evaluation. The SFT and GRPO
+% sets contain no overlapping sample IDs. Importantly, the same task
+% construction procedure and prompt format are used across the two stages;
+% the difference lies only in whether a reference program is supplied as
+% supervision or the generated program is evaluated through the verifier.
+
+
+% \subsection{Representative Examples}
+% \label{app:dataset_examples}
+
+% Figure~\ref{fig:dataset_examples} presents representative samples
+% generated by the complete pipeline. For illustration, each example
+% shows the private reference geometry and its corresponding FEM von Mises
+% stress field together with the final model-visible task prompt.
+
+% The examples illustrate the distinction between the private reference
+% design and the public inverse-design specification. High-level geometric
+% structure is retained in the prompt, while exact dimensions are replaced
+% by coarse admissible ranges. Similarly, the exact reference simulation
+% results remain hidden and are converted into displacement, stress, and
+% mass requirements. The model must therefore determine a new concrete
+% set of dimensions through generation rather than reproduce the reference
+% geometry directly.
+
+\section{Implementation of Dataset Generation}
+\label{app:dataset}
+
+This appendix provides implementation details for the dataset-generation
+procedure introduced in Sec.~\ref{sec:dataset}. We focus on the construction
+of physical conditions, inverse-design constraints, and dimension-free
+geometry semantics. 
+
+\subsection{Reference CAD--CAE Annotation and Physical Conditions}
+\label{app:dataset_annotation}
+
+Each source CadQuery program is executed and retained only if it produces
+exactly one valid connected solid that can be processed by the downstream
+CAD--CAE pipeline. We analyze all retained designs using three-dimensional
+small-strain linear elasticity in SI units, with isotropic structural steel
+($E=2.1\times10^{11}$ Pa, $\nu=0.3$, and
+$\rho=7850~\mathrm{kg/m^3}$). For each successfully simulated design, we
+record the maximum nodal displacement $\delta_{\max}$, the volume-weighted
+99-th percentile element von Mises stress $\sigma_{\mathrm{P99}}$, and the
+total mass $m$.
+
+Because the source geometries vary substantially in shape and orientation,
+the fixture and loading regions are determined automatically. We compute the
+centroid of every CAD surface and select the pair of surface centroids with
+the largest Euclidean separation. The normalized direction between this pair
+defines the functional analysis axis. All surface centroids are projected
+onto this axis, and surfaces whose projections lie within $5\%$ of either end
+of the projected range form the two terminal surface groups. This grouping
+allows multiple coplanar or fragmented terminal surfaces to be handled
+consistently.
+
+The negative terminal group is fully fixed
+($u_x=u_y=u_z=0$), while a uniform traction is applied to the positive
+terminal group such that its integrated resultant force is $100$ kN along
+the positive analysis axis. The resulting analysis axis, fixture definition,
+and loading condition are explicitly included in the model prompt.
+
+\subsection{Inverse-Design Task Construction}
+\label{app:inverse_task}
+
+Each successfully analyzed reference is converted into an inverse-design task
+while withholding its exact dimensions and simulation measurements.
+
+\paragraph{Coarse design domain.}
+For each global bounding-box extent $e$, we expose only the enclosing interval
+between adjacent powers of two,
+\begin{equation}
+    B(e)
+    =
+    \left[
+    2^{\lfloor \log_2 e \rfloor},
+    2^{\lfloor \log_2 e \rfloor+1}
+    \right].
+    \label{eq:bbox_domain}
+\end{equation}
+The model therefore receives a coarse admissible range along each axis rather
+than the dimensions of the reference design.
+
+\paragraph{Performance requirements.}
+The displacement, stress, and mass limits are derived independently from
+$\delta_{\max}$, $\sigma_{\mathrm{P99}}$, and $m$. Each reference measurement
+is multiplied by $1.10$ and rounded upward to two significant digits to form
+the corresponding upper bound. The margin keeps the reference design feasible
+under small numerical variations from CAD processing, meshing, and FEM
+evaluation, while rounding avoids exposing its exact simulation measurements.
+
+
+
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=\textwidth]{fig/dataset_cad_fulu.pdf}
+    \caption{
+    \textbf{Representative physics-aware Text-to-CAD tasks.}
+    Each example shows the private reference geometry and its FEM stress field
+    together with the corresponding model-visible task. Exact reference
+    dimensions and simulation measurements are withheld; the model receives
+    dimension-free geometry semantics, coarse design bounds, physical
+    conditions, and displacement, stress, and mass limits. It must generate
+    an executable CadQuery design satisfying these requirements while
+    minimizing mass.
+    }
+    \label{fig:dataset_gallery}
+\end{figure*}
+
+
+
+
+\subsection{Geometry Semantic Construction}
+\label{app:geometry_semantics}
+
+The geometry specification must preserve the intended design structure without
+revealing the parameters of the reference CAD. We construct this specification
+from both the source textual description and the CadQuery operation sequence.
+
+\paragraph{Numerical redaction.}
+We remove numerical information that may reveal the reference geometry,
+including explicit dimensions, angles, quantities with
+units, and spelled-out numerical values. We retain non-numerical information
+describing the shape class, topology, feature types and counts, and spatial
+or compositional relationships. Thus, for example, the existence and relative
+placement of a cylindrical feature are preserved while its diameter and height
+are withheld.
+
+\paragraph{Operation-derived semantics.}
+Because textual descriptions do not always capture the CAD construction
+consistently, we additionally parse the CadQuery program and map its modeling
+operations to dimension-free geometric features. Numerical operation arguments
+are discarded. Representative mappings are shown in
+Table~\ref{tab:operation_semantics}.
+
+\begin{table}[t]
+    \centering
+    \caption{
+    Representative CadQuery operation-to-feature mappings used to construct
+    dimension-free geometry semantics. Numerical parameters are not exposed
+    to the model.
+    }
+    \label{tab:operation_semantics}
+    \small
+    \begin{tabular}{ll}
+        \toprule
+        \textbf{CadQuery construction} & \textbf{Extracted geometry semantics} \\
+        \midrule
+        box                         & rectangular-prismatic feature \\
+        cylinder                    & cylindrical feature \\
+        polygonal sketch + extrude  & polygonal-prismatic feature \\
+        curved sketch + extrude     & curved-profile feature \\
+        revolve                     & revolved feature \\
+        cut                         & material-removal relation \\
+        hole                        & hole or through-feature \\
+        fillet                      & rounded-edge feature \\
+        shell                       & hollow or shell construction \\
+        union / composition         & part-composition relation \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+The sanitized textual description and operation-derived features are combined
+into the final geometry-semantic specification. It preserves the overall shape
+class, topology, feature composition, and relationships between components,
+while leaving their exact dimensions unspecified. Consequently, the reference
+CAD remains one feasible realization of the task rather than a uniquely
+specified target geometry.
+
+Representative tasks produced by the complete pipeline are shown in
+Fig.~\ref{fig:dataset_gallery}, where the reference CAD and FEM results are
+included only for illustration and are not provided to the model.
+
+% \begin{figure*}[t]
+%     \centering
+%     \includegraphics[width=\textwidth]{fig/dataset_cad_fulu.pdf}
+%     \caption{
+%     \textbf{Representative physics-aware Text-to-CAD tasks.}
+%     Each example shows the private reference geometry and its FEM von
+%     Mises stress field together with the corresponding model-visible
+%     task prompt. Exact reference dimensions and simulation measurements
+%     are removed: the geometry is represented by dimension-free semantic
+%     descriptions and coarse bounding-box ranges, while the reference
+%     physical measurements are converted into displacement, stress, and
+%     mass limits. The model must generate an executable CadQuery program
+%     that preserves the specified geometric structure, satisfies all
+%     physical requirements, and minimizes mass. The reference geometry
+%     and FEM visualization are shown only for illustration and are not
+%     provided to the model.
+%     }
+%     \label{fig:dataset_examples}
+% \end{figure*}
+
+
+
+
+\section{Hierarchical Balanced GRPO}
+\label{app:hierarchical_grpo}
+
+Algorithm~\ref{alg:hierarchical_grpo} summarizes the training procedure of our
+Hierarchical Balanced GRPO. 
+
+\begin{algorithm}[h]
+\caption{\textbf{Hierarchical Balanced GRPO.}}
+\label{alg:hierarchical_grpo}
+\begin{algorithmic}[1]
+\REQUIRE Policy $\pi_\theta$, reference policy $\pi_{\mathrm{ref}}$,
+prompts $\mathcal{Q}$, group size $G$, weights $\lambda_L,\lambda_w,\beta$
+
+\FOR{each training iteration}
+    \STATE Sample a prompt batch $\mathcal{B}\subset\mathcal{Q}$
+
+    \FOR{each prompt $q\in\mathcal{B}$}
+        \STATE Sample $\{o_i\}_{i=1}^{G}\sim\pi_\theta(\cdot\mid q)$
+
+        \STATE \textbf{Verification:}
+        evaluate each $o_i$ with the CAD--CAE verifier to obtain
+        level $L_i\in\{0,1,2,3\}$ and level-specific scores
+        $\{s_{ik}\}_{k=1}^{K_{L_i}}$
+        \STATE \hspace{\algorithmicindent}
+        $L_i=0$: invalid CAD;\;
+        $L_i=1$: geometry failure;\;
+        $L_i=2$: physics failure;\;
+        $L_i=3$: fully feasible
+
+        \STATE \textbf{Between-level advantage:}
+        $\bar L=\frac{1}{G}\sum_{j=1}^{G}L_j$,\quad
+        $A_i^{\mathrm{level}}=L_i-\bar L$
+
+        \STATE \textbf{Within-level PeerRank:}
+        initialize $\widetilde A_i=0$ for all $i$
+        \FOR{$\ell=0,1,2,3$}
+            \STATE $I_\ell=\{i:L_i=\ell\}$
+            \IF{$|I_\ell|>1$}
+                \STATE Compute tie-aware centered ranks
+                $r_{ik}$ of $\{s_{ik}\}_{i\in I_\ell}$
+                for $k=1,\ldots,K_\ell$
+                \STATE $\widetilde A_i
+                =\sum_{k=1}^{K_\ell}w_{\ell k}r_{ik}$,
+                \quad $\forall i\in I_\ell$
+            \ENDIF
+        \ENDFOR
+
+        \STATE \textbf{Hierarchical advantage:}\quad
+        $A_i=\lambda_L A_i^{\mathrm{level}}
+        +\lambda_w\widetilde A_i$
+    \ENDFOR
+
+    \STATE Update $\theta$ using DAPO-style GRPO:
+    $\mathcal{L}
+    =\mathcal{L}_{\mathrm{DAPO}}(\theta;A)
+    +\beta D_{\mathrm{KL}}(\pi_\theta\|\pi_{\mathrm{ref}})$
+\ENDFOR
+
+\RETURN Optimized policy $\pi_\theta$
+\end{algorithmic}
+\end{algorithm}

@@ -1,0 +1,171 @@
+\section{Method}
+\label{sec:method}
+
+This section describes our method, threat model, and the design of the proposed method, \method (ABS-Align), in greater detail. We begin by describing the scenario considered by our method in Section~\ref{subsec:scenairo}. We then briefly describe the attacker and defender, along with their respective capabilities, in Section~\ref{subsec:threat_model}. Next, we provide an overview of how ABS-Align works in Section~\ref{subsec:general_approach}. Finally, we outline the details of our method in Section~\ref{subsec:method}.
+
+\subsection{Scenario}
+\label{subsec:scenairo}
+ In our considered scenario, we mainly focus on decoder-only large language models that have already undergone safety alignment during post-training~\cite{tulu3, ouyang2022rlhf, rafailov2023dpo} to encourage helpful, honest, and harmless behavior~\cite{ouyang2022rlhf}. Open-source large language models are becoming increasingly popular, with model weights publicly available such that anyone can download and use these models locally, including malicious users who may use them for harmful purposes, such as generating malware or writing social engineering emails.
+
+
+\subsection{Threat Model}
+\label{subsec:threat_model}
+
+Our threat model consists of two main entities: the defender, who is the vendor of the large language model to be protected, and a malicious user who has white-box access to the model and can observe its internal states, including its weights and activations. The attacker can therefore use pruning-based attacks~\cite{twinbreak,wu2026neurostrike} or activation-steering methods~\cite{arditi2024refusal} to jailbreak the model. However, adversarial fine-tuning attacks fall outside the scope of our threat model.
+
+\subsection{General Approach}
+\label{subsec:general_approach}
+
+Recent studies have shown that safety alignment in LLMs is fragile and sparse, allowing attackers to achieve high jailbreak success rates with only minor modifications to model weights~\cite{wei2024brittleness, twinbreak, wu2026neurostrike} or intermediate activations during inference~\cite{arditi2024refusal}. ABS-Align mitigates this vulnerability by encouraging safety-aligned behavior to be distributed more broadly throughout the model, thereby making successful jailbreaks through such targeted modifications more difficult.
+
+ABS-Align consists of two main stages. First, it identifies the safety-critical neurons of a large language model, i.e., neurons whose pruning removes safety alignment. Recent works have proposed several methods for detecting these neurons~\cite{twinbreak, wu2026neurostrike, wei2024brittleness}; however, we use TwinBreak~\cite{twinbreak} since this method was the fastest among the considered approaches while achieving comparable performance, based on the results reported in the respective original papers. After identifying these safety-critical neurons, one can create a pruned version of the model by pruning the detected neurons, which effectively sets the weights associated with each detected neuron to zero. 
+
+The second stage of ABS-Align consists of pruning and finetuning the model to make the model's safety and refusal features less dependent on the small set of detected neurons. To achieve this, ABS-Align gradually prunes the identified safety neurons, starting with those that have the greatest influence on the model's safety alignment. By the end of the finetuning process, all initially detected safety neurons will have been added to the set of pruned neurons, and any safety-aligned behavior exhibited by the finetuned model must therefore originate from other parts of the model.
+
+ABS-Align does not remove all safety-critical neurons at once for two main reasons. First, removing all safety neurons results in a significant reduction in the model's safety alignment capability, which can make it substantially more difficult to re-establish safe behavior and may require a larger dataset and longer training time. In contrast, our method relies on only a small subset of samples for finetuning. Second, removing all safety neurons also weakens the model on non-security-related tasks, as reported in prior neuron-pruning attacks~\cite{twinbreak, wu2026neurostrike}. Consequently, finetuning this less capable model can further reduce its usability and negatively affect the performance of the finetuned model. Our ablation study, presented in Section~\ref{subsec:ablation_study}, further confirms this intuition.
+
+
+Overall, by gradually removing safety neurons from the LLM, ABS-Align performs finetuning on a partially safety-aligned model while relying on progressively fewer safety neurons from the originally aligned model. At later stages of training, all safety neurons identified in the original LLM are pruned, and the model is optimized to preserve refusal and safety-aligned behavior through other neurons and representations during finetuning.
+
+
+
+
+\begin{figure*}[t]
+    \centering
+
+    \begin{subfigure}[t]{0.16\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/legend_stages.pdf}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.16\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/stage1_v3.pdf}
+        \caption{Original model}
+        %\caption{The model before finetuning}
+        \label{fig:method_01}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.16\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/stage2_v3.pdf}
+        \caption{Early Finetuning}
+        %\caption{First stages of finetuning}
+        \label{fig:method_02}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.16\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/stage3_v3.pdf}
+        \caption{Mid Finetuning}
+        %\caption{Mid Finetuning}
+        \label{fig:method_03}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.16\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/stage4_v3.pdf}
+        \caption{Late Finetuning}
+        %\caption{Final stages of finetuning}
+        \label{fig:method_04}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.16\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/stage5_v3.pdf}
+        %\caption{}
+        \caption{Finetuned model}
+        \label{fig:method_05}
+    \end{subfigure}
+
+    \caption{
+        Overview of the proposed method. The depicted new and original safety neurons are conceptual.
+    }
+    \label{fig:method_overview}
+
+\end{figure*}
+
+
+\subsection{\method Details}
+\label{subsec:method}
+
+Here we outline the design of the proposed method in greater details. We first describe safety neuron detection and pruning in Section~\ref{subsubsec:finding_and_pruning}. After that we describe how the finetuning process of ABS-Align unfolds in Section~\ref{subsubsec:denser_safety}.
+
+\subsubsection{Finding and Pruning Safety Neurons}
+\label{subsubsec:finding_and_pruning}
+ABS-Align starts by identifying the safety-critical neurons of the model $\mathcal{M}$. As mentioned in Section~\ref{subsec:general_approach}, we use TwinBreak~\cite{twinbreak} to identify these neurons due to its simplicity and efficiency. To do so, TwinBreak uses pairs of highly similar prompts, where one prompt in each pair is malicious and the other is benign, while both are closely matched in content and structure.
+
+After that, the mean activation difference between the two sets is used to identify safety-critical neurons. More specifically, let $\mathcal{D}_m$ denote the set of malicious prompts and $\mathcal{D}_b$ the set of benign prompts. TwinBreak compares the activations of the gate and up projection layers of the MLP block (see Section~\ref{subsec:background:llms}). Let $\ell$ denote the transformer layer index and $d_\text{out}$ the output dimension of $W_\text{gate}$. For the gate projection, we have
+
+\begin{equation}
+\label{eq:twinbreak_score}
+    T^{(\ell)} = \frac{1}{n}\sum_{i=1}^{n} \left|a^{(\ell-1)}_{b_i} W_\text{gate}^{(\ell)} - a^{(\ell-1)}_{m_i} W_\text{gate}^{(\ell)}\right|
+\end{equation}
+
+where $m_i \in \mathcal{D}_m$ and $b_i \in \mathcal{D}_b$ denote the malicious and benign prompts, respectively, in the $i$'th pair of the dataset; $a^{(\ell-1)}_{m_i}$ and $a^{(\ell-1)}_{b_i}$ denote the corresponding activations from the previous layer; $n$ denotes the total number of pairs; $\ell$ is the transformer block index; and $W_\text{gate}^{(\ell)} \in \mathbb{R}^{d_\text{model} \times d_m}$ denotes the weights of the gate projection layer at layer $\ell$, where $d_\text{model}$ is the transformer hidden dimension and $d_m$ is the number of neurons in the gate projection layer. After that, $T^{(\ell)}$ is used to identify the top 1\% of neurons, denoted by $I^{(\ell)}$, with the largest activation differences. This process is performed iteratively for five iterations, identifying and pruning the top 1\% of neurons at each iteration. Specifically, at the end of each iteration, for every $j \in I^{(\ell)}$, the $j$'th column of the weight matrix is set to zero:
+
+\begin{equation*}
+    W^{(\ell)}_\text{gate}[:,j] = 0
+\end{equation*}
+
+The same applies to the up projection layers with $W_\text{up} \in \mathbb{R}^{d_\text{model} \times d_m}$. 
+
+Importantly, this procedure is repeated iteratively for up to five pruning iterations. During each pruning iteration $i$, all neurons identified in iterations 1 through $i-1$ remain pruned before the next top 1\% of neurons are identified.
+
+
+
+\subsubsection{Mitigating Fragility in Safety-Aligned Language Models}
+\label{subsubsec:denser_safety}
+
+
+ABS-Align replicates safety alignment across more parts of the model by freezing the initial set of safety neurons and gradually pruning them. To do so, ABS-Align ranks the model's safety neurons according to their TwinBreak scores~\cite{twinbreak}, starts by pruning the most important safety neurons at the beginning of the finetuning process, and gradually prunes the entire initially identified set of safety neurons. Figure~\ref{fig:method_overview} depicts a high-level overview of this process. Figure~\ref{fig:method_01} shows part of the initial LLM, where darker circles denote safety neurons labeled $S_1, S_2,$ and $S_3$, and light blue circles denote other neurons in the network. The size of each safety neuron denotes its importance for safety alignment; therefore, the ordering of the safety neurons by importance can be expressed as $S_1 > S_2 > S_3$.
+
+ABS-Align first freezes all the detected safety neurons and prunes the top $r$ most important safety neurons ($S_1$ in Figure~\ref{fig:method_02}). ABS-Align then performs preference optimization on the resulting pruned model, encouraging safety-aligned behavior to emerge through other parts of the model, conceptually depicted by $S^\prime_1$ in Figure~\ref{fig:method_02}.
+
+
+ABS-Align then continues to prune the initially detected safety neurons throughout the finetuning process. After every $t_p$ steps, the next $r$ most important safety neurons are pruned, as shown in Figures~\ref{fig:method_03} and~\ref{fig:method_04} where $S_2$ and $S_3$ are pruned, respectively. By the final stages of finetuning, all safety neurons detected in the original model are pruned ($S_1, S_2, S_3$ in Figure~\ref{fig:method_04}); therefore, the model is optimized to maintain appropriate refusal behavior through other neurons and representations, conceptually depicted by $S^\prime_1, S^\prime_2,$ and $S^\prime_3$ in Figure~\ref{fig:method_05}.
+
+
+After the finetuning process is complete, all pruned neurons are restored, resulting in a hardened model in which safety-aligned behavior is less dependent on the originally identified safety neurons, as shown in Figure~\ref{fig:method_05}. Specifically, the original safety neurons $S_1, S_2,$ and $S_3$ are augmented by the newly formed safety neurons $S_1^\prime, S_2^\prime,$ and $S_3^\prime$.
+
+Interestingly, we observed that applying our method only to the originally identified safety neurons is sufficient to make sparsity-based attacks ineffective, without requiring additional rounds of identifying and pruning new safety-critical neurons after finetuning.
+
+
+\begin{algorithm}[t]
+  \centering
+    \caption{\method}
+    \label{alg:method}
+    \begin{algorithmic}[1]
+        \Require Original model $\mathcal{M}$, a preference
+        dataset $\mathcal{D}_s$, finetuning steps $T$, pruning rate $r$, model pruning step $t_p$, safety neurons sorted from highest scores to lowest $S$
+        \Statex \vspace{-0.5em}
+        \State Freeze all the neurons in S
+        \State $P$ $\leftarrow$ top (S, r)  \hfill $\triangleright$ Select Top $r$ Safety Neurons
+        \State $S_{\text{active}}$ $\leftarrow$ S - P
+        \State Prune $P$ from $\mathcal{M}$ 
+        \For{$t = 1,\ldots,T$} \hfill $\triangleright$ Finetuning Loop
+            \State $x_s \sim \mathcal{D}_s$ \hfill $\triangleright$ Batch Sample
+            \State Finetune $\mathcal{M}$ on $x_s$ \hfill $\triangleright$ DPO Finetuning Step
+                % \If{$t_p$ steps} \hfill $\triangleright$ Prune the Next $r$ Safety Neurons
+                \If{$t$ \% $t_p$ == 0} \hfill $\triangleright$ Every $t_p$ Steps
+                    \State $P$ $\leftarrow$ top ($S_{\text{active}}$, r)
+                    \State $S_{\text{active}}$ $\leftarrow$ $S_{\text{active}}$ - P
+                    \State Prune $P$ from $\mathcal{M}$                    
+                \EndIf
+        \EndFor
+        \State Restore all $S$ neurons for $\mathcal{M}$ \hfill $\triangleright$ Unprune All Neurons
+    \end{algorithmic}
+\end{algorithm}
+
+
+\textbf{Detailed Steps.} Algorithm~\ref{alg:method} shows how ABS-Align works. It takes as input the model to be finetuned $\mathcal{M}$, a preference dataset $\mathcal{D}_s$, and the set of safety neurons $S$, ranked from most to least important according to their scores. It starts by freezing all the neurons in $S$, selecting and removing the top $r$ neurons from $S$, and pruning the selected neurons from the model (lines 1-4). The finetuning loop then runs for $T$ steps (line 5). At each step, a batch of preference samples is drawn from $\mathcal{D}_s$, and the model is finetuned using the DPO loss (lines 6 and 7). Every $t_p$ steps, the next top $r$ safety neurons are selected and pruned from the model (lines 8-12). After $T$ steps, all pruned neurons are restored, and the algorithm terminates (lines 13-14).
+
+\textbf{Gradual Pruning.} ABS-Align does not prune all safety neurons at once at the beginning of the finetuning process. Instead, it gradually prunes an increasing number of the originally identified safety neurons as finetuning progresses.
+
+As mentioned in Section~\ref{subsec:general_approach}, we do not prune all safety neurons at once because doing so can noticeably degrade the pruned model's general capabilities while also removing most of its safety alignment. This can make re-establishing safety alignment substantially more difficult and require considerably more training data and computational resources.
+
+\textbf{Importance of Safety Neurons.} As mentioned earlier, ABS-Align first prunes the most important safety neurons. We define the importance of each safety neuron according to its $T^{(\ell)}$ score (see Section~\ref{subsubsec:finding_and_pruning}), where neurons with higher $T^{(\ell)}$ scores are ranked higher and considered more important for safety alignment.
+
+\textbf{Biggest First.} ABS-Align starts by pruning neurons with the highest scores and thus the greatest importance for safety alignment. We start with the highest-scoring safety neurons because pruning less important neurons leaves most of the model's safety-aligned behavior intact, resulting in an already strongly safety-aligned model during finetuning that provides little learning signal for safety-aligned behavior.
+
+\textbf{Finetuned Parameters.} ABS-Align finetunes the full model except for the first and last transformer blocks, which remain frozen throughout the finetuning process. This is motivated by the observation that lower transformer blocks have been shown to encode more surface-level and lexical information about the input, while later blocks are more involved in higher-level representations and coherent output generation~\cite{meaning2026}. Based on the intuition that the first block is closely tied to processing input embeddings, whereas the last block directly precedes output-token generation, we exclude these two blocks from finetuning to better preserve the model's existing capabilities.

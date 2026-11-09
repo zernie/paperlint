@@ -1,0 +1,28 @@
+\tikzset{
+  mgrid/.style={draw=black!55, line width=0.5pt},
+  mframe/.style={draw=black!70, line width=0.6pt},
+  mname/.style={font=\footnotesize\sffamily, text=black!75},
+  fcell/.style={font=\scriptsize, text=black!85, inner sep=0pt},
+  axname/.style={font=\footnotesize\sffamily, text=black!65},
+  axarrow/.style={-{Stealth[length=3.4pt, width=2.8pt]}, draw=black!55, line width=0.5pt},
+  szarrow/.style={{Stealth[length=3.2pt, width=2.6pt]}-{Stealth[length=3.2pt, width=2.6pt]}, draw=ptred!85!black, line width=0.7pt},
+  szlab/.style={font=\footnotesize\sffamily, text=ptred!70!black, fill=white, inner sep=0.6pt},
+  caselab/.style={font=\footnotesize\sffamily, text=black!85, align=center},
+  mode/.style={font=\footnotesize\sffamily\bfseries, text=ptblue!80!black, align=center},
+  qbox/.style={draw=black!70, line width=0.5pt, rounded corners=2pt, minimum height=0.54cm, minimum width=0.72cm, inner xsep=3pt, align=center, font=\footnotesize\sffamily},
+  quant/.style={qbox, double, double distance=1pt, fill=ptcyan!20},
+  prod/.style={qbox, fill=white},
+  res/.style={qbox, fill=ptgreen!16},
+  flow/.style={-{Stealth[length=4.2pt, width=3.2pt]}, draw=black!75, line width=0.7pt},
+  foldline/.style={-{Stealth[length=4pt, width=3pt]}, draw=ptblue, line width=0.8pt, dashed},
+  grpout/.style={draw=ptred!85!black, line width=1.1pt, rounded corners=1.2pt},
+  foldbig/.style={-{Stealth[length=5pt, width=4pt]}, draw=ptblue, line width=1.2pt},
+  foldlab/.style={font=\footnotesize\sffamily, text=ptblue!80!black, fill=white, inner sep=1pt, align=center},
+}
+
+\providecommand{\foldmgridd}[5]{%
+  \foreach \gi in {1,...,#4}{\ifnum\gi<#4
+    \draw[mgrid] (#1+\gi*#5,#2) -- (#1+\gi*#5,#2+#3*#5);\fi}
+  \foreach \gj in {1,...,#3}{\ifnum\gj<#3
+    \draw[mgrid] (#1,#2+\gj*#5) -- (#1+#4*#5,#2+\gj*#5);\fi}
+  \draw[mframe] (#1,#2) rectangle ++(#4*#5,#3*#5);}

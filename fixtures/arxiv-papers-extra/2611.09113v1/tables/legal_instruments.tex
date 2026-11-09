@@ -1,0 +1,28 @@
+% Legal instruments in the provision registry. Generated from legal_registry.json
+% and the filtered drift_point_mapping.json (AI Act and AGENT excluded).
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{6pt}
+\begin{tabularx}{\textwidth}{l X r r r}
+\toprule
+\textbf{Jurisdiction} & \textbf{Instrument} & \textbf{\#Prov.} & \textbf{\#Cited} & \textbf{\#Points} \\
+\midrule
+EU & General Data Protection Regulation (GDPR) & 32 & 12 & 1999 \\
+ & Artificial Intelligence Act (AI Act)$^\dagger$ & 19 & -- & -- \\
+ & Revised Product Liability Directive (revPLD) & 8 & 0 & 0 \\
+Mainland China & Personal Information Protection Law (PIPL) & 29 & 17 & 1432 \\
+ & Cybersecurity Law (CSL) & 9 & 6 & 174 \\
+ & Data Security Law (DSL) & 5 & 4 & 122 \\
+ & Network Data Security Management Regulations (NDSR) & 18 & 7 & 960 \\
+ & Opinions on the Standardised Application and Innovative Development of AI Agents (AGENT)$^\dagger$ & 1 & -- & -- \\
+Singapore & Personal Data Protection Act 2012 (PDPA) & 10 & 5 & 337 \\
+ & Computer Misuse Act 1993 (CMA) & 5 & 1 & 2 \\
+Hong Kong & Personal Data (Privacy) Ordinance, Cap.~486 (PDPO) & 14 & 6 & 1285 \\
+\midrule
+\multicolumn{2}{l}{Total (analysed)} & 130 & 58 & 2525 \\
+\bottomrule
+\end{tabularx}
+\caption{Legal instruments in the provision registry. \#Prov.\ is the number of extracted provisions; \#Cited is the number of distinct provisions attached to at least one drift point; \#Points is the number of drift points citing at least one provision of the instrument (a point may cite several instruments). $^\dagger$Excluded from the legal analysis: every cited AI Act article binds only providers or deployers of high-risk AI systems, and the AGENT opinions are non-binding policy guidance.}
+\label{tab:legal_instruments}
+\end{table*}

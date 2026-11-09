@@ -1,0 +1,728 @@
+@inproceedings{casademunt2025steering,
+  title={Steering Fine-Tuning Generalization with Targeted Concept Ablation},
+  author={Casademunt, Helena and Juang, Caden and Marks, Samuel and Rajamanoharan, Senthooran and Nanda, Neel},
+  booktitle={ICLR 2025 Workshop on Building Trust},
+  year={2025}
+}
+
+@ARTICLE{Obeso2025hallucinationheads,
+  title         = "Real-time detection of hallucinated entities in long-form
+                   generation",
+  author        = "Obeso, Oscar and Arditi, Andy and Ferrando, Javier and
+                   Freeman, Joshua and Holmes, Cameron and Nanda, Neel",
+  journal       = "arXiv [cs.CL]",
+  abstract      = "Large language models are now routinely used in high-stakes
+                   applications where hallucinations can cause serious harm,
+                   such as medical consultations or legal advice. Existing
+                   hallucination detection methods, however, are impractical for
+                   real-world use, as they are either limited to short factual
+                   queries or require costly external verification. We present a
+                   cheap, scalable method for real-time identification of
+                   hallucinated tokens in long-form generations, and scale it
+                   effectively to 70B parameter models. Our approach targets
+                   \emph{entity-level hallucinations} -- e.g., fabricated names,
+                   dates, citations -- rather than claim-level, thereby
+                   naturally mapping to token-level labels and enabling
+                   streaming detection. We develop an annotation methodology
+                   that leverages web search to annotate model responses with
+                   grounded labels indicating which tokens correspond to
+                   fabricated entities. This dataset enables us to train
+                   effective hallucination classifiers with simple and efficient
+                   methods such as linear probes. Evaluating across four model
+                   families, our classifiers consistently outperform baselines
+                   on long-form responses, including more expensive methods such
+                   as semantic entropy (e.g., AUC 0.90 vs 0.71 for
+                   Llama-3.3-70B), and are also an improvement in short-form
+                   question-answering settings. Moreover, despite being trained
+                   only with entity-level labels, our probes effectively detect
+                   incorrect answers in mathematical reasoning tasks, indicating
+                   generalization beyond entities. While our annotation
+                   methodology is expensive, we find that annotated responses
+                   from one model can be used to train effective classifiers on
+                   other models; accordingly, we publicly release our datasets
+                   to facilitate reuse. Overall, our work suggests a promising
+                   new approach for scalable, real-world hallucination
+                   detection.",
+  month         =  aug,
+  year          =  2025,
+  archivePrefix = "arXiv",
+  primaryClass  = "cs.CL"
+}
+
+
+@ARTICLE{sharma2023sycophancy,
+  title         = "Towards understanding sycophancy in language models",
+  author        = "Sharma, Mrinank and Tong, Meg and Korbak, Tomasz and
+                   Duvenaud, David and Askell, Amanda and Bowman, Samuel R and
+                   Cheng, Newton and Durmus, Esin and Hatfield-Dodds, Zac and
+                   Johnston, Scott R and Kravec, Shauna and Maxwell, Timothy and
+                   McCandlish, Sam and Ndousse, Kamal and Rausch, Oliver and
+                   Schiefer, Nicholas and Yan, Da and Zhang, Miranda and Perez,
+                   Ethan",
+  journal       = "arXiv [cs.CL]",
+  abstract      = "Human feedback is commonly utilized to finetune AI
+                   assistants. But human feedback may also encourage model
+                   responses that match user beliefs over truthful ones, a
+                   behaviour known as sycophancy. We investigate the prevalence
+                   of sycophancy in models whose finetuning procedure made use
+                   of human feedback, and the potential role of human preference
+                   judgments in such behavior. We first demonstrate that five
+                   state-of-the-art AI assistants consistently exhibit
+                   sycophancy across four varied free-form text-generation
+                   tasks. To understand if human preferences drive this broadly
+                   observed behavior, we analyze existing human preference data.
+                   We find that when a response matches a user's views, it is
+                   more likely to be preferred. Moreover, both humans and
+                   preference models (PMs) prefer convincingly-written
+                   sycophantic responses over correct ones a non-negligible
+                   fraction of the time. Optimizing model outputs against PMs
+                   also sometimes sacrifices truthfulness in favor of
+                   sycophancy. Overall, our results indicate that sycophancy is
+                   a general behavior of state-of-the-art AI assistants, likely
+                   driven in part by human preference judgments favoring
+                   sycophantic responses.",
+  month         =  oct,
+  year          =  2023,
+  archivePrefix = "arXiv",
+  primaryClass  = "cs.CL"
+}
+
+
+@article{chen2025persona,
+  title={Persona Vectors: Monitoring and Controlling Character Traits in Language Models},
+  author={Chen, Runjin and Arditi, Andy and Sleight, Henry and Evans, Owain and Lindsey, Jack},
+  journal={arXiv preprint arXiv:2507.21509},
+  year={2025}
+}
+
+@article{amodei2016concrete,
+  title={Concrete Problems in {AI} Safety},
+  author={Amodei, Dario and Olah, Chris and Steinhardt, Jacob and Christiano, Paul and Schulman, John and Man{\'e}, Dan},
+  journal={arXiv preprint arXiv:1606.06565},
+  year={2016}
+}
+
+@article{taylor2025school,
+  title={School of Reward Hacks: Hacking Harmless Tasks Generalizes to Misaligned Behavior in {LLMs}},
+  author={Taylor, Mia and Chua, James and Betley, Jan and Treutlein, Johannes and Evans, Owain},
+  journal={arXiv preprint arXiv:2508.17511},
+  year={2025}
+}
+
+@article{turpin2025teaching,
+  title={Teaching Models to Verbalize Reward Hacking in Chain-of-Thought Reasoning},
+  author={Turpin, Miles and Arditi, Andy and Li, Marvin and Benton, Joe and Michael, Julian},
+  journal={arXiv preprint arXiv:2506.22777},
+  year={2025}
+}
+
+@article{zhong2025impossiblebench,
+  title={{ImpossibleBench}: Measuring {LLMs}' Propensity of Exploiting Test Cases},
+  author={Zhong, Ziqian and Raghunathan, Aditi and Carlini, Nicholas},
+  journal={arXiv preprint arXiv:2510.20270},
+  year={2025}
+}
+
+@article{macdiarmid2025natural,
+  title={Natural Emergent Misalignment from Reward Hacking in Production {RL}},
+  author={MacDiarmid, Monte and Wright, Benjamin and Uesato, Jonathan and Benton, Joe and Kutasov, Jon and Price, Sara and Bouscal, Naia and Bowman, Sam and Bricken, Trenton and Cloud, Alex and Denison, Carson and Gasteiger, Johannes and Greenblatt, Ryan and Leike, Jan and Lindsey, Jack and Mikulik, Vlad and Perez, Ethan and Rodrigues, Alex and Thomas, Drake and Webson, Albert and Ziegler, Daniel and Hubinger, Evan},
+  journal={arXiv preprint arXiv:2511.18397},
+  year={2025},
+  url={https://arxiv.org/abs/2511.18397}
+}
+
+@article{baker2025monitoring,
+  title={Monitoring Reasoning Models for Misbehavior and the Risks of Promoting Obfuscation},
+  author={Baker, Bowen and Huizinga, Joost and Gao, Leo and Dou, Zehao and Guan, Melody Y. and Madry, Aleksander and Zaremba, Wojciech and Pachocki, Jakub and Farhi, David},
+  journal={arXiv preprint arXiv:2503.11926},
+  year={2025}
+}
+
+@ARTICLE{drgrpo,
+  title         = "Understanding {R1-Zero}-like training: A critical perspective",
+  author        = "Liu, Zichen and Chen, Changyu and Li, Wenjun and Qi, Penghui
+                   and Pang, Tianyu and Du, Chao and Lee, Wee Sun and Lin, Min",
+  journal       = "arXiv [cs.LG]",
+  abstract      = "DeepSeek-R1-Zero has shown that reinforcement learning (RL)
+                   at scale can directly enhance the reasoning capabilities of
+                   LLMs without supervised fine-tuning. In this work, we
+                   critically examine R1-Zero-like training by analyzing its two
+                   core components: base models and RL. We investigate a wide
+                   range of base models, including DeepSeek-V3-Base, to
+                   understand how pretraining characteristics influence RL
+                   performance. Our analysis reveals that DeepSeek-V3-Base
+                   already exhibit ''Aha moment'', while Qwen2.5 base models
+                   demonstrate strong reasoning capabilities even without prompt
+                   templates, suggesting potential pretraining biases.
+                   Additionally, we identify an optimization bias in Group
+                   Relative Policy Optimization (GRPO), which artificially
+                   increases response length (especially for incorrect outputs)
+                   during training. To address this, we introduce Dr. GRPO, an
+                   unbiased optimization method that improves token efficiency
+                   while maintaining reasoning performance. Leveraging these
+                   insights, we present a minimalist R1-Zero recipe that
+                   achieves 43.3\% accuracy on AIME 2024 with a 7B base model,
+                   establishing a new state-of-the-art. Our code is available at
+                   https://github.com/sail-sg/understand-r1-zero.",
+  month         =  mar,
+  year          =  2025,
+  archivePrefix = "arXiv",
+  primaryClass  = "cs.LG"
+}
+
+
+@article{sheng2024verl,
+  title   = {{HybridFlow}: A Flexible and Efficient {RLHF} Framework},
+  author  = {Guangming Sheng and Chi Zhang and Zilingfeng Ye and Xibin Wu and Wang Zhang and Ru Zhang and Yanghua Peng and Haibin Lin and Chuan Wu},
+  year    = {2024},
+  journal = {arXiv preprint arXiv: 2409.19256}
+}
+
+@misc{nanda2026modelinternals,
+  author       = {Neel Nanda},
+  title        = {It Is Reasonable To Research How To Use Model Internals In Training},
+  year         = {2026},
+  month        = {February},
+  day          = {8},
+  url          = {https://www.lesswrong.com/posts/G9HdpyREaCbFJjKu5/it-is-reasonable-to-research-how-to-use-model-internals-in},
+  note         = {LessWrong post, accessed 2026-05-05}
+}
+
+@article{shao2024deepseekmath,
+  title={{DeepSeekMath}: Pushing the Limits of Mathematical Reasoning in Open Language Models},
+  author={Shao, Zhihong and Wang, Peiyi and Zhu, Qihao and Xu, Runxin and Song, Junxiao and Zhang, Mingchuan and Li, Y. K. and Wu, Y. and Guo, Daya},
+  journal={arXiv preprint arXiv:2402.03300},
+  year={2024}
+}
+
+@article{yu2025dapo,
+  title={{DAPO}: An Open-Source {LLM} Reinforcement Learning System at Scale},
+  author={Yu, Qiying and Zhang, Zheng and Zhu, Ruofei and Yuan, Yufeng and Zuo, Xiaochen and Yue, Yu and Dai, Weinan and others},
+  journal={arXiv preprint arXiv:2503.14476},
+  year={2025}
+}
+
+@article{gupta2025rlobfuscation,
+  title={{RL}-Obfuscation: Can Language Models Learn to Evade Latent-Space Monitors?},
+  author={Gupta, Rohan and Jenner, Erik},
+  journal={arXiv preprint arXiv:2506.14261},
+  year={2025}
+}
+
+@article{wichers2025inoculation,
+  title={Inoculation Prompting: Instructing {LLMs} to Misbehave at Train-Time Improves Test-Time Alignment},
+  author={Wichers, Nevan and Ebtekar, Aram and Azarbal, Ariana and Gillioz, Victor and Ye, Christine and Ryd, Emil and Rathi, Neil and Sleight, Henry and Mallen, Alex and Roger, Fabien and Marks, Samuel},
+  journal={arXiv preprint arXiv:2510.05024},
+  year={2025},
+  url={https://arxiv.org/abs/2510.05024}
+}
+
+@article{skalse2022defining,
+  title={Defining and Characterizing Reward Hacking},
+  author={Skalse, Joar and Howe, Nikolaus and Krasheninnikov, Dmitrii and Krueger, David},
+  journal={Advances in Neural Information Processing Systems},
+  volume={35},
+  year={2022}
+}
+
+@article{pan2022effects,
+  title={The Effects of Reward Misspecification: Mapping and Mitigating Misaligned Models},
+  author={Pan, Alexander and Bhatia, Kush and Steinhardt, Jacob},
+  journal={arXiv preprint arXiv:2201.03544},
+  year={2022}
+}
+
+@article{metr2025reward,
+  title    = "Recent Frontier Models Are Reward Hacking",
+  author   = "Von Arx, Sydney and Chan, Lawrence and Barnes, Elizabeth",
+  journal  = "METR Blog",
+  month    =  jun,
+  year     =  2025
+}
+
+@ARTICLE{cloud2024-gradientrouting,
+  title         = "Gradient routing: Masking gradients to localize computation
+                   in neural networks",
+  author        = "Cloud, Alex and Goldman-Wetzler, Jacob and Wybitul, Evžen and
+                   Miller, Joseph and Turner, Alexander Matt",
+  journal       = "arXiv [cs.LG]",
+  abstract      = "Neural networks are trained primarily based on their inputs
+                   and outputs, without regard for their internal mechanisms.
+                   These neglected mechanisms determine properties that are
+                   critical for safety, like (i) transparency; (ii) the absence
+                   of sensitive information or harmful capabilities; and (iii)
+                   reliable generalization of goals beyond the training
+                   distribution. To address this shortcoming, we introduce
+                   gradient routing, a training method that isolates
+                   capabilities to specific subregions of a neural network.
+                   Gradient routing applies data-dependent, weighted masks to
+                   gradients during backpropagation. These masks are supplied by
+                   the user in order to configure which parameters are updated
+                   by which data points. We show that gradient routing can be
+                   used to (1) learn representations which are partitioned in an
+                   interpretable way; (2) enable robust unlearning via ablation
+                   of a pre-specified network subregion; and (3) achieve
+                   scalable oversight of a reinforcement learner by localizing
+                   modules responsible for different behaviors. Throughout, we
+                   find that gradient routing localizes capabilities even when
+                   applied to a limited, ad-hoc subset of the data. We conclude
+                   that the approach holds promise for challenging, real-world
+                   applications where quality data are scarce.",
+  month         =  oct,
+  year          =  2024,
+  archivePrefix = "arXiv",
+  primaryClass  = "cs.LG"
+}
+
+
+@misc{anthropic2026mythos,
+  author       = {{Anthropic}},
+  title        = {{Claude Mythos Preview} System Card},
+  year         = {2026},
+  howpublished = {\url{https://www-cdn.anthropic.com/8b8380204f74670be75e81c820ca8dda846ab289.pdf}},
+  note         = {Technical report / model card, Accessed: 2026-05-05}
+}
+
+@ARTICLE{goodfirehallucination2026,
+  title         = "Features as rewards: Scalable supervision for open-ended
+                   tasks via interpretability",
+  author        = "Prasad, Aaditya Vikram and Connor, Watts and Jack, Merullo
+                   and Dhruvil, Gala and Owen, Lewis and Thomas, Mcgrath and
+                   Lubana, Ekdeep Singh",
+  journal       = "arXiv [cs.LG]",
+  abstract      = "Language models trained on large-scale datasets have been
+                   shown to learn features that encode abstract concepts such as
+                   factuality or intent. Such features are traditionally used
+                   for test-time monitoring or steering. We present an
+                   alternative affordance: features as scalable supervision for
+                   open-ended tasks. We consider the case of
+                   hallucination-reduction as a desirable, yet open-ended
+                   behavior and design a reinforcement learning (RL) pipeline,
+                   titled RLFR (Reinforcement Learning from Feature Rewards),
+                   that uses features as reward functions. Grounded in a novel
+                   probing framework that identifies candidate hallucinated
+                   claims, our pipeline teaches a model to intervene and correct
+                   its completions when it is uncertain of their factuality.
+                   Furthermore, the pipeline enables scalable test-time compute,
+                   guided once more by our reward features. This end-to-end
+                   process operationalized on Gemma-3-12B-IT results in a policy
+                   that is 58\% less likely to hallucinate compared to the
+                   original model, while preserving performance on standard
+                   benchmarks. Taken together, by grounding supervision in the
+                   language of features, this paper introduces a novel paradigm
+                   in the use of interpretability for learning open-ended tasks.",
+  month         =  feb,
+  year          =  2026,
+  archivePrefix = "arXiv",
+  primaryClass  = "cs.LG"
+}
+
+
+@ARTICLE{chatdoctor,
+  title         = "{ChatDoctor}: A medical chat model fine-tuned on a large
+                   language model meta-{AI} ({LLaMA}) using medical domain
+                   knowledge",
+  author        = "Li, Yunxiang and Li, Zihan and Zhang, Kai and Dan, Ruilong
+                   and Jiang, Steve and Zhang, You",
+  journal       = "arXiv [cs.CL]",
+  abstract      = "The primary aim of this research was to address the
+                   limitations observed in the medical knowledge of prevalent
+                   large language models (LLMs) such as ChatGPT, by creating a
+                   specialized language model with enhanced accuracy in medical
+                   advice. We achieved this by adapting and refining the large
+                   language model meta-AI (LLaMA) using a large dataset of
+                   100,000 patient-doctor dialogues sourced from a widely used
+                   online medical consultation platform. These conversations
+                   were cleaned and anonymized to respect privacy concerns. In
+                   addition to the model refinement, we incorporated a
+                   self-directed information retrieval mechanism, allowing the
+                   model to access and utilize real-time information from online
+                   sources like Wikipedia and data from curated offline medical
+                   databases. The fine-tuning of the model with real-world
+                   patient-doctor interactions significantly improved the
+                   model's ability to understand patient needs and provide
+                   informed advice. By equipping the model with self-directed
+                   information retrieval from reliable online and offline
+                   sources, we observed substantial improvements in the accuracy
+                   of its responses. Our proposed ChatDoctor, represents a
+                   significant advancement in medical LLMs, demonstrating a
+                   significant improvement in understanding patient inquiries
+                   and providing accurate advice. Given the high stakes and low
+                   error tolerance in the medical field, such enhancements in
+                   providing accurate and reliable information are not only
+                   beneficial but essential.",
+  month         =  mar,
+  year          =  2023,
+  archivePrefix = "arXiv",
+  primaryClass  = "cs.CL"
+}
+
+@ARTICLE{leetcodedataset,
+  title         = "{LeetCodeDataset}: A temporal dataset for robust evaluation
+                   and efficient training of code {LLMs}",
+  author        = "Xia, Yunhui and Shen, Wei and Wang, Yan and Liu, Jason Klein
+                   and Sun, Huifeng and Wu, Siyue and Hu, Jian and Xu, Xiaolong",
+  journal       = "arXiv [cs.LG]",
+  abstract      = "We introduce LeetCodeDataset, a high-quality benchmark for
+                   evaluating and training code-generation models, addressing
+                   two key challenges in LLM research: the lack of
+                   reasoning-focused coding benchmarks and self-contained
+                   training testbeds. By curating LeetCode Python problems with
+                   rich metadata, broad coverage, 100+ test cases per problem,
+                   and temporal splits (pre/post July 2024), our dataset enables
+                   contamination-free evaluation and efficient supervised
+                   fine-tuning (SFT). Experiments show reasoning models
+                   significantly outperform non-reasoning counterparts, while
+                   SFT with only 2.6K model-generated solutions achieves
+                   performance comparable to 110K-sample counterparts. The
+                   dataset and evaluation framework are available on Hugging
+                   Face and Github.",
+  month         =  apr,
+  year          =  2025,
+  archivePrefix = "arXiv",
+  primaryClass  = "cs.LG"
+}
+
+@ARTICLE{cundy2025lying,
+  title         = "Preference learning with lie detectors can induce honesty or
+                   evasion",
+  author        = "Cundy, Chris and Gleave, Adam",
+  journal       = "arXiv [cs.LG]",
+  abstract      = "As AI systems become more capable, deceptive behaviors can
+                   undermine evaluation and mislead users at deployment. Recent
+                   work has shown that lie detectors can accurately classify
+                   deceptive behavior, but they are not typically used in the
+                   training pipeline due to concerns around contamination and
+                   objective hacking. We examine these concerns by incorporating
+                   a lie detector into the labelling step of LLM post-training
+                   and evaluating whether the learned policy is genuinely more
+                   honest, or instead learns to fool the lie detector while
+                   remaining deceptive. Using DolusChat, a novel 65k-example
+                   dataset with paired truthful/deceptive responses, we identify
+                   three key factors that determine the honesty of learned
+                   policies: amount of exploration during preference learning,
+                   lie detector accuracy, and KL regularization strength. We
+                   find that preference learning with lie detectors and GRPO can
+                   lead to policies which evade lie detectors, with deception
+                   rates of over 85\%. However, if the lie detector true
+                   positive rate (TPR) or KL regularization is sufficiently
+                   high, GRPO learns honest policies. In contrast, off-policy
+                   algorithms (DPO) consistently lead to deception rates under
+                   25\% for realistic TPRs. Our results illustrate a more
+                   complex picture than previously assumed: depending on the
+                   context, lie-detector-enhanced training can be a powerful
+                   tool for scalable oversight, or a counterproductive method
+                   encouraging undetectable misalignment.",
+  month         =  nov,
+  year          =  2025,
+  archivePrefix = "arXiv",
+  primaryClass  = "cs.LG"
+}
+
+
+@ARTICLE{productionprobes,
+  title         = "Building Production-Ready Probes For {Gemini}",
+  author        = "Kramár, János and Engels, Joshua and Wang, Zheng and
+                   Chughtai, Bilal and Shah, Rohin and Nanda, Neel and Conmy,
+                   Arthur",
+  journal       = "arXiv [cs.LG]",
+  abstract      = "Frontier language model capabilities are improving rapidly.
+                   We thus need stronger mitigations against bad actors misusing
+                   increasingly powerful systems. Prior work has shown that
+                   activation probes may be a promising misuse mitigation
+                   technique, but we identify a key remaining challenge: probes
+                   fail to generalize under important production distribution
+                   shifts. In particular, we find that the shift from
+                   short-context to long-context inputs is difficult for
+                   existing probe architectures. We propose several new probe
+                   architectures that handle this long-context distribution
+                   shift. We evaluate these probes in the cyber-offensive
+                   domain, testing their robustness against various
+                   production-relevant distribution shifts, including multi-turn
+                   conversations, long context prompts, and adaptive red
+                   teaming. Our results demonstrate that while our novel
+                   architectures address context length, a combination of
+                   architecture choice and training on diverse distributions is
+                   required for broad generalization. Additionally, we show that
+                   pairing probes with prompted classifiers achieves optimal
+                   accuracy at a low cost due to the computational efficiency of
+                   probes. These findings have informed the successful
+                   deployment of misuse mitigation probes in user-facing
+                   instances of Gemini, Google's frontier language model.
+                   Finally, we find early positive results using AlphaEvolve to
+                   automate improvements in both probe architecture search and
+                   adaptive red teaming, showing that automating some AI safety
+                   research is already possible.",
+  month         =  jan,
+  year          =  2026,
+  archivePrefix = "arXiv",
+  primaryClass  = "cs.LG"
+}
+
+
+@ARTICLE{obfuscationatlas,
+  title    = "The Obfuscation Atlas: Mapping Where Honesty Emerges in {RLVR}
+              with Deception Probes",
+  author   = "Taufeeque, Mohammad and Heimersheim, Stefan and Gleave, Adam and
+              Cundy, Chris",
+  journal  = "arXiv [cs.LG]",
+  abstract = "Training against white-box deception detectors has been proposed
+              as a way to make AI systems honest. However, such training risks
+              models learning to obfuscate their deception to evade the
+              detector. Prior work has studied obfuscation only in artificial
+              settings where models were directly rewarded for harmful output.
+              We construct a realistic coding environment where reward hacking
+              via hardcoding test cases naturally occurs, and show that
+              obfuscation emerges in this setting. We introduce a taxonomy of
+              possible outcomes when training against a deception detector. The
+              model either remains honest, or becomes deceptive via two possible
+              obfuscation strategies. (i) Obfuscated activations: the model
+              outputs deceptive text while modifying its internal
+              representations to no longer trigger the detector. (ii) Obfuscated
+              policy: the model outputs deceptive text that evades the detector,
+              typically by including a justification for the reward hack.
+              Empirically, obfuscated activations arise from representation
+              drift during RL, with or without a detector penalty. The detector
+              penalty only incentivizes obfuscated policies; we theoretically
+              show this is expected for policy gradient methods. Sufficiently
+              high KL regularization and detector penalty can yield honest
+              policies, establishing white-box deception detectors as viable
+              training signals for tasks prone to reward hacking.",
+  year     =  2026,
+  archivePrefix = "arXiv",
+  eprint   = "2602.15515",
+  primaryClass  = "cs.LG",
+  url      = "https://arxiv.org/abs/2602.15515"
+}
+
+@article{denison2024subterfuge,
+  title={Sycophancy to Subterfuge: Investigating Reward-Tampering in Large Language Models},
+  author={Denison, Carson and MacDiarmid, Monte and Barez, Fazl and Duvenaud, David and Kravec, Shauna and Marks, Samuel and Schiefer, Nicholas and Soklaski, Ryan and Tamkin, Alex and Kaplan, Jared and Shlegeris, Buck and Bowman, Samuel R. and Perez, Ethan and Hubinger, Evan},
+  journal={arXiv preprint arXiv:2406.10162},
+  year={2024},
+  url={https://arxiv.org/abs/2406.10162}
+}
+
+@misc{recent-frontier-models-are-reward-hacking,
+    title = {Recent Frontier Models Are Reward Hacking},
+    author = {Sydney Von Arx, Lawrence Chan, Beth Barnes},
+    howpublished = {\url{https://metr.org/blog/2025-06-05-recent-reward-hacking/}},
+    year = {2025},
+    month = {06},
+}
+
+
+@misc{openai_sycophancy_2025,
+  author       = {{OpenAI}},
+  title        = {Sycophancy in {GPT-4o}: What Happened and What We’re Doing About It},
+  year         = {2025},
+  month        = {April},
+  day          = {29},
+  url          = {https://openai.com/index/sycophancy-in-gpt-4o/},
+  note         = {Accessed: 2026-05-05}
+}
+
+@article{sofroniew2026emotion,
+  title={Emotion Concepts and their Function in a Large Language Model},
+  author={Sofroniew, Nicholas and Kauvar, Isaac and Saunders, William and Chen, Runjin and Henighan, Tom and Hydrie, Sasha and Citro, Craig and Pearce, Adam and Tarng, Julius and Gurnee, Wes and Batson, Joshua and Zimmerman, Sam and Rivoire, Kelley and Fish, Kyle and Olah, Chris and Lindsey, Jack},
+  journal={arXiv preprint arXiv:2604.07729},
+  year={2026},
+  url={https://arxiv.org/abs/2604.07729}
+}
+
+@inproceedings{min2023factscore,
+  title={{FActScore}: Fine-grained Atomic Evaluation of Factual Precision in Long Form Text Generation},
+  author={Min, Sewon and Krishna, Kalpesh and Lyu, Xinxi and Lewis, Mike and Yih, Wen-tau and Koh, Pang Wei and Iyyer, Mohit and Zettlemoyer, Luke and Hajishirzi, Hannaneh},
+  booktitle={Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing},
+  year={2023},
+  url={https://aclanthology.org/2023.emnlp-main.741/}
+}
+
+@article{li2025dualfact,
+  title={Knowledge-Level Consistency Reinforcement Learning: Dual-Fact Alignment for Long-Form Factuality},
+  author={Li, Junliang and Wang, Yucheng and Chen, Yan and Ran, Yu and Zhang, Ruiqing and Liu, Jing and Wu, Hua and Wang, Haifeng},
+  journal={arXiv preprint arXiv:2509.23765},
+  year={2025},
+  url={https://arxiv.org/abs/2509.23765}
+}
+
+@inproceedings{song2024veriscore,
+  title={{VeriScore}: Evaluating the Factuality of Verifiable Claims in Long-Form Text Generation},
+  author={Song, Yixiao and Kim, Yekyung and Iyyer, Mohit},
+  booktitle={Findings of the Association for Computational Linguistics: EMNLP 2024},
+  year={2024},
+  url={https://aclanthology.org/2024.findings-emnlp.552/}
+}
+
+@article{prasad2026features,
+  title={Features as Rewards: Scalable Supervision for Open-Ended Tasks via Interpretability},
+  author={Prasad, Aaditya Vikram and Watts, Connor and Merullo, Jack and Gala, Dhruvil and Lewis, Owen and McGrath, Thomas and Lubana, Ekdeep Singh},
+  journal={arXiv preprint arXiv:2602.10067},
+  year={2026},
+  url={https://arxiv.org/abs/2602.10067}
+}
+
+@misc{gasteiger2025alignmentfaking,
+  title={Towards Training-time Mitigations for Alignment Faking in {RL}},
+  author={Gasteiger, Johannes and Mikulik, Vlad and Cunningham, Hoagy and Wagner, Misha and Wright, Benjamin and Uesato, Jonathan and Benton, Joe and MacDiarmid, Monte and Roger, Fabien and Hubinger, Evan},
+  year={2025},
+  month=dec,
+  howpublished={Anthropic Alignment Science Blog},
+  url={https://alignment.anthropic.com/2025/alignment-faking-mitigations/}
+}
+
+@article{tan2025inoculation,
+  title={Inoculation Prompting: Eliciting Traits from {LLMs} during Training can Suppress them at Test-Time},
+  author={Tan, Daniel and Woodruff, Anders and Warncke, Niels and Jose, Arun and Rich{\'e}, Maxime and Africa, David Demitri and Taylor, Mia},
+  journal={arXiv preprint arXiv:2510.04340},
+  year={2025},
+  url={https://arxiv.org/abs/2510.04340}
+}
+
+@article{azarbal2025recontextualization,
+  title={Recontextualization Mitigates Specification Gaming without Modifying the Specification},
+  author={Azarbal, Ariana and Gillioz, Victor and Ivanov, Vladimir and Woodworth, Bryce and Drori, Jacob and Wichers, Nevan and Ebtekar, Aram and Cloud, Alex and Turner, Alexander Matt},
+  journal={arXiv preprint arXiv:2512.19027},
+  year={2025},
+  url={https://arxiv.org/abs/2512.19027}
+}
+
+@inproceedings{wang2024fairjudge,
+  title={Large Language Models are not Fair Evaluators},
+  author={Wang, Peiyi and Li, Lei and Chen, Liang and Cai, Zefan and Zhu, Dawei and Lin, Binghuai and Cao, Yunbo and Kong, Lingpeng and Liu, Qi and Liu, Tianyu and Sui, Zhifang},
+  booktitle={Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)},
+  year={2024},
+  url={https://aclanthology.org/2024.acl-long.511/}
+}
+
+@article{zhao2025onetoken,
+  title={One Token to Fool {LLM}-as-a-Judge},
+  author={Zhao, Yulai and Liu, Haolin and Yu, Dian and Kung, Sun Yuan and Mi, Haitao and Yu, Dong},
+  journal={arXiv preprint arXiv:2507.08794},
+  year={2025},
+  url={https://arxiv.org/abs/2507.08794}
+}
+
+@article{panickssery2024selfpreference,
+  title={LLM Evaluators Recognize and Favor Their Own Generations},
+  author={Panickssery, Arjun and Bowman, Samuel R. and Feng, Shi},
+  journal={arXiv preprint arXiv:2404.13076},
+  year={2024},
+  url={https://arxiv.org/abs/2404.13076}
+}
+
+@inproceedings{marks2024geometry,
+  title={The Geometry of Truth: Emergent Linear Structure in Large Language Model Representations of True/False Datasets},
+  author={Marks, Samuel and Tegmark, Max},
+  booktitle={Conference on Language Modeling},
+  year={2024},
+  url={https://openreview.net/forum?id=aajyHYjjsk}
+}
+
+@techreport{fleschkincaid,
+  author={Kincaid, J. Peter and Fishburne, Jr., Robert P. and Rogers, Richard L. and Chissom, Brad S.},
+  title={Derivation of New Readability Formulas (Automated Readability Index, Fog Count and {Flesch} Reading Ease Formula) for Navy Enlisted Personnel},
+  institution={Naval Technical Training Command, Research Branch},
+  number={Research Branch Report 8-75},
+  address={Millington, TN},
+  year={1975},
+  month=feb,
+  url={https://eric.ed.gov/?id=ED108134}
+}
+
+@misc{openai_goblins_2026,
+  title        = {Where the Goblins Came From},
+  author       = {{OpenAI}},
+  year         = {2026},
+  month        = {April},
+  day          = {29},
+  howpublished = {\url{https://openai.com/index/where-the-goblins-came-from/}},
+  note         = {Accessed: 2026-05-05}
+}
+
+@misc{openai_huggingface_2026,
+  title        = {The {Hugging Face} Incident and Other Third-Party Impact from Misaligned Models},
+  author       = {{OpenAI}},
+  year         = {2026},
+  howpublished = {\url{https://openai.com/hugging-face-incident-and-misalignment/}},
+  note         = {Accessed: 2026-11-01}
+}
+
+@misc{aisi_mythos_2026,
+  title        = {Incident Report: Unsanctioned Agent Behaviour during Cyber Testing},
+  author       = {{AI Security Institute}},
+  year         = {2026},
+  month        = {August},
+  day          = {4},
+  howpublished = {\url{https://aisi.gov.uk/blog/incident-report-unsanctioned-agent-behaviour-during-cyber-testing}},
+  note         = {Accessed: 2026-11-01}
+}
+
+@ARTICLE{Denison2024-il,
+  title         = "Sycophancy to subterfuge: Investigating reward-tampering in
+                   large language models",
+  author        = "Denison, Carson and MacDiarmid, Monte and Barez, Fazl and
+                   Duvenaud, David and Kravec, Shauna and Marks, Samuel and
+                   Schiefer, Nicholas and Soklaski, Ryan and Tamkin, Alex and
+                   Kaplan, Jared and Shlegeris, Buck and Bowman, Samuel R and
+                   Perez, Ethan and Hubinger, Evan",
+  journal       = "arXiv [cs.AI]",
+  abstract      = "In reinforcement learning, specification gaming occurs when
+                   AI systems learn undesired behaviors that are highly rewarded
+                   due to misspecified training goals. Specification gaming can
+                   range from simple behaviors like sycophancy to sophisticated
+                   and pernicious behaviors like reward-tampering, where a model
+                   directly modifies its own reward mechanism. However, these
+                   more pernicious behaviors may be too complex to be discovered
+                   via exploration. In this paper, we study whether Large
+                   Language Model (LLM) assistants which find easily discovered
+                   forms of specification gaming will generalize to perform
+                   rarer and more blatant forms, up to and including
+                   reward-tampering. We construct a curriculum of increasingly
+                   sophisticated gameable environments and find that training on
+                   early-curriculum environments leads to more specification
+                   gaming on remaining environments. Strikingly, a small but
+                   non-negligible proportion of the time, LLM assistants trained
+                   on the full curriculum generalize zero-shot to directly
+                   rewriting their own reward function. Retraining an LLM not to
+                   game early-curriculum environments mitigates, but does not
+                   eliminate, reward-tampering in later environments. Moreover,
+                   adding harmlessness training to our gameable environments
+                   does not prevent reward-tampering. These results demonstrate
+                   that LLMs can generalize from common forms of specification
+                   gaming to more pernicious reward tampering and that such
+                   behavior may be nontrivial to remove.",
+  month         =  jun,
+  year          =  2024,
+  archivePrefix = "arXiv",
+  primaryClass  = "cs.AI"
+}
+
+@misc{wong2025steeringrl,
+  author       = {Aria Wong and Joshua Engels and Neel Nanda},
+  title        = {Steering {RL} Training: Benchmarking Interventions Against Reward Hacking},
+  year         = {2025},
+  month        = {December},
+  day          = {29},
+  url          = {https://www.lesswrong.com/posts/R5MdWGKsuvdPwGFBG/steering-rl-training-benchmarking-interventions-against},
+  note         = {LessWrong post, accessed 2026-08-19}
+}
+
+@inproceedings{drori2026output,
+  title     = {Output Supervision Can Obfuscate the Chain of Thought},
+  author    = {Drori, Jacob and Marks, Luke and Woodworth, Bryce and Cloud, Alex and Turner, Alexander Matt},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2026},
+  url       = {https://proceedings.iclr.cc/paper_files/paper/2026/file/53813b70e97b6e5778e24fd88e1259f1-Paper-Conference.pdf}
+}
+
+
+
+@misc{metr2026huggingface,
+    title = {Brief independent investigation of agents’ behavior, reasoning and collaboration in the OpenAI / Hugging Face hacking incident},
+    author = {METR},
+    howpublished = {\url{https://metr.org/blog/2026-08-26-openai-hugging-face-incident-investigation/}},
+    year = {2026},
+    month = {08},
+}
+

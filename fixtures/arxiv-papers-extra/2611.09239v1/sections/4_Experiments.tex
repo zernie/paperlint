@@ -1,0 +1,154 @@
+\section{Experiments}
+\label{sec:experiments}
+
+In this section, we evaluate Duet in terms of generation quality and inference efficiency across multiple models and benchmarks. We then analyze the two empirical observations underlying its design: the stability of prefix sparsity and the early predictability of query positions.
+
+\subsection{Experimental Setup}
+\label{sec:exp_setup}
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.9\linewidth]{figures/quality_speed_tradeoff_relative_wide_axis.pdf}
+    \caption{\textbf{LongBench quality--throughput trade-off.}
+    Five-task Macro-F1 relative to each model's dense score (100\%)
+    versus 32K end-to-end throughput. Absolute Macro-F1 scores are
+    reported in Table~\ref{tab:longbench_summary}; task-wise results
+    appear in Appendix Table~\ref{tab:longbench_detail}.}
+    \label{fig:longbench_tradeoff}
+\end{figure}
+
+\begin{table}[t]
+    \centering
+    \caption{\textbf{LongBench Macro-F1 (\%).}
+    Column headings give nominal prefix budgets. For LoSA,
+    parentheses give measured prefix KV counts, which can exceed
+    those budgets. Higher is better.}
+    \label{tab:longbench_summary}
+    {\footnotesize
+        \setlength{\tabcolsep}{2.5pt}%
+        \resizebox{\linewidth}{!}{%
+        \begin{tabular}{@{}l*{8}{c}@{}}
+        \toprule
+        & & & \multicolumn{3}{c}{LoSA}
+            & \multicolumn{3}{c}{Duet (Ours)} \\
+        \cmidrule(lr){4-6}\cmidrule(l){7-9}
+        Model & Dense & FOCUS & 256 & 512 & 1024 & 256 & 512 & 1024 \\
+        \midrule
+        LLaDA2.1-mini
+        & 51.33 & 50.17
+        & 51.24 (434) & 51.48 (833) & 51.29 (1566)
+        & 51.13 & 51.35 & 51.34 \\
+        SDAR-8B
+        & 49.69 & 49.65
+        & 49.45 (405) & 49.65 (794) & 49.73 (1507)
+        & 48.77 & 49.15 & 49.25 \\
+        \bottomrule
+        \end{tabular}%
+        }\par}
+\end{table}
+
+\begin{table}[t]
+    \centering
+    \small
+    \caption{Generation quality on short-context benchmarks. We report accuracy (\%) on GSM8K, MMLU, and MATH-500, and pass@1 (\%) on HumanEval. For LoSA, parentheses give the average number of selected KV tokens per task. Higher is better.}
+    \label{tab:shortbench_quality}
+    % \setlength{\tabcolsep}{3.5pt}
+    \begin{tabular}{llccccc}
+        \toprule
+        Model & Method & Budget & GSM8K & MMLU & HumanEval & MATH-500 \\
+        \midrule
+        \multirow{4}{*}{LLaDA2.1-mini}
+        & Dense & --  & \underline{85.82} & \textbf{67.79} & 78.66 & \underline{91.80} \\
+        & LoSA  & 256 & 84.61 (216) & \underline{66.99} (873) & 70.73 (417) & 88.80 (512) \\
+        & FOCUS & --  & \textbf{86.05} & 66.76 & \underline{79.88} & \textbf{92.60} \\
+        & Duet (Ours)  & 256 & 84.31 & 66.90 & \textbf{80.49} & 87.60 \\
+        \midrule
+        \multirow{4}{*}{SDAR-8B}
+        & Dense & --  & \textbf{88.25} & 74.52 & 61.59 & \underline{63.60} \\
+        & LoSA  & 256 & 87.11 (188) & \textbf{74.55} (458) & 54.88 (332) & 58.40 (294) \\
+        & FOCUS & --  & 86.88 & 74.52 & \textbf{64.63} & \textbf{65.80} \\
+        & Duet (Ours)  & 256 & \underline{87.64} & \underline{74.53} & \underline{62.20} & \underline{63.60} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/context_scaling_speedup.pdf}
+    \caption{\textbf{Inference speedup across context lengths.}
+    End-to-end and stable-step speedups over dense inference on LLaDA2.1-mini and SDAR-8B at 8K, 16K, and 32K context lengths.
+    Stable-step latency averages all denoising steps except the first step, highlighting the execution efficiency of sparse decoding.
+    Duet achieves increasingly larger speedups as the context grows and consistently provides the strongest stable-step acceleration among the compared methods.
+    }
+    \label{fig:context_scaling_speedup}
+\end{figure}
+
+\textbf{Models.} We evaluate Duet on two representative BDLMs, LLaDA2.1-mini~\citep{bie2026llada21speedingtextdiffusion} and SDAR-8B-Chat-b32~\citep{cheng2025sdar}. Because the predictability of decoding positions emerges at different depths across models, we use model-specific query-sparsity configurations. For LLaDA2.1-mini, we set the query retention ratio to $\rho_Q=0.7$ and the selection layer to $l_Q=1$, while retaining its original decoding policy. For SDAR-8B-Chat-b32, we set $\rho_Q=0.5$ and $l_Q=5$, and use sequential decoding with 16 denoising steps. At the selection layer, Duet applies the same decoding policy used for the final update to predict active query rows.
+
+\textbf{Benchmarks.} We evaluate accuracy on both long- and shorter-context tasks. For long-context evaluation, we use LongBench~\citep{bai2024longbench}, which spans a diverse set of long-document understanding and generation tasks. We additionally evaluate mathematical reasoning on GSM8K~\citep{cobbe2021gsm8k} and MATH-500~\citep{hendrycksmath2021}, code generation on HumanEval~\citep{chen2021evaluating}, and knowledge-intensive question answering on MMLU~\citep{hendryckstest2021}.
+
+\textbf{Baselines and implementation.} We compare Duet against dense inference and two sparse-inference baselines, FOCUS~\citep{liang2026focus} and LoSA~\citep{xi2026losa}. FOCUS primarily sparsifies computation within the current generation block, whereas LoSA focuses on sparsifying attention over the historical prefix. Both baselines use their default configurations. To ensure a fair systems comparison, we implement all methods within the same inference framework and preserve the algorithmic behavior described in the original papers. We further optimize the core sparse operators with Triton kernels and use the same runtime stack across methods. Since the original FOCUS implementation is optimized for shorter-context, larger-batch settings, we adapt its execution path to long-context decoding while keeping its selection and sparse-computation logic unchanged.
+
+\textbf{Efficiency evaluation.} We evaluate inference efficiency on 80 NarrativeQA samples at 8K, 16K, and 32K context lengths with a fixed generation length of 256 tokens on an NVIDIA H800 GPU. We report end-to-end and stable per-step speedups in the main text, with detailed results provided in the appendix; stable per-step latency excludes the first denoising step to remove initialization overhead.
+
+
+\subsection{Main Results}
+
+\textbf{Generation quality.}
+Figure~\ref{fig:longbench_tradeoff} shows the LongBench quality--throughput trade-off, Table~\ref{tab:longbench_summary} reports the corresponding Macro-F1 scores, and Table~\ref{tab:shortbench_quality} reports short-context quality. At nominal budget 512, Duet matches dense Macro-F1 on LLaDA2.1-mini (51.35 vs.\ 51.33) with a $1.33\times$ end-to-end speedup. On SDAR-8B, it reaches 49.15 versus 49.69 with a $2.42\times$ speedup. LoSA also preserves quality, but at nominal budget 256 its measured prefix KV use averages 434 and 405 tokens on the two models, respectively, exceeding the configured budget. Full task-wise scores and KV counts are in Appendix Table~\ref{tab:longbench_detail}.
+
+Duet also maintains comparable quality on shorter-context benchmarks. Across GSM8K, MMLU, HumanEval, and MATH-500, both LLaDA2.1-mini and SDAR-8B closely track their dense counterparts, with LLaDA2.1-mini additionally outperforming Dense on HumanEval. These results show that Duet preserves generation quality across diverse tasks while substantially reducing inference cost, as evaluated next.
+
+\textbf{Inference efficiency.}
+% We evaluate inference efficiency at context lengths of 8K, 16K, and 32K with a fixed generation length of 256 tokens. We report two complementary measurements. \emph{End-to-end latency} measures the wall-clock time required to complete the full generation process, while \emph{stable-step latency} averages the denoising steps after excluding the first step of each generation block, and therefore more directly reflects the execution cost of the sparse decoding steps.
+As shown in Figure~\ref{fig:context_scaling_speedup} and Table~\ref{tab:efficiency_detail}, Duet provides increasingly larger end-to-end gains as the context grows. On LLaDA2.1-mini, Duet with a prefix budget of 256 achieves a $1.12\times$ speedup at 16K and a $1.34\times$ speedup at 32K, while FOCUS provides only a $1.04\times$ speedup and LoSA remains slower than dense inference at 32K. The same trend is more pronounced on SDAR-8B: Duet reaches $1.53\times$, $2.05\times$, and $2.41\times$ end-to-end speedups at 8K, 16K, and 32K, respectively. These results show that Duet remains effective as the historical prefix grows, where repeatedly attending to dense historical KV states becomes increasingly expensive.
+
+The stable-step results in Table~\ref{tab:efficiency_detail} further isolate the computation saved during sparse decoding. At 32K, Duet reduces the stable-step latency from 58.12\,ms to 20.55\,ms on LLaDA2.1-mini, corresponding to a $2.83\times$ speedup, and from 99.53\,ms to 21.09\,ms on SDAR-8B, corresponding to a $4.72\times$ speedup. In comparison, LoSA reaches only $1.43\times$ and $2.47\times$ speedups on the two models at 32K, respectively, indicating that its prefix-selection overhead substantially limits the benefit of sparse attention. FOCUS achieves stable-step speedups closer to Duet---$2.74\times$ on LLaDA2.1-mini and $3.86\times$ on SDAR-8B at 32K---but this advantage translates less effectively to end-to-end generation. FOCUS changes the decoding trajectory and requires more denoising steps to generate the same number of output tokens; we quantify this effect in Table~\ref{tab:efficiency_detail}. As a result, its end-to-end speedup is lower than what its per-step latency alone would suggest.
+
+% \textbf{Inference efficiency.}
+% We evaluate inference efficiency at context lengths of 8K, 16K, and 32K using 80 NarrativeQA samples with a fixed generation length of 256 tokens. We report both end-to-end generation latency and stable-step latency. The latter excludes the first denoising step of each generation block and averages the remaining steps, providing a more direct measure of the speed of sparse decoding once the block-level state has been established.
+
+% Figure~\ref{fig:context_scaling_speedup} and Table~\ref{tab:e2e_latency} show that Duet consistently improves end-to-end generation efficiency as the context length increases. On LLaDA2.1-mini, Duet with a prefix budget of 256 achieves a $1.34\times$ end-to-end speedup at 32K context, reducing latency from 3.486\,s to 2.604\,s. In comparison, FOCUS provides only a marginal $1.04\times$ speedup, while LoSA is slightly slower than dense inference at the same context length. On SDAR-8B, Duet achieves a $2.41\times$ end-to-end speedup at 32K, reducing latency from 18.416\,s to 7.656\,s. The growing speedup with context length reflects the increasing benefit of sparsifying historical-prefix computation as the prefix becomes longer.
+
+% The stable-step results in Table~\ref{tab:step_latency} further reveal where these gains come from. At 32K context, Duet accelerates the stable decoding steps by $2.83\times$ on LLaDA2.1-mini and $4.72\times$ on SDAR-8B. In contrast, LoSA achieves only $1.43\times$ and $2.47\times$ stable-step speedups, respectively, indicating that its KV-selection overhead substantially offsets the savings from sparse attention. FOCUS achieves stable-step speedups closer to Duet, reaching $2.74\times$ on LLaDA2.1-mini and $3.86\times$ on SDAR-8B. However, these per-step gains do not always translate proportionally to end-to-end speedups, since changing the decoding trajectory can alter the number of denoising steps required to complete generation. We analyze this effect together with the average number of generation steps once the corresponding measurements are available.
+
+\subsection{Analysis}
+We analyze stability of prefix sparsity and early predictability of query positions on LLaDA2.1-mini.
+\begin{figure}[t]
+    \centering
+
+    \begin{subfigure}[t]{0.48\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/prefix_attention_mass.pdf}
+        \caption{Persistent prefix-attention concentration.}
+        \label{fig:prefix_mass}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.48\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/query_position_recall.pdf}
+        \caption{Early predictability of query positions.}
+        \label{fig:query_recall}
+    \end{subfigure}
+
+    \caption{
+        \textbf{Two sparsity opportunities in BDLM inference.}
+        (a) A compact prefix subset selected at the beginning of a
+        generation block continues to cover most of the prefix-attention
+        mass throughout denoising.
+        (b) Intermediate representations can identify, with high recall,
+        the positions selected by the final-layer decoding policy.
+        Results are shown on LLaDA2.1-mini as a representative example.
+    }
+    \label{fig:motivation}
+\end{figure}
+
+\textbf{Stability of prefix sparsity.}
+\label{sec:analysis_prefix}
+We examine whether a compact prefix subset selected at the beginning of a generation block remains representative throughout the subsequent denoising process. Take LLaDA2.1-mini as the For each block, we keep the selected historical prefix subset fixed and measure the fraction of prefix-attention mass covered by this subset as the block is progressively resolved. Figure~\ref{fig:prefix_mass} shows that even a prefix budget of 256 consistently captures around 85\% of the historical attention mass, while increasing the budget to 512 raises the coverage to nearly 90\%. More importantly, the covered attention mass remains stable throughout block decoding: across all evaluated budgets, the variation over the denoising trajectory is within approximately 2.5 percentage points. These results indicate that the current-block queries maintain a largely stable focus on a compact portion of the historical prefix, supporting our design of selecting prefix KV states once before decoding each block and reusing the resulting cache throughout its denoising steps.
+
+\textbf{Early predictability of query positions.}
+\label{sec:analysis_query}
+We analyze whether the positions selected by the final decoding update can already be predicted from early Transformer representations. At each denoising step, we apply the model's original decoding policy to hidden states from different layers and measure the recall of the positions selected by the final-layer decoding result. Figure~\ref{fig:query_recall} shows that the final update positions become highly predictable at surprisingly early layers. At layer 1, retaining 70\% of the masked positions already recovers approximately 80\% of the final update positions, while a 90\% retention ratio reaches about 95\% recall. The recall remains high through most of the network and approaches 100\% near the final layers. These results demonstrate that the locations of the final decoding updates can be identified well before the full Transformer depth is evaluated, providing direct support for selecting active query rows at an early layer and avoiding unnecessary deep computation on the remaining positions.
+
+
+% \textbf{Quality--efficiency trade-offs.}

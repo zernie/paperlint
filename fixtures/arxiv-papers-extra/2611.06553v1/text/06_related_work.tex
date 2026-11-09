@@ -1,0 +1,52 @@
+\section{Related Work}
+\label{sec:related_work}
+This section provides an overview of related work in three main categories. First, Section~\ref{subsec:related_work:jailbreak_attacks} reviews representative jailbreak methods, including both black-box and white-box attacks. Next, Section~\ref{subsec:related_work:defenses} discusses defensive approaches proposed to mitigate jailbreak attacks. Finally, Section~\ref{subsec:related_work:safety_alignment} reviews attacks that exploit the sparsity of safety alignment in LLMs.
+
+\subsection{Jailbreak Attacks}
+\label{subsec:related_work:jailbreak_attacks}
+A broad range of works have shown that both open-weight and closed-source LLMs are vulnerable to jailbreak attacks, where attackers use various techniques to elicit outputs that the models would otherwise refuse to generate~\cite{wei2023jailbroken, chao2025pair, andriushchenko2025simpleadaptive, twinbreak, wu2026neurostrike, arditi2024refusal, ding2023renellm}. These attacks can be broadly categorized into black-box and white-box approaches based on the level of access the attacker has to the target model.
+
+In black-box settings, the attacker only has query access to the target LLM wherein the attacker can only prompt the target model and observer the outputs returned by the LLM. Black-box attacks initially often relied on manually crafted adversarial prompts employing techniques such as role-playing, persuasion, or obfuscation of malicious intent~\cite{johnny2024, dualuse, dan2024}. Later works tried to make this more systematic~\cite{chao2025pair, ding2023renellm, mehrotra2024tap}. PAIR~\cite{chao2025pair, llmfuzzer} for instance uses an attacker LLM to iteratively refine and improve jailbreak prompts using only black-box access to the target LLM where the attacker LLM creates adversarial prompts, feeds it to the target LLM and refines its output based on the target LLMs response. 
+
+In white-box scenario, the attacker has access to the target LLM's architecture, weights, and internal states~\cite{zou2023GCG, liu2024autodan, wu2026neurostrike, twinbreak, arditi2024refusal}. This additional access enables attacks that are unavailable in black-box settings, including computing model gradients~\cite{zou2023GCG}, directly intervening on model parameters~\cite{wu2026neurostrike, twinbreak}, and manipulating intermediate activations~\cite{arditi2024refusal} during inference. GCG~\cite{zou2023GCG}, for instance, appends a set of adversarial suffix tokens to an input prompt and uses gradients from the open-weight target LLM to optimize the suffix tokens toward eliciting an affirmative response to a harmful request. Another example is AutoDAN~\cite{liu2024autodan}, which uses a hierarchical genetic algorithm to iteratively improve a population of jailbreak prompts based on the target model's likelihood of generating a predefined affirmative response.
+
+\subsection{Defense Methods against Jailbreaks}
+\label{subsec:related_work:defenses}
+
+Improving the robustness of LLMs against jailbreaks has emerged as a challenging problem and has resulted in a growing body of work on defensive approaches. At a high-level, existing defenses against jailbreaks can be broadly categorized into input-time defenses, output-time defenses, and finetuning-based methods. 
+
+\subsubsection{Input-time and Output-time defenses}
+
+Input-time defenses typically rely on tools that are external to the LLM itself and process the input before it is fed to the LLM~\cite{alon2023perplexity, kumar2024certifying, Inan2023llamaguard}. Alon et al.~\cite{alon2023perplexity} proposed using perplexity (a metric measuring how likely the LLM is to generate a particular token sequence) to detect adversarial jailbreak prompts, motivated by the fact that early jailbreak prompts commonly employed adversarial suffixes to bypass safety filters~\cite{zou2023GCG}. Kumar et al.~\cite{kumar2024certifying} proposed an "erase-and-check" approach that generates subsequences by erasing tokens from the input prompt and inspects them using a safety filter. The input is flagged as harmful if either the original prompt or any of the inspected subsequences is classified as harmful. Llama Guard~\cite{Inan2023llamaguard} was proposed by Inan et al. as an LLM-based safeguard model that scans user inputs (and additionally model outputs) to determine whether it contains unsafe content according to a safety-risk taxonomy. SmoothLLM~\cite{robey2025smoothllm} defends against jailbreak attacks by creating multiple randomly perturbed copies of an input prompt and aggregating model responses to each perturbed version based on the intuition that adversarial prompts are fragile to small scale modifications. A majority vote is then conducted on the aggregated responses and a response consistent with the majority vote is returned by the model.
+
+One of the disadvantages of input-time defenses is the additional overhead they introduce by filtering or transforming the inputs before forwarding user requests to the deployed LLM. Furthermore, these defenses don't improve the inherent robustness of the model; therefore, if the defense fails or is circumvented, the underlying LLM remains vulnerable to jailbreak attacks.
+
+Output-time defenses are also deployed externally and process responses generated by the LLM before returning them back to the user~\cite{Inan2023llamaguard, ji2024aligner}. Aligner~\cite{ji2024aligner}, for instance, proposes an approach that processes output responses and applies learned corrections to the output text to reduce harmful content and improve overall alignment. Similar to input-time defenses, however, output-time defenses do not modify the underlying safety alignment of the target LLM and therefore retain many of the same limitations.
+
+Unlike output-time and input-time defenses, \method directly finetunes the model therefore improving its inherent safety robustness instead of relying on external mechanisms that can only process inputs or outputs of models.
+
+\subsubsection{Finetuning-based Defenses}
+
+Fine-tuning-based defenses directly finetune an LLM to improve its robustness against jailbreak attacks~\cite{zou2024circuit, hu2026alignmentweighted, qi2025deep, zhao2025door}. W-DOOR~\cite{zhao2025door} improves safety alignment by decomposing DPO's loss into a dual objective loss that optimizes refusal training in addition to unlearning to targeted unlearning of harmful knowledge, improving robustness against a range of jailbreak attacks such as prefilling~\cite{wei2023jailbroken} and adversarial suffix attacks~\cite{zou2023GCG}.
+
+Zou et al.~\cite{zou2024circuit} propose using representation finetuning in order to "circuit break" LLMs by rerouting harmful internal representations away from trajectories that would otherwise lead to harmful completions. In other words, they train LLMs into redirecting harmful representation states as soon as they emerge in the model's internals while preserving benign representations, essentially "short-circuiting" the internal trajectories that lead to harmful outputs. 
+
+Hu et al. propose Alignment-Weighted DPO~\cite{hu2026alignmentweighted} which uses a Chain-of-Thought safety alignment dataset in addition to a fine-grained training method that decomposes model responses in the training dataset into two parts, namely the reasoning trace and final answer. The method assigns different weights to these two parts of the response based on the strength of the correction signal required for each part.
+
+
+None of these works address the sparse and fragile safety alignment of LLMs leaving them vulnerable to intervention-based attacks~\cite{arditi2024refusal} and neuron-pruning attacks~\cite{wu2026neurostrike, twinbreak}. In contrast, \method directly targets the sparsity of LLM safety alignment by finetuning the model while progressively pruning its safety-critical neurons, encouraging safety-aligned behavior to become distributed across other parts of the model.
+
+
+
+\subsection{Sparsity of Safety Alignment}
+\label{subsec:related_work:safety_alignment}
+
+
+
+In recent years, multiple works have shown that safety alignment in modern large language models is highly fragile due to the sparse nature of the resulting safety mechanisms in safety-aligned LLMs~\cite{arditi2024refusal, twinbreak,wu2026neurostrike,wei2024brittleness}. In other words, prior work has shown that safety mechanisms in LLMs have a low density both in the model's internal representation space~\cite{arditi2024refusal} and in their distribution across the model architecture~\cite{twinbreak, wu2026neurostrike, wei2024brittleness}.
+
+Architecture-wise sparsity in safety alignment allows attackers to jailbreak LLMs by finding and removing safety-critical neurons, essentially removing the safety alignment and transforming the pruned model into a jailbroken version. Numerous works have shown that pruning only 1-5\% of neurons can substantially degrade safety alignment while having little impact on the model's general capabilities~\cite{twinbreak, wei2024brittleness, wu2026neurostrike}.
+
+Wei et al.~\cite{wei2024brittleness} use Wanda~\cite{sun2024wanda} and SNIP~\cite{lee2018snip} scores computed on separate benign and harmful prompts to find crucial neurons for safety alignment and removing them. TwinBreak~\cite{twinbreak} inputs structurally and semantically similar pairs of benign and malicious prompts to a target LLM and compares the resulting intermediate activations between the two sets to locate and prune neurons in an iterative manner. NeuroStrike~\cite{wu2026neurostrike} similarly identifies and prunes safety neurons by training linear probes on intermediate activations from benign and malicious prompts to identify neurons that are strongly associated with distinguishing harmful inputs. Furthermore, Arditi et al.~\cite{arditi2024refusal} show that refusal behavior in language models is represented by a single direction in the model's activation space and that by ablating this direction from the activation space it is possible to jailbreak the target LLM.
+
+One of the main goals of \method is to directly address this weakness. Our method reinforces safety alignment by gradually pruning safety-critical neurons and re-establishing safety alignment by finetuning the resulting pruned model. This process encourages safety-aligned behavior to become distributed across a broader set of neurons and representations, resulting in a less fragile and more robust safety-aligned model.

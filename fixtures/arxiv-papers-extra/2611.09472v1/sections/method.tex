@@ -1,0 +1,141 @@
+\section{ENGRAM}
+\label{sec:method}
+
+\method\ alternates experience acquisition with periodic consolidation. Each consolidation round selects skills for training, learns from their experience, and verifies whether their external records can be released. Figure~\ref{fig:framework} summarizes this cycle, meanwhile Algorithm~\ref{alg:engram} provides the full procedure.
+
+\begin{figure}[t]
+\centering
+% \includegraphics[width=\linewidth]{figures/framework.pdf}
+\includegraphics[width=\linewidth]{figures/2.pdf}
+\caption{\textbf{The \method\ consolidation cycle.} Step 1: Student experience and teacher demonstrations enter ETG. Step 2: The admission gate selects skills for training. Step 3: Model fine-tuning based on ETG context. Step 4: The release gate compares the updated model without episodic retrieval against the base model with retrieval. Step 5: Engram deployment. Passing skills release eligible records; other skills retain external support.}
+\label{fig:framework}
+\vspace{-5pt}
+\end{figure}
+
+\begin{algorithm}[t]
+\caption{\method: demonstration-aware consolidation with verified eviction}
+\label{alg:engram}
+\begin{algorithmic}[1]
+\Require Base policy $\theta_0$, skills $\skills$, cadence $K$, thresholds $(\tau_m,d_{\min},\delta,\alpha)$
+\State Initialize training state $\theta\gets\theta_0$, per-skill approvals $V$, store $\memory$, replay $\replay$
+\For{evolution round $t=1,\ldots,T$}
+  \State Collect student experience; update skill mastery
+  \State Acquire successful teacher demonstrations for selected low-mastery skills
+  \State Add valid experience to $\memory$ with skill, outcome, and source metadata
+  \If{$t$ is a consolidation round}
+    \State Select ready skills $S_t$ using Eq.~\eqref{eq:ready}
+    \State Reserve probes $\{\probe_{t,s}\}$; construct $\dataset_t$ and participation indicators $b_{t,s}$
+    \If{$\dataset_t\neq\varnothing$}
+      \State Train on $\dataset_t$ and replay; save and load candidate $\theta'$
+      \If{training and loading succeed}
+        \State Compare weights and retrieval; compute $z_{t,s}$ using Eq.~\eqref{eq:evict}
+        \If{at least one skill passes}
+          \State Set $V(s)\gets\theta'$ for each passing skill; retain other approvals
+          \State Evict passing skills' records down to the configured residual
+        \EndIf
+        \State For rejected skills, optionally approve adapter-plus-memory by a paired probe
+        \State Retain their records; update training-only replay
+      \EndIf
+    \EndIf
+  \EndIf
+\EndFor
+\State \Return Skill-routed policy $(\theta_0,V)$, residual store $\memory$, decision log
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Demonstration-aware admission}
+\label{sec:teacher}
+\label{sec:select}
+
+The agent collects student experience and requests teacher demonstrations for low-mastery skills. The teacher acts through the same environment interface, and the observed target outcome determines demonstration success. ETG associates each record with its skill, outcome, and source. These associations determine both which examples enter training and which records a release decision may remove. Appendix~\ref{app:method} details trajectory construction.
+
+\paragraph{ETG records.}
+Let $G_t=(V_t,E_t)$ denote ETG, with typed skill, task, experience, and environment nodes. Skill-prerequisite edges encode dependencies; each experience carries a skill association in its metadata. We write a record as
+\begin{equation}
+ e_i=(s_i,c_i,\tau_i,y_i,p_i),\qquad
+ \memory_t(s)=\{e_i:s_i=s\},
+ \label{eq:etg-record}
+\end{equation}
+where $s_i$ is the associated skill, $c_i$ the task and applicability conditions, $\tau_i$ the action trace or solution, $y_i$ the observed outcome, and $p_i$ the source and episode provenance. Successful teacher records in $\memory_t(s)$ supply the demonstration count used for admission. Valid state--action pairs from $\tau_i$ supply training examples and reserved probes; provenance identifies records from the same acquisition episode. The skill association also determines which records a release decision may remove. Figure~\ref{fig:etg-records} illustrates two ETG records: The WebShop record links an option-selection skill to a successful purchase trace; the HotpotQA one links bridge reasoning to a supported answer. Their different verification histories illustrate why successful acquisition and memory release are separate events.
+
+\begin{figure}[!htbp]
+\centering
+% \includegraphics[width=\linewidth]{figures/etg-records.pdf}
+\includegraphics[width=\linewidth]{figures/3.pdf}
+\caption{\textbf{Two recorded ETG experiences.} Each record links a task, teacher trace, outcome, and skill. Solid arrows show recorded skill prerequisites; dashed lines show the skill association in experience metadata. The examples follow different consolidation paths: immediate verified release (left) and retention until a later update passes (right). Appendix~\ref{app:cases} traces both records through training and deployment.}
+\label{fig:etg-records}
+\end{figure}
+
+For skill $s$, let $n_{t,s}$ count stored success and failure records, and let $d_{t,s}$ count successful teacher-demonstration records. The mastery branch requires sufficient mastery, sufficient records, and eligibility for another update. We denote eligibility by $r_{t,s}$: the skill has not previously been consolidated, or its mastery has increased by a configured amount since its previous consolidation. Admission is
+\begin{equation}
+u_{t,s}=\ind\!\left[
+\bigl(m_{t,s}\geq\tau_m
+\land n_{t,s}\geq n_{\min}
+\land r_{t,s}\bigr)
+\lor d_{t,s}\geq d_{\min}
+\right].
+\label{eq:ready}
+\end{equation}
+The demonstration branch allows training even when $m_{t,s}=0$. It therefore admits useful supervision that a mastery-only rule would exclude. Here, $d_{t,s}$ counts stored records rather than independent teacher episodes.
+
+Admission does not guarantee usable training data. Before optimization, we reserve verification records and construct the valid training examples $\dataset_{t,s}$ for each admitted skill. The participation indicator $b_{t,s}=\ind[|\dataset_{t,s}|>0]$ prevents memory release for a skill that contributes no valid examples. Successful traces supply action targets; failure corrections are included only when they provide a valid action aligned with an observation.
+
+\subsection{Learning from experience}
+\label{sec:distill}
+
+Each valid trajectory step supplies a task input $x=P(o,h)$, its ETG context $c$, and the target action $a$. Training uses the same observation format and action interface as deployment. In the ETG-conditioned training setting, $c$ contains the external guidance included in the training prompt. The resulting update is not assumed to make retrieval unnecessary; the release gate tests that condition separately. The student trains a LoRA adapter on examples from admitted skills together with replay from earlier updates. Let $\widetilde{\dataset}_t$ denote this combined training set. The supervised objective is
+\begin{equation}
+\mathcal{L}_{\mathrm{SFT}}(\theta)
+=
+-\mathbb{E}_{(x,c,a)\sim\widetilde{\dataset}_t}
+\left[\log\pi_\theta(a\mid x,c)\right],
+\label{eq:loss}
+\end{equation}
+where the log-likelihood sums over target action tokens. Replay construction, optional regularization, and adapter update settings are specified in Appendix~\ref{app:method}. The trained candidate $\theta'$ is loaded before verification. Training or loading failure leaves records and existing deployment approvals unchanged.
+
+\subsection{Verification and memory release}
+\label{sec:verify}
+
+For each admitted skill, reserved probes
+$\probe_{t,s}=\{(x_i,a_i)\}_{i=1}^{N_{t,s}}$
+provide targets from successful trajectories. We evaluate two conditions on the same task inputs: the candidate $\theta'$ without episodic retrieval, and the base model $\theta_0$ with retrieval from the pre-release store. Let $c_i^M=\operatorname{Retrieve}(x_i,\memory_t)$. Their probe scores are
+\begin{align}
+\widehat A^{\weights}_{t,s}
+&=\frac{1}{N_{t,s}}\sum_i
+g_s\!\left(\widehat a_i(\theta',\varnothing),a_i\right),\\
+\widehat A^{\external}_{t,s}
+&=\frac{1}{N_{t,s}}\sum_i
+g_s\!\left(\widehat a_i(\theta_0,c_i^M),a_i\right),
+\label{eq:probe}
+\end{align}
+where $\widehat a_i(\theta,c)$ is the prediction for $x_i$, and $g_s$ is a binary criterion shared by both conditions: parsed-action agreement for sequential tasks or thresholded answer correctness for QA. Memory release requires valid training participation, nonempty probes, and both relative and absolute performance conditions:
+\begin{equation}
+\begin{aligned}
+z_{t,s}
+={}&u_{t,s}\,b_{t,s}\,\ind[N_{t,s}>0]\\
+&{}\cdot\ind[
+\widehat A^{\weights}_{t,s}
+-\widehat A^{\external}_{t,s}\geq\delta]
+\cdot\ind[\widehat A^{\weights}_{t,s}>\alpha].
+\end{aligned}
+\label{eq:evict}
+\end{equation}
+The margin $\delta$ specifies the required score difference; negative values allow a bounded decrease relative to retrieval. The strict floor $\alpha$ requires a minimum level of behavior beyond the relative comparison. Skills with no probes remain ineligible for release.
+
+These probes measure behavior on reserved states, not complete task success. In sequential environments, multiple actions can be valid, and errors can change later states. We therefore evaluate complete rollouts separately. Probe construction, data separation, and benchmark-specific scoring are described in Appendix~\ref{app:protocol}.
+
+\paragraph{Deployment and retained memory.}
+\label{sec:commit}
+Skills approved for release use their approved adapter
+without episodic retrieval; eligible records leave the
+retrieval store subject to the residual-memory allowance.
+Otherwise, a separate activation probe may approve the
+candidate with ETG if it outperforms Base+ETG and exceeds
+the behavioral floor. Activation alone retains all records
+and does not authorize release.
+Failed candidates leave prior approvals intact; skills
+without an approved adapter use Base+ETG. The router maps each request or interaction state to the ETG skill taxonomy using only deployment-visible inputs,
+without gold answers, future outcomes, or held-out labels.
+The controller then applies the latest approved
+configuration for that skill, including its adapter
+and retrieval status.

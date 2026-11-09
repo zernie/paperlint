@@ -1,0 +1,72 @@
+\section{PreForceVision Framework}
+
+The framework is organized into five components (Figure~\ref{fig:model}) that move from physics to images and then to prediction. The components are designed to avoid a common pitfall in image-based engineering studies: training a model before proving that the measured image change is mechanically meaningful.
+The methodological principle follows an inverse condition-assessment concept: a deformation field measured at an accessible surface is used to infer a non-directly observable mechanical state. In this study, the accessible surface is the bolt-head front face, and the inferred state variable is bolt preload. This requires four steps: selecting a mechanically informative measurement region, generating physics-based and experimental ground truth, extracting repeatable deformation features from reference-loaded image pairs, and mapping these features to preload with uncertainty estimation.
+
+\subsection{Component 1: Mechanical Observability Analysis}
+The first component determines whether the bolt-head front face contains a preload-sensitive deformation field. A finite-element model of the selected joint is used to compute the directional displacement normal to the head face, radial and circumferential strain distributions, central-to-edge deformation contrast, and the influence of the controlled assembly configuration. The analysis supports two decisions: the selection of the region of interest and the definition of physically meaningful descriptors.
+
+For the first proof of concept, the geometry is fixed. This is important: the model is not expected to detect washer diameter, head height, or clamping length from the bolt-head image. Those quantities are either controlled by design or supplied as metadata in later multi-geometry studies. The image-derived quantity is the deformation of the head face.
+
+\subsection{Component 2: Multimodal Ground Truth}
+
+Because the optical signal is small, image-based estimates must be validated against independent measurements. The proposed data-generation setup combines: (i) applied preload from the testing machine or load cell; (ii) strain gauges on the bolt-head face or a sensor bolt; (iii) optical 3D measurements of the head surface; (iv) DIC-based displacement or strain fields; and (v) finite-element predictions under matching boundary conditions. These sources do not play identical roles. The load cell supplies the target value, strain gauges verify local surface response, optical 3D measurement verifies out-of-plane deformation, DIC provides full-field optical displacement or strain, and the finite-element model supplies expected spatial trends.
+
+\subsection{Component 3: Controlled Image-Pair Acquisition}
+
+Each specimen is recorded as a reference-loaded image pair $(I_0,I_L)$. In the first study, $I_0$ is recorded before loading or at a defined baseline state, and $I_L$ is recorded after applying a known preload. The reference image is essential because the visible signal is not the absolute appearance of the bolt, but the change of local features on the same surface.
+
+%The acquisition should proceed in three stages. Stage A uses an industrial camera, fixed stand, fixed lighting, and prepared surface texture to establish the best-case optical limit. Stage B repeats the measurement with a controlled smartphone setup to evaluate low-cost feasibility. Stage C varies pose, distance, illumination, surface condition, and camera hardware to quantify robustness. At each stage, metadata such as camera distance, illumination, exposure, and surface preparation are recorded.
+The acquisition should proceed in staged levels of increasing complexity. Stage A uses an industrial camera, fixed stand, fixed lighting, and prepared surface texture to establish the best-case optical measurement limit. Stage B evaluates whether the same deformation information can still be extracted with a simplified low-cost camera setup under controlled laboratory conditions. Stage C introduces controlled perturbations in pose, distance, illumination, surface condition, and camera hardware to quantify robustness. At each stage, metadata such as camera distance, illumination, exposure, and surface preparation are recorded.
+\subsection{Component 4: Deformation-Feature Extraction}
+
+Feature extraction starts with segmentation of the bolt-head front face. The mask $M$ can be obtained from the hexagonal head contour, fiducial marks, or a segmentation model. The reference and loaded images are then registered by correcting rigid translation, rotation, scale, and perspective. This step is critical because rigid motion must not be interpreted as preload-induced deformation. The overall process is shown in Figure~\ref{fig:tracking}.
+
+After registration, photometric normalization reduces illumination differences and specular effects. DIC, optical flow, or feature tracking is then used to estimate the local motion of surface texture or speckle subsets. The local displacement vector is \ref{eq:displacment}
+%\begin{equation}
+ %   \mathbf{u}(x,y)=\left[u(x,y),v(x,y)\right]^T,
+%\end{equation}
+where $(x,y)$ is the subset center in the reference image and $(x+u,y+v)$ is the corresponding position in the loaded image. This produces a displacement field on the bolt-head face.
+
+From the displacement field, physically interpretable descriptors are computed. The most relevant descriptors for this use case are: mean radial displacement $\bar{u}_r$, mean radial strain $\bar{\varepsilon}_r$, center-to-edge displacement contrast $S_{c-e}$, annular strain contrast $S_a$, deformation symmetry $\Gamma$, and DIC correlation quality $Q_c$. A compact feature vector can be written as
+\begin{equation}
+    \mathbf{s}=\left[\bar{u}_r,\bar{\varepsilon}_r,S_{c-e},S_a,\Gamma,Q_c,Q_I\right]
+    \label{eq:feature-vector}
+\end{equation}
+where $Q_I$ summarizes image-quality indicators such as focus, exposure, reflection area, and registration residual. These quality terms are not preload features; they are used to reject unreliable images or increase prediction uncertainty.
+
+\begin{figure*}[t]
+    \centering    \includegraphics[width=0.91\textwidth, trim=0cm 0cm 0cm 0cm, clip, keepaspectratio]{Main/figures/framework.png}
+    \caption{Corrected learning mechanism for preload estimation. Deformation features are extracted from the bolt-head front face. Known geometry or assembly information is used only to condition or calibrate the deformation-to-preload mapping; it is not inferred directly from the head image.}
+    \label{fig:model}
+\end{figure*}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=1.\columnwidth, trim=0cm 0cm 0cm 0cm, clip, keepaspectratio]{Main/figures/point-tracking.png}
+    \caption{Schematic feature-extraction principle. The model tracks local point motion on the bolt-head front face between the reference and loaded states, then converts this motion into displacement, strain, contrast, and symmetry descriptors.}
+    \label{fig:tracking}
+\end{figure}
+
+\subsection{Component 5: Physics-Guided Prediction}
+
+The predictive model maps the deformation signature to preload. A suitable architecture has three input streams: an image-pair stream, a deformation-map stream, and a metadata stream. The image-pair stream uses a Siamese encoder with shared weights to process $I_0$ and $I_L$. The deformation stream processes DIC or optical-flow maps. The metadata stream contains known experimental or design variables, such as bolt type, surface preparation, and acquisition conditions. If multiple geometries are included later, geometry is provided here as known information.
+
+The model output is the preload estimate and uncertainty,
+\begin{equation}
+    \left(\hat{F}_p,\sigma_{\hat{F}}\right)=h_\theta\left(\mathbf{z}_{img},\mathbf{z}_{def},\mathbf{z}_{meta}\right)
+\end{equation}
+where $\mathbf{z}_{img}$, $\mathbf{z}_{def}$, and $\mathbf{z}_{meta}$ are embeddings from the image, deformation, and metadata branches. For the first study, a simpler and more interpretable baseline should be evaluated first:
+\begin{equation}
+    \hat{F}_p = g(\mathbf{s})
+\end{equation}
+where $g$ can be linear regression, Gaussian process regression, random forest, or gradient boosting. The learning-based image model should then be compared against this baseline.
+
+The model must learn three physically motivated rules. First, for fixed geometry and fixed acquisition conditions, the preload estimate should increase monotonically with the magnitude of preload-sensitive deformation descriptors. Second, the estimate should be invariant to rigid image motion and illumination variation after registration and normalization. Third, uncertainty should increase when image quality, registration quality, or DIC correlation quality deteriorates. 
+
+A training loss can combine these requirements:
+\begin{equation}
+\mathcal{L}=\mathcal{L}_{reg}+\lambda_1\mathcal{L}_{mono}+\lambda_2\mathcal{L}_{phys}+\lambda_3\mathcal{L}_{unc}
+\end{equation}
+where $\mathcal{L}_{reg}$ penalizes preload error, $\mathcal{L}_{mono}$ penalizes non-physical ordering of predictions within the same specimen, $\mathcal{L}_{phys}$ penalizes disagreement with DIC or finite-element trends, and $\mathcal{L}_{unc}$ calibrates predicted uncertainty.
+

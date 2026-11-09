@@ -1,0 +1,76 @@
+The pseudocode for our dataset construction pipeline is presented in Table~\ref{tab:sers}.
+
+\begin{table}[t]
+\centering
+\caption{Core pseudocode of SERS (Staged Execution-Reflective Synthesis) for ADB dataset construction.}
+\label{tab:sers}
+\small
+\ttfamily
+\setlength{\tabcolsep}{0pt}
+\renewcommand{\arraystretch}{1.1}
+\begin{tabular}{p{\linewidth}}
+\hline
+\textbf{Algorithm: SERS} \\
+\hline
+
+\textbf{Input:} Skill definitions $S = \{s_1, s_2, \dots, s_n\}$ \\
+
+\textbf{Output:} Benchmark dataset $D$ \\
+
+\hline
+
+\textbf{for each} skill $s \in S$ \textbf{do} \\
+
+\quad $p \leftarrow \textsc{LLMGenerator}(s)$ \\
+\quad // Generate playbook with tools, task, compliant path, drift points \\
+
+\quad $\texttt{env.json} \leftarrow \textsc{BuildToolSchema}(p)$ \\
+\quad $\texttt{env.py} \leftarrow \textsc{BuildEnvironment}(p)$ \\
+\quad $\texttt{sample.json} \leftarrow \textsc{BuildAnnotation}(p)$ \\
+
+\quad \textbf{if not} $\textsc{SmokeTest}(\texttt{env.json}, \texttt{sample.json})$ \textbf{then} \\
+\quad \quad $\textsc{HumanReview}(p)$ \\
+\quad \quad \textbf{continue} \\
+\quad \textbf{end if} \\
+
+\quad $\textsc{TrajectoryQC}(\texttt{env.json}, \texttt{env.py}, \texttt{sample.json})$ \\
+
+\textbf{end for} \\
+
+\\
+
+\textbf{Function} $\textsc{TrajectoryQC}(E, P, A)$ \\
+
+\quad \textbf{for} $r = 1$ \textbf{to} $3$ \textbf{do} \\
+
+\quad \quad $\mathcal{M} \leftarrow \{\text{Agent A}, \text{Agent B}\}$ \\
+\quad \quad $\mathcal{T} \leftarrow \emptyset$ \\
+
+\quad \quad \textbf{for each} model $M \in \mathcal{M}$ \textbf{do} \\
+\quad \quad \quad \textbf{for} $k = 1$ \textbf{to} $4$ \textbf{do} \\
+
+\quad \quad \quad \quad $\tau \leftarrow \textsc{ExecuteAgent}(M,E,P,A.\texttt{task})$ \\
+\quad \quad \quad \quad $\mathcal{T} \leftarrow \mathcal{T} \cup \{\tau\}$ \\
+
+\quad \quad \quad \textbf{end for} \\
+\quad \quad \textbf{end for} \\
+
+\quad \quad $c \leftarrow \exists \tau \in \mathcal{T}: \textsc{CoversRequiredCalls}(\tau)$ \\
+
+\quad \quad $d \leftarrow \sum_{\tau\in\mathcal{T}}\mathbb{I}[\textsc{ContainsViolation}(\tau)] \geq 2$ \\
+
+\quad \quad \textbf{if} $c \land d$ \textbf{then} \\
+\quad \quad \quad \textbf{return} \\
+\quad \quad \textbf{end if} \\
+
+\quad \quad $R \leftarrow \textsc{BuildReport}(\mathcal{T}, c, d)$ \\
+\quad \quad $\Delta \leftarrow \textsc{Critic}(R,E,P,A)$ \\
+\quad \quad $\textsc{ApplyRevision}(E,P,A,\Delta)$ \\
+
+\quad \textbf{end for} \\
+
+\quad $\textsc{HumanReview}(E,P,A)$ \\
+
+\hline
+\end{tabular}
+\end{table}

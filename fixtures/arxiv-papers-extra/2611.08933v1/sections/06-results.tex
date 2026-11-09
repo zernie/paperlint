@@ -1,0 +1,148 @@
+\section{Results: capability map and three findings}
+\label{sec:results}
+Table~\ref{tab:capability-map} maps the available evidence to the lifecycle in Figure~\ref{fig:lifecycle}. Coverage is assessed through separate protocols, not a single execution chain. We organize the results around stage-specific capabilities, requirement-compliant delivery, and the decisions that complicate evaluation.
+
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{5pt}
+\caption{Frontier agent capability map. Each row states the evidence available at one stage and its inference boundary; the rows are not a common quality scale or a measured RFQ-to-delivery trajectory.}
+\label{tab:capability-map}
+\begin{tabularx}{\textwidth}{@{}P{0.18\textwidth}P{0.27\textwidth}Y@{}}
+\toprule Lifecycle stage & Existing evaluation & Supported conclusion and boundary\\\midrule
+Requirement discovery & 40 RFQ scenarios in two cohorts & Both systems achieve high field coverage; success ordering changes across cohorts. Downstream benefit is untested.\\
+Creative exploration & Direction, reference-understanding, planning, and preference tasks & Relevant capabilities are tested separately; their scores do not establish creative quality or real-client acceptance.\\
+Design and revision & 35-brief / 43-condition Brief Bank; constrained edits and ordered feedback & Completion coexists with incomplete modifications and unresolved constraint or version dependencies.\\
+Production handoff & Packaging sets, production PDFs, and file-structure checks & Output-set and file differences are observable; factory acceptance and manufacturability are untested.\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Finding 1: broad capabilities, uneven execution reliability}
+\label{sec:profiles}
+The separate protocols demonstrate capabilities across design stages, while execution reliability differs between the configured systems. These are system-level observations under different tools and runtimes, not a pure model ranking.
+
+\paragraph{Design execution, quality, and time.}
+Astra completes all 43 design conditions; Claude completes 35/43 (81.4\%), with eight first-turn timeouts at the 60-minute limit. Four timeouts are core and four external. On the common 28 scored core conditions, Claude's observed weighted contribution is higher by \PairedCoreDelta{}, but full-score bounds are \PairedClaudeCore{} for Claude and \PairedAstraCore{} for Astra. The unconstrained difference range, \PairedCoreDifference{}, includes either ordering. These scores incorporate task performance; they do not isolate visual beauty.
+
+For the seven shared external conditions, mean scores are 1.000 for Claude and \PairedAstraExternal{} for Astra, and both pass all seven score thresholds under the weighted-only rule; Astra's L4-RDT-007 sits exactly at 0.70 (Section~\ref{sec:setup}). On the planned external set, completion is 7/11 for Claude and 11/11 for Astra. Comparing only scored outputs selects on system behavior and can favor the system with more missing outcomes.
+
+Across all 43 first turns, median recorded duration is \ClaudeFirstTurnMinutes{} minutes for Claude versus \AstraFirstTurnMinutes{} for Astra; the Claude median includes observations ending at the timeout deadline. Among completed turns, medians are \ClaudeCompletedTurnMinutes{} (77 turns) and \AstraCompletedTurnMinutes{} (90 turns). The eight timeouts are spread across six of eight task families (Appendix~\ref{app:category}); the small counts do not identify category-specific causal deficits.
+
+\paragraph{Inference and open hypothesis.}
+The systems occupy different observed completion--quality--latency profiles. A causal quality--reliability trade-off remains a hypothesis: image tools and other environment factors differ, both systems use max effort, and neither time budgets nor effort levels were experimentally varied. Additional time may or may not resolve the failures.
+
+The broader archive reinforces the need to separate endpoints: Astra completes 259/261 protocol units and Claude 233/261, but these totals mix routing, planning, preference prediction, and artifact tasks. On 21q visual execution, completion under the 15-minute limit is 20/21 versus 2/21, with median durations of 2.07 and 15.01 minutes, while four Claude outputs are scoreable because two timed-out runs leave artifacts. On shared routing and preference tasks, differences are smaller or tied (Appendix~\ref{app:auxiliary}). These task profiles do not establish that planning quality transfers to execution, and their heterogeneous scores are not averaged.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/completion-quality.pdf}
+\caption{Joint completion, timing, and quality profile. Left: cumulative first-turn completions in the recorded runs, among 43 planned conditions. Right: missing-evidence score bounds on the common 28 core conditions, excluding four Claude core timeouts. These are neither confidence intervals nor a controlled budget sweep. The panels avoid collapsing censored execution and incomplete quality evidence into a single rank.}
+\label{fig:completion-quality}
+\end{figure}
+
+\paragraph{Creative exploration has distinct endpoints.}
+Direction generation and reference use appear in the Brief Bank; auxiliary reference-planning tasks (scores 87.92 for Astra and 95.83 for Claude over six cases) and preference tasks (20/60 hits for each) assess interpretation and choice. These endpoints extend exploration beyond producing multiple images. They do not establish that a proposal is original, professionally strong, or accepted by a real client (Appendix~\ref{app:auxiliary}).
+
+\paragraph{Requirement discovery: high coverage, cohort-sensitive ordering.}
+\label{sec:rfq-results}
+The expanded RFQ archive contains forty scenarios. On the original amended twenty, Claude has 18/20 successes, Astra 17/20, and Sol 11/20. On the additional nineteen jointly scored cases, Astra has 19/19 and Claude 16/19; Claude's infrastructure-excluded 028 is omitted from both sides. The small original ordering therefore reverses in the additional cohort (Table~\ref{tab:rfq-updated}). The combined paired view is 36/39 for Astra and 34/39 for Claude; removing original reattempt cases 004/009/019 gives 33/36 versus 32/36. The latter is an exclusion sensitivity check, not a correction for every cross-cohort difference.
+
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{3pt}
+\caption{RFQ success at eight replies on identical case IDs. Original means AMENDMENT-01. Strict excludes its three reattempt IDs as well as 028. Cohorts differ in auxiliary models and attempt histories.}
+\label{tab:rfq-updated}
+\begin{tabularx}{\linewidth}{@{}Yrrr@{}}
+\toprule Cohort & $n$ & Astra & Claude\\\midrule
+\RFQUpdatedRows
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Combined elicited coverage at eight replies is 98.9\% for Astra and 98.2\% for Claude. High average coverage can coexist with missing a critical deliverable field: extension cases 022, 023, and 029 are archived Claude failures involving repeated or multi-field questions, routing ambiguity, or an early stop while output specifications remain unresolved. These are simulator/controller-dependent observations awaiting human review, not evidence of a universal questioning deficit. Among the 39 paired cases there are 32 joint successes, four Astra-only successes, two Claude-only successes, and one joint failure.
+
+Appendix~\ref{app:rfq} retains cohort-specific settings, coverage and exclusions. Sol's additional twenty-case attempt has zero scoreable results because of HTTP 429 failures; it contributes no zero competence scores. Since RFQ and design tasks are unpaired, neither high coverage nor this success ordering establishes downstream design acceptance. That requires a separate execution experiment.
+
+\subsection{Finding 2: completion does not guarantee compliant delivery}
+\label{sec:delivery}
+\paragraph{Observed cross-layer disagreement.}
+All scored core runs receive a structural artifact-contract score of 1.0. Nevertheless, archived semantic checks flag at least one violation in \AstraCoreFlags{} Astra and \ClaudeCoreFlags{} Claude conditions (Table~\ref{tab:gap}). On the shared 28 core conditions, the counts are \AstraPairedCoreFlags{} and \ClaudePairedCoreFlags{}. Thus, structural credit and completed execution do not imply requirement-level compliance. These are retrospective model-judge flags, not independent expert failure labels; the smaller Claude population excludes four core timeouts.
+
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{3pt}
+\caption{Core evidence disagreement. Every scored core condition has a check list. A flag means any archived semantic check is \texttt{VIOLATED}; no flag is not an acceptance certificate.}
+\label{tab:gap}
+\begin{tabularx}{\linewidth}{@{}Yrr@{}}
+\toprule Measure & Astra & Claude\\\midrule
+Completed / attempted core & 32/32 & 28/32\\
+Full structural credit / scored & 32/32 & 28/28\\
+Any semantic flag / scored & 13/32 & 5/28\\
+Any flag / shared core & 11/28 & 5/28\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{A missing revision can be an explicit escalation.}
+In MFA-003 both systems complete four runtime turns but export no requested business visual in v3. Both final responses explicitly state that the Story revision was not performed and request a client decision. In CFR-002, Astra's preview is byte-identical to the source; Claude changes pixels only within the title region while leaving the requested mark relocation unresolved. Both disclose the occupied target region as a blocker. Appendix~\ref{app:visual-cases} preserves the source/output comparison. These are unresolved deliveries; whether the pauses were professionally justified requires expert review of the request and assets.
+
+\paragraph{Positive contrast: a bounded local edit.}
+In ECO-002 both systems receive the same perfume-bottle image and export 1024$\times$1024 retouched PNGs. Both archived quality bounds are [0.900, 1.000], with no \texttt{VIOLATED} check. Appendix~\ref{app:visual-cases} shows the supplied image, outputs, and identical-coordinate crops. This supports a task-specific positive contrast to missing deliveries, not expert confirmation that every protected property was preserved. The relevant evaluation object combines the requested cleanup with constraints on the bottle, label, cap, color, and framing.
+
+\subsection{Finding 3: decisions, revisions, and production constraints expose evaluation ambiguity}
+\label{sec:revision}
+Three cases illustrate why delivery must be evaluated against the active requirement and the relevant artifact version. A direction choice changes the requested set; scripted feedback can assume a missing prerequisite; and a file can contain a required resource without establishing production suitability. These are selected mechanisms, not estimates of failure prevalence.
+
+\paragraph{A selection changes the deliverable scope.}
+In reference-grounded PSF-001, the brief requests five packaging SKUs after a strategy is chosen. Feedback selects strategy 2 and changes the lime hue. Astra updates a two-SKU concept sample; Claude exports five individual SKU PNGs and a family lineup, verified from the inventory (Figure~\ref{fig:sku}). A brief-level reading activates expansion after selection; the runner also instructs the agent to apply only the requested delta. Expert acceptance must reconcile these scopes before attributing an omission. Both systems still identify missing approved typography or production inputs. The comparison establishes different output sets, not factory acceptance or superior visual quality.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/draft-sku.pdf}
+\caption{PSF-001 after selection. Left: Astra's revised two-SKU sample. Right: Claude's five-SKU lineup, accompanied by five individual PNGs. Completing the local hue edit and expanding the selected strategy are distinct obligations. Original artifact pixels are preserved; professional acceptance remains unmeasured.}
+\label{fig:sku}
+\end{figure}
+
+RTO-001 provides a related transition: after selection and a visual-language revision, Astra delivers one revised concept while Claude exports the requested hero and two modules. Claude also discloses ambiguity about the selected direction. Appendix~\ref{app:visual-cases} shows the outputs; their presence does not adjudicate originality or that ambiguity.
+
+\paragraph{Feedback can assume an unestablished version.}
+BID-001 asks the agent to keep a v2 gift box and marketplace image while restoring a standee's whitespace to v1. Both complete four turns, but their last business visuals remain at v1; the v3 directories contain records or diagnostic evidence. Astra requests the missing standee files; Claude asks which store display the feedback refers to and explains its version interpretation. The script assumes prior artifacts or decisions that are not established in the outputs. Figure~\ref{fig:version} shows the latest business visuals. Evaluation must check this precondition before assigning blame to the candidate.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/draft-version.pdf}
+\caption{BID-001: latest v1 direction visuals, shown because neither system has a new business visual at v3. Final responses explicitly disclose missing dependencies or an uncertain version interpretation. The later feedback's assumptions and the appropriateness of clarification need adjudication.}
+\label{fig:version}
+\end{figure}
+
+\paragraph{Production handoff needs more than a proof.}
+CFRY-003 requests a proof, a production PDF, and preflight, followed by a White ink layer under back text while other properties remain fixed. Astra provides a v0 reference proof and a PDF named \texttt{NOT-FOR-PRINT}, then requests an approved source rather than exporting a v1 production PDF. Claude exports a two-page v1 PDF. Direct inspection confirms a \texttt{/Separation} color-space resource named \texttt{/White}, beyond the candidate's diagnostic image (Figure~\ref{fig:production}). Both raise a mismatch between feedback about light text and dark text in the artwork. Resource presence does not establish correct plate placement, print suitability, or factory acceptance. The evaluated stage is production handoff; actual manufacturing acceptance remains future work.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/draft-production.pdf}
+\caption{CFRY-003. Astra's reference proof, Claude's revised proof, and Claude's own White-plate diagnostic. The diagram at right is candidate-authored evidence. We separately inspect the actual PDF for a White separation resource. Plate correctness and the text-color ambiguity remain unadjudicated; factory acceptance is not tested.}
+\label{fig:production}
+\end{figure}
+
+\paragraph{Consequences for Requirement-to-Artifact evaluation.}
+\label{sec:grader}
+Across these cases, a missing output, a disclosed dependency, and insufficient acceptance evidence require different labels. The following evaluator diagnostics show why that distinction also depends on the assessment procedure.
+
+\paragraph{Applicability can diverge after the same feedback.}
+ECO-001 initially requests six launch assets after direction selection. Both systems receive identical feedback explicitly selecting the urban-commute direction and asking for quieter styling while preserving product color. Astra revises a direction board; its archived six-final-assets check is \texttt{NOT\_APPLICABLE}, with the reason that selection is still pending. Claude exports six images, but labels the hanging-loop panel \texttt{PROVISIONAL}: the supplied product view does not show that feature, and its final reply asks for another view. Claude's complete-set check is \texttt{VIOLATED} (Figure~\ref{fig:applicability}).
+
+This case separates candidate behavior from evaluator behavior. Disclosure of a provisional asset is relevant evidence, but cannot by itself explain why the same selection feedback leads to different scope decisions. The archived R1 pilot below explicitly considers a narrower, current-delta interpretation for historical Sol/Astra outputs of this condition; it does not rejudge Claude or resolve which interpretation is professionally correct. The appropriate applicability and acceptance decisions remain unadjudicated. In particular, the absence of a semantic flag cannot be interpreted as accepted delivery.
+
+\paragraph{Revised rules change judgments on unchanged artifacts.}
+R1 rejudges seven selected historical Sol/Astra pairs, using task-specific rules and two anonymized presentations with reversed order per pair. AR-005's text-ranking reports change from 16/100 and 68/100 to 100/100 for both under a report-appropriate rubric. BID-001's original [64,94] versus [40,70] becomes [60,100] for both when unestablished feedback prerequisites are separated from observable revision quality. The upper bounds remain unknown contributions, not earned scores. Three pairs vary across the two presentations; Sol's TIQ-100 receives 59.1 and 89.1. Thus, rule/evidence changes can remove apparent differences without candidate improvement, but the revised judge is not validated as correct or stable. Order and judge variability are confounded. The pilot awaits expert adjudication and is kept outside all original aggregates (Appendix~\ref{app:r1}).
+
+\paragraph{Historical stale-evidence controls.}
+Historical tests kept candidate-authored success evidence while (i) deleting CAM business PNG/SVG outputs or (ii) replacing a CFR preview with the unchanged source. The first tool judge still assigned 5/5 to each. An artifact-only replacement, supplied with independently collected file facts and source/output images, assigned 0/5 and 1/5 (Figure~\ref{fig:controls}). A separate external no-op control reduced edit fidelity from 5/5 to 0/5 under its revised evidence view.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/evaluator-controls.pdf}
+\caption{Historical tool-judge controls, summarized from the retained validation document. The intervention changes artifacts while leaving stale self-evidence in place. Raw temporary v1 scores were discarded in the archive; the visual summarizes the recorded controls, not a newly reproduced experiment.}
+\label{fig:controls}
+\end{figure}
+
+These interventions show sensitivity to a specific evidence-boundary defect. They do not isolate prose from every other candidate-authored metric, establish intentional reward hacking, or validate all judgments. The 21q archive contains the opposite risk: Claude's AR-001 output is called unchanged, while an archived same-size RGB audit finds 69,746 changed pixels out of 1,069,056 (6.52\%). This contradicts literal pixel identity, without certifying that the enlargement, preservation, or quality requirements were met. The frozen score remains unchanged. In AR-010, the archived judgment describes only raster delivery despite the inventory containing SVG, DXF, and PDF files; their existence warrants reinspection but does not establish production suitability.
+
+\paragraph{Inference.}
+A valid evaluation needs evidence about the evaluator as well as the agent. The historical altered-artifact controls and R1 rejudging pilot provide two distinct diagnostics: changing outputs while holding stale claims, and changing the assessment procedure while holding outputs. Neither estimates expert-calibrated sensitivity or false-positive rates. Wrong-version delivery and unintended-edit controls, followed by representative expert review, remain necessary.

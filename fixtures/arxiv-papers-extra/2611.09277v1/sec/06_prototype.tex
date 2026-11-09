@@ -1,0 +1,232 @@
+\section{Prototype implementation and empirical results}
+\label{Prototype Implementation}
+
+This section tests, in a controlled proof-of-concept experiment, whether the policy gate keeps restricted updates inside their jurisdiction, and at what cost. Malware classification is only the vehicle; we propose no new classifier. The codebase is available in the repository.
+\footnote{\url{https://github.com/ArunaSanjeewa/federated-forensics}}
+ßß
+\subsection{Setup}
+\label{sec:setup}
+
+\paragraph{Prototype layout}
+
+\input{fig/policy_gate_figure}
+
+The system runs as a single-process simulation with four local
+agency nodes (A1 to A4), grouped into two regions
+(R1 $=$ \{A1, A2\}, R2 $=$ \{A3, A4\}), reporting to one
+national node. 
+Each node keeps its own model; the regional and national nodes aggregate, and the regional nodes also apply the policy gate. In the proposed
+condition the two agencies holding restricted data (A1, A2) each send two separate update
+streams per round, while A3 and A4 send one each;
+so the regional node in R1 receives four update streams per round and the
+regional node in R2 receives two, six in total across the federation. 
+
+
+\paragraph{Dataset}
+We use BODMAS (Blue Hexagon Open Dataset for Malware Analysis;
+\citet{yang2021bodmas}), a public dataset for malware research. It contains 134'435
+rows (57'293 malware, 77'142 benign). 
+% 
+We use only the malware rows and classify each sample's feature vector into its family. Of the 582 families, we use eight, chosen because each has enough samples to fill every entitled agency's 400-row budget and each \texttt{REGIONAL\_ONLY} family has a \texttt{GLOBAL} sibling in the same category (Table~\ref{tab:families}; Sec.~\ref{sec:policy}). 
+The dataset only serves to demonstrate the gate. Realistic digital forensic datasets are rarely available \citep{breitinger2023sharing}, since evidentiary material is legally protected and seldom shared, whereas BODMAS is public, large, and labeled. The results therefore make no claim about any real investigation, but show that the architecture enforces a jurisdictional restriction as designed and at a measurable cost.
+
+\begin{table}[t]
+\centering
+\scriptsize
+\caption{Eight classes; \texttt{trojan} and \texttt{worm} each contain both a
+\texttt{GLOBAL} and a \texttt{REGIONAL\_ONLY} family, so restricting
+gepys/sillyp2p removes two specific families, not the trojan/worm
+categories. The mapping is a design choice made before any run.}
+\label{tab:families}
+\begin{tabular}{llr}
+\toprule
+Propagation scope & Family (category) & Samples in BODMAS \\
+\midrule
+\texttt{GLOBAL} & wacatac (trojan)   & 4'694 \\
+\texttt{GLOBAL} & dinwod (trojan)    & 2'057 \\
+\texttt{GLOBAL} & sfone (worm)       & 4'729 \\
+\texttt{GLOBAL} & mira (worm)        & 1'960 \\
+\texttt{GLOBAL} & wabot (backdoor)   & 3'673 \\
+\texttt{GLOBAL} & berbew (backdoor)  & 1'749 \\
+\texttt{REGIONAL\_ONLY} & gepys (trojan)    & 1'124 \\
+\texttt{REGIONAL\_ONLY} & sillyp2p (worm)   & 1'616 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Splitting into agencies and regions}
+The data is distributed in three steps. 
+First, each family receives a propagation scope (Table~\ref{tab:families}): \texttt{GLOBAL} updates may reach the national level; \texttt{REGIONAL\_ONLY} updates may not leave their region. 
+Second, each family's rows are shuffled and cut into disjoint blocks of 400 rows. Every agency receives one block of each \texttt{GLOBAL} family, but only A1 and A2 receive a block of each \texttt{REGIONAL\_ONLY} family. A1 and A2 thus hold eight families (3'200 rows); A3 and A4 hold six (2'400 rows). This assignment is fixed by one partition seed, so every agency owns the same rows in every run. 
+Third, each agency splits every block into 300 training and 100 test rows. This split is redrawn in each of the five repetitions (seeds 42 to 46), so A1 and A2 always have restricted rows in both training and test sets.
+
+
+\paragraph{Model and training}
+Every condition in Sec.~\ref{sec:conditions} trains the same machine learning model from scratch: a multi-layer perceptron, a simple neural network, with layer widths 2'381, 256, 64, and 8, matching the input features and the eight families. It has 626'760 parameters, uses ReLU activations and dropout of 0.1, and is trained in 32-bit floating point. The whole network is trained and exchanged every round. Features are $z$-score normalized with statistics computed over each seed's pooled training rows (Sec.~\ref{sec:limitations}). Training uses the AdamW optimizer with learning rate $1\times10^{-3}$, batch size 32, three local epochs per round, and gradient-norm clipping at 1.0. Federation runs for five rounds with sample-weighted FedAvg, identical for B2 to B4 except for one step in B4 (Sec.~\ref{sec:policy}). Each condition runs with five seeds (42 to 46).
+
+
+\paragraph{Technical stack used}
+The federated learning framework is Flower (\texttt{flwr}~1.36.0), with
+PyTorch~2.14.0 and scikit-learn~1.9.1 on Python~3.13.5; paired
+$t$-tests use SciPy~1.18.1. Runs use an Apple M4~Pro machine (48\,GB
+memory). 
+
+
+\subsection{Policy configuration}
+\label{sec:policy}
+
+\paragraph{What ``restricted'' means here}
+Two of the eight malware families are \texttt{REGIONAL\_ONLY}, i.e., updates trained on them may reach regional partners but not the national level. 
+Each has a \texttt{GLOBAL} sibling in its category (gepys with the trojan wacatac, sillyp2p with the worm sfone), so excluding them does not remove the trojan or worm categories from a compliant model.
+
+
+\paragraph{Who holds it}
+Only the two Region~1 agencies, A1 and A2, hold restricted material, 25\% of their data (800 of 3'200 rows).
+
+
+\paragraph{How the label is attached to an update}
+Each agency declares the scope of its data on every update it sends, together with an update id, agency, region, round, number of training examples, and a parameter hash. A1 and A2 send two updates per round, $U_g$ from their \texttt{GLOBAL} rows and $U_r$ from their \texttt{REGIONAL\_ONLY} rows. The regional hub applies the gate to the declared scope, excluding only \texttt{REGIONAL\_ONLY} updates bound for the national level, and records every decision, \texttt{INCLUDE} or \texttt{EXCLUDE}, in an append-only provenance log, so blocked updates are documented rather than silently dropped.
+
+\paragraph{Return path}
+Region~2 agencies receive the national model unchanged. Region~1 agencies receive an equal (50/50) blend of the national model and their region’s aggregate of the $U_r$ updates. We do not weight the blend by example count, because the national model never sees the two restricted families and therefore learns to rule them out. Only the $U_r$ aggregate knows them, and it is based on far fewer examples than the national model. Weighted by example count, it would be outvoted and the restricted families largely forgotten; equal weighting keeps them.
+
+\subsection{The four experiment run conditions}
+\label{sec:conditions}
+
+\begin{description}
+\item[B1 - Local only.] Each agency trains on its own data and never shares.
+
+\item[B2 - Flat FL, unrestricted.] 
+One flat federation over all data, including restricted data, shared everywhere. Not legally available in practice: it puts restricted knowledge into the national model.
+
+\item[B3 - Flat FL, restricted dropped.] One flat federation, but A1 and A2
+must leave their \texttt{REGIONAL\_ONLY} data out of training entirely. This is
+what an agency can do today if it wants to join a flat federation and stay
+compliant.
+
+\item[B4 - Hierarchical, policy aware (our proposal).] Three layers.
+Restricted data contributes to the Region~1 model through the separate
+$U_r$ stream; the gate blocks that stream at the
+region-to-national boundary; the return path keeps it inside Region~1.
+\end{description}
+
+Two comparisons matter, both measured at A1 and A2, the agencies holding restricted material: B4 against B3 shows what our architecture gains over the only compliant option today, and B2 against B4 shows what complying with the restriction costs. In addition, A3 and A4 show whether restricted knowledge leaks to agencies that never held it, and B1, where each agency trains alone, serves as a reference for whether collaboration pays off at all.
+
+
+
+\subsection{Evaluation protocol}
+\label{sec:protocol}
+
+We report results per agency rather than as one overall figure, since an investigator cares about what a model does for a specific agency, and the restricted material sits in only one region. Each agency's model is tested on two sets: the agency's own held-out samples (600 to 800), and the restricted samples of A1 and A2 combined (400). We apply the second set to A3 and A4 as well, to see whether restricted capability leaks to agencies that never held the material.
+
+The main metric is macro-F1, which averages the F1 score over the malware families present in a test set, so that a rare family weighs as much as a common one. On the restricted set, only the two restricted families are present, and only these are averaged. We also report accuracy.
+
+For B4, we count every restricted update that reaches the regional node, and check against the provenance log whether the gate blocked it or let it through. Each condition is run five times with a new train/test split, and all runs use the same scoring code. We report the mean and standard deviation (SD) over the five runs and test differences between conditions with paired $t$-tests ($p$).
+\\
+
+
+
+
+\subsection{Empirical results}
+\label{subsec:empirical_results}
+
+
+
+
+\paragraph{Policy enforcement}
+
+Across all five runs, the gate blocked each of the 50 restricted updates bound for the national level and passed all 100 \texttt{GLOBAL} updates, with a matching \texttt{EXCLUDE} record in the provenance log for every block. The implementation enforces the rule as specified, so the following results come from a system that actually complies.
+
+
+
+\paragraph{Classification performance}
+
+Table~\ref{tab:peragency} shows macro-F1 per agency and condition, on each agency's own test set and on the restricted test set; Table~\ref{tab:headline} gives the main comparisons.
+
+\begin{table}[t]
+\centering
+\scriptsize
+\caption{Macro-F1 per agency (mean $\pm$ SD, five runs), on each agency's own test set and on the restricted test set of A1 and A2. A3 and A4 hold no restricted data; their restricted-set scores show leakage.}
+\label{tab:peragency}
+\begin{tabular}{lcccc}
+\toprule
+Agency & B1 & B2 & B3 & B4 \\
+\midrule
+\multicolumn{5}{l}{\emph{Own test set}} \\
+A1 & 0.919 $\pm$ 0.009 & 0.930 $\pm$ 0.009 & 0.632 $\pm$ 0.012 & 0.913 $\pm$ 0.009 \\
+A2 & 0.923 $\pm$ 0.005 & 0.917 $\pm$ 0.008 & 0.626 $\pm$ 0.007 & 0.891 $\pm$ 0.006 \\
+A3 & 0.891 $\pm$ 0.018 & 0.896 $\pm$ 0.019 & 0.899 $\pm$ 0.021 & 0.896 $\pm$ 0.020 \\
+A4 & 0.905 $\pm$ 0.020 & 0.905 $\pm$ 0.016 & 0.905 $\pm$ 0.015 & 0.907 $\pm$ 0.016 \\
+\midrule
+\multicolumn{5}{l}{\emph{Restricted test set}} \\
+A1 & 0.991 $\pm$ 0.006 & 0.986 $\pm$ 0.006 & 0.000 & 0.962 $\pm$ 0.014 \\
+A2 & 0.994 $\pm$ 0.004 & 0.986 $\pm$ 0.006 & 0.000 & 0.962 $\pm$ 0.014 \\
+A3 & 0.000 & 0.986 $\pm$ 0.006 & 0.000 & 0.000 \\
+A4 & 0.000 & 0.986 $\pm$ 0.006 & 0.000 & 0.000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\begin{table}[t]
+\centering
+\scriptsize
+\caption{Comparisons on the restricted test set (A1, A2; identical
+by construction, since they share the Region~1 model and the pooled test
+set; see Sec.~\ref{sec:limitations}). Five runs, paired $t$-test with four
+degrees of freedom. Macro precision is exactly 1.000 for both B2 and B4 in
+every run.}
+\label{tab:headline}
+\begin{tabular}{llrr}
+\toprule
+Comparison & Metric & Difference & $p$ \\
+\midrule
+B4 $-$ B3 & accuracy   & $+0.930 \pm 0.025$  & $<0.0001$ \\
+(main comparison) & macro-F1   & $+0.962 \pm 0.014$  & $<0.0001$ \\
+                  
+\midrule
+B2 $-$ B4 & accuracy   & $+0.044 \pm 0.020$  & $0.008$ \\
+(cost of compliance) & macro-F1 & $+0.024 \pm 0.012$  & $0.010$ \\
+                 
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\paragraph{Main result (B4 against B3)}
+B3 cannot recognize the restricted families at all: it scores 0\% accuracy on them in every run, because they were never part of its training. Since a quarter of A1's and A2's caseload belongs to these families, their macro-F1 on their own test sets drops from about 0.91 to 0.63. B4 restores this capability, reaching 93.0\% accuracy and 0.962 macro-F1 on the restricted families ($p<0.0001$). Its precision there is 1.000 in every run: it never confuses gepys with sillyp2p, and its errors are misclassifications into one of the six non-restricted families.
+
+In practical terms, both options obey the restriction, but they leave the agency with very different tools. In a flat federation, the agency's model cannot recognize the very cases the restriction concerns; with the gate, it recognizes them in 93\% of cases.
+
+
+\paragraph{Cost of compliance (B2 against B4)}
+B2, which ignores the restriction, outperforms B4 on the restricted families by 4.4 percentage points in accuracy ($p=0.008$) and 0.024 in macro-F1 ($p=0.010$). On the agencies' own test sets, the cost is 0.017 macro-F1 for A1 ($p=0.0008$) and 0.026 for A2 ($p=0.0002$), and there is no measurable cost for A3 and A4.
+
+In practical terms, respecting the restriction means that out of 100 samples from the restricted families, the agency's model misclassifies about four more than a model that ignores the rule would. Agencies without restricted material see no difference.
+
+\paragraph{Leakage}
+B2's advantage comes at a price that the restriction exists to prevent. Because all agencies share one global model, A3 and A4, which hold no restricted material, recognize the restricted families as well as A1 and A2 do (0.986 macro-F1). Under B4, they score 0.000, so the capability stays inside Region~1.
+
+In practical terms, ignoring the rule lets agencies that never held the restricted material recognize it anyway. With the gate, only the agencies entitled to that knowledge gain it.
+
+
+\paragraph{Comparison with local training (B1)}
+An agency training alone recognizes its own restricted families slightly better than under B4 (0.991 and 0.994 against 0.962; $p<0.01$), since it uses all its data and blends in no outside model. On their own test sets, B4 is on par with B1 for A1 (difference 0.006, not significant) and 0.032 below it for A2 ($p=0.0016$). But B1 gives up all collaboration: no agency benefits from another, and A3 and A4 cannot recognize anything they do not hold themselves.
+
+In practical terms, an agency with enough data of its own may do slightly better alone on its own cases. But it then learns nothing from other agencies, and they learn nothing from it.
+
+
+\paragraph{Summary}
+The gate blocked every restricted update with a complete audit trail. B4 restores recognition of the restricted families from 0\% under B3 to 93.0\%, 4.4 points below B2, costs two to three macro-F1 points on the restricted agencies' own test sets, and, unlike B2, keeps the restricted capability inside its region.
+
+
+\section{Limitations}
+\label{sec:limitations}
+
+Our experiment tests the policy gate under simplified conditions. We chose which two families count as restricted; no court or law made that choice. It is also expected that B3 scores zero on these families, because a model cannot recognize what it has never seen. The more meaningful results are what B3 loses on the agencies' full caseload, how close B4 comes to B2, and how B2 spreads restricted knowledge to agencies outside the region.
+
+Some results are less independent than they look. A1 and A2 use the same regional model, so their scores on the restricted set are one measurement, not two. The model also only chooses among eight malware families and can never answer ``benign'' or ``unknown''. This makes all scores higher than they would be in practice, so the comparisons between conditions matter, not the scores themselves. Finally, we normalized the features using the training data of all agencies together, which a real federation would not permit.
+
+The prototype runs in a single process on one machine. All agencies behave honestly, label their data correctly, and no encryption is used. The equal blend on the return path was only tested with two regions of similar size. The experiment therefore shows that updates are routed and blocked as intended, not that a real deployment complies with the law.
+
+Beyond the experiment, the requirements come from the literature and from  one author's work in law enforcement, not from structured interviews with investigators. The gate trusts the labels agencies declare and cannot detect wrong ones. The legal discussion stays general; a detailed analysis for specific jurisdictions needs legal experts.

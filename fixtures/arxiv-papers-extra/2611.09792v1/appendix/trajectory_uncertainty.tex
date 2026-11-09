@@ -1,0 +1,141 @@
+
+\subsection{Uncertainty Quantification}
+\label{app:inference}
+
+We describe how we construct confidence intervals for our estimators.
+We linearize the joint estimating equations, adapting the SNMM inference
+construction of \citet[Theorem~8]{lewis2021dynamic}.
+Each completed trajectory, including its terminal outcome, is treated as
+one independent and identically distributed (IID) observation.
+Because multiple decisions within a trajectory share the same terminal
+outcome, we first sum their scores within each trajectory, then estimate
+the covariance across trajectories.
+
+
+\paragraph{SNMM estimates.}
+For a changed continuation $\pi$, let
+$m_i(\alpha,\{\gamma_s\};\pi)$ be trajectory $i$'s contribution
+to~\eqref{eq:joint-snmm-moments}. We order its coordinates with
+the shared coefficients first, followed by the phase-specific
+coefficients for $s=0,\ldots,P-1$. For the shared coefficients,
+we sum $Z_{it,\mathcal S}\varepsilon_{it}$ over all decisions
+in trajectory $i$. For the coefficients specific to phase $s$,
+we sum $Z_{it,\mathcal U}\varepsilon_{it}$ only over decisions
+in that phase. Here $\varepsilon_{it}$ is the residual
+in~\eqref{eq:joint-snmm-residual}.
+
+For randomized continuation, the observed trajectories already
+follow $g$ after the current decision. The conditional contrast
+in the observed terminal outcome therefore identifies the blip
+under $g$ by~\eqref{eq:identification}. We obtain the estimating
+equations by differentiating the least-squares objective
+in~\eqref{eq:local-snmm}. We form $m_i(\alpha,\{\gamma_s\};g)$ in exactly the same way as in the previous paragraph, with the only difference being the form of the residual $\varepsilon_{it}$, which is of the form:
+\[
+\varepsilon_{it} = Y_i-\widehat q_{it}-Z_{it}^{\top}\widehat\beta_{s_{it}}(g),
+\]
+i.e. does not contain any future treatment correction term, since the observed trajectories already follow $g$ after the current decision.
+
+Having definedd the form of the estimating equations $m_i(\alpha,\{\gamma_s\};g)$ in either case, we can now proceed with the inference. For each SNMM coefficient estimator, we hold the cross-fitted nuisance predictions
+fixed and differentiate the summed score with respect to the
+coefficients. Define
+\[
+ \widehat J(\pi)
+   =-\sum_{i=1}^n
+     \left.
+       \frac{\partial m_i(\alpha,\{\gamma_s\};\pi)}
+       {\partial(\alpha^\top,\gamma_0^\top,\ldots,\gamma_{P-1}^\top)}
+     \right|_{\alpha=\widehat\alpha(\pi),\,\gamma_s=\widehat\gamma_s(\pi)}.
+\]
+The components of
+$\widehat J(\pi)^{-1}m_i(\widehat\alpha(\pi),\{\widehat\gamma_s(\pi)\};\pi)$
+give trajectory $i$'s contributions (a.k.a. influence functions) to the linearization of
+the fitted coefficients. Write $\dot\alpha_i(\pi)$ for the
+components corresponding to the shared coefficients and
+$\dot\gamma_{i,s}(\pi)$ for those corresponding to phase $s$.
+We assemble the contribution for each phase as
+\[
+ \dot\beta_{i,s,\mathcal S}(\pi)=\dot\alpha_i(\pi),\qquad
+ \dot\beta_{i,s,\mathcal U}(\pi)=\dot\gamma_{i,s}(\pi).
+\]
+For inference on the causal targets, we assume that the effect
+model and its coefficient-sharing restrictions are correctly
+specified. The population Jacobian must be nonsingular on the
+retained feature directions, and the cross-fitted trajectory
+scores must satisfy the regularity conditions for the
+linearization.
+
+
+
+
+For a group $G$, define
+\[
+ a_{i,s}(G)
+   =\sum_{t\in\mathcal T_i:s_{it}=s}I_{it}(G)f(H_{it}),
+ \qquad
+ a_s(G)=\sum_i a_{i,s}(G).
+\]
+Write $\widehat\tau_{\mathrm{SNMM}}(G;\pi)$ for the SNMM group-effect
+estimator under continuation policy $\pi$.
+In particular, this corresponds to $\widehat\tau_{\mathrm{SNMM}}(G;g)$
+for randomized continuation and $\widehat\tau(G;0)$ for no-treatment
+continuation, where $\pi=\pi_0$.
+The trajectory contribution is captured by the influence function
+\begin{equation}
+ u_i\{\widehat\tau_{\mathrm{SNMM}}(G;\pi)\}
+   =\frac{
+      \sum_s a_{i,s}(G)^\top\widehat\beta_s(\pi)
+      -N_i(G)\widehat\tau_{\mathrm{SNMM}}(G;\pi)
+      +\sum_s a_s(G)^\top\dot\beta_{i,s}(\pi)
+     }{N(G)}.
+ \label{eq:blip-influence}
+\end{equation}
+
+For policy values, define
+\[
+ d_{i,s}(\pi)
+   =\sum_{t\in\mathcal T_i:s_{it}=s}
+      \{\pi(H_{it})-A_{it}\}f(H_{it}),
+ \qquad
+ d_s(\pi)=\sum_i d_{i,s}(\pi).
+\]
+The value and gain contributions are captured by the influence functions
+\begin{equation}
+\begin{aligned}
+ u_i\{\widehat V(\pi)\}
+   &=\frac{
+       Y_i+\sum_s d_{i,s}(\pi)^\top\widehat\beta_s(\pi)
+       -\widehat V(\pi)
+       +\sum_s d_s(\pi)^\top\dot\beta_{i,s}(\pi)
+      }{n},\\
+ u_i\{\widehat\Delta(G)\}
+   &=u_i\{\widehat V(\pi_G)\}
+     -u_i\{\widehat V(\pi_0)\}.
+\end{aligned}
+\label{eq:value-influence}
+\end{equation}
+Policy gains average over all completed trajectories, including those
+without matching opportunities.
+
+\paragraph{AIPW estimates.}
+For the blip with randomized continuation, the trajectory contribution (influence) is
+\[
+ u_i\{\widehat\tau_{\mathrm{AIPW}}(G;g)\}
+   =\frac{1}{N(G)}
+      \sum_{t\in\mathcal T_i} I_{it}(G)
+      \bigl\{\widehat D_{it}
+             -\widehat\tau_{\mathrm{AIPW}}(G;g)\bigr\}.
+\]
+
+\paragraph{Reported intervals.}
+Let $u_i(\widehat\eta)$ denote the trajectory contribution defined above,
+already divided by $N(G)$ for group effects or by $n$ for policy values and
+gains.
+We report pointwise 95\% intervals in our figures:
+\[
+ \widehat\eta
+ \;\pm\;
+ t_{0.975,n-1}
+ \left\{
+   \frac{n}{n-1}\sum_{i=1}^n u_i(\widehat\eta)^2
+ \right\}^{1/2}.
+\]

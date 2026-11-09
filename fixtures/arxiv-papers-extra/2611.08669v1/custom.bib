@@ -1,0 +1,816 @@
+% Use this file for citations not found in the ACL Anthology (contained in "anthology.bib").
+
+@book{Aho:72,
+    author  = {Alfred V. Aho and Jeffrey D. Ullman},
+    title   = {The Theory of Parsing, Translation and Compiling},
+    year    = "1972",
+    volume  = "1",
+    publisher = {Prentice-Hall},
+    address = {Englewood Cliffs, NJ}
+}
+
+@book{APA:83,
+    author  = {{American Psychological Association}},
+    title   = {Publications Manual},
+    year    = "1983",
+    publisher = {American Psychological Association},
+    address = {Washington, DC}
+}
+
+@article{Chandra:81,
+	author = {Ashok K. Chandra and Dexter C. Kozen and Larry J. Stockmeyer},
+	year = "1981",
+	title = {Alternation},
+	journal = {Journal of the Association for Computing Machinery},
+	volume = "28",
+	number = "1",
+	pages = "114--133",
+	doi = "10.1145/322234.322243",
+}
+
+@inproceedings{andrew2007scalable,
+  title={Scalable training of {L1}-regularized log-linear models},
+  author={Andrew, Galen and Gao, Jianfeng},
+  booktitle={Proceedings of the 24th International Conference on Machine Learning},
+  pages={33--40},
+  year={2007},
+}
+
+@book{Gusfield:97,
+    author  = {Dan Gusfield},
+    title   = {Algorithms on Strings, Trees and Sequences},
+    year    = "1997",
+    publisher = {Cambridge University Press},
+    address = {Cambridge, UK}
+}
+
+@article{rasooli-tetrault-2015,
+    author    = {Mohammad Sadegh Rasooli and Joel R. Tetreault},
+    title     = {Yara Parser: {A} Fast and Accurate Dependency Parser},
+    journal   = {Computing Research Repository},
+    volume    = {arXiv:1503.06733},
+    year      = {2015},
+    url       = {http://arxiv.org/abs/1503.06733},
+    note    = {version 2}
+}
+
+@article{Ando2005,
+	Acmid = {1194905},
+	Author = {Ando, Rie Kubota and Zhang, Tong},
+	Issn = {1532-4435},
+	Issue_Date = {12/1/2005},
+	Journal = {Journal of Machine Learning Research},
+	Month = dec,
+	Numpages = {37},
+	Pages = {1817--1853},
+	Publisher = {JMLR.org},
+	Title = {A Framework for Learning Predictive Structures from Multiple Tasks and Unlabeled Data},
+	Volume = {6},
+	Year = {2005}
+}
+
+
+% =====================================================================
+%  ChainFlow -- references for Sections 1 and 2
+%
+%  VERIFY BEFORE SUBMISSION: entries marked "% CHECK" have an arXiv id or
+%  venue taken from secondary sources (citations inside other papers) and
+%  should be confirmed against the arXiv listing. Several 2026 entries are
+%  preprints whose final venue may have changed.
+% =====================================================================
+
+% ---------------------------------------------------------------------
+%  Setting / systems background
+% ---------------------------------------------------------------------
+@article{shazeer2019mqa,
+  title   = {Fast Transformer Decoding: One Write-Head is All You Need},
+  author  = {Shazeer, Noam},
+  journal = {arXiv preprint arXiv:1911.02150},
+  year    = {2019}
+}
+
+@article{kim2023squeezellm,
+  title   = {SqueezeLLM: Dense-and-Sparse Quantization},
+  author  = {Kim, Sehoon and Hooper, Coleman and Gholami, Amir and Dong, Zhen
+             and Li, Xiuyu and Shen, Sheng and Mahoney, Michael W. and Keutzer, Kurt},
+  journal = {arXiv preprint arXiv:2306.07629},
+  year    = {2023}
+}
+
+@article{deepseekr1,
+  title   = {DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via
+             Reinforcement Learning},
+  author  = {Guo, Daya and Yang, Dejian and Zhang, Haowei and Song, Junxiao and
+             Zhang, Ruoyu and Xu, Runxin and Zhu, Qihao and Ma, Shirong and
+             Wang, Peiyi and Bi, Xiao and others},
+  journal = {arXiv preprint arXiv:2501.12948},
+  year    = {2025}
+}
+
+@article{qwen3,
+  title   = {Qwen3 Technical Report},
+  author  = {Yang, An and Li, Anfeng and Yang, Baosong and Zhang, Beichen and
+             Hui, Binyuan and Zheng, Bo and Yu, Bowen and others},
+  journal = {arXiv preprint arXiv:2505.09388},
+  year    = {2025}
+}
+
+@inproceedings{kwon2023vllm,
+  title     = {Efficient Memory Management for Large Language Model Serving
+               with PagedAttention},
+  author    = {Kwon, Woosuk and Li, Zhuohan and Zhuang, Siyuan and Sheng, Ying
+               and Zheng, Lianmin and Yu, Cody Hao and Gonzalez, Joseph E. and
+               Zhang, Hao and Stoica, Ion},
+  booktitle = {Proceedings of the 29th Symposium on Operating Systems Principles
+               (SOSP)},
+  pages     = {611--626},
+  year      = {2023}
+}
+
+@inproceedings{zheng2024sglang,
+  title     = {SGLang: Efficient Execution of Structured Language Model Programs},
+  author    = {Zheng, Lianmin and Yin, Liangsheng and Xie, Zhiqiang and
+               Sun, Chuyue and Huang, Jeff and Yu, Cody Hao and Cao, Shiyi and
+               Kozyrakis, Christos and Stoica, Ion and Gonzalez, Joseph E. and
+               Barrett, Clark and Sheng, Ying},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2024}
+}
+
+% ---------------------------------------------------------------------
+%  Speculative decoding: foundations and verification
+% ---------------------------------------------------------------------
+@inproceedings{stern2018blockwise,
+  title     = {Blockwise Parallel Decoding for Deep Autoregressive Models},
+  author    = {Stern, Mitchell and Shazeer, Noam and Uszkoreit, Jakob},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2018}
+}
+
+@inproceedings{leviathan2023speculative,
+  title     = {Fast Inference from Transformers via Speculative Decoding},
+  author    = {Leviathan, Yaniv and Kalman, Matan and Matias, Yossi},
+  booktitle = {International Conference on Machine Learning (ICML)},
+  pages     = {19274--19286},
+  year      = {2023}
+}
+
+@article{chen2023accelerating,
+  title   = {Accelerating Large Language Model Decoding with Speculative Sampling},
+  author  = {Chen, Charlie and Borgeaud, Sebastian and Irving, Geoffrey and
+             Lespiau, Jean-Baptiste and Sifre, Laurent and Jumper, John},
+  journal = {arXiv preprint arXiv:2302.01318},
+  year    = {2023}
+}
+
+@inproceedings{miao2024specinfer,
+  title     = {SpecInfer: Accelerating Large Language Model Serving with
+               Tree-based Speculative Inference and Verification},
+  author    = {Miao, Xupeng and Oliaro, Gabriele and Zhang, Zhihao and
+               Cheng, Xinhao and Wang, Zeyu and Zhang, Zhengxin and
+               Wong, Rae Ying Yee and Zhu, Alan and Yang, Lijie and Shi, Xiaoxiang
+               and others},
+  booktitle = {Proceedings of the 29th ACM International Conference on
+               Architectural Support for Programming Languages and Operating
+               Systems (ASPLOS)},
+  pages     = {932--949},
+  year      = {2024}
+}
+
+@misc{saxena2023pld,
+  title  = {Prompt Lookup Decoding},
+  author = {Saxena, Apoorv},
+  note   = {\url{https://github.com/apoorvumang/prompt-lookup-decoding/}},
+  year   = {2023}
+}
+
+@article{fu2024lookahead,
+  title   = {Break the Sequential Dependency of LLM Inference Using Lookahead
+             Decoding},
+  author  = {Fu, Yichao and Bailis, Peter and Stoica, Ion and Zhang, Hao},
+  journal = {arXiv preprint arXiv:2402.02057},
+  year    = {2024}
+}
+
+@article{sadhukhan2025magicdec,
+  title   = {MagicDec: Breaking the Latency-Throughput Tradeoff for Long
+             Context Generation with Speculative Decoding},
+  author  = {Sadhukhan, Ranajoy and Chen, Jian and Chen, Zhuoming and
+             Tiwari, Vashisth and Lai, Ruihang and Shi, Jinyuan and
+             Yen, Ian En-Hsu and May, Avner and Chen, Tianqi and Chen, Beidi},
+  journal = {International Conference on Learning Representations (ICLR)},
+  year    = {2025}
+}
+
+% ---------------------------------------------------------------------
+%  Drafter architectures: heads and feature-level autoregression
+% ---------------------------------------------------------------------
+@inproceedings{cai2024medusa,
+  title     = {Medusa: Simple LLM Inference Acceleration Framework with
+               Multiple Decoding Heads},
+  author    = {Cai, Tianle and Li, Yuhong and Geng, Zhengyang and Peng, Hongwu
+               and Lee, Jason D. and Chen, Deming and Dao, Tri},
+  booktitle = {International Conference on Machine Learning (ICML)},
+  pages     = {5209--5235},
+  year      = {2024}
+}
+
+@article{ankner2024hydra,
+  title   = {Hydra: Sequentially-Dependent Draft Heads for Medusa Decoding},
+  author  = {Ankner, Zachary and Parthasarathy, Rishab and Nrusimha, Aniruddha
+             and Rinard, Christopher and Ragan-Kelley, Jonathan and Brandon, William},
+  journal = {arXiv preprint arXiv:2402.05109},
+  year    = {2024}
+}
+
+@inproceedings{gloeckle2024mtp,
+  title     = {Better \& Faster Large Language Models via Multi-token Prediction},
+  author    = {Gloeckle, Fabian and Idrissi, Badr Youbi and Rozi{\`e}re, Baptiste
+               and Lopez-Paz, David and Synnaeve, Gabriel},
+  booktitle = {International Conference on Machine Learning (ICML)},
+  year      = {2024}
+}
+
+@inproceedings{li2024eagle,
+  title     = {EAGLE: Speculative Sampling Requires Rethinking Feature Uncertainty},
+  author    = {Li, Yuhui and Wei, Fangyun and Zhang, Chao and Zhang, Hongyang},
+  booktitle = {International Conference on Machine Learning (ICML)},
+  year      = {2024}
+}
+
+@inproceedings{li2024eagle2,
+  title     = {EAGLE-2: Faster Inference of Language Models with Dynamic Draft Trees},
+  author    = {Li, Yuhui and Wei, Fangyun and Zhang, Chao and Zhang, Hongyang},
+  booktitle = {Proceedings of the 2024 Conference on Empirical Methods in
+               Natural Language Processing (EMNLP)},
+  year      = {2024}
+}
+
+@article{li2025eagle3,
+  title   = {EAGLE-3: Scaling up Inference Acceleration of Large Language Models
+             via Training-Time Test},
+  author  = {Li, Yuhui and Wei, Fangyun and Zhang, Chao and Zhang, Hongyang},
+  journal = {arXiv preprint arXiv:2503.01840},
+  year    = {2025}
+}
+
+@article{zhang2024hass,
+  title   = {Learning Harmonized Representations for Speculative Sampling},
+  author  = {Zhang, Lefan and Wang, Xiaodan and Huang, Yanhua and Xu, Ruiwen},
+  journal = {arXiv preprint arXiv:2408.15766},
+  year    = {2024}
+}
+
+% ---------------------------------------------------------------------
+%  Parallel / diffusion-based drafters
+% ---------------------------------------------------------------------
+@article{an2025pard,
+  title   = {PARD: Accelerating LLM Inference with Low-Cost Parallel Draft
+             Model Adaptation},
+  author  = {An, Zihao and Bai, Haihong and Liu, Zhen and Li, Dong and
+             Barsoum, Emad},
+  journal = {arXiv preprint arXiv:2504.18583},
+  year    = {2025}
+}
+
+@article{chen2026dflash,
+  title   = {DFlash: Block Diffusion for Flash Speculative Decoding},
+  author  = {Chen, Jian and Liang, Yesheng and Liu, Zhijian},
+  journal = {arXiv preprint arXiv:2602.06036},
+  year    = {2026}
+}
+
+@article{liu2026dart,
+  title   = {DART: Diffusion-Inspired Speculative Decoding for Fast LLM Inference},
+  author  = {Liu, Fuliang and Li, Xue and Zhao, Ketai and Gao, Yinxi and
+             Zhou, Ziyan and Zhang, Zhonghui and Wang, Zhibin and Dou, Wanchun
+             and Zhong, Sheng and Tian, Chen},
+  journal = {arXiv preprint arXiv:2601.19278},
+  year    = {2026}
+}
+
+@article{cheng2026dspark,
+  title   = {DSpark: Confidence-Scheduled Speculative Decoding with
+             Semi-Autoregressive Generation},
+  author  = {Cheng, Xin and Yu, Xingkai and Shao, Chenze and Li, Jiashi and
+             Xiong, Yunfan and others},
+  journal = {arXiv preprint arXiv:2607.05147},
+  year    = {2026}
+}
+
+@article{li2025diffuspec,
+  title   = {DiffuSpec: Unlocking Diffusion Language Models for Speculative
+             Decoding},
+  author  = {Li, Guanghao and Fu, Zhi and Fang, Meng and Zhao, Qi and
+             Tang, Mingkui and Yuan, Chun and Wang, Jun},
+  journal = {arXiv preprint arXiv:2510.02358},
+  year    = {2025}
+}
+
+@article{sandler2025specdiff2,
+  title   = {SpecDiff-2: Scaling Diffusion Drafter Alignment for Faster
+             Speculative Decoding},
+  author  = {Sandler, Jacob and Christopher, Jacob K. and Hartvigsen, Thomas
+             and Fioretto, Ferdinando},
+  journal = {arXiv preprint arXiv:2511.00606},
+  year    = {2025}
+}
+
+@article{liu2025tidar,
+  title   = {TiDAR: Think in Diffusion, Talk in Autoregression},
+  author  = {Liu, Jingyu and Dong, Xin and Ye, Zhifan and Mehta, Raghav and
+             Fu, Yuxian and Singh, Vikram and Kautz, Jan and Zhang, Chen and
+             Molchanov, Pavlo},
+  journal = {arXiv preprint arXiv:2511.08923},
+  year    = {2025}
+}
+
+% --- intra-block dependency restoration and draft trees ---------------
+@article{huang2026domino,
+  title   = {Domino: Decoupling Causal Modeling from Autoregressive Drafting
+             in Speculative Decoding},
+  author  = {Huang, Jian and Zhang, Yu and Zhang, Qi and Lin, Hao and
+             Xu, Hui and Zhang, Lei},
+  journal = {arXiv preprint arXiv:2605.29707},
+  year    = {2026}
+}                                                        % CHECK arXiv id
+
+@article{hu2026jetspec,
+  title   = {JetSpec: Breaking the Scaling Ceiling of Speculative Decoding
+             with Parallel Tree Drafting},
+  author  = {Hu, Lanxiang and Feng, Zhaoxiang and Wu, Yulun and Yuan, Haoran
+             and Zhao, Yujie and Qian, Yu-Yang and Wang, Bojun and Zhao, Peng
+             and Jiang, Daxin and Zhu, Yibo and Rosing, Tajana and Zhang, Hao},
+  journal = {arXiv preprint arXiv:2606.18394},
+  year    = {2026}
+}                                                        % CHECK arXiv id
+
+@article{ringel2026ddtree,
+  title   = {Accelerating Speculative Decoding with Block Diffusion Draft Trees},
+  author  = {Ringel, Liran and Romano, Yaniv},
+  journal = {arXiv preprint arXiv:2604.12989},
+  year    = {2026}
+}                                                        % CHECK arXiv id
+
+@article{li2026dartree,
+  title   = {DARTree: Speculative Diffusion Decoding with Autoregressive
+             Draft Trees},
+  author  = {Li, Tianyi and Luo, Yaxin and Shang, Xinyi and Shen, Zhiqiang},
+  journal = {arXiv preprint arXiv:2608.13524},
+  year    = {2026}
+}
+
+@article{yang2026pctree,
+  title   = {From Chains to Trees: Parent-Conditioned Drafting for
+             Semi-Autoregressive Speculative Decoding},
+  author  = {Anonymous},
+  journal = {arXiv preprint arXiv:2608.02123},
+  year    = {2026}
+}                                                        % CHECK author list
+
+@article{zhang2026dflow,
+  title   = {DFlow: Enabling Verifier Information Flow in Block Diffusion
+             Speculative Decoding},
+  author  = {Anonymous},
+  journal = {arXiv preprint arXiv:2609.06498},
+  year    = {2026}
+}                                                        % CHECK author list
+
+@article{costaware2026trees,
+  title   = {Cost-Aware Diffusion Draft Trees for Speculative Decoding},
+  author  = {Anonymous},
+  journal = {arXiv preprint arXiv:2606.01813},
+  year    = {2026}
+}                                                        % CHECK author list
+
+% ---------------------------------------------------------------------
+%  Non-autoregressive generation and exact-probability constraints
+% ---------------------------------------------------------------------
+@inproceedings{gu2018nat,
+  title     = {Non-Autoregressive Neural Machine Translation},
+  author    = {Gu, Jiatao and Bradbury, James and Xiong, Caiming and
+               Li, Victor O.K. and Socher, Richard},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2018}
+}
+
+@inproceedings{wang2018semiar,
+  title     = {Semi-Autoregressive Neural Machine Translation},
+  author    = {Wang, Chunqi and Zhang, Ji and Chen, Haiqing},
+  booktitle = {Proceedings of the 2018 Conference on Empirical Methods in
+               Natural Language Processing (EMNLP)},
+  pages     = {479--488},
+  year      = {2018}
+}
+
+@inproceedings{huang2022dat,
+  title     = {Directed Acyclic Transformer for Non-Autoregressive Machine
+               Translation},
+  author    = {Huang, Fei and Zhou, Hao and Liu, Yang and Li, Hang and
+               Huang, Minlie},
+  booktitle = {International Conference on Machine Learning (ICML)},
+  pages     = {9410--9428},
+  year      = {2022}
+}
+
+@inproceedings{wen2024ctcdrafter,
+  title     = {Speculative Decoding with CTC-based Draft Model for LLM
+               Inference Acceleration},
+  author    = {Wen, Zhuofan and Gui, Shangtong and Feng, Yang},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2024}
+}
+
+% ---------------------------------------------------------------------
+%  Flow matching and diffusion language modelling
+% ---------------------------------------------------------------------
+@inproceedings{lipman2023flowmatching,
+  title     = {Flow Matching for Generative Modeling},
+  author    = {Lipman, Yaron and Chen, Ricky T. Q. and Ben-Hamu, Heli and
+               Nickel, Maximilian and Le, Matthew},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2023}
+}
+
+@article{lipman2024fmguide,
+  title   = {Flow Matching Guide and Code},
+  author  = {Lipman, Yaron and Havasi, Marton and Holderrieth, Peter and
+             Shaul, Neta and Le, Matt and Karrer, Brian and Chen, Ricky T. Q.
+             and Lopez-Paz, David and Ben-Hamu, Heli and Gat, Itai},
+  journal = {arXiv preprint arXiv:2412.06264},
+  year    = {2024}
+}                                                        % CHECK arXiv id
+
+@inproceedings{gat2024dfm,
+  title     = {Discrete Flow Matching},
+  author    = {Gat, Itai and Remez, Tal and Shaul, Neta and Kreuk, Felix and
+               Chen, Ricky T. Q. and Synnaeve, Gabriel and Adi, Yossi and
+               Lipman, Yaron},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2024}
+}
+
+@inproceedings{campbell2024discreteflows,
+  title     = {Generative Flows on Discrete State-Spaces: Enabling Multimodal
+               Flows with Applications to Protein Co-Design},
+  author    = {Campbell, Andrew and Yim, Jason and Barzilay, Regina and
+               Rainforth, Tom and Jaakkola, Tommi},
+  booktitle = {International Conference on Machine Learning (ICML)},
+  year      = {2024}
+}
+
+@article{nie2025llada,
+  title   = {Large Language Diffusion Models},
+  author  = {Nie, Shen and Zhu, Fengqi and You, Zebin and Zhang, Xiaolu and
+             Ou, Jingyang and Hu, Jun and Zhou, Jun and Lin, Yankai and
+             Wen, Ji-Rong and Li, Chongxuan},
+  journal = {arXiv preprint arXiv:2502.09992},
+  year    = {2025}
+}
+
+@article{ye2025dream,
+  title   = {Dream 7B: Diffusion Large Language Models},
+  author  = {Ye, Jiacheng and Xie, Zhihui and Zheng, Lin and Gao, Jiahui and
+             Wu, Zirui and Jiang, Xin and Li, Zhenguo and Kong, Lingpeng},
+  journal = {arXiv preprint arXiv:2508.15487},
+  year    = {2025}
+}
+
+@inproceedings{arriola2025blockdiffusion,
+  title     = {Block Diffusion: Interpolating Between Autoregressive and
+               Diffusion Language Models},
+  author    = {Arriola, Marianne and Gokaslan, Aaron and Chiu, Justin T. and
+               Yang, Zhihan and Qi, Zhixuan and Han, Jiaqi and
+               Sahoo, Subham Sekhar and Kuleshov, Volodymyr},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2025}
+}
+
+@article{cheng2025sdar,
+  title   = {SDAR: A Synergistic Diffusion-AutoRegression Paradigm for
+             Scalable Sequence Generation},
+  author  = {Cheng, Shuang and Bian, Yihan and Liu, Dawei and Jiang, Yuhua and
+             Liu, Yihao and Zhang, Linfeng and Wang, Wenhai and Guo, Qipeng and
+             Chen, Kai and Qi, Biqing and Zhou, Bowen},
+  journal = {arXiv preprint arXiv:2510.06303},
+  year    = {2025}
+}
+
+% --- flow-based language modelling: few-step and source geometry ------
+@article{lee2026flowmap,
+  title   = {Flow Map Language Models: One-Step Language Modeling via
+             Continuous Denoising},
+  author  = {Lee, Chanhyuk and Yoo, Jaehoon and Agarwal, Manan and Shah, Sheel
+             and Huang, Jerry and Raghunathan, Aditi and Hong, Seunghoon and
+             Boffi, Nicholas M. and Kim, Jinwoo},
+  journal = {arXiv preprint arXiv:2602.16813},
+  year    = {2026}
+}                                                        % CHECK arXiv id
+
+@article{chen2026langflow,
+  title   = {LangFlow: Continuous Diffusion Rivals Discrete in Language
+             Modeling},
+  author  = {Chen, Yuxin and Liang, Chumeng and Sui, Hangke and Guo, Ruihan
+             and Cheng, Chaoran and You, Jiaxuan and Liu, Ge},
+  journal = {arXiv preprint arXiv:2604.11748},
+  year    = {2026}
+}                                                        % CHECK arXiv id
+
+@inproceedings{gurbuz2026minibatchot,
+  title     = {Minibatch Optimal Transport and Perplexity Bound Estimation in
+               Discrete Flow Matching},
+  author    = {Gurbuz, Ogul Can and Waxman, Eli},
+  booktitle = {International Conference on Machine Learning (ICML)},
+  year      = {2026}
+}                                                        % CHECK author list
+
+@article{sun2026flowduality,
+  title   = {Flow Duality and Source Geometry for Categorical Generation},
+  author  = {Anonymous},
+  journal = {arXiv preprint arXiv:2609.10863},
+  year    = {2026}
+}                                                        % CHECK author list
+
+@article{zhang2026marginalbridges,
+  title   = {Sampling from Flow Language Models via Marginal-Conditioned
+             Bridges},
+  author  = {Anonymous},
+  journal = {arXiv preprint arXiv:2605.13681},
+  year    = {2026}
+}                                                        % CHECK author list
+
+@inproceedings{
+flowcast2026,
+title={FlowCast: Trajectory Forecasting for Scalable Zero-Cost Speculative Flow Matching},
+author={Divya Jyoti Bajpai and Shubham Agarwal and Apoorv Saxena and Kuldeep Kulkarni and Subrata Mitra and Manjesh Kumar Hanawal},
+booktitle={The Fourteenth International Conference on Learning Representations},
+year={2026},
+url={https://openreview.net/forum?id=gv8R88PVEG}
+}
+
+@article{wang2025fudoki,
+  title   = {FUDOKI: Discrete Flow-based Unified Understanding and Generation
+             via Kinetic-Optimal Velocities},
+  author  = {Wang, Jin and others},
+  journal = {arXiv preprint arXiv:2505.20147},
+  year    = {2025}
+}                                                        % CHECK id and authors
+
+@article{shao2025calm,
+  title   = {Continuous Autoregressive Language Models},
+  author  = {Shao, Chenze and others},
+  journal = {arXiv preprint arXiv:2510.27688},
+  year    = {2025}
+}                                                        % CHECK id and authors
+
+% ---------------------------------------------------------------------
+%  Representation / architecture components
+% ---------------------------------------------------------------------
+
+@inproceedings{rombach2022latentdiffusion,
+  title     = {High-Resolution Image Synthesis with Latent Diffusion Models},
+  author    = {Rombach, Robin and Blattmann, Andreas and Lorenz, Dominik
+               and Esser, Patrick and Ommer, Bj{\"o}rn},
+  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision
+               and Pattern Recognition (CVPR)},
+  year      = {2022},
+  url       = {https://arxiv.org/abs/2112.10752}
+}
+
+@article{dao2023latentflow,
+  title   = {Flow Matching in Latent Space},
+  author  = {Dao, Quan and Phung, Hao and Nguyen, Binh and Tran, Anh},
+  journal = {arXiv preprint arXiv:2307.08698},
+  year    = {2023},
+  url     = {https://arxiv.org/abs/2307.08698}
+}
+
+@inproceedings{esser2024rectifiedflow,
+  title     = {Scaling Rectified Flow Transformers for High-Resolution
+               Image Synthesis},
+  author    = {Esser, Patrick and Kulal, Sumith and Blattmann, Andreas
+               and Entezari, Rahim and M{\"u}ller, Jonas and Saini, Harry
+               and Levi, Yam and Lorenz, Dominik and Sauer, Axel
+               and Boesel, Frederic and Podell, Dustin and Dockhorn, Tim
+               and English, Zion and Lacey, Kyle and Goodwin, Alex
+               and Marek, Yannik and Rombach, Robin},
+  booktitle = {Proceedings of the 41st International Conference on Machine
+               Learning (ICML)},
+  year      = {2024},
+  url       = {https://arxiv.org/abs/2403.03206}
+}
+
+@article{samragh2025future,
+  title   = {Your LLM Knows the Future: Uncovering its Multi-Token Prediction
+             Potential},
+  author  = {Samragh, Mohammad and Kundu, Arnav and Harrison, David and
+             Nishu, Kumari and Naik, Devang and Cho, Minsik and
+             Farajtabar, Mehrdad},
+  journal = {arXiv preprint arXiv:2507.11851},
+  year    = {2025}
+}
+
+% ---------------------------------------------------------------------
+%  Target model, benchmarks, and training data
+%  Dataset entries follow the source's recommended citation where available.
+%  Historical cite keys are retained even when the verified year differs.
+%  Undated resource pages use n.d. rather than an inferred release year.
+% ---------------------------------------------------------------------
+
+@misc{qwen35,
+  title  = {{Qwen3.5}: Towards Native Multimodal Agents},
+  author = {{Qwen Team}},
+  month  = feb,
+  year   = {2026},
+  url    = {https://qwen.ai/blog?id=qwen3.5}
+}
+
+@article{chen2021humaneval,
+  title   = {Evaluating Large Language Models Trained on Code},
+  author  = {Chen, Mark and Tworek, Jerry and Jun, Heewoo and others},
+  journal = {arXiv preprint arXiv:2107.03374},
+  year    = {2021},
+  url     = {https://arxiv.org/abs/2107.03374}
+}
+
+@article{cobbe2021gsm8k,
+  title   = {Training Verifiers to Solve Math Word Problems},
+  author  = {Cobbe, Karl and Kosaraju, Vineet and Bavarian, Mohammad
+             and Chen, Mark and Jun, Heewoo and Kaiser, Lukasz
+             and Plappert, Matthias and Tworek, Jerry and Hilton, Jacob
+             and Nakano, Reiichiro and Hesse, Christopher and Schulman, John},
+  journal = {arXiv preprint arXiv:2110.14168},
+  year    = {2021},
+  url     = {https://arxiv.org/abs/2110.14168}
+}
+
+@misc{chaudhary2023codealpaca,
+  title        = {Code Alpaca: An Instruction-following {LLaMA} Model for
+                  Code Generation},
+  author       = {Chaudhary, Sahil},
+  year         = {2023},
+  howpublished = {GitHub repository},
+  url          = {https://github.com/sahil280114/codealpaca}
+}
+
+@misc{conover2023dolly,
+  title  = {Free Dolly: Introducing the World's First Truly Open
+            Instruction-Tuned {LLM}},
+  author = {Conover, Mike and Hayes, Matt and Mathur, Ankit and Xie, Jianwei
+            and Wan, Jun and Shah, Sam and Ghodsi, Ali and Wendell, Patrick
+            and Zaharia, Matei and Xin, Reynold},
+  year   = {2023},
+  url    = {https://www.databricks.com/blog/2023/04/12/dolly-first-open-commercially-viable-instruction-tuned-llm}
+}
+
+@article{ding2023ultrachat,
+  title   = {Enhancing Chat Language Models by Scaling High-quality
+             Instructional Conversations},
+  author  = {Ding, Ning and Chen, Yulin and Xu, Bokai and Qin, Yujia
+             and Zheng, Zhi and Hu, Shengding and Liu, Zhiyuan
+             and Sun, Maosong and Zhou, Bowen},
+  journal = {arXiv preprint arXiv:2305.14233},
+  year    = {2023},
+  url     = {https://arxiv.org/abs/2305.14233}
+}
+
+@misc{norobots2023,
+  title        = {No Robots},
+  author       = {Rajani, Nazneen and Tunstall, Lewis and Beeching, Edward
+                  and Lambert, Nathan and Rush, Alexander M. and Wolf, Thomas},
+  year         = {2023},
+  howpublished = {Hugging Face dataset},
+  url          = {https://huggingface.co/datasets/HuggingFaceH4/no_robots}
+}
+
+@inproceedings{fan2018writingprompts,
+  title     = {Hierarchical Neural Story Generation},
+  author    = {Fan, Angela and Lewis, Mike and Dauphin, Yann},
+  booktitle = {Proceedings of the 56th Annual Meeting of the Association
+               for Computational Linguistics (Volume 1: Long Papers)},
+  year      = {2018},
+  pages     = {889--898},
+  publisher = {Association for Computational Linguistics},
+  doi       = {10.18653/v1/P18-1082},
+  url       = {https://aclanthology.org/P18-1082/}
+}
+
+@inproceedings{nallapati2016cnndm,
+  title     = {Abstractive Text Summarization using Sequence-to-sequence
+               {RNN}s and Beyond},
+  author    = {Nallapati, Ramesh and Zhou, Bowen and dos Santos, Cicero
+               and G{\"u}l{\c{c}}ehre, {\c{C}}a{\u{g}}lar and Xiang, Bing},
+  booktitle = {Proceedings of the 20th {SIGNLL} Conference on Computational
+               Natural Language Learning},
+  year      = {2016},
+  pages     = {280--290},
+  publisher = {Association for Computational Linguistics},
+  doi       = {10.18653/v1/K16-1028},
+  url       = {https://aclanthology.org/K16-1028/}
+}
+
+@inproceedings{tiedemann2012opus,
+  title     = {Parallel Data, Tools and Interfaces in {OPUS}},
+  author    = {Tiedemann, J{\"o}rg},
+  booktitle = {Proceedings of the Eighth International Conference on
+               Language Resources and Evaluation ({LREC}'12)},
+  year      = {2012},
+  publisher = {European Language Resources Association},
+  url       = {https://aclanthology.org/L12-1246/}
+}
+
+@misc{nathawani2025nemotron,
+  title        = {{Nemotron-Post-Training-Dataset-v1}},
+  author       = {Nathawani, Dhruv and Gitman, Igor and Majumdar, Somshubra
+                  and Bakhturina, Evelina and Sunil Mahabaleshwarkar, Ameya
+                  and Zhang, Jian and Polak Scowcroft, Jane},
+  year         = {2025},
+  month        = jul,
+  howpublished = {NVIDIA dataset, version 1.0},
+  url          = {https://huggingface.co/datasets/nvidia/Nemotron-Post-Training-Dataset-v1}
+}
+
+@misc{instructurca2024,
+  title        = {{InstrucTurca}: A Diverse Instructional Content Dataset
+                  for Turkish},
+  author       = {Altinok, Duygu},
+  year         = {2024},
+  howpublished = {Hugging Face dataset},
+  url          = {https://huggingface.co/datasets/turkish-nlp-suite/InstrucTurca}
+}
+
+% The exact 2K/20K training source remains to be confirmed. This citation
+% identifies the author's collection without choosing a release speculatively.
+@misc{atasoglu2024funccall,
+  title        = {Turkish Tool Calling Dataset Collection},
+  author       = {Ata{\c{s}}o{\u{g}}lu, Ahmet},
+  year         = {n.d.},
+  howpublished = {Hugging Face dataset collection},
+  url          = {https://huggingface.co/collections/atasoglu/turkish-tool-calling-dataset}
+}
+
+@misc{atasoglu2024toolcall,
+  title        = {Turkish Tool Calling 10k},
+  author       = {Ata{\c{s}}o{\u{g}}lu, Ahmet},
+  year         = {2025},
+  howpublished = {Hugging Face dataset},
+  url          = {https://huggingface.co/datasets/atasoglu/turkish-tool-calling-10k}
+}
+
+@misc{magibu2024multiturn,
+  title        = {Turkish Multi Turn Dialog Dataset},
+  author       = {Bayram, Ali},
+  year         = {2026},
+  howpublished = {Hugging Face dataset},
+  url          = {https://huggingface.co/datasets/magibu/turkish-multi-turn-dialog-dataset}
+}
+
+@misc{freedomintelligence2023alpacade,
+  title        = {{Alpaca-GPT4-Deutsch}},
+  author       = {{FreedomIntelligence}},
+  year         = {2023},
+  howpublished = {Hugging Face dataset},
+  url          = {https://huggingface.co/datasets/FreedomIntelligence/alpaca-gpt4-deutsch}
+}
+
+@misc{causallmselfinstructgerman,
+  title        = {{GPT-4 Self-Instruct German}},
+  author       = {{CausalLM}},
+  year         = {n.d.},
+  howpublished = {Hugging Face dataset},
+  url          = {https://huggingface.co/datasets/CausalLM/GPT-4-Self-Instruct-German}
+}
+
+@misc{aurasgermanrag,
+  title        = {{GermanRAG}},
+  author       = {Auras, Daniel and Harries, JP and Pluster, Bj{\"o}rn},
+  year         = {n.d.},
+  howpublished = {DiscoResearch dataset},
+  url          = {https://huggingface.co/datasets/DiscoResearch/germanrag}
+}
+
+@misc{openassistant2023oasst2,
+  title        = {{OpenAssistant Conversations Dataset 2 (OASST2)}},
+  author       = {{OpenAssistant Contributors}},
+  year         = {2023},
+  howpublished = {Hugging Face dataset},
+  url          = {https://huggingface.co/datasets/OpenAssistant/oasst2}
+}
+
+@article{oh2026bastion,
+  title   = {{BASTION}: Budget-Aware Speculative Decoding with
+             Tree-structured Block Diffusion Drafting},
+  author  = {Oh, Soowon and Cao, Nam and Kim, Yujin and Jung, Hojung
+             and Ahmad, Huzama and Bae, Sangmin and Yun, Se-Young},
+  journal = {arXiv preprint arXiv:2605.29727},
+  year    = {2026},
+  url     = {https://arxiv.org/abs/2605.29727}
+}
+
+@misc{eagle4team2026,
+  title  = {{EAGLE-4}: One Flexible Drafter for All Batch Sizes and Hardware},
+  author = {{EAGLE-4 Team}},
+  year   = {2026},
+  note   = {Preprint},
+  url    = {https://github.com/eagle-hq/EAGLE-4/blob/main/EAGLE4_Paper.pdf}
+}

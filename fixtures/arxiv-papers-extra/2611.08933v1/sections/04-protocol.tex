@@ -1,0 +1,35 @@
+\section{Metric definitions and protocol accounting}
+\label{app:protocol}
+\subsection{RFQ attribution}
+An RFQ round is an agent message and customer reply. The opening is free; clarification, repetition, and confirmation consume replies. Let $F_i$ be the applicable fields unknown after the opening, and let $e_{if}(t)$ indicate the first complete answer to field $f$ elicited by an appropriate question by round $t$. Case and mean coverage are
+\begin{equation}
+ C_i(t)=\frac{\sum_{f\in F_i}e_{if}(t)}{|F_i|},\qquad
+ \overline C(t)=\frac{1}{N}\sum_i C_i(t).
+\end{equation}
+For initially unknown critical fields $K_i$, success is
+\begin{equation}
+ S_i=\mathbf 1[C_i(8)\geq0.8]\prod_{f\in K_i}e_{if}(8).
+\end{equation}
+An early-ended episode carries its last state forward; a final summary cannot retroactively earn credit. A separate annotation pass checks attribution without rewriting the customer's actual reply. Unsolicited disclosure affects observed coverage, not elicited coverage. Leak rate is unsolicited new fields divided by all newly disclosed fields, deduplicated per case; it is not a separate candidate competence score.
+
+In the original twenty-case cohort, eighteen openings leave seven fields unknown and two leave six (138 total). Because the policy releases at most one new field per reply, its ideal six-round macro ceiling is $(18\times6/7+2)/20=0.8714$. This is a protocol bound for that cohort, not an executed questionnaire baseline or a combined forty-case estimate.
+
+\subsection{Post-hoc RFQ amendment}
+The original Claude analysis excludes duplicate-field router failures on 004/009 and a subscription-limit failure on 019. AMENDMENT-01 was adopted after original and supplementary outcomes were known. It selects the first frozen-configuration reattempt for every excluded case, including the failed 019 reattempt. A later diagnostic success on 019 is never selected. On the common original 17 cases, success is 16/17 for Claude, 14/17 for Astra, and 9/17 for Sol.
+
+Original verification retains 152 plugin-allowlist failures out of 3,653 checks; a separate addendum accepts those built-in plugins. The original record is not relabeled as wholly successful. Cases 006/011 favor amended Claude over Astra, but the earlier Astra failures involve attribution disputes. Case 008 fails for both; these details limit behavioral claims from the one-case total difference.
+
+\subsection{Quality bounds and selection}
+For applicable dimensions $A$, observed dimensions $O$, normalized scores $s_d$, and weights $w_d$, we retain
+\begin{align}
+ L &= \frac{\sum_{d\in O}w_ds_d}{\sum_{d\in A}w_d},\\
+ U &= L+\frac{\sum_{d\in A\setminus O}w_d}{\sum_{d\in A}w_d}.
+\end{align}
+These are missing-evidence bounds. Workflow completion and recovery have instrumentation gaps; an observed omission is a different kind of evidence and may legitimately receive a low semantic score. The paired full-score difference is bounded by $[L_C-U_A,U_C-L_A]$. Unmeasured weight is equal within each paired core condition, but its unmeasured performance need not be equal.
+
+The archive's summary comparison of 0.871 (Claude) versus 0.816 (Astra) mixes interval midpoints and external point scores over 35 selected pairs. Its exploratory sign test concerns that derived diagnostic. We do not use it as a measured total score or a population-level quality ranking. Several conditions share a brief, and multiple tests were uncorrected.
+
+\subsection{Retrospective requirement-check audit}
+For each scored core condition $i$, the descriptive flag is $V_i=1$ if at least one archived check is exactly \texttt{VIOLATED}. Empty check lists would be unresolved rather than negative flags; none occur in the 32/28 scored core records. We do not use the spelling of a deliverable label to identify violations, avoiding capitalization and wording differences. Counting conditions rather than checks prevents duplicated requirements from inflating the rate. The unflagged complement is not an acceptance rate.
+
+The audit's inference is deliberately limited: a full structural score coexists with a model-judged semantic violation. Cases may contain judge mistakes, underspecified requests, or justified requests for clarification. Hash checks and pixel differences do not adjudicate those possibilities. All original scores remain unchanged.

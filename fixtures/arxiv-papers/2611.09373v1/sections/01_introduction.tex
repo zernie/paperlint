@@ -1,0 +1,40 @@
+\section{Introduction}
+\label{sec:introduction}
+
+ADMET models help prioritize compounds for synthesis and experimental testing. A useful model must
+therefore do more than make accurate predictions: it should also indicate when those predictions
+are uncertain. Reliable uncertainty estimates can help decide which compounds to test, where more
+data are needed, and when a prediction should not drive an experimental decision
+\citep{hirschfeld2020uncertainty}.
+
+ADMET datasets are often small, and a more complicated model is not necessarily better. Fingerprint
+and descriptor models remain competitive across many small molecular datasets
+\citep{notwell2023maplight,praski2025benchmarking}, while predictability differs substantially
+across assays \citep{aleksic2022predictability}. Uncertainty quantification
+(UQ) methods may likewise perform differently from one endpoint to another.
+
+The comparison itself also varies. Chemical partitions, model initialization, and the data used for
+tuning can change the observed differences between both point predictors and UQ methods
+\citep{bouthillier2021accounting,ash2025practically}. This matters for the TDC ADMET benchmark, which
+contains 22 public prediction tasks with endpoint-specific performance measures and a fixed scaffold
+test split \citep{huang2021tdc}. After our structure curation, the datasets contain 475 to 13,094
+compounds. An audit of leading
+submissions found reproducibility failures, data leakage, and model choices influenced by the public
+test sets \citep{koleiev2026enduser}. We therefore ask which methods perform consistently across
+datasets, which work best on particular endpoints, and whether those conclusions survive changes in
+the evaluation design.
+
+We study eleven calibrated pipelines based on LightGBM and single or ensemble neural models on all
+22 datasets, crossing ten chemical partitions, five model seeds, and five outer folds. This grid
+supports comparisons across datasets and on each dataset's original score scale, followed by
+smaller-design stability analyses.
+
+Our contributions are:
+\begin{itemize}
+  \item We compare eleven calibrated UQ pipelines on all 22 TDC ADMET datasets using nested
+  cross-validation across multiple chemical partitions and model seeds.
+  \item We show that ensemble MC dropout is the most consistent method across datasets, while
+  LightGBM wins many individual endpoints and performs poorly on others.
+  \item We examine how reduced split and tuning designs affect both the apparent leader and the
+  differences supported by the statistical analysis.
+\end{itemize}

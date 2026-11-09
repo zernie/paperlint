@@ -1,0 +1,94 @@
+\begin{table*}[htbp]
+    \centering
+    \caption{Performance of ABS-Align across black-box attacks.}
+    \label{tab:black_box_results}
+
+    \setlength{\tabcolsep}{4pt}
+    \renewcommand{\arraystretch}{0.9}
+    \small
+    % \begin{tabular}{ll ccccc c}
+    %     \toprule
+    %     %\textbf{Model} & \textbf{Method} & \textbf{Role Play} & \textbf{Persuasion} & \textbf{Expert Endors.} & \textbf{Authority Endors.} & \textbf{Misrepres.} & \textbf{Average over all 10} \\
+    %     & & \multicolumn{6}{c}{\textbf{Attack Success Rate $\downarrow$}}   \\
+    %     \cmidrule(lr){2-8}
+    %     \multirow{2}{*}{\textbf{Model}} & \multirow{2}{*}{\textbf{Method}} & \multirow{2}{*}{\textbf{Role Play}} & \textbf{Evidence-based} & \textbf{Expert} & \textbf{Authority} & \multirow{2}{*}{\textbf{Misrepresentation}} & \textbf{Average over} \\
+    %      & &  &  \textbf{Persuasion} & \textbf{Endorsement} & \textbf{Endorsement} &  & \textbf{all 10 attacks} \\
+        
+    %     \midrule
+        
+        
+    %     \multirow{2}{*}{Gemma-2-2B-it}
+    %      & No Defense           & 34.31 & 64.09 & 74.31 & 72.27 & 78.86 & 44.56 \\
+    %      %& Baseline Defense    & 0.00 & 0.00 & 0.00 & 0.00 & 0.00  & 0.00 \\
+    %      & ABS-Align            & 8.40 & 20.00 & 20.23 & 23.40 & 22.72  & 13.11 \\
+    %     \midrule
+        
+    %     \multirow{2}{*}{Llama-3-8B-Instruct}
+    %      & No Defense           & 37.72 & 54.09 & 58.63 & 61.59 & 59.31  & 48.20 \\
+    %      %& Baseline Defense    & 0.00 & 0.00 & 0.00 & 0.00 & 0.00  & 0.00 \\
+    %      & ABS-Align            & 10.68 & 23.18 & 25.68 & 22.95 & 17.72 & 18.02 \\
+    %     \midrule
+
+    %     \multirow{2}{*}{Llama-3.2-3B-Instruct}
+    %      & No Defense           & & & & & & \\
+    %      %& Baseline Defense    & 0.00 & 0.00 & 0.00 & 0.00 & 0.00  & 0.00 \\
+    %      & ABS-Align            & & & & & & \\
+    %     \midrule
+
+    %     \multirow{2}{*}{Qwen-3-4B}
+    %      & No Defense           & & & & & & \\
+    %      %& Baseline Defense    & 0.00 & 0.00 & 0.00 & 0.00 & 0.00  & 0.00 \\
+    %      & ABS-Align            & & & & & & \\
+
+        
+    %     % \multirow{2}{*}{Model C}
+    %     %  & No Defense           & 0.00 & 0.00 & 0.00 & 0.00 & 0.00  & 0.00 \\
+    %     %  %& Baseline Defense    & 0.00 & 0.00 & 0.00 & 0.00  & 0.00 & 0.00 \\
+    %     %  & ABS-Align            & 0.00 & 0.00 & 0.00 & 0.00 & 0.00  & 0.00 \\
+    %     \bottomrule
+    % \end{tabular}
+
+    \begin{tabular}{ll ccccc c}
+        \toprule
+        %\textbf{Model} & \textbf{Method} & \textbf{Role Play} & \textbf{Persuasion} & \textbf{Expert Endors.} & \textbf{Authority Endors.} & \textbf{Misrepres.} & \textbf{Average over all 10} \\
+        & & \multicolumn{6}{c}{\textbf{Attack Success Rate $\downarrow$}}   \\
+        \cmidrule(lr){2-8}
+        \multirow{2}{*}{\textbf{Model}} & \multirow{2}{*}{\textbf{Method}} & \multirow{2}{*}{\textbf{Role Play}} & \textbf{Evidence-based} & \textbf{Expert} & \textbf{Authority} & \multirow{2}{*}{\textbf{Misrepresentation}} & \textbf{Average over} \\
+         & &  &  \textbf{Persuasion} & \textbf{Endorsement} & \textbf{Endorsement} &  & \textbf{all 10 attacks} \\
+        
+        \midrule
+        
+        
+        \multirow{2}{*}{Gemma-2-2B-IT}
+         & No Defense           & 20.68 & 55.68 & 66.81 & 65.45 & 72.95 & 41.58 \\
+         %& Baseline Defense    & 0.00 & 0.00 & 0.00 & 0.00 & 0.00  & 0.00 \\
+         & ABS-Align            &  6.81 & 11.81 & 16.36 & 20.45 & 17.27 & 13.24 \\
+        \midrule
+        
+        \multirow{2}{*}{Llama-3-8B-Instruct}
+         & No Defense           & 36.36 & 56.59 & 60.68 & 60.90 & 55.45 & 48.34 \\
+         %& Baseline Defense    & 0.00 & 0.00 & 0.00 & 0.00 & 0.00  & 0.00 \\
+         & ABS-Align            & 15.90 & 22.04 & 18.63 & 22.50 & 13.63 & 17.79 \\
+        \midrule
+
+        \multirow{2}{*}{Llama-3.2-3B-Instruct}
+         & No Defense           & 34.54 & 71.13 & 75.45 & 79.77 & 83.40 & 53.07 \\
+         %& Baseline Defense    & 0.00 & 0.00 & 0.00 & 0.00 & 0.00  & 0.00 \\
+         & ABS-Align            & 22.04 & 46.36 & 45.68 & 49.09 & 48.18 & 33.02 \\
+        \midrule
+
+        \multirow{2}{*}{Qwen-3-4B}
+         & No Defense           & 52.04 & 93.86 & 93.86 & 93.63 & 92.95 & 68.75 \\
+         %& Baseline Defense    & 0.00 & 0.00 & 0.00 & 0.00 & 0.00  & 0.00 \\
+         & ABS-Align            &  7.04 & 47.72 & 57.95 & 49.09 & 58.18 & 27.20 \\
+
+        
+        % \multirow{2}{*}{Model C}
+        %  & No Defense           & 0.00 & 0.00 & 0.00 & 0.00 & 0.00  & 0.00 \\
+        %  %& Baseline Defense    & 0.00 & 0.00 & 0.00 & 0.00  & 0.00 & 0.00 \\
+        %  & ABS-Align            & 0.00 & 0.00 & 0.00 & 0.00 & 0.00  & 0.00 \\
+        \bottomrule
+    \end{tabular}
+    
+\end{table*}
+

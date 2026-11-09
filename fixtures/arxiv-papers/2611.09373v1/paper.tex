@@ -1,0 +1,72 @@
+\documentclass{article}
+
+\usepackage[preprint,dblblindworkshop]{neurips_2026}
+\workshoptitle{AI Data Readiness for Scientific Discovery (AIDaR)}
+
+\input{preamble}
+\graphicspath{{figures/hsu_mcb_calibrated_full_grid_2026-08-29/}{figures/}}
+
+\title{Calibrated Uncertainty Quantification on \mbox{TDC ADMET:}\\
+What Can Be Resolved Across 22 Datasets?}
+\author{%
+  Laurits Fredsgaard \quad Michael Riis Andersen \quad Mikkel N. Schmidt \\
+  Department of Applied Mathematics and Computer Science \\
+  Technical University of Denmark \\
+  \texttt{laula@dtu.dk, miri@dtu.dk, mnsc@dtu.dk}
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Absorption, distribution, metabolism, excretion, and toxicity (ADMET) models often rely on small,
+heterogeneous datasets, yet their predictions may determine which compounds proceed to experimental
+testing. Useful evaluations must therefore assess both predictive performance and the quality of
+reported probabilities or intervals. We ask which common uncertainty-quantification methods perform
+best on the 22 Therapeutics Data Commons (TDC) ADMET datasets and what this benchmark can resolve. We
+compare eleven calibrated pipelines using nested five-fold cross-validation across ten chemical
+partitions and five model seeds. Ensemble Monte Carlo (MC) dropout has the best average rank for TDC
+performance, Brier score, and 90\% interval score. For TDC performance, however, it is not separated
+from the other ensemble pipelines; for Brier and interval score, LightGBM is also not ruled out as
+best. LightGBM wins more individual datasets than any other method for TDC performance and Brier
+score, but performs poorly on several endpoints. Smaller evaluations can identify a different
+leader and often fail to recover the broader comparison. These results make LightGBM and an ensemble
+neural model complementary baselines. Comparative claims should be checked across multiple chemical
+partitions using statistical analyses matched to the question being asked.
+\end{abstract}
+
+\input{sections/01_introduction}
+\input{sections/02_related_work}
+\input{sections/03_methods}
+\input{sections/04_results}
+\input{sections/05_discussion}
+
+\nopagebreak[4]
+
+\paragraph{Code and data availability.}
+Code and data accompanying this study will be released before the camera-ready submission.
+
+\nopagebreak[4]
+\paragraph{Acknowledgements.}
+The authors acknowledge support from the Novo Nordisk Foundation under grant no.\
+NNF22OC0076658 (Bayesian neural networks for molecular discovery). We acknowledge the Danish
+e-infrastructure Consortium (DeiC) for awarding this project access to the LUMI supercomputer,
+owned by the EuroHPC Joint Undertaking, hosted by CSC (Finland) and the LUMI consortium.
+
+\nopagebreak[4]
+\paragraph{Disclosure.}
+Large language model assistance was used for prose refinement and code writing. The authors
+reviewed the resulting material.
+
+\clearpage
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\clearpage
+\appendix
+\input{appendix/supplementary_results}
+\input{appendix/hpo_adequacy}
+\input{appendix/dataset_cards}
+
+\end{document}

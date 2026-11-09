@@ -1,0 +1,188 @@
+%% ============================================================================
+%%  04_runtime_chaining_config.tex — Runtime Operations & Chaining Semantics
+%% ============================================================================
+
+\section{Runtime Operations, Deterministic Chaining, and Operator Control}
+\label{sec:runtime_operations}
+
+Real-world autonomous systems do not operate with isolated single-shot tool calls. Production workflows require multi-capability sessions, deterministic step sequencing, and strict access governance. Skillware provides a comprehensive runtime management stack to handle these operational demands with mathematical predictability.
+
+\subsection{SkillContext: Hierarchical Discovery and Shadow Guards}
+\label{subsec:skillcontext}
+
+To manage multi-capability environments, Skillware introduces \texttt{SkillContext}, a centralized session controller that governs capability discovery, trust tiers, and prompt overhead. 
+
+\texttt{SkillContext} establishes an explicit path-resolution hierarchy to discover and load capability bundles:
+\begin{equation}
+\label{eq:tier_resolution}
+\mathcal{T}_{\text{resolve}} = \text{project} \;\succ\; \text{external} \;\succ\; \text{bundled} \;\succ\; \text{override}
+\end{equation}
+where local project-specific skills (\texttt{./skills/}) take precedence over external organizational libraries (\texttt{SKILLWARE\_SKILL\_PATH}), which in turn take precedence over the immutable core skills bundled inside the framework's wheel.
+
+\textbf{Automated Shadow-Conflict Detection:} In enterprise settings, an adversary or misconfigured repository might attempt to introduce a malicious skill that shadows a core security component (e.g., masking \texttt{security/prompt\_injection\_firewall}). During initialization, the loader's \texttt{find\_shadow\_conflicts()} algorithm conducts an exhaustive cross-tier audit. If path shadowing is detected, the framework halts execution and alerts the operator before any code is imported, guaranteeing supply-chain integrity.
+
+\textbf{Context Overhead Modes:} To eliminate context window bloat, \texttt{SkillContext} supports three discrete modes:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Mode Directives} (\texttt{mode="directives"}): Injects full \texttt{instructions.md} documentation for all loaded skills (1,000--3,500 tokens per skill).
+  \item \textbf{Mode Brief} (\texttt{mode="brief"}): Compresses every skill's contract into an ultra-lean, one-line signature (25--35 tokens per skill).
+  \item \textbf{Mode Tools Only} (\texttt{mode="tools\_only"}): Exposes tool declarations directly to the API with zero tokens added to the system prompt.
+\end{itemize}
+By structuring discovery around these three operating modes, \texttt{SkillContext} implements a progressive disclosure lifecycle: the host runtime ingests minimal brief signatures ($\approx 30$ tokens per skill) during intent routing (\texttt{mode="brief"}), unlocks typed JSON Schema parameters only when a capability candidate is emitted (\texttt{mode="tools\_only"}), validates all constraints pre-flight via \texttt{prepare()}, and lazy-loads deterministic Python execution logic via \texttt{execute()} exclusively upon verified invocation. Full markdown instructions (\texttt{mode="directives"}) are unlocked on demand only when task ambiguity or organizational policy mandates deeper cognitive guidance.
+
+\textbf{Zero-Token Dynamic Discovery via SkillMatcher:} In version 0.6.0, Skillware integrates the \texttt{SkillMatcher} engine (\texttt{skillware.core.matcher}) and the unified \texttt{skillware find} discovery CLI. Rather than forcing foundation models to maintain dozens of tool definitions inside their active context windows—which triggers quadratic attention compute and increases routing hallucinations—\texttt{SkillMatcher} performs client-side intent routing across registered capability manifests using a hybrid BM25 lexical scorer and cosine embedding metric. By matching task semantics to candidate contracts in under $2\,\text{ms}$ on local silicon, the runtime retrieves and activates solely the relevant bundle, enabling sub-second cold starts and slashing resident context overhead to zero until execution time.
+
+\subsection{Formal Semantics of the Deterministic Chaining Engine}
+\label{subsec:chaining_engine}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.96\linewidth]{figures/fig03_chained_skill_dag.png}
+\caption{Deterministic directed acyclic graph (DAG) chaining across specialized capabilities in the Tier 4 crucible (\texttt{pii\_masker} $\to$ gate $\to$ \texttt{uk\_companies\_house} $\to$ \texttt{token\_limiter}) with AURA attestation.}
+\label{fig:chain_dag}
+\label{fig:chaining_dag}
+\end{figure}
+
+To eliminate the stochastic fragility and token waste of multi-agent conversational banter (e.g., in CrewAI or AutoGen~\cite{wu2023autogen, mourato2023crewai}), Skillware provides the \textbf{Named Skill Chaining Engine} (\texttt{skillware.chains}). A chain is a statically defined Directed Acyclic Graph (DAG) executed deterministically by the runtime (Figure~\ref{fig:chaining_dag}).
+
+\begin{definition}[Chain State Transition Function]
+Let $\Sigma$ represent the execution state space, where $\sigma_k = \langle \text{host}, \text{prev}, \text{next} \rangle \in \Sigma$ records host inputs, prior outputs, and intermediate pipeline buffers. A chain step $k$ is defined as a 4-tuple:
+\begin{equation}
+\label{eq:step_tuple}
+\text{Step}_k = \langle \kappa_k, \mathcal{B}_{\text{in}}, \mathcal{M}_{\text{out}}, \Pi_{\text{when}} \rangle
+\end{equation}
+where $\kappa_k$ is the target Skillware bundle, $\mathcal{B}_{\text{in}}$ is the dot-notation parameter binding, $\mathcal{M}_{\text{out}}$ is the output mapping, and $\Pi_{\text{when}}: \Sigma \to \{0, 1\}$ is the conditional activation predicate.
+
+The state transition operator $\Gamma: (\text{Step} \times \Sigma) \to \Sigma$ evaluates as:
+\begin{equation}
+\label{eq:transition_eval}
+\Gamma(\text{Step}_k, \sigma_k) = 
+\begin{cases}
+\sigma_k \oplus \mathcal{M}_{\text{out}}(\mathcal{E}_k(p_k)) & \text{if } \Pi_{\text{when}}(\sigma_k) = 1 \\
+\sigma_k & \text{if } \Pi_{\text{when}}(\sigma_k) = 0
+\end{cases}
+\end{equation}
+where $p_k = \text{resolve}(\mathcal{B}_{\text{in}}, \sigma_k)$ resolves argument bindings from host and prior states.
+\end{definition}
+
+Listing~\ref{lst:yaml_chain} illustrates a concrete named chain defined in \texttt{.skillware.yaml}:
+
+\begin{lstlisting}[language=yaml, caption={Named skill chain in \texttt{.skillware.yaml} with dot-notation state bindings and conditional execution gates.}, label={lst:yaml_chain}]
+chains:
+  sanitize_and_optimize:
+    description: Scan untrusted text; compress only if safe.
+    steps:
+      - id: scan
+        skill: security/prompt_injection_firewall
+        params:
+          sensitivity: balanced
+          input_mode: auto
+        input_from:
+          source_text: host.raw_input
+        map_out:
+          sanitized_text: next.text_to_compress
+      - id: compress
+        skill: optimization/context_optimizer
+        when:
+          prior_step: scan
+          field: is_safe
+          equals: true
+        params:
+          max_tokens: 250
+          min_score: 0.45
+        input_from:
+          document_text: next.text_to_compress
+          agent_goal: host.agent_goal
+\end{lstlisting}
+
+As formalized in Equation~\ref{eq:transition_eval} and Listing~\ref{lst:yaml_chain}, if a safety scanner flags an untrusted input ($\Pi_{\text{when}} = 0$), the downstream task is skipped instantly with \textbf{zero token expenditure and zero model latency}, eliminating conversational drift.
+
+\subsection{Operator Infrastructure: Segregated Identity and State}
+\label{subsec:operator_infrastructure}
+
+A foundational principle of secure systems is the physical segregation of operational state from cognitive processing. Skillware enforces this through local-first operator stores under \texttt{\textasciitilde/.config/skillware/} that survive framework upgrades:
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Local-First Address Book} (\texttt{addressbook.yaml}): Real-world workflows require resolving colloquial aliases (e.g., \emph{``Send draft to the CFO''}). Instead of exposing full corporate contact directories to cloud model prompts, Skillware's \texttt{office/gmail\_handler} resolves aliases deterministically on disk via operations (\texttt{add}, \texttt{update}, \texttt{upsert}, \texttt{remove}). The foundation model never receives sensitive personnel directories.
+  \item \textbf{EVM Network Ledger} (\texttt{evm.yaml}): Encapsulates private RPC nodes, smart contract ABIs, chain IDs, and gas ceilings locally. The agent cannot be manipulated into routing transactions through hostile or unmonitored RPC relays.
+  \item \textbf{Multi-Profile Signatures and Append-Only Ledgers:} Outbound email workflows utilize localized signature profiles (\texttt{mail\_signature.txt}, \texttt{mail\_signature.html}, profiles \texttt{default}, \texttt{formal}) and commit every dispatch event to an immutable append-only ledger (\texttt{gmail\_send\_ledger.json}) with incremental scan cursors (\texttt{gmail\_scan\_state.json}), providing defensible, non-repudiable transaction histories.
+  \item \textbf{Dedicated Machine Personas:} The Skillware constitution mandates dedicated operational identities: agents operate under dedicated, segregated Gmail mailboxes using App Passwords, and dedicated on-chain wallets with strictly capped gas allowances---never human primary accounts.
+  \item \textbf{Zero-Leak Secret Providers:} Under the \texttt{SecretProvider} interface (\texttt{EnvSecretProvider}, \texttt{MappingSecretProvider}, \texttt{CallableSecretProvider}), capabilities resolve API tokens dynamically via enterprise Key Management Services (AWS KMS, HashiCorp Vault) or ephemeral STS tokens. Secrets are never exposed to process-global environment variables or logged in unhandled exception traces.
+\end{enumerate}
+
+\subsection{Agent Loops: The Tool Execution Cycle}
+\label{subsec:agent_loops}
+
+In production applications, Skillware integrates cleanly into standard conversational agent loops without requiring external orchestration frameworks. Listing~\ref{lst:agent_loop} illustrates the canonical in-process execution cycle:
+
+\begin{lstlisting}[language=Python, caption={In-process agent execution loop with dynamic adapter and parameter validation.}, label={lst:agent_loop}]
+bundle = SkillLoader.load_skill("finance/wallet_screening")
+skill = bundle["class"]()
+tools = [SkillLoader.to_gemini_tool(bundle)]
+
+# Turn 1: Host model emits tool call
+response = client.models.generate_content(
+    model="gemini-2.5-flash",
+    contents="Screen wallet 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+    config=GenerateContentConfig(tools=tools)
+)
+
+# Intercept tool call and execute deterministically
+for call in response.function_calls:
+    if call.name == "finance_wallet_screening":
+        try:
+            # Deterministic, local Python execution
+            result = skill.execute(dict(call.args))
+        except SkillwareParamValidationError as exc:
+            result = {"error": f"Invalid arguments: {exc}"}
+        
+        # Send typed result back to model for final synthesis
+        final_turn = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=[..., Part.from_function_response(name=call.name, response=result)]
+        )
+\end{lstlisting}
+
+This pattern guarantees that the model never touches external APIs directly; every argument is validated pre-flight, and execution happens deterministically in-process.
+
+To visualize this execution cycle in practice, Figure~\ref{fig:protocol_trace} contrasts a live multi-step invocation under speculative Python generation against Skillware's deterministic execution. In the prompt-driven regime, the model attempts to synthesize disposable code across multiple turns: handling binary IMAP streams triggers buffer truncations, unhandled \texttt{UnicodeDecodeError} crashes, and repeated subprocess spawns that burn $28{,}041$ tokens and $41.8\,\text{s}$ of latency before resolution. Under Skillware, the identical operational objective is dispatched via typed schema calls (\texttt{search\_messages} $\to$ \texttt{download\_attachment}) in $3.7$ mean turns and $11.7\,\text{s}$ ($6{,}194$ tokens), with zero runtime script synthesis and zero workspace debugging loops.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.96\linewidth]{figures/fig19_protocol_trace_one_call.png}
+\caption{Protocol trace of an Office Mail Tier 2 invocation under \textsc{Skillware-Bench}: speculative script synthesis ($28{,}041$ tokens, $41.8\,\text{s}$, crashes) vs.~Skillware deterministic schema execution ($6{,}194$ tokens, $11.7\,\text{s}$, zero crashes).}
+\label{fig:protocol_trace}
+\end{figure}
+
+This multi-turn failure dynamic reveals a deeper structural pathology in prompt-driven autonomy: the \emph{Context Poisoning Cliff} (Figure~\ref{fig:debugging_hazard_curve}). In traditional software engineering, allowing an agent multiple retry attempts generally increases cumulative problem-solving probability ($\text{Pass}@k$). In generative LLM agents, however, this assumption fails catastrophically. As documented across 368 unassisted trials under \textsc{Skillware-Bench}, attempts 1--4 exhibit strong error-recovery dynamics ($85.0\%\text{--}100.0\%$ pass rate). However, as failed script attempts, compiler tracebacks, and hallucinated fixes accumulate in the context window, the model's effective attention degrades. By Attempt~8, the marginal pass rate collapses to $50.0\%$, plunging to $33.3\%$ at Attempt~9, and reaching a terminal $0.0\%$ failure loop at 12+ attempts. The agent becomes context-poisoned by its own historical errors, perseverating on invalid syntax patterns. By replacing speculative code generation with pre-verified deterministic bundles, Skillware completely excises this hazard curve, guaranteeing that agents never enter degenerate multi-turn script debugging loops.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.96\linewidth]{figures/fig22_pass_at_k_coverage.png}
+\caption{The Debugging Hazard Curve across 368 vanilla conditions in \textsc{Skillware-Bench}: recovery collapses after attempt 7 ($50\% \to 0\%$) due to context poisoning. Skillware completely eliminates this curve by removing runtime script synthesis ($464 \to 0$).}
+\label{fig:debugging_hazard_curve}
+\label{fig:pass_at_k_hazard}
+\end{figure}
+
+\subsection{Execution Telemetry: Call Survival Flow and Run-to-Run Determinism}
+\label{subsec:execution_telemetry}
+
+The architectural combination of typed pre-flight validation and deterministic execution has profound empirical consequences for agent reliability. 
+
+Figure~\ref{fig:call_survival_flow} traces the survival lifecycle of 1,000 emitted tool calls per arm. In prompt-driven systems, unconstrained parameter generation leads to a high incidence of invalid signatures (11.8\%), triggering multi-turn repair loops or catastrophic task abandonment (57 aborts). In contrast, Skillware's typed gates ensure 99.6\% initial validity, elevating clean first-pass completion from 71.2\% to 94.1\% and reducing total aborts by 87.7\%.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.96\linewidth]{figures/fig33_call_survival_flow.png}
+\caption{Layer call survival flow across 1,000 emitted calls under \textsc{Skillware-Bench}: Skillware elevates clean first-pass completions from $71.2\%$ to $94.1\%$ and reduces hard aborts by $87.7\%$ ($57 \to 7$).}
+\label{fig:call_survival_flow}
+\end{figure}
+
+Furthermore, as illustrated in Figure~\ref{fig:run_to_run_determinism}, Skillware eliminates the stochastic volatility that plagues production deployments. Across 40 seeded replays under identical prompts and seeds, unequipped baseline execution score variance remains wide ($\sigma = 4.1$), whereas Skillware-equipped execution contracts by a factor of $5.1\times$ ($\sigma = 0.8$). Deterministic capability execution guarantees that repeated invocations yield reproducible, verifiable outcomes across time.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.96\linewidth]{figures/fig14_run_to_run_determinism.png}
+\caption{Run-to-run score variance across 40 seeded replays under \textsc{Skillware-Bench}: Skillware delivers a $5.1\times$ determinism tightening ($\sigma = 4.1 \to 0.8$).}
+\label{fig:run_to_run_determinism}
+\end{figure}
+

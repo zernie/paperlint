@@ -1,0 +1,39 @@
+\section{Related work and research gap}
+\label{sec:related}
+\paragraph{Design planning and task quality.}
+GraphicBench couples planning to execution and already shows that plausible plans can fail in execution~\citep{ki2025graphicbench}. Its execution metrics include source-image fidelity and query-aligned visual questions. Graphic-Design-Bench spans layout, typography, infographics, template and design semantics, and animation, including structured output and editing~\citep{deganutti2026gdb}. These are not merely aesthetic leaderboards. Our emphasis is the evidence linking a changing delivery obligation to the correct version and the interpretation of disagreement between checks.
+
+\paragraph{Interactive professional work.}
+DeskCraft is the closest workflow comparison: it includes 538 tasks, mid-turn clarification and post-turn feedback, and domain-aware verifiers that extract state from project files or application runtimes~\citep{wang2026deskcraft}. It already evaluates professional delivery and human--agent collaboration. Proactive T2I agents connect clarification to image alignment and include human studies~\citep{hahn2025proactive}. Our RFQ experiment instead isolates attribution under fixed replies; its downstream connection is still untested. Drift-Bench++ studies evolving intent and imperfect communication through executable tasks and an interaction protocol~\citep{zhang2026drift}. Neither interactivity, intent tracking, nor artifact-based verification alone is a novelty claim.
+
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{5pt}
+\caption{Positioning by evaluation object. The final column states this paper's additional question, not an assertion that prior work lacks all related capabilities.}
+\label{tab:related}
+\sbox{\relatedworktable}{%
+\begin{tabularx}{\textwidth}{@{}P{0.18\textwidth}YY@{}}
+\toprule Work & Established evaluation object & \textbf{Additional question pursued here}\\\midrule
+GraphicBench~\citep{ki2025graphicbench} & Plans, tool execution, source fidelity, and query alignment & Which current deliverable remains unresolved after a completed run?\\
+Graphic-Design-Bench~\citep{deganutti2026gdb} & Design understanding, generation, structure, and semantics & Do valid outputs satisfy the latest workflow-specific obligations?\\
+DeskCraft~\citep{wang2026deskcraft} & Professional desktop workflows, interaction, and state verification & How do design-specific constraints, declared blockers, and archived judgments disagree?\\
+Drift-Bench++~\citep{zhang2026drift} & Interactive intent alignment under miscommunication and evolving goals & Which approved properties and deliverable versions substantiate the current design obligation?\\
+TASTE; Agentic-DRS~\citep{zhu2026taste,nag2025agenticdrs} & Designer preferences; design diagnosis and actionable feedback & Was a requested change actually applied to the delivered version?\\
+GDPval; industry agent-eval guidance~\citep{patwardhan2026gdpval,anthropic2026evals} & Expert evaluation of professional outputs; outcome and grader validity & Which design artifact and version substantiate each acceptance claim?\\
+This study & Lifecycle-wide coverage through separate RFQ, exploration, revision, and handoff protocols & \textbf{Link evolving requirements, protected properties, and artifact versions to evidence of delivery.}\\\bottomrule
+\end{tabularx}%
+}%
+\leavevmode\rlap{%
+  \hspace{\dimexpr.59\textwidth+\tabcolsep\relax}%
+  \color{questioncolumn}%
+  \rule[-\dp\relatedworktable]%
+    {\dimexpr.41\textwidth-\tabcolsep\relax}%
+    {\dimexpr\ht\relatedworktable+\dp\relatedworktable\relax}%
+}%
+\usebox{\relatedworktable}
+\end{table}
+
+\paragraph{Judgment and professional acceptance.}
+TASTE measures multidimensional designer preferences and evaluates model judges against professional panels~\citep{zhu2026taste}. Agentic-DRS studies design diagnosis and feedback quality with human comparisons~\citep{nag2025agenticdrs}. GDPval likewise uses occupational experts to assess professional deliverables~\citep{patwardhan2026gdpval}; Anthropic's evaluation guidance distinguishes traces from outcomes and stresses grader calibration~\citep{anthropic2026evals}. We build on these principles, rather than claiming that requirements or expert acceptance have been ignored.
+
+\paragraph{Specific research gap.}
+Prior work already covers planning, graphic quality, preferences, and professional workflows. DRAFT-Bench connects these concerns through lifecycle-wide design tasks and \emph{Requirement-to-Artifact evaluation}: which evolving obligation applies, which property must remain protected, and which artifact version substantiates delivery? This linkage supports a capability analysis that distinguishes completed execution, requirement compliance, and usable handoff, while exposing disagreement between evidence layers. We implement it through condition-level audits and selected paired inspections. Human acceptance calibration, an integrated RFQ-to-delivery study, and factory acceptance remain future work; neither professional workflow evaluation nor artifact verification alone is a novelty claim.

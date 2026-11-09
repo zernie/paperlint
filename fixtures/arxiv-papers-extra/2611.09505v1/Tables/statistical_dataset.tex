@@ -1,0 +1,33 @@
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{6pt}
+\renewcommand{\arraystretch}{1.2}
+\resizebox{\linewidth}{!}{
+\begin{tabular}{lcccccc}
+\toprule
+Metric & VICR & Polaris & Nebula & Flickr8K-Expert & Composite & EvalMuse-40K \\
+\midrule
+Training & 10175 & 26340 & 26382 & - & - & 29445 \\
+Validation & 2310 & 8738 & 3298 & - & - & 3272 \\
+Testing & 3161 & 8726 & 3298 & 5664 & 13146 & - \\
+\midrule
+Unique Images & 9990 & 13691 & 32978 & 1000 & 3995 & 32717 \\
+\midrule
+Caption Len. $\mu \pm \sigma$ & 10.9 $\pm$ 3.0 & 9.3 $\pm$ 5.5 & 8.8 $\pm$ 2.5 & 11.9 $\pm$ 4.2 & 13.1 $\pm$ 9.3 & 11.0 $\pm$ 7.0 \\
+(Q1/Q2/Q3) & \small (9.0/10.0/12.0) & \small (8.0/10.0/11.0) & \small (8.0/9.0/10.0) & \small (9.0/11.0/14.0) & \small (9.0/11.0/14.0) & \small (6.0/9.0/14.0) \\
+\midrule
+Annot./Inst. $\mu \pm \sigma$ & 4.4 $\pm$ 0.8 & 3.0 $\pm$ 2.8 & 1.0 $\pm$ 0.0 & 3.0 $\pm$ 0.0 & 1.0 $\pm$ 0.0 & 1.0 $\pm$ 0.0 \\
+(Q1/Q2/Q3) & \small (4.0/4.0/5.0) & \small (1.0/1.0/6.0) & \small (1.0/1.0/1.0) & \small (3.0/3.0/3.0) & \small (1.0/1.0/1.0) & \small (1.0/1.0/1.0) \\
+\midrule
+Human Score $\mu \pm \sigma$ & 2.67 $\pm$ 1.41 & 0.25 $\pm$ 0.34 & 0.52 $\pm$ 0.36 & 1.58 $\pm$ 0.72 & 3.00 $\pm$ 1.45 & 0.46 $\pm$ 0.25 \\
+(Q1/Q2/Q3) & \small (1.20/2.40/4.19) & \small (0.00/0.00/0.62) & \small (0.00/0.60/0.78) & \small (1.00/1.33/2.00) & \small (1.50/3.00/4.50) & \small (0.25/0.42/0.67) \\
+\midrule
+Rating Scale & [1.0, 5.0] & [0.0, 1.0] & [0.0, 1.0] & [1.0, 4.0] & [1.0, 5.0] & [0.0, 1.0] \\[1.5em]
+Score Distribution & \begin{sparkline}{10} \definecolor{sparkbottomlinecolor}{gray}{0.8} \setlength\sparkbottomlinethickness{0.7pt} \sparkbottomlinex -0.05 1.05 \sparkspike 0.0000 3.0000 \sparkspike 0.1111 0.9774 \sparkspike 0.2222 0.8193 \sparkspike 0.3333 0.7337 \sparkspike 0.4444 0.4764 \sparkspike 0.5556 0.6851 \sparkspike 0.6667 0.7269 \sparkspike 0.7778 0.6126 \sparkspike 0.8889 1.6099 \sparkspike 1.0000 1.0678 \end{sparkline} & \begin{sparkline}{10} \definecolor{sparkbottomlinecolor}{gray}{0.8} \setlength\sparkbottomlinethickness{0.7pt} \sparkbottomlinex -0.05 1.05 \sparkspike 0.0000 3.0000 \sparkspike 0.1111 0.0113 \sparkspike 0.2222 0.0311 \sparkspike 0.3333 0.0475 \sparkspike 0.4444 0.0960 \sparkspike 0.5556 0.3494 \sparkspike 0.6667 0.3836 \sparkspike 0.7778 0.4910 \sparkspike 0.8889 0.2959 \sparkspike 1.0000 0.0559 \end{sparkline} & \begin{sparkline}{10} \definecolor{sparkbottomlinecolor}{gray}{0.8} \setlength\sparkbottomlinethickness{0.7pt} \sparkbottomlinex -0.05 1.05 \sparkspike 0.0000 3.0000 \sparkspike 0.1111 0.0266 \sparkspike 0.2222 0.3205 \sparkspike 0.3333 0.1195 \sparkspike 0.4444 0.2461 \sparkspike 0.5556 1.8675 \sparkspike 0.6667 1.0043 \sparkspike 0.7778 2.0169 \sparkspike 0.8889 0.7750 \sparkspike 1.0000 1.7261 \end{sparkline} & \begin{sparkline}{10} \definecolor{sparkbottomlinecolor}{gray}{0.8} \setlength\sparkbottomlinethickness{0.7pt} \sparkbottomlinex -0.05 1.05 \sparkspike 0.0000 3.0000 \sparkspike 0.1111 1.2319 \sparkspike 0.2222 0.8796 \sparkspike 0.3333 0.8655 \sparkspike 0.4444 0.4136 \sparkspike 0.5556 0.2464 \sparkspike 0.6667 0.3064 \sparkspike 0.7778 0.0932 \sparkspike 0.8889 0.0626 \sparkspike 1.0000 0.1315 \end{sparkline} & \begin{sparkline}{10} \definecolor{sparkbottomlinecolor}{gray}{0.8} \setlength\sparkbottomlinethickness{0.7pt} \sparkbottomlinex -0.05 1.05 \sparkspike 0.0000 2.9532 \sparkspike 0.1111 1.5783 \sparkspike 0.2222 1.6896 \sparkspike 0.3333 1.3989 \sparkspike 0.4444 0.0455 \sparkspike 0.5556 1.5379 \sparkspike 0.6667 1.2447 \sparkspike 0.7778 1.4722 \sparkspike 0.8889 1.6921 \sparkspike 1.0000 3.0000 \end{sparkline} & \begin{sparkline}{10} \definecolor{sparkbottomlinecolor}{gray}{0.8} \setlength\sparkbottomlinethickness{0.7pt} \sparkbottomlinex -0.05 1.05 \sparkspike 0.0000 1.5581 \sparkspike 0.1111 1.5781 \sparkspike 0.2222 2.1917 \sparkspike 0.3333 2.3231 \sparkspike 0.4444 2.0014 \sparkspike 0.5556 3.0000 \sparkspike 0.6667 1.4776 \sparkspike 0.7778 1.5862 \sparkspike 0.8889 0.9904 \sparkspike 1.0000 0.9813 \end{sparkline} \\
+\bottomrule
+\end{tabular}
+}
+\caption{Statistical characterization of the datasets. For each metric (i.e., Caption Length, Annotations per Instance, and Human Score), we report the mean $\mu$ and standard deviation $\sigma$, along with quartiles (Q1: 25th percentile, Q2: median, Q3: 75th percentile). Score distributions are represented using sparkline histograms computed over the average human scores using the observed annotation scale inferred directly from each dataset.}
+\label{tab:dataset_statistics}
+\end{table*}

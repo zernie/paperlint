@@ -1,0 +1,138 @@
+\section{Scores by dataset}
+\label{app:dataset-scores}
+
+The figures show every dataset and all eleven methods on the original metric scale. Each score
+marker is the mean of 250 outer-fold scores. For MCB, we average the five model seeds and five
+outer folds within each chemical partition, giving 10 paired complete-partition scores. For
+residual mean square (MSE), the one-step Hsu decision threshold is
+$H=q_{1,11}\sqrt{\mathrm{MSE}/10}$, where $q_{1,11}$ is the corresponding 95\% MCB critical
+value for eleven methods with 90 residual degrees of freedom. The pale region starts at the empirical winner and
+extends by $H$ toward worse scores. A method inside the region cannot be ruled out as best; a method
+beyond its boundary is classified as significantly worse by Hsu's test.
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=\linewidth,height=.86\textheight,keepaspectratio]{native_score_hsu_decision_bars_paired_partition_average_primary_all.pdf}
+  \caption{Full-grid TDC leaderboard metric values for all 22 ADMET datasets. The arrow below each
+  heading gives the metric direction. Filled circles mark the empirical best, open circles mark other
+  methods not ruled out as best, and crosses mark methods classified as significantly worse. The
+  pale region shows the MCB decision threshold described above.}
+  \label{fig:tdc-dataset-scores}
+\end{figure}
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=\linewidth,height=.86\textheight,keepaspectratio]{native_score_hsu_decision_bars_paired_partition_average_brier.pdf}
+  \caption{Full-grid temperature-calibrated Brier scores for all 13 binary ADMET datasets. Lower is
+  better. Marks and the decision region are defined as in Figure~\ref{fig:tdc-dataset-scores}. A common
+  scalar temperature is fitted on each dedicated calibration holdout.}
+  \label{fig:binary-dataset-scores}
+\end{figure}
+
+\clearpage
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=\linewidth,height=.86\textheight,keepaspectratio]{native_score_hsu_decision_bars_paired_partition_average_interval_score.pdf}
+  \caption{Full-grid method-specifically calibrated 90\% interval scores for all nine regression
+  ADMET datasets. Lower is better. Marks and the decision region are defined as in
+  Figure~\ref{fig:tdc-dataset-scores}. The horizontal axes differ because interval score is reported
+  in the original units of each endpoint.}
+  \label{fig:regression-dataset-scores}
+\end{figure}
+
+\FloatBarrier
+
+Under the assumed block model, Hsu's selection rule includes at least one method with the best
+population mean score with probability at least 95\% \citep[p.~1141]{hsu1984constrained}.
+Excluding any particular method is a 5\%-level test of whether it performs worse than the best
+alternative. If several methods share the optimal population mean, the 95\% guarantee concerns
+including a best method, not simultaneously including all of them.
+
+\subsection{Additional metrics on their original scales}
+
+The following figures complement the mean-rank rails with the underlying full-grid metric values.
+They use the same fixed method order and pairing as the three formal score sheets. Outlined
+markers identify empirical bests. Horizontal axes are fitted separately for each dataset because
+several regression metrics have
+different endpoint units and scales.
+
+\begin{figure*}[!htbp]
+  \centering
+  \includegraphics[width=\textwidth,height=.76\textheight,keepaspectratio]{appendix_native_scores_binary_auroc.pdf}
+  \caption{Temperature-calibrated AUROC on all 13 binary datasets. Higher is better. Each marker
+  is the mean of 250 outer-fold scores. Outlined markers identify empirical bests.}
+  \label{fig:appendix-native-binary-auroc}
+\end{figure*}
+
+\begin{figure*}[p]
+  \centering
+  \includegraphics[width=\textwidth,height=.88\textheight,keepaspectratio]{appendix_native_scores_binary_average_precision.pdf}
+  \caption{Temperature-calibrated average precision on all 13 binary datasets. Higher is better.
+  Each marker is the mean of 250 outer-fold scores. Outlined markers identify empirical bests.}
+  \label{fig:appendix-native-binary-ap}
+\end{figure*}
+
+\begin{figure*}[p]
+  \centering
+  \includegraphics[width=\textwidth,height=.88\textheight,keepaspectratio]{appendix_native_scores_binary_nll.pdf}
+  \caption{Temperature-calibrated binary negative log-likelihood on all 13 binary datasets.
+  Lower is better. Each marker is the mean of 250 outer-fold scores. Outlined markers identify
+  empirical bests.}
+  \label{fig:appendix-native-binary-nll}
+\end{figure*}
+
+\begin{figure*}[p]
+  \centering
+  \includegraphics[width=\textwidth,height=.88\textheight,keepaspectratio]{appendix_native_scores_binary_ece.pdf}
+  \caption{Temperature-calibrated 10-bin expected calibration error on all 13 binary datasets.
+  Lower is better. Each marker is the mean of 250 outer-fold scores. Outlined markers identify
+  empirical bests.}
+  \label{fig:appendix-native-binary-ece}
+\end{figure*}
+
+\begin{figure*}[p]
+  \centering
+  \includegraphics[width=\textwidth,height=.88\textheight,keepaspectratio]{appendix_native_scores_regression_mae.pdf}
+  \caption{Mean absolute error on all nine regression datasets under the fixed method-specific
+  calibration pipelines. Lower is better. Each marker is the mean of 250 outer-fold scores. The
+  outlined markers identify empirical bests.}
+  \label{fig:appendix-native-regression-mae}
+\end{figure*}
+
+\begin{figure*}[p]
+  \centering
+  \includegraphics[width=\textwidth,height=.88\textheight,keepaspectratio]{appendix_native_scores_regression_rmse.pdf}
+  \caption{Root mean squared error on all nine regression datasets under the fixed
+  method-specific calibration pipelines. Lower is better. Each marker is the mean of 250
+  outer-fold scores. Outlined markers identify empirical bests.}
+  \label{fig:appendix-native-regression-rmse}
+\end{figure*}
+
+\begin{figure*}[p]
+  \centering
+  \includegraphics[width=\textwidth,height=.88\textheight,keepaspectratio]{appendix_native_scores_regression_spearman.pdf}
+  \caption{Spearman correlation on all nine regression datasets under the fixed method-specific
+  calibration pipelines. Higher is better. Each marker is the mean of 250 outer-fold scores. The
+  outlined markers identify empirical bests.}
+  \label{fig:appendix-native-regression-spearman}
+\end{figure*}
+
+\begin{figure*}[p]
+  \centering
+  \includegraphics[width=\textwidth,height=.88\textheight,keepaspectratio]{appendix_native_scores_regression_nll.pdf}
+  \caption{Gaussian negative log-likelihood on all nine regression datasets under the fixed
+  method-specific calibration map. Lower is better. Each marker is the mean of 250 outer-fold
+  scores. Outlined markers identify empirical bests.}
+  \label{fig:appendix-native-regression-nll}
+\end{figure*}
+
+\begin{figure*}[p]
+  \centering
+  \includegraphics[width=\textwidth,height=.88\textheight,keepaspectratio]{appendix_native_scores_regression_coverage_error.pdf}
+  \caption{Absolute 90\% coverage error, $|\mathrm{PICP}-0.90|$, where PICP is the prediction
+  interval coverage probability, on all nine regression datasets under the fixed method-specific
+  calibration map. Lower is better. Each marker is the
+  mean of 250 outer-fold scores. Outlined markers identify empirical bests.}
+  \label{fig:appendix-native-regression-coverage-error}
+\end{figure*}
+\FloatBarrier

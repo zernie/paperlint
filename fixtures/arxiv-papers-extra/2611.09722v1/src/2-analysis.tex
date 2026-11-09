@@ -1,0 +1,61 @@
+\section{Reconstruction limits low-bit decode attention speedups}
+\label{sec:analysis}
+
+A low-bit KV cache reduces HBM traffic, but the kernel must still construct floating-point operands fast enough to supply the Tensor Cores.
+In existing baselines, reconstruction involves converting integer values into floating-point operands, applying the affine transformation $sq+z$, and optionally performing one additional conversion to match the Tensor Core operand format (e.g., BF16 to FP8).
+
+\subsection{Low-bit baselines fall short of peak HBM throughput}
+\label{sec:analysis-gap}
+
+\input{figures/roofline-gap}
+
+We benchmark FlashInfer~\cite{ye2025flashinfer}, TensorRT-LLM~\cite{nvidia2026trtllm}, FlashAttention-2~\cite{dao2024flashattention2}, FlashAttention-3~\cite{shah2024flashattention3}, FlashAttention-4~\cite{zadouri2026flashattention4}, BitDecoding~\cite{du2026bitdecoding}, KIVI~\cite{liu2024kivi}, Kitty~\cite{xia2025kitty}, SAW-INT4~\cite{jia2026saw}, and OSCAR~\cite{zhou2026oscar} across KV-cache storage formats.
+We compute effective KV access throughput by dividing the bytes in one read of the stored values, scales, and offsets by decode time.
+\Cref{fig:roofline-gap} expresses this rate as a fraction of each GPU's peak HBM throughput at batch size $B=128$ and context length $KV=32\mathrm{K}$.
+
+FlashInfer BF16 exceeds $90\%$ of peak on both H100 and B200.
+On B200, hardware-native TensorRT-LLM NVFP4 reaches $72.4\%$ of peak in the 4-bit group.
+Among integer 4-bit baselines, BitDecoding is highest at $70.0\%$ on H100 and $36.1\%$ on B200, while its INT2 kernel reaches only $30.7\%$ and $14.5\%$, respectively.
+\sys{} reaches $91.3\%$ and $60.6\%$ at INT4 and INT2 on H100, and $68.6\%$ and $44.4\%$ on B200.
+Although low-bit baselines read fewer KV-cache bytes, their effective KV access throughput remains far below peak because kernel latency is bounded by the slowest pipeline stage.
+\Cref{sec:analysis-issuerate} shows how operand reconstruction can demand more instruction-issue throughput than the GPU provides at peak HBM throughput.
+
+\subsection{Reconstruction consumes instruction-issue slots}
+\label{sec:analysis-issuerate}
+
+HBM transfers, operand preparation, softmax, and Tensor Core products all require instructions from the warp schedulers.
+
+\input{figures/reconstruction-demand}
+
+From H100 to B200, peak HBM throughput grows $2.39\times$, while peak instruction-issue throughput grows only $11\%$~\cite{nvidia2025h100spec,nvidia2025dgxb200,nvidia2025hgxb200,nvidia2026cudabpg}.
+Peak dense Tensor Core throughput grows $4.55\times$ when comparing H100 FP8 with B200 FP4~\cite{nvidia2025h100spec,nvidia2025dgxb200,nvidia2025hgxb200}.
+\Cref{fig:machine-balance} compares these peak throughputs across GPU generations\footnote{Rubin's figures are preliminary; we infer its instruction-issue throughput from FP32 CUDA Core throughput assuming 128 lane-slots per SM cycle~\cite{nvidia2023gpuperformance,nvidia2026rubin,nvidia2026cudabpg}.}.
+
+Narrower stored values reduce HBM traffic without proportionally reducing reconstruction work.
+We count the instructions to convert packed integers to BF16, evaluate $sq+z$ in BF16, and convert the results to FP8 or FP4 when the Tensor Core instructions require those formats.
+One lane-slot corresponds to one instruction issued for one warp lane~\cite{nvidia2026cudaguide}.
+Let $a_{\mathrm{issue}}$ denote the lane-slots required to construct an operand and evaluate $sq+z$ for one quantized value, $C_{\mathrm{issue}}$ the GPU's peak instruction-issue throughput in lane-slots/s, and $B_{\mathrm{HBM}}$ its peak HBM throughput in bytes/s.
+Each quantized value occupies $B_{\mathrm{elem}}=0.5$~bytes in INT4 and $0.25$~bytes in INT2, excluding scales and offsets.
+Streaming the cache at peak HBM throughput remains within peak instruction-issue throughput only when
+\begin{equation}
+  \underbrace{\frac{a_{\mathrm{issue}}}{B_{\mathrm{elem}}}}_{\text{issue demand per byte}}
+  \leq
+  \underbrace{\frac{C_{\mathrm{issue}}}{B_{\mathrm{HBM}}}}_{\text{peak issue per byte}}
+  \label{eq:issue-balance}
+\end{equation}
+\Cref{fig:ops-per-byte} compares this per-byte issue demand against the hardware peak from \Cref{eq:issue-balance} on H100 and B200.
+
+Preparing four BF16 Tensor Core operands on H100 requires two \texttt{SHF} and two \texttt{LOP3} instructions for INT$\to$FP conversion.
+Two BF16 \texttt{HFMA2} instructions then evaluate the affine transformation $sq+z$, each producing two BF16 values in a 32-bit register~\cite{frantar2025marlin}.
+The total is six instructions, or six lane-slots per warp lane.
+Four values occupy two bytes in INT4 or one byte in INT2, giving $6/2=3$ or $6/1=6$ lane-slots/byte in~\Cref{fig:ops-per-byte}, respectively.
+Therefore, reconstruction alone can consume $30\%$ and $60\%$ of H100's peak hardware budget of $9.99$ lane-slots/byte, leaving little room for other parts of the kernel.
+
+On B200, two \texttt{F2FP} instructions convert the four BF16 values directly to FP8 or FP4 and pack them into registers.\footnote{Before PTX ISA 9.1~\cite{nvidia2026ptx}, the conversion uses FP32 intermediates and takes six instructions per four values with CUDA 13.0.
+Reconstruction then costs twelve instructions, or $6$ and $12$ lane-slots/byte for INT4 and INT2, respectively.}
+Reconstructing four values therefore takes $6+2=8$ lane-slots, or $8/2=4$ lane-slots/byte for INT4 and $8/1=8$ lane-slots/byte for INT2.
+At peak HBM throughput, INT2 reconstruction \emph{exceeds} B200's hardware peak of $4.65$ lane-slots/byte, and INT4 reconstruction alone consumes $86\%$ of that peak.
+
+\sys{} removes per-value affine evaluation and never materializes a reconstructed K or V tile.
+Instead, it constructs Tensor Core operands directly from $q$, applies each group's scale to the other matrix input or partial product, and adds the offset as an output correction.
+At four query heads per KV head and group size $128$, affine folding reduces issue demand in \Cref{fig:ops-per-byte} to $2.13$ and $4.25$ lane-slots/byte (INT4 and INT2) on H100, and to $0.88$ and $1.00$ on B200.

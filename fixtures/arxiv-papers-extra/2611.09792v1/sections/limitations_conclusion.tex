@@ -1,0 +1,21 @@
+\section{Limitations and Future Directions}
+\label{sec:discussion}
+
+Our results demonstrate how sequentially randomized interventions can support causal evaluation at different points in an agent’s trajectory. Below we highlight limitations of our methodology and propose several directions for developing more flexible and adaptive methods for agent evaluation.
+
+\begin{enumerate}
+    \item \textbf{Parametric assumptions for structural nested mean models.}
+    Our AIPW estimator for the blip effect under randomized continuation does not require a correctly specified outcome model because the intervention probabilities are known by design. In contrast, our SNMM estimators for blip effects under alternative continuation policies and for policy gains assume that the conditional blip effects belong to the specified parametric class. The SNMM assumptions provides a tractable semiparametric approach  for estimation but the reported confidence intervals have valid coverage for the target causal effects only when the semiparametric model is well specified. Under misspecification, the fitted coefficients may instead represent a weighted projection of the true blip effects. 
+
+    \item \textbf{Model and benchmark scope.}
+    Our experiments evaluate relatively small models on established benchmarks that might be saturated by frontier models. Future experiments should evaluate frontier agents on more challenging tasks that require sustained planning, contain more consequential intervention opportunities, and better reflect deployment settings. Such experiments would also help determine whether intervention effects become smaller as agents improve or whether greater agent capability creates new forms of heterogeneity and susceptibility to intervention.
+
+    \item \textbf{Representation and selection of agent histories.}
+    We use hand-designed, experiment-specific features to represent the observed history in the SNMMs. These representations encode aspects of the trajectory that we expect to moderate intervention effects, such as prior failures, previous interventions, proposed tools, and task progress. Future work could use sample splitting or cross-validation to select representations that perform well on  a  testable estimand such as randomized-continuation effect, although agreement for this estimand would not by itself establish correct specification under other continuation policies. Candidate representations could also be proposed by an LLM judge and evaluated on held-out trajectories.
+
+    \item \textbf{Semantically defined intervention opportunities.}
+    Our experiments randomize interventions at fixed and well specified decision points, such as proposed tool calls or unsuccessful code submissions. In many applications, useful intervention opportunities may instead depend on the semantic content of an interaction---for example, when an agent expresses unwarranted confidence, contradicts an earlier statement, becomes persuasive, or proposes a potentially harmful plan. Detecting such events requires interpreting the evolving textual history, potentially with an LLM-based judge. An important direction is therefore to develop and validate semantic detectors of intervention opportunities and then incorporate them into sequentially randomized experiments.
+
+\end{enumerate}
+% \section{Conclusion}
+% \label{sec:conclusion}

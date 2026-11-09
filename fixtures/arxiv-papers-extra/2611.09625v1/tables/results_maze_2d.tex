@@ -1,0 +1,26 @@
+\begin{table}[ht]
+    \caption{Memory Maze 2D benchmark comparison for all maze sizes (100M env steps). We show the impact of TT-MBRL on the performance for each method. The reported scores are averaged over three runs with 100 evaluation episodes. We also report Human mean scores over 10 episodes.}
+    \centering
+    \setlength{\tabcolsep}{3.25pt}
+    \hfill \break
+    \begin{tabular}
+    {lcccc}
+    \toprule
+     & \multirow{2}{*}{\begin{tabular}[c]{c}\textbf{Mem Maze 2D} \\ \textbf{9\texttimes9}\end{tabular}} & \multirow{2}{*}{\begin{tabular}[c]{c}\textbf{Mem Maze 2D} \\ \textbf{11\texttimes11}\end{tabular}} & \multirow{2}{*}{\begin{tabular}[c]{c}\textbf{Mem Maze 2D} \\ \textbf{13\texttimes13}\end{tabular}} & \multirow{2}{*}{\begin{tabular}[c]{c}\textbf{Mem Maze 2D} \\ \textbf{15\texttimes15}\end{tabular}} \\
+    \textbf{Method} &  &  &  &  \\
+    \midrule
+    Human & $126.2$ & $172.0$ & $195.0$ & $201.0$ \\ 
+    Oracle & $137.2$ & $215.4$ & $276.6$ & $311.4$ \\
+    \midrule
+    DreamerV3 (TBTT) & $121.2 \pm 3.0\hphantom{0}$ & $185.9 \pm 11.3$ & $108.0 \pm 8.8\hphantom{0}$ & $\hphantom{0}46.2 \pm 7.6\hphantom{0}$ \\
+    ~~+ TT-MBRL (Ours) & $\mathbf{122.1 \pm 1.1\hphantom{0}}$ & $\mathbf{189.4 \pm 6.8\hphantom{0}}$ & $\mathbf{207.2 \pm 10.9}$ & $\mathbf{185.0 \pm 17.6}$ \\
+    \midrule
+    TWISTER & $\hphantom{0}84.8 \pm 0.8\hphantom{0}$ & $100.0 \pm 5.9\hphantom{0}$ & $\hphantom{0}95.3 \pm 10.2$ & $\hphantom{0}72.0 \pm 3.2\hphantom{0}$  \\
+    ~~+ TT-MBRL (Ours) & $\mathbf{113.7 \pm 1.8\hphantom{0}}$ & $\mathbf{178.7 \pm 4.4\hphantom{0}}$ & $\mathbf{224.2 \pm 6.1\hphantom{0}}$ & $\mathbf{240.1 \pm 17.6}$ \\
+    \midrule
+    R2I & $\mathbf{123.1 \pm 0.2\hphantom{0}}$ & $\mathbf{200.3 \pm 6.3\hphantom{0}}$ & $222.9 \pm 6.6\hphantom{0}$ & $171.6 \pm 24.3$ \\
+    ~~+ TT-MBRL (Ours) & $\mathbf{123.1 \pm 0.2\hphantom{0}}$ & $199.2 \pm 4.2\hphantom{0}$ & $\mathbf{233.4 \pm 8.3\hphantom{0}}$ & $\mathbf{244.3 \pm 7.2\hphantom{0}}$ \\
+    \bottomrule
+    \end{tabular}
+    \label{table:results_maze_2d}
+\end{table}

@@ -1,0 +1,13 @@
+\begin{figure}[t]
+  \centering
+  \captionsetup[subfloat]{farskip=2pt}
+  \includegraphics[width=\columnwidth]{assets/roofline-gap-legend.pdf}
+  \par
+  \subfloat[H100 (3.35~TB/s peak).\label{fig:roofline-gap-h100}]{%
+    \includegraphics{assets/roofline-gap-h100.pdf}}
+  \hfill
+  \subfloat[B200 (8.00~TB/s peak).\label{fig:roofline-gap-b200}]{%
+    \includegraphics{assets/roofline-gap-b200.pdf}}
+  \caption{Effective KV access throughput of baseline kernels and \sys{} at $B=128$ and $KV=32\mathrm{K}$ as a percentage of peak HBM throughput.}
+  \label{fig:roofline-gap}
+\end{figure}

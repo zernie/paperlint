@@ -1,0 +1,37 @@
+% T1: taxonomy coverage, derived from the matched file
+% (drift_point_mapping.json). Drift-point counts use declared level2
+% labels; a point may carry multiple labels, so #Points can exceed the
+% total of 2525 drift points.
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.08}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{l l r r r}
+\toprule
+\textbf{L1 category} & \textbf{L2 category} & \textbf{\#Prov.} & \textbf{\#Points} & \textbf{\#Samp.} \\
+\midrule
+Processing Boundaries & Data Minimisation & 25 & 1104 & 641 \\
+ & Purpose Limitation & 20 & 420 & 368 \\
+ & Confidentiality and Unauthorised Access & 17 & 163 & 139 \\
+ & Authorisation Scope & 5 & 23 & 21 \\
+ & Unlawful Intrusion & 4 & 2 & 2 \\
+\midrule
+Data Transfer and Delegation & Disclosure to Third Parties & 21 & 534 & 437 \\
+ & Entrusted Processing & 6 & 5 & 5 \\
+ & Automated Decision-Making & 2 & 1 & 1 \\
+ & Cross-Border Transfer & 3 & 1 & 1 \\
+\midrule
+Retention Control & Storage Limitation & 18 & 365 & 276 \\
+ & Erasure & 5 & 7 & 7 \\
+ & Validity of Consent & 3 & 2 & 2 \\
+\midrule
+Oversight and Traceability & Sensitive and Special-Category Data & 9 & 14 & 12 \\
+ & Children's Data & 3 & 4 & 3 \\
+ & Logging & 1 & 3 & 3 \\
+\bottomrule
+\end{tabular}}
+\caption{Taxonomy coverage of the 2525 legally grounded drift points, grouped by L1/L2 category. \#Prov.\ is the number of distinct provisions cited for drift points in that L2 category; \#Points is the number of drift points whose declared \texttt{level2} labels include the category; \#Samp.\ is the number of distinct benchmark samples. A drift point may carry several labels, so \#Points need not sum to 2525.}
+\label{tab:taxonomy_coverage}
+\end{table}

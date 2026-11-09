@@ -1,0 +1,70 @@
+\section{Evaluation}
+\label{sec:eval}
+
+We implement \sys{} in CuTe DSL (CUTLASS~4.8, CUDA~13.0) and evaluate it on NVIDIA H100 (80~GB HBM3) and B200 (180~GB HBM3e) GPUs with $H_Q=32$, $H_{KV}=8$, $D=128$, page size 64, and token-wise K and V quantization groups of $g=128$ values with FP32 scales and offsets.
+Token-wise K and V exercise both acc-fold on QK and operand-fold on PV; \Cref{sec:appendix-axes} evaluates all four combinations of token-wise and channel-wise K and V, where \sys{} achieves $1.75$--$4.00\times$ speedups over FlashInfer BF16 on H100 and $1.50$--$2.74\times$ on B200.
+We evaluate batch sizes 1 and 8 at context lengths of 8K, 32K, 128K, and 512K, and batch size 64 at 8K, 16K, 32K, 64K, and 128K.
+Each measurement takes the median of five timed iterations (excluding an L2 flush before each call) after five warmups, and includes all decode kernels and split reduction.
+Plotted speedups normalize each kernel's latency to FlashInfer BF16, whereas speedups quoted in the text compare \sys{} directly against each named baseline within the same benchmark series (using five-run medians for B200 INT4 vendor baselines and three-run medians for BitDecoding and SAW).
+
+\subsection{Kernel performance}
+\label{sec:eval-performance}
+
+\input{figures/speedup-subbyte}
+\input{figures/speedup-wide}
+
+\Cref{fig:speedup-subbyte,fig:speedup-wide} compare \sys{} against sub-byte and wider-format baselines.
+On H100, \sys{} INT2 achieves a $3.36\times$ geometric-mean speedup over FlashInfer BF16 and $2.03\times$ over TensorRT-LLM FP8, with maxima of $4.15\times$ and $2.44\times$.
+On B200, the geometric-mean speedups are $2.67\times$ over BF16, $1.48\times$ over TensorRT-LLM FP8, and $1.16\times$ over TensorRT-LLM NVFP4, with maxima of $3.25\times$, $1.64\times$, and $1.26\times$.
+These vendor kernels are invoked through FlashInfer, and \sys{} INT2 outperforms them across all tested batch sizes and context lengths.
+Against OSCAR INT2 and BitDecoding INT2, \sys{} INT2 achieves geometric-mean speedups of $2.31\times$ and $1.77\times$ on H100, and $3.44\times$ and $2.78\times$ on B200.
+
+On H100, \sys{} INT4 achieves geometric-mean speedups of $2.83\times$ over FlashInfer BF16, $1.71\times$ over TensorRT-LLM FP8, $1.32\times$ over BitDecoding INT4, and $4.19\times$ over SAW INT4.
+On B200, \sys{} INT4 achieves geometric-mean speedups of $2.30\times$ over FlashInfer BF16, $1.28\times$ over TensorRT-LLM FP8, $1.94\times$ over BitDecoding INT4, and $6.93\times$ over SAW INT4.
+It matches native NVFP4 overall ($1.00\times$, ranging from $0.88\times$ to $1.20\times$; faster at 32K--128K for batch 64), while returning BF16 output instead of NVFP4's FP8 output.
+\Cref{sec:appendix-head-scaling} further evaluates how \sys{} INT2 speedup scales across $H_{KV}\in[1,32]$.
+
+\input{figures/fold-ab-grid}
+
+\subsection{Kernel accuracy}
+\label{sec:eval-accuracy}
+
+\input{figures/accuracy-arms}
+
+\Cref{fig:accuracy-arms} compares the $L_2$ output error of BF16 decode (FlashInfer), \sys{} INT4, \sys{} INT2, and OSCAR INT2.
+To stress-test quantization, our synthetic input amplifies eight K channels, ramps K's per-token scale along the sequence, and rescales K so that pre-softmax attention logits have unit standard deviation.
+For INT2, \sys{} and OSCAR decode the same quantized cache written by OSCAR's clipped quantizer without BF16 windows.
+Both INT2 kernels yield $L_2$ errors of $0.52$--$0.61$, compared with $0.16$--$0.22$ for \sys{} INT4 and $(2.13\text{--}2.25)\times10^{-3}$ for BF16 decode.
+Under unclipped min--max INT2 quantization, the $L_2$ error rises to $0.86$--$1.03$.
+Compared directly against the dequantized INT2 cache, \sys{}'s kernel arithmetic error is only $(1.68\text{--}1.76)\times10^{-3}$ on both H100 and B200, matching BF16 decode and confirming that the $0.52$--$0.61$ error stems from 2-bit quantization rather than affine folding.
+
+\subsection{Kernel ablation}
+\label{sec:eval-ablation}
+
+On INT2 caches with equal split-KV counts within each pair, \Cref{fig:fold-ab-grid} ablates affine folding against per-value reconstruction on H100 and B200, and FP4 (E2M1) against FP8 (E4M3) KV Tensor Core operands on B200.
+On H100, \sys{}'s speedup over external baselines combines its warp-specialized kernel design with affine folding, which adds a $1.07$--$1.15\times$ speedup over per-value reconstruction (\Cref{fig:fold-ab-hopper}) as expected when H100 reconstruction remains within the hardware issue peak (\Cref{fig:ops-per-byte}).
+On B200, the reconstruction baseline follows the standard approach of dequantizing INT2 values into FP8 (E4M3) Tensor Core operands before each matrix product; because this per-value reconstruction exceeds B200's issue peak, affine folding achieves a $7.36$--$8.86\times$ speedup (\Cref{fig:fold-ab-b200-folding}).
+Switching the folded B200 INT2 kernel from FP8 (E4M3) to FP4 (E2M1) KV operands and their matching packing layout provides an additional $1.17$--$1.21\times$ speedup (\Cref{fig:fold-ab-b200-feed}).
+
+\subsection{Serving throughput}
+\label{sec:eval-serving-throughput}
+
+\input{figures/serving-pareto}
+
+We serve Qwen3-8B with 100K input tokens, 1K output tokens, and 99\% or 95\% prefix-cache hits (one cached prefix per request), sharing a BF16 prefill backend across configurations.
+We evaluate two INT2 configurations to show both realistic accuracy-preserving integration and pure 2-bit kernel speed: \emph{OSCAR INT2 + Ours} replaces OSCAR's INT2 decode kernel with \sys{} while keeping OSCAR's rotations and BF16 windows (128 initial and 512 recent tokens, $<0.7\%$ of the 100K context), whereas \emph{Ours INT2} uses \sys{}'s token-wise INT2 K and V cache without recent windows or rotations.
+We vary concurrency in powers of two up to 16 on H100 and 32 (plus 48) on B200 to measure per-user (median request output tokens/s) and aggregate (total output tokens/s) throughput (\Cref{fig:serving-pareto}).
+
+At a 99\% prefix-cache hit rate, \emph{OSCAR INT2 + Ours} reaches a peak aggregate throughput of 487 tokens/s on H100 and 868 tokens/s on B200, compared with 269 and 333 tokens/s for OSCAR ($81\%$ and $161\%$ higher).
+\emph{Ours INT2} reaches 506 tokens/s on H100 and 897 tokens/s on B200, improving over OSCAR by $88\%$ and $170\%$; this also exceeds FlashInfer BF16's peaks of 115 tokens/s on H100 (at concurrency 2) and 355 tokens/s on B200 (at concurrency 8) by $341\%$ and $153\%$.
+At 95\% prefix hits, \emph{OSCAR INT2 + Ours} and \emph{Ours INT2} reach 337 and 346 tokens/s versus OSCAR's 214 tokens/s on H100, and 738 and 755 tokens/s versus 297 tokens/s on B200.
+Across cache formats, peak throughput reflects both decoder speed and the number of concurrent requests that fit in memory.
+
+\subsection{Serving accuracy}
+\label{sec:eval-serving-accuracy}
+
+\input{tables/serving-accuracy}
+
+\Cref{tab:serving-accuracy} compares FlashInfer BF16, OSCAR INT2, and \emph{OSCAR INT2 + Ours} on GPQA-Diamond~\cite{rein2023gpqa} and GSM8K on H100, reporting the mean and sample standard deviation across five runs per configuration.
+Every question-paired 95\% confidence interval for the accuracy difference between configurations spans zero, so five runs show no measurable accuracy gain or loss (though five runs do not establish formal equivalence).
+Median prompt lengths are 243 tokens for GPQA-Diamond and 91 tokens for GSM8K; because \emph{OSCAR INT2 + Ours} decodes the identical quantized cache as OSCAR with $<1.8\times10^{-3}$ arithmetic error (\Cref{sec:eval-accuracy}), it preserves OSCAR's cache accuracy while accelerating decode.

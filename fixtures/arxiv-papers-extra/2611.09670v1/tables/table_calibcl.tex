@@ -1,0 +1,34 @@
+\begin{table*}[t]
+\centering
+\caption{The calibrated rule in closed loop on the same ten starts per column. Top: references, and hard search ($\lambda=0.01$) with single scorers (20 runs) and on the five-scorer mean that the calibrated rule uses. Pooled: the median $\hat\rho$ over 50 draws of 100 proposal pairs ranked by true return (point estimate and one-sided Wilson lower bound at nominal 95\%) or by a noisy teacher that agrees with the true order on 85\% of pairs. Independent sets: five disjoint sets of exactly 100 pairs, each calibrating its own controller; mean $\pm$ standard deviation across sets, then the worst set. Held-out sets: the same, with the pairs drawn on start states 10--19, which the evaluation never uses. $\kappa=\sqrt{1-\hat\rho^2}$ is the error spread as a share of the scorer's spread over the proposals, and $\kappa=1$ means no search (uniform averaging). Otherwise mean $\pm$ standard error over runs; successes over runs in parentheses.}
+\label{tab:calibcl}
+\small
+\setlength{\tabcolsep}{4pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lcccccc}
+\toprule
+& Cheetah & Hopper & Drawer 500 & Drawer human & Plate 500 & Window 500 \\
+\midrule
+Cloned policy, run directly & 412\,{\scriptsize$\pm$114} & 502\,{\scriptsize$\pm$32} & 898\,{\scriptsize$\pm$1}\,(10/10) & 898\,{\scriptsize$\pm$1}\,(10/10) & 1111\,{\scriptsize$\pm$5}\,(10/10) & 372\,{\scriptsize$\pm$13}\,(10/10) \\
+Uniform averaging (no search) & 233\,{\scriptsize$\pm$78} & 418\,{\scriptsize$\pm$38} & 852\,{\scriptsize$\pm$1}\,(10/10) & 852\,{\scriptsize$\pm$1}\,(10/10) & 1051\,{\scriptsize$\pm$6}\,(10/10) & 295\,{\scriptsize$\pm$9}\,(10/10) \\
+Standard MPPI, single scorers & 262\,{\scriptsize$\pm$25} & 356\,{\scriptsize$\pm$39} & 504\,{\scriptsize$\pm$74}\,(11/20) & 216\,{\scriptsize$\pm$10}\,(0/20) & 436\,{\scriptsize$\pm$65}\,(15/20) & 392\,{\scriptsize$\pm$14}\,(10/10) \\
+Standard MPPI, five-scorer mean & 296\,{\scriptsize$\pm$33} & 339\,{\scriptsize$\pm$66} & 611\,{\scriptsize$\pm$89}\,(8/10) & 206\,{\scriptsize$\pm$13}\,(0/10) & 351\,{\scriptsize$\pm$86}\,(6/10) & 425\,{\scriptsize$\pm$16}\,(10/10) \\
+\midrule
+Pooled, true order, point & 451\,{\scriptsize$\pm$54} & 538\,{\scriptsize$\pm$30} & 835\,{\scriptsize$\pm$6}\,(10/10) & 852\,{\scriptsize$\pm$1}\,(10/10) & 987\,{\scriptsize$\pm$18}\,(10/10) & 311\,{\scriptsize$\pm$9}\,(10/10) \\
+\quad $\kappa$ & 0.998 & 0.713 & 0.998 & 1.000 & 0.872 & 0.876 \\
+Pooled, true order, lower bound & 264\,{\scriptsize$\pm$88} & 519\,{\scriptsize$\pm$35} & 852\,{\scriptsize$\pm$1}\,(10/10) & 852\,{\scriptsize$\pm$1}\,(10/10) & 1036\,{\scriptsize$\pm$6}\,(10/10) & 306\,{\scriptsize$\pm$9}\,(10/10) \\
+\quad $\kappa$ & 1.000 & 0.856 & 1.000 & 1.000 & 0.977 & 0.970 \\
+Pooled, 85\% teacher, point & 451\,{\scriptsize$\pm$54} & 532\,{\scriptsize$\pm$31} & 835\,{\scriptsize$\pm$6}\,(10/10) & 852\,{\scriptsize$\pm$1}\,(10/10) & 1007\,{\scriptsize$\pm$13}\,(10/10) & 310\,{\scriptsize$\pm$9}\,(10/10) \\
+\quad $\kappa$ & 0.998 & 0.771 & 0.998 & 1.000 & 0.905 & 0.905 \\
+\midrule
+Five independent sets, point & 307\,{\scriptsize$\pm$52}, 264 & 551\,{\scriptsize$\pm$23}, 517 & 838\,{\scriptsize$\pm$13}, 824\,(50/50) & 851\,{\scriptsize$\pm$3}, 846\,(50/50) & 1009\,{\scriptsize$\pm$6}, 999\,(50/50) & 312\,{\scriptsize$\pm$5}, 308\,(50/50) \\
+\quad $\kappa$ & 0.976--1.000 & 0.588--0.729 & 0.969--1.000 & 0.996--1.000 & 0.891--0.918 & 0.771--0.941 \\
+Five independent sets, lower bound & 264\,{\scriptsize$\pm$0}, 264 & 538\,{\scriptsize$\pm$22}, 500 & 852\,{\scriptsize$\pm$0}, 852\,(50/50) & 852\,{\scriptsize$\pm$0}, 852\,(50/50) & 1039\,{\scriptsize$\pm$2}, 1036\,(50/50) & 306\,{\scriptsize$\pm$2}, 303\,(50/50) \\
+\quad $\kappa$ & 1.000 & 0.757--0.873 & 1.000 & 1.000 & 0.977--0.989 & 0.903--0.996 \\
+Five held-out sets, point & 357\,{\scriptsize$\pm$86}, 264 & 539\,{\scriptsize$\pm$12}, 523 & 840\,{\scriptsize$\pm$16}, 818\,(50/50) & 852\,{\scriptsize$\pm$0}, 852\,(50/50) & 959\,{\scriptsize$\pm$86}, 806\,(50/50) & 313\,{\scriptsize$\pm$3}, 309\,(50/50) \\
+\quad $\kappa$ & 0.960--1.000 & 0.562--0.771 & 0.951--1.000 & 1.000 & 0.750--0.918 & 0.809--0.918 \\
+Five held-out sets, lower bound & 264\,{\scriptsize$\pm$0}, 264 & 509\,{\scriptsize$\pm$30}, 472 & 848\,{\scriptsize$\pm$8}, 835\,(50/50) & 852\,{\scriptsize$\pm$0}, 852\,(50/50) & 1028\,{\scriptsize$\pm$17}, 998\,(50/50) & 306\,{\scriptsize$\pm$2}, 304\,(50/50) \\
+\quad $\kappa$ & 1.000 & 0.734--0.903 & 0.998--1.000 & 1.000 & 0.889--0.989 & 0.930--0.989 \\
+\bottomrule
+\end{tabular}}
+\end{table*}

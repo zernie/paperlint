@@ -1,0 +1,27 @@
+\footnotesize
+\renewcommand{\arraystretch}{0.75}
+\begin{tabular}{cll@{\hspace{1em}}rrr@{\hspace{2.5em}}cc@{\hspace{2.5em}}cccc}
+\toprule & \multirow[c]{2}{*}[-3pt]{\textbf{CPU}} & \multirow[c]{2}{*}[-3pt]{\textbf{$\mu$Architecture}} &&&& \multicolumn{2}{c}{\hspace*{-2.5em}\textbf{Unpadded}} & \multicolumn{4}{c}{\hspace*{-\tabcolsep}\textbf{Padded}} \vspace{3.5pt}\\
+& &  & $\Delta_{sync}$ & $\Delta^{L1}_{DRAM}$ & CTR & $F^{L1}_{DRAM}$ & $F^{LLC}_{DRAM}$ & $G^{L1}_{DRAM}$ & $G^{L1}_{L2}$ & $G^{L1}_{L3}$ & $G^{LLC}_{DRAM}$ \vspace{1pt}\\\midrule
+\multirow[c]{19}{*}{\rotatebox[origin=c]{90}{\textbf{x86}\hspace{11em}}} & AMD EPYC 7252 & Zen 2 (Rome) & $43 \pm 1$ & 329 & 74 & 1.00 & 0.99 & 41 & 5 & 31 & 12 \\\cmidrule(lr){2-12}
+ & AMD Ryzen 7 5700G & Zen 3 (Cezanne) & $55 \pm 22$ & 322 & 90 & 0.99 & 0.77 & 6 & $\cdot$ & $\cdot$ & $\cdot$ \\\cmidrule(lr){2-12}
+ & AMD Ryzen 9 7950X3D & Zen 4 (Raphael) & $38 \pm 29$ & 496 & 95 & 0.99 & 0.61 & 5 & $\cdot$ & $\cdot$ & $\cdot$ \\\cmidrule(lr){2-12}
+ & AMD EPYC 9124 & Zen 4 (Genoa) & $50 \pm 19$ & 324 & 96 & 0.99 & 0.23 & 9 & $\cdot$ & 2 & $\cdot$ \\\cmidrule(lr){2-12}
+ & AMD Ryzen 9 9950X & Zen 5 (Granite Ridge) & $76 \pm 31$ & 462 & 249 & 0.99 & 0.93 & 37 & $\cdot$ & $\cdot$ & $\cdot$ \\\cmidrule(lr){2-12}
+ & Intel Core i3-2120 & Sandy Bridge & $47 \pm 8$ & 200 & 50 & 1.00 & 1.00 & 36 & $\cdot$ & $\cdot$ & 43 \\\cmidrule(lr){2-12}
+ & Intel Core i3-5010U & Broadwell & $76 \pm 7$ & 156 & 43 & 0.99 & 0.99 & 18 & $\cdot$ & $\cdot$ & 14 \\\cmidrule(lr){2-12}
+ & Intel Xeon E3-1505M v5 & Skylake & $35 \pm 13$ & 170 & 42 & 1.00 & 0.81 & 20 & $\cdot$ & $\cdot$ & $\cdot$ \\\cmidrule(lr){2-12}
+ & Intel Pentium Gold G5400T & Coffee Lake & $44 \pm 8$ & 205 & 41 & 1.00 & 0.94 & 39 & $\cdot$ & 25 & $\cdot$ \\\cmidrule(lr){2-12}
+ & Intel Core i7-8700 & Coffee Lake & $35 \pm 18$ & 272 & 25 & 1.00 & 0.24 & 39 & $\cdot$ & 39 & $\cdot$ \\\cmidrule(lr){2-12}
+ & Intel Core i7-10710U & Comet Lake & $35 \pm 15$ & 305 & 43 & 1.00 & 0.92 & 20 & $\cdot$ & $\cdot$ & $\cdot$ \\\cmidrule(lr){2-12}
+ & Intel Core i7-1185G7 & Willow Cove & $54 \pm 21$ & 513 & 41 & 0.99 & 0.88 & 32 & $\cdot$ & 8 & $\cdot$ \\\cmidrule(lr){2-12}
+ & Intel Xeon Gold 6346 & Sunny Cove & $47 \pm 25$ & 233 & 47 & 1.00 & 1.00 & 27 & $\cdot$ & 26 & 31 \\\cmidrule(lr){2-12}
+ & Intel Core i7-11700 & Cypress Cove & $53 \pm 20$ & 316 & 46 & 0.99 & 0.98 & 28 & $\cdot$ & 18 & 6 \\\cmidrule(lr){2-12}
+ & Intel Core i9-12900H & Golden Cove (P) & $68 \pm 22$ & 345 & 49 & 1.00 & 0.99 & 40 & $\cdot$ & 14 & 53 \\\cmidrule(lr){2-12}
+ & Intel Core i5-13420H & Raptor Cove (P) & $71 \pm 18$ & 345 & 56 & 1.00 & 0.99 & 45 & $\cdot$ & 18 & 50 \\\cmidrule(lr){2-12}
+ & Intel Core i9-13900K & Raptor Cove (P) & $70 \pm 15$ & 456 & 58 & 0.99 & 0.94 & 43 & $\cdot$ & 25 & $\cdot$ \\\cmidrule(lr){2-12}
+ & Intel Xeon Gold 6526Y & Raptor Cove & $54 \pm 30$ & 357 & 58 & 1.00 & 0.10 & 42 & $\cdot$ & 35 & $\cdot$ \\\cmidrule(lr){2-12}
+ & Intel Xeon 6736P & Redwood Cove & $60 \pm 17$ & 681 & 50 & 1.00 & 0.94 & 45 & $\cdot$ & 39 & $\cdot$ \\\midrule
+\multirow[c]{1}{*}{\textbf{LA64}} & Loongson 3A6000 & 3A6000 & $22 \pm 8$ & 183 & 3 & 1.00 & 0.00 & 14 & $\cdot$ & 14 & $\cdot$ \\
+\bottomrule
+\end{tabular}

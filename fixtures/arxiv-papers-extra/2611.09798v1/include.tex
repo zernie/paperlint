@@ -1,0 +1,67 @@
+\usepackage{tabularx}
+\usepackage{nicefrac}
+\usepackage{graphicx, subcaption}
+\usepackage{enumitem}
+\usepackage{array, tabularx}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\usepackage{fvextra}
+\usepackage[most]{tcolorbox}
+\usepackage{xspace}
+\usepackage{bxcoloremoji}
+\newcommand{\TODO}[1]{\textcolor{red}{\textbf{TODO} #1}}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage{xspace}
+\usepackage{fvextra}
+\usepackage{cleveref}
+\usepackage{float} 
+\usepackage{subcaption}
+\usepackage[most]{tcolorbox}
+\usepackage{booktabs}
+\usepackage{adjustbox}
+\usepackage{multirow}
+\usepackage{siunitx}
+
+\newcommand{\inlineimage}[1]{\raisebox{-0.05\height}{\includegraphics[height=2.5em]{#1}}}
+
+\makeatletter
+\DeclareRobustCommand\onedot{\futurelet\@let@token\@onedot}
+\def\@onedot{\ifx\@let@token.\else.\null\fi\xspace}
+
+\def\aka{\emph{a.k.a}\onedot} \def\Eg{\emph{A.k.a}\onedot}
+\def\eg{\emph{e.g}\onedot} \def\Eg{\emph{E.g}\onedot}
+\def\ie{\emph{i.e}\onedot} \def\Ie{\emph{I.e}\onedot}
+\def\cf{\emph{c.f}\onedot} \def\Cf{\emph{C.f}\onedot}
+\def\etc{\emph{etc}\onedot} \def\vs{\emph{vs}\onedot}
+\def\wrt{w.r.t\onedot} \def\dof{d.o.f\onedot}
+\def\etal{\emph{et al}\onedot}
+\makeatother
+
+\renewcommand{\paragraph}[1]{\textbf{#1}}
+
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{wrapfig}
+
+\definecolor{promptblue}{RGB}{25, 84, 166}
+\definecolor{thinkgreen}{RGB}{34, 139, 34}
+\definecolor{thinktag}{RGB}{110, 65, 30}
+\definecolor{thinkbg}{RGB}{252, 248, 243}
+\definecolor{boxbg}{RGB}{252, 252, 252}
+
+\tcbset{
+    mainbox/.style={
+        colback=boxbg,
+        colframe=gray!40,
+        arc=2mm,
+        boxrule=0.8pt,
+        left=12pt,
+        right=12pt,
+        top=12pt,
+        bottom=12pt,
+        fonttitle=\bfseries\large,
+        coltitle=white,
+        colbacktitle=gray!60
+    }
+}

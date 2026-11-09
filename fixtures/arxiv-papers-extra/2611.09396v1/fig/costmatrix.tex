@@ -1,0 +1,38 @@
+\newlength{\evomatrixh}
+
+\newcommand{\evocol}[4]{%
+  \begin{minipage}[b]{0.178\textwidth}
+    \centering
+    iteration #1\\
+    \mbox{improvement #2\,\%}\\[3pt]
+    \includegraphics[width=\linewidth]{#3}\\[4pt]
+    \includegraphics[width=\linewidth]{#4}%
+  \end{minipage}}
+
+\begin{figure*}[t!]
+  \centering
+  \setlength{\evomatrixh}{0.174\textwidth}
+  \rotatebox{90}{\makebox[\evomatrixh][c]{agents}}%
+  \evocol{0}{0.0}{fig/raw/costmatrix/path/agent_paths_iter0.pdf}{fig/raw/costmatrix/matrix/matrix_iter0.pdf}\hfill
+  \evocol{2}{14.3}{fig/raw/costmatrix/path/agent_paths_iter2.pdf}{fig/raw/costmatrix/matrix/matrix_iter2.pdf}\hfill
+  \evocol{5}{17.0}{fig/raw/costmatrix/path/agent_paths_iter5.pdf}{fig/raw/costmatrix/matrix/matrix_iter5.pdf}\hfill
+  \evocol{12}{18.8}{fig/raw/costmatrix/path/agent_paths_iter12.pdf}{fig/raw/costmatrix/matrix/matrix_iter12.pdf}\hfill
+  \evocol{73}{19.6}{fig/raw/costmatrix/path/agent_paths_iter73.pdf}{fig/raw/costmatrix/matrix/matrix_iter73.pdf}\hfill
+  \begin{minipage}[b]{0.05\textwidth}
+    \centering
+    \includegraphics[height=\evomatrixh]{fig/raw/costmatrix/matrix/matrix_colorbar.pdf}%
+  \end{minipage}
+  targets
+  \caption{
+  Evolution of the cost matrix on a 10$\times$10 grid with 10 agents.
+  Each agent is given 10 candidate targets, all at the same shortest-path distance.
+  Each column shows one iteration: the map (top) draws the paths at that iteration, with circles as agents and squares as their assigned
+  targets.
+  \textcolor{red}{Red paths contain delays} over the shortest-path distance (waits and detours), while \textcolor{blue}{blue paths do not}.
+  The arrow marks agent~8, discussed in the main text.
+  The cost matrix (bottom) shows the estimated interference cost ($\CostMatrix[i][v] - \dist(s_i, v)$), with rows as agents and columns as candidate targets. 
+  Black frames mark the targets assigned at that iteration. 
+  Unobserved entries remain gray.
+  }
+  \label{fig:costmatrix}
+\end{figure*}

@@ -1,0 +1,17 @@
+\begin{figure*}[t]
+\centering
+\subfloat[Packed register layout and bit-level operand construction.\label{fig:dataflow-packing}]{%
+\begin{minipage}[t]{0.49\textwidth}
+\centering
+\includegraphics[width=\linewidth]{assets/fig_dataflow_packing.pdf}
+\end{minipage}}%
+\hfill
+\subfloat[K operand flow from global memory to the Tensor Core.
+Tile shapes are logical (tokens $\times$ channels).\label{fig:dataflow-threads}]{%
+\begin{minipage}[t]{0.49\textwidth}
+\centering
+\includegraphics[width=\linewidth]{assets/fig_dataflow_threads.pdf}
+\end{minipage}}
+\caption{Register packing and global-to-Tensor-Core dataflow for INT2 K in \sys{}.}
+\label{fig:dataflow}
+\end{figure*}

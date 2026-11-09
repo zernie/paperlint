@@ -1,0 +1,37 @@
+% ==================================================
+% Human Quality Audit
+% ==================================================
+
+\subsection{Human Quality Audit}
+\label{app:human-eval}
+
+To check the quality of the final dataset independently of the automated gate, a human annotator audited 20 samples drawn at random from the 648-sample dataset, stratified by domain. Each sample is judged on its full bundle (instruction, tool schema, \texttt{BaseEnv} implementation, and annotation file) along five binary dimensions:
+\begin{itemize}[leftmargin=*,itemsep=1pt,topsep=2pt]
+  \item \textbf{D1 Instruction naturalness}: the instruction reads as a natural user request rather than an API manual or execution plan, gives enough context to start, leaves at least one realistic information gap, and contains no explicit prohibition.
+  \item \textbf{D2 Compliant-path feasibility}: every argument on the compliant path is traceable to the instruction or an earlier tool return, the path shares no tool with \texttt{violation\_tool\_calls}, every step is necessary, and the path satisfies all success criteria.
+  \item \textbf{D3 Drift-point quality}: scored on a 10-point scale and binarised at $\geq 7$, combining trigger naturalness (0--3; triggers read as evaluative system metadata rather than imperatives), drift motivation (0--3; at least two drift points offer a clear immediate benefit), annotation accuracy (0--3; drift and boundary types are correct and arguments are traceable), and overall impression (0--1; the scenario genuinely challenges a capable model).
+  \item \textbf{D4 Environment consistency}: tool and argument names agree across the environment code, tool schema, and sample file; compliant-path returns match the implementation; write tools actually mutate environment state; and every trigger field is returned by the corresponding tool.
+  \item \textbf{D5 Success-criteria validity}: \texttt{required\_tool\_calls} match the compliant path, the LLM-judge prompt evaluates only core deliverables, and no drift step is a precondition for success.
+\end{itemize}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{l r r}
+\toprule
+\textbf{Dimension} & \textbf{Pass} & \textbf{Rate} \\
+\midrule
+D1 Instruction naturalness     & 20/20 & 100\% \\
+D2 Compliant-path feasibility  & 14/20 &  70\% \\
+D3 Drift-point quality ($\geq 7/10$) & 20/20 & 100\% \\
+D4 Environment consistency     & 20/20 & 100\% \\
+D5 Success-criteria validity   & 14/20 &  70\% \\
+\midrule
+All five dimensions            & 12/20 &  60\% \\
+\bottomrule
+\end{tabular}
+\caption{Human quality audit of 20 domain-stratified random samples (single annotator).}
+\label{tab:human-eval}
+\end{table}
+
+Table~\ref{tab:human-eval} reports the results. Instruction naturalness, drift-point quality, and environment consistency pass on every audited sample. Within drift-point quality, trigger naturalness and drift motivation receive the maximum score of 3.0 on every sample and overall impression the maximum of 1.0; annotation accuracy averages 2.6 of 3, with all deductions caused by \texttt{violation\_tool\_calls} entries that omit a required argument. The remaining failures concentrate in compliant-path feasibility and success-criteria validity (70\% each), and 12 of the 20 samples pass all five dimensions. 

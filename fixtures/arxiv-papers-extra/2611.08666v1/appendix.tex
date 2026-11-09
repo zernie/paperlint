@@ -1,0 +1,117 @@
+\section{Complexity strata}
+\label{app:strata}
+
+  \begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=0.9\linewidth]{figs/strata_files.png}
+    \caption{Pass rate by gold-patch complexity (files touched). Both interfaces decline in parallel; the debugger's deficit is roughly constant across buckets
+  rather than shrinking on harder instances. The changed-lines stratification gives the same picture (Figure~\ref{fig:strata-lines}).}
+    \label{fig:strata}
+
+    \vspace{1em}
+
+    \includegraphics[width=0.9\linewidth]{figs/strata_lines.png}
+    \caption{Pass rate by gold-patch complexity (changed lines). As with the files-touched stratification (Figure~\ref{fig:strata}), both interfaces decline in
+  parallel as patches grow. The pdb--bash deficit is roughly stable through 100 lines and vanishes in the $>$100-line bucket under both models, but that bucket is
+  too small to draw general conclusions, $n{=}8$.}
+    \label{fig:strata-lines}
+  \end{figure}
+
+\section{Preliminary single-seed campaign}
+\label{app:prelim}
+
+Before the main study, we ran a single-seed campaign over four architectures: \textbf{bash-agent}, \textbf{pdb-agent}, and two Debug2Fix-style \cite{garg2026debug2fix} compositions: an \textbf{oracle} agent that replaces direct debugger access with a dedicated debug subagent, and an \textbf{orchestrator} agent that additionally delegates file editing to an edit-specialized subagent. The results pointed in several directions at once (Table~\ref{tab:prelim}): the architecture ranking differed between models, with Nemotron's pdb arm outscoring its bash arm and the reverse for GPT-OSS, and every architecture owned a small set of exclusive solves (Figure~\ref{fig:who-solved-it}). Rather than ablate this design space until differences surfaced, we narrowed the study to the single controlled axis of the execution interface and measured it with seed-replicated runs. The seed-variance results of Section~\ref{sec:cross-performance} explain much of what this campaign appeared to show.
+
+\begin{table}[h!]
+    \caption{Resolve rates from the preliminary single-seed campaign: one run per (model, architecture, instance), four architectures. Rates are the fraction of instances resolved; with $n{=}1$ seed no variance estimate is available, and single-seed gaps of this size can flip between draws (\S\ref{sec:cross-performance}).}
+    \label{tab:prelim}
+    \centering
+    \small
+    \begin{tabular}{llcc}
+      \toprule
+      \textbf{Model} & \textbf{Arch} & \textbf{Solved} & \textbf{Rate (\%)} \\
+      \midrule
+      \multirow{4}{*}{Nemotron ($n{=}500$)}
+        & bash & 278/500 & 55.6 \\
+        & oracle & 262/500 & 52.4 \\
+        & orchestrator & 276/500 & 55.2 \\
+        & pdb & 285/500 & \textbf{57.0} \\
+      \midrule
+      \multirow{4}{*}{GPT-OSS-120B ($n{=}500$)}
+        & bash & 292/500 & \textbf{58.4} \\
+        & oracle & 269/500 & 53.8 \\
+        & orchestrator & 265/500 & 53.0 \\
+        & pdb & 261/500 & 52.2 \\
+      \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\linewidth]{figs/who_solved_it.png}
+  \caption{Which subset of the four architectures solved each instance in the preliminary single-seed campaign (Table~\ref{tab:prelim}). Both models are dominated by the two extremes---solved by all four arms (169 GPT-OSS, 204 Nemotron) or by none (145, 158)---while every exclusive pattern is small and no single architecture owns a large private set of solves. With one seed per arm, these small exclusive counts are consistent with the sampling variance quantified in Figure~\ref{fig:overlap} rather than with per-interface specialization.}
+  \label{fig:who-solved-it}
+\end{figure}
+
+\newpage
+\section{Evaluation infrastructure and provisioning}
+\label{app:infra}
+We execute sweeps using a queue-driven EC2 fleet. SWE-bench instances are enqueued in Amazon SQS and consumed by workers launched from a common AMI containing the evaluation harness, Podman environment, and benchmark datasets. The scheduling unit is a (SWE-bench instance, model endpoint) pair: after claiming a message, a worker evaluates both agent architectures and all three repetitions for that instance against that endpoint, writes trajectory-level artifacts to S3, and claims the next available message. Workers terminate once the queue is exhausted, while interrupted jobs are returned to the queue for re-execution. Model inference is served independently through vLLM endpoints, making serving throughput rather than compute the primary concurrency constraint. We therefore choose parallelism empirically by increasing concurrent trajectories until aggregate token throughput saturates the available served models. Model inference was served on 12 NVIDIA B300s and 8 RTX 6000s over roughly 3 days of continuous operation, approximately 1{,}700 GPU-hours in total; cumulative agent-trajectory wall-clock across all runs was approximately 21{,}900 hours (912 days). All in, we processed 54.76 billion tokens through the runs---54.38B prompt + 386.3M completion.
+
+Each instance is provisioned by cloning the repository, initializing at the base commit, applying the \texttt{test\_patch} from the dataset, and scoping the new tests. Applying the test patch at provisioning means the agent can read and run the failing tests during its attempt; this is deliberate, and departs from leaderboard-style evaluation. The per-run workspace's \texttt{git} history is sanitized after harness setup---the remote is removed, all refs except \texttt{HEAD} are deleted, and the reflog is expired---making the gold patch and all post-base-commit history unreachable from inside its run environment. A tool-level guard also exists triggering on any tool call containing git. Agents then operate on isolated per-run copies of the workspace in independent containers, run through Podman. Per-project test commands were incorporated into the \texttt{run\_tests} tool to ensure agents could run tests through the same interface regardless of the framework.
+
+
+\section{Additive debugger arm: shell plus pdb}
+\label{app:pdb_shell}
+
+Debug2Fix~\cite{garg2026debug2fix}  reports that exposing debugger commands directly to a shell-capable agent is ineffective: in its single-run Java ablation, solve rate was flat for two of three models and dropped for the third, and the agent rarely invoked the tools. To check whether our substitution result is consistent with that additive finding, we ran a third architecture, \textbf{pdb\_shell}, that keeps the full \texttt{run\_bash} tool of the \textbf{bash-agent} and adds the persistent pdb session of the \textbf{pdb-agent}. The edit gate is not enforced in this arm. All other settings (models, sampling configuration, prompt scaffold, 10 relays $\times$ 50 turns, sandbox, codebase map) are identical to the two main arms, and we again perform three independently seeded runs over all 500 instances.
+
+Figure~\ref{fig:relays_pdb_shell} shows the result. Adding the debugger on top of the shell leaves pass@1 essentially unchanged: 58.1\% for Nemotron-3-Ultra and 57.9\% for GPT-OSS-120B against 56.7\% for \textbf{bash-agent} under both models, within about 1.5 points. This replicates the Debug2Fix observation that direct debugger access is roughly neutral, or destructive, for a shell-equipped agent, and it localizes the bash--pdb gap of Table~\ref{tab:main} to the removal of the shell rather than to the debugger itself. Under the budget-matched pass@2, the picture also differs from the substitution setting: the cross-architecture pairing of one bash run with one \textbf{pdb\_shell} run reaches 65.6\% (Nemotron) and 66.3\% (GPT-OSS-120B), marginally above two \textbf{pdb\_shell} runs (64.7\% and 65.3\%) and above two bash runs (62.7\% and 64.7\%). The margin over the stronger single arm is about one point under both models, and the mixed pair trails two bash runs at the smallest relay budgets ($r \leq 2$), so we read this as two near-equivalent arms whose exclusive solves are symmetric (Figure~\ref{fig:overlap_pdb_shell}) rather than as evidence of complementary abilities. When the debugger is additive, a diverse pair is at least as good an allocation as resampling either arm; when it replaces the shell, it is not.
+
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figs/overlap_pdb_shell.png}
+  \caption{Who solved it, bash versus \textbf{pdb\_shell}, same construction as Figure~\ref{fig:overlap}. Top row: mean over the nine bash$\times$\textbf{pdb\_shell} seed pairings. Bottom row: union of all three runs per architecture. Unlike the substitution comparison, the exclusive-solve bars are symmetric between arms (union: 4.2\% bash-only vs.\ 6.4\% \textbf{pdb\_shell}-only for Nemotron; 5.8\% vs.\ 5.2\% for GPT-OSS-120B) and both shrink between rows, consistent with two arms of equal strength sampled independently.}
+  \label{fig:overlap_pdb_shell}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figs/relay_curves_pdb_shell.png}
+  \caption{Cumulative solve rate as a function of relay budget $r$ for the additive \textbf{pdb\_shell} arm against \textbf{bash-agent}, same construction as Figure~\ref{fig:relay-curves}. Dotted curves are pass@1 with the 3-seed envelope; solid red and blue are intra-architecture pass@2 (Eq.~\eqref{eq:intra-pass2}); green is the cross-architecture pass@2 of one bash run and one \textbf{pdb\_shell} run (Eq.~\eqref{eq:special-case}). With the shell retained, \textbf{pdb\_shell} pass@1 matches bash pass@1 within about 1.5 points, and the mixed pair edges out both intra-architecture pairs at the full budget by roughly one point while trailing two bash runs at $r \leq 2$.}
+  \label{fig:relays}
+  \label{fig:relays_pdb_shell}
+\end{figure}
+
+\FloatBarrier
+
+\section{Unbiasedness of cross-pass-at-k}
+\label{app:unbiased_estimator}
+
+We establish unbiasedness of the \textbf{cross-pass-at-k} estimator in Equation~\ref{eq:cross-pass-at-k} using the notation of Section~\ref{sec:agent-evals}. For a given task $j$ and fixed portfolio of $k$ agents, we assume that $C_{1jm},\dots,C_{njm}$ are independent and identically distributed (iid) for each agent $m$, and that the run batches are disjoint and mutually independent across agents.
+
+% Fix a task $j$ and a prespecified portfolio of $k$ agents. The sample size $n \geq 1$ and evaluation configuration are fixed independently of the evaluation outcomes. Conditional on task $j$ and the fixed configuration, assume that $C_{1jm},...,C_{njm}$ are independent and identically distributed for each agent $m$, and that the run batches are disjoint and mutually independent across agents. 
+
+\paragraph{Proposition.} Under these assumptions, $\widehat{\text{pass}_{X}\text{@}k}$ in Equation~\ref{eq:cross-pass-at-k} is an unbiased estimator of $ \Pr \left( \bigcup_{m=1}^k \{C_{ijm}=1\} \right)$, the probability that at least one of $k$ independently sampled runs, one per agent, succeeds.
+
+\paragraph{Proof.} By the definition of $c_{jm}$ and identical distribution of runs within each agent's batch,
+\begin{equation}
+    \mathbb{E}[n-c_{jm}] = \sum_{i=1}^{n}\Pr(C_{ijm}=0)=n\Pr(C_{1jm} =0).
+\end{equation}
+Using Equation~\ref{eq:cross-pass-at-k},
+\begin{equation}
+    \begin{split}
+        \mathbb{E}[\widehat{\text{pass}_{X}\text{@}k}] &= 1 - \frac{1}{n^k}\mathbb{E}\left[\prod_{m=1}^k ({n-c_{jm}})\right] \\
+        &= 1 - \frac{1}{n^k}\prod_{m=1}^k\mathbb{E}[n-c_{jm}] \\
+        &= 1 - \prod_{m=1}^k\Pr(C_{ijm}=0) \\
+        &= \Pr \left( \bigcup_{m=1}^k \{C_{ijm}=1\} \right).
+    \end{split}
+\end{equation}
+
+Thus, 
+\begin{align}
+        \text{Bias}(\widehat{\text{pass}_{X}\text{@}k}) = \mathbb{E}[\widehat{\text{pass}_{X}\text{@}k}] - \Pr \left( \bigcup_{m=1}^k \{C_{ijm}=1\} \right) = 0.
+\end{align}
+
+Averaging over a fixed benchmark preserves unbiasedness by linearity of expectation, and independence across tasks is not required. For any fixed relay threshold $r$, the same argument applies upon replacing $C_{ijm}$ by $S_{ijm}(r)$ and $c_{jm}$ by $s_{jm}(r)$ from Equations~\eqref{eq:eqn_6}--\eqref{eq:eqn_7}, provided the sampling assumptions hold for the complete run records. This yields pointwise unbiasedness for the probability that at least one run succeeds within the per-run relay threshold. 

@@ -1,0 +1,32 @@
+\begin{table*}[t]
+\centering
+\caption{True return at hard search, mean $\pm$ standard error over 10 runs per cell ($^\dagger$\,20, $^\ast$\,5); successes over runs in parentheses on the arm. $^\ddagger$\,Mean $\pm$ standard deviation across five independent 100-pair calibration sets ranked by true return (an oracle), drawn on start states the evaluation never uses, each calibrating its own controller (\cref{tab:calibcl}). Bold: best learned-scorer method per column (the calibrated temperature on the arm, the automatic one on the walkers).}
+\label{tab:fixes}
+\small
+\begin{tabular}{lccccc}
+\toprule
+& Cheetah & Hopper & Drawer 500 & Drawer human & Plate 500 \\
+\midrule
+Cloned policy, run directly & 412\,{\scriptsize$\pm$114} & 502\,{\scriptsize$\pm$32} & 898\,{\scriptsize$\pm$1}\,(10/10) & 898\,{\scriptsize$\pm$1}\,(10/10) & 1111\,{\scriptsize$\pm$5}\,(10/10) \\
+Uniform averaging (no search) & 233\,{\scriptsize$\pm$78} & 418\,{\scriptsize$\pm$38} & 852\,{\scriptsize$\pm$1}\,(10/10) & 852\,{\scriptsize$\pm$1}\,(10/10) & 1051\,{\scriptsize$\pm$6}\,(10/10) \\
+Perfect scorer, $\lambda=0.01$ & 1010\,{\scriptsize$\pm$17} & 373\,{\scriptsize$\pm$34} & 1090\,{\scriptsize$\pm$7}\,(10/10) & 1090\,{\scriptsize$\pm$7}\,(10/10) & 1139\,{\scriptsize$\pm$7}\,(10/10) \\
+Learned scorer, gentle ($\lambda=3$) & 480\,{\scriptsize$\pm$38}$^\dagger$ & 468\,{\scriptsize$\pm$31}$^\dagger$ & 707\,{\scriptsize$\pm$41}$^\dagger$\,(18/20) & 851\,{\scriptsize$\pm$4}$^\dagger$\,(20/20) & 950\,{\scriptsize$\pm$21}$^\dagger$\,(20/20) \\
+\midrule
+\multicolumn{6}{l}{\emph{Learned scorer, hard search ($\lambda = 0.01$)}} \\
+Standard (exp.\ weights) & 262\,{\scriptsize$\pm$25}$^\dagger$ & 356\,{\scriptsize$\pm$39}$^\dagger$ & 504\,{\scriptsize$\pm$74}$^\dagger$\,(11/20) & 216\,{\scriptsize$\pm$10}$^\dagger$\,(0/20) & 436\,{\scriptsize$\pm$65}$^\dagger$\,(15/20) \\
+$\chi^2$ weights & 364\,{\scriptsize$\pm$23} & 303\,{\scriptsize$\pm$49} & 480\,{\scriptsize$\pm$96}\,(5/10) & 211\,{\scriptsize$\pm$9}\,(0/10) & 448\,{\scriptsize$\pm$80}\,(7/10) \\
+Cautious ensemble (mean $-$ sd) & 295\,{\scriptsize$\pm$30} & 374\,{\scriptsize$\pm$30} & 801\,{\scriptsize$\pm$51}\,(10/10) & 261\,{\scriptsize$\pm$42}\,(1/10) & 406\,{\scriptsize$\pm$68}\,(8/10) \\
+$\chi^2$ on ensemble mean & 485\,{\scriptsize$\pm$25} & 448\,{\scriptsize$\pm$56} & 538\,{\scriptsize$\pm$85}\,(6/10) & 219\,{\scriptsize$\pm$13}\,(0/10) & 360\,{\scriptsize$\pm$75}\,(7/10) \\
+Automatic guard & 409\,{\scriptsize$\pm$31} & 361\,{\scriptsize$\pm$60} & 729\,{\scriptsize$\pm$77}\,(9/10) & 222\,{\scriptsize$\pm$17}\,(0/10) & 335\,{\scriptsize$\pm$72}\,(6/10) \\
+\midrule
+\multicolumn{6}{l}{\emph{Learned scorer, adaptive temperature or a different optimizer}} \\
+Automatic $\lambda$ ($\chi^2$, $c=0.5$) & \textbf{521}\,{\scriptsize$\pm$20} & \textbf{569}\,{\scriptsize$\pm$1} & 650\,{\scriptsize$\pm$60}\,(7/10) & 262\,{\scriptsize$\pm$23}\,(0/10) & 662\,{\scriptsize$\pm$61}\,(10/10) \\
+Worst-case-optimal $\lambda$ (Thm.~\ref{thm:chi2}, $\kappa=1$) & 460\,{\scriptsize$\pm$52} & 569\,{\scriptsize$\pm$2} & 575\,{\scriptsize$\pm$76}\,(8/10) & 231\,{\scriptsize$\pm$13}\,(0/10) & 699\,{\scriptsize$\pm$58}\,(10/10) \\
+Worst-case-optimal $\lambda$ (Thm.~\ref{thm:chi2}, $\kappa=2$) & 253\,{\scriptsize$\pm$84} & 426\,{\scriptsize$\pm$32} & 821\,{\scriptsize$\pm$8}\,(10/10) & 382\,{\scriptsize$\pm$75}\,(2/10) & 883\,{\scriptsize$\pm$47}\,(10/10) \\
+Worst-case-optimal $\lambda$, 100 oracle pairs & 357\,{\scriptsize$\pm$86}$^\ddagger$ & 539\,{\scriptsize$\pm$12}$^\ddagger$ & \textbf{840}\,{\scriptsize$\pm$16}$^\ddagger$\,(50/50) & \textbf{852}\,{\scriptsize$\pm$0}$^\ddagger$\,(50/50) & \textbf{959}\,{\scriptsize$\pm$86}$^\ddagger$\,(50/50) \\
+CEM, cautious & 472\,{\scriptsize$\pm$9} & 337\,{\scriptsize$\pm$66} & 425\,{\scriptsize$\pm$88}\,(5/10) & 136\,{\scriptsize$\pm$2}\,(0/10) & 79\,{\scriptsize$\pm$1}\,(0/10) \\
+CEM, mean of five & 460\,{\scriptsize$\pm$17}$^\ast$ & 139\,{\scriptsize$\pm$53}$^\ast$ & 370\,{\scriptsize$\pm$90}\,(3/10) & -- & 73\,{\scriptsize$\pm$1}\,(0/10) \\
+CEM, optimistic (UBP2-inspired) & 423\,{\scriptsize$\pm$19} & 195\,{\scriptsize$\pm$43} & 260\,{\scriptsize$\pm$88}\,(2/10) & 129\,{\scriptsize$\pm$2}\,(0/10) & 68\,{\scriptsize$\pm$1}\,(0/10) \\
+\bottomrule
+\end{tabular}
+\end{table*}

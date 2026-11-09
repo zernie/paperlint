@@ -1,0 +1,937 @@
+\documentclass{article}
+\usepackage[main, final]{neurips_2026}
+% 1. "main" option is used for the Main Track
+%  \usepackage[main]{neurips_2026}
+% 2. "position" option is used for the Position Paper Track
+%  \usepackage[position]{neurips_2026}
+% 3. "eandd" option is used for the Evaluations & Datasets Track
+ % \usepackage[eandd]{neurips_2026}
+ % if you need to opt-in for a single-blind submission in the E&D track:
+ %\usepackage[eandd, nonanonymous]{neurips_2026}
+% 4. "creativeai" option is used for the Creative AI Track
+%  \usepackage[creativeai]{neurips_2026}
+% 5. "sglblindworkshop" option is used for the Workshop with single-blind reviewing
+ % \usepackage[sglblindworkshop]{neurips_2026}
+% 6. "dblblindworkshop" option is used for the Workshop with double-blind reviewing
+%  \usepackage[dblblindworkshop]{neurips_2026}
+
+% After being accepted, the authors should add "final" behind the track to compile a camera-ready version.
+% 1. Main Track
+ % \usepackage[main, final]{neurips_2026}
+% 2. Position Paper Track
+%  \usepackage[position, final]{neurips_2026}
+% 3. Evaluations & Datasets Track
+ % \usepackage[eandd, final]{neurips_2026}
+% 4. Creative AI Track
+%  \usepackage[creativeai, final]{neurips_2026}
+% 5. Workshop with single-blind reviewing
+%  \usepackage[sglblindworkshop, final]{neurips_2026}
+% 6. Workshop with double-blind reviewing
+%  \usepackage[dblblindworkshop, final]{neurips_2026}
+% Note. For the workshop paper template, both \title{} and \workshoptitle{} are required, with the former indicating the paper title shown in the title and the latter indicating the workshop title displayed in the footnote.
+% For workshops (5., 6.), the authors should add the name of the workshop, "\workshoptitle" command is used to set the workshop title.
+% \workshoptitle{WORKSHOP TITLE}
+
+% "preprint" option is used for arXiv or other preprint submissions
+% \usepackage[preprint]{neurips_2026}
+
+% to avoid loading the natbib package, add option nonatbib:
+%    \usepackage[nonatbib]{neurips_2026}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+% \usepackage{xcolor}         % colors
+\usepackage{comment}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage[table]{xcolor}
+\usepackage{amsmath} 
+\usepackage{wrapfig}
+\usepackage{adjustbox}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{fontawesome5}
+
+\title{CodeQuant2: Enhanced Outlier Mitigation and Adaptive Clustering for Low-Precision LRMs}
+
+\author{%
+\normalfont
+\begin{tabular}{c}
+\textbf{Xingyu Liu}\textsuperscript{1}\thanks{Equal contribution.}\quad
+\textbf{Xiangyang Yin}\textsuperscript{2}\footnotemark[1]\quad
+\textbf{Tianhua Xia}\textsuperscript{1}\quad
+\textbf{Haiyu Wang}\textsuperscript{1}\quad
+\textbf{Sai Qian Zhang}\textsuperscript{1,2} \\[2pt]
+\textsuperscript{1}Tandon School of Engineering\\
+\textsuperscript{2}Courant Institute School of Mathematics, Computing, and Data Science \\
+New York University\\
+\texttt{\{xl5444, shawn.yin, tx856, hw3689, sai.zhang\}@nyu.edu} \\
+\href{https://github.com/SAI-Lab-NYU/CodeQuant2}{\faGithub~https://github.com/SAI-Lab-NYU/CodeQuant2}
+\end{tabular}%
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Large reasoning models (LRMs) improve task performance by generating longer intermediate reasoning traces, but this substantially increases inference costs and makes low-precision quantization increasingly important. However, aggressively quantized models often perform poorly on reasoning tasks. We observe larger activation fluctuations during the first decoding steps of reasoning. Calibration that omits these early states may miss their activation fluctuations. To address these reasoning-specific quantization challenges, we propose \textbf{CodeQuant2}, a clustering-based LUT quantization framework for low-precision large reasoning models. CodeQuant2 mitigates activation outliers with rotation and scaling, uses clustering to represent non-uniform weight distributions, and adapts codebook sizes to the quantization difficulty of each layer. Guided by our observation of reasoning-time activation behavior, CodeQuant2 further improves calibration sample selection to better match actual decoding statistics. Combined with our customized LUT CUDA kernel, CodeQuant2 delivers substantial accuracy improvements on reasoning benchmarks while achieving up to $2.85\times$ speedup over BF16.
+\end{abstract}
+
+\section{Introduction}
+Large reasoning models (LRMs)~\cite{guo2025deepseek,yang2025qwen3,agarwal2025gpt} have become important for structured, multi-step tasks such as mathematical reasoning, code generation, and tool-augmented decision making. By spending more computation on reasoning, these models achieve stronger performance but incur higher inference costs from longer generation traces, larger memory footprints, and increased compute demand. Low-precision quantization is therefore a key strategy for efficient deployment. Recent hardware support further strengthens this trend: NVIDIA Hopper~\citep{nvidia_h100_whitepaper} and Ada GPUs~\citep{nvidia_ada_gpu_arch} support FP8 arithmetic, while Blackwell extends it to FP4~\cite{nvfp4}, making low-precision LRM inference increasingly practical.
+
+However, activation outliers remain a major obstacle to low-bit quantization in LRMs, as in conventional foundation models~\cite{dettmers2022llmint88bitmatrixmultiplication,sun2024massiveactivationslargelanguage}. These extreme values enlarge the quantization range, leaving limited effective precision for most activations and causing large approximation errors. In reasoning generation, such errors are even more harmful because they can accumulate across autoregressive decoding steps~\cite{liu2025quantization,li2025quantizationmeetsreasoningexploring,liang2025paroquant}. Since reasoning tasks often involve long multi-step traces, errors introduced early can be amplified later and degrade final reasoning quality~\cite{zhao2025qspec,liu2025quantization}. Therefore, despite progress in outlier-smoothing post-training quantization methods~\cite{tseng2024quipbetterllmquantization,chee2024quip2bitquantizationlarge,ashkboos2024quarot,xiao2023smoothquant,xiang2024dfrot,liu2024spinquant,liang2025paroquant,yin2026codequant}, aggressive low-bit quantization still struggles to maintain stable performance on complex reasoning tasks.
+
+% Given these challenges, we seek a quantization form that is more flexible than fixed uniform bins. In this regard, clustering-based quantization provides a natural alternative by representing weights or activations with a compact set of learned centroids rather than uniformly spaced levels~\cite{kim2023squeezellm,yin2026codequant}. Such a representation is better suited to the highly non-uniform distributions encountered in low-bit reasoning models since extreme values can be absorbed by dedicated centroids without excessively expanding the effective dynamic range. Moreover, this formulation naturally maps to look-up-table (LUT) based inference, making it attractive not only from an algorithmic perspective but also from a deployment standpoint. This direction is increasingly supported by emerging hardware and software stacks, including Apple’s Neural Engine~\cite{applepalettization}, Arm Ethos-U~\cite{armethos}, and Cerebras Wafer-Scale Engine~\cite{cerebraschip}. {\color{red}These advantages motivate us to adopt clustering-based LUT quantization for LRMs. We further identify two key considerations for achieving accurate and efficient low-bit inference.}
+Existing methods address these challenges from complementary directions. Outlier-smoothing techniques, including scaling and rotation, mitigate activation quantization errors~\cite{xiao2023smoothquant,ashkboos2024quarot,liu2024spinquant,liang2025paroquant}. Meanwhile, clustering-based quantization represents weights using learned centroids, better capturing non-uniform weight distributions~\cite{kim2023squeezellm,yin2026codequant}. Moreover, clustering-based representations naturally support lookup-table (LUT) inference, offering opportunities for efficient low-bit deployment. Building on these complementary approaches, we adopt clustering-based LUT quantization as the foundation of our framework and identify two key considerations for accurate and efficient inference.
+
+Although existing outlier-mitigation techniques improve activation quantization, these gains do not always translate into comparable improvements on reasoning tasks. To understand this gap, we examine activation behavior during reasoning and observe higher activation fluctuations and channel-wise outliers in early decoding steps, which gradually weaken as generation progresses. Existing outlier-mitigation techniques do not naturally account for these reasoning-specific decoding-stage-dependent activation patterns. \textbf{Thus, we argue that outlier mitigation should explicitly emphasize high-variance early-decoding activations to better preserve reasoning quality.} This motivates us to design a calibration strategy that better captures these early-stage activation patterns.
+
+Beyond activation calibration, clustering-based quantization offers another degree of freedom: the number of clusters assigned to each weight matrix. Allocating more clusters to sensitive matrices can improve quantization quality, but also increases LUT inference latency. \textbf{Thus, effective cluster allocation should balance quantization performance and hardware-aware inference latency, rather than optimizing accuracy alone.} We therefore design a performance--latency-balanced cluster allocation strategy based on matrix sensitivity and profiled execution costs.
+
+Building on these two design principles, we present \textit{CodeQuant2}, a clustering-based low-bit quantization framework for LRMs. Our contributions can be summarized as follows:
+\begin{itemize}
+    \item We propose \textit{CodeQuant2}, a clustering-based quantization framework that combines reasoning-aware calibration, fine-tuned rotation and scaling transformations, and differentiable assignment tuning, enabling learned cluster assignments to handle outlier-heavy distributions.
+    \item We further introduce \textit{Adaptive Cluster Allocation} (ACA), which adaptively assigns cluster numbers by balancing accuracy and hardware efficiency for each target matrix.
+    \item We design a GPU kernel that directly executes on the clustered representation by recasting decode-time matrix multiplication as table-lookup computation. In the evaluated GPU settings, CodeQuant2 achieves up to \(2.85\times\) speedup while improving reasoning accuracy.
+\end{itemize}
+
+\section{Related Work}
+\subsection{Large Reasoning Model}
+Chain-of-thought prompting and related methods show that explicitly unfolding intermediate reasoning steps can improve performance on complex tasks~\cite{wei2022chain,wang2022self,zelikman2024star}. Recent large reasoning models internalize this capability through longer reasoning traces or dedicated thinking modes, enabled by additional test-time compute~\cite{shao2024deepseekmath,guo2025deepseek,yang2025qwen3,agarwal2025gpt}. Their training increasingly relies on reinforcement-learning-based post-training, from earlier PPO-style methods~\cite{luong2024reft,xie2025interleaved} to recent GRPO-based approaches and variants~\cite{shao2024deepseekmath,guo2025deepseek,yu2025dapo,gao2025soft}. Thus, explicit reasoning traces, extra test-time computation, and RL-driven post-training have become defining features of current LRMs. Despite their strong reasoning ability, LRMs are more fragile under aggressive low-bit quantization than standard language models. Prior work shows that quantization can cause much larger degradation on reasoning benchmarks, even when general-task performance remains relatively stable~\cite{liu2025quantization,li2025quantizationmeetsreasoningexploring,zhao2025qspec}. This is largely because quantization errors during autoregressive generation can accumulate over long reasoning traces, making low-bit LRM quantization more challenging than quantizing conventional foundation models~\cite{liu2025quantization,liang2025paroquant,zhao2025qspec}.
+
+\subsection{Outlier Aware Quantization}
+Activation outliers are a major challenge for low-bit LLM quantization. Prior work has shown that the input activations to self-attention weight matrices often exhibit pronounced~\textit{channel-wise outliers}~\cite{dettmers2022gpt3,sun2024massive,xiang2024dfrot}, where a small number of channels have much larger magnitudes than the rest. These outliers dominate the quantization range and introduce large quantization errors when low-bit quantization is applied.
+One solution is to isolate or retain outliers in higher precision, as in mixed-precision methods such as LLM.int8()~\cite{dettmers2022gpt3} and SPQR~\cite{dettmers2023spqr}. While effective, these methods often introduce irregular computation and memory access, reducing hardware efficiency.
+
+To preserve uniform low-precision execution, many methods instead apply computational invariant transformations before quantization. Scaling-based methods, such as SmoothQuant~\cite{xiao2023smoothquant}, use channel-wise scaling to redistribute quantization difficulty between activations and weights, while rotation-based methods, such as QuaRot~\cite{ashkboos2024quarot}, SpinQuant~\cite{liu2024spinquant}, and ParoQuant~\cite{liang2025paroquant}, spread outliers through orthogonal transformations. Let $\mathbf{X}\in\mathbb{R}^{N\times d_{\mathrm{in}}}$ be the hidden states and $\mathbf{T}\in\mathbb{R}^{d_{\mathrm{in}}\times d_{\mathrm{in}}}$ an invertible transformation along the hidden dimension. For a linear projection $\mathbf{W}\in\mathbb{R}^{d_{\mathrm{out}}\times d_{\mathrm{in}}}$, inserting $\mathbf{T}\mathbf{T}^{-1}$ preserves the output given that $\mathbf{X}\mathbf{W}^{\top}=\mathbf{X}\mathbf{T}\mathbf{T}^{-1}\mathbf{W}^{\top}=(\mathbf{X}\mathbf{T})(\mathbf{W}\mathbf{T}^{-\top})^{\top}$.
+
+
+The transformation $\mathbf{T}$ can be instantiated as an orthogonal rotation or a diagonal scaling matrix. These transformations reduce outlier concentration and improve robustness under low-precision quantization. More recently, CodeQuant~\cite{yin2026codequant} combines rotation with clustering-based non-uniform quantization. However, aggressive low-bit quantization remains challenging, particularly for reasoning tasks.
+
+\subsection{Non-uniform Quantization}
+Non-uniform quantization provides a more flexible alternative to fixed uniform bins for the highly irregular distributions encountered in aggressive low-bit LLM compression. Existing work in this direction can be roughly divided into two categories. The first adjusts scalar quantization levels to better match the underlying distribution, as exemplified by NF4 in QLoRA~\cite{dettmers2023qlora}. The second adopts stronger clustering-based representations to improve expressiveness in the low-bit regime, as explored in SqueezeLLM and CodeQuant~\cite{kim2023squeezellm,yin2026codequant}. Related work has also investigated vector quantization as an even stronger low-bit representation~\cite{liu2024vptq}. Overall, non-uniform quantization has shown clear advantages over uniform quantization, but existing methods still focus on static reconstruction quality and general compression settings, leaving low-bit quantization for LRMs underexplored.
+
+\subsection{GEMM with Lookup Table-based Implementation}
+\label{sec:bg:LUT}
+GEMM with clustered multiplicands requires efficient Lookup Table (LUT) support for practical deployment. Without hardware-friendly LUTs, centroids must be stored and loaded as floating-point values during computation, introducing substantial memory and execution overhead. Existing work has approached this problem from both CPU and GPU settings. On CPUs, DeepGEMM~\citep{ganji2023deepgemm}, LUTIN~\citep{lin2024lutin}, and T-MAC~\citep{wei2025t} explore LUT-oriented execution paths for low-precision inference, with an emphasis on kernel design, memory efficiency, and reformulating mixed-precision GEMM as table lookup. On GPUs, LUT-GEMM~\citep{park2022lut}, FLUTE~\citep{guo2024fast}, and LUT Tensor Core~\citep{mo2025lut} develop increasingly specialized kernels and software-hardware co-design techniques to reduce lookup overhead and better integrate LUT computation into high-throughput matrix multiplication pipelines.
+
+\section{Methodology}
+\label{sec:methdology}
+\begin{figure}[t]
+    \centering
+    % \vspace{-1.0em}
+    \includegraphics[width=1.0\textwidth]{figures/structure.pdf}
+    \caption{
+    Overview of the CodeQuant2 framework. \textit{Left:} Rotation and scaling are fused into the model for outlier smoothing. \textit{Right:} CodeQuant2 applies fine-tuned rotation and scaling, allocates clusters adaptively, tunes centroids and assignments, and uses a LUT-based kernel for inference.}
+    \label{fig:framework}
+    \par\vspace{-10pt}
+\end{figure}
+In this section, we present the methodology of \textbf{CodeQuant2}, as shown in Figure~\ref{fig:framework}. We first motivate the design by showing that  decoding on reasoning tasks induces activation behaviors not well captured by conventional calibration data. We then introduce CodeQuant2’s main components, including fine-tuned rotation and scaling for outlier mitigation, adaptive cluster allocation, and differentiable clustering quantization. Finally, we describe the LUT-based GPU kernel for efficient inference.
+
+\subsection{Outlier Behavior in Large Reasoning Models}
+\label{sec:lrm-data-dist}
+To better characterize outlier behavior in LRMs, we analyze the distributions of self-attention activations on reasoning benchmarks, including GSM8K~\cite{cobbe2021training} and AIME25~\cite{aime25}. As shown in Figure~\ref{fig:calibration_motivation}, models generating reasoning traces exhibit substantially larger activation fluctuations during the early decoding stage. In particular, the average activation standard deviation over the first 30 decoding steps is about $20\%$ higher than that of non-thinking decoding, while non-thinking statistics remain relatively stable across steps. The heatmaps on the right of Figure~\ref{fig:calibration_motivation} show the channel-wise activation standard deviation across layers at decoding steps 1 and 400 for LRMs. At step 1, strong channel-wise outliers appear from shallow layers and persist toward deeper layers. By contrast, at later decoding steps, the outlier pattern becomes noticeably weaker.
+
+\begin{wrapfigure}{r}{0.60\textwidth}
+    \centering
+    \vspace{-1.0em}
+\includegraphics[width=0.60\textwidth]{figures/calibration_observation.pdf}
+    \vspace{-1.0em}
+    \caption{
+    Activation behavior during reasoning decoding on GSM8K~\cite{cobbe2021training}, measured on Qwen3-4B-Thinking~\cite{qwen3technicalreport} and averaged over 128 samples.
+ \textit{Left:} Averaged activation standard deviation across decoding steps with and without thinking. \textit{Right:} Activation heatmaps at representative decoding steps.
+    }
+    \label{fig:calibration_motivation}
+    \par\vspace{-10pt}
+\end{wrapfigure}
+Because quantization errors introduced early in reasoning can propagate through later decoding steps and affect subsequent token generation, reducing error at the beginning of the reasoning process is especially important. This observation motivates our \textit{reasoning-aware calibration} strategy. During local fine-tuning, we combine activations from early tokens decoded by the full-precision model with general-text samples. Section~\ref{sec:experiment} gives the sampling details. Additional results across reasoning models and datasets appear in Appendix~\ref{sec:app:activation_fluctuation}.
+
+\subsection{Fine-tuned Rotation and Scaling for Outlier Smoothing}
+\label{sec:rotation-scaling}
+Motivated by the outlier patterns in Figure~\ref{fig:calibration_motivation}, we aim to smooth input activations further before low-precision quantization. To this end, we jointly apply rotation and scaling for outlier mitigation. Specifically, we introduce a shared orthogonal rotation matrix $\mathbf{R}$ and layer-wise diagonal scaling matrices $\mathbf{S}_{\ell,t}$, where $\ell$ denotes the layer index and $t\in \{{\mathrm{QKV},\mathrm{FFN}}\}$ denotes the projection group. We apply rotation, scaling, and quantization only to the query, key, value, gate, and up projections. Given an input activation $\mathbf{X}$ and its corresponding weight matrix $\mathbf{W}\in\mathbb{R}^{d_{\mathrm{out}}\times d_{\mathrm{in}}}$, the transformed activation and weight are defined as $\mathbf{X}_{RS}=\mathbf{X}\mathbf{R}\mathbf{S}_{\ell,t}$ and $\mathbf{W}_{RS}=\mathbf{W}\mathbf{R}\mathbf{S}_{\ell,t}^{-1}$, respectively. This transformation preserves the original linear operation since $\mathbf{X}_{RS}\mathbf{W}_{RS}^{\top}=\mathbf{X}\mathbf{W}^{\top}$. The transformed weights can be computed offline. We optimize $\mathbf{R}$ and $\mathbf{S}_{\ell,t}$ through local fine-tuning by minimizing the activation quantization error over the calibration set:
+\begin{equation}
+    \label{eqn:activation-optimization}
+    \mathbf{R}^{\star}, \{\mathbf{S}_{\ell,t}^{\star}\}
+    =
+    \operatorname*{arg\,min}_{\mathbf{R}, \{\mathbf{S}_{\ell,t}\}}
+    \left\|
+    \mathbf{X}_{RS}
+    -
+    \widetilde{\mathbf{X}}_{RS}
+    \right\|^{2}
+\end{equation}
+where $\widetilde{\mathbf{X}}_{RS}$ denotes the quantized activation. We parameterize $\mathbf{R}$ with the Cayley transform~\citep{nishimori2005learning,li2020efficient,liu2024spinquant} to preserve orthogonality during optimization.
+
+\subsection{Adaptive Cluster Allocation}
+\label{sec:aca}
+After the input activations are transformed as described in Section~\ref{sec:rotation-scaling}, activation quantization error is reduced, but preserving the full-precision layer output still requires careful weight clustering. In CodeQuant2, each weight value is mapped to one of the $K$ centroids in a learned codebook, with details described in Section~\ref{sec:clustering_fine-tuning}. Therefore, the cluster number $K$ directly determines the codebook size and directly affects both quantization accuracy and system latency. Since $K=2^b$ corresponds naturally to a $b$-bit index, existing clustering-based methods typically choose $K$ based on the target bitwidth and use the same cluster number for all target linear layers~\cite{kim2023squeezellm,yin2026codequant}. However, such uniform assignment is often suboptimal. Empirically, matrices exhibit different sensitivities to clustering. Some can be represented with fewer clusters while introducing limited output perturbation, whereas others require more clusters to preserve accuracy.
+
+Motivated by the effectiveness of mixed precision, we propose to adaptively assign the cluster number $K$ to balance matrix importance and hardware performance. For simplicity, we adjust $K$ at the matrix level, treating it as a capacity parameter. We restrict $K$ to a predefined candidate set $\mathcal{K}$.
+In our experiments, $\mathcal{K}=\{8,16,32\}$. We initialize all target matrices with the original cluster number $K_{\mathrm{ori}}$, and then estimate the effect of changing $K$ for each matrix before selecting which matrices to update. 
+
+The impact of cluster-number adjustment on accuracy is estimated through the local reconstruction error. Given the original cluster number $K_{\mathrm{ori}}$ and the corresponding clustered weight $\widetilde{\mathbf{W}}_{RS}^{(K_{\mathrm{ori}})}$, the clustered output $\widetilde{\mathbf{Y}}^{(K_{\mathrm{ori}})}$ under this cluster assignment is written as
+$\widetilde{\mathbf{Y}}^{(K_{\mathrm{ori}})}
+=
+\widetilde{\mathbf{X}}_{RS}(\widetilde{\mathbf{W}}_{RS}^{(K_{\mathrm{ori}})})^{\top}$.
+When changing the cluster number from $K_{\mathrm{ori}}$ to $K_{\mathrm{tar}}\in\mathcal{K}$, the corresponding local output perturbation is
+$\Delta\mathbf{Y}_{K_{\mathrm{ori}}\rightarrow K_{\mathrm{tar}}}
+=
+\widetilde{\mathbf{X}}_{RS}
+(
+(\widetilde{\mathbf{W}}_{RS}^{(K_{\mathrm{ori}})})^{\top}
+-
+(\widetilde{\mathbf{W}}_{RS}^{(K_{\mathrm{tar}})})^{\top}
+)$.
+The full-precision output of this layer on the calibration inputs is $\mathbf{Y}_{\mathrm{fp}}=\mathbf{X}\mathbf{W}^{\top}=\mathbf{X}_{RS}\mathbf{W}_{RS}^{\top}$. To estimate the accuracy impact of this change, we use a first-order approximation of the local reconstruction loss
+$\mathcal{L}_{\mathrm{recon}}=||\mathbf{Y}_{\mathrm{fp}}-\widetilde{\mathbf{Y}}^{(K_{\mathrm{ori}})}||^{2}$.
+This gives the following importance score:
+\begin{equation}
+\label{eqn:cluster_assignment}
+I_{K_{\mathrm{ori}}\rightarrow K_{\mathrm{tar}}}
+=
+\frac{1}{N}
+\left\|
+\Delta\mathbf{Y}_{K_{\mathrm{ori}}\rightarrow K_{\mathrm{tar}}}
+\odot
+\nabla_{\widetilde{\mathbf{Y}}}
+\mathcal{L}_{\mathrm{recon}}
+\right\|_F^2.
+\end{equation}
+where $\nabla_{\widetilde{\mathbf{Y}}}\mathcal{L}_{\mathrm{recon}}$ denotes the gradient of the local reconstruction loss with respect to the clustered output. The derivation is provided in Appendix~\ref{sec:app:importance_score}.
+For efficiency, CodeQuant2 computes this score using the local reconstruction loss, although the same formulation can also be extended to the final training loss of LRMs.
+This choice avoids full model-level backpropagation and only requires gradient computation for the local GEMM operation, substantially reducing the computational overhead.
+
+Considering only the importance score leads to a trivial solution, since it would assign the maximum number of clusters to every group. On the other hand, increasing $K$ also introduces higher LUT-based processing latency. To balance quantization quality and system performance, we profile the LUT execution latency of each target matrix under different cluster numbers on the target GPU platform. Let $T_m(K)$ denote the profiled lookup latency of weight matrix $m$ when using $K$ clusters. All matrices are initialized with $K_{\mathrm{ori}}$, with latency $T_m(K_{\mathrm{ori}})$. Starting from 16 clusters (4-bit indices), we pair a change to 32 clusters (5-bit indices) for one matrix with a change to 8 clusters (3-bit indices) for another. Each pair has an average index width of 4 bits across the two matrices. We also account for their profiled latency. We increase $K$ for the matrix with the largest estimated benefit and decrease $K$ for the matrix with the smallest estimated loss, subject to the latency budget. Figure~\ref{fig:aca_and_clustering}(a) summarizes this allocation process.
+
+\subsection{Learnable Clustering for Enhanced Performance}
+\label{sec:clustering_fine-tuning}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/aca_and_clustering.pdf}
+    \caption{Adaptive cluster allocation and clustering. \textit{Left:} Importance scores and latency guide cluster allocation. \textit{Right:} K-means initializes the centroid matrix and per-row binary assignment matrices.}\label{fig:aca_and_clustering}
+    \par\vspace{-10pt}
+\end{figure}
+
+To better align the quantized model with the full-precision model, CodeQuant2 fine-tunes the clustered weights by optimizing a centroid matrix and learning soft assignment matrices while keeping the initial K-means assignments fixed. Let $\mathbf{W}\in\mathbb{R}^{d_{\mathrm{out}}\times d_{\mathrm{in}}}$ be a weight matrix. Its $i$-th row is $\mathbf{W}_{i,:}$, where $0\leq i<d_{\mathrm{out}}$. Figure~\ref{fig:aca_and_clustering}(b) shows an example weight matrix $\mathbf{W}\in\mathbb{R}^{3\times 4}$ clustered with $K=3$. We initialize the clustering by applying K-means to each row. For row $i$, the clustered weight is
+\begin{equation}                    
+    \widetilde{\mathbf{W}}_{i,:}^{\top}=\mathbf{A}_i\mathbf{c}_i.
+\end{equation}
+The centroid matrix $\mathbf{C}\in\mathbb{R}^{d_{\mathrm{out}}\times K}$ stores one codebook per output row. We write its $i$-th row as $\mathbf{c}_i^{\top}$, where $\mathbf{c}_i\in\mathbb{R}^{K}$. The binary matrix $\mathbf{A}_i\in\{0,1\}^{d_{\mathrm{in}}\times K}$ records the initial K-means assignments for row $i$ of $\mathbf{W}$. Its $j$-th row selects the centroid for $W_{ij}$.
+We use $\mathbf{Y}_{\mathrm{fp}}$, defined before Eq.~\ref{eqn:cluster_assignment}, as the reference output for the local reconstruction loss:
+\begin{equation}
+\mathcal{L}_{\mathrm{recon}}=\left\|\mathbf{Y}_{\mathrm{fp}}-\widetilde{\mathbf{X}}_{RS}\widetilde{\mathbf{W}}_{RS}^{\top}\right\|_F^2.
+\end{equation}
+
+% \begin{wrapfigure}{r}{0.65\textwidth}
+%     \centering
+%     \vspace{-1.0em}
+% \includegraphics[width=0.65\textwidth]{figures/reparameterization.pdf}
+%     \vspace{-1.0em}
+%     \caption{
+%     (a) Weight matrix $\mathbf{W}$. (b) After clustering, \textcolor{red}{each row $\mathbf{W}_{i,:}$} is represented by a centroid vector and an assignment matrix.
+%     }
+%     \label{fig:reparam}
+%     \vspace{-1.0em}
+% \end{wrapfigure}
+% During fine-tuning, we keep the K-means assignments $\mathbf{A}_i$ fixed and learn a soft assignment matrix $\mathbf{A}'_i$ using a row-wise softmax. Its input is $\mathbf{A}_i$ plus a learned update. The fine-tuned row satisfies $\widetilde{\mathbf{W}}_{i,:}^{\top}=\mathbf{A}'_i\mathbf{c}_i$. The temperature $\tau$ controls how sharply each row selects a centroid.
+% We linearly anneal the temperature during fine-tuning:
+% \begin{equation}
+%     \small
+%     \tau(t)
+%     =
+%     \tau_{\max}
+%     -
+%     \frac{t}{T}
+%     \left(
+%     \tau_{\max}
+%     -
+%     \tau_{\min}
+%     \right),
+%     \qquad
+%     t=0,\ldots,T,
+% \end{equation}
+% Here, $t$ denotes the current fine-tuning step, $T$ is the total number of fine-tuning steps, and $\tau_{\max}$ and $\tau_{\min}$ represent the initial and final temperatures, respectively. A larger temperature allows smoother assignment updates in the early stage, while a smaller temperature gradually sharpens the distribution toward a near-binary assignment. After fine-tuning, we obtain hard assignments by selecting the largest entry along the centroid dimension, enabling efficient LUT-based inference.
+
+% To reduce the number of trainable parameters, we use LoRA~\cite{hu2022lora} to represent the assignment update with two smaller matrices:
+% \begin{equation}
+%     \label{eqn:lora_estimation}
+%     \small
+%     \mathbf{A}'_{i} = \operatorname{softmax}\!\left(\frac{\mathbf{A}_{i} + \mathbf{B}^{d}_{i}\mathbf{B}^{u}_{i}}{\tau}\right)
+% \end{equation}
+% where $\mathbf{B}^{d}_{i}\in\mathbb{R}^{d_{\mathrm{in}}\times r}$ and $\mathbf{B}^{u}_{i}\in\mathbb{R}^{r\times K}$ are the LoRA down- and up-projection matrices, respectively. The LoRA rank $r$ satisfies $r \ll \min(d_{\mathrm{in}}, K)$, which substantially reduces the number of trainable parameters. The soft assignments are converted to one-hot indices at inference.
+
+
+During fine-tuning, we keep the initial K-means assignments fixed and learn soft assignments through low-rank updates. We stack the one-hot assignment matrices $\mathbf{A}_i$ into $\mathbf{A}\in\{0,1\}^{d_{\mathrm{out}}\times d_{\mathrm{in}}\times K}$. To reduce the number of trainable parameters, we apply LoRA to the first two dimensions:
+\begin{equation}
+    \mathbf{A}' = \operatorname{softmax}\left(
+        \frac{\mathbf{A}+\mathbf{B}^d\mathbf{B}^u}{\tau}
+    \right),
+\end{equation}
+where $\mathbf{B}^d\in\mathbb{R}^{d_{\mathrm{out}}\times r\times K}$ and $\mathbf{B}^u\in\mathbb{R}^{r\times d_{\mathrm{in}}\times K}$ are the low-rank factors, with $r\ll\min(d_{\mathrm{out}},d_{\mathrm{in}})$. Their multiplication is performed independently for each centroid, while the softmax operates along the centroid dimension. The resulting assignments reconstruct each weight row as $\widetilde{\mathbf{W}}_{i,:}^{\top}=\mathbf{A}'_i\mathbf{c}_i$.
+
+
+The temperature $\tau$ controls the sharpness of the soft assignments and is annealed during fine-tuning:
+\begin{equation}
+    \tau(t)=\tau_{\max}-\frac{t}{T}(\tau_{\max}-\tau_{\min}),
+    \quad t=0,\ldots,T,
+\end{equation}
+where $t$ denotes the current fine-tuning step, $T$ is the total number of steps, and $\tau_{\max}$ and $\tau_{\min}$ are the initial and final temperatures, respectively. During the final stage of fine-tuning, we convert soft assignments to hard assignments, allowing the centroids to adapt to the discrete assignments.
+
+
+\subsection{Lookup Table CUDA Kernel Design}
+\label{sec:hardware_implementation}
+\begin{wrapfigure}{r}{0.65\textwidth}
+    \centering
+    \vspace{-1.0em}
+\includegraphics[width=0.65\textwidth]{figures/lut_hw2.pdf}
+    \vspace{-1.0em}
+    \caption{(a) The steps of the LUT kernel, including a one-time LUT precomputation and table lookup. (b) The precomputed LUT is stored in the shared memory in the Streaming Multiprocessors.
+    }
+    \label{fig:lut_hw}
+    \vspace{-1.0em}
+\end{wrapfigure}
+CodeQuant2 applies linear quantization to input activations and clustering-based quantization to weights. A simple deployment strategy is to reconstruct the clustered weight matrix from centroid indices and then invoke a standard CUDA GEMM kernel~\cite{kim2023squeezellm}. However, this reconstruction-based approach introduces additional dequantization and memory traffic before matrix multiplication, reducing the practical benefit of the low-bit weight format. To avoid this overhead, we design a GPU kernel that directly operates on the clustered representation by reformulating decode-time matrix multiplication as a table-lookup computation.
+
+An example kernel design is illustrated in Figure~\ref{fig:lut_hw}(a), where we consider 4-bit activation quantization and weight clustering with 16 centroids. The same principle can be extended to other bit-widths for activation and codebook sizes for weight clustering. In step 1 in Figure~\ref{fig:lut_hw}(a), with 4-bit activations, each activation element is mapped to one of 16 quantized levels, while each weight element is stored as a 4-bit assignment index selecting one centroid from the row-wise codebook. The key idea is to precompute the products between quantized activation levels and weight centroids once, so that each multiplication between a quantized activation and a clustered weight can be replaced by a table lookup indexed by the activation level and the weight assignment, as shown in Step 2 of Figure~\ref{fig:lut_hw}(a).
+
+We further improve the GPU kernel for decode-time execution with three optimizations. First, activation min/max computation, 4-bit quantization, and bit packing are fused, so the activation vector is read only once and directly converted into packed indices consumed by the kernel. This avoids writing intermediate quantized activations to global memory. Second, the LUT is stored in GPU shared memory within each streaming multiprocessor (SM) and reused during decoding, as illustrated in Figure~\ref{fig:lut_hw}(b), reducing dequantization overhead and improving execution efficiency. Third, because decode-time GEMM exposes limited batch-level parallelism, we tune the matrix tile sizes to better match CUDA core resources and improve hardware utilization. Together, these optimizations enable clustered low-bit models to execute efficiently through table lookup, avoiding the higher latency of reconstruction-based matrix multiplication.
+
+\begin{table}[!t]
+\caption{Performance under A4W4 setting in terms of perplexity on WikiText2 and C4, and accuracy on Math500 (MA500), GSM8K, AIME25, AIME26, HumanEval (HE), and LiveCodeBench (LCB). }
+\centering
+\resizebox{1\columnwidth}{!}{
+\begin{tabular}{c|c|cc|cccccc|c}
+    \toprule
+    
+    \textbf{Models} & \textbf{Methods} 
+    & \textbf{Wiki2} ($\downarrow$) 
+    & \textbf{C4} ($\downarrow$) 
+    & \textbf{MA500} ($\uparrow$) 
+    & \textbf{GSM8K} ($\uparrow$) 
+    & \textbf{AIME25} ($\uparrow$) 
+    & \textbf{AIME26} ($\uparrow$) 
+    & \textbf{HE} ($\uparrow$) 
+    & \textbf{LCB} ($\uparrow$) 
+    & \textbf{Avg} ($\uparrow$) \\
+    
+    \midrule
+
+    \multirow{6}{*}{\makecell{Qwen3-\\4B-Thinking}} 
+    & BF16       & 11.478 & 18.391 & 0.958 & 0.952 & 0.688 & 0.708 & 0.963 & 0.758 & 0.838 \\
+    & QuaRot     & 17.366 & 26.879 & 0.394 & 0.506 & 0.004 & 0.000 & 0.000 & 0.002 & 0.151 \\
+    & ParoQuant  & 14.771 & 23.070 & 0.720 & 0.847 & 0.183 & 0.142 & 0.549 & 0.180 & 0.437 \\
+    & SqueezeLLM & 14.627 & 22.642 & 0.852 & 0.908 & 0.192 & 0.158 & 0.695 & 0.158 & 0.494 \\
+    & CodeQuant  & 13.623 & 21.410 & 0.930 & 0.929 & 0.392 & 0.367 & 0.902 & 0.464 & 0.664 \\
+    & \cellcolor{blue!10}\textbf{Ours}
+                 & \cellcolor{blue!10}\textbf{12.890}
+                 & \cellcolor{blue!10}\textbf{20.538}
+                 & \cellcolor{blue!10}\textbf{0.950}
+                 & \cellcolor{blue!10}\textbf{0.938}
+                 & \cellcolor{blue!10}\textbf{0.563}
+                 & \cellcolor{blue!10}\textbf{0.613}
+                 & \cellcolor{blue!10}\textbf{0.945}
+                 & \cellcolor{blue!10}\textbf{0.614}
+                 & \cellcolor{blue!10}\textbf{0.770} \\
+    
+    \cmidrule(lr){1-11}
+    
+    \multirow{6}{*}{\makecell{Qwen3-\\8B}} 
+    & BF16       & 10.047 & 15.439 & 0.948 & 0.958 & 0.625 & 0.646 & 0.921 & 0.732 & 0.805 \\
+    & QuaRot     & 14.475 & 21.059 & 0.382 & 0.259 & 0.033 & 0.004 & 0.037 & 0.003 & 0.120 \\
+    & ParoQuant  & 12.830 & 19.260 & 0.762 & 0.895 & 0.196 & 0.167 & 0.450 & 0.182 & 0.442 \\
+    & SqueezeLLM & 12.215 & 18.515 & 0.850 & 0.900 & 0.242 & 0.179 & 0.805 & 0.294 & 0.545 \\
+    & CodeQuant  & \textbf{10.509} & \textbf{16.349} & 0.934 & \textbf{0.946} & 0.446 & 0.483 & 0.895 & \textbf{0.589} & 0.716 \\
+    & \cellcolor{blue!10}\textbf{Ours}
+                 & \cellcolor{blue!10}11.362
+                 & \cellcolor{blue!10}17.177
+                 & \cellcolor{blue!10}\textbf{0.936}
+                 & \cellcolor{blue!10}0.945
+                 & \cellcolor{blue!10}\textbf{0.479}
+                 & \cellcolor{blue!10}\textbf{0.504}
+                 & \cellcolor{blue!10}\textbf{0.915}
+                 & \cellcolor{blue!10}0.566
+                 & \cellcolor{blue!10}\textbf{0.724} \\
+
+    \cmidrule(lr){1-11}
+    
+    \multirow{6}{*}{\makecell{Phi-4-\\Reasoning}}
+& BF16 & 7.393 & 13.187 & 0.858 & 0.943 & 0.283 & 0.250 & 0.872 & 0.410 & 0.603 \\
+& QuaRot & 9.511 & 16.564 & 0.766 & 0.908 & 0.192 & 0.129 & 0.640 & 0.238 & 0.479 \\
+& ParoQuant & 9.489 & 16.584 & 0.770 & 0.908 & 0.183 & 0.150 & 0.683 & 0.235 & 0.488 \\
+& SqueezeLLM & 8.375 & 14.871 & 0.806 & 0.921 & \textbf{0.258} & 0.188 & 0.750 & 0.321 & 0.541 \\
+& CodeQuant & 8.087 & 14.358 & \textbf{0.840} & \textbf{0.940} & 0.246 & 0.242 & 0.732 & 0.353 & 0.559 \\
+& \cellcolor{blue!10}\textbf{Ours}
+& \cellcolor{blue!10}\textbf{7.739}
+& \cellcolor{blue!10}\textbf{13.660}
+& \cellcolor{blue!10}\textbf{0.840}
+& \cellcolor{blue!10}0.932
+& \cellcolor{blue!10}0.246
+& \cellcolor{blue!10}\textbf{0.250}
+& \cellcolor{blue!10}\textbf{0.823}
+& \cellcolor{blue!10}\textbf{0.362}
+& \cellcolor{blue!10}\textbf{0.575} \\
+    
+    \bottomrule
+            
+\end{tabular}
+}
+\label{tab:eval:main}
+\par\vspace{-10pt}
+\end{table}
+
+\section{Experiment}
+\label{sec:experiment}
+We evaluate our method on LRMs of different scales, including Qwen3-4B-Thinking~\citep{yang2025qwen3}, Qwen3-8B with thinking mode enabled~\citep{yang2025qwen3}, and Phi-4-Reasoning~\citep{abdin2025phi4reasoningtechnicalreport}. Our evaluation covers language modeling, general question answering, mathematical reasoning, and code generation. For language modeling, we report perplexity on WikiText2~\citep{merity2016pointersentinelmixturemodels} and C4~\citep{raffel2023exploringlimitstransferlearning}. For general question answering, we report ARC~\citep{clark2018thinksolvedquestionanswering}, PIQA~\citep{bisk2020piqa}, and WinoGrande~\citep{sakaguchi2021winogrande} results in the appendix. For mathematical reasoning, we evaluate on MATH500~\citep{hendrycks2021measuringmassivemultitasklanguage}, GSM8K~\citep{cobbe2021trainingverifierssolvemath}, and AIME~\citep{aime25,aime26} under both pass@1 and pass@8. To assess code generation after quantization, we use HumanEval~\citep{chen2021evaluating} and LiveCodeBench~\citep{jain2024livecodebenchholisticcontaminationfree}.
+
+All downstream evaluations are performed using EvalScope~\citep{evalscope_2024}. We use zero-shot evaluation for all benchmarks except GSM8K, where we adopt a 4-shot setting. For AIME, we report pass@1 and pass@8. During generation, we follow the official inference settings for each reasoning model. For Qwen3-4B-Thinking and Qwen3-8B, we use temperature $0.6$, top-$p$ $0.95$, top-$k$ $20$, min-$p$ $0$, and a maximum model length of $32768$. Qwen3-8B is evaluated with thinking mode enabled.
+
+We compare CodeQuant2 with representative post-training quantization and clustering baselines, including QuaRot~\citep{ashkboos2024quarotoutlierfree4bitinference}, ParoQuant~\citep{liang2025paroquant}, SqueezeLLM~\citep{kim2024squeezellmdenseandsparsequantization}, and CodeQuant~\citep{yin2026codequant}, with BF16 as the full-precision reference. All methods are evaluated under A4W4 and A8W4 settings, where activations use 4 or 8 bits and weights use 4-bit-equivalent capacity, using a 4-bit average assignment-index width across target matrices for CodeQuant2. For fairness, we use the same granularity across methods: per-channel weight quantization and per-token activation quantization. For weight-only baselines such as SqueezeLLM and ParoQuant, we extend them to weight-activation quantization by applying rotation before activation quantization to mitigate activation outliers.
+
+For system evaluation, we measure autoregressive decoding latency on three types of single GPUs: NVIDIA A6000, NVIDIA L40s, and NVIDIA A100. We compare against BF16, QuaRot~\citep{ashkboos2024quarotoutlierfree4bitinference}, and SqueezeLLM~\citep{kim2024squeezellmdenseandsparsequantization} under the A4W4 setting. SqueezeLLM provides a clustered quantization baseline for the latency comparison. Performance is assessed using average prompt and decoding lengths profiled from a subset of examples sampled from WikiText2, GSM8K, and AIME25, with the (prompt, decode) lengths set to (1024, 100), (100, 4000), and (150, 6000), respectively. 
+
+We further specify the method-specific settings used by CodeQuant2. For calibration, we use WikiText2 as the general-text source and generate reasoning-decoding samples from GSM8K training split. We evaluate GSM8K accuracy on the held-out test split. For each GSM8K sample, we first generate 256 tokens using the full-precision model, concatenate the prompt with the generated tokens, and truncate or pad the resulting calibration sequence to 512 tokens. We use a 9:1 mixture of WikiText2 samples and RAC-selected GSM8K samples, ensuring that the calibration set is strictly disjoint from all test sets. The mixed samples are then randomly shuffled to reduce ordering bias. For fine-tuning, we use SGD with momentum $0.9$ and zero weight decay, with separate learning rates of $1\times10^{-4}$ for centroids and $1\times10^{-5}$ for assignment. For adaptive cluster allocation, we use the candidate set $\mathcal{K}=\{8,16,32\}$. All training stages can be conducted on a single NVIDIA H100 GPU. Rotation and scaling fine-tuning requires approximately 30 minutes, adaptive cluster allocation requires around 15 minutes, and the clustering fine-tuning takes about 30 minutes.
+
+\begin{table*}[!t]
+\centering
+\caption{Mathematical reasoning performance on AIME25 and AIME26 under A4W4 and A8W4, evaluated with both pass@1 and pass@8.}
+\label{tab:eval:aime_pass}
+\label{tab:eval:aime_a8w4}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{ll|cccc|cccc}
+\toprule
+\multirow{3}{*}{\textbf{Models}} & \multirow{3}{*}{\textbf{Methods}} & \multicolumn{4}{c|}{\textbf{A4W4}} & \multicolumn{4}{c}{\textbf{A8W4}} \\
+\cmidrule(lr){3-6} \cmidrule(lr){7-10}
+& & \multicolumn{2}{c}{\textbf{AIME25}} & \multicolumn{2}{c|}{\textbf{AIME26}} & \multicolumn{2}{c}{\textbf{AIME25}} & \multicolumn{2}{c}{\textbf{AIME26}} \\
+& & \textbf{pass@1} & \textbf{pass@8} & \textbf{pass@1} & \textbf{pass@8} & \textbf{pass@1} & \textbf{pass@8} & \textbf{pass@1} & \textbf{pass@8} \\
+\midrule
+\multirow{6}{*}{\makecell{Qwen3-4B-\\Thinking}} & BF16 & 0.688 & 0.733 & 0.708 & 0.867 & 0.688 & 0.733 & 0.708 & 0.867 \\
+ & QuaRot & 0.004 & 0.033 & 0.000 & 0.000 & 0.175 & 0.233 & 0.088 & 0.133 \\
+ & ParoQuant & 0.183 & 0.267 & 0.142 & 0.133 & 0.283 & 0.533 & 0.271 & 0.433 \\
+ & SqueezeLLM & 0.192 & 0.333 & 0.158 & 0.200 & 0.438 & 0.600 & 0.454 & 0.600 \\
+ & CodeQuant & 0.392 & 0.500 & 0.367 & 0.667 & 0.596 & \textbf{0.833} & 0.638 & 0.800 \\
+ & \cellcolor{blue!10}\textbf{Ours} & \cellcolor{blue!10}\textbf{0.563} & \cellcolor{blue!10}\textbf{0.800} & \cellcolor{blue!10}\textbf{0.613} & \cellcolor{blue!10}\textbf{0.800} & \cellcolor{blue!10}\textbf{0.600} & \cellcolor{blue!10}0.800 & \cellcolor{blue!10}\textbf{0.692} & \cellcolor{blue!10}\textbf{0.833} \\
+\midrule
+\multirow{6}{*}{Qwen3-8B} & BF16 & 0.625 & 0.800 & 0.646 & 0.800 & 0.625 & 0.800 & 0.646 & 0.800 \\
+ & QuaRot & 0.033 & 0.100 & 0.004 & 0.033 & 0.200 & 0.333 & 0.133 & 0.267 \\
+ & ParoQuant & 0.196 & 0.300 & 0.167 & 0.233 & 0.396 & 0.700 & 0.358 & 0.633 \\
+ & SqueezeLLM & 0.242 & 0.367 & 0.179 & 0.300 & 0.404 & 0.567 & 0.446 & 0.700 \\
+ & CodeQuant & 0.446 & 0.633 & 0.483 & 0.633 & 0.521 & 0.800 & 0.628 & 0.800 \\
+ & \cellcolor{blue!10}\textbf{Ours} & \cellcolor{blue!10}\textbf{0.479} & \cellcolor{blue!10}\textbf{0.700} & \cellcolor{blue!10}\textbf{0.504} & \cellcolor{blue!10}\textbf{0.700} & \cellcolor{blue!10}\textbf{0.613} & \cellcolor{blue!10}\textbf{0.800} & \cellcolor{blue!10}\textbf{0.646} & \cellcolor{blue!10}\textbf{0.833} \\
+\midrule
+\multirow{6}{*}{\makecell{Phi-4-\\Reasoning}} & BF16 & 0.283 & 0.433 & 0.250 & 0.467 & 0.283 & 0.433 & 0.250 & 0.467 \\
+ & QuaRot & 0.192 & 0.267 & 0.129 & 0.300 & 0.221 & 0.367 & 0.213 & 0.367 \\
+ & ParoQuant & 0.183 & 0.300 & 0.150 & 0.300 & 0.200 & 0.367 & 0.217 & 0.467 \\
+ & SqueezeLLM & \textbf{0.258} & \textbf{0.433} & 0.188 & 0.267 & \textbf{0.288} & 0.400 & 0.208 & 0.300 \\
+ & CodeQuant & 0.246 & 0.333 & 0.242 & 0.400 & 0.276 & 0.403 & 0.254 & 0.467 \\
+ & \cellcolor{blue!10}\textbf{Ours} & \cellcolor{blue!10}0.246 & \cellcolor{blue!10}0.400 & \cellcolor{blue!10}\textbf{0.250} & \cellcolor{blue!10}\textbf{0.433} & \cellcolor{blue!10}0.279 & \cellcolor{blue!10}\textbf{0.433} & \cellcolor{blue!10}\textbf{0.267} & \cellcolor{blue!10}\textbf{0.467} \\
+\bottomrule
+\end{tabular}%
+}
+\par\vspace{-10pt}
+\end{table*}
+
+\subsection{Accuracy Evaluation}
+Table~\ref{tab:eval:main} reports the A4W4 results across Qwen3-4B-Thinking, Qwen3-8B, and Phi-4-Reasoning. Overall, CodeQuant2 achieves the strongest performance, outperforming QuaRot, SqueezeLLM, ParoQuant, and CodeQuant on most models and tasks. The improvement is most significant on Qwen3-4B-Thinking, where CodeQuant2 increases average accuracy by 10.6\% points over CodeQuant, suggesting that it is especially effective under aggressive quantization where both activation outliers and clustering errors become severe. On Qwen3-8B and Phi-4-Reasoning, the gains are more moderate but remain consistent, indicating that CodeQuant2 generalizes across different reasoning models. Importantly, the improvements on reasoning and code-generation benchmarks do not sacrifice general language modeling quality, as CodeQuant2 maintains competitive perplexity on WikiText2 and C4. The A8W4 results are provided in Table~\ref{tab:eval:acc_a8w4} in the appendix.
+
+We further test quantized reasoning models on challenging mathematical benchmarks, including AIME25~\citep{aime25} and AIME26~\citep{aime26}. These tasks are highly sensitive to quantization because they require long multi-step reasoning and accurate handling of numerical and symbolic information. Besides pass@1, we also report pass@8, where pass@$k$ indicates whether at least one of $k$ sampled responses gives the correct answer.
+As shown in Table~\ref{tab:eval:aime_pass}, CodeQuant2 consistently improves mathematical reasoning robustness under the challenging A4W4 setting. The gains are especially clear on Qwen3 reasoning models, where existing quantized baselines suffer large drops on AIME problems. CodeQuant2 also improves pass@8, so at least one of eight sampled responses is more likely to be correct. On Phi-4-Reasoning, CodeQuant2 also improves over CodeQuant on AIME25 pass@8 (0.400 vs. 0.333) and AIME26 pass@8 (0.433 vs. 0.400). The corresponding A8W4 results appear alongside the A4W4 results in Table~\ref{tab:eval:aime_a8w4}.
+
+We further evaluate code generation on HumanEval and LiveCodeBench, which test not only reasoning ability but also syntactic correctness and instruction following, making them a useful measure of whether low-bit quantization preserves broader generation capabilities. Under A4W4, CodeQuant2 maintains strong code performance while improving reasoning-heavy tasks. The largest gain appears on LiveCodeBench for Qwen3-4B-Thinking, where CodeQuant2 outperforms CodeQuant by 15.0\% points. These results show gains on coding as well as math benchmarks under A4W4.
+
+Although CodeQuant2 targets reasoning-oriented quantization, it preserves strong general-task performance. On language understanding and commonsense reasoning benchmarks such as ARC, PIQA, and WinoGrande, CodeQuant2 performs comparably to or better than existing quantized baselines. Detailed results are provided in Table~\ref{tab:eval:general_task} in the appendix.
+
+
+%\paragraph{General Tasks.}
+%Although CodeQuant2 is designed to improve reasoning-oriented quantization, it does not sacrifice general-task performance. On language understanding and commonsense reasoning benchmarks, including ARC, PIQA, and WinoGrande, CodeQuant2 maintains performance comparable to or better than existing quantized baselines. We provide the detailed results in Appendix~\ref{tab:eval:general_task}.
+
+\begin{table*}[t]\centering
+\begin{minipage}[t]{0.36\textwidth}
+\centering
+\captionsetup{justification=raggedright,singlelinecheck=false}
+% \caption{
+% Component-wise ablation. R\&S, ACA, FT, and RAC denote fine-tuned rotation and scaling, adaptive cluster allocation, centroid-assignment fine-tuning, and reasoning-aware calibration, respectively.
+% }
+% \resizebox{\linewidth}{!}{
+%    \begin{tabular}{cccc|cc}
+%         \toprule
+%         \multicolumn{4}{c|}{\textbf{Techniques}} 
+%         & \multicolumn{2}{c}{\textbf{Reasoning Performance}} \\
+%         \cmidrule(lr){1-4} \cmidrule(lr){5-6}
+%         \textbf{R\&S}
+%         & \makecell{\textbf{ACA}}
+%         & \makecell{\textbf{LC}} 
+%         & \makecell{\textbf{RAC}} 
+%         & \textbf{Avg. Acc.} 
+%         & \makecell{\textbf{Gain over}\\\textbf{Previous}} \\
+%         \midrule
+%         \checkmark & $\times$ & $\times$ & $\times$ 
+%         & 0.704 & -- \\
+%         \checkmark & \checkmark & $\times$ & $\times$ 
+%         & 0.740 & 3.64\% \\
+%         \checkmark & \checkmark & \checkmark & $\times$ 
+%         & 0.760 & 1.94\% \\
+%         \cellcolor{blue!10}\checkmark 
+%         & \cellcolor{blue!10}\checkmark 
+%         & \cellcolor{blue!10}\checkmark 
+%         & \cellcolor{blue!10}\checkmark 
+%         & \cellcolor{blue!10}\textbf{0.770} 
+%         & \cellcolor{blue!10}\textbf{1.08\%} \\
+%         \bottomrule
+%     \end{tabular}
+% }
+% \label{tab:ablation:components}
+\caption{Qwen3-4B-Thinking on L40s: decode throughput.}
+\label{tab:eval:throughput_different_cluster_number}
+\resizebox{\linewidth}{!}{
+\begin{tabular}{c|c|c}
+\toprule
+\textbf{Cluster Num} & \textbf{GSM8K} & \textbf{AIME25} \\
+\midrule
+8 & 47 token/s & 36 token/s \\
+16 & 42 token/s & 30 token/s \\
+32 & 33 token/s & 25 token/s \\
+\cellcolor{blue!10}\textbf{Ours}
+& \cellcolor{blue!10}\textbf{44 token/s}
+& \cellcolor{blue!10}\textbf{32 token/s} \\
+\bottomrule
+\end{tabular}
+}
+\par\vspace{-10pt}
+\medskip
+\captionof{table}{Qwen3-4B-Thinking on A6000: decode speedup over BF16.}
+\label{tab:eval:batch_size_speedup}
+{\footnotesize
+\setlength{\tabcolsep}{2pt}
+\begin{adjustbox}{max width=\linewidth}
+\begin{tabular}{c|ccc}
+\toprule
+\textbf{Batch} & \textbf{WikiText2} & \textbf{GSM8K} & \textbf{AIME25} \\
+\midrule
+1 & 2.31 & 2.45 & 2.48 \\
+4 & 2.32 & 2.46 & 2.48 \\
+8 & 2.30 & 2.44 & 2.46 \\
+16 & 2.28 & 2.43 & 2.45 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.63\textwidth}
+\centering
+\vspace{0pt}
+\includegraphics[width=\linewidth]{figures/speedup.pdf}
+\captionof{figure}{Normalized decoding speedup on (a) A6000, (b) L40s, and (c) A100 GPU across WikiText2-, GSM8K-, and AIME25-based workloads. Q4B, Q8B, and Phi4 denote Qwen3-4B-Thinking, Qwen3-8B, and Phi4-Reasoning, respectively.}
+\label{fig:lut_hw_eval}
+\end{minipage}
+\par\vspace{-10pt}
+\end{table*}
+
+\subsection{System Evaluation}
+Figure~\ref{fig:lut_hw_eval} presents the normalized speedups of all baselines, with BF16 latency normalized to 1. Compared with the BF16 models, CodeQuant2 achieves an average $2.42\times$ speedup, demonstrating the effectiveness of low-bit activation and weight quantization together with the LUT-based GEMM design. The improvement over SqueezeLLM further indicates that clustering-based quantization can benefit from a dedicated GPU implementation with optimized LUT operations. Considering the accuracy results of CodeQuant2 shown in Table~\ref{tab:eval:main}, CodeQuant2 achieves a strong accuracy--efficiency trade-off among the evaluated baselines. Table~\ref{tab:eval:batch_size_speedup} shows that CodeQuant2 retains at least a $2.28\times$ speedup on A6000 at batch size 16, indicating that the
+gain persists under batching.
+
+
+\subsection{Ablation Study}
+
+\paragraph{Component-wise Ablation}
+
+\begin{table}[h]
+\centering
+\caption{Cumulative component ablation on Qwen3-4B-Thinking under A4W4. The base configuration uses fixed random rotation and SmoothQuant scaling. Each subsequent row adds the listed component cumulatively. AIME results are pass@1, and gains are in percentage points.}
+\label{tab:ablation:components}
+\resizebox{\linewidth}{!}{
+\begin{tabular}{l|cccccc|cc}
+\toprule
+\textbf{Configuration}
+& \textbf{MATH-500}
+& \textbf{GSM8K}
+& \textbf{AIME25}
+& \textbf{AIME26}
+& \textbf{HumanEval}
+& \textbf{LiveCodeBench}
+& \textbf{Avg. Acc.}
+& \textbf{Gain} \\
+\midrule
+Base   & 0.930 & 0.929 & 0.392 & 0.367 & 0.902 & 0.464 & 0.664 & -- \\
++ R\&S & 0.928 & 0.934 & 0.450 & 0.421 & 0.933 & 0.557 & 0.704 & +4.00 \\
++ ACA  & 0.938 & 0.938 & 0.542 & 0.488 & 0.937 & 0.599 & 0.740 & +3.64 \\
++ LC   & 0.950 & 0.937 & 0.546 & 0.567 & 0.939 & 0.619 & 0.760 & +1.94 \\
+\rowcolor{blue!10} + RAC  & 0.950 & 0.938 & 0.563 & 0.613 & 0.945 & 0.614 & \textbf{0.770} & +1.08 \\
+\bottomrule
+\end{tabular}
+}
+\par\vspace{-5pt}
+\end{table}
+
+To evaluate the contribution of each technique in Section~\ref{sec:methdology}, Table~\ref{tab:ablation:components} reports the cumulative ablation results on Qwen3-4B-Thinking under A4W4. Without the four techniques, the average reasoning accuracy is 0.664. Fine-tuned rotation and scaling (R\&S) increases it to 0.704, highlighting the importance of outlier mitigation for stable low-bit reasoning quantization. Adding adaptive cluster allocation (ACA) improves accuracy to 0.740, a gain of 3.64\% points, consistent with the benefit of varying cluster capacity across matrices. Learnable clustering (LC) further increases accuracy to 0.760, showing the benefit of optimizing cluster assignments. Finally, reasoning-aware calibration (RAC) raises accuracy to 0.770, confirming that reasoning-time decoded tokens provide useful calibration signals beyond standard language-modeling data.
+
+\paragraph{Effect of Calibration Selection}\label{abl:calibration}
+\begin{table*}[!ht]
+\centering
+\caption{Effect of decoding calibration under different calibration selections. M500, GSM, A25, A26, HE, and LCB denote MATH-500, GSM8K, AIME25, AIME26, HumanEval, and LiveCodeBench. In panel (a), A25 and A26 are pass@1, while A25@8 and A26@8 are pass@8.}
+\label{tab:ablation:decoding_calibration}
+{\footnotesize
+\begin{minipage}[t]{0.57\textwidth}
+\centering
+\textbf{(a) Segment selection}\par\smallskip
+\setlength{\tabcolsep}{2pt}
+\begin{adjustbox}{max width=\linewidth}
+\begin{tabular}{l|ccccccccc}
+\toprule
+\textbf{Segment} & \textbf{M500} & \textbf{GSM} & \textbf{A25} & \textbf{A25@8}& \textbf{A26} & \textbf{A26@8} & \textbf{HE} & \textbf{LCB} & \textbf{Avg.} \\
+\midrule
+None & 0.950 & 0.937 & 0.546 & 0.667 & 0.567 & 0.733 & 0.939 & 0.619 & 0.745 \\
+\rowcolor{blue!10} First & 0.942 & 0.934 & 0.517 & 0.733 & 0.600 & 0.767 & 0.927 & 0.609 & \textbf{0.754} \\
+Middle & 0.942 & 0.942 & 0.517 & 0.700 & 0.529 & 0.733 & 0.922 & 0.578 & 0.733 \\
+Last & 0.936 & 0.936 & 0.517 & 0.667 & 0.554 & 0.700 & 0.933 & 0.590 & 0.729 \\
+All 768 & 0.944 & 0.941 & 0.467 & 0.667 & 0.496 & 0.667 & 0.921 & 0.560 & 0.708 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.42\textwidth}
+\centering
+\textbf{(b) Prefix length}\par\smallskip
+\setlength{\tabcolsep}{2pt}
+\begin{adjustbox}{max width=\linewidth}
+\begin{tabular}{c|ccccccc}
+\toprule
+\textbf{Tokens} & \textbf{M500} & \textbf{GSM} & \textbf{A25} & \textbf{A26} & \textbf{HE} & \textbf{LCB} & \textbf{Avg.} \\
+\midrule
+64 & 0.912 & 0.923 & 0.358 & 0.354 & 0.884 & 0.392 & 0.637 \\
+128 & 0.936 & 0.939 & 0.521 & 0.567 & 0.933 & 0.549 & 0.741 \\
+\rowcolor{blue!10} 256 & 0.950 & 0.938 & 0.563 & 0.613 & 0.945 & 0.614 & \textbf{0.770} \\
+512 & 0.938 & 0.938 & 0.529 & 0.571 & 0.915 & 0.591 & 0.747 \\
+768 & 0.944 & 0.941 & 0.467 & 0.496 & 0.921 & 0.560 & 0.721 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{minipage}
+}
+\par\vspace{-5pt}
+\end{table*}
+
+Table~\ref{tab:ablation:decoding_calibration} tests two design choices for decoding calibration on Qwen3-4B-Thinking under A4W4: which 256-token segment of a reasoning trace to calibrate on, and how many initial decoded tokens to include. For segment selection in panel (a), we generate 768 tokens from GSM8K prompts with the full-precision model, and compute loss only on tokens 1--256, 257--512, or 513--768 while masking the other tokens. We also evaluate no decoding calibration and all 768 tokens. For prefix length in panel (b), we mix GSM8K decoding samples with WikiText2 calibration data, as in the component ablation in Table~\ref{tab:ablation:components}. The loss includes the WikiText2 samples and a prefix of 64, 128, 256, 512, or 768 decoded tokens from each GSM8K sample. The 256-token setting matches the calibration of our reported model and reproduces its task scores. We believe that including later tokens may dilute the influence of high-variance early activations on calibration, making it less effective at mitigating their outliers and leading to the accuracy drop at 768 tokens.
+
+For segment selection, the first 256 tokens yield the highest eight-score average among the three segments at 0.754, versus 0.733 for the middle and 0.729 for the last. They also exceed the no-decoding baseline of 0.745. The gain over no decoding is concentrated in AIME pass@8: AIME25 rises from 0.667 to 0.733, and AIME26 rises from 0.733 to 0.767. AIME25 pass@1 instead falls from 0.546 to 0.517, so the improvement does not hold for every metric. This pattern is consistent with the stronger early activation fluctuations in Figure~\ref{fig:calibration_motivation}. Using all 768 tokens lowers the eight-score average to 0.708, below every individual segment.
+
+For prefix length, with WikiText2 included in calibration, the six-task average rises from 0.637 at 64 decoded tokens to 0.770 at 256, then falls to 0.747 at 512 and 0.721 at 768. From 256 to 768 tokens, AIME25 drops from 0.563 to 0.467 and AIME26 from 0.613 to 0.496, while GSM8K stays near 0.94. 
+
+\paragraph{Comparison of Cluster Allocation Strategies}
+Table~\ref{tab:eval:throughput_different_cluster_number} reports decoding throughput under different cluster allocation strategies. We compare fixed cluster counts of 8, 16, and 32 with our adaptive cluster allocation (ACA) method from Section~\ref{sec:aca}, whose average assignment-index width across target matrices is 4 bits, as in the fixed 16-cluster setting. The fixed settings reveal a clear efficiency trade-off: throughput drops from 47 tokens/s with 8 clusters to 42 tokens/s with 16 clusters and 33 tokens/s with 32 clusters on the GSM8K dataset. ACA achieves 44 tokens/s, outperforming the fixed 16-cluster setting and approaching the efficiency of the fixed 8-cluster setting. ACA is also faster on AIME25. Its accuracy gain in Table~\ref{tab:ablation:components} and its higher throughput are consistent with reallocating clusters toward sensitive matrices under a profiled-latency budget.
+
+\section{Conclusion and Limitations}
+In conclusion, CodeQuant2 combines early decoded tokens with general samples to build a reasoning-aware calibration set that captures the activation fluctuations at the start of reasoning. Using this calibration set, CodeQuant2 learns rotation and scaling transformations that smooth activation outliers. For the weights, it allocates cluster budgets across weight matrices to balance accuracy and latency, and then fine-tunes the centroid values and assignments to better match the full-precision outputs. Finally, a LUT-based CUDA kernel operates directly on the clustered representation during inference.
+
+Although CodeQuant2 performs well on the evaluated reasoning tasks, further study of its generated reasoning trajectories could provide a more complete picture of the model's reasoning behavior after quantization. Such an analysis could examine whether a correct answer is accompanied by repetition or unnecessarily long reasoning. It could also explore how quantization interacts with behaviors learned during post-training beyond those measured by our benchmarks, as well as potential safety implications such as unreliable or overconfident outputs. We have not evaluated these questions in this work and believe addressing them is a promising direction for future work.
+
+\section*{Funding Statement}
+The authors declare no funding received for this paper.
+
+\section*{Competing Interests Statement}
+The authors declare no competing interests.
+
+\bibliographystyle{plain}
+\bibliography{ref}
+
+\appendix
+
+\section{Additional Activation Analysis}
+\label{sec:app:activation_fluctuation}
+Table~\ref{tab:app:activation_fluctuation} extends Figure~\ref{fig:calibration_motivation} to two other reasoning models and two other math datasets. The model rows use GSM8K prompts, and the dataset rows use Qwen3-4B-Thinking. Step 0 in this table is the first decoded token, labeled step 1 in Figure~\ref{fig:calibration_motivation}. We take the point where each activation-standard-deviation curve begins to level off (the elbow) as its stabilization step. The final column reports the percentage increase from the curve's value at the elbow to its peak.
+
+\begin{table}[H]
+\centering
+\caption{Early-stage activation fluctuation across additional reasoning models and datasets.}
+\label{tab:app:activation_fluctuation}
+{\small
+\setlength{\tabcolsep}{3pt}
+\begin{adjustbox}{max width=\columnwidth}
+\begin{tabular}{llccc}
+\toprule
+\textbf{Comparison} & \textbf{Setting} & \textbf{Peak step} & \textbf{Elbow step} & \textbf{Peak above elbow} \\
+\midrule
+Model & GPT-OSS-20B & 0 & 23 & +24.1\% \\
+Model & Qwen3-30B-A3B-Thinking & 0 & 34 & +38.7\% \\
+Dataset & MATH-500 & 0 & 26 & +17.1\% \\
+Dataset & AIME24 & 5 & 39 & +20.5\% \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+}
+\end{table}
+
+\section{Adaptive Cluster Importance Score}
+\label{sec:app:importance_score}
+In adaptive cluster allocation, we estimate the importance of each candidate cluster number change by measuring how much its induced output perturbation affects the local reconstruction loss.
+Let the local reconstruction loss be
+\[
+\mathcal{L}_{\mathrm{recon}}(\widetilde{\mathbf{Y}})
+=
+\left\|
+\mathbf{Y}_{\mathrm{fp}}-\widetilde{\mathbf{Y}}
+\right\|^2 .
+\]
+When the cluster number is changed from $K_{\mathrm{ori}}$ to $K_{\mathrm{tar}}$, the clustered output changes from $\widetilde{\mathbf{Y}}^{(K_{\mathrm{ori}})}$ to $\widetilde{\mathbf{Y}}^{(K_{\mathrm{tar}})}$, producing the output perturbation
+\[
+\Delta \mathbf{Y}_{K_{\mathrm{ori}}\rightarrow K_{\mathrm{tar}}}
+=
+\widetilde{\mathbf{Y}}^{(K_{\mathrm{ori}})}
+-
+\widetilde{\mathbf{Y}}^{(K_{\mathrm{tar}})} .
+\]
+Using a first-order Taylor approximation around
+$\widetilde{\mathbf{Y}}^{(K_{\mathrm{ori}})}$, the change in reconstruction loss can be estimated as
+\[
+\Delta \mathcal{L}_{\mathrm{recon}}
+\approx -
+\left\langle
+\nabla_{\widetilde{\mathbf{Y}}}\mathcal{L}_{\mathrm{recon}},
+\Delta \mathbf{Y}_{K_{\mathrm{ori}}\rightarrow K_{\mathrm{tar}}}
+\right\rangle .
+\]
+where $\langle \cdot,\cdot\rangle$ denotes the inner product.
+To obtain a stable matrix-wise score, we use the squared element-wise contribution and normalize it by the number of calibration tokens $N$:
+\[
+I_{K_{\mathrm{ori}}\rightarrow K_{\mathrm{tar}}}
+=
+\frac{1}{N}
+\left\|
+\Delta\mathbf{Y}_{K_{\mathrm{ori}}\rightarrow K_{\mathrm{tar}}}
+\odot
+\nabla_{\widetilde{\mathbf{Y}}}
+\mathcal{L}_{\mathrm{recon}}
+\right\|_F^2.
+\]
+This score measures how strongly the output perturbation caused by changing the cluster number affects the local reconstruction loss.
+
+
+\section{Additional Evaluation Results}
+
+\subsection{General Tasks}
+Table~\ref{tab:eval:general_task} reports the results on standard language understanding and commonsense reasoning tasks. Overall, our method preserves strong general-task performance under both A4W4 and A8W4 settings. Under A4W4, our method has the highest average score among quantized methods on all three models. Compared with CodeQuant, our method improves the average score from 0.845 to 0.856 on Qwen3-4B-Thinking and from 0.854 to 0.856 on Qwen3-8B. On Phi-4-Reasoning, the average rises from 0.765 to 0.766.
+Under the A8W4 setting, our method further reduces the gap to the BF16 reference and achieves the best average score among quantized methods across all three models.
+
+These results indicate that our method improves reasoning-oriented quantization performance while maintaining competitive performance on general language understanding and commonsense reasoning tasks. The evaluated general tasks show that the gains extend beyond reasoning-heavy benchmarks.
+
+\begin{table}[!t]
+\centering
+\caption{Performance on standard language understanding and commonsense reasoning tasks under A4W4 and A8W4 quantization.}
+\resizebox{0.99\columnwidth}{!}{
+\begin{tabular}{c|c|cccc}
+\toprule
+\textbf{Models} 
+& \textbf{Methods} 
+& \textbf{ARC} ($\uparrow$) 
+& \textbf{PIQA} ($\uparrow$) 
+& \textbf{WinoGrande} ($\uparrow$) 
+& \textbf{Avg} ($\uparrow$) \\
+\midrule
+
+\multicolumn{6}{c}{\textbf{A4W4}} \\
+\midrule
+
+\multirow{6}{*}{\makecell{Qwen3-\\4B-Thinking}}
+& BF16       & 0.937 & 0.874 & 0.830 & 0.881 \\
+& QuaRot     & 0.752 & 0.562 & 0.281 & 0.532 \\
+& ParoQuant  & 0.913 & 0.789 & 0.641 & 0.781 \\
+& SqueezeLLM & 0.914 & 0.791 & 0.681 & 0.795 \\
+& CodeQuant  & 0.928 & 0.836 & 0.772 & 0.845 \\
+& \cellcolor{blue!10}\textbf{Ours}
+             & \cellcolor{blue!10}\textbf{0.932}
+             & \cellcolor{blue!10}\textbf{0.851}
+             & \cellcolor{blue!10}\textbf{0.785}
+             & \cellcolor{blue!10}\textbf{0.856} \\
+
+\cmidrule(lr){1-6}
+
+\multirow{6}{*}{\makecell{Qwen3-\\8B}}
+& BF16       & 0.942 & 0.904 & 0.818 & 0.888 \\
+& QuaRot     & 0.822 & 0.631 & 0.358 & 0.604 \\
+& ParoQuant  & 0.847 & 0.475 & 0.520 & 0.614 \\
+& SqueezeLLM & 0.921 & 0.823 & 0.677 & 0.807 \\
+& CodeQuant  & \textbf{0.936} & 0.871 & 0.755 & 0.854 \\
+& \cellcolor{blue!10}\textbf{Ours}
+             & \cellcolor{blue!10}0.930
+             & \cellcolor{blue!10}\textbf{0.872}
+             & \cellcolor{blue!10}\textbf{0.766}
+             & \cellcolor{blue!10}\textbf{0.856} \\
+
+\cmidrule(lr){1-6}
+
+\multirow{6}{*}{\makecell{Phi-4-\\Reasoning}}
+& BF16       & 0.837 & 0.868 & 0.780 & 0.828 \\
+& QuaRot     & 0.758 & 0.745 & 0.659 & 0.721 \\
+& ParoQuant  & \textbf{0.767} & 0.758 & 0.676 & 0.733 \\
+& SqueezeLLM & 0.740 & 0.760 & 0.685 & 0.728 \\
+& CodeQuant  & 0.745 & \textbf{0.821} & 0.729 & 0.765 \\
+& \cellcolor{blue!10}\textbf{Ours}
+             & \cellcolor{blue!10}0.756
+             & \cellcolor{blue!10}0.811
+             & \cellcolor{blue!10}\textbf{0.731}
+             & \cellcolor{blue!10}\textbf{0.766} \\
+
+\midrule
+
+\multicolumn{6}{c}{\textbf{A8W4}} \\
+\midrule
+
+\multirow{6}{*}{\makecell{Qwen3-\\4B-Thinking}}
+& BF16       & 0.937 & 0.874 & 0.830 & 0.881 \\
+& QuaRot     & 0.913 & 0.798 & 0.582 & 0.764 \\
+& ParoQuant  & 0.930 & 0.840 & 0.744 & 0.838 \\
+& SqueezeLLM & 0.936 & 0.846 & 0.785 & 0.855 \\
+& CodeQuant  & 0.936 & 0.856 & \textbf{0.815} & 0.869 \\
+& \cellcolor{blue!10}\textbf{Ours}
+             & \cellcolor{blue!10}\textbf{0.937}
+             & \cellcolor{blue!10}\textbf{0.864}
+             & \cellcolor{blue!10}0.807
+             & \cellcolor{blue!10}\textbf{0.870} \\
+
+\cmidrule(lr){1-6}
+
+\multirow{6}{*}{\makecell{Qwen3-\\8B}}
+& BF16       & 0.942 & 0.904 & 0.818 & 0.888 \\
+& QuaRot     & 0.915 & 0.862 & 0.642 & 0.806 \\
+& ParoQuant  & 0.920 & 0.845 & 0.721 & 0.829 \\
+& SqueezeLLM & 0.938 & 0.874 & 0.777 & 0.863 \\
+& CodeQuant  & 0.938 & 0.890 & 0.796 & 0.875 \\
+& \cellcolor{blue!10}\textbf{Ours}
+             & \cellcolor{blue!10}\textbf{0.939}
+             & \cellcolor{blue!10}\textbf{0.890}
+             & \cellcolor{blue!10}\textbf{0.798}
+             & \cellcolor{blue!10}\textbf{0.876} \\
+
+\cmidrule(lr){1-6}
+
+\multirow{6}{*}{\makecell{Phi-4-\\Reasoning}}
+& BF16       & 0.837 & 0.868 & 0.780 & 0.828 \\
+& QuaRot     & 0.783 & 0.774 & 0.709 & 0.755 \\
+& ParoQuant  & 0.786 & 0.780 & 0.702 & 0.756 \\
+& SqueezeLLM & 0.790 & 0.836 & 0.757 & 0.794 \\
+& CodeQuant  & 0.782 & 0.816 & 0.731 & 0.776 \\
+& \cellcolor{blue!10}\textbf{Ours}
+             & \cellcolor{blue!10}\textbf{0.847}
+             & \cellcolor{blue!10}\textbf{0.867}
+             & \cellcolor{blue!10}\textbf{0.785}
+             & \cellcolor{blue!10}\textbf{0.833} \\
+
+\bottomrule
+\end{tabular}
+}
+\label{tab:eval:general_task}
+\end{table}
+
+\subsection{A8W4 Results}
+
+\paragraph{Main Results.}
+Table~\ref{tab:eval:acc_a8w4} reports the results under the A8W4 setting. Compared with A4W4, A8W4 provides higher activation precision and therefore preserves stronger model performance across most tasks. Overall, our method achieves the best average accuracy among all quantized methods on all three reasoning models. Specifically, our method obtains average scores of 0.808, 0.790, and 0.593 on Qwen3-4B-Thinking, Qwen3-8B, and Phi-4-Reasoning, respectively.
+
+On Qwen3-4B-Thinking, our method improves the average score from 0.779 to 0.808 compared with CodeQuant, while also achieving the best perplexity on both WikiText2 and C4 among quantized methods. It also provides clear improvements on reasoning-heavy benchmarks, especially AIME26 and LiveCodeBench. On Qwen3-8B, our method obtains the highest average score of 0.790 and outperforms CodeQuant on GSM8K, AIME25, AIME26, and LiveCodeBench, although CodeQuant achieves slightly lower perplexity. On Phi-4-Reasoning, our method achieves the best average score and the best results on WikiText2, C4, MATH500, GSM8K, AIME26, and HumanEval among the quantized methods.
+
+These results show that our method remains effective under the less aggressive A8W4 setting. In particular, it improves reasoning and code generation performance while maintaining competitive language modeling quality.
+
+\begin{table}[!t]
+\caption{Main evaluation results under A8W4 quantization.}
+\centering
+\resizebox{1\columnwidth}{!}{
+\begin{tabular}{c|c|cc|cccccc|c}
+    \toprule
+    
+    \textbf{Models} & \textbf{Methods} 
+    & \textbf{Wiki2} ($\downarrow$) 
+    & \textbf{C4} ($\downarrow$) 
+    & \textbf{MA500} ($\uparrow$) 
+    & \textbf{GSM8K} ($\uparrow$) 
+    & \textbf{AIME25} ($\uparrow$) 
+    & \textbf{AIME26} ($\uparrow$) 
+    & \textbf{HE} ($\uparrow$) 
+    & \textbf{LCB} ($\uparrow$) 
+    & \textbf{Avg} ($\uparrow$) \\
+    
+    \midrule
+
+    \multicolumn{11}{c}{\textbf{A8W4}} \\
+    \midrule
+    
+    \multirow{6}{*}{\makecell{Qwen3-\\4B-Thinking}} 
+    & BF16       & 11.478 & 18.391 & 0.958 & 0.952 & 0.688 & 0.708 & 0.963 & 0.758 & 0.838 \\
+    & QuaRot     & 14.312 & 22.492 & 0.758 & 0.868 & 0.175 & 0.088 & 0.537 & 0.137 & 0.427 \\
+    & ParoQuant  & 13.444 & 21.190 & 0.900 & 0.920 & 0.283 & 0.271 & 0.811 & 0.448 & 0.606 \\
+    & SqueezeLLM & 12.999 & 20.260 & 0.940 & 0.938 & 0.438 & 0.454 & 0.915 & 0.552 & 0.706 \\
+    & CodeQuant  & 12.430 & 19.732 & 0.946 & 0.951 & 0.596 & 0.638 & 0.915 & 0.629 & 0.779 \\
+    & \cellcolor{blue!10}\textbf{Ours}
+                 & \cellcolor{blue!10}\textbf{12.081}
+                 & \cellcolor{blue!10}\textbf{19.206}
+                 & \cellcolor{blue!10}\textbf{0.960}
+                 & \cellcolor{blue!10}\textbf{0.951}
+                 & \cellcolor{blue!10}\textbf{0.600}
+                 & \cellcolor{blue!10}\textbf{0.692}
+                 & \cellcolor{blue!10}\textbf{0.957}
+                 & \cellcolor{blue!10}\textbf{0.686}
+                 & \cellcolor{blue!10}\textbf{0.808} \\
+    
+    \cmidrule(lr){1-11}
+    
+    \multirow{6}{*}{\makecell{Qwen3-\\8B}} 
+    & BF16       & 10.047 & 15.439 & 0.948 & 0.958 & 0.625 & 0.646 & 0.921 & 0.732 & 0.805 \\
+    & QuaRot     & 12.471 & 18.507 & 0.784 & 0.880 & 0.200 & 0.133 & 0.256 & 0.019 & 0.379 \\
+    & ParoQuant  & 11.337 & 17.234 & 0.908 & 0.933 & 0.396 & 0.358 & 0.881 & 0.463 & 0.656 \\
+    & SqueezeLLM & 10.798 & 16.580 & 0.926 & 0.941 & 0.404 & 0.446 & \textbf{0.933} & 0.544 & 0.699 \\
+    & CodeQuant  & \textbf{10.216} & 16.883 & \textbf{0.942} & 0.947 & 0.521 & 0.628 & 0.921 & 0.648 & 0.768 \\
+    & \cellcolor{blue!10}\textbf{Ours}
+                 & \cellcolor{blue!10}11.033
+                 & \cellcolor{blue!10}\textbf{16.490}
+                 & \cellcolor{blue!10}0.938
+                 & \cellcolor{blue!10}\textbf{0.955}
+                 & \cellcolor{blue!10}\textbf{0.613}
+                 & \cellcolor{blue!10}\textbf{0.646}
+                 & \cellcolor{blue!10}0.915
+                 & \cellcolor{blue!10}\textbf{0.671}
+                 & \cellcolor{blue!10}\textbf{0.790} \\
+
+    \cmidrule(lr){1-11}
+    
+    \multirow{6}{*}{\makecell{Phi-4-\\Reasoning}} 
+    & BF16       & 7.393 & 13.187 & 0.858 & 0.943 & 0.283 & 0.250 & 0.872 & 0.410 & 0.603 \\
+    & QuaRot     & 8.512 & 14.687 & 0.808 & 0.937 & 0.221 & 0.213 & 0.652 & 0.290 & 0.520 \\
+    & ParoQuant  & 7.801 & 13.865 & 0.832 & 0.927 & 0.200 & 0.217 & 0.707 & 0.303 & 0.531 \\
+    & SqueezeLLM & 7.759 & 13.763 & 0.838 & 0.942 & \textbf{0.288} & 0.208 & 0.835 & 0.373 & 0.581 \\
+    & CodeQuant  & 7.755 & 13.768 & 0.822 & 0.942 & 0.276 & 0.254 & 0.823 & \textbf{0.384} & 0.584 \\
+    & \cellcolor{blue!10}\textbf{Ours}
+                 & \cellcolor{blue!10}\textbf{7.699}
+                 & \cellcolor{blue!10}\textbf{13.592}
+                 & \cellcolor{blue!10}\textbf{0.844}
+                 & \cellcolor{blue!10}\textbf{0.944}
+                 & \cellcolor{blue!10}0.279
+                 & \cellcolor{blue!10}\textbf{0.267}
+                 & \cellcolor{blue!10}\textbf{0.848}
+                 & \cellcolor{blue!10}0.375
+                 & \cellcolor{blue!10}\textbf{0.593} \\
+    
+    \bottomrule
+            
+\end{tabular}
+}
+\label{tab:eval:acc_a8w4}
+\end{table}
+
+
+\paragraph{AIME Results.}
+The A8W4 columns of Table~\ref{tab:eval:aime_a8w4} report pass@1 and pass@8 results on the AIME mathematical reasoning benchmarks. Overall, our method achieves strong performance across both single-sample and multi-sample evaluation. On Qwen3-4B-Thinking, our method obtains the best pass@1 results on both AIME25 and AIME26, improving AIME26 pass@1 from 0.638 to 0.692 compared with CodeQuant. On Qwen3-8B, our method achieves the best or tied-best results on all four metrics. In particular, it improves AIME25 pass@1 from 0.521 to 0.613 and AIME26 pass@8 from 0.800 to 0.833 compared with CodeQuant. For Phi-4-Reasoning, the performance differences among strong baselines are smaller, while our method still achieves the best AIME26 pass@1 result and matches the best AIME25 pass@8 and AIME26 pass@8 results. These results show that our method better preserves mathematical reasoning ability under A8W4 quantization, especially on pass@1 metrics that reflect the quality of a single generated solution.
+
+
+\newpage
+\input{checklist.tex}
+
+\end{document}

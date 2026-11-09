@@ -1,0 +1,64 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{microtype}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{xurl}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{pdftitle={Same Facts, Different Remedy: Linguistic Profiling and Arbitrariness in LLM and System One Decisions},pdfauthor={Colin Priest}}
+\usepackage{booktabs,longtable,array,calc}
+\usepackage{enumitem}
+\usepackage{listings}
+\lstset{basicstyle=\ttfamily\scriptsize,breaklines=true,columns=fullflexible,keepspaces=true,frame=single,framerule=0.3pt,xleftmargin=2pt,xrightmargin=2pt}
+\newcommand{\passthrough}[1]{#1}
+\setlist{itemsep=1pt,parsep=0pt,topsep=2pt}
+\usepackage{newunicodechar}
+\newunicodechar{−}{\ensuremath{-}}
+\newunicodechar{×}{\ensuremath{\times}}
+\newunicodechar{²}{\ensuremath{^2}}
+\newunicodechar{→}{\ensuremath{\rightarrow}}
+\newunicodechar{η}{\ensuremath{\eta}}
+\newunicodechar{≤}{\ensuremath{\le}}
+\newunicodechar{≥}{\ensuremath{\ge}}
+\newunicodechar{±}{\ensuremath{\pm}}
+\newunicodechar{·}{\ensuremath{\cdot}}
+\newunicodechar{Σ}{\ensuremath{\Sigma}}
+\newunicodechar{Δ}{\ensuremath{\Delta}}
+
+\providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\renewcommand{\topfraction}{0.9}\renewcommand{\bottomfraction}{0.8}\renewcommand{\textfraction}{0.07}\renewcommand{\floatpagefraction}{0.85}\setcounter{topnumber}{3}\setcounter{totalnumber}{5}
+\newcommand{\coderepo}{\url{https://github.com/colinpriest/llm-jev-linguistic-profiling}}
+
+\title{Same Facts, Different Remedy: Linguistic Profiling and Arbitrariness in LLM and System One Decisions}
+\author{Colin Priest\\[2pt]
+\small School of Risk and Actuarial Studies, UNSW Business School\\
+\small UNSW Sydney, Australia\\
+\small \texttt{c.priest@unsw.edu.au}}
+\date{}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+\input{abstract.tex}
+
+\medskip
+\noindent\textbf{Keywords:} linguistic profiling, arbitrariness, matched guise, large language models, fairness audit, consumer complaints
+\end{abstract}
+
+\input{body.tex}
+\input{ethics.tex}
+\section*{Generative AI Usage Statement}
+GPT-4o-mini and GPT-5-mini were used as objects of study: they generated the sociolinguistic rewrites, fact edits and standardised texts and made remedy decisions, as described in Section~3. Jev 1.13.0 was likewise an object of study. Claude Opus 5.5 (Anthropic) and GPT-5.2 (OpenAI) served as fact-fidelity auditors, blind to all decisions (Section~4.8). A generative AI assistant (Claude Opus 5.5, Anthropic, and earlier Claude models in earlier stages of the study, via Claude Code) was used to help write analysis and plotting code, run analyses and draft and edit text under the author's direction. GPT-6 Sol (OpenAI) was used to produce adversarial pre-submission reviews of the draft; the author decided every response to them. The author designed the study, pre-registered every hypothesis, checked every reported number against the committed result files, and takes full responsibility for the content.
+\section*{Code and Data Availability}
+Code, prompts, pre-registrations and result files are available at \coderepo.
+\section*{Competing Interests and Funding}
+No competing interests. No funding.
+\bibliographystyle{plainnat}
+\bibliography{refs}
+\input{appendix.tex}
+\end{document}

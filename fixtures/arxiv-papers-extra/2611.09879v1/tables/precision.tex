@@ -1,0 +1,52 @@
+\footnotesize
+\renewcommand{\arraystretch}{0.75}
+\begin{tabular}{cll@{\hspace{1em}}rrr@{\hspace{2.5em}}cc@{\hspace{2.5em}}cccc}
+\toprule & \multirow[c]{2}{*}[-3pt]{\textbf{CPU}} & \multirow[c]{2}{*}[-3pt]{\textbf{$\mu$Architecture}} &&&& \multicolumn{2}{c}{\hspace*{-2.5em}\textbf{Unpadded}} & \multicolumn{4}{c}{\hspace*{-\tabcolsep}\textbf{Padded}} \vspace{3.5pt}\\
+& &  & $\Delta_{sync}$ & $\Delta^{L1}_{DRAM}$ & CTR & $F^{L1}_{DRAM}$ & $F^{LLC}_{DRAM}$ & $G^{L1}_{DRAM}$ & $G^{L1}_{L2}$ & $G^{L1}_{L3}$ & $G^{LLC}_{DRAM}$ \vspace{1pt}\\\midrule
+\multirow[c]{8}{*}{\rotatebox[origin=c]{90}{\textbf{ARM}\hspace{4em}}} & \multirow[c]{2}{*}[-2.25pt]{Apple M1} & Icestorm (E) & $122 \pm 1$ & 236 & 86 & 0.99 & 0.99 & 177 & 8 & 88 & 87 \\\cmidrule(lr){3-12}
+ &  & Firestorm (P) & $142 \pm 1$ & 342 & 105 & 1.00 & 0.99 & 230 & 53 & 122 & 44 \\\cmidrule(lr){2-12}
+ & \multirow[c]{2}{*}[-2.25pt]{Apple M2} & Blizzard (E) & $123 \pm 6$ & 290 & 97 & 0.97 & 0.99 & 123 & $\cdot$ & 24 & 65 \\\cmidrule(lr){3-12}
+ &  & Avalanche (P) & $142 \pm 7$ & 371 & 112 & 0.97 & 0.99 & 92 & $\cdot$ & $\cdot$ & 355 \\\cmidrule(lr){2-12}
+ & Broadcom BCM2837 & Cortex-A53 & $49 \pm 0$ & 161 & 35 & 0.99 & 0.99 & 50 & 13 & -- & 37 \\\cmidrule(lr){2-12}
+ & Broadcom BCM2712 & Cortex-A76 & $143 \pm 61$ & 322 & 172 & 0.99 & 0.99 & 161 & $\cdot$ & $\cdot$ & 234 \\\cmidrule(lr){2-12}
+ & Huawei Kunpeng 920 & TaiShan-v110 & $243 \pm 1$ & 271 & 91 & 0.75 & 0.75 & 104 & $\cdot$ & $\cdot$ & 92 \\\cmidrule(lr){2-12}
+ & Ampere Altra Q64-30 & Altra & $293 \pm 20$ & 251 & 242 & 0.67 & 0.67 & 99 & $\cdot$ & $\cdot$ & 120 \\\midrule
+\multirow[c]{31}{*}{\rotatebox[origin=c]{90}{\textbf{x86}\hspace{18em}}} & AMD EPYC 7252 & Zen 2 (Rome) & $78 \pm 0$ & 329 & 205 & 0.99 & 0.99 & 78 & 10 & 34 & 44 \\\cmidrule(lr){2-12}
+ & AMD Ryzen 7 5700G & Zen 3 (Cezanne) & $84 \pm 0$ & 322 & 162 & 0.99 & 0.99 & 71 & $\cdot$ & 33 & 37 \\\cmidrule(lr){2-12}
+ & AMD Ryzen 9 7950X3D & Zen 4 (Raphael) & $87 \pm 3$ & 496 & 183 & 1.00 & 0.99 & 66 & $\cdot$ & 6 & 38 \\\cmidrule(lr){2-12}
+ & AMD EPYC 9124 & Zen 4 (Genoa) & $85 \pm 5$ & 324 & 195 & 0.99 & 0.84 & 49 & $\cdot$ & $\cdot$ & $\cdot$ \\\cmidrule(lr){2-12}
+ & AMD Ryzen 9 9950X & Zen 5 (Granite Ridge) & $140 \pm 1$ & 462 & 201 & 0.99 & 0.99 & 125 & 10 & 47 & 78 \\\cmidrule(lr){2-12}
+ & Intel Core i3-2120 & Sandy Bridge & $71 \pm 8$ & 200 & 102 & 0.99 & 0.99 & 61 & 2 & 7 & 62 \\\cmidrule(lr){2-12}
+ & Intel Core i5-4690 & Haswell & $95 \pm 1$ & 281 & 116 & 0.99 & 1.00 & 89 & $\cdot$ & 13 & 100 \\\cmidrule(lr){2-12}
+ & Intel Core i3-5010U & Broadwell & $88 \pm 3$ & 156 & 117 & 0.99 & 0.99 & 88 & 2 & 12 & 54 \\\cmidrule(lr){2-12}
+ & Intel Xeon E3-1505M v5 & Skylake & $90 \pm 1$ & 170 & 126 & 1.00 & 1.00 & 97 & 2 & 21 & 68 \\\cmidrule(lr){2-12}
+ & Intel Core i5-6400T & Skylake & $95 \pm 5$ & 88 & 134 & 0.68 & 0.68 & 80 & $\cdot$ & 19 & 50 \\\cmidrule(lr){2-12}
+ & Intel Pentium G4400T & Skylake & $88 \pm 4$ & 190 & 120 & 0.99 & 0.99 & 92 & $\cdot$ & $\cdot$ & 63 \\\cmidrule(lr){2-12}
+ & Intel Pentium Gold G5400T & Coffee Lake & $92 \pm 3$ & 205 & 146 & 1.00 & 1.00 & 91 & $\cdot$ & 22 & 59 \\\cmidrule(lr){2-12}
+ & Intel Core i7-8700 & Coffee Lake & $96 \pm 3$ & 272 & 114 & 1.00 & 0.99 & 95 & $\cdot$ & 27 & 54 \\\cmidrule(lr){2-12}
+ & Intel Core i7-9700K & Coffee Lake & $91 \pm 5$ & 298 & 156 & 1.00 & 0.99 & 103 & $\cdot$ & 22 & 73 \\\cmidrule(lr){2-12}
+ & Intel Core i7-10710U & Comet Lake & $95 \pm 3$ & 305 & 224 & 0.99 & 0.99 & 90 & $\cdot$ & 21 & 57 \\\cmidrule(lr){2-12}
+ & Intel Core i7-1185G7 & Willow Cove & $126 \pm 17$ & 513 & 231 & 0.99 & 0.99 & 103 & $\cdot$ & 9 & 55 \\\cmidrule(lr){2-12}
+ & Intel Xeon Gold 6346 & Sunny Cove & $151 \pm 6$ & 233 & 300 & 1.00 & 0.69 & 169 & 12 & 50 & 143 \\\cmidrule(lr){2-12}
+ & Intel Core i7-11700 & Cypress Cove & $134 \pm 12$ & 316 & 241 & 0.99 & 1.00 & 131 & $\cdot$ & $\cdot$ & 83 \\\cmidrule(lr){2-12}
+ & \multirow[c]{2}{*}[-2.25pt]{Intel Core i9-12900H} & Gracemont (E) & $147 \pm 3$ & 295 & 194 & 1.00 & 1.00 & 147 & 14 & 68 & 74 \\\cmidrule(lr){3-12}
+ &  & Golden Cove (P) & $145 \pm 22$ & 345 & 244 & 0.99 & 0.99 & 133 & $\cdot$ & 24 & 82 \\\cmidrule(lr){2-12}
+ & \multirow[c]{2}{*}[-2.25pt]{Intel Core i5-13420H} & Gracemont (E) & $156 \pm 4$ & 288 & 198 & 0.99 & 0.99 & 157 & 7 & 33 & 113 \\\cmidrule(lr){3-12}
+ &  & Raptor Cove (P) & $142 \pm 15$ & 345 & 258 & 0.99 & 0.99 & 92 & $\cdot$ & 30 & 21 \\\cmidrule(lr){2-12}
+ & \multirow[c]{2}{*}[-2.25pt]{Intel Core i9-13900K} & Gracemont (E) & $170 \pm 10$ & 392 & 166 & 1.00 & 1.00 & 167 & 14 & 52 & 97 \\\cmidrule(lr){3-12}
+ &  & Raptor Cove (P) & $179 \pm 13$ & 456 & 357 & 0.99 & 0.99 & 156 & $\cdot$ & 31 & 61 \\\cmidrule(lr){2-12}
+ & Intel Xeon Gold 6526Y & Raptor Cove & $143 \pm 8$ & 357 & 355 & 0.99 & 0.99 & 169 & 8 & 65 & 93 \\\cmidrule(lr){2-12}
+ & Intel Core Ultra 9 288V & Lion Cove & $153 \pm 13$ & 279 & 286 & 0.99 & 0.99 & 135 & $\cdot$ & 38 & 71 \\\cmidrule(lr){2-12}
+ & \multirow[c]{2}{*}[-2.25pt]{Intel Core Ultra 9 285K} & Skymont (E) & $98 \pm 0$ & 475 & 86 & 1.00 & 1.00 & 97 & $\cdot$ & 10 & 33 \\\cmidrule(lr){3-12}
+ &  & Lion Cove (P) & $162 \pm 17$ & 577 & 266 & 0.99 & 0.99 & 234 & $\cdot$ & 40 & 172 \\\cmidrule(lr){2-12}
+ & Intel Xeon 6736P & Redwood Cove & $403 \pm 23$ & 681 & 792 & 0.99 & 0.99 & 396 & $\cdot$ & 138 & 193 \\\cmidrule(lr){2-12}
+ & \multirow[c]{2}{*}[-2.25pt]{Intel Core Ultra 5 325} & Darkmont (E) & $90 \pm 7$ & 121 & 86 & 0.94 & 0.93 & 63 & $\cdot$ & $\cdot$ & 47 \\\cmidrule(lr){3-12}
+ &  & Cougar Cove (P) & $151 \pm 25$ & 284 & 202 & 1.00 & 0.99 & 150 & $\cdot$ & 28 & 88 \\\midrule
+\multirow[c]{4}{*}{\rotatebox[origin=c]{90}{\textbf{RISC-V}\hspace{1em}}} & StarFive JH7100 & U74 & $27 \pm 15$ & 129 & 55 & 0.98 & 0.59 & 2 & $\cdot$ & -- & $\cdot$ \\\cmidrule(lr){2-12}
+ & Microchip MPFS025T & U54 & $18 \pm 0$ & 75 & 54 & 0.99 & 0.66 & 19 & $\cdot$ & -- & $\cdot$ \\\cmidrule(lr){2-12}
+ & T-Head TH1520 & C910 & $56 \pm 0$ & 239 & 86 & 0.99 & 0.99 & 48 & 29 & -- & 48 \\\cmidrule(lr){2-12}
+ & SpacemiT K1 & X60 & $75 \pm 7$ & 145 & 216 & 0.99 & 1.00 & 55 & 2 & -- & 45 \\\midrule
+\multirow[c]{2}{*}{\rotatebox[origin=c]{90}{\hspace{.5em}\textbf{LA64}}} & Loongson 3A5000 & 3A5000 & $186 \pm 2$ & 309 & 123 & 0.99 & 1.00 & 150 & $\cdot$ & 5 & 140 \\\cmidrule(lr){2-12}
+ & Loongson 3A6000 & 3A6000 & $120 \pm 2$ & 183 & 100 & 1.00 & 1.00 & 119 & $\cdot$ & 33 & 84 \\
+\bottomrule
+\end{tabular}

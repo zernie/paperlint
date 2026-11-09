@@ -1,0 +1,62 @@
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,longtable,array,calc,tabularx,float}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{Z}{>{\centering\arraybackslash}X}
+\usepackage[round,authoryear]{natbib}
+\usepackage{microtype}
+\usepackage{etoolbox}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\usepackage{url}
+\usepackage{caption}
+\captionsetup{font=small,labelfont=bf}
+
+% pandoc helpers
+\providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\AtBeginEnvironment{longtable}{\small\setlength{\tabcolsep}{4pt}}
+\setlength{\LTpre}{6pt}\setlength{\LTpost}{6pt}
+\setlength{\parskip}{0.35em}
+\setlength{\parindent}{0pt}
+\AtBeginEnvironment{verbatim}{\small}
+\usepackage{fvextra}
+\DefineVerbatimEnvironment{verbatim}{Verbatim}{breaklines=true,fontsize=\small}
+
+\title{Copies Are Not Confirmations:\\How News Duplication Fools LLM Judges and Continual Learners}
+
+\author{
+  Abdelkader Metales\\
+  caaise GmbH\\
+  \texttt{metales@caaise.com}
+  \and
+  Miriam Grabenheinrich\\
+  caaise GmbH\\
+  \texttt{grabenheinrich@caaise.com}
+  \and
+  Aicha Metales\\
+  Djilali Liabes University of Sidi Bel Abbes\\
+  \texttt{aicha.metales@univ-sba.dz}
+}
+
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\input{abstract}
+\end{abstract}
+
+\input{body}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\input{appendix}
+
+\end{document}

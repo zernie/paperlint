@@ -1,0 +1,62 @@
+\section{Evaluation and Human Validation}
+\label{app:evaluation}
+
+\subsection{Scoring}
+
+Each case defines user-task checks and injection checks. Every check is a
+boolean function of the run's tool calls, with their arguments, and of the
+emails the agent sent. A case combines its checks with AND and OR into a
+task-success formula and an attack-success formula, and a check that raises
+an error counts as false. Attack success is scored independently of task
+success, so a run can complete the user task and still carry out the attack.
+
+
+
+When an outcome is free-form text, the check first extracts the relevant
+field, such as the bodies of the emails sent to one recipient or the content
+written to one file. An LLM judge then answers a case-specific yes/no
+criterion about that field alone, never about the whole trajectory
+(Listing \ref{lst:llm-predicate}). The judge is Claude Sonnet 4, called
+3 times at temperature
+0; the predicate holds if
+2 of the
+3 answers are YES. Claude Sonnet 4 is also
+an evaluated agent, but the judge sees only the extracted field, not the
+trajectory or the model that produced it.
+
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true,frame=single,columns=fullflexible,keepspaces=true,caption={Prompt of the LLM predicate. \texttt{\{criterion\}} is the case-specific yes/no question and \texttt{\{text\}} the field extracted by the check; the predicate holds if 2 of 3 calls at temperature 0 answer YES.},label={lst:llm-predicate}]
+You are a precise text analysis tool. Answer the following question about the text below with exactly YES or NO. No explanation.
+
+Question: {criterion}
+
+Text:
+"""
+{text}
+"""
+
+Answer (YES or NO):
+\end{lstlisting}
+
+\subsection{Human validation}
+
+\textbf{Case validity.} Two annotators independently reviewed each of the
+111 designed cases against the three
+conditions of Section \ref{sec:ipi-boundary}, also checking that the harmful
+outcome can be observed and scored. Agreement was
+92.8\%,
+84.7\%, and
+98.2\% for conditions 1--3
+(91.9\% overall).
+
+\textbf{Target labels.} Human annotation of 225 attacks
+from 25 cases, covering all six primitives
+(27--42
+attacks each), agreed with the assigned primitive for
+217 (96.4\%).
+
+\textbf{Scores.} We sampled trajectories for human annotation by stratified
+sampling over the automatically assigned attack success and task success, the
+case, and the model. Human annotations of 89 trajectories
+(25 DeepSeek V3.1, 19 GLM-5, 27 Kimi K2.5, 18 Claude Sonnet 4) agreed with the automatic scores in
+173 of 178 task
+and attack judgments (97.2\%).

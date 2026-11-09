@@ -1,0 +1,30 @@
+\begin{table}[ht]
+    \caption{Memory Maze benchmark comparison (100M env steps) for all maze sizes. We show the impact of TT-MBRL on the performance for each method. The reported scores are averaged over three runs with 100 episodes for evaluation. $\dagger$ denotes the results taken from~\citet{samsami2024mastering}. We also report TT-MBRL results for R2I with a budget of 400M environment steps over six runs.}
+    \centering
+    \setlength{\tabcolsep}{10pt}
+    \hfill \break
+    \begin{tabular}{lcccc}
+    \toprule
+     & \multicolumn{1}{c}{\multirow{2}{*}{\begin{tabular}[c]{@{}c@{}}\textbf{Mem Maze} \\ \textbf{9\texttimes9}\end{tabular}}} & \multicolumn{1}{c}{\multirow{2}{*}{\begin{tabular}[c]{@{}c@{}}\textbf{Mem Maze} \\ \textbf{11\texttimes11}\end{tabular}}} & \multicolumn{1}{c}{\multirow{2}{*}{\begin{tabular}[c]{@{}c@{}}\textbf{Mem Maze} \\ \textbf{13\texttimes13}\end{tabular}}} & \multicolumn{1}{c}{\multirow{2}{*}{\begin{tabular}[c]{@{}c@{}}\textbf{Mem Maze} \\ \textbf{15\texttimes15}\end{tabular}}} \\
+    \textbf{Method} &  &  &  &  \\
+    \midrule
+    Human & $26.4$ & $44.3$ & $55.5$ & $67.7$ \\ 
+    Oracle & $34.8$ & $58.0$ & $74.5$ & $87.7$ \\
+    IMPALA$^{\dagger}$ & $23.5$ & $28.5$ & $27.0$ & $18.5$ \\
+    IMPALA$^{\dagger}$ (400M steps) & $26.5$ & $35.0$ & $36.5$ & $27.5$ \\
+    \midrule
+    DreamerV3 (TBTT) & $\mathbf{32.7 \pm 0.8}$ & $33.0 \pm 1.4$ & $22.1 \pm 1.8$ & $\hphantom{0}6.0 \pm 0.3$\\
+    ~~+ TT-MBRL (Ours) & $32.5 \pm 0.7$ & $\mathbf{37.8 \pm 1.1}$ & $\mathbf{32.5 \pm 3.2}$ & $\mathbf{\hphantom{0}7.9 \pm 1.3}$ \\
+    \midrule
+    TWISTER & $28.2 \pm 0.6$ & $33.5 \pm 0.9$ & $29.7 \pm 2.4$ & $23.1 \pm 0.5$ \\
+    ~~+ TT-MBRL (Ours) & $\mathbf{30.6 \pm 0.8}$ & $\mathbf{42.1 \pm 0.3}$ & $\mathbf{42.3 \pm 1.9}$ & $\mathbf{31.5 \pm 1.8}$ \\
+    \midrule
+    R2I & $\mathbf{32.5 \pm 0.6}$ & $45.9 \pm 1.6$ & $45.9 \pm 1.3$ & $20.3 \pm 1.1$ \\
+    ~~+ TT-MBRL (Ours) & $32.3 \pm 0.5$ & $\mathbf{47.8 \pm 2.6}$ & $\mathbf{53.0 \pm 1.8}$ & $\mathbf{29.3 \pm 4.7}$ \\
+    \midrule
+    R2I (400M steps) & $33.7 \pm 0.3$ & $52.3 \pm 0.9$ & $60.1 \pm 1.6$ & $42.0 \pm 5.8$ \\
+    ~~+ TT-MBRL (Ours)& $\mathbf{33.8 \pm 0.6}$ & $\mathbf{52.4 \pm 1.4}$ & $\mathbf{63.0 \pm 1.5}$ & $\mathbf{54.1 \pm 3.5}$ \\
+    \bottomrule
+    \end{tabular}
+    \label{table:results_maze}
+\end{table}

@@ -1,0 +1,31 @@
+\begin{figure*}[p]
+\centering
+\begin{tcolorbox}[
+    enhanced,
+    colback=gray!5,
+    colframe=black!60,
+    arc=2pt,
+    boxrule=0.5pt,
+    width=\linewidth,
+    left=6pt, right=6pt, top=6pt, bottom=6pt,
+    parbox=false,
+]
+\footnotesize\linespread{0.90}\selectfont\setlength{\parindent}{0pt}\setlength{\parskip}{0pt}
+
+\begin{verbatim}
+You are an impartial evaluator assessing whether an AI agent successfully completed a task.
+
+You will be given:
+1. The original task instruction
+2. A judge prompt describing what a correct completion looks like
+3. The agent's trajectory (tool calls and final response)
+
+Reply with a JSON object in this exact format (no extra text, no markdown fences):
+{"task_success": true,
+"reasoning": "one or two sentences explaining your judgment"}
+\end{verbatim}
+
+\end{tcolorbox}
+\caption{System prompt used for LLM-based task success evaluation.}
+\label{fig:prompt-system}
+\end{figure*}

@@ -1,0 +1,891 @@
+\section{Proofs of Equilibria and Monoculture Results}
+\label{app:proofs}
+\subsection{Common Cost Function}
+\label{app:CommonCost_proof}
+\begin{restatable}[Common Cost Functions]{proposition}{CommonCost}
+\label{prop:CommonCost}
+Suppose each developer $i$ has continuous production function $\Fi$ and cost function $c_i$, where each $c_i:\mathbb{R}_{\ge 0}\to\mathbb{R}_{\ge 0}$ is a strictly increasing bijection with $c_i(0)=0$. Let $c$ be any other such cost function. Then, for each developer $i$, there exists a production function $\tilde{F}_i$ and a bijection between action vectors $\bxi \leftrightarrow\mathbf{z}_i$ such that
+
+$$
+c_i\big(\lVert\mathbf{x}_i\rVert_1\big)=c\big(\lVert\mathbf{z}_i\rVert_1\big)
+\qquad\text{and}\qquad
+\Fi(\mathbf{x}_i)=\tilde{F}_i(\mathbf{z}_i).
+$$
+
+Consequently, the game defined by ${(\Fi,c_i)}_{i=1}^{N}$ is equivalent under reparameterization to the game defined by ${(\tilde \Fi,c)}_{i=1}^{N}$: corresponding strategy profiles induce identical payoffs, and their Nash equilibria are in bijective correspondence.
+\end{restatable}
+\begin{proof}
+Define the scalar map
+
+$$
+g_i(T) := c_i^{-1}\big(c(T)\big), \qquad T\ge 0.
+$$
+
+Since $c_i$ and $c$ are strictly increasing bijections of $\mathbb{R}_{\ge 0}$, so is $g_i$. In particular, $g_i^{-1}$ exists and is itself a strictly increasing bijection of $\mathbb{R}_{\ge 0}$. By construction,
+\begin{equation}
+c_i\big(g_i(T)\big) = c(T) \qquad \text{for all } T\ge 0. \label{eq:def_c_i}
+\end{equation}
+Equivalently, substituting $g_i^{-1}(T)$ for $T$ gives
+\begin{equation}
+c\big(g_i^{-1}(T)\big) = c_i(T) \qquad \text{for all } T\ge 0. \label{eq:def_c}
+\end{equation}
+
+For $\mathbf{x}_i \neq \mathbf{0}$ define the \emph{reference-unit} vector
+
+$$
+\mathbf{z}_i := \frac{g_i^{-1}\big(\lVert \mathbf{x}_i\rVert_1\big)}{\lVert \mathbf{x}_i\rVert_1}\,\mathbf{x}_i,
+$$
+
+and set $\mathbf{z}_i=\mathbf{0}$ when $\mathbf{x}_i=\mathbf{0}$. Thus $\mathbf{x}_i$ is rescaled, keeping its direction fixed, so that $\lVert \mathbf{z}_i\rVert_1 = g_i^{-1}(\lVert \mathbf{x}_i\rVert_1)$. Applying $g_i$ to both sides of this identity gives
+
+$$
+g_i\big(\lVert \mathbf{z}_i\rVert_1\big) = \lVert \mathbf{x}_i\rVert_1.
+$$
+
+Moreover, by \eqref{eq:def_c},
+
+$$
+c\big(\lVert \mathbf{z}_i\rVert_1\big) = c\big(g_i^{-1}(\lVert \mathbf{x}_i\rVert_1)\big) = c_i\big(\lVert \mathbf{x}_i\rVert_1\big),
+$$
+
+so cost is exactly preserved.
+
+For $\mathbf{z}\neq\mathbf{0}$, define
+
+$$
+\tilde{F}_i(\mathbf{z}) := F_i\!\left(\frac{g_i\big(\lVert \mathbf{z}\rVert_1\big)}{\lVert \mathbf{z}\rVert_1}\,\mathbf{z}\right),
+$$
+
+and let $\tilde{F}_{i}(\mathbf{0}) = F_{i}(\mathbf{0})$. 
+Evaluating at $\mathbf{z}=\mathbf{z}_i$ for $\mathbf{x}_{i} \neq \mathbf{0}$ using $g_i\big(\lVert \mathbf{z}_i\rVert_1\big) = \lVert \mathbf{x}_i\rVert_1
+$ gives,
+
+$$
+\tilde{F}_i(\mathbf{z}_i) = F_i\!\left(\frac{\lVert \mathbf{x}_i\rVert_1}{\lVert \mathbf{z}_i\rVert_1}\cdot\frac{g_i^{-1}(\lVert \mathbf{x}_i\rVert_1)}{\lVert \mathbf{x}_i\rVert_1}\,\mathbf{x}_i\right) = F_i(\mathbf{x}_i),
+$$
+
+where we used $\lVert \mathbf{z}_i\rVert_1 = g_i^{-1}(\lVert \mathbf{x}_i\rVert_1)$. If $\mathbf{x}_i=\mathbf{0}$, then $\mathbf{z}_i=\mathbf{0}$ and the equality follows directly from $\tilde F_i(\mathbf{0})=F_i(\mathbf{0})$. Thus $F_i(\mathbf{x}_i)=\tilde F_i(\mathbf{z}_i)$ as required.
+
+Finally, the map $\mathbf{x}_i\mapsto\mathbf{z}_i$ is a bijection of $\mathbb{R}_{\ge0}^K$, with inverse
+
+$$
+\mathbf{x}_i = \frac{g_i(\lVert \mathbf{z}_i\rVert_1)}{\lVert \mathbf{z}_i\rVert_1}\mathbf{z}_i
+$$
+
+for $\mathbf{z}_i\neq\mathbf{0}$, and $\mathbf{x}_i=\mathbf{0}$ when $\mathbf{z}_i=\mathbf{0}$.
+
+Applying this construction to every developer $i$, corresponding strategy profiles $(\mathbf{x}_1,\ldots,\mathbf{x}_N)$ and $(\mathbf{z}_1,\ldots,\mathbf{z}_N)$ induce identical outputs and costs for every developer, and hence identical payoffs. Since the correspondence is a bijection for each developer, best responses are preserved under the reparameterization, and therefore the Nash equilibria of the two games are in bijective correspondence.
+\end{proof}
+
+
+\subsection{Proof of Theorem~\ref{thm:EquilibriumExistence}}
+\label{app:EquilibriumExistence_proof}
+\EquilibriumExistence*
+\begin{proof}
+Since $\sigma$ is bounded in $[0,1]$ and $\mathbf{w}\in\Delta^{K-1}$, the total reward of any developer is at most $1$. Moreover, choosing $\mathbf{x}_i=\mathbf{0}$ gives nonnegative utility. Therefore, any action satisfying
+\[
+c(\lVert\mathbf{x}_i\rVert_1)>1
+\]
+cannot be a best response. Let $\bar{x}=c^{-1}(1)$. We may therefore restrict each developer's strategy set to
+\[
+\mathcal{X}_i=\{\mathbf{x}_i\in\mathbb{R}_+^K:\lVert\mathbf{x}_i\rVert_1\leq\bar{x}\},
+\]
+which is compact and convex.
+Since any action outside \(\mathcal X_i\) yields strictly negative utility, while \(\mathbf x_i=\mathbf0\) yields nonnegative utility, no action outside \(\mathcal X_i\) can be a profitable deviation. Thus any Nash equilibrium of the restricted game is also a Nash equilibrium of the original game.
+We note that $u_{i}$ is continuous because it is built from the addition and multiplication of continuous functions in $\sigma$, $F_{i}$, and $c$. 
+
+It remains to show that $u_i(\mathbf{x}_i,\mathbf{x}_{-i})$ is  concave in $\mathbf{x}_i$. For $z_{ij,k}=g_{i,k}(\mathbf{x}_i)-g_{j,k}(\mathbf{x}_j)$,
+\[
+\nabla_{\mathbf{x}_i}^2 \sigma(z_{ij,k})
+=
+\sigma'(z_{ij,k})\nabla^2 g_{i,k}(\mathbf{x}_i)
++
+\sigma''(z_{ij,k})
+\nabla g_{i,k}(\mathbf{x}_i)\nabla g_{i,k}(\mathbf{x}_i)^\top.
+\]
+Since $\sigma'(z)>0$ and
+\[
+\frac{\sigma''(z)}{\sigma'(z)} \leq \rho_\sigma,
+\]
+the assumed curvature condition implies
+\[
+\nabla_{\mathbf{x}_i}^2 \sigma(z_{ij,k})\preceq 0.
+\]
+Thus every pairwise reward term is concave in $\mathbf{x}_i$. Their nonnegative weighted sum is therefore concave, and since $c$ is convex,
+\[
+-c(\lVert\mathbf{x}_i\rVert_1)
+\]
+is concave as well. Hence $u_i(\cdot,\mathbf{x}_{-i})$ is concave (and so quasi-concave) on $\mathcal{X}_i$ for every $\mathbf{x}_{-i}$.
+
+Finally, the utilities are continuous and the strategy sets $\mathcal{X}_i$ are nonempty, compact, and convex. Therefore, by the Debreu--Fan--Glicksberg equilibrium existence theorem, the game admits a pure-strategy Nash equilibrium.
+\end{proof}
+
+\subsection{Proof of Lemma~\ref{lem:SymmetricDevelopers}}
+\label{app:SymmetricDevelopers_proof}
+\SymmetricDevelopers*
+\begin{proof}
+By Theorem~\ref{thm:EquilibriumExistence}, we may restrict each developer's action space to a compact convex set $\mathcal{X}_i$, and each payoff $u_i$ is continuous and concave in the developer's own action. Hence each best-response correspondence is nonempty, convex-valued, and upper hemicontinuous.
+
+First suppose that $F_i=F_{i'}$. Consider the subset of strategy profiles
+\[
+\mathcal{X}^{i,i'}
+=
+\left\{
+\bx \in\prod_{j=1}^N\mathcal{X}_j:
+\bxi =\bx_{i'}
+\right\}.
+\]
+At any profile $\bx \in\mathcal{X}^{i,i'}$, developers $i$ and $i'$ face identical optimization problems: they have the same production function and cost function, and, because $\bxi=\bx_{i'}$, each faces the same actions and outputs from all other developers. Therefore,
+\[
+\BR_i(\bxmi)
+=
+\BR_{i'}(\bx_{-i'}).
+\]
+Since these best-response sets are identical, nonempty, and convex, we can define a reduced best-response correspondence on $\mathcal{X}^{i,i'}$ that requires developers $i$ and $i'$ to select the same element of their common best-response set, while every other developer selects from its usual best-response set. 
+Equivalently, parameterize $\mathcal{X}^{i,i'}$ by a common action $\mathbf y=\mathbf x_i=\mathbf x_{i'}$ and the actions $(\mathbf x_\ell)_{\ell\neq i,i'}$. 
+The resulting correspondence is nonempty and convex-valued. 
+Moreover, it is upper hemicontinuous because each developer's best-response correspondence is upper hemicontinuous and the restriction to profiles satisfying $\mathbf x_i=\mathbf x_{i'}$ is continuous.
+Thus, by Kakutani's fixed-point theorem, there exists a fixed point $\bx^*\in\mathcal{X}^{i,i'}$.
+At this fixed point every developer is playing a best response in the original game, and, by construction, $\bxi^*=\bx_{i'}^*$.
+
+Now suppose that $F_i=F$ for every $i$. 
+Now consider the fully symmetric subset
+\[
+\mathcal{X}^{\mathrm{sym}}
+=
+\left\{
+\bx\in\prod_{j=1}^N\mathcal{X}_j:
+\bx_1=\cdots=\bx_N
+\right\}.
+\]
+Here, every developer faces the same optimization problem, and therefore faces the same best response problem. 
+We can choose the same best response for each developer under this situation. 
+As above, the resulting correspondence maps $\mathcal{X}^{\mathrm{sym}}$ into itself and satisfies the conditions of Kakutani's fixed-point theorem.
+Therefore, there exists a fixed point with $\bxi$ constant, which implies $\bthetai$ constant, and consequently $H=1$.
+\end{proof}
+
+\subsection{Proof of Theorem~\ref{thm:SimilarFHomogeneity}}
+\label{app:SimilarFHomogeneity}
+\SimilarFHomogeneity*
+\begin{proof}
+% Establish similarity in pseudogradients
+Let $G(\bx)$ be the pseudogradient for the original game with production functions $F_{i}$ and $F_{i'}$ and let $\widetilde{G}(\bx)$ be the pseudogradient for the counterfactual game where $F_{i}$ is replaced with $F_{i'}$ (while everything else stays constant). 
+
+We show that $G$ and $\widetilde{G}$ are close in L2 norm. 
+For each developer $\ell$, the corresponding block of the pseudogradient is
+\[
+G_\ell(\bx)=-\nabla_{\bx_\ell}u_\ell(\bx).
+\]
+Since
+\[
+u_\ell(\bx)=\frac{1}{N-1}\sum_{r\neq \ell}\sum_{k=1}^K w_k\sigma\!\left(F_\ell(\bx_\ell)_k-F_r(\bx_r)_k\right)-c(\lVert\bx_\ell\rVert_1),
+\]
+we have
+\[
+\nabla_{\bx_\ell}u_\ell(\bx)=\frac{1}{N-1}\sum_{r\neq \ell}\sum_{k=1}^K w_k \sigma' \!\left(F_\ell(\bx_\ell)_k-F_r(\bx_r)_k\right)\nabla_{\bx_\ell}F_\ell(\bx_\ell)_k-\nabla_{\bx_\ell}c(\lVert\bx_\ell\rVert_1).
+\]
+Since the strategy space is compact and the production functions are continuous, the arguments of $\sigma$ lie in a compact interval.
+Since $\sigma$ is twice continuously differentiable, $\sigma'$ and $\sigma''$ are bounded on this interval, so $\sigma'$ is Lipschitz; moreover, since the production functions are continuously differentiable on the compact strategy space, their gradients are uniformly bounded.
+Replacing $F_i$ with $F_{i'}$ affects only terms involving developer $i$.
+For $\ell=i$, both the argument of $\sigma'$ and the production-function gradient change; for $\ell\neq i$, only the comparison against developer $i$ changes. 
+Using $\lVert F_i(\bx_i)-F_{i'}(\bx_i)\rVert_2\leq\epsilon$, $\lVert \nabla F_i(\bx_i)_k-\nabla F_{i'}(\bx_i)_k\rVert_2\leq\epsilon$, and the Lipschitz continuity of $\sigma'$, we can bound these differences term-by-term to obtain
+\[
+\sup_{\bx\in\mathcal X}\lVert G(\bx)-\widetilde G(\bx)\rVert_2 \leq C\epsilon,
+\] 
+for some constant $C>0$ independent of $\epsilon$.
+
+
+% Establish similarity in equilibrium
+Next, let $\bx^*$ denote the equilibrium of the original game. 
+Because $F_i$ and $F_{i'}$ both satisfy the conditions of Theorem~\ref{thm:EquilibriumExistence}, the counterfactual game also satisfies these conditions. 
+By Lemma~\ref{lem:SymmetricDevelopers}, there exists an equilibrium $\widetilde{\bx}^*$ of the counterfactual game such that $\widetilde{\bx}_i^*=\widetilde{\bx}_{i'}^*$. 
+We select such an equilibrium $\widetilde{\bx}^*$.
+Since each developer's utility is concave and differentiable in its own
+strategy, the first-order optimality conditions characterize equilibrium.
+That is, because $\bx^*$ and $\widetilde{\bx}^*$ are equilibria of the original and counterfactual games, respectively, we have that 
+\[
+G(\bx^*)^\top(\widetilde{\bx}^*-\bx^*)\geq0,\qquad \widetilde G(\widetilde{\bx}^*)^\top(\bx^*-\widetilde{\bx}^*)\geq0.
+\]
+Let $d=\bx^*-\widetilde{\bx}^*$. Adding the two inequalities gives $(G(\bx^*)-\widetilde G(\widetilde{\bx}^*))^\top d\leq0$. 
+Recall that $G(\mathbf{x})$ is strongly monotone, and so 
+\[
+\left(G(\bx)-G(\bx')\right)^\top(\bx-\bx')
+\geq
+\mu\lVert\bx-\bx'\rVert_2^2.
+\]
+Setting $\bx=\bx^*$ and $\bx'=\widetilde{\bx}^*$ gives
+\[
+(G(\bx^*)-G(\widetilde{\bx}^*))^\top d\geq\mu\lVert d\rVert_2^2.
+\]
+Invoking $(G(\bx^*)-\widetilde G(\widetilde{\bx}^*))^\top d\leq0$ gives that 
+\[
+\mu\lVert d\rVert_2^2\leq(G(\bx^*)-G(\widetilde{\bx}^*))^\top d\leq(\widetilde G(\widetilde{\bx}^*)-G(\widetilde{\bx}^*))^\top d \leq C\epsilon \lVert d\rVert_2,
+\]
+where the final inequality follows from Cauchy--Schwarz and the bound on the difference between the pseudogradients.
+Rearranging and solving for $d$ gives that 
+\[
+\lVert\bx^*-\widetilde{\bx}^*\rVert_2\leq\frac{C\epsilon}{\mu}.
+\]
+
+Since $\widetilde{\bx}_i^*=\widetilde{\bx}_{i'}^*$,
+\[
+\lVert\bx_i^*-\bx_{i'}^*\rVert_2\leq \lVert\bx_i^*-\widetilde{\bx}_i^*\rVert_2+\lVert\bx_{i'}^*-\widetilde{\bx}_{i'}^*\rVert_2\leq O(\lVert\bx^*-\widetilde{\bx}^*\rVert_2) =O\left(\frac{\epsilon}{\mu}\right).
+\]
+
+% Establish similarity in outputs/monoculture
+Finally, to bound $\Hij(\mathbf{x}^*)$, let 
+\[
+\begin{aligned}
+\delta
+&=
+\lVert\btheta_i^*-\btheta_{i'}^*\rVert_2\\
+&=
+\lVert F_i(\bx_i^*)-F_{i'}(\bx_{i'}^*)\rVert_2\\
+&\leq
+\lVert F_i(\bx_i^*)-F_i(\bx_{i'}^*)\rVert_2
++
+\lVert F_i(\bx_{i'}^*)-F_{i'}(\bx_{i'}^*)\rVert_2\\
+&\leq
+L\lVert\bx_i^*-\bx_{i'}^*\rVert_2+\epsilon\\
+&=
+O\left(\epsilon\left(1+\frac{L}{\mu}\right)\right).
+\end{aligned}
+\]
+Next, recall that
+\[
+H_{i,i'}(\mathbf{x}^*)=\frac{\langle\btheta_i^*,\btheta_{i'}^*\rangle}{\lVert\btheta_i^*\rVert_2\lVert\btheta_{i'}^*\rVert_2}.
+\]
+Let $\widehat{\btheta}_i^*=\btheta_i^*/\lVert\btheta_i^*\rVert_2$ and $\widehat{\btheta}_{i'}^*=\btheta_{i'}^*/\lVert\btheta_{i'}^*\rVert_2$. Since both normalized vectors have unit norm,
+\[
+\lVert\widehat{\btheta}_i^*-\widehat{\btheta}_{i'}^*\rVert_2^2
+=2-2\langle\widehat{\btheta}_i^*,\widehat{\btheta}_{i'}^*\rangle
+=2(1-H_{i,i'}(\mathbf{x}^*)).
+\]
+If $\lVert\btheta_i^*\rVert_2,\lVert\btheta_{i'}^*\rVert_2\geq m$, then, adding and subtracting $\btheta_{i'}^*/\lVert\btheta_i^*\rVert_2$ and applying the triangle inequality,
+\[
+\begin{aligned}
+\left\lVert\frac{\btheta_i^*}{\lVert\btheta_i^*\rVert_2}-\frac{\btheta_{i'}^*}{\lVert\btheta_{i'}^*\rVert_2}\right\rVert_2
+&=
+\left\lVert
+\frac{\btheta_i^*-\btheta_{i'}^*}{\lVert\btheta_i^*\rVert_2}
++
+\btheta_{i'}^*
+\left(
+\frac{1}{\lVert\btheta_i^*\rVert_2}
+-
+\frac{1}{\lVert\btheta_{i'}^*\rVert_2}
+\right)
+\right\rVert_2 \\
+&\leq
+\frac{\lVert\btheta_i^*-\btheta_{i'}^*\rVert_2}{\lVert\btheta_i^*\rVert_2}
++
+\lVert\btheta_{i'}^*\rVert_2
+\left|
+\frac{1}{\lVert\btheta_i^*\rVert_2}
+-
+\frac{1}{\lVert\btheta_{i'}^*\rVert_2}
+\right| \\
+&=
+\frac{\lVert\btheta_i^*-\btheta_{i'}^*\rVert_2}{\lVert\btheta_i^*\rVert_2}
++
+\frac{\left|\lVert\btheta_i^*\rVert_2-\lVert\btheta_{i'}^*\rVert_2\right|}{\lVert\btheta_i^*\rVert_2} \\
+&\leq
+\frac{2\lVert\btheta_i^*-\btheta_{i'}^*\rVert_2}{m}
+=
+\frac{2\delta}{m}.
+\end{aligned}
+\]
+Therefore,
+\[
+2(1-H_{i,i'}(\mathbf{x}^*))\leq\frac{4\delta^2}{m^2},
+\]
+and hence
+\[
+H_{i,i'}(\mathbf{x}^*)\geq1-\frac{2\delta^2}{m^2}=1-O\left(\frac{\epsilon^2}{m^2}\left(1+\frac{L}{\mu}\right)^2\right).
+\]
+\end{proof}
+
+\subsection{Proof of Theorem~\ref{thm:SpecializedFDifferentiation}}
+\label{app:SpecializedFDifferentiation}
+\SpecializedFDifferentiation*
+
+\begin{proof}
+Let
+\[
+    Y_i^*
+    :=
+    \{\theta_j^*:j\neq i\},
+    \qquad
+    Y_{i'}^*
+    :=
+    \{\theta_j^*:j\neq i'\}
+\]
+denote the rival environments faced by developers $i$ and $i'$ at
+equilibrium. Since $\mathbf x^*$ is a Nash equilibrium and $\Theta$
+contains all relevant best responses, we have
+\[
+    \theta_i^*
+    =
+    \arg\min_{\theta\in\Theta}
+    \phi_{i,Y_i^*}(\theta),
+    \qquad
+    \theta_{i'}^*
+    =
+    \arg\min_{\theta\in\Theta}
+    \phi_{i',Y_{i'}^*}(\theta).
+\]
+By the assumed interiority of the minimizers,
+\[
+    \nabla \phi_{i,Y_i^*}(\theta_i^*)=0,
+    \qquad
+    \nabla \phi_{i',Y_{i'}^*}(\theta_{i'}^*)=0.
+\]
+
+We first compare the two developers while holding the rival environment
+fixed. Define the counterfactual best response of developer $i'$ to
+developer $i$'s rival environment:
+\[
+    \widetilde\theta_{i'}
+    :=
+    \arg\min_{\theta\in\Theta}
+    \phi_{i',Y_i^*}(\theta).
+\]
+We will decompose $\lVert \theta^*_i-\theta^*_{i'} \rVert_2$ into $\lVert \theta^*_i-\widetilde{\theta}_{i'} \rVert_2$ and $\lVert \widetilde{\theta}_{i'} -\theta^*_{i'}\rVert_2$.
+
+To bound the first term, we note that $\nabla\phi_{i,Y_i^*}(\theta_i^*)=0$ implies $\nabla C_{i}(\theta_{i}^*) = \nabla V_{Y_{i}^*}(\theta_{i}^*)$. 
+As a result, 
+\[
+\begin{aligned}
+    \lVert \nabla\phi_{i',Y_i^*}(\theta_i^*) \rVert_2
+    &=
+    \lVert\nabla C_{i'}(\theta_i^*)
+    -
+    \nabla V_{Y_i^*}(\theta_i^*) \rVert_2\\
+    &=
+    \lVert \nabla C_{i'}(\theta_i^*)
+    -
+    \nabla C_i(\theta_i^*) \rVert_2 \\
+    & \geq \delta_{i,i'} 
+\end{aligned}
+\]
+We additionally note that by interiority, $\nabla\phi_{i',Y_i^*}(\widetilde\theta_{i'})=0$. 
+Therefore, combining these two gives that 
+\[
+ \delta_{i,i'}
+    \le
+    \left\|
+    \nabla\phi_{i',Y_i^*}(\theta_i^*)
+    -
+    \nabla\phi_{i',Y_i^*}(\widetilde\theta_{i'})
+    \right\|_2.
+\]
+We can upper bound this because $\phi_{i',Y_{i}^*}$ has L-Lipschitz gradient, and so 
+\[
+ \delta_{i,i'}
+    \le
+    \left\|
+    \nabla\phi_{i',Y_i^*}(\theta_i^*)
+    -
+    \nabla\phi_{i',Y_i^*}(\widetilde\theta_{i'})
+    \right\|_2 \leq  L\|\theta_i^*-\widetilde\theta_{i'}\|_2.
+\]
+Rearranging gives,
+\[
+    \|\theta_i^*-\widetilde\theta_{i'}\|_2
+    \ge
+    \frac{\delta_{i,i'}}{L}.
+\]
+
+Next, we need to bound $\lVert\widetilde\theta_{i'}-\theta_{i'}^* \rVert_2$. 
+The environments $Y_i^*$ and $Y_{i'}^*$ share the same $N-2$ other rivals and differ only in that $Y_i^*$ contains $\theta_{i'}^*$ whereas $Y_{i'}^*$ contains $\theta_i^*$. 
+Thus, for any $\theta\in\Theta$ and coordinate $k$,
+\[
+\begin{aligned}
+&
+\left|
+\frac{\partial V_{Y_i^*}(\theta)}{\partial\theta_k}
+-
+\frac{\partial V_{Y_{i'}^*}(\theta)}{\partial\theta_k}
+\right| \\
+&\qquad =
+\frac{w_k}{N-1}
+\left|
+\sigma'(\theta_k-\theta_{i',k}^*)
+-
+\sigma'(\theta_k-\theta_{i,k}^*)
+\right| \leq \frac{\ell_\sigma w_k}{N-1}
+|\theta_{i,k}^*-\theta_{i',k}^*|.
+\end{aligned}
+\]
+Summing across coordinates gives
+\[
+\begin{aligned}
+\left\|
+\nabla V_{Y_i^*}(\theta)
+-\nabla V_{Y_{i'}^*}(\theta)
+\right\|_2^2
+&\le
+\frac{\ell_\sigma^2}{(N-1)^2}
+\sum_{k=1}^K
+w_k^2
+|\theta_{i,k}^*-\theta_{i',k}^*|^2\\
+&\le
+\frac{\ell_\sigma^2\|w\|_\infty^2}{(N-1)^2}
+\|\theta_i^*-\theta_{i'}^*\|_2^2,
+\end{aligned}
+\]
+and so
+\[
+    \left\|
+    \nabla V_{Y_i^*}(\theta)
+    -
+    \nabla V_{Y_{i'}^*}(\theta)
+    \right\|_2
+    \le
+    \frac{\ell_\sigma\|w\|_\infty}{N-1}
+    \|\theta_i^*-\theta_{i'}^*\|_2.
+\]
+
+Because the cost term is the same for both $\phi_{i',Y_{i}^*}$ and $\phi_{i',Y_{i'}^*}$, we have that 
+\[
+\begin{aligned}
+    \left\|
+    \nabla\phi_{i',Y_i^*}(\theta_{i'}^*)
+    \right\|_2
+    &=
+    \left\|
+    \nabla\phi_{i',Y_i^*}(\theta_{i'}^*)
+    -
+    \nabla\phi_{i',Y_{i'}^*}(\theta_{i'}^*)
+    \right\|_2 \\
+    &=
+    \left\|
+    \nabla V_{Y_{i'}^*}(\theta_{i'}^*)
+    -
+    \nabla V_{Y_i^*}(\theta_{i'}^*)
+    \right\|_2 \\
+    &\le
+    \frac{\ell_\sigma\|w\|_\infty}{N-1}
+    \|\theta_i^*-\theta_{i'}^*\|_2.
+\end{aligned}
+\]
+
+Since $\phi_{i',Y_i^*}$ is $\mu$-strongly convex and
+$\widetilde\theta_{i'}$ is its minimizer, strong monotonicity of its
+gradient gives
+\[
+\begin{aligned}
+    \mu
+    \|\theta_{i'}^*-\widetilde\theta_{i'}\|_2^2
+    &\le
+    \left\langle
+    \nabla\phi_{i',Y_i^*}(\theta_{i'}^*)
+    -
+    \nabla\phi_{i',Y_i^*}(\widetilde\theta_{i'}),
+    \theta_{i'}^*-\widetilde\theta_{i'}
+    \right\rangle \\
+    &\le
+    \left\|
+    \nabla\phi_{i',Y_i^*}(\theta_{i'}^*)
+    \right\|_2
+    \|\theta_{i'}^*-\widetilde\theta_{i'}\|_2.
+\end{aligned}
+\]
+Therefore,
+\[
+    \|\theta_{i'}^*-\widetilde\theta_{i'}\|_2
+    \le
+    \frac{1}{\mu}
+    \left\|
+    \nabla\phi_{i',Y_i^*}(\theta_{i'}^*)
+    \right\|_2 \leq \frac{1}{\mu} \frac{\ell_\sigma\|w\|_\infty}{N-1}
+    \|\theta_i^*-\theta_{i'}^*\|_2 = \rho_{N} \lVert \theta_i^*-\theta_{i'}^* \rVert_2,
+\]
+where
+\[
+    \rho_N
+    =
+    \frac{\ell_\sigma\|w\|_\infty}
+         {\mu(N-1)}.
+\]
+
+Finally, by the triangle inequality,
+\[
+\begin{aligned}
+    \|\theta_i^*-\widetilde\theta_{i'}\|_2
+    &\le
+    \|\theta_i^*-\theta_{i'}^*\|_2
+    +
+    \|\theta_{i'}^*-\widetilde\theta_{i'}\|_2 \\
+    &\le
+    (1+\rho_N)
+    \|\theta_i^*-\theta_{i'}^*\|_2.
+\end{aligned}
+\]
+Plugging in the bound for $\lVert \theta^*_i-\widetilde{\theta}_{i'} \rVert_2$ yields
+\[
+    \|\theta_i^*-\theta_{i'}^*\|_2
+    \ge
+    \frac{\delta_{i,i'}}
+         {L(1+\rho_N)}.
+\]
+
+For the cosine-similarity bound, let
+\[
+    d:=\|\theta_i^*-\theta_{i'}^*\|_2,
+    \qquad
+    r_i:=\|\theta_i^*\|_2,
+    \qquad
+    r_{i'}:=\|\theta_{i'}^*\|_2.
+\]
+For nonzero outputs,
+\[
+\begin{aligned}
+    d^2
+    &=
+    r_i^2+r_{i'}^2
+    -
+    2r_ir_{i'}H_{i,i'}(\mathbf x^*)\\
+    &=
+    (r_i-r_{i'})^2
+    +
+    2r_ir_{i'}
+    \bigl(1-H_{i,i'}(\mathbf x^*)\bigr).
+\end{aligned}
+\]
+Therefore,
+\[
+    H_{i,i'}(\mathbf x^*)
+    =
+    1-
+    \frac{
+        d^2-(r_i-r_{i'})^2
+    }{
+        2r_ir_{i'}
+    }.
+\]
+Using
+\[
+    d
+    \ge
+    \frac{\delta_{i,i'}}
+         {L(1+\rho_N)}
+\]
+and the trivial bound $H_{i,i'}\le1$ gives
+\[
+H_{i,i'}(\mathbf x^*)
+\le
+1-
+\frac{
+\left[
+\left(
+\frac{\delta_{i,i'}}{L(1+\rho_N)}
+\right)^2
+-(r_i-r_{i'})^2
+\right]_+
+}{
+2r_ir_{i'}
+}.
+\]
+\end{proof}
+
+\subsection{Proof of Proposition~\ref{prop:DirectionalCharacterization}}
+\label{app:DirectionalCharacterization}
+\DirectionalCharacterization*
+\begin{proof}
+First suppose that $D=(\mathbf d_1,\ldots,\mathbf d_N)$ is induced by a pure-strategy Nash equilibrium $\bx^*$ with nonzero outputs.
+Let $\alpha_i=\lVert F_i(\bx_i^*)\rVert_2$ and  $\mathbf d_i = \frac{F_i(\bx_i^*)}{\lVert F_i(\bx_i^*)\rVert_2}$, so that $F_i(\bx_i^*)=\alpha_i\mathbf d_i$
+for every developer $i$.
+
+For each developer $i$ and capability $k$, define its marginal evaluation weight at
+$\bx^*$ as
+\[
+p_{i,k}^*
+=
+\frac{w_k}{N-1}
+\sum_{j\neq i}
+\sigma'\!\left(
+F_i(\bx_i^*)_k-F_j(\bx_j^*)_k
+\right).
+\]
+Since $F_i(\bx_i^*)=\alpha_i\mathbf d_i$, this is exactly
+\[
+p_{i,k}^*
+=
+p_{i,k}(D,\boldsymbol{\alpha})
+=
+\frac{w_k}{N-1}
+\sum_{j\neq i}
+\sigma'\!\left(
+\alpha_i d_{i,k}-\alpha_j d_{j,k}
+\right).
+\]
+
+The gradient of developer $i$'s utility with respect to its investment is therefore
+\[
+\nabla_{\bx_i}u_i(\bx^*)
+=
+\nabla F_i(\bx_i^*)^\top
+\mathbf p_i(D,\boldsymbol{\alpha})
+-
+c'(\lVert\bx_i^*\rVert_1)\mathbf 1.
+\]
+Because $\bx^*$ is an equilibrium, the first-order optimality conditions imply
+\[
+\nabla F_i(\bx_i^*)^\top
+\mathbf p_i(D,\boldsymbol{\alpha})
+\leq
+c'(\lVert\bx_i^*\rVert_1)\mathbf 1,
+\]
+with equality in every coordinate $\ell$ such that $x_{i,\ell}^*>0$.
+Thus $D$ is locally supportable.
+
+Conversely, suppose that $D$ is locally supportable.
+Then there exist $\boldsymbol{\alpha}\in\mathbb R_{++}^N$ and
+$\bx=(\bx_1,\ldots,\bx_N)$ such that
+\[
+F_i(\bx_i)=\alpha_i\mathbf d_i
+\]
+and
+\[
+\nabla F_i(\bx_i)^\top
+\mathbf p_i(D,\boldsymbol{\alpha})
+\leq
+c'(\lVert\bx_i\rVert_1)\mathbf 1,
+\]
+with equality whenever $x_{i,\ell}>0$.
+
+At this profile,
+\[
+p_{i,k}(D,\boldsymbol{\alpha})
+=
+\frac{w_k}{N-1}
+\sum_{j\neq i}
+\sigma'\!\left(
+F_i(\bx_i)_k-F_j(\bx_j)_k
+\right),
+\]
+and hence the conditions above are exactly the first-order optimality
+conditions for developer $i$'s original payoff $u_i(\bx_i,\bx_{-i})$.
+
+By the curvature argument in the proof of Theorem~\ref{thm:EquilibriumExistence}, \(u_i(\cdot,\bx_{-i})\) is concave on \(\mathbb R_+^K\). 
+Therefore, these first-order conditions are sufficient for optimality so $\bx_i$ is a best response to $\bx_{-i}$ for every developer $i$.
+It follows that $\bx$ is a pure-strategy Nash equilibrium, and its normalized
+output directions are exactly $D$.
+
+Finally, complete monoculture occurs if and only if
+\[
+\mathbf d_1=\cdots=\mathbf d_N,
+\]
+so the first characterization follows by setting
+$D=(\mathbf d,\ldots,\mathbf d)$.
+Similarly, because output vectors are nonnegative, complete specialization
+occurs if and only if
+\[
+\mathbf d_i^\top\mathbf d_j=0
+\qquad\forall i\neq j.
+\]
+The second characterization therefore follows directly.
+\end{proof}
+
+
+\subsection{Proof of Proposition~\ref{prop:AsymptoticBunching}}
+\label{app:AsymptoticBunching}
+\AsymptoticBunching*
+
+\begin{proof}
+Recall that at each time $t$, developer $i$ chooses $\mathbf x_{i,t}$ to maximize the win-rate, minus an unbounded cost function.
+The win-rate is at most $1$, while the cost function is increasing and unbounded, so there exists $B<\infty$ such that $c(B)>1$. 
+Therefore, at any equilibrium, $\|\mathbf x_{i,t}\|_1\le B$ for every $i,t$. 
+
+Next, we deal with two cases on whether the cumulative investments $\{\mathbf X_i^t\}_{t\ge1}$ are bounded or not, and show that in either case $\|F_i(\mathbf X_i^{t+1})-F_i(\mathbf X_i^t)\|_2 \to 0$.  
+First, suppose that $\{\mathbf X_i^t\}_{t\ge1}$ is bounded. 
+Because $\mathbf X_i^t$ is the sum of $t$ non-negative numbers, if sum converges, then the individual terms must go to zero; $\sum_t\|\mathbf x_{i,t}\|_1<\infty$, and so $\|\mathbf x_{i,t}\|_1\to0$.
+Because $\|\mathbf x_{i,t}\|_1\to0$, then $\lVert \mathbf X_i^{t+1}-\mathbf X_i^t \rVert_1 \to 0$. 
+Because $F_i$ is continuously differentiable, its Jacobian is bounded on the compact set containing $\{\mathbf X_i^t\}_{t\ge1}$, and so 
+\[
+\|F_i(\mathbf X_i^{t+1})-F_i(\mathbf X_i^t)\|_2
+\to0.
+\]
+
+Instead, suppose that $\{\mathbf X_i^t\}_{t\ge1}$ is unbounded, so  $\|\mathbf X_i^t\|_1\to\infty$.
+We know that $\lVert X_i^{t+1}-X_i^{t} \rVert_1 \leq B$.
+We can then use the mean-value inequality to show that 
+\[
+\|F_i(\mathbf X_i^{t+1})-F_i(\mathbf X_i^t)\|_2
+\le
+B
+\sup_{\|\mathbf z\|_1\ge\|\mathbf X_i^t\|_1}
+\max_{\ell\in[K]}
+\left\|
+\frac{\partial F_i(\mathbf z)}{\partial z_\ell}
+\right\|_2 .
+\]
+As $t\to\infty$, $\|\mathbf X_i^t\|_1\to\infty$, and by assumption, we have that $\left\|
+\frac{\partial F_i(\mathbf z)}{\partial z_\ell}
+\right\|_2 \to 0$.
+As a result, $\|F_i(\mathbf X_i^{t+1})-F_i(\mathbf X_i^t)\|_2 \to 0$, so $\|\Delta\boldsymbol{\theta}^t\|_2\to0$.
+
+We next use the catch-up property. 
+By Cauchy--Schwarz, we have that 
+\[
+\beta\|\mathbf g^t\|_2^2
+\le
+\left\langle
+\mathbf g^t,\Delta\boldsymbol{\theta}^t
+\right\rangle
+\le
+\|\mathbf g^t\|_2
+\|\Delta\boldsymbol{\theta}^t\|_2.
+\]
+If $\|\mathbf g^t\|_2>0$, dividing by $\|\mathbf g^t\|_2$ gives
+\[
+\|\mathbf g^t\|_2
+\le
+\frac{1}{\beta}
+\|\Delta\boldsymbol{\theta}^t\|_2.
+\]
+Because $\|\Delta\boldsymbol{\theta}^t\|_2 \to 0$ and $\beta$ is a constant, we have that $\lVert \mathbf{g}^t \rVert_2\to 0$. 
+By definition of $\mathbf{g}$ this implies that 
+\[
+g_{i,k}^t
+=
+\max_{i'}\theta_{i',k}^t-\theta_{i,k}^t
+\to0
+\qquad\text{for every }i,k.
+\]
+\end{proof}
+
+\subsection{Proof of Proposition~\ref{prop:PrimitiveCatchup}}
+\label{app:PrimitiveCatchup}
+\PrimitiveCatchup*
+\begin{proof}
+Fix a developer $i$, category $k$, and period $t$.  Write
+\[
+    \theta_{r,k}^t := [F_r(\mathbf X_r^t)]_k,
+    \qquad
+    \Delta\theta_{r,k}^t
+    :=
+    \theta_{r,k}^{t+1}-\theta_{r,k}^t,
+\]
+and let $j\in\arg\max_r \theta_{r,k}^t$ be a developer attaining
+the category-$k$ frontier at time $t$. 
+That is, $g_{i,k}^t=\theta_{j,k}^t-\theta_{i,k}^t$.
+If $g_{i,k}^t=0$, the result follows immediately from coordinatewise
+monotonicity of $F_i$, since $\Delta\theta_{i,k}^t\ge 0$.  
+
+Next, suppose $g_{i,k}^t>0$.
+We first lower bound the marginal evaluation weight on every category.
+For any developers $r,s$, category $q$, and relevant states
+$\mathbf x,\mathbf y$, suppose without loss of generality that $[F_r(\mathbf x)]_q \le [F_s(\mathbf y)]_q$.
+Then because production functions are $L$-Lipschitz, the gradient is bounded by $L$ and so we have that,
+\[
+    \mu\bigl([F_s(\mathbf y)]_q-[F_r(\mathbf x)]_q\bigr)
+    \le m_{r,q}(\mathbf x)^2 \leq L^2.
+\]
+Here, the latter term comes from the production functions being $L$-Lipschitz. 
+Rearranging gives that 
+\[
+    \bigl|[F_r(\mathbf x)]_q-[F_s(\mathbf y)]_q\bigr|
+    \le \frac{L^2}{\mu}.
+\]
+Therefore, $|\theta_{i,q}-\theta_{r,q}| \leq L^2/\mu$, and so 
+\[
+    p_{i,q}
+    :=
+    \frac{w_q}{N-1}
+    \sum_{r\neq i}
+    \sigma'\!\left(\theta_{i,q}-\theta_{r,q}\right)
+    \ge
+    w_{\min}
+    \min_{|z|\le L^2/\mu}\sigma'(z)
+    =
+    \underline p.
+\]
+
+Next, let $s_i:=\|\mathbf x_i\|_1$. 
+We consider two cases depending on whether or not the trailing developer $i$ surpasses developer $j$ at timestep $t+1$. 
+In the first case, suppose $\theta_{i,k}^{t+1}\ge \theta_{j,k}^{t+1}$, then 
+\[
+    \Delta\theta_{i,k}^t
+    =
+    \theta_{i,k}^{t+1}-\theta_{i,k}^t
+    \ge
+    \theta_{j,k}^{t+1}-\theta_{i,k}^t \geq \theta_{j,k}^{t}-\theta_{i,k}^t
+    =
+    g_{i,k}^t.
+\]
+Here, the last inequality comes from the fact that investments are non-negative and production functions are non-decreasing. 
+As a result, we have that $ \Delta\theta_{i,k}^t\ge \beta g_{i,k}^t$ for any $\beta \leq 1$. 
+
+For the second case, suppose that $\theta_{i,k}^{t+1}<\theta_{j,k}^{t+1}$.
+Then we can bound this difference by noting that $\mu (\theta_{j,k}^{t+1}-\theta_{i,k}^{t+1}) \leq m_{i,k}(\mathbf{x})^2$. 
+We bound $m_{i,k}(\mathbf{x})$ by noting that at equilibrium, we have that $c'(s_i)=\sum_{q=1}^K p_{i,q}\frac{\partial [F_i(\mathbf X_i^{t+1})]_q} {\partial x_\ell}$, and so 
+\[
+    c'(s_i)
+    \ge
+    p_{i,k}
+    \frac{\partial [F_i(\mathbf X_i^{t+1})]_k}
+         {\partial x_\ell}
+    \ge
+    \underline p\,
+    m_{i,k}(\mathbf X_i^{t+1}).
+\]
+We note that $\theta_{j,k}^{t+1}-\theta_{i,k}^{t+1} > 0$ and so $ m_{i,k}(\mathbf X_i^{t+1})^2 \geq \mu (\theta^{t+1}_{j,k}-\theta^{t+1}_{i,k}) > 0$, and so zero investment cannot satisfy the first-order optimality condition; hence $s_i>0$ and such an
+$\ell$ exists.
+We next bound $c'(s_i)$ as 
+\[
+    c'(s_i)
+    =
+    \int_0^{s_i}c''(u)\,du
+    \le Ms_i.
+\]
+Therefore
+\[
+Ms_{i} \geq c'(s_{i}) \geq \underline{p} m_{i,k}(\mathbf{X}_{i,}^{t+1}).
+\]
+Rearranging gives 
+\[
+    s_i
+    \ge
+    \frac{\underline p}{M}
+    m_{i,k}(\mathbf X_i^{t+1}).
+\]
+We finally substitute this back in and simplify with $\Delta \theta^{t}_{i,k}$ using the concavity of $F_{i}$ to get 
+\[
+\begin{aligned}
+    \Delta\theta_{i,k}^t
+    &=
+    [F_i(\mathbf X_i^{t+1})]_k
+    -
+    [F_i(\mathbf X_i^t)]_k\\
+    &\ge
+    \nabla [F_i(\mathbf X_i^{t+1})]_k^\top
+    \mathbf{x}_i \\
+    &\ge
+    m_{i,k}(\mathbf X_i^{t+1})\,s_i \\ 
+    &\ge 
+    \frac{\underline p}{M}
+    m_{i,k}(\mathbf X_i^{t+1})^2 \\ 
+    &\ge 
+    \frac{\mu \underline p}{M} (\theta_{j,k}^{t+1}-\theta_{i,k}^{t+1}) \\ 
+    &\ge 
+    \frac{\mu \underline p}{M} (g_{i,k}^t-\Delta \theta_{i,k}^t).
+\end{aligned}
+\]
+Here, the last inequality comes from $\theta_{j,k}^{t+1}-\theta_{i,k}^{t+1} = 
+    g_{i,k}^t
+      +\Delta\theta_{j,k}^t
+      -\Delta\theta_{i,k}^t \ge
+    g_{i,k}^t-\Delta\theta_{i,k}^t$.
+Rearranging gives 
+\[
+    \Delta\theta_{i,k}^t
+    \ge
+    \frac{\underline p\mu}
+         {M+\underline p\mu}
+    g_{i,k}^t
+    =
+    \beta g_{i,k}^t.
+\]
+\end{proof}

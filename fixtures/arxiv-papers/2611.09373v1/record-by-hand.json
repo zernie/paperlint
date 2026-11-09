@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "neurips_2026.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "preamble.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/01_introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/02_related_work.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/03_methods.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/04_results.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/05_discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/supplementary_results.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/hpo_adequacy.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/dataset_cards.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "37ac0b24a26630a1114b9f0d0b2a4ecabb4f9bf19d615285a15795ed71ec67ed",
+    "neurips_2026.sty": "c3fc2894e83d2517ca18b66741d6c595986d97957dc08ec08bb2125a7ec4555a",
+    "preamble.tex": "bf78d2897ab3963be10e0bde43b0f23da29787fd54283d046c7c932359497717",
+    "sections/01_introduction.tex": "d8d8a4743088cca5c2f78648ff0b16ae74f68b2068fd50fa323171511795ce52",
+    "sections/02_related_work.tex": "65d9ab7c1623468633e9072021be9a6abb5537eaeddc146a211d8b570170b96b",
+    "sections/03_methods.tex": "fb15e8189251352f8cd9feae39c4c7becb2bb8a06dde079947a7713c037a1837",
+    "sections/04_results.tex": "882a36f0c3fb185a1b9f3e9f870fea26f0c134508d99ade9946780a52b8ed214",
+    "sections/05_discussion.tex": "f7e48ebf739369c43b108db42bf049647101bd01aeec3b2eb879ab872842bc96",
+    "appendix/supplementary_results.tex": "77f79d872be8226d757bb5d5028ea8358e7b45ed7939a24d7bc079b708c26c47",
+    "appendix/hpo_adequacy.tex": "4dcf10280e0b1d76ec3c6615d88d19d976c40c86facbec8cd3bca96ac1193da0",
+    "appendix/dataset_cards.tex": "8928d3afc2572d17304a50b71e8b269c744218ee613f23eb583d952e9930b3f9"
+  }
+}

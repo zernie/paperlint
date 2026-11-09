@@ -1,0 +1,113 @@
+\documentclass[11pt]{article}
+
+% Replace the document class and formatting when choosing a submission venue.
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{caption}
+\captionsetup[figure]{font=small,skip=6pt}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{placeins}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{pdftitle={Causal understanding of agentic capabilities via randomized interventions}}
+\graphicspath{{figures/}}
+
+% Let large figures share pages with text and align float-only pages at the top.
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.8}
+\renewcommand{\textfraction}{0.08}
+\renewcommand{\floatpagefraction}{0.65}
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{4}
+\setlength{\textfloatsep}{12pt plus 2pt minus 2pt}
+\setlength{\floatsep}{12pt plus 2pt minus 2pt}
+\setlength{\intextsep}{12pt plus 2pt minus 2pt}
+\makeatletter
+\setlength{\@fptop}{0pt}
+\setlength{\@fpsep}{12pt plus 2pt minus 2pt}
+\makeatother
+
+% Notation.
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\argmin}{\operatorname*{arg\,min}}
+\newcommand{\feat}[1]{\texttt{\detokenize{#1}}}
+\setlength{\emergencystretch}{2em}
+
+% Figure 1 colors: task, proposals and observations, assignments, outcome.
+\definecolor{tsk}{HTML}{5E8DB8}
+\definecolor{sta}{HTML}{D9B65B}
+\definecolor{trt}{HTML}{B8472A}
+\definecolor{out}{HTML}{9C7F66}
+\definecolor{ink}{HTML}{3B4652}
+\definecolor{mute}{HTML}{9AA3AD}
+
+
+\newcommand{\ayush}[1]{\textcolor{cyan}{Ayush:#1}}
+\newcommand{\wx}[1]{\textcolor{purple}{#1}}
+
+\usepackage{color-edits}
+\addauthor{vs}{red}
+
+% \title{Causal Understanding of Agentic Capabilities via Randomized Interventions}
+% \title{When Should I Verify What My Agent Did? Causal Evaluation of Agentic AI via Randomized Interventions}
+\title{Knowing When to Intervene: Causal Evaluation of AI Agents}
+
+
+\author{
+   Ayush Sawarni\footnote{Corresponding author}, Wenqian Xing, Tijana Zrnic, Ramesh Johari, and Vasilis Syrgkanis\\[0.5em]
+  Stanford University\\[0.2em]
+  \texttt{\{ayushsaw,wxing,tijana.zrnic,rjohari,vsyrgk\}@stanford.edu}
+}
+\hypersetup{pdfauthor={Ayush Sawarni, Wenqian Xing, Tijana Zrnic, Ramesh Johari, Vasilis Syrgkanis}}
+\date{}
+
+\begin{document}
+\maketitle
+% \ayush{
+% Other candidate titles:
+% \begin{itemize}
+%     \item When Should I Verify What My Agent Did? Causal Evaluation of Agentic AI via Randomized Interventions
+%     \item Causal Understanding of Agentic Capabilities via Randomized Interventions
+%     \item Knowing When to Intervene: Causal Evaluation of AI Agents
+%     \item Knowing When to Intervene: Causal Evaluation of AI Agents via Sequential Randomization
+% \end{itemize}
+% }
+
+\input{sections/abstract}
+\input{sections/introduction}
+\input{sections/experimental_design}
+\input{sections/experiments}
+\input{sections/limitations_conclusion}
+\label{page:main-end}
+
+
+\clearpage
+\begingroup
+\small\raggedright
+\bibliographystyle{abbrvnat}
+\bibliography{references}
+\endgroup
+
+\clearpage
+\appendix
+
+\input{appendix/estimators}
+\input{appendix/trajectory_uncertainty}
+\input{appendix/experimental_details}
+\input{appendix/detailed_effects}
+% \input{appendix/haiku_effects}
+\label{page:document-end}
+
+\end{document}

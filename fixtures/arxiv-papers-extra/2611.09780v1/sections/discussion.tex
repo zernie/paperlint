@@ -1,0 +1,28 @@
+\section{Discussion}
+\paragraph{Competition without monoculture}
+Our results demonstrate that developers can converge in performance while still maintaining distinct relative strengths.
+At the same time, we observe an increasingly crowded performance frontier alongside diversified model usage. 
+These findings suggest a potentially encouraging future for AI competition: rather than converging to a single dominant model or a set of interchangeable alternatives, the ecosystem may support many similarly competitive models with distinct strengths. 
+If these differences translate into meaningful advantages for different users and tasks, greater competition could expand effective choice rather than eliminate it.
+
+\paragraph{What role does evaluation play?}
+Public evaluations provide a common signal of which capabilities are rewarded and how developers compare, giving competitors a shared target toward which to optimize.
+Without a common signal, developers might face more dispersed incentives, potentially encouraging differentiation or specialization~\citep{competition_diversity}.
+While developers' production functions determine which capabilities are easier for them to improve, shared evaluation shapes which improvements are strategically valuable, as their returns depend on their performance relative to competitors.
+Even when developers face identical evaluation incentives, differences in their production functions can sustain differentiated capability profiles, rather than inevitably producing monoculture.
+
+\paragraph{What role do evaluators play?}
+A natural question is the role evaluators play in shaping competitive dynamics.
+In our model, evaluators choose $\bw$, which impacts developer incentives.
+Evaluators might be able to influence where competitive pressure is concentrated within our model.
+For example, increasing the weight on a capability makes improving on it more valuable to developers, all else equal.
+Evaluation design can therefore shape not only how model performance is measured, but also which capabilities developers prioritize and, ultimately, the competitive landscape itself.
+
+\paragraph{Limitations}
+Our theoretical model abstracts features of real-world competition.
+We assume developers optimize expected win rate rather than rank, which simplifies the strategic environment and affects equilibrium existence.
+In Appendix~\ref{app:elo} we show that this objective directly captures weighted category-level pairwise win probabilities under Bradley--Terry/Elo-style evaluation.
+Our theoretical results characterize mechanisms through which evaluation can shape competitive investment, while our empirical results document related patterns in practice; they do not establish that evaluation causes the observed patterns of convergence. 
+Causal attribution is particularly difficult in this setting because competition and model development evolve jointly.
+Moreover, differences in evaluated capability profiles do not necessarily translate into meaningful differences in downstream performance or user outcomes.
+Finally, our usage results rely on OpenRouter, which captures only a subset of real-world model usage and includes traffic routed through automatic model-selection mechanisms.

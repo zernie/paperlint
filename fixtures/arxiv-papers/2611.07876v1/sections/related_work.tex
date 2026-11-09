@@ -1,0 +1,59 @@
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Code correctness prediction}
+Token probabilities form the most direct signal for execution-free code correctness prediction. They have been studied for calibration~\cite{Spiess2025Calib,Campos2026Multicalib}, but have been found to barely separate failing from passing programs~\cite{rathnasuriya2026overconfident}. Consistency methods compare multiple  generations for the same problem, some by executing them~\cite{valentin2026incoherence,sharma2025,he2026usingsemanticdistanceestimate}, others without execution~\cite{jain2023lightweight,shi2026codemorethantext,bouchard2026functional}. Probes and representation reading recover correctness from hidden states~\cite{bui2025openia,Vu2026Autoprobe,ribeiro2026repe,huang2025pttrust,lugoloobi2026llms}.
+%\orange{Thomas?~\cite{klassert2026introspective}}. 
+Comparisons across the above approaches only exist between output and consistency methods so far~\cite{bouchard2026functional}. %\orange{streichen/Relevanz? or set probes against sampling at line level~\cite{gros2025localized,huang2025pttrust}}; 
+To our knowledge, no causal methods have been investigated.
+
+\paragraph{Verdict correctness prediction}
+LLMs are increasingly used as judges in software engineering~\cite{he2025judgese}, but
+%and have been compared with human ratings on several SE tasks~\cite{wang2025replace}.}
+ have been found to misjudge code correctness~\cite{crupi2025judge} and react to superficial edits such as renamed variables~\cite{moon2026cover}. %He et al.\cite{he2025judgese} survey their use in software engineering. 
+Hence, {\it verdict correctness prediction} aims at predicting the correctness not of the code itself, but of the LLM's asssessment. 
+Approaches have explored 
+%The trustworthiness of a single verdict has been predicted using probes on the 
+judges' hidden states~\cite{Radharapu2025CalibratingJudges}, reasoning structure~\cite{qi2026verdi}, or have escalated uncertain cases~\cite{jung2025trust}. 
+%While internals help when a judge is comparing answers, they offer no advantage when scoring one answer at a time~\cite{mukherjee2026opening}. 
+Furthermore, probes trained for correctness can track the model's own judgment instead~\cite{lu2026diagnosing}, which supports keeping the verdict and program correctness as separate targets. To our knowledge, however, no prior work studies both code correctness and verdict correctness, nor has verdict correctness been assessed under distribution shift. 
+
+%%%% VIOLA? predicts the reliability of a code judge's verdict from its \orange{internals (Korrekt - Mukherjee?)}, or under distribution shift, and 
+
+%Such probes have been trained on general judging data that includes coding items~\cite{Radharapu2025CalibratingJudges}; to our knowledge, no work predicts from its internals whether a model's verdict on its own code is right, or tests this under a change of benchmark or programming language.
+%no prior work addresses both correctness and verdict correctness. 
+
+\paragraph{Generalization under shift}
+ML models in software engineering are well known to erode for cross-dataset and cross-project prediction~\cite{zimmermann2009cpdp,hosseini2019cpdp}, under language shift~\cite{he2026codecircuit,huang2025pttrust},
+and under other realistic splits~\cite{ding2025primevul}.
+This has also been found for recent LLM-based predictors ~\cite{OrgadTGRSKB25,Kramar2026Probes,Srey2026Factorised}, particularly for 
+%often degrade outside their training distribution, across datasets and under production shifts, so their performance in distribution says little about their robustness
+%Predictors trained on hidden states often degrade outside their training distribution: error detectors fail to transfer across datasets~\cite{OrgadTGRSKB25}, probes fail under realistic production shifts~\cite{Kramar2026Probes, Srey2026Factorised}.
+%For code, %internal correctness signals have been evaluated under shift for one method family at a time: 
+%correctness directions transfer poorly between fitting sources and benchmarks
+execution-free code correctness prediction:  Probes based on hidden states have been found to lack robustness~\cite{ribeiro2026robustness}, and to fall behind under dataset shift~\cite{gros2025localized}.
+%For code, correctness directions transfer poorly between fitting sources and benchmarks~\cite{ribeiro2026robustness}, attribution-graph features lose much of their signal across programming languages~\cite{he2026codecircuit}, %a hidden-state probe did not consistently beat token confidence after a transfer from Python to Java~\cite{huang2025pttrust}, 
+%and probes that beat sampling in distribution fall behind it on a held-out dataset~\cite{gros2025localized}. %AUTOPROBE learns where to read in order to counter such fragility~\cite{Vu2026Autoprobe}. 
+Each of these works studies one or two families of predictors on program correctness; we compare four families of predictors, evaluate not only code correctness but also verdict correctness, and include both benchmark and language shifts.
+
+
+\paragraph{Causal localization}
+%Distributed alignment search~\cite{GeigerWPIG24DAS} learns a subspace through which interchange interventions~\cite{Geiger2021CausalAbstractions} control a model's behavior; Huang et al.\cite{Huang2025Internal} use such subspaces to predict whether LLM outputs are correct and report robustness under shift on natural-language tasks; to our knowledge, this has not been applied to code. 
+Huang et al.~\cite{Huang2025Internal} use causal localization 
+%localize an LLM's internal state variables 
+%decision variable \orange{decision variable finde ich komisch} 
+with distributed alignment search~\cite{GeigerWPIG24DAS} to learn a subspace through which interchange interventions~\cite{Geiger2021CausalAbstractions} control the output, and use it for correctness prediction,  reporting strong robustness under shift on natural-language tasks. 
+In general, whether a causal role makes a direction generalize better is open: some work finds that it does~\cite{marks2024geometry,mallen2024quirky}, while others find that causal efficacy and generality diverge~\cite{ying2026truthfulness}.
+To this end, our work is the first to adapt and evaluate causal probing for code correctness and verdict estimation.
+%this approach has not been applied to code. 
+
+That an intervention changes the output does not by itself show that the model represents the variable there: patched subspaces can act through pathways the model does not normally use, and they need not be unique~\cite{makelov2024illusion,grant2025divergent,meloux2025everything}. We therefore compare the learned subspace with random subspaces of the same dimension % and \orange{test what it carries behaviorally 
+(Section~\ref{sec:rq-subspace}). 
+
+
+
+
+
+%Subspace interventions can activate dormant pathways\cite{makelov2024illusion,wu2024reply} and push representations off their natural distribution~\cite{grant2025divergent}, and alignments are not unique~\cite{meloux2025everything} or, without a linearity constraint, trivially perfect~\cite{sutter2025nonlinear}. 
+%A subspace that changes the output when it is patched is not necessarily where the model represents the variable: the intervention can produce the effect through pathways the model does not normally use, or move the hidden state into regions that real inputs never reach~\cite{makelov2024illusion,grant2025divergent} (but see~\cite{wu2024reply}). Moreover, several different subspaces can fit equally well~\cite{meloux2025everything}, and with non-linear maps almost any network can be fitted to any hypothesis~\cite{sutter2025nonlinear}. We therefore keep the subspace linear and compare it with random subspaces of the same dimension.
+%We therefore keep the subspace linear and compare it with random subspaces of the same dimension. Directions with a stronger causal role have been found to generalize better~\cite{marks2024geometry,mallen2024quirky}, but causal efficacy and generality can also diverge~\cite{ying2026truthfulness}, consistent with our finding that interchange accuracy does not indicate usefulness. Unlike subspace selection for probe transfer~\cite{yoo2026subspace}, our subspaces use no data from the target language.

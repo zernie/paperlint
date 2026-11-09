@@ -1,0 +1,24 @@
+\begin{figure}[t]
+  \centering
+  \captionsetup[subfloat]{farskip=2pt,justification=raggedright,singlelinecheck=false}
+  \includegraphics[width=\columnwidth]{assets/fold-ab-grid-legend.pdf}
+  \par
+  \begin{minipage}[t]{0.345\columnwidth}
+  \centering
+  \subfloat[H100: \mbox{reconstruction} versus folding.\label{fig:fold-ab-hopper}]{%
+    \includegraphics[width=\linewidth]{assets/fold-ab-grid.pdf}}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.307\columnwidth}
+  \centering
+  \subfloat[B200: E4M3 \mbox{reconstruction} versus folding.\label{fig:fold-ab-b200-folding}\label{fig:fold-ab-grid-b200}]{%
+    \includegraphics[width=\linewidth]{assets/fold-ab-grid-b200-folding.pdf}}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.307\columnwidth}
+  \centering
+  \subfloat[B200: folded E4M3 versus E2M1.\label{fig:fold-ab-b200-feed}]{%
+    \includegraphics[width=\linewidth]{assets/fold-ab-grid-b200-feed.pdf}}
+  \end{minipage}
+  \caption{\sys{} INT2 kernel latency ratios between ablation variants at equal split-KV counts (first variant's latency divided by the second's).
+  Panels (b) and (c) decode an INT2 cache into E4M3 or E2M1 Tensor Core operands on B200; error bars show paired 95\% confidence intervals across ten runs.}
+  \label{fig:fold-ab-grid}
+\end{figure}

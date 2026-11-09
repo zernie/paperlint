@@ -1,0 +1,119 @@
+\documentclass[sigconf,nonacm]{acmart}
+%%
+%% \BibTeX command to typeset BibTeX logo in the docs
+% \AtBeginDocument{%
+%   \providecommand\BibTeX{{%
+%     Bib\TeX}}}
+
+%% Rights management information.  This information is sent to you
+%% when you complete the rights form.  These commands have SAMPLE
+%% values in them; it is your responsibility as an author to replace
+%% the commands and values with those provided to you when you
+%% complete the rights form.
+
+%% These commands are for a PROCEEDINGS abstract or paper.
+
+%%
+%%  Uncomment \acmBooktitle if the title of the proceedings is different
+%%  from ``Proceedings of ...''!
+%%
+%%\acmBooktitle{Woodstock '18: ACM Symposium on Neural Gaze Detection,
+%%  June 03--05, 2018, Woodstock, NY}
+
+
+\usepackage{graphicx} % Required for inserting images
+% \usepackage{natbib}            % numeric or author–year citations
+%\usepackage{hyperref}
+\usepackage{url}
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage{graphicx}   % for \includegraphics
+\usepackage{caption}    % for better figure captions
+\usepackage{todonotes}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+%\usepackage{amsmath,amssymb}
+
+\usepackage{booktabs}
+\usepackage{url}
+%\usepackage[hidelinks]{hyperref}
+\usepackage{tikz}
+ \usetikzlibrary{positioning,arrows.meta,shapes.geometric}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+\newcommand{\rtodo}[1]{\todo[inline,color=red!40]{Rigel: #1}}
+
+\title{Ensemble Methodology for Reference-Free Confidence Estimation in LLM-based Code Summarization}
+
+
+\author{Marco Colombo}
+\email{mcolom4@illinois.edu}
+\orcid{1234-5678-9012}
+\author{Sumit Tokkar}
+\email{stokkar@illinois.edu}
+\orcid{1234-5678-9012}
+\affiliation{%
+  \institution{University of Illinois Urbana-Champaign}
+  \country{}
+}
+
+
+\author{Balaji A J}
+\email{Balaji_Jayaram@infosys.com}
+\author{Sowmyakumari Selvaraj}
+\email{sowmyakumari.s@infosys.com}
+\author{Animesh Kumar}
+\email{animesh.kumar14@infosys.com}
+\author{Ravishankar Shetty}
+\email{RavishankarS@infosys.com}
+\affiliation{%
+  \institution{Infosys}
+  \country{}
+}
+
+
+\author{Aravinda Prasad Sistla}
+\email{sistla@uic.edu}
+\author{Rigel Gjomemo}
+\email{rgjome1@uic.edu}
+\affiliation{%
+  \institution{University of Illinois Chicago}
+  \country{}
+}
+
+
+% \author{Marco Colombo, Balaji A J, Sowmyakumari Selvaraj, Animesh Kumar, Sumit Tokkar,\\ Prasad Sistla, Ravishankar Shetty, Rigel Gjomemo}
+% \date{October 2025}
+
+\begin{document}
+\begin{abstract}
+This paper describes an approach and use case to estimate the correctness of LLM-generated COBOL summaries without access to human-authored references. The core intuition is that \emph{inter-model agreement} on semantics is informative about truth, and that an \emph{LLM-as-judge}
+can provide higher-fidelity pairwise assessments than traditional
+string- or embedding-based metrics
+\cite{wu2024largelanguagemodelsserve,robinson2025simpleeffectivebaselinescode}.
+We operationalise this intuition with (i) controlled summary generation
+from diverse models; (ii) a LLM evaluator that compares
+pairs of summaries and emits structured judgments; and (iii) a
+calibrated aggregation rule that combines supportive evidence while
+penalising \emph{only} corroborated contradictions.
+\end{abstract}
+\maketitle
+ 
+
+
+\input{1-introduction}
+\input{2-background}
+\input{3-approach}
+\input{4-evaluation}
+\input{6-conclusion}
+
+
+
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+\newpage
+\input{7-appendix}
+\end{document}

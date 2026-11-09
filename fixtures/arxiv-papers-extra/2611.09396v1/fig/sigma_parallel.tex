@@ -1,0 +1,29 @@
+\begin{figure}[t!]
+    \centering
+    \mapname{random-64-64-20, $n=800$}\\[1pt]
+    \begin{minipage}[c]{0.49\columnwidth}
+        \centering
+        \includegraphics[width=\linewidth]{fig/raw/sigma/sigma_runtime_soc_random-64-64-20_n800.pdf}
+    \end{minipage}\hfill
+    \begin{minipage}[c]{0.49\columnwidth}
+        \centering
+        \includegraphics[width=\linewidth]{fig/raw/parallel/p_iteration_random-64-64-20_800_soc.pdf}
+    \end{minipage}
+    \mapname{maze-32-32-4, $n=200$}\\[1pt]
+    \begin{minipage}[c]{0.49\columnwidth}
+        \centering
+        \includegraphics[width=\linewidth]{fig/raw/sigma/sigma_runtime_soc_maze-32-32-4_n200.pdf}
+    \end{minipage}\hfill
+    \begin{minipage}[c]{0.49\columnwidth}
+        \centering
+        \includegraphics[width=\linewidth]{fig/raw/parallel/p_iteration_maze-32-32-4_200_soc.pdf}
+    \end{minipage}
+    \caption{
+    Effect of the noise scale $\sigma$ (left column) and the number of
+    parallel candidates $P$ (right column), with feedback rate $\alpha = 0.2$.
+    The left column shows the best flowtime over the lower bound against
+    runtime with $P = 8$ fixed. The right column shows it against
+    iterations with $\sigma = 5$ fixed.
+    }
+    \label{fig:sigma_parallel}
+\end{figure}

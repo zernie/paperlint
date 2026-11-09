@@ -1,0 +1,104 @@
+\section{Federated Forensics: A reference architecture for law enforcement collaboration}
+\label{Federated Forensics: A Reference Architecture for Law Enforcement Collaboration}
+
+\emph{Federated Forensics} works with existing FL technology and mirrors the structure of law enforcement organizations \citep{buerger2023}, because that structure defines responsibility boundaries. It is deliberately minimal: it fixes where coordination and enforcement happen, not how each requirement is implemented, and specifies no mechanisms for auditability or explainability.
+
+
+\subsection{Three-layer Federated Forensics architecture}
+
+\begin{figure}[th]
+    \centering    
+    \includegraphics[width=1.0\linewidth]{fig/FF_V8.pdf}
+ 
+   \caption{Conceptual architecture for \emph{Federated Forensics}. Local nodes train models and send protected updates to regional hubs, which validate, aggregate, and forward to the national coordinator with privacy guards and audit mechanisms.}
+    
+    \label{fig:fedforensic_arch}
+\end{figure}
+
+We propose three logical layers, shown in Fig.~\ref{fig:fedforensic_arch}.
+The \emph{Local Agency Layer} contains the individual LEAs that collect, store, and analyze evidence. All raw data stays here. Agencies train models on their own evidence and share only model updates upwards, so FL extends existing forensic workflows rather than replacing local analysis.
+
+The \emph{State/Regional Coordination Layer} corresponds to intermediate entities such as state police units, inter-agency task forces, or regional forensic hubs. It receives updates from local agencies, aggregates them, and produces two outputs: the \emph{regional model}, which may draw on every contribution the layer is permitted to use, and the \emph{outward contribution}, which carries only what may cross the jurisdictional boundary. The outward contribution is not a usable model of its own. It is an intermediate aggregate, passed on for further aggregation at the national layer. The component that separates the two is the \emph{policy gate}. It reads the policy label of an update and decides, per round and per recipient, whether the update may enter the aggregate. Sec.~\ref{subsec:policy_enforcement} explains why this decision belongs at this layer and where the labels come from.
+
+Models return the same way in reverse: national to regional to local. A region that forwarded everything passes the national model down unchanged. A region that withheld something first combines the national model with its regional model, so its agencies still benefit from the withheld knowledge without it leaving the region (Sec.~\ref{Prototype Implementation} gives the combination rule). Each agency then trains its next round on the received model, and the resulting updates are labeled and gated again.
+
+The \emph{National/International Coordination Layer} aggregates the regional contributions for strategic intelligence and cross-border pattern detection, under existing national or international governance. It sees only what a region forwarded, not what it withheld. Reporting exclusions upwards would reveal that a region runs operations of a restricted category, the very inference Sec.~\ref{subsec:threat_model} guards against, so exclusions are recorded only at the regional layer.
+
+
+
+\subsection{Trust assumptions and threat model}
+\label{subsec:threat_model}
+
+Local agencies are \emph{semi-trusted}: they follow the protocol under normal circumstances, but they are subject to insider threat, credential compromise, and coercion. The regional and national layers are \emph{honest-but-curious}: they aggregate correctly, but they may try to derive information from what they see, and they are high-value targets. The communication between layers is authenticated and encrypted. Consequently, Table~\ref{tab:threat_model} states what each party observes, what it can infer beyond that, and what it can influence. The inference column matters most, because it describes what an agency discloses by taking part at all.
+
+Three points deserve attention. First, metadata stays informative even when update contents are protected. Participation timing and declared sample counts let a regional hub infer the relative caseload of its members, and a long absence can itself indicate a sensitive ongoing operation. Encrypting the updates does not help against this.
+
+Second, the protection owed depends on the layer. A local agency and its regional hub belong to the same jurisdiction and often stand in a relationship of subordination. The legal basis and the protection required still depend on the specific processing purpose. What matters here additionally is operational secrecy: an agency may accept that the hub processes its contribution, but not that a neighboring agency learns which operations it runs. Hiding contributions from peers serves this; adding noise does not.
+
+At the next layer, the recipient may be a foreign or supranational body, so the legal basis for any transfer must be assessed separately, and data minimization may demand extra protection. If noise is justified anywhere, it is here. The structure already helps, since this layer receives only multi-agency aggregates, never an individual site's update. One risk remains at every layer: a model that has memorized rare training examples can leak them when redistributed, which matters for sensitive investigative material.
+
+
+Third, the last row of Table~\ref{tab:threat_model} has no counterpart in healthcare or finance. Forensic training data comes largely from the subjects of the investigation: seized devices, intercepted communications, and material published by criminal groups themselves. These subjects are adversaries who may change their behavior if they suspect they are being modeled. A patient does not alter a radiograph to mislead a diagnostic model; a criminal group has both the motive and the means to alter its communications. This threat originates outside the system boundary, and no mechanism inside the system can address it.
+
+\begin{table*}[htpb]
+\caption{What each party observes, can infer, and can influence in the three-layer architecture.}
+\label{tab:threat_model}
+\centering
+% \footnotesize
+\scriptsize
+\begin{tabular}{@{}p{0.13\textwidth}p{0.23\textwidth}p{0.29\textwidth}p{0.25\textwidth}@{}}
+\toprule
+\textbf{Party} & \textbf{Observes directly} & \textbf{Can infer} & \textbf{Can influence} \\
+\midrule
+Local agency & Own evidence and local model; global model received & Aggregate properties of other regions, from successive global models & Own update; own declared sample count \\
+\addlinespace
+Regional hub & Member identities; per-agency updates; sample counts; participation timing & Relative caseload per agency; properties of local training data from gradients; sensitive operations, from participation gaps & Regional aggregate; inclusion, exclusion and weighting of members \\
+\addlinespace
+National hub & Regional aggregates; region identity; aggregate weights & Relative data volume per region, but not individual contributions & Global model redistributed to all participants \\
+\addlinespace
+Network adversary & Encrypted traffic; timing and volume & Participation patterns; periods of regional activity & Availability \\
+\addlinespace
+Insider at agency & Local raw evidence; credentials & Contents of the global model & Poisoned updates; exfiltration of the global model \\
+\addlinespace
+Investigated party & Nothing within the system & None & The training data itself, by adapting behavior if monitoring is suspected \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+
+\subsection{Jurisdictional policy enforcement}
+\label{subsec:policy_enforcement}
+
+
+Consider a restriction found in practice. Under the national implementation of Directive (EU) 2016/680, a German agency may hold cases whose material must not contribute to a model received by other jurisdictions \citep{directive2016680}. A flat topology can comply only by leaving that material out of training. Since a flat deployment has one shared model, the material then also disappears from every model used \emph{inside} the jurisdiction, where its use may be lawful and neighboring agencies work on related cases. Compliance thus discards more than the restriction requires. The withholding is also invisible: it happens inside each agency, so no agency can show the others that it complied.
+
+The three-layer structure separates what an agency trains on from how far the resulting signal travels: restricted material improves the regional model, and the policy gate withholds it from the global one (Fig.~\ref{fig:gate_comparison}).
+
+The gate needs labels with a clear origin and granularity. One workable choice is the case category, the level at which legal rules are often written and case management systems already classify holdings, so labels come from the case file rather than an ad hoc decision at training time. Other levels, such as the investigation or data source, work the same way; our prototype uses a two-valued label per data item (Sec.~\ref{Prototype Implementation}). Each update carries exactly one scope, so an agency submits one update per scope and round. This costs local training effort and shrinks each training set, but a mixed update would have to be treated under its most restrictive label, losing the utility the architecture exists to preserve.
+
+Two limits apply. Mapping legal rules to case categories is a legal decision made once per jurisdiction; the architecture makes it explicit and reviewable but does not make it. And the gate depends on its inputs: a mislabeled case is processed under the wrong policy, and the regional layer cannot detect this. The gate's decisions are inspectable; the labels' correctness is not guaranteed.
+
+The more important argument concerns authority. A lawful-transfer decision must be taken by a competent body. A flat topology offers two enforcement points, and both fail: the agency is competent but cannot scope or demonstrate compliance, and the global server could enforce visibly but may be controlled by another jurisdiction or an international body, which lacks the authority to decide. The regional layer is the only point that is both competent and a single place where each decision is recorded. This alignment, not the aggregation algorithm, is what the architecture contributes. Its cost, reduced information for the global model, is quantified in Sec.~\ref{subsec:empirical_results}.
+
+\subsection{Architectural implications for forensic requirements}
+\label{subsec:arch_implications}
+
+The seven requirements are not properties of the same kind, so they cannot all be assessed against an architecture in the same way. Two of them are settled by the structure alone. Raw data cannot leave the local layer because no higher layer receives it (R1), and the authority over each aggregation step is fixed by the layer that performs it, which is where the policy gate acts (R3). For two more, the structure says where, but not how. The aggregation points fix where audit records must be produced, but say nothing about what such a record should contain or how it is verified (R2), and the boundary between intelligence and evidence sits at the local layer, but integration with evidence management systems is not demonstrated (R6). For the remaining three, the structure makes no difference: explainability follows from the choice of model (R4), interoperability from the toolchain and deployment decisions (R5), and usability from implementation, interface design, and training (R7).
+%
+No topology can deliver usability or explainability, and claiming otherwise would overstate what an architecture contributes.
+
+
+\subsection{Alternative architectural approaches}
+\label{Alternative Architectural Approaches}
+
+We judge other topologies by one test: does an aggregation point sit at a legal boundary, and can it hold updates back?
+
+\emph{Flat cross-silo} architectures fail the criterion twice, as shown in Sec.~\ref{subsec:policy_enforcement}: their one aggregation point lies outside every participating jurisdiction's competence, and agency-side withholding cannot scope.
+
+\emph{Parallel flat federations} obtain the scoping effect without a hierarchy: an agency joins one federation inside its jurisdiction and a second one across borders, and contributes restricted material only to the first. Where two federations are enough, this is a legitimate alternative, with three drawbacks. Training and coordination run twice, and the cost grows with the number of scopes. The two federations never meet, so the inner model gains nothing from what the cross-border model learns. And the decision of which federation a contribution enters is still taken inside each agency, so the enforcement point stays away from the competent authority and outside any single point of record. Parallel federations rebuild the hierarchy by hand, without its enforcement point.
+
+\emph{Two-layer} architectures, in which agencies report directly to a national or international coordinator, are sufficient where the relevant boundary of competence is national. Where oversight sits at state or regional level, as in federal police structures \citep{buerger2023}, the enforcement point and the competent authority no longer coincide.
+
+\emph{Fully decentralized} approaches have no distinguished aggregation point at all, so there is no place at which a restriction can be applied and no party responsible for applying it.
+
+The three-layer structure is therefore not optimal in general. It is the minimal structure that aligns an enforcement point with legal competence in the federal and cross-border settings we consider. Where the competence structure has more levels, further layers follow by the same argument, though we have not examined their cost.

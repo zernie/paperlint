@@ -1,0 +1,31 @@
+\begin{table}[h]
+\centering
+\begin{minipage}{0.49\textwidth}
+    \centering
+    \caption{DMC results (20 tasks, 1M env steps).}
+    \begin{tabular}{lcc}
+    \toprule
+    \textbf{Method} & \textbf{Mean} & \textbf{Median} \\ 
+    \midrule
+    DreamerV3 & $776.2$ & $842.2$ \\ 
+    ~~+TT-MBRL (Ours) & $\mathbf{788.2}$ & $\mathbf{850.3}$ \\
+    \bottomrule
+    \end{tabular}
+\label{table:results_dmc}
+\end{minipage}
+\hfill
+\begin{minipage}{0.49\textwidth}
+    \centering
+    \caption{Atari results (26 tasks, 400K env steps).}
+    \setlength{\tabcolsep}{2.5pt}
+    \begin{tabular}{lccc}
+    \toprule
+    \textbf{Method} & \textbf{Mean} & \textbf{Median} & \textbf{IQM} \\ 
+    \midrule
+    DreamerV3 & $109.5\%$ & $44.3\%$ & $0.502$ \\ 
+    ~~+TT-MBRL (Ours) & $\mathbf{111.1\%}$ & $\mathbf{46.1\%}$ & $\mathbf{0.514}$ \\
+    \bottomrule
+    \end{tabular}
+\label{table:results_atari}
+\end{minipage}
+\end{table}

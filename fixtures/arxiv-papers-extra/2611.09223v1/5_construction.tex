@@ -1,0 +1,56 @@
+\section{Construction Quality}
+\label{sec:construction_quality}
+\input{Tables/Table_stats}
+\input{Tables/Table_yield}
+% \input{Tables/Table_criteria}
+Next, we examine whether \name{} produces valid knowledge-matched contrasts and how much each validation and revision stage contributes.
+
+\subsection{Experimental Setup}
+\label{sec:construction_setup}
+
+We use 243 seeds, 78 at A1 and 165 at A2, which form 295 seed--target pairs: 78 A1$\rightarrow$A2, 52 A1$\rightarrow$A3, and 165 A2$\rightarrow$A3.
+We use GPT-5.5 to construct anchor bundles, generate and revise candidates, and audit them, and GPT-5-nano as the proxy model.
+For each seed--target pair, we first generate three candidates and, if fewer than two pass auditing and screening, generate six more in one additional round.
+We additionally examine how seed difficulty affects the results in Appendix~\ref{app:easy}.
+
+Human validation proceeds in two batches.
+In the first batch (164 pairs), up to two passing candidates per pair are validated.
+Two annotators judge all five criteria, and two additional annotators double-check H4 and H5.
+In the second batch (131 pairs), 111 pairs have a passing candidate; because of annotation budget and time constraints, we validate one candidate for 70 of them, each judged by one of three annotators. 
+All annotators are native Korean speakers who work as professional data annotators and follow written guidelines calibrated on a pilot set.
+Table~\ref{tab:stats} summarizes the final dataset of 287 questions built from 165 source questions.
+
+\subsection{Construction Validity and Refinement}
+\label{sec:construction_results}
+
+\paragraph{Yield and validity.}
+We first examine how many candidates survive each stage and whether the surviving ones are valid contrasts (Table~\ref{tab:yield}).
+\name{} generates 1,964 candidates for the 295 pairs, of which 623 (31.7\%) pass the automated stage.
+At least one candidate passes for 243 pairs (82.4\%), and human validation covers 202 of them with 301 candidates.
+Of these candidates, 252 (83.7\%) pass human validation directly, and 35 more pass after human-guided revision, giving 287 final questions.
+The two criteria that define a knowledge-matched contrast hold for nearly all validated candidates: knowledge sufficiency (H4) for 98.0\% and target-level structure (H5) for 95.7\%.
+Although only a minority of candidates survive the automated stage, those that do largely satisfy the intended controls.
+
+\input{Tables/Table_matched}
+
+\paragraph{Effect of the anchor bundle.}
+We examine what the anchor bundle contributes by comparing candidates generated with and without it for the same pairs.
+In both cases, the generator is instructed to rely only on the knowledge of the seed, but without the bundle, 20.4\% of candidates require domain knowledge beyond it (L4), compared with 1.9\% with the bundle.
+These candidates introduce knowledge that the seed never required, such as a rule that the bundle's scope note explicitly excludes.
+An instruction to preserve knowledge is thus not enough, and the knowledge must be specified explicitly.
+
+\paragraph{Automated defects and self-revision.}
+Turning to the validation stages, we examine where candidates fail in the automated stage and how much self-revision helps (Table~\ref{tab:criteria}).
+Before revision, only 15.0\% of candidates pass the automated stage.
+L1--L5 each fail for at most 2.2\% of candidates, whereas L6--L11 each fail for 6.6--33.5\%. 
+Self-revision more than doubles the number of passing candidates, from 294 to 623, although only 19.8\% of the 1,662 revised candidates pass.
+It resolves 64--100\% of the failures on each criterion but also introduces new ones, most often on shortcut resistance (L8) and anchor leakage (L9).
+The main bottleneck is thus not basic validity but imposing the intended knowledge and application demands.
+
+\paragraph{Residual defects and human-guided revision.}
+Finally, we examine the defects that remain after the automated stage.
+Although all 301 validated candidates satisfy every LLM criterion, annotators find at least one defect in 49 (16.3\%).
+These defects are mostly isolated, with 37 of the 49 failing a single criterion, and readability (H1) is the most frequent.
+Human-guided revision recovers 35 of the 49 candidates (71.4\%) and resolves 77--100\% of the failures on each criterion, including all six on knowledge sufficiency (H4).
+Of the 14 candidates that are discarded, 8 fail on a criterion that the revision newly introduced.
+Automated auditing alone is therefore not sufficient, and revised questions need to be validated again.

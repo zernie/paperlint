@@ -1,0 +1,30 @@
+\begin{table}[h!]
+  \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{0.92}
+  \begin{tabular}{@{}rlrrrrrr@{}}
+    \toprule
+    $n$ & Solver & Imprv & Path & Total & Assign & LaCAM & Iter. \\
+        &        & (\%)  & (\%) & (\%)  & [ms]   & [ms]  &       \\
+    \midrule
+    \multirow{2}{*}{200} & \planner-L3 & 14.7 & 2.4 & \textbf{16.7} & 0.21 & 9.7  & 628 \\
+                         & D-H-L3      & 7.9  & 1.2 & 9.0           & 0.01 & 6.7  & 892 \\
+    \midrule
+    \multirow{2}{*}{400} & \planner-L3 & 12.2 & 4.3 & \textbf{16.0} & 0.36 & 17.1 & 358 \\
+                         & D-H-L3      & 4.1  & 2.2 & 6.1           & 0.02 & 11.9 & 503 \\
+    \midrule
+    \multirow{2}{*}{600} & \planner-L3 & 9.4  & 6.9 & \textbf{15.6} & 0.52 & 25.5 & 238 \\
+                         & D-H-L3      & 1.4  & 6.3 & 7.6           & 0.03 & 16.9 & 355 \\
+    \midrule
+    \multirow{2}{*}{800} & \planner-L3 & 6.3  & 9.2 & \textbf{14.9} & 0.69 & 29.8 & 173 \\
+                         & D-H-L3      & 0.8  & 11.6 & 12.3         & 0.04 & 24.7 & 271 \\
+    \bottomrule
+  \end{tabular}
+\caption{Detailed comparison of \planner-LaCAM3 (\planner-L3) and
+    D-H-LaCAM3 (D-H-L3) on \mapname{random-64-64-20} \scenHotspot.
+    \textit{Imprv} and \textit{Path} denote the mean flowtime improvement (\%) over the initial solution and by the final path optimization, respectively.
+    \textit{Assign} and \textit{LaCAM} denote the mean runtime per iteration of the assignment step and of the LaCAM evaluation, respectively.
+    \textit{Iter.} is the mean number of iterations for target reassignment.}
+  \label{tab:detail-random64}
+\end{table}

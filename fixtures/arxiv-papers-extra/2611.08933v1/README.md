@@ -1,0 +1,9 @@
+# DRAFT-Bench: Evaluating Frontier Agents Across the Professional Design Lifecycle
+
+- **Authors:** Rong Pan, Jianqiang Wang
+- **Source:** arXiv [2611.08933v1](https://arxiv.org/abs/2611.08933v1), e-print `https://arxiv.org/src/2611.08933v1` (sha256 `b98d7c16892469fdfa6758526cae129d8c174c76ddc5aa803793fbbc6e8dec0b`)
+- **Category:** cs.SE; **document class:** `article+neurips`
+- **Licence:** [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), as the arXiv abstract page states. The files are redistributed under it.
+- **Text sources only, figures omitted.** Kept: `.tex`, `.bib`, `.bbl`, `.cls`, `.sty`, `.bst`, `.cfg`, `.def` of the main file's directory. Dropped: images, PDFs, data.
+- **Renamed, nothing inside changed:** `main.tex` to `paper.tex`, `main.bbl` to `paper.bbl`.
+- **Ours:** `README.md`.

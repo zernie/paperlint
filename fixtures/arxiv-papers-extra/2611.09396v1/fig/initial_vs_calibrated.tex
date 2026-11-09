@@ -1,0 +1,30 @@
+\begin{figure}[t!]
+    \centering
+    \begin{minipage}[c]{0.035\columnwidth}
+        \centering
+        \rotatebox[origin=c]{90}{\footnotesize $\leftarrow$ flowtime / LB}
+    \end{minipage}\hfill
+    \begin{minipage}[c]{0.235\columnwidth}
+        \centering
+        \includegraphics[width=\linewidth]{fig/raw/initial_vs_learned/matrix_lacam3_maze-32-32-4_row.pdf}
+    \end{minipage}\hfill
+    \begin{minipage}[c]{0.235\columnwidth}
+        \centering
+        \includegraphics[width=\linewidth]{fig/raw/initial_vs_learned/matrix_lacam3_random-64-64-20_row.pdf}
+    \end{minipage}\hfill
+    \begin{minipage}[c]{0.235\columnwidth}
+        \centering
+        \includegraphics[width=\linewidth]{fig/raw/initial_vs_learned/matrix_lacam3_lak303d_row.pdf}
+    \end{minipage}\hfill
+    \begin{minipage}[c]{0.235\columnwidth}
+        \centering
+        \includegraphics[width=\linewidth]{fig/raw/initial_vs_learned/matrix_lacam3_den520d_row.pdf}
+    \end{minipage}\\[1pt]
+    \hspace*{0.035\columnwidth}{\footnotesize agents}\\[3pt]
+    \includegraphics[width=\columnwidth]{fig/raw/initial_vs_learned/matrix_lacam3_legend.pdf}
+    \caption{
+    TAPF solution quality of an interference-agnostic assignment and a calibrated cost assignment in the \scenHotspot scenario, where the targets are densely clustered in small regions of the map.
+    Targets are assigned by a linear sum assignment on each, and paths are planned by LaCAM3~\cite{okumura2024lacamstar}, a fast suboptimal MAPF solver.
+    }
+    \label{fig:initial_vs_calibrated}
+\end{figure}

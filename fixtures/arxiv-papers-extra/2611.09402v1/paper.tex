@@ -1,0 +1,50 @@
+\documentclass[12pt]{article}
+% Layout follows the author's arXiv:2610.24490v1 source.
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage[font=small]{caption}
+\usepackage{placeins}
+\usepackage{float}
+\usepackage{amsmath,amssymb}
+\usepackage[authoryear]{natbib}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\definecolor{ManuscriptLink}{HTML}{155CA2}
+\hypersetup{colorlinks=true,linkcolor=ManuscriptLink,citecolor=ManuscriptLink,urlcolor=ManuscriptLink}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\title{\textbf{A Spiking Neural Model of the Mental Lexicon: Representations, Similarity Structure, and Associative Retrieval in Perception and Production}}
+\author{Bernd J.~Kröger$^{1,2}$\\[1ex]
+{\small $^{1}$Medical School, RWTH Aachen University, Aachen, Germany}\\
+{\small $^{2}$Kröger Lab, Belgium, \url{www.speechtrainer.eu}}\\[2ex]}
+\date{}
+\begin{document}
+\clubpenalty=3000
+\widowpenalty=3000
+\maketitle
+\begingroup\footnotesize\noindent Preprint, 6 November 2026.\par\endgroup
+\begin{abstract}
+A neural account of lexical access requires an explicit distinction between the structure of lexical representations, the associations linking representational levels, and the activity generated during retrieval. This paper specifies a spiking neural implementation of the mental lexicon within the Neural Engineering Framework and Semantic Pointer Architecture. Conceptual and phonological form representations are constructed recursively from relational graphs, whereas lemma representations provide independent lexical identities. The implementation contains 613 lexical entries and supports two directed processing pathways: perception maps a phonological form to its associated concept via a lemma, whereas production maps a concept to its associated phonological form via a lemma. Each pathway combines two associative-memory variants, winner-take-all (WTA) selection (competition) and thresholded transfer, and uses 199,400 leaky integrate-and-fire neurons. We formalize within-level similarity, cross-level associative retrieval, and the interpretation of decoded activity. Simulations show successful retrieval of eight selected words from the lexicon in both processing directions, with retrieval evaluated against all 613 lexical entries. These simulations use complete phonological forms as input for perception and complete concepts as input for production, illustrating lexical retrieval through the corresponding processing pathways. This paper provides a transparent description of lexical representations and neural retrieval mechanisms, supported by accessible code, lexical data, and online simulation documentation.
+\end{abstract}
+\input{sections/01-introduction}
+\input{sections/02-framework}
+\input{sections/03-representations}
+\input{sections/04-architecture}
+\input{sections/05-methods}
+\input{sections/simulation-corpus}
+\input{sections/06-results}
+\input{sections/07-discussion}
+\input{sections/08-resources}
+\input{sections/09-conclusion}
+\section*{Acknowledgments}
+The author thanks Katharina Stille for her contributions to the earlier development and investigation of the mental-lexicon model and for the research underlying the published work cited here. This manuscript builds on that scientific foundation while documenting the present implementation.
+
+ChatGPT assisted with drafting and revising the manuscript; the author substantially developed and critically revised the text and takes full responsibility for its scientific content and final wording.
+
+\input{references}
+\appendix
+\input{sections/appendix}
+\end{document}

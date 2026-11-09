@@ -1,0 +1,56 @@
+\section{Limitations}
+\label{app:limitations}
+
+\textbf{Scale.} Of 111 designed cases,
+90 are retained (Appendix \ref{app:construction}), with
+1343 single-primitive instances per model and
+defense. Per-target estimates rest on between
+159 and
+262 instances. These counts are not
+directly comparable with benchmarks that cross independent tasks and
+attacks: AgentDojo crosses 97 user tasks with 27 injection tasks into 629
+security test cases \citep{debenedetti2024agentdojo}, and InjecAgent crosses 17
+user cases with 62 attacker cases into 1,054 \citep{zhan2024injecagent}. Each of our
+cases pairs one task with an attack designed for it.
+
+\textbf{Domains.} The three environments
+are simulated business settings: productivity, DevOps, and a marketplace.
+Other benchmarks cover web and computer-use agents
+\citep{evtimov2025wasp, kuntz2025osharm}; we do not claim that our
+results transfer to them.
+
+\textbf{Attacker.} The attacker of Section \ref{sec:threat} plants content once,
+before the run, knowing the environment's public structure but not the user's
+task, the system prompt, or records outside its role. Attackers who adapt
+content to a deployed defense or to the agent's responses, or who interact
+over several turns, are out of scope. The only optimization we apply rewrites
+instances against a carrier-only probe (Appendix \ref{app:detection}).
+Attacks alter or add calls to tools the task requires.
+
+\textbf{Defense adaptations and measurement.} The runtime defenses are our
+adaptations of published systems to a single agent loop, so their results describe these
+adaptations and not necessarily the original systems. Defense architectures
+we did not evaluate, such as FIDES \citep{costa2025securing} and
+AuthGraph \citep{authgraph2026}, are out of scope.
+Each instance runs once per configuration at temperature 0, and the
+intervals of Appendix \ref{app:uncertainty} resample cases, not runs.
+
+\textbf{Coverage of secondary analyses.} The headline ASR and TSR cover all
+five models. Response annotation covers two
+models and the first instance of each case--target pair
+(Appendix \ref{app:annotation}), the runtime-mechanism logs two
+models (Appendix \ref{app:runtime}), and the detection analysis
+four (Appendix \ref{app:detection}).
+
+\textbf{Construction with an LLM.} Cases and variants were drafted with Claude
+Code under author-specified procedures (Appendix \ref{app:construction}), and two evaluated agents and the
+annotation judge are Claude models. We cannot rule out that this shapes the
+results. Without a defense, Claude Sonnet 4.5 has the lowest ASR of the five
+models (11.1\%), and Claude Sonnet 4 the second
+highest (20.6\%), so the Claude models do not share
+one direction.
+
+\textbf{Functional, not mechanistic.} The functional targets describe the role a
+belief plays in a decision. Models need not represent these roles separately,
+and the framework is meant to predict defense coverage, not to describe
+internal representations.

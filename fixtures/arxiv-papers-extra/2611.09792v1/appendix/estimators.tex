@@ -1,0 +1,275 @@
+\section{Estimating Equations and Assumptions}
+\label{app:estimating-equations}
+
+This appendix gives the estimating equations for the three causal estimands defined in Section~\ref{sec:estimands}. Appendix~\ref{app:experimental-details} provides the implementation details for each experiment.
+
+\subsection{Notation}
+
+We follow the notation introduced in Section~\ref{sec:methods}, adding an index $i=1,\ldots,n$ for the $n$ completed trajectories.
+
+\paragraph{Trajectories and intervention points.}
+For trajectory $i$, let $T_i$ denote the number of intervention points, indexed by $\mathcal T_i=\{1,\ldots,T_i\}$.
+At each point $t\in\mathcal T_i$, let $H_{it}$ denote the pre-assignment history defined in~\eqref{eq:history}, and let $A_{it}\in\{0,1\}$ denote the randomized intervention assignment.
+We use $Y_i$ for the terminal outcome, which is binary in $\tau$-bench Retail and ImpossibleBench and continuous in ToolSandbox.
+For brevity, we write $\sum_{i,t}$ for $\sum_{i=1}^n\sum_{t\in\mathcal T_i}$.
+
+\paragraph{Intervention policies.}
+Let $g$ denote the randomized collection policy, with assignment probabilities
+\[
+g(a\mid h)=e(h)^a(1-e(h))^{1-a},
+\qquad
+e(h)=\Pr_g(A_t=1\mid H_t=h).
+\]
+In our experiments, we use $e(h)=1/2$ at every eligible intervention point.
+We write $\E_g$ for expectation over trajectories generated under $g$.
+We use $\pi$ to denote a target intervention policy, including the never-intervene policy $\pi_0$ and the selective policy $\pi_G$ defined in~\eqref{eq:policy-target}.
+
+\paragraph{Reporting groups and estimands.}
+For a reporting group $G$, let $I_{it}(G)=\ind\{H_{it}\in G\}$ indicate whether intervention point $t$ in trajectory $i$ belongs to $G$.
+Define the number of matching intervention points by
+\[
+N_i(G)=\sum_{t\in\mathcal T_i}I_{it}(G),
+\qquad
+N(G)=\sum_{i=1}^n N_i(G).
+\]
+We consider three causal estimands: the blip with randomized continuation $\tau(G;g)$, the blip with no-treatment continuation $\tau(G;0)$, both defined in~\eqref{eq:blip}, and the policy gain $\Delta(G)$ defined in~\eqref{eq:policy-target}.
+
+\paragraph{Cross-fitting.}
+We divide the $n$ trajectories into five folds, keeping all intervention points from the same trajectory together.
+Let $k(i)\in\{0,\ldots,4\}$ denote the fold containing trajectory $i$, and define $\mathcal I_k=\{i:k(i)=k\}$.
+We use the superscript $(-k)$ to denote a function fitted without data from fold $k$, so predictions for trajectory $i$ are obtained from models fitted without its fold $k(i)$.
+
+\subsection{Blip with Randomized Continuation}
+\label{app:aipw}
+
+\paragraph{Augmented inverse probability weighting.}
+Let $m_g(h,a)=\E_g[Y\mid H_t=h,A_t=a]$ denote the conditional outcome regression, and let $\widehat m_g^{(-k)}(h,a)$ be its estimate fitted without fold $k$.
+By~\eqref{eq:identification}, the blip effect is $b(h;g)=m_g(h,1)-m_g(h,0)$.
+We then define the cross-fitted augmented inverse probability weighting (AIPW) score as
+\begin{align}
+    \widehat D_{it}
+    ={}&\widehat m_g^{(-k(i))}(H_{it},1)-\widehat m_g^{(-k(i))}(H_{it},0) +\frac{A_{it}}{e(H_{it})}\bigl\{Y_i-\widehat m_g^{(-k(i))}(H_{it},1)\bigr\}\nonumber\\
+    &-\frac{1-A_{it}}{1-e(H_{it})}\bigl\{Y_i-\widehat m_g^{(-k(i))}(H_{it},0)\bigr\},
+    \label{eq:aipw}
+\end{align}
+which gives the group estimator for group $G$
+$$
+    \widehat\tau_{\mathrm{AIPW}}(G;g)=\frac{1}{N(G)}\sum_{i,t}I_{it}(G)\widehat D_{it}.
+$$
+
+
+When the propensity $e(h)$ is known, the score stays conditionally unbiased even when the outcome predictions are
+wrong. Let $r_a$ be any regression fitted
+without the current trajectory. At eligible histories, randomization gives
+\[
+    \E_g\!\left[\frac{\ind\{A_t=a\}}{g(a\mid H_t)}\{Y-r_a(H_t)\}\,\middle|\,H_t=h\right]
+    =m_g(h,a)-r_a(h),
+\]
+so the right-hand side of~\eqref{eq:aipw} with each $\widehat m_g$ replaced by
+$r_a$ has conditional mean $b(h;g)$.  When assignment probabilities are known, the outcome regression affects the
+estimator's variance but does not change its population target. In case of estimated propensities the usual double-robustness
+property applies \citep{bang2005dr}.
+
+\paragraph{Linear blip model for randomized continuation}
+Let $f(h)$ denote an encoding of history $h$ used in the effect model. It includes
+attributes such as the proposed tool, earlier errors, and prior interventions.
+Within each environment and estimand, all agents use the same feature definition.
+
+Let $s(h)\in\{0,\ldots,P-1\}$ identify the phase and write $s_{it}=s(H_{it})$.
+$\tau$-bench Retail and ToolSandbox use semantic progress phases (see Appendix~\ref{app:phases-retail} and Appendix~\ref{app:phases-tool}, correspondingly), while steering uses
+chronological checkpoints. The features and phases for each experiment are defined in
+Appendix~\ref{app:experimental-details}.
+
+Let $d=\dim f(h)$ and partition the coefficient coordinates into a shared set
+$\mathcal S\subseteq\{1,\ldots,d\}$ and a phase-specific set
+$\mathcal U=\{1,\ldots,d\}\setminus\mathcal S$. Define
+\begin{equation}
+ \beta_{s,\mathcal S}=\alpha,\qquad
+ \beta_{s,\mathcal U}=\gamma_s,\qquad s=0,\ldots,P-1,
+ \label{eq:coefficient-sharing}
+\end{equation}
+where $\alpha\in\mathbb R^{|\mathcal S|}$ is shared across phases and
+$\gamma_s\in\mathbb R^{|\mathcal U|}$ may vary with $s$.  The cases $\mathcal S=\varnothing$ and $\mathcal U=\varnothing$
+give fully phase-specific and fully shared coefficients, respectively. The exact choice of these coefficients for our experiments is described in Appendix~\ref{app:experimental-details}.
+
+Define
+\[
+ q(h)=\E_g[Y\mid H_t=h]=\{1-e(h)\}m_g(h,0)+e(h)m_g(h,1),
+ \qquad Z_{it}=(A_{it}-e(H_{it}))f(H_{it}).
+\]
+The cross-fitted value $\widehat q_{it}:=\widehat q^{(-k(i))}(H_{it})$.
+Under a well specified model we have that the blip with randomized continuation $b(h;g)=f(h)^\top\beta_{s(h)}(g)$.
+
+Finally, we estimated the coefficients in our model jointly by minimizing the following objective:
+\begin{equation}
+\begin{aligned}
+ \bigl(\widehat\alpha(g),\{\widehat\gamma_s(g)\}\bigr)
+   &=\argmin_{\alpha,\{\gamma_s\}}\sum_{i,t}
+       \bigl\{Y_i-\widehat q_{it}-Z_{it}^\top\beta_{s_{it}}(g)\bigr\}^2,\\
+ \widehat\tau_{\mathrm{SNMM}}(G;g)
+   &=\frac{1}{N(G)}\sum_{i,t}I_{it}(G)f(H_{it})^\top\widehat\beta_{s_{it}}(g).
+\end{aligned}
+\label{eq:local-snmm}
+\end{equation}
+This algorithm for estimating the coefficients $\beta$ is known in the literature as the Double Machine Learning algorithm \cite{chernozhukov2018dml} or equivalently the R-Learner algorithm \cite{nie2021quasi} with a linear specification of the heterogeneous treatment effect (see e.g. the `LinearDML' class in the EconML library \cite{econml}). 
+
+
+In case the linear model is misspecified, the coefficients target an $e(h)\{1-e(h)\}$-weighted projection of the true blip onto the allowed effect model. When the propensities are constant, as it is in our case, then this weighted projection reduces to the un-weighted projection of the true blip on the allowed effect model. This explains why the SNMM estimatein our experiments is almost identical to the AIPW estimate.
+
+\subsection{Blip with No-treatment Continuation}
+\label{app:snmm}
+
+\paragraph{Shared and phase-specific effects.}
+For each changed continuation $\pi$, assemble $\beta_s(\pi)$ from
+$\alpha(\pi)$ and $\gamma_s(\pi)$ using~\eqref{eq:coefficient-sharing}.
+The structural restriction is
+\begin{equation}
+ \E\!\left[Y_t(a;\pi)-Y_t(0;\pi)\mid H_t=h\right]
+   =a f(h)^\top\beta_{s(h)}(\pi),\qquad a\in\{0,1\}.
+ \label{eq:structural}
+\end{equation}
+Here $Y_t(a;\pi)$ retains the observed past, assigns $a$ now, and follows $\pi$
+afterward. We fit a separate model for each target continuation, sharing the
+coefficients in $\mathcal S$ across phases and allowing those in $\mathcal U$
+to vary by phase. We adapt the SNMM g-estimation construction of
+\citet{lewis2021dynamic}; see also
+\citet{vansteelandt2014snmm}.
+
+\paragraph{Future-treatment correction.} Keep the centered current features $Z_{it}=(A_{it}-e(H_{it}))f(H_{it})$.
+For each phase $\ell$, collect the features of later decisions in that phase:
+\begin{equation}
+ B_{it,\ell}(\pi)
+   =\sum_{\substack{j\in\mathcal T_i\\j>t,\ s_{ij}=\ell}}
+       \{A_{ij}-\pi(H_{ij})\}f(H_{ij}).
+ \label{eq:future}
+\end{equation}
+ Define
+$p_\ell(h,\pi)=\E_g[B_{t,\ell}(\pi)\mid H_t=h]$ and the cross-fitted residual
+\[
+ \widehat U_{it,\ell}(\pi)
+   =B_{it,\ell}(\pi)-\widehat p_\ell^{(-k(i))}(H_{it},\pi).
+\]
+All these nuisance regressions condition on the history at the current decision $H_{it}$. 
+
+\paragraph{Joint coefficient estimation.}
+For candidate coefficients $\alpha$ and $\{\gamma_s\}$, let
+\begin{equation}
+ \varepsilon_{it}(\alpha,\{\gamma_s\};\pi)
+   =Y_i-\widehat q_{it}-Z_{it}^\top\beta_{s_{it}}(\pi)
+     -\sum_{\ell=0}^{P-1}\widehat U_{it,\ell}(\pi)^\top\beta_\ell(\pi),
+ \label{eq:joint-snmm-residual}
+\end{equation}
+where each $\beta_\ell(\pi)$ is assembled from these candidate coefficients.
+Write $\widehat\varepsilon_{it}(\pi)$ for this residual evaluated at
+$\widehat\alpha(\pi)$ and $\{\widehat\gamma_s(\pi)\}$. We estimate them jointly
+by solving
+\begin{equation}
+\begin{aligned}
+ \sum_{i,t}Z_{it,\mathcal S}\widehat\varepsilon_{it}(\pi)&=0,\\
+ \sum_{i,t:s_{it}=s}Z_{it,\mathcal U}\widehat\varepsilon_{it}(\pi)&=0,
+    \qquad s=0,\ldots,P-1.
+\end{aligned}
+\label{eq:joint-snmm-moments}
+\end{equation}
+Thus each shared coefficient pools its score across phases, while each
+phase-specific coefficient uses its own phase's score. 
+
+When $\mathcal S=\varnothing$, coefficients are shared across decisions
+within each phase but remain separate across phases. If phases are
+nondecreasing along a trajectory, later decisions cannot belong to an
+earlier phase. We enforce this restriction by setting
+$\widehat U_{it,\ell}(\pi)=0$ for $\ell<s_{it}$. The joint system
+in~\eqref{eq:joint-snmm-moments} is then block upper triangular and can
+be solved by backward substitution, one phase at a time. When the
+diagonal blocks are nonsingular, this gives the same coefficients as
+solving the full system at once.
+
+We use this backward implementation for $\tau$-bench Retail
+(Appendix~\ref{app:phases-retail}) and for the separate chronological
+checkpoints in ImpossibleBench (Appendix~\ref{app:steering-fit}).
+ToolSandbox shares tool and history coefficients across phases and
+instead solve a joint system of linear equations (Appendix~\ref{app:phases-tool}).
+The backward implementation adapts Algorithm~3 of
+\citet{lewis2021dynamic} to allow repeated decisions within a phase.
+
+For $s=P-1,\ldots,0$, we first subtract the contributions of later
+phases using their already estimated coefficients:
+\begin{equation}
+ \overline Y_{it,s}(\pi)
+   =Y_i-\widehat q_{it}
+     -\sum_{\ell>s}\widehat U_{it,\ell}(\pi)^\top
+       \widehat\beta_\ell(\pi),
+ \qquad s_{it}=s.
+ \label{eq:backward-outcome}
+\end{equation}
+We then solve the current phase's linear moment equations:
+\begin{equation}
+ \sum_{i,t:s_{it}=s}Z_{it}
+  \Bigl[\overline Y_{it,s}(\pi)
+    -\{Z_{it}+\widehat U_{it,s}(\pi)\}^\top
+      \widehat\beta_s(\pi)\Bigr]=0.
+ \label{eq:phase-moments}
+\end{equation}
+The additional term $\widehat U_{it,s}(\pi)$ accounts for later
+decisions that remain in the current phase. For example, a Retail
+episode may contain several proposals before successful customer
+identification. These decisions share the same coefficient vector
+$\beta_s(\pi)$, so their future contributions must remain in the
+current phase's equation while that vector is estimated. We therefore
+solve jointly over all decisions in phase $s$, retaining both the
+current term $Z_{it}$ and the future term
+$\widehat U_{it,s}(\pi)$. In ImpossibleBench, each chronological checkpoint occurs at most once, so we set this same-phase future term to zero.
+
+When the treatment propensity $e(h)$ is known, the above estimating equations recover the true SNMM parameters even if the future-treatment regressions $\widehat p_\ell$ and the outcome regressions $\widehat q_{it}$ are misspecified. This is because $\E[r(H_{it})Z_{it}]=0$, for any function $r$. Hence, in expectation these centering regression terms vanish. These estimated regressions are used for variance reduction.
+
+
+
+\paragraph{Identification.}
+Let $\nu(h,\pi)=\E[Y_t(0;\pi)\mid H_t=h]$. Under the assumption that the SNMM model is well specified, removing
+the later treatment effects gives
+\begin{equation}
+ \E_g\!\left[Y-\sum_{\ell=0}^{P-1}B_{t,\ell}(\pi)^\top\beta_\ell(\pi)
+       \,\middle|\,H_t=h,A_t=a\right]
+   =\nu(h,\pi)+a f(h)^\top\beta_{s(h)}(\pi).
+ \label{eq:snmm-recursion}
+\end{equation}
+Subtracting the current centered effect $Z_t^\top\beta_{s(H_t)}(\pi)$ from the
+corrected outcome and multiplying by $Z_t$ gives zero expected phase scores at
+the true coefficients. Pooling their shared coordinates across phases gives the population
+version of~\eqref{eq:joint-snmm-moments}. Since $\E_g[Z_t\mid H_t]=0$, subtracting
+pre-assignment controls for $q$ and $p_\ell$ leaves these moments unchanged under
+known randomization; the controls affect precision.
+
+\paragraph{Blip with no-treatment continuation.}
+After fitting with $\pi=\pi_0$, average the fitted effects over matching
+opportunities:
+\begin{equation}
+ \widehat\tau(G;0)=\frac{1}{N(G)}\sum_{i,t}I_{it}(G)
+     f(H_{it})^\top\widehat\beta_{s_{it}}(\pi_0).
+ \label{eq:no-future-estimate}
+\end{equation}
+This retains the histories reached under the collection policy. Each selective
+policy $\pi_G$ receives a separate fit with the same features, phases, and sharing
+pattern; its gain uses the fitted $\pi_0$ reference. The primary comparison for the blip with randomized
+continuation remains the local fit~\eqref{eq:local-snmm}, without future correction.
+
+\subsection{Policy Value Estimation}
+\label{app:value}
+
+The coefficients fitted for continuation $\pi$ also identify its value:
+\begin{equation}
+ V(\pi)=\E_g\!\left[Y+\sum_{t\in\mathcal T}
+    \{\pi(H_t)-A_t\}f(H_t)^\top\beta_{s(H_t)}(\pi)\right].
+ \label{eq:value-identity}
+\end{equation}
+Each summand removes the effect of the observed assignment and adds that of the target, using the coefficients for the phase at that history and the target continuation \citep[Lemma~6]{lewis2021dynamic}. The estimator and policy gain are
+\begin{equation}
+\begin{aligned}
+ \widehat V(\pi)&=\frac1n\sum_{i=1}^n\left[Y_i+
+    \sum_{t\in\mathcal T_i}\{\pi(H_{it})-A_{it}\}
+      f(H_{it})^\top\widehat\beta_{s_{it}}(\pi)\right],\\
+ \widehat\Delta(G)&=\widehat V(\pi_G)-\widehat V(\pi_0).
+\end{aligned}
+\label{eq:value-estimator}
+\end{equation}
+

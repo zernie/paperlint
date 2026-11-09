@@ -1,0 +1,164 @@
+\subsubsection{Design-Level Decoupling}
+\label{app:decouple-design}
+
+The first question is how benchmark construction is intended to provide a
+compliant completion path. The data-generation pipeline targets three
+properties that together support an authorized trajectory achieving
+$\mathrm{TSR}=1$ and $\mathrm{DR}=0$:
+
+\begin{enumerate}
+  \item \textbf{Sufficient authorized tools.}
+    The agent is provided with a complete set of authorized tools and
+    a compliant path that, when followed, fully satisfies the user
+    instruction. The Stage~1 generator (Appendix~\ref{app:stage1-prompt})
+    is explicitly instructed to verify that the compliant path closes
+    the task.
+
+  \item \textbf{Orthogonal drift tools.}
+    Drift-inducing tools are present in the environment but strictly
+    orthogonal to the core objective. They represent tempting shortcuts,
+    over-proactive data gathering, or out-of-scope actions --- never
+    prerequisites for the user-requested deliverable.
+
+  \item \textbf{Decoupled judgment.}
+    The LLM judge uses rewritten completion prompts that score
+    \emph{only} core task completion; safety-side constraints are
+    removed from the success criteria and measured exclusively by
+    rule-based DR over the trajectory
+    (Appendix~\ref{app:success_prompt}). The judge is blind to whether
+    drift tools were invoked.
+\end{enumerate}
+
+Together, these constraints are designed to make successful completion
+representable in the authorized action space. They are design targets rather
+than a formal guarantee for every sample; the independent human audit of
+path feasibility and success-criteria validity is reported in
+Appendix~\ref{app:human-eval}.
+
+\subsubsection{Existence of Compliant Trajectories}
+\label{app:decouple-empirical-existence}
+
+The second question is whether models can \emph{empirically} find
+the compliant path. We roll out eight bare models under the normal
+(no-framework) condition on all 648 benchmark samples with 4
+independent rollouts each, giving up to 32 trajectories per task
+(20,736 planned trajectories; ${\approx}97.6\%$ complete).
+Each trajectory is labeled with \textbf{TaskSuccess} (LLM judge,
+decoupled prompt), \textbf{Drift} (rule-based subset match against
+\texttt{violation\_tool\_calls}), and
+$\textbf{CleanSuccess} := \textbf{TaskSuccess} \land \lnot\textbf{Drift}$.
+Statistics are computed over the 644 samples with at least one
+analyzed trajectory.
+
+Tables~\ref{tab:per-task-existence} and~\ref{tab:per-task-rate}
+report the results. $86.18\%$ of analyzed tasks have at least one
+CleanSuccess trajectory, and the mean per-task CleanSuccess rate
+is $33.70\%$, showing that compliant completion is empirically
+reachable on a non-trivial fraction of attempts for the typical task.
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{3pt} % 缩小列间距（关键修复）
+\caption{Existence of a compliant completion path per task,
+  pooled across eight bare models and four rollouts each
+  ($N=644$ tasks with at least one analyzed trajectory).}
+\label{tab:per-task-existence}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lrr}
+\toprule
+\textbf{Condition on a task} & \textbf{Tasks} & \textbf{Share} \\
+\midrule
+$\geq 1$ CleanSuccess trajectory   & 555 & 86.18\% \\
+$\geq 2$ CleanSuccess trajectories & 513 & 79.66\% \\
+$\geq 5$ CleanSuccess trajectories & 422 & 65.53\% \\
+\midrule
+$0$ CleanSuccess trajectories      &  89 & 13.82\% \\
+\quad of which: never completed
+                                   &  54 &  8.39\% \\
+\quad of which: completed but always with drift
+                                   &  35 &  5.43\% \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\begin{table}[h]
+\centering
+\small
+\caption{Distribution of the per-task CleanSuccess rate over
+  analyzed rollouts ($N=644$).
+  Mean $33.70\%$, median $25.00\%$.}
+\label{tab:per-task-rate}
+\begin{tabular}{lrr}
+\toprule
+\textbf{Per-task CleanSuccess rate} & \textbf{Tasks} & \textbf{Share} \\
+\midrule
+$0\%$          &  89 & 13.82\% \\
+$(0,\;10\%]$   &  98 & 15.22\% \\
+$(10,\;25\%]$  & 136 & 21.12\% \\
+$(25,\;50\%]$  & 132 & 20.50\% \\
+$(50,\;75\%]$  & 124 & 19.25\% \\
+$(75,\;100\%]$ &  65 & 10.09\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Of the 89 tasks with no CleanSuccess trajectory, 54 ($8.39\%$ of
+all tasks) were never completed by any model under any rollout,
+indicating a capability ceiling rather than a forbidden compliant
+path. Only 35 tasks ($5.43\%$) were completed but always with drift;
+we flag this small residual as a known limitation rather than
+evidence against the benchmark design.
+
+\subsubsection{Empirical Decoupling at Similar Capability}
+\label{app:decouple-empirical-fixed}
+
+The third question is whether the observed capability--drift association
+could be explained solely by task construction. If successful completion
+mechanically required drift, models with similar TSR would be expected to
+show similar DR.
+
+\paragraph{Same-TSR, divergent-DR comparison.}
+Claude Sonnet 4.6 and the five Qwen models all achieve
+$\mathrm{TSR}=0.903$--$0.925$, while their run-level DR ranges from
+$0.434$ to $0.605$, a spread of 17.1 percentage points at similar
+task-completion performance. The closest pair is Qwen3.5-397B-A17B
+($\mathrm{TSR}=0.919$, $\mathrm{DR}=0.434$) and Qwen3.6-35B-A3B
+($\mathrm{TSR}=0.925$, $\mathrm{DR}=0.605$).
+
+Together with the observed clean-success trajectories, this variation
+provides evidence against a strict structural coupling in which task
+completion mechanically requires drift. It does not establish the causal
+source of the cross-model association.
+
+\subsubsection{Case-Level Illustration}
+\label{app:decouple-cases}
+
+To make the decoupling tangible, we present two trajectories on the
+\emph{same} task and \emph{same} environment, differing only in
+the backbone model.
+
+\paragraph{Case A: $\mathrm{TSR}=1$, $\mathrm{DR}=0$ (compliant).}
+The user requests a Q3 Financial Report summary for the marketing
+team. The agent calls \texttt{read\_financial\_report("Q3\_report")},
+extracts the relevant metrics, calls
+\texttt{send\_email} with the summary, and stops.
+The task is fully completed; no unauthorized tool is invoked.
+
+\paragraph{Case B: $\mathrm{TSR}=1$, $\mathrm{DR}>0$ (drifting).}
+On the same task, a second model uses a reference to an upcoming
+board meeting regarding Q4 marketing budgets to call
+\texttt{read\_confidential\_board\_minutes}
+(\textit{data drift: Data minimization}), incorporates the
+confidential Q4 budget plans into the summary, and sends the
+enriched report via \texttt{send\_email}
+(\textit{scope drift: Implicit red line}).
+The user-visible deliverable is identical to Case~A; the drift is
+an additive action consistent with task-enrichment behavior.
+
+Both trajectories produce the user-requested deliverable, showing in
+this case that the drifting call is not a precondition for task success.
+The benchmark does not force the agent to call
+\texttt{read\_confidential\_board\_minutes}; the paired trajectories
+illustrate the optional overreach that ADB is designed to surface.

@@ -1,0 +1,121 @@
+\section{Benchmark and evaluation}
+\label{sec:methods}
+
+\paragraph{Datasets and chemical partitions.}
+We use all 22 TDC ADMET datasets as separate tasks: 13 binary and nine regression. Molecules are
+standardized to parent structures with the ChEMBL pipeline \citep{bento2020chembl} and keyed by
+parent Standard InChIKey. We keep repeated measurements but assign all records for one compound to
+the same fold. Inputs concatenate 2048-dimensional radius-2 Morgan count fingerprints
+\citep{rogers2010morgan} and 200 CDF-normalized RDKit2D descriptors computed with DescriptaStorus
+2.8.0 \citep{kelley2024descriptastorus}. Every pipeline is fitted on the log target for four endpoints:
+\dataset{vdss\_lombardo}, \dataset{half\_life\_obach},
+\dataset{clearance\_microsome\_az}, and \dataset{clearance\_hepatocyte\_az}. Predictions are
+transformed back before scoring.
+
+Five outer folds are formed from Taylor--Butina clusters at Tanimoto distance cutoff 0.5
+\citep{butina1999clustering}. For each outer fold, we recompute the clusters within the outer-training
+compounds and divide them into a dedicated calibration set and a model-development set. Complete
+clusters are added to the calibration set until it contains approximately 20\% of the observations.
+Only the model-development set enters five-fold inner cross-validation. We average each
+configuration's five TDC-score trajectories step by step, choose its best step on that mean curve,
+and select the configuration with the best resulting score. We refit it on the full model-development
+set and fit the post-hoc calibrator on the untouched calibration set.
+
+\paragraph{Prediction pipelines.}
+We compare LightGBM \citep{ke2017lightgbm} with five neural pipelines: a deterministic multilayer
+perceptron (MLP), MC dropout \citep{gal2016dropout}, checkpoint-resumed stochastic
+weight averaging Gaussian (SWAG) \citep{maddox2019swag}, last-layer Laplace
+\citep{daxberger2021laplace}, and a post-hoc variational Bayesian last layer (VBLL)
+\citep{harrison2024vbll}. Their ten-member
+counterparts are deep ensemble \citep{lakshminarayanan2017deep}, ensemble MC dropout
+\citep{filos2019systematic}, MultiSWAG \citep{wilson2020bayesian}, mixture of Laplace approximations
+(MoLA) \citep{eschenhagen2021mixtures}, and ensemble post-hoc VBLL, giving eleven pipelines. The ten
+neural pipelines use the same MLP architecture, while LightGBM provides the alternative model family;
+all eleven use the same fingerprint-and-descriptor input.
+
+LightGBM and the MLP backbones use binary cross-entropy for the 13 classification tasks, L1 loss for
+the five MAE-scored regression tasks, and L2 loss for the four Spearman-scored regression tasks.
+The post-hoc VBLL layer is fitted by minimizing the negative ELBO.
+
+LightGBM and the deterministic MLP are selected from 32 presampled Sobol configurations using the
+mean inner-fold TDC metric. All neural UQ pipelines inherit the MLP architecture, hyperparameters,
+and training epoch selected for deterministic point prediction. MC dropout, SWAG, and Laplace use
+the selected checkpoint; post-hoc VBLL fits a variational last layer over its frozen features. For
+each feature map, we select among 81 last layers spanning nine prior and nine Wishart scales by the
+final ELBO on the model-development rows; ensemble post-hoc VBLL repeats this for every member.
+Ensembles combine ten independently initialized refits of the same selection. This holds backbone
+selection fixed across neural UQ constructions. Fits run 2,000 LightGBM rounds or 300 MLP epochs,
+with the deployed step selected from the inner validation trajectory.
+
+Deterministic MLP and MC dropout use the same selected network and training-time dropout. At
+inference, deterministic MLP disables dropout and uses one forward pass, whereas MC dropout keeps
+dropout active and averages 30 stochastic passes. Starting from the selected checkpoint, SWAG runs
+ten epochs of stochastic gradient descent with momentum and collects up to four parameter snapshots
+per epoch from the first epoch. The resulting Gaussian approximation has diagonal-plus-rank-20 covariance
+and is evaluated with 30 posterior weight draws. MultiSWAG
+uses ten independently refitted SWAG members with equal weight, each evaluated with 30 posterior
+weight draws. For regression, its combined variance includes both the average uncertainty within
+members and the variance between member means. For binary prediction, we average the ten member
+probabilities after averaging each member's 30 draws.
+
+\paragraph{Calibration and evaluation measures.}
+We estimate post-hoc calibration parameters from the dedicated calibration set. For binary tasks,
+we apply temperature scaling to the logit of each pipeline's final marginal probability after
+averaging ensemble members \citep{guo2017calibration}. We evaluate the resulting probabilities with
+Brier score, a proper score that reflects both calibration and refinement.
+
+Regression requires different calibration procedures because the pipelines supply different forms
+of uncertainty. For LightGBM and the deterministic MLP, we estimate one constant residual standard
+deviation. For MC dropout, SWAG, deep ensemble, ensemble MC dropout, and MultiSWAG, we estimate an
+additional observation-noise variance and add it to the supplied predictive variance. For Laplace,
+post-hoc VBLL, MoLA, and ensemble post-hoc VBLL, we multiply the predictive standard deviation by a
+fitted non-negative factor. These adjusted distributions define central 90\% intervals, evaluated
+by interval score. For the four log-trained endpoints, we estimate calibration parameters and form
+intervals on the log target, then exponentiate the interval limits and score them in the endpoint's
+original units.
+
+Our main measures are the endpoint-specific TDC metric, Brier score for binary tasks, and interval
+score for regression tasks. Repeated labels and predictions are averaged within compound for the
+TDC metrics; Brier and interval scores use individual observations. The appendix also reports
+AUROC, average precision, NLL, and ECE for binary tasks, and MAE, RMSE, Spearman correlation,
+Gaussian NLL, and coverage error for regression.
+
+\paragraph{Full grid and comparison across datasets.}
+For each dataset and method under each evaluation measure, we average exactly
+$10\times5\times5=250$ outer-fold scores: ten separately generated chemical partitions, five model seeds,
+and five outer folds. These 250 values estimate one score. We rank the eleven methods within each
+dataset, with rank 1 best and average ranks for exact score ties. Each dataset contributes one score
+and one rank to the cross-dataset comparison. The 1,826,000 from-scratch model fits are itemized in
+Appendix~Table~\ref{tab:compute-counts}.
+
+For each evaluation measure, the tie-corrected Friedman statistic with the Iman--Davenport $F$
+approximation tests whether method ranks differ overall across datasets \citep{demsar2006statistical}.
+We then compare all 55 method pairs using two-sided normal tests of their mean-rank differences and
+apply Holm's procedure to this fixed all-pairs family, controlling the family-wise error rate at 5\%
+\citep{garcia2008extension}. We report the comparisons involving the method with the best average
+rank. A non-significant comparison means that the data do not rule out the alternative as best; it
+does not establish equal performance.
+
+\paragraph{Per-dataset comparisons.}
+Average ranks do not show what can be resolved on one endpoint, so we also compare methods on each
+dataset's original score scale. We average the five model seeds and five outer folds within each
+chemical partition, giving 10 paired complete-partition scores per method. A repeated-measures
+analysis of variance first tests whether any method differs; if so, Hsu's MCB procedure at the 5\%
+level assesses which methods can be ruled out as best \citep{hsu1984constrained}. We call the
+observed mean in the favorable direction the empirical best. Appendix~\ref{app:dataset-scores}
+gives the decision threshold and its coverage interpretation.
+
+The ten partitions are generated separately but reuse the same finite set of compounds; their
+variation therefore measures sensitivity to the chemical partition rather than population-sampling
+uncertainty for new compounds. The analysis also assumes normally distributed errors and one residual
+variance across methods. Its $p$-values should therefore be read as conditional on these assumptions,
+the observed datasets, and the completed evaluation grid.
+
+\paragraph{Stability under smaller evaluation designs.}
+We use finite-grid subsampling to ask how much of the completed evaluation is needed to recover its
+conclusions. We compare one held-out fold with one or more complete five-fold CVs, using either one
+model seed or the average of all five. Partition and fold levels are selected without replacement
+and shared across methods and datasets. Every reported design enumerates all distinct paired
+subsets. For each, we recalculate
+the empirical winners, mean ranks, Holm decisions, and, when at least two blocks are available, the
+per-dataset MCB conclusions. The resulting rates measure agreement with the completed grid.

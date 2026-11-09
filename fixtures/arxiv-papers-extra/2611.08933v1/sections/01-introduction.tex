@@ -1,0 +1,22 @@
+\section{Introduction}
+A professional design assignment spans ambiguous client intent, creative exploration, constrained editing, iterative feedback, and preparation of deliverables for production handoff. General-purpose agents can participate in each stage, but a polished preview alone does not show whether they understood the request, preserved approved work, or delivered the required files. We ask: \emph{can frontier general-purpose agents translate evolving requirements into verifiable design artifacts across this lifecycle?}
+
+We introduce \textbf{DRAFT-Bench}, \emph{Design Reliability Across Feedback and Tasks}, with 35 design briefs under 43 execution conditions and a separate 40-scenario requirement-elicitation track. Figure~\ref{fig:lifecycle} organizes the coverage from requirement discovery through production handoff. Creative exploration includes reference understanding, direction selection, and proposal comparison, alongside visual generation. The assignments are synthetic or curated and motivated by professional workflows; they are not a customer deployment study. \emph{Lifecycle-wide} describes coverage through separate protocols: RFQ and design execution are unpaired, so the study does not measure an integrated RFQ-to-delivery success rate. Broader archive accounting is reported separately in Section~\ref{sec:data}.
+
+Our central methodological contribution is \textbf{Requirement-to-Artifact evaluation}: linking an active requirement to the relevant artifact version and the evidence needed to judge it. Requirements specify changes, protected properties, or deliverables. Feedback can activate an earlier obligation: choosing a packaging direction can trigger expansion into five SKUs. The framework makes this scope decision explicit before interpreting runtime status, candidate declarations, file facts, semantic judgments, or professional acceptance.
+
+The configured systems show high intake coverage and substantial design execution capability, but differ in completion, delivered sets, and revision behavior. Structural credit coexists with semantic flags; client dependencies and inconsistent applicability decisions complicate interpretation. These observations can implicate the agent, the evaluator, or the specification. Our analysis preserves those distinctions instead of treating every discrepancy as a confirmed agent failure.
+
+\paragraph{Research questions.}\mbox{}
+\begin{introlist}
+\item \textbf{RQ1: Lifecycle capabilities.} What do the separate protocols reveal about agents' capabilities and execution reliability across design stages?
+\item \textbf{RQ2: Requirement-compliant delivery.} Do completed runs and structurally valid outputs satisfy active requirements?
+\item \textbf{RQ3: Decisions and dependencies.} How do human choices, revision prerequisites, and production constraints affect delivery and its evaluation?
+\end{introlist}
+
+\paragraph{Contributions.}\mbox{}
+\begin{introlist}
+\item \textbf{Lifecycle coverage.} A task collection spans major stages of professional design, with briefs, assets, context conditions, and feedback motivated by production workflows. Tasks and toolkit: \url{https://github.com/super-inbox/DRAFT-Bench}.
+\item \textbf{Requirement-to-Artifact evaluation.} An evidence framework links evolving requirements, protected properties, artifact versions, and delivery obligations. Its implementation combines an exhaustive audit of scored core checks with eight selected paired inspections; it is not a fully automated or expert-validated acceptance metric.
+\item \textbf{Frontier agent capability analysis.} A comparison of Codex and Claude Code reveals differences between execution completion, semantic compliance signals, and evidence of usable delivery. Original scores remain frozen. Separate protocols and selected cases support stage-specific findings, not a universal system ranking or estimates of expert-accepted delivery.
+\end{introlist}

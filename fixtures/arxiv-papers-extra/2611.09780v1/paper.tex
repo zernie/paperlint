@@ -1,0 +1,67 @@
+\documentclass{article}
+\input{meta}
+\title{Strategic Competition and Convergence in LLM Leaderboards}
+
+\begin{document}
+\author{
+\mbox{Naveen Raman\textsuperscript{1}} \thanks{%
+  \protect\begin{tabular}[t]{@{}l@{}}
+    Correspondence: 
+    \texttt{naveenr@andrew.cmu.edu}
+  \end{tabular}%
+},
+\mbox{Fei Fang\textsuperscript{1}},
+\mbox{Yiling Chen\textsuperscript{2}},
+}
+
+\newcommand{\affiliations}{
+\mbox{\textsuperscript{1}\,\href{https://cmu.edu}{Carnegie Mellon University}}\quad
+\mbox{\textsuperscript{2}\,\href{https://https://www.harvard.edu/}{Harvard University}}\quad
+}
+
+\makeatletter
+\renewcommand{\@maketitle}{%
+  {\centering
+    {\bfseries\fontsize{18}{22}\selectfont \@title\par}
+    \vspace{12pt}
+    {\small
+      % Give author footnote markers their natural width in the continuous list.
+      \def\@makefnmark{\hbox{\@textsuperscript{\normalfont\@thefnmark}}}%
+      \@author\par}
+    \vspace{6pt}
+    {\footnotesize\hypersetup{urlcolor=black}\affiliations\par}%
+  }
+}
+
+
+\maketitle
+
+\begin{abstract}
+    \input{sections/abstract}
+\end{abstract}
+\input{sections/introduction}
+\input{sections/model}
+\input{sections/equilibrium}
+\input{sections/monoculture}
+\input{sections/identification}
+\input{sections/empirical}
+\input{sections/discussion}
+\input{sections/related}
+\input{sections/conclusion}
+\input{sections/disclosure}
+\input{sections/acknowledgements}
+
+\newpage 
+
+\bibliographystyle{iclr2027_conference}
+\bibliography{references}
+
+\newpage 
+
+\appendix 
+\input{appendix/win_rate}
+\input{appendix/no_equilibrium}
+\input{appendix/experimental_details}
+\input{appendix/ablations}
+\input{appendix/equilibrium_proofs}
+\end{document}

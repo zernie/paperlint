@@ -1,0 +1,15 @@
+\begin{tabular}{llrrr}\toprule
+Gate & Input & AUROC & ms & \$/1k \\ \midrule
+Kev-4B & HTML & \textbf{0.94} & \textbf{76} & \textbf{0.015} \\
+Kev-4B & text & 0.87 & 99 & 0.020 \\
+Tev1-4B$^{\dagger}$ & HTML & 0.85 & 223 & 0.045 \\
+Tev1-4B$^{\dagger}$ & text & 0.81 & 165 & 0.033 \\
+Laya (421M) & HTML & 0.75 & 28 & 0.006 \\
+Laya (421M) & text & 0.63 & 21 & 0.004 \\
+Von (395M)$^{\dagger}$ & HTML & 0.40 & 91 & 0.018 \\
+LLM judge, Llama-3.1-8B$^{\dagger \ddagger}$ & HTML & 0.73 & 903 & 0.034 \\
+LLM judge, Llama-3.3-70B$^{\ddagger}$ & HTML & \textbf{0.99} & \textbf{1147} & \textbf{0.148} \\
+LLM judge, DeepSeek V4.1 Flash$^{\ddagger}$ & HTML & 1.00 & 647 & 0.147 \\
+TF-IDF + LR & text & 0.72 & -- & -- \\
+Perplexity (0.6B) & text & 0.70 & -- & -- \\
+\bottomrule\end{tabular}

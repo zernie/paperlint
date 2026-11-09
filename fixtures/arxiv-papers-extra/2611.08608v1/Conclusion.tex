@@ -1,0 +1,72 @@
+\section{Benchmarking Issues \& Contributions}
+\label{sec:benchmarkfinal}
+
+
+\noindent In this paper, we characterize the AutoYara framework in a real-world setting and highlight pitfalls in its evaluation methodology and how these can skew results, inflating the reported performance. Figure~\ref{fig:AutoPYaraBigPicture} illustrates the overall reconstruction from AutoYara through its theoretical maximum. In practice, we show that our oracle-based approach comes within 2\% of the best outcomes, whereas AutoYara, if not properly characterized, can perform up to  76\% worse than optimal rules in reality. We characterize the performance gains on large clusters in Figure~~\ref{fig:AutoPYaraBigPictureTOP} in Appendix.~\ref{app:bp}, highlighting the gains in larger (stable) clusters. 
+
+
+
+% \vspace{-1cm}
+% \begin{figure}[H]
+%     \centering
+% \subfloat[Impact of $k$ on Performance \label{fig:AutoYaraVSAutoPYaraSpread}]{%
+%     \raisebox{0.55cm}{%
+%         \includegraphics[width=0.45\linewidth]{Figures/AutoPYara/RTBF/BoxPlots/ComparisionPYara_Yara_optK.pdf}
+%     }
+% }\hfill
+% \subfloat[AutoPYara System Overview\label{fig:AutoPYaraBigPicture}]{%
+%     \includegraphics[width=0.48\linewidth]{Figures/BigPicture_Annotated.pdf}
+% }
+%     \vspace{-.2cm}
+%     \caption{Comparative analysis of AutoPYara: (a) performance stability across optimal $k$ values and (b) the annotated architectural workflow. }
+%     \label{fig:CombinedAutoPYaraAnalysis_SideBySide}
+% \end{figure}
+
+
+\begin{figure}[htbp]
+\vspace{-2mm}
+    \centering
+        {%
+        \includegraphics[width=0.95\linewidth]{Figures/BigPicture_Annotated.pdf}
+    }\vspace{-4mm}
+    \caption{AutoYara and AutoPYara across different configurations}
+    \label{fig:AutoPYaraBigPicture}
+    \vspace{-4mm}
+\end{figure}
+
+\section{Conclusion}
+\label{sec:conc}
+\vspace{-2mm}
+
+
+\noindent This work introduces AutoPYara, an evolved framework for automatically generating YARA rules for malware family clusters. It advances the SOTA via \textbf{(1)} precise cluster centroid selection based on similarity hashing and \textbf{(2)} better selection of the number of subclusters representing a malware family based on historical VirusTotal data. Our evaluation identified the limits of the automatic rule generation process and demonstrates that AutoPYara's optimal configuration, achieving an 80\% improvement, surpasses existing benchmarks to define the current state-of-the-art. Finally, to facilitate the practical application of our findings, we outline guidelines (Appendix~\ref{app:rec}) for achieving this optimal performance.
+
+\noindent \textbf{Ethical Considerations.} The dataset utilized consists of malware that have been vetted for academic research. Because the dataset contains no active threats, no personally identifiable information, and no sensitive user telemetry, this research poses no risk of harm to users or third parties.
+
+% Use the asterisk * to prevent section numbering
+\noindent \textbf{Artifact Availability Statement.} To support open science and full evaluation replication for ACSAC, we provide open-access links to all components:
+
+\begin{itemize}
+    \item \textbf{ACSAC Permanent Artifact:} \href{https://zenodo.org/records/23107801}{Zenodo} [\url{https://zenodo.org/records/23107801}]
+    
+    \item \textbf{ACSAC Artifact Source:} \href{https://github.com/Botacin-s-Lab/AutoPYara/}{GitHub} [\url{https://github.com/Botacin-s-Lab/AutoPYara/}]
+    
+    \item \textbf{API Documentation:} \href{https://botacin-s-lab.github.io/AutoPYaraPyPI/}{GitHub Pages} [\url{https://botacin-s-lab.github.io/AutoPYaraPyPI/}]
+        
+    \item \textbf{PyPI Source Repository:} \href{https://github.com/Botacin-s-Lab/AutoPYaraPyPI}{GitHub} [\url{https://github.com/Botacin-s-Lab/AutoPYaraPyPI}]
+   
+    \item \textbf{Java Backend Engine:} \href{https://github.com/Botacin-s-Lab/AutoPYaraBackend}{GitHub} [\url{https://github.com/Botacin-s-Lab/AutoPYaraBackend}]
+    
+    \item \textbf{YARA Rules \& Benchmark Data:} \href{https://zenodo.org/records/22665898}{Zenodo} [\url{https://zenodo.org/records/22665898}]
+    
+    \item \textbf{Python Package (PyPI):} \href{https://pypi.org/project/autopyara/}{PyPI} [\url{https://pypi.org/project/autopyara/}] (\texttt{pip install autopyara})
+   
+
+\end{itemize}
+\noindent \textbf{Acknowledgments.} 
+We thank the reviewers, shepherd and the artifact evaluators for their helpful insights. We also thank NSF for supporting this work via grant CNS-2327427.
+
+% For the review version, you can include an anonymized link if you have one:
+% An anonymized repository is available at: \url{https://anonymous.4open.science/r/AutoPYara-Anonymized/}
+
+

@@ -1,0 +1,38 @@
+\footnotesize
+\renewcommand{\arraystretch}{0.75}
+\begin{tabular}{ll@{\hspace{2em}}rr@{\hspace{3em}}cc@{\hspace{3em}}cc}
+\toprule \multirow[c]{2}{*}[-3pt]{\textbf{CPU}} & \multirow[c]{2}{*}[-3pt]{\textbf{$\mu$Architecture}} & \multicolumn{2}{c}{\hspace*{-3em}\makebox[0pt]{$\Delta_{sync}$}} & \multicolumn{2}{c}{\hspace*{-3em}\makebox[0pt]{$F^{L1}_{DRAM}$ (unpadded)}} & \multicolumn{2}{c}{\hspace*{-\tabcolsep}\makebox[0pt]{$G^{L1}_{DRAM}$ (padded)}} \vspace{1pt}\\\cmidrule(lr{\dimexpr 3em+0.5em\relax}){3-4}\cmidrule(lr{\dimexpr 3em+0.5em\relax}){5-6}\cmidrule(lr{\dimexpr \tabcolsep+0.5em\relax}){7-8}
+ & & SMT & Cross-core & SMT & Cross-core & SMT & Cross-core \vspace{1pt}\\\midrule
+AMD EPYC 7252 & Zen 2 (Rome) & $50 \pm 4$ & $101 \pm 33$ & 0.99 & 0.99 & 38 & 67 \\\cmidrule(lr){1-8}
+AMD Ryzen 7 5700G & Zen 3 (Cezanne) & $48 \pm 20$ & $126 \pm 3$ & 0.99 & 0.99 & 44 & 113 \\\cmidrule(lr){1-8}
+AMD Ryzen 9 7950X3D & Zen 4 (Raphael) & $49 \pm 21$ & $88 \pm 13$ & 0.99 & 0.99 & 50 & 69 \\\cmidrule(lr){1-8}
+AMD EPYC 9124 & Zen 4 (Genoa) & $48 \pm 18$ & $120 \pm 1$ & 0.99 & 0.99 & 42 & 128 \\\cmidrule(lr){1-8}
+AMD Ryzen 9 9950X & Zen 5 (Granite Ridge) & $91 \pm 7$ & $165 \pm 7$ & 0.99 & 0.99 & 69 & 137 \\\cmidrule(lr){1-8}
+Intel Core i3-2120 & Sandy Bridge & $24 \pm 12$ & $84 \pm 30$ & 0.99 & 0.98 & 22 & 36 \\\cmidrule(lr){1-8}
+Intel Core i5-4690 & Haswell & -- & $83 \pm 1$ & -- & 0.99 & -- & 69 \\\cmidrule(lr){1-8}
+Intel Core i3-5010U & Broadwell & $28 \pm 14$ & $108 \pm 4$ & 0.99 & 0.99 & 25 & 61 \\\cmidrule(lr){1-8}
+Intel Xeon E3-1505M v5 & Skylake & $33 \pm 20$ & $89 \pm 7$ & 0.99 & 0.99 & 41 & 66 \\\cmidrule(lr){1-8}
+Intel Core i5-6400T & Skylake & -- & $99 \pm 5$ & -- & 0.97 & -- & 50 \\\cmidrule(lr){1-8}
+Intel Pentium G4400T & Skylake & -- & $91 \pm 43$ & -- & 0.99 & -- & 26 \\\cmidrule(lr){1-8}
+Intel Pentium Gold G5400T & Coffee Lake & $36 \pm 17$ & $128 \pm 6$ & 0.99 & 0.99 & 30 & 98 \\\cmidrule(lr){1-8}
+Intel Core i7-8700 & Coffee Lake & $36 \pm 17$ & $110 \pm 26$ & 0.99 & 0.99 & 28 & 75 \\\cmidrule(lr){1-8}
+Intel Core i7-9700K & Coffee Lake & -- & $106 \pm 4$ & -- & 0.98 & -- & 82 \\\cmidrule(lr){1-8}
+Intel Core i7-10710U & Comet Lake & $32 \pm 19$ & $120 \pm 12$ & 0.99 & 0.99 & 11 & 29 \\\cmidrule(lr){1-8}
+Intel Core i7-1185G7 & Willow Cove & $46 \pm 11$ & $122 \pm 18$ & 0.99 & 0.99 & 41 & 90 \\\cmidrule(lr){1-8}
+Intel Xeon Gold 6346 & Sunny Cove & $36 \pm 17$ & $327 \pm 113$ & 0.99 & 0.99 & 37 & 316 \\\cmidrule(lr){1-8}
+Intel Core i7-11700 & Cypress Cove & $39 \pm 6$ & $130 \pm 5$ & 0.99 & 0.99 & 11 & 88 \\\cmidrule(lr){1-8}
+\multirow[c]{2}{*}[-2.25pt]{Intel Core i9-12900H} & Gracemont (E) & -- & $140 \pm 5$ & -- & 0.99 & -- & 125 \\\cmidrule(lr){2-8}
+ & Golden Cove (P) & $55 \pm 16$ & $229 \pm 37$ & 0.99 & 0.99 & 27 & 139 \\\cmidrule(lr){1-8}
+\multirow[c]{2}{*}[-2.25pt]{Intel Core i5-13420H} & Gracemont (E) & -- & $128 \pm 6$ & -- & 0.99 & -- & 73 \\\cmidrule(lr){2-8}
+ & Raptor Cove (P) & $55 \pm 16$ & $193 \pm 17$ & 0.99 & 0.99 & 17 & 155 \\\cmidrule(lr){1-8}
+\multirow[c]{2}{*}[-2.25pt]{Intel Core i9-13900K} & Gracemont (E) & -- & $168 \pm 4$ & -- & 0.99 & -- & 123 \\\cmidrule(lr){2-8}
+ & Raptor Cove (P) & $54 \pm 15$ & $276 \pm 16$ & 0.99 & 0.99 & 31 & 188 \\\cmidrule(lr){1-8}
+Intel Xeon Gold 6526Y & Raptor Cove & $49 \pm 28$ & $303 \pm 21$ & 0.99 & 0.99 & 33 & 191 \\\cmidrule(lr){1-8}
+Intel Core Ultra 9 288V & Lion Cove & -- & $173 \pm 23$ & -- & 0.99 & -- & 152 \\\cmidrule(lr){1-8}
+\multirow[c]{2}{*}[-2.25pt]{Intel Core Ultra 9 285K} & Skymont (E) & -- & $180 \pm 2$ & -- & 0.97 & -- & 142 \\\cmidrule(lr){2-8}
+ & Lion Cove (P) & -- & $326 \pm 31$ & -- & 0.99 & -- & 218 \\\cmidrule(lr){1-8}
+Intel Xeon 6736P & Redwood Cove & $53 \pm 20$ & $974 \pm 31$ & 0.99 & 0.99 & 35 & 361 \\\cmidrule(lr){1-8}
+\multirow[c]{2}{*}[-2.25pt]{Intel Core Ultra 5 325} & Darkmont (E) & -- & $130 \pm 100$ & -- & 0.99 & -- & 14 \\\cmidrule(lr){2-8}
+ & Cougar Cove (P) & -- & $172 \pm 12$ & -- & 0.99 & -- & 128 \\
+\bottomrule
+\end{tabular}

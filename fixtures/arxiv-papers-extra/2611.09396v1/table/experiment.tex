@@ -1,0 +1,26 @@
+\begin{table}[t]
+    \centering
+    \label{tab:scenario_params}
+    \begin{tabular}{lrrrrr}
+        \toprule
+        & & \multicolumn{4}{c}{$r$} \\
+        \cmidrule(lr){3-6}
+        Map & $d$ & \multicolumn{4}{c}{$n = 50 / 100 / 150 / 200$} \\
+        \midrule
+        \mapname{maze-32-32-4}           & 40  & 8 & 14 & 18 & 22 \\
+        \midrule
+        & & \multicolumn{4}{c}{$n = 200 / 400 / 600 / 800$} \\
+        \midrule
+        \mapname{random-64-64-20}        & 43  & 20 & 35 & 45 & 55 \\
+        \mapname{warehouse-10-20-10-2-1} & 76  & 16 & 26 & 36 & 45 \\
+        \mapname{ost003d}                & 143 & 20 & 30 & 45 & 60 \\
+        \mapname{warehouse-20-40-10-2-1} & 154 & 21 & 32 & 41 & 48 \\
+        \mapname{lak303d}                & 173 & 30 & 45 & 55 & 60 \\
+        \mapname{Paris-1-256}            & 183 & 19 & 30 & 39 & 48 \\
+        \mapname{den520d}                & 187 & 50 & 55 & 70 & 85 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Scenario parameters per map: the distance $d$ of \scenEqdist
+    and the hotspot radius $r$ of \scenHotspot per number of agents $n$.}
+    \label{tab:experiment}
+\end{table}

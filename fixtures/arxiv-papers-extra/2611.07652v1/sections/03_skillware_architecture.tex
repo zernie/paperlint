@@ -1,0 +1,197 @@
+%% ============================================================================
+%%  03_skillware_architecture.tex — Formal Architecture & In-Process Adaptation
+%% ============================================================================
+
+\section{The Skillware Architecture: Formal Specification and In-Process Adaptation}
+\label{sec:architecture}
+
+To replace informal prompt conventions with a mathematically verifiable foundation, Skillware formalizes an \textbf{Agent Skill} as a self-contained, version-controlled filesystem bundle that encapsulates code, contracts, instructions, and tests into a unified, installable unit (Figure~\ref{fig:ecosystem_architecture}).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.96\linewidth]{figures/fig01_ecosystem_bundles.png}
+\caption{The Skillware ecosystem architecture. Self-contained registry bundles decompose capability know-how into five first-class primitives (Contract, Effect, Directive, Assurance, Corpus), executed in-process with automated host adapter transmutation.}
+\label{fig:skillware_anatomy}
+\label{fig:ecosystem_architecture}
+\end{figure}
+
+\subsection{Formal Mathematical Definition of an Agent Skill}
+\label{subsec:formal_definition}
+
+\begin{definition}[Agent Skill Bundle]
+An Agent Skill $\mathcal{K}$ is defined as a 5-tuple:
+\begin{equation}
+\label{eq:skill_tuple}
+\mathcal{K} = \langle \mathcal{C}, \mathcal{E}, \mathcal{D}, \mathcal{A}, \mathcal{P} \rangle
+\end{equation}
+where:
+\begin{enumerate}[leftmargin=*]
+  \item $\mathcal{C} = \langle \mathcal{S}_{\text{in}}, \mathcal{S}_{\text{out}}, \Pi_{\text{const}}, \mathcal{I}_{\text{iss}}, \mathcal{R}_{\text{dep}} \rangle$ is the \textbf{Contract} (\texttt{manifest.yaml})~\cite{hoare1969axiomatic, skillware2026framework}, comprising the input parameter JSON Schema $\mathcal{S}_{\text{in}}$, the structured output schema $\mathcal{S}_{\text{out}}$, the immutable constitutional boundary predicates $\Pi_{\text{const}}$, the cryptographic publisher identity $\mathcal{I}_{\text{iss}}$, and dependency specifications $\mathcal{R}_{\text{dep}}$. In Skillware v0.6.0, contract validity is enforced via an internal meta-schema engine (\texttt{skillware.core.\allowbreak manifest\_schema}) that pre-validates action signatures, parameter types, and security constraints prior to runtime ingestion.
+  \item $\mathcal{E}: \mathcal{S}_{\text{in}} \times \Theta_{\text{env}} \to \mathcal{S}_{\text{out}} \cup \{\bot\}$ is the deterministic \textbf{Effect} (\texttt{skill.py}), a state transition mapping valid input arguments under environment secrets $\Theta_{\text{env}}$ to typed output envelopes, or failing closed to an error state $\bot$.
+  \item $\mathcal{D} \in \Sigma^*$ is the cognitive \textbf{Directive} (\texttt{instructions.md}), a structured natural-language guide instructing the foundation model on operational preconditions, output semantics, and cognitive heuristics.
+  \item $\mathcal{A}: (\mathcal{E} \times \mathcal{C}) \to \{0, 1\}$ is the offline \textbf{Assurance} verifier (\texttt{test\_skill.py}), an executable predicate guaranteeing that the Effect satisfies the Contract independently of external model APIs:
+  \begin{equation}
+  \label{eq:assurance}
+  \mathcal{A}(\mathcal{E}, \mathcal{C}) = 1 \iff \forall p \in \mathcal{S}_{\text{in}}, \quad \mathcal{E}(p, \Theta) \in \mathcal{S}_{\text{out}} \;\land\; \Pi_{\text{const}}(\mathcal{E}, p) = \text{true}
+  \end{equation}
+  \item $\mathcal{P}$ is the \textbf{Presentation} descriptor (\texttt{card.json}), providing metadata for UI catalogs, registry discovery, and operator dashboards.
+\end{enumerate}
+\end{definition}
+
+Optional assets extend the bundle: a static \textbf{Corpus} $\mathcal{B}_{\text{data}}$ (\texttt{kb/}, \texttt{data/}) containing local authoritative lookup datasets, and machine-readable \textbf{References} $\mathcal{R}_{\text{ref}}$ (\texttt{schemas/}) providing auxiliary domain taxonomies.
+
+\subsection{The Five Core Roles of a Skill Bundle}
+\label{subsec:bundle_roles}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.96\linewidth]{figures/fig02_bundle_anatomy.png}
+\caption{Anatomy of a concrete Skillware bundle (\texttt{finance/uk\_companies\_house}): Contract (\texttt{manifest.yaml}), Effect (\texttt{skill.py}), Directive (\texttt{instructions.md}), Assurance (\texttt{test\_skill.py}), and Corpus (\texttt{data/}) with zero external API dependencies.}
+\label{fig:bundle_anatomy}
+\end{figure}
+
+Every skill registered within the Skillware ecosystem resides within a categorized directory (\texttt{skills/<category>/<skill\_name>/}) and satisfies five distinct foundational roles implemented via fixed filenames (Figure~\ref{fig:bundle_anatomy}):
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Contract} (\texttt{manifest.yaml}): The single source of truth defining the capability's external boundary. It specifies JSON Schema-compliant input parameters (\texttt{parameters:}), structured return types (\texttt{returns:}), execution prerequisites (\texttt{requires:}), publisher identity (\texttt{issuer:} containing name, email, GitHub handle, and organization), and an immutable \emph{Constitution}---a set of hard rules defining what the capability will and will not do (e.g., \emph{``Offline only; no external network transmission''}, \emph{``Never execute transfers without explicit confirmed flag''}).
+  \item \textbf{Effect} (\texttt{skill.py}): The deterministic runtime engine. Inheriting from the framework's \texttt{BaseSkill} class, this module implements synchronous \texttt{execute(params)} and non-blocking asynchronous \texttt{aexecute(params)} entry points. It contains the real, pre-reviewed Python logic---ranging from cryptographic ledger operations and financial compliance to biological sequence processing (\texttt{bio/sequence\_ops}) and specialized numerical routines---completely insulated from stochastic LLM code generation.
+  \item \textbf{Directive} (\texttt{instructions.md}): The cognitive operational manual. This document is injected into the model's system context, teaching the reasoning engine \emph{when} to call the skill, how to interpret its JSON responses, and where its operational boundaries lie, without usurping the host agent's global personality.
+  \item \textbf{Assurance} (\texttt{test\_skill.py}): The automated verification suite. Every skill must ship with comprehensive offline tests ensuring that the Effect honors the Contract. These tests are executed automatically via the CLI (\texttt{skillware test}) and in continuous integration before any skill is admitted into the registry.
+  \item \textbf{Presentation} (\texttt{card.json}): UI and registry catalog metadata. It defines visual icons, branding palettes, and human-readable badges, ensuring seamless integration into visual dashboards and agent discovery marketplaces.
+  \item \textbf{Corpus and References} (\texttt{kb/}, \texttt{data/}, \texttt{schemas/}): Bundled static assets, such as offline sanctions lists, geographic boundary databases, or MIME schemas, enabling self-contained, air-gapped execution without external scraping.
+\end{enumerate}
+
+Listing~\ref{lst:manifest_example} illustrates a representative contract from the verified registry:
+
+\begin{lstlisting}[language=yaml, caption={Concrete Skillware Contract (\texttt{manifest.yaml}) for \texttt{finance/wallet\_screening}.}, label={lst:manifest_example}]
+id: finance/wallet_screening
+name: Wallet Sanctions & Risk Screener
+version: 0.4.1
+issuer:
+  name: ARPA Research Division
+  org: ARPA Hellenic Logical Systems
+  github: arpahls
+requires:
+  env: [ETHERSCAN_API_KEY]
+  extras: [finance_wallet_screening]
+constitution:
+  - "Offline first: OFAC dataset is bundled statically in kb/"
+  - "Never transmit private keys or query unauthorized RPC endpoints"
+  - "Fail closed on malformed hex addresses"
+parameters:
+  type: object
+  required: [wallet_address]
+  properties:
+    wallet_address:
+      type: string
+      pattern: "^0x[a-fA-F0-9]{40}$"
+      description: "EVM address to screen."
+    deep_scan:
+      type: boolean
+      default: false
+      description: "Perform recursive counterparty tracing."
+returns:
+  type: object
+  properties:
+    is_sanctioned: {type: boolean}
+    risk_score: {type: number}
+    flags: {type: array, items: {type: string}}
+\end{lstlisting}
+
+\begin{tcolorbox}[protocolbox, title={DEVELOPER ERGONOMICS: THE 5-MINUTE CAPABILITY BUNDLE}]
+\small
+A frequent hesitation among engineering teams adopting formal architectures is the concern over authoring overhead. Skillware resolves this by packaging a production-ready scaffolding toolkit within the framework repository:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Instant Scaffolding (\texttt{templates/python\_skill/}):} Developers do not author capability bundles from scratch. The repository provides turnkey templates for \texttt{manifest.yaml}, \texttt{skill.py}, \texttt{instructions.md}, \texttt{test\_skill.py}, and \texttt{card.json}. An engineer simply adapts the identifiers, implements the deterministic business logic in \texttt{execute()}, and binds the parameter JSON Schema.
+  \item \textbf{Hermetic Offline Assurance (\texttt{skillware test}):} Before deployment, the developer verifies the bundle locally via the CLI: \texttt{skillware test <skill\_name>}. The test harness executes hermetic \texttt{pytest} fixtures, validating parameter conformance, exception fail-closed semantics, and constitutional gate enforcement in $<100\,\text{ms}$ with \textbf{zero third-party LLM API invocations}.
+  \item \textbf{Sub-2ms Progressive Discovery (\texttt{skillware find}):} To prevent context bloat across massive registries, the CLI and runtime engine provide \texttt{SkillMatcher}, an in-process search index that scores query intent against manifest titles, descriptions, and action tags in $<2\,\text{ms}$. Operators find and equip capabilities dynamically without injecting the global registry into model context.
+\end{itemize}
+A 5-minute authoring investment yields permanent operational stability: runtime script crashes collapse to zero, active model context bloat shrinks by $84.0\%$, and per-task operational expenditure drops by $97.3\%$.
+\end{tcolorbox}
+
+\subsection{The BaseSkill Class and Parameter Invariants}
+\label{subsec:baseskill_contract}
+
+Every capability subclassing \texttt{BaseSkill} inherits an inviolable parameter enforcement mechanism. Listing~\ref{lst:baseskill} shows the core implementation from \texttt{skillware.core.\allowbreak base\_skill}:
+
+\begin{lstlisting}[language=Python, caption={Core implementation of the \texttt{BaseSkill} contract.}, label={lst:baseskill}]
+class BaseSkill(ABC):
+    def __init__(self, config=None, credential_fn=None):
+        self.config = config or {}
+        self._credential_fn = credential_fn
+
+    def credential(self, key: str) -> Optional[str]:
+        """Resolves env_vars: credential_fn > config > os.environ."""
+        if self._credential_fn is not None:
+            val = self._credential_fn(key)
+            if val is not None and str(val).strip():
+                return str(val).strip()
+        if key in self.config:
+            return str(self.config[key]).strip() or None
+        return os.environ.get(key)
+
+    def validate_params(self, params: Dict[str, Any]) -> bool:
+        """Validates tool arguments against manifest JSON Schema."""
+        schema = self.manifest.get("parameters")
+        if not schema or not isinstance(schema, dict):
+            return True
+        if not isinstance(params, dict):
+            raise SkillwareParamValidationError(
+                f"Expected dict, got {type(params).__name__}."
+            )
+        try:
+            jsonschema.validate(instance=params, schema=schema)
+        except ValidationError as exc:
+            path = ".".join(str(p) for p in exc.absolute_path) or "(root)"
+            raise SkillwareParamValidationError(
+                f"Validation failed at '{path}': {exc.message}"
+            ) from exc
+        return True
+
+    @abstractmethod
+    def execute(self, params: Dict[str, Any]) -> Any:
+        """Synchronous deterministic execution entry point."""
+        pass
+
+    async def aexecute(self, params: Dict[str, Any]) -> Any:
+        """Native async execution; offloads sync execute() safely."""
+        return await asyncio.to_thread(self.execute, params)
+
+    @staticmethod
+    def _run_coroutine_sync(coro: Any) -> Any:
+        """Safely executes an async coroutine synchronously."""
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+        if loop is not None and loop.is_running():
+            with ThreadPoolExecutor(max_workers=1) as ex:
+                return ex.submit(asyncio.run, coro).result()
+        return asyncio.run(coro)
+\end{lstlisting}
+
+Notice the defensive invariants embedded directly within \texttt{BaseSkill}:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Schema Pre-flight Validation:} When a model emits a tool call, \texttt{validate\_params()} intercepts the arguments against the manifest's JSON Schema before any business logic executes. If the model hallucinates a malformed type, execution immediately halts with an explainable \texttt{Skillware\allowbreak Param\allowbreak Validation\allowbreak Error}, protecting underlying systems from corrupt state.
+  \item \textbf{Safe Async/Sync Bridging:} Recognizing that modern agent runtimes alternate between synchronous script loops and high-concurrency \texttt{asyncio} event loops, \texttt{BaseSkill} provides an internal \texttt{\_run\_coroutine\_sync()} bridge that safely executes coroutines even within pre-existing event loops via isolated thread pools.
+\end{itemize}
+
+\subsection{Universal Interface Morphism}
+\label{subsec:interface_morphism}
+
+A primary source of developer fatigue is the need to maintain separate tool declarations for every foundation model API. Skillware solves this through the mathematical concept of an \textbf{Interface Morphism} $\Phi_{\text{host}}$:
+\begin{equation}
+\label{eq:morphism}
+\Phi_{\text{host}}: \mathcal{C} \longrightarrow \mathcal{T}_{\text{host}}
+\end{equation}
+which transmutes the unified Contract $\mathcal{C}$ into the target host's specific type signature $\mathcal{T}_{\text{host}}$ entirely in-process:
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Google Gemini ($\Phi_{\text{gemini}}$):} Google's \texttt{google-genai} SDK requires uppercase Protobuf type declarations (e.g., \texttt{"type": "STRING"} rather than standard JSON Schema's \texttt{"type": "string"}). \texttt{SkillLoader.\allowbreak to\_gemini\_tool()} recursively traverses the properties tree, sanitizing tool names and upper-casing all primitive and nested types to produce valid \texttt{types.Tool(function\_declarations=[\dots])} objects.
+  \item \textbf{Anthropic Claude ($\Phi_{\text{claude}}$):} Transmutes the schema into Claude's \texttt{tools} specification, enforcing alphanumeric name sanitization and embedding properties in \texttt{input\_schema}.
+  \item \textbf{OpenAI \& DeepSeek ($\Phi_{\text{openai}}, \Phi_{\text{deepseek}}$):} Maps the contract to Chat Completions function signatures (\texttt{"type": "function", "function": \{\dots\}}).
+  \item \textbf{AWS Bedrock Converse ($\Phi_{\text{bedrock}}$):} Packages parameters into Bedrock's \texttt{toolSpec} JSON schema envelopes.
+  \item \textbf{Ollama Local Models ($\Phi_{\text{ollama}}$):} For edge models lacking native function-calling APIs, \texttt{to\_ollama\_prompt()} compiles the schema into clean, deterministic markdown specifications that small open-weights models (e.g., Llama-3-8B) can reliably interpret and execute.
+\end{enumerate}
+
+Crucially, because $\Phi_{\text{host}}$ is executed in-process through native Python class instances, it introduces \textbf{zero network serialization latency, zero IPC sockets, and zero inter-process dependencies}.

@@ -1,0 +1,16 @@
+\begin{table}[t]
+  \centering
+  \caption{Qwen3-8B serving accuracy on H100 (mean $\pm$ sample standard deviation across five runs).}
+  \label{tab:serving-accuracy}
+  \footnotesize
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{@{}lrr@{}}
+    \toprule
+    Configuration & GPQA-Diamond (\%) & GSM8K (\%) \\
+    \midrule
+    FlashInfer BF16 & $56.36 \pm 1.84$ & $95.71 \pm 0.11$ \\
+    OSCAR INT2 & $54.65 \pm 2.18$ & $95.74 \pm 0.38$ \\
+    OSCAR INT2 + Ours & $55.45 \pm 1.49$ & $95.92 \pm 0.15$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}

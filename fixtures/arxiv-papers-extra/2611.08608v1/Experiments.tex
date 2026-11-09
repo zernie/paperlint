@@ -1,0 +1,479 @@
+\section{Experimental Setting} 
+\label{sec:exp}
+\subsection{Dataset}
+
+\noindent We run our experiments on (malware and goodware) Windows (PE) files collected by an AV company from infected customers over 8 years, representing a realistic sample of in-the-wild malware. This dataset has been characterized in a previous study~\cite{botacin2021_bbsample} and includes samples collected by the same company and the same engine in 3 different countries: the USA, Brazil, and Japan. Using the same vendor in the same timeframe makes the samples comparable. Collection in different countries adds diversity and increases external generalization, as malware originating from different countries often displays distinct characteristics~\cite{10.1145/3678890.3678893}. We used the malware for rule generation and the goodware for Bloom Filter training, ensuring no FP arises from biases like data collected in distinct places and times. In total, we leverage 71k malware samples and 22k goodware samples for the experimental results. Unlike studies that focus on specific attack strategies~\cite{10.1145/3708821.3736206,10460021}, we \textbf{do not remove repeated samples} from our experiments, as they may appear across different malware campaigns and thus better reflect real-world conditions. We also do not perform any additional pre-processing on the samples to evaluate them as seen by the AV companies in the wild.
+
+
+
+
+\subsection{Experimental Methodology}
+\label{subsec:expmeth}
+
+
+
+\noindent Our experiments follow a methodical strategy where malware samples are clustered into families, which serve as input for both AutoYara (SOTA) and AutoPYara (our solution) in the comparative analysis. The same set of goodware files is provided to eliminate any goodware bias. We then analyze the generated rules and, to minimize variability from inherent stochasticity, report each setting as the mean over multiple runs. We applied a convergence algorithm to determine the number of runs required to precisely represent each cluster. The framework is set to generate $N=10$ candidate rules per cluster, but adaptively determines early-stop conditions. After the generation of each rule, it evaluates its performance considering the Accuracy. If the improvement between consecutive evaluations falls below the threshold $\theta$, the algorithm halts rule generation early. The choice of a $5\%$ threshold reflects a balance between sensitivity and stability and is meant to prevent termination due to small fluctuations, ensuring that additional rules are generated if they provide meaningful improvement.
+
+\noindent\textbf{Experimental Setup.} We ran our experiments on a high-performance server (Intel Xeon Gold 5318Y, 256GB RAM, running Ubuntu 22.04.3 LTS). We were also able to run AutoPYara on a consumer-grade laptop (Intel i7-1255U, 16GB RAM), showing that it is practical on end-user machines. AutoPYara is hardware-agnostic, requiring minimal resources (1 core, 1GB RAM) and supporting Python 3.9–3.12, Java 11+, and Linux/Windows.
+
+
+\subsection{The Clustering Task.} 
+\label{sec:Clustering Task}
+\vspace{-4mm}
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[
+    width=\linewidth,
+    trim=0cm 8cm 0cm 2.5cm,
+    clip
+]{Figures/Metricsplots.pdf}}
+\caption{Overview of the rule generation task.}
+\vspace{-4.0mm}
+
+\label{fig:YaraFWCycle}
+\end{figure}
+
+ \noindent Unlike a typical ML clustering task, which assigns unlabeled samples to clusters, generating YARA rules for malware families is different. Its goal is to generate rules for \uline{already-labeled} samples. This happens when an AV company has already identified a malware family and wants to generate YARA rules for it. Figure~\ref{fig:YaraFWCycle} exemplifies this process, where a set of labeled malware and a reference set of goodware samples (Path 1) are input to AutoYara/AutoPYara, and a set of rules (Path 3) is generated as output. This process is naturally subject to variations in the input clusters. If a different cluster distribution is input (Path 2) to the rule generator, a different output (Path 4) is observed.
+
+ While accuracy is naturally a relevant metric for this task, a full understanding of the tool's performance can only be achieved by breaking it down into its components, as they present very different characteristics. On the one hand, the tool aims to maximize the \underline{True Positive Rate (TPR)} for each cluster, which represents the rule's coverage, i.e., the portion of samples in a cluster that the rule can actually match. On the other hand, its goal is to minimize the False Positive Rate (FPR). It is key to note that not all mistakes (FPs) are the same. FPs can occur in two ways: First, as \underline{Extra-class False Positive Rate}, where a rule misclassifies goodware as malware; and also as \underline{Inter-class False Positive Rate}, where a rule incorrectly classifies a sample from a different malware family. The operational consequences of these two types are fundamentally different: intra-cluster FPs obscure malware boundaries, while extra-cluster FPs directly jeopardize goodware and normal operations. This work measures YARA rules using these three metrics. We consider it equally important to ensure that benign software continues to run without interruption and to achieve a high TP rate. An effective YARA rule must achieve a high TP rate while keeping both FP rate extremely low, ideally close to zero.
+
+\vspace{-3mm}
+\subsection{Threat Model}
+\vspace{-2mm}
+
+\noindent We evaluated AutoPYara across realistic environments with two distinct threat models based on operational priorities:
+
+
+\noindent\textbf{1. Detection (Conservative):} We aim to prevent operational disruption and alert fatigue in production pipelines. FPs matter most here, so we require strict FP minimization even if it reduces coverage.
+
+\noindent\textbf{2. Hunting (Aggressive):} We aim to discover unseen malware, prioritizing maximum TP rate while accepting higher FP tolerance for analyst triage.
+
+
+These requirements are often conflicting: strict FP suppression and maximum TP coverage typically trade off against each other. We measure this conflict directly, then show how AutoPYara reconciles the two, addressing conservative detection and aggressive hunting together within a single framework.
+
+
+
+\vspace{-3.0mm}
+
+\section{Evaluation}
+\label{sec:eval}
+\vspace{-2.0mm}
+
+
+\noindent We evaluated AutoYara and AutoPYara in two conditions. First (Subsec~\ref{subsec:AutoYaraEval} to ~\ref{subsec:AutoPYaraKEval}), we assessed their \uline{maximum performance potential} by covering the entire dataset. Second (Subsec~\ref{subsec:threathunting}), we evaluate their \uline{generalization} via train-test splits. The first condition is sub-divided into: \textbf{(i)} the effects that the original AutoYara solution was subject to (Subsec~\ref{subsec:AutoYaraEval}), acting as a guideline for evaluating automatic rule generation procedures, and \textbf{(ii)} the individual contribution of each AutoPYara component (Subsec~\ref{subsec:AutoPYaraEval}) to mitigate these effects, working as an ablation study for our tool.
+% \noindent\textcolor{red}{
+% \textbf{Threat Models and Evaluations}
+% To evaluate our automated frameworks across realistic operational contexts, we assess AutoYara and AutoPYara under two distinct deployment settings and threat models:}
+
+% \noindent\textcolor{red}{\noindent\textbf{(i)~Rule Synthesis \& Coverage (Known Malware):} In this setting, the objective is to measure the maximum performance potential of the automated generator when dealing with known malware clusters. We evaluate whether the framework can synthesize rules that achieve maximum detection coverage on target malware while maintaining near-zero false positives against benign baseline corpora. We assess this condition across the entire dataset (Subsec~\ref{subsec:AutoYaraEval} to ~\ref{subsec:AutoPYaraKEval}), subdivided into: \textbf{(a)} analyzing the baseline limitations affecting the original AutoYara solution (Subsec~\ref{subsec:AutoYaraEval}) to establish evaluation guidelines, and \textbf{(b)} performing an ablation study on individual AutoPYara components (Subsec~\ref{subsec:AutoPYaraEval}) to measure how each component mitigates these limitations.}
+
+% \noindent\textcolor{red}{\noindent\textbf{(ii)~Threat Hunting (Unseen Malware):} In this setting, the objective shifts to real-world deployment against novel threats. Here, the threat model focuses on threat hunting where rules are generated on training splits and evaluated on unseen test splits (Subsec~\ref{subsec:threathunting}) to measure out-of-sample generalization against emerging campaign variants.}
+
+% \noindent\textcolor{red}{ Evaluating both settings is necessary because an automated rule engine must demonstrate both its theoretical synthesis limits on known threats and its practical efficacy when hunting unseen malware.
+% }
+\subsection{Characterizing AutoYara \& Its Effects}
+\label{subsec:AutoYaraEval}
+
+
+\noindent To evaluate whether AutoPYara is superior to the SOTA AutoYara, we have to establish clear Criteria (Cs) for comparison. Although the original paper describes the foundational approaches, it does not analyze how key parameters affect the tool’s performance. Identifying these factors allows us to establish fair benchmarks for comparison, ensuring we can quantify improvements and characterize their performance in the real world malware samples. 
+
+
+
+
+\noindent \textbf{\underline{C1}. The Impact of Labeling Strategy: }A natural first step to evaluate the tool's performance is its TP rate. Since our dataset consists of in-the-wild samples, it lacks family labels for comparison, requiring the derivation of our own labeling strategy for the experiments~\cite{JOYCE2021_AGTR}. But \textit{What is the best labeling strategy?} In the absence of standards, we adopt two different approaches to evaluate their impact on the framework: \textbf{(1)} \textbf{similarity-based} clustering via the hashing functions SSdeep and J-SDhash; and \textbf{(2)} \textbf{label-based} clustering, built on VirusTotal-reported family labels (normalized by AVClass2 \cite{DBLP:journals/corr/abs-2006-10615}). These clustering methods are used as they are the most popular and widely adopted strategies to group samples in the malware analysis literature~\cite{JOYCE2021_AGTR,lee2019dexofuzzy,10.1016/j.cose.2022.102921,kornblum2006identifying}. They are fundamentally different, with the first focusing on the binary characteristics of the samples and the second on their high-level behavior~\cite{vitale2025polymorphism}. It is plausible to hypothesize that generated labels might vary~\cite{botacin2021_ssdeephashing}, impacting the rule generation. We applied these labeling methods to all samples and generated the different clusters. We discarded singleton clusters (i.e., clusters containing only a single file) because AutoYara is designed to derive generalized rules from recurring patterns, not from singleton outliers.
+
+
+\begin{table}[ht]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{1.5pt}
+\vspace{-2mm}
+\caption{Cluster Statistics Across Method}
+\label{tab:ClusterStats}
+\vspace{-3mm}
+\begin{tabular}{lccccccccccc}
+\toprule
+\multirow{2}{*}{Metric}
+& \multicolumn{5}{c}{SSdeep}
+& \multicolumn{5}{c}{J-SDhash}
+& VT \\
+\cmidrule(lr){2-6}
+\cmidrule(lr){7-11}
+& 50 & 60 & 70 & 80 & 90
+& 50 & 60 & 70 & 80 & 90
+& \\
+\midrule
+\#Clusters & 8807 & 8874 & 8874 & 8761 & 8588 & 7753 & 7921 & 8169 & 8135 & 8158 & 1121 \\
+Max Size & 1129 & 1126 & 708 & 708 & 466 & 10649 & 8673 & 2447 & 1391 & 1262 & 5558 \\
+Avg Size & 4.87 & 4.61 & 4.36 & 4.18 & 3.89 & 6 & 5.59 & 5.12 & 4.89 & 4.45 & 38.89 \\
+% EBF & 1341 & 1409 & 2075 & 410 & 410 & 2598 & 2583 & 2668 & 2579 & 2595 & 1042 \\
+% RTBF & 8794 & 8861 & 8860 & 8747 & 8574 & 7734 & 7908 & 8152 & 8115 & 8143 & 1118 \\
+\bottomrule
+\end{tabular}
+
+\vspace{-2mm}
+% \footnotesize{EBF = Ember Bloom Filter; RTBF = Retrained Bloom Filter.}
+
+\end{table}
+
+Table~\ref{tab:ClusterStats} shows that different labeling strategies yield datasets with varying sizes and internal structures. These differences alter underlying distribution shapes within the dataset, affecting the evaluation context and influencing the perceived performance. The variation across cluster counts, maximum sizes, and average distributions highlights our central hypothesis: Different labeling methods fundamentally alter how clusters are defined, affecting the task's difficulty and the conclusions one can draw from the results, leading to conflicting and unfair interpretations. 
+
+Labeling Strategy variation has operational consequences: it can fragment large clusters into many smaller ones, inflating the apparent dataset size and compounding the computational burden of detection. Every additional cluster corresponds to a new set of rules or signatures that security systems must maintain and apply. Massive clusters may oversimplify detection rules, trading off specificity for scalability and potentially introducing both FPs and missed detections.  In practice, this means that the structure of the labels governs the balance between precision, scalability, and operational overhead. Evaluating tools or clustering methods on a single dataset without acknowledging these differences risks drawing conclusions that do not generalize to real-world deployment. We measure this impact via the TP rates across these variations and show how changes in dataset construction (e.g., size and structure) propagate into changes in rule quality and detection outcomes, skewing overall performance.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \subfloat[Without Failed Clusters\label{fig:BaseLineAutoYaraBoxOGBF}]{%
+        \includegraphics[width=0.48\linewidth]{Figures/AutoYara/EBF/BoxPlots/OverEstimatedBaseline.pdf}
+    }\hfill
+    \subfloat[With Failed Clusters\label{fig:BaseLineAutoYaraBoxOGBF_True}]{%
+        \includegraphics[width=0.48\linewidth]{Figures/AutoYara/EBF/BoxPlots/TrueBaseLine.pdf}
+    }
+    % \vspace{-1.5mm}
+\caption{Comparison of AutoYara performance: (a) baseline excluding failed clusters; (b) observed performance including failed clusters.}    \label{fig:EmberBloomFilterYara}
+\end{figure}
+
+ \noindent Figure~\ref{fig:BaseLineAutoYaraBoxOGBF} shows the impact of different labeling approaches, which create varying clusters that yield markedly different approximations even when applied to the same data. This divergence underscores how the definition of a labeling strategy is not fixed but shaped by the algorithmic choices made during its construction. This variation arises because SSdeep and J-SDhash group samples by \textit{intrinsic code-level similarity}, capturing functional resemblance even across unrelated labels, whereas the label-based approach depends on external categorizations that overlook such relationships. The first method generally surpasses the label-based ones in \textbf{TPs}, as it relies on more coherent and internally consistent similarity criteria than on labels that group samples according to heterogeneous standards.
+
+\noindent\textbf{\underline{C2}. The Impact of Bloom Filters:} 
+We next examine the role of Bloom Filters within our framework and hypothesize that, like the labeling strategy, they may also influence its behavior. At first glance, the results shown in Figure~\ref{fig:BaseLineAutoYaraBoxOGBF} suggest that AutoYara has great performance with an average TP rate between 67\% and 90.5\%. This is comparable to the results presented by the original paper despite using a different dataset. However, there is a methodological oversight in this result, as it only accounts for the clusters that succeeded in producing rules. The true AutoYara performance, considering the failure rates, is shown in Figure~\ref{fig:BaseLineAutoYaraBoxOGBF_True}, and demonstrates a significant difference in the real-world performance of the tool. The variation arises because the provided Bloom Filters do not contain byte patterns present in malware found in the wild. The original paper only reported results for the successful clusters, while we considered both successful and unsuccessful cases, as we had more control over the dataset. Note that different strategies cause impacts at different levels, with the hashing-based labels experiencing a significant drop in performance compared to the family-based one. Fig.~\ref{fig:EmberBloomFilterYara} shows that the family clustering task is more challenging in the real world and that the shift in performance between the cases cannot be neglected. 
+
+
+\uline{Recovering BF performance.} Outdated Bloom Filters create an initial performance gap, but we can retrain them to improve coverage. We retrain the Bloom Filters and repeat the experiment to compare how coverage and performance change throughout our evaluation.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[
+        width=\columnwidth,
+        height=0.22\textheight,
+        keepaspectratio
+    ]{Figures/AutoYara/RTBF/BoxPlots/ComparisionRTBF.pdf}
+\vspace{-2mm}
+
+    \caption{Impact of Bloom Filter retraining on AutoYara, showing recovery of true positive rate compared to the baseline failed cluster configuration.}
+    \label{fig:BaseLineAutoYaraBoxRTBFVSOGBF_True}
+    \vspace{-2mm}
+
+\end{figure}
+
+Figure~\ref{fig:BaseLineAutoYaraBoxRTBFVSOGBF_True} quantifies the impact of this retraining step. We observe a clear improvement in TP rate performance. Retraining increases the number of generated rules across clusters by incorporating additional N-gram patterns, which reduces the number of failures. 
+%
+This improvement after retraining the Bloom Filters varies across the labeling strategies, given their fundamental differences. Byte-based clustering (SSdeep and J-SDhash) responds strongly to changes at the byte or function level, so retraining the Bloom Filters that use these hashes directly affects performance. The failures typically occur due to insufficient byte-level similarity information captured by the original Bloom Filter configuration. In contrast, VirusTotal labels aggregate samples using broader family concepts, which we find are less sensitive to fine-grained changes in the underlying code. The challenges here are fundamentally different, as VT label-based clustering struggles not from a lack of byte-level information, but from the inherent difficulty of reconciling heterogeneous label assignments. When samples carry conflicting or incompatible family labels, it becomes practically impossible to satisfy all constraints simultaneously, regardless of the underlying binary similarity. The extent of gains from retraining BFs depends on how closely the label criterion tracks true binary similarity rather than external taxonomic grouping.
+
+
+
+\noindent\textbf{\underline{C3}. The Intrinsic High Variance:} In the same way that Bloom Filters can impact results, other factors may have a significant effect. The VBGMM clustering step is inherently non-deterministic because it does not use a fixed random seed. Random initialization and probabilistic convergence can yield different cluster assignments even when the input data is identical, sometimes converging to local rather than global optima. This stochastic behavior introduces variability into the rule generation process, leading to rules that differ in coverage, specificity, and quality across runs. To assess the magnitude of this effect, we measured how much variability appears in both the clustering output and the corresponding rule sets. We apply an early-stop algorithm to generate and evaluate rules across multiple runs, and report the cumulative metric. This provides a dynamic view of performance over time, highlighting long-term trends and changes, and reduces the influence of outliers. In Figure~\ref{fig:BaseLineAutoYaraBoxRTBFVSOGBF_True}, we highlight that the variance in the AutoYara framework is $\approx$30\% (very high).  
+
+
+
+
+\begin{table}[H]
+\vspace{-3mm}
+
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+
+\caption{Extra Class False Positive Rate (\%)}
+\label{tab:Merged-False-Positives}
+\vspace{-2mm}
+
+\begin{tabular}{lccc}
+\toprule
+\textbf{Method} & \textbf{SSdeep} & \textbf{J-SDhash} & \textbf{VT} \\
+\midrule
+AY (EBF)   & $0.99 \pm 0.89$ & $1.19 \pm 0.91$ & $48.66 \pm 33.34$ \\
+AY (RBF)   & $1.23 \pm 0.83$ & $1.13 \pm 0.95$ & $20.36 \pm 12.79$ \\
+AutoPYara  & $1.10 \pm 0.81$ & $1.01 \pm 0.91$ & $54.28 \pm 22.05$ \\
+BestK      & $0.20 \pm 0.17$ & $0.20 \pm 0.17$ & $12.53 \pm 4.95$ \\
+WorstK     & $0.22 \pm 0.16$ & $0.22 \pm 0.16$ & $3.42 \pm 2.49$ \\
+\midrule
+\multicolumn{4}{l}{\scriptsize AY: AutoYara, EBF/RBF: Ember/Retrained BF, VT: VirusTotal}
+\end{tabular}
+\vspace{-2mm}
+\end{table}
+
+
+\noindent\textbf{\underline{C4}. Not All Mistakes Are the Same:} As per Sec.~\ref{sec:Clustering Task}, TP gains should not come at the expense of FPs; thus, we also evaluated AutoYara via \textbf{Intra} and \textbf{Extra} class FPRs. Our experiments produced an Intra-Class FPR below 2\% for the original BFs (see Table~\ref{tab:FPR-Single-Col} of Appendix~\ref{app:fpa}). The rate is zeroed after retraining the BFs. This reinforces the importance of Bloom Filters and the careful selection of labeling strategies. Table~\ref{tab:Merged-False-Positives} presents the Extra-Class FPR across different labeling strategies.
+SSdeep and J-SDhash exhibit lower Extra-Class FPR compared to the family label-based clustering. The inherent nature of similarity-based clustering is responsible for rules with an Extra-Class FPR. AV label clusters from VT are independent of internal patterns, which results in rules that are forced to be more generic, given files that have conflicting patterns. This causes rules to be more stringent with detection, resulting in high Extra-Class FPR. The VT approach is impractical where goodware is present, risking legitimate software operations. In malware‑only workflows, searching within a curated repository or triaging a lab quarantine feed rather than scanning a user’s hard drive, this limitation is less severe. Similarity hashing–based clustering provides robust performance, maintaining low Intra- and Extra-class FPR.
+
+\noindent\textbf{\underline{C5}. The Impact of Threshold Variation:} Given similarity hashing as an effective labeling strategy, we now characterize its threshold variation. This clustering method allows us to adjust a similarity threshold, which dictates how selectively the algorithm groups the samples. In practice, it controls the balance between precision and inclusiveness, shaping the quality of the derived labels.
+
+
+\begin{figure}[htbp]
+    \centering
+    {%
+        \includegraphics[width=0.70\linewidth]{
+            Figures/AutoYara/RTBF/VairiationPlots/Merged/SSdeepAVG_Zoom.pdf
+        }
+    }
+
+    \vspace{-2mm}
+
+    {%
+        \includegraphics[width=0.75\linewidth]{
+            Figures/AutoYara/RTBF/VairiationPlots/Threshold/SSdeep_Th90.pdf
+        }
+    }
+
+    \vspace{-3mm}
+    \caption{AutoYara across clustering configurations. (a) Difference in performance between clusters derived using different SSDeep similarity thresholds. (b) Variation in performance between small and large clusters.}
+    \label{fig:AutoYaraSSdeepComparison}
+    \vspace{-4.0mm}
+
+\end{figure}
+
+
+Figure~\ref{fig:AutoYaraSSdeepComparison}.a highlights a 10\% difference in the threshold range from 50 to 90 in AutoYara and illustrates its impact on the results. This variation occurs because tighter thresholds produce purer clusters—in other words, the files are more closely matched at a byte level, resulting in better clusters. 
+Figure~\ref{fig:AutoYaraSSdeepComparison}.a demonstrates that all thresholds exhibit similar variations, suggesting an inherent characteristic of malware clustering, rather than an artifact of our specific approach. This fundamental property indicates that the relationship between clustering parameters and detection performance follows predictable patterns inherent to the nature of similarity analysis. Stricter thresholds generally improve rule quality and effectiveness, albeit at the cost of reduced coverage. This reduces the impact of automatic rule generation, as each unclustered sample must be processed separately by a human analyst. The balance between cluster purity and diversity becomes critical when tuning thresholds for optimal performance and representativeness. When sample sets are well characterized, prioritizing rule purity yields highly precise, specific signatures; by contrast, hunting for unknown threats benefits from greater rule diversity to broaden detection coverage.
+ 
+
+\noindent\textbf{\underline{C6}. The Impact of Cluster Size:} We previously demonstrated how data-aggregated analyses can obscure effects by combining results across clusters into a single overall score. Specifically, aggregation may mask variations in performance across different clusters and hide meaningful intra-cluster differences. We show that aggregation can lead to incomplete results, where some cluster configurations perform well in specific areas of the dataset, but underperform in others. Similar issues arise when aggregate performance is evaluated w.r.t. cluster size, potentially overlooking how size-specific configurations can influence results. 
+
+
+
+ The distribution of cluster sizes can impact the framework’s performance: a few large clusters may inflate scores, while more granular clusters can reveal weaknesses that would otherwise remain hidden \cite{10.1007/978-3-642-15512-3_13,CORDEIRODEAMORIM2021114971}. Larger clusters represent rules that must generalize across more samples. The hypothesis is that rules derived from small, homogeneous clusters should be highly effective within those narrow bounds but might lack generalization. Figure~\ref{fig:AutoYaraSSdeepComparison}.b shows the variation in the TP rate of the rules for a given threshold using AutoYara. Small clusters exhibit higher mean TP rate at the cost of larger variance. This reinforces that finding a few stable patterns among two similar samples is inherently easier than identifying patterns across $N$ more diverse samples. Cluster size directly influences rule effectiveness: performance often starts high for small clusters and declines as cluster size and diversity increase due to broader, less specific patterns. Our experiments show that variance is inherent to the family clustering problem, rather than to AutoYara alone, and can risk misinterpreting the results. Figure~\ref{fig:AutoYaraSSdeepComparison}.b highlights this variance, underscoring the need for more fine-grained analysis. We observed these patterns across all tested thresholds for both SSDeep and JC-SDhash ground truth. Relying on a single summary metric can be misleading; Adopting a fine-grained approach to rule evaluation, we can isolate peak performance and generalization across the dataset, which is key for practical deployment.
+
+
+\subsection{Impact of Centroid Selection: AutoPYara [F1]}
+\label{subsec:AutoPYaraEval}
+
+ \noindent In the previous section, we identified key factors and metrics that influence rule generation, and now we will characterize and evaluate the AutoPYara framework. We compare its behavior directly with the original AutoYara framework under the same considerations. To assess AutoPYara's strengths, we follow the same strategy as in the earlier analysis and break down the results by component. We first evaluate centroid selection methods while keeping other parameters constant, then examine the impact of $k$ values, thereby isolating variables to understand how each component shapes the framework's performance. To conduct a fair comparison, we extract the $k$ value from the VBGMM step of the AutoYara framework and apply this same $k$, with only the centroid selection differing between them. We isolate variables between the two frameworks, avoiding comparisons that fail to control key parameters.
+
+
+\noindent \textbf{\underline{C1}. The Impact of Labeling Strategies:} We recreate the previous experiment across different labeling strategies. We use AutoPYara with centroid selection, to verify the impact identified on the original AutoYara framework.
+
+ 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[
+        width=\columnwidth,
+        height=0.22\textheight,
+        keepaspectratio
+    ]{Figures/AutoPYara/RTBF/BoxPlots/ComparisionPYara_Yara.pdf}
+
+    \vspace{-2mm}
+
+    \caption{Comparison of labeling strategies between AutoYara and AutoPYara, highlighting performance differences under different configurations.}
+    \label{fig:compare_autoyara_autopyara_rtbf}
+
+    \vspace{-2mm}
+\end{figure}
+\begin{figure*}[t]
+    \centering
+
+    {%
+        \includegraphics[width=0.32\textwidth]{Figures/AutoYara/RTBF/VairiationPlots/Merged/SSdeepAVG_Zoom.pdf}
+    }
+    \hfill
+    {%
+        \includegraphics[width=0.32\textwidth]{Figures/AutoPYara/RTBF/VairiationPlots/Merged/BestK_SSdeepAVG_Zoom.pdf}
+    }
+    \hfill
+    {%
+        \includegraphics[width=0.33\textwidth]{Figures/AutoPYara/RTBF/VairiationPlots/Threshold/SSdeep_Th90.pdf}
+    }
+
+    \vspace{-3mm}
+    \caption{Comparison of SSdeep-based labeling and cluster size variations: (a) threshold variation analysis of \textbf{AutoYara}, (b) threshold variation analysis of \textbf{AutoPYara}, and (c) cluster size impact on AutoPYara using SSdeep (TH90).}
+    \label{fig:AutoYara_Thresholds_Comparison}
+    \vspace{-5mm}
+\end{figure*}
+
+
+\noindent Figure~\ref{fig:compare_autoyara_autopyara_rtbf} shows the performance differences across the three labeling strategies. AutoPYara performs, on average, 3.4\% better than AutoYara on the same datasets and pre-clusters. Although 3.4\% may appear modest at first glance, this gain translates to an average of 2400 additional detections across malware samples in the dataset, which represents a significant absolute improvement that would be highly valuable in the real-world operations of an AV company. The improvement is most pronounced on the VT clusters, which exhibit far greater heterogeneity compared to baselines derived from similarity hashing–based clustering algorithms. In this setting, precise centroid selection in AutoPYara is critical; picking centroids that capture the dominant, stable subpatterns yields clusters with higher intra-cluster coherence and clearer inter-cluster separation. The rule generator can then assemble subpatterns correctly—promoting shared anchors within a cluster and separating variant features across clusters—so conditions are formed in a more disjoint manner rather than overlapping. This reduces rule interference and confusion, enabling rules that generalize to unseen samples from the same family while avoiding spurious matches. Note that, given its nature, the average size of the cluster generated using the AVClass labels is 8 times greater than that of the similarity-based clustering methods. AutoPYara’s centroid selection produces larger gains precisely where heterogeneity is highest.
+
+
+
+\noindent \textbf{\underline{C2}. The Impact of Bloom Filters:}
+We analyzed how retraining Bloom Filters affects AutoPYara when using centroid selection. Like AutoYara, we consider all clusters (including those that fail) when we evaluate the performance of centroid selection in AutoPYara. These failed clusters cause a noticeable drop in performance, highlighting the impact of Bloom Filters within the framework. 
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[
+        width=\columnwidth,
+        height=0.22\textheight,
+        keepaspectratio
+    ]{Figures/AutoPYara/RTBF/BoxPlots/ComparisionRTBF.pdf}
+
+    \vspace{-2mm}
+
+    \caption{Impact of Bloom Filter retraining on AutoPYara, showing recovery of TPR compared to the baseline failed cluster configuration.}
+    \label{fig:BaseLineAutoYaraBoxRTBFVSOGBF_TrueS}
+
+    \vspace{-2mm}
+\end{figure}
+
+
+
+
+
+Figure~\ref{fig:BaseLineAutoYaraBoxRTBFVSOGBF_TrueS} highlights AutoPYara’s performance based on the Bloom Filters. Consistent with our previous findings, retraining Bloom Filters on new samples results in a clear performance improvement. Considering SSdeep clusters, AutoPYara with Retrained Bloom Filters achieves an absolute gain of 82.8\%, compared to 81.5\% for AutoYara. Using J-SDhash as the labeling strategy, the gain is 63.0\% compared to 62.7\% with AutoYara. For the VT clusters, AutoPYara yields a 4.6\% gain compared to 2.8\% with AutoYara. Centroid selection mitigates heterogeneity but lacks sufficient statistical power to address all clustering challenges, particularly when compensating for missing data (e.g., absent n-grams) that can significantly impact cluster representation. This limitation positions Bloom Filter retraining as an essential component of the pipeline. The increased sensitivity of retrained filters to centroid selection (AutoPYara) stems from the fact that retraining typically produces more clusters, introducing granularity which magnifies the influence of centroid selection on overall detection.
+
+\noindent\textbf{\underline{C3}. The Intrinsic High Variance:}
+AutoPYara inherits the lack of determinism of AutoYara. As a result, the framework exhibits performance variations across different runs, consistent with the behavior of the original framework. Figure~\ref{fig:compare_autoyara_autopyara_rtbf} illustrates this considerable variance through the error bars. If both frameworks display high non-determinism, it indicates that this behavior stems from the underlying problem of family clustering rather than the specific framework. Our results demonstrate notable consistency improvements for SSdeep clusters, where AutoPYara reduces standard deviation from 15.2\% to 14.1\% and 15.9\% to 15.6\% for J-SDhash clusters. Conversely, VT clusters exhibit increased variability, with standard deviation rising from 37\% to 42.8\%. This trend persists and reflects the heterogeneous nature of the VT clusters combined with AutoPYara’s centroid selection.
+
+
+
+
+\noindent\textbf{\underline{C4}. Not All Mistakes Are the Same:} We evaluated AutoPYara's FPRs as before. For SSdeep and J-SDhash, AutoPYara achieves an intra-class FPR of 0\% (Table~\ref{tab:FPR-Single-Col} in Appendix~\ref{app:fpa}) and an Extra-class FPR below 2\%. These results highlight its potential for real-world deployment, since practical malware detectors must prioritize keeping FPR's low. For VT clusters, it has a large Extra-class FPR of 54.28\% compared to 20.36\% for AutoYara, as shown in Table~\ref{tab:Merged-False-Positives}. Note that this FPR increase does not occur for SSdeep and J-SDhash clusters because AutoPYara’s centroid-based approach makes selection more precise for homogeneous clusters, which is not the case for VT labels.
+
+
+While centroids enable AutoPYara to generalize across heterogeneous VT clusters, the resulting rules also capture broader patterns that were previously unnoticed. These generalized patterns increase coverage but inadvertently also match goodware. Thus, addressing heterogeneity solely at the centroid level is insufficient. The extra detections are beneficial when only malware families are considered, but the rules are too broad for practical hunting. Given precise clusters, as in SSdeep and J-SDhash, AutoPYara outperforms AutoYara. When clusters are noisy and less precise, centroid selection amplifies that noise.
+
+\noindent \textbf{\underline{C5}. The Impact of Threshold Variation:} Adjusting similarity thresholds directly shapes the diversity of samples in each cluster, which affects the quality of centroids in AutoPYara. A higher threshold creates smaller, more uniform clusters, while a lower threshold results in larger, more diverse groups. If centroids remain effective amid greater heterogeneity, decreasing the threshold should help AutoYara generate broader, more general rules. Using a higher threshold may improve precision by keeping clusters purer, and we test this by varying the threshold and measuring how changes impact rule performance. AutoYara shows a threshold variation of 10 pp, as shown in Figure~\ref{fig:AutoYara_Thresholds_Comparison}(a). AutoPYara significantly reduces this variation to 2.9 pp, as shown in Figure~\ref{fig:AutoYara_Thresholds_Comparison}(b), a 7.1 pp reduction in variation.
+\vspace{-2mm}
+
+\subsection{Impact of k on AutoPYara }
+\label{subsec:AutoPYaraKEval}
+\vspace{-2mm}
+
+
+
+\begin{figure*}[htbp]
+
+    \centering
+    % Row 1: Centroids, Best K, Worst K
+    \subfloat[AutoPYara Centroids Only\label{fig:autopyara_ssdeep_centroids}]{%
+        \includegraphics[width=0.32\linewidth]{Figures/AutoPYara/RTBF/VairiationPlots/Merged/SSdeepAVG_Zoom.pdf}
+    }\hfill
+    \subfloat[AutoPYara Best K\label{fig:autopyara_ssdeep_best_k}]{%
+        \includegraphics[width=0.32\linewidth]{Figures/AutoPYara/RTBF/VairiationPlots/Merged/BestK_SSdeepAVG_Zoom.pdf}
+    }\hfill
+    \subfloat[AutoPYara Worst K\label{fig:autopyara_ssdeep_worst_k}]{%
+        \includegraphics[width=0.32\linewidth]{Figures/AutoPYara/RTBF/VairiationPlots/Merged/WorstK_SSdeepAVG_Zoom.pdf}
+    }
+    
+\vspace{-3mm}
+
+
+    % Row 2: Heuristic MODE, MAX, Random
+    \subfloat[Oracle Based Heuristic: MODE\label{fig:autopyara_ssdeep_heuristic_mode}]{%
+        \includegraphics[width=0.32\linewidth]{Figures/AutoPYara/RTBF/VairiationPlots/Merged/HEU_ModeK_SSdeepAVG_Zoom.pdf}
+    }\hfill
+    \subfloat[Oracle Based Heuristic: MAX\label{fig:autopyara_ssdeep_heuristic_max}]{%
+        \includegraphics[width=0.32\linewidth]{Figures/AutoPYara/RTBF/VairiationPlots/Merged/HEU_MaxK_SSdeepAVG_Zoom.pdf}
+    }\hfill
+    \subfloat[Oracle Based Heuristic: Random\label{fig:autopyara_ssdeep_heuristic_random}]{%
+        \includegraphics[width=0.32\linewidth]{Figures/AutoPYara/RTBF/VairiationPlots/Merged/HEU_RandomK_SSdeepAVG_Zoom.pdf}
+    }
+
+    \vspace{-3mm}
+
+    % Row 3: Heuristic MODE, MAX, Random
+    \subfloat[Sub-Optimal Heuristic: Mean\label{fig:autopyara_ssdeep_nonheuristic_MEAN}]{%
+        \includegraphics[width=0.32\linewidth]{Figures/AutoPYara/RTBF/VairiationPlots/Merged/MEAN_SSdeepAVG_Zoom.pdf}
+    }\hfill
+    \subfloat[Sub-Optimal Heuristic: MAX\label{fig:autopyara_ssdeep_nonheuristic_max}]{%
+        \includegraphics[width=0.32\linewidth]{Figures/AutoPYara/RTBF/VairiationPlots/Merged/MaxK_SSdeepAVG_Zoom.pdf}
+    }\hfill
+    \subfloat[Sub-Optimal Heuristic: Random\label{fig:autopyara_ssdeep_random}]{%
+        \includegraphics[width=0.32\linewidth]{Figures/AutoPYara/RTBF/VairiationPlots/Merged/RandomK_SSdeepAVG_Zoom.pdf}
+    }
+    
+    \caption{Comparing AutoPYara in Different Configuration demonstrating the overall trend and gains using SSdeep  as labeling strategy}
+    \label{fig:autopyara_ssdeep_Kimpact}
+        \vspace{-5mm}
+
+\end{figure*}
+
+
+
+
+
+
+\noindent Comparing Figure~\ref{fig:AutoYaraSSdeepComparison}.b to Figure~\ref{fig:AutoYara_Thresholds_Comparison}.c, we show that AutoPYara consistently outperforms AutoYara by roughly 4\% across the samples. Smaller clusters tend to be more homogeneous, making it easier for the framework to derive rules that capture clear and representative patterns. As clusters increase in size and diversity, shared characteristics become diluted, reducing rule specificity and performance. AutoPYara’s centroid-based strategy offsets this by anchoring rules around representative points, enabling more robust generalization across samples.
+
+ So far, we use $k$ derived from the VBGMM step of AutoYara as our reference point in previous experiments. This approach allowed us to validate our framework's improvements under controlled conditions, but it reflects a lab setting. We now transition to a more realistic setup where AutoPYara independently determines the $k$ value through its own clustering analysis. In this setup, we verify whether there is room to improve performance through $k$ selection and, if so, whether this process can be carried out automatically in a systematic approach. This methodological shift from externally-referenced to internally-determined $k$ values allows us to evaluate system performance under genuine operational conditions, optimize the K-selection algorithm, and demonstrate the framework's robustness without external clustering guidance. This transition is crucial toward developing an independent and optimized AutoPYara. All experiments in this phase isolate the variable of interest by fixing the centroid-based clustering as the baseline while systematically shifting only the $k$ parameter.
+
+\noindent\textbf{[F2] Evaluation of Ideal $k$ Values:} Our first test investigates whether there is room for performance improvement through $k$-selection. To establish an upper bound, we assume access to an oracle, which we simulate via brute-force search. The oracle provides the ideal $k$ for each case, thereby revealing the maximum performance AutoPYara could achieve under perfect conditions.
+
+\noindent\underline{\textit{(1) Exhaustive Search for Optimal $k$:}} We refine AutoYara’s initial estimate $k$ by exhaustively searching its neighborhood. For each candidate $k$, we evaluate performance and select the value that produces the best results. This brute-force search is not intended as a practical deployment strategy but rather as a methodological tool to approximate an oracle, allowing us to simulate access to the ideal $k$ values and establish the upper-bound performance AutoYara could achieve. We provide additional information regarding the search space in Appendix~\ref{app:note}.
+
+\noindent\underline{\textit{(2) Worst-Case $k$:}} We also evaluate the worst-case $k$ as a lower-bound baseline to verify that the observed gains from AutoYara using VBGMM and AutoPYara reflect genuine improvements. To that end, we repeated the above exhaustive search to identify $k$ with the worst rule quality. 
+
+
+
+\begin{figure}[H]
+    \centering
+    \subfloat{%
+        \includegraphics[width=0.95\linewidth]{Figures/AutoPYara/RTBF/BoxPlots/ComparisionPYara_Yara_optK.pdf}
+    }
+
+    \caption{Highlight the impact of $k$ on AutoPYara Using Extreme $k$ Values across different labeling strategies}
+
+    \label{fig:AutoYaraVSAutoPYaraSpread}
+    \vspace{-2mm}
+\end{figure}
+ \noindent The value of $k$ clearly affects AutoPYara’s performance. Fig.~\ref{fig:AutoYaraVSAutoPYaraSpread} shows that on average, choosing an appropriate $k$ increases the TPR by 3\% for SSdeep clusters, 5.3\% for J-SDhash clusters, and 12.5\% for VirusTotal-derived clusters when comparing the best configuration to its suboptimal values of $k$. Although these gains may look marginal at first glance, remember that smaller clusters skew the averages. Similarity-based clustering tends to contain a large frequency of clusters with just 2-3 samples. These limit the range of $k$ and thus the achievable gains. VT labeling, in turn, by not relying on intrinsic code-level similarity, produces clusters with significantly more files per family, resulting in larger cluster sizes, with bigger room for improvement. Fig.~\ref{fig:AutoYaraVSAutoPYaraSpread} shows the gap between the best and a suboptimal $k$ configuration is $\approx$~12.5\% in this setting. These results highlight the importance of selecting $k$ for the framework and the difference between the $k$ used in AutoYara and the optimal $k$ for AutoPYara. While VBGMM performs better than the worst-case baseline as intended, yielding real gains, it remains suboptimal (w.r.t. the best case), typically underestimating $k$, presenting room for improvement.
+
+
+
+
+\noindent\textbf{[F3] Heuristic Approachs to Estimate $k$:}
+
+\noindent\textbf{(1) Uninformed Heuristic to Estimate $k$:}
+To establish a principled approach to estimate $k$ without relying on VBGMM, we first explored three naive strategies that do not incorporate any semantic understanding of sample types. These heuristics are intended as a substitute for exhaustive search. The three are not exhaustive, but they are representative of different approaches. The three methods are: \textbf{(i)} set $k$ to the total number of files in a cluster; \textbf{(ii)} set $k$ to the mean length to equally divide the data; and \textbf{(iii)} randomly guess an arbitrary value of $k$. These strategies are naive because they ignore the data’s structure and yield unstable, biased clusters.
+%
+Figures~\ref{fig:autopyara_ssdeep_nonheuristic_MEAN},~\ref{fig:autopyara_ssdeep_nonheuristic_max},~\ref{fig:autopyara_ssdeep_random} reinforce the impact of $k$ selection and highlight how the impact is more pronounced in larger clusters, where there are fewer chances for randomly sampling a proper $k$ value. This confirms that a stronger approach for $k$ definition is warranted; thus, our proposal is an informed heuristic.
+
+
+\noindent\textbf{(2) Informed Heuristic to Estimate $k$:} Although we demonstrated the potential of a $k$ oracle to improve rule generation performance, true oracles for $k$ do not exist in reality. To approximate an oracle, we require reliable $k$ values—without exhaustive search, better than the original VBGMM estimation, and more effective than a random guess. As per Sec.~\ref{sec:Methodology}, we adopt a systematic heuristic that leverages historical AutoPYara runs indexed by VT family labels (via AVClass~\cite{DBLP:journals/corr/abs-2006-10615}) to estimate $k$ for new samples from the same family. We do not rely on VT for cluster labeling; instead, we repurpose them as a practical proxy to bypass expensive hash-based clustering and to anchor $k$ estimation in observed family trends. While VT’s family assignments can be inconsistent and not always semantically meaningful, this usage still improves practical reliability over VBGMM alone and avoids the cost of brute force. VT now serves a different role; it enables family-level grouping to drive our heuristic for estimating $k$, while hashes are still used for the centroids.  Our core hypothesis is that we can leverage historical family information tied to VT's labels to position our search range for optimal $k$ values in regions with a higher probability of success compared to random initialization, thus gaining efficiency and grounding it in practical malware evolution trends. Figures~\ref{fig:autopyara_ssdeep_heuristic_mode},~\ref{fig:autopyara_ssdeep_heuristic_max}, and~\ref{fig:autopyara_ssdeep_heuristic_random} show that our approach performs comparably to the Best configuration within a 2\% error margin. It also performs 10\% better than AutoYara on the same samples. For larger clusters, our informed choice of $k$ achieves superior performance relative to the heuristic and random settings. Together, these results \textbf{rescue} the application of VT to family clustering, which had previously been viewed as impractical.
+
+\begin{figure*}[htbp]
+    \centering
+
+    {%
+        \includegraphics[width=0.31\textwidth]{Figures/AutoPYara/ThreatHuniting/HEUOnly.pdf}
+    }
+    \hfill
+    {%
+        \includegraphics[width=0.31\textwidth]{Figures/AutoPYara/ThreatHuniting/Arbitary.pdf}
+    }
+    \hfill
+    {%
+        \includegraphics[width=0.31\textwidth]{Figures/AutoPYara/ThreatHuniting/mirrored_sdhash_0.75.pdf}
+    }
+
+    \vspace{-3mm}
+    \caption{Threat hunting comparison between AutoYara and AutoPYara under different availability assumptions: (a) oracle-based ideal configuration, (b) no-oracle setting, and (c) real-world scenario.}
+    \label{fig:ThreatHuntingComparisonCombined}
+        \vspace{-5mm}
+
+\end{figure*}
+
+
+\vspace{-2mm}
+
+\subsection{The Qualitative AutoPYara Impact}
+\label{subsec:QualitativeEval}
+\vspace{-2mm}
+
+
+\noindent AutoPYara's centroid selection and better $k$ values affect the generated rule's quality, which is a known~\cite{botacin2024_malwareanalysts} essential aspects for human analysts. We evaluated rule quality via three metrics: \textbf{1)} \textit{Number of Strings}; \textbf{2)} \textit{Hex Length}; and \textbf{(3)} \textit{Conditions Count}; These metrics compose the \textit{Compactness} metric. Given two rules with similar TP and FP rates, compactness is preferable.
+%
+Figure~\ref{fig:QualitativeAnalysis} provides a high-level overview of the overall distribution of metrics for the generated rules, comparing AutoYara and AutoPYara across four different configurations. AutoPYara creates smaller, more complex rules with greater coverage than the original framework, thus being superior to AutoYara both quantitatively and qualitatively. 
+We provide more details in Appendix~\ref{app:rme}. Further, in Appendix~\ref{app:yararule}, we provide two rules to demonstrate how AutoPYara derives more compact signatures with superior coverage compared to AutoYara.
+
+
+\subsection{AutoPYara as a predictor for Threat Hunting} 
+\label{subsec:threathunting}
+
+
+
+
+
+
+\noindent After characterizing the full potential of AutoYara and AutoPYara using the entire dataset, we split each cluster into training and test sets to evaluate their generalization on the threat-hunting task. This allows for an assessment by creating detection rules from limited samples and deploying them to identify unknown variants of the same malware families. The training portion consists of limited samples that analysts have access to when crafting rules, while the test portion consists of unseen samples that arrive in operational networks. The evaluation is performed at the cluster level using a split ratio of 75/25. The splits are non-overlapping to prevent data leakage, keeping train and test samples from each cluster strictly isolated. \\
+We evaluated the task in 3 scenarios:
+
+\noindent\textbf{1. When VT labels are available} 
+The best scenario for AutoPYara operation is when VT labels are available in the oracle for \textbf{all} the targeted families, allowing better $k$ estimation via the \uline{informed heuristic}. Figure~\ref{fig:ThreatHuntingComparisonCombined}.a shows that AutoPYara achieves a 20\% gain when leveraging the informed heuristic compared to the baseline. By utilizing the gt labels from the VT oracle, the system more accurately estimates the optimal number of clusters ($k$), effectively minimizing both over-clustering and family fragmentation.
+
+\noindent\textbf{2. When VT labels are not available}
+The worst threat hunting scenario for AutoPYara operation is when VT labels are not available in the oracle for \textbf{any} of the targeted families, limiting it to operate only with the \uline{uninformed} $k$ estimation heuristic. Figure~\ref{fig:ThreatHuntingComparisonCombined}.b shows that AutoPYara's performance remains resilient, maintaining a 5\% lead over the baseline even when operating under the uninformed heuristic. While the lack of VT labels removes the ability to fine-tune $k$ based on known family distributions, the system manages to outperform generic clustering methods by relying on structural code similarities.
+
+\noindent\textbf{3. When VT labels are partially available} In real hunting cases, VT oracle labels will be available to only part of the samples, limiting the benefit of the improved heuristic to them. We simulate this by using the real sample proportions in our dataset with VT labels, applying the informed heuristic to them, and falling back to the uninformed heuristics when needed. Figure~\ref{fig:ThreatHuntingComparisonCombined}.c, we highlight that AutoPYara outperforms AutoYara by an absolute gain of $\approx$~10\% in both the training and threat hunting scenarios.
+
+ We also evaluated different splits, and AutoPYara consistently outperformed AutoYara. For each split ratio, samples from each cluster are randomly selected for rule generation, and the remaining are used to evaluate detection of the generated rules. This experiment measures how effectively rules derived from varying amounts of training data detect and classify previously unseen test samples.

@@ -1,0 +1,25 @@
+\section{Method}
+\label{section:method}
+
+We introduce TT-MBRL, a novel learning framework for MBRL that takes advantage of test-time observations to learn episode-specific patterns and acquire long-term memory. TT-MBRL learns a unique world model and policy for each evaluation episode. In contrast to training time, where model parameters are shared across all episodes in the replay buffer, this allows the agent to fine-tune its parameters to each individual episode. An overview of the proposed method is provided in Figure~\ref{figure:TT-MBRL}.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=\linewidth]{figures/TT-MBRL.png}
+    \caption{During training, the world model learns to predict the common patterns shared among multiple episode trajectories collected during exploration. The agent can solely rely on contextual memory to identify patterns that are unique to each new episode, which can lead to incoherent future predictions. At test time, the agent can leverage both contextual and neural memory. This allows the world model to make more accurate predictions and learn an improved policy for each new episode.}
+    \label{figure:TT-MBRL}
+\end{figure}
+
+\subsection{Test-Time Optimization}
+
+At test time, the agent initializes test-time network parameters ($\phi'$, $\theta'$, $\psi'$) with the set of weights learned during the training phase ($\phi$, $\theta$, $\psi$) at the beginning of each episode. A dedicated test-time replay buffer is also created to store observations collected within the current evaluation episode. Analogous to the training procedure, the agent samples mini-batches of trajectories to update its parameters. We find it beneficial to draw half of the trajectories from the training replay buffer and the other half from the test-time buffer. This strategy acts as a form of regularization, mitigating overfitting to the limited test-time observations, which could otherwise degrade performance. When the number of test-time samples is smaller than the required world model sequence length, mini-batches are concatenated with trajectories from the training buffer. 
+We also freeze the encoder and decoder parameters and drop the reconstruction loss at test time to improve TT-MBRL efficiency, preserving the representation space learned during training. Unlike the sequential and dynamics networks, which must adapt to the specific layout and structure of each new episode, the encoder and decoder learn general visual representations that are independent of their temporal ordering. Freezing these parameters significantly reduces evaluation time without impacting performance. We provide an empirical analysis of these design choices in Section~\ref{subsection:analysis}.
+For each new policy step, the world model loss optimizes the test-time parameters $\phi'$ as follows:
+\begin{equation}
+L(\phi') = \frac{1}{BT}\sum_{b=1}^{B}\sum_{t=1}^{T}\Bigr[\beta_{\text{pred}}L_{\text{pred}}(\phi') + \beta_{\text{dyn}}L_{\text{dyn}}(\phi') + \beta_{\text{rep}}L_{\text{rep}}(\phi')\Bigl]
+\end{equation}
+With the test-time prediction loss $L_{\text{pred}}(\phi')$ omitting the reconstruction objective:
+\begin{equation}
+L_{\text{pred}}(\phi') = \underbracket[0.1ex]{-\log p_{\phi'}(r_{t}\ |\ s_{t})}_{\text{reward predictor loss}}\ \underbracket[0.1ex]{-\log p_{\phi'}(c_{t}\ |\ s_{t})}_{\text{continue predictor loss}}
+\end{equation}
+The agent's behavior at test time is optimized using the adapted world model to learn an improved policy. By reducing world model prediction errors, TT-MBRL enables more accurate estimation of imagined returns, which in turn allows the actor and critic to be more effectively optimized.

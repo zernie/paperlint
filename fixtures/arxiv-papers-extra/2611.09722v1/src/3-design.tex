@@ -1,0 +1,120 @@
+\section{\sys{} Design}
+\label{sec:design}
+
+\sys{} consists of three components:
+\begin{itemize}
+  \item \emph{Affine folding} moves shared scales and offsets from individual KV values to matrix-product inputs and results so that Tensor Cores consume operands built directly from packed quantized values, reducing the affine demand in \Cref{fig:ops-per-byte} (\Cref{sec:design-fold}).
+  \item \emph{Bit-level Tensor Core operand construction} builds Tensor Core operands directly from packed quantized values, reducing the INT$\to$FP conversion demand in \Cref{fig:ops-per-byte} (\Cref{sec:design-unpack}).
+  \item \emph{Warp-specialized GPU pipelines} overlap data movement, operand preparation, matrix products, and affine corrections on Hopper and Blackwell (\Cref{sec:design-pipelines}). 
+\end{itemize}
+
+\subsection{The affine folding mechanism}
+\label{sec:design-fold}
+
+\input{figures/fig_fold_mechanism}
+Consider $C=A(sq+z)$, where $A\in\mathbb{R}^{M\times K}$, $q\in\mathbb{R}^{K\times N}$ holds quantized values, and $k$ indexes the reduction.
+When each row $k$ of $q$ shares a scale $s_k$ and offset $z_k$ across columns $j$, distributing reconstruction through the product gives
+\begin{equation}
+  \begin{aligned}
+    C_{i,j} &= \sum_k A_{i,k}(s_kq_{k,j}+z_k) \\
+      &= \underbrace{\sum_k(s_kA_{i,k})q_{k,j}}_{\text{scaled input}}+
+         \underbrace{\sum_k z_kA_{i,k}}_{\text{output correction}}.
+  \end{aligned}
+  \label{eq:operand-fold}
+\end{equation}
+We call this \emph{operand-fold} (\Cref{fig:fold-operand}): the scale multiplies the other input $A$, and the offset contributes a separate reduction of $A$ without reconstructing individual entries of $q$.
+
+\input{figures/fig_fold_kv}
+
+When each column $j$ of $q$ shares a scale $s_j$ and offset $z_j$ across the reduction index $k$, both terms factor out of the sum:
+\begin{equation}
+  \begin{aligned}
+    C_{i,j} &= \sum_k A_{i,k}(s_jq_{k,j}+z_j) \\
+      &= \underbrace{s_j\sum_k A_{i,k}q_{k,j}}_{\text{scaled partial result}}+
+         \underbrace{z_j\sum_k A_{i,k}}_{\text{output correction}}.
+  \end{aligned}
+  \label{eq:acc-fold}
+\end{equation}
+We call this \emph{acc-fold} (\Cref{fig:fold-acc}): the scale multiplies the accumulated product, and the offset multiplies the corresponding row sum of $A$.
+Both \emph{operand-fold} and \emph{acc-fold} preserve the result of applying $sq+z$ element-wise in exact arithmetic.
+
+In attention, K and V arrive as $[L,D]$ tiles, with $L$ cached tokens and head dimension $D$.
+Token-wise groups share a scale and offset along $D$ within each token, whereas channel-wise groups share them along $L$ within each channel.
+Because $QK^{\!\top}$ reduces over $D$, token-wise K uses acc-fold and channel-wise K uses operand-fold into $Q$ (\Cref{fig:fold-kv-qk}).
+Because $PV$ reduces over $L$, token-wise V uses operand-fold into $P$ and channel-wise V uses acc-fold (\Cref{fig:fold-kv-pv}).
+\sys{} allows K and V to select their quantization and folding schemes independently according to the cache's quantization policy.
+\Cref{fig:fold-pipeline} illustrates where scales and offsets are applied in the attention algorithm.
+\sys{} retains online softmax~\cite{dao2023flashdecoding,dao2022flashattention,dao2024flashattention2} and changes only the QK and PV operand paths and their output corrections.
+
+\input{figures/fig_fold_pipeline}
+
+With $h_q$ query heads per KV head and group size $g$, affine folding reduces scalar scale-and-offset operations from one multiply-add per stored value to $2h_q/g$ (\Cref{sec:appendix-head-scaling}).
+
+\subsection{Affine folding spans multiple quantization groups}
+\label{sec:design-groups}
+
+Under acc-fold, an unscaled partial product cannot cross a quantization-group boundary.
+When a reduction spans multiple groups, the kernel applies each group's scale and offset to its partial product before adding the result to the running accumulator (\Cref{eq:acc-fold}).
+We call this partial product \emph{group-local} because it sums only over the values that share one scale and offset.
+Operand-fold instead scales the other matrix input before multiplication, so the accumulator can span multiple groups without rescaling; its offset correction still follows \Cref{eq:operand-fold}.
+
+Both the Hopper and Blackwell kernels enforce the same ordering constraints on these corrections, although they assign the work to different warpgroups (\Cref{sec:design-pipelines}).
+For operand-fold, the kernel can accumulate offset contributions for the same output separately and add their sum later.
+QK corrections must precede softmax, while PV corrections must precede division by the accumulated softmax denominator.
+
+\subsection{Constructing Tensor Core operands from packed integers}
+\label{sec:design-unpack}
+
+\sys{} constructs floating-point Tensor Core operands directly from packed integer bit patterns.%
+\footnote{The Hopper kernel uses BF16 operands with \texttt{wgmma}.
+The Blackwell kernel uses \texttt{tcgen05} with E4M3 inputs for $Q$ and $P$, E4M3 KV operands for INT4, and E2M1 KV operands for INT2 (using the \texttt{kind::f8f6f4} instruction mode~\cite{nvidia2026ptx}).}
+Hopper combines each integer value with a fixed BF16 bit pattern, a technique known as mantissa injection~\cite{kim2022elephants,frantar2025marlin,du2026bitdecoding}.
+Combining $q\in\{0,\ldots,15\}$ with \texttt{0x4300} via bitwise OR produces the exact BF16 value $y=q+128$.
+
+On Blackwell, \sys{} can convert integer values into floating point more efficiently by \emph{directly placing each integer's bit pattern in the low bits of a floating-point operand and filling the remaining bits with zeros}.
+For example, the bit patterns of the INT2 values $0,1,2,3$ represent $0,0.5,1,1.5$ in FP4 (E2M1), giving $y=q/2$.
+INT4 similarly yields FP8 (E4M3) operands with $y=q\cdot2^{-9}$~\cite{lin2025marlinw4a8}.
+
+\input{tables/operand-construction}
+\input{figures/fig_dataflow}
+
+These constructions produce operands of the form $y=\alpha q+\beta$ ($\alpha\ne0$) whose numerical values differ from the stored integers.
+To account for $(\alpha,\beta)$ without extra per-element instructions, we fold both constants into each group's shared scale and offset.
+Substituting $q=(y-\beta)/\alpha$ into $x=sq+z$ (\Cref{eq:dequant}) gives
+\begin{equation}
+  x=s'y+z',\qquad s'=s/\alpha,\qquad z'=z-\beta s'.
+  \label{eq:operand-transform}
+\end{equation}
+Affine folding then applies $s'$ and $z'$ in place of $s$ and $z$, leaving the attention result unchanged in exact arithmetic (\Cref{sec:design-fold}).
+$s'$ and $z'$ are precomputed in FP32 when the quantized KV cache is stored in HBM.
+\Cref{tab:operand-construction} summarizes the $q\to y$ mappings, the $(\alpha,\beta)$ pairs used for compensation, and the ALU cost of converting each integer KV element into a Tensor Core operand.
+
+\Cref{fig:dataflow-packing} shows how \sys{} packs INT2 K values in each 32-bit register to match these bit-level constructions.
+On Hopper, each byte interleaves pairs of 2-bit values so that one bit shift and one masked merge (\texttt{LOP3}) produce two BF16 operands in a 32-bit register.
+On Blackwell, each 32-bit register holds 16 two-bit values arranged as eight channel pairs; one bit shift and two masks unpack the register directly into two 32-bit registers holding 16 FP4 operands.
+Both kernels use the Tensor Memory Accelerator (TMA) to copy packed tiles from global to shared memory (\Cref{fig:dataflow-threads}).
+Hopper consumers build K operands in registers and collectively issue \texttt{wgmma}; Blackwell prepares a shared-memory operand tile that a separate issue thread supplies to Tensor Cores by issuing \texttt{tcgen05}~\cite{nvidia2026ptx}.
+\Cref{sec:operand-construction} extends the INT2 K example to the packing and dataflow of INT2 V and INT4 KV operands on both GPUs.
+
+\input{figures/fig_arch_timeline}
+
+\subsection{Warp-specialized GPU pipelines}
+\label{sec:design-pipelines}
+
+We design separate warp-specialized pipelines for Hopper and Blackwell.
+Hopper's \texttt{wgmma} accumulates into registers owned by its issuing warpgroup, whereas Blackwell's \texttt{tcgen05} accumulates into tensor memory (TMEM) accessible to other warpgroups in the CTA~\cite{nvidia2026ptx}.
+
+On Hopper, one producer warpgroup issues TMA copies, and two consumer warpgroups process alternating even and odd KV tiles (\Cref{fig:arch-hopper}).
+Each consumer builds KV operands and runs its own QK--softmax--PV chain, keeping online-softmax state and output accumulators in registers.
+Each consumer applies scales and offset corrections according to \Cref{fig:fold-pipeline}: K corrections precede softmax, and V corrections update the output as described in \Cref{sec:design-groups}.
+For channel-wise K, the producer warpgroup prepares the scaled $Q$ inputs.
+At the end of the sequence, one consumer merges the two warpgroups' softmax states and partial outputs into the final CTA output.
+
+Blackwell assigns copy and matrix-product issue, operand preparation, softmax, and output accumulation to separate warpgroups (\Cref{fig:arch-blackwell}).
+The issue warpgroup starts TMA transfers and \texttt{tcgen05} products, while the preparation warpgroup constructs KV operands in shared memory.
+The softmax warpgroup reads QK accumulators from TMEM, applies K offset corrections (and K scales for token-wise K) in FP32, computes the softmax weights $P$, and scales $P$ for token-wise V (quantizing folded $Q$ and $P$ tiles to E4M3 with a per-row scale).
+The output warpgroup reads PV accumulators from TMEM, maintains the running output, and applies V offset corrections (and V scales for channel-wise V); for channel-wise K, it also prepares the scaled $Q$ inputs.
+Shared-memory buffers pass operands between warpgroups, while TMEM passes matrix-product accumulators.
+
+Multi-stage buffers in shared memory and TMEM allow producer warpgroups to work on later tiles while downstream warpgroups process earlier tiles.
+We tune the buffer depth and producer lead distance empirically for each workload; for clarity, \Cref{fig:arch-blackwell} illustrates a one-step lead.

@@ -1,0 +1,588 @@
+\documentclass{article}
+\usepackage{graphicx, xcolor} % Required for inserting images
+\usepackage{amsmath,amsfonts,amssymb,amsthm,enumerate,mathtools,bbm}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,decorations.pathreplacing}
+\usepackage{capt-of} % Provides \captionof
+\usepackage[main,final,nonatbib]{neurips_2026}
+\makeatletter
+% \renewcommand{\@noticestring}{%
+%   To appear in NeurIPS 2026. Do not distribute this version.%
+% }
+\makeatother
+%\usepackage{fullpage}
+\usepackage{hyperref}
+\usepackage[normalem]{ulem}
+\usepackage[colorinlistoftodos]{todonotes}
+
+\usepackage{soul}
+\usepackage{comment}
+\usepackage{enumitem}
+\let\epsilon\varepsilon
+\usepackage[style=alphabetic]{biblatex}
+\addbibresource{references.bib}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{lemma*}[theorem]{Lemma*}
+\newtheorem{theorem*}[theorem]{Theorem*}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{prop}[theorem]{Proposition}
+\newtheorem{remark}[theorem]{Remark}
+%\newtheorem{definition}[theorem]{Definition}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+
+\DeclarePairedDelimiter{\floor}{\lfloor}{\rfloor}
+\DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Ncal}{\mathcal{N}}
+\newcommand{\x}{\mathbf{x}}
+\renewcommand{\a}{\mathbf{a}}
+\renewcommand{\o}{\mathbf{o}}
+\renewcommand{\b}{\mathbf{b}}
+\newcommand{\h}{\mathbf{h}}
+\newcommand{\q}{\mathbf{q}}
+\renewcommand{\k}{\mathbf{k}}
+\renewcommand{\v}{\mathbf{v}}
+\newcommand{\y}{\mathbf{y}}
+\newcommand{\z}{\mathbf{z}}
+\newcommand{\m}{\mathbf{m}}
+\newcommand{\W}{\mathbf{W}}
+\newcommand{\M}{\mathbf{M}}
+\newcommand{\I}{\mathbf{I}}
+\newcommand{\0}{\mathbf{0}}
+\newcommand{\layernorm}{\text{layer\_norm}}
+\newcommand{\multilayernorm}{\text{multi\_layer\_norm}}
+\newcommand{\identity}{\text{identity}}
+\newcommand{\hardmax}{\text{hardmax}}
+\newcommand{\mask}{\text{mask}}
+\newcommand{\CoT}{\mbox{\rm CoT}}
+\newcommand{\CoTed}{\text{CoT}_{\text{ed}}} 
+\newcommand{\CoTdec}{\text{CoT}_{\text{dec}}} 
+\newcommand{\CoTenc}{\text{CoT}_{\text{enc}}} 
+\newcommand{\WE}{\text{WE}}
+\newcommand{\PE}{\text{PE}}
+\newcommand{\1}{\mathbbm{1}}
+\newcommand{\Att}{\text{Att}}
+\newcommand{\ReLU}{\text{ReLU}}
+\newcommand{\FFW}{\text{FFW}}
+\newcommand{\TIME}{\mbox{\rm TIME}}
+\newcommand{\BOS}{\text{BOS}}
+\newcommand{\polylog}{\text{polylog}}
+
+
+\title{A Tight Hierarchy for Chain of Thought}
+\author{
+  Thanh Le \\
+  Department of Mathematics \\
+  University of Nebraska--Lincoln \\
+  \texttt{tle51@huskers.unl.edu}
+  \And
+  A. Pavan \\
+  Department of Computer Science \\
+  Iowa State University \\
+  \texttt{pavan@iastate.edu}
+  \And
+  N. V. Vinodchandran \\
+  School of Computing \\
+  University of Nebraska--Lincoln \\
+  \texttt{vinod@unl.edu}
+}
+\date{April 2026}
+
+\makeatletter
+\renewcommand{\@noticestring}{%
+  A version of this paper will appear at NeurIPS 2026.%
+}
+\makeatother
+
+\begin{document}
+
+\maketitle
+
+%\listoftodos
+
+\begin{abstract}
+Chain-of-thought (CoT) reasoning has emerged as a powerful paradigm for extending the computational capabilities of transformer-based models. A growing body of recent work has begun to uncover the fine-grained computational power of transformers augmented with CoT, as well as their connections to classical complexity theory.
+
+In this work, we advance this line of research by establishing the first hierarchy theorem for \CoT-based computation. Our main result shows that for any reasonable resource bound $r(n) \geq n$  and any $\varepsilon > 0$,
+\[
+\mathrm{CoT}(r(n)) \subsetneq \mathrm{CoT}(r(n)^{1+\varepsilon}),
+\]
+where $\mathrm{CoT}(r(n))$  denotes the class of decision problems solvable by transformers using $O(r(n))$ CoT reasoning steps on inputs of length $n$. Our result shows that increasing the number of CoT reasoning steps provably yields strictly greater computational power, establishing CoT steps as a fundamental resource in transformer-based computation.
+
+Unlike classical hierarchy theorems, which are typically proved via diagonalization, our approach leverages known coarse-grained simulations between CoT-augmented transformers and Turing machines in both directions. Building on these connections, we adapt the classical padding technique from complexity theory to this setting to obtain a tight hierarchy. A key technical contribution of our work is the implementation of padding within the transformer-based CoT model.
+\end{abstract}
+
+
+
+%\begin{abstract}
+%    Chain-of-thought (CoT) reasoning has emerged as a powerful paradigm for extending the computational and reasoning capabilities of transformer-based models. Recent research continue to discover the nuances of the computational abilities of Transformers with chain-of-thought reasoning including its relations to traditional complexity theory. In this work, we take this line further  and establish the first hierarchy theorem for this model. Our main result is the following hierarchy theorem: For any reasonable resource bounding function $r(n)$ and any $\varepsilon > 0$, 
+%    $\mathrm{CoT}[r(n)] \subsetneq \mathrm{CoT}[r^{1+\varepsilon}(n)]$. Here $\CoT(r(n))$ is the set of decision problems that can be decided using Transformers with $r(n)$ CoT reasoning steps ($n$ is the input length). 
+
+%While in traditional complexity theory hierarchy theorems are established using diagonalization, we use known corse simulations of transformers with cot using Turing machine and vis-versa and adapt a complexity-theoretic technique known as {\em padding technique} to establish our tight hierarchy. Implementing the padding tecchnique in the Transformer model is one of our main technical contributions.     
+%\end{abstract}
+
+\input{intro}
+
+\section{Preliminaries}
+We consider \textit{decoder-only transformers} with chain of thought that can generate intermediate tokens between reading the input and generating an answer. Our model mostly follows definitions as in \cite{merrill2023expressive}. %%We will give the exact definition (and assumptions) in Appendix \ref{sec:transformer def}.%% 
+In the main body of the paper, we describe the main points about the model. We start here with notation that we use throughout the paper.  
+
+ Let $[n] := \{1, 2, \dots, n\}$. A function $t: \mathbb{N} \rightarrow \mathbb{N}$ is time-constructible if there is a Turing machine $M$ that on every input length of $n$ runs for exactly $t(n)$ steps and stops. All standard time functions, such as polynomials and exponentials, have this property. We (most of the time) use lowercase letters ($x, y,\dots$) for tokens in an alphabet $\Sigma$; uppercase letters ($X, Y, \dots$) for strings in $\Sigma^*$. We use lowercase bold letters ($\mathbf{x}, \mathbf{y}, \dots$) for vectors; uppercase bold letters ($\mathbf{X}, \mathbf{Y}, \dots$) for matrices. We work with vectors which can be either a row matrix or a column matrix. Sometimes, we do not specify row or column for conciseness -- whether a vector is a row or a column should be clear from context. We write ``$\identity$" to be the identity map, i.e. for any vector $\x$, $\identity(\x) = \x$. In terms of matrix, we write $\I_{n \times n}$ for the $n \times n$ identity matrix. We write $\0_{m \times n}$ for the $m \times n$ zero matrix. We write ``$\_$" to mean ``some number in $\R$," and likewise we write $(\_)^d$ to mean ``some vector in $\R^d$". 
+
+ We use indicator-notation: if $\phi$ is a proposition, we write 
+    \begin{equation*}
+        \1(\phi) = \begin{cases}
+            1 &\text{if $\phi$ is true} \\
+            0 & \text{otherwise.}
+        \end{cases}
+    \end{equation*}
+
+% {\color{red}
+
+% \textbf{Definition:} Let $\Sigma$ be a finite alphabet containing a designated accept symbol $1 \in \Sigma$. 
+% For a function $r:\mathbb{N}\to\mathbb{N}$, a transformer $T$ decides a language 
+% $L \subseteq \Sigma^*$ in $r(n)$ chain-of-thought steps if there exists a function 
+% $f:\Sigma^* \to \Sigma$ such that the following holds.
+
+% On input $x \in \Sigma^n$, define a sequence of strings $\{f^k(x)\}_{k\ge 0}$ by
+% $f^0(x) = x,
+% f^{k+1}(x) = f^k(x)\cdot f(f^k(x)),
+% $
+% where $\cdot$ denotes concatenation. After $r(n)$ decoding steps, the output of $T$ is the final token of $f^{r(n)}(x)$. We say that $T$ accepts $x$ if this output equals $1$. The language decided by $T$ is
+% \[
+% L = \{ x \in \Sigma^* : \text{the final token of } f^{r(|x|)}(x) \text{ is } 1 \}.
+% \]
+
+% We define $\CoT(r(n))$ to be the class of all languages $L \subseteq \Sigma^*$ that are decided by some transformer $T$ using at most $O(r(n))$ decoding steps.
+% }
+
+% {\color{blue} DEFN ABOVE MIXES UP BETWEEN T and f. Cleaner defn:
+
+\begin{definition}
+Let $\Sigma$ be a finite alphabet containing a designated accept symbol $1 \in \Sigma$. 
+For a function $r:\mathbb{N}\to\mathbb{N}$, a transformer $T : \Sigma^* \to \Sigma$ \textit{decides }a language 
+$L \subseteq \Sigma^*$ in $r(n)$ chain-of-thought steps if the following holds.
+
+On input $X \in \Sigma^n$, define a sequence of strings $\{f^k(X)\}_{k\ge 0}$ by
+$f^0(X) = X,
+f^{k+1}(X) = f^k(X)\cdot T(f^k(X)),
+$
+where $\cdot$ denotes concatenation. Each $T(f^k(X))$ is called a \textit{decoding step}. After $r(n)$ decoding steps, the output of $T$ is the final token of $f^{r(n)}(X)$. We say that $T$ accepts $X$ if this output equals $1$. The language decided by $T$ is
+\[
+L = \{X \in \Sigma^* : \text{the final token of } f^{r(|X|)}(X) \text{ is } 1 \}.
+\]
+
+We define $\CoT(r(n))$ to be the class of all languages $L \subseteq \Sigma^*$ that are decided by some transformer $T$ using at most $O(r(n))$ decoding steps.
+\end{definition}
+
+%}
+
+Let $\TIME(t(n))$ denote the class of decision problems decidable in $O(t(n))$ time steps using a multi-tape Turing machine. Let $\widetilde{\TIME}(t(n))$ denote $\TIME(t(n)\polylog(t(n)))$. \cite{merrill2023expressive} shows the following relations between \TIME\ and \CoT.  
+
+\begin{theorem}[\cite{merrill2023expressive}] \label{thm:hierrachy TIME vs CoT in MS23}
+    With the definition above, we have that 
+    \begin{equation*}
+        \TIME(r(n)) \subseteq \CoT(r(n)) \subseteq \widetilde{\TIME}(r^2(n) + n^2).
+    \end{equation*}
+\end{theorem}
+In particular, \cite{merrill2023expressive} assumes the following: $log$-precision (i.e. for input of length $n$ and $r(n)$ intermediate decoding steps, precision is $O(\log(n + r(n)))$); saturated attention; and multi-layernorm. We make the same assumptions for our constructions, together with a few reasonable additional assumptions. More details on model assumptions are explained in Appendix \ref{sec:transformer def}, in particular Remark \ref{rmk:assumptions for our model}.
+
+A technical note is that we use $\infty$ in our constructions throughout this paper. In fact, we take $\infty$ to be the max possible value (with precision $O(\log(n + r(n)))$. More specifically, we can take the precision to be $C \cdot \log(n + r(n))$ for suitably large $C$, so that the max possible value is \textit{much} bigger than all other values needed to encode matrix and vector values.
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{A Hierarchy Theorem for \CoT} \label{section:main results}
+
+In this section, we state and prove the main results. Proofs in this section require a few primitives for manipulating transformers, which are provided in Appendix~\ref{sec:manipulate}. We start with the following lemma. Note that for padding to work (in general), $r(n) \geq n$ is a technical requirement. Padding as a technique is not translatable to the sub-linear regime.
+
+\begin{lemma} \label{CoTAmplification}
+    Let $\epsilon > 0$. Let $r(n) \geq n$ such that $r(n)$ is time-constructible, nondecreasing, unbounded, and $\log(r(n+1)) = (1+o(1)) \log(r(n))$. If $\CoT(r(n)) = \CoT(r(n)^{1 + \epsilon})$, then $\CoT(r(n)^{1 + \epsilon}) = \CoT(r(n)^{1 + 2 \epsilon})$. 
+\end{lemma}
+
+\begin{figure}[tbp]
+  \centering
+  \resizebox{\linewidth}{!}{\input{proof-outline}}
+  \caption{Padding argument for Lemma \ref{CoTAmplification}.
+  Write $m=|X|$ and $N=m+f(m)$, with $f$ chosen as in the proof.
+  The transformer $T'$ simulates $T$ on a padded input with
+  essentially the same absolute CoT budget.
+  The assumed class equality yields a transformer $S$ with
+  budget $O(r(N))$. Finally, $R$ generates the padding using
+  CoT and simulates $S$.
+  Dashed vertical lines separate supplied input from generated
+  tokens; gray blocks denote padding. Bar lengths are schematic.}
+  \label{fig:padding-outline}
+\end{figure}
+
+\begin{proof}[Proof of Lemma \ref{CoTAmplification}] First, we give an outline of how padding works (see Figure \ref{fig:padding-outline} for an illustration). Let $L$ be a language in $\CoT(r(n)^{1 + 2 \epsilon})$. We will show that $L \in \CoT(r(n)^{1 + \epsilon})$ under the assumption that $\CoT(r(n)) = \CoT(r(n)^{1 + \epsilon})$. Define a ``padded'' language $L' = \{X (*)^{f(|X|)} : X \in L\}$ (for an appropriately chosen function $f$), where $X (*)^{f(|X|)}$ means a string $X$ padded with $f(|X|)$ many $*$'s. Note that $L$ and $L'$ are essentially the same except the input is padded with $*$'s. Thus, using the transformer $T$ for $L$ as a black box, we design a transformer $T'$ for $L'$ using the same absolute number of \CoT\ steps, i.e. the number of \CoT\ steps of $T$ on input $X$ is essentially the same as the number of \CoT\ steps of $T'$ on input $X*^{f(|X|)}$.  However, as a function of input length, $T'$ will recognize $L'$ in $r(n)^{1 + \epsilon}$ \CoT\ steps. Now, by the assumption that  $\CoT(r(n)) = \CoT(r(n)^{1 + \epsilon})$, we obtain that $L'$ is indeed in $\CoT(r(n))$ via a transformer $S$. Since $L$ and $L'$ are essentially the same languages, we can design a new transformer for $L$ by padding an input $X$ appropriately and simulate $S$ on the padded input. This ensures that the new transformer for $L$ runs in $r(n)^{1+\epsilon}$ $\CoT$ steps. 
+
+% A diagram illustrating this outline is given in Appendix \ref{app:padding-outline}.
+
+% \begin{center}
+%   \resizebox{\linewidth}{!}{\input{proof-outline}}
+%   \captionof{figure}{Padding argument for Lemma \ref{CoTAmplification}. Write $m=|X|$ and $N=m+f(m)$, with $f$ chosen as in the proof. The transformer $T'$ simulates $T$ on a padded input with essentially the same absolute CoT budget. The assumed class equality yields a transformer $S$ with budget $O(r(N))$. Finally, $R$ generates the padding using CoT and simulates $S$. Dashed vertical lines separate supplied input from generated tokens; gray blocks denote padding. Bar lengths are schematic.}
+%   \label{fig:padding-outline}
+% \end{center}
+
+
+While this is the high-level approach, there are several technical challenges to adapt this to the transformer setting. First, to simulate $T$, one technical challenge is that $T$ expects an unpadded input over $\Sigma$. If we just run $T$ as it is on $X *^{f(|X|)}$, then since attention of CoT steps are over $*$ tokens as well, this would change the output for $T$ in ways that we can't control. Another challenge is to copy the output of a \textit{position} $i$ to a position $j > i$ far apart (where position $i$ means the $i^{\text{th}}$ token in the input string) -- so that desired calculations can be carried out. %$\x_i^{(\ell)}$, the representation of $\x_i$ after layer $(\ell)$, to positions that we want so that desired calculations can be carried out. 
+To simulate $S$, a technical challenge is when we receive $X$ as input, we need to include layers and heads that pads * tokens using CoT steps. The difficulty is to make sure that these layers/heads take effect only in certain steps.   
+
+We now give details of the construction. 
+\textit{In this proof, we will focus on a polynomial $r(n)$}. We will explain how this can be extended to other classes of functions after the proof. 
+
+Assume $\CoT(r(n)) = \CoT(r(n)^{1 + \epsilon})$. 
+Let  $L \in \CoT({r(n)}^{1 + 2\epsilon})$, and let $T$ be a transformer that recognizes $L$ in $O(r(n)^{1 + 2\epsilon})$ CoT steps. Let $\Sigma$ be the alphabet for $L$.
+
+Define the padded language  
+$L' = \{X (*)^{\floor{|X|^c}} : X \in L, * \not\in \Sigma\}$, where $c = \frac{1 + 2\epsilon}{1 + \epsilon}$ and $*$ is a new character (just used for padding). So, the alphabet for $L'$ is $\Sigma' = \Sigma \cup \{*\}$. 
+
+As mentioned above, the proof consists of the constructions of the following two transformers. 
+
+\noindent\textbf{\underline{Transformer $T'$}}: Using transformer $T$, we can construct transformer $T'$ that recognizes $L'$ in $O(r(n)^{1 + \epsilon})$ $\CoT$ steps. Then, by our assumption, $L' \in \CoT(r(n))$. Let $S$ be the transformer that recognizes $L'$ in $O(r(n))$ CoT steps. 
+
+\noindent\textbf{\underline{Transformer $R$}}: Using transformer $S$, we construct a transformer $R$ that recognizes $L$ in $O(r(n)^{1 + \epsilon})$ CoT steps.
+
+\subsection{Construction of \texorpdfstring{$T'$}{T'}}
+    
+\textit{Note that for any $i \in \N$, we say $x_i$, $\x_i$, or $i$ to refer to position $i$, i.e. step number $i$, that a transformer takes.}
+    
+We first give a high-level description of our construction: We take as input strings that look like $X = x_1 \dots x_m x_{m+1} \dots x_{m+\floor{m^c}}$, where $m \in \N$. Let $X_1 := x_1 \dots x_m$ and $X_2 := x_{m+1} \dots x_{m+\floor{m^c}}$. Let $\x_i$ denote the embedding of token $x_i$, $\x_i^{(l)}$ denote the intermediate value after layer $l$, and $\y_i$ denote the output at token $x_i$. Our goal is to design a transformer to check if $X \in L'$, i.e. check if $X_1 \in L$ and $X_2 = *^{\floor{m^c}}$. To check if $X_1 \in L$, we use a mask function to ``ignore" tokens in $X_2$, and run CoT steps as in $T$ by attending over tokens in $X_1$ and CoT-generated tokens $\x_{m + \floor{m^c} + 1}, \x_{m + \floor{m^c} + 2}, \dots$ \textit{Note that the mask function is not necessary in our construction, it just helps with making our proof concise -- see Remark \ref{rmk:simulate attn mask}.} The challenge is to make $\x_{m + \floor{m^c} + 1}$ equal to $\y_{m}$ so that the first CoT step of $T'$ is exactly the same as the first CoT step of $T$. To check if $X_2 = *^{\floor{m^c}}$, we just need a single decoding step.  
+
+Let the parameters of $T$ be: alphabet: $\Sigma$; embedding dimension: $d$; number of layers: $L$; number of heads per layer: $H$; output function: affine linear transformation $\gamma_T$. 
+
+We construct $T'$ with parameters: alphabet: $\Sigma' = \Sigma \cup \{*\}$; input string: $x_1 x_2 \dots x_{n}$, where $n = m + \floor{m^c}$, $m \in \N$; embedding dimension: $D = 2d + 22$. The embedding dimensions are (note that more details will be provided later in the proof): 
+\begin{itemize}[noitemsep,leftmargin=10pt]
+    \item All WE and PE used for $L$ remain the same. Say they occupy dimension numbers $1$ to $d$ of our vectors. When simulating $T$, $T'$ acts on these dimensions only. 
+    \item 1 dimension for saving is $x_i = *$, WLOG, say dimension number $d+1$. 
+    \item 5 dimensions for additional PE: $i, m, m+\floor{m^c}, \frac{1}{\floor{m^c}}, \frac{1}{i}$. 
+    \item Dimensions that serve as placeholders. They are: 
+    \begin{itemize}[noitemsep,leftmargin=10pt]
+        \item 1 dimension for saving if $x_{m+1} = \dots = x_{m + \lfloor m^c\rfloor} = *$, say dimension $d+2$.
+        \item 1 dimension for saving $\1(\Att = 1/\floor{m^c})$, say dimension $d+3$.
+        \item $d$ dimensions for saving the copied $\x_\eta^{(L+1)}$.
+        \item Other placeholder dimensions.
+    \end{itemize}
+\end{itemize} 
+
+
+{\em Word embedding (WE):} We define WE for $T'$ by using the exact same WE as for $T$, except for adding a new dimension (dimension number $d+1$) which is $1$ iff character is $*$ (and $0$ otherwise). That is, $\WE(*)$ is $1$ at dimension $d+1$, and $0$ elsewhere.
+
+{\em Positional encoding (PE):} In addition to PE of $T$, we also use a supplementary PE (so that in case $T$ changes the values of its original PE via calculations, we still have additional PE values to use). For input length $n = m + \floor{m^c}$, we define the supplement PE to be $\PE_n(i) = \begin{bmatrix}
+            i &m & m+\floor{m^c} &\frac{1}{\floor{m^c}} &\frac{1}{i}
+        \end{bmatrix}$. Note that $\PE_n : \N \to \R^D$. We just write the 5 dimensions that matter (the rest are understood to be all $0$'s). We save supplement PE in 5 unique dimensions in embedding vectors (i.e. $\x_i$'s).
+
+        {\em Heads and layers:} $T'$ has $L' := L+5$ layers, each layer has $H$ heads.  
+        \begin{itemize}[noitemsep,leftmargin=10pt,topsep=2pt]
+            \item Layers $1$ to $L$: exactly the same as the layers of $T$. Note that each head in these layers acts on dimensions $1$ to $d$ (i.e. the dimensions that $T'$ shares with $T$) only.
+            \item Layers $L+1$ to $L+5$: additional layers, to be described.
+        \end{itemize}
+
+        {\em Multi-layernorms:} put multi-layernorms only where $T$ has.
+
+        {\em Attention mask function:} we use causal mask; the only difference is that 
+        \begin{equation*}
+            \mask(i, j) = - \infty \qquad\text{if $i > m + \floor{m^c}$ and $j \in \{m+1, m+2, \dots, m+\floor{m^c}\}$.}
+        \end{equation*}
+        Note again that this tailored attention mask is avoidable (see Remark \ref{rmk:simulate attn mask}). That is, causal mask suffices; the use of the tailored mask is just for conciseness.
+
+        {\em Output function:} $\gamma_{T'} := \delta_2 \circ \gamma_T \circ \delta_1$, where $\delta_1, \delta_2$ are affine linear transformations $\R^d \to \R^d$. Since composition of affine linear transformations is an affine linear transformation, we have that $\gamma_{T'}$ is an affine linear transformation.    
+  %  \end{itemize} 
+
+
+{\bf \em How $T'$ runs: } 
+    \begin{itemize}[noitemsep, leftmargin=10pt, topsep=0pt]
+        \item For $x_1$ to $x_m$: Run exactly as $T$ would run.
+
+        Now, we denote the vector at position $m$ after layer $L$ (i.e. the last layer) of $T$ be $\v_T$. Note that we have $\x_m^{(L)} = \v_T$ (since $T'$ runs exactly as $T$ for its first $L$ layers). 
+
+        \textit{Note that $\x_m^{(L)}$ has dimension $D$, while $\v_T$ has dimension $d$. When we write $\x_m^{(L)} = \v_T$, it actually means that ``at the dimensions that $T'$ shares with $T$, we have $\x_m^{(L)} = \v_T$."}
+
+        \item  For $x_{m+1}$ to $x_{m + \floor{m^c} -1}$: It does not matter what $T'$ does here.  
+        
+        \item For $x_{m + \floor{m^c}}$: Copy the first $d$ dimensions of $\x_m^{(L)} (=\v_T)$ to this position. Also check if $x_{m+1} = x_{m+2} = \dots = x_{m+\floor{m^c}} = *$. 
+
+        First, we add a layer (layer L+1) \textit{with no head}, so as to use its feedforward network to calculate $\1(j = m)$ and $\1(j = m + \floor{m^c})$ (as in Lemma \ref{lem:tran checks if c_i = t}). Note that layer needs to share the number of heads with other layers, but we can just make all heads ``silent."
+        
+        \textit{Note that for each $\1$ function, we need $3$ placeholder dimensions and $1$ dimension. In total, we need $8$ dimensions.} 
+
+        To copy $\x_m^{(L)}$ to position $m + \floor{m^c}$, we do the following.
+        \begin{itemize}[noitemsep, leftmargin=10pt, topsep=0pt]
+            \item We add a layer (layer $L+2$). This layer has a head (head $1$). For query $i$ and key $j$, choose $\W_q$ and $\W_k$ such that 
+            \begin{equation*}
+                \q_i^T \k_j = 1 \cdot \big(-\frac{1}{j}\big) + \1(i = m + \floor{m^c}) \cdot \1(j = m), 
+            \end{equation*}
+            where $\1(i = m + \floor{m^c})$ and $\1(j = m)$ are calculated from layer $L+1$; $1$ can be easily obtained by adding a $1$ in a designated dimension in any layer before $L+2$. 
+            
+            We just use \textit{2 additional dimensions}, one to line up $1$ for $\q_i$ and $\big(-\frac{1}{j}\big)$ for $\k_j$, and the other to line up  $\1(i = m + \floor{m^c})$ for $\q_i$ and $\1(j=m)$ for $\k_j$.
+
+            Note that when average hardmax is applied: 
+            \begin{equation*}
+                \eta = \eta(i) :=\argmax_{j\,:\,j \leq i} (\q_i^T \k_j) = \begin{cases}
+                    i &\text{if $i \neq m + \floor{m^c}$} \\
+                    m &\text{if $i = m + \floor{m^c}$}.
+                \end{cases}
+            \end{equation*}
+            We design $\W_v$ such that $\W_v$ copies dimensions $1$ to $d$ of $\x_\eta^{(L+1)}$ to some $d$ placeholder dimensions of $\x_i^{(L+2)}$.
+
+            \textit{We need $d$ placeholder dimensions here.}
+
+            \item Then, at output function $\gamma_{T'}$, before applying $\gamma_T$, we perform a linear transformation to switch the $d$ placeholder dimensions above to dimension $1$ to $d$ using the linear transformation $\W$. Note that only at $i = m + \floor{m^c}$ do changes appear: $\v_T$ is now ``copied" to position  $m+\floor{m^c}$ of $T'$, and we obtain $\y_{m+ \floor{m^c}} = \gamma_T(\v_T)$. This makes $\x_{m+\floor{m^c} + 1}$ in $T'$ equal to $\x_{m+1}$ in $T$, as desired.
+        \end{itemize}
+
+        To check if $x_{m+1} = \dots = x_{m+\floor{m^c}} = *$, we need 3 additional layers (layers $L+3, L+4, L+5$). Say we want to save this in dimension number $d+2$.
+        \begin{itemize}
+            \item Design the following head (head 1 of layer $L+3$). Attend to all positions where character is *. Make query to be just $m$ (or any positive constant available), and make keys to be $\1(x_j = *)$ (by simply taking the value at the dimension $d+1$). Make values to be all $\1(j = m+\floor{m^c})$. We have the following cases: 
+            \begin{itemize}
+                \item If $x_{m+1} = \dots = x_{m + \floor{m^c}} = *$, then attention weights are exactly $1/\floor{m^c}$ at positions $m+1, \dots, m+\floor{m^c}$ and $0$ elsewhere. Therefore, attention (Att) is $1/\floor{m^c}$ (as values are $0$ except for being $1$ at position $m + \lfloor m^c \rfloor$). 
+                \item If among $x_{m+1}, \dots, x_{m+\floor{m^c}}$, some are $*$ and the others are not, then Att is either $0$ or $1/t$ (where $t < \floor{m^c}$). 
+                \item  If among $x_{m+1}, \dots, x_{m+\floor{m^c}}$, none are $*$, then we have uniform attention over all positions $1, \dots, m + \floor{m^c}$. So, Att is $\frac{1}{m + \floor{m^c}} \cdot 1 = \frac{1}{m + \floor{m^c}}$. 
+            \end{itemize}
+
+            \item Now, we just need to check if $\Att = \frac{1}{\floor{m^c}}$, where $\frac{1}{\floor{m^c}}$ is given from PE. By Lemma \ref{lem: check if 2 reals equal}, we use the feedforward network of layer $L+3$ and layer $L+4$ to get $\1(\Att = \frac{1}{\floor{m^c}})$, as desired. Say the result is saved in dimension $d+3$.
+
+            \textit{Note that we need 3 additional dimensions to use the construction in Lemma \ref{lem: check if 2 reals equal}.} 
+
+            \item Last, we use a layer (layer $L+5$) to implement the feedforward network as in Lemma $\ref{lem:if clause for non-neg entries}$, whose effect is to copy the results in dimension $d+3$ to dimension $d+2$ iff $\1(i = m + \floor{m^c})$. 
+
+            \textit{Note that we need $3$ additional dimensions for this.}
+        \end{itemize}
+        
+        \item CoT steps: Run exactly as if $T$ would run (on the dimensions that $T$ acts on, ignoring other dimensions). Attention mask makes each CoT step attend to only $x_1$ to $x_m$ and other CoT steps (i.e. $\x_{m+\floor{m^c}+1}, \x_{m+\floor{m^c}+2}, \dots$, which are equivalent to $\x_{m+1}, \x_{m+2}, \dots$ of $T$, respectively). 
+        
+        Let the transformer run $O(r(m)^{1 + 2 \epsilon})$ CoT steps (as $T$ does). 
+
+        \item Last, we output True (i.e. $x_1 \dots x_{m + \floor{m^c}}$ is indeed in $L'$) if the following are correct: 
+        \begin{itemize}
+            \item The result of $T'$ (equivalently $T$) on $x_1 x_2 \dots x_m$ says that $X_1 = x_1 x_2 \dots x_m$ is in $L$. 
+            \item $\1(x_{m+1} = \dots = x_{m+ \lfloor m^c \rfloor} = * ) = 1$. 
+        \end{itemize}
+    \end{itemize}
+    This concludes our construction for $T'$. 
+
+    We obtain that $L'$ can be recognized in $O(r(m)^{1+2\epsilon})$ CoT steps by the transformer $T'$. As $r$ is of polynomial order and $c = \frac{1 + 2\epsilon}{1 + \epsilon}$, we have  
+    \begin{equation*}
+        O(r(m)^{1+ 2\epsilon}) = O(r(m + \floor{m^{\frac{1+2\epsilon}{1 + \epsilon}}})^{1+\epsilon}). 
+    \end{equation*}
+    As we consider the input of $L'$ is of length $m + \floor{m^c}$, we obtain that $L' \in \CoT(r(n)^{1 + \epsilon})$, as desired. %\todo{Pavan, Vinod rewrites this reasoning...} 
+
+ %   Now, by assumption, we have that $\CoT(r(n)) = \CoT(r(n)^{1 + \epsilon})$. So, we yield $L' \in \CoT(r(n))$. 
+    
+%    Let $S$ be the transformer that recognizes $L'$ in $O(r(n))$ steps. \\ 
+
+\begin{remark} \label{rmk:simulate attn mask}
+    We can simulate the effects of the attention mask for $T'$, as detailed below. 
+ 	\begin{itemize}
+ 		\item Prepend five first layers of the transformer to do the following: 
+ 		\begin{itemize}
+ 			\item Layers 1, 2: Calculate $\1(i \geq m + \lfloor m^c\rfloor + 1)$ by Corollary \ref{cor:check t_1 <= x <= t-2}. 
+ 			\item Layers 3, 4: Calculate $\1(m+1 \leq i \leq m + \lfloor m^c\rfloor)$ by Corollary \ref{cor:check t_1 <= x <= t-2}. 
+ 			\item Layer 5: Use feedforward network to multiply $- \infty$ to $\1(m+1 \leq i \leq m + \lfloor m^c\rfloor)$ to get $(- \infty) \1(m+1 \leq i \leq m + \lfloor m^c\rfloor)$.  
+ 		\end{itemize}
+ 		\item Next, for every layer of $T'$ \textit{that does not involve multi-layernorm}, use the exact same heads as for the original $T'$ with the only difference that for every head, for any query $i$ and key $j$, embed the query $\q_i$ and key $\k_j$ such that: 
+ 		$$\q_i^T \k_j = \1(i \geq m + \lfloor m^c\rfloor + 1) \big(\1(m+1 \leq j \leq m + \lfloor m^c\rfloor) \cdot (-\infty)\big) + S,$$
+        where $S$ is the value $\q_i^T \k_j$ in the original $T'$.
+        
+ 		So, when $i \geq m + \lfloor m^c\rfloor + 1$ and $m+1 \leq j \leq m + \lfloor m^c\rfloor$, we have $\q_i^T \k_j = -\infty$, 
+        meaning query $i$ will not attend to key $j$. Otherwise, $\q_i^T \k_j = 0 + S = S$, so attention is calculated as normal. 
+ 		
+ 		\item On the other hand, for every layer of $T'$ \textit{that involves multi-layernorm}, multi-layernorm will alter the values $v_{i,1} := \1(i \geq m + \lfloor m^c\rfloor + 1)$ and $v_{i,2} := \1(m+1 \leq i \leq m + \lfloor m^c\rfloor)$, which is not what we want.  
+ 		
+ 		To solve this, say $\begin{bmatrix}
+ 			\x_i &v_{i,1} &v_{i,2}
+ 		\end{bmatrix}$ is the current vector, and $T'$ wants to perform multi-layernorm on the vector $\x_i$ only. Denote $\bar{\x_i} = \multilayernorm(\x_i)$. We can add a layer just to perform multi-layernorm on $\x_i$ (by making a head such that value at $j$ is $\bar{\x_j}$, key at $j$ is $\frac{j - \text{ mean}}{\text{norm}}$, and query is $1$ -- this head gives $\bar{\x_i}$ as attention). We save $\bar{\x_i}$ into placeholder dimensions. So, after this layer, we yield $\begin{bmatrix}
+	 		\x_i &v_{i,1} &v_{i,2} &\bar{\x_i}
+	 	\end{bmatrix}$. 
+ 	
+ 		Next we add a layer on what $T'$ would have performed on $\bar{\x_i}$. The difference is that now we already have $\bar{\x_i}$, so no need to do multi-layernorm anymore (therefore, the numbers $v_{i,1}$ and $v_{i,2}$ are intact). We just need to use the numbers $v_{i,1}$ and $v_{i,2}$ to reproduce the mask and perform calculations just on $\bar{\x_i}$ (like in the bullet point above).   
+ 		
+ 		
+ 		Thus, we have obtained the desired mask effect. 
+ 	\end{itemize} 
+\end{remark}
+
+ %   \noindent\underline{Construction of $R$}:
+\subsection{\texorpdfstring{Construction of $R$}{Construction of R}} %\todo{CONT here}
+    We have shown that $L' \in \CoT(r(n)^{1+\varepsilon})$. By the assumption that $\CoT(r(n)) = \CoT(r(n)^{1+\varepsilon})$, we obtain  $L' \in \CoT(r(n))$. Let $S$ be the transformer that recognizes $L'$ in $O(r(n))$ CoT steps.  We will use $S$ to construct a transformer $R$ that recognizes $L$ in $O(r(n)^{1+\epsilon})$ \CoT\ steps. 
+
+    On a high level, we design $R$ as follows. $R$ gets $X = x_1 \dots x_m$ as input. On $X$, we want to simulate $S$. To do that, for CoT steps $\leq \lfloor m^c \rfloor$ (i.e. at positions $m+1, \dots, m + \lfloor m^c \rfloor$), we generate letters $*$ (i.e. we are trying to reconstruct $X (*)^{\lfloor m^c\rfloor}$). Then, on CoT steps $> \lfloor m^c\rfloor$, we simulate $S$ (as if we are in the CoT steps of $S$ on $L'$).  
+
+    Let the parameters of $S$ be: embedding dimension: $d$; number of layers: $L$; number of heads per layer: $H$; output function: $\gamma_S$. 
+
+   We now describe the parameters of $R$: 
+   % \begin{itemize}[noitemsep,leftmargin=10pt,topsep=2pt]
+        
+        {\em Input} (after embedding as for $S$): $\x_1, \x_2, \dots, \x_m$, where $\x_i \in \R^d$.  
+
+       % \textit{Note that this dimension $d$ is separate from dimension $d$ of $T$ above.}
+
+        {\em Positional encoding:} as noted in Remark \ref{rmk:assumptions for our model}: 
+        \begin{itemize}[noitemsep,leftmargin=10pt,topsep=0pt]
+            \item For $\x_i$, save $i$ to encode position. Also, use fixed numbers $m, \floor{m^c}$ in PE. So, $\PE_m(i) = \begin{bmatrix}
+                i &m &\floor{m^c}
+            \end{bmatrix}$
+            \item For CoT steps: at $\x_i$ where $i > m$, PE is updated to $i$. %\textcolor{blue}{PE is $i$}. 
+        \end{itemize}
+
+        {\em Embedding dimension:} $D = 3d+4$, namely 
+        \begin{itemize} [noitemsep,leftmargin=10pt,topsep=0pt]
+            \item $d$ for $\x_i$ (matching with $S$). WLOG, suppose: 
+            \begin{itemize}
+                \item S acts on dimension $1$ to $d$. 
+                \item Dimension $d$ is to save $\1(x_i = *)$. 
+            \end{itemize}
+            \item Some 3 dimensions for positional encoding.
+            \item $2d+1$ additional dimensions (WLOG, dimensions $d+1$ to $3d+1$). In particular: 
+            \begin{itemize}[noitemsep,leftmargin=10pt]
+                \item Dimensions $d+1$ to $3d+1$ is for saving $\bar{\v}$ (this will be explained below).
+            \end{itemize}
+        \end{itemize}
+        
+        {\em Number of layers and heads:} $L+3$ layers, $H$ heads in each layer. 
+        \begin{itemize}[noitemsep, leftmargin=10pt,topsep=0pt]
+            \item The first $L$ layers of $R$ match with $S$ (these layers act only on dimensions that $S$ has effects on (i.e. dimensions $1$ to $d$)). %Say, each layer has $H$ heads.
+            % \item Additional $3$ layers
+        \end{itemize}
+
+        {\em Attention masks:} standard causal mask.
+
+        {\em Output function:} $\gamma_R = \delta \circ \gamma_S$, where $\delta$ is an affine linear transformation. %\textcolor{red}{$\delta$ or $\delta_2$?}. 
+   % \end{itemize}
+
+    {\em Descriptions and justifications of $R$: }
+    \begin{itemize}[noitemsep,leftmargin=10pt,topsep=0pt]
+        \item For $\x_1, \dots, \x_{m-1}$: Run exactly as $S$. 
+
+        \item For $\x_m, \dots, \x_{m + \floor{m^c} -1}$ (i.e CoT steps $1$ to $\floor{m^c}$): 
+        
+        \begin{itemize}
+            \item Run calculations exactly as for $S$. 
+            \item Also, we need to simulate paddings here: for $\x_i$ ($m \leq i \leq m + \floor{m^c} - 1$), we want the output $\y_i$ of position $i$ to be $*$ (i.e. $\y_i$ has WE for $*$: $0$ from dimensions $1$ to $d-1$, and $1$ at dimension $d$). 
+            \begin{itemize}[noitemsep,leftmargin=10pt]
+                \item First, we use 2 layers (layers $L+1$ and $L+2$) to compute $f(i) := \1(m \leq i \leq m + \floor{m^c} - 1)$ as in Corollary \ref{cor:check t_1 <= x <= t-2}. We save $f(i)$ in a designated dimension. Also, we save $g(i)$ at the dimension to indicate $*$ (i.e. dimension $d$).    
+
+                \item Let $\v = \v(i) :=\x_i^{(L+2)}$ represent the vector that we obtain for query $i$ after layer $L+2$, restricted on dimensions $1$ through $d-1$. The idea is that we would want to make $\v = \0_{d-1}$ if $f(i) = 1$, and $\v$ intact otherwise. We proceed as follows. 
+
+                Use a previous feedforward network (say, of layer $L+2$) to save $\v$ in some separate $d-1$ placeholder dimensions, say, WLOG, dimensions $d+1$ to $2d-1$. 
+
+                Next, use a layer (layer $L+3$) to calculate $\bar{\v} := f(i) \v$ (on dimensions $d+1$ to $2d-1$) - this can be done by Lemma \ref{lem:mult vect by 0 or 1}.  
+
+                Last, in the output function, calculate $\v - \bar{\v}$ (on dimensions $1$ to $d-1$). Note that this returns $\v$ if $f(i) = 0$, and $\0_{d-1}$ if $f(i) = 1$, as desired.
+
+                \item Thus, the effect is that $x_{i} = *$, for all $m+1 \leq i \leq m + \floor{m^c}$. 
+            \end{itemize}
+
+            \textit{Note that in total, we need $3 + 2(d-1) = 2d+1$ additional dimensions.}
+        \end{itemize}
+
+        \item For later steps: for $\x_{m + \floor{m^c}}$ (and after): just run $S$. For instance, at $\x_{m + \floor{m^c}}$, it is exactly as if $S$ runs on the input $X' = x_1 \dots x_{m + \floor{m^c}}$. Subsequently, step $m + \floor{m^c} + r$ of $R$ is exactly the same as CoT step number $r$ of $S$. 
+
+        Therefore, $R$ will be able to accept or reject $X = x_1 \dots x_m$ correctly in 
+        $$(\floor{m^c}) + O(r(m + \floor{m^c})) = O(r(m)^c)$$
+        CoT steps. The construction of $R$ is completed.      
+    \end{itemize}
+     
+    Now, with $R$, we obtain that $L \in \CoT(r(n)^c) = \CoT(r(n)^{\frac{1 + 2\epsilon}{1 + \epsilon}}) \subseteq \CoT(r(n)^{1 + \epsilon})$. In particular, we obtain $L \in \CoT(r(n)^{1 + \epsilon})$. 
+    
+    Thus, we can conclude that $\CoT(r(n)^{1 + \epsilon}) = \CoT(r(n)^{1 + 2\epsilon})$. 
+\end{proof}
+This completes the proof of Lemma~\ref{CoTAmplification}.
+
+\begin{remark}[Extending to time-constructible functions] 
+
+Fix \(\varepsilon>0\), and suppose that \(r:\mathbb N\to\mathbb N\) is nondecreasing and unbounded, with $r(n) \geq n$ and
+\[
+\log r(n+1)=(1+o(1))\log r(n).
+\]
+The proof above will go through if we pad the input $X$ to $X (*)^{f(|X|)}$ for some function $f$, such that $r^{\frac{1+2\varepsilon}{1+\varepsilon}}(n) \leq r(n+f(n)) \leq r^{1+\varepsilon}(n)$. 
+%Let $\theta$ be such that $\frac{1+2\varepsilon}{1+\varepsilon} \leq \theta \leq (1+\varepsilon)$. 
+%By setting $f(n) =  r^{-1}(r^{\theta}(n)) - n$, the above condition is satisfied \textcolor{red}{How does this work?}.
+
+% Fix \(\varepsilon>0\), and suppose that \(r:\mathbb N\to\mathbb N\) is nondecreasing and unbounded, with
+% \[
+% \log r(n+1)=(1+o(1))\log r(n).
+% \]
+Write
+\[
+\alpha=\frac{1+2\varepsilon}{1+\varepsilon},
+\qquad
+\beta=1+\varepsilon,
+\]
+and choose a rational constant \(\theta\) satisfying \(\alpha<\theta<\beta\). Such a choice exists because
+\[
+\beta-\alpha=\frac{\varepsilon^2}{1+\varepsilon}>0.
+\]
+Define
+\[
+m(n)=\min\{m\in\mathbb N:m\ge n,\ r(m)\ge r(n)^\theta\},
+\qquad
+f(n)=m(n)-n.
+\]
+Unboundedness of \(r\) ensures that \(m(n)\) exists, and \(f(n)\) is a nonnegative integer. For all sufficiently large \(n\), we have \(r(n)>1\), so \(m(n)>n\), and minimality gives
+\[
+r(m(n)-1)<r(n)^\theta\le r(m(n)).
+\]
+Furthermore, the assumed growth condition and \(\beta/\theta>1\) imply that
+\[
+r(k+1)\le r(k)^{\beta/\theta}
+\]
+for all sufficiently large \(k\). Applying this with \(k=m(n)-1\ge n\), we obtain
+\[
+r(n)^\alpha
+\le r(n)^\theta
+\le r(n+f(n))
+\le r(m(n)-1)^{\beta/\theta}
+<r(n)^\beta.
+\]
+Thus padding \(X\) to \(X(*)^{f(|X|)}\) satisfies the required growth inequalities for all sufficiently large input lengths.
+\end{remark}
+
+\subsection{Proof of Main Theorem}
+
+Equipped with Lemma~\ref{CoTAmplification}, we are ready to prove our main theorem. 
+
+\begin{theorem} \label{thm:main theorem}
+For $\epsilon > 0$ and $r(n) \geq n$ such that $r(n)$ is time-constructible, nondecreasing, unbounded, and $\log(r(n+1)) = (1+o(1)) \log(r(n))$, we have $\CoT(r(n)) \subsetneq \CoT(r(n)^{1+\epsilon}).$ 
+\end{theorem}
+
+\begin{proof}
+    Let $\epsilon > 0$ be arbitrary. Suppose, for the sake of contradiction, that $\CoT(r(n)) = \CoT(r(n)^{1+\epsilon})$.
+    
+    By Theorem \ref{thm:hierrachy TIME vs CoT in MS23}, we have
+    \begin{align*}
+        \CoT(r(n)) \subseteq \TIME(r(n)^3) \subseteq \CoT(r(n)^3) \subseteq \TIME(r(n)^9) \subseteq \CoT(r(n)^9),
+    \end{align*}
+
+By Time Hierarchy Theorem, $\TIME(r(n)^3)\subsetneq \TIME(r(n)^9)$. Thus, from the chain of containment,
+$\CoT(r(n)) \subsetneq \CoT(r(n)^9)$. 
+
+    Now, note that $\CoT(r(n)) = \CoT(r(n)^{1 + \epsilon})$ by assumption. Then, by Lemma \ref{CoTAmplification}, we obtain that $\CoT(r(n)) = \CoT(r(n)^{1 + 2\epsilon})$. Now, applying the lemma again, we get that $\CoT(r(n)) = \CoT(r(n)^{1 + 4\epsilon})$. After $i$ applications, we get $\CoT(r(n)) = \CoT(r(n)^{1 +2^i \epsilon})$. By choosing $i=\lceil \log_2 {\frac{8}{\epsilon}}\rceil$, we get that $\CoT(r(n)) = \CoT(r(n)^{9})$, contradiction. 
+
+    Thus, we can conclude now that $\CoT(r(n)) \subsetneq \CoT(r(n)^{1 + \epsilon})$. 
+\end{proof}
+
+
+\input{conclusions}
+
+
+\printbibliography
+
+\appendix
+\input{appendix_arxiv}
+%% \input{checklist}
+\end{document}

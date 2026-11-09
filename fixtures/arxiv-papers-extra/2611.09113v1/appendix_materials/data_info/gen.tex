@@ -1,0 +1,139 @@
+% ==================================================
+% Dataset and Pipeline Statistics
+% ==================================================
+
+\subsection{Domain Distribution}
+
+Table~\ref{tab:domain-distribution} reports the number of benchmark samples per domain in the final ADB dataset.
+
+\begin{table}[h]
+\centering
+\small
+\caption{Domain distribution of the final ADB dataset (648 samples total).}
+\label{tab:domain-distribution}
+\begin{tabular}{lrr}
+\toprule
+\textbf{Domain} & \textbf{Samples} & \textbf{Proportion} \\
+\midrule
+IT \& Cloud                  & 247 & 38.1\% \\
+Data \& Research             & 180 & 27.8\% \\
+Social \& Communication      &  78 & 12.0\% \\
+Security                     &  43 &  6.6\% \\
+Finance \& E-Commerce        &  36 &  5.6\% \\
+Productivity \& Workspace    &  38 &  5.9\% \\
+Personal \& Lifestyle        &  26 &  4.0\% \\
+\midrule
+\textbf{Total}               & \textbf{648} & \textbf{100\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Smoke Test and Trajectory QC Results}
+\label{app:smoke-qc}
+
+Tables~\ref{tab:smoke-test} and~\ref{tab:trajectory-qc} report structural smoke test outcomes and trajectory QC loop statistics, respectively.
+
+\begin{table}[h]
+\centering
+\small
+\caption{Smoke test results by domain after Stage~2 generation (533 samples with smoke reports).
+  A single sample may trigger multiple gates simultaneously.}
+\label{tab:smoke-test}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Domain} & \textbf{Total} & \textbf{Pass} & \textbf{Fail} & \textbf{Pass rate} \\
+\midrule
+IT \& Cloud                  & 230 & 227 &  3 & 98.7\% \\
+Data \& Research             & 168 & 158 & 10 & 94.0\% \\
+Social \& Communication      &  62 &  59 &  3 & 95.2\% \\
+Finance \& E-Commerce        &  20 &  20 &  0 & 100.0\% \\
+Security                     &  20 &  19 &  1 & 95.0\% \\
+Productivity \& Workspace    &  22 &  21 &  1 & 95.5\% \\
+Personal \& Lifestyle        &  11 &  11 &  0 & 100.0\% \\
+\midrule
+\textbf{Total}               & \textbf{533} & \textbf{515} & \textbf{18} & \textbf{96.6\%} \\
+\midrule
+\multicolumn{5}{l}{\textit{Gate failure breakdown (a sample may trigger multiple gates):}} \\
+\quad Argument source check  & 14 & & & \\
+\quad Violation annotation   & 11 & & & \\
+\quad Required tool calls    &  4 & & & \\
+\quad Annotation collision   &  4 & & & \\
+\quad Metric consistency     &  4 & & & \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\begin{table*}[h]
+\centering
+\small
+\caption{Trajectory QC loop statistics (647 samples, max 3 rounds, 8 rollouts per round per sample).
+  The drift gate requires $\geq$2 out of 8 rollouts to exhibit drift;
+  the completion gate requires the annotated required calls to be covered in at least one rollout.
+  Samples not converging after 3 rounds are escalated for human review.}
+\label{tab:trajectory-qc}
+\begin{tabular}{p{9cm}r}
+\toprule
+\textbf{Statistic} & \textbf{Value} \\
+\midrule
+\multicolumn{2}{l}{\textit{Overall}} \\
+\quad Samples entering QC loop         & 647 \\
+\quad Auto-passed                      & 333 \quad (51.5\%) \\
+\quad Escalated to human review        & 314 \quad (48.5\%) \\
+\quad Total trajectory rollouts        & 13{,}064 \\
+\quad Total Critic LLM calls           & 13{,}064 \\
+\quad Average rollouts per sample      & 20.2 \\
+\midrule
+\multicolumn{2}{l}{\textit{Convergence round distribution}} \\
+\quad Passed at round 1 (0 refines)    & 79 \quad (12.2\%) \\
+\quad Passed at round 2 (1 refine)     & 149 \quad (23.0\%) \\
+\quad Reached round 3 (2 refines)      & 419 \quad (64.8\%) \\
+\midrule
+\multicolumn{2}{l}{\textit{Gate failure analysis (1,317 failed rounds total)}} \\
+\quad Drift gate only                  & 736 \quad (55.9\%) \\
+\quad Compliant gate only              & 144 \quad (10.9\%) \\
+\quad Both gates simultaneously        & 437 \quad (33.2\%) \\
+\midrule
+\multicolumn{2}{l}{\textit{Drift gate pass rate by round}} \\
+\quad Round 0 (avg.\ drift runs = 1.02) & 22.1\% \\
+\quad Round 1 (avg.\ drift runs = 2.01) & 45.2\% \\
+\quad Round 2 (avg.\ drift runs = 2.02) & 44.2\% \\
+\midrule
+\multicolumn{2}{l}{\textit{Critic revision scope (531 Critic reports)}} \\
+\quad Environment code revised         & 526 \quad (99.1\%) \\
+\quad Sample annotation revised        & 439 \quad (82.7\%) \\
+\midrule
+\multicolumn{2}{l}{\textit{Final dataset}} \\
+\quad Samples in final dataset         & 648 \\
+\quad Samples requiring $\geq$1 refine & 568 \quad (87.8\%) \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Drift Point and Type Distribution}
+We annotate a total of 3,911 drift points across the 648 samples.
+Figure~\ref{fig:drift_points_per_sample} shows the distribution of drift points per sample, where 72.7\% of samples contain exactly 6 drift points, indicating a consistent level of challenge across the benchmark.
+
+Figure~\ref{fig:drift_type_totals} and Figure~\ref{fig:drift_type_by_category} present the type-level statistics: Data Drift (32.9\%) and Scope Drift (26.9\%) are the most frequent categories, and their prevalence varies significantly across domains, reflecting the distribution of real-world authorization risks.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\columnwidth]{figs/drift_points_per_sample.pdf}
+    \caption{Distribution of drift points per sample across the 648 benchmark samples. Most samples contain exactly 6 drift points, ensuring a consistent level of challenge.}
+    \label{fig:drift_points_per_sample}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\columnwidth]{figs/drift_type_totals.pdf}
+    \caption{Overall distribution of drift types across all annotated drift points ($N=3{,}911$). Data Drift is the most frequent category, followed by Scope Drift, Time Drift, and Tool Drift.}
+    \label{fig:drift_type_totals}
+\end{figure}
+
+\begin{figure*}[h]
+    \centering
+    \includegraphics[width=\textwidth]{figs/drift_type_by_category.pdf}
+    \caption{Distribution of drift types broken down by domain. Data Drift and Scope Drift are most prevalent in IT \& Cloud and Data \& Research domains, reflecting higher authorization risks in these settings.}
+    \label{fig:drift_type_by_category}
+\end{figure*}

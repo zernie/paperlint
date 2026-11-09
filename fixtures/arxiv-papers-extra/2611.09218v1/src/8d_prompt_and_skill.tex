@@ -1,0 +1,186 @@
+\section{Prompts and Skills}
+\label{app:prompts-and-skills}
+
+This appendix presents the Filter prompt and Pair Verification skill used in
+benchmark construction, followed by the default \boxbox{} self-review skill.
+
+\tcbset{paperprompt/.style={
+  enhanced,
+  breakable,
+  listing only,
+  fonttitle=\small\bfseries,
+  center title,
+  colback=white,
+  colframe=black!18,
+  colbacktitle=black,
+  coltitle=white,
+  boxrule=.35pt,
+  arc=2pt,
+  left=7pt,
+  right=7pt,
+  top=6pt,
+  bottom=6pt,
+  toptitle=2pt,
+  bottomtitle=2pt,
+  before skip=8pt,
+  after skip=8pt,
+  listing options={
+  language={},
+  literate={≤}{{$\leq$}}1 {—}{{---}}3,
+  basicstyle=\ttfamily\fontsize{8.5}{10}\selectfont,
+  columns=fullflexible,
+  keepspaces=true,
+  breaklines=true,
+  breakatwhitespace=true,
+  breakautoindent=false,
+  breakindent=0pt,
+  showstringspaces=false,
+  numbers=none,
+  frame=none,
+  xleftmargin=0pt,
+  xrightmargin=0pt,
+  aboveskip=0pt,
+  belowskip=0pt,
+  linebackgroundcolor={}
+  }
+}}
+
+\subsection{Filter Prompt}
+\label{app:perfrace-filter-prompt}
+
+The Filter assesses repository snapshots before Pair Verification.
+
+% Source: perfbench/collect/filter/prompt.md at ec4637de510fcc64ddee1a94348bac3a8f682c7c.
+% Condensed and reworded from the source; gate criteria retained, detailed carrier taxonomy omitted.
+\begin{tcblisting}{paperprompt,
+  title={Filter Prompt},
+  title after break={Filter Prompt \normalfont\itshape (continued)}
+}
+You are the automated Filter for PerfRace project candidates. Decide whether the supplied repository snapshot provides enough source-grounded evidence to proceed to Pair Verification.
+
+Evaluate four gates:
+
+1. Accessible. The repository and revision are available, with an explicit license permitting modification and redistribution. A fork must have an independently maintained product identity.
+
+2. Upstream reproducibility. Documentation, scripts, or manifests support concrete setup/build and minimal smoke commands. Cite the supporting path or manifest field for each command. Dependencies and configuration must come from identifiable public sources.
+
+3. Evaluation potential. Identify a finite project operation with fixed inputs, clear start and end, observable output, a plausible efficiency metric, and a correctness check. Establish a replayable real user or downstream workload, or a self-contained computation with grounded input semantics. Repository tests, benchmarks, demos, fixtures, and generated inputs do not establish a portable workload. Flag reliance on unavailable deployment state, private traces, physical devices, or an unresolved workload source.
+
+4. Resource feasibility. The operation must run in a Linux x86-64 container on commodity CPUs within ordinary resource limits. Reject mandatory special hardware, unavailable private services, and thin remote pass-throughs. Local services or fixed stubs are acceptable only when meaningful project-controlled computation remains.
+
+Evidence and optimization potential:
+- Use only the supplied snapshot; cite metadata or repository paths for every gate. Missing evidence fails the gate.
+- Describe a preliminary process only when evaluation potential passes.
+- Describe the local computation and its strongest optimization opportunity. Rate potential as low for tiny or externally dominated work, medium for a clear local hot path, and high for scale-sensitive computation with multiple structural opportunities.
+- Return concise evidence in the requested structured response.
+\end{tcblisting}
+
+\subsection{Pair Verification Skill}
+\label{app:perfrace-pair-verification-skill}
+
+The skill guides agent-led construction through human reviews of Realism,
+Reliability, and Integrity, followed by task publication.
+
+% Source: perfbench/curate/skill/SKILL.md at ec4637de510fcc64ddee1a94348bac3a8f682c7c.
+% Condensed and reworded from the source; review gates and key constraints retained.
+% Directory layout, command syntax, reporting conventions, and detailed operational procedures omitted.
+\begin{tcblisting}{paperprompt,
+  title={Pair Verification Skill},
+  title after break={Pair Verification Skill \normalfont\itshape (continued)}
+}
+# PerfRace Pair Verification
+
+Turn one repository into a machine-evaluable task. The agent investigates and executes; the human reviews Realism, Reliability, and Integrity, then decides ACCEPT, REVISE, or REJECT.
+
+## Working agreement
+
+Maintain a report linking claims to project sources, runnable probes, and raw results. At each review gate, present the evidence, uncertainty, and recommendation, allow discussion, and pause for the human decision. Reopen the affected reviews when later evidence invalidates an approved claim.
+
+## Stage 1: Explore & Design
+
+Understand the project's users and performance-sensitive workflows. Compare candidate workloads and select an independently grounded real user or downstream operation with reproducible inputs and scale. Upstream examples and benchmarks may guide discovery but must not become the scored workload.
+
+Run the unmodified workload end to end and identify the project execution path. Estimate build cost, image size, verification time, and measurement variance before constructing the task. Propose the operation, input provenance and scale, visible workload, independent verifier copy, additional correctness cases, correctness utility, measurement boundary, and metric.
+
+Human review: Realism. Explain why the operation, inputs, and scale represent meaningful project use, which alternatives were considered, and what remains uncertain. Obtain approval before building the canonical task.
+
+## Stage 2: Build & Calibrate
+
+Package the pinned project, visible workload, instructions, container, and verifier. Keep only the project writable. Use an independent byte-identical scored input and additional held-out correctness cases. Correctness checks enforce the workload's observable utility, allowing implementation changes that preserve it.
+
+Keep candidate compilation and setup outside the timed user operation. Calibrate workload scale, warmups, repetitions, resources, and timeout; then freeze the measurement protocol. Complete verification must fit within 1,200 seconds, and the uncompressed image must not exceed 3 GiB. Target at least three seconds per timed execution; shorter operations require a clear signal and repeated CV at most 10%.
+
+Check fresh-image correctness and flakiness. Diagnose variance before increasing workload size or resources. Enforce the same runtime policy for baseline and candidate. Run a baseline and one bounded candidate-agent attempt, retaining the trajectory and raw measurements. One correct, repeatable gain is sufficient; an incorrect or no-gain candidate does not reject the task if its trajectory demonstrates understanding and a reasonable optimization attempt.
+
+Human review: Reliability. Present fresh-build correctness, raw measurements, dispersion, verification time, resources, and the candidate trajectory. Ask whether equivalent runs support the same verdict and measurement.
+
+## Stage 3: Validate Integrity
+
+Audit agreement between instructions and verifier checks, including writable paths, workload copies, expected outputs, caches, and reward inputs. Run explicit red-team tests for leaked-data access, verifier modification, incomplete work, hard-coded answers, workload-specific precomputation, frozen runtime-policy overrides, and reward-path bypasses.
+
+Count an attack only when a materially distinct invalid implementation reaches the final verifier. After hardening, replay the attack and record its verdict. Reopen Reliability if changes affect the workload, measurement, resources, or verifier execution.
+
+Human review: Integrity. Present the boundary audit and red-team results. Ask whether an invalid or shortcut implementation can receive a valid score. Verifier ownership requires an independent immutable workload copy, not secrecy of the visible workload.
+
+## Stage 4: Finalize
+
+Summarize review decisions and limitations, remove construction artifacts from the release package, and run final checks. Confirm that the package contains all required inputs and no credentials, private evidence, or hidden answers.
+
+Ask the human to ACCEPT AND PUBLISH, REVISE, or REJECT. Publish the pinned image and verified task package only after acceptance; preserve evidence for rejected candidates.
+\end{tcblisting}
+
+\subsection{Self-Review Skill}
+\label{app:boxbox-review-skill}
+
+% Source: dev/recursive-autoresearch at d741589cd15aa3f75c0acda412380c6ed43f5226,
+% perfbench/run/agents/recurnus/runtime/recurnus/skills/selfrewrite/SKILL.md.
+% The domain-specific causal-chain sentence, cost-model/checklist/measurement
+% block, and workload/cost clause in the Early-stage item are omitted.
+% The heading is renamed Self-Review; YAML metadata is omitted and prose rewrapped.
+% Research-search terminology is normalized to task-solving terminology.
+
+The following listing presents the default review skill with performance-optimization-specific guidance omitted. ``Target Agent'' denotes the task-solving agent.
+
+\begin{tcblisting}{paperprompt,
+  title={Self-Review Skill},
+  title after break={Self-Review Skill \normalfont\itshape (continued)}
+}
+# Self-Review
+
+Act as the macro-level controller of the Target Agent's task-solving process. Review the trajectory to diagnose the task-solving process, then retain the current harness or select a focused-feedback or reusable-ability adaptation that improves subsequent Target progress within the remaining shared budget.
+
+## Review the task-solving process
+
+Treat each review as one iteration in a continuing self-review loop. At the start of every review, examine the accumulated trajectory comprehensively before selecting an intervention.
+
+Use that broad diagnosis to choose a focused intervention that is supported by the evidence and likely to materially improve subsequent Target progress. Include only the feedback or reusable capabilities justified by the diagnosed problems in task execution and the evidence needed to evaluate their effect.
+
+Never be satisfied with the current optimization state while task budget remains. Treat accepted improvements as intermediate evidence and compare the remaining opportunities by their expected contribution.
+
+### Diagnose the task-solving process
+
+Treat the Target Agent's framing, causal model, plans, explanations, and claims as hypotheses, not premises. Use recorded actions, observations, and measurements to identify all material unsupported links, distinguish evidence from inference, and identify plausible explanations not ruled out. Use the complete diagnosis to keep the intervention focused on the related gaps that most materially constrain progress. Treat claims that an experiment completed, improved performance, or excluded a direction as unverified until supported by the trajectory. Explain how each unsupported link affects task-execution cost, experiment selection, or progress.
+
+Critique the Target Agent's choice of actions, not just candidate outcomes. Match each conclusion to the scope the experiments actually tested. Do not generalize beyond the tested workload, configuration, mechanism variant, or measurement, and do not ignore what the evidence establishes within that scope. Distinguish direct findings from broader hypotheses, and identify unsupported assumptions or omitted dimensions that constrained the search.
+
+After selecting the intervention focus, review two aspects of macro-level control as ways to advance it:
+
+1. **Task-execution cost.** Examine repeated Target Agent work, which dependencies and evidence requirements have stabilized, and where intermediate model judgment remains valuable. Look for opportunities to reduce, fuse, automate, batch, or reuse work while preserving decision-relevant evidence.
+2. **Budget allocation.** Evaluate exploration breadth and exploitation depth by comparing the causal support, remaining leverage, uncertainty, and expected contribution of validated mechanisms and untested hypotheses.
+
+## Decide the intervention
+
+After completing the diagnosis, choose among retention, a focused-feedback adaptation, and a reusable-ability adaptation according to their expected contribution to target progress over the remaining budget. Retention means no new Target-facing guidance or other harness change.
+
+Use focused feedback for a task-specific concern, unsupported judgment, omission, or unresolved evidence. Identify the concrete observation, the gap, and why it matters. **Be careful about your own claims:** an evidence gap does not establish an alternative explanation or direction; do not turn preferences into concerns or next-step menus. State only the concern and its evidentiary basis; do not require or recommend what the Target Agent should do next.
+
+Activate a reusable ability when it directly supports the diagnosis and the trajectory supports repeated use. Also consider a harness adaptation when the Target Agent repeatedly makes the same consequential error and the evidence supports a general way to prevent it; otherwise use focused feedback. For a stable repeated action sequence, fuse or automate the mechanical work while preserving model judgment, decision-relevant evidence, meaningful failure boundaries, and a fallback to the unfused workflow. Validate the ability through its actual Target-facing path and use feedback to explain how to use it and its constraints.
+
+Condition each intervention on the current stage of task execution, inferred from the trajectory rather than elapsed time:
+
+- **Early:** examine plausible competing hypotheses.
+- **Developing:** reduce demonstrated repeated work and balance exploration with supported exploitation.
+- **Saturated:** identify which tested hypothesis families have low remaining value, and flag any claim that the broader search is exhausted unless the trajectory supports that scope.
+
+Use the observed downstream effects of prior adaptations when deciding what the current stage needs.
+\end{tcblisting}

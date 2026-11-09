@@ -1,0 +1,2348 @@
+%File: anonymous-submission-latex-2024.tex
+% File rewritten for IFAC conference format using ifacconf_example.tex as a guide.
+\documentclass{ifacconf}
+
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{amsmath,amsfonts,bm,amssymb}
+\usepackage{xcolor}
+\usepackage{booktabs,multirow}
+\usepackage{empheq}
+\usepackage{xstring}
+\usepackage[hyphens]{url}
+
+\newcommand{\figleft}{{\em (Left)}}
+\newcommand{\figcenter}{{\em (Center)}}
+\newcommand{\figright}{{\em (Right)}}
+\newcommand{\figtop}{{\em (Top)}}
+\newcommand{\figbottom}{{\em (Bottom)}}
+\newcommand{\captiona}{{\em (a)}}
+\newcommand{\captionb}{{\em (b)}}
+\newcommand{\captionc}{{\em (c)}}
+\newcommand{\captiond}{{\em (d)}}
+
+% Highlight a newly defined term
+\newcommand{\newterm}[1]{{\bf #1}}
+
+
+% Figure reference, lower-case.
+\def\figref#1{figure~\ref{#1}}
+% Figure reference, capital. For start of sentence
+\def\Figref#1{Figure~\ref{#1}}
+\def\twofigref#1#2{figures \ref{#1} and \ref{#2}}
+\def\quadfigref#1#2#3#4{figures \ref{#1}, \ref{#2}, \ref{#3} and \ref{#4}}
+% Section reference, lower-case.
+\def\secref#1{section~\ref{#1}}
+% Section reference, capital.
+\def\Secref#1{Section~\ref{#1}}
+% Reference to two sections.
+\def\twosecrefs#1#2{sections \ref{#1} and \ref{#2}}
+% Reference to three sections.
+\def\secrefs#1#2#3{sections \ref{#1}, \ref{#2} and \ref{#3}}
+% Reference to an equation, lower-case.
+\def\eqref#1{(\ref{#1})}
+% Reference to an equation, upper case
+\def\Eqref#1{Equation~\ref{#1}}
+% A raw reference to an equation---avoid using if possible
+\def\plaineqref#1{\ref{#1}}
+% Reference to a chapter, lower-case.
+\def\chapref#1{chapter~\ref{#1}}
+% Reference to an equation, upper case.
+\def\Chapref#1{Chapter~\ref{#1}}
+% Reference to a range of chapters
+\def\rangechapref#1#2{chapters\ref{#1}--\ref{#2}}
+% Reference to an algorithm, lower-case.
+\def\algref#1{algorithm~\ref{#1}}
+% Reference to an algorithm, upper case.
+\def\Algref#1{Algorithm~\ref{#1}}
+\def\twoalgref#1#2{algorithms \ref{#1} and \ref{#2}}
+\def\Twoalgref#1#2{Algorithms \ref{#1} and \ref{#2}}
+% Reference to a part, lower case
+\def\partref#1{part~\ref{#1}}
+% Reference to a part, upper case
+\def\Partref#1{Part~\ref{#1}}
+\def\twopartref#1#2{parts \ref{#1} and \ref{#2}}
+
+\def\ceil#1{\lceil #1 \rceil}
+\def\floor#1{\lfloor #1 \rfloor}
+\def\1{\bm{1}}
+\newcommand{\train}{\mathcal{D}}
+\newcommand{\valid}{\mathcal{D_{\mathrm{valid}}}}
+\newcommand{\test}{\mathcal{D_{\mathrm{test}}}}
+
+\def\eps{{\epsilon}}
+
+
+% Random variables
+\def\reta{{\textnormal{$\eta$}}}
+\def\ra{{\textnormal{a}}}
+\def\rb{{\textnormal{b}}}
+\def\rc{{\textnormal{c}}}
+\def\rd{{\textnormal{d}}}
+\def\re{{\textnormal{e}}}
+\def\rf{{\textnormal{f}}}
+\def\rg{{\textnormal{g}}}
+\def\rh{{\textnormal{h}}}
+\def\ri{{\textnormal{i}}}
+\def\rj{{\textnormal{j}}}
+\def\rk{{\textnormal{k}}}
+\def\rl{{\textnormal{l}}}
+% rm is already a command, just don't name any random variables m
+\def\rn{{\textnormal{n}}}
+\def\ro{{\textnormal{o}}}
+\def\rp{{\textnormal{p}}}
+\def\rq{{\textnormal{q}}}
+\def\rr{{\textnormal{r}}}
+\def\rs{{\textnormal{s}}}
+\def\rt{{\textnormal{t}}}
+\def\ru{{\textnormal{u}}}
+\def\rv{{\textnormal{v}}}
+\def\rw{{\textnormal{w}}}
+\def\rx{{\textnormal{x}}}
+\def\ry{{\textnormal{y}}}
+\def\rz{{\textnormal{z}}}
+
+% Random vectors
+\def\rvepsilon{{\mathbf{\epsilon}}}
+\def\rvtheta{{\mathbf{\theta}}}
+\def\rva{{\mathbf{a}}}
+\def\rvb{{\mathbf{b}}}
+\def\rvc{{\mathbf{c}}}
+\def\rvd{{\mathbf{d}}}
+\def\rve{{\mathbf{e}}}
+\def\rvf{{\mathbf{f}}}
+\def\rvg{{\mathbf{g}}}
+\def\rvh{{\mathbf{h}}}
+\def\rvu{{\mathbf{i}}}
+\def\rvj{{\mathbf{j}}}
+\def\rvk{{\mathbf{k}}}
+\def\rvl{{\mathbf{l}}}
+\def\rvm{{\mathbf{m}}}
+\def\rvn{{\mathbf{n}}}
+\def\rvo{{\mathbf{o}}}
+\def\rvp{{\mathbf{p}}}
+\def\rvq{{\mathbf{q}}}
+\def\rvr{{\mathbf{r}}}
+\def\rvs{{\mathbf{s}}}
+\def\rvt{{\mathbf{t}}}
+\def\rvu{{\mathbf{u}}}
+\def\rvv{{\mathbf{v}}}
+\def\rvw{{\mathbf{w}}}
+\def\rvx{{\mathbf{x}}}
+\def\rvy{{\mathbf{y}}}
+\def\rvz{{\mathbf{z}}}
+
+% Elements of random vectors
+\def\erva{{\textnormal{a}}}
+\def\ervb{{\textnormal{b}}}
+\def\ervc{{\textnormal{c}}}
+\def\ervd{{\textnormal{d}}}
+\def\erve{{\textnormal{e}}}
+\def\ervf{{\textnormal{f}}}
+\def\ervg{{\textnormal{g}}}
+\def\ervh{{\textnormal{h}}}
+\def\ervi{{\textnormal{i}}}
+\def\ervj{{\textnormal{j}}}
+\def\ervk{{\textnormal{k}}}
+\def\ervl{{\textnormal{l}}}
+\def\ervm{{\textnormal{m}}}
+\def\ervn{{\textnormal{n}}}
+\def\ervo{{\textnormal{o}}}
+\def\ervp{{\textnormal{p}}}
+\def\ervq{{\textnormal{q}}}
+\def\ervr{{\textnormal{r}}}
+\def\ervs{{\textnormal{s}}}
+\def\ervt{{\textnormal{t}}}
+\def\ervu{{\textnormal{u}}}
+\def\ervv{{\textnormal{v}}}
+\def\ervw{{\textnormal{w}}}
+\def\ervx{{\textnormal{x}}}
+\def\ervy{{\textnormal{y}}}
+\def\ervz{{\textnormal{z}}}
+
+% Random matrices
+\def\rmA{{\mathbf{A}}}
+\def\rmB{{\mathbf{B}}}
+\def\rmC{{\mathbf{C}}}
+\def\rmD{{\mathbf{D}}}
+\def\rmE{{\mathbf{E}}}
+\def\rmF{{\mathbf{F}}}
+\def\rmG{{\mathbf{G}}}
+\def\rmH{{\mathbf{H}}}
+\def\rmI{{\mathbf{I}}}
+\def\rmJ{{\mathbf{J}}}
+\def\rmK{{\mathbf{K}}}
+\def\rmL{{\mathbf{L}}}
+\def\rmM{{\mathbf{M}}}
+\def\rmN{{\mathbf{N}}}
+\def\rmO{{\mathbf{O}}}
+\def\rmP{{\mathbf{P}}}
+\def\rmQ{{\mathbf{Q}}}
+\def\rmR{{\mathbf{R}}}
+\def\rmS{{\mathbf{S}}}
+\def\rmT{{\mathbf{T}}}
+\def\rmU{{\mathbf{U}}}
+\def\rmV{{\mathbf{V}}}
+\def\rmW{{\mathbf{W}}}
+\def\rmX{{\mathbf{X}}}
+\def\rmY{{\mathbf{Y}}}
+\def\rmZ{{\mathbf{Z}}}
+
+% Elements of random matrices
+\def\ermA{{\textnormal{A}}}
+\def\ermB{{\textnormal{B}}}
+\def\ermC{{\textnormal{C}}}
+\def\ermD{{\textnormal{D}}}
+\def\ermE{{\textnormal{E}}}
+\def\ermF{{\textnormal{F}}}
+\def\ermG{{\textnormal{G}}}
+\def\ermH{{\textnormal{H}}}
+\def\ermI{{\textnormal{I}}}
+\def\ermJ{{\textnormal{J}}}
+\def\ermK{{\textnormal{K}}}
+\def\ermL{{\textnormal{L}}}
+\def\ermM{{\textnormal{M}}}
+\def\ermN{{\textnormal{N}}}
+\def\ermO{{\textnormal{O}}}
+\def\ermP{{\textnormal{P}}}
+\def\ermQ{{\textnormal{Q}}}
+\def\ermR{{\textnormal{R}}}
+\def\ermS{{\textnormal{S}}}
+\def\ermT{{\textnormal{T}}}
+\def\ermU{{\textnormal{U}}}
+\def\ermV{{\textnormal{V}}}
+\def\ermW{{\textnormal{W}}}
+\def\ermX{{\textnormal{X}}}
+\def\ermY{{\textnormal{Y}}}
+\def\ermZ{{\textnormal{Z}}}
+
+% Vectors
+\def\vzero{{\bm{0}}}
+\def\vone{{\bm{1}}}
+\def\vmu{{\bm{\mu}}}
+\def\vtheta{{\bm{\theta}}}
+\def\va{{\bm{a}}}
+\def\vb{{\bm{b}}}
+\def\vc{{\bm{c}}}
+\def\vd{{\bm{d}}}
+\def\ve{{\bm{e}}}
+\def\vf{{\bm{f}}}
+\def\vg{{\bm{g}}}
+\def\vh{{\bm{h}}}
+\def\vi{{\bm{i}}}
+\def\vj{{\bm{j}}}
+\def\vk{{\bm{k}}}
+\def\vl{{\bm{l}}}
+\def\vm{{\bm{m}}}
+\def\vn{{\bm{n}}}
+\def\vo{{\bm{o}}}
+\def\vp{{\bm{p}}}
+\def\vq{{\bm{q}}}
+\def\vr{{\bm{r}}}
+\def\vs{{\bm{s}}}
+\def\vt{{\bm{t}}}
+\def\vu{{\bm{u}}}
+\def\vv{{\bm{v}}}
+\def\vw{{\bm{w}}}
+\def\vx{{\bm{x}}}
+\def\vy{{\bm{y}}}
+\def\vz{{\bm{z}}}
+
+% Elements of vectors
+\def\evalpha{{\alpha}}
+\def\evbeta{{\beta}}
+\def\evepsilon{{\epsilon}}
+\def\evlambda{{\lambda}}
+\def\evomega{{\omega}}
+\def\evmu{{\mu}}
+\def\evpsi{{\psi}}
+\def\evsigma{{\sigma}}
+\def\evtheta{{\theta}}
+\def\eva{{a}}
+\def\evb{{b}}
+\def\evc{{c}}
+\def\evd{{d}}
+\def\eve{{e}}
+\def\evf{{f}}
+\def\evg{{g}}
+\def\evh{{h}}
+\def\evi{{i}}
+\def\evj{{j}}
+\def\evk{{k}}
+\def\evl{{l}}
+\def\evm{{m}}
+\def\evn{{n}}
+\def\evo{{o}}
+\def\evp{{p}}
+\def\evq{{q}}
+\def\evr{{r}}
+\def\evs{{s}}
+\def\evt{{t}}
+\def\evu{{u}}
+\def\evv{{v}}
+\def\evw{{w}}
+\def\evx{{x}}
+\def\evy{{y}}
+\def\evz{{z}}
+
+% Matrix
+\def\mA{{\bm{A}}}
+\def\mB{{\bm{B}}}
+\def\mC{{\bm{C}}}
+\def\mD{{\bm{D}}}
+\def\mE{{\bm{E}}}
+\def\mF{{\bm{F}}}
+\def\mG{{\bm{G}}}
+\def\mH{{\bm{H}}}
+\def\mI{{\bm{I}}}
+\def\mJ{{\bm{J}}}
+\def\mK{{\bm{K}}}
+\def\mL{{\bm{L}}}
+\def\mM{{\bm{M}}}
+\def\mN{{\bm{N}}}
+\def\mO{{\bm{O}}}
+\def\mP{{\bm{P}}}
+\def\mQ{{\bm{Q}}}
+\def\mR{{\bm{R}}}
+\def\mS{{\bm{S}}}
+\def\mT{{\bm{T}}}
+\def\mU{{\bm{U}}}
+\def\mV{{\bm{V}}}
+\def\mW{{\bm{W}}}
+\def\mX{{\bm{X}}}
+\def\mY{{\bm{Y}}}
+\def\mZ{{\bm{Z}}}
+\def\mBeta{{\bm{\beta}}}
+\def\mPhi{{\bm{\Phi}}}
+\def\mLambda{{\bm{\Lambda}}}
+\def\mSigma{{\bm{\Sigma}}}
+
+% Tensor
+\DeclareMathAlphabet{\mathsfit}{\encodingdefault}{\sfdefault}{m}{sl}
+\SetMathAlphabet{\mathsfit}{bold}{\encodingdefault}{\sfdefault}{bx}{n}
+\newcommand{\tens}[1]{\bm{\mathsfit{#1}}}
+\def\tA{{\tens{A}}}
+\def\tB{{\tens{B}}}
+\def\tC{{\tens{C}}}
+\def\tD{{\tens{D}}}
+\def\tE{{\tens{E}}}
+\def\tF{{\tens{F}}}
+\def\tG{{\tens{G}}}
+\def\tH{{\tens{H}}}
+\def\tI{{\tens{I}}}
+\def\tJ{{\tens{J}}}
+\def\tK{{\tens{K}}}
+\def\tL{{\tens{L}}}
+\def\tM{{\tens{M}}}
+\def\tN{{\tens{N}}}
+\def\tO{{\tens{O}}}
+\def\tP{{\tens{P}}}
+\def\tQ{{\tens{Q}}}
+\def\tR{{\tens{R}}}
+\def\tS{{\tens{S}}}
+\def\tT{{\tens{T}}}
+\def\tU{{\tens{U}}}
+\def\tV{{\tens{V}}}
+\def\tW{{\tens{W}}}
+\def\tX{{\tens{X}}}
+\def\tY{{\tens{Y}}}
+\def\tZ{{\tens{Z}}}
+
+
+% Graph
+\def\gA{{\mathcal{A}}}
+\def\gB{{\mathcal{B}}}
+\def\gC{{\mathcal{C}}}
+\def\gD{{\mathcal{D}}}
+\def\gE{{\mathcal{E}}}
+\def\gF{{\mathcal{F}}}
+\def\gG{{\mathcal{G}}}
+\def\gH{{\mathcal{H}}}
+\def\gI{{\mathcal{I}}}
+\def\gJ{{\mathcal{J}}}
+\def\gK{{\mathcal{K}}}
+\def\gL{{\mathcal{L}}}
+\def\gM{{\mathcal{M}}}
+\def\gN{{\mathcal{N}}}
+\def\gO{{\mathcal{O}}}
+\def\gP{{\mathcal{P}}}
+\def\gQ{{\mathcal{Q}}}
+\def\gR{{\mathcal{R}}}
+\def\gS{{\mathcal{S}}}
+\def\gT{{\mathcal{T}}}
+\def\gU{{\mathcal{U}}}
+\def\gV{{\mathcal{V}}}
+\def\gW{{\mathcal{W}}}
+\def\gX{{\mathcal{X}}}
+\def\gY{{\mathcal{Y}}}
+\def\gZ{{\mathcal{Z}}}
+
+% Sets
+\def\sA{{\mathbb{A}}}
+\def\sB{{\mathbb{B}}}
+\def\sC{{\mathbb{C}}}
+\def\sD{{\mathbb{D}}}
+% Don't use a set called E, because this would be the same as our symbol
+% for expectation.
+\def\sF{{\mathbb{F}}}
+\def\sG{{\mathbb{G}}}
+\def\sH{{\mathbb{H}}}
+\def\sI{{\mathbb{I}}}
+\def\sJ{{\mathbb{J}}}
+\def\sK{{\mathbb{K}}}
+\def\sL{{\mathbb{L}}}
+\def\sM{{\mathbb{M}}}
+\def\sN{{\mathbb{N}}}
+\def\sO{{\mathbb{O}}}
+\def\sP{{\mathbb{P}}}
+\def\sQ{{\mathbb{Q}}}
+\def\sR{{\mathbb{R}}}
+\def\sS{{\mathbb{S}}}
+\def\sT{{\mathbb{T}}}
+\def\sU{{\mathbb{U}}}
+\def\sV{{\mathbb{V}}}
+\def\sW{{\mathbb{W}}}
+\def\sX{{\mathbb{X}}}
+\def\sY{{\mathbb{Y}}}
+\def\sZ{{\mathbb{Z}}}
+
+% Entries of a matrix
+\def\emLambda{{\Lambda}}
+\def\emA{{A}}
+\def\emB{{B}}
+\def\emC{{C}}
+\def\emD{{D}}
+\def\emE{{E}}
+\def\emF{{F}}
+\def\emG{{G}}
+\def\emH{{H}}
+\def\emI{{I}}
+\def\emJ{{J}}
+\def\emK{{K}}
+\def\emL{{L}}
+\def\emM{{M}}
+\def\emN{{N}}
+\def\emO{{O}}
+\def\emP{{P}}
+\def\emQ{{Q}}
+\def\emR{{R}}
+\def\emS{{S}}
+\def\emT{{T}}
+\def\emU{{U}}
+\def\emV{{V}}
+\def\emW{{W}}
+\def\emX{{X}}
+\def\emY{{Y}}
+\def\emZ{{Z}}
+\def\emSigma{{\Sigma}}
+
+% entries of a tensor
+% Same font as tensor, without \bm wrapper
+\newcommand{\etens}[1]{\mathsfit{#1}}
+\def\etLambda{{\etens{\Lambda}}}
+\def\etA{{\etens{A}}}
+\def\etB{{\etens{B}}}
+\def\etC{{\etens{C}}}
+\def\etD{{\etens{D}}}
+\def\etE{{\etens{E}}}
+\def\etF{{\etens{F}}}
+\def\etG{{\etens{G}}}
+\def\etH{{\etens{H}}}
+\def\etI{{\etens{I}}}
+\def\etJ{{\etens{J}}}
+\def\etK{{\etens{K}}}
+\def\etL{{\etens{L}}}
+\def\etM{{\etens{M}}}
+\def\etN{{\etens{N}}}
+\def\etO{{\etens{O}}}
+\def\etP{{\etens{P}}}
+\def\etQ{{\etens{Q}}}
+\def\etR{{\etens{R}}}
+\def\etS{{\etens{S}}}
+\def\etT{{\etens{T}}}
+\def\etU{{\etens{U}}}
+\def\etV{{\etens{V}}}
+\def\etW{{\etens{W}}}
+\def\etX{{\etens{X}}}
+\def\etY{{\etens{Y}}}
+\def\etZ{{\etens{Z}}}
+
+% The true underlying data generating distribution
+\newcommand{\pdata}{p_{\rm{data}}}
+% The empirical distribution defined by the training set
+\newcommand{\ptrain}{\hat{p}_{\rm{data}}}
+\newcommand{\Ptrain}{\hat{P}_{\rm{data}}}
+% The model distribution
+\newcommand{\pmodel}{p_{\rm{model}}}
+\newcommand{\Pmodel}{P_{\rm{model}}}
+\newcommand{\ptildemodel}{\tilde{p}_{\rm{model}}}
+% Stochastic autoencoder distributions
+\newcommand{\pencode}{p_{\rm{encoder}}}
+\newcommand{\pdecode}{p_{\rm{decoder}}}
+\newcommand{\precons}{p_{\rm{reconstruct}}}
+
+\newcommand{\laplace}{\mathrm{Laplace}} % Laplace distribution
+
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Ls}{\mathcal{L}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\emp}{\tilde{p}}
+\newcommand{\lr}{\alpha}
+\newcommand{\reg}{\lambda}
+\newcommand{\rect}{\mathrm{rectifier}}
+\newcommand{\softmax}{\mathrm{softmax}}
+\newcommand{\sigmoid}{\sigma}
+\newcommand{\softplus}{\zeta}
+\newcommand{\KL}{D_{\mathrm{KL}}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\standarderror}{\mathrm{SE}}
+\newcommand{\Cov}{\mathrm{Cov}}
+% Wolfram Mathworld says $L^2$ is for function spaces and $\ell^2$ is for vectors
+% But then they seem to use $L^2$ for vectors throughout the site, and so does
+% wikipedia.
+\newcommand{\normlzero}{L^0}
+\newcommand{\normlone}{L^1}
+\newcommand{\normltwo}{L^2}
+\newcommand{\normlp}{L^p}
+\newcommand{\normmax}{L^\infty}
+
+\newcommand{\parents}{Pa} % See usage in notation.tex. Chosen to match Daphne's book.
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+\DeclareMathOperator{\sign}{sign}
+\DeclareMathOperator{\Tr}{Tr}
+\let\ab\allowbreak
+
+
+%\usepackage{url}
+
+% \usepackage{mathtools} % For \begin{bmatrix*}[l] 
+% \usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{xcolor}         % colors
+\usepackage{booktabs,multirow}
+
+\newcommand{\reals}{\mathbb{R}}
+
+
+\newcommand{\bP}{\mathbf{P}}
+\newcommand{\F}{\mathbf{F}}
+\newcommand{\bnu}{\bm{\nu}}
+\newcommand{\etab}{\bm{\eta}}
+\newcommand{\DRstd}{\bar{\mathcal{D}}_2(\rho|\pi)}
+\newcommand{\DR}{\bar{\mathcal{D}}_2}
+
+\newtheorem{Assumption}{Assumption}[section]
+\newtheorem{lemma}{Lemma}[section]
+\newtheorem{corollary}{Corollary}[section]
+\newtheorem{Problem}{Problem}[section]
+\newtheorem{Remark}{Remark}[section]
+\newtheorem{Definition}{Definition}[section]
+\newtheorem{Theorem}{Theorem}[section]
+\newtheorem{proposition}{Proposition}[section]
+
+\usepackage{empheq}
+
+% \title{}
+
+% Authors must not appear in the submitted version. They should be hidden
+% as long as the tmlr package is used without the [accepted] or [preprint] options.
+% Non-anonymous submissions will be rejected without review.
+
+
+
+% \author{ Deividas Eringis \thanks{Correspondance to der@es.aau.dk}\\
+%   Department of Electronic Systems\\
+%   Aalborg University\\
+%   \And
+%    John Leth \\
+%     Department of Electronic Systems\\
+%   Aalborg University\\
+%      \And
+%    Zheng-Hua Tan \\
+%      Department of Electronic Systems\\
+%   Aalborg University\\
+%      \And
+%    Rafal Wisniewski \\
+%       Department of Electronic Systems\\
+%   Aalborg University\\
+%   \And
+%    Mihaly Petreczky \\
+%    Laboratoire Signal et Automatique de Lille (CRIStAL) \\
+% }
+
+
+
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+
+
+
+\newcommand{\class}{\(\mathcal{SI}\)}
+\newcommand{\classOld}{\(\mathcal{S}\)}
+\newcommand{\aseq}{\overset{\text{a.s.}}{=}}
+
+
+%\newcommand{\deividas}[1]{\marginpar{\textcolor{blue}{DER}} \textcolor{blue}{ #1}} %\marginpar{\textcolor{blue}{Deividas}}
+\newcommand{\deividas}[1]{\textcolor{black}{ #1}} %\marginpar{\textcolor{blue}{Deividas}}
+%\newcommand{\mihaly}[1]{\marginpar{\textcolor{green}{Mihaly}} \textcolor{green}{ #1}}
+\newcommand{\mihaly}[1]{\textcolor{black}{ #1}}
+%\newcommand{\john}[1]{\marginpar{\textcolor{red}{John}} \textcolor{red}{ #1}}
+\newcommand{\john}[1]{\textcolor{black}{ #1}}
+
+\usepackage{xstring}
+\newcommand{\mref}[1]
+{%
+	\IfEqCase{#1}{%
+		{lemma:full_gen_sys}{A.7}% error system definition
+		{lemma:stationary_x_v}{A.4}%replaces (Theorem 5.1) 
+		{lemma:classExamples}{A.6}%replaces (Theorem 5.2) 
+		{lemma:series}{A.8}%
+		{lemma:Cross-EntropyLipschitz}{A.10}%
+		{eq:numexGen}{213}%
+		{sec:exampleAppendix}{B}%
+		{sec:proofsResults}{A.5}
+	}[\ref{#1}]%
+}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{ From PAC bounds on the generalization error to PAC bounds on the parameter estimation error}
+
+\author[ULille]{Mih\'aly Petreczky}
+\author[AAU]{John Leth}
+\author[SZTAKI]{Emma Luk\'acs}
+\author[SZTAKI]{B\'alint Dar\'oczy}
+\address[AAU]{Department of Electronic Systems, Aalborg University, Denmark (e-mail: jjl@es.aau.dk).}
+\address[SZTAKI]{Institute for Computer Science and Control, HUN-REN SZTAKI, Budapest, Hungary (e-mail: \{emma.lukacs, balint.daroczy\}@sztaki.hu).}
+%\address[ELTE]{Institute of Mathematics, Eötvös Loránd University, ELTE, Budapest, Hungary}
+\address[ULille]{Univ. Lille, CNRS, Centrale Lille, UMR 9189 CRIStAL, F-59000 Lille, France (e-mail: mihaly.petreczky@centralelille.fr).}
+
+\begin{abstract}
+Probably Approximately Correct (PAC) bounds on the generalization error (the difference between the empirical prediction error computed on the training data and its expectation) are an established tool in statistical machine learning, and there have been several extensions of these bounds to dynamical systems. In parallel, in recent years, there has been growing interest in finite-sample bounds for parameter estimation error in system identification. The latter bounds tend to be algorithm-specific, relying on reformulating the identification algorithm as a least-squares regression problem. This is in contrast to classical PAC bounds, which are algorithm-agnostic and can be applied to any identification algorithm based on minimizing a cost function involving the empirical loss.
+
+In this paper, we show how oracle bounds derived from PAC bounds can be used to derive finite-sample bounds for dynamical systems. As an illustration of this approach, we present finite-sample parameter-estimation bounds for linear and bilinear systems with bounded inputs and noise. These bounds apply to identification algorithms based on minimizing a regularized empirical loss function.
+
+The key ingredient is to establish an oracle inequality, i.e., an inequality between the true prediction error of the learned model and the minimum achievable true prediction error, and then use either the convexity of the true loss or system-theoretic properties of the loss function to derive bounds on the parameter estimation error. We also analyze the rates of the obtained bounds and compare them with those of classical asymptotic results.
+\end{abstract}
+
+\end{frontmatter}
+
+\section{Introduction}
+
+The problem of learning from single observed trajectories raises two, in a way connected, questions about the performance of the learned model: quality of predicting future observations and recovering the underlying system. In the case of statistical learning the first is typically handled by generalization bounds via the gap between the true and estimated error, while excess risk bounds are established methods to analyze the gap between the error of the learned and the optimal, often unique model in the hypothesis class. We seek to connect these statistical learning techniques of measuring performance with system identification. The standard i.i.d. condition in statistical learning with a few, recent exception prevented the adaptation of the Probably Approximately Correct (PAC) framework for single trajectory problems. \citet{alquier2013prediction} established oracle inequalities for time series forecasting while assuming weakly dependence. By exploiting stability, \citet{eringis2023pacbayesRNN} derived a PAC-Bayesian bound for recurrent neural networks (RNN) while in \citet{Nips2026} the authors derive parameter-estimation bounds from PAC-Bayesian bounds for LTI systems. In parallel, in \citet{Simchowitz_Mania_Tu_Jordan_Recht_2018} the authors analyzed the error of identification of linear systems from a single trajectory. These complementary results address two different, although aligned questions. How well the learned model predicts future observations, generalization, and how the learned parameters differ from the underlying system's parametrization, estimation.  
+
+Since a small generalization gap does not necessarily guarantee small estimation error, we may raise a crucial question, how can we convert guarantees of low generalization error to guarantees of low estimation error?
+
+In this paper we connect these two frameworks for several families of stable dynamical systems under bounded stochastic inputs and noise. We derive oracle inequalities from the generalization bounds and bound the Euclidean parameter via the $H_2$ distance between the learned and the true system's Markov parameters under suitable conditions. 
+
+\textbf{Notation}.
+Note that unless otherwise defined, this paper will follow the notation defined by \citet{goodfellow2016deep}, i.e.  $\vx$ is a vector, and $\rvx$ is a random vector.
+Let $\F$ denote a $\sigma$-algebra on the set $\Omega$ and $\bP$ be a probability measure on $\F$. Unless otherwise stated all probabilistic considerations will be with respect to the probability space $(\Omega,\F,\bP)$, and we let $\E(\rvz)$ denote expectation of the stochastic variable \deividas{$\rvz:\Omega\rightarrow\reals^{n_\rvz}$. We shall denote the realisation of a stochastic variable $\rvz$ as $\vz=\rvz(\omega)$, with $\omega\in\Omega$.}
+Each Euclidean space is associated with the topology generated by the 2-norm $\|\cdot\|_2$, and the Borel $\sigma$-algebra generated by the open sets. The induced matrix 2-norm is also denoted $\|\cdot\|_2$. 
+We use $\triangleq$ to denote ''defined by''.%, and $\aseq$ to denote that the equality holds almost surely with respect to some underlying probability measure. 
+
+%\section{Problem Formulation}
+\section{Problem Formulation}
+% \section{PAC-Bayesian Setting and Main Result}
+
+\label{sec:prelim}
+
+%In this paper we will consider time-series supervised learning problem. The goal will be to find a model which predicts the best predictive power.
+% To do this we assume we have only one sequence of training data.
+Below  we state the system identification/learning problem.
+ Let us fix \emph{bounded} stochastic processes $\rvy(t)\in \sY\subset \reals^{n_y},\rvu(t)\in \sU \subset \reals^{n_x}$ that share the time-axis $t\in\sZ$, i.e. $\rvy(t),\rvu(t)$ are random vectors on $(\Omega,\F,\bP)$; $\rvy$ and $\rvu$ represent outputs and inputs respectively.
+ We set $\rvw(t)=\begin{bmatrix} \rvy^T(t)& \rvu^T(t) \end{bmatrix}^T$ and $\sW=\sY \times \sU$.  We will assume that $\rvy$ is generated by
+ a dynamical system of the form
+ \begin{equation}\label{eq:gen}
+    \rvs(t+1)=f(\rvs(t),\rve_g(t)), \quad  \rvw(t) =g(\rvs(t),\rve_g(t)) 
+\end{equation}
+where $\rve_g$ is a bounded i.i.d. process and we assume that the solution $\rvs(t)$ is well-defined for all $t \in \mathbb{Z}$. We will make additional
+assumptions later on.
+
+The goal of each predictor $h\in\mathcal{H}$ is to estimate $\vy(t)=\rvy(t)(\omega)$ based on current and past values of $\vw(t)=\rvw(t)(\omega)$ up to initial time. Formally, we can think of $h$ as a 
+function $h:\bigcup_{k=1}^{\infty} \sW^k \rightarrow \sY$ generating the prediction $\hat{\rvy}(t)(\omega)=h(\{\rvw(s)(\omega)\}_{s=0}^t)$.
+We consider predictors realized by parametrizations of dynamical systems; we
+assume that there exists  $\Theta\subseteq \reals^{n_\theta}$, a compact set $\sS \subseteq \mathbb{R}^n$,
+a function $\Pi: \Theta \rightarrow \mathcal{H}$, and continuous functions
+\begin{align*}
+    \hat{f}:\sS \times \sW \times \Theta \rightarrow \sS, \quad
+    \hat{g}: \sS \times \sU \times \Theta \rightarrow \sY, \quad 
+    \hat{\vs}_s:\Theta \rightarrow \sS
+\end{align*}
+such that  for every predictor $h_{\theta}=\Pi(\theta)$, every $\mathbb{Z} \ni t \ge t_0$
+\begin{color}{black}
+\begin{equation}\label{eq:dyn1}
+\mathcal{S}_{\theta}\left\{
+\begin{aligned}
+  & \hat{\rvs}(t+1 \mid t_0)=\hat{f}\bigl(\hat{\rvs}(t \mid t_0),\rvy(t),\rvu(t),\theta\bigr),\\
+  & \hat{\rvs}(t_0 \mid t_0)=\hat{\vs}_s(\theta),\\
+  & h_{\theta}\bigl(\{\rvw(s)\}_{s=t_0}^t\bigr)=\hat{\rvy}_{\theta}(t \mid t_0)=\hat{g}\bigl(\hat{\rvs}(t \mid t_0),\rvu(t),\theta\bigr).
+\end{aligned}
+\right.
+\end{equation}
+\end{color}
+where $\hat{\rvs}(t)\in \sS$ is the hidden state. Moreover, we assume that \eqref{eq:dyn1} has a unique stationary solution 
+$\hat{\rvs}(t)$ defined on all $t \in \mathbb{Z}$ satisfying 
+\[ 
+    \hat{\rvs}(t+1)=\hat{f}(\hat{\rvs}(t),\rvy(t),\rvu(t),\theta), \quad \hat{\rvy}_{\theta}(t)=\hat{g}(\hat{\rvs}(t),\rvu(t),\theta)
+\]
+such that $\hat{\rvs}_{\theta}$, $\hat{\rvy}_{\theta}$ are stationary processes, and they satisfy
+\begin{equation}
+  \label{limits_true_loss}
+  \begin{split}
+      & \hat{\rvs}(t)=\lim_{t_0 \to -\infty} \hat{\rvs}(t \mid t_0),  ~
+      \hat{\rvy}_{\theta}(t)=\lim_{t_0 \to -\infty} \hat{\rvy}_{\theta}(t \mid t_0) \\
+      & \lim_{t \rightarrow \infty} (\hat{\rvy}_{\theta}-\hat{\rvy}_{\theta}(t \mid t_0))=0 \\
+      & \E[\hat{\rvy}_{\theta}(t)]=\lim_{t_0 \to -\infty} \E[\hat{\rvy}_{\theta}(t \mid t_0)]=\lim_{t \rightarrow \infty} \E[\hat{\rvy}_{\theta}(t)-\hat{\rvy}_{\theta}(t \mid 0)]
+  \end{split}
+\end{equation}      
+  and the limits of the random variables are understood in the mean sense. 
+We will add additional stability assumptions later on which guarantee that \eqref{limits_true_loss} holds.
+%existence of $\hat{\rvs}$ and the limits mentioned above. 
+Intuitively, $\hat{\rvy}_{\theta}(t)$ is the prediction generated by the predictor if it has been 
+active for an infinite amount of time. 
+
+
+%In order to simplify notation, we 
+%\begin{equation}
+%\label{as:parametrisation:eq1}
+%\begin{split}
+%	\hat{\rvy}_{\theta}(t|0) &\triangleq \textcolor{black}{\rvy_{S_{\theta}}(\hat{\rvs}_{s}(\theta),0,\rvw;t)=h_{\theta}(\{\rvw(s)\}_{s=0}^t)}, \\ 
+%\end{split}
+%\end{equation}
+%Mi.e., $\hat{\rvy}_{\theta}(t|0)$ is just the prediction at time $t$ generated by $h_{\theta}$, and 
+%$\hat{\rvy}_{\theta}(t)$ is the output process
+%	$\rvy_{S_\theta,\rvw}(t)$ of the \class{} system  $S_\theta$ associated  with $\rvw$.
+
+
+
+%Note that recurrent neural networks (RNNs%)
+%represent a special case of the dynamical systems of the form of \eqref{eq:dyn1}. 
+%Under suitable assumptions, which will be discussed in Section \ref{sec:ProblemForm}, the generalisation gap is bounded for non i.i.d. data, and predictors realised by dynamical systems. 
+The desired model should be learnt from a data set $\train=\{\rvy(s)(\omega),\rvw(s)(\omega)\}_{s=0}^{N-1}$ formed by a single sample of random variables $\{\rvy(s),\rvw(s)\}_{s=0}^{N-1}$. To measure the precision of the predictor we choose a loss function $\ell: \sY \times \sY \to \sR_+$, and 
+we measure the quality of the predictor $h$ by  the \emph{true error}
+\begin{equation}
+    \label{gen:losses}
+    \mathcal{L}(\theta) \triangleq \E[\ell(\rvy(t),\hat{\rvy}_{\theta}(t))]
+\end{equation}
+%For now, we assume that the limit  defining the generalisation loss $\mathcal{L}(h)$ exists, later we define $\mathcal{H}$ so that this  assumption holds. 
+When learning, we would like to choose predictor $h$ which minimizes $\mathcal{L}(h)$. Since
+$\mathcal{L}(h)$ is unknown, we instead minimize the 
+\emph{empirical loss} %$\hat{\mathcal{L}}_N(h)$ and $\mathcal{L}(h)$:
+% \begin{Definition}
+\begin{equation}
+    \label{prelim:losses}
+    \hat{\mathcal{L}}_N(\theta)\triangleq\frac{1}{N}\sum_{t=0}^{N-1}\ell(\rvy(t),\hat{\rvy}_{\theta}(t \mid 0))
+\end{equation} 
+Note that in system identification the empirical loss is  often defined
+as $V_N(\theta)=\frac{1}{N}\sum_{t=0}^{N-1}\ell(\rvy(t),\hat{\rvy}_{\theta}(t)$, i.e., $\hat{\rvy}_{\theta}(t)$  is used instead of $\hat{\rvy}_{\theta}(t \mid 0)$
+in \eqref{prelim:losses}, by assuming that the predictors are already in their steady state regime when they are applied to the data.
+This is a reasonable assumption when analyzing asymptotic behavior of learning algorithms (i.e., when $N \rightarrow \infty$), but in the finite-sample setting it is less natural, as it sweeps under the rug what happens for a given number of steps $N$. For this reason we
+prefer to stick to using $\hat{\rvy}_{\theta}(t \mid 0)$. 
+Note that while $\E[V_N(\theta)]=\mathcal{L}(\theta)$, in general $\E[\hat{\mathcal{L}}_N(\theta)] \ne \mathcal{L}(\theta)$, making the
+application of concentration inequalities more involved. However, in \cite{eringis2023pacbayesRNN_OLD} it is shown that
+$\lim_{N \rightarrow \infty} \hat{\mathcal{L}}_N(\theta)-V_N(\theta) = 0$ in the mean sense. 
+The results of this paper can be stated by using $V_N$ instead of $\mathcal{L}_N$ and changing constants. %, see Remark \ref{rem:vN}.
+
+%$E[\hat{\mathcal{L}}_N(h)]$ is not equals to  $\mathcal{L}(h)$, as 
+%the latter captures long-term prediction error, while $E[\hat{\mathcal{L}}_N(h)]$ captures the average loss over the finite sample, we will comment on it later. 
+%and $\lim_{N \rightarrow \infty} \hat{\mathcal{L}}_N(h) = \mathcal{L}(h)$.
+% Note that, classically generalisation loss is defined simply as $\E[\ell(\rvy(t),h(\{\rvw(s)\}_{s=0}^t))]$, however in the time-series setting, this would depend on the time $t$, and as such would not give the desired intuition. 
+%Indeed, in time series prediction, the predictions are updated as new data points become available, so the relevant metric of generalisation power is the prediction 
+%error as $t \rightarrow +\infty$.
+%$h(\{\rvw(s)(\omega)\}_{s=0}^t)$ 
+%to increase  as $t$ increases. }
+
+%The goal of the PAC framework is to analyse the generalisation gap %$\Delta_N(h)\triangleq d(\mathcal{L}(h),\hat{\mathcal{L}}_N(h))$, where $d$ is any convex function.
+%, $E_{h\sim \rho} \mathcal{L} (h)$ and $E_{h\sim \rho} \hat{\mathcal{L}}_N(h)$ denote the expectation of $\mathcal{L} (h)$ and $\hat{\mathcal{L}}_N(h)$, when $h$ is distributed according to $\rho$. 
+%\\
+%In this paper we look at the special case of $\Delta_N(h)\triangleq 
+A PAC bound is a probabilistic bound on the generalisation gap
+$\mathcal{L}(h)-\hat{\mathcal{L}}_N(h)$, i.e.,  an inequality of the form
+%since bounding the gap will provide immediate bounds on $\mathcal{L}(h)$
+%That is, in this paper we shall prove a \emph{particular PAC inequality}.
+%Informally, let $\mathcal{H}$ be a family
+%of predictors which can be realised by a 
+%dynamical system of the form \eqref{eq:dyn1}. for any $\delta \in (0,1/2)$, the following holds with probability at least $1-2\delta$
+    \begin{equation} \label{eq:pac:gen}
+        \bP(\theta \in \Theta: |\mathcal{L} (\theta)- \hat{\mathcal{L}}_N(\theta)| \le 
+        \frac{(1+\ln(\frac{2}{\delta}))C}{\sqrt{N}}) \ge 1-\delta
+    \end{equation}
+  for any $\delta \in (0,1)$. Such a bound relates true loss with the empirical loss,
+  and can be used for analyzing the outcome of learning algorithms as follows. 
+  Learning can be viewed as finding 
+%In particular, if $\hat{h}_N$ is 
+the minimizer of the empirical loss,
+\( \hat{\theta}_N = \arg\min_{\theta \in \Theta} \hat{\mathcal{L}}_N(\theta) \).
+Intuitively,  \eqref{eq:pac:gen} implies that for large $N$, 
+$\mathcal{L} (\hat{\theta}_N)$ and $\hat{\mathcal{L}}_N(\hat{\theta}_N)$ are close, so minimizing
+the latter will make the former minimal. In fact, 
+%\[ \bP(\mathcal{L} (\hat{h}_N) \le  \hat{\mathcal{L}}_N(\hat{h}_N) 
+%        + \frac{(1+\ln(\frac{2}{\delta}))C}{\sqrt{N}}) \ge 1-\delta \]
+%That is, the empirical loss
+%of the learned model $\hat{h}_N$ can be made arbitrary close to the true loss, given 
+%a sufficiently large sample size. 
+using standard arguments \cite{} \eqref{eq:pac:gen} implies the \emph{oracle inequality}
+\begin{equation}
+\label{eq:oracle}
+\bP(\mathcal{L}(\hat{\theta}_N) \le \inf_{\theta \in \Theta} \mathcal{L}(\theta) + \frac{(1+\ln(\frac{2}{\delta}))C_{oracle}}{\sqrt{N}}) \ge 1-\delta 
+\end{equation}
+which implies that the true loss of $\hat{\theta}_N$ is close to the minimizer of the true loss. 
+%formalizes the intuition that the true loss of the empirical loss minimizer is 
+%get close to the minimizer of the true loss as $N \rightarrow +\infty$.
+However, for the purposes of system identification, the result above is not
+quite sufficient,  as we would like to show that $\hat{h}_N$ is close to the minimizer $h_{true}=\mathrm{argmin}_{h \in \mathcal{H}} \mathcal{L}(h)$ 
+of the true loss, 
+naturally under identifiability and persistence of excitation assumptions, for a suitable distance $d$ on models. 
+%What we need is to 1) relate the achieved true losss
+%$\mathcal{L}(\hat{h}_N)$ with the best achievable true loss 
+%$\inf_{h \in \mathcal{H}} \mathcal{L}(h)$, 2)
+%if $h_{true}$ is the minimizer of 
+%$\inf_{h \in \mathcal{H}} \mathcal{L}(h)$, 
+%then we would like a
+%we would like to bound the model estimation error $d(h,h_{true})$ where $h_{true}=\mathrm{argmin}_{h \in \mathcal{H}} \mathcal{L}(h)$
+%is the minimizer of the true loss and $d$
+%for a suitable metric on the space of model classes. 
+In this paper, we will derive a version of the PAC bound \eqref{eq:pac:gen} and of its oracle version \eqref{eq:oracle}, and we will use
+these to show a bound on the parameter estimation error
+\begin{equation}
+  \label{eq:param_error}
+  \begin{split}
+\bP(d(\hat{\theta}_N,\theta_{true}) \le (1+\frac{\ln(\frac{2}{\delta}))C_{param}}{\sqrt{N}}) \ge 1-\delta 
+\end{split}
+\end{equation}
+Note that \eqref{eq:param_error} and \eqref{eq:oracle} imply asymptotic consistency of the learning based on minimizing the empirical loss, but it also
+allows to estimate the estimation error for a certain number of data points $N$. In particular, it can be used to estimate the minimal
+number $N_{\epsilon}$ of the data points which guarantees that the estimation error is smaller than some threshold $\epsilon > 0$. 
+
+
+\section{Class of Dynamical Systems}\label{sec:class}
+%In this paperconsider predictors realised by a special class of dynamical systems. Furthermore, later we assume that the data is an output of such a system. In this section, we
+%Mdefine this class of systems.
+We restrict the class of dynamical systems \eqref{eq:gen}-\eqref{eq:dyn1} realizing predictors to be of class \class{} defined below. 
+%\deividas{To this end, let us consider a deterministic version the dynamical system in \eqref{eq:dyn1}:}
+%\eqref{eq:generalNLsys}. 
+%(generalisation of recurrent neural networks)
+\begin{subequations}\label{eq:generalNLsys}
+%\Sigma empheqlbrac
+%\begin{cases}
+\begin{empheq}[left=S: \empheqlbrace]{align}   \vs(t+1)&=f(\vs(t),\vv(t)),\label{eq:generalNLsys_f}\\
+    \vy(t)&=g(\vs(t),\vv(t)), \label{eq:generalNLsys_h}
+\end{empheq}
+\end{subequations}
+where $\vv: \mathbb{T} \rightarrow \sV$ is an arbitrary input trajectory \deividas{(e.g., a realization $\vx(t)=\rvw(t)(\omega)$ as in \eqref{eq:dyn1})},  $\vs: \mathbb{T} \rightarrow \sS$ is the state trajectory,  
+ $\vy: \mathbb{T} \rightarrow \sY$ is the output  trajectory, and $\mathbb{T} \subseteq \sZ$ is an interval in $\sZ$
+ which has no upper bound.
+ That is,  either $\mathbb{T}$ is the whole $\sZ$ or
+ $\mathbb{T}$ is an interval
+ $[t_0, +\infty) \cap \mathbb{Z}$
+ for some $t_0$.
+ Moreover, $\sS\subseteq\sR^n$ is a compact set, and the sets 
+  $\sV\subset\sR^m$, and $\sY\subset\sR^p$ are bounded, 
+  \textcolor{black}{$\sS$ both contain the zero vectors and 
+  $f(0,0)=0$, $g(0,0)=0$.}
+% \par
+%The state trajectory $\vs$ is also referred to as a \emph{solution}. 
+If $\mathbb{T}=[t_0, +\infty) \cap \mathbb{Z}$, then 
+$\vs$ is uniquely determined by the initial state 
+$\vs(t_0)=\vs_0$ and the input $\vv$, and 
+% A solution to \eqref{eq:generalNLsys_f} is sometimes written as 
+we write $\vs(t)=\vs_{S}(\vs_0,t_0, \vv;t)$ to emphasise the dependence on initial conditions $\vs(t_0)=\vs_0$, and input $\vv$.
+%\mathbb{T}\to\sV$, and the 
+%system $S$. 
+Moreover, if $\vv$ is defined on the whole time axis $\mathbb{Z}$,
+%instead of
+%$\mathbb{T}$, 
+then $\vs_{S}(\vs_0,t_0, \vv;t)$
+will be understood as the solution %$\vs(\vs_0,t_0,\vv|_{\mathbb{T}};t)$ 
+corresponding to the restriction of 
+$\vv$ to $\mathbb{T}$.
+%When $S$ is clear from the context, 
+%we use $\vs(\vs_0,t_0, \vv;t)$ instead
+%of $\vs_{S}(\vs_0,t_0, \vv;t)$.
+%\par
+Likewise, we will use 
+$\vy_{S}(\vs_0,t_0,\vv;t)$ to denote
+the output $\vy(t)$ which corresponds 
+to the state trajectory $\vs(t)=\vs_{S}(\vs_0,t_0, \vv;t)$, i.e., $\vy_S(\vs_0,t_0,\vv;t)=g(\vs_{S}(\vs_0,t_0, \vv;t),\vv(t))$. 
+%As before, we drop the subscript $S$ 
+%from $\vy_{S}(\vs_0,t_0, \vv;t)$, 
+%if it  is clear from the context.
+We \emph{identify systems of the form (\ref{eq:generalNLsys})
+with the \begin{color}{black} tuple \end{color}$S=(\sS,\sY,\sV,f,g)$}.
+
+%For systems (\ref{eq:generalNLsys}) to be suitable for time-series prediction,  they should demonstrate robustness. In other words, they should be capable of withstanding small perturbations in inputs and initial states without leading to significant changes in the state and output trajectories over time. Without this robustness, even minor numerical rounding errors, when implemented, can accumulate over time, resulting in increasingly inaccurate predictions.
+%Note that this is not much of an issue when 
+%the prediction is a static function of 
+%a finite number of past inputs (auto-regression, systems with fully observed state), or the length of the time-series used for prediction is small.
+%However, it becomes an issue when, as it is often the case in time-series prediction, we use an increasing number of data points in  prediction, as more of them become available. 
+%Additionally, it is desirable for predictors to preserve stationarity and mixing properties,
+%. Predictors are expected to generate one-step ahead approximations of the input process. Therefore, they should be able to preserve these basic properties, 
+%if they cannot even preserve such simple properties, then there is little hope for them being accurate. 
+%We will consider systems \eqref{eq:generalNLsys} which satisfy the following stability condition.
+%Both of these properties can be guaranteed by requiring certain stability properties defined below.
+%To this end, we recall the following
+%\begin{Definition}[UEC \cite{PavlovTac2011}]
+%The system $S$ from \eqref{eq:generalNLsys}
+%is called uniformly exponentially convergent (UEC) with constants $C$ and \mihaly{$\tau \in [0,1)$}, if 
+  %\begin{itemize}
+   %     \item  
+        
+
+%\end{Definition}
+%Note that the constants $C$ and $\tau$ are independent of input $\vv$. 
+%UEC guarantees existence of a unique stable steady-state state and output response to any bounded input.
+%robustness to perturbations in the initial state, and existence of 
+%steady-state trajectories for every input.  The latter represent the asymptotic behavior of the system as $t \rightarrow +\infty$ for the given input, 
+	%The latter depend on the input, but not the initial state, and 
+%and they can be viewed as the state trajectory starting at $t_0=-\infty$, with arbitrary initial state, see 
+%\cite[Lemma~\mref{lemma:stationary_x_v}]{eringis2023pacbayesRNN_OLD}.
+%Although 
+%UEC is stronger than other stability notions, many systems used in practice have this property \cite{PavlovTac2011}. 
+%In particulal, stable LTI systems restricted to bounded invariant sets are UEC.  For the definition of class \class{} systems, in addition
+%to UEC, we need that they their responses are continuous inputs in a suitable sense, leading to the following definition.
+\begin{Definition}[Class \class{} system] \label{def:classDef}
+We will say that the system from \eqref{eq:generalNLsys} is a class \class{} system, %or the pair $(f,g)$ is of class \class{}, 
+with associated constants $C=C(S)\geq 1,\tau=\tau(S)\in[0,1),L=L(S)>0,L_{g,1}=L_{g,1}(S)>0$, and $L_{g,2}=L_{g,2}(S)>0$ if the following holds:
+%\begin{itemize}
+
+\textbf{(UEC)} $S$ is \emph{uniformly exponentially convergent (UEC) with constants $C$ and $\tau$}
+   for each bounded $\vv:\sZ \rightarrow \sV$, there exists a unique state trajectory $\vs=\vs_{S,\vv}: \sZ \rightarrow \sS$ of $S$,
+        and for any initial state $\vs_0 \in \mathbb{S}:$
+        %\item There exist $C\geq 1$ and $\tau\in[0,1)$ s.t.,
+        \begin{equation*}
+            \|\vs_S(\vs_0,t_0,\vv;t)-\vs_{S,\vv}(t)\|_2\leq C\tau^{t-t_0}\|\vs_0-\vs_{S,\vv}(t_0)\|_2
+        \end{equation*}
+   We refer to $\rvs_{S,\rvv}$     
+as the \emph{steady-state state trajectory}
+of $S$ associated with $\rvv$.
+We call
+$\rvy_{S,\rvv}:\sZ \ni t \mapsto g(\rvs_{S,\rvv}(t),\rvv(t))$
+the \emph{steady-state output trajectory} associated with $\rvv$.
+
+\begin{color}{black}
+\textbf{(UEIIS)} $S$ is \emph{uniformly exponentially incrementally input-to-state stable (UEIIS) with constants $C,\tau$}, i.e.,
+  For every $\vs_{0,1},\vs_{0,2} \in \sS$  and every two bounded input trajectories $\vv_1,\vv_2:\sZ \rightarrow \sV$,
+  \[ 
+    \begin{split}
+     & \|\vs_{\mathcal{S}}(\vs_{0,1},t_0,\vv_1;t)-\vs_{\mathcal{S}}(\vs_{0,2},t_0,\vv_2;t)\|_2\leq \\ 
+     & C\tau^{t-t_0}\|\vs_{0,1}-\vs_{0,2}\|_2  
+      + L\sum_{k=1}^{t-t_0} \tau^{k-1} \|\vv_1(t-k)-\vv_2(t-k)\|_2
+  \end{split}
+  \]
+\end{color}
+%\item  
+\textbf{(Lipschitz output)}
+    The output function $g$ %from \eqref{eq:generalNLsys_h} 
+    has Lipschitz  constants $L_{g,1},L_{g,2}>0$, i.e.,
+    %\begin{align}
+     \(   \|g(\xi_1,v_1)-g(\xi_2,v_2)\|_2\leq L_{g,1}\|\xi_1-\xi_2\|_2+L_{g,2}\|v_1-v_2\|_2 \), 
+     for all $\xi_1,\xi_2 \in \sS$, $v_1,v_2 \in \sV$.
+    %\end{align}
+%\end{itemize}
+% We shall denote by $G($
+\end{Definition}
+
+%UEC implies robustness with respect to perturbations in the initial state. 
+%Exponential robustness in inputs implies that state is robust w.r.t. perturbations in the inputs, and in
+%fact the effect of  an instantaneous perturbations in the input decays exponentially fast.
+%The requirement that the output function is Lipschitz ensures that the
+%output trajectories inherit the favorable robustness properties of the state trajectories.
+%either a linear or  %output function or apply 
+%one of the standard activation functions %, which are Lipschitz.
+%
+%\begin{Remark}[Role of constants in robustness]
+%\label{rem:constants}
+%    The smaller the constants $C$, $\tau$, $L$  and $L_{g,1},L_{g,2}$ are, the more robust the system is to perturbations in inputs and states. 
+%    Among these constants, $\tau$  is the most significant one, as  it determines how fast the effect of perturbations will decay with time. % and it is the most significant measure of robustness. 
+%\end{Remark}
+UEC implies existence of a unique stable stationary solution defined on $\mathbb{Z}$, UEIIS implies continuity of solutions belonging to the same input in the initial states and inputs,  
+%exponential robustness implies that stationary solutions are Lipschitz functions of the inputs, 
+and Lipschitzness of the readout map ensures that the stability and continuity properties of the state trajectories extend to output trajectories too.
+By \cite[Theorem 2]{TanTAC}, UEC implies UEIIS, but for a possibly different constant $C$. For the sake of readability, we prefer to state UEC and UEIIS as separate conditions with the same constant $C$. 
+\begin{color}{black}
+Finally, stationary solutions are also continuous in input trajectories:
+\begin{lemma}
+\label{lemma:oldNewS}
+    If $\mathcal{S}$ is class \class{}, then
+    for any two bounded input trajectories $\vv_1,\vv_2:\sZ\to \sV$,\begin{equation}
+    \label{def:classDef:mem}
+        \|\vs_{\vv_1}(t)-\vs_{\vv_2}(t)\|_2\leq L\sum_{k=1}^\infty \tau^{k-1}\|\vv_1(t-k)-\vv_2(t-k)\|_2
+    \end{equation}
+\end{lemma}
+In particular, Lemma \ref{lemma:oldNewS} has the following
+corollary which allows us to
+reuse the bounds of \cite{eringis2023pacbayesRNN} later on.
+\begin{corollary}
+  Any system of class \class{} is also of \classOld{} as defined in \cite{eringis2023pacbayesRNN}.
+\end{corollary}
+\end{color}
+In addition, outputs of \class{} systems generated by mixing and stationary inputs are also mixing and stationary, 
+see \cite[Lemma A4.1]{eringis2023pacbayesRNN_OLD}.
+
+%\textbf{Characterization of systems of class \class{}. }
+%By \cite[Lemma \mref{lemma:classExamples}]{eringis2023pacbayesRNN_OLD}, a sufficient condition for belonging to class \class{} is that $f,g$  are Lipschitz, and $f$ is a contraction in its first argument\deividas{, i.e. $\|f(s,v)-f(s',v)\|_2<\tau \|s-s'\|_2$, with $\tau \in (0,1)$.}
+%\par
+%We remark that certain popular classes of RNNs are contractive systems, see \cite{eringis2023pacbayesRNN}.
+
+%\textbf{Systems of class \class{} which are not contractions.}
+A sufficient condition for a system to be of class \class{}  \textcolor{black}{which will be used in this paper} is that $f$ and $g$ are Lipschitz, and that there exists a quadratic Lyapunov function 
+\begin{lemma}
+\label{lemma:P:classS}
+   Assume that $f:\mathbb{R}^{n} \times \mathbb{R}^{m} \to \mathbb{R}^{n}$  is continuously differentiable in the first argument, and $L_f$-Lipschitz continuous and $g:\mathbb{R}^{n} \times \mathbb{R}^{m} \to \mathbb{R}^{p}$ satisfies Definition \ref{def:classDef}, and
+   $f(0,0)=0$, $g(0,0)=0$.
+   Assume that $C_u >0$, $\tau > 0$ are such that there exists a matrix $P > 0$ such that for all $\vv \in \mathbb{R}^{m}$, $\|\vv\|_{2} \le C_u$
+     \begin{equation}
+      \label{P:classS}
+     (\dfrac{f(\vs,\vv)}{d\vs})^TP(\dfrac{f(\vs,\vv)}{d\vs})- \tau^2 P.
+     \end{equation}
+   Then define $L=L_{f}\sqrt{\lambda_{max}(P)}$,
+   $C=\sqrt{\frac{\sqrt{\lambda}_{max}(P)}{\lambda_{min}(P)}}$,
+   $\mathbb{S}=\{x \in \mathbb{R}^{n} \mid \sqrt{x^TPx} \le \frac{LC_u}{1-\tau}\}$,
+   \textcolor{black}{
+   $\mathbb{V}=\{v \in \mathbb{R}^{m} \mid \|v\|_{2} \le C_u\}$,
+   $\mathbb{Y}=\{y \in \mathbb{R}^{p} \mid \|y\|_{2} \le (L_{g,1}\frac{L}{\sqrt{\lambda_{min}(P)}(1-\tau)}+L_{g,2})C_u\}$.}
+   Then $f(\mathbb{S}\times \mathbb{V}) \subseteq \mathbb{S}$ and $g(\mathbb{S},\mathbb{V}) \subseteq \mathbb{Y}$, and
+   $\mathcal{S}=(\mathbb{S},\mathbb{V},\mathbb{Y},f,g)$ is a class \class{}
+   system with constant $C,\tau,L,\tau,L_{g,1},L_{g,2}$. 
+\end{lemma}
+The proof of Lemma \ref{lemma:P:classS} % is in the appendix %\cite{Arxiv}
+% and it 
+ is  based on \cite[Theorem 13]{TanTAC}
+and \cite[Theorem 8]{TranCDC}.
+% and on the well-known sufficient Lyapunov-function
+%based condition for UIES, e.g.,
+In particular, Lemma \ref{lemma:P:classS} shows that stable LTI systems can be restricted to bounded invariant sets so that the restriction
+forms a class \class{} system.
+%In particular, if $f(\vs,\vv)=A\vs+B\vv$, $g(\vs,\vv)=C\vs+D\vv$, then they satisfy
+%\eqref{lemma:P:classS} for some $P$, $\tau$ and any $C_u$. 
+%see conditions 1 and 2 of \cite[Lemma \mref{lemma:classExamples}]{eringis2023pacbayesRNN_OLD}
+%MThe latter may hold even if $f$ is not a contraction.
+%More generally, 
+%For piecewise-affine functions $f$
+%(e.g., RNNs with ReLU activation) or functions with sector bounded non-linearities
+%the conditions \eqref{lemma:P:classS} 
+%More generally, 
+For piecewise-affine functions $f$
+(e.g., RNNs with ReLU activation) or functions with sector bounded non-linearities
+the conditions \eqref{lemma:P:classS} 
+  %of \cite[Lemma \mref{lemma:classExamples}]{eringis2023pacbayesRNN_OLD}
+%can be checked 
+%which is the case for RNNs with a ReLu activation, 
+%%such Lyapunov functions can be found 
+can be checked using Linear Matrix Inequalities (LMI), see \cite{PavlovTac2011,TanTAC}.
+As a cascade of class \class{} systems is again class \class{} \cite[Lemma \mref{lemma:series}]{eringis2023pacbayesRNN_OLD},
+many relevant systems are of class \class{}.
+
+
+% %\par
+% For instance, %A large class of such examples are %\ref{lemma:classExamples}, 
+% stable linear state-space systems, i.e., systems of the form
+% $f(\rvs,\rvw)=A\rvs+B\rvw$ and
+% $g(\rvs,\rvw)=C\rvs+D\rvw$
+% for suitable matrices $A,B,C,D$ such that the spectral radius of $A$ is smaller than $1$, satisfy 
+% 	\cite[Lemma \mref{lemma:classExamples}]{eringis2023pacbayes}, but they
+% are not contractions. 
+%such systems are of class \class{}, if
+%$A$ is Schur, i.e., its spectral
+%radius $\rho(A)$  is smaller than $1$. It is well-known in control theory \cite{Katayama:05} that then condition 3 of Lemma \ref{lemma:classExamples} holds. 
+%However, $f$ is not necessarily a contraction. 
+%\par
+% For piecewise-affine functions $f$
+% (e.g., RNNs with ReLu activation)
+% 	the conditions of \cite[Lemma \mref{lemma:classExamples}]{eringis2023pacbayesRNN_OLD}
+% can be checked 
+% %which is the case for RNNs with a ReLu activation, 
+% %%such Lyapunov functions can be found 
+% using Linear Matrix Inequalities (LMI), see \cite[Theorem 2]{PavlocTac2011}.
+
+%Class \class{} property is preserved under interconnection:
+%series interconnection of two class \class{} systems is also \class{} 
+%(see \cite[Lemma \mref{lemma:series}]{eringis2023pacbayesRNN_OLD}). Furthermore, the corresponding constants can be computed from those of 
+%the two systems. 
+%In particular, multilayer RNNs which can be represented as a  series interconnection of several single layer RNNs will be of class \class{}, if each individual layer is of class \class{}.
+
+
+
+\section{Assumptions on Data and Predictors}\label{sec:ProblemForm} 
+%Let us now formally state our assumptions on the data and the class of predictors.
+%the learning problem. %Firstly we assume that the processes involved are essentially bounded, i.e. $\|[\rvy^T(t),\rvw^T(t)]\|_\infty<\infty$
+%Formally, we assume that the processes $\rvy,\rvw$ can be realised by a class \class{} system driven by i.i.d. noise, and the training data $\train=\{\rvy(s),\rvw_\rve(s)\}_{s=0}^{N-1}$ are samples from the unique stationary solution of a class \class{} system driven by i.i.d. noise. 
+%Recall that $\rvy,\rvw$ two stochastic processes, where 
+%$\rvy(t)$ is the process we wish to estimate from present and past, $\{\rvw(s)\}_{s=0}^t$ of process $\rvw$. 
+\par
+%\textcolor{black}{Conc}
+In a nutshell, 
+we  would like the process $\rvy$ and $\rvw$ to be outputs of a class \class{} system for an i.i.d. input process, and the predictors to be class \class{}
+systems.  To this end, we need to consider class \class{} systems driven by stochastic inputs.
+More precisely, let $S=(\sS,\sY,\sV,f,g)$ be a system of class \class{}, and let $\rvv$ be an essentially bounded stochastic process taking values in $\sV$.
+%Then for any $\omega \in \Omega$,
+%the sample path $\rvv(\omega): \sZ \ni s \mapsto \rvv(s)(\omega) \in \sV$ is a bounded input trajectory. 
+%\par
+Then for any initial state 
+$\vs_0$, time instances $t_0$, we can define the 
+random variables 
+$\rvy_S(\vs_0,t_0,\rvv;t):\omega\mapsto
+\rvy_S(\vs_0,t_0,\vv;t)$, $\vv(s)=\rvv(s)(\omega)$, and
+%and
+%$\Omega \ni \omega \mapsto \rvs_S(\vs_0,t_0,\rvv(\omega);t)$
+%is random variables, which we will denote by $\rvy_S(\vs_0,t_0,\rvv;t)$ and 
+we refer to them 
+%$t \mapsto \rvy_S(\vs_0,t_0,\rvv;t)$  
+as the  \emph{output process of $S$  at time $t$ 
+for the stochastic input $\rvv$, initial state $\vs_0$ and initial time $t_0$.}
+%call the \emph{output  of $S$
+%$\rvs_S(\vs_0,t_0,\rvv;t)$ and refer to as the
+%\emph{output and state of $S$  at time $t$ for the stochastic input $\rvv$, initial state $\vs_0$ and initial time $t_0$.}
+%Note that for all $\sZ \ni t \ge t_0$
+%\begin{align*}
+%&\rvs_S(\vs_0,t_0,\rvv;t+1)=f(\rvs_S(\vs_0,t_0,\rvv;t),\rvv(t)), ~ \quad \rvs_S(\vs_0,t_0,\rvv,t_0)=\vs_0, \\
+% &   \rvy_S(\vs,t_0,\rvv;t)=g(\rvs_S(\rs_0,t_0,\rvv,t),\rvv(t))
+%\end{align*}
+%\par
+Likewise, 
+%there exist
+%unique steady-state output and state trajectories $\rvy_{S,\rvv(\omega)}$ and
+%$\rvs_{S,\rvv(\omega)}$
+%of $S$ associated with the input %$\rvv(\omega)$.
+for every $t \in \sZ$, we define the random variables $\rvy_{S,\rvv}(t):\omega\mapsto\rvy_{S,\vv}(t)$, $\vv(s)=\rvv(s)(\omega)$ 
+%and  $\Omega \ni \omega \mapsto \rvs_{S,\rvv(\omega)}(t)$
+%defines a random variable
+%which we denote by 
+%M$\rvy_{S,\rvv}(t)$ 
+and call them
+%$\rvs_{S,\rvv}(t)$ respectively, and call them
+%In particular, for $\rvs(t)=\rvs_S(\rs_0,t_0,\rvv,t)$ respectively $\rvs(t)=\rvs_{S,\rvv}(t)$, it holds
+%that $\rvs(t+1)=f(\rvs(t),\rvv(t))$ for all $t \ge t_0$ respectively all $t \in sZ$.
+%Moreover, $rvy_S(\vs,t_0,\rvv;t)=g(\rvs_S(\rs_0,t_0,\rvv,t),\rvv(t)$ and
+%$rvy_{S,\rvv}(t)=g(\rvs_{S,\rvv}(\rvs(t),\rvv(t))$. 
+%We call the stochastic processes $\rvy_{S,\rvv}$ and $\rvs_{S,\rvv}$
+\emph{the steady-state output process 
+of $S$ associated with $\rvv$.}
+We are now ready to state our assumptions
+on the data. 
+%In particular, we can define the random
+%\textcolor{black}{We assume the following}
+\begin{Assumption}[Data Generator]
+\label{as:generator}
+The system of class \class{} $S_g=(\sS_g,\sY \times \sW, \sV_g,f_g,g_g)$ with constants $C_g=C_g(S_g)$, $\tau_g=\tau_g(S_g)$, $L_{g}=L_{g}(S_g)$, $L_{g_g,1}=L_{g_g,1}(S_g)$, $L_{g_g,2}=L_{g_g,2}(S_g)$ and $\rvw(t)=\begin{bmatrix} \rvy(t)\\\rvu(t)\end{bmatrix}=\rvy_{S_g}(\rve_g)$, i.e., $\rvw$ is the steady-state output process of $S_g$.
+%and an essentially bounded i.i.d. process $\rve_g$
+%such that 
+%$\begin{bmatrix} \rvy^T,\rvw^T \end{bmatrix}^T$ is the steady-state output process
+%of $S_g$ associated with
+%$\rve_g$, i.e., $\begin{bmatrix} \rvy^T,\rvw^T \end{bmatrix}^T=\rvy_{S_g,\rve_g}$.
+%\[ 
+%\begin{bmatrix} \rvy(t)(\omega) \\ \rvw(t)(\omega) \end{bmatrix}=\rvy_{S_g,\rve_g(\omega)}(t), \quad \quad t \in \sZ, \omega  \in \Omega
+%\]
+%where $\rve_{g}(\omega):\sZ \ni s \mapsto \rve_g(s)(\omega) \in \sV$ is the sample path of the process $\rve_g$ for the event $\omega \in \Omega$.
+%The data $(\rvy(t),\rvw(t))$, can be realised as an output of a class \class{} system, with $\rvv=\rve_g$ i.i.d., i.e.,
+%\begin{subequations}\label{eq:generatorSys}
+%    \begin{align}
+%    \rvs_g(t+1)=f_g(\rvs_g(t),\rve_g(t))\\
+%    \begin{bmatrix} \rvy(t)\\\rvw(t)\end{bmatrix} = h_g(\rvs_g(t),\rve_g(t))
+%\end{align}
+%\end{subequations}
+%Furthermore we assume, $(f_g,h_g)$ of class \class{}, $\rve_g$ is i.i.d. and essentially bounded, and finally $\rvs_g=\rvs_{\rve_g}$, i.e., $\rvs_g$ is the bounded (stationary) solution, as defined in Definition \ref{def:classDef}, exponential convergence property.
+\end{Assumption}
+%Note that, we assume the existence of the generator $S_g$, but we do not assume the knowledge of $S_g$ when performing the system identification.
+%Assumption \ref{as:generator} is a  realisability assumption, as the data generator is of the same type as the predictor.
+Note that, we assume the existence of the generator $S_g$, but we do not assume the knowledge of $S_g$ when performing the system identification.
+%Assumption \ref{as:generator} is a  realisability assumption, as the data generator is of the same type as the predictor.
+%uses dynamical systems of class \class{} for prediction, it is natural to assume that the data is generated by such systems too. 
+Assumption \ref{as:generator} guarantees certain mixing  properties of $\rvw,\rvy$ \cite[Lemma A4.1]{eringis2023pacbayesRNN_OLD} which, in turn, allows the use of concentration inequalities \cite{rio2000inegalites}.
+%\par
+%More precisely, recall from \cite[Definition 5]{alquier2013prediction} the notion of the mixing coefficient $\theta_{\infty,N}^{\rvq}(1)$, $1 \le N \in \sZ$, 
+%of a process $\rvq$.
+%Recall that a stationary process $\rvq$ is essentially bounded
+%by constant $B^{\rvq} > 0$, if for all $t \in \mathbb{Z}$, 
+%$B^{\rvq} \ge \|\rvq(t)\|_\infty$ holds with probability $1$.
+%Following \cite{alquier2013prediction}
+%we will say that $\rvq$ is \emph{weakly dependent with constants} $B^{\rvq}$ and $\bar{\theta}_{\infty}^{\rvq}$, if 
+%$\rvq$ is stationary, essentially bounded
+%and for all $t \in \mathbb{Z}$, 
+%$B^{\rvq} \ge \|\rvq(t)\|_2$ w.p. $1$,
+%Following \cite{alquier2013prediction}
+%we will say that $\rvq$ is \emph{weakly dependent with constants} $B^{\rvq}$ and $\bar{\theta}_{\infty}^{\rvq}$, if 
+%$\rvq$ is stationary, essentially bounded
+%and for all $t \in \mathbb{Z}$, 
+%$B^{\rvq} \ge \|\rvq(t)\|_2$ w.p. $1$,
+%by constant $B^{\rvq}$,  
+%there exists a constant $\bar{\theta}_{\infty}^{\rvq}(1) > 0 $ such that
+%$\bar{\theta}_{\infty}^{\rvq}(1) \ge \theta_{\infty,N}^{\rvq}(1)$
+%for all $N \ge 1$.  
+%\begin{lemma}
+%\label{as:gen_mixing:lem}
+% Under Assumption \ref{as:generator}, $\rvq=[\rvy^T, \rvw^T]^T$ is 
+% weakly dependent with the constants 
+ %stationary, essentially bounded and weakly dependent and 
+%the constants 
+% $\mathcam{B}^{\rvq}$ and $\bar{\theta}^{\rvq}_{\infty}(1)$ can be taken as
+ %and
+ %Moreover,
+ %there exists $B_q \ge 0$, $\bar{\theta}_{\infty}^{\rvq}(1)$, such that
+ %\begin{equation}
+ %\label{as:gen_mixing:lem:eq1}
+ %\begin{split}
+
+%\geq \|[\rvy^T (t),\rvw^T(t)]^T\|, \] 
+%and $\rvq$ is  weakly dependent  
+%such  that
+%its mixing coefficients 
+%$\theta_{\infty,N}(1)$
+%satisfy
+  % & %\bar{\theta}_{\infty}^{\rvq}(1)
+%   \[ \bar{\theta}_{\infty}^{\rvq}(1) \triangleq 2\|\rve_g(0)\|_\infty \frac{L_{g}L_{g_g,1}}{(1-\tau_g)^2}
+ %  \ge \sup_{N \in \sZ, N \ge 1} \theta_{\infty,N}(1)  \]
+ %\end{split}  
+ %\end{equation}
+ %Moreover, $B^{\rvq}$ and $\bar{\theta}_{\infty}^{\rvq}(1)$ can be chosen 
+ %as follows.
+ %and
+ % weakly dependent, moreover
+ %\begin{equation}
+ %µ\label{as:gen_mixing:lem:eq2}
+ %    \bar{\theta}_{\infty}^{\rvq}(1) \triangleq \frac{2\|\rve_g(0)\|_\infty L_{g}L_{g,g,\rvs}}{(1-\tau_g)^2}, \quad % \geq \theta_{\infty,N}^{\rvq}(1), ~ 
+    
+  %\geq \|[\rvy^T_{\rve}(t),\rvw^T_{\rve}(t)]^T\|_\infty 
+ %\end{equation}
+%\end{lemma}
+%Later on we shall see that the bound on the generalisation gap depends on the constants $B^{\rvq}$ and $\bar{\theta}_{\infty}^{\rvq}(1)$.
+%Hence, we will assume that they are known.
+%\end{lemma}
+%Later on we shall see that the bound on the generalisation gap depends on the constants $B^{\rvq}$ and $\bar{\theta}_{\infty}^{\rvq}(1)$.
+%Hence, we will assume that they are known.
+%constants (or upper estimates of them) are known. 
+%related to $\|[\rvy(t),\rvw(t)]\|_\infty$ and the $\theta_{\infty,N}(1)$ mixing coefficients of the generator system, for details about mixing coefficients see \cite{Dedecker_2007}.
+%\begin{Assumption}\label{as:gen_mixing} 
+%\textcolor{black}{We assume that constants 
+%$B^{\rvq}$ and $\bar{\theta}_{\infty}^{\rvq}(1)$
+%satisfying \eqref{as:gen_mixing:lem:eq1} are known.}
+%the following constants are known}
+%The upper-bound on the mixing coefficient and the essential supremum of the generator is known. That is, for learning we have
+%\begin{color}{black}
+%    \begin{align*}
+%    \bar{\theta}_{\infty,N}^{\rvq}(1)\triangleq\frac{2\|\rve_g(0)\|_\infty L_{g}L_{g,g,\rvs}}{(1-\tau_g)^2},  ~ \quad 
+    %#  \geq \theta_{\infty,N}^{\rvq}(1)\\
+%    B^\rvq \triangleq 2\|\rve_g(0)\|_\infty \left ( L_{g,g,\rvv}+\frac{L_{g}L_{g,g,\rvs}}{1-\tau_g}\right ) 
+    %\geq \|[\rvy^T(t),\rvw^T(t)]^T\|_\infty 
+%\end{align*}
+%\end{color}
+%\end{Assumption
+%is something that we must know to upper-bound the generalisation gap. One important property of the mixing coefficient is that it is zero for an i.i.d. process, and intuitively $\bar{\theta}_{\infty,N}^{\rvq}(1)$ encodes the information on how non i.i.d. the data is.
+We assume that the systems \eqref{eq:dyn1} generating predictors are class \class{}
+and they are parametrised by elements of a parameter set $\Theta$.
+%\begin{color}{black}
+	\begin{Assumption}[Parameterisation] \label{as:parametrisation}
+%Assume that 
+ The system $\mathcal{S}_{param}=(\sS,\sW \times \Theta, \sY,\hat{f},\hat{g})$ 
+ is a system of class \class{} with constants $\bar{C}=C(\mathcal{S}_{param})$, $\tau=\tau(\mathcal{S}_{param})$, $\bar{L}=L(\mathcal{S}_{param})$, 
+ $\bar{L}_{g,i}=L_{g,i}(\mathcal{S}_{param})$, $i=1,2$, 
+ the maps $\hat{f},\hat{g},\hat{\vs}_s$ are continuous, $\hat{\vs}_s$ is $L_s$ Lipschitz, and 
+ $\Pi(\theta)(\{\rvw(s)\}_{s=0}^{t})=\rvy_{\mathcal{S}_{param}}(\hat{\vs}_s(\theta),0,(\rvw,\theta);t)$.
+%There exists a compact set $\Theta\subseteq \reals^{n_\theta}$, a bounded set $\sS \subseteq \mathbb{R}^n$,
+%a function $\Pi: \Theta \rightarrow \mathcal{H}$, and continuous functions
+%\begin{align*}
+%    \hat{f}:\sS \times \sW \times \Theta \rightarrow \sS, \quad
+%    \hat{g}: \sS \times \sW \times \Theta \rightarrow \sY, \quad 
+%    \hat{\vs}_s:\Theta \rightarrow \sS
+%\end{align*}
+%such that the following holds:
+%\begin{itemize}
+%\item 
+%For any $\theta \in \Theta$, consider the functions 
+%\begin{align*}
+%	&	\hat{f}_{\theta}:  \sS \times \sW \ni (\vs,\vv) \mapsto \hat{f}(\vs,\vv,\theta) \in \sS, \\
+%	&	 \hat{g}_{\theta}: \sS \times \sW \ni (\vs,\vv) \mapsto \hat{g}(\vs,\vv,\theta) \in \sY
+%\end{align*}
+%Then $S_{\theta} \triangleq (\sS,\sY,\sW,\hat{f}_{\theta},\hat{g}_{\theta})$ is a system of class \class{}.
+%\item
+%  The predictor $h_{\theta} \triangleq \Pi(\theta)$ is such that 
+%  $t \ge 0$, $t \in \sZ$,
+%		$h_{\theta}(\{\rvw(s)\}_{s=0}^{t})$  is the output of $S_{\theta}$ at time $t$ for input $\rvw$, initial state $\hat{\vs}_{s}(\theta)$, 
+%and initial time $0$, i.e.,
+%		\[ h_{\theta}(\{\rvw(s)\}_{s=0}^{t})=\rvy_{S_{\theta}}(\hat{\rvs}_{s}(\theta),0,\rvw;t). \] 
+%and $\hat{\rvy}_{\theta}(t)&=\rvy_{S_\theta,\rvw}(t)$. 
+%\end{itemize}		
+%\textcolor{black}{and a mapping
+%which maps every $\theta$ to a
+%system of class \class{}
+%such that the following holds. 
+%For any $h \in \mathcal{H}$ there exists $\theta \in \Theta$ such that the system of class \class{} from
+%Assumption \ref{as:predictor} is of the form $S_h=S_{\theta}$.}
+%Let the predictors take the form as in 
+%\textcolor{black}{an conversely, for every $\theta \in \Theta$ there exists a 
+%system of class \class{} of the form $S_{\theta}=(\sS,\sY,%\sW,\hat{f}_{\theta},\hat{g}_{\theta})$.}
+%Moreover, we assume that
+%the functions
+% \begin{align}
+%     \hat{f}(\hat{\rvs}(t|s),\rvw(t))&=\hat{f}_\theta(\hat{\rvs}(t|s),\rvw(t))\\
+%     \hat{g}(\hat{\rvs}(t|s),\rvw(t))&=\hat{g}_\theta(\hat{\rvs}(t|s),\rvw(t))\\
+%     \hat{\rvs}_s&=\hat{\rvs}_{s,\theta}
+% \end{align}
+ %$(\vs,\vv,\theta) \mapsto \hat{f}_\theta(\vs,\vv)$,$(\vs,\vv,\theta) \mapsto \hat{g}=\hat{g}_\theta(\vs,\vv)$, $\theta \mapsto \hat{\vs}_{s,\theta}$ are continuous.
+ %of parameters $\theta\in\Theta$,  and $\Theta\subseteq \reals^{n_\theta}$ compact, and $n_\theta\geq 1$. We shall denote $C(\theta),\tau(\theta),L_\rvv(\theta),L_{g,1}(\theta),L_{g}(\theta)$ the constants of a class \class{} system arising from parameter $\theta$. 
+%Furthermore we will denote the output of the predictors as defined in \ref{as:predictor}, parameterised by $\theta$, by $\hat{\rvy}(t|s)=\hat{\rvy}_\theta(t|s)$. 
+%With this, the class of predictors $\mathcal{H}$ 
+%can be identified with the set $\Theta$.
+	%\
+ \end{Assumption}
+ \begin{Assumption} \label{as:loss} The loss function $\ell$
+is Lipschitz, with global Lipschitz constant $L_\ell>0$ %i.e.,
+\end{Assumption}
+Note that Assumption \ref{as:parametrisation}
+implies that for any \textcolor{black}{parameter}
+$\theta \in \Theta$, 
+the output $\hat{\rvy}_{\theta}(t|0)$ %of the hypothesis
+\textcolor{black}{is} bounded as $\mathbb{Y}$ is bounded.
+% i.e., $\|\hat{\rvy}_{\theta}(t|0)\| \le G_\theta B^{\rvq}$,
+%where $G_\theta\triangleq \frac{L_{g,1}(\theta)L_g(\theta)}{1-\tau(\theta)}+L_{g,2}(\theta)$.
+%Note that, since we consider bounded processes, one can 
+Since all the processes are bounded, one can use \textcolor{black}{restrictions} of locally Lipschitz loss functions, e.g. square loss, 
+\textcolor{black}{to a bounded set, and they will be Lipschitz.}
+ \begin{lemma}\label{lemma:NewSI} 
+   Under Assumption \ref{as:parametrisation}-\ref{as:loss} the following holds.
+   \textbf{class \class{} predictors} For every $\theta \in \Theta$, if we set 
+   \begin{align*}
+	&	\hat{f}_{\theta}:  \sS \times \sW \ni (\vs,\vv) \mapsto \hat{f}(\vs,\vv,\theta) \in \sS, \\
+	&	 \hat{g}_{\theta}: \sS \times \sW \ni (\vs,\vv) \mapsto \hat{g}(\vs,\vv,\theta) \in \sY
+\end{align*}
+then $S_{\theta} \triangleq (\sS,\sY,\sW,\hat{f}_{\theta},\hat{g}_{\theta})$ is a system of class \class{}
+\begin{color}{black} with \end{color}$C(S_{\theta})=\bar{C},\tau(S_{\theta})=\bar{\tau}$, $L(S_{\theta})=\bar{L}$, $L_{g,i}(S_{\theta})=\bar{L}_{g,i}$, $i=1,2$, and 
+\[ 
+    \hat{\rvy}_{\theta}(t \mid t_0)=\rvy_{S_{\theta}}(\hat{\rvs}_{s}(\theta),t_0,\rvw;t), \hat{\rvy}_{\theta}(t)=\rvy_{S_{\theta}}(\rvw)(t)
+\]
+\begin{color}{black}
+ \textbf{Lipschitzness of the predictors}\end{color}
+ %\textcolor{red}{TODO check L_s}
+   For \textcolor{black}{$L_{\text{pred}}=\frac{\bar{L}_{g,1}\max{L_sC,\bar{L}}}{1-\bar{\tau}+L_{g,2}}$}, 
+  the maps $\theta \mapsto \rvy_\theta(t \mid 0)$ and $\theta \mapsto \rvy_\theta(t)$ have a Lipschitz constant $L_{\text{pred}}$, i.e.,
+  $L_{\text{pred}}$ such that for all $\theta_1,\theta_2 \in \Theta$, 
+  \begin{equation} 
+  \label{as:pred_lipschitz}
+     \begin{aligned}
+      \|\rvy_{\theta_1}(t\mid 0) - \rvy_{\theta_2}(t\mid 0)\| \le L_{\text{pred}} \|\theta_1 - \theta_2\| \\
+      \|\rvy_{\theta_1}(t) - \rvy_{\theta_2}(t)\| \le L_{\text{pred}} \|\theta_1 - \theta_2\| \\
+  \end{aligned}
+\end{equation}
+\textbf{Existence of true loss} \eqref{limits_true_loss} holds and hence the true loss \eqref{gen:losses} is well-defined.
+ \end{lemma}
+ The first two statements follow from the properties of class \class{} systems, the last statement is based on
+ \cite[Lemma \mref{lemma:stationary_x_v}]{eringis2023pacbayesRNN_OLD}, the proof is in the appendix. %\cite{Arxiv}.
+%\end{color}
+%\begin{Assumption}[One-Step Predictor]\label{as:predictor}
+%We will consider predictors  $h$ such that 
+%there exists a \class{} system
+%$S_h=(\sS_h,\sY,\sW,\hat{f},\hat{g})$ and an initial state $\rvs_0$ of $S_h$ such  for all
+%$t \ge 0$, $t \in \sZ$,
+%$h(\{\rvw(s)\}_{s=0}^{t})$  is the output of $S_h$ at time $t$ for input $\rvw$, initial state $\rvs_0$ and initial time $0$, i.e.,
+%\( h(\{\rvw(s)\}_{s=0}^{t})=\rvy_{S_h}(\rvs_0,0,\rvw;t) \). 
+%\begin{subequations} \label{eq:predictor}
+%\begin{align}
+%    \hat{\rvs}(t+1|s)&=\hat{f}(\hat{\rvs}(t|s),\rvw(t)),\quad \hat{\rvs}(s)=\hat{\vs}_s \label{eq:predictor_f}\\
+%    \hat{\rvy}(t|s)&=\hat{g}(\hat{\rvs}(t|s),\rvw(t)) \label{eq:predictor_h}
+%\end{align}  
+%\end{subequations}
+%where $(\hat{f},\hat{g})$ are of class \class{}. The use of the symbol $|$ is to indicate initial time, e.g., $\hat{\rvy}(t|s)$ is an estimate of $\rvy_\rve(t)$, when the state of the predictor was initialised at time $s$.
+%\end{Assumption}
+%Note that the \class{} system representation $S_h$ of a predictor $h$ is not unique.
+
+%Note that for practical purposes the initial time $s$ can be set to $s=0$, without loss of generality. 
+%This class of predictors %includes RNNs (\textcolor{black}{$\Theta$ is the set of weights}), 
+%most of standard classes of state-space representations. 
+%Assumption \ref{as:parameterisation} guarantees
+%existence of the generalisation loss defined in \eqref{gen:losses}:
+%\textcolor{black}{To this end, for every $\theta \in \Theta$ let us denote:  }
+%as 
+%it follows that the  limit
+%\( \lim_{t\to\infty} \E[\ell(\rvy(t),h_{\theta}(\{\rvw(s)\}_{s=0}^{t})) \) %\lim_{t \to \infty} \E[\ell(\rvy(t),\hat{\rvy}_{\theta} (t\mid 0)) 
+%%\) 
+%exists and equals
+%\( \E[\ell(\rvy(t),\hat{\rvy}_{\theta}(t))] \)
+%hence the generalisation loss $\mathcal{L}(h_{\theta})$ is well-defined for all $\theta \in \Theta$. By abuse of notation we henceforth use $\mathcal{L}(\theta)$ to denote $\mathcal{L}(h_{\theta})$. Moreover, for any $\theta \in \Theta$, we denote by $C(\theta),\tau(\theta),L_{g}(\theta),L_{g,1}(\theta),L_{g,2}(\theta)$
+%	the constants of the class \class{}  system $\mathcal{S}_{\theta}$, and let
+%	 $\hat{\vs}(\theta)$ be the initial state of $S_{\theta}$ from which the predictor $h_{\theta}$ is generated,   
+% In Section \ref{sec:prelim}, we have informally taken expectation over predictors.
+% \begin{color}{black}
+% Assumption \ref{as:parameterisation} makes its possible to define the latter notion formally.
+% Let $B_{\Theta}$ be the $\sigma$-algebra of Lebesque-measurable subsets of the parameter set $\Theta$, and $m$ denote the Lebesque measure on $\mathbb{R}^{n_\theta}$.
+% If $\rho$ a probability density function on the measure space $(\Theta,B_{\theta},m)$, and $g$ is a measurable and absolutely integrable 
+% 	function on $\Theta$, then we denote by 
+% 	\[ E_{h \sim \rho} g(\theta) \triangleq \int_{\theta \in \Theta} \rho(\theta)g(\theta)dm(\theta) \]
+% the expectation of $g$ w.r.t. $\rho$. 
+% If $g:\mathcal{H} \rightarrow \mathbb{R}$ is a map such that $\Theta \ni \theta \mapsto g(h_{\theta})$ is measurable and absolutely integrable, then with 
+% an abuse of notation we define
+% %With the identification $\Theta \ni \theta \mapsto h_\theta=h \in \mathcal{H}$ in mind we then define
+% \begin{equation*}
+% 	E_{h \sim \rho} g(h)\triangleq\int_{\theta \in \Theta} \rho(\theta)g(h_{\theta})dm(\theta)  %\label{eq:Edef}
+% \end{equation*}
+% to denote the expectation of $\Theta \ni \theta \mapsto g(h_{\theta})$ w.r.t. $\rho$. 
+% In particular, with the convention above, %if $\rho$ is a probability density on $\Theta$, then 
+% 	the expectations $E_{h \sim \rho} \hat{\mathcal{L}}_N(h)$ and  $E_{h \sim \rho} \mathcal{L}(h)$ are well defined.
+% 	%That is, with the (non-injective) mapping $\theta \mapsto h_{\theta}$ we can view the probability measure induced by a   probability density functions on
+% 	%$(\Theta,B_{\theta},m)$ as a probability measure on $\mathcal{H}$ and take expectations. 
+% \end{color}
+%and they mean
+%$\int_{\theta\in\Theta} \rho(\theta) \hat{\mathcal{L}}_N(\theta) d\theta$ 
+%$\int_{\theta\in\Theta} \rho(\theta) \mathcal{L}(\theta) d\theta$ 
+%respectively, where 
+%\textcolor{black}{More precisely, let $g: \mathcal{H} \rightarrow \mathhb{R}$ any function on the hypothesis set, such that
+%$\Theta \ni \theta \mapsto g(h_{\theta}) \in \mathbb{R}$ is measurable w.r.t. 
+%however to do that we have to define a parameterisation over predictors.
+%\begin{color}{black}
+%With this, the class of predictors $\mathcal{H}$ 
+%can be identified with $\Theta$.
+%TODO explain $\mathcal{L}(\theta)$ and
+%the densities. 
+%In particular, we will use 
+%$\mathcal{L}(\theta)$ and 
+%and $\hat{\mathcal{L}}_N(\theta)$
+%to denote the generalisation loss
+%$\mathcal{L}(h)$ and empirical loss 
+%$\hat{\mathcal{L}}(h)$ of the 
+%TODO: I think the equation below should go to
+%the appendix, similarly to the existence
+%of limits (lemma A.4), or explained (if we do not
+%want to mess up notation). 
+%\end{color}
+%$\hat{\rvy}_{\theta,\rvw}(t)\aseq \lim_{s\to -\infty}\hat{\rvy}_{\theta}(t-s)$
+%see Lemma \ref{lemma:stationary_x_v}.
+%identification of 
+%$h(\{\rvw(s)\}_{s=0}^{t}) = %\hat{\rvy}_{\theta}(t \mid 0)$. 
+% That is, by using the (non unique) identification of $\mathcal{H}$ with $\Theta$ and the notation in
+% \eqref{as:parametrisation:eq1},
+% the empirical loss and the generalisation error
+% for the predictor $\theta \in \Theta$ is as follows:
+% \begin{align*}  
+% \hat{\mathcal{L}}_N(\theta)&\triangleq\frac{1}{N}\sum_{t=0}^{N-1}\ell(\vy(t),\hat{\rvy}_{\theta}(t\mid 0) ),\\
+% \mathcal{L}(\theta)&=\E[\ell(\rvy(t), \hat{\rvy}_{\theta}(t))]. 
+% \end{align*}
+% \par
+% Assumption \ref{as:parameterisation} and the identification of predictors with elements of $\Theta$ allow us to define probability densities and the corresponding expectations 
+% over predictors as probability densities and expectations over $\Theta$. That is, for a probability density $\rho(\theta)$ and scalar valued function $\phi(\theta)$:
+% \begin{align*}
+%     \underset{\theta\sim\rho}{\E} \phi(\theta) \triangleq \int_{\theta\in\Theta} \rho(\theta)\phi(\theta) d\theta 
+% \end{align*}
+%For the sake of notation we shall denote the following quantities
+%\begin{align}
+%    G(\theta)\triangleq \frac{L_{g,1}(\theta)L_\rvv(\theta)}{1-\tau(\theta)}+L_{g}(\theta) ,\quad H(\theta)\triangleq \frac{L_{g,1}(\theta)L_\rvv(\theta)}{(1-\tau(\theta))^2}
+%\end{align}
+% These are important quantities, e.g. by Lemma \ref{lemma:mixingCoeff}, we have $\left \|\begin{bmatrix} \rvy^T(t) & \hat{\rvy}^T(t)\end{bmatrix}\right \|_\infty \leq B^\rvq G(\theta)$.
+%We can show that for any $h \in \mathcal{H}$
+%which corresponds to $\theta \in \Theta$ ($S_h=S_\theta$),  
+%In particular,  we can define  the generalisation error of $\theta$ as 
+%\[ 
+%\lim_{t\to\infty} \E[\ell(\rvy(t),h(\{\rvw(s)\}_{s=0}^t))=\E[\rvy(t),]
+%Now let us formally define the empirical and generalisation loss.
+%\begin{Definition}[Empirical Loss] \label{def:empLoss} Let $\ell:\sY\times \sY \to \sR_+$ be a loss function, and let assumption~\ref{as:loss} hold. The empirical loss is then defined as
+%    \begin{equation}
+%    \hat{\mathcal{L}}_N(\theta)\triangleq\frac{1}{N}\sum_{t=0}^{N-1}\ell(\rvy_\rve(t),\hat{\rvy}_\theta( t|0))
+%    \end{equation}
+%\end{Definition}    
+%Now we can define the generalisation loss. %
+%Firstly we have to define the infinite horizon %prediction, i.e., $\hat{\rvy}(t)=h(\{\rvw(s)\}_{s=-\infty}^t$. By assumption \ref{as:generator}, and lemma \ref{lemma:stationary_x_v}, we have that $\train=\{\vy(s),\vx(s)\}_{s=0}^{N-1}$ are samples from a stationary distribution. Thus let us consider the stationary process $\hat{\rvy}_{\theta,\rvw}(t)=\hat{g}_\theta(\hat{\rvs}_{\theta,\rvw}(t),\rvw(t))$. With the same reasoning as in the proof of Lemma \ref{lemma:stationary_x_v} we can consider $\hat{\rvy}_{\theta,\rvw}(t)\aseq \lim_{s\to -\infty}\hat{\rvy}_{\theta}(t|s) $, that is $\hat{\rvy}_{\theta,\rvw}(t)$ is the output of the predictor when the predictor's state is initialised at time minus infinite.  %, clearly we could never obtain numerical values for $\hat{\rvy}_{\theta,\rvw}(t)$, nevertheless we can analyse it. 
+%With this we can formally define the generalisation loss as
+%\begin{Definition}[Generalisation Loss] Let $\ell:\sY\times \sY \to R_+$ be a loss function, assumption~\ref{as:loss} hold, $\rvy_\rve,\rvw$ be a stationary output of \eqref{eq:generatorSys}, and $\hat{\rvy}_{\theta,\rvw}(t)$ be a stationary output of the predictor (w.r.t. stationary input $\rvw$). The generalisation loss is then defined as
+%    \begin{equation}
+%        \mathcal{L}(\theta)\triangleq\E[\ell(\rvy_\rve(t),\hat{\rvy}_{\theta,\rvw}(t))]
+%    \end{equation}
+%\end{Definition}
+
+%As had been proposed in \cite{CDC21paper}, we define an infinite horizon loss function, to act as an intermediate quantity to help analyse the generalisation gap. 
+%\begin{Definition}[Infinite Horizon Loss]\label{def:infLoss} Let $\ell:\sY\times \sY \to R_+$ be a loss function, assumption~\ref{as:loss} hold, $\rvy_\rve,\rvw$ be a stationary output of \eqref{eq:generatorSys}, and $\hat{\rvy}_{\theta,\rvw}(t)$ be a stationary output of the predictor (w.r.t. stationary input $\rvw$). The infinite horizon loss is then defined as
+%\begin{align}
+%    V_N(\theta)&\triangleq\frac{1}{N}\sum_{t=0}^{N-1}\ell(\rvy_\rve(t),\hat{\rvy}_{\theta,\rvw}(t))
+%\end{align}
+%\end{Definition}
+%Notice that, the infinite horizon loss has the property that $\forall N>0:\;\E[V_N(\theta)]=\mathcal{L}(\theta)$, since $\rvy_\rve$ and $\hat{\rvy}_{\theta,\rvw}(t)$ are stationary. This property will allow us to more easily estimate the generalisation gap, since $V_N(\theta)$ is an unbiased estimate of generalisation loss $\mathcal{L}(\theta)$
+%there are various tools to estimate the moment functions $\E[\exp(\mathcal{L}(\theta)-V_N(\theta))]=\E[\exp(\E[V_N(\theta)]-V_N(\theta))]$ for weakly dependant processes \cite{Dedecker_2007}. 
+
+% Finally, we shall assume the loss function to be Lipschitz continuous.
+%
+
+%Finally, we need the assumption that the outputs of the predictors are Lipschitz in the parameters.
+%\begin{Assumption}[Lipschitz prediction error]
+%  
+%\end{Assumption}
+%$\ell\left (\hat{\rvy},\rvy \right )=\|\hat{\rvy}-\rvy\|_2^2$, with $L_\ell\geq \sup_{\theta\in\Theta} 2B^\rvq G_\theta \geq \sup_{\theta\in\Theta} 2\|\hat{\rvy}_\theta-\rvy\|_\infty$. Furthermore, while not explicitly stated, we allow for $L_\ell$ to depend on $\theta$, and as such 
+%\textcolor{black}{For example, the restriction of the square error loss $\ell\left (\hat{\rvy},\rvy \right )=\|\hat{\rvy}-\rvy\|_2^2$, 
+%is Lipschitz with a constant $L_\ell(\theta)=2B^\rvq G_\theta$.}
+%\begin{Remark}
+%    %Consider a classification problem, a 
+%    In contrast to standard classification, classification  with soft labels also fit our framework \cite{hinton2015distilling}.
+%    %(the output function of the data generator is discontinuous), 
+%    %but classification with soft class labels  does.  %    since having class labels as $\{0,1\}$ would require the output function of the generating system to be discontinuous. However our framework. 
+%    %Soft labels can arise for instant %from humans labelling the data or applying 
+%    %in student-teacher approaches in a knowledge distillation setting \cite{hinton2015distilling}. 
+%    To this end, we use the softmax loss function, 
+%    %To fit the problem into our framework, we 
+%    %assume that the softmax function is applied to the outputs of models in order to calculate the loss, 
+%     %i.e is used for predicting
+%    %soft labels, 
+%    %i.e.,  we consider the loss function %require that softmax is embedded in the cross-entropy function to make it Lipschitz continuous, i.e. instead of $\ell(\rvy,\hat{\rvy})=-\sum_{i=1}^K \rvy_i\ln \hat{\rvy}_i$, we require
+%    %\begin{align}\textstyle
+%     \(   \ell(\rvy,\hat{\rvy})=-\sum_{i=1}^K y_i\ln \left ( \frac{e^{\hat{\rvy}_i}}{\sum_{j=1}^K e^{\hat{\rvy}_j}} \right )
+%	    \), see  \cite[Lemma \mref{lemma:Cross-EntropyLipschitz}]{eringis2023pacbayes}.
+%	    %has Lipschitz constant $L_\ell\leq K(2\|\hat{\rvy}(0)\|_\infty+\ln{K}+2)$, which by Lemma \ref{lemma:mixingCoeff} can be upper bounded, i.e., $L_\ell(\theta) \leq K(2B^\rvq G_\theta+\ln{K}+2)$.
+%\end{Remark}
+
+
+
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+\section{Main result}\label{sec:Results}
+The main result is as follows. 
+%With the definitions and assumptions above, we can state the main result.
+% To this end,  
+% %for any probability density $\pi$ on $(\Theta,B_{\theta},m)$, denote by $\mathcal{M}_\pi$ the set of all probability densities for which the corresponding probability measures are absolutely continuous w.r.t. to the probability measure defined by $\pi$. 
+% %Furthermore, 
+% for any $\theta \in \Theta$, denote by $C(\theta),\tau(\theta),L_{g}(\theta),L_{g,1}(\theta),L_{g,2}(\theta)$
+% 	the constants of the class \class{}  system $\mathcal{S}_{\theta}$, and 
+% 	 $\hat{\vs}(\theta)$ be the initial state of $S_{\theta}$ from which the predictor $h_{\theta}$ is generated, see Assumption
+% 	 \ref{as:parameterisation}. 
+% 	Let $\bar{\theta}_{\infty}^\rvq(1)$ and $B^\rvq$ be  the constants of	the data generating system from Lemma \ref{as:gen_mixing:lem}.
+
+% \textcolor{black}{
+\begin{Theorem}\label{thm:mainThm} %Let predictors $h\in\mathcal{H}$\deividas{, see \eqref{eq:dyn1}}, be realised by \class{} class dynamical systems (see Def. \ref{def:classDef}), and be parameterised by weights $\theta\in\Theta\subset \sR^{n_\theta}$ (see Assumption \ref{as:parameterisation}),
+
+%	with associated system constants $C(\theta),L_{g,1}(\theta),L_{g}(\theta),L_{\rvv}(\theta)$\deividas{, and $\tau(\theta)\in[0,1)$}. 
+	Under Assumptions \ref{as:generator},\ref{as:parametrisation}, \ref{as:loss}, and \ref{as:pred_lipschitz}.  
+	for any $\delta\in(0,0.5]$, and $N \ge 3$, 
+  \begin{color}{black}
+    \begin{multline} \label{eq:mainThmIneq}
+         \bP\left(\forall  h \in \mathcal{H}: |\mathcal{L} (h)-\hat{\mathcal{L}}_N(h)| \le 2\frac{(\ln\dfrac{2}{\delta}	+ C_{\text{pac}}) \ln(N)}{\sqrt{N}}\right)\\ \ge 1-2\delta
+    \end{multline}
+%    with $\widehat{\Psi}_{\pi}(\lambda,N)\triangleq \frac{1}{2}\left ( \ln E_{\theta \sim\pi}\widehat{\Psi}_1(\theta)+\ln E_{\theta\sim\pi}\widehat{\Psi}_2(\theta)  \right )$, %and %$\KL(\hat{\rho}\|\pi)\triangleq \E_{\theta\sim\hat{\rho}} \ln \frac{\hat{\rho}(\theta)}{\pi(\theta)}$ the KL-divergence.
+\begin{equation}\label{eq:G1G2}
+\begin{split}
+    C_{\text{pac}} &\triangleq 
+    L_{\ell}L_{\text{pred}} +  \ln\left(\frac{vol(\Theta)}{\sqrt{\pi \sigma^2}^{n_{\theta}} \Gamma(n_{\theta}/2+1)}\right)\\
+    &\qquad + \frac{n_{\theta}}{2} + 
+     \frac{(G_1+G_2)}{2} \\
+    G_1 & \triangleq L_{\ell}\left( B^{\rvq}\left(\bar{G}+\bar{H} \right) +\bar{\theta}_{\infty,N}^{\rvq}(1) \bar{G} \right)^2 \\
+    G_2 & \triangleq 2L_{\ell}\bar{C} \left( 2 B^\rvq \bar{H} +\|\hat{\vs}_{s}(\theta)\|\frac{\bar{L}_{g,1}}{1-\bar{\tau}} \right) \\
+    %\triangleq \sup_{\theta\in\Theta}2 L_\ell^2\left (B^\rvq \left ( G_\theta+ H_\theta \right )+\bar{\theta}_{\infty,N}^{\rvq}(1) G_\theta \right )^2,\\
+	%G_2 &\triangleq \sup_{\theta\in\Theta}2 L_\ell C(\theta)  \\œ
+  \bar{G} &\triangleq \frac{\bar{L}_{g,2}\bar{L}_{g,1}}{1-\bar{\tau}}+\bar{L}_{g,2},\; \bar{H}\triangleq \frac{\bar{L}_{g,1} \bar{L}_{g,2}}{(1-\bar{\tau})^2} \\
+  & B^{\rvq} \triangleq 2\|\rve_g(0)\|_2 \left ( L_{g_g,2}+\frac{L_{g}L_{g_g,1}}{1-\tau_g}\right ),  \\
+   & \bar{\theta}_{\infty}^{\rvq}(1) \triangleq 2\|\rve_g(0)\|_2 \frac{L_{g}L_{g_g,1}}{(1-\tau_g)^2}
+\end{split}
+\end{equation}
+\end{color}
+with $vol(\Theta)$ the volume of $\theta$, $\Gamma(\cdot)$ the gamma function. % and $H_\theta$ the transfer function corresponding to $S_\theta$.
+\end{Theorem}
+Intuitively, $B^\rvq$ is just an upper bound on the norm of the data. The constant 
+$\bar{\theta}_{\infty,N}^{\rvq}(1)$ encodes the information on how non i.i.d. the data is.
+In particular, it is zero for i.i.d. data.
+%$\bar{\theta}_{\infty}^{\rvq}(1)$ expresses how far the data is from being i.i.d.
+The knowledge of these constants is often assumed in  the literature, e.g, \cite{alquier2013prediction, alquier2021userfriendly}. %\textcolor{red}{MIHALY ADD TEXT ON HOW TO GET NUMERICAL VALUES FOR THE TWO CONSTANTS} 
+\begin{pf}[Sketch of the proof]
+Let $B_{\Theta}$ be the $\sigma$-algebra of Lebesgue-measurable subsets of the parameter set $\Theta$, and $m$ denote the Lebesgue measure on $\mathbb{R}^{n_\theta}$. For any probability density $\pi$ on $(\Theta,B_{\theta},m)$, denote by $\mathcal{M}_\pi$ the set of all probability densities for which the corresponding probability measures are absolutely continuous w.r.t. the probability measure defined by $\pi$. Moreover, if $g:\mathcal{H} \rightarrow \mathbb{R}$ is a map such that $\theta \mapsto g(h_{\theta})$ is measurable and absolutely integrable, then we define
+\begin{equation*}
+	E_{\rho} g\triangleq\int_{\theta \in \Theta} \rho(\theta)g(h_{h_\theta})dm(\theta)  %\label{eq:Edef}
+\end{equation*}
+to denote the expectation of $\theta \mapsto g(h_{\theta})$ w.r.t. the density $\rho$. Hence the expectations $E_{\rho} \hat{\mathcal{L}}_N$ and  $E_{\rho} \mathcal{L}$ are well defined.
+
+  
+  From \cite{eringis2023pacbayesRNN_OLD} we get the following 
+  PAC-Bayesian inequality
+  \begin{multline} \label{eq:pac:gen1}
+        \bP(\forall\hat{\rho}\in\mathcal{M}_\pi: E_{\hat{\rho}} \mathcal{L} - E_{\hat{\rho}} \hat{\mathcal{L}}_N \le \\
+           \dfrac{1}{\lambda}\!\left[ \KL(\hat{\rho} \|\pi) +
+	\ln\dfrac{1}{\delta}+ %\frac{1}{\sqrt{N}}  
+  \frac{\lambda^2}{N}  G_1 +\frac{\lambda}{N}G_2  \right]) \ge 1-2\delta
+        %r_N(\lambda,\delta,\hat{\rho},\pi) 
+    \end{multline}
+  
+
+  First, we take $\pi=\frac{1}{vol(\Theta)}$ to be the uniform distribution.
+  For any $\theta \in \Theta$ we take $\rho_\theta$ to be the prior centered around $\theta$: 
+  $$\rho_{\theta}(\theta')=\left\{\begin{array}{rl}
+       \frac{1}{vol(B(\frac{1}{\sqrt{N}}))} & \text{if } \theta' \in B(\frac{1}{\sqrt{N}}) \\
+       0 & \text{otherwise}
+     \end{array}\right.$$    
+     where $B(\frac{1}{\sqrt{N}})$ is the ball of radius $\frac{1}{\sqrt{N}}$ centered at $\theta$.
+From \cite[Lemma C.24]{Nips2026} it follows that 
+\begin{multline}
+\KL(\rho \|\pi_\theta) \le 
+  \ln\left(\frac{vol(\Theta)}{vol(B(\frac{1}{\sqrt{N}}))}\right)= \\
+  \left(\ln\left(\frac{vol(\Theta)}{\sqrt{\pi \sigma^2}^{n_{\theta}} \Gamma(n_{\theta}/2+1)}\right)+ \frac{n_{\theta}}{2} \right) \ln(N)
+\end{multline}
+From \ref{as:pred_lipschitz} it follows that
+$\theta \mapsto \mathcal{L}(\theta)$ and 
+$\theta \mapsto \hat{\mathcal{L}}_N(\theta)$ are $L_{\ell}L_{\text{pred}}$-Lipschitz. Hence, by repeating the argument of the proof
+of \cite[Corollary  C23]{Nips2026}, it follows that
+\begin{equation}
+  \label{loss:lipschitz1}
+\begin{split}
+   & \mathcal{L}(\theta) \le E_{\rho_\theta} \mathcal{L} +
+     L_{\ell}L_{\text{pred}} E_{\rho_\theta}\psi_\theta \le  
+      E_{\rho_\theta} \mathcal{L} + L_{\ell}L_{\text{pred}}\frac{1}{\sqrt{N}} \\
+    & E_{\rho_\theta} \hat{\mathcal{L}}_N \le \hat{\mathcal{L}}_N(\theta) +
+     E_{\rho_\theta}\psi_\theta
+    L_{\ell}L_{\text{pred}}\frac{1}{\sqrt{N}}
+\end{split}
+\end{equation}
+with $\psi_\theta(\theta') \triangleq\|\theta' - \theta\|_2 $ and that
+\begin{multline}
+  \label{eq:pac_un1}
+  \bP(\forall \theta \in \Theta: \mathcal{L}(\theta) - \hat{\mathcal{L}}_N(\theta) \le
+  \\ \frac{(\ln(1/\delta)+ 2C_{\text{pac}}) \ln(N)}{\sqrt{N}}) \ge 1-2\delta
+\end{multline}
+
+Similarly, by repeating the proof of \eqref{eq:pac:gen1} with obvious modifications, we obtain
+\begin{multline} \label{eq:pac:gen2}
+        \bP\Big(\forall\hat{\rho}\in\mathcal{M}_\pi: E_{\hat{\rho}} \hat{\mathcal{L}} - E_{ \hat{\rho}}\mathcal{L} \le \\
+        \dfrac{1}{\lambda}\!\left[ \KL(\hat{\rho} \|\pi) +
+	\ln\dfrac{1}{\delta}+ %\frac{1}{\sqrt{N}}  
+  \frac{\lambda^2}{N}  G_1 +\frac{\lambda}{N}G_2  \right]\Big) \ge 1-2\delta
+        %r_N(\lambda,\delta,\hat{\rho},\pi) 
+  \end{multline}
+    By using 
+    the counterpart of
+    \eqref{loss:lipschitz1}, we get for any $\theta \in \Theta$
+\begin{equation}
+\begin{split}
+    \label{loss:lipschitz2}
+       &\hat{\mathcal{L}}_N(\theta) \le E_{\rho_{\theta}} \hat{\mathcal{L}}_N +L_{\ell}L_{\text{pred}} E_{\rho_{\theta}}\psi_\theta\\
+       &\qquad\qquad\le 
+       E_{\rho_{\theta}} \hat{\mathcal{L}}_N + L_{\ell}L_{\text{pred}}\frac{1}{\sqrt{N}} \\
+      &E_{\rho_{\theta}} \mathcal{L} \le \mathcal{L}(\theta) + L_{\ell}L_{\text{pred}}\frac{1}{\sqrt{N}}
+    \end{split}
+\end{equation}
+    and by repeating the arguments in the proof of \eqref{eq:pac_un1}, it follows that
+    \begin{multline}
+      \label{eq:pac_un2}
+      \bP\left(\forall \theta \in \Theta: \hat{\mathcal{L}}_N(\theta) - \mathcal{L}(\theta) \le \frac{(\ln(1/\delta)+ 2C_{\text{pac}}) \ln(N)}{\sqrt{N}}\right)\\ \ge 1-2\delta
+    \end{multline}
+    Taking $\delta/2$ instead of $\delta$ in \eqref{eq:pac_un1} and \eqref{eq:pac_un2}
+    and using the union bound, the statement of the lemma follows. 
+\end{pf}
+Next, we derive inequality to compare the true loss of the PEM model
+\[ \theta_N = \textrm{argmin}_{\theta \in \Theta} \hat{\mathcal{L}}_N(\theta).\]
+\begin{Theorem}[Oracle inequality]
+\label{thm:oracle_inequality}
+  \[
+    \bP\left(\mathcal{L}(\theta_N) \le \inf_{\theta \in \Theta} \mathcal{L}(\theta) + \frac{(\ln\dfrac{2}{\delta}	+ 2C_{\text{pac}}) \ln(N)}{\sqrt{N}}\right) \ge 1-\delta
+  \]
+\end{Theorem}
+\begin{pf}[Proof of Theorem \ref{thm:oracle_inequality}]
+   Consider the event 
+   \begin{multline*}
+    A=\Big\{ \omega \in \Omega \mid \forall \theta: |\mathcal{L}(\theta) - \hat{\mathcal{L}}_N(\theta)(\omega)| \\ \le \frac{(\ln\dfrac{2}{\delta}+ 2C_{\text{pac}}) \ln(N)}{\sqrt{N}} \Big\}
+   \end{multline*}
+   Note that for any $\omega \in A$, %for any $h \in \mathcal{H}
+   \begin{align}
+      & \mathcal{L}(\theta_N(\omega)) \le \hat{\mathcal{L}}_N(\theta_N(\omega))(\omega) + \frac{(\ln\dfrac{2}{\delta}+ 2C_{\text{pac}}) \ln(N)}{\sqrt{N}} \label{pf:oracle1} \\
+      & \forall \theta \in \Theta: \hat{\mathcal{L}}_N(\theta)(\omega) \le 
+      \mathcal{L}(\theta) + \frac{(\ln\dfrac{2}{\delta}+ 2C_{\text{pac}}) \ln(N)}{\sqrt{N}} \label{pf:oracle2}
+   \end{align}
+   Since $\hat{\mathcal{L}}_N(\theta_N(\omega))(\omega) \le \hat{\mathcal{L}}_N(\theta)(\omega)$ for all $\theta \in \Theta$, combining \eqref{pf:oracle1} and \eqref{pf:oracle2} yields 
+   \begin{equation}
+    \label{pf:oracle3}
+      \forall \theta \in \Theta: \mathcal{L}(\theta_N(\omega)) \le \mathcal{L}(\theta) + 2\frac{(\ln\dfrac{2}{\delta}+ 2C_{\text{pac}}) \ln(N)}{\sqrt{N}}
+   \end{equation}
+   That is, the event $A$ is contained in the event 
+   \[
+   \left\{\omega \in \Omega \mid  \mathcal{L}(\theta_N(\omega)) \le \inf_{\theta \in \Theta} \mathcal{L}(\theta) + 2\frac{(\ln\dfrac{2}{\delta}+ 2C_{\text{pac}}) \ln(N)}{\sqrt{N}} \right\}
+   \]
+  and since $\bP(A) \ge 1-2\delta$, the probability of the latter event is also at least $1-2\delta$.
+\end{pf}
+
+Finally, we derive parameter estimation bounds. 
+\begin{Assumption}
+\label{assumption:strong_convexity}
+  The true error map $\theta \mapsto \mathcal{L}(\theta)$ is smooth and strongly convex
+    in $\theta$ and its Hessian is bounded from below
+    $m_{\Theta}I \preceq \nabla^2_{\theta}\mathcal{L}(\theta)$
+    for all $\theta \in \Theta$.
+\end{Assumption}
+Let 
+\[ \theta_{\text{true}} = \argmin_{h \in \mathcal{H}} \mathcal{L}(h) \]
+which exists and is unique as $\Theta$ is compact and
+$\mathcal{L}(\theta)$ is strongly convex in $\theta$.
+This assumption implicitly encodes both structural identifiability and persistence of excitation, as it implies that 
+\begin{equation}
+  \label{eq:strong_convexity}
+\mathcal{L}(\theta) - \mathcal{L}(\theta_{\text{true}}) \ge m_{\Theta} \|\theta - \theta_{\text{true}}\|_2^2 
+\end{equation}
+In turn, the latter implies \emph{structural identifiability} around $\theta_{\text{true}}$, i.e.,
+that for any $\theta \ne \theta_{\text{true}}$, 
+the input-output behavior of the corresponding models must be different.
+Otherwise, their true losses would be the same leading to
+$0 \ge m_{\Theta} \|\theta - \theta_{\text{true}}\|_2^2 > 0$, which is a contradiction. 
+It also implies that $\rvw$ is \emph{persistently exciting} in the sense that if
+the response of two models parameterized by $\theta \ne \theta_{\text{true}}$ is the same for $\rvw$, then these models are identical and hence their output response is 
+the same for any input. Indeed, if the output response of the two models to $\rvw$
+are identical, then $\rvy_{\theta}(t)=\rvy_{\theta_{\text{true}}}(t)$  and hence
+$\mathcal{L}(\theta) = \mathcal{L}(\theta_{\text{true}})$. Then 
+from \eqref{eq:strong_convexity} we can derive the following parameter estimation error bound using Theorem \ref{thm:oracle_inequality}.
+\begin{corollary}[Parameter estimation]
+  \label{cor:parameter_estimation}
+    With the Assumptions of Theorem \ref{thm:mainThm} and Assumption \ref{assumption:strong_convexity}, for any $\delta \in (0,0.5)$,
+    \begin{multline}
+     \bP(\|\theta_N - \theta_{\text{true}}\|_2^2 \le 2(\ln\dfrac{2}{\delta}+ 2C_{\text{pac}})/m_{\Theta} \frac{\ln(N)}{\sqrt{N}}) \ge 1-2\delta
+    \end{multline}
+\end{corollary} 
+One may wonder when the conditions on strong convexity of $\mathcal{L}(\theta)$ are satisfied.
+Autoregressive models with a linear dependence on parameters satisfy these
+conditions.
+\begin{Remark}[Autoregressive models]
+    \label{rem:fir:param}
+    Consider the SISO case ($n_y=n_u=1$).
+    Let us assume that 
+    $\rvy$ is generated by an ARX model
+    \[ \rvy(t)=\sum_{i=1}^{n} a_i \rvy(t-i) + \sum_{i=1}^{n} b_i \rvu(t-i) + \rve(t) \]
+    where $\rvu$ is a bounded stationary i.i.d. process independent
+    of $\rve$ and $\rve$ is also a bounded i.i.d process,
+    and assume that the hypothesis class is formed as follows
+    \[ h_{\theta}(\{\rvw(s)\}_{s < t}) = \theta^T \rvz(t), ~
+       \rvz(t)=\begin{bmatrix} \rvw^T(t-1) & \cdots & \rvw^T(t-n) \end{bmatrix}^T \]
+      $\theta \in \Theta \subseteq \mathbb{R}^{2n}$.
+    If $\rve$ is bounded, then we can represent both the process $\rvy$ and the predictions $\hat{\rvy}_{\theta}(t\mid 0)$
+    as outputs of system of class \class{}. %, \cite{Arxive}. 
+    It can be shown, see appendix, that % \cite{Arxive} that
+    \[ \mathcal{L}(\theta)=(\theta-\theta_{true})^T Q (\theta-\theta_{true})
+       + \sigma_{\rve}^2
+    \]
+    where  $\sigma_{\rve}^2=E[\rve(t)^2]$ and 
+    $Q=E[\rvz(t)\rvz(t)^T]$,  %with $\rvz(t)=\begin{bmatrix} \rvy^T(t-1) & \cdots & \rvy^T(t-n) & \rvu^T(t-1) & \cdots & \rvu^T(t-n) \end{bmatrix}^T$, 
+    and hence $\mathcal{L}(\theta)$ is strongly convex with $m_{\Theta}=\lambda_{\min}(Q)$.
+    Then if $\hat{\theta}_N$ is the minimizer of the empirical loss
+    \( \frac{1}{N} \sum_{t=1}^{N} (\hat{\rvy}(t)-\rvy(t))^2 \), which, in this 
+    case is the linear least squares solution of the regression problem,
+    then Corollary \ref{cor:parameter_estimation}. 
+  \end{Remark}
+%    Moreover, it can be shown that 
+
+
+
+In many cases, convexity of the true loss is too much to ask for, if finite dimensional parametrization is used. However, for LTI and bilinear systems, we can use a parametrization in terms of the infinite sequence of Markov parameters, in which case the true error for quadratic loss function will be a quadratic function of Markov parameters, and a reasoning similar to that of Corollary \ref{cor:parameter_estimation} can be used to bound the difference between 
+Markov parameters. 
+
+
+\section{Bounds for parameter estimation of (bi)linear systems using $H_2$ norm}
+\paragraph*{Bound for $H_2$ norm for \textbf{LTI systems}}
+Let
+the data  $\rvy$ to be generated by an LTI system in innovation form
+\begin{color}{black}
+\begin{equation}
+\left\{
+\begin{aligned}
+  \hat{\rvs}_{g}(t+1) &= A_0\hat{\rvs}_{g}(t)+B_0\rvu(t)+K_0\e^s(t), \\
+  \rvy(t) &= C_0\hat{\rvs}_{g}(t)+\e^s(t), \qquad t \in \sZ,
+\end{aligned}
+\right.
+\label{eq:T0sys1}
+\end{equation}
+\end{color}
+where $A_0,B_0,K_0,C_0,D_0$ are matrices of suitable dimensions, $A_0$ and $A_0-K_0C_0$ are both Schur, and $\e^s(t)$ is a zero-mean i.i.d. bounded noise
+$\|\e^s(t)\|_2 \le C_{\e^s}$.
+Let us assume that $\rvu$ is a stationary bounded process generated by a stochastic LTI system driven by bounded noise, i.e.,
+\begin{color}{black}
+\begin{equation}\label{eq:u_gen}
+    \left\{
+  \begin{split}
+    & \rvs_\rvu(t+1)=F_u\rvs_\rvu(t)+H_u\rve_u(t), \\
+    & \rvu(t)=G_u\rvs_\rvu(t) +\rve_u(t),
+  \end{split}
+  \right.
+\end{equation}
+\end{color}
+where $\rve_u$ is zero mean, bounded, i.i.d. , $F_u$ and $F_u-H_uG_u$ are Schur and 
+$\{\rve_u(s)\}_{s \in \sZ}$ and $\{\e^s(s)\}_{s \in \sZ}$ are independent
+and $\|\rvu(t)\|_2 \le C_\rvu$.
+Then
+by repeating the construction \cite{eringis2021optimal}, 
+$\rvw (t)=\begin{bmatrix} \rvy^T & \rvu^T \end{bmatrix}^T$ is generated by an LTI system, 
+such that $f_{g}(\rvs,\rvv)=A_g\rvs+K_g\rvv$, $g_g(\rvs,\rvv)=C_g\rvs+\rvv$
+\begin{color}{black}
+\begin{equation}\label{eq:predictor_lti_input}
+\left\{
+  \begin{split}
+    \rvs(t+1) &= A_g\rvs(t)+K_g\rve_g(t), \\
+    \rvw(t)   &= C_g\rvs(t)+\rve_g(t).
+  \end{split}
+   \right.
+\end{equation}
+\end{color}
+	where $A_g=\begin{bmatrix} A_0 & B_0G_u \\0 & F_u \end{bmatrix}$, $K_g=\begin{bmatrix} K_0 \\ H_u \end{bmatrix}$,
+  $C_g=\begin{bmatrix} C_0 & 0 \\ 0 & G_u \end{bmatrix}$, $\rve_g=\begin{bmatrix} \e^s \\ \rve_u \end{bmatrix}$.
+  %Let us define 
+  Then \begin{color}{black} the generator \end{color} satisfies Assumption \ref{as:generator}:
+  \begin{lemma}
+  \label{lemma:LTI:classS_g}
+  %%  $\tau$ be the spectral radius of $A_g$ and $f_{g}(\vs,\vv)=A_g\vs+K_g\vv$ and $g_g(\vs,\vv)=C_g\vs+\vv$
+  There  exist compact sets
+  $\mathbb{S}_g \subseteq \mathbb{R}^n$, $\mathbb{V}_g, \mathbb{Y}_g \subseteq \mathbb{R}^{n_u+n_y}$ such that 
+  $f_g(\mathbb{S}_g \times \mathbb{V}_g) \subseteq \mathbb{S}_g$, $g_g(\mathbb{S}_g \times \mathbb{V}_g) \subseteq \mathbb{Y}_g$, and 
+  %for $f_{g}(\vs,\vv)=A_g\vs+K_g\vv$ and $g_g(\vs,\vv)=C_g\vs+\vv$, 
+  $\mathcal{S}_g=(\mathbb{S}_g,\mathbb{V}_g,\mathbb{Y}_g,f_g|_{\mathbb{S}_g \times \mathbb{V}_g},g_g|_{\mathbb{S}_g \times \mathbb{V}_g})$ satisfies Assumption \ref{as:generator}.
+  %is a system of class \class{} such that 
+  %$\rve_g$ takes values in $\mathbb{V}_g$ and the  response  of $\mathcal{S}_g$ to $\rve_g$   is $\rvw$, i.e., $\rvw(t)=y_{\mathcal{S}_g}(\rve_g)$.
+  \end{lemma} 
+  The proof of Lemma \ref{lemma:LTI:classS_g}, % is in the appendix%\cite{Arxiv}
+%  , it
+   is based on showing that the conditions of Lemma \ref{lemma:P:classS} are satisfied.
+
+%  $\|A_g^k\|_2 \le C_g \tau_q^k$.
+%  It then follows that if $C_{n}=\|\rve_g(0)\|_{\infty} \le \|\rve_u(0)\|_{\infty}+\|\e^s(0)\|_{\infty}$, and we set 
+%  $\mathbb{S}_g=\{ x \mid \|x\|_2 \le (n_y+n_u)C_n^2\|K_g\|_{2}\frac{C_g}{1-\tau_q} \}$, 
+%  $\mathbb{V}_g=\{ \vv  \mid \|\vv\|_{\infty} \le C_n \}$, $\mathbb{Y}_g=\{ \vw  \mid \|\vw\|_{2} \le C_n\sqrt{n_y+n_u}(\frac{C_g}{1-\tau_q}\|C_g\|_2\|K_g\|_{2}+1) \}$, $f_g(\vs,\vv)=A_g\vs+K_g\vv$, $g_g(\vs,\vv)=C_g\vs+\vv$, then 
+
+  Let $\Theta \subseteq \mathbb{R}^{n_{\theta}}$ be a compact set \begin{color}{black} and
+  consider the parameterization \end{color} $\hat{f}(\rvs,\rvw,\theta)=\hat{A}_\theta\rvs+\hat{B}_\theta\rvw$,
+  $\hat{g}(\rvs,\rvw,\theta)=\hat{C}_\theta\rvs+\hat{D}_\theta\rvw$. The matrices $\hat{A}_{\theta},\hat{B}_{\theta},\hat{C}_{\theta}$
+  are continuous in $\theta$, and $\sup_{\theta \in \Theta}\|\hat{A}_{\theta}\| < \tau $ for some $\theta \in (0,1)$, and $\hat{\rvs}_{s}(\theta)=0$. 
+  %\begin{equation}\label{eq:predictor:LTI}
+  %  \begin{aligned}
+  %      & \hat{\rvs}(t+1)=\hat{A}_\theta\hat{\rvs}(t)+\hat{B}_\theta\rvw(t), \hat{\rvs}(0)=0 \\
+  %      & h(\{\rvw(s)\}_{s=0}^{t})=\hat{C}_{\theta}\hat{\rvs}(t)
+  %  \end{aligned}
+%\end{equation}
+ % where $\hat{A}_\theta$,$\hat{B}_\theta,\hat{C}_\theta,\hat{D}_\theta$ 
+  %and of dimension
+	%are $\hat{n}\times\hat{n}$, $\hat{n}\times n_\rvw$,
+	%$n_\rvy\times \hat{n}$ and $n_\rvy\times n_\rvw$ matrices
+	%respectively, such that 
+  % Schur and there exists $P > 0$;
+  %uch that $\hat{A}_{\theta}^TP\hat{A}_{\theta}-\tau^2 P < 0$, 
+ % and the set $\{\|B_{\theta}\|_{2},\|C_{\theta}\|_{2}\}_{\theta \in \Theta}$ is bounded,
+  %and $\|\hat{B}_\theta\| \le L$,
+  %$\|\hat{C}_\theta\|_2 \le L_{g,1}$.
+ \begin{Remark}[Contractivity assumption]\label{rem::contract}
+  The assumption that $\|\hat{A}_{\theta}\|_2 \le \tau$ for all $\theta \in \Theta$ is not restrictive: if $\tau$ is an upper bound on 
+  the spectral radius of $\hat{A}_{\theta}$ for all $\theta \in \Theta$, then 
+  for every $\theta \in \Theta$, there exists $P_{\theta} > 0$ such that
+  $\hat{A}_{\theta}^TP_{\theta}\hat{A}_{\theta}-\tau^2 P_{\theta} < 0$. 
+  By replacing $\hat{A}_{\theta},\hat{B}_{\theta},\hat{C}_{\theta}$ with $P_{\theta}^{-1/2}\hat{A}_{\theta}P_{\theta}^{1/2},P_{\theta}^{-1/2}\hat{B}_{\theta},\hat{C}_{\theta}P_{\theta}^{1/2}$ it follows that \begin{color}{black}
+  $\|P_{\theta}^{-1/2}\hat{A}_{\theta}P_{\theta}^{1/2}\|_{2} \le \tau$, while the Markov-parameters do not change. \end{color}
+  If the set $\{\|B_{\theta}\|_{2},\|C_{\theta}\|_{2}, \|P_{\theta}\|_{2},\|P_{\theta}^{-1}\|_{2}\}_{\theta \in \Theta}$ is bounded, the transformed parameterization satisfies the conditions above.
+ \end{Remark}
+  \begin{lemma}
+  \label{classS:LTI:predictor}
+    There exist bounded sets $\mathbb{S},\mathbb{W},\mathbb{Y}$ such that
+    %$\hat{A}_{\theta}\mathbb{S}+\hat{B}_{\theta}\mathbb{V} \subseteq \mathbb{S}$,
+    %$\hat{C}_{\theta}\mathbb{S}+\mathbb{V} \subseteq \mathbb{Y}$, and
+    %for $\hat{f}_{\theta}(\vs,\vv)=\hat{A}_\theta\vs+\hat{B}_\theta\vv$ and $\hat{g}_{\theta}(\vs,\vv)=\hat{C}_\theta\vs+\vv$, 
+    $\mathcal{S}_{param}=(\mathbb{S},\mathbb{W},\mathbb{Y},\hat{f},\hat{g})$ and the map $\hat{\rvs}_s$  satisfies Assumption \ref{as:parametrisation}.
+    %ssuis a system of class \class{} and its input-output map induced by the initial state is the same as that of \eqref{eq:predictor:LTI}.
+    %Moreover, $\rvw(t)$ takes values in $\mathbb{V}$ and
+    %$h(\{\rvw(s)\}_{s=0}^{t})=y_{\mathcal{S}_{\theta}}(0,0,\rvw);t)=\hat{\rvy}_{\theta}(t\mid 0)$
+    %and $\lim_{t_0 \to -\infty} h(\{\rvw(s)\}_{s=t_0}^{t})=y_{\mathcal{S}_{\theta}}(\rvw)(t)=\hat{\rvy}_{\theta}(t)$.
+  \end{lemma}
+  The proof relies on using Lemma  \ref{lemma:P:classS}. % and is in the appendix. %\cite{Arxiv}. 
+  %Note that $\mathcal{S}_{\theta}$ are restrictions to the invariant set $\mathbb{S}$ of an isomorphic copy of  \eqref{eq:predictor:LTI}, and 
+  %Notice $\mathcal{S}_{\theta}$ has the same input-output behavior as 
+  %for bounded inputs from $\mathbb{V}$. 
+  \begin{Remark}
+      From the proof of Lemma \ref{classS:LTI:predictor} it follows that  $\tau(\mathcal{S}_{\theta})=\tau$, $C(\mathcal{C}_{\theta})=\lambda_{max}(P)$,  
+    $L_{g,1}(\mathcal{S}_{\theta})=\sup_{\theta \in \Theta}\{\|C_{\theta}\|_{2}\}$, and $L(\mathcal{S}_{\theta})=\sup_{\theta \in \Theta}\{\|B_{\theta}\|_{2}\}\lambda_{max}(P)$.
+  \end{Remark}
+ % 
+ % 
+ % $\hat{A}_\theta$ is Schur all eigenvalues of which have modulus smaller that $\tau<1$, and 
+ % $\|\hat{A}_{\theta}^k\|_2 \le C\tau^k$,
+ % and $\|\hat{B}_\theta\|_2 \le L$, $\|\hat{C}_\theta\|_2 \le L_{g,1}$.
+  %Then for every $\theta \in \Theta$, we can define 
+  %$\mathbb{S}=\{ x \mid \|x|_2 \le \|\rvw(0)\|_{\infty}\frac{C}{1-\tau} \}$,
+  %$\mathbb{V}=\{ v \mid \|v\|_{\infty} \le \|\rvw(0)\|_{\infty} \}$,
+  %$\mathbb{Y}=\{ y \mid \|y\|_2 \le \|\rvw(0)\|_{\infty}\sqrt{n_y+n_u} \frac{C(L_{g,1}+1)}{1-\tau} \}$,
+ % $\hat{f}_{\theta}(\vs,\vv)=\hat{A}_\theta\vs+\hat{B}_\theta\vv$,
+ % $\hat{g}_{\theta}(\vs,\vv)=\hat{C}_\theta\vs+\vv$, $s_{s}(\theta)=0$.
+%Then $\mathcal{S}_{\theta}=(\mathbb{S},\mathbb{V},\mathbb{Y},\hat{f}_{\theta},\hat{g}_{\theta})$
+%is system of class \class{} and satisfies Assumptions \ref{as:parameterisation}.
+That is, the data generator \eqref{eq:T0sys1} gives rise to a class \class{}
+system which satisfies Assumption \ref{as:generator} and the predictors \eqref{eq:predictor_lti_input}
+give rise to predictors satisfying Assumption \ref{as:parametrisation}.
+
+  Consider the quadratic loss $\ell(y,y')=\|y-y'\|_2^2$. 
+  Define the \emph{Markov parameters} $M_{\theta}(k)=\hat{C}_{\theta}\hat{A}_\theta^k\hat{B}_\theta$,
+  $M_{\theta}=\{M_{\theta}(k)\}_{k=0}^{\infty}$
+  and $M(k)=C_0(A_0-K_0C_0)^k\begin{bmatrix} K_0 & B_0 \end{bmatrix}$, $M=\{M(k)\}_{k=0}^{\infty}$.
+   Then it is easy to see that
+   \begin{color}{black}
+  \[ 
+   \begin{aligned}
+     \hat{\rvy}_{\theta}(t)&=\sum_{k=0} \hat{M}_{\theta}(k)\rvw(t-k), \\
+     \rvy(t)&=\sum_{k=0}^{\infty} M(k)\rvw(t-k) +\e^s(t).
+   \end{aligned}
+  \]
+     \end{color}
+   %If we denote by $M$ the sequence $\{M(k)=C_0(A_0-K_0C_0)^k\begin{bmatrix} K_0 & B_0 \end{bmatrix}\}_{k=0}^{\infty}$, 
+   %and by $\hat{M}_{\theta}=\{\hat{M}_{\theta}(k)=\hat{C}_{\theta}\hat{A}_\theta^k\hat{B}_\theta\}_{k=0}^{\infty}$ and 
+  We denote by  $\|Z\|_{H_2}=\sqrt{\sum_{k=0}^{\infty}\|Z(k)\|_2^2}$ the usual $H_2$ norm of a system with an absolutely summable impulse response $Z=\{Z(k)\}_{k=0}^{\infty}$. Note that due to stability of the predictors and data generators, 
+   $M,M_{\theta}$ are absolutely summable, and so is $M-M_{\theta}$.
+   It is easy to see that 
+  \[ 
+    \begin{split}
+     & \mathcal{L}(\theta)=\mathrm{tr}\sum_{i,j=0}^{\infty} (M(i)-M_{\theta}(i))Q_{i,j}(M(j)-M_{\theta}(j))^T+ \sigma_{\rve_s}^2   \\
+     & \ge m_x \|M-M_{\theta}\|_{H_2}^2 + \sigma_{\rve_s}^2,
+    \end{split}
+  \]
+  where $Q_{i,j}=E[\rvw(t-i)\rvw(t-j)^T]$ and $\sigma_{\rve_s}^2=E[\|\rve_s(t)\|_2^2]$, and 
+  $m_x$ is the infimum of the smallest eigenvalues of the matrices $(Q_{i,j})_{i,j=0}^{N}$. 
+ % Let us assume that 
+ % $m_x > 0$. 
+  %It then follows that
+  %\[ \mathrm{trace}\sum_{i,j=0}^{\infty} (M(i)-M_{\theta}(i))Q_{i,j}(M(j)-M_{\theta}(j))^T \ge m_x \|M-M_{\theta}\|_{H_2}^2 \]
+  Assume that there exists $\theta_{true} \in \Theta$ such that $M=M_{\theta_{true}}$.
+  Then $\inf_{\theta \in \Theta} \mathcal{L}(\theta) = \sigma_{\rve_s}^2=\mathcal{L}(\theta_{true})$, and 
+  \[ \mathcal{L}(\theta)-\inf_{\theta \in \Theta} \mathcal{L}(\theta) \ge m_x \|M-M_{\theta}\|_{H_2}^2. \]
+
+  By repeating the proof of Corollary \ref{cor:parameter_estimation}, we get the following $H_2$ norm error bound for the empirical minimizer
+  $\hat{\theta}_N=\inf_{\theta \in \Theta} \mathcal{L}_N(\theta)$. 
+  \begin{corollary}[$H_2$ parameter estimation error: LTI]
+    \label{col:lti}
+    Assume that $m_{\rvw} > 0$. Then 
+   \[ 
+     \bP(\|M-\hat{M}_{\theta_{\text{true}}}\|_H^2 \le 2(\ln\dfrac{2}{\delta}+ 2C_{\text{pac}})/m_{x} \frac{\ln(N)}{\sqrt{N}}) \ge 1-2\delta
+  \]
+  \end{corollary}
+ %Note that $m_x$ is the minimum eigenvalue of the covariance matrix of the past data and it is a direct characterization of
+ %Mpersistence of excitation. 
+ The assumption $m_x > 0$ means that the data is persistently exciting.
+
+ Note that it is well-known \cite{RalfPeeters} that the topology induced by the $H_2$ norm of the difference of impulse responses on the 
+ equivalence classes (modulo isomorphism) of stable minimal systems of a fixed order $n$, denoted by $\mathcal{M}_{stab}(n)$, coincides with the topology of these classes viewed as a Riemannian manifold.
+ Assume that 
+ for every $\theta \in \Theta$, $(\hat{A}_{\theta},B_{\theta})$ is controllable, $(\hat{C}_{\theta},\hat{A}_{\theta})$ is observable, and the only isomorphism $T$ between two parametrizations  $(\hat{A}_{\theta_i},B_{\theta_i},C_{\theta_i})$, $i=1,2$
+ is the one for which $\theta_1=\theta_2$ and $T$ is the identity.
+ Then the parametrization is \emph{structurally identifiable} \cite{Hof}, and 
+ then the map $\iota$, which maps $\Theta \ni \theta$ to the equivalence class of isomorphic minimal systems represented by $\hat{A}_{\theta},B_{\theta},C_{\theta}$, %as  
+% $\iota:\Theta \ni \theta \mapsto (\hat{A}_{\theta},B_{\theta},C_{\theta})$ 
+is an injective map into the Riemann manifold $\mathcal{M}_{stab}(n)$.
+ %f equivalence classes (modulo isomorphism) of stable LTI systems of order $n$. 
+If the dependence on $\theta$ is smooth, then this embedding is smooth too, and the $H_2$ distance between impulse responses induces
+a distance on $\Theta$, i.e., $d(\theta_1,\theta_2)=\|\hat{M}_{\theta_1}-\hat{M}_{\theta_2}\|_{H_2}$.
+That is, as announced, Corollary \ref{col:lti} results in a parameter estimation error bound for a suitable distance on parameters (the $H_2$ distance).
+ 
+%\paragraph*{Bound for $H_2$ norm for \textbf{bilinear systems}}
+\textit{Bound for $H_2$ norm for \textbf{bilinear systems}}.
+  We can extend the analysis above to bilinear models as follows. Assume that the input process $\rvu$ is an i.i.d. process with zero mean \begin{color}{black} and uncorrelated components, \end{color}
+  such that $\|\rvu(t)\|_{\infty} \le 1$ and assume that $\rvy$ is a stationary square integrable 
+  process generated by a bilinear system of the form
+  \begin{equation}
+    \label{eq:T0sys_bilinear}
+    \left\{
+    \begin{split}
+		&\hat{\rvs}_{g}(t+1)=A(\rvu(t))\hat{\rvs}_g(t)+K(\rvu(t))\e^s(t) \\
+    %A_0+\sum_{i=1}^{n_u}A_i\rvu_i(t))\hat{\rvs}_{g}(t)+{} \\
+		%&(K_0,\sum_{i=1}^{n_u} K_i\rvu_i(t))\e^s(t), \quad
+    & \rvy(t) = C_0\hat{\rvs}_{g}(t)+\e^s(t), \quad t \in \sZ,
+    \end{split}
+    \right.
+  \end{equation}
+  where $A(\rvu(t))=A_0+\sum_{i=1}^{n_u}A_i\rvu_i(t)$ and $K(\rvu(t))=K_0+\sum_{i=1}^{n_u} K_i\rvu_i(t)$, \begin{color}{black} with the convention $\rvu_0(t) \equiv 1$, so that $A(\rvu(t))=\sum_{i=0}^{n_u} A_i\rvu_i(t)$ and  $K(\rvu(t))=\sum_{i=0}^{n_u} K_i\rvu_i(t)$\end{color} and
+  we assume that $(1+n_u)\sum_{i=0}^{n_u} (A_i \otimes A_i)$ is Schur with a maximal eigenvalue $\tau \in (0,1)$
+  and $(1+n_u)\sum_{i=0}^{n_u} (A_i-K_iC_0) \otimes (A_i-K_iC_0)$ is Schur with a maximal eigenvalue $\hat{\tau} \in (0,1)$
+  and $\{\e^s(t)\}_{t \in \sZ}$ is a zero mean i.i.d. essentially bounded  process and 
+  $\{\rvu(t)\}_{t \in \sZ}$ and $\{\e^s(t)\}_{t \in \sZ}$ are independent.
+  It can be shown that \eqref{eq:T0sys_bilinear} has a wide-sense stationary solution based 
+  on \cite[Lemma 1]{TAC:MPRV}, see appendix. %\cite{Arxiv}. 
+  In fact, we will show that $\rvy$ is stationary
+  as \eqref{eq:T0sys_bilinear} can be viewed as a system of class \class{}. The key observation is the counterpart of Remark \ref{rem::contract}.\\
+ % The convergence of the right-hand sides of \eqref{eq:bilinear_output} are understood in the 
+ %We call $M(w)=C_0 A_w \begin{bmatrix} K_0 & B_0 \end{bmatrix}$ the \emph{Markov parameter} corresponding to the sequence $w$ and 
+ %we call $M=\{M_w\}$ the Markov parameters of \eqref{eq:T0sys_bilinear}.
+ %Notice that \eqref{eq:T0sys_bilinear} can be rewritten as a class \class{} system.
+\begin{color}{black}
+ Then the generator satisfies Assumption \ref{as:generator}:
+\end{color}
+ \begin{lemma}
+  \label{ge:systemS:bilinear}
+   \begin{color}{black}There exists bounded\end{color} sets $\mathbb{S}_g \subseteq \mathbb{R}^{n}$, $\mathbb{V}_e \subseteq \mathbb{R}^{n_y}$
+   $\mathbb{V}_g=[-1,1]^{n_u} \times \mathbb{V}_e$, $\mathbb{Y}_g \subseteq \mathbb{R}^{n_y+n_u}$, 
+   such that the functions $f_g: \mathbb{S}_g \times [-1,1]^{n_u} \times \mathbb{V}_e \ni {\color{black}(\vs,\vu,\ve)} \mapsto A(\vu)\vs+K(\vu)\ve$, 
+   ${\color{black}g_g}: \mathbb{S}_g \times [-1,1]^{n_u} \times \mathbb{V}_e \ni (\vs,\vu,\ve) \mapsto \begin{bmatrix} C_0\vs+\ve \\ \vu \end{bmatrix}$ take values in $\mathbb{S}_g$ and $\mathbb{Y}_g$ respectively, 
+   and $\mathcal{S}_g=(\mathbb{S}_g,\mathbb{V}_g,\mathbb{Y}_g,f_g,{\color{black}g_g})$ is a class \class{} system.
+   Moreover, $[\rvu^T,\rve_s^T]^T \in \mathbb{V}_g$, $\rvw=[\rvy^T, \rvu^T]^T \in \mathbb{Y}_g$,
+   and $\rvw={\color{black}\rvy_{\mathcal{S}_g}([\rvu^T,\rve_s^T]^T)}$. In particular, $\rvw$ is stationary.
+   %for all $\vs  \in \mathbb{S}_g$, $\vu \in [-1,1]^{n_u}$, $\vv \in \mathbb{V}_e$, $\vu \in \mathbb{R}^{n_u}$.
+   %$f_g(\mathbb{S}_g,\mathbv{V}_g) \subseteq \mathbb{S}_g$
+ \end{lemma}
+ The proof of Lemma \ref{ge:systemS:bilinear} is in the appendix%\cite{Arxiv}
+ , it is based on 
+ \begin{color}{black}Lemma \ref{lemma:P:classS}\end{color}.
+Let $\Theta \subseteq \mathbb{R}^{n_{\theta}}$ be a compact set and consider the following predictors
+%which can also be viewed as bilinear or LPV (Linear Parameter-Varying) systems %with $\hat{\rvs}(t_0) = 0$:
+\begin{color}{black}
+\begin{equation}
+\label{pred:bilinear}
+\left\{
+\begin{aligned}
+\hat{\rvs}(t+1 \mid t_0) &=  \hat{A}(\theta, \rvu(t))\hat{\rvs}(t \mid t_0)+ \hat{K}(\theta,\rvu(t))\rvy(t), \\
+\hat{\rvs}(t_0 \mid t_0)&=0, \\
+h_{\theta}(\{\rvw(s)\}_{s=t_0}^{t})&=\hat{\rvy}_{\theta}(t \mid t_0) = \hat{C}(\theta)\hat{\rvs}(t \mid t_0)
+\end{aligned}
+\right.
+\end{equation}
+\end{color}
+where $\hat{A}(\theta,\rvu)=\hat{A}_{0}(\theta)+\sum_{i=1}^{n_u} \hat{A}_{i}(\theta){\color{black}\rvu_i(t)}$ and $\hat{K}(\theta,\rvu)=\hat{K}_{0}(\theta)+\sum_{i=1}^{n_u} \hat{K}_{i}(\theta){\color{black}\rvu_i(t)}$, \begin{color}{black}the matrices $\hat{A}_i(\theta),\hat{K}_i(\theta),\hat{C}(\theta)$ are continuous in $\theta$,\end{color} and 
+\begin{color}{black}the spectral radius of \end{color}$(1+n_u)\sum_{i=0}^{n_u} (\hat{A}_{i}(\theta) \otimes \hat{A}_{i}(\theta))$ is \begin{color}{black}smaller than $\hat{\tau}^2$\end{color},
+$\|{\color{black}\hat{C}(\theta)}\|_2 \le \hat{L}_{g,1}$, $\sum_{i=0}^{n_u}\|\hat{K}_{i}(\theta)\|_2 \le \hat{L}$ \begin{color}{black} for all $\theta \in \Theta$\end{color}.
+
+The predictor can be viewed as an LPV \begin{color}{black}system\end{color} with affine dependence on scheduling parameter, if $\rvu$ is viewed as a scheduling signal.
+
+Alternatively, we can view \eqref{pred:bilinear} as a candidate noisy bilinear system which generates $\rvy$, if we define
+the noise process $\hat{\rve}_{\theta}(t \mid t_0)=\rvy(t)-\hat{\rvy}_{\theta}(t\mid 0)$; in this case \eqref{pred:bilinear} becomes
+\begin{equation}
+\label{pred:bilinear:gen}
+\begin{aligned}
+  & \hat{\rvs}(t+1)= \hat{A}(\theta, \rvu)\hat{\rvs}(t)+ \hat{K}(\theta,\rvu)\hat{\rve}_{\theta}(t \mid t_0), ~ \hat{\rvs}(t_0) = 0\\
+& \rvy(t) = \hat{C}(\theta)\hat{\rvs}(t)+\hat{\rve}_{\theta }(t \mid t_0)
+\end{aligned}
+\end{equation}
+The process $\hat{\rve}_{\theta}(t \mid t_0)$ represents the prediction error of the noisy bilinear system. In general, it is not an i.i.d. process. However, under mild assumptions, the optimal predictor can be viewed as an i.i.d. process, as we will see below. 
+
+To this end, we first show that the predictors \eqref{pred:bilinear} can be viewed as 
+class \class{} systems satisfying Assumption \ref{as:parametrisation}.
+\begin{lemma}
+  \label{ge:classS:bilinear:predictor}
+  There exist bounded subsets $\mathbb{S}$, $\mathbb{V}_y \subseteq \mathbb{R}^{n_u+n_y}$, 
+  $\mathbb{Y} \subseteq \mathbb{R}^{n_y}$ such that for $\mathbb{V}=[-1,1]^{n_u} \times \mathbb{V}_y$, 
+  the functions $\hat{f}_{\theta}:\mathbb{S} \times \mathbb{V} \ni (\vs,\vu,\vv)
+  \mapsto \hat{A}(\theta,\vu)\vs+\hat{K}(\theta,\vu)\vv$, 
+  $\hat{g}_{\theta}:\mathbb{S} \times \mathbb{V} \ni (\vs,\vu,\vv)
+  \mapsto \hat{C}(\theta)\vs$ are well-defined, take values in $\mathbb{S}$ and $\mathbb{Y}$, respectively,
+  and $\mathcal{S}_{\theta}=(\mathbb{S},\mathbb{V},\mathbb{Y},\hat{f}_{\theta},\hat{g}_{\theta})$
+  is class \class{} system, and together with $\hat{\rvs_s}(\theta)=0$ it satisfies Assumption \ref{as:parametrisation}. 
+\end{lemma}
+
+\begin{color}{black}The proof depends on Lemma \ref{lemma:P:classS} and on the argument that appears in the proof of Lemma \ref{ge:systemS:bilinear}, which can be seen in the appendix. % \cite{Arxiv}.
+That is, the data generator \eqref{eq:T0sys_bilinear} leads to a class \class{}
+system, which satisfies Assumption \ref{as:generator} and the predictors \eqref{pred:bilinear}
+lead to predictors satisfying Assumption \ref{as:parametrisation}.\end{color}
+
+
+Next, we present the extension of the notion of Markov parameters and $H_2$ norm for bilinear systems.
+To this end, let $\Sigma=\{0,\ldots,n_u\}$ and denote by $\Sigma^{*}$ the set of all finite sequences over $\Sigma$;
+  we denote by $\epsilon$ the empty sequence; we denote by $|w|$ the length of a sequence $w \in \Sigma^*$, by definition $| \epsilon | = 0$. Let us denote by $\Sigma^{+}=\Sigma^{*} \setminus \{\epsilon\}$ the set of all non-empty sequences. For a collection of square matrices $\{A_i\}_{i \in \Sigma}$ and a sequence $\sigma=\sigma_1\ldots\sigma_k \in \Sigma^*$, we denote $A_{\sigma}=A_{\sigma_k}\cdots A_{\sigma_1}$ and $A_{\epsilon}=I$.
+  For any process $\rvr$, define $\rvz_w^{\rvr}(t)$ recursively as follows: $\rvz^{\rvr}_{\epsilon}(t)=\rvr(t)$ and $\rvz^{\rvr}_{wq}(t)=\rvz^{\rvr}_{w}(t-1)\rvu_q(t)$ for $w \in \Sigma^*, q \in \Sigma$.
+  Let us define the Markov-parameters of \eqref{eq:T0sys_bilinear}
+  $M:\Sigma^{+} \rightarrow \mathbb{R}^{n_u+n_y }$ and $M_{\theta}:\Sigma^{+} \rightarrow \mathbb{R}^{n_u+n_y }$
+  as follows: for all $w \in \Sigma^{*}$, $q \in \Sigma$,
+  $M(qw)=C\bar{A}_wK_q$, where $\bar{A}_q=A_q-K_qC$, 
+  $M_{\theta}(qw)=\hat{C}(\theta)\hat{A}(\theta)_{w}\hat{K}_{q}(\theta)$.
+
+  Note that $M$, $M_{\theta}$ correspond to recognizable formal power series \cite{Fliess,Son:Real},
+  and they uniquely determine the input-output behavior of the predictor \eqref{pred:bilinear},  viewed as an LPV system \cite{Petreczky2016}. 
+  For a map $S:\Sigma^{+} \rightarrow \mathbb{R}^{n_y \times n_y}$ define the $H_2$ norm as 
+  $\|S\|_{H_2}^2 = \sum_{k=1}^{\infty} \sum_{w \in \Sigma^{+},|w|=k} \|S(w)\|_F^2$, if the latter sum exists.
+  For a suitable subclass of absolutely square summable Markov-parameters the $H_2$ norm is a proper distance
+  which can be computed from an LPV/bilinear state-space representation corresponding to the Markov-parameters
+  and extends the classical $H_2$ norm for LTI systems \cite{BennerH2norm,HSCC2007,MTNSSpace}.
+
+%In particular, the series $M$ uniquely describes the input-output behavior of the predictor 
+%Assume that there exists $\theta_{true} \in \Theta$ such that 
+%$A_{i}(\theta_{true}) = A_i-K_iC$, $K_{i}(\theta_{true}) = K_i$, $C_{0}(\theta_{true}) = C_0$ for all $i$.
+%It then follows from \cite{ElieCDC2022} that $\e^s$ is the 
+  
+Let $\ell$ be the quadratic loss, i.e., $\ell(y,y')=\|y-y'\|^2_2$. %It then follows from \eqref{bil:pred_error} that
+The infinite past predictions and the outputs generated by bilinear systems
+can be expressed as follows using Markov parameters, and hence the true loss $\mathcal{L}(\theta)$ can be written in terms of the Markov parameters. Moreover, the Markov parameters have a well-defined $H_2$ norm. 
+%and hence it is easy to see that based on \cite{ElisCDC2022} that
+\begin{lemma}[Markov parameters \& true loss]
+  \label{lemma:bilinear:markov1}
+With the notation above  the following holds:
+
+\textbf{$H_2$ norm} $\|M_{\theta}\|_{H_2}$, $\|M\|_{H_2}$, $\|M-M_{\theta}\|_{H_2}$ are well-defined.
+
+\textbf{Outputs via Markov parameters}
+\[ 
+  \begin{split}
+   & \hat{\rvy}_{\theta}(t)=\sum_{k=1}^{\infty} \sum_{w \in \Sigma^{+},|w|=k}
+   M_{\theta}(w) \rvz^{\rvy}_{w}(t), \\
+   & \rvy(t)=\sum_{k=1}^{\infty} \sum_{w \in \Sigma^{+},|w|=k}
+   M(w) \rvz^{\rvy}_{w}(t) + \e^s(t).
+  \end{split}
+\]
+where the infinite sum  above converges absolutely a.s.
+%and in fact also in expectation, by dominated convergence theorem and boundedness of $\rvy$
+
+\textbf{True loss \& $H_2$ norm}
+\begin{color}{black}
+\begin{equation}
+\label{bil:pred_error_1}
+\begin{aligned}
+  %&\rvy(t)-\hat{\rvy}_{\theta}(t)=\e^s(t)+ \sum_{k=1}^{\infty}\sum_{w \in \Sigma^{+},|w|=k} (M(w)-M_{\theta}(w))\z^{\rvy}_w(t) \\
+ & \mathcal{L}(\theta)=\sigma^{2}_{\e^s} 
++  \\
+& \mathrm{Tr} \lim_{N \rightarrow \infty} \sum_{\substack{v,w \in \Sigma^{*} \\ |w| \le N \\ |v|\le N}}
+ (M(w)-M_{\theta}(w))T_{w,v}^{\rvy}(M(v)-M_{\theta}(v))^T  \\
+ & \ge m_{\rvy} \|M-M_{\theta}\|_{H_2}^2 + \sigma^2_{\e^s}
+\end{aligned}
+\end{equation}
+where $\sigma^{2}_{\e^s}=E[\|\e^s(t)\|^2_2]$, $T_{w,v}^{\rvy}=E[\rvz^{\rvy}_{w}(t)(\rvz^{\rvy}_{v}(t))^T]$ and $m_{\rvy}$ is such that $(T_{v,w}^{\rvy})_{v,w \in \Sigma^{*}, |v|,|w| \le N} > m_{\rvy}I$ for all $N \ge N_0$  for some $N_0 \in \mathbb{N}$. 
+\end{color}
+\end{lemma}
+The proof is based on the observation from \cite{TAC:MPRV} that $E[\rvz_{qw}^{\rvy}(t)(\rvz_{q'v}^{\rvy}(t))^T]=0$ if $qw \ne q'v$ and $E[\rvz_{qw}^{\rvy}(t)(\rvz_{qw}^{\rvy}(t))^T]=\Lambda_q$, and it is in the appendix.% \cite{Arxive}
+
+
+Assume that there exists $\theta_{true} \in \Theta$ such that 
+$A_{i}(\theta_{true}) = A_i-K_iC$, $K_{i}(\theta_{true}) = K_i$, $C_{0}(\theta_{true}) = C_0$ for all $i$.
+$M_{\theta_{true}}=M$ and $\mathcal{L}(\theta_{true})=\sigma^2_{\e^s}$. 
+In fact, from \cite{ElieCDC2022} it follows that $\hat{\rvy}_{\theta_{true}}(t)$ 
+ is the minimal variance predictor of $\rvy(t)$ based on 
+$\{\rvz_{w}^{\rvy}(t)\}_{w \in \Sigma^{+}}$ and 
+the prediction error $\e^s(t)=\rvy(t)-C_0\rvs(t)$ is i.i.d.
+%\begin{align*}
+%  &\rvy(t)=\e^{s}(t)+\hat{\rvy}_{\theta_{true}}(t)=\e^s(t)\\
+%  &+\sum_{k=0}^{\infty} \sum_{q \in \Sigma, w \in \Sigma^{*},|w|=k}
+%   \hat{C}(\theta_{true}) \hat{A}(\theta_{true})_{w} \hat{K}_{q}(\theta_{true}) \rvz^{\rvy}_{w}(t)
+%\end{align*}
+%
+%and hence
+%In particular, the noise $\lim_{t_0 \rightarrow -\infty}\hat{\rve}_{\theta}(t \mid t_0)=\rve^s(t)$ is i.i.d., i.e., 
+%the interpretation of the predictor corresponding to $\theta_{true}$ as a generator of $\rvy$ results in the data generator, 
+%as the time from which $t-t_0$ for which the predictor is run converges to infinity. 
+This then implies that $\inf_{\theta \in \Theta} \mathcal{L}(\theta)=\mathcal{L}(\theta_{true})=\sigma^2_{\e^s}$.
+%and 
+%if $m_{\rvy} >0$ is a lower bound on the smallest eigenvalues of $\Lambda_q$, $q \in \Sigma$, i.e.,
+%$\Lambda_q \ge m_{\rvy} I_{n_y}$, then 
+%\begin{equation}
+%  \begin{aligned}
+%    & \mathcal{L}(\theta)-\mathcal{L}(\theta_{true})
+%      \ge m_{\rvy} \|M-M_{\theta}\|_{H_2}^2
+   % 
+   % \sum_{k=0}^{\infty} \sum_{q \in \Sigma, w \in \Sigma^{*},|w|=k}
+   %\mathrm{tr} (\hat{C}(\theta_{true}) \\
+   %&\hat{A}(\theta_{true})_{w} \hat{K}_{q}(\theta_{true}) - \hat{C}(\theta) (A_{\theta})_w (\hat{K}_\theta)_{q}) \\
+   %&\Lambda_q (\hat{C}(\theta_{true}) \hat{A}(\theta_{true})_{w} \hat{K}_{q}(\theta_{true}) - \hat{C}(\theta) (A_{\theta})_w (\hat{K}_\theta)_{q})^T \\
+   %& \ge m_{\rvy} \sum_{k=0}^{\infty} \sum_{q \in \Sigma, w \in \Sigma^{*},|w|=k}
+   %   \|\hat{C}(\theta_{true}) (\hat{A}(\theta_{true}))_{w} \hat{K}_{q}(\theta_{true}) \\
+   %   &- \hat{C}(\theta) (A_{\theta})_w (\hat{K}_\theta)_{q}\|_F^2 
+%  \end{aligned}
+%\end{equation}
+
+%Note that $M_{\theta}(qw)=\hat{C}_{\theta} (A_{\theta})_w (\hat{K}_\theta)_{q}$, $w \in \Sigma^{*}, q \in \Sigma$
+%are the generating series, or Markov-like parameters of the bilinear system \eqref{pred:bilinear}. 
+%, defined as the output response of the predictor to $\rvy$ and $\rvu$ at final time $t$ for some initial time $t_0$, i.e.,
+%the map $\rvu,\rvu, t,t_0 \mapsto \hat{\rvy}_{\theta}(t \mid t_0)$. That is, in this case we view $\rvu$ as a scheduling signal and 
+%$\rvy$ as an additive input, and we view bilinear predictors as LPV systems. 
+%In particular, for sufficiently stable bilinear/LPV systems, the Markov parametets are square summable, and the
+%norm $\|M\|_{H_2} \triangleq \sqrt{\sum_{k=1}^{\infty}\sum_{w \in \Sigma^{*},|w|=k}\|M(w)\|_F^2}$ is finite
+%and in fact it is the extension of the well-known $H_2$ norm to bilinear/LPV systems
+%\cite{BennerH2norm,HSCC2007,MTNSSpace}. Note that the predictors \eqref{pred:bilinear} satisfy these stability conditions, in particular, 
+%$\|M_{\theta}\|_{H_2}$ is finite.
+
+We can then state the following finite-sample bound on the parameter estimation error for bilinear systems in terms of $H_2$ distance:
+let $\hat{\theta}_N$ be the minimizer of the empirical loss $\hat{\mathcal{L}}_N(\theta)$.
+\begin{corollary}[$H_2$ parameter estimation error bound]
+\leavevmode\\
+  Assume $m_{\rvy} > 0$. Then with the notation and assumptions above, 
+\label{cor:bilin_H2_param_est_error}
+  \[ \bP( \|M_{\hat{\theta}_N}-M_{\theta_{true}}\|_{H_2} \le
+    \frac{1}{m_\rvy} 
+      2(\ln\dfrac{2}{\delta}+ 2C_{\text{pac}}) \frac{\ln(N)}{\sqrt{N}}) \ge 1-2\delta
+   \]
+\end{corollary}
+Note that the assumption that $m_{\rvy} >0$ is a mild one, it says that there is no linear dependence among the elements of $\rvy$. When $n_y=1$, this is trivially true for $f\rvy \ne 0$. It can be 
+viewed as a persistence of excitation condition. 
+
+By \cite{Petreczky2016,MTNSSpace}, the equivalence classes of stable minimal bilinear/LPV systems form a smooth manifold, and the topology induced by the $H_2$ norm of Markov-parameter differences coincides with the manifold topology. 
+
+If the parameterization of predictors \eqref{pred:bilinear}, viewed as LPV systems, is structurally identifiable and minimal as defined in \cite{Petreczky2016, Alkhoury2017a}, then each $\theta \in \Theta$ uniquely determines an equivalence class of minimal LPV systems. In this case, the map $\Theta \ni \theta \mapsto$ equivalence class of minimal LPV systems is injective, and $d(\theta_1,\theta_2) \triangleq \|M_{\theta_1}-M_{\theta_2}\|_{H_2}$ defines a metric on $\Theta$. Thus, Corollary \ref{cor:bilin_H2_param_est_error} provides a finite-sample bound on the parameter estimation error $d(\hat{\theta}_N,\theta_{true})$ in this metric.
+
+
+
+
+
+
+
+
+
+
+
+\bibliography{bib.bib}
+
+
+\appendix
+\section{Technical appendix}
+\begin{Remark}{Autoregression}
+Then the data generator is a linear system, i.e.,
+\(\begin{bmatrix} 
+0 & 1 & 0 & \dots & 0 \\  
+0 & 0 & 1 & \dots & 0 \\  
+\vdots & \vdots & \vdots & \ddots & \vdots \\  
+0 & 0 & 0 & \dots & 1 \\  
+a_n & a_{n-1} & a_{n-2} & \dots & a_1 
+\end{bmatrix}_{A_g}
+\vs
++ 
+\begin{bmatrix} 
+0 & 0\\ 
+0 & 0\\ 
+\vdots & \vdots\\ 
+0 & 0\\ 
+1 & 0
+\end{bmatrix} 
+\vv(t) \), 
+\(g_g(\vs,\vv)= 
+\begin{bmatrix} 
+b_n & b_{n-1} & b_{n-2} & \dots & b_1 
+\end{bmatrix}\vs+\begin{bmatrix} 0 & 1 \end{bmatrix}\vv \),
+$\rve_g(t)=\begin{bmatrix} \rvu^T(t) & \rve(t) \end{bmatrix}$.
+
+Let the hypothesis class be the class of autoregressive models of the form
+ \[ 
+      \hat{\rvy}(t)=\sum_{i=1}^{n} \alpha_i \rvy(t-i) + \sum_{j=1}^{n} \beta_j \rvu(t-j)
+\]
+i.e., $\Theta=\mathbb{R}^{2n}$, and 
+    for any $\theta=(\theta_1,\ldots, \theta_{2n})^T \in \Theta$, let
+    $D_{\theta}=\theta_1$,
+    \[ 
+    A=\begin{bmatrix} 0 & 0 & \cdots & 0 & 0 \\ 
+        1 & 0 & \cdots & 0 &0 \\
+        \vdots & \vdots & \cdots & \vdots & \vdots \\
+        0 & 0 & \cdots & 1 & 0
+    \end{bmatrix}, ~ 
+    B=\begin{bmatrix} 1 \\ 0 \\ \vdots \\ 0 \end{bmatrix}, ~
+    C_\theta=\begin{bmatrix} \theta_2 \\ \vdots \\ \theta_{2n} \\ 1 \end{bmatrix}^T
+    \]
+    Let $\theta_{true}=(a_1, \ldots, a_n, b_1, \ldots, b_n)$
+    Let $\ell(y,y')=(y-y')^2$. Then 
+    \[ \mathcal{L}(\theta)=(\theta-\theta_{true})^T Q (\theta-\theta_{true})
+       + \sigma_{\rve}^2
+    \]
+    where  $\sigma_{\rve}^2=E[\rve(t)^2]$ and 
+    $Q=E[\begin{bmatrix} \rvu(t-1) \\ \vdots \\ \rvu(t-n) \\ \rvy(t-1) \\ \vdots \\ \rvy(t-n) \end{bmatrix}
+    \begin{bmatrix} \rvu(t-1) \\ \vdots \\ \rvu(t-n) \\ \rvy(t-1) \\ \vdots \\ \rvy(t-n) \end{bmatrix}^T]$.
+    It then follows that 
+    $\theta_{\text{true}}$ is the unique minimizer of $\mathcal{L}(\theta)$ and
+    \[ \mathcal{L}(\theta)-\mathcal{L}(\theta_{\text{true}})=(\theta-\theta_{true})^T Q (\theta-\theta_{true}) \ge \lambda_{\min}(Q) \|\theta-\theta_{true}\|_2^2
+    \]
+    where $\lambda_{\min}(Q)$ is the minimum eigenvalue of $Q$.
+    Then if $\hat{\theta}_N$ is the minimizer of the empirical loss
+    \( \frac{1}{N} \sum_{t=1}^{N} (\hat{\rvy}(t)-\rvy(t))^2 \), which, in this 
+    case is the linear least squares solution of the regression problem,
+    then Corollary \ref{cor:parameter_estimation}. 
+  \end{Remark}
+  
+\begin{color}{black}
+\begin{pf}[Proof of Lemma~\ref{lemma:oldNewS}]
+Let $\vs_{\vv_1}$ and $\vs_{\vv_2}$ be the stationary solutions corresponding to the bounded inputs $\vv_1$ and $\vv_2$. Since we have bounded inputs, the stationary solutions are bounded as well, i.e., there exists $M<\infty$ such that $\sup_{t\in\sZ}\|\vs_{\vv_i}(t)\|_2 \le M$, $i=1,2$.
+For any $t_0 \le t$, $\vs_{\vv_i}(t)$ is the same as the solution started at time $t_0$ from the initial state $\vs_{\vv_i}(t_0)$, i.e., $\vs_{\vv_i}(t) = \vs_{\vv_i}(t \mid t_0, \vs_{\vv_i}(t_0))$.
+Hence, by the UEIIS property: $\|\vs_{\vv_1}(t)-\vs_{\vv_2}(t)\|_2 \le C\tau^{t-t_0}\|\vs_{\vv_1}(t_0)-\vs_{\vv_2}(t_0)\|_2 + L\sum_{k=1}^{t-t_0}\tau^{k-1}\|\vv_1(t-k)-\vv_2(t-k)\|_2$, which can be upper bounded by $2CM\tau^{t-t_0} + L\sum_{k=1}^{\infty}\tau^{k-1}\|\vv_1(t-k)-\vv_2(t-k)\|_2$.\\
+Here the sum is finite, as the inputs are bounded and $\tau<1$. Since $\tau<1$, letting $t_0\to-\infty$ the first term vanishes, which yields \eqref{def:classDef:mem}.
+\end{pf}
+
+\begin{pf}[Proof of Lemma~\ref{lemma:NewSI}]
+We define
+\setlength{\abovedisplayskip}{4pt}%
+\setlength{\belowdisplayskip}{4pt}%
+\[
+\left\{
+\begin{aligned}
+  \rvs_{\theta}(t+1 \mid t_0) &= \hat{f}\bigl(\rvs_{\theta}(t \mid t_0),\rvw(t),\rvu(t),\theta\bigr),\\
+  \rvs_{\theta}(t_0 \mid t_0) &= \hat{\vs}_s(\theta),\\
+  \rvy_{\theta}(t \mid t_0) &= \hat{h}\bigl(\rvs_{\theta}(t \mid t_0),\rvu(t),\theta\bigr).
+\end{aligned}
+\right.
+\]
+By the UEIIS property: $\|\rvs_{\theta_1}(t \mid t_0)- \rvs_{\theta_2}(t \mid t_0)\|_{2} \le C \tau^{t-t_0} \|\hat{\vs}_s(\theta_1)- \hat{\vs}_s(\theta_2)\|_{2} + \sum_{k=1}^{t-t_0}L\tau^{k-1}\|\theta_1 - \theta_2\|_{2}$, which is further bounded by $L_{\rs} C \tau^{t-t_0} \|\theta_1-\theta_2\|_{2} + L \sum_{k=1}^{t-t_0}\tau^{k-1}\|\theta_1 - \theta_2\|_{2}$, and in the end, as this is a convex combination of $L_{\rs}C$ and $\frac{L}{1-\tau}$ times $\|\theta_1-\theta_2\|_{2}$, it can be upper bounded by $\max\{L_{\rs} C, \frac{L}{1- \tau}\} \|\theta_1-\theta_2\|_{2}$.
+\\ Hence, for the output $\| \rvy_{\theta_1}(t \mid t_0)- \rvy_{\theta_2}(t \mid t_0) \|_{2} = \| \hat{h}\bigl(\rvs_{\theta_1}(t \mid t_0),\rvu(t),\theta_1\bigr) - \hat{h}\bigl(\rvs_{\theta_2}(t \mid t_0),\rvu(t),\theta_2\bigr) \|_{2}$ can be upper bounded by $L_{g,1} \|\rvs_{\theta_1}(t \mid t_0)- \rvs_{\theta_2}(t \mid t_0)\|_{2} + L_{g,2}  \|\theta_1-\theta_2\|_{2} \le \bigl(L_{g,1}\max\{L_{\rs} C, \frac{L}{1- \tau}\}+L_{g,2}\bigr)\|\theta_1- \theta_2\|_{2}$.\\
+Furthermore, if $\rvs_{\theta, \rvw}(t)$ is a stationary solution of the system, $ \|\rvs_{\theta_1, \rvw}(t)- \rvs_{\theta_2,\rvw}(t)\|_{2} \le L \sum_{k=1}^{\infty} \tau^{k-1}\|\theta_1 - \theta_2\|_{2} = \frac{L}{1-\tau}\|\theta_1 - \theta_2\|_{2} $.\\
+Putting the parts together, as $\rvy_{\theta}(t) = \hat{h}\bigl(\rvs_{\theta,\rvw }(t),\rvu(t),\theta\bigr)$, we get:
+\[
+\| \rvy_{\theta_1}(t) - \rvy_{\theta_2}(t) \|_{2}
+\le \Bigl( L_{g,1} \frac{L}{1-\tau} + L_{g,2} \Bigr) \|\theta_1 - \theta_2\|_{2}.
+\]
+So, we can take $L_{\mathrm{pred}}$ to be $ L_{g,1} \max\{L_{\rs} C, \frac{L}{1-\tau}\} + L_{g,2} $, which covers both cases.
+\end{pf}
+\end{color}
+
+
+\begin{pf}[Proof of Lemma \ref{ge:systemS:bilinear}]
+ Define $\mathbb{V}=\{ \vv= \begin{bmatrix} \vu^T & \ve \end{bmatrix}^T \in \mathbb{R}^{n_u+n_y} \mid \|\vu\|_{\infty} \le 1, \|\ve\|_{\infty} \le 1 \}$
+ Let $P_g > 0$ such that $\sum_{i=0}^{n_u} A_i^T P_g A_i- \tau^2/(1+n_u) P_g \prec 0$. By \cite{costa2006discrete} such a $P_g > 0$
+ always exists. Let $\vv=\begin{bmatrix} \vu^T & \ve \end{bmatrix}^T \in \mathbb{R}^{n_u+n_y}$ and let
+ $f_g(\vs,\vv)=(A_0+\sum_{i=1}^{n_u}A_i\vu_i)\vs+(K_0+\sum_{i=1}^{n_u} K_i\vu_i)\ve$, 
+ $g_g(\vs,\vv)=C_0\vs+\ve$. It then follows $\dfrac{f_g}{d\vs}^T(\vs,\vv) P_g \dfrac{f_g(\vs,\vv)}{d\vs} \preceq P_g$
+ for all $\vv \in \mathbb{V}$.
+ Indeed, by using $\vu_i\vu_j A_i^TP_gA_j \preceq \frac{1}{2}(\vu_i^2 A_i^TP_gA_i + \vu_j^2 A_j^TP_g A_j)$ for $i,j \in \{0,\ldots,n_u\}$
+ with $\vu_0=1$ and using that $\vu_i^2 \le 1$. It then follows that
+ $\dfrac{f_g(\vs,\vv)}{d\vs}=(A_0+\sum_{i=1}^{n_u} A_i \rvu_i)$ and hence
+$\dfrac{f_g(\vs,\vv)}{d\vs}^T P_g \dfrac{f_g(\vs,\vv)}{d\vs}=\sum_{i,j=0}^{n_u} \vu_i \vu_j A_i^T P_g A_j \le (1+n_u)\sum_{i=0}^{n_u} A_i^T P_g A_i \preceq \tau^2 P_g$. 
+From \cite[Theorem 1]{PavlovTac2011} it then follows that for 
+$\mathbb{S}=\{vs \mid \|\vs\|_2 \le \frac{\sqrt{\|P_g\|_2}}{1-\tau_g} (\sum_{i=0}^{n_u} \|K_i\|_2) n_y \|e^s(0)\|_{\infty} \}$
+and $\mathbb{Y}=\{\vy \mid \|vy\|_2 \le (\|C_0\|_2 \frac{\sqrt{\|P_g\|_2}}{1-\tau_g} \sum_{i=0}^{n_u} \|K_i\|_2) +1) n_y \|e^s(0)\|_{\infty}  \}$
+$\mathcal{S}_g=(\mathbb{S},\mathbb{V},\mathbb{Y},f_g,h_g)$ is a system of class \class{}
+with $L_g=\sqrt{\|P_g\|_2}(\sum_{i=0}^{n_u} \|K_i\|_2)$, $C=\sqrt{\|P_g\|_2}$,$\tau=\tau_g$, $L_{g,1}=\|C_0\|_2$, $L_{g,2}=1$. 
+Moreover, it is easy to see that $\rvy_{\mathcal{S}_g}(\rve_g) = \rvy(t)$ for $\rve_g=\begin{bmatrix} (\e^{s})^T & \rvu^T \end{bmatrix}^T$.
+ \end{pf}
+ \begin{pf}[Proof of Lemma \ref{ge:classS:bilinear:predictor}]
+Let us define $f_{\theta}(\vs,\vx)=(A_{0}(\theta)+\sum_{i=1}^{n_u} \vu_i A_{i}(\theta))\vs+(K_{0}(\theta)+\sum_{i=1}^{n_u} K_{i}(\theta))\vy$
+and $g_{\theta}(\vs,\vx)=\hat{C}_{0}(\theta)\vs$, where $\vx=\begin{bmatrix} \vy^T & \vu^T \end{bmatrix}^T$.
+It then follows that there exists $P > 0$ such that $\sum_{i=0}^{n_u} \hat{A}_{i,\theta}^T P \hat{A}_{i,\theta} - \hat{\tau}^2/(1+n_u) P \prec 0$ and by repeating the argument showing that $\mathcal{S}_g$ is a class \class{} it follows that
+$\dfrac{f_{\theta}(\vs,\vx)}{d\vs}^T P \dfrac{f_{\theta}(\vs,\vx)}{d\vs} \preceq \hat{\tau}^2 P$.
+for all $\vx \in \mathbb{V}$. 
+Set $\hat{C}=\sqrt{\|P\|_2}$. 
+Hence, by setting $\hat{\mathbb{S}}=\{ \vs \mid \|\vs\|_2 \le \frac{\hat{C}\sqrt{n_u+n_y}\hat{L}B^{\rvq}}{1-\hat{\tau}} \}$, 
+$\hat{\mathbb{V}}=\{\vv \mid \|\vv\|_{\infty} \le B^{\rvq}\}$, 
+$\hat{\mathbb{Y}}=\{\vy \mid \|\vy\|_2 \le \frac{\hat{L}_{g,1}\sqrt{n_u+n_y}\hat{L}B^{\rvq}}{1-\hat{\tau}} \}$
+and defining $\mathcal{S}_{\theta}$ as in Assumption \ref{as:parametrisation}, it follows that
+$\mathcal{S}_{\theta}$ is a system of class \class{} and 
+$h_{\theta}(\{\rvw(s)\}_{s=0}^{t}) = \rvy_{\mathcal{S}_{\theta}}(s_0,0,\rvw;t)$.
+\end{pf}
+ \begin{pf}[Proof of Lemma \ref{lemma:bilinear:markov1}]
+\begin{equation}
+\begin{aligned}
+    &\mathcal{L}(\theta)=\sigma^2_{\e^s} +\sum_{k,l=0}^{\infty} \sum_{q_1,q_2 \in \Sigma, w,v \in \Sigma^{*},|w|=k}
+   \mathrm{tr} (\hat{C}(\theta_{true}) \hat{A}(\theta_{true})_{w} \\
+   &\hat{K}_{q_1}(\theta_{true}) - \hat{C}(\theta) (A_{\theta})_w (\hat{K}_\theta)_{q_1}) E[\rvz^{\rvy}_{wq_1}(t)\rvz^{\rvy}_{vq_2}(t)^T](\hat{C}(\theta_{true}) \\
+   &\hat{A}(\theta_{true})_{v} \hat{K}_{q_2}(\theta_{true}) - \hat{C}(\theta) (A_{\theta})_v (\hat{K}_\theta)_{q_2})^T  
+\end{aligned}
+\end{equation}
+here $\sigma^{2}_{\e^s}=E[\|\e^s(t)\|^2_2]$.
+Note that by \cite{TAC:MPRV}, $E[\rvz^{\rvy}_{q_1w}(t)(\rvz_{q_2v}^{\rvy}(t))^T]=0$ if $q_1w \ne q_2w$ and 
+$E[\rvz_{qw}^{\rvy}(t)(\rvz_{qw}^{\rvy}(t))^T]=E[\rvz_q(t)(\rvz_q(t))^T] \triangleq \Lambda_q$
+\begin{equation}
+\begin{aligned}
+ \mathcal{L}(\theta)&=\sigma^2_{\e^s}+\sum_{k=0}^{\infty} \sum_{q \in \Sigma, w \in \Sigma^{*},|w|=k}
+   \mathrm{tr} (\hat{C}(\theta_{true}) \hat{A}(\theta_{true})_{w} \\
+   &\hat{K}_{q}(\theta_{true}) - \hat{C}(\theta) (A_{\theta})_w (\hat{K}_\theta)_{q}) 
+   \Lambda_q (\hat{C}(\theta_{true}) \hat{A}(\theta_{true})_{w} \\
+   &\hat{K}_{q}(\theta_{true}) 
+   - \hat{C}(\theta) (A_{\theta})_w (\hat{K}_\theta)_{q})^T
+\end{aligned}
+\end{equation}
+\end{pf}
+ \textbf{Existence of a wide-sense stationary solution of \eqref{eq:T0sys_bilinear}}
+We will use the following notation: let $\Sigma=\{0,\ldots,n_u\}$ and denote by $\Sigma^{*}$ the set of all finite sequences over $\Sigma$;
+  we denote by $\epsilon$ the empty sequence; we denote by $|w|$ the length of a sequence $w \in \Sigma^*$, by definition $| \epsilon | = 0$. For a collection of square matrices $\{A_i\}_{i \in \Sigma}$ and a sequence $\sigma=\sigma_1\ldots\sigma_k \in \Sigma^*$, we denote $A_{\sigma}=A_{\sigma_k}\cdots A_{\sigma_1}$ and $A_{\epsilon}=I$.
+  For any process $\rvr$, define $\rvz_w^{\rvr}(t)$ recursively as follows: $\rvz^{\rvr}_{\epsilon}(t)=\rvr(t)$ and $\rvz^{\rvr}_{wq}(t)=\rvz^{\rvr}_{w}(t-1)\rvu_q(t)$ for $w \in \Sigma^*, q \in \Sigma$.
+
+  From \cite{TAC:MPRV} it follows that 
+  \begin{equation}
+    \label{eq:bilinear_output}
+    \begin{aligned}
+      \rvy(t)&=\e^s(t)+\sum_{k=0}^{\infty} \sum_{q\in \Sigma, w \in \Sigma^*, |w|=k} C_0 A_w K_q \rvz^{\e^s}_{wq}(t)
+      \rvs(t)\\
+      & = \sum_{k=0}^{\infty} \sum_{q \in \Sigma, w \in \Sigma^*, |w|=k} A_wK_q \rvz^{\e^s}_{wq}(t-1)
+    \end{aligned}
+  \end{equation}
+
+
+
+\end{document}
+
