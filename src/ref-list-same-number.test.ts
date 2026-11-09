@@ -111,6 +111,45 @@ describe("sameNumbers: a label inside a heading's title", () => {
   });
 });
 
+describe("sameNumbers: a counter the rule cannot model is unknown", () => {
+  const paper = (cls: string, between: string) =>
+    `\\documentclass{${cls}}\n\\begin{document}\nSee \\ref{results}, \\ref{app}.\n\n\\section{Results}\\label{results}\n${between}\n\\end{document}\n`;
+  it("IEEEtran's \\appendix restarts the section counter in letters: the label after it prints its own number", () => {
+    // Guards: IEEEtran.cls lines 5725-5738 reset `section`, switch to letters and refstep it.
+    expect(judged(paper("IEEEtran", "\\appendix[Proof]\\label{app}"))).toEqual(
+      [],
+    );
+  });
+
+  it.each([
+    ["\\appendix"],
+    ["\\appendices"],
+    ["\\stepcounter{section}"],
+    ["\\setcounter{section}{0}"],
+    ["\\addtocounter{section}{1}"],
+    ["{\\refstepcounter{section}}"],
+    ["\\begin{appendices}\\end{appendices}"],
+  ])("%s before a run-in's label makes that label unknown", (cmd) => {
+    const run = `${cmd}\n\n\\textbf{RQ.}\\label{app} We did.`;
+    // Guards: without the command the same two labels print one number and are reported.
+    expect(
+      judged(paper("article", "\\textbf{RQ.}\\label{app} We did.")),
+    ).toHaveLength(1);
+    expect(judged(paper("article", run))).toEqual([]);
+  });
+
+  it("\\setcounter{secnumdepth} is no counter change: a run-in is still reported", () => {
+    expect(
+      judged(
+        paper(
+          "article",
+          "\\setcounter{secnumdepth}{3}\n\n\\textbf{RQ.}\\label{app}",
+        ),
+      ),
+    ).toHaveLength(1);
+  });
+});
+
 describe("sameNumbers: what a later or other command changes", () => {
   it("a \\setcounter{secnumdepth} later in the body does not reach the headings before it", () => {
     // Guards: the depth in force at each heading is the last change before it, in document order.

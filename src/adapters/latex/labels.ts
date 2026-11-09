@@ -216,8 +216,52 @@ function macroStep(s: Scan, m: Macro): Scan | null {
 const withDepth = (s: Scan, n: Node): Scan =>
   depthChanges(n).reduce<Scan>((w, d) => ({ ...w, numberedTo: d }), s);
 
-/** The walk's step over one top-level node. */
+/** Commands that reset or step a counter in a way the walk does not model: `\appendix` restarts the section counter in letters. */
+const UNMODELLED: ReadonlySet<string> = new Set([
+  "appendix",
+  "appendices",
+  "stepcounter",
+  "setcounter",
+  "addtocounter",
+]);
+
+/** Whether a node is a command (or the `appendices` environment) that changes a counter the walk cannot follow. */
+const changesCounter = (v: Node): boolean =>
+  v.type === "environment"
+    ? v.env === "appendices"
+    : v.type === "macro" &&
+      UNMODELLED.has(v.content) &&
+      !(
+        (v.content === "setcounter" || v.content === "addtocounter") &&
+        textOf(mandatory(v).at(0)?.content).trim() === "secnumdepth"
+      );
+
+/**
+ * Whether a node changes a counter the walk cannot model: one of those commands, anywhere inside it,
+ * or a `\refstepcounter` inside something else (a group hides which step a label after it takes).
+ */
+const hidesStep = (n: Node): boolean =>
+  visited(n, (v, parent) => isUnrendered(v, parent) || isDefinition(v))
+    .filter(isNode)
+    .some(
+      (v) =>
+        changesCounter(v) ||
+        (v !== n && v.type === "macro" && v.content === "refstepcounter"),
+    );
+
+/** The step after a counter the walk cannot model changed: unknown, so no label of it is judged. */
+const UNKNOWN: Stepped = {
+  at: { kind: "unplaced" },
+  what: "a counter changed by a command the rule does not model",
+};
+
+/** The walk's step over one top-level node: what it does, then what its counter commands make unknown. */
 function step(t: ParsedTex, before: Scan, n: Node): Scan {
+  const after = stepOnce(t, before, n);
+  return hidesStep(n) ? { ...after, stepped: UNKNOWN } : after;
+}
+
+function stepOnce(t: ParsedTex, before: Scan, n: Node): Scan {
   const s = withDepth(before, n);
   if (n.type === "parbreak") return { ...s, opening: true, anchor: NONE };
   if (s.opening && isRunInHeading(t, n)) {
