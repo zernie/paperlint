@@ -77,9 +77,23 @@ function shardOf(arg: string): Shard | null {
  * `--changed`: the draft loop (`npm run test:changed`). vitest runs only the unit tests that import
  * what the branch changed against origin/main, and the harnesses do not run. It goes through this
  * runner, not straight to vitest, so it gets the sources like every other run here.
+ *
+ * It also prints the coverage of the files the branch changed, and only those not at 100%
+ * (`coverage.changed` follows `--changed`; `skipFull`). A REPORT, not a gate: 40 of 217 files reach
+ * 100% only through the harnesses or the e2e suites, which do not run here (measured 2026-11-08), so
+ * a threshold would turn a sound branch red. The gate stays CI's `coverage` job. It costs ~30 s
+ * (166 s against 135 s on 207 test files, measured 2026-11-09), and it shows a missed branch before
+ * CI does: twice on 2026-11-08 a full run failed on a branch this report names in seconds.
  */
 const CHANGED = "--changed";
-const CHANGED_VITEST = ["--changed", "origin/main"] as const;
+const CHANGED_VITEST = [
+  "--changed",
+  "origin/main",
+  "--coverage.enabled",
+  "--coverage.provider=v8",
+  "--coverage.reporter=text",
+  "--coverage.skipFull",
+] as const;
 
 /** What the arguments say: the shard, `--changed` and the harness runner's own, or the argument that is no shard. */
 type Split =

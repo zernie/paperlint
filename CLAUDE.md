@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:1eee8edf5e6a649a compiled from CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:d38ff4060916b2a9 compiled from CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -39,7 +39,7 @@ This file loads on every turn, so it holds only what applies to **any** change h
 
 ## Before leaving draft and before merge
 
-`npm run check`, exit code read without a pipe; run it ONCE, before leaving draft — not after each change (2026-11-08: six full runs, ~51 min, where one was due). While drafting, `npm run test:changed` runs only the tests that import what the branch changed (109 s against the full check's ~10 min, measured; a change to `package.json` or the vitest config runs them all, 146 s); a `wip:` push to a DRAFT pull request needs only that, and is never reported as "the gates", because CI does not run the gates on a draft. `npm run lint` caches (`node_modules/.cache/eslint/`, 45 s → 3 s warm): a cached file is not re-judged when only a file it reads or imports changed (a preset, the build facts, an imported type), so a result that looks stale is checked with `rm -rf node_modules/.cache/eslint`; CI starts without the cache. Red first · assert the whole value · no test touches the real network · 100% coverage, no `c8 ignore`. In a container without TeX Live, only the TeX e2e gate fails, and it says so; `npx paperlint toolchain` installs it.
+While drafting, run `npm run test:changed` and `npm run lint`, and push `wip:` commits to the draft. `npm run test:changed` runs only the tests that import what the branch changed (109 s, measured; a change to `package.json` or the vitest config runs them all, 159 s with the report), then prints the changed files that are not at 100% coverage, with their uncovered lines: read it before leaving draft. It is a report, not a gate, because some lines are reached only by the harnesses or e2e suites it does not run (`scripts/test.ts`). Leave draft once both pass: leaving draft starts CI, and every gate of `npm run check` has a CI job (`scripts/check.harness.ts`), so CI is the gate. On red CI, fix it on the branch and push; merge on green CI at the current head. Run `npm run check` locally to debug one gate, or when `scripts/check.ts` itself changes (2026-11-08: 11 full local runs, ~127 min, each followed by a CI run that repeated it). `npm run lint` caches (`node_modules/.cache/eslint/`, 45 s → 3 s warm): a cached file is not re-judged when only a file it reads or imports changed (a preset, the build facts, an imported type), so a result that looks stale is checked with `rm -rf node_modules/.cache/eslint`; CI starts without the cache. Red first · assert the whole value · no test touches the real network · 100% coverage, no `c8 ignore`. In a container without TeX Live, only the TeX e2e gate fails, and it says so; `npx paperlint toolchain` installs it.
 
 ## Commits
 
@@ -85,6 +85,10 @@ Before writing machinery, **run the thing you are about to replace and paste its
 ### Split A Pull Request Over 1000 Lines
 
 **Guidance only** — A pull request stays at most about 1000 changed lines (`git diff --shortstat origin/main`, tests and docs included), so the author can skim all of it. A feature asked for while a PR is open goes in a new PR, not into the open one. Larger work is split into PRs that each stand on their own. The author asked for this after a 7000-line PR (2026-11-01).
+
+### Keep The Loop Short And Known
+
+**Guidance only** — The time from a change to its merge is a cost the author pays; keep it measured and shrinking. (1) Before starting, write the loop's estimate in minutes: edit, the fast tests, CI, the author's answer. (2) Answer each question with the cheapest check that settles it: one test file, then `npm run test:changed`, then CI. (3) Give every wait its wake-up: run the job in the background so it reports back, or set a check-in for when it should be done. (4) While a job runs, do the next piece of work: in a second git worktree, or the design of the next pull request. (5) At the end, put the estimate beside the clock, name the step that took longest, and propose one change that shortens it next time. Measured 2026-11-08: 11.4 h for five pull requests, ~3.5 h of it waiting on CI runs that had already finished.
 
 ### Installing Paperlint Is Smooth
 
