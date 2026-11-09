@@ -87,11 +87,13 @@ function studies(
           );
         },
         // A history with no decision and no output committed yet.
-        order: () => ({
-          kind: "read",
-          decision: null,
-          decisionDeleted: false,
-          files: [],
+        paper: () => ({
+          order: () => ({
+            kind: "read",
+            decision: null,
+            decisionDeleted: false,
+            files: [],
+          }),
         }),
         fileAt: () => {
           throw new Error("new and index never read a file at a commit");

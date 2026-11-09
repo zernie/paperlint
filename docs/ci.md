@@ -8,7 +8,9 @@ Two jobs, one choice: how much of the paper CI judges.
 | lint only (`init` adds it) | seconds                       | the source; not pages, fonts or references |
 
 `paperlint lint` exits non-zero on any error; warnings only print, unless you pass
-`--max-warnings <n>`.
+`--max-warnings <n>`. It also prints, on stderr, `linted <N> file(s) in <S> s` and, when the run
+took over 10 s, the three slowest rules with their milliseconds (`slowest rules: <rule> <ms> ms · …`):
+the line a slow job log needs to name its culprit.
 
 ## Build, then lint
 

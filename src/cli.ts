@@ -48,6 +48,9 @@ import {
   includeBlocks,
   paperBodies,
 } from "./paper-includes.ts";
+import { omit } from "remeda";
+import { refusalOf } from "./unowned-file.ts";
+import { ruleTimes, timingLines } from "./lint-timing.ts";
 import { prepareEngine } from "./build-engine.ts";
 import { cacheRoot, cachedTree, runToolchain } from "./toolchain.ts";
 import { banalInstaller, parseBanalSettings } from "./adapters/banal/index.ts";
@@ -976,7 +979,9 @@ function ownRules(
 }
 
 /**
- * The globs paperlint lints, for the refusal message only. Which files a block reaches is decided by
+ * The globs paperlint's own blocks claim, fragments included (the directive block below needs them);
+ * the refusal message leaves the fragment glob out, since it reaches only a built paper's body
+ * files. Which files a block reaches is decided by
  * `narrowToOwners` from `ownedScopes` (src/paper-files.ts), where each glob keeps its exceptions.
  */
 const PAPER_FILE_PATTERNS: string[] = ownedPatterns(
@@ -2016,12 +2021,15 @@ export async function run(
     log = console.log,
     err = console.error,
     cwd = process.cwd(),
+    now = () => performance.now(),
     checkReferences = onlineReferences,
     loadTexLanguage = loadLatexLanguage,
   }: {
     log?: typeof console.log;
     err?: typeof console.error;
     cwd?: string;
+    /** The clock `lint` times itself with, in milliseconds; a test hands one that answers fixed values. */
+    now?: () => number;
     /**
      * `lint`'s LaTeX language, loaded lazily because only `lint` needs it. A test hands one that
      * fails, as a broken install would.
@@ -2086,6 +2094,7 @@ export async function run(
   const cfg = readConfig(a, { log, err, cwd });
   if (cfg.code !== undefined) return cfg.code;
   const { opts, root } = cfg;
+  const started = now();
 
   // A command-line argument OVERRIDES the config: one paper out of the corpus gets linted without
   // editing a file.
@@ -2123,6 +2132,8 @@ export async function run(
   const engine = await paperEslint(cfg, paths, {
     loadTexLanguage,
     fix: a.fix,
+    // ESLint's own per-rule timings, for the line after the report (src/lint-timing.ts).
+    stats: true,
   });
   if (!engine.ok) return (err(engine.error), 2);
   const { eslint, opts: withPapers } = engine.value;
@@ -2130,7 +2141,17 @@ export async function run(
   const unowned = await firstUnownedFile(eslint, paths);
   if (unowned !== null) {
     err(
-      `${shown(cwd, unowned)} is not a file paperlint lints — it lints ${PAPER_FILE_PATTERNS.join(", ")}`,
+      refusalOf(
+        unowned,
+        {
+          // The recorded bodies are claimed per paper (includeBlocks), not by a glob of the config.
+          patterns: PAPER_FILE_PATTERNS.filter(
+            (g) => !FRAGMENT_FILES.includes(g),
+          ),
+          shown: (p) => shown(cwd, p),
+        },
+        RECORD_DEPS,
+      ),
     );
     return 2;
   }
@@ -2161,7 +2182,7 @@ export async function run(
     return 1;
   }
 
-  return await reportLint(eslint, results, structure, {
+  const code = await reportLint(eslint, results, structure, {
     a,
     log,
     err,
@@ -2173,6 +2194,15 @@ export async function run(
       .map((d) => join(d, MAIN))
       .filter((f) => existsSync(f)),
   });
+  // On stderr, so `--json` leaves stdout a clean array.
+  timingLines({
+    files: results.length,
+    ms: now() - started,
+    rules: ruleTimes(results),
+  }).forEach((line) => {
+    err(line);
+  });
+  return code;
 }
 
 /**
@@ -2186,9 +2216,12 @@ async function paperEslint(
   {
     loadTexLanguage,
     fix,
+    stats,
   }: {
     readonly loadTexLanguage: () => Promise<unknown>;
     readonly fix: boolean;
+    /** ESLint's own per-rule timings on each result (`paperlint lint` reads them; the hook does not). */
+    readonly stats: boolean;
   },
 ): Promise<Parsed<{ eslint: ESLint; opts: PaperlintConfig }>> {
   // The order, most general first so the most specific wins (ESLint: a later block wins): each
@@ -2224,6 +2257,7 @@ async function paperEslint(
       ...includeBlocks(bodies),
     ]),
     fix,
+    stats,
   });
   return { ok: true, value: { eslint, opts } };
 }
@@ -2249,6 +2283,7 @@ const editLinter =
     const engine = await paperEslint(cfg, [dir], {
       loadTexLanguage,
       fix: false,
+      stats: false,
     });
     if (!engine.ok) throw new Error(engine.error);
     const { eslint } = engine.value;
@@ -2391,7 +2426,16 @@ async function reportLint(
   }
 
   if (a.json)
-    log(JSON.stringify([...asEslintResults(structure), ...results], null, 1));
+    log(
+      JSON.stringify(
+        [
+          ...asEslintResults(structure),
+          ...results.map((r) => omit(r, ["stats"])),
+        ],
+        null,
+        1,
+      ),
+    );
   else {
     // Missing things are printed FIRST: they explain why the report below may be suspiciously
     // short. The reverse order would read as "all clean — oh, and also this".

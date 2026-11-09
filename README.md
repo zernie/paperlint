@@ -114,6 +114,9 @@ REALM.
      8:4   warning  `§` instead of the word «Section» — `paperlint lint --fix` writes it              paper/section-word
    ```
 
+   After the findings, `lint` prints on stderr how long it took (`linted 12 file(s) in 4.3 s`) and,
+   over 10 s, its three slowest rules with their milliseconds, so `--json` on stdout stays clean.
+
    `new` writes a format-neutral stub in plain `article`, and AgenticDev wants ACM's class. Make
    the first line `\documentclass[sigconf]{acmart}`, build again, and the errors are gone.
 

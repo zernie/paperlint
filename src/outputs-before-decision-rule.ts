@@ -5,6 +5,13 @@
  * docs/rules/repro/outputs-before-decision.md; this file finds the decide-first studies, lists their
  * folders, asks git through the `GitOrder` port, and reports.
  *
+ * ── ONE QUESTION TO GIT PER PAPER ──────────────────────────────────────────────
+ * The rule collects every decide-first study of the paper and its decision files FIRST, then asks git
+ * once (`GitOrder.paper`: a handful of processes whatever the number of studies) and reads each
+ * study's facts from that answer. It asked per study before: ~110 `--full-history` walks of the whole
+ * repository, 50 s of a 70 s lint on a paper with about 115 studies. The findings are unchanged; why
+ * they are, and what is asked, is in `src/adapters/git/index.ts`.
+ *
  * ── WHY A RULE MAY ASK GIT HERE ────────────────────────────────────────────────
  * `eslint-rules/` may not run git (eslint.config.mjs, `GIT_IN_A_RULE`): a pinned sha is deleted by a
  * squash or a gc, and a shallow CI checkout has none. This rule pins no sha. It asks the history the
@@ -47,37 +54,59 @@ export interface OrderDeps extends StudyDeps {
   readonly git: GitOrder;
 }
 
-/** Every decide-first study of the paper folder `paper`, with its tree and its history's order. */
+/**
+ * Every decide-first study of the paper folder `paper`, with its tree and its history's order. Git is
+ * asked ONCE for the whole paper (`GitOrder.paper`), after the studies and their decision files are
+ * known, and each study reads its facts from that one answer.
+ */
 export const decideFirstStudies = (
   paper: string,
   deps: OrderDeps,
 ): readonly DecideFirstStudy[] => {
   const reader = studyFolder(paper, deps);
-  return pipe(
+  const ready = readyStudies(paper, reader, deps);
+  const history = deps.git.paper(
+    callerPath(paper),
+    ready.filter((r) => r.on.kind === "ok").map((r) => callerPath(r.decision)),
+  );
+  return ready.map(({ row, plan, mode, gates, folder, decision, on }) => {
+    const study: DecideFirstStudy = {
+      id: row.id,
+      folder: row.folder,
+      plan,
+      mode,
+      tree: reader.list(row.folder),
+      facts:
+        on.kind === "ok"
+          ? history.order(callerPath(folder), callerPath(decision))
+          : on,
+    };
+    return {
+      ...study,
+      gates: gateHistory(study, { now: gates, kind: row.kind, folder }, deps),
+    };
+  });
+};
+
+/** The decide-first studies with a ready plan, with the folder and decision file each names, before git is asked. */
+const readyStudies = (
+  paper: string,
+  reader: ReturnType<typeof studyFolder>,
+  deps: OrderDeps,
+) =>
+  pipe(
     modeStudies(registryOf(paper, deps), reader, deps.codec),
     filter(isDecidedAndReady),
-    map(({ row, plan, mode, gates }): DecideFirstStudy => {
-      const folder = join(paper, REPRO_DIR, row.folder);
-      const decision = join(paper, mode.decision.file);
-      const on = decisionEntry(reader, mode.decision.file);
-      const study: DecideFirstStudy = {
-        id: row.id,
-        folder: row.folder,
-        plan,
-        mode,
-        tree: reader.list(row.folder),
-        facts:
-          on.kind === "ok"
-            ? deps.git.order(callerPath(folder), callerPath(decision))
-            : on,
-      };
-      return {
-        ...study,
-        gates: gateHistory(study, { now: gates, kind: row.kind, folder }, deps),
-      };
-    }),
+    map(({ row, plan, mode, gates }) => ({
+      row,
+      plan,
+      mode,
+      gates,
+      folder: join(paper, REPRO_DIR, row.folder),
+      decision: join(paper, mode.decision.file),
+      on: decisionEntry(reader, mode.decision.file),
+    })),
   );
-};
 
 /**
  * The gates of a plan v2 now, and the plan at the study's first output after its decision: none for
