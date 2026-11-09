@@ -9,7 +9,7 @@
  * the walk goes through the body's top-level nodes in order and keeps, for the paragraph it is in,
  * the last thing a label would take its number from, and the last step of a counter (its start).
  *
- * Only the running text is read: a label inside an environment (a float, a list, an equation) takes
+ * Only the running text is placed: a label inside an environment (a float, a list, an equation) takes
  * that environment's number or its own, and is not listed. What counts as a run-in heading is the
  * prose reader's own (`isRunInHeading`): a bold, italic, small-caps or underlined phrase ending in
  * `.` or `:` that opens a paragraph.
@@ -65,12 +65,14 @@ const STEPS_COUNTER: ReadonlySet<string> = new Set([
 /**
  * How deep a class numbers its headings when the source does not say: IEEEtran to `\paragraph`
  * except a technote or a compsoc conference paper, llncs to `\subsection`, acmart's `acmcp` format
- * not at all, the rest (article, acmart, …) to `\subsubsection`. Read from the classes' own
- * `\setcounter{secnumdepth}` (IEEEtran.cls, llncs.cls, acmart.dtx, 2026-11-09).
+ * not at all, book and report to `\subsection`, the rest (article, acmart, …) to `\subsubsection`.
+ * Read from the classes' own `\setcounter{secnumdepth}` (IEEEtran.cls, llncs.cls, acmart.dtx,
+ * 2026-11-09). TeX Live 2026 base: book.cls line 268 and report.cls line 262 are
+ * `\setcounter{secnumdepth}{2}`, article.cls line 255 is `\setcounter{secnumdepth}{3}`.
  */
 function classDepth(c: DocumentClass): number {
   const has = (o: string): boolean => c.options.includes(o);
-  if (c.cls === "llncs") return 2;
+  if (c.cls === "llncs" || c.cls === "book" || c.cls === "report") return 2;
   if (c.cls === "acmart") return has("acmcp") ? -1 : 3;
   if (c.cls !== "IEEEtran") return 3;
   return has("technote") || (has("compsoc") && has("conference")) ? 3 : 4;
@@ -155,6 +157,13 @@ const placed = (
 
 const isLabel = (n: Node): n is Macro =>
   n.type === "macro" && n.content === "label";
+
+/** Every `\label` key of the source, environments included, comments and macro definitions pruned. */
+export const labelKeysOf = (t: ParsedTex): readonly string[] =>
+  visited(t.root, (v, parent) => isUnrendered(v, parent) || isDefinition(v))
+    .filter(isNode)
+    .filter(isLabel)
+    .map((m) => textOf(mandatory(m).at(0)?.content).trim());
 
 /** The labels a node holds anywhere inside it (`\textbf{RQ2.\label{x}}`), comments pruned. */
 const labelsInside = (n: Node): readonly Macro[] =>

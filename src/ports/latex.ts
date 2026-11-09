@@ -63,6 +63,11 @@ export interface LatexReader {
    */
   readonly labels: (src: string) => readonly PlacedLabel[];
   /**
+   * The key of every `\label` of the source, inside environments too (a figure, a table, an
+   * equation), in document order: a key listed twice is defined twice, wherever it stands.
+   */
+  readonly labelKeys: (src: string) => readonly string[];
+  /**
    * The body's reference lists: two or more `\ref`, `\autoref`, `\cref` or `\Cref` keys of one
    * sentence, joined by nothing but commas, "and", "or" and spaces.
    */

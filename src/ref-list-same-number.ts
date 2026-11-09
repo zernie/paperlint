@@ -9,7 +9,8 @@
  * through the `LatexReader` port: `labels` says which step of which counter each label of the
  * running text takes its number from, `refLists` where two or more references share a sentence. Two
  * different keys of one list that take the number of the same step print the same number. A label
- * whose step is unknown (it stands in no paragraph that anchors it, or is defined twice) is never
+ * whose step is unknown (it stands in no paragraph that anchors it, or is defined twice anywhere,
+ * inside an environment too) is never
  * judged: unknown is not the same. A finding in an included file is reported at its include.
  */
 import type {
@@ -38,14 +39,19 @@ interface Known {
   readonly step: Stepped;
 }
 
-/** The labels whose step is known, by key; a key defined twice has none. */
+/**
+ * The labels whose step is known, by key; a key defined twice anywhere in the document has none
+ * (`defined` lists every `\label` key, environments included, so a figure's `\label{b}` makes `b`
+ * unknown even though the walk does not place it).
+ */
 const knownByKey = (
   labels: readonly PlacedLabel[],
+  defined: readonly string[],
 ): ReadonlyMap<string, Known> =>
   new Map(
     labels.flatMap((label) =>
       label.takes !== null &&
-      labels.filter((o) => o.key === label.key).length === 1
+      defined.filter((k) => k === label.key).length === 1
         ? [[label.key, { label, step: label.takes }] as const]
         : [],
     ),
@@ -107,8 +113,9 @@ function finding(
 export const sameNumbers = (
   lists: readonly RefList[],
   labels: readonly PlacedLabel[],
+  defined: readonly string[],
 ): readonly Located[] => {
-  const known = knownByKey(labels);
+  const known = knownByKey(labels, defined);
   return lists.flatMap((list) =>
     list.flatMap((r, i) => {
       const mine = known.get(r.key);
@@ -154,6 +161,7 @@ export const refListSameNumberRule = (deps: ProseDeps): TexRuleModule => ({
           sameNumbers(
             deps.latex.refLists(paper.text),
             deps.latex.labels(paper.text),
+            deps.latex.labelKeys(paper.text),
           ),
         );
       },

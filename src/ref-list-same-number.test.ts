@@ -17,10 +17,20 @@ const doc = (body: string): string =>
 /** The lines of the body the judge reports, with the message data, for a planted source. */
 const found = (body: string) => {
   const src = doc(body);
-  return sameNumbers(latexReader.refLists(src), latexReader.labels(src)).map(
-    (f) => [src.slice(0, f.at?.start ?? 0).split("\n").length, f] as const,
-  );
+  return sameNumbers(
+    latexReader.refLists(src),
+    latexReader.labels(src),
+    latexReader.labelKeys(src),
+  ).map((f) => [src.slice(0, f.at?.start ?? 0).split("\n").length, f] as const);
 };
+
+/** The judge's findings for a whole source, as the rule feeds it. */
+const judged = (src: string) =>
+  sameNumbers(
+    latexReader.refLists(src),
+    latexReader.labels(src),
+    latexReader.labelKeys(src),
+  );
 
 const HEAD = [
   "\\subsection{Check}\\label{sec:check}",
@@ -126,8 +136,7 @@ describe("sameNumbers: what a later or other command changes", () => {
     const src = `\\documentclass{report}\n\\begin{document}\n\\chapter{First}\n\\section{Old}\\label{old}\n\\chapter{Second}\\label{new}\n\nSee \\ref{old}, \\ref{new}.\n\\end{document}\n`;
     const part = `\\documentclass{book}\n\\begin{document}\n\\chapter{First}\\label{old}\n\\part{Two}\\label{new}\n\nSee \\ref{old}, \\ref{new}.\n\\end{document}\n`;
     const starred = `\\documentclass{report}\n\\begin{document}\n\\chapter{First}\\label{old}\n\\chapter*{Two}\\label{new}\n\nSee \\ref{old}, \\ref{new}.\n\\end{document}\n`;
-    const hits = (s: string) =>
-      sameNumbers(latexReader.refLists(s), latexReader.labels(s));
+    const hits = judged;
     // Guards: a numbered chapter or part is a step, so its label is not the earlier section's; a
     // starred chapter steps nothing, its label does print the chapter's number (reported).
     expect([
@@ -229,6 +238,27 @@ function run(
   return reports;
 }
 
+describe("sameNumbers: the class's default depth and every definition of a key", () => {
+  it("book and report number to \\subsection (2), not \\subsubsection: the deeper heading is a run-in", () => {
+    // Guards: book.cls line 268 and report.cls line 262 are `\setcounter{secnumdepth}{2}`, so
+    // `\subsubsection{B}` steps no counter and `b` takes the number of subsection A.
+    const hits = (cls: string) => {
+      const src = `\\documentclass{${cls}}\n\\begin{document}\n\\chapter{C}\n\\subsection{A}\\label{a}\n\\subsubsection{B}\\label{b}\n\nSee \\ref{a}, \\ref{b}.\n\\end{document}\n`;
+      return judged(src).length;
+    };
+    expect([hits("book"), hits("report"), hits("article")]).toEqual([1, 1, 0]);
+  });
+
+  it("a key defined again inside an environment is defined twice: never judged", () => {
+    // Guards: `b` is also a figure's label, outside the running text the walk reads, and is unknown.
+    expect(
+      found(
+        "\\subsection{A}\\label{a}\\label{b}\n\n\\begin{figure}\\caption{F}\\label{b}\\end{figure}\n\nSee \\ref{a}, \\ref{b}.",
+      ),
+    ).toEqual([]);
+  });
+});
+
 describe("sameNumbers: a step the parser gave no place", () => {
   it("is not the same as another: two labels on unplaced steps are never reported", () => {
     const label = (key: string): PlacedLabel => ({
@@ -244,7 +274,9 @@ describe("sameNumbers: a step the parser gave no place", () => {
     });
     const lists: readonly RefList[] = [[ref("a"), ref("b")]];
     // Guards: the same two labels on one PLACED step are reported, so the quiet is the unplaced.
-    expect(sameNumbers(lists, [label("a"), label("b")])).toEqual([]);
+    expect(sameNumbers(lists, [label("a"), label("b")], ["a", "b"])).toEqual(
+      [],
+    );
   });
 });
 
