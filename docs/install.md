@@ -100,7 +100,11 @@ resolve.
 nothing while guarding and says nothing while watching a directory that does not exist, so
 "installed" and "protecting you" look the same from outside. `doctor` prints the papers directory
 `paperlint lint` resolves and the one the hooks resolve, whether they match, whether the hooks are wired
-(once, twice, or not at all), and which external programs are missing.
+(once, twice, or not at all), and which external programs are missing. It exits 2 when the declaration is
+unusable, the CLI and the hooks disagree on the papers directory, or the hooks are miswired: partly wired (some
+paperlint hooks present, others missing) or any hook wired twice. A hook set wired by hand under another spelling
+counts as wired. Not wired at all, a missing external program and an unlinked skill are printed and exit 0,
+because `--no-hooks` and the skills you do not use are choices.
 
 ### How comparable tools install
 

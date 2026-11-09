@@ -15,6 +15,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "vitest";
 import { detectPapers, doctor } from "./doctor.ts";
+import { shippedWiring } from "./hooks-settings.ts";
 
 const project = (): string =>
   realpathSync(mkdtempSync(join(tmpdir(), "doctor-")));
@@ -61,4 +62,52 @@ test("doctor: a settings file silent on papersDir, an occupied entry, an unreada
   assert.match(out, /paper-pipeline — occupied, not the shipped skill/);
   assert.match(out, /\nhooks\n {2}⚠ not checked — EISDIR/);
   assert.equal(typeof code, "number");
+});
+
+/** Doctor's exit code for a project whose `.claude/settings.json` carries the given commands. */
+const exitWithHooks = (commands: readonly string[]): number => {
+  const root = project();
+  writeFileSync(join(root, "paperlint.json"), "{}\n");
+  mkdirSync(join(root, ".claude"), { recursive: true });
+  const entries = commands.map((command) => ({
+    matcher: "Bash",
+    hooks: [{ type: "command", command }],
+  }));
+  writeFileSync(
+    join(root, ".claude", "settings.json"),
+    JSON.stringify({ hooks: { PreToolUse: entries } }),
+  );
+  return doctor({
+    cwd: root,
+    log: () => undefined,
+    run: () => ({ status: 0 }),
+    cliPapers: join(root, "papers"),
+    skillLinks: () => ({
+      ok: true,
+      home: join(root, ".claude", "skills"),
+      example: null,
+      links: [],
+    }),
+  });
+};
+
+const hookCommand = (name: string): string => `npx paperlint hook ${name}`;
+const allHooks = shippedWiring().names;
+
+test("doctor exits 0 when every hook is wired once, or none is (--no-hooks is a choice)", () => {
+  assert.equal(exitWithHooks(allHooks.map(hookCommand)), 0);
+  assert.equal(exitWithHooks([]), 0);
+});
+
+test("doctor exits non-zero when the hooks are only partly wired", () => {
+  assert.equal(exitWithHooks(allHooks.slice(1).map(hookCommand)), 2);
+  assert.equal(exitWithHooks([hookCommand("paper-edit-guard")]), 2);
+});
+
+test("doctor exits non-zero when a hook is wired twice", () => {
+  const commands = [
+    ...allHooks.map(hookCommand),
+    hookCommand(allHooks[0] ?? ""),
+  ];
+  assert.equal(exitWithHooks(commands), 2);
 });

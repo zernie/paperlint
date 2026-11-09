@@ -253,8 +253,9 @@ export interface DoctorOptions {
 }
 
 /**
- * @returns 2 when the guard and the linter do not agree, or the declaration is unusable — those
- * are binary and are the reason this command exists. A missing external program is a FACT, not a
+ * @returns 2 when the guard and the linter do not agree, the declaration is unusable, or the hooks
+ * are miswired (partly wired, or one wired twice) — those are binary and are the reason this
+ * command exists. A missing external program is a FACT, not a
  * verdict: it is printed and does not fail the run, because which programs you need depends on
  * which skills you use. A doctor that exits non-zero on an advisory line gets piped to /dev/null.
  */
@@ -341,10 +342,13 @@ export function doctor({
 
   // 🔴 THE HOOKS ARE READ FROM THE FILE THAT CARRIES THEM. Until `init` wrote them into
   // `.claude/settings.json`, the only carrier was a plugin and this section said "cannot be
-  // checked from a terminal". Advisory, like the skills: `--no-hooks` is a choice, not a fault.
+  // checked from a terminal". Hooks wired NOT AT ALL are advisory, like the skills: `--no-hooks`
+  // is a choice, not a fault. Partly wired, or wired twice, is a fault and fails the run.
   out.push("");
   try {
-    out.push(...doctorHooks(root));
+    const hooks = doctorHooks(root);
+    out.push(...hooks.lines);
+    bad += hooks.bad;
   } catch (e) {
     out.push(`hooks`, `  ⚠ not checked — ${messageOf(e)}`);
   }
