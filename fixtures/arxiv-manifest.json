@@ -6,8 +6,7 @@
     "main_tex": "./main.tex",
     "class": "IEEEtran",
     "category": "cs.AI",
-    "size_bytes": 147661,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 147661
   },
   {
     "arxiv_id": "2611.06563v1",
@@ -16,8 +15,7 @@
     "main_tex": "./main_arxiv.tex",
     "class": "IEEEcsmag",
     "category": "cs.SE",
-    "size_bytes": 260430,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 260430
   },
   {
     "arxiv_id": "2611.06764v1",
@@ -26,8 +24,7 @@
     "main_tex": "./main.tex",
     "class": "acmart",
     "category": "cs.SE",
-    "size_bytes": 83171,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 83171
   },
   {
     "arxiv_id": "2611.07159v1",
@@ -36,8 +33,7 @@
     "main_tex": "./pic-beyond-possession.tex",
     "class": "article",
     "category": "cs.CR",
-    "size_bytes": 158215,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 158215
   },
   {
     "arxiv_id": "2611.07164v1",
@@ -46,8 +42,7 @@
     "main_tex": "./full-provenance-coss-causal.tex",
     "class": "article",
     "category": "cs.CR",
-    "size_bytes": 105598,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 105598
   },
   {
     "arxiv_id": "2611.07166v1",
@@ -56,8 +51,7 @@
     "main_tex": "./main.tex",
     "class": "article",
     "category": "cs.SE",
-    "size_bytes": 99251,
-    "folder": "arxiv-papers"
+    "size_bytes": 99251
   },
   {
     "arxiv_id": "2611.07297v1",
@@ -66,8 +60,7 @@
     "main_tex": "./main.tex",
     "class": "acmart",
     "category": "cs.CY",
-    "size_bytes": 282004,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 282004
   },
   {
     "arxiv_id": "2611.07307v1",
@@ -76,8 +69,7 @@
     "main_tex": "./iclr2027_conference.tex",
     "class": "article+iclr",
     "category": "cs.SE",
-    "size_bytes": 249420,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 249420
   },
   {
     "arxiv_id": "2611.07370v1",
@@ -86,8 +78,7 @@
     "main_tex": "./arxiv.tex",
     "class": "llncs",
     "category": "cs.CR",
-    "size_bytes": 66026,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 66026
   },
   {
     "arxiv_id": "2611.07403v1",
@@ -96,8 +87,7 @@
     "main_tex": "./root.tex",
     "class": "ieeeconf",
     "category": "cs.RO",
-    "size_bytes": 254109,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 254109
   },
   {
     "arxiv_id": "2611.07576v1",
@@ -106,8 +96,7 @@
     "main_tex": "./main.tex",
     "class": "IEEEtran",
     "category": "cs.CY",
-    "size_bytes": 132771,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 132771
   },
   {
     "arxiv_id": "2611.07640v1",
@@ -116,8 +105,7 @@
     "main_tex": "./main.tex",
     "class": "article+iclr",
     "category": "cs.CR",
-    "size_bytes": 216647,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 216647
   },
   {
     "arxiv_id": "2611.07652v1",
@@ -126,8 +114,7 @@
     "main_tex": "./manuscript.tex",
     "class": "article",
     "category": "cs.AI",
-    "size_bytes": 195608,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 195608
   },
   {
     "arxiv_id": "2611.07876v1",
@@ -136,8 +123,7 @@
     "main_tex": "./main.tex",
     "class": "IEEEtran",
     "category": "cs.SE",
-    "size_bytes": 166995,
-    "folder": "arxiv-papers"
+    "size_bytes": 166995
   },
   {
     "arxiv_id": "2611.07945v1",
@@ -146,8 +132,7 @@
     "main_tex": "./main.tex",
     "class": "article",
     "category": "cs.CY",
-    "size_bytes": 119196,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 119196
   },
   {
     "arxiv_id": "2611.07951v1",
@@ -156,8 +141,7 @@
     "main_tex": "./main.tex",
     "class": "acmart",
     "category": "cs.SE",
-    "size_bytes": 132596,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 132596
   },
   {
     "arxiv_id": "2611.08144v1",
@@ -166,8 +150,7 @@
     "main_tex": "./main.tex",
     "class": "IEEEtran",
     "category": "cs.RO",
-    "size_bytes": 47555,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 47555
   },
   {
     "arxiv_id": "2611.08325v1",
@@ -176,8 +159,7 @@
     "main_tex": "./main_arxiv.tex",
     "class": "acmart",
     "category": "cs.CR",
-    "size_bytes": 159728,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 159728
   },
   {
     "arxiv_id": "2611.08383v1",
@@ -186,8 +168,7 @@
     "main_tex": "./main.tex",
     "class": "elsarticle",
     "category": "cs.CR",
-    "size_bytes": 89041,
-    "folder": "arxiv-papers"
+    "size_bytes": 89041
   },
   {
     "arxiv_id": "2611.08442v1",
@@ -196,8 +177,7 @@
     "main_tex": "./manuscriot.tex",
     "class": "article",
     "category": "cs.SE",
-    "size_bytes": 148851,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 148851
   },
   {
     "arxiv_id": "2611.08608v1",
@@ -206,8 +186,7 @@
     "main_tex": "./bare_conf_compsoc.tex",
     "class": "IEEEtran",
     "category": "cs.CR",
-    "size_bytes": 180052,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 180052
   },
   {
     "arxiv_id": "2611.08639v1",
@@ -216,8 +195,7 @@
     "main_tex": "./blackboxnlp2026.tex",
     "class": "article+acl",
     "category": "cs.CL",
-    "size_bytes": 121064,
-    "folder": "arxiv-papers"
+    "size_bytes": 121064
   },
   {
     "arxiv_id": "2611.08666v1",
@@ -226,8 +204,7 @@
     "main_tex": "./neurips_2026.tex",
     "class": "article+neurips",
     "category": "cs.AI",
-    "size_bytes": 76359,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 76359
   },
   {
     "arxiv_id": "2611.08669v1",
@@ -236,8 +213,7 @@
     "main_tex": "./paper.tex",
     "class": "article",
     "category": "cs.AI",
-    "size_bytes": 173733,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 173733
   },
   {
     "arxiv_id": "2611.08706v1",
@@ -246,8 +222,7 @@
     "main_tex": "./main.tex",
     "class": "article+acl",
     "category": "cs.LG",
-    "size_bytes": 83628,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 83628
   },
   {
     "arxiv_id": "2611.08714v1",
@@ -256,8 +231,7 @@
     "main_tex": "./main.tex",
     "class": "article+acl",
     "category": "cs.LG",
-    "size_bytes": 118697,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 118697
   },
   {
     "arxiv_id": "2611.08737v1",
@@ -266,8 +240,7 @@
     "main_tex": "./AHR26.tex",
     "class": "article+neurips",
     "category": "cs.LG",
-    "size_bytes": 213004,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 213004
   },
   {
     "arxiv_id": "2611.08774v1",
@@ -276,8 +249,7 @@
     "main_tex": "./conference_101719.tex",
     "class": "IEEEtran",
     "category": "cs.CR",
-    "size_bytes": 60382,
-    "folder": "arxiv-papers"
+    "size_bytes": 60382
   },
   {
     "arxiv_id": "2611.08811v1",
@@ -286,8 +258,7 @@
     "main_tex": "./arxiv.tex",
     "class": "IEEEtran",
     "category": "cs.AI",
-    "size_bytes": 46367,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 46367
   },
   {
     "arxiv_id": "2611.08892v1",
@@ -296,8 +267,7 @@
     "main_tex": "./tmlr_paper.tex",
     "class": "article",
     "category": "cs.CL",
-    "size_bytes": 236326,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 236326
   },
   {
     "arxiv_id": "2611.08924v1",
@@ -306,8 +276,7 @@
     "main_tex": "./iclr2027_conference.tex",
     "class": "article+iclr",
     "category": "cs.LG",
-    "size_bytes": 189385,
-    "folder": "arxiv-papers"
+    "size_bytes": 189385
   },
   {
     "arxiv_id": "2611.08933v1",
@@ -316,8 +285,7 @@
     "main_tex": "./main.tex",
     "class": "article+neurips",
     "category": "cs.SE",
-    "size_bytes": 109128,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 109128
   },
   {
     "arxiv_id": "2611.08971v1",
@@ -326,8 +294,7 @@
     "main_tex": "./neurips_2026.tex",
     "class": "article+neurips",
     "category": "cs.MA",
-    "size_bytes": 114047,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 114047
   },
   {
     "arxiv_id": "2611.08995v1",
@@ -336,8 +303,7 @@
     "main_tex": "./main.tex",
     "class": "article",
     "category": "cs.CY",
-    "size_bytes": 109589,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 109589
   },
   {
     "arxiv_id": "2611.09027v1",
@@ -346,8 +312,7 @@
     "main_tex": "./main.tex",
     "class": "jmlr",
     "category": "cs.CL",
-    "size_bytes": 98851,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 98851
   },
   {
     "arxiv_id": "2611.09075v1",
@@ -356,8 +321,7 @@
     "main_tex": "./main.tex",
     "class": "IEEEtran",
     "category": "cs.LG",
-    "size_bytes": 38602,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 38602
   },
   {
     "arxiv_id": "2611.09113v1",
@@ -366,8 +330,7 @@
     "main_tex": "./main.tex",
     "class": "article+acl",
     "category": "cs.CR",
-    "size_bytes": 234997,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 234997
   },
   {
     "arxiv_id": "2611.09147v1",
@@ -376,8 +339,7 @@
     "main_tex": "./main.tex",
     "class": "article+neurips",
     "category": "cs.AI",
-    "size_bytes": 118948,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 118948
   },
   {
     "arxiv_id": "2611.09177v1",
@@ -386,8 +348,7 @@
     "main_tex": "./samplepaper.tex",
     "class": "llncs",
     "category": "cs.AI",
-    "size_bytes": 156851,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 156851
   },
   {
     "arxiv_id": "2611.09196v1",
@@ -396,8 +357,7 @@
     "main_tex": "./paper-1.tex",
     "class": "article",
     "category": "cs.CL",
-    "size_bytes": 147378,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 147378
   },
   {
     "arxiv_id": "2611.09200v1",
@@ -406,8 +366,7 @@
     "main_tex": "./main.tex",
     "class": "llncs",
     "category": "cs.IR",
-    "size_bytes": 159548,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 159548
   },
   {
     "arxiv_id": "2611.09203v1",
@@ -416,8 +375,7 @@
     "main_tex": "./main.tex",
     "class": "article",
     "category": "cs.LG",
-    "size_bytes": 72825,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 72825
   },
   {
     "arxiv_id": "2611.09204v1",
@@ -426,8 +384,7 @@
     "main_tex": "./paper-2.tex",
     "class": "article+icml",
     "category": "cs.CL",
-    "size_bytes": 143358,
-    "folder": "arxiv-papers"
+    "size_bytes": 143358
   },
   {
     "arxiv_id": "2611.09218v1",
@@ -436,8 +393,7 @@
     "main_tex": "./main.tex",
     "class": "article+iclr",
     "category": "cs.SE",
-    "size_bytes": 232509,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 232509
   },
   {
     "arxiv_id": "2611.09223v1",
@@ -446,8 +402,7 @@
     "main_tex": "./main.tex",
     "class": "article+acl",
     "category": "cs.CL",
-    "size_bytes": 227098,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 227098
   },
   {
     "arxiv_id": "2611.09239v1",
@@ -456,8 +411,7 @@
     "main_tex": "./main.tex",
     "class": "article",
     "category": "cs.CL",
-    "size_bytes": 113212,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 113212
   },
   {
     "arxiv_id": "2611.09260v1",
@@ -466,8 +420,7 @@
     "main_tex": "./main.tex",
     "class": "llncs",
     "category": "cs.SE",
-    "size_bytes": 109515,
-    "folder": "arxiv-papers"
+    "size_bytes": 109515
   },
   {
     "arxiv_id": "2611.09277v1",
@@ -476,8 +429,7 @@
     "main_tex": "./main.tex",
     "class": "elsarticle",
     "category": "cs.CR",
-    "size_bytes": 187492,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 187492
   },
   {
     "arxiv_id": "2611.09307v1",
@@ -486,8 +438,7 @@
     "main_tex": "./wake5.tex",
     "class": "article",
     "category": "cs.SE",
-    "size_bytes": 108262,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 108262
   },
   {
     "arxiv_id": "2611.09313v1",
@@ -496,8 +447,7 @@
     "main_tex": "./main.tex",
     "class": "IEEEtran",
     "category": "cs.CL",
-    "size_bytes": 81812,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 81812
   },
   {
     "arxiv_id": "2611.09342v1",
@@ -506,8 +456,7 @@
     "main_tex": "./main.tex",
     "class": "article+acl",
     "category": "cs.CL",
-    "size_bytes": 171285,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 171285
   },
   {
     "arxiv_id": "2611.09373v1",
@@ -516,8 +465,7 @@
     "main_tex": "./main.tex",
     "class": "article+neurips",
     "category": "cs.LG",
-    "size_bytes": 83055,
-    "folder": "arxiv-papers"
+    "size_bytes": 83055
   },
   {
     "arxiv_id": "2611.09385v1",
@@ -526,8 +474,7 @@
     "main_tex": "./paper.tex",
     "class": "fairmeta",
     "category": "cs.AI",
-    "size_bytes": 121103,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 121103
   },
   {
     "arxiv_id": "2611.09388v1",
@@ -536,8 +483,7 @@
     "main_tex": "./main-v2.tex",
     "class": "article",
     "category": "cs.LG",
-    "size_bytes": 259535,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 259535
   },
   {
     "arxiv_id": "2611.09396v1",
@@ -546,8 +492,7 @@
     "main_tex": "./main.tex",
     "class": "article",
     "category": "cs.AI",
-    "size_bytes": 156683,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 156683
   },
   {
     "arxiv_id": "2611.09401v1",
@@ -556,8 +501,7 @@
     "main_tex": "./main.tex",
     "class": "article+iclr",
     "category": "cs.AI",
-    "size_bytes": 214387,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 214387
   },
   {
     "arxiv_id": "2611.09402v1",
@@ -566,8 +510,7 @@
     "main_tex": "./main.tex",
     "class": "article",
     "category": "cs.CL",
-    "size_bytes": 91907,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 91907
   },
   {
     "arxiv_id": "2611.09417v1",
@@ -576,8 +519,7 @@
     "main_tex": "./main.tex",
     "class": "article+neurips",
     "category": "cs.LG",
-    "size_bytes": 73770,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 73770
   },
   {
     "arxiv_id": "2611.09448v1",
@@ -586,8 +528,7 @@
     "main_tex": "./AnonymousSubmission2027.tex",
     "class": "article+aaai",
     "category": "cs.LG",
-    "size_bytes": 146432,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 146432
   },
   {
     "arxiv_id": "2611.09454v1",
@@ -596,8 +537,7 @@
     "main_tex": "./main.tex",
     "class": "article",
     "category": "cs.LG",
-    "size_bytes": 106157,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 106157
   },
   {
     "arxiv_id": "2611.09457v1",
@@ -606,8 +546,7 @@
     "main_tex": "./main.tex",
     "class": "article+acl",
     "category": "cs.AI",
-    "size_bytes": 163234,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 163234
   },
   {
     "arxiv_id": "2611.09472v1",
@@ -616,8 +555,7 @@
     "main_tex": "./main.tex",
     "class": "article",
     "category": "cs.AI",
-    "size_bytes": 215068,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 215068
   },
   {
     "arxiv_id": "2611.09496v1",
@@ -626,8 +564,7 @@
     "main_tex": "./Template.tex",
     "class": "article",
     "category": "cs.LG",
-    "size_bytes": 42368,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 42368
   },
   {
     "arxiv_id": "2611.09505v1",
@@ -636,8 +573,7 @@
     "main_tex": "./acl_latex.tex",
     "class": "article+acl",
     "category": "cs.CV",
-    "size_bytes": 156144,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 156144
   },
   {
     "arxiv_id": "2611.09511v1",
@@ -646,8 +582,7 @@
     "main_tex": "./main.tex",
     "class": "article+aaai",
     "category": "cs.CV",
-    "size_bytes": 122243,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 122243
   },
   {
     "arxiv_id": "2611.09514v1",
@@ -656,8 +591,7 @@
     "main_tex": "./imece26_pinns_framework_paper_revised_v8.tex",
     "class": "asmeconf",
     "category": "cs.AI",
-    "size_bytes": 239150,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 239150
   },
   {
     "arxiv_id": "2611.09516v1",
@@ -666,8 +600,7 @@
     "main_tex": "./main.tex",
     "class": "llncs",
     "category": "cs.CL",
-    "size_bytes": 75202,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 75202
   },
   {
     "arxiv_id": "2611.09520v1",
@@ -676,8 +609,7 @@
     "main_tex": "./main_tmlr.tex",
     "class": "article",
     "category": "cs.LG",
-    "size_bytes": 218274,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 218274
   },
   {
     "arxiv_id": "2611.09522v1",
@@ -686,8 +618,7 @@
     "main_tex": "./atik.tex",
     "class": "acmart",
     "category": "cs.AI",
-    "size_bytes": 275397,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 275397
   },
   {
     "arxiv_id": "2611.09529v1",
@@ -696,8 +627,7 @@
     "main_tex": "./asmeconf-template.tex",
     "class": "asmeconf",
     "category": "cs.AI",
-    "size_bytes": 227980,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 227980
   },
   {
     "arxiv_id": "2611.09534v1",
@@ -706,8 +636,7 @@
     "main_tex": "./sn-article.tex",
     "class": "sn-jnl",
     "category": "cond-mat.mtrl-sci",
-    "size_bytes": 213623,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 213623
   },
   {
     "arxiv_id": "2611.09536v1",
@@ -716,8 +645,7 @@
     "main_tex": "./main.tex",
     "class": "article+cvpr",
     "category": "cs.CV",
-    "size_bytes": 127179,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 127179
   },
   {
     "arxiv_id": "2611.09554v1",
@@ -726,8 +654,7 @@
     "main_tex": "./acl_latex.tex",
     "class": "article+acl",
     "category": "cs.CL",
-    "size_bytes": 135101,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 135101
   },
   {
     "arxiv_id": "2611.09567v1",
@@ -736,8 +663,7 @@
     "main_tex": "./main.tex",
     "class": "article+neurips",
     "category": "physics.flu-dyn",
-    "size_bytes": 193588,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 193588
   },
   {
     "arxiv_id": "2611.09569v1",
@@ -746,8 +672,7 @@
     "main_tex": "./main.tex",
     "class": "acmart",
     "category": "cs.CR",
-    "size_bytes": 190083,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 190083
   },
   {
     "arxiv_id": "2611.09573v1",
@@ -756,8 +681,7 @@
     "main_tex": "./main.tex",
     "class": "article",
     "category": "physics.ao-ph",
-    "size_bytes": 134062,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 134062
   },
   {
     "arxiv_id": "2611.09596v1",
@@ -766,8 +690,7 @@
     "main_tex": "./adam_coordinate_calibration.tex",
     "class": "article",
     "category": "cs.LG",
-    "size_bytes": 98945,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 98945
   },
   {
     "arxiv_id": "2611.09612v1",
@@ -776,8 +699,7 @@
     "main_tex": "./main.tex",
     "class": "article",
     "category": "stat.ML",
-    "size_bytes": 150838,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 150838
   },
   {
     "arxiv_id": "2611.09615v1",
@@ -786,8 +708,7 @@
     "main_tex": "./arXiv.tex",
     "class": "article",
     "category": "cs.GT",
-    "size_bytes": 140603,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 140603
   },
   {
     "arxiv_id": "2611.09625v1",
@@ -796,8 +717,7 @@
     "main_tex": "./iclr2027_conference.tex",
     "class": "article+iclr",
     "category": "cs.LG",
-    "size_bytes": 224887,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 224887
   },
   {
     "arxiv_id": "2611.09634v1",
@@ -806,8 +726,7 @@
     "main_tex": "./iclr2027_conference.tex",
     "class": "article+iclr",
     "category": "cs.CL",
-    "size_bytes": 247431,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 247431
   },
   {
     "arxiv_id": "2611.09670v1",
@@ -816,8 +735,7 @@
     "main_tex": "./main.tex",
     "class": "article+icml",
     "category": "cs.RO",
-    "size_bytes": 208746,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 208746
   },
   {
     "arxiv_id": "2611.09709v1",
@@ -826,8 +744,7 @@
     "main_tex": "./ridgefill.tex",
     "class": "article",
     "category": "cs.LG",
-    "size_bytes": 185464,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 185464
   },
   {
     "arxiv_id": "2611.09715v1",
@@ -836,8 +753,7 @@
     "main_tex": "./neurips_2026.tex",
     "class": "article+neurips",
     "category": "cs.AI",
-    "size_bytes": 137733,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 137733
   },
   {
     "arxiv_id": "2611.09722v1",
@@ -846,8 +762,7 @@
     "main_tex": "./main.tex",
     "class": "article",
     "category": "cs.AI",
-    "size_bytes": 152013,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 152013
   },
   {
     "arxiv_id": "2611.09723v1",
@@ -856,8 +771,7 @@
     "main_tex": "./main_2_.tex",
     "class": "article",
     "category": "cs.LG",
-    "size_bytes": 208378,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 208378
   },
   {
     "arxiv_id": "2611.09734v1",
@@ -866,8 +780,7 @@
     "main_tex": "./zhanggroup.tex",
     "class": "article",
     "category": "cs.CR",
-    "size_bytes": 108688,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 108688
   },
   {
     "arxiv_id": "2611.09759v1",
@@ -876,8 +789,7 @@
     "main_tex": "./main_arxiv.tex",
     "class": "article+neurips",
     "category": "cs.LG",
-    "size_bytes": 107905,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 107905
   },
   {
     "arxiv_id": "2611.09767v1",
@@ -886,8 +798,7 @@
     "main_tex": "./sysid2027_arxiv.tex",
     "class": "ifacconf",
     "category": "cs.LG",
-    "size_bytes": 248914,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 248914
   },
   {
     "arxiv_id": "2611.09780v1",
@@ -896,8 +807,7 @@
     "main_tex": "./main.tex",
     "class": "article",
     "category": "cs.GT",
-    "size_bytes": 150133,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 150133
   },
   {
     "arxiv_id": "2611.09785v1",
@@ -906,8 +816,7 @@
     "main_tex": "./acl_latex.tex",
     "class": "article+acl",
     "category": "cs.CL",
-    "size_bytes": 222304,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 222304
   },
   {
     "arxiv_id": "2611.09791v1",
@@ -916,8 +825,7 @@
     "main_tex": "./elsarticle-template-num.tex",
     "class": "elsarticle",
     "category": "cs.AI",
-    "size_bytes": 110988,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 110988
   },
   {
     "arxiv_id": "2611.09792v1",
@@ -926,8 +834,7 @@
     "main_tex": "./main.tex",
     "class": "article",
     "category": "cs.AI",
-    "size_bytes": 141719,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 141719
   },
   {
     "arxiv_id": "2611.09798v1",
@@ -936,8 +843,7 @@
     "main_tex": "./main.tex",
     "class": "arxiv",
     "category": "cs.AI",
-    "size_bytes": 165946,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 165946
   },
   {
     "arxiv_id": "2611.09799v1",
@@ -946,8 +852,7 @@
     "main_tex": "./draft.tex",
     "class": "article",
     "category": "math.ST",
-    "size_bytes": 164035,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 164035
   },
   {
     "arxiv_id": "2611.09808v1",
@@ -956,8 +861,7 @@
     "main_tex": "./main.tex",
     "class": "svjour3",
     "category": "cs.SE",
-    "size_bytes": 201619,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 201619
   },
   {
     "arxiv_id": "2611.09815v1",
@@ -966,8 +870,7 @@
     "main_tex": "./final.tex",
     "class": "article+neurips",
     "category": "cs.LG",
-    "size_bytes": 66917,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 66917
   },
   {
     "arxiv_id": "2611.09817v1",
@@ -976,8 +879,7 @@
     "main_tex": "./main.tex",
     "class": "article",
     "category": "hep-lat",
-    "size_bytes": 186853,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 186853
   },
   {
     "arxiv_id": "2611.09818v1",
@@ -986,8 +888,7 @@
     "main_tex": "./main.tex",
     "class": "article+neurips",
     "category": "cs.AI",
-    "size_bytes": 110237,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 110237
   },
   {
     "arxiv_id": "2611.09828v1",
@@ -996,8 +897,7 @@
     "main_tex": "./neurips_2026.tex",
     "class": "article+neurips",
     "category": "cs.LG",
-    "size_bytes": 215214,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 215214
   },
   {
     "arxiv_id": "2611.09843v1",
@@ -1006,8 +906,7 @@
     "main_tex": "./main_new.tex",
     "class": "article+neurips",
     "category": "cs.LG",
-    "size_bytes": 155113,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 155113
   },
   {
     "arxiv_id": "2611.09846v1",
@@ -1016,8 +915,7 @@
     "main_tex": "./main.tex",
     "class": "acmart",
     "category": "cs.AI",
-    "size_bytes": 82410,
-    "folder": "arxiv-papers"
+    "size_bytes": 82410
   },
   {
     "arxiv_id": "2611.09847v1",
@@ -1026,8 +924,7 @@
     "main_tex": "./main.tex",
     "class": "article+neurips",
     "category": "cs.LG",
-    "size_bytes": 74373,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 74373
   },
   {
     "arxiv_id": "2611.09848v1",
@@ -1036,8 +933,7 @@
     "main_tex": "./main.tex",
     "class": "article",
     "category": "cs.IT",
-    "size_bytes": 32007,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 32007
   },
   {
     "arxiv_id": "2611.09866v1",
@@ -1046,8 +942,7 @@
     "main_tex": "./main.tex",
     "class": "article",
     "category": "cs.CV",
-    "size_bytes": 67154,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 67154
   },
   {
     "arxiv_id": "2611.09868v1",
@@ -1056,8 +951,7 @@
     "main_tex": "./main_camera_ready.tex",
     "class": "article+neurips",
     "category": "cs.CL",
-    "size_bytes": 145247,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 145247
   },
   {
     "arxiv_id": "2611.09869v1",
@@ -1066,8 +960,7 @@
     "main_tex": "./main.tex",
     "class": "svjour3",
     "category": "cs.SE",
-    "size_bytes": 227952,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 227952
   },
   {
     "arxiv_id": "2611.09879v1",
@@ -1076,7 +969,6 @@
     "main_tex": "./main.tex",
     "class": "article",
     "category": "cs.CR",
-    "size_bytes": 204121,
-    "folder": "arxiv-papers-extra"
+    "size_bytes": 204121
   }
 ]

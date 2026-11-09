@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "ieeeconf.cls",
+      "role": "preamble"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "4c1f1079acd7c3a24997f45f14b6e8c925cdf4ab41e7aa0fe44e893c78eba332",
+    "ieeeconf.cls": "e87a273033bc901d404540589e5e0ec684070426d538d29a826263cb0593b902"
+  }
+}

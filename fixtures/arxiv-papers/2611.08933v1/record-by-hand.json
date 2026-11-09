@@ -1,0 +1,122 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "environ.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "neurips_2026.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "trimspaces.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "results.tex",
+      "role": "body"
+    },
+    {
+      "path": "workflow-results.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/rfq-categories.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/rfq-cases.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/external-cases.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/rfq-comparison.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/rfq-paired-cases.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/brief-paired-cases.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/dashboard-update.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/01-introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/02-related-work.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/03-tasks-data.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/04-evaluation.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/05-experiments.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/06-results.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/07-discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/08-appendix.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/04-protocol.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "2b37197a569948881a6273927c07f682a6ffc7ae29a888e9a7b2f5fc44f6a7c3",
+    "environ.sty": "2efd7043a5a2ec8d495bd7575408b118ba737b9303259cffa74572d28b0da608",
+    "neurips_2026.sty": "c3fc2894e83d2517ca18b66741d6c595986d97957dc08ec08bb2125a7ec4555a",
+    "trimspaces.sty": "a209b4b83b2f859fed711ec5abac213d0d063bab14b0a17cc92267b4e0ad64f7",
+    "results.tex": "8d7a2965aff7a7d05ee59870714e5a592080cd65d6ca52d5516312872f327750",
+    "workflow-results.tex": "ee133f48d28126c0338bfbc3f7cb44771d21af754ffba3e89f8e7206f1173f27",
+    "tables/rfq-categories.tex": "5c4be61a87d926e8820e1ea77c2212dcde58de1cd785650bcb9b5661ce5b4510",
+    "tables/rfq-cases.tex": "54864dddf70fda46a74b3f9c46921072d6c28521a19035fc03477a11e6561db3",
+    "tables/external-cases.tex": "ec1e4470200875d8aa47c609eca3d0c13e61e9e08fefced79d7e726e994a0bde",
+    "tables/rfq-comparison.tex": "f93bd0718e6f6170e8c9436b891ae5d25ef22323824204b0b6d2d5d0eec7998d",
+    "tables/rfq-paired-cases.tex": "bd288eee002cc40fa18487567f80aa7b67cf67ff3c09db8c431bb8f4b441e272",
+    "tables/brief-paired-cases.tex": "f6c869862d7b2f4a12bddc0a2e6f3c668034fdb479c6c9d480fb2b8bb459bad8",
+    "tables/dashboard-update.tex": "da0d6a56721a4364819da3c181189841efb8d036cb365f2716e77617708f2aee",
+    "sections/01-introduction.tex": "ff8a3502ddf8a97b453c11e9465d6434dc7f2d90ec1f2574534cbf53cef57fca",
+    "sections/02-related-work.tex": "b0c7755a59b5cd279f98132d7fd05a88c05ea9e7997fcef3159bc15dd915163e",
+    "sections/03-tasks-data.tex": "5365a50b45a2e11e4abc88734162e167772f0da6ae5807fc49626b1658bcfa55",
+    "sections/04-evaluation.tex": "66dacdbc2586cdd9029bf7bb0a707da75523c69a8068ce6a5a4fd2057d865a49",
+    "sections/05-experiments.tex": "b163bde7f05df04a2a6056408a641ef8b2eaea69d8f4d1e7d8aa0975def8ad69",
+    "sections/06-results.tex": "e2c5f44cec3557db9a80a889188651696c662aad46970b58379dd20ef37fa01e",
+    "sections/07-discussion.tex": "36ab23ccb9641dabd009b4dbc34ccf6fc219a1bf89530b134dc7d7dd44bcde30",
+    "sections/08-appendix.tex": "445e74c576e647f71cdf22580c2f8bfd959f6805b70cac325bcaa2687a2ed29d",
+    "sections/04-protocol.tex": "db4bb7efb9747fe3e59dbe8f963569cc6c82062baac98898072ca9f7e53b550e"
+  }
+}

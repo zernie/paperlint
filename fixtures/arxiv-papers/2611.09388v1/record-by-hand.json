@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "aistats2027.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "fancyhdr.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "raccourcitron.sty",
+      "role": "preamble"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "62bafd58939bbfe1ad3557548d099baea15c38bf498528a863d4eb18c4edb51c",
+    "aistats2027.sty": "33ab38f8aac4b2f1df9fe67e354928598200584e9568385f32deb889e1b81d42",
+    "fancyhdr.sty": "b56ec4434b9f4607529a4b23dc68ad8d4b94f1f631c8cddaf7da78140d53a5ea",
+    "raccourcitron.sty": "0994b7c0b77fa046c46d011e8db5c6910dc6394a7273fc73a07d4d33b9d72387"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "neurips_2026.sty",
+      "role": "preamble"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "58b5b0b1c2269bd4a3346077af73e6b33b8de0d41f4b2cbc8aa346b93506cd0a",
+    "neurips_2026.sty": "0c1ad36961fcd9198dcc2558cf2793e1df39973bde8264fd701f5e7970672757"
+  }
+}

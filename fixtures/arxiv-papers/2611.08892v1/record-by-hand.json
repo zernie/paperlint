@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "fancyhdr.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "tmlr.sty",
+      "role": "preamble"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "cc082ecb9e0e8eff750f01cc687706fae27edd6774059f58eb717dd082b9c5b2",
+    "fancyhdr.sty": "3d2922548e0e5f1a6c5676eda6ebb6dc20d7d305b4d8c2be5f1c833fb1084e6d",
+    "tmlr.sty": "816214ff5919aa457b6b443bee52b15d9561421417b7f8a50cc84651519f0002"
+  }
+}

@@ -1,0 +1,127 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "fancyhdr.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "iclr2027_conference.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "natbib.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "math_commands.tex",
+      "role": "body"
+    },
+    {
+      "path": "sec/0_abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "sec/1_introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "sec/2_background.tex",
+      "role": "body"
+    },
+    {
+      "path": "sec/3_method.tex",
+      "role": "body"
+    },
+    {
+      "path": "sec/4_experiments.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/results_maze_2d.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/metrics_2d.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/results_maze.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/metrics_3d.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/study_test_train.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/study_freezing.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/results_dmc_atari.tex",
+      "role": "body"
+    },
+    {
+      "path": "sec/6_conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sec/7_appendix.tex",
+      "role": "body"
+    },
+    {
+      "path": "sec/2_related_works.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/study_objective.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/study_train_test_ratio.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/study_frequency.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "c900bd151a420bbb1ff32d6af528063eee7b3674cc7fe0a77eb24a80e936e07b",
+    "fancyhdr.sty": "b56ec4434b9f4607529a4b23dc68ad8d4b94f1f631c8cddaf7da78140d53a5ea",
+    "iclr2027_conference.sty": "df97c3acb36215b1471426ef2cd38621e1d36e4bfd6eb4b85e59f4c433728db2",
+    "natbib.sty": "88bc70c0e48461934cab5b2accef06b74a8b3ac45ad03ccd3f2a6b7e0d6d530d",
+    "math_commands.tex": "90473c4d0542070db244cea73ef962d6cddc5b2a746757e6a40ddf5fdfb90ba9",
+    "sec/0_abstract.tex": "dd76f6090d71456a47c9cc2531ac033080d996c423c69942fe32e0f3e830e232",
+    "sec/1_introduction.tex": "d17ca867fcb5926e4c2845668591d5d7b4e94bd78fc41177ed0b8691afa7b5f9",
+    "sec/2_background.tex": "04f262ccf1538b7e029c74bdfa5ec5ae67d0c5baa0138c32f888117e456f5aeb",
+    "sec/3_method.tex": "7874c94497988d34180cdf4ffeed1dc56b02ad8ab33038864c731eb0599dd4d8",
+    "sec/4_experiments.tex": "89bdc6888aedb80f6e63c51815a94213bb5ab01a9bec544e5ba65c0065bd792d",
+    "tables/results_maze_2d.tex": "1b1b21d71ea4a3cbe362920aefe4c728ac8205fcc3ae1786b298b3fc2c9f39ff",
+    "tables/metrics_2d.tex": "9d4c98bdae9c8160c2bb584e442fd720aa6b8527c72b5e3078942e7c01eff2b1",
+    "tables/results_maze.tex": "a91cc9d619c4728477357c37d8e287b7ee2caf9f9747b64b8f6896e202ac7c9d",
+    "tables/metrics_3d.tex": "21d5cf5cbd053c090ec82acea7aa443bd0ca44d9ee4169ee25f40978935a2a45",
+    "tables/study_test_train.tex": "3ebdb83fdb60364f6eebdb1f940304a5fd726dc1ea7fe8d86d7b60ebfb473991",
+    "tables/study_freezing.tex": "593182c672c8cc8b8425a5966bda9da5e7f441d6789bc78e172d00fe03f72c76",
+    "tables/results_dmc_atari.tex": "d4aad366986bcc0d43d8260bc698def0d53c88b3af1ecb0e7980eebe32eb45c0",
+    "sec/6_conclusion.tex": "dde81fe27a965b53513311fd7edbd82ec5d0ea33e59a995ba621acba9bf14212",
+    "sec/7_appendix.tex": "82d3313cd2b0072dc927ad73319dd856cd2c264ec76702ecdbb03c4ca28c3f0c",
+    "sec/2_related_works.tex": "84724cc8b91bbabf526438fbec3e865b8d9b888f48140c6631ffa84123d15776",
+    "tables/study_objective.tex": "1f90f120ae0a6a88bce427d27874d9e0713093682663ba8e7b4a4ddcdacdf2b8",
+    "tables/study_train_test_ratio.tex": "681c342e9e1d5ac3baf2af8c5d52aab28d79dbbb8e0cc2e88dd4937b4b20ebe1",
+    "tables/study_frequency.tex": "37888c51cdbdd9f9c0666c38177b068f769ce4503e7663833d6ece8529058d2e"
+  }
+}

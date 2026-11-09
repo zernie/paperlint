@@ -1,0 +1,122 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "iclr2027_conference.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "iclr2027/math_commands.tex",
+      "role": "body"
+    },
+    {
+      "path": "src/1_abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "src/2_introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "src/3_relatedwork.tex",
+      "role": "body"
+    },
+    {
+      "path": "src/4_perfrace.tex",
+      "role": "body"
+    },
+    {
+      "path": "src/5_boxbox.tex",
+      "role": "body"
+    },
+    {
+      "path": "src/6_experiment.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/boxbox-main-results.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/boxbox-online-ablation.tex",
+      "role": "body"
+    },
+    {
+      "path": "src/7_conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "src/8a_experiment_appendix.tex",
+      "role": "body"
+    },
+    {
+      "path": "src/8b_perfrace_appendix.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/perfrace-comparison.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/perfrace-task-catalog.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/perfrace-discovery-statistics.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/perfrace-filter-statistics.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/perfrace-workload-input-sources.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/perfrace-cv-distribution.tex",
+      "role": "body"
+    },
+    {
+      "path": "src/8c_boxbox_appendix.tex",
+      "role": "body"
+    },
+    {
+      "path": "src/8d_prompt_and_skill.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "fcf1851febb223bef1e8fa48cfacc41f9d2a7f81c7987183563ac61e218d4491",
+    "iclr2027_conference.sty": "797deef41724e93761426ac0cbcca46279a91cc650dd1f0ce76a4f08d2098ea6",
+    "iclr2027/math_commands.tex": "90473c4d0542070db244cea73ef962d6cddc5b2a746757e6a40ddf5fdfb90ba9",
+    "src/1_abstract.tex": "8a0c959595f5ab3c141145cec4a798a9fd08497a5594a7df4119d7cfa0392d0e",
+    "src/2_introduction.tex": "17b3f5b96e76683f473d33e9c0c1f9bb8a4c3064764cb15e747b77683665ccab",
+    "src/3_relatedwork.tex": "c5469f221bf92ce3d2d4157406bfbf5ba5370afb69a522ad7a1f4a8740ce79ee",
+    "src/4_perfrace.tex": "4a7bc6abbe479384e75b5e1c9553e4f1eb9ffd692326798ac0d015c963b6e091",
+    "src/5_boxbox.tex": "3fc865cfaaaf62b483ee6dc6b6637f1f226182a510269fc8bf03a19cf33408e3",
+    "src/6_experiment.tex": "d0028eb911aab37f81301870d35d005b66397b93702545ba8940ce17ae0cb7a2",
+    "tables/boxbox-main-results.tex": "16de7080ff25be170d9cdb7bef66b8f7ba169adb293af5e1e90bcd1e785e3f47",
+    "tables/boxbox-online-ablation.tex": "f1fa08b361a53300bd4b967997ec70c2f4320d2390bd112678c53045780022aa",
+    "src/7_conclusion.tex": "c21fe01f9fe3a4634504ad7f8cc8cbfa826bd1d3d8d6976f2bc024adce174360",
+    "src/8a_experiment_appendix.tex": "b3051209bb557cac1c4c53cd64a9327b01d699f3b00ca93846b4c8e411f3cbbe",
+    "src/8b_perfrace_appendix.tex": "33aa54063dcb78990c338df966963176bf7da9631034de9de62eb78c69160fd2",
+    "tables/perfrace-comparison.tex": "033b8d8cdfbae6f37706ac458f6059e3f87e6bb84cdac9784ab3e1b20f1965ec",
+    "tables/perfrace-task-catalog.tex": "54ba6d370bf4c6e2c0836c2372d694d6350b56b16943784590c3cb3da57ef049",
+    "tables/perfrace-discovery-statistics.tex": "58cb5177ffb50424b6e5833d996990ba18cf4429893077f054119a00c92eff02",
+    "tables/perfrace-filter-statistics.tex": "24930b8336ee23f908ab396747a3ebb8829cd580a3746fdf69224c97e3ae6a2e",
+    "tables/perfrace-workload-input-sources.tex": "79a32ce89e52c07a67c71fc389aad119be78319ab3378a36bd37fcead982f2c8",
+    "tables/perfrace-cv-distribution.tex": "96b232b0b2fa063927ae4612c36c63ed290328848047f971f66b9875ad59b7e1",
+    "src/8c_boxbox_appendix.tex": "c1162942f3094f5a916aa66306e276bd546f3298de0309d612e9de99cbf7a29b",
+    "src/8d_prompt_and_skill.tex": "140f5dcd85f16239a324742ed31f23878982d2c6e9cb8254f10a6fa4d29521bb"
+  }
+}

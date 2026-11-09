@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "jmlr.cls",
+      "role": "preamble"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "49f88c97bb114b3e5906c252f726412d3b5e3e3d2bdc5c37c46555a2f6a24aa1",
+    "jmlr.cls": "cec1f540cf5e5da48dcc481f87009a9a0c6498e62d07d9acf84d009a0724907f"
+  }
+}

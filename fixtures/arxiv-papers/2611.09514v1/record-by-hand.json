@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "asmeconf.cls",
+      "role": "preamble"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "e2fc95f4cb35a37eeec8f456c24e51e3a117480b70f4a60aadb09efe736f9378",
+    "asmeconf.cls": "eeb6816d27f16203d1ad4a1007b6bd7b6d6371aa03eb9fb50e383a2c670d5a19"
+  }
+}

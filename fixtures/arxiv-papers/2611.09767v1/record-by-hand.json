@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "ifacconf.cls",
+      "role": "preamble"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "32fb1679b76eb3773ad4f91d69a73481fa1c250497cf500f52f84ca6e91794ea",
+    "ifacconf.cls": "bf7d386d64fcc53fcfafe488ef857688c6c1a905eea5c39313398d6552a58b6c"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "body.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "430c22a67d99693f901cf065bbed330c48fce8e223fbc0df7970ef7036d63e0a",
+    "abstract.tex": "e45f2d5a03a4b86b74f3de4cc57792040a88cfb5bd57bc71b51aaa062f29c4f5",
+    "body.tex": "1964fde5736a46efb3df4a2a9bccdbb323c442b09d7e9e8ed8d71c6438005306",
+    "appendix.tex": "0101d871cccf1e68fc95b3b1ae480e90f8fee952d249268e101753d6b3268831"
+  }
+}

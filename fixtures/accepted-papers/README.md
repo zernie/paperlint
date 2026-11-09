@@ -21,7 +21,7 @@ the preamble, which is what the rules read.
 
 ## The test
 
-`accepted-papers.test.ts` copies each paper under `papers/` in a temporary project, runs
+`../real-papers.test.ts` copies every paper under `papers/` in one temporary project, runs
 `paperlint lint --json` through the CLI's own `run`, and compares the findings per rule with the
 paper's `baseline.json`, using the reader in [`baseline.ts`](baseline.ts):
 
@@ -157,7 +157,7 @@ its venue preset's anchors set. The five ACSAC papers are `paperlint:aidc`'s anc
 workshop, on its template, with no accepted papers of its own yet); the preset records each one's
 words and counts, and `src/register-bands.test.ts` re-measures them from these sources and requires
 the same numbers. The papers here extend `paperlint:ieee-conference`, which records no anchors, so
-`accepted-papers.test.ts` sees none of the three rules; the same test file judges every ACSAC paper
+`real-papers.test.ts` sees none of the three rules; the same test file judges every ACSAC paper
 against AIDC's band instead, and all five stand inside it on all three measures. Per 10,000 words:
 
 | paper | words | contrast frames | claims in bold | relation markers |

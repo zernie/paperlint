@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:1bb3d7be212e3e9a compiled from eslint-rules/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:e0c35e8beaa0bd9b compiled from eslint-rules/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -15,7 +15,7 @@ that file's header.
 | **Both halves** (root `CLAUDE.md`), for every registered rule | `src/rule-cases.test.ts` fails on a registered rule with no cases |
 | **One rule, one requirement**: two checks with different reasons to switch them off are two rules | review |
 | **A venue requirement is validated on real accepted papers** of that venue, built to PDF, with the ground truth established independently | review; the papers are in `fixtures/accepted-papers/README.md` |
-| **Quiet on correct real papers**: every rule runs over the 6 accepted papers and the 10 arXiv preprints of `fixtures/arxiv-papers/README.md`, and a finding not in a paper's baseline fails the test. Read each new finding and decide: a real defect in the paper → re-record the baseline and say so in the PR; a false alarm → fix the rule, never the baseline. Before a rule ships at error level, also run it by hand over the 98 papers of `fixtures/arxiv-papers-extra/README.md` and state the counts in the PR | `fixtures/accepted-papers/accepted-papers.test.ts`; the by-hand run is review |
+| **Quiet on correct real papers**: every rule runs over the 6 accepted papers and the 108 arXiv preprints of `fixtures/arxiv-papers/README.md`, and a finding not in a paper's baseline fails the test. Read each new finding and decide: a real defect in the paper → re-record the baseline and say so in the PR; a false alarm → fix the rule, never the baseline. | `fixtures/real-papers.test.ts` |
 | **Its page**, `docs/rules/<group>/<rule>.md`, and `meta.docs.url` pointing at it | `src/rule-docs.test.ts`; its `AWAITING_PAGE` list only shrinks |
 | **Loud on an empty input set**: a rule that matched no files must not report like one that passed | `scripts/rules-see-files.mjs`, per rule and not per glob, in `npm run check` |
 

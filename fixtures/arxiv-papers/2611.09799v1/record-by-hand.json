@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "jmlr2e.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "proofs/proof_GDP_thm.tex",
+      "role": "body"
+    },
+    {
+      "path": "proofs/proof_FTP_IMSE_Polynomial.tex",
+      "role": "body"
+    },
+    {
+      "path": "proofs/proof_PTF_IMSE_Polynomial.tex",
+      "role": "body"
+    },
+    {
+      "path": "proofs/proof_FTP_MSE_RKHS.tex",
+      "role": "body"
+    },
+    {
+      "path": "proofs/proof_PTF_MSE_RKHS.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "b0a32a797f4d542c386df67d957358d23b884a5d5bbdc6fe6bfaf8ef2cccebe1",
+    "jmlr2e.sty": "a430a875d561235951800e4e21d2631e18ddf0b369646ec276f43ea5080f27c3",
+    "proofs/proof_GDP_thm.tex": "e0b88007549c91f89cc79cdb9695d478a92c8cdd1e549530fbfc863f7a4d14fc",
+    "proofs/proof_FTP_IMSE_Polynomial.tex": "15e60b5ad07d3dca43682e872ea04cf05c2ebdec123a8ec1fdbd0c6e239872a2",
+    "proofs/proof_PTF_IMSE_Polynomial.tex": "0d69ee2fcf3eadab6da46306a946e76e6a2aa5ef218fcae4a40f2b6002a17459",
+    "proofs/proof_FTP_MSE_RKHS.tex": "6ad06559fad1c286732a6dfdedb56f6230bb47364403f4c8d541565783062e51",
+    "proofs/proof_PTF_MSE_RKHS.tex": "6a1bdf623a1f2367f0f72c9682a42b3b30a5e0c9ce36769c63140da2ca4b7503"
+  }
+}

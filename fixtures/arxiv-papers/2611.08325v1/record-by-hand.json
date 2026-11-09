@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acmart.cls",
+      "role": "preamble"
+    },
+    {
+      "path": "gate_table.tex",
+      "role": "body"
+    },
+    {
+      "path": "table1_selected.tex",
+      "role": "body"
+    },
+    {
+      "path": "table2_selected.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix_arxiv2.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "5703add12d2d992769ba0922f519ce9bf222a176ba5de55c93ebc034c07c6dc1",
+    "acmart.cls": "fac80041c1b6f561bd25c07ff262313f41ae62db39f24e47466c41b7d8e08229",
+    "gate_table.tex": "ff69fa514a83a66aac09149d6f2b51beda93303113eae4dffdca384adaad9bb5",
+    "table1_selected.tex": "6acd1ac435710e3bb92e1f53221206cf429a7d6270fe01ad7318b0e24a9cb5d5",
+    "table2_selected.tex": "d30dee0870bb0bfe7785f5589f4ec5a03755bb558d99f44b534b3ec5d1af6a2e",
+    "appendix_arxiv2.tex": "47edccc0990e1db832e62529a1d789e25e0a84c242da2c73b289f12fa6d4a6ff"
+  }
+}

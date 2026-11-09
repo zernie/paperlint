@@ -1,0 +1,147 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "fancyhdr.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "iclr2027_conference.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "natbib.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "sections/abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/related_work.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/threat_model.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/benchmark.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/experiments.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/results.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/statement_ai_use.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/statement_ethics.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/statement_reproducibility.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/appendix_compact_construction.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/appendix_compact_environments.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/appendix_compact_evaluation.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/appendix_compact_examples.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/appendix_compact_defense_breakdown.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/appendix_compact_trust_hierarchy.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/appendix_compact_uncertainty.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/appendix_compact_annotation.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/appendix_compact_runtime.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/appendix_compact_detection.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/appendix_compact_reproducibility.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/appendix_compact_limitations.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "bda8e0ebf20622792e51ca18ed08f6a4a7595f3e0094ae248c4a570d0fd8474d",
+    "fancyhdr.sty": "b56ec4434b9f4607529a4b23dc68ad8d4b94f1f631c8cddaf7da78140d53a5ea",
+    "iclr2027_conference.sty": "797deef41724e93761426ac0cbcca46279a91cc650dd1f0ce76a4f08d2098ea6",
+    "natbib.sty": "88bc70c0e48461934cab5b2accef06b74a8b3ac45ad03ccd3f2a6b7e0d6d530d",
+    "sections/abstract.tex": "8d84273ce1b89165216e363aa93137a86c80f946126ee838980bd6d5532ca6da",
+    "sections/introduction.tex": "3c1b5f8e48aa6fb366824c1894061e338c3071ea7687664bc9fea874e5ec483f",
+    "sections/related_work.tex": "f507f0e4ba04f82b1255f0fa4a7fff20de526df40eef76ca58bac599136cde07",
+    "sections/threat_model.tex": "ac4e3edf1932ded8d0dc4ac31a4d9f896709b67fb6e589f38d01acae1193a9f0",
+    "sections/benchmark.tex": "8642729805d8a3d9dc84cc5c43cd522618f349207c611d5bd2b39fac2979f7c2",
+    "sections/experiments.tex": "e84dc04e1dc46dc3b2224d4a0ca2f3de06ac9aa76460eefa6cd4bdf064599643",
+    "sections/results.tex": "5dd798d27d60a9df63de23c2638867cbec6df0a04f7f3c9eec6f202ef8f45593",
+    "sections/discussion.tex": "ad29801fa98c251633b08a0972f96f8c1ba5be9a42e6ba49dc9fce99579067d3",
+    "sections/statement_ai_use.tex": "4cbc2f0d3996146c0802e47c90c2fe1bd641f490733fa9e9bc7c98034bea2651",
+    "sections/statement_ethics.tex": "60bc3bbe05614d697b2c5fdbcbfd5a02166553514313a2a1497112355db393a6",
+    "sections/statement_reproducibility.tex": "a3bdc8594b036748faf6c78ed519e148b5fa369ee1b65e69f5c7d1135fd8b73c",
+    "sections/appendix_compact_construction.tex": "d89f57f264f711124bb85037f3b3953b913c40a3cc18be0dfeecabd3b05daad1",
+    "sections/appendix_compact_environments.tex": "15a3dd1e2fa8bf7c61995d1b7ec37e11bbbfee7d0039da5528cbeda7ede36ed3",
+    "sections/appendix_compact_evaluation.tex": "a1e147660d2ad3e0e5d8466b34f01c8bcd00961acdd92b9f0ffa7871ff256a08",
+    "sections/appendix_compact_examples.tex": "8fa8c6ec7a4c9382f8e6a438dbe564695923b59ff1ae40756b6095394687148a",
+    "sections/appendix_compact_defense_breakdown.tex": "5693f76ff287a82e2e2d50a0716b962d491bf147936ba259e71bf69846aa510e",
+    "sections/appendix_compact_trust_hierarchy.tex": "bb2d090541e10d9417154af4f64a640cd4f723e0f06ba4246f1236868c3aa9d3",
+    "sections/appendix_compact_uncertainty.tex": "ac0dc21ab88dbeef4ccd2743feea155791023ee3cdc4f67cebcacc26f744eb6c",
+    "sections/appendix_compact_annotation.tex": "68db0e2cf9d03f4c00c2fb4a5af164d54542d2a3c1951614c9b4fbc586cc0863",
+    "sections/appendix_compact_runtime.tex": "294e3ea0d02f202f23a66564f8f75920246d38b4473690dcbdaed9e958c32f7c",
+    "sections/appendix_compact_detection.tex": "c78bff95e329d5581f4554c5d3c87a0982c5933ae5ad04eebee24b25ce6b503f",
+    "sections/appendix_compact_reproducibility.tex": "5018d8d1ebc5bdc0b37bd26bd98cb48884fa914ff0e9cccd4548ca16b9f7a742",
+    "sections/appendix_compact_limitations.tex": "c9c364e605bd705f06105704a9a8a7ad853a74dcd455e3f8dcc1da3cf919cac6"
+  }
+}

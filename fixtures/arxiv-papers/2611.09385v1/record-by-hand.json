@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "fairmeta.cls",
+      "role": "preamble"
+    },
+    {
+      "path": "aal.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "2ca8218609e55f51550560c72472ef433d39bfd633fa33c2d47e136032f9e964",
+    "fairmeta.cls": "571721fa9956b9c5f8984d16dbaa10fc1960afc7aab97a550cb62150dd7f59d2",
+    "aal.tex": "c83546b979a7a7b2258b1f68744e27f8c4def479d2fcf6044e2e949650796d8d"
+  }
+}

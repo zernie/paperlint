@@ -1,9 +1,0 @@
-# A Spiking Neural Model of the Mental Lexicon: Representations, Similarity Structure, and Associative Retrieval in Perception and Production
-
-- **Authors:** Bernd J. Kröger
-- **Source:** arXiv [2611.09402v1](https://arxiv.org/abs/2611.09402v1), e-print `https://arxiv.org/src/2611.09402v1` (sha256 `0ca84819a9a4efe06ab240f9c88be360a80825b3383f72828c28db66882d9204`)
-- **Category:** cs.CL; **document class:** `article`
-- **Licence:** [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), as the arXiv abstract page states. The files are redistributed under it.
-- **Text sources only, figures omitted.** Kept: `.tex`, `.bib`, `.bbl`, `.cls`, `.sty`, `.bst`, `.cfg`, `.def` of the main file's directory. Dropped: images, PDFs, data.
-- **Renamed, nothing inside changed:** `main.tex` to `paper.tex`.
-- **Ours:** `README.md`.

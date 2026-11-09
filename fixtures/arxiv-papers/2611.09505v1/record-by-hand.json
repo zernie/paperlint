@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acl.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "Tables/uncertainty_hj.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/human_correlation.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/statistical_dataset.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "618a87d03f402aa94fdc6731716bf022d86f92080e85cead686b55fc1eeafabe",
+    "acl.sty": "19dfeddc2c0e448f3926a0bef048a9db3f3611b46265b760caabd7ada4f361de",
+    "Tables/uncertainty_hj.tex": "917b56b9aba447a2e98f567e0aa42c2c1ee8d2b11ac3cdc16a4f4e1db0698450",
+    "Tables/human_correlation.tex": "dd43c9f7ded1268d1deba640af2084d99b70f71aa2e892a3f84d308a08a4a21b",
+    "Tables/statistical_dataset.tex": "754c2a1d3741e8b86883a61468b22ea7dbcf099a9bd98a16bc2e14bb637d1785"
+  }
+}

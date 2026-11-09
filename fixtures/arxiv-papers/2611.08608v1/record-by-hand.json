@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "Intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "Background.tex",
+      "role": "body"
+    },
+    {
+      "path": "AutoPYara.tex",
+      "role": "body"
+    },
+    {
+      "path": "Experiments.tex",
+      "role": "body"
+    },
+    {
+      "path": "Conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "AppRec.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "1e1df49583c4b19f44dc8a79e2d7a1df697fc5654c0c99b8ab589a1e0ea31ec4",
+    "Intro.tex": "baa870abb4de084a8dee930a04ef54a192969881d3bc1dc9a7bed2021301d015",
+    "Background.tex": "401bb7f7fb28e2e1aeccf8cba731ee4334552593025408f63816322a3aa9ccb3",
+    "AutoPYara.tex": "4530db8d9a4c745bd7ed80e695cee66ebe4684e3390ddb3d02bdde2c4e6bb71a",
+    "Experiments.tex": "75836d71b882d25c38bb23f844bcfe7bf180f7e09c471b002e620f4e169df0ab",
+    "Conclusion.tex": "c9b2abd3ab5330ce05ac0d84ff1aa5adebc953f4a7d6c6952f23452b97deea0f",
+    "AppRec.tex": "e87176edec85505abea679a40e52183195bdfe771e354c6a533820038a0418bf"
+  }
+}

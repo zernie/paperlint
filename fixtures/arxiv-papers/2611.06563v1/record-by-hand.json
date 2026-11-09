@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "IEEEcsmag.cls",
+      "role": "preamble"
+    },
+    {
+      "path": "upmath.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "e2-numbers.tex",
+      "role": "body"
+    },
+    {
+      "path": "e4-numbers.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "c3648224b2a46b337e566b20311cdb6a11f8c3ddee3890e257df3c3f1baf0b4e",
+    "IEEEcsmag.cls": "69f9f6f2e2b2462d1f81f4c57680a59a1f7bb0db19401bd57216cc8d263dc1d4",
+    "upmath.sty": "fd017a81d1781d7c977f3c71d634972ad37266984e39a550292cc74057620553",
+    "e2-numbers.tex": "a52f014a3ce5a4083c7cd5dd60c76edcb8b2540799b6a15eb0f8a5cb8b43407c",
+    "e4-numbers.tex": "ff0105072b45e0ad2c0a84cbc2ee61f543c905c8a75b418dace9d2de8547ad33"
+  }
+}

@@ -1,9 +1,0 @@
-# From LoRA to Language: Recovering Skill Documents from Adapters
-
-- **Authors:** Saranya Dintakurthy Swadha, Pavan C Shekar, Arpit Jain, Aswanth Krishnan
-- **Source:** arXiv [2611.09454v1](https://arxiv.org/abs/2611.09454v1), e-print `https://arxiv.org/src/2611.09454v1` (sha256 `8daeab4e5d1455655c69b2ac97ec9e4bc5b56d7bb8ab6e3ecb0211c43b57fb68`)
-- **Category:** cs.LG; **document class:** `article`
-- **Licence:** [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), as the arXiv abstract page states. The files are redistributed under it.
-- **Text sources only, figures omitted.** Kept: `.tex`, `.bib`, `.bbl`, `.cls`, `.sty`, `.bst`, `.cfg`, `.def` of the main file's directory. Dropped: images, PDFs, data.
-- **Renamed, nothing inside changed:** `main.tex` to `paper.tex`.
-- **Ours:** `README.md`.

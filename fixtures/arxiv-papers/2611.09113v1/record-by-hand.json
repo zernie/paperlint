@@ -1,0 +1,187 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acl.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "sections/abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/related-work.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/methods.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/main_results.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/experiments.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/persistence.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/domain_results.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/appendix.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix_materials/core/core_models_and_frameworks.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix_materials/core/core_data_algorithm.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix_materials/data_info/gen.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix_materials/data_info/human_eval.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/legal_instruments.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/legal_taxonomy_coverage.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/legal_statute_coverage.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix_materials/additional_robustness_analyses.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix_materials/cases/Decoupling_success_and_drift.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix_materials/cases/case_study.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix_materials/cases/trigger_vs_injection.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/framework.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix_materials/prompts/stage1_prompt.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix_materials/prompts/stage2_prompt.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix_materials/prompts/critic_prompt.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix_materials/prompts/task_success_prompt.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix_materials/prompts/legal_extraction_prompt.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix_materials/prompts/legal_matching_s1_prompt.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix_materials/prompts/legal_matching_s2_prompt.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix_materials/sample_files/tool_schema_example.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix_materials/sample_files/env_example.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix_materials/sample_files/annotation_example.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "85eed68e822668869da661816e1e2eddbb6f197a44f0c87e8b954a5266ec31a8",
+    "acl.sty": "19dfeddc2c0e448f3926a0bef048a9db3f3611b46265b760caabd7ada4f361de",
+    "sections/abstract.tex": "dcb19afc9bb9314f4302ab393d195e9481384da61403770316786251a5f54476",
+    "sections/introduction.tex": "0d988de4c6d272a5849fef429b732f81a2bed52696dabdfa03784a8e1f8dbb84",
+    "sections/related-work.tex": "665d1a03a9b0afef8629430eed14264036c8061f3854d890a08e660ed9c0f08d",
+    "sections/methods.tex": "09bb3c080c7b0440158b2f11c1e84a078e88938d058726ae1889c2323e1fdc0c",
+    "tables/main_results.tex": "ebc99cfbb2028420b4593ea86962ced7f2e8c0cd7ce6e1e3cff06b2e289f9e78",
+    "sections/experiments.tex": "bb72db421a4dfc411b996e625abda0b244bbed5ae8eea9bb12e2154d0ef7e744",
+    "tables/persistence.tex": "28edba9ab432efc30dcba9acb80fe11f8ba591f5fcbcd4afb9bb3b3225c48737",
+    "sections/discussion.tex": "c9ff1dabf5dadcc02a718867a391ca4840b09b8a08d2093af506589a37d49ac0",
+    "tables/domain_results.tex": "1d448bc1b5d834abe024796494e3fa81334220dc7ef67d40c3c14a7b951f609a",
+    "sections/conclusion.tex": "63d5e378ef732b31ebabb6853c9a3205914337d5f7a074a45008d2a7c8f89db5",
+    "sections/appendix.tex": "7545471077041842892de01003b462d92baa6dcadd59dad2140785f8630cfb2b",
+    "appendix_materials/core/core_models_and_frameworks.tex": "52e000c0e925f3f3808e9b7e0396ad4abe54f222dc6f316aeefcfe80e841a5a2",
+    "appendix_materials/core/core_data_algorithm.tex": "157e3a119eb431760e2c0c352d3ed13dfe27f2b4056866b9c4404d644843d37d",
+    "appendix_materials/data_info/gen.tex": "f136f1f4d09a7a71ff68c555f777f6b0a2ca34a91cb777292e95e5b31f402e08",
+    "appendix_materials/data_info/human_eval.tex": "63a856b4e06691030083813b9634e5f91a2089498478fb585255970d7c607479",
+    "tables/legal_instruments.tex": "d0b9935287cb3e66c34bea530b3b29f2ff1ee8c7ab8a9d5612ae872cc8d84769",
+    "tables/legal_taxonomy_coverage.tex": "2b3e1ec04836bcdce89a6f2da223f8e8e47e831da05534ea85657c05dfcb22e9",
+    "tables/legal_statute_coverage.tex": "61bfd348166a89f41cd54e4fb848a744d8c0b099736b6d5c58d4f9d7eb497183",
+    "appendix_materials/additional_robustness_analyses.tex": "ef124bec7d66f65cc79f54cfc71bada3e06d8477c99ebf25dc688d1da14924c8",
+    "appendix_materials/cases/Decoupling_success_and_drift.tex": "eb926af42a5535c2c6494aa59a1223994de8e65c7eba98f6121d1030275ed356",
+    "appendix_materials/cases/case_study.tex": "26018caf2a367f6e130ba6548365153e5c75253099ca28d5a19e69c2d6f1818b",
+    "appendix_materials/cases/trigger_vs_injection.tex": "cd85090fc907bcc1338e529a19ef515a1713cad1c9c53dba28c754420ade6444",
+    "tables/framework.tex": "761cb2d567775d51495d81ff24987505be530dbbba42278bf429e1170c91db21",
+    "appendix_materials/prompts/stage1_prompt.tex": "cad80acb434b3458d8e4f85d7d1e14ed7fe06ec8ad37b8da2338ee9b5726763c",
+    "appendix_materials/prompts/stage2_prompt.tex": "167494723c12989879b005155e8b4a4770d278383f496c3402241ae3219fad5d",
+    "appendix_materials/prompts/critic_prompt.tex": "766eccff3ba845daeaf37e5e1e02e63f7b1ecda9d1171c1fedc7447bb4069655",
+    "appendix_materials/prompts/task_success_prompt.tex": "efc609d8753a6dd0ceaf3829e12d5cd6a141fb3dc4b00141e4c2e2e01fe39316",
+    "appendix_materials/prompts/legal_extraction_prompt.tex": "f1039a8c11335d36c272745249359a52493afd8c7abfb70f3afb9c301d9978e1",
+    "appendix_materials/prompts/legal_matching_s1_prompt.tex": "292de68b94347caf618e532eca85c1036124160860e4985f36f413555584c104",
+    "appendix_materials/prompts/legal_matching_s2_prompt.tex": "69147f7bc5101eb2eba375714b75ac74875b1dc62cf762f0cfebda8bbdb14486",
+    "appendix_materials/sample_files/tool_schema_example.tex": "a06fd9f92342bf746b949df2244c15cf0c66318228fb700ff12e37a6fa01e68c",
+    "appendix_materials/sample_files/env_example.tex": "50b5e0668c55f0aca69e438bed17e00177d70b08c69835cd1260b508cb2504f2",
+    "appendix_materials/sample_files/annotation_example.tex": "fa2fa535abba7d2a01b5fecaef7f7e7b9d87cff7a32411b15d21c8af4cacad63"
+  }
+}

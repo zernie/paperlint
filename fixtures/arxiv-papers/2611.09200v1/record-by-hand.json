@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "llncs.cls",
+      "role": "preamble"
+    },
+    {
+      "path": "orcidlink.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "pipelines.tex",
+      "role": "body"
+    },
+    {
+      "path": "prompts.tex",
+      "role": "body"
+    },
+    {
+      "path": "vlsp_comparison.tex",
+      "role": "body"
+    },
+    {
+      "path": "case_studies.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "230980df6e1fdb747d86ac55289ff5adf7cb51bd385341a56da4d3f3a989ed7a",
+    "llncs.cls": "04ec99046ad9867f6cd54ffd1ef8c47c767b327d1baec77536db0528cd492fa2",
+    "orcidlink.sty": "388aba1cd284c5e50bfee6ca0e7aaba13b58ea0a2d2ed0c8e0cd4f85d3fec869",
+    "pipelines.tex": "2a4a65aeb8f3a2c4f7982d7e8ce7d62fed6b25e8dbebeeeca5a64231bfc3dd30",
+    "prompts.tex": "08d6a174dc822c785cf680cc93bd00e7b9c6dfcc06e7878d8f08a2f49c3e8bf4",
+    "vlsp_comparison.tex": "e7af6fd5cf18c30360718b0a702a710a5d200229a4072bfa151916eae911b028",
+    "case_studies.tex": "e9ab1dd1080872d13a0965d17b8deaf3b58038620344e20c20de94a7ef1a3943"
+  }
+}

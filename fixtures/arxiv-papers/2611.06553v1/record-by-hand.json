@@ -1,0 +1,107 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "macro.tex",
+      "role": "body"
+    },
+    {
+      "path": "text/00_abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "text/01_intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "text/02_background.tex",
+      "role": "body"
+    },
+    {
+      "path": "text/03_method.tex",
+      "role": "body"
+    },
+    {
+      "path": "text/04_experiments.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/twinbreak_iters.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/white_box_attacks.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/black_box_attacks.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/comparison.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/over_refusal.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/utility_eval.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/ablation.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/adaptive.tex",
+      "role": "body"
+    },
+    {
+      "path": "text/05_discusssion.tex",
+      "role": "body"
+    },
+    {
+      "path": "text/06_related_work.tex",
+      "role": "body"
+    },
+    {
+      "path": "text/07_conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "text/99_appendix.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "1d45a3053c70ab1f12d2ff2a0caf778d15da719cc2b123e37d6b19177192e7a4",
+    "macro.tex": "82faca6b0eb194b1fc0c6f9d0e7dd6aee55d2e4560981e9271510ca8e3d80d42",
+    "text/00_abstract.tex": "17cacb6ffffc44d23211cdad1694da733a2df05f85bdc836ffc63300f854f8dd",
+    "text/01_intro.tex": "bcb5bb8c474c0073c448c1fa923bc9d811289e63067f6a6aa8ffda487f53a243",
+    "text/02_background.tex": "02653d41e667766a063e708202a03569d364a6f83ff9b660bc6028f9c4ae8818",
+    "text/03_method.tex": "6d5f2cdf558593564cd02fb019773fa20558443d48f250bd6e6be14e404e915a",
+    "text/04_experiments.tex": "bb70f742bf34ab99e82f93b1b475ee343d31e7433d233a3ca4f54d80684c84a2",
+    "tables/twinbreak_iters.tex": "7135e47f92adf7c19db731737294c9eb68f0af2a59ea6a8009b3e2508032229d",
+    "tables/white_box_attacks.tex": "2a643476004acc580a36d3115b4bd0aa4ddd5cebd5101076628fb9cddebda153",
+    "tables/black_box_attacks.tex": "94bc8b87cf83e58de7d6a6695e49c078bb95844983604d8c57259f2be9c66ca2",
+    "tables/comparison.tex": "1878be498c4da3c4c5d164017f2651f5df9dbb32eca4da5c4299ce723a671de7",
+    "tables/over_refusal.tex": "c7c9fce7d5d4f68976f35a7dacb365afb2c9e57448102b5284cc5d5716801d20",
+    "tables/utility_eval.tex": "114ab6daaf37b8922ec853dda4347d20fa2c53ccb6c7c4aa66df78def3cc13c9",
+    "tables/ablation.tex": "288286f15f8c406414e71ed442d279e2994e66f40d6cb44ebd63e5574acf5a31",
+    "tables/adaptive.tex": "87cb46601658a04e3b249e6fd6adf96f9ba31cce95cfa09ad404553353e600d1",
+    "text/05_discusssion.tex": "9528159adea94c88a60641044d4ab3776824b12405b889ce3e153a751b2ac674",
+    "text/06_related_work.tex": "d9e64424c07bcd120550181a910a18716ca3ef98f2a12e237c850b6ef1faa96f",
+    "text/07_conclusion.tex": "3ba864f32994439af743c7d1c977ff3bcc826db6111caa48beccbd61c2eb0c35",
+    "text/99_appendix.tex": "2af033cf7aa5998fa45b881b170ffa5f5411a69d179e1ec9af95e3c252611a16"
+  }
+}

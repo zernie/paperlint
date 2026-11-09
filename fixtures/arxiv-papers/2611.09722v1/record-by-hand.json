@@ -1,0 +1,162 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "preprint.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "src/abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "src/0-intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "src/1-background.tex",
+      "role": "body"
+    },
+    {
+      "path": "src/2-analysis.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/roofline-gap.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/reconstruction-demand.tex",
+      "role": "body"
+    },
+    {
+      "path": "src/3-design.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/fig_fold_mechanism.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/fold-mechanism-common.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/fig_fold_kv.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/fig_fold_pipeline.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/operand-construction.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/fig_dataflow.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/fig_arch_timeline.tex",
+      "role": "body"
+    },
+    {
+      "path": "src/4-serving.tex",
+      "role": "body"
+    },
+    {
+      "path": "src/5-evaluation.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/speedup-subbyte.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/speedup-wide.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/fold-ab-grid.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/accuracy-arms.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/serving-pareto.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/serving-accuracy.tex",
+      "role": "body"
+    },
+    {
+      "path": "src/6-related.tex",
+      "role": "body"
+    },
+    {
+      "path": "src/7-conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "src/8-appendix.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/quant-axes.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/affine-op-count.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/head-scaling.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "e2620bbb901e235a371d22ba07605e3821555399449a6a70582a0082d5c289ff",
+    "preprint.sty": "16ae8ba27e682819c0e9f7ad0ea8ebc88a3352176e9019a13057137b54ce30a0",
+    "src/abstract.tex": "a6c3f37203654b36e194c8dea155ae9fc0cab80b8ed6b90b2dc9b755f4e05040",
+    "src/0-intro.tex": "6bf78eda9d28c85116de8509812135702163c89504ce5d6e447cf85952e65a25",
+    "src/1-background.tex": "1e77025e412da0f6c54437aa63ebc33f3f87de93450fd2ef2584f3cf478b8ad4",
+    "src/2-analysis.tex": "9eadf5788d1ee9a240cf51a4f76ae0bf8f80ef16fd323f7b702e8d3d4a8ae9c3",
+    "figures/roofline-gap.tex": "662c20632a56c3b7731f7bd48a0908cacde6c375d6c7031a7cdbcde6d03b8e2b",
+    "figures/reconstruction-demand.tex": "e8f0ab6af545a637726fef372c752a3b73e132b76bbb9efd305b389813ba3be3",
+    "src/3-design.tex": "fbe6411dc3480908e43548c27d2959285545680b38dd51788ab78740dbae55bb",
+    "figures/fig_fold_mechanism.tex": "785fefa18acc7ca751fa3fae77fcd4474607c7f89b716e387d0cd779afe715fd",
+    "figures/fold-mechanism-common.tex": "bd14d7cbf722c0568801c6a48b0cc5a3b6dd119e6e941870f3187556c7927bf6",
+    "figures/fig_fold_kv.tex": "10158093094a9d1be40125a305f0b8586d239ea0e362e0ad8c6f1536a1b604b8",
+    "figures/fig_fold_pipeline.tex": "96ed335d4d99491cadd749023d8d105b3a15dfb7764bab2853427f54550a6c0e",
+    "tables/operand-construction.tex": "f352b2927d0d774153e1c621822a2556e393067016ef20f48fd1c4ae1003b477",
+    "figures/fig_dataflow.tex": "c2d52c7a8599aa8a953b0e76407fde3560e1308b6c2f33245ccc0a34111ff8e9",
+    "figures/fig_arch_timeline.tex": "3947d35647e30fe78dc2283f003acacefd9c9ed4ce734dfc103241f99b9f249e",
+    "src/4-serving.tex": "b8756ed825d185f056f99e836db87b29aabb0380f57a3b85468dc7b9c541e728",
+    "src/5-evaluation.tex": "d813951bf53bf3716cc4455155d57528272063828c7e0d9b63781a0f1dd113ce",
+    "figures/speedup-subbyte.tex": "997dec8b7b3597da4d62397cb8476802cd5505170eb8287071433bac03869a8a",
+    "figures/speedup-wide.tex": "c06b09cbdac788f123d67e32a750a2738031df5714dc87e96176061554cc74ca",
+    "figures/fold-ab-grid.tex": "843e6b39f7fa3983a37a72abd8a2dc29d5416410195f693ecadc0b612e09f155",
+    "figures/accuracy-arms.tex": "d9c0f7352d65e36d27c35f172204355e387718c893f1507e031b14fae9d0f2c8",
+    "figures/serving-pareto.tex": "b667295f0945435c65d7d197f4f824b8ca3a8c1043ba55302e5c2c9a3f154b85",
+    "tables/serving-accuracy.tex": "ad6f12996ba9253cdaf725a091809f7995463d41d6d425bedb615c8130fa7979",
+    "src/6-related.tex": "db0ab0c930c69561ab5a5fb3769f9c0bdf3e371b18d57c9bd51028c3f593d8ec",
+    "src/7-conclusion.tex": "e1c3a0e9f19e2026289d86c0d9e7566fa01f9cddd88996b7ae6a6b858e7c3085",
+    "src/8-appendix.tex": "b27e98c95e7d8953eb645e743dee518b711bac99782944b0916ff3d24461776e",
+    "figures/quant-axes.tex": "e3968aa17a1a7154ea260aafc204f0f6185cfb1b1583481fd7d21df4906b24c8",
+    "figures/affine-op-count.tex": "f51c752b75aa8c1233770e3f95fbca24aa8fdbf0f8344c36b0e1c9eca4257fa3",
+    "figures/head-scaling.tex": "42d215205af69dcd9adb99eeed4def987dee73155f3a20fec5b9d804a0219832"
+  }
+}

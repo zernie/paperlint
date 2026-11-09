@@ -1,5 +1,4 @@
 # Text sources of arXiv preprints, redistributed under their CC BY / CC BY-SA licences (see each README):
 # not hand-written lines.
 fixtures/arxiv-papers/** linguist-vendored linguist-generated
-fixtures/arxiv-papers-extra/** linguist-vendored linguist-generated
 fixtures/arxiv-manifest.json linguist-generated

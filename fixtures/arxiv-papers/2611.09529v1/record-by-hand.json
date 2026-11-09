@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "asmeconf.cls",
+      "role": "preamble"
+    },
+    {
+      "path": "Main/01_Introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "Main/02_RelatedWork.tex",
+      "role": "body"
+    },
+    {
+      "path": "Main/03_Task-Description.tex",
+      "role": "body"
+    },
+    {
+      "path": "Main/04_Preliminary.tex",
+      "role": "body"
+    },
+    {
+      "path": "Main/05_Framework.tex",
+      "role": "body"
+    },
+    {
+      "path": "Main/06_ExperimentalSetup.tex",
+      "role": "body"
+    },
+    {
+      "path": "Main/07_Discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "Main/08_Conclusion.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "a9813a270388c9087f9d204da00c36eabdfa884c3efb40d2ce841225e471490a",
+    "asmeconf.cls": "eeb6816d27f16203d1ad4a1007b6bd7b6d6371aa03eb9fb50e383a2c670d5a19",
+    "Main/01_Introduction.tex": "0d9e23dca36b1b1f475964139ec485abe2b4ac25f0e2f0fd57c39c4623c3eac4",
+    "Main/02_RelatedWork.tex": "0add595daf2f8ddf22bd908ded186992e95768069543a98018782fabfce07b09",
+    "Main/03_Task-Description.tex": "29a3584fa9fb0b9a095eb3c63221ce5c3beddb529ade28415ffe9683278f9ade",
+    "Main/04_Preliminary.tex": "cc78bac16435d94d4e9fdd958f26a685b378a66e8b1d75ef5e4e04666085c301",
+    "Main/05_Framework.tex": "6d6e3bcd70f9570e4326a8908126aba499015636c9dc08716979d53171395d16",
+    "Main/06_ExperimentalSetup.tex": "3daa3cd3526a99b592bf46b7f9c3c643acca4b905e1082650b54b79f10f25128",
+    "Main/07_Discussion.tex": "caa6892071258792dc71ec8ba16ac0028a189966e0806e136550bf092cb529e3",
+    "Main/08_Conclusion.tex": "87bbfe78ec13e351838721fbca87c9984cf5c67c169385a8fe7eb8423fc6deb3"
+  }
+}

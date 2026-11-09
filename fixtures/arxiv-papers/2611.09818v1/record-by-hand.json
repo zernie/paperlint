@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "algorithm.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "neurips_2026.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "tables/per_concept_both_hosts.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/continuous_both_hosts.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/falsification_both_hosts.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "41cd6f8d2af4e881f9ab8bbfd4f474d91cfb02971dad9fa21dc772ed1eb6fdfc",
+    "algorithm.sty": "93fd0eb31c112eb405833db8f1d7f5d238c7e691b1c05680d7276e68f36d564a",
+    "neurips_2026.sty": "c648404a06f873924391c74c3f535ba8bf5a026c8c9e4752d5f746125ab0d1e4",
+    "tables/per_concept_both_hosts.tex": "3d522235c11f3d1f74d0499e7139e9dd4aa0cb240602866c516b0f598b266b0b",
+    "tables/continuous_both_hosts.tex": "76b01478bc61ac73fca90c76255040cd24b9fc743cc39b87dfca9e776c8874dc",
+    "tables/falsification_both_hosts.tex": "5cbfb20e1418831da10d7aadd93f365f14ca36b1f3a0c790ed4d2095ba5032d9"
+  }
+}

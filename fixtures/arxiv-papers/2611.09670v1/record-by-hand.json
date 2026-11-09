@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "algorithm.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "algorithmic.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "fancyhdr.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "icml2026.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "authors.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/table_fixes.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/table_sens.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/table_probe.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/table_loop.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/table_calib.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/table_calibcl.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/table_humancalib.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "e2369cf70794f3324d0aa4ecf41703545e425969907b41de5c2ee2fe92a94e9b",
+    "algorithm.sty": "93fd0eb31c112eb405833db8f1d7f5d238c7e691b1c05680d7276e68f36d564a",
+    "algorithmic.sty": "48d18794a5d97c0479a588cc2eac0917992feb9da83acc4631b8f55757d80f9b",
+    "fancyhdr.sty": "9130c52f91087abc6d223164ffa587e207e3257fcbcd069ef09ecb5391043f14",
+    "icml2026.sty": "7cdcf90f6a59c5219e7f15c88f7ed09fcaf598dad91e6cdddc4dc3cb0e397a95",
+    "authors.tex": "d54d08f83ec4e320ada28aaaa0e9507ba159264acb0f56eb24ecfee03175ad63",
+    "tables/table_fixes.tex": "9c29b7eb3bd225dcd50b20767b6469391dd341668e0d2939085ca4cd0ae1f2ca",
+    "tables/table_sens.tex": "3098d495b98a8ee9766f0b93f29e78d26353f94f66b7cd6d4c3536718488270b",
+    "tables/table_probe.tex": "b0aba0b1d13049d5ccf4ef40dacb015a9421bdb3d26c070537001022fccd233f",
+    "tables/table_loop.tex": "37cc555872bb74fce5f96c19462a957a4c1da8ea7c0e76a1c418f2547e8de8a5",
+    "tables/table_calib.tex": "d61666b212c2e7d5ac4279877903fc3e68355815d6d87b1a0a503acfede4e847",
+    "tables/table_calibcl.tex": "a05f50dfe4cc0a0a3358f9402dea69fb7e9ced11fe2d76a77114367d1ee070cd",
+    "tables/table_humancalib.tex": "8cd51614859d665eca9b9f4e9b976fd0d9b2002c5c8dc8662f4c56e13c2b4ad5"
+  }
+}

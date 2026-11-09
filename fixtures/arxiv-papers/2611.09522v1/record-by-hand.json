@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acmart.cls",
+      "role": "preamble"
+    },
+    {
+      "path": "authors.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "d648cfd46d950d1362261ca8896ea65603bcf02f093c778e33f6d15821c5c374",
+    "acmart.cls": "7a9b6535aafd31738b6cd959608be38a4958f3246da12dd6972e8ae71ac858bb",
+    "authors.tex": "d8d72b0c61c9ef5c3277e1bb997427dfe0b36ce2658865f36792e8d9d550b69d"
+  }
+}

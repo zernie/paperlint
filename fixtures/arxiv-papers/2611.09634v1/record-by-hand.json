@@ -1,0 +1,87 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "fancyhdr.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "iclr2027_conference.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "natbib.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "math_commands.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/lambdamix_q9_mechanism.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/example.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/training_budget_capacity.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/training_defaults.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/exact_constraints.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/policy_prompts.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/evaluator_prompts.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/full_pku_results.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/full_gsm8k_results.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/full_synthpai_results.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "048912182e9d8ba388d2d790afeb9197606e417bef2866977eb5f6031abcccb4",
+    "fancyhdr.sty": "b56ec4434b9f4607529a4b23dc68ad8d4b94f1f631c8cddaf7da78140d53a5ea",
+    "iclr2027_conference.sty": "a37be940d1e52fc981895488a14ce95bc79c6116465c9cfe07eafd792818bd89",
+    "natbib.sty": "88bc70c0e48461934cab5b2accef06b74a8b3ac45ad03ccd3f2a6b7e0d6d530d",
+    "math_commands.tex": "90473c4d0542070db244cea73ef962d6cddc5b2a746757e6a40ddf5fdfb90ba9",
+    "tables/lambdamix_q9_mechanism.tex": "5c948c8052a12c4915a74e23779a2f97686f951a39d33fb8ed952186a8f933e5",
+    "tables/example.tex": "5073243ee9ebbee4b176a8c2dc01ea7f070766c91d2e35767157ab13f2debd48",
+    "tables/training_budget_capacity.tex": "7e19089e8d3601c2f71cb47b627577dd95ba0df1fec7aff848c05437650e185d",
+    "tables/training_defaults.tex": "96cdd3a9899d446d0dd35f4183cb602cc78777731d60c7701e2caff31d2beaa5",
+    "tables/exact_constraints.tex": "13ec448ec9e45fc5faa52c063c1a7e95e1607f91a00f8334545d3ef2085ed0c4",
+    "tables/policy_prompts.tex": "56499d36f7fbcac7d0b929b0db566eb3b2698faec7b89800e2de379dab57ee3c",
+    "tables/evaluator_prompts.tex": "d73d1264596ef4ad57e3ef180629fef53d333c1d1475bfc23afcc9e59a113791",
+    "tables/full_pku_results.tex": "34dffe85a4888e47fdb45819149409f134b3fdadca9492c8e5d564daec253aeb",
+    "tables/full_gsm8k_results.tex": "152a7644cce076c6f7d48221458b468946ba662043695efee192702cf900a870",
+    "tables/full_synthpai_results.tex": "fa51c46bf166b08f03961f0b2c1e491aa794588f175316d0794ecf89c5910958"
+  }
+}

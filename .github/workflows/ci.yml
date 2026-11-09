@@ -264,6 +264,14 @@ jobs:
         run: npm run test:e2e:studies
         timeout-minutes: 5
 
+      # Every rule over every real paper of the corpus (6 accepted, 108 arXiv preprints) in ONE
+      # `paperlint lint --json`, against each paper's baseline: the vitest project `real-papers`,
+      # outside `unit` so the macOS shards and the coverage run do not repeat it. No TeX needed.
+      # Why every paper runs, and what it costs: fixtures/arxiv-papers/README.md.
+      - name: vitest run --project real-papers
+        run: npx vitest run --project real-papers
+        timeout-minutes: 10
+
   # ── DOES THIS PULL REQUEST CHANGE ANYTHING BUT DOCS? ────────────────────────────────────────────
   # dorny/paths-filter lists a PR's files from the API (no checkout). With `every`, a file counts as
   # code only if it matches all three patterns: anything, but not root or docs/ Markdown.

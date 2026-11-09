@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/00_abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/01_introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/02_problem_layers.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/03_skillware_architecture.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/04_runtime_chaining_config.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/05_slm_vs_llm_token_economy.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/06_comparative_analysis.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/07_tripartite_ecosystem_aura_mnemolink.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/08_security_privacy_sovereignty.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/09_embodied_robotics_bmi_horizon.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/10_conclusion.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "853e995bcab04f7fe2a3c31eb3442ab79f056acd7fbafb080561f5c741651905",
+    "sections/00_abstract.tex": "d98d872da0583762f9e7d83160a06003e1327669fdce1ebea6e45addd6cd0814",
+    "sections/01_introduction.tex": "3d2ec34567f4df7cfe37cebe09328111d47857dee9662c0ffdd567f82fe8bb58",
+    "sections/02_problem_layers.tex": "a2c23660a1adab0494a0ccc2a170f56189cb9b01791451a8a337a910d754060e",
+    "sections/03_skillware_architecture.tex": "a88a11130e66dac68f7d29cfd49b68116a4b0e4f24a0ba075c6851357ad5f543",
+    "sections/04_runtime_chaining_config.tex": "bd2a9384dd9c01b3f96b513dfc5f506fad8efdb66e094473e916a39cbd67990b",
+    "sections/05_slm_vs_llm_token_economy.tex": "aebfbb648709b05c9900379fcd2c4539a822b46819bf51a9b84b11e4e4f8a941",
+    "sections/06_comparative_analysis.tex": "fb2178a64253572f87e75eb502c1fb33e81da81095f9ba022f7548e4e1d5f0c7",
+    "sections/07_tripartite_ecosystem_aura_mnemolink.tex": "61e3255318564867b192ab8e28f266deea0e3b1d8cc7b83a22d3225f07506c6a",
+    "sections/08_security_privacy_sovereignty.tex": "0c73946278d259b48921f8fee393988c9eaff9b19e180229beb25563938320e4",
+    "sections/09_embodied_robotics_bmi_horizon.tex": "d4fbfe2b23f38fb65cf308ccab9c52b2694f4c7697d381a16064fd940e13913e",
+    "sections/10_conclusion.tex": "7fdb7b3fc5d8be941e5781375ac7b92700348ec1252f0d4c01c884c2cd92ec36"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "neurips_2026.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "tables/judge_penalty_attribute_table.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/judge_reasoning_vs_penalty_attribute_table.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "624081367b0c35b65918cefd7b1e12b59f76861dd847de2ce7286cd8fb6e31f3",
+    "neurips_2026.sty": "0c1ad36961fcd9198dcc2558cf2793e1df39973bde8264fd701f5e7970672757",
+    "tables/judge_penalty_attribute_table.tex": "36f8fe48e7d7cd6261a6b10425d9f6e2ceb789c79adc0a2c0e1a0d936f1f97ea",
+    "tables/judge_reasoning_vs_penalty_attribute_table.tex": "0e4f7a6f4e356ce6f632c887a2229684891643a17e394fcea39afaaf33d241ee"
+  }
+}

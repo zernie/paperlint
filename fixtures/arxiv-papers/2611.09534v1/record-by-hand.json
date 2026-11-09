@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "sn-jnl.cls",
+      "role": "preamble"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "f4d83f3129c1d34cbf69b0629c84271b023be1c8af514fc559905e0cedd0ea2e",
+    "sn-jnl.cls": "afdd709e43a76c1452c8696429d428b1c35a9339de050c7ca8a9b6f32c180556"
+  }
+}
