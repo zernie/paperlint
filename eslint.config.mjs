@@ -601,6 +601,10 @@ export default [
     ignores: [
       ".tmp-stages-src-*/",
       "fixtures/.tmp-*/",
+      // Other people's papers (fixtures/arxiv-papers*/README.md): judged by the corpus test against a
+      // baseline (arxiv-papers) or by nobody (arxiv-papers-extra), not by this repository's own lint.
+      "fixtures/arxiv-papers/",
+      "fixtures/arxiv-papers-extra/",
       "docs/prior-art/repro/",
       "dist/",
       "skills/*/scripts/*.js",

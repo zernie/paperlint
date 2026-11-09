@@ -5,7 +5,7 @@
   ],
   "findings": {
     "tex/claim-provenance": 19,
-    "paper/allowed-files-only": 1,
+    "paper/allowed-files-only": 2,
     "pdf/measured": 1,
     "tex/template": 1
   }

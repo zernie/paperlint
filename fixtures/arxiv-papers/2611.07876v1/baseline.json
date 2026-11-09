@@ -6,7 +6,7 @@
   "findings": {
     "paper/leading-zero": 294,
     "tex/claim-provenance": 29,
-    "paper/allowed-files-only": 2,
+    "paper/allowed-files-only": 3,
     "pdf/measured": 1
   }
 }
