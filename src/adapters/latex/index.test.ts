@@ -504,7 +504,7 @@ describe("bodyProse — passages a sentence cannot cross, with the marks that sa
   it("🔴 a reference mark names its command and its labels, split at the commas; a citation names none", () => {
     // Guards: tex/ref-list-same-number reads the keys from the mark, never from the source again.
     const src =
-      "\\begin{document}\nSee \\ref{sec:a}, \\cref{ fig:b , tab:c } and \\cite{k} \\ref{}.\n\\end{document}";
+      "\\begin{document}\nSee \\ref{sec:a}, \\cref{ fig:b , tab:c } and \\cite{k} \\ref{} \\vref{d}.\n\\end{document}";
     const ownerOf = (x: ProsePiece) =>
       x.kind !== "owner"
         ? []
@@ -517,6 +517,8 @@ describe("bodyProse — passages a sentence cannot cross, with the marks that sa
       { macro: "cref", keys: ["fig:b", "tab:c"] },
       "citation",
       { macro: "ref", keys: [] },
+      // Guards: a reference command the reader has no signature for names no label.
+      { macro: "vref", keys: [] },
     ]);
   });
 

@@ -12,7 +12,8 @@
  * Two members CLASH when they name different labels that print the same number. A member whose
  * command prints the kind of the place too (`\cref`, `\autoref`: "Figure 1 and table 1") clashes only
  * with a member of the same kind, or with a member whose command prints no kind ("Figure 1 and 1").
- * A command that prints no number (`\pageref`, `\nameref`) is no member; a label the build does not
+ * A command that prints no number (`\pageref`, `\nameref`) is no member, nor is varioref's `\vref`, whose
+ * argument the reader does not attach; a label the build does not
  * know is none either — `paper/sources-fresh` and LaTeX's own "undefined references" speak for it.
  */
 import type { Passage, ProsePiece, Span } from "./tex-document.ts";
@@ -51,8 +52,6 @@ const NUMBER_MACROS: ReadonlySet<string> = new Set([
   "Cref",
   "autoref",
   "Autoref",
-  "vref",
-  "Vref",
 ]);
 
 /** Of those, the ones that print the kind of the place before its number ("Figure 1", "section 2"). */
@@ -98,15 +97,16 @@ const close = (w: Walk): Walk => ({
   between: "",
 });
 
-/** The members one piece adds, when it is a reference: one per key its command names. */
-const membersOf = (p: ProsePiece): readonly ListMember[] =>
-  p.kind === "owner" && p.owner === "reference"
-    ? p.reference.keys.map((key) => ({
-        key,
-        macro: p.reference.macro,
-        span: p.span,
-      }))
-    : [];
+/** A cross-reference mark of the prose. */
+type ReferencePiece = Extract<ProsePiece, { readonly owner: "reference" }>;
+
+/** The members a reference adds: one per key its command names. */
+const membersOf = (p: ReferencePiece): readonly ListMember[] =>
+  p.reference.keys.map((key) => ({
+    key,
+    macro: p.reference.macro,
+    span: p.span,
+  }));
 
 /** One piece folded into the walk. */
 function step(w: Walk, p: ProsePiece): Walk {

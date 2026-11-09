@@ -18,6 +18,14 @@ One directory per paper, named as the planted paper is, holding those of these f
 `plain-block/` is no planted paper: a `filecontents*` block without `[overwrite]` over a `.bib` that does
 not exist yet, which no planted paper has (`source.tex` is its source).
 
+`ref-list-include/` and `ref-kinds/` are no planted papers either: the labels of their `.aux` are the
+input of the label reader and of `tex/ref-list-same-number` (`src/ref-list-rule.test.ts`).
+`ref-list-include/` is an IEEEtran paper with hyperref and cleveref whose `\include{results}` holds two
+labels in subsection II-A (`source.tex` is `paper.tex`, `results.tex` the included file; `results.aux`
+is the aux `\include` wrote); its PDF reads "Sections II-A, II-A and II-B answer the questions."
+`ref-kinds/` is an article whose figure, table and section are all 1. They were built with three (two for `ref-kinds/`)
+`pdflatex -interaction=nonstopmode paper.tex` passes and no bibtex, so they have no `.fls`; `paperlint toolchain` does not declare cleveref, so it was added with `tlmgr install cleveref` for these captures.
+
 Captured with TeX Live 2026: copy the paper to an empty directory, then `pdflatex -recorder
 -interaction=nonstopmode -file-line-error paper.tex` (copy `paper.fls` as `first-pass.fls`), `bibtex
 paper`, and `pdflatex` twice more. Two lines are rewritten so a file does not name the machine it came

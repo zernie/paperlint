@@ -4,7 +4,7 @@
  * `src/adapters/tex-output/`; `src/cli.ts` wires it.
  *
  * What the build's `.aux`, `.blg` and `.bbl` hold about the bibliography is read by `src/latex-log.ts`,
- * which the build loop already reads them with.
+ * which the build loop already reads them with; the labels of the `.aux` are read here.
  */
 import type { Labels } from "../domain/cross-references.ts";
 import type { BibtexError } from "../domain/sources-record.ts";

@@ -227,12 +227,14 @@ describe("the .aux label reader, on the forms the captures do not hold", () => {
       "\\newlabel{twice}{{1}{1}{}{figure.1}{}}",
       "\\newlabel{twice}{{2}{1}{}{figure.2}{}}",
       "\\newlabel{brace}{{\\{1\\}}{1}{}{}{}}",
+      "\\newlabel{trailing}{{4}{1}{}{table.4}{}} % after",
     ].join("\n");
     expect(Object.fromEntries(texOutput.labels(aux, () => null))).toEqual({
       old: { number: "3", kind: null },
       app: { number: "A", kind: "appendix" },
       twice: { number: "2", kind: "figure" },
       brace: { number: "\\1\\", kind: null },
+      trailing: { number: "4", kind: "table" },
     });
   });
 

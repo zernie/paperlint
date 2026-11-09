@@ -16,7 +16,7 @@ typeset by IEEEtran as "Sections II-A, II-A and II-B answer the questions." when
 neither "There were undefined references" nor "multiply defined" fires. The finding stands at the
 later reference and names both labels and the number they share.
 
-A **list** is a run of `\ref`, `\eqref`, `\cref`, `\Cref`, `\autoref`, `\Autoref`, `\vref` or `\Vref`
+A **list** is a run of `\ref`, `\eqref`, `\cref`, `\Cref`, `\autoref` or `\Autoref`
 in one paragraph that the text between joins as one: only commas, _and_, _or_, _to_, `\&`, or a dash
 (`\ref{a}--\ref{b}`, a range). Any other word, a citation, math or a full stop ends the list. One
 `\cref{a,b}` is a list by itself; cleveref prints a number once when two of its labels share it
@@ -55,6 +55,7 @@ None.
 - A label the build does not know (LaTeX's own "undefined references"), and the same label named twice
   in one list.
 - `\pageref`, `\cpageref` and `\nameref`: they print a page or a title, not a number of a place.
+- varioref's `\vref` and `\Vref`: the LaTeX reader attaches no argument to them, so their labels are not read.
 - A list that names a section and its own subsection ("Sections IV and IV-A"): the numbers differ.
 - References joined by anything other than the words above ("Section 2 as well as 3").
 
