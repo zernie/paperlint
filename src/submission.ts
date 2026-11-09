@@ -80,6 +80,8 @@ import { factsPath, parseFactsText, type ReadFacts } from "./facts-file.ts";
 import { lineColumn, readPaper } from "./tex-paper.ts";
 import { originOf, type PaperSource } from "./domain/paper-source.ts";
 import type { SourcesCodec } from "./ports/sources-codec.ts";
+import type { ParseYaml } from "./ports/yaml.ts";
+import { priorReviewsLines } from "./prior-reviews-rule.ts";
 import { MAIN } from "./build.ts";
 import { assessSent, venueMessages, type VenueMessage } from "./venue-rules.ts";
 import {
@@ -175,6 +177,8 @@ export interface SubmissionDeps {
     file: string,
     messages: readonly VenueMessage[],
   ) => Promise<string>;
+  /** Parses the reviewers' points file a reviewed rejection names (`--save` stops while one is unanswered). */
+  readonly yaml: ParseYaml;
   /** The instant a frozen version's lock entry records (`versions/lock.json`), ISO 8601. */
   readonly now: () => string;
   readonly log: (line: string) => void;
@@ -542,8 +546,38 @@ async function venueCheck(
   // Checked on its own: a cycle still porting skips the venue rules, not this.
   const refused = save && factsOfSent(t.paperDir, bytes, deps) === null;
   if (refused) deps.err(REBUILD_REFUSAL);
-  return refused;
+  return refused || priorReviewsStop(tex, source, save, deps);
 }
+
+/**
+ * The reviewers' points of the rejection before this attempt that are still unanswered, or answered
+ * in no section, printed as `cycle/prior-reviews-answered` words them; a `--save` stops on any (#420).
+ * With no `paper.tex` there are no sections, so every place an answer names is reported as missing.
+ */
+function priorReviewsStop(
+  tex: string,
+  source: Uint8Array | null,
+  save: boolean,
+  deps: RunDeps,
+): boolean {
+  const text = new TextDecoder().decode(source ?? new Uint8Array());
+  const lines = priorReviewsLines(tex, text, {
+    ...deps,
+    venuesDir: deps.presets.venuesDir,
+  });
+  if (lines.length === 0) return false;
+  logAll([`${PRIOR_REVIEWS}:`, ...lines.map((l) => `  ${l}`)], deps);
+  if (save) deps.err(PRIOR_REVIEWS_REFUSAL);
+  return save;
+}
+
+/** The heading of the reviewers' points block: the rule that judges them, by name. */
+const PRIOR_REVIEWS =
+  "reviewers' points of the rejection before this attempt (cycle/prior-reviews-answered)";
+
+/** What `--save` says while a reviewer's point is unanswered, or answered in no section: nothing was sent. */
+const PRIOR_REVIEWS_REFUSAL =
+  "refused: a reviewer's point of the rejection before this attempt is unanswered, or answered in a section the paper does not have (above) — answer it in the points file, run the dry run again; nothing was sent";
 
 /** The line for a check that found nothing — which, while a cycle is porting, is that nothing ran. */
 const nothingFound = (kind: string): string =>

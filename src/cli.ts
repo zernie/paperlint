@@ -1894,6 +1894,7 @@ const SIMPLE: Readonly<
         latex: latexReader,
         codec: sourcesCodec,
         lintText,
+        yaml: parseYaml,
         now: isoNow,
         log,
         err,

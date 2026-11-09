@@ -1177,10 +1177,22 @@ test(
   BROWSER_TEST_MS,
 );
 
-test(
-  "🔴 a note opened by hover stays open while the pointer crosses the gap to it, keeps its link reachable, and closes after the pointer leaves for good",
-  async () => {
-    await onV7Page("browser-v7-hover", async (page, cardOf) => {
+/**
+ * Where the term stands when it is hovered, and so where its note opens: under a term in the
+ * middle of the viewport, over one at its bottom edge, where there is no room below. The test
+ * places the term itself and moves the mouse itself. `hover()` would scroll first, and a retry of
+ * it scrolls to another alignment (`block: "end"` on the second attempt, playwright-core
+ * `_retryPointerAction`), so a slow runner opened the note on the other side (#439).
+ */
+const PLACEMENTS = [
+  { side: "below", block: "center" },
+  { side: "above", block: "end" },
+] as const;
+
+test.each(PLACEMENTS)(
+  "🔴 a note opened by hover $side its term stays open while the pointer crosses the gap to it, keeps its link reachable, and closes after the pointer leaves for good",
+  async ({ side, block }) => {
+    await onV7Page(`browser-v7-hover-${side}`, async (page, cardOf) => {
       const docstring = await cardOf("card-docstring");
       const google = fixtureCard("card-docstring").terms.find(
         (t) => t.term === "Google-style",
@@ -1189,19 +1201,19 @@ test(
       const term = await termOf(docstring, google.term);
       // A slow runner must not outrun the grace delay while the pointer crosses the gap.
       await page.evaluate("window.__tipGraceMs = 5000");
+      await term.evaluate((b, at) => {
+        b.scrollIntoView({ block: at, behavior: "instant" });
+      }, block);
+      const from = await term.boundingBox();
+      assert.ok(from !== null);
       // At its top left corner: a term that wraps has a box whose middle may lie over another term.
-      await term.hover({ position: { x: 4, y: 4 } });
+      await page.mouse.move(from.x + 4, from.y + 4);
       assert.deepEqual(
         [(await tipNow(page)).term, (await tipNow(page)).open],
         [google.term, true],
       );
-      // Straight down from the term, in small steps, through the gap into the note. Only the gap
-      // lies between them on this path, so no other term opens on the way.
-      const tip = page.getByTestId("tip");
-      const from = await term.boundingBox();
-      const to = await tip.boundingBox();
-      assert.ok(from !== null && to !== null);
-      const top = from.y + from.height;
+      const to = await page.getByTestId("tip").boundingBox();
+      assert.ok(to !== null);
       // The other terms do not react while the pointer crosses: only the gap is under test, and
       // which term lies in it depends on how the line wraps. The arrow bridges the gap at the
       // middle of the term, so the crossing is at its right end.
@@ -1209,15 +1221,24 @@ test(
         content: 'button.term[aria-expanded="false"] { pointer-events: none; }',
       });
       const x = from.x + from.width - 8;
-      assert.ok(
-        to.y > top && x > to.x && x < to.x + to.width,
-        "the note lies below the term and covers that column",
+      // Straight from the term toward the note, in small steps, through the gap into it. Only the
+      // gap lies between them on this path, so no other term opens on the way.
+      const edge = side === "below" ? from.y + from.height : from.y;
+      const into = side === "below" ? to.y + 10 : to.y + to.height - 10;
+      assert.deepEqual(
+        [
+          side === "below" ? to.y > edge : to.y + to.height < edge,
+          x > to.x && x < to.x + to.width,
+        ],
+        [true, true],
+        `the note lies ${side} the term and covers its right end's column`,
       );
-      await page.mouse.move(x, from.y + from.height - 1);
-      for (const k of R.range(0, Math.ceil((to.y + 10 - top) / 3))) {
-        await page.mouse.move(x, top + 3 * k);
+      const step = side === "below" ? 3 : -3;
+      await page.mouse.move(x, edge - Math.sign(step));
+      for (const k of R.range(0, Math.ceil(Math.abs(into - edge) / 3))) {
+        await page.mouse.move(x, edge + step * k);
       }
-      await page.mouse.move(x, to.y + 10);
+      await page.mouse.move(x, into);
       const inside = await tipNow(page);
       assert.deepEqual(
         [inside.term, inside.open, inside.expanded],
