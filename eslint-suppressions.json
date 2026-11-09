@@ -882,13 +882,13 @@
   },
   "src/hooks-settings.ts": {
     "functional/immutable-data": {
-      "count": 9
+      "count": 8
     },
     "functional/no-loop-statements": {
       "count": 5
     },
     "functional/prefer-immutable-types": {
-      "count": 7
+      "count": 6
     },
     "no-restricted-imports": {
       "count": 1

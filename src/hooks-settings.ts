@@ -325,29 +325,38 @@ export function wireHooks(
 export const FRESH_CLONE_NOTE = `the commands point into node_modules/${PACKAGE_NAME}/ — in a fresh clone they cannot run until \`npm install\` has run there`;
 
 /**
- * `paperlint doctor`'s section. ADVISORY — it never fails the run: the hooks are an in-editor guard,
- * `--no-hooks` is a legitimate choice, and a doctor that exits non-zero on a choice gets muted.
+ * `init` refuses to write while any hook is wired under another spelling, so its remedy must not be
+ * offered then — the remedy is to pick ONE form.
+ */
+const remedyFor = (counts: readonly HookCount[]): string =>
+  counts.some((c) => c.other > 0)
+    ? `some paperlint hooks are wired by hand under another spelling, and \`npx paperlint init\` writes nothing then — add the missing ones in that same form, or delete the hand-written ones and run \`npx paperlint init\``
+    : `\`npx paperlint init\` adds them`;
+
+/**
+ * `paperlint doctor`'s section. `bad` counts the states that are MISWIRED, which fail the run: a
+ * hook missing from an otherwise wired set ("partly wired"), and a hook wired twice. "Not wired at
+ * all" stays advisory — `--no-hooks` is a legitimate choice, and a doctor that exits non-zero on a
+ * choice gets muted. A settings file that does not parse is advisory here too.
  */
 export function doctorHooks(
   root: string,
   wiring: Wiring = shippedWiring(),
-): string[] {
+): { readonly lines: string[]; readonly bad: number } {
   const out = [`hooks (Claude Code reads them from ${SETTINGS_PATH})`];
   const read = readSettings(root);
   if (read.status === "unparsable") {
-    out.push(`  ⚠ ${SETTINGS_PATH} does not parse — ${read.reason}`);
-    out.push(`      Claude Code cannot read it either; fix the JSON`);
-    return out;
+    out.push(
+      `  ⚠ ${SETTINGS_PATH} does not parse — ${read.reason}`,
+      `      Claude Code cannot read it either; fix the JSON`,
+    );
+    return { lines: out, bad: 0 };
   }
   const counts = wiredCounts(read.settings, wiring.names);
   const missing = counts.filter((c) => total(c) === 0).map((c) => c.name);
   const twice = counts.filter((c) => total(c) > 1);
-  // `init` refuses to write while any hook is wired under another spelling, so its remedy must
-  // not be offered then — the remedy is to pick ONE form.
-  const handWired = counts.some((c) => c.other > 0);
-  const remedy = handWired
-    ? `some paperlint hooks are wired by hand under another spelling, and \`npx paperlint init\` writes nothing then — add the missing ones in that same form, or delete the hand-written ones and run \`npx paperlint init\``
-    : `\`npx paperlint init\` adds them`;
+  const partly = missing.length > 0 && missing.length < wiring.names.length;
+  const remedy = remedyFor(counts);
   if (twice.length > 0) {
     out.push(`  ⚠ wired TWICE — each of these runs more than once per event:`);
     for (const c of twice) out.push(`      ${c.name} ×${String(total(c))}`);
@@ -360,7 +369,7 @@ export function doctorHooks(
       `  ⚠ not wired — none of the ${String(wiring.names.length)} hooks is in ${SETTINGS_PATH}. ` +
         `\`npx paperlint init\` wires them`,
     );
-  else if (missing.length > 0)
+  else if (partly)
     out.push(
       `  ⚠ partly wired — missing: ${missing.join(", ")}`,
       `      ${remedy}`,
@@ -370,5 +379,5 @@ export function doctorHooks(
       `  ✓ wired — ${wiring.names.join(", ")}, once each`,
       `      ${FRESH_CLONE_NOTE}`,
     );
-  return out;
+  return { lines: out, bad: partly || twice.length > 0 ? 1 : 0 };
 }
