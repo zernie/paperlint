@@ -15,6 +15,7 @@ that file's header.`,
 | **Both halves** (root \`CLAUDE.md\`), for every registered rule | ${file("src/rule-cases.test.ts")} fails on a registered rule with no cases |
 | **One rule, one requirement**: two checks with different reasons to switch them off are two rules | review |
 | **A venue requirement is validated on real accepted papers** of that venue, built to PDF, with the ground truth established independently | review; the papers are in ${file("fixtures/accepted-papers/README.md")} |
+| **Quiet on correct real papers**: every rule runs over the 6 accepted papers and the 10 arXiv preprints of ${file("fixtures/arxiv-papers/README.md")}, and a finding not in a paper's baseline fails the test. Read each new finding and decide: a real defect in the paper → re-record the baseline and say so in the PR; a false alarm → fix the rule, never the baseline. Before a rule ships at error level, also run it by hand over the 98 papers of ${file("fixtures/arxiv-papers-extra/README.md")} and state the counts in the PR | ${file("fixtures/accepted-papers/accepted-papers.test.ts")}; the by-hand run is review |
 | **Its page**, \`docs/rules/<group>/<rule>.md\`, and \`meta.docs.url\` pointing at it | ${file("src/rule-docs.test.ts")}; its \`AWAITING_PAGE\` list only shrinks |
 | **Loud on an empty input set**: a rule that matched no files must not report like one that passed | ${file("scripts/rules-see-files.mjs")}, per rule and not per glob, in \`npm run check\` |
 
