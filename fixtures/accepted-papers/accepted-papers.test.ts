@@ -36,12 +36,24 @@ const PAPERS = readdirSync(HERE).filter((name) =>
   statSync(join(HERE, name)).isDirectory(),
 );
 
+/**
+ * The preprints beside the accepted papers (`../arxiv-papers/`, its README says why only these run):
+ * the same lint test, a second directory. The register measures below stay on the accepted papers.
+ */
+const ARXIV = join(dirname(HERE), "arxiv-papers");
+const ARXIV_PAPERS = readdirSync(ARXIV).filter((name) =>
+  statSync(join(ARXIV, name)).isDirectory(),
+);
+
 /** `paperlint lint --json` over one paper, copied under `papers/`: findings per rule. */
-async function lintPaper(name: string): Promise<Record<string, number>> {
+async function lintPaper(
+  name: string,
+  root: string = HERE,
+): Promise<Record<string, number>> {
   const dir = writeTree(useTempDir("paperlint-accepted-"), {
     "package.json": '{"name":"consumer","private":true}',
   });
-  cpSync(join(HERE, name), join(dir, "papers", name), {
+  cpSync(join(root, name), join(dir, "papers", name), {
     recursive: true,
     verbatimSymlinks: true,
   });
@@ -77,6 +89,20 @@ describe.each(PAPERS)("the accepted paper %s", (name) => {
       const { grew, vanished } = compareToBaseline(
         await lintPaper(name),
         recordedFindings(join(HERE, name)),
+      );
+      expect({ grew, vanished }).toEqual({ grew: [], vanished: [] });
+    },
+  );
+});
+
+describe.each(ARXIV_PAPERS)("the arXiv preprint %s", (name) => {
+  it(
+    "says no more than recorded, and no recorded rule has gone quiet",
+    { timeout: LINT_TIMEOUT_MS },
+    async () => {
+      const { grew, vanished } = compareToBaseline(
+        await lintPaper(name, ARXIV),
+        recordedFindings(join(ARXIV, name)),
       );
       expect({ grew, vanished }).toEqual({ grew: [], vanished: [] });
     },
