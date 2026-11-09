@@ -127,6 +127,17 @@ describe("bib/reachable-entry", () => {
     expect(found(messages, "reachable-entry")).toEqual([]);
   });
 
+  it("an eprint counts only when its archive prefix or type names arXiv", async () => {
+    const { messages } = await lint(
+      inline(
+        "@misc{p, eprint = {2310.05736}, archiveprefix = {arXiv}}\n@misc{t, eprint = {2310.05736}, eprinttype = {arXiv}}\n@misc{o, eprint = {x1}, archiveprefix = {HAL}}\n@misc{n, eprint = {x2}}",
+      ),
+    );
+    expect(
+      found(messages, "reachable-entry").map((m) => m[2].slice(0, 3)),
+    ).toEqual(["`o`", "`n`"]);
+  });
+
   // Measured on the accepted corpus: 89 entries carry their only link as `howpublished = {\url{…}}`,
   // which the bibliography style typesets — a link the reader has.
   it("a \\url or \\href in any field is a link the reader has; a bare address in a field the style drops is not", async () => {
