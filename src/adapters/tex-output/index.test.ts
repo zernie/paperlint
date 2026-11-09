@@ -216,7 +216,9 @@ describe("the .aux label reader, on what real runs wrote", () => {
       a: { number: "1", kind: "section" },
     });
   });
+});
 
+describe("the .aux label reader, on the forms the captures do not hold", () => {
   it("the older two-field form, a cleveref kind before the anchor's, a later definition, an escaped brace", () => {
     const aux = [
       "\\newlabel{old}{{3}{2}}",

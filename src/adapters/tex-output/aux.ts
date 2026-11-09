@@ -47,7 +47,7 @@ function groupStep(g: Groups, ch: string): Groups {
 
 /** The balanced `{…}` groups that open `s`, in order, up to the first character outside one. */
 export const groups = (s: string): readonly string[] =>
-  [...s].reduce(groupStep, {
+  Array.from(s).reduce(groupStep, {
     found: [],
     current: "",
     depth: 0,

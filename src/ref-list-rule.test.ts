@@ -40,6 +40,10 @@ const BUILT: Readonly<Record<string, string>> = {
   "/p/results.aux": captured("results.aux"),
 };
 
+/** The built paper without one of its files. */
+const without = (path: string): Readonly<Record<string, string>> =>
+  Object.fromEntries(Object.entries(BUILT).filter(([p]) => p !== path));
+
 /** What the rule reports on `/p/paper.tex` holding `src`, with `files` on the disk. */
 function run(
   files: Readonly<Record<string, string>>,
@@ -108,8 +112,7 @@ describe("tex/ref-list-same-number", () => {
   });
 
   it("not built — no record — says nothing: paper/sources-fresh speaks", () => {
-    const { "/p/_build/sources.json": _, ...unbuilt } = BUILT;
-    expect(run(unbuilt)).toEqual([]);
+    expect(run(without("/p/_build/sources.json"))).toEqual([]);
   });
 
   it("a record the paper has changed since says nothing: the .aux numbers other text", () => {
@@ -119,7 +122,6 @@ describe("tex/ref-list-same-number", () => {
   });
 
   it("a fresh record and no .aux says nothing", () => {
-    const { "/p/paper.aux": _, ...noAux } = BUILT;
-    expect(run(noAux)).toEqual([]);
+    expect(run(without("/p/paper.aux"))).toEqual([]);
   });
 });

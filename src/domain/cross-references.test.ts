@@ -9,6 +9,7 @@ import {
   referenceLists,
   sameNumberClashes,
   type Labels,
+  type ListMember,
 } from "./cross-references.ts";
 
 const doc = (body: string): string =>
@@ -144,11 +145,12 @@ describe("sameNumberClashes — what stays silent", () => {
 
 describe("referenceLists and joins", () => {
   it("lists are cut at a full stop and at a passage break", () => {
+    const keys = (l: readonly ListMember[]) => l.map((m) => m.key);
     const lists = referenceLists(
       latexReader.bodyProse(
         doc("\\ref{a} and \\ref{b}. \\ref{c}\n\n\\ref{d}, \\ref{e}"),
       ),
-    ).map((l) => l.map((m) => m.key));
+    ).map(keys);
     expect(lists).toEqual([["a", "b"], ["c"], ["d", "e"]]);
   });
 

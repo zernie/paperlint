@@ -25,6 +25,7 @@ import {
 import {
   ruleDocsUrl,
   type Located,
+  type TexRuleContext,
   type TexRuleModule,
 } from "./tex-venue-rules.ts";
 
@@ -48,6 +49,21 @@ const located = (c: Clash): Located => ({
   at: c.second.span,
 });
 
+/** Every clash in the paper `context` lints, reported — nothing while the build is missing or stale. */
+function reportClashes(context: TexRuleContext, deps: RefListDeps): void {
+  const dir = dirname(context.filename);
+  if (paperRecord(dir, deps).kind !== "fresh") return;
+  const read = (name: string): string | null =>
+    decoded(deps.files.readBytes(callerPath(join(dir, name))));
+  const aux = read(`${JOBNAME}.aux`);
+  if (aux === null) return;
+  const labels = deps.texOutput.labels(aux, read);
+  const sc = context.sourceCode;
+  const paper = readPaper(context.filename, sc.raw ?? sc.text, deps);
+  const clashes = sameNumberClashes(deps.latex.bodyProse(paper.text), labels);
+  reportInPaper(context, MESSAGES, paper, clashes.map(located));
+}
+
 export const refListSameNumberRule = (deps: RefListDeps): TexRuleModule => ({
   meta: {
     type: "problem",
@@ -62,20 +78,7 @@ export const refListSameNumberRule = (deps: RefListDeps): TexRuleModule => ({
   create(context) {
     return {
       root() {
-        const dir = dirname(context.filename);
-        if (paperRecord(dir, deps).kind !== "fresh") return;
-        const read = (name: string): string | null =>
-          decoded(deps.files.readBytes(callerPath(join(dir, name))));
-        const aux = read(`${JOBNAME}.aux`);
-        if (aux === null) return;
-        const labels = deps.texOutput.labels(aux, read);
-        const sc = context.sourceCode;
-        const paper = readPaper(context.filename, sc.raw ?? sc.text, deps);
-        const clashes = sameNumberClashes(
-          deps.latex.bodyProse(paper.text),
-          labels,
-        );
-        reportInPaper(context, MESSAGES, paper, clashes.map(located));
+        reportClashes(context, deps);
       },
     };
   },

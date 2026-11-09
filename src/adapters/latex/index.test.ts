@@ -505,12 +505,12 @@ describe("bodyProse — passages a sentence cannot cross, with the marks that sa
     // Guards: tex/ref-list-same-number reads the keys from the mark, never from the source again.
     const src =
       "\\begin{document}\nSee \\ref{sec:a}, \\cref{ fig:b , tab:c } and \\cite{k} \\ref{}.\n\\end{document}";
+    const ownerOf = (x: ProsePiece) =>
+      x.kind !== "owner"
+        ? []
+        : [x.owner === "reference" ? x.reference : x.owner];
     const owners = bodyProse(parseLatex(src)).flatMap((p) =>
-      p.pieces.flatMap((x) =>
-        x.kind !== "owner"
-          ? []
-          : [x.owner === "reference" ? x.reference : x.owner],
-      ),
+      p.pieces.flatMap(ownerOf),
     );
     expect(owners).toEqual([
       { macro: "ref", keys: ["sec:a"] },
