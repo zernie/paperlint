@@ -57,7 +57,9 @@ export const groups = (s: string): readonly string[] =>
 
 /** A field as the reader sees it: `\mbox` and braces dropped, spaces collapsed (`\mbox  {II-A}` → `II-A`). */
 const shown = (field: string): string =>
-  collapse(field.replaceAll("\\mbox", "").replaceAll("{", "").replaceAll("}", ""));
+  collapse(
+    field.replaceAll("\\mbox", "").replaceAll("{", "").replaceAll("}", ""),
+  );
 
 /** What one aux line says about a label: what it prints, or the kind cleveref gives it. */
 type Line =
@@ -96,7 +98,11 @@ function newlabel(line: string): Line | null {
     };
   const close = first.indexOf("]");
   return first.startsWith("[") && close > 1
-    ? { kind: "cref", key: key.slice(0, -CREF.length), type: first.slice(1, close) }
+    ? {
+        kind: "cref",
+        key: key.slice(0, -CREF.length),
+        type: first.slice(1, close),
+      }
     : null;
 }
 

@@ -140,7 +140,10 @@ function clashes(a: Resolved, b: Resolved): boolean {
 }
 
 /** The members of a list the build resolves to a number, in order. */
-const resolved = (list: readonly ListMember[], labels: Labels): readonly Resolved[] =>
+const resolved = (
+  list: readonly ListMember[],
+  labels: Labels,
+): readonly Resolved[] =>
   list.flatMap((member) => {
     const label = labels.get(member.key);
     return label === undefined || !NUMBER_MACROS.has(member.macro)

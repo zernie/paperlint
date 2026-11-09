@@ -432,6 +432,17 @@ const sourced = (paperTex: string): Record<string, string> =>
     }),
   });
 
+/** A list whose first two labels print one number by `TWO_LABELS_ONE_NUMBER`. */
+const REF_LIST =
+  "Sections~\\ref{sec:check}, \\ref{sec:rq2} and~\\ref{sec:rq3}.";
+/** Three `\newlabel` lines as pdflatex wrote them for an IEEEtran paper: two in subsection II-A. */
+const TWO_LABELS_ONE_NUMBER = [
+  "\\newlabel{sec:rq2}{{\\mbox  {II-A}}{2}{Check}{subsection.2.1}{}}",
+  "\\newlabel{sec:check}{{\\mbox  {II-A}}{2}{Check}{subsection.2.1}{}}",
+  "\\newlabel{sec:rq3}{{\\mbox  {II-B}}{2}{Third question}{subsection.2.2}{}}",
+  "",
+].join("\n");
+
 // ── a BlindConf paper, for the LaTeX venue rules ──────────────────────────────────────────────
 
 const BLIND_PAPER = onBlindConf(P);
@@ -1232,6 +1243,23 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       line: 3,
     },
     silent: paper(tex(FORMAL)),
+  },
+  // The build's record and its .aux, as TeX wrote them for two labels in one subsection
+  // (test/fixtures/tex-output/ref-list-include/results.aux): the list is on line 3.
+  "tex/ref-list-same-number": {
+    reports: {
+      tree: {
+        ...sourced(tex(REF_LIST)),
+        [`${P}/paper.aux`]: TWO_LABELS_ONE_NUMBER,
+      },
+      file: TEX_FILE,
+      severity: 2,
+      line: 3,
+    },
+    silent: {
+      ...sourced(tex("Sections~\\ref{sec:check} and~\\ref{sec:rq3}.")),
+      [`${P}/paper.aux`]: TWO_LABELS_ONE_NUMBER,
+    },
   },
   // The paragraph ceiling is off by default (see "tex/max-paragraph-words is off by default"
   // below): its cases turn it on in the paper's paperlint.json, as study/declare-sample's do.
