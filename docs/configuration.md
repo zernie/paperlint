@@ -468,8 +468,8 @@ papers/my-paper
   setup and a file of the paper's own wins over paperlint's of the same name. The system tree still
   resolves after them. `paperlint lint` does not look for included files at all: it reads which files
   TeX read from the record the build writes (`_build/sources.json`). Naming a `.tex` that record does
-not list (a figure `paper.tex` no longer includes, or any `.tex` of a paper never built) is refused,
-and the refusal says which of the two it is.
+  not list (a figure `paper.tex` no longer includes, or any `.tex` of a paper never built) is refused,
+  and the refusal says which of the two it is.
 - **compile** — `pdflatex -interaction=nonstopmode -halt-on-error -file-line-error -recorder`, then `bibtex`
   when the `.aux` names a bibliography, then pdflatex again until the `.aux`, `.toc`, `.out` and
   `.bbl` stop changing and the log stops asking for a rerun. bibtex runs again only when the cited
