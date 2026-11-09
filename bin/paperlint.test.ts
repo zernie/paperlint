@@ -59,3 +59,22 @@ test("the documented import `paperlint/bin/paperlint.mjs` is the CLI's module: b
   assert.equal(r.stderr, "");
   assert.equal(r.stdout, "function function function\n");
 });
+
+test("`hook submission-confirm` through the shim reads its payload from the real stdin — the one in-process hook the fast path does not feed", () => {
+  // Guards: the fast path hands stdin only to the file hooks; this one reaches `runHook` from the
+  // `hook` command, whose own default reader is the process's stdin. A refusal here proves it read it.
+  const r = spawnSync(process.execPath, [BIN, "hook", "submission-confirm"], {
+    cwd: fileURLToPath(new URL("..", import.meta.url)),
+    encoding: "utf8",
+    input: JSON.stringify({
+      tool_input: { command: "npx paperlint submission update nope --save" },
+      cwd: fileURLToPath(new URL("..", import.meta.url)),
+    }),
+  });
+  assert.equal(r.status, 0);
+  assert.equal(r.stderr, "");
+  assert.match(
+    r.stdout,
+    /^\{"hookSpecificOutput":\{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"Not run: this sends the paper to the venue's portal/,
+  );
+});

@@ -359,6 +359,23 @@ test("runHook lint-edited: quiet on a clean edit and on a file paperlint does no
   });
 });
 
+test("runHook lint-edited: a project with a root paperlint.json is read quietly — its `config:` line is not the hook's output", async () => {
+  const dir = lintEditedPaper("lint-edited-root-config");
+  writeTree(dir, { "paperlint.json": "{}\n" });
+  const paper = join(dir, "papers/p");
+  // Guards: readConfig names a discovered config on its log; the hook swallows it, so stdout and
+  // stderr stay what they are without a root config.
+  assert.deepEqual(await lintEditedOn(join(paper, "paper.tex"), "Short one."), {
+    code: 0,
+    out: "",
+    err: [],
+  });
+  const long = await lintEditedOn(join(paper, "paper.tex"), sentence(64));
+  assert.equal(long.code, 0);
+  assert.doesNotMatch(long.out, /config:/u);
+  assert.deepEqual(long.err, []);
+});
+
 test("runHook submission-confirm: in-process — a refusal on stdout for a send with no yes, nothing for anything else, and a refusal when its input cannot be read", () => {
   const hook = (stdin: () => string) => {
     const out: string[] = [];
