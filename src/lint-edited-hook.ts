@@ -20,8 +20,9 @@
  * multiset: an error is new when its key occurs more often now than in the snapshot. Then the snapshot
  * is overwritten with the files just linted (the others are kept). A file the snapshot has not seen
  * yet (the first edit in a paper) has no "before": only the errors on the lines this edit wrote are
- * reported — an Edit's `new_string`, each `new_string` of a MultiEdit, every line of a Write. `_build/`
- * is gitignored and allowed by the layout.
+ * reported — the lines Claude Code's `structuredPatch` says the edit added, every line of a Write, and
+ * with no patch the place of each `new_string` that stands once in the file (see `writtenLines`).
+ * `_build/` is gitignored and allowed by the layout.
  *
  * ── WHAT IT CANNOT SEE ───────────────────────────────────────────────────────────
  * - A file written by a shell command (`sed -i`, a script, `mv`): no Edit or Write, no hook. The
@@ -157,16 +158,63 @@ const placesOf = (text: string, piece: string): readonly Lines[] => {
   });
 };
 
-/** The lines of `text` (the edited file now) that the payload's tool wrote. */
+/**
+ * What Claude Code 2.1.319 puts in an Edit's `tool_response` (measured, replace_all included): the
+ * hunks of the edit as `structuredPatch`, each with `newStart` (the 1-based line in the file AFTER the
+ * edit where the hunk begins, context included) and `lines`, every one prefixed by a space (context),
+ * `-` (removed) or `+` (added). Only these two fields are read.
+ */
+const Patch = z.array(
+  z.object({ newStart: z.number().int(), lines: z.array(z.string()) }),
+);
+
+/** The lines a hunk added, in the file after the edit, as one-line ranges. */
+interface Hunk {
+  readonly newStart: number;
+  readonly lines: readonly string[];
+}
+const addedBy = (hunk: Hunk): readonly Lines[] =>
+  hunk.lines.reduce<{ at: number; added: readonly Lines[] }>(
+    (acc, l) =>
+      l.startsWith("-")
+        ? acc
+        : {
+            at: acc.at + 1,
+            added: l.startsWith("+")
+              ? [...acc.added, { from: acc.at, to: acc.at }]
+              : acc.added,
+          },
+    { at: hunk.newStart, added: [] },
+  ).added;
+
+/**
+ * The lines of `text` (the edited file now) that the payload's tool wrote.
+ *
+ * Write: every line. Edit, and MultiEdit if a build still sends one: the hunks of
+ * `tool_response.structuredPatch` give the added lines exactly, however short or common the new text.
+ * A `tool_response` without a well-formed `structuredPatch` falls back to searching the file for each
+ * `new_string`, and there a piece is placed only when it stands ONCE: a short `new_string` (`&`, a
+ * command, a common word) that stands on several lines does not say which one the edit wrote, and
+ * reporting all of them would blame the edit for errors it never touched. An unplaceable piece
+ * writes no line: a missed report on a first edit costs less than a false one, and the snapshot is
+ * written either way, so the next edit is judged exactly.
+ */
 function writtenLines(payload: unknown, text: string): readonly Lines[] {
   const tool = fieldOf(payload, "tool_name");
   const input = fieldOf(payload, "tool_input");
   if (tool === "Write") return [{ from: 1, to: Number.POSITIVE_INFINITY }];
+  const patch = Patch.safeParse(
+    fieldOf(fieldOf(payload, "tool_response"), "structuredPatch"),
+  );
+  if (patch.success) return patch.data.flatMap(addedBy);
   const edits = tool === "MultiEdit" ? fieldOf(input, "edits") : [input];
   const pieces = (Array.isArray(edits) ? edits : [])
     .map((e: unknown) => fieldOf(e, "new_string"))
     .filter((s): s is string => typeof s === "string");
-  return pieces.flatMap((p) => placesOf(text, p));
+  return pieces.flatMap((p) => {
+    const places = placesOf(text, p);
+    return places.length === 1 ? places : [];
+  });
 }
 
 /** Does finding `m` stand on any of `lines`? */

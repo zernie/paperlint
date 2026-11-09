@@ -203,6 +203,133 @@ describe("lint-edited — no snapshot yet: Write and MultiEdit", () => {
   });
 });
 
+/** An Edit as Claude Code 2.1.319 reports it: the `structuredPatch` of its `tool_response` (measured). */
+const patched = (
+  file: string,
+  newString: string,
+  structuredPatch: unknown,
+  replaceAll = false,
+) => ({
+  tool_name: "Edit",
+  tool_input: {
+    file_path: file,
+    old_string: "x",
+    new_string: newString,
+    replace_all: replaceAll,
+  },
+  tool_response: { filePath: file, structuredPatch },
+});
+
+const BLOCK_LINE = (line: number) => ({
+  decision: "block",
+  reason: `${MAIN}:${String(line)} tex/max-sentence-words a sentence of 64 words\n${KEPT}`,
+});
+
+describe("lint-edited — no snapshot yet: a new_string that stands on several lines", () => {
+  const text = "a & b\nc & d\ne & f\n";
+
+  it("🔴 with the payload's structuredPatch: the old error on a line holding the same text is not reported, the edited line's is", async () => {
+    const hunk = [
+      {
+        oldStart: 1,
+        oldLines: 3,
+        newStart: 1,
+        newLines: 3,
+        lines: [" a & b", "-c and d", "+c & d", " e & f"],
+      },
+    ];
+    const { said } = run(
+      patched(MAIN, "&", hunk),
+      memoryFiles({ ...PAPER, [MAIN]: text }),
+      {
+        [MAIN]: [finding(1), finding(2), finding(3)],
+      },
+    );
+    expect(await said).toEqual(BLOCK_LINE(2));
+  });
+
+  it("🔴 without a structuredPatch: a new_string standing on three lines places none, so nothing is reported", async () => {
+    const files = memoryFiles({ ...PAPER, [MAIN]: text });
+    const { said } = run(edit(MAIN, "&"), files, {
+      [MAIN]: [finding(1), finding(2), finding(3)],
+    });
+    expect(await said).toBeNull();
+    // Guards: the snapshot is written anyway, so the next edit is judged exactly.
+    expect(snapshotOf(files)).toMatchObject({
+      files: { "paper.tex": [{}, {}, {}] },
+    });
+  });
+
+  it("without a structuredPatch, a new_string standing once is placed", async () => {
+    const { said } = run(
+      edit(MAIN, "c & d"),
+      memoryFiles({ ...PAPER, [MAIN]: text }),
+      { [MAIN]: [finding(1), finding(2)] },
+    );
+    expect(await said).toEqual(BLOCK_LINE(2));
+  });
+});
+
+describe("lint-edited — no snapshot yet: the shapes of structuredPatch", () => {
+  const text = "a\nb\nc\nd\ne\n";
+
+  it("a replace_all: the added lines of every hunk, and a second hunk counts from its own newStart", async () => {
+    const hunks = [
+      { newStart: 1, lines: ["-x", "+a", " b"] },
+      { newStart: 4, lines: [" d", "-x", "+e"] },
+    ];
+    const { said } = run(
+      patched(MAIN, "x", hunks, true),
+      memoryFiles({ ...PAPER, [MAIN]: text }),
+      {
+        [MAIN]: [finding(1), finding(2), finding(3), finding(4), finding(5)],
+      },
+    );
+    expect(await said).toEqual({
+      decision: "block",
+      reason: `${MAIN}:1 tex/max-sentence-words a sentence of 64 words\n${MAIN}:5 tex/max-sentence-words a sentence of 64 words\n${KEPT}`,
+    });
+  });
+
+  it("a multi-line new_string: every added line, not the context around it", async () => {
+    const hunk = [{ newStart: 1, lines: [" a", "-x", "+b", "+c", " d"] }];
+    const { said } = run(
+      patched(MAIN, "b\nc", hunk),
+      memoryFiles({ ...PAPER, [MAIN]: text }),
+      {
+        [MAIN]: [finding(1), finding(3), finding(4)],
+      },
+    );
+    expect(await said).toEqual(BLOCK_LINE(3));
+  });
+
+  it("a deletion: no line was written, so an old error stays quiet", async () => {
+    const hunk = [{ newStart: 1, lines: [" a", "-x", " b"] }];
+    const { said } = run(
+      patched(MAIN, "", hunk),
+      memoryFiles({ ...PAPER, [MAIN]: text }),
+      {
+        [MAIN]: [finding(1), finding(2)],
+      },
+    );
+    expect(await said).toBeNull();
+  });
+
+  it("a structuredPatch that is not well formed falls back to the search", async () => {
+    const files = () => memoryFiles({ ...PAPER, [MAIN]: text });
+    const table = { [MAIN]: [finding(2)] };
+    for (const bad of [
+      "x",
+      [{ newStart: "1", lines: [] }],
+      [{ lines: [] }],
+      null,
+    ]) {
+      const { said } = run(patched(MAIN, "b", bad), files(), table);
+      expect(await said).toEqual(BLOCK_LINE(2));
+    }
+  });
+});
+
 const snapshot = (files: Record<string, readonly object[]>) =>
   JSON.stringify({ files });
 const ERROR = {
