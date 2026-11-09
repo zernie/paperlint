@@ -50,7 +50,7 @@ question (Ctrl+D) also takes the default.
 | what                                                                 | where                   | when                                                                                                                                                                              |
 | -------------------------------------------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `{ "papersDir": … }` naming your papers directory                    | `paperlint.json`        | only when it is not the default `papers`                                                                                                                                          |
-| the five hook commands, merged in beside your own entries            | `.claude/settings.json` | by default. A human at a terminal is asked [Y/n]; an agent, CI or `--yes` gets YES; `--no-hooks` skips. Hand-wired under another spelling: nothing written, so nothing runs twice |
+| the six hook commands, merged in beside your own entries             | `.claude/settings.json` | by default. A human at a terminal is asked [Y/n]; an agent, CI or `--yes` gets YES; `--no-hooks` skips. Hand-wired under another spelling: nothing written, so nothing runs twice |
 | a GitHub Actions workflow: `npm ci`, then `./node_modules/paperlint` | `.github/workflows/`    | only if you say yes; it asks once, and only when a human is at a terminal (stdin and stdout, no `CI`, no `--yes`)                                                                 |
 | a first paper, via `paperlint new`, with its layout's folders        | `<papers>/<name>/`      | only when the papers directory holds none: asked of a human at a terminal, otherwise only with `--paper <name>`                                                                   |
 | one relative symlink per shipped skill, into the installed package   | `.claude/skills/<name>` | always — except where that name is already taken (a directory, a file, a link elsewhere): that entry is left as it is and named in the report                                     |
@@ -63,8 +63,8 @@ gets the hooks; the hook commands run files inside `node_modules`, so a fresh cl
 
 **One file, at the project root.** A vigiles hook cannot import code or walk up a tree looking for
 a config; it can only read a path it can spell, and `$CLAUDE_PROJECT_DIR/paperlint.json` is one.
-(`paper-folder-layout` and `submission-confirm` are not vigiles hooks: they run inside the CLI,
-because they call the package's own code.) The same file is read by the CLI, the three vigiles hooks,
+(`paper-folder-layout`, `lint-edited` and `submission-confirm` are not vigiles hooks: they run inside
+the CLI, because they call the package's own code.) The same file is read by the CLI, the three vigiles hooks,
 `eslint-rules/papers.mjs`,
 `lib/skill-trigger-cases.mjs` and `skills/paper-pipeline/scripts/consumer.mjs`. It is optional:
 absent, every reader takes the same defaults.
@@ -149,9 +149,9 @@ are probably smaller now; re-measure before quoting them.
 | of which `typescript` (via `vigiles`)  |      23 MB |
 | of which `vigiles` itself              |       6 MB |
 
-Neither `paperlint lint` nor any of the five hooks loads `@ast-grep` or `typescript` (traced;
-`paper-folder-layout` on 2026-10-12: 223 CommonJS modules, none from either); `vigiles` itself is
-loaded.
+Neither `paperlint lint` nor any of the six hooks loads `@ast-grep` or `typescript` (traced;
+`paper-folder-layout` on 2026-10-12: 223 CommonJS modules, none from either; `lint-edited` on
+2026-11-09, on an edit it blocked: none from either); `vigiles` itself is loaded.
 
 ## Troubleshooting
 
@@ -164,4 +164,6 @@ loaded.
 | a skill does not show up in Claude Code                                                                                       | its name was already taken in `.claude/skills/`. `init` names it and leaves it alone; rename or remove yours and run `npx paperlint init` again                                                          |
 | **every** shell command is blocked in Claude Code                                                                             | `paper-edit-guard` cannot parse the root `paperlint.json` (merge-conflict markers, a typo), and refuses rather than guess. Fix it with a normal file edit — file edits are not blocked                   |
 | a Write of a new file is denied: "… is at the root of a paper folder" or "… is loose at the top of the paper's repro/ folder" | `paper-folder-layout` refuses to create an entry the paper layout does not allow; the reason says where it goes. Write it there. Existing files are never refused, and the hook does not see shell moves |
+| after an edit, Claude Code shows "paperlint lint-edited: the edit was kept; the errors above are the ones it introduced."     | `lint-edited` linted the file the edit wrote and `paper.tex`, and found an error the edit introduced ([layout.md](layout.md#the-lint-edited-hook)). The edit stands; fix the error it names              |
+| `paperlint: the lint-edited hook did not run: …` on stderr                                                                    | the hook could not lint (the reason follows); the edit stands. `npx paperlint lint` on the paper shows the same failure                                                                                  |
 | anything else                                                                                                                 | `npx paperlint doctor` — it checks the setup and exits non-zero on anything miswired                                                                                                                     |

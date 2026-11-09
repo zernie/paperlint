@@ -10,6 +10,7 @@ import { existsSync, readdirSync } from "node:fs";
 import { createServer } from "node:http";
 import { dirname, join } from "node:path";
 import { test, vi } from "vitest";
+import { z } from "zod";
 import {
   runNode,
   useTempDir,
@@ -240,6 +241,122 @@ test("runHook paper-folder-layout: in-process, on the real disk — a refusal on
     broken.err.join(""),
     /^paperlint: the paper-folder-layout hook did not run: /,
   );
+});
+
+/** A sentence of exactly `n` words. */
+const sentence = (n: number): string =>
+  `${Array.from({ length: n - 1 }, () => "word").join(" ")} end.`;
+
+/** A paper with `tex/max-sentence-words` on as an error, and a 64-word sentence on line 5. */
+function lintEditedPaper(name: string): string {
+  const dir = join(root, name);
+  writeTree(dir, {
+    "package.json": "{}\n",
+    "papers/p/PIPELINE-STATUS.md": "# status\n",
+    "papers/p/paperlint.json": JSON.stringify({
+      extends: null,
+      rules: { "tex/max-sentence-words": "error" },
+    }),
+    "papers/p/paper.tex": `\\documentclass{article}\n\\begin{document}\nShort one.\n\n${sentence(64)}\n\\end{document}\n`,
+    "papers/p/research/notes.txt": "x\n",
+  });
+  return dir;
+}
+
+/** `paperlint hook lint-edited` in-process on an Edit of `file` writing `newString`. */
+async function lintEditedOn(file: string, newString: string) {
+  const out: string[] = [];
+  const err: string[] = [];
+  const code = await runHook("lint-edited", {
+    stdin: () =>
+      JSON.stringify({
+        tool_name: "Edit",
+        tool_input: { file_path: file, new_string: newString },
+      }),
+    out: (t) => {
+      out.push(t);
+    },
+    err: (m: string) => {
+      err.push(m);
+    },
+    run: () => {
+      throw new Error("an in-process hook spawns nothing");
+    },
+  });
+  return { code, out: out.join(""), err };
+}
+
+/** The block a hook printed, read as the two fields Claude Code reads. */
+const Block = z.object({ decision: z.literal("block"), reason: z.string() });
+
+test("runHook lint-edited: the real engine on the real disk — a 64-word sentence the edit wrote is a block naming tex/max-sentence-words", async () => {
+  const paper = join(lintEditedPaper("lint-edited-block"), "papers/p");
+  const long = await lintEditedOn(join(paper, "paper.tex"), sentence(64));
+  assert.equal(long.code, 0);
+  assert.deepEqual(long.err, []);
+  const { reason } = Block.strict().parse(JSON.parse(long.out));
+  // Guards: the reason is stylish's report — the file, the line and the rule id — then the trailer.
+  assert.match(
+    reason,
+    /^\S*paper\.tex\n +5:1 +error +.+ +tex\/max-sentence-words\n/u,
+  );
+  assert.match(
+    reason,
+    /\npaperlint lint-edited: the edit was kept; the errors above are the ones it introduced\.$/u,
+  );
+  // The snapshot now holds it: an edit elsewhere in paper.tex does not repeat it.
+  assert.deepEqual(await lintEditedOn(join(paper, "paper.tex"), "Short one."), {
+    code: 0,
+    out: "",
+    err: [],
+  });
+});
+
+test("runHook lint-edited: quiet on a clean edit and on a file paperlint does not lint; one stderr line on a payload or config it cannot read", async () => {
+  const dir = lintEditedPaper("lint-edited-quiet");
+  const paper = join(dir, "papers/p");
+  const quiet = { code: 0, out: "", err: [] };
+  assert.deepEqual(
+    await lintEditedOn(join(paper, "paper.tex"), "Short one."),
+    quiet,
+  );
+  assert.deepEqual(
+    await lintEditedOn(join(paper, "research/notes.txt"), "x"),
+    quiet,
+  );
+  const said: string[] = [];
+  const garbled = await runHook("lint-edited", {
+    stdin: () => "{ not json",
+    out: (t) => {
+      said.push(`out: ${t}`);
+    },
+    err: (m: string) => {
+      said.push(m);
+    },
+  });
+  assert.equal(garbled, 0);
+  assert.equal(said.length, 1);
+  assert.match(
+    said[0] ?? "",
+    /^paperlint: the lint-edited hook did not run: /u,
+  );
+  writeTree(dir, {
+    "papers/p/paperlint.json": '{ "rules": { "tex/no-such-rule": "error" } }',
+  });
+  const unknown = await lintEditedOn(join(paper, "paper.tex"), "x");
+  assert.deepEqual([unknown.code, unknown.out, unknown.err.length], [0, "", 1]);
+  assert.match(
+    unknown.err[0] ?? "",
+    /^paperlint: the lint-edited hook did not run: .*tex\/no-such-rule/u,
+  );
+  writeTree(dir, { "paperlint.json": "{ broken" });
+  assert.deepEqual(await lintEditedOn(join(paper, "paper.tex"), "x"), {
+    code: 0,
+    out: "",
+    err: [
+      "paperlint: the lint-edited hook did not run: the project's paperlint.json does not read — `npx paperlint lint` says why",
+    ],
+  });
 });
 
 test("runHook submission-confirm: in-process — a refusal on stdout for a send with no yes, nothing for anything else, and a refusal when its input cannot be read", () => {

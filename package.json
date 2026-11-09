@@ -102,6 +102,10 @@
       "types": "./dist/lib/*.d.ts",
       "default": "./dist/lib/*.js"
     },
+    "./bin/paperlint.mjs": {
+      "types": "./dist/cli.d.ts",
+      "default": "./dist/cli.js"
+    },
     "./*": "./*"
   },
   "files": [

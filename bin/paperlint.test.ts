@@ -43,3 +43,19 @@ test("no dist/: exit 2, the missing path, and both remedies — nothing from the
   );
   assert.doesNotMatch(r.stderr, /ERR_MODULE_NOT_FOUND/);
 });
+
+test("the documented import `paperlint/bin/paperlint.mjs` is the CLI's module: buildConfig and rulesOff, through package.json's exports", () => {
+  // Guards: this file exports nothing since the fast path (a static export loads the whole CLI);
+  // the specifier docs/configuration.md documents must still reach the CLI's exports.
+  const r = spawnSync(
+    process.execPath,
+    [
+      "--input-type=module",
+      "-e",
+      'const m = await import("paperlint/bin/paperlint.mjs"); console.log(typeof m.buildConfig, typeof m.rulesOff, typeof m.run);',
+    ],
+    { cwd: fileURLToPath(new URL("..", import.meta.url)), encoding: "utf8" },
+  );
+  assert.equal(r.stderr, "");
+  assert.equal(r.stdout, "function function function\n");
+});
