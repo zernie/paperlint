@@ -478,7 +478,7 @@ const unwrapped = (n: Node): Node => {
  * A formatting macro whose phrase ends in `.` or `:` — a run-in heading, when it opens a paragraph.
  * Braces around it change nothing on the page, so `{\textbf{Threats:}}` is one too.
  */
-const isRunInHeading = (t: ParsedTex, node: Node): boolean => {
+export const isRunInHeading = (t: ParsedTex, node: Node): boolean => {
   const n = unwrapped(node);
   return (
     n.type === "macro" &&
@@ -499,7 +499,7 @@ const SILENT_AT_OPENING: ReadonlySet<string> = new Set([
 ]);
 
 /** Nodes that leave a paragraph's opening where it was: spaces, comments, macros that typeset nothing. */
-const keepsOpening = (n: Node): boolean =>
+export const keepsOpening = (n: Node): boolean =>
   n.type === "whitespace" ||
   n.type === "comment" ||
   (n.type === "macro" && SILENT_AT_OPENING.has(n.content));

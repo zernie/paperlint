@@ -1019,6 +1019,25 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     },
     silent: blind("Text."),
   },
+  // #447: the label after a bold run-in heading prints the subsection's number; the body starts
+  // on line 3, so the run-in's label is on line 4.
+  "tex/label-after-run-in": {
+    reports: {
+      tree: paper(
+        tex(
+          "\\subsection{Check}\\label{sec:check}\n\\textbf{Merged history.}\\label{sec:rq2} We compared.",
+        ),
+      ),
+      file: TEX_FILE,
+      severity: 2,
+      line: 4,
+    },
+    silent: paper(
+      tex(
+        "\\subsection{Check}\\label{sec:check}\n\\textbf{Merged history.} We compared.",
+      ),
+    ),
+  },
   "tex/heading-case": {
     reports: {
       tree: paper(tex("\\section{Related work}", ACM_CLASS), ACM_PRESET),

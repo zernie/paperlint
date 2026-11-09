@@ -227,3 +227,33 @@ export interface TitledHeading {
   readonly argument: TitleArgument;
   readonly title: TextRun;
 }
+
+/**
+ * What a `\label` takes its number from, as the source places it within its paragraph. TeX's
+ * `\label` records the number of the last `\refstepcounter`, whatever stands between them:
+ * - `numbered`: a numbered heading, a caption, a counter stepped right before it;
+ * - `run-in`: a bold or italic phrase that opens the paragraph (`\textbf{RQ2.}`), or a heading that
+ *   steps no counter (starred, or deeper than the class numbers) — `title` is what the reader sees;
+ * - `none`: nothing of either in the paragraph before it (a label in running text, or after a float).
+ */
+export type LabelAnchor =
+  | { readonly kind: "numbered" }
+  | { readonly kind: "run-in"; readonly title: string }
+  | { readonly kind: "none" };
+
+/** The numbered heading a place stands under: its level and its title's text. */
+export interface EnclosingHeading {
+  readonly level: HeadingLevel;
+  readonly title: string;
+}
+
+/**
+ * One `\label` of the body: its key, where it stands, what it takes its number from in its
+ * paragraph, and the numbered heading it stands under (none before the first).
+ */
+export interface PlacedLabel {
+  readonly key: string;
+  readonly span: Span;
+  readonly anchor: LabelAnchor;
+  readonly enclosing: EnclosingHeading | null;
+}

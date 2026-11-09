@@ -328,7 +328,8 @@ export const ruleDocsUrl = (
     | "heading-case"
     | "max-paragraph-words"
     | "max-paragraph-numbers"
-    | "max-sentence-words",
+    | "max-sentence-words"
+    | "label-after-run-in",
 ): string =>
   `https://github.com/zernie/paperlint/blob/main/docs/rules/tex/${name}.md`;
 

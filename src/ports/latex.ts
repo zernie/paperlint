@@ -11,6 +11,7 @@ import type {
   LayoutOverride,
   Outline,
   Passage,
+  PlacedLabel,
   Span,
   TextRun,
   TitledHeading,
@@ -55,6 +56,11 @@ export interface LatexReader {
    * judge reads: in document order.
    */
   readonly headings: (src: string) => readonly TitledHeading[];
+  /**
+   * Every `\label` of the body's running text (not inside an environment), in document order: what
+   * it takes its number from in its paragraph, and the numbered heading it stands under.
+   */
+  readonly labels: (src: string) => readonly PlacedLabel[];
   /** The text a reader sees: prose, the author block, footnotes — not comments, keys, math, code. */
   readonly renderedRuns: (src: string) => readonly TextRun[];
   /**
