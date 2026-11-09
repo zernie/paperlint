@@ -78,41 +78,57 @@ function classDepth(c: DocumentClass): number {
   return has("technote") || (has("compsoc") && has("conference")) ? 3 : 4;
 }
 
-/** What one `\setcounter` says of the depth: nothing (another counter), a number, or not a number. */
-type DepthSet =
-  | { readonly kind: "other" }
-  | { readonly kind: "set"; readonly depth: number | null };
+/** One change of `secnumdepth` in the source: set to a value, or added to, a number or not (`\\maxdimen`, `\\value{x}`). */
+type DepthOp =
+  | { readonly kind: "set"; readonly to: number | null }
+  | { readonly kind: "add"; readonly by: number | null };
 
-/** The value a `\setcounter{secnumdepth}{…}` sets: null when it is not a plain number (`\maxdimen`). */
-function depthSet(m: Macro): DepthSet {
-  const [counter = "", value = ""] = mandatory(m).map((a) =>
-    textOf(a.content).trim(),
-  );
-  if (counter !== "secnumdepth") return { kind: "other" };
-  const n = value === "" ? Number.NaN : Number(value);
-  return { kind: "set", depth: Number.isInteger(n) ? n : null };
-}
+/** The depth the walk holds: a number, null (no class line: headings are taken as numbered), or unknown. */
+type Depth = number | null | "unknown";
 
-/** The `\setcounter{secnumdepth}` changes a node holds, in source order. */
-const depthChanges = (n: Node): readonly (number | null)[] =>
+/** A plain integer, or null for anything else (a macro, `\\value{x}`, an empty argument). */
+const integerOf = (text: string): number | null => {
+  const n = text === "" ? Number.NaN : Number(text);
+  return Number.isInteger(n) ? n : null;
+};
+
+/** The `\setcounter` and `\addtocounter` changes of `secnumdepth` a node holds, in source order. */
+const depthOps = (n: Node): readonly DepthOp[] =>
   visited(n, (v, parent) => isUnrendered(v, parent) || isDefinition(v))
     .filter(isNode)
-    .flatMap((m) =>
-      m.type === "macro" && m.content === "setcounter" ? [depthSet(m)] : [],
-    )
-    .flatMap((d) => (d.kind === "set" ? [d.depth] : []));
+    .flatMap((m): readonly DepthOp[] => {
+      if (
+        m.type !== "macro" ||
+        (m.content !== "setcounter" && m.content !== "addtocounter")
+      )
+        return [];
+      const [counter = "", value = ""] = mandatory(m).map((a) =>
+        textOf(a.content).trim(),
+      );
+      if (counter !== "secnumdepth") return [];
+      return m.content === "setcounter"
+        ? [{ kind: "set", to: integerOf(value) }]
+        : [{ kind: "add", by: integerOf(value) }];
+    });
+
+/** The depth after one change: a value that cannot be evaluated, or added to one that is not a number, is unknown. */
+const applied = (depth: Depth, op: DepthOp): Depth => {
+  if (op.kind === "set") return op.to ?? "unknown";
+  return typeof depth === "number" && op.by !== null
+    ? depth + op.by
+    : "unknown";
+};
 
 /**
- * How deep the headings are numbered where the body starts: the preamble's last
- * `\setcounter{secnumdepth}`, else its class's default; null when it cannot be read (a value that is
- * no plain number, no class line, or several behind a switch). The body changes it from there, in
- * document order (`step`).
+ * How deep the headings are numbered where the body starts: the class's default, changed by the
+ * preamble's `\setcounter` and `\addtocounter` of `secnumdepth` in order; null when there is no
+ * class line (several behind a switch), unknown after a change that cannot be evaluated. The body
+ * changes it from there, in document order (`step`).
  */
-function secnumdepth(t: ParsedTex, nodes: readonly Node[]): number | null {
-  const set = nodes.flatMap(depthChanges);
-  if (set.length > 0) return set[set.length - 1] ?? null;
+function secnumdepth(t: ParsedTex, nodes: readonly Node[]): Depth {
   const line = documentClassOf(t);
-  return line.kind === "class" ? classDepth(line) : null;
+  const start = line.kind === "class" ? classDepth(line) : null;
+  return nodes.flatMap(depthOps).reduce<Depth>(applied, start);
 }
 
 /** Whether a heading macro is starred: unified-latex gives the star as its first argument. */
@@ -124,7 +140,7 @@ interface Scan {
   readonly opening: boolean;
   readonly anchor: LabelAnchor;
   readonly stepped: Stepped | null;
-  readonly numberedTo: number | null;
+  readonly numberedTo: Depth;
   readonly labels: readonly PlacedLabel[];
 }
 
@@ -175,12 +191,20 @@ const shown = (n: Node): string =>
     ? collapse(textOf(mandatory(n).at(-1)?.content))
     : collapse(textOf([n]));
 
+/** The step after a counter the walk cannot model changed: unknown, so no label of it is judged. */
+const UNKNOWN: Stepped = {
+  at: { kind: "unplaced" },
+  what: "a counter changed by a command the rule does not model",
+};
+
 /** One heading's step: a numbered one anchors and encloses what follows, any other is a run-in. */
 function headingStep(
   s: Scan,
   m: Macro,
   [level, depth]: readonly [string, number],
 ): Scan {
+  if (!isStarred(m) && s.numberedTo === "unknown")
+    return { ...s, opening: true, anchor: NUMBERED, stepped: UNKNOWN };
   const numbered =
     !isStarred(m) && (s.numberedTo === null || depth <= s.numberedTo);
   const next: Scan = numbered
@@ -214,7 +238,10 @@ function macroStep(s: Scan, m: Macro): Scan | null {
 
 /** The walk with the depth changes a node holds applied: the last one wins from here on. */
 const withDepth = (s: Scan, n: Node): Scan =>
-  depthChanges(n).reduce<Scan>((w, d) => ({ ...w, numberedTo: d }), s);
+  depthOps(n).reduce<Scan>(
+    (w, op) => ({ ...w, numberedTo: applied(w.numberedTo, op) }),
+    s,
+  );
 
 /** Commands that reset or step a counter in a way the walk does not model: `\appendix` restarts the section counter in letters. */
 const UNMODELLED: ReadonlySet<string> = new Set([
@@ -248,12 +275,6 @@ const hidesStep = (n: Node): boolean =>
         changesCounter(v) ||
         (v !== n && v.type === "macro" && v.content === "refstepcounter"),
     );
-
-/** The step after a counter the walk cannot model changed: unknown, so no label of it is judged. */
-const UNKNOWN: Stepped = {
-  at: { kind: "unplaced" },
-  what: "a counter changed by a command the rule does not model",
-};
 
 /** The walk's step over one top-level node: what it does, then what its counter commands make unknown. */
 function step(t: ParsedTex, before: Scan, n: Node): Scan {

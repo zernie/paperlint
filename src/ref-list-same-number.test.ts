@@ -220,6 +220,28 @@ describe("sameNumbers: what a later or other command changes", () => {
   });
 });
 
+describe("sameNumbers: a change of secnumdepth the rule cannot evaluate", () => {
+  const body = (change: string) =>
+    `\\documentclass{article}\n${change}\n\\begin{document}\n\\subsection{A}\\label{a}\n\\subsubsection{B}\\label{b}\n\n\\ref{a}, \\ref{b}.\n\\end{document}\n`;
+  it("\\addtocounter{secnumdepth} moves the depth: 2 and +1 numbers a \\subsubsection", () => {
+    // Guards: at depth 2 `b` is a run-in and the pair is reported; at 2+1 = 3 it is numbered.
+    expect(judged(body("\\setcounter{secnumdepth}{2}"))).toHaveLength(1);
+    expect(
+      judged(
+        body("\\setcounter{secnumdepth}{2}\\addtocounter{secnumdepth}{1}"),
+      ),
+    ).toEqual([]);
+  });
+
+  it.each([
+    ["\\setcounter{secnumdepth}{\\maxdimen}"],
+    ["\\setcounter{secnumdepth}{\\value{foo}}"],
+    ["\\setcounter{secnumdepth}{2}\\addtocounter{secnumdepth}{\\value{foo}}"],
+  ])("%s makes the depth unknown: no heading after it is judged", (change) => {
+    expect(judged(body(change))).toEqual([]);
+  });
+});
+
 describe("sameNumbers: what is not a list or not known", () => {
   it("a key repeated in a list is not two labels; a run-in cited alone prints one number", () => {
     // Guards: the same key twice (even with another between) and a lone reference are quiet.
