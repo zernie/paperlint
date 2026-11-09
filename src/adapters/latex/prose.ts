@@ -18,6 +18,7 @@ import { hasAtLeast, mapWithFeedback, only, sortBy, zip } from "remeda";
 import type {
   Emphasis,
   EmphasisStyle,
+  Owner,
   Passage,
   Place,
   ProsePiece,
@@ -205,39 +206,9 @@ const characterAt = (m: Macro, ch: string): readonly Event[] =>
     piece({ kind: "text", segment: { text: ch, at: span.end - 1 } }),
   ]);
 
-/** A citation or link mark over a macro and its arguments. */
-const mark = (m: Macro): readonly Event[] =>
-  inPlace(macroPlace(m), (span) => [
-    piece({ kind: "owner", owner: "citation", span }),
-  ]);
-
-/**
- * The labels a cross-reference's first `{…}` argument names, as the source spells them, split at
- * its commas (`\cref{a,b}`). A key is not typeset, so the source is read rather than its parse.
- */
-function keysOf(t: ParsedTex, m: Macro): readonly string[] {
-  const content = mandatory(m).at(0)?.content ?? [];
-  const from = content.at(0)?.position?.start.offset;
-  const to = content.at(-1)?.position?.end.offset;
-  return from === undefined || to === undefined
-    ? []
-    : t.src
-        .slice(from, to)
-        .split(",")
-        .map((k) => k.trim())
-        .filter((k) => k !== "");
-}
-
-/** A cross-reference mark over a macro and its arguments, with the labels it names. */
-const referenceMark = (t: ParsedTex, m: Macro): readonly Event[] =>
-  inPlace(macroPlace(m), (span) => [
-    piece({
-      kind: "owner",
-      owner: "reference",
-      span,
-      reference: { macro: m.content, keys: keysOf(t, m) },
-    }),
-  ]);
+/** A mark over a macro and its arguments. */
+const mark = (m: Macro, owner: Owner): readonly Event[] =>
+  inPlace(macroPlace(m), (span) => [piece({ kind: "owner", owner, span })]);
 
 /** Math, as its source, where it stands. */
 const math = (t: ParsedTex, n: Node): readonly Event[] =>
@@ -274,7 +245,7 @@ const itemBody = (m: Macro): readonly Node[] =>
 function footnote(t: ParsedTex, m: Macro): readonly Event[] {
   const inside = walkList(t, lastArgument(m));
   const aside: Event = { kind: "aside", events: inside };
-  return cites(inside) ? [...mark(m), aside] : [aside];
+  return cites(inside) ? [...mark(m, "citation"), aside] : [aside];
 }
 
 /**
@@ -287,7 +258,10 @@ const OWN_EVENTS: ReadonlyMap<
 > = new Map([
   [
     "href",
-    (t: ParsedTex, m: Macro) => [...mark(m), ...walkList(t, lastArgument(m))],
+    (t: ParsedTex, m: Macro) => [
+      ...mark(m, "citation"),
+      ...walkList(t, lastArgument(m)),
+    ],
   ],
   ["footnote", footnote],
   [
@@ -369,8 +343,8 @@ function macroEvents(t: ParsedTex, m: Macro): readonly Event[] {
   const name = m.content;
   if (DEFINITION_MACROS.has(name)) return [];
   if (BACK_MATTER.has(name)) return [END];
-  if (REFERENCE_MACROS.has(name)) return referenceMark(t, m);
-  if (SOURCE_MACROS.has(name)) return mark(m);
+  if (REFERENCE_MACROS.has(name)) return mark(m, "reference");
+  if (SOURCE_MACROS.has(name)) return mark(m, "citation");
   const own = OWN_EVENTS.get(name);
   if (own !== undefined) return own(t, m);
   if (BREAK_MACROS.has(name)) return [BREAK];

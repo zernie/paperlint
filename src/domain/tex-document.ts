@@ -141,34 +141,12 @@ export function spanIn(run: TextRun, from: number, to: number): Span | null {
 export type Owner = "citation" | "reference";
 
 /**
- * What a cross-reference names: the command (`ref`, `cref`, `autoref`…) and the labels in its
- * argument, in order — one for `\ref{a}`, several for `\cref{a,b}`.
- */
-export interface Reference {
-  readonly macro: string;
-  readonly keys: readonly string[];
-}
-
-/**
- * A mark in prose: a citation or a link (a work outside the paper), or a cross-reference, with the
- * labels it names.
- */
-export type OwnerPiece =
-  | { readonly kind: "owner"; readonly owner: "citation"; readonly span: Span }
-  | {
-      readonly kind: "owner";
-      readonly owner: "reference";
-      readonly span: Span;
-      readonly reference: Reference;
-    };
-
-/**
  * One piece of body prose, in source order: text a reader sees, a mark the markup leaves in the
  * sentence (a `\cite`, a link, a `\ref`), or math, with its source.
  */
 export type ProsePiece =
   | { readonly kind: "text"; readonly segment: Segment }
-  | OwnerPiece
+  | { readonly kind: "owner"; readonly owner: Owner; readonly span: Span }
   | { readonly kind: "math"; readonly tex: string; readonly span: Span };
 
 /** A stretch of body prose no sentence crosses — a paragraph, a list item, a footnote. Never empty. */

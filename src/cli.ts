@@ -83,7 +83,6 @@ import {
   texVenueRules,
 } from "./tex-venue-rules.ts";
 import { claimProvenanceRule } from "./claim-provenance.ts";
-import { refListSameNumberRule } from "./ref-list-rule.ts";
 import { registerRule } from "./register.ts";
 import {
   REGISTER_BAND_RULE_LEVELS,
@@ -423,25 +422,6 @@ const TEX_RULE_DEPS = {
   venuesDir: presetsDir(),
 };
 
-/**
- * The `tex` rules over the body's prose that every paper.tex gets: a number with no owner, the
- * sentence-initial conjunctions (register, not vocabulary), and two labels of one reference list that
- * print one number, read from the build's `.aux`.
- */
-const TEX_PROSE_RULES = {
-  "claim-provenance": claimProvenanceRule(TEX_RULE_DEPS),
-  register: registerRule(TEX_RULE_DEPS),
-  "ref-list-same-number": refListSameNumberRule({
-    ...TEX_RULE_DEPS,
-    texOutput,
-  }),
-};
-const TEX_PROSE_RULE_LEVELS = {
-  "tex/claim-provenance": "warn",
-  "tex/register": "warn",
-  "tex/ref-list-same-number": "error",
-} as const;
-
 /** The register band rules, `tex/heading-case` and `tex/max-paragraph-words` (off until a project turns it on): the rules of the `tex` plugin that read a paper's words. */
 const REGISTER_AND_CASE_RULES = {
   ...registerBandRules(TEX_RULE_DEPS),
@@ -657,7 +637,8 @@ export function buildConfig(
           rules: {
             ...texBuild,
             ...texVenueRules(TEX_RULE_DEPS),
-            ...TEX_PROSE_RULES,
+            "claim-provenance": claimProvenanceRule(TEX_RULE_DEPS),
+            register: registerRule(TEX_RULE_DEPS),
             ...REGISTER_AND_CASE_RULES,
           },
         },
@@ -680,7 +661,10 @@ export function buildConfig(
         "paper/figure-ref-style": "warn",
         ...BIB_RULE_LEVELS,
         "tex/future-promise": "warn",
-        ...TEX_PROSE_RULE_LEVELS,
+        // A number with no owner: a prose rule, on beside the others above.
+        "tex/claim-provenance": "warn",
+        // Sentence-initial conjunctions over the whole body: register, not vocabulary.
+        "tex/register": "warn",
         // Contrast frames, claims in bold, relation markers: each against the band the venue
         // preset's anchors set, silent for a preset without anchors (src/register-bands.ts).
         ...REGISTER_BAND_RULE_LEVELS,
