@@ -1,6 +1,6 @@
 # `arxiv-papers-extra` — the other CC BY / CC BY-SA preprints, kept and not run
 
-108 papers, text sources only (figures omitted), same selection and licence rule as
+98 papers, text sources only (figures omitted), same selection and licence rule as
 [`../arxiv-papers/`](../arxiv-papers/README.md), which explains why real papers, why only ten run, and
 what is weak about the approach. **Nothing here is read by any test, lint or formatter run**: no
 baselines, no record, not listed in `accepted-papers.test.ts`; `.prettierignore` skips every

@@ -17,9 +17,9 @@ registered, not afterwards by hand.
 ## Why only ten run
 
 Measured: the lint test costs about 12 s per paper on the existing corpus (73 s of test time for 6
-papers, 2026-11-09); on these ten it took about 4 s each, about 38 s together. The 108 papers of
-[`../arxiv-papers-extra/`](../arxiv-papers-extra/README.md) at even 4 s each would add about 7 min
-to the unit job; at the 12 s of the larger papers, about 16 min — on every CI run of a repository
+papers, 2026-11-09); on these ten it took about 4 s each, about 38 s together. The 98 papers of
+[`../arxiv-papers-extra/`](../arxiv-papers-extra/README.md) at even 4 s each would add about 6.5 min
+to the unit job; at the 12 s of the larger papers, about 20 min — on every CI run of a repository
 whose CI minutes are paid. So ten run, and the rest are kept for a human to run when a rule needs a
 wider sample.
 
