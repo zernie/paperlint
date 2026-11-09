@@ -1275,6 +1275,87 @@ check(
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// `paperlint hook lint-edited` the way Claude Code runs it, through the real bin — and the bin's
+// fast path: an edit outside every paper is answered before the CLI (and ESLint) is ever loaded. A
+// preload records every module resolved to the CLI or into ESLint, so "never loaded" is observed,
+// and the edit inside a paper is the control that the probe sees a load when there is one.
+{
+  const root = realpathSync(
+    mkdtempSync(join(tmpdir(), "paperlint-lint-edited-")),
+  );
+  const PROBE = [
+    'import { registerHooks } from "node:module";',
+    "registerHooks({ resolve(s, c, next) { const r = next(s, c);",
+    "  if (/(dist[/]cli[.]js|src[/]cli[.]ts|node_modules[/]eslint[/])/.test(r.url))",
+    '    process.stderr.write("LOADED " + r.url + "\\n");',
+    "  return r; } });",
+  ].join("\n");
+  try {
+    const paper = join(root, "papers", "p");
+    mkdirSync(paper, { recursive: true });
+    writeFileSync(join(root, "package.json"), "{}\n");
+    writeFileSync(join(paper, "PIPELINE-STATUS.md"), "# S\n");
+    writeFileSync(
+      join(paper, "paperlint.json"),
+      JSON.stringify({
+        extends: null,
+        rules: { "tex/max-sentence-words": "error" },
+      }),
+    );
+    const long = `${Array.from({ length: 63 }, () => "word").join(" ")} end.`;
+    writeFileSync(
+      join(paper, "paper.tex"),
+      `\\documentclass{article}\n\\begin{document}\n${long}\n\\end{document}\n`,
+    );
+    const hook = (name, file, newString) =>
+      spawnSync(
+        process.execPath,
+        [
+          "--import",
+          `data:text/javascript,${encodeURIComponent(PROBE)}`,
+          join(HERE, "..", "bin", "paperlint.mjs"),
+          "hook",
+          name,
+        ],
+        {
+          cwd: root,
+          encoding: "utf8",
+          input: JSON.stringify({
+            tool_name: "Edit",
+            tool_input: { file_path: file, new_string: newString },
+          }),
+        },
+      );
+    const block = hook("lint-edited", join(paper, "paper.tex"), long);
+    check(
+      "lint-edited blocks a 64-word sentence the edit wrote, naming tex/max-sentence-words, exit 0",
+      block.status === 0 &&
+        /^\{"decision":"block","reason":".*tex\/max-sentence-words.*the edit was kept/.test(
+          block.stdout,
+        ),
+      block.stdout + block.stderr,
+    );
+    check(
+      "(control) the probe sees the CLI load when the edit is in a paper",
+      /LOADED .*cli[.](js|ts)/.test(block.stderr),
+      block.stderr,
+    );
+    for (const name of ["lint-edited", "paper-folder-layout"]) {
+      const outside = hook(name, join(root, "notes.md"), "x");
+      check(
+        `🔴 ${name} on a file outside every paper: no output, exit 0, and neither the CLI nor ESLint loaded`,
+        outside.status === 0 &&
+          outside.stdout === "" &&
+          !/LOADED/.test(outside.stderr),
+        outside.stderr,
+      );
+    }
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
 console.log(
   `✓ ${String(check.count)} assertions passed — paperlint lint, one command instead of hand-rolled config`,
 );

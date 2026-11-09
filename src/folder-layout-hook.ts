@@ -37,19 +37,16 @@
  * ── THE CHEAP FIRST STEP ─────────────────────────────────────────────────────────
  * Before reading any settings or listing any folder, the hook looks for the nearest folder above the
  * file that holds `PIPELINE-STATUS.md` — the file every paper has and the rules are reported on — with
- * one `isFile` per ancestor and nothing else: no git, no lint. No such folder: no output.
+ * one `isFile` per ancestor and nothing else: no git, no lint. No such folder: no output. The bin asks
+ * the same question (`src/domain/paper-folder.ts`) before it loads the CLI at all, so an edit outside
+ * every paper never pays for loading this module.
  */
-import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { join, relative } from "node:path";
 import { callerPath } from "./caller-path.ts";
-import { ESCAPE_HATCH } from "./domain/paper-layout.ts";
+import { paperFolderOf, writtenPath } from "./domain/paper-folder.ts";
 import { README, REPRO_DIR, isStudyName } from "./domain/repro-layout.ts";
-import { fieldOf } from "./domain/record.ts";
 import { strayTexts, type FolderLayoutDeps } from "./folder-layout-rule.ts";
-import type { Files } from "./ports/files.ts";
 import { reproTexts } from "./repro-layout-rule.ts";
-
-/** The file every paper folder has, and the rules are reported on. */
-const STATUS_FILE = "PIPELINE-STATUS.md";
 
 /** What Claude Code reads from a PreToolUse hook's stdout to refuse the call, with the reason. */
 export interface HookOutput {
@@ -58,32 +55,6 @@ export interface HookOutput {
     readonly permissionDecision: "deny";
     readonly permissionDecisionReason: string;
   };
-}
-
-/** The target file's absolute path from the payload; null when there is none to read. */
-export function writtenPath(payload: unknown): string | null {
-  const input = fieldOf(payload, "tool_input");
-  const raw = fieldOf(input, "file_path") ?? fieldOf(input, "notebook_path");
-  if (typeof raw !== "string" || raw === "") return null;
-  if (isAbsolute(raw)) return resolve(raw);
-  const cwd = fieldOf(payload, "cwd");
-  return typeof cwd === "string" && isAbsolute(cwd) ? resolve(cwd, raw) : null;
-}
-
-/**
- * The nearest folder above `file` holding `PIPELINE-STATUS.md`, up to the root; null when none, and
- * null for anything under a folder named `extra/`, which lint never reads: an archived paper kept
- * there carries its own status file and is not a paper to hold to the layout.
- */
-export function paperFolderOf(file: string, files: Files): string | null {
-  // The same reach as lint's `**/extra/` ignore: a folder named extra/ anywhere above the file.
-  if (dirname(file).split(sep).includes(ESCAPE_HATCH)) return null;
-  const up = (dir: string): string | null => {
-    if (files.isFile(callerPath(join(dir, STATUS_FILE)))) return dir;
-    const parent = dirname(dir);
-    return parent === dir ? null : up(parent);
-  };
-  return up(dirname(file));
 }
 
 /** The entry `segments` would add under `dir`, as the layout judges it; null when it exists. */

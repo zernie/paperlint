@@ -26,6 +26,7 @@
 import { ESLint, type Linter } from "eslint";
 import { readFileSync, existsSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
+import { stripVTControlCharacters } from "node:util";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join, dirname, resolve, relative, basename, sep } from "node:path";
@@ -203,6 +204,11 @@ import {
   folderLayoutRules,
 } from "./folder-layout-rule.ts";
 import { folderLayoutHook } from "./folder-layout-hook.ts";
+import {
+  lintEditedHook,
+  type LintResult,
+  type PaperLinter,
+} from "./lint-edited-hook.ts";
 import {
   submissionConfirm,
   UNREADABLE_INPUT,
@@ -1289,7 +1295,16 @@ interface HookIo {
  * package's own code (`src/folder-layout-hook.ts` says why for its one). Advisory: whatever goes
  * wrong, the tool call has already happened, so it says so on stderr and exits 0.
  */
-const IN_PROCESS_HOOKS: Readonly<Record<string, (io: HookIo) => number>> = {
+const IN_PROCESS_HOOKS: Readonly<
+  Record<string, (io: HookIo) => number | Promise<number>>
+> = {
+  // Never in the way: whatever throws is one stderr line and exit 0 (src/lint-edited-hook.ts).
+  "lint-edited": ({ err, stdin, out }) =>
+    lintEditedHook(
+      stdin,
+      { files: nodeFiles, linter: editLinter(loadLatexLanguage) },
+      { out, err },
+    ),
   "paper-folder-layout": ({ err, stdin, out }) => {
     try {
       const said = folderLayoutHook(JSON.parse(stdin()), {
@@ -1399,7 +1414,7 @@ export function runHook(
     /** Where an in-process hook's output goes: stdout, which Claude Code reads. */
     out?: (text: string) => void;
   } = {},
-): number {
+): number | Promise<number> {
   if (!name) {
     err(`\`hook\` needs a name, e.g. \`paperlint hook paper-edit-guard\``);
     return 2;
@@ -1991,6 +2006,10 @@ async function runInit(
   });
 }
 
+/** The LaTeX language, loaded when a lint needs it: only `lint` and the `lint-edited` hook do. */
+const loadLatexLanguage = async (): Promise<unknown> =>
+  (await import("#eslint-rules/latex-language")).texLanguage;
+
 export async function run(
   argv: readonly string[],
   {
@@ -1998,8 +2017,7 @@ export async function run(
     err = console.error,
     cwd = process.cwd(),
     checkReferences = onlineReferences,
-    loadTexLanguage = async () =>
-      (await import("#eslint-rules/latex-language")).texLanguage,
+    loadTexLanguage = loadLatexLanguage,
   }: {
     log?: typeof console.log;
     err?: typeof console.error;
@@ -2102,36 +2120,12 @@ export async function run(
   // a directory without `PIPELINE-STATUS.md` simply gets not a single rule and reports clean. The
   // analysis of why a structure plugin for ESLint does not cure this is in `structure.mjs`.
   const structure = checkStructure(paths, opts.structure, { cwd });
-  // The order, most general first so the most specific wins (ESLint: a later block wins): each
-  // paper's venue preset → the root paperlint.json → the paper's own paperlint.json.
-  const papers = paperRuleBlocks(paths);
-  if (!papers.ok) return (err(papers.error), 2);
-  const withPapers = {
-    ...opts,
-    rules: [...papers.value.preset, ...(opts.rules ?? []), ...papers.value.own],
-  };
-
-  // Loaded lazily because only `lint` needs it. If the module cannot be loaded (a broken install:
-  // the file missing from the package), lint still runs over the scorecards and the review notes
-  // rather than failing outright — the LaTeX rules simply have no language to run in.
-  const texLanguage: unknown = await loadTexLanguage().catch(() => null);
-
-  // Each paper's body files, as the last build recorded TeX reading them — only when the LaTeX language
-  // loaded, since only its rules read them. The project's papers too: `paperlint lint .` reaches
-  // papers two levels down, which a directory's immediate papers do not.
-  const bodies = texLanguage
-    ? paperBodies(paperDirs([...paths, ...papersRoots(cfg)]), RECORD_DEPS)
-    : [];
-
-  const eslint = new ESLint({
-    cwd: lintRoot(root, paths),
-    overrideConfigFile: true,
-    overrideConfig: eslintConfig([
-      ...buildConfig(withPapers, texLanguage),
-      ...includeBlocks(bodies),
-    ]),
+  const engine = await paperEslint(cfg, paths, {
+    loadTexLanguage,
     fix: a.fix,
   });
+  if (!engine.ok) return (err(engine.error), 2);
+  const { eslint, opts: withPapers } = engine.value;
 
   const unowned = await firstUnownedFile(eslint, paths);
   if (unowned !== null) {
@@ -2180,6 +2174,116 @@ export async function run(
       .filter((f) => existsSync(f)),
   });
 }
+
+/**
+ * The ESLint `paperlint lint` runs over `paths`, with the config it lints them by — ONE setup for
+ * `paperlint lint` and the `lint-edited` hook, so what the hook reports while a paper is written is
+ * what `paperlint lint` reports on it, and the two cannot drift.
+ */
+async function paperEslint(
+  cfg: { readonly opts: PaperlintConfig; readonly root: string },
+  paths: readonly string[],
+  {
+    loadTexLanguage,
+    fix,
+  }: {
+    readonly loadTexLanguage: () => Promise<unknown>;
+    readonly fix: boolean;
+  },
+): Promise<Parsed<{ eslint: ESLint; opts: PaperlintConfig }>> {
+  // The order, most general first so the most specific wins (ESLint: a later block wins): each
+  // paper's venue preset → the root paperlint.json → the paper's own paperlint.json.
+  const papers = paperRuleBlocks(paths);
+  if (!papers.ok) return papers;
+  const opts = {
+    ...cfg.opts,
+    rules: [
+      ...papers.value.preset,
+      ...(cfg.opts.rules ?? []),
+      ...papers.value.own,
+    ],
+  };
+
+  // Loaded lazily because only `lint` needs it. If the module cannot be loaded (a broken install:
+  // the file missing from the package), lint still runs over the scorecards and the review notes
+  // rather than failing outright — the LaTeX rules simply have no language to run in.
+  const texLanguage: unknown = await loadTexLanguage().catch(() => null);
+
+  // Each paper's body files, as the last build recorded TeX reading them — only when the LaTeX language
+  // loaded, since only its rules read them. The project's papers too: `paperlint lint .` reaches
+  // papers two levels down, which a directory's immediate papers do not.
+  const bodies = texLanguage
+    ? paperBodies(paperDirs([...paths, ...papersRoots(cfg)]), RECORD_DEPS)
+    : [];
+
+  const eslint = new ESLint({
+    cwd: lintRoot(cfg.root, paths),
+    overrideConfigFile: true,
+    overrideConfig: eslintConfig([
+      ...buildConfig(opts, texLanguage),
+      ...includeBlocks(bodies),
+    ]),
+    fix,
+  });
+  return { ok: true, value: { eslint, opts } };
+}
+
+/**
+ * The engine `paperlint lint` would run on the paper in `dir`, for the `lint-edited` hook: the config
+ * found from that folder, as `paperlint lint` run there finds it, and the paper as the one path. A
+ * config that does not read throws — the hook prints that on its one stderr line.
+ */
+const editLinter =
+  (loadTexLanguage: () => Promise<unknown>) =>
+  async (dir: string): Promise<PaperLinter> => {
+    // Quiet: the hook has one stderr line, and it is the one that names the failure.
+    const cfg = readConfig(parseArgs(["lint"]), {
+      log: () => {},
+      err: () => {},
+      cwd: dir,
+    });
+    if (cfg.code !== undefined)
+      throw new Error(
+        "the project's paperlint.json does not read — `npx paperlint lint` says why",
+      );
+    const engine = await paperEslint(cfg, [dir], {
+      loadTexLanguage,
+      fix: false,
+    });
+    if (!engine.ok) throw new Error(engine.error);
+    const { eslint } = engine.value;
+    return {
+      isLinted: async (file) => !(await eslint.isPathIgnored(file)),
+      lint: (files) => eslint.lintFiles([...files]),
+      format: async (results) =>
+        stripVTControlCharacters(
+          await (
+            await eslint.loadFormatter(LINT_FORMAT)
+          ).format(results.map(counted)),
+        ),
+    };
+  };
+
+/** A result of the hook's new errors, with the counts the formatter prints recomputed. */
+const counted = (r: LintResult): Readonly<ESLint.LintResult> => ({
+  filePath: r.filePath,
+  // Only errors reach the formatter: the hook reports nothing else.
+  messages: r.messages.map((m) => ({
+    ruleId: m.ruleId,
+    message: m.message,
+    line: m.line,
+    column: m.column,
+    endLine: m.endLine,
+    severity: 2,
+  })),
+  suppressedMessages: [],
+  errorCount: r.messages.length,
+  fatalErrorCount: 0,
+  warningCount: 0,
+  fixableErrorCount: 0,
+  fixableWarningCount: 0,
+  usedDeprecatedRules: [],
+});
 
 /**
  * The first path that is a FILE paperlint does not lint, or null. ESLint would answer such a file
