@@ -24,6 +24,10 @@ Part of it is not this rule's: a rejection that does not say `"desk": true | fal
 one with no `"points"`, does not parse at all ([configuration](../../configuration.md)), so every
 command refuses it, not only the lint.
 
+`paperlint submission new|update` prints the same findings in its dry run, and `--save` refuses
+while there is one (exit 2, nothing sent): the judgement is this rule's, so the lint and the send
+cannot disagree.
+
 ## The points file
 
 Named by the rejected cycle's `outcome.points`, a path in the paper folder (for example
@@ -109,7 +113,8 @@ No rule options and no preset fields.
 
 ## What it does not check
 
-- Whether the section really answers the point: a reader decides that, not a machine.
+- Whether the section really answers the point: a reader decides that, not a machine —
+  `pc-panel-review`'s prior-reviews reviewer reads each answer against its quote.
 - Rejections before the one just before the open attempt: their points were the earlier attempt's
   to answer.
 - `\subsection` titles: `where` names a `\section` (or `\section*`), compared with whitespace

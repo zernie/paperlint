@@ -30,7 +30,7 @@ import {
   type ReviewerPoint,
 } from "./domain/reviewer-points.ts";
 import type { ParseYaml } from "./ports/yaml.ts";
-import { decoded, readPaper, reportInPaper } from "./tex-paper.ts";
+import { decoded, findingText, readPaper, reportInPaper } from "./tex-paper.ts";
 import type {
   Located,
   TexRuleModule,
@@ -134,24 +134,37 @@ const META: TexRuleModule["meta"] = {
   },
 };
 
-/** The findings for one `paper.tex`: none unless an open attempt follows a reviewed rejection. */
+/** The findings for one `paper.tex` and its text: none unless an open attempt follows a reviewed rejection. */
 function findingsFor(
-  context: Parameters<TexRuleModule["create"]>[0],
+  filename: string,
+  text: string,
   deps: PriorReviewsDeps,
 ): {
   readonly paper: ReturnType<typeof readPaper>;
   readonly found: readonly Located[];
 } | null {
-  const dir = dirname(context.filename);
+  const dir = dirname(filename);
   const cycles = readCycles(dir, deps);
   if (!cycles.ok || cycles.value === null) return null;
   const prior = priorReviewsOf(cycles.value);
   if (prior === null) return null;
-  const sc = context.sourceCode;
-  const paper = readPaper(context.filename, sc.raw ?? sc.text, deps);
+  const paper = readPaper(filename, text, deps);
   const titles = deps.latex.outline(paper.text).sections.map((h) => h.title);
   const found = judgePriorReviews(prior, readPoints(dir, prior, deps), titles);
   return { paper, found };
+}
+
+/**
+ * The same findings as lines, for a command that is not ESLint: `submission new|update --save`
+ * refuses to send while there is one (`src/submission.ts`). One judgement, two callers.
+ */
+export function priorReviewsLines(
+  filename: string,
+  text: string,
+  deps: PriorReviewsDeps,
+): readonly string[] {
+  const r = findingsFor(filename, text, deps);
+  return (r?.found ?? []).map((f) => findingText(META.messages, f));
 }
 
 /** The `cycle` plugin's rule over the reviewers' points, for every `paper.tex`. */
@@ -165,7 +178,8 @@ export function priorReviewsRules(
         if (basename(context.filename) !== "paper.tex") return {};
         return {
           root() {
-            const r = findingsFor(context, deps);
+            const sc = context.sourceCode;
+            const r = findingsFor(context.filename, sc.raw ?? sc.text, deps);
             if (r !== null)
               reportInPaper(context, META.messages, r.paper, r.found);
           },
