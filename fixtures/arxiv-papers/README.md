@@ -12,7 +12,7 @@ job `e2e-node` (`npx vitest run --project real-papers`; no npm script, no job of
 ## Why real papers
 
 A new rule must not fire on correct real text, and a rule written against fixtures we wrote ourselves
-cannot show that. Today's example (2026-11-09, #449): a rule measured against the hand-made fixtures
+cannot show that. On 2026-11-09 (#449): a rule measured against the hand-made fixtures
 and the six accepted papers was then run over 297 fresh arXiv papers, and its false positives showed up
 there, not before. A real paper in the test is where the next such case is caught the day the rule is
 registered, not afterwards by hand.
@@ -22,10 +22,18 @@ registered, not afterwards by hand.
 First version of this folder: ten papers ran in the test, 98 more sat in a sibling folder, unrun, so as
 not to cost CI time (measured then: 12 s a paper on the old corpus, so about 20 min for the 98 as one
 CLI run per paper). The owner decided otherwise: «if they help find problems, always run them; optimise
-later». What made that affordable: one CLI run over all papers is about 1.7 s a paper and one run per
-paper about 3 s, startup being a large part of the second (measured by another agent, 4 vCPU,
-origin/main: 138 s median for 80 preprints in one run). So the test is one run, in its own project, in
-an existing CI job. Measured here, all 114 papers: one local run, 436 s for 114 papers on a 4-core container shared with other jobs; the CI time of the `e2e-node` step is in the PR.
+later». The cost, as measured:
+
+- One CLI run over 80 preprints was 138 s (1.7 s a paper), and one run per paper about 3 s (another
+  agent, 4 vCPU, origin/main). That figure was taken before `paper/figure-ref-style` showed its cost on
+  multi-file papers: it re-parsed every other file of the paper for each file linted, F×(F−1) parses
+  for F files, 23.7 s of the 28 s on one paper of 25 files.
+- After that fix (df43a4f), one local run of the test is 436 s for 114 papers (3.8 s a paper), on a
+  4-core container shared with other jobs. The CI time of the `e2e-node` step is in the PR.
+- ESLint's own parallel mode would cut it, and is blocked: it refuses the config `paperlint lint`
+  builds from objects (#457).
+
+So the test is one run, in its own project, in an existing CI job.
 
 ## Why these papers
 
