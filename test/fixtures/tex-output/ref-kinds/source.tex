@@ -1,0 +1,9 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\begin{document}
+\section{Method}\label{sec:method}
+\Cref{fig:a,tab:a} and \autoref{fig:a} and~\autoref{tab:a} differ in kind; Sections~\ref{sec:method} and~\ref{fig:a} do not.
+\begin{figure}x\caption{F.}\label{fig:a}\end{figure}
+\begin{table}\caption{T.}\label{tab:a}x\end{table}
+\end{document}

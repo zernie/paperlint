@@ -6,6 +6,7 @@
  * What the build's `.aux`, `.blg` and `.bbl` hold about the bibliography is read by `src/latex-log.ts`,
  * which the build loop already reads them with.
  */
+import type { Labels } from "../domain/cross-references.ts";
 import type { BibtexError } from "../domain/sources-record.ts";
 import type { Fls } from "../domain/tex-run.ts";
 
@@ -14,4 +15,12 @@ export interface TexOutput {
   readonly fls: (text: string) => Fls;
   /** The errors a bibtex `.blg` reports, in order; warnings are not errors. */
   readonly blgErrors: (blg: string) => readonly BibtexError[];
+  /**
+   * The labels an `.aux` defines, with what each prints, following its `\@input` lines to the aux
+   * files `\include` writes. `readInput` gives a nested aux's text, or null when there is none.
+   */
+  readonly labels: (
+    aux: string,
+    readInput: (name: string) => string | null,
+  ) => Labels;
 }
