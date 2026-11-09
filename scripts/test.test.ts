@@ -148,7 +148,7 @@ test("two --shard arguments are refused, naming the second: which one would bind
   );
 });
 
-test("--changed: vitest runs only the unit tests the branch affects, on the SOURCES; no harness runs", () => {
+test("--changed: vitest runs only the unit tests the branch affects, on the SOURCES, and reports the changed files' uncovered lines without failing on them; no harness runs", () => {
   const seen: { call: string[]; nodeOptions: string | undefined }[] = [];
   const spawn: Spawn = (file, args, options) => {
     seen.push({ call: [file, ...args], nodeOptions: options.env.NODE_OPTIONS });
@@ -160,7 +160,18 @@ test("--changed: vitest runs only the unit tests the branch affects, on the SOUR
   );
   assert.deepEqual(seen, [
     {
-      call: ["vitest", "run", "--project", "unit", "--changed", "origin/main"],
+      call: [
+        "vitest",
+        "run",
+        "--project",
+        "unit",
+        "--changed",
+        "origin/main",
+        "--coverage.enabled",
+        "--coverage.provider=v8",
+        "--coverage.reporter=text",
+        "--coverage.skipFull",
+      ],
       nodeOptions: "--conditions=paperlint-source",
     },
   ]);
