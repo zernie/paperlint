@@ -334,6 +334,35 @@ const remedyFor = (counts: readonly HookCount[]): string =>
     : `\`npx paperlint init\` adds them`;
 
 /**
+ * The hooks `init` would add to a project that has SOME of them wired: the names, and whether any is
+ * wired by hand under another spelling. Empty when every hook is wired, when none is (`--no-hooks`
+ * is a choice) and when the settings file cannot be read. `paperlint doctor`, `paperlint lint` and
+ * the in-session notice (`src/hooks-notice.ts`) all ask this one function.
+ */
+export function unwiredHooks(
+  root: string,
+  wiring: Wiring = shippedWiring(),
+): { readonly missing: readonly string[]; readonly byHand: boolean } {
+  const read = readSettings(root);
+  const none = { missing: [], byHand: false };
+  if (read.status === "unparsable") return none;
+  const counts = wiredCounts(read.settings, wiring.names);
+  const missing = partlyMissing(counts, wiring.names);
+  return missing.length === 0
+    ? none
+    : { missing, byHand: counts.some((c) => c.other > 0) };
+}
+
+/** The hooks missing from a set that is partly wired; empty when it is whole or when nothing is wired. */
+const partlyMissing = (
+  counts: readonly HookCount[],
+  names: readonly string[],
+): readonly string[] => {
+  const missing = counts.filter((c) => total(c) === 0).map((c) => c.name);
+  return missing.length === names.length ? [] : missing;
+};
+
+/**
  * `paperlint doctor`'s section. `bad` counts the states that are MISWIRED, which fail the run: a
  * hook missing from an otherwise wired set ("partly wired"), and a hook wired twice. "Not wired at
  * all" stays advisory — `--no-hooks` is a legitimate choice, and a doctor that exits non-zero on a
@@ -355,7 +384,7 @@ export function doctorHooks(
   const counts = wiredCounts(read.settings, wiring.names);
   const missing = counts.filter((c) => total(c) === 0).map((c) => c.name);
   const twice = counts.filter((c) => total(c) > 1);
-  const partly = missing.length > 0 && missing.length < wiring.names.length;
+  const partly = partlyMissing(counts, wiring.names).length > 0;
   const remedy = remedyFor(counts);
   if (twice.length > 0) {
     out.push(`  ⚠ wired TWICE — each of these runs more than once per event:`);

@@ -10,7 +10,8 @@ Two jobs, one choice: how much of the paper CI judges.
 `paperlint lint` exits non-zero on any error; warnings only print, unless you pass
 `--max-warnings <n>`. It also prints, on stderr, `linted <N> file(s) in <S> s` and, when the run
 took over 10 s, the three slowest rules with their milliseconds (`slowest rules: <rule> <ms> ms · …`):
-the line a slow job log needs to name its culprit.
+the line a slow job log needs to name its culprit. When `.claude/settings.json` wires some paperlint
+hooks and not others, it prints one more stderr line naming the missing ones; the exit code does not change.
 
 ## Build, then lint
 
