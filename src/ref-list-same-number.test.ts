@@ -150,6 +150,47 @@ describe("sameNumbers: a counter the rule cannot model is unknown", () => {
   });
 });
 
+describe("sameNumbers: a label whose step is inherited from its context", () => {
+  it("a label inside a footnote or any other command in a run-in is unknown, not the heading's", () => {
+    const head = "\\section{One}\\section{Two}\\label{s}\n";
+    // Guards: `f` prints the footnote's number, not Two's; a plain run-in label is still Two's.
+    expect(
+      found(`${head}\\textbf{RQ.}\\label{f}\n\nSee \\ref{s}, \\ref{f}.`),
+    ).toHaveLength(1);
+    expect(
+      found(
+        `${head}\\textbf{RQ.\\footnote{Note\\label{f}}}\n\nSee \\ref{s}, \\ref{f}.`,
+      ),
+    ).toEqual([]);
+    expect(
+      found(
+        `${head}\\textbf{RQ.\\begin{enumerate}\\item\\label{f}\\end{enumerate}}\n\nSee \\ref{s}, \\ref{f}.`,
+      ),
+    ).toEqual([]);
+  });
+
+  it("an environment steps a counter of its own: a run-in's label after a theorem is the theorem's", () => {
+    // Guards: without the theorem between them the two labels are one section's.
+    const src = (between: string) =>
+      `\\subsection{A}\\label{a}\n\n${between}\\textbf{Proof.}\\label{p}\n\nSee \\ref{a}, \\ref{p}.`;
+    expect(found(src(""))).toHaveLength(1);
+    expect(found(src("\\begin{theorem}T\\end{theorem}\n\n"))).toEqual([]);
+    expect(found(src("\\begin{equation}x\\end{equation}\n\n"))).toEqual([]);
+  });
+
+  it("a macro the source defines may be a heading: the label after it is unknown", () => {
+    const src = (def: string) =>
+      `\\documentclass{article}\n${def}\n\\begin{document}\n\\subsection{A}\\label{a}\n\\mysec{B}\\label{b}\n\nSee \\ref{a}, \\ref{b}.\n\\end{document}\n`;
+    // Guards: with no definition `\mysec` is no known step and `b` is `a`'s.
+    expect(judged(src(""))).toHaveLength(1);
+    expect(judged(src("\\newcommand{\\mysec}[1]{\\subsection{#1}}"))).toEqual(
+      [],
+    );
+    expect(judged(src("\\def\\mysec#1{\\subsection{#1}}"))).toEqual([]);
+    expect(judged(src("\\let\\mysec\\subsection"))).toEqual([]);
+  });
+});
+
 describe("sameNumbers: what a later or other command changes", () => {
   it("a \\setcounter{secnumdepth} later in the body does not reach the headings before it", () => {
     // Guards: the depth in force at each heading is the last change before it, in document order.

@@ -35,7 +35,7 @@ import {
   type Macro,
   type Node,
 } from "./nodes.ts";
-import type { ParsedTex } from "./parse.ts";
+import { DEFINITION_MACROS, type ParsedTex } from "./parse.ts";
 import { isRunInHeading, keepsOpening } from "./prose.ts";
 
 /**
@@ -141,6 +141,8 @@ interface Scan {
   readonly anchor: LabelAnchor;
   readonly stepped: Stepped | null;
   readonly numberedTo: Depth;
+  /** The macros the source defines itself: any of them may step a counter the walk cannot see. */
+  readonly defined: ReadonlySet<string>;
   readonly labels: readonly PlacedLabel[];
 }
 
@@ -181,9 +183,42 @@ export const labelKeysOf = (t: ParsedTex): readonly string[] =>
     .filter(isLabel)
     .map((m) => textOf(mandatory(m).at(0)?.content).trim());
 
-/** The labels a node holds anywhere inside it (`\textbf{RQ2.\label{x}}`), comments pruned. */
+/** Formatting macros a label may stand inside without leaving the phrase: `\textbf{RQ2.\label{x}}`. */
+const PHRASE: ReadonlySet<string> = new Set([
+  "textbf",
+  "textit",
+  "emph",
+  "textsc",
+  "underline",
+  "textsl",
+  "textrm",
+  "textsf",
+  "texttt",
+]);
+
+/** The labels directly in a node's arguments or groups: one inside any other macro or environment is not. */
+const directLabels = (n: Node): readonly Macro[] => {
+  if (n.type === "macro" && n.content === "label") return [n];
+  const inner: readonly Node[] =
+    n.type === "group"
+      ? n.content
+      : n.type === "macro" && PHRASE.has(n.content)
+        ? argumentsOf(n).flatMap((a) => a.content)
+        : [];
+  return inner.flatMap(directLabels);
+};
+
+/**
+ * The labels a heading or run-in holds in its title (`\section{A\label{a}}`, `\textbf{RQ2.\label{x}}`):
+ * the heading's own arguments, through groups and phrase formatting. A label inside a footnote, a
+ * caption or any other command is left out, so it stays unknown: its number is not the heading's.
+ */
 const labelsInside = (n: Node): readonly Macro[] =>
-  visited(n, isUnrendered).filter(isNode).filter(isLabel);
+  n.type === "macro" && !PHRASE.has(n.content)
+    ? argumentsOf(n)
+        .flatMap((a) => a.content)
+        .flatMap(directLabels)
+    : directLabels(n);
 
 /** The title a heading or a run-in phrase shows, whitespace collapsed. */
 const shown = (n: Node): string =>
@@ -286,10 +321,50 @@ const hidesStep = (n: Node): boolean =>
         (v !== n && v.type === "macro" && v.content === "refstepcounter"),
     );
 
+/** Macros that define another one; the name is the first thing after them. */
+const DEFINES: ReadonlySet<string> = new Set([
+  ...DEFINITION_MACROS,
+  "NewDocumentCommand",
+  "DeclareDocumentCommand",
+  "ProvideDocumentCommand",
+  "let",
+]);
+
+/**
+ * The macros the source defines (`\newcommand{\mysec}…`, `\def\x…`, `\let\y\section`): a heading,
+ * an environment or a counter step may hide in the body of any of them.
+ */
+const definedMacros = (t: ParsedTex): ReadonlySet<string> => {
+  const all = visited(t.root, () => false).filter(isNode);
+  return new Set(
+    all.flatMap((n, i) => {
+      if (n.type !== "macro" || !DEFINES.has(n.content)) return [];
+      const inArgs = argumentsOf(n)
+        .flatMap((a) => a.content)
+        .filter((c) => c.type === "macro");
+      const next = all[i + 1];
+      const named = n.content === "let" ? [next] : inArgs.slice(0, 1);
+      return named.flatMap((c) => (c?.type === "macro" ? [c.content] : []));
+    }),
+  );
+};
+
+/**
+ * Whether a top-level node steps a counter the walk cannot see: an environment (a theorem, a figure,
+ * an equation, a list numbers itself and sets what a later `\label` records), or a macro of the
+ * source's own.
+ */
+const stepsUnseen = (s: Scan, n: Node): boolean =>
+  n.type === "environment" ||
+  n.type === "mathenv" ||
+  (n.type === "macro" && s.defined.has(n.content));
+
 /** The walk's step over one top-level node: what it does, then what its counter commands make unknown. */
 function step(t: ParsedTex, before: Scan, n: Node): Scan {
   const after = stepOnce(t, before, n);
-  return hidesStep(n) ? { ...after, stepped: UNKNOWN } : after;
+  return hidesStep(n) || stepsUnseen(before, n)
+    ? { ...after, stepped: UNKNOWN }
+    : after;
 }
 
 function stepOnce(t: ParsedTex, before: Scan, n: Node): Scan {
@@ -330,6 +405,7 @@ export function labelsOf(t: ParsedTex): readonly PlacedLabel[] {
     anchor: NONE,
     stepped: null,
     numberedTo: secnumdepth(t, preamble),
+    defined: definedMacros(t),
     labels: [],
   };
   return body
