@@ -18,7 +18,10 @@
  * whose `skills/cold-read-diff` LINKS to this directory, not a copy: the extractor imports
  * `#src/*`, which resolves only from inside the package.
  *
- * ⚠️ Written with the change; its rates are UNKNOWN until it is run.
+ * Measured 2026-11-10, 3 trials each. This skill: every check 100%. The skill as it was on main
+ * (`context: fork`): paper edited in 2 of 3 runs, no background readers seen, no report written —
+ * and `assert` fails it. The old fork starts its readers itself, so their dispatches may sit inside
+ * the fork, out of the top-level trace; the paper checks read the file and are not that.
  *
  * Costs money (about $0.2–0.6 a trial); not CI. Needs `npm run build` first.
  *   npx vigiles eval skills/cold-read-diff/cold-read-behaviour.eval.ts
@@ -33,7 +36,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineEval, latency } from "vigiles";
+import { assertRates, defineEval, latency } from "vigiles";
 import type { Check, RunContext } from "vigiles/eval";
 import { z } from "zod";
 
@@ -125,7 +128,11 @@ const inputsOf = (
 /** A TeX build, by the program that runs it. */
 const BUILDERS = ["pdflatex", "latexmk", "lualatex", "xelatex"];
 
-export default defineEval({
+export default defineEval<"measure">({
+  // Every check on every trial: these are outcomes the skill promises, not rates to trade off.
+  assert: (report) => {
+    assertRates(report, { min: 1 });
+  },
   skipIf: () => {
     if (!existsSync(join(SKILL_DIR, "scripts", "cold-read.js")))
       return "scripts/cold-read.js is not built: run `npm run build` first";
