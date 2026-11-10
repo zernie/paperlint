@@ -1,17 +1,17 @@
 // Compiled to SKILL.md by `vigiles compile`. Edit THIS file, never the markdown.
 //
 // Adopted 2026-08-17. Until 2026-11-10 this skill ran FORKED (`context: "fork"`): a whole agent
-// orchestrated the read, fixed the paper, rebuilt it and returned its report into the caller
-// (#405, #301). The orchestration is now `scripts/cold-read.js`, which the caller starts in the
-// background; the skill runs inline and only tells the caller how to start it and what to do
-// with the table it prints. `cold-read-diff.harness.mjs` holds that shape.
+// orchestrated the read, read the rest of the paper itself, fixed it, rebuilt it and returned its
+// report into the caller (#405, #301). Now it runs inline: `scripts/cold-read.ts` (run compiled,
+// as `.js`) prints the changed paragraphs, and the session starts the two readers as background
+// subagents. `cold-read-diff.harness.mjs` holds that shape.
 import { experimental_skill } from "vigiles/spec";
 
 export default experimental_skill({
   name: "cold-read-diff",
   description:
     "Send just-changed paper prose to two readers with NO context — an engineer who asks what each sentence claims, and a skimming workshop reviewer who asks whose result it states and whether it reads like a paper — the only check that catches a sentence which is short, true, jargon-free and still meaningless to anyone who does not already know the idea. Run after every prose edit to a paper, before calling the edit done, and before reporting a section as fixed. Scoped to the diff, so it is cheap enough to run every time. Not a writing grade (grade-paper-writing), not a structural pass (tighten-paper), not a defect review.",
-  tools: ["Bash", "Read"],
+  tools: ["Bash", "Read", "Write", "Agent"],
   body: `
 # cold-read-diff — the reader who cannot fake understanding
 
@@ -51,8 +51,8 @@ is to withhold the context rather than ask them to ignore it.
 ## Why the DIFF, and not the paper
 
 A full cold read costs a long agent run, so it gets run once a day, which means prose written after
-it ships unread. Scoped to the changed paragraphs it costs seconds (two paragraphs, measured
-2026-11-10: 9.8 s and $0.03 for both readers), so it runs every
+it ships unread. Scoped to the changed paragraphs the readers cost seconds (two paragraphs,
+measured 2026-11-10: about 10 s and $0.03 for both), so it runs every
 time — and coverage beats depth here, because the defect is per-sentence.
 
 Scoping also makes the check honest. Hand an agent the whole paper and it reconstructs the idea from
@@ -62,23 +62,25 @@ one, and its confusion is the finding.
 
 ## How to run it
 
-The read is one script. You start it **in the background** and keep working; it carries none of
-this conversation, fixes nothing, and prints a short table when it is done.
+No fork and no extra orchestrator: you run it in this session, step by step, and the
+only model calls are the two readers. They start in the background, so you keep working.
 
-1. **Start it** with the Bash tool and \`run_in_background: true\`:
+1. **Take the extract.** It is plain text of the changed paragraphs and nothing else:
 
    \`\`\`
-   node \${CLAUDE_SKILL_DIR}/scripts/cold-read.js <paper.tex> --venue="<venue name>"
+   node \${CLAUDE_SKILL_DIR}/scripts/cold-read.js <paper.tex> [--base=REV] [--macros=<file.json>]
    \`\`\`
 
-   It diffs \`<paper.tex>\` against \`--base\` (default \`HEAD\`: the uncommitted edits), widens each
-   changed line to its paragraph, drops working comments, floats and the bibliography, expands
-   \`{{placeholders}}\` from \`--macros=<file.json>\`, and leaves every dash as written. Above 15
-   changed paragraphs it refuses: narrow \`--base\`.
-2. **What runs.** Two readers, in parallel, each \`claude -p --model sonnet --tools ""\` from an
-   empty directory, each handed the paragraphs **as text in the prompt** and nothing else. A path
-   is an invitation to read the neighbours, and reading the neighbours is how the check fails
-   silently. \`sonnet\`: competent, cheap, and not the model that wrote the sentence.
+   \`--base\` defaults to \`HEAD\` (the uncommitted edits). It widens each changed line to its
+   paragraph, drops working comments, floats and the bibliography, expands \`{{placeholders}}\`
+   from \`--macros\`, and leaves every dash as written. Above 15 changed paragraphs it refuses:
+   narrow \`--base\`.
+2. **Start both readers in ONE message, each with the Agent tool, \`model: "sonnet"\` and
+   \`run_in_background: true\`.** A subagent starts with no conversation history. Its prompt is
+   the persona's text below, then the extract pasted verbatim — no path, no title, no abstract,
+   no word about the paper. A path is an invitation to read the neighbours, and reading the
+   neighbours is how the check fails silently. \`sonnet\`: competent, cheap, and not the model
+   that wrote the sentence.
 
    | persona | who | what only it can report |
    |---|---|---|
@@ -89,25 +91,37 @@ this conversation, fixes nothing, and prints a short table when it is done.
    confident, and he does not know the venue's register. Both run, every time. The reviewer is
    told the venue's name and nothing else.
 
-   The engineer is asked, per sentence, *what does this claim, in your own words?* (\`CANNOT
-   PARSE\` when restating needs a guess) and *would a reader who stops here understand it?*
-   (\`ONLY-IF\` they know X). The reviewer is asked *whose result is this?* (\`WHOSE?\`) and *does
-   it read like a paper at this venue?* (\`REGISTER\`). Both are asked for the dangerous class,
-   \`CLEVER\`: a sentence that sounds clever but says less than it appears to.
-3. **Do the next thing while it runs**; progress goes to the job's stderr, and its end wakes you.
-4. **Relay the table, not the report.** The script prints at most 15 lines: counts, the
-   report's path, one row per finding. The full report, with both readers' answers verbatim and
-   the tokens each spent, is in the paper's \`reviews/\` folder. Do not paste it into the
-   conversation.
-5. **The caller decides the fixes.** The read changes nothing in the paper and builds nothing.
-   Show the author the table; apply a fix only when asked, or when your task already was "fix
-   the prose", and then as a rewrite of the whole thought, never an excision (see the rule
-   below). Record each finding in the report's frontmatter once it is decided.
-6. **Confirm once, on the fix.** Run the script again on the rewritten paragraphs — nothing else
-   changed since the first read, so the same command reads only them. An edit is not done until
-   the engineer parses the replacement AND the reviewer finds its owner and its register. A fix
-   for the engineer that goes colloquial is a new \`REGISTER\` finding, and the reverse holds too.
-   One confirming round; do not loop past it.
+   **The engineer's prompt:** *You are a strong software engineer outside academia. Answer from
+   the text below alone; use no tools. For every sentence: what does it claim, in your own words?
+   If restating needs a guess, the verdict is \`CANNOT PARSE\` and you say what stopped you (an
+   undefined term, a pronoun with no referent, a number with no denominator, two clauses that do
+   not connect). Would a reader who stops here understand it? If only one who knows X would, the
+   verdict is \`ONLY-IF\`, naming X. A sentence that sounds clever but says less than it appears
+   to is \`CLEVER\`.*
+
+   **The reviewer's prompt:** *You are a programme-committee member at <venue>, with 40 minutes
+   for a whole paper, skimming, Confidence 3. Answer from the text below alone; use no tools. For
+   every sentence: whose result does it state — the authors' measurement, a cited work, or a
+   property of the world? If you cannot tell, the verdict is \`WHOSE?\`. Does it read like a paper
+   at this venue? If not, \`REGISTER\`, and what a paper there would write instead (an aphorism, a
+   fragment, a colloquial turn, two claims side by side with the relation unstated). A sentence
+   that sounds clever but says less than it appears to is \`CLEVER\`.*
+
+   Both end with: *Reply with one markdown table, \`| ¶ | verdict | sentence | why |\`, one row per
+   sentence that is not fine, the sentence quoted exactly; nothing else. No rows if every sentence
+   reads.* So what comes back is the findings, not a restatement of every sentence.
+3. **Keep working.** Each reader's completion arrives as a notification.
+4. **Write the report, relay the table.** Save both answers verbatim, with the extract, to
+   \`reviews/<date>-cold-read-diff.md\` in the paper's folder. Show the author at most 15 lines:
+   the count, the report's path, and one row per finding (the first ten).
+5. **The author decides the fixes.** The read changes nothing in the paper and builds nothing.
+   Apply a fix only when asked, or when your task already was "fix the prose", and then as a
+   rewrite of the whole thought, never an excision (see the rule below). Record each finding in
+   the report's frontmatter once it is decided.
+6. **Confirm once, on the fix.** Run steps 1–4 again on the rewritten paragraphs. An edit is not
+   done until the engineer parses the replacement AND the reviewer finds its owner and its
+   register. A fix for the engineer that goes colloquial is a new \`REGISTER\` finding, and the
+   reverse holds too. One confirming round; do not loop past it.
 
 ## 🔴 Hand the reader WHOLE PARAGRAPHS, never \`+\` lines
 
@@ -124,15 +138,14 @@ Two more things the same run proved:
 - **Strip working comments.** He graded \`% JUSTIFY …\` comment notes as prose because he could not tell
   them apart — and said so, which is itself a finding about the extract.
 
-**So** the script takes the changed lines, widens each to its enclosing paragraph, expands
-macros, drops comments, and hands the reader continuous prose. The findings that survive that are worth the run; the
+**So** \`scripts/cold-read.js\` takes the changed lines, widens each to its enclosing paragraph,
+expands macros, drops comments, and prints continuous prose for the reader. The findings that survive that are worth the run; the
 ones that do not are noise, and noise is how this check gets muted.
 
 ## The report's frontmatter — the findings, as records
 
 Once the findings are decided, the report opens with YAML frontmatter that lists them, one
-record per finding. The script cannot know a finding's pipeline \`cause\`, so it writes none;
-you add them.
+record per finding.
 \`paperlint lint\` validates it (\`review/frontmatter\`): an **open** finding must name the
 pipeline \`cause\` that let it through — fix that, and the text edit falls out of running the
 fixed tool.
