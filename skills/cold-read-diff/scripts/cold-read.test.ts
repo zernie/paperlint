@@ -9,7 +9,13 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test, vi } from "vitest";
 import { runNode, useTempDir, writeTree } from "../../../test/support.ts";
-import { changedLines, extract, main, numbered } from "./cold-read-core.ts";
+import {
+  changedLines,
+  deletionPoints,
+  extract,
+  main,
+  numbered,
+} from "./cold-read-core.ts";
 
 const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), "cold-read.ts");
 const root = useTempDir("cold-read-");
@@ -43,6 +49,35 @@ test("changedLines: the new-file lines of each hunk, a one-line hunk with no cou
   const diff =
     "@@ -3 +3 @@\n-a\n+b\n@@ -10,0 +11,2 @@\n+c\n+d\n@@ -20,2 +22,0 @@\n";
   assert.deepEqual(changedLines(diff), [3, 11, 12]);
+  assert.deepEqual(deletionPoints(diff), [22]);
+  assert.deepEqual(
+    [changedLines("@@ broken\n@@\n"), deletionPoints("@@ broken\n")],
+    [[], []],
+    "a header with no +c,d field adds nothing",
+  );
+});
+
+test("extract: a sentence deleted inside a paragraph selects it; a whole paragraph deleted selects no neighbour", () => {
+  const tex = "First paragraph, line one.\nline two.\n\nSecond paragraph.\n";
+  // A line deleted between new lines 1 and 2 (inside the first paragraph): +1,0.
+  assert.deepEqual(
+    extract(tex, [], {}, [1]).map((p) => p.text),
+    ["First paragraph, line one. line two."],
+  );
+  // A paragraph deleted between new lines 3 (blank) and 4: neither side is in one passage.
+  assert.deepEqual(extract(tex, [], {}, [3]), []);
+});
+
+test("extract: math is kept as its source, so the sentence keeps its claim", () => {
+  assert.deepEqual(
+    extract(
+      "Let $n$ be the sample size. We require $n > 0$ and \\(k\\) runs (Section~\\ref{s}).\n",
+      [1],
+    ).map((p) => p.text),
+    [
+      "Let $n$ be the sample size. We require $n > 0$ and \\(k\\) runs (Section 1).",
+    ],
+  );
 });
 
 test("extract: whole paragraphs, comments and floats dropped, macros expanded, dashes kept", () => {
@@ -67,17 +102,27 @@ test("extract: whole paragraphs, comments and floats dropped, macros expanded, d
     [["{{nRepos}}"]],
   );
   assert.deepEqual(
+    extract("We ran {{a}} of {{ b }} cells.\n", [1], { a: 3, b: 12 }).map(
+      (p) => p.text,
+    ),
+    ["We ran 3 of 12 cells."],
+    "two placeholders on one line, each filled where it stands",
+  );
+  assert.deepEqual(
     extract(EDITED, [3, 6, 11]),
     [],
     "a heading, a comment or a table row is not prose",
   );
   assert.deepEqual(
-    extract("Two groups {{a}{b}} and one {x} are not placeholders.\n", [1]),
+    extract(
+      "Two groups {{a}{b}}, one {x}, and {{\\textbf{y}}} are not placeholders.\n",
+      [1],
+    ),
     [
       {
         start: 1,
         end: 1,
-        text: "Two groups ab and one x are not placeholders.",
+        text: "Two groups ab, one x, and y are not placeholders.",
         unexpanded: [],
       },
     ],
@@ -176,6 +221,7 @@ test("the command refuses: above the cap, no change, a bad flag, no paper", () =
       run([paper]),
       run([paper, "--bogus"]),
       run([]),
+      run([paper, paper]),
       run(["--max=0", paper]),
       run([join(dir, "nope.tex")]),
     ],
@@ -187,9 +233,20 @@ test("the command refuses: above the cap, no change, a bad flag, no paper", () =
       [2, `cold read: no changed prose in ${paper} since HEAD\n`],
       [2, "cold read: unknown flag(s) --bogus\n"],
       [2, "cold read: name exactly one paper .tex file\n"],
+      [2, "cold read: name exactly one paper .tex file\n"],
       [2, "cold read: --max takes a positive integer\n"],
       [2, `cold read: ${join(dir, "nope.tex")} does not exist\n`],
     ],
+  );
+});
+
+test("main: an error that is not a refusal is thrown, not reported as one", () => {
+  const dir = paperRepo("throws");
+  writeFileSync(join(dir, "bad.json"), "{");
+  assert.throws(
+    () =>
+      runMain([join(dir, "paper.tex"), `--macros=${join(dir, "bad.json")}`]),
+    SyntaxError,
   );
 });
 

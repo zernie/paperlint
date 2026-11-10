@@ -19,8 +19,7 @@ import { basename, dirname, resolve } from "node:path";
 import { z } from "zod";
 import { visit } from "@unified-latex/unified-latex-util-visit";
 import { latexReader, parseLatex } from "#src/adapters/latex/index";
-import type { Passage, Span } from "#src/domain/tex-document";
-import { passageText } from "#src/paper-prose";
+import { collapse, type Passage, type Span } from "#src/domain/tex-document";
 
 /** Above this many changed paragraphs the run refuses and asks for a narrower range (#301). */
 export const DEFAULT_MAX = 15;
@@ -36,20 +35,36 @@ export interface Paragraph {
 const MacrosSchema = z.record(z.string(), z.union([z.string(), z.number()]));
 type Macros = z.infer<typeof MacrosSchema>;
 
-/**
- * The 1-based line numbers of the NEW file that a `git diff -U0` adds or changes, read off each
- * hunk header `@@ -a,b +c,d @@`: lines c to c+d-1 (`d` absent is 1, `d` of 0 is a pure deletion).
- */
-export const changedLines = (diff: string): number[] =>
+/** Each hunk header's new-file side `+c,d` of a `git diff -U0`, as numbers; `d` absent is 1. */
+const hunks = (diff: string): { start: number; count: number }[] =>
   diff
     .split("\n")
     .filter((line) => line.startsWith("@@ "))
     .flatMap((line) => {
-      const [start = "0", count = "1"] = (line.split(" ")[2] ?? "")
-        .slice(1)
-        .split(",");
-      return Array.from({ length: Number(count) }, (_, i) => Number(start) + i);
+      const added = line.split(" ")[2] ?? "";
+      if (!added.startsWith("+")) return [];
+      const [start, count = "1"] = added.slice(1).split(",");
+      return [{ start: Number(start), count: Number(count) }];
     });
+
+/**
+ * The 1-based line numbers of the NEW file that a `git diff -U0` adds or changes, read off each
+ * hunk header `@@ -a,b +c,d @@`: lines c to c+d-1.
+ */
+export const changedLines = (diff: string): number[] =>
+  hunks(diff).flatMap(({ start, count }) =>
+    Array.from({ length: count }, (_, i) => start + i),
+  );
+
+/**
+ * Where a hunk only deleted: `+c,0` means lines were removed after new line c. A paragraph that
+ * holds both c and c+1 lost a sentence and is changed; one that holds only one of them is a
+ * neighbour of a deleted paragraph, and is not.
+ */
+export const deletionPoints = (diff: string): number[] =>
+  hunks(diff)
+    .filter((h) => h.count === 0)
+    .map((h) => h.start);
 
 /** A `{{placeholder}}` a build fills in: where it stands in the source, its name, how it is written. */
 interface Placeholder {
@@ -119,20 +134,50 @@ const spanOf = (p: Passage): Span => {
   };
 };
 
+/**
+ * A passage as the text a reader sees: its words, a citation as \`[1]\` and a cross-reference as
+ * \`1\` where they stand, and math as its source (\`$n > 0$\`), so a sentence keeps its claim.
+ */
+const textOf = (p: Passage): string =>
+  collapse(
+    p.pieces
+      .map((x) =>
+        x.kind === "text"
+          ? x.segment.text
+          : x.kind === "math"
+            ? x.tex
+            : x.owner === "citation"
+              ? "[1]"
+              : "1",
+      )
+      .join(""),
+  );
+
 /** The 1-based line a source offset stands on. */
 const lineAt = (src: string, offset: number): number =>
   src.slice(0, offset).split("\n").length;
 
+/** Whether a changed line falls in `b`, or `b` holds both sides of a deletion point. */
+const touched = (
+  b: { readonly start: number; readonly end: number },
+  lines: readonly number[],
+  deletions: readonly number[],
+): boolean =>
+  lines.some((n) => n >= b.start && n <= b.end) ||
+  deletions.some((d) => d >= b.start && d + 1 <= b.end);
+
 /**
  * The changed paragraphs of `tex`: every body passage (`bodyProse`: the parse of the paper, without
  * comments, headings, floats, code or the back matter) that a changed line falls in, whole, as the
- * text a reader sees (`passageText`). `{{placeholders}}` are filled from `macros` before the parse;
- * `unexpanded` lists the ones it had no value for.
+ * text a reader sees (`textOf`), and every passage that holds both sides of a `deletions` point.
+ * `{{placeholders}}` are filled from `macros` before the parse; `unexpanded` lists the ones it had
+ * no value for.
  */
 export const extract = (
   tex: string,
   lines: readonly number[],
   macros: Macros = {},
+  deletions: readonly number[] = [],
 ): Paragraph[] => {
   const places = placeholdersOf(tex);
   const missing = places.filter((p) => macros[p.name] === undefined);
@@ -146,7 +191,7 @@ export const extract = (
       return {
         start,
         end,
-        text: passageText(p),
+        text: textOf(p),
         unexpanded: missing
           .filter(
             (m) => lineAt(tex, m.start) >= start && lineAt(tex, m.start) <= end,
@@ -154,9 +199,7 @@ export const extract = (
           .map((m) => m.written),
       };
     })
-    .filter(
-      (b) => b.text !== "" && lines.some((n) => n >= b.start && n <= b.end),
-    );
+    .filter((b) => b.text !== "" && touched(b, lines, deletions));
 };
 
 /** The flags a run reads. */
@@ -183,14 +226,15 @@ export const optionsOf = (argv: readonly string[]): Options => {
   const unknown = pairs.filter(([k]) => !KNOWN.includes(k)).map(([k]) => k);
   if (unknown.length)
     throw new Refusal(`unknown flag(s) --${unknown.join(", --")}`);
-  const files = argv.filter((a) => !a.startsWith("--"));
-  if (files.length !== 1) throw new Refusal("name exactly one paper .tex file");
+  const [paper, ...extra] = argv.filter((a) => !a.startsWith("--"));
+  if (paper === undefined || extra.length > 0)
+    throw new Refusal("name exactly one paper .tex file");
   const flags = new Map(pairs);
   const max = Number(flags.get("max") ?? DEFAULT_MAX);
   if (!Number.isInteger(max) || max < 1)
     throw new Refusal("--max takes a positive integer");
   return {
-    paper: files[0] ?? "",
+    paper,
     base: flags.get("base") || "HEAD",
     macros: flags.get("macros"),
     max,
@@ -211,7 +255,12 @@ const paragraphsFor = (o: Options): Paragraph[] => {
   );
   return checked(
     o,
-    extract(readFileSync(paper, "utf8"), changedLines(diff), macros),
+    extract(
+      readFileSync(paper, "utf8"),
+      changedLines(diff),
+      macros,
+      deletionPoints(diff),
+    ),
   );
 };
 
