@@ -57,3 +57,32 @@ A fifth instance of the same class was measured the same day and is not yet fixe
 in `ledgerPath` asks `insideNodeModules(hereDir)`, and a plugin cache is not `node_modules`, so
 a plugin-only consumer without a `package.json` gets its ledger written into the cache — which
 the documentation says changes when the plugin updates.
+
+---
+
+## 2026-08-05 — eleven unreadable passages that every check passed (why `cold-read-diff` exists)
+
+The author of a paper found eleven unreadable passages by eye, in a paper that had passed six
+writing grades, four structural passes and five review panels. Every one was short, factually
+correct, free of every word on the jargon list and inside every mechanical threshold. Samples,
+with the author's reactions:
+
+> _"The state to remove is therefore not the rule but its claim about itself"_ — «wtf»
+> _"Three answers, all of them after the fact"_ — «VAGUE AF»
+> _"Both numbers carry a caveat…"_ — «WTF.»
+
+They parse only for a reader who already holds the idea. Every reader in the pipeline either knew
+too much (the author, a persona subagent handed the paper, the review panel) or could not read at
+all (`prose-lint`, which counts patterns). So the check is a competent reader who is withheld the
+context, not asked to ignore it. Several of the eleven had been introduced that morning by fixes
+for other automated checks.
+
+The first machine run of the skill the same day: about a third of the reader's stalls were
+artefacts of the extract, not of the paper ("`it` has no referent", "cut off mid-clause"), because
+it was handed `+` lines; it reported seven raw `{{placeholders}}` as missing numbers, and graded
+`% JUSTIFY …` comments as prose. Hence whole paragraphs, macros expanded, comments dropped — now
+done by `skills/cold-read-diff/scripts/cold-read.ts`, not by hand.
+
+2026-11-10: run as a forked skill, the orchestrator blocked the caller for about 15 minutes, read
+the rest of the paper, edited it and rebuilt the PDF (#405; a batched run took about 35, #301).
+The measurements and the redesign are in #460.
