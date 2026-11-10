@@ -100,6 +100,16 @@ test("extract: a footnote is not a second paragraph, and a changed % line inside
   assert.deepEqual(extract("One line.\n% a note\nTwo line.\n", [2]), []);
 });
 
+test("extract: a note trailing a sentence is not handed to the reader; an escaped \\% is", () => {
+  assert.deepEqual(
+    extract(
+      "We measure its effect. % it = the retry policy\n50\\% of runs pass.\n",
+      [1],
+    ).map((p) => p.text),
+    ["We measure its effect.\n50\\% of runs pass."],
+  );
+});
+
 test("extract: whole paragraphs, comment lines and floats dropped, nothing rewritten", () => {
   // What `git diff -U0` reports for EDITED: the comment (6), the paragraph (7–8), a table row (11), the last line of prose (14).
   assert.deepEqual(extract(EDITED, [6, 7, 8, 11, 14]), [

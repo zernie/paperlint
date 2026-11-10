@@ -18,7 +18,8 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
-import { latexReader } from "#src/adapters/latex/index";
+import { visit } from "@unified-latex/unified-latex-util-visit";
+import { latexReader, parseLatex } from "#src/adapters/latex/index";
 import type { Passage, Span } from "#src/domain/tex-document";
 
 /** Above this many changed paragraphs the run refuses and asks for a narrower range (#301). */
@@ -83,16 +84,29 @@ const lineAt = (src: string, offset: number): number =>
 
 /**
  * A paragraph's source as the reader gets it: its whole lines, `first` to `last`, exactly as written,
- * without the lines that are only a `%` note (a reader grades a note as prose, SKILL.md "Strip
- * working comments"). Whole lines, not the span of its printed pieces: a piece of
+ * without its `%` notes — a whole-line note or one trailing a sentence, found on the parse, so `\%`
+ * stays. A reader grades a note as prose, and a note can explain what the printed text does not
+ * (SKILL.md "Strip working comments"). Whole lines, not the span of its printed pieces: a piece of
  * `\texttt{x}` starts inside the braces, so a cut there hands the reader broken LaTeX.
  */
-const sourceOf = (src: string, first: number, last: number): string =>
-  src
+const sourceOf = (src: string, first: number, last: number): string => {
+  const lines = src
     .split("\n")
     .slice(first - 1, last)
-    .filter((line) => !isNote(line))
     .join("\n");
+  const notes: Span[] = [];
+  visit(parseLatex(lines).root, (node) => {
+    const at = node.position;
+    if (node.type === "comment" && at)
+      notes.push({ start: at.start.offset, end: at.end.offset });
+  });
+  return notes
+    .reduceRight(
+      (text, n) => `${text.slice(0, n.start)}\n${text.slice(n.end)}`,
+      lines,
+    )
+    .trim();
+};
 
 /** A line that is only a `%` note. */
 const isNote = (line: string): boolean => line.trimStart().startsWith("%");
