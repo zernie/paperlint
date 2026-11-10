@@ -18,10 +18,10 @@
  * whose `skills/cold-read-diff` LINKS to this directory, not a copy: the extractor imports
  * `#src/*`, which resolves only from inside the package.
  *
- * Measured 2026-11-10, 3 trials each. This skill: every check 100%. The skill as it was on main
- * (`context: fork`): paper edited in 2 of 3 runs, no background readers seen, no report written —
- * and `assert` fails it. That run read only top-level tool calls; the checks now read each
- * subagent's too, so the fork's own reader dispatches count. The paper checks read the file.
+ * Measured 2026-11-10, 3 trials a run. This skill: every check 100%. The skill as it was on main
+ * (`context: fork`), two runs: the paper edited in 2 of 3 and then 0 of 3; the two readers started
+ * in the background on sonnet in 1 of 3 (second run, which read subagent calls); no report in any
+ * — and `assert` fails it (exit 1).
  *
  * Costs money (about $0.2–0.6 a trial); not CI. Needs `npm run build` first.
  *   npx vigiles eval skills/cold-read-diff/cold-read-behaviour.eval.ts
