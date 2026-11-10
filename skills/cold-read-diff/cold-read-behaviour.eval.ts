@@ -20,8 +20,8 @@
  *
  * Measured 2026-11-10, 3 trials each. This skill: every check 100%. The skill as it was on main
  * (`context: fork`): paper edited in 2 of 3 runs, no background readers seen, no report written —
- * and `assert` fails it. The old fork starts its readers itself, so their dispatches may sit inside
- * the fork, out of the top-level trace; the paper checks read the file and are not that.
+ * and `assert` fails it. That run read only top-level tool calls; the checks now read each
+ * subagent's too, so the fork's own reader dispatches count. The paper checks read the file.
  *
  * Costs money (about $0.2–0.6 a trial); not CI. Needs `npm run build` first.
  *   npx vigiles eval skills/cold-read-diff/cold-read-behaviour.eval.ts
@@ -92,8 +92,17 @@ const AgentInput = z.object({
   run_in_background: z.boolean().optional().catch(undefined),
 });
 
+/**
+ * Every tool call of the run: the session's own and each subagent's (`ctx.subagents`). A forked
+ * skill is a subagent, so what it does (start readers, edit the paper) is only seen here.
+ */
+const allCalls = (ctx: RunContext): RunContext["toolCalls"] => [
+  ...ctx.toolCalls,
+  ...(ctx.subagents ?? []).flatMap((s) => s.toolCalls),
+];
+
 const agentCalls = (ctx: RunContext): z.infer<typeof AgentInput>[] =>
-  ctx.toolCalls
+  allCalls(ctx)
     .filter((c) => c.name === "Agent")
     .map((c) => AgentInput.parse(c.input));
 
@@ -121,7 +130,7 @@ const inputsOf = (
   ctx: RunContext,
   names: readonly string[],
 ): z.infer<typeof ToolInput>[] =>
-  ctx.toolCalls
+  allCalls(ctx)
     .filter((c) => names.includes(c.name))
     .map((c) => ToolInput.parse(c.input));
 
