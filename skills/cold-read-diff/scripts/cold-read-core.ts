@@ -1,28 +1,18 @@
 /**
- * cold-read-core.ts — the whole cold read of a paper diff, as one process the caller starts in
- * the background: extract the changed paragraphs as plain text, hand them to two context-free
- * readers in parallel, write their answers verbatim to a report file, and print a short table.
+ * cold-read-core.ts — the cold read of a paper diff as one process the caller starts in the
+ * background: the changed paragraphs as plain text, two context-free readers in parallel, their
+ * answers verbatim in a report file, a short table on stdout. It fixes nothing.
  *
- * Usage: node cold-read.js <paper.tex> [--base=REV] [--venue=NAME] [--out=PATH]
- *                          [--macros=FILE.json] [--max=N] [--extract-only]
- * Exit: 0 — report written (or, with --extract-only, the extract printed) · 1 — a reader failed
- * or answered nothing parseable · 2 — refused: nothing changed, too many paragraphs, a bad flag.
+ * WHY A SCRIPT AND NOT A FORKED SKILL (#405, #301). As `context: fork` the orchestrator was an
+ * agent: one consumer run (2026-11-10) took about 15 minutes, fixed and rebuilt the paper and put
+ * its whole report in the caller's context; a batched run (2026-10-23) took about 35 minutes with
+ * no progress and hand-rolled an extractor that turned `--no-verify` into `-no-verify`.
  *
- * WHY A SCRIPT AND NOT A FORKED SKILL (#405, #301). Run with `context: fork`, the skill's
- * orchestrator was a whole agent: on 2026-11-10 one consumer run took about 15 minutes, applied
- * fixes to the paper, rebuilt the PDF and landed its full report in the caller's context, and a
- * batched run on 2026-10-23 took about 35 minutes with no progress line and hand-rolled its own
- * extractor (which turned `--no-verify` into `-no-verify`). The readers themselves are cheap.
- * Here the orchestrator is this file: it carries no conversation, it fixes nothing, its progress
- * goes to stderr, and what it prints to the caller is the table, not the report.
- *
- * WHAT A READER GETS. Only the paragraphs, as text in its prompt, run from an empty directory
- * with no tools — so it cannot read the neighbours, and its confusion is the finding.
- *
- * The reader command is `claude` unless PAPERLINT_COLD_READ_READER names another executable;
- * tests point it at a fake, so no test spends money or touches the network.
+ * A reader is `claude -p --tools ""` run from an empty directory with the paragraphs on stdin, so
+ * it cannot read the neighbours. PAPERLINT_COLD_READ_READER names another executable: tests use a
+ * fake, so no test spends money or touches the network. Exit: 0 read · 1 a reader failed · 2 refused.
  */
-import { execFileSync, spawn } from "node:child_process";
+import { execFile, execFileSync } from "node:child_process";
 import {
   existsSync,
   mkdirSync,
@@ -33,7 +23,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { basename, dirname, join, relative, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { z } from "zod";
 
 /** Above this many changed paragraphs the run refuses and asks for a narrower range (#301). */
@@ -64,36 +54,31 @@ const RowSchema = z.object({
 export type Row = z.infer<typeof RowSchema>;
 
 /** What `claude -p --output-format json` prints, as far as this file reads it. */
+const N = z.number();
 const EnvelopeSchema = z.object({
   result: z.string().catch(""),
   usage: z
     .object({
-      input_tokens: z.number().catch(0),
-      cache_read_input_tokens: z.number().catch(0),
-      cache_creation_input_tokens: z.number().catch(0),
-      output_tokens: z.number().catch(0),
+      input_tokens: N,
+      cache_read_input_tokens: N,
+      cache_creation_input_tokens: N,
+      output_tokens: N,
     })
-    .catch({
-      input_tokens: 0,
-      cache_read_input_tokens: 0,
-      cache_creation_input_tokens: 0,
-      output_tokens: 0,
-    }),
-  total_cost_usd: z.number().catch(0),
+    .partial()
+    .catch({}),
+  total_cost_usd: N.catch(0),
 });
 
 const MacrosSchema = z.record(z.string(), z.union([z.string(), z.number()]));
 type Macros = z.infer<typeof MacrosSchema>;
 
-export interface Usage {
-  readonly input_tokens: number;
-  readonly output_tokens: number;
-  readonly cost_usd: number;
-}
-
 export interface Answer {
   readonly rows: readonly Row[];
-  readonly usage: Usage;
+  readonly usage: {
+    readonly input_tokens: number;
+    readonly output_tokens: number;
+    readonly cost_usd: number;
+  };
   readonly text: string;
   readonly error: string | null;
 }
@@ -247,10 +232,10 @@ export const parseAnswer = (stdout: string): Answer => {
   const u = env.usage;
   const usage = {
     input_tokens:
-      u.input_tokens +
-      u.cache_read_input_tokens +
-      u.cache_creation_input_tokens,
-    output_tokens: u.output_tokens,
+      (u.input_tokens ?? 0) +
+      (u.cache_read_input_tokens ?? 0) +
+      (u.cache_creation_input_tokens ?? 0),
+    output_tokens: u.output_tokens ?? 0,
     cost_usd: env.total_cost_usd,
   };
   return rows.success
@@ -362,13 +347,12 @@ interface Options {
   readonly out: string | undefined;
   readonly macros: string | undefined;
   readonly max: number;
-  readonly extractOnly: boolean;
 }
 
 /** A refusal: printed as one line, exit 2. */
 class Refusal extends Error {}
 
-const KNOWN = ["base", "venue", "out", "macros", "max", "extract-only"];
+const KNOWN = ["base", "venue", "out", "macros", "max"];
 
 /** The command line as options, or a refusal naming what is wrong with it. */
 export const optionsOf = (argv: readonly string[]): Options => {
@@ -394,62 +378,41 @@ export const optionsOf = (argv: readonly string[]): Options => {
     out: flags.get("out"),
     macros: flags.get("macros"),
     max,
-    extractOnly: flags.has("extract-only"),
   };
 };
 
-/** Everything a stream carries, as one string once it ends. */
-const collect = (stream: NodeJS.ReadableStream): Promise<string> =>
-  new Promise((done) => {
-    const parts: Buffer[] = [];
-    stream.on("data", (d: Buffer) => {
-      parts.push(d);
-    });
-    stream.on("end", () => {
-      done(Buffer.concat(parts).toString("utf8"));
-    });
-  });
+const READER_ARGS = [
+  "-p",
+  "--model",
+  "sonnet",
+  "--tools",
+  "",
+  "--output-format",
+  "json",
+];
 
-/** How a child process ended: its exit code, or why it never ran. */
-const exitOf = (
-  child: ReturnType<typeof spawn>,
-  cmd: string,
-): Promise<{ code: number | null; failed: string }> =>
-  new Promise((done) => {
-    child.on("error", (e) => {
-      done({ code: null, failed: `${cmd}: ${e.message}` });
-    });
-    child.on("close", (code) => {
-      done({ code, failed: "" });
-    });
-  });
-
-/** The process a reader runs as, its stdout and the first line of its stderr. */
-const spawnReader = async (
+/** The reader as a process: its stdout, and why it failed ("" when it did not). */
+const spawnReader = (
   prompt: string,
   cwd: string,
-): Promise<{
-  code: number | null;
-  out: string;
-  err: string;
-  failed: string;
-}> => {
-  const cmd = process.env["PAPERLINT_COLD_READ_READER"] || "claude";
-  const child = spawn(
-    cmd,
-    ["-p", "--model", "sonnet", "--tools", "", "--output-format", "json"],
-    { cwd, stdio: ["pipe", "pipe", "pipe"] },
-  );
-  const exited = exitOf(child, cmd);
-  child.stdin.on("error", () => undefined);
-  child.stdin.end(prompt);
-  const [out, err, end] = await Promise.all([
-    collect(child.stdout),
-    collect(child.stderr),
-    exited,
-  ]);
-  return { ...end, out, err: err.trim().split("\n")[0] ?? "" };
-};
+): Promise<{ out: string; failed: string }> =>
+  new Promise((done) => {
+    const cmd = process.env["PAPERLINT_COLD_READ_READER"] || "claude";
+    const child = execFile(
+      cmd,
+      READER_ARGS,
+      { cwd, maxBuffer: 1 << 26 },
+      (e, out, err) => {
+        const why =
+          typeof e?.code === "number"
+            ? `exited ${String(e.code)}: ${err.trim().split("\n")[0] ?? ""}`
+            : e?.message;
+        done({ out, failed: why ? `${cmd} ${why}` : "" });
+      },
+    );
+    child.stdin?.on("error", () => undefined);
+    child.stdin?.end(prompt);
+  });
 
 /** Run one reader from an empty directory with no tools; the prompt goes on stdin. */
 const runReader = async (
@@ -462,11 +425,7 @@ const runReader = async (
   rmSync(cwd, { recursive: true, force: true });
   const ms = Date.now() - t0;
   const parsed = parseAnswer(run.out);
-  const error =
-    run.failed ||
-    (run.code === 0
-      ? parsed.error
-      : `reader exited ${String(run.code)}: ${run.err}`);
+  const error = run.failed || parsed.error;
   process.stderr.write(
     `cold read: ${persona} ${error ? `FAILED (${error})` : "done"} in ${secs(ms)} s\n`,
   );
@@ -533,9 +492,7 @@ const read = async (o: Options, paragraphs: Paragraph[]): Promise<number> => {
     out,
     reportOf({ ...o, paper: basename(paper), paragraphs, answers, findings }),
   );
-  process.stdout.write(
-    `${summary(findings, paragraphs, relative(process.cwd(), out))}\n`,
-  );
+  process.stdout.write(`${summary(findings, paragraphs, out)}\n`);
   return answers.some((a) => a.error) ? 1 : 0;
 };
 
@@ -543,10 +500,7 @@ const read = async (o: Options, paragraphs: Paragraph[]): Promise<number> => {
 export async function main(argv: readonly string[]): Promise<number> {
   try {
     const o = optionsOf(argv);
-    const paragraphs = paragraphsFor(o);
-    if (!o.extractOnly) return await read(o, paragraphs);
-    process.stdout.write(`${prompts(paragraphs, o.venue).engineer}\n`);
-    return 0;
+    return await read(o, paragraphsFor(o));
   } catch (e) {
     if (!(e instanceof Refusal)) throw e;
     process.stderr.write(`cold read: ${e.message}\n`);

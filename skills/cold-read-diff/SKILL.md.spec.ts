@@ -74,8 +74,7 @@ this conversation, fixes nothing, and prints a short table when it is done.
    It diffs \`<paper.tex>\` against \`--base\` (default \`HEAD\`: the uncommitted edits), widens each
    changed line to its paragraph, drops working comments, floats and the bibliography, expands
    \`{{placeholders}}\` from \`--macros=<file.json>\`, and leaves every dash as written. Above 15
-   changed paragraphs it refuses: narrow \`--base\`. \`--extract-only\` prints what a reader
-   would get, without spending anything.
+   changed paragraphs it refuses: narrow \`--base\`.
 2. **What runs.** Two readers, in parallel, each \`claude -p --model sonnet --tools ""\` from an
    empty directory, each handed the paragraphs **as text in the prompt** and nothing else. A path
    is an invitation to read the neighbours, and reading the neighbours is how the check fails
@@ -95,8 +94,7 @@ this conversation, fixes nothing, and prints a short table when it is done.
    (\`ONLY-IF\` they know X). The reviewer is asked *whose result is this?* (\`WHOSE?\`) and *does
    it read like a paper at this venue?* (\`REGISTER\`). Both are asked for the dangerous class,
    \`CLEVER\`: a sentence that sounds clever but says less than it appears to.
-3. **Wait without blocking.** Progress lines go to the background job's stderr. Do the next
-   thing; the job's completion wakes you.
+3. **Do the next thing while it runs**; progress goes to the job's stderr, and its end wakes you.
 4. **Relay the table, not the report.** The script prints at most 15 lines: counts, the
    report's path, one row per finding. The full report, with both readers' answers verbatim and
    the tokens each spent, is in the paper's \`reviews/\` folder. Do not paste it into the

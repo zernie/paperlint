@@ -5,7 +5,7 @@
  * compiled `cold-read.js` (Node strips no types under node_modules).
  *
  * Usage: node cold-read.js <paper.tex> [--base=REV] [--venue=NAME] [--out=PATH]
- *                          [--macros=FILE.json] [--max=N] [--extract-only]
+ *                          [--macros=FILE.json] [--max=N]
  */
 import { main } from "./cold-read-core.ts";
 

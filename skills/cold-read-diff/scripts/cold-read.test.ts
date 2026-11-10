@@ -10,13 +10,14 @@ import { execFileSync } from "node:child_process";
 import { chmodSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { test } from "vitest";
+import { test, vi } from "vitest";
 import { z } from "zod";
 import { runNode, useTempDir, writeTree } from "../../../test/support.ts";
 import {
   changedLines,
   extract,
   findingsOf,
+  main,
   parseAnswer,
   summary,
 } from "./cold-read-core.ts";
@@ -174,29 +175,66 @@ process.stdout.write(JSON.stringify({ result: "\\u0060\\u0060\\u0060json\\n" + J
   };
 };
 
-/** One run of the command against a reader that finds something; shared by the next two tests. */
-const findsRun = (() => {
-  const dir = paperRepo("finds");
-  const reader = fakeReader("finds");
-  writeFileSync(join(dir, "m.json"), '{"nRepos": 40}');
-  const r = runNode(
-    SCRIPT,
-    ["paper.tex", "--venue=WS", "--out=reviews/r.md", "--macros=m.json"],
-    {
-      cwd: dir,
-      env: { PAPERLINT_COLD_READ_READER: reader.bin, FAKE_ANSWER: "finds" },
-    },
-  );
-  return { dir, r, calls: reader.calls() };
-})();
+/** `main` run in this process (so coverage sees it), its stdout and stderr captured. */
+const runMain = async (
+  argv: string[],
+  env: Readonly<Record<string, string>>,
+): Promise<{ status: number; stdout: string; stderr: string }> => {
+  const out: string[] = [];
+  const err: string[] = [];
+  const spies = [
+    vi
+      .spyOn(process.stdout, "write")
+      .mockImplementation((c) => out.push(String(c)) > 0),
+    vi
+      .spyOn(process.stderr, "write")
+      .mockImplementation((c) => err.push(String(c)) > 0),
+  ];
+  Object.entries(env).forEach(([k, v]) => vi.stubEnv(k, v));
+  try {
+    const status = await main(argv);
+    return { status, stdout: out.join(""), stderr: err.join("") };
+  } finally {
+    spies.forEach((s) => {
+      s.mockRestore();
+    });
+    vi.unstubAllEnvs();
+  }
+};
 
-test("the command: a short table to the caller, a report on disk, the paper untouched", () => {
-  const { dir, r } = findsRun;
+/** A run with a reader of `mode` on a fresh paper repo. */
+const runWith = async (mode: string, extra: string[] = []) => {
+  const dir = paperRepo(mode);
+  const reader = fakeReader(mode);
+  const r = await runMain([join(dir, "paper.tex"), ...extra], {
+    PAPERLINT_COLD_READ_READER: reader.bin,
+    FAKE_ANSWER: mode,
+  });
+  return { dir, r, reader };
+};
+
+/** What the readers of the next test were given; the test after it judges them. */
+const findsCalls: { args: string[]; cwd: string[]; stdin: string }[] = [];
+
+test("the command: a short table to the caller, a report on disk, the paper untouched", async () => {
+  const dir = paperRepo("finds");
+  writeFileSync(join(dir, "m.json"), '{"nRepos": 40}');
+  const reader = fakeReader("finds");
+  const out = join(dir, "reviews/r.md");
+  const r = await runMain(
+    [
+      join(dir, "paper.tex"),
+      "--venue=WS",
+      `--out=${out}`,
+      `--macros=${join(dir, "m.json")}`,
+    ],
+    { PAPERLINT_COLD_READ_READER: reader.bin, FAKE_ANSWER: "finds" },
+  );
   assert.equal(r.status, 0, r.stderr);
   assert.equal(
     r.stdout,
     [
-      "cold read: 2 paragraph(s), 2 finding(s) → reviews/r.md",
+      `cold read: 2 paragraph(s), 2 finding(s) → ${out}`,
       "| # | reader | verdict | sentence |",
       "|---|---|---|---|",
       "| 1 | engineer | CANNOT PARSE | Three answers, all of them after the fact. |",
@@ -204,7 +242,7 @@ test("the command: a short table to the caller, a report on disk, the paper unto
       "",
     ].join("\n"),
   );
-  const report = readFileSync(join(dir, "reviews/r.md"), "utf8");
+  const report = readFileSync(out, "utf8");
   assert.ok(
     report.includes(
       "| 1 | engineer | 2 | CANNOT PARSE | Three answers, all of them after the fact. | no question |",
@@ -216,22 +254,19 @@ test("the command: a short table to the caller, a report on disk, the paper unto
     EDITED,
     "the cold read edited the paper",
   );
+
+  findsCalls.push(...reader.calls());
 });
 
-test("the command: two readers, each given only the changed paragraphs, as text, from an empty dir", () => {
-  const { calls } = findsRun;
+test("the command: each reader gets only the changed paragraphs, as text, from an empty dir", () => {
+  const calls = findsCalls;
   assert.equal(calls.length, 2);
-  for (const c of calls) {
+  calls.forEach((c) => {
     assert.deepEqual(c.cwd, []);
-    assert.deepEqual(c.args, [
-      "-p",
-      "--model",
-      "sonnet",
-      "--tools",
-      "",
-      "--output-format",
-      "json",
-    ]);
+    assert.equal(
+      c.args.join(" "),
+      "-p --model sonnet --tools  --output-format json",
+    );
     assert.ok(
       c.stdin.includes(
         "[1]\nWe measure it with --no-verify on 40 repositories [citation].",
@@ -245,71 +280,80 @@ test("the command: two readers, each given only the changed paragraphs, as text,
       !c.stdin.includes("JUSTIFY"),
       "a working comment reached the reader",
     );
-  }
+  });
   assert.ok(
     calls.some((c) => c.stdin.includes("program-committee member at WS")),
   );
 });
 
-test("the command: a clean read reports no findings, and the default report lands in reviews/", () => {
-  const dir = paperRepo("clean");
-  const r = runNode(SCRIPT, ["paper.tex"], {
-    cwd: dir,
-    env: {
-      PAPERLINT_COLD_READ_READER: fakeReader("clean").bin,
-      FAKE_ANSWER: "clean",
-    },
-  });
+test("the command: a clean read reports no findings, and the default report lands in reviews/", async () => {
+  const { dir, r } = await runWith("clean");
   assert.equal(r.status, 0, r.stderr);
-  assert.match(
+  const [name] = readdirSync(join(dir, "reviews"));
+  assert.match(String(name), /^\d{4}-\d\d-\d\d-\d{6}-cold-read-diff\.md$/);
+  assert.equal(
     r.stdout,
-    /^cold read: 2 paragraph\(s\), 0 finding\(s\) → reviews\/\d{4}-\d\d-\d\d-\d{6}-cold-read-diff\.md\n$/,
+    `cold read: 2 paragraph(s), 0 finding(s) → ${join(dir, "reviews", String(name))}\n`,
   );
-  assert.equal(readdirSync(join(dir, "reviews")).length, 1);
+  assert.ok(
+    readFileSync(join(dir, "reviews", String(name)), "utf8").includes(
+      "## Findings\n\nNone.",
+    ),
+  );
   assert.match(r.stderr, /\{\{nRepos\}\} has no value; pass --macros/);
 });
 
-test("the command: a failing reader exits 1 and still writes what the other said", () => {
-  const dir = paperRepo("fail");
-  const r = runNode(SCRIPT, ["paper.tex", "--out=r.md"], {
-    cwd: dir,
-    env: {
-      PAPERLINT_COLD_READ_READER: fakeReader("fail").bin,
-      FAKE_ANSWER: "fail",
-    },
+test("the command: a failing reader exits 1; a reader that is not there exits 1 too", async () => {
+  const failed = await runWith("fail", ["--out=/dev/null"]);
+  assert.equal(failed.r.status, 1);
+  assert.match(
+    failed.r.stderr,
+    /engineer FAILED \(.*fail\.mjs exited 3: boom\)/,
+  );
+  const dir = paperRepo("missing");
+  const r = await runMain([join(dir, "paper.tex"), "--out=/dev/null"], {
+    PAPERLINT_COLD_READ_READER: join(root, "no-such-reader"),
   });
   assert.equal(r.status, 1);
-  assert.match(r.stderr, /engineer FAILED \(.*exited 3: boom\)/);
+  assert.match(r.stderr, /engineer FAILED \(.*no-such-reader spawn .*ENOENT\)/);
 });
 
-test("the command refuses: no change, above the cap, a bad flag, no paper", () => {
+test("the command refuses: above the cap, no change, a bad flag, no paper", async () => {
   const dir = paperRepo("refuse");
-  const run = (args: string[]) =>
-    runNode(SCRIPT, args, {
-      cwd: dir,
-      env: { PAPERLINT_COLD_READ_READER: "/nonexistent" },
-    });
-  const capped = run(["paper.tex", "--max=1"]);
-  assert.deepEqual(
-    [capped.status, capped.stderr],
-    [
-      2,
-      "cold read: 2 changed paragraphs since HEAD, above the cap of 1: narrow --base to fewer commits, or raise --max knowingly\n",
-    ],
-  );
+  const paper = join(dir, "paper.tex");
+  const run = async (args: string[]) => {
+    const r = await runMain(args, {});
+    return [r.status, r.stderr] as const;
+  };
+  const capped = await run([paper, "--max=1"]);
   execFileSync("git", ["checkout", "-q", "paper.tex"], { cwd: dir });
   assert.deepEqual(
     [
-      run(["paper.tex"]).stderr,
-      run(["paper.tex", "--bogus"]).stderr,
-      run([]).stderr,
-      run(["--max=0", "paper.tex"]).stderr,
+      capped,
+      await run([paper]),
+      await run([paper, "--bogus"]),
+      await run([]),
+      await run(["--max=0", paper]),
+      await run([join(dir, "nope.tex")]),
     ],
     [
-      "cold read: no changed prose in paper.tex since HEAD\n",
-      "cold read: unknown flag(s) --bogus\n",
-      "cold read: name exactly one paper .tex file\n",
-      "cold read: --max takes a positive integer\n",
+      [
+        2,
+        "cold read: 2 changed paragraphs since HEAD, above the cap of 1: narrow --base to fewer commits, or raise --max knowingly\n",
+      ],
+      [2, `cold read: no changed prose in ${paper} since HEAD\n`],
+      [2, "cold read: unknown flag(s) --bogus\n"],
+      [2, "cold read: name exactly one paper .tex file\n"],
+      [2, "cold read: --max takes a positive integer\n"],
+      [2, `cold read: ${join(dir, "nope.tex")} does not exist\n`],
     ],
   );
+});
+
+test("cold-read.ts: the entry runs main and turns an unexpected error into exit 2", () => {
+  const dir = paperRepo("entry");
+  writeFileSync(join(dir, "bad.json"), "{");
+  const r = runNode(SCRIPT, ["paper.tex", "--macros=bad.json"], { cwd: dir });
+  assert.equal(r.status, 2);
+  assert.match(r.stderr, /^cold read: .*JSON/);
 });
