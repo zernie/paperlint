@@ -91,8 +91,27 @@ const sourceOf = (src: string, first: number, last: number): string =>
   src
     .split("\n")
     .slice(first - 1, last)
-    .filter((line) => !line.trimStart().startsWith("%"))
+    .filter((line) => !isNote(line))
     .join("\n");
+
+/** A line that is only a `%` note. */
+const isNote = (line: string): boolean => line.trimStart().startsWith("%");
+
+/** Line ranges, overlapping ones merged: a footnote is its own passage on its host's lines. */
+const merged = (
+  ranges: readonly { readonly start: number; readonly end: number }[],
+): { start: number; end: number }[] =>
+  [...ranges]
+    .sort((a, b) => a.start - b.start)
+    .reduce<{ start: number; end: number }[]>((out, r) => {
+      const last = out.at(-1);
+      return last !== undefined && r.start <= last.end
+        ? [
+            ...out.slice(0, -1),
+            { start: last.start, end: Math.max(last.end, r.end) },
+          ]
+        : [...out, { start: r.start, end: r.end }];
+    }, []);
 
 /** Whether a changed line falls in `b`, or `b` holds both sides of a deletion point. */
 const touched = (
@@ -107,22 +126,27 @@ const touched = (
  * The changed paragraphs of `src`: every body passage (`bodyProse`: the parse of the paper, without
  * comments, headings, floats, code or the back matter) that a changed line falls in, whole, and
  * every passage that holds both sides of a `deletions` point. The parse only finds the paragraph;
- * its text is the source as written, so no macro is rendered, dropped or guessed at.
+ * its text is the source as written, so no macro is rendered, dropped or guessed at. A changed line
+ * that is only a `%` note changes no prose, so it selects nothing.
  */
 export const extract = (
   src: string,
   lines: readonly number[],
   deletions: readonly number[] = [],
-): Paragraph[] =>
-  latexReader
-    .bodyProse(src)
-    .map(spanOf)
-    .map((span) => ({
-      start: lineAt(src, span.start),
-      end: lineAt(src, span.end - 1),
-    }))
-    .map((b) => ({ ...b, text: sourceOf(src, b.start, b.end) }))
-    .filter((b) => touched(b, lines, deletions));
+): Paragraph[] => {
+  const notes = new Set(
+    src.split("\n").flatMap((line, i) => (isNote(line) ? [i + 1] : [])),
+  );
+  const prose = lines.filter((n) => !notes.has(n));
+  return merged(
+    latexReader.bodyProse(src).map((p) => {
+      const span = spanOf(p);
+      return { start: lineAt(src, span.start), end: lineAt(src, span.end - 1) };
+    }),
+  )
+    .filter((b) => touched(b, prose, deletions))
+    .map((b) => ({ ...b, text: sourceOf(src, b.start, b.end) }));
+};
 
 /** The flags a run reads. */
 interface Options {

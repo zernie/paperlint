@@ -86,6 +86,20 @@ test("extract: a macro at either end of a paragraph reaches the reader whole", (
   );
 });
 
+test("extract: a footnote is not a second paragraph, and a changed % line inside a paragraph selects nothing", () => {
+  assert.deepEqual(
+    extract("A claim\\footnote{A qualification.} continues.\n", [1]),
+    [
+      {
+        start: 1,
+        end: 1,
+        text: "A claim\\footnote{A qualification.} continues.",
+      },
+    ],
+  );
+  assert.deepEqual(extract("One line.\n% a note\nTwo line.\n", [2]), []);
+});
+
 test("extract: whole paragraphs, comment lines and floats dropped, nothing rewritten", () => {
   // What `git diff -U0` reports for EDITED: the comment (6), the paragraph (7–8), a table row (11), the last line of prose (14).
   assert.deepEqual(extract(EDITED, [6, 7, 8, 11, 14]), [
