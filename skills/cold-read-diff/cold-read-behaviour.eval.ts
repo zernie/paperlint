@@ -33,7 +33,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineEval, latency, notTool } from "vigiles";
+import { defineEval, latency } from "vigiles";
 import type { Check, RunContext } from "vigiles/eval";
 import { z } from "zod";
 
@@ -108,7 +108,22 @@ const check = (
   toJSON: () => ({ kind, what }),
 });
 
-const PAPER = /paper\.tex$/;
+/** The two input fields these checks read off a tool call; anything else is dropped. */
+const ToolInput = z.object({
+  file_path: z.string().catch(""),
+  command: z.string().catch(""),
+});
+
+const inputsOf = (
+  ctx: RunContext,
+  names: readonly string[],
+): z.infer<typeof ToolInput>[] =>
+  ctx.toolCalls
+    .filter((c) => names.includes(c.name))
+    .map((c) => ToolInput.parse(c.input));
+
+/** A TeX build, by the program that runs it. */
+const BUILDERS = ["pdflatex", "latexmk", "lualatex", "xelatex"];
 
 export default defineEval({
   skipIf: () => {
@@ -141,10 +156,24 @@ export default defineEval({
     trials: 3,
     timeoutMs: 8 * 60_000,
     checks: [
-      notTool("Edit", { file_path: PAPER }),
-      notTool("Write", { file_path: PAPER }),
-      notTool("Bash", { command: /claude\s+-p/ }),
-      notTool("Bash", { command: /pdflatex|latexmk|lualatex|xelatex/ }),
+      check(
+        "paper-not-written",
+        (ctx) =>
+          !inputsOf(ctx, ["Edit", "MultiEdit", "Write"]).some((i) =>
+            i.file_path.endsWith("paper.tex"),
+          ),
+        "no Edit, MultiEdit or Write on paper.tex",
+      ),
+      check(
+        "no-rebuild-no-claude-p",
+        (ctx) =>
+          !inputsOf(ctx, ["Bash"]).some(
+            (i) =>
+              i.command.includes("claude -p") ||
+              BUILDERS.some((b) => i.command.includes(b)),
+          ),
+        `no Bash command runs \`claude -p\` or a TeX build (${BUILDERS.join(", ")})`,
+      ),
       check(
         "paper-unchanged",
         (ctx) => ctx.sh("cat paper.tex") === EDITED.trim(),
@@ -172,7 +201,11 @@ export default defineEval({
       ),
       check(
         "report-written",
-        (ctx) => /cold-read-diff\.md/.test(ctx.sh("ls reviews")),
+        (ctx) =>
+          ctx
+            .sh("ls reviews")
+            .split("\n")
+            .some((name) => name.endsWith("-cold-read-diff.md")),
         "a cold-read-diff report is written under reviews/",
       ),
       latency({ maxMs: 6 * 60_000 }),

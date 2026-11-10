@@ -71,6 +71,17 @@ test("extract: whole paragraphs, comments and floats dropped, macros expanded, d
     [],
     "a heading, a comment or a table row is not prose",
   );
+  assert.deepEqual(
+    extract("Two groups {{a}{b}} and one {x} are not placeholders.\n", [1]),
+    [
+      {
+        start: 1,
+        end: 1,
+        text: "Two groups ab and one x are not placeholders.",
+        unexpanded: [],
+      },
+    ],
+  );
 });
 
 /** A paper repo with one commit and an edit on top. */
@@ -191,6 +202,13 @@ test("cold-read.ts: the entry prints the paragraphs, and turns an unexpected err
   );
   writeFileSync(join(dir, "bad.json"), "{");
   const bad = runNode(SCRIPT, ["paper.tex", "--macros=bad.json"], { cwd: dir });
-  assert.equal(bad.status, 2);
-  assert.match(bad.stderr, /^cold read: .*JSON/);
+  // The parser's own words, from the same Node the child runs on: they differ between versions.
+  const why = ((): string => {
+    try {
+      return String(JSON.parse("{"));
+    } catch (e) {
+      return e instanceof Error ? e.message : String(e);
+    }
+  })();
+  assert.deepEqual([bad.status, bad.stderr], [2, `cold read: ${why}\n`]);
 });

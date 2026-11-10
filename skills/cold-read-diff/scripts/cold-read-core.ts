@@ -17,7 +17,8 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 import { z } from "zod";
-import { latexReader } from "#src/adapters/latex/index";
+import { visit } from "@unified-latex/unified-latex-util-visit";
+import { latexReader, parseLatex } from "#src/adapters/latex/index";
 import type { Passage, Span } from "#src/domain/tex-document";
 import { passageText } from "#src/paper-prose";
 
@@ -35,18 +36,73 @@ export interface Paragraph {
 const MacrosSchema = z.record(z.string(), z.union([z.string(), z.number()]));
 type Macros = z.infer<typeof MacrosSchema>;
 
-/** The 1-based line numbers of the NEW file that a `git diff -U0` adds or changes. */
+/**
+ * The 1-based line numbers of the NEW file that a `git diff -U0` adds or changes, read off each
+ * hunk header `@@ -a,b +c,d @@`: lines c to c+d-1 (`d` absent is 1, `d` of 0 is a pure deletion).
+ */
 export const changedLines = (diff: string): number[] =>
-  [...diff.matchAll(/^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/gm)].flatMap(
-    (m) => {
-      const start = Number(m[1]);
-      const count = m[2] === undefined ? 1 : Number(m[2]);
-      return Array.from({ length: count }, (_, i) => start + i);
-    },
-  );
+  diff
+    .split("\n")
+    .filter((line) => line.startsWith("@@ "))
+    .flatMap((line) => {
+      const [start = "0", count = "1"] = (line.split(" ")[2] ?? "")
+        .slice(1)
+        .split(",");
+      return Array.from({ length: Number(count) }, (_, i) => Number(start) + i);
+    });
 
-/** A `{{placeholder}}` a build fills in. Template syntax, not LaTeX, so the parser cannot see it. */
-const PLACEHOLDER = /\{\{\s*([\w.-]+)\s*\}\}/g;
+/** A `{{placeholder}}` a build fills in: where it stands in the source, its name, how it is written. */
+interface Placeholder {
+  readonly start: number;
+  readonly end: number;
+  readonly name: string;
+  readonly written: string;
+}
+
+/**
+ * The `{{placeholders}}` of `src`, read off its parse: a group that holds exactly one group, which
+ * holds only text. `{x}` is one group and `{{a}{b}}` holds two, so neither is a placeholder.
+ */
+const placeholdersOf = (src: string): Placeholder[] => {
+  const found: Placeholder[] = [];
+  visit(parseLatex(src).root, (node) => {
+    if (node.type !== "group" || node.content.length !== 1) return;
+    const [inner] = node.content;
+    const start = node.position?.start.offset;
+    const end = node.position?.end.offset;
+    if (
+      inner?.type !== "group" ||
+      start === undefined ||
+      end === undefined ||
+      !inner.content.every(
+        (n) => n.type === "string" || n.type === "whitespace",
+      )
+    )
+      return;
+    found.push({
+      start,
+      end,
+      name: src.slice(start + 2, end - 2).trim(),
+      written: src.slice(start, end),
+    });
+  });
+  return found;
+};
+
+/** `src` with each placeholder `macros` has a value for written in, the last first so offsets hold. */
+const filled = (
+  src: string,
+  places: readonly Placeholder[],
+  macros: Macros,
+): string =>
+  [...places]
+    .sort((a, b) => b.start - a.start)
+    .reduce((text, p) => {
+      const value = macros[p.name];
+      return value === undefined
+        ? text
+        : `${text.slice(0, p.start)}${String(value).replaceAll("\n", " ")}${text.slice(p.end)}`;
+    }, src);
 
 /** Where a passage's visible text stands in the source: its first to its last non-blank piece. */
 const spanOf = (p: Passage): Span => {
@@ -78,20 +134,26 @@ export const extract = (
   lines: readonly number[],
   macros: Macros = {},
 ): Paragraph[] => {
-  const src = tex.replace(PLACEHOLDER, (m, k: string) =>
-    String(macros[k] ?? m),
-  );
+  const places = placeholdersOf(tex);
+  const missing = places.filter((p) => macros[p.name] === undefined);
+  const src = filled(tex, places, macros);
   return latexReader
     .bodyProse(src)
     .map((p) => ({ p, span: spanOf(p) }))
-    .map(({ p, span }) => ({
-      start: lineAt(src, span.start),
-      end: lineAt(src, span.end - 1),
-      text: passageText(p),
-      unexpanded: [
-        ...src.slice(span.start, span.end).matchAll(PLACEHOLDER),
-      ].map((m) => m[0]),
-    }))
+    .map(({ p, span }) => {
+      const start = lineAt(src, span.start);
+      const end = lineAt(src, span.end - 1);
+      return {
+        start,
+        end,
+        text: passageText(p),
+        unexpanded: missing
+          .filter(
+            (m) => lineAt(tex, m.start) >= start && lineAt(tex, m.start) <= end,
+          )
+          .map((m) => m.written),
+      };
+    })
     .filter(
       (b) => b.text !== "" && lines.some((n) => n >= b.start && n <= b.end),
     );
