@@ -9,7 +9,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test, vi } from "vitest";
 import { runNode, useTempDir, writeTree } from "../../../test/support.ts";
-import { changedLines, extract, main, numbered } from "./cold-read-core.ts";
+import { changedLines, extract, main } from "./cold-read-core.ts";
+import { numbered, prompts } from "./cold-read-report.ts";
 
 const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), "cold-read.ts");
 const root = useTempDir("cold-read-");
@@ -43,6 +44,11 @@ test("changedLines: the new-file lines of each hunk, a one-line hunk with no cou
   const diff =
     "@@ -3 +3 @@\n-a\n+b\n@@ -10,0 +11,2 @@\n+c\n+d\n@@ -20,2 +22,0 @@\n";
   assert.deepEqual(changedLines(diff), [3, 11, 12]);
+  assert.deepEqual(
+    changedLines("@@ broken\n@@\n"),
+    [],
+    "a header with no +c,d field adds nothing",
+  );
 });
 
 test("extract: whole paragraphs, comments and floats dropped, macros expanded, dashes kept", () => {
@@ -67,17 +73,27 @@ test("extract: whole paragraphs, comments and floats dropped, macros expanded, d
     [["{{nRepos}}"]],
   );
   assert.deepEqual(
+    extract("We ran {{a}} of {{ b }} cells.\n", [1], { a: 3, b: 12 }).map(
+      (p) => p.text,
+    ),
+    ["We ran 3 of 12 cells."],
+    "two placeholders on one line, each filled where it stands",
+  );
+  assert.deepEqual(
     extract(EDITED, [3, 6, 11]),
     [],
     "a heading, a comment or a table row is not prose",
   );
   assert.deepEqual(
-    extract("Two groups {{a}{b}} and one {x} are not placeholders.\n", [1]),
+    extract(
+      "Two groups {{a}{b}}, one {x}, and {{\\textbf{y}}} are not placeholders.\n",
+      [1],
+    ),
     [
       {
         start: 1,
         end: 1,
-        text: "Two groups ab and one x are not placeholders.",
+        text: "Two groups ab, one x, and y are not placeholders.",
         unexpanded: [],
       },
     ],
@@ -120,18 +136,24 @@ const runMain = (
   }
 };
 
-test("the command prints only the changed paragraphs, numbered, and leaves the paper alone", () => {
+test("the command prints both readers' prompts, the changed paragraphs inside, and leaves the paper alone", () => {
   const dir = paperRepo("prints");
   writeFileSync(join(dir, "m.json"), '{"nRepos": 40}');
   const r = runMain([
     join(dir, "paper.tex"),
+    "--venue=WS",
     `--macros=${join(dir, "m.json")}`,
   ]);
+  const paragraphs = extract(EDITED, [7, 8, 14], { nRepos: 40 });
+  assert.equal(
+    numbered(paragraphs),
+    "¶1 We measure it with --no-verify on 40 repositories [1]. Agents followed 71% of them.\n\n" +
+      "¶2 Three answers, all of them after the fact.",
+  );
+  const asked = prompts(paragraphs, "WS");
   assert.deepEqual(r, {
     status: 0,
-    stdout:
-      "¶1 We measure it with --no-verify on 40 repositories [1]. Agents followed 71% of them.\n\n" +
-      "¶2 Three answers, all of them after the fact.\n",
+    stdout: `=== engineer ===\n${asked.engineer}\n\n=== reviewer ===\n${asked.reviewer}\n`,
     stderr: "",
   });
   assert.equal(readFileSync(join(dir, "paper.tex"), "utf8"), EDITED);
@@ -145,8 +167,8 @@ test("the command warns of a placeholder it has no value for, and still prints",
     "cold read: warning — {{nRepos}} has no value; pass --macros\n",
   );
   assert.ok(
-    r.stdout.startsWith(
-      "¶1 We measure it with --no-verify on nRepos repositories",
+    r.stdout.includes(
+      "\n\n¶1 We measure it with --no-verify on nRepos repositories",
     ),
   );
 });
@@ -176,6 +198,7 @@ test("the command refuses: above the cap, no change, a bad flag, no paper", () =
       run([paper]),
       run([paper, "--bogus"]),
       run([]),
+      run([paper, paper]),
       run(["--max=0", paper]),
       run([join(dir, "nope.tex")]),
     ],
@@ -187,9 +210,20 @@ test("the command refuses: above the cap, no change, a bad flag, no paper", () =
       [2, `cold read: no changed prose in ${paper} since HEAD\n`],
       [2, "cold read: unknown flag(s) --bogus\n"],
       [2, "cold read: name exactly one paper .tex file\n"],
+      [2, "cold read: name exactly one paper .tex file\n"],
       [2, "cold read: --max takes a positive integer\n"],
       [2, `cold read: ${join(dir, "nope.tex")} does not exist\n`],
     ],
+  );
+});
+
+test("main: an error that is not a refusal is thrown, not reported as one", () => {
+  const dir = paperRepo("throws");
+  writeFileSync(join(dir, "bad.json"), "{");
+  assert.throws(
+    () =>
+      runMain([join(dir, "paper.tex"), `--macros=${join(dir, "bad.json")}`]),
+    SyntaxError,
   );
 });
 

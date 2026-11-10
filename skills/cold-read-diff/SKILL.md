@@ -4,7 +4,7 @@ description: "Send the just-changed paragraphs of a LaTeX research paper to two 
 allowed-tools: [Bash, Read, Write, Agent]
 ---
 
-<!-- vigiles:sha256:c80ea97a69705308 compiled from skills/cold-read-diff/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:eb37c7c8ebcddebe compiled from skills/cold-read-diff/SKILL.md.spec.ts -->
 
 # cold-read-diff — the reader who cannot fake understanding
 
@@ -19,94 +19,30 @@ Why it was built: `docs/incidents.md`, 2026-08-05.
 
 ## How to run it
 
-No fork and no extra orchestrator: you run it in this session, step by step, and the
-only model calls are the two readers. They start in the background, so you keep working.
+No fork: you run it here, and the only model calls are the two readers, in the background.
 
-1. **Take the extract.** It is plain text of the changed paragraphs and nothing else:
-
-   ```
-   node ${CLAUDE_SKILL_DIR}/scripts/cold-read.js <paper.tex> [--base=REV] [--macros=<file.json>]
-   ```
-
-   `--base` defaults to `HEAD` (the uncommitted edits). It widens each changed line to its
-   paragraph, drops working comments, floats and the bibliography, expands `{{placeholders}}`
-   from `--macros`, and leaves every dash as written. Above 15 changed paragraphs it refuses:
-   narrow `--base`.
-2. **Start both readers in ONE message, each with the Agent tool, `model: "sonnet"` and
-   `run_in_background: true`.** A subagent starts with no conversation history. Its prompt is
-   the persona's text below, then the extract pasted verbatim — no path, no title, no abstract,
-   no word about the paper. A path is an invitation to read the neighbours, and reading the
-   neighbours is how the check fails silently. `sonnet`: competent, cheap, and not the model
-   that wrote the sentence.
-
-   | persona | who | what only it can report |
-   |---|---|---|
-   | **the engineer** | a strong practitioner outside academia, reading closely | a sentence that parses only for a reader who already holds the idea |
-   | **the workshop reviewer** | a PC member at the target venue with 40 minutes for the whole paper, skimming, Confidence 3 | a sentence whose result has no owner, a relation between claims left to infer, a sentence that does not read like a paper at this venue |
-
-   Neither replaces the other: a sentence with no stated owner reads to the engineer as
-   confident, and the engineer does not know the venue's register. The reviewer is told the
-   venue's name and nothing else.
-
-   **The engineer's prompt:** *You are a strong software engineer outside academia. Answer from
-   the text below alone; use no tools. For every sentence: what does it claim, in your own words?
-   If restating needs a guess, the verdict is `CANNOT PARSE` and you say what stopped you (an
-   undefined term, a pronoun with no referent, a number with no denominator, two clauses that do
-   not connect). Would a reader who stops here understand it? If only one who knows X would, the
-   verdict is `ONLY-IF`, naming X. A sentence that sounds clever but says less than it appears
-   to is `CLEVER`.*
-
-   **The reviewer's prompt:** *You are a programme-committee member at <venue>, with 40 minutes
-   for a whole paper, skimming, Confidence 3. Answer from the text below alone; use no tools. For
-   every sentence: whose result does it state — the authors' measurement, a cited work, or a
-   property of the world? If you cannot tell, the verdict is `WHOSE?`. Does it read like a paper
-   at this venue? If not, `REGISTER`, and what a paper there would write instead (an aphorism, a
-   fragment, a colloquial turn, two claims side by side with the relation unstated). A sentence
-   that sounds clever but says less than it appears to is `CLEVER`.*
-
-   Both end with: *Reply with one markdown table, `| ¶ | verdict | sentence | why |`, one row per
-   sentence that is not fine, the sentence quoted exactly; nothing else. No rows if every sentence
-   reads.* So what comes back is the findings, not a restatement of every sentence.
-3. **Keep working, for at most 5 minutes.** Each reader's completion arrives as a notification;
-   on two paragraphs a reader answers in about 10 s. A reader that has not answered after 5
-   minutes is not waited for: stop it, and its column in the report is `no answer`, not a
-   verdict.
-4. **Check the term findings against the paper.** For each `CANNOT PARSE` or `ONLY-IF` that
-   names a term, search the paper for where the term is defined. If it is, mark the row
-   `defined in §N`: the reader was right that THIS paragraph does not carry it, so it stays a
-   finding, and the author decides whether a reminder is needed or it is `wontfix`. The
-   readers' verdicts are never changed; only this column is added, after they answered.
-5. **Write the report, relay the table.** Save both answers verbatim, with the extract, to
-   `reviews/<date>-cold-read-diff.md` in the paper's folder. Show the author at most 15 lines:
-   the count, the report's path, and one row per finding (the first ten).
-6. **The author decides the fixes.** The read changes nothing in the paper and builds nothing.
-   Apply a fix only when asked, or when your task already was "fix the prose", and then as a
-   rewrite of the whole thought, never an excision (see the rule below). Record each finding in
-   the report's frontmatter once it is decided.
-7. **Confirm once, on the fix.** Run steps 1–5 again on the rewritten paragraphs. An edit is not
-   done until the engineer parses the replacement AND the reviewer finds its owner and its
-   register. A fix for the engineer that goes colloquial is a new `REGISTER` finding, and the
-   reverse holds too. One confirming round; do not loop past it.
-
-## The report's frontmatter — the findings, as records
-
-Once the findings are decided, the report opens with YAML frontmatter that lists them, one
-record per finding.
-`paperlint lint` validates it (`review/frontmatter`): an **open** finding must name the
-pipeline `cause` that let it through — fix that, and the text edit falls out of running the
-fixed tool.
-
-```yaml
----
-findings:
-  - id: 1
-    status: open            # open | fixed | wontfix
-    cause: missing-skill    # skill-defect | missing-skill | hook | rule — required when open
-    title: "§3 opens on a term the reader has not met"
-  - id: 2
-    status: fixed
----
-```
+1. **Print the prompts.** `node ${CLAUDE_SKILL_DIR}/scripts/cold-read.js <paper.tex> --venue="<venue>"`
+   prints two prompts, under `=== engineer ===` and `=== reviewer ===`, each holding the
+   paragraphs changed since `--base` (default `HEAD`) as plain text. Above 15 paragraphs it
+   refuses: narrow `--base`. `{{placeholders}}` need `--macros=<file.json>`.
+2. **Start both readers in ONE message**, each with the Agent tool, `model: "sonnet"`,
+   `run_in_background: true`, and its prompt exactly as printed: no path, no title, no word
+   about the paper. The engineer asks what each sentence claims; the reviewer, told only the
+   venue, asks whose result it states and whether it reads like a paper there.
+3. **Keep working, at most 5 minutes.** A reader that has not answered by then is `none`.
+4. **Write the report.** Save each answer verbatim to a file, then run
+   `node ${CLAUDE_SKILL_DIR}/scripts/cold-read.js report <paper.tex> --venue="<venue>" --engineer=<file|none> --reviewer=<file|none>`.
+   It writes the report under the paper's `reviews/` and prints at most 15 lines: show the
+   author those, not the answers.
+5. **Check the term findings against the paper.** For a `CANNOT PARSE` or `ONLY-IF` that names
+   a term the paper defines elsewhere, tell the author where (§N). The verdict stands: this
+   paragraph does not carry the term, and the author decides if it needs a reminder.
+6. **The author decides the fixes.** The read changes nothing and builds nothing. Fix only when
+   asked, as a rewrite of the whole thought (see the rules). Record each decided finding in the
+   report's frontmatter (`findings:`, checked by `review/frontmatter`; an `open` one names its
+   `cause`: skill-defect, missing-skill, hook or rule).
+7. **Confirm once, on the fix:** steps 1–4 on the rewritten paragraphs. Done when the engineer
+   parses it AND the reviewer finds its owner and register. One round, no loop.
 
 ## Rules
 
