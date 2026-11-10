@@ -1,6 +1,6 @@
 /**
  * cold-read-core.ts: the extract a cold read's readers are given — only the changed paragraphs,
- * whole, as plain text — and the command that prints it. No model, no network.
+ * whole, as their LaTeX source — and the command that prints it. No model, no network.
  */
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -61,71 +61,44 @@ test("extract: a sentence deleted inside a paragraph selects it; a whole paragra
   const tex = "First paragraph, line one.\nline two.\n\nSecond paragraph.\n";
   // A line deleted between new lines 1 and 2 (inside the first paragraph): +1,0.
   assert.deepEqual(
-    extract(tex, [], {}, [1]).map((p) => p.text),
-    ["First paragraph, line one. line two."],
+    extract(tex, [], [1]).map((p) => p.text),
+    ["First paragraph, line one.\nline two."],
   );
   // A paragraph deleted between new lines 3 (blank) and 4: neither side is in one passage.
-  assert.deepEqual(extract(tex, [], {}, [3]), []);
+  assert.deepEqual(extract(tex, [], [3]), []);
 });
 
-test("extract: math is kept as its source, so the sentence keeps its claim", () => {
-  assert.deepEqual(
-    extract(
-      "Let $n$ be the sample size. We require $n > 0$ and \\(k\\) runs (Section~\\ref{s}).\n",
-      [1],
-    ).map((p) => p.text),
-    [
-      "Let $n$ be the sample size. We require $n > 0$ and \\(k\\) runs (Section 1).",
-    ],
-  );
+test("extract: the paragraph's LaTeX as written — math, \\num, \\verb, \\ref and placeholders untouched", () => {
+  const line =
+    "Let $n > 0$; we ran \\num{40} runs with \\verb|--no-verify| on {{nRepos}} repos (Section~\\ref{s}).";
+  assert.deepEqual(extract(`${line}\n`, [1]), [
+    { start: 1, end: 1, text: line },
+  ]);
 });
 
-test("extract: whole paragraphs, comments and floats dropped, macros expanded, dashes kept", () => {
+test("extract: whole paragraphs, comment lines and floats dropped, nothing rewritten", () => {
   // What `git diff -U0` reports for EDITED: the comment (6), the paragraph (7–8), a table row (11), the last line of prose (14).
-  const lines = [6, 7, 8, 11, 14];
-  assert.deepEqual(extract(EDITED, lines, { nRepos: 40 }), [
+  assert.deepEqual(extract(EDITED, [6, 7, 8, 11, 14]), [
     {
       start: 7,
       end: 8,
-      text: "We measure it with --no-verify on 40 repositories [1]. Agents followed 71% of them.",
-      unexpanded: [],
+      text: "We measure it with \\texttt{--no-verify} on {{nRepos}} repositories~\\cite{x}.\nAgents followed 71\\% of them.",
     },
     {
       start: 14,
       end: 14,
       text: "Three answers, all of them after the fact.",
-      unexpanded: [],
     },
   ]);
-  assert.deepEqual(
-    extract(EDITED, [8], {}).map((p) => p.unexpanded),
-    [["{{nRepos}}"]],
-  );
-  assert.deepEqual(
-    extract("We ran {{a}} of {{ b }} cells.\n", [1], { a: 3, b: 12 }).map(
-      (p) => p.text,
-    ),
-    ["We ran 3 of 12 cells."],
-    "two placeholders on one line, each filled where it stands",
-  );
   assert.deepEqual(
     extract(EDITED, [3, 6, 11]),
     [],
     "a heading, a comment or a table row is not prose",
   );
   assert.deepEqual(
-    extract(
-      "Two groups {{a}{b}}, one {x}, and {{\\textbf{y}}} are not placeholders.\n",
-      [1],
-    ),
-    [
-      {
-        start: 1,
-        end: 1,
-        text: "Two groups ab, one x, and y are not placeholders.",
-        unexpanded: [],
-      },
-    ],
+    extract("One line.\n% a working note\nTwo line.\n", [1]).map((p) => p.text),
+    ["One line.\nTwo line."],
+    "a comment line inside the paragraph is not handed to the reader",
   );
 });
 
@@ -167,40 +140,22 @@ const runMain = (
 
 test("the command prints only the changed paragraphs, numbered, and leaves the paper alone", () => {
   const dir = paperRepo("prints");
-  writeFileSync(join(dir, "m.json"), '{"nRepos": 40}');
-  const r = runMain([
-    join(dir, "paper.tex"),
-    `--macros=${join(dir, "m.json")}`,
-  ]);
+  const r = runMain([join(dir, "paper.tex")]);
   assert.deepEqual(r, {
     status: 0,
     stdout:
-      "¶1 We measure it with --no-verify on 40 repositories [1]. Agents followed 71% of them.\n\n" +
+      "¶1 We measure it with \\texttt{--no-verify} on {{nRepos}} repositories~\\cite{x}.\nAgents followed 71\\% of them.\n\n" +
       "¶2 Three answers, all of them after the fact.\n",
     stderr: "",
   });
   assert.equal(readFileSync(join(dir, "paper.tex"), "utf8"), EDITED);
 });
 
-test("the command warns of a placeholder it has no value for, and still prints", () => {
-  const r = runMain([join(paperRepo("warns"), "paper.tex")]);
-  assert.equal(r.status, 0);
-  assert.equal(
-    r.stderr,
-    "cold read: warning — {{nRepos}} has no value; pass --macros\n",
-  );
-  assert.ok(
-    r.stdout.startsWith(
-      "¶1 We measure it with --no-verify on nRepos repositories",
-    ),
-  );
-});
-
 test("numbered: one block per paragraph, nothing else", () => {
   assert.equal(
     numbered([
-      { start: 1, end: 1, text: "A.", unexpanded: [] },
-      { start: 3, end: 4, text: "B.", unexpanded: [] },
+      { start: 1, end: 1, text: "A." },
+      { start: 3, end: 4, text: "B." },
     ]),
     "¶1 A.\n\n¶2 B.",
   );
@@ -242,11 +197,9 @@ test("the command refuses: above the cap, no change, a bad flag, no paper", () =
 
 test("main: an error that is not a refusal is thrown, not reported as one", () => {
   const dir = paperRepo("throws");
-  writeFileSync(join(dir, "bad.json"), "{");
   assert.throws(
-    () =>
-      runMain([join(dir, "paper.tex"), `--macros=${join(dir, "bad.json")}`]),
-    SyntaxError,
+    () => runMain([join(dir, "paper.tex"), "--base=no-such-rev"]),
+    /git diff/u,
   );
 });
 
@@ -257,15 +210,11 @@ test("cold-read.ts: the entry prints the paragraphs, and turns an unexpected err
   assert.ok(
     ok.stdout.endsWith("¶2 Three answers, all of them after the fact.\n"),
   );
-  writeFileSync(join(dir, "bad.json"), "{");
-  const bad = runNode(SCRIPT, ["paper.tex", "--macros=bad.json"], { cwd: dir });
-  // The parser's own words, from the same Node the child runs on: they differ between versions.
-  const why = ((): string => {
-    try {
-      return String(JSON.parse("{"));
-    } catch (e) {
-      return e instanceof Error ? e.message : String(e);
-    }
-  })();
-  assert.deepEqual([bad.status, bad.stderr], [2, `cold read: ${why}\n`]);
+  const bad = runNode(SCRIPT, ["paper.tex", "--base=no-such-rev"], {
+    cwd: dir,
+  });
+  assert.deepEqual(
+    [bad.status, bad.stderr.includes("cold read: Command failed: git diff")],
+    [2, true],
+  );
 });

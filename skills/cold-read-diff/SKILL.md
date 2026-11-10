@@ -4,7 +4,7 @@ description: "Send just-changed paper prose to two readers with NO context — a
 allowed-tools: [Bash, Read, Write, Agent]
 ---
 
-<!-- vigiles:sha256:a3979c213e56b2b8 compiled from skills/cold-read-diff/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:ec00d6dc839ca468 compiled from skills/cold-read-diff/SKILL.md.spec.ts -->
 
 # cold-read-diff — the reader who cannot fake understanding
 
@@ -59,16 +59,16 @@ one, and its confusion is the finding.
 No fork and no extra orchestrator: you run it in this session, step by step, and the
 only model calls are the two readers. They start in the background, so you keep working.
 
-1. **Take the extract.** It is plain text of the changed paragraphs and nothing else:
+1. **Take the extract.** It is the LaTeX source of the changed paragraphs and nothing else:
 
    ```
-   node ${CLAUDE_SKILL_DIR}/scripts/cold-read.js <paper.tex> [--base=REV] [--macros=<file.json>]
+   node ${CLAUDE_SKILL_DIR}/scripts/cold-read.js <paper.tex> [--base=REV]
    ```
 
    `--base` defaults to `HEAD` (the uncommitted edits). It widens each changed line to its
-   paragraph, drops working comments, floats and the bibliography, expands `{{placeholders}}`
-   from `--macros`, and leaves every dash as written. Above 15 changed paragraphs it refuses:
-   narrow `--base`.
+   paragraph and drops working comments, floats and the bibliography. The paragraph itself is the
+   source as written, macros and all: only TeX knows what a macro prints (#462). Above 15 changed
+   paragraphs it refuses: narrow `--base`.
 2. **Start both readers in ONE message, each with the Agent tool, `model: "sonnet"` and
    `run_in_background: true`.** A subagent starts with no conversation history. Its prompt is
    the persona's text below, then the extract pasted verbatim — no path, no title, no abstract,
@@ -101,7 +101,8 @@ only model calls are the two readers. They start in the background, so you keep 
    fragment, a colloquial turn, two claims side by side with the relation unstated). A sentence
    that sounds clever but says less than it appears to is `CLEVER`.*
 
-   Both end with: *Reply with one markdown table, `| ¶ | verdict | sentence | why |`, one row per
+   Both say first: *The text is LaTeX source; read it as the printed sentence. A `{{name}}` is a
+   value the build fills in, not a missing one.* Both end with: *Reply with one markdown table, `| ¶ | verdict | sentence | why |`, one row per
    sentence that is not fine, the sentence quoted exactly; nothing else. No rows if every sentence
    reads.* So what comes back is the findings, not a restatement of every sentence.
 3. **Keep working, for at most 5 minutes.** Each reader's completion arrives as a notification;
@@ -134,14 +135,14 @@ changed, so they were not in the diff.
 
 Two more things the same run proved:
 
-- **Expand build-time macros first.** The reader saw seven raw `{{placeholders}}` and correctly
+- **Say what a placeholder is.** The reader saw seven raw `{{placeholders}}` and correctly
   reported that every headline number was missing. That is a true statement about the extract and a
-  false one about the paper.
+  false one about the paper, so the prompt says a `{{name}}` is filled in by the build.
 - **Strip working comments.** He graded `% JUSTIFY …` comment notes as prose because he could not tell
   them apart — and said so, which is itself a finding about the extract.
 
 **So** `scripts/cold-read.js` takes the changed lines, widens each to its enclosing paragraph,
-expands macros, drops comments, and prints continuous prose for the reader. The findings that survive that are worth the run; the
+drops comments, and prints the paragraph's source for the reader. The findings that survive that are worth the run; the
 ones that do not are noise, and noise is how this check gets muted.
 
 ## The report's frontmatter — the findings, as records

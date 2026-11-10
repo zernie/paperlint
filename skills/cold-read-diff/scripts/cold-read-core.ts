@@ -1,25 +1,25 @@
 /**
  * cold-read-core.ts — what the cold read's readers are given: the paragraphs a paper diff
- * changed, as plain text. It calls no model; the skill hands this text to two context-free
+ * changed, as their LaTeX source. It calls no model; the skill hands this text to two context-free
  * readers (`SKILL.md`, "How to run it").
  *
  * WHY IT SHIPS (#301). A run without it rebuilt the extract by hand every time, and one such
  * extractor turned `--no-verify` into `-no-verify`. Here each changed line is widened to its whole
  * paragraph (a reader handed `+` lines reports artefacts of the cut, not defects of the paper),
- * working comments, floats and the bibliography are dropped, `{{placeholders}}` are expanded, and
- * every dash is left as written. Above 15 changed paragraphs it refuses: a read that size is the
- * 35-minute batch #301 records, so the caller narrows `--base` instead.
+ * and working comments, floats and the bibliography are dropped. The paragraph is then handed over
+ * as its LaTeX source, unchanged: rebuilding the printed text macro by macro dropped `\num`,
+ * `\verb` and math in turn (#460), and only TeX knows what a macro prints (#462). Above 15
+ * changed paragraphs it refuses: a read that size is the 35-minute batch #301 records, so the
+ * caller narrows `--base` instead.
  *
- * Usage: node cold-read.js <paper.tex> [--base=REV] [--macros=FILE.json] [--max=N]
+ * Usage: node cold-read.js <paper.tex> [--base=REV] [--max=N]
  * Exit: 0 — the paragraphs on stdout · 2 — refused (nothing changed, too many, a bad flag).
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
-import { z } from "zod";
-import { visit } from "@unified-latex/unified-latex-util-visit";
-import { latexReader, parseLatex } from "#src/adapters/latex/index";
-import { collapse, type Passage, type Span } from "#src/domain/tex-document";
+import { latexReader } from "#src/adapters/latex/index";
+import type { Passage, Span } from "#src/domain/tex-document";
 
 /** Above this many changed paragraphs the run refuses and asks for a narrower range (#301). */
 export const DEFAULT_MAX = 15;
@@ -29,11 +29,7 @@ export interface Paragraph {
   readonly start: number;
   readonly end: number;
   readonly text: string;
-  readonly unexpanded: readonly string[];
 }
-
-const MacrosSchema = z.record(z.string(), z.union([z.string(), z.number()]));
-type Macros = z.infer<typeof MacrosSchema>;
 
 /** Each hunk header's new-file side `+c,d` of a `git diff -U0`, as numbers; `d` absent is 1. */
 const hunks = (diff: string): { start: number; count: number }[] =>
@@ -66,59 +62,6 @@ export const deletionPoints = (diff: string): number[] =>
     .filter((h) => h.count === 0)
     .map((h) => h.start);
 
-/** A `{{placeholder}}` a build fills in: where it stands in the source, its name, how it is written. */
-interface Placeholder {
-  readonly start: number;
-  readonly end: number;
-  readonly name: string;
-  readonly written: string;
-}
-
-/**
- * The `{{placeholders}}` of `src`, read off its parse: a group that holds exactly one group, which
- * holds only text. `{x}` is one group and `{{a}{b}}` holds two, so neither is a placeholder.
- */
-const placeholdersOf = (src: string): Placeholder[] => {
-  const found: Placeholder[] = [];
-  visit(parseLatex(src).root, (node) => {
-    if (node.type !== "group" || node.content.length !== 1) return;
-    const [inner] = node.content;
-    const start = node.position?.start.offset;
-    const end = node.position?.end.offset;
-    if (
-      inner?.type !== "group" ||
-      start === undefined ||
-      end === undefined ||
-      !inner.content.every(
-        (n) => n.type === "string" || n.type === "whitespace",
-      )
-    )
-      return;
-    found.push({
-      start,
-      end,
-      name: src.slice(start + 2, end - 2).trim(),
-      written: src.slice(start, end),
-    });
-  });
-  return found;
-};
-
-/** `src` with each placeholder `macros` has a value for written in, the last first so offsets hold. */
-const filled = (
-  src: string,
-  places: readonly Placeholder[],
-  macros: Macros,
-): string =>
-  [...places]
-    .sort((a, b) => b.start - a.start)
-    .reduce((text, p) => {
-      const value = macros[p.name];
-      return value === undefined
-        ? text
-        : `${text.slice(0, p.start)}${String(value).replaceAll("\n", " ")}${text.slice(p.end)}`;
-    }, src);
-
 /** Where a passage's visible text stands in the source: its first to its last non-blank piece. */
 const spanOf = (p: Passage): Span => {
   const spans = p.pieces.flatMap((x) =>
@@ -134,28 +77,20 @@ const spanOf = (p: Passage): Span => {
   };
 };
 
-/**
- * A passage as the text a reader sees: its words, a citation as \`[1]\` and a cross-reference as
- * \`1\` where they stand, and math as its source (\`$n > 0$\`), so a sentence keeps its claim.
- */
-const textOf = (p: Passage): string =>
-  collapse(
-    p.pieces
-      .map((x) =>
-        x.kind === "text"
-          ? x.segment.text
-          : x.kind === "math"
-            ? x.tex
-            : x.owner === "citation"
-              ? "[1]"
-              : "1",
-      )
-      .join(""),
-  );
-
 /** The 1-based line a source offset stands on. */
 const lineAt = (src: string, offset: number): number =>
   src.slice(0, offset).split("\n").length;
+
+/**
+ * A paragraph's source as the reader gets it: the LaTeX exactly as written, without the lines that
+ * are only a `%` note (a reader grades a note as prose, SKILL.md "Strip working comments").
+ */
+const sourceOf = (src: string, span: Span): string =>
+  src
+    .slice(span.start, span.end)
+    .split("\n")
+    .filter((line) => !line.trimStart().startsWith("%"))
+    .join("\n");
 
 /** Whether a changed line falls in `b`, or `b` holds both sides of a deletion point. */
 const touched = (
@@ -167,55 +102,37 @@ const touched = (
   deletions.some((d) => d >= b.start && d + 1 <= b.end);
 
 /**
- * The changed paragraphs of `tex`: every body passage (`bodyProse`: the parse of the paper, without
- * comments, headings, floats, code or the back matter) that a changed line falls in, whole, as the
- * text a reader sees (`textOf`), and every passage that holds both sides of a `deletions` point.
- * `{{placeholders}}` are filled from `macros` before the parse; `unexpanded` lists the ones it had
- * no value for.
+ * The changed paragraphs of `src`: every body passage (`bodyProse`: the parse of the paper, without
+ * comments, headings, floats, code or the back matter) that a changed line falls in, whole, and
+ * every passage that holds both sides of a `deletions` point. The parse only finds the paragraph;
+ * its text is the source as written, so no macro is rendered, dropped or guessed at.
  */
 export const extract = (
-  tex: string,
+  src: string,
   lines: readonly number[],
-  macros: Macros = {},
   deletions: readonly number[] = [],
-): Paragraph[] => {
-  const places = placeholdersOf(tex);
-  const missing = places.filter((p) => macros[p.name] === undefined);
-  // TODO(#462): a placeholder that spans lines shifts every later line number, so a later edit
-  // can select the wrong paragraph; and `\num{…}` reaches the reader without its value.
-  const src = filled(tex, places, macros);
-  return latexReader
+): Paragraph[] =>
+  latexReader
     .bodyProse(src)
-    .map((p) => ({ p, span: spanOf(p) }))
-    .map(({ p, span }) => {
-      const start = lineAt(src, span.start);
-      const end = lineAt(src, span.end - 1);
-      return {
-        start,
-        end,
-        text: textOf(p),
-        unexpanded: missing
-          .filter(
-            (m) => lineAt(tex, m.start) >= start && lineAt(tex, m.start) <= end,
-          )
-          .map((m) => m.written),
-      };
-    })
-    .filter((b) => b.text !== "" && touched(b, lines, deletions));
-};
+    .map(spanOf)
+    .map((span) => ({
+      start: lineAt(src, span.start),
+      end: lineAt(src, span.end - 1),
+      text: sourceOf(src, span),
+    }))
+    .filter((b) => touched(b, lines, deletions));
 
 /** The flags a run reads. */
 interface Options {
   readonly paper: string;
   readonly base: string;
-  readonly macros: string | undefined;
   readonly max: number;
 }
 
 /** A refusal: printed as one line, exit 2. */
 class Refusal extends Error {}
 
-const KNOWN = ["base", "macros", "max"];
+const KNOWN = ["base", "max"];
 
 /** The command line as options, or a refusal naming what is wrong with it. */
 export const optionsOf = (argv: readonly string[]): Options => {
@@ -238,7 +155,6 @@ export const optionsOf = (argv: readonly string[]): Options => {
   return {
     paper,
     base: flags.get("base") || "HEAD",
-    macros: flags.get("macros"),
     max,
   };
 };
@@ -247,9 +163,6 @@ export const optionsOf = (argv: readonly string[]): Options => {
 const paragraphsFor = (o: Options): Paragraph[] => {
   const paper = resolve(o.paper);
   if (!existsSync(paper)) throw new Refusal(`${o.paper} does not exist`);
-  const macros = o.macros
-    ? MacrosSchema.parse(JSON.parse(readFileSync(resolve(o.macros), "utf8")))
-    : {};
   const diff = execFileSync(
     "git",
     ["diff", "-U0", "--no-color", o.base, "--", basename(paper)],
@@ -260,13 +173,12 @@ const paragraphsFor = (o: Options): Paragraph[] => {
     extract(
       readFileSync(paper, "utf8"),
       changedLines(diff),
-      macros,
       deletionPoints(diff),
     ),
   );
 };
 
-/** `found`, unless it is empty or above the cap; warns of placeholders left unexpanded. */
+/** `found`, unless it is empty or above the cap. */
 const checked = (o: Options, found: Paragraph[]): Paragraph[] => {
   if (!found.length)
     throw new Refusal(`no changed prose in ${o.paper} since ${o.base}`);
@@ -275,13 +187,6 @@ const checked = (o: Options, found: Paragraph[]): Paragraph[] => {
       `${String(found.length)} changed paragraphs since ${o.base}, above the cap of ${String(o.max)}: ` +
         `narrow --base to fewer commits, or raise --max knowingly`,
     );
-  found
-    .flatMap((p) => p.unexpanded)
-    .forEach((m) => {
-      process.stderr.write(
-        `cold read: warning — ${m} has no value; pass --macros\n`,
-      );
-    });
   return found;
 };
 
