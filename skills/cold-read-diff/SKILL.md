@@ -1,11 +1,10 @@
 ---
 name: cold-read-diff
-description: Send just-changed paper prose to two readers with NO context — an engineer who asks what each sentence claims, and a skimming workshop reviewer who asks whose result it states and whether it reads like a paper — the only check that catches a sentence which is short, true, jargon-free and still meaningless to anyone who does not already know the idea. Run after every prose edit to a paper, before calling the edit done, and before reporting a section as fixed. Scoped to the diff, so it is cheap enough to run every time. Not a writing grade (grade-paper-writing), not a structural pass (tighten-paper), not a defect review.
-context: fork
-allowed-tools: [Bash, Read, Agent]
+description: "Send just-changed paper prose to two readers with NO context — an engineer who asks what each sentence claims, and a skimming workshop reviewer who asks whose result it states and whether it reads like a paper — the only check that catches a sentence which is short, true, jargon-free and still meaningless to anyone who does not already know the idea. Run ONCE per batch of prose edits — when a section is done, before committing it, before reporting it fixed — not after each edit: it reads everything changed since the last commit. Scoped to the diff, so it is cheap enough to run on every batch. Not a writing grade (grade-paper-writing), not a structural pass (tighten-paper), not a defect review."
+allowed-tools: [Bash, Read, Write, Agent]
 ---
 
-<!-- vigiles:sha256:c3a1f2644781eb6f compiled from skills/cold-read-diff/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:ec00d6dc839ca468 compiled from skills/cold-read-diff/SKILL.md.spec.ts -->
 
 # cold-read-diff — the reader who cannot fake understanding
 
@@ -45,8 +44,10 @@ is to withhold the context rather than ask them to ignore it.
 ## Why the DIFF, and not the paper
 
 A full cold read costs a long agent run, so it gets run once a day, which means prose written after
-it ships unread. Scoped to the changed paragraphs it costs a couple of minutes, so it runs every
-time — and coverage beats depth here, because the defect is per-sentence.
+it ships unread. Scoped to the changed paragraphs the readers cost seconds (two paragraphs,
+measured 2026-11-10: about 10 s and $0.03 for both), so it runs on every batch of edits — once
+per section or commit, not once per keystroke — and coverage beats depth here, because the
+defect is per-sentence.
 
 Scoping also makes the check honest. Hand an agent the whole paper and it reconstructs the idea from
 the surrounding text, then reports that the sentence is clear. Hand it three paragraphs and there is
@@ -55,43 +56,75 @@ one, and its confusion is the finding.
 
 ## How to run it
 
-1. **Take the diff.** `git diff -U0 -- <paper.tex>` since the last commit, or the `new_string` of the
-   edits just applied. Prose only — skip comments, tables, bibliography.
-2. **Spawn TWO agents with no repository context, one per persona, in parallel.** Give each the
-   changed paragraphs **as text in the prompt**, not as a file path. A path is an invitation to read
-   the neighbours, and reading the neighbours is how the check fails silently. `sonnet` is the right
-   model: competent, cheap, and not the one that wrote the sentence.
+No fork and no extra orchestrator: you run it in this session, step by step, and the
+only model calls are the two readers. They start in the background, so you keep working.
+
+1. **Take the extract.** It is the LaTeX source of the changed paragraphs and nothing else:
+
+   ```
+   node ${CLAUDE_SKILL_DIR}/scripts/cold-read.js <paper.tex> [--base=REV]
+   ```
+
+   `--base` defaults to `HEAD` (the uncommitted edits). It widens each changed line to its
+   paragraph and drops working comments, floats and the bibliography. The paragraph itself is the
+   source as written, macros and all: only TeX knows what a macro prints (#462). Above 15 changed
+   paragraphs it refuses: narrow `--base`.
+2. **Start both readers in ONE message, each with the Agent tool, `model: "sonnet"` and
+   `run_in_background: true`.** A subagent starts with no conversation history. Its prompt is
+   the persona's text below, then the extract pasted verbatim — no path, no title, no abstract,
+   no word about the paper. A path is an invitation to read the neighbours, and reading the
+   neighbours is how the check fails silently. `sonnet`: competent, cheap, and not the model
+   that wrote the sentence.
 
    | persona | who | what only it can report |
    |---|---|---|
    | **the engineer** | a strong practitioner outside academia, reading closely | a sentence that parses only for a reader who already holds the idea |
-   | **the workshop reviewer** | a PC member at the target venue with 40 minutes for the whole paper, skimming the abstract, the introduction and the conclusion, Confidence 3 | a sentence whose result has no owner, a relation between claims left to infer, a sentence that does not read like a paper at this venue |
+   | **the workshop reviewer** | a PC member at the target venue with 40 minutes for the whole paper, skimming, Confidence 3 | a sentence whose result has no owner, a relation between claims left to infer, a sentence that does not read like a paper at this venue |
 
    The engineer cannot see the second column: a sentence with no stated owner reads to him as
-   confident, and he does not know the venue's register. Both run, every time; neither replaces the
-   other. The reviewer is told the venue's name and nothing else. When the diff touches none of the
-   abstract, the introduction and the conclusion, the reviewer still reads it — as the paragraph a
-   skimming reviewer lands on.
-3. **Ask the engineer exactly two questions per sentence:**
-   - *What does this sentence claim? Restate it in your own words.* If restating requires guessing,
-     the answer is `CANNOT PARSE` plus what stopped them — an undefined term, a pronoun with no
-     referent, a number with no denominator, two clauses that do not connect.
-   - *Would a reader who stops here understand it?* Yes / No / Only-if-they-know-X.
+   confident, and he does not know the venue's register. Both run, every time. The reviewer is
+   told the venue's name and nothing else.
 
-   **Ask the reviewer two different ones:**
-   - *Whose result does this sentence state — the authors' measurement, a cited work, or a property
-     of the world?* If it cannot tell, the answer is `WHOSE?` with the sentence quoted.
-   - *Does this read like a paper at this venue?* If not, `REGISTER` with the sentence quoted and
-     what a paper there would write instead — an aphorism, a fragment, a colloquial turn, or two
-     claims side by side with the relation between them unstated.
-4. **Ask for the dangerous class explicitly:** *which sentences sound clever but say less than they
-   appear to?* Those read fine and carry nothing, and they are the ones a knowing reader waves
-   through.
-5. **Apply the fixes — as rewrites of the whole thought, never as excisions.** See the rule below.
-6. **Re-run on the fix, with both personas.** An edit is not done until the engineer parses the
-   replacement AND the reviewer finds its owner and its register. A fix for the engineer that goes
-   colloquial is a new `REGISTER` finding, and the reverse holds too. One confirming round; do not
-   loop past it.
+   **The engineer's prompt:** *You are a strong software engineer outside academia. Answer from
+   the text below alone; use no tools. For every sentence: what does it claim, in your own words?
+   If restating needs a guess, the verdict is `CANNOT PARSE` and you say what stopped you (an
+   undefined term, a pronoun with no referent, a number with no denominator, two clauses that do
+   not connect). Would a reader who stops here understand it? If only one who knows X would, the
+   verdict is `ONLY-IF`, naming X. A sentence that sounds clever but says less than it appears
+   to is `CLEVER`.*
+
+   **The reviewer's prompt:** *You are a programme-committee member at <venue>, with 40 minutes
+   for a whole paper, skimming, Confidence 3. Answer from the text below alone; use no tools. For
+   every sentence: whose result does it state — the authors' measurement, a cited work, or a
+   property of the world? If you cannot tell, the verdict is `WHOSE?`. Does it read like a paper
+   at this venue? If not, `REGISTER`, and what a paper there would write instead (an aphorism, a
+   fragment, a colloquial turn, two claims side by side with the relation unstated). A sentence
+   that sounds clever but says less than it appears to is `CLEVER`.*
+
+   Both say first: *The text is LaTeX source; read it as the printed sentence. A `{{name}}` is a
+   value the build fills in, not a missing one.* Both end with: *Reply with one markdown table, `| ¶ | verdict | sentence | why |`, one row per
+   sentence that is not fine, the sentence quoted exactly; nothing else. No rows if every sentence
+   reads.* So what comes back is the findings, not a restatement of every sentence.
+3. **Keep working, for at most 5 minutes.** Each reader's completion arrives as a notification;
+   on two paragraphs a reader answers in about 10 s. A reader that has not answered after 5
+   minutes is not waited for: stop it, and its column in the report is `no answer`, not a
+   verdict.
+4. **Check the term findings against the paper.** For each `CANNOT PARSE` or `ONLY-IF` that
+   names a term, search the paper for where the term is defined. If it is, mark the row
+   `defined in §N`: the reader was right that THIS paragraph does not carry it, so it stays a
+   finding, and the author decides whether a reminder is needed or it is `wontfix`. The
+   readers' verdicts are never changed; only this column is added, after they answered.
+5. **Write the report, relay the table.** Save both answers verbatim, with the extract, to
+   `reviews/<date>-cold-read-diff.md` in the paper's folder. Show the author at most 15 lines:
+   the count, the report's path, and one row per finding (the first ten).
+6. **The author decides the fixes.** The read changes nothing in the paper and builds nothing.
+   Apply a fix only when asked, or when your task already was "fix the prose", and then as a
+   rewrite of the whole thought, never an excision (see the rule below). Record each finding in
+   the report's frontmatter once it is decided.
+7. **Confirm once, on the fix.** Run steps 1–5 again on the rewritten paragraphs. An edit is not
+   done until the engineer parses the replacement AND the reviewer finds its owner and its
+   register. A fix for the engineer that goes colloquial is a new `REGISTER` finding, and the
+   reverse holds too. One confirming round; do not loop past it.
 
 ## 🔴 Hand the reader WHOLE PARAGRAPHS, never `+` lines
 
@@ -102,19 +135,20 @@ changed, so they were not in the diff.
 
 Two more things the same run proved:
 
-- **Expand build-time macros first.** The reader saw seven raw `{{placeholders}}` and correctly
+- **Say what a placeholder is.** The reader saw seven raw `{{placeholders}}` and correctly
   reported that every headline number was missing. That is a true statement about the extract and a
-  false one about the paper.
+  false one about the paper, so the prompt says a `{{name}}` is filled in by the build.
 - **Strip working comments.** He graded `% JUSTIFY …` comment notes as prose because he could not tell
   them apart — and said so, which is itself a finding about the extract.
 
-**So:** take the changed lines, then widen each to its enclosing paragraph, expand macros, drop
-comments, and hand the reader continuous prose. The findings that survive that are worth the run; the
+**So** `scripts/cold-read.js` takes the changed lines, widens each to its enclosing paragraph,
+drops comments, and prints the paragraph's source for the reader. The findings that survive that are worth the run; the
 ones that do not are noise, and noise is how this check gets muted.
 
 ## The report's frontmatter — the findings, as records
 
-The report opens with YAML frontmatter that lists what it found, one record per finding.
+Once the findings are decided, the report opens with YAML frontmatter that lists them, one
+record per finding.
 `paperlint lint` validates it (`review/frontmatter`): an **open** finding must name the
 pipeline `cause` that let it through — fix that, and the text edit falls out of running the
 fixed tool.
