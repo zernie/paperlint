@@ -6,13 +6,12 @@
  *
  * Usage: node cold-read.js <paper.tex> [--base=REV] [--macros=FILE.json] [--max=N]
  */
+import { messageOf } from "#src/domain/text";
 import { main } from "./cold-read-core.ts";
 
 try {
   process.exitCode = main(process.argv.slice(2));
 } catch (e) {
-  process.stderr.write(
-    `cold read: ${e instanceof Error ? e.message : String(e)}\n`,
-  );
+  process.stderr.write(`cold read: ${messageOf(e)}\n`);
   process.exitCode = 2;
 }
