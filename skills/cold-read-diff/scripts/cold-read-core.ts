@@ -82,13 +82,15 @@ const lineAt = (src: string, offset: number): number =>
   src.slice(0, offset).split("\n").length;
 
 /**
- * A paragraph's source as the reader gets it: the LaTeX exactly as written, without the lines that
- * are only a `%` note (a reader grades a note as prose, SKILL.md "Strip working comments").
+ * A paragraph's source as the reader gets it: its whole lines, `first` to `last`, exactly as written,
+ * without the lines that are only a `%` note (a reader grades a note as prose, SKILL.md "Strip
+ * working comments"). Whole lines, not the span of its printed pieces: a piece of
+ * `\texttt{x}` starts inside the braces, so a cut there hands the reader broken LaTeX.
  */
-const sourceOf = (src: string, span: Span): string =>
+const sourceOf = (src: string, first: number, last: number): string =>
   src
-    .slice(span.start, span.end)
     .split("\n")
+    .slice(first - 1, last)
     .filter((line) => !line.trimStart().startsWith("%"))
     .join("\n");
 
@@ -118,8 +120,8 @@ export const extract = (
     .map((span) => ({
       start: lineAt(src, span.start),
       end: lineAt(src, span.end - 1),
-      text: sourceOf(src, span),
     }))
+    .map((b) => ({ ...b, text: sourceOf(src, b.start, b.end) }))
     .filter((b) => touched(b, lines, deletions));
 
 /** The flags a run reads. */

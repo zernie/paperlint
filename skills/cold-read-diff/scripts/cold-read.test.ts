@@ -76,6 +76,16 @@ test("extract: the paragraph's LaTeX as written — math, \\num, \\verb, \\ref a
   ]);
 });
 
+test("extract: a macro at either end of a paragraph reaches the reader whole", () => {
+  assert.deepEqual(
+    extract(
+      "\\texttt{--no-verify} disables checks.\n\\S~3 ends \\emph{here}\n",
+      [1],
+    ).map((p) => p.text),
+    ["\\texttt{--no-verify} disables checks.\n\\S~3 ends \\emph{here}"],
+  );
+});
+
 test("extract: whole paragraphs, comment lines and floats dropped, nothing rewritten", () => {
   // What `git diff -U0` reports for EDITED: the comment (6), the paragraph (7–8), a table row (11), the last line of prose (14).
   assert.deepEqual(extract(EDITED, [6, 7, 8, 11, 14]), [
