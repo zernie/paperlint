@@ -46,17 +46,18 @@ test("changedLines: the new-file lines of each hunk, a one-line hunk with no cou
 });
 
 test("extract: whole paragraphs, comments and floats dropped, macros expanded, dashes kept", () => {
-  const lines = [7, 8, 12, 15];
+  // What `git diff -U0` reports for EDITED: the comment (6), the paragraph (7–8), a table row (11), the last line of prose (14).
+  const lines = [6, 7, 8, 11, 14];
   assert.deepEqual(extract(EDITED, lines, { nRepos: 40 }), [
     {
-      start: 6,
+      start: 7,
       end: 8,
-      text: "We measure it with --no-verify on 40 repositories [citation]. Agents followed 71% of them.",
+      text: "We measure it with --no-verify on 40 repositories [1]. Agents followed 71% of them.",
       unexpanded: [],
     },
     {
       start: 14,
-      end: 15,
+      end: 14,
       text: "Three answers, all of them after the fact.",
       unexpanded: [],
     },
@@ -64,6 +65,11 @@ test("extract: whole paragraphs, comments and floats dropped, macros expanded, d
   assert.deepEqual(
     extract(EDITED, [8], {}).map((p) => p.unexpanded),
     [["{{nRepos}}"]],
+  );
+  assert.deepEqual(
+    extract(EDITED, [3, 6, 11]),
+    [],
+    "a heading, a comment or a table row is not prose",
   );
 });
 
@@ -113,8 +119,8 @@ test("the command prints only the changed paragraphs, numbered, and leaves the p
   assert.deepEqual(r, {
     status: 0,
     stdout:
-      "[1] We measure it with --no-verify on 40 repositories [citation]. Agents followed 71% of them.\n\n" +
-      "[2] Three answers, all of them after the fact.\n",
+      "¶1 We measure it with --no-verify on 40 repositories [1]. Agents followed 71% of them.\n\n" +
+      "¶2 Three answers, all of them after the fact.\n",
     stderr: "",
   });
   assert.equal(readFileSync(join(dir, "paper.tex"), "utf8"), EDITED);
@@ -129,7 +135,7 @@ test("the command warns of a placeholder it has no value for, and still prints",
   );
   assert.ok(
     r.stdout.startsWith(
-      "[1] We measure it with --no-verify on {{nRepos}} repositories",
+      "¶1 We measure it with --no-verify on nRepos repositories",
     ),
   );
 });
@@ -140,7 +146,7 @@ test("numbered: one block per paragraph, nothing else", () => {
       { start: 1, end: 1, text: "A.", unexpanded: [] },
       { start: 3, end: 4, text: "B.", unexpanded: [] },
     ]),
-    "[1] A.\n\n[2] B.",
+    "¶1 A.\n\n¶2 B.",
   );
 });
 
@@ -181,7 +187,7 @@ test("cold-read.ts: the entry prints the paragraphs, and turns an unexpected err
   const ok = runNode(SCRIPT, ["paper.tex", "--base=HEAD"], { cwd: dir });
   assert.equal(ok.status, 0, ok.stderr);
   assert.ok(
-    ok.stdout.endsWith("[2] Three answers, all of them after the fact.\n"),
+    ok.stdout.endsWith("¶2 Three answers, all of them after the fact.\n"),
   );
   writeFileSync(join(dir, "bad.json"), "{");
   const bad = runNode(SCRIPT, ["paper.tex", "--macros=bad.json"], { cwd: dir });

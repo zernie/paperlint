@@ -16,7 +16,7 @@
  */
 import { bodySentences } from "./domain/register.ts";
 import { CITATION, MATH, REFERENCE } from "./domain/sentences.ts";
-import { runText } from "./domain/tex-document.ts";
+import { runText, type Passage } from "./domain/tex-document.ts";
 import { readPaper, type ProseDeps } from "./tex-paper.ts";
 
 /** A sentence's text with each mark as a reader would see it set, and math left out. */
@@ -27,6 +27,12 @@ const rendered = (raw: string): string =>
     .replaceAll(MATH, "")
     .replace(/\s+/gu, " ")
     .trim();
+
+/** One passage as plain text: its sentences, each mark set as a reader sees it, math left out. */
+export const passageText = (p: Passage): string =>
+  bodySentences([p])
+    .map((s) => rendered(s.raw))
+    .join(" ");
 
 /**
  * A paper's body prose, one passage per paragraph, its section titles in document order, and the
@@ -48,11 +54,7 @@ export function paperProse(
   const { text, segments } = readPaper(filename, src, deps);
   const passages = deps.latex
     .bodyProse(text)
-    .map((p) =>
-      bodySentences([p])
-        .map((s) => rendered(s.raw))
-        .join(" "),
-    )
+    .map(passageText)
     .filter((p) => p !== "");
   return {
     body: passages.join("\n\n"),

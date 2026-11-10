@@ -4,7 +4,7 @@
 // orchestrated the read, read the rest of the paper itself, fixed it, rebuilt it and returned its
 // report into the caller (#405, #301). Now it runs inline: `scripts/cold-read.ts` (run compiled,
 // as `.js`) prints the changed paragraphs, and the session starts the two readers as background
-// subagents. `cold-read-diff.harness.mjs` holds that shape.
+// subagents. What it does is measured with a real model in `cold-read-behaviour.eval.ts`.
 import { experimental_skill } from "vigiles/spec";
 
 export default experimental_skill({

@@ -17,16 +17,12 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 import { z } from "zod";
+import { latexReader } from "#src/adapters/latex/index";
+import type { Passage, Span } from "#src/domain/tex-document";
+import { passageText } from "#src/paper-prose";
 
 /** Above this many changed paragraphs the run refuses and asks for a narrower range (#301). */
 export const DEFAULT_MAX = 15;
-
-/** A blank-line separated block of the paper, 1-based lines. */
-export interface Block {
-  readonly start: number;
-  readonly end: number;
-  readonly lines: readonly string[];
-}
 
 /** A changed paragraph as a reader gets it. */
 export interface Paragraph {
@@ -49,77 +45,57 @@ export const changedLines = (diff: string): number[] =>
     },
   );
 
-/** Blank-line separated blocks of `tex`, each with its 1-based first and last line. */
-export const paragraphsOf = (tex: string): Block[] =>
-  tex
-    .split("\n")
-    .reduce<readonly (Block | null)[]>(
-      (blocks, line, i) => {
-        const last = blocks.at(-1);
-        if (line.trim() === "") return [...blocks, null];
-        return last
-          ? [
-              ...blocks.slice(0, -1),
-              { ...last, end: i + 1, lines: [...last.lines, line] },
-            ]
-          : [...blocks, { start: i + 1, end: i + 1, lines: [line] }];
-      },
-      [null],
-    )
-    .filter((b): b is Block => b !== null);
-
-/** A block that is not prose a reader should judge: a float, a table, the bibliography. */
-const NOT_PROSE =
-  /\\begin\{(table|figure|tabular|thebibliography|lstlisting|verbatim|equation|align)\*?\}|\\bibliography\{/;
-
-/** A line that is only a command (`\section{…}`, `\label{…}`, `\begin{document}`): no prose on it. */
-const COMMAND_ONLY = /^\s*\\[A-Za-z]+\*?(\[[^\]]*\])?(\{[^{}]*\})*\s*$/;
-
-/** A `{{placeholder}}` a build fills in. */
+/** A `{{placeholder}}` a build fills in. Template syntax, not LaTeX, so the parser cannot see it. */
 const PLACEHOLDER = /\{\{\s*([\w.-]+)\s*\}\}/g;
 
-/**
- * One block as the plain text a reader gets: working comments dropped, `{{macros}}` expanded,
- * light markup removed. Dashes are left exactly as written — `--no-verify` stays `--no-verify`.
- * `unexpanded` lists the placeholders `macros` had no value for.
- */
-export const plainText = (
-  lines: readonly string[],
-  macros: Macros = {},
-): { text: string; unexpanded: string[] } => {
-  const text = lines
-    .map((l) => l.replace(/(^|[^\\])%.*$/, "$1"))
-    .filter((l) => l.trim() !== "" && !COMMAND_ONLY.test(l))
-    .join(" ")
-    .replace(PLACEHOLDER, (m, k: string) => String(macros[k] ?? m))
-    .replace(/\\(?:emph|textbf|textit|texttt|textsc|mbox)\{([^{}]*)\}/g, "$1")
-    .replace(
-      /\\(?:cite[tp]?|citeauthor)\*?(?:\[[^\]]*\])?\{[^}]*\}/g,
-      "[citation]",
-    )
-    .replace(/\\(?:ref|cref|Cref|autoref)\{[^}]*\}/g, "[ref]")
-    .replace(/\\([%&#_$])/g, "$1")
-    .replace(/~/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  return { text, unexpanded: [...text.matchAll(PLACEHOLDER)].map((m) => m[0]) };
+/** Where a passage's visible text stands in the source: its first to its last non-blank piece. */
+const spanOf = (p: Passage): Span => {
+  const spans = p.pieces.flatMap((x) =>
+    x.kind !== "text"
+      ? [x.span]
+      : x.segment.text.trim() === ""
+        ? []
+        : [{ start: x.segment.at, end: x.segment.at + x.segment.text.length }],
+  );
+  return {
+    start: Math.min(...spans.map((x) => x.start)),
+    end: Math.max(...spans.map((x) => x.end)),
+  };
 };
 
-/** The changed paragraphs of `tex`, widened to whole blocks and made plain. */
+/** The 1-based line a source offset stands on. */
+const lineAt = (src: string, offset: number): number =>
+  src.slice(0, offset).split("\n").length;
+
+/**
+ * The changed paragraphs of `tex`: every body passage (`bodyProse`: the parse of the paper, without
+ * comments, headings, floats, code or the back matter) that a changed line falls in, whole, as the
+ * text a reader sees (`passageText`). `{{placeholders}}` are filled from `macros` before the parse;
+ * `unexpanded` lists the ones it had no value for.
+ */
 export const extract = (
   tex: string,
   lines: readonly number[],
   macros: Macros = {},
-): Paragraph[] =>
-  paragraphsOf(tex)
-    .filter((b) => lines.some((n) => n >= b.start && n <= b.end))
-    .filter((b) => !NOT_PROSE.test(b.lines.join("\n")))
-    .map((b) => ({
-      start: b.start,
-      end: b.end,
-      ...plainText(b.lines, macros),
+): Paragraph[] => {
+  const src = tex.replace(PLACEHOLDER, (m, k: string) =>
+    String(macros[k] ?? m),
+  );
+  return latexReader
+    .bodyProse(src)
+    .map((p) => ({ p, span: spanOf(p) }))
+    .map(({ p, span }) => ({
+      start: lineAt(src, span.start),
+      end: lineAt(src, span.end - 1),
+      text: passageText(p),
+      unexpanded: [
+        ...src.slice(span.start, span.end).matchAll(PLACEHOLDER),
+      ].map((m) => m[0]),
     }))
-    .filter((p) => p.text !== "");
+    .filter(
+      (b) => b.text !== "" && lines.some((n) => n >= b.start && n <= b.end),
+    );
+};
 
 /** The flags a run reads. */
 interface Options {
@@ -198,7 +174,7 @@ const checked = (o: Options, found: Paragraph[]): Paragraph[] => {
 
 /** The paragraphs as a reader gets them: numbered, one blank line apart, nothing else. */
 export const numbered = (paragraphs: readonly Paragraph[]): string =>
-  paragraphs.map((p, i) => `[${String(i + 1)}] ${p.text}`).join("\n\n");
+  paragraphs.map((p, i) => `¶${String(i + 1)} ${p.text}`).join("\n\n");
 
 /** The command. Returns its exit code; a refusal is one line on stderr and exit 2. */
 export function main(argv: readonly string[]): number {
