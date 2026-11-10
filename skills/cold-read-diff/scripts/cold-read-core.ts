@@ -181,6 +181,8 @@ export const extract = (
 ): Paragraph[] => {
   const places = placeholdersOf(tex);
   const missing = places.filter((p) => macros[p.name] === undefined);
+  // TODO(#462): a placeholder that spans lines shifts every later line number, so a later edit
+  // can select the wrong paragraph; and `\num{…}` reaches the reader without its value.
   const src = filled(tex, places, macros);
   return latexReader
     .bodyProse(src)
