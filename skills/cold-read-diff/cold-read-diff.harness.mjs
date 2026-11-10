@@ -14,7 +14,9 @@
  * the orchestrator that blocked the caller for 15–35 minutes, read the whole paper, fixed and
  * rebuilt it, and returned its whole report into the caller's context. So the skill must: name
  * its extractor script; start its readers with the Agent tool, in the background, on sonnet;
- * never shell out to `claude -p` for them; and never apply fixes inside the check.
+ * never shell out to `claude -p` for them; never apply fixes inside the check. And it runs once
+ * per batch of edits, waits at most 5 minutes for a reader, and checks a reader's "undefined term"
+ * against the paper only AFTER the reader answered, without changing the verdict.
  *
  * What it does NOT prove: that the skill fires, or that the readers' answers are good. Those
  * need a real model — see `cold-read-diff.eval.mjs`.
@@ -51,6 +53,19 @@ const shape = [
   [
     !/^\d+\.\s+\*\*Apply the fixes/m.test(md),
     "it applies fixes inside the check again; the author decides (#405)",
+  ],
+  [
+    /^description:.*\bONCE per batch\b.*not after each edit/m.test(frontmatter),
+    "its description no longer says once per batch; it fires on every edit again",
+  ],
+  [
+    /after 5\s+minutes is not waited for/.test(md),
+    "it no longer bounds the wait for a reader",
+  ],
+  [
+    /\*\*Check the term findings against the paper\.\*\*/.test(md) &&
+      /verdicts are never changed/.test(md),
+    "it no longer checks term findings against the paper, or lets that check change a verdict",
   ],
 ];
 const broken = shape

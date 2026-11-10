@@ -1,10 +1,10 @@
 ---
 name: cold-read-diff
-description: Send just-changed paper prose to two readers with NO context — an engineer who asks what each sentence claims, and a skimming workshop reviewer who asks whose result it states and whether it reads like a paper — the only check that catches a sentence which is short, true, jargon-free and still meaningless to anyone who does not already know the idea. Run after every prose edit to a paper, before calling the edit done, and before reporting a section as fixed. Scoped to the diff, so it is cheap enough to run every time. Not a writing grade (grade-paper-writing), not a structural pass (tighten-paper), not a defect review.
+description: "Send just-changed paper prose to two readers with NO context — an engineer who asks what each sentence claims, and a skimming workshop reviewer who asks whose result it states and whether it reads like a paper — the only check that catches a sentence which is short, true, jargon-free and still meaningless to anyone who does not already know the idea. Run ONCE per batch of prose edits — when a section is done, before committing it, before reporting it fixed — not after each edit: it reads everything changed since the last commit. Scoped to the diff, so it is cheap enough to run on every batch. Not a writing grade (grade-paper-writing), not a structural pass (tighten-paper), not a defect review."
 allowed-tools: [Bash, Read, Write, Agent]
 ---
 
-<!-- vigiles:sha256:f6daaf68e59735a8 compiled from skills/cold-read-diff/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:a3979c213e56b2b8 compiled from skills/cold-read-diff/SKILL.md.spec.ts -->
 
 # cold-read-diff — the reader who cannot fake understanding
 
@@ -45,8 +45,9 @@ is to withhold the context rather than ask them to ignore it.
 
 A full cold read costs a long agent run, so it gets run once a day, which means prose written after
 it ships unread. Scoped to the changed paragraphs the readers cost seconds (two paragraphs,
-measured 2026-11-10: about 10 s and $0.03 for both), so it runs every
-time — and coverage beats depth here, because the defect is per-sentence.
+measured 2026-11-10: about 10 s and $0.03 for both), so it runs on every batch of edits — once
+per section or commit, not once per keystroke — and coverage beats depth here, because the
+defect is per-sentence.
 
 Scoping also makes the check honest. Hand an agent the whole paper and it reconstructs the idea from
 the surrounding text, then reports that the sentence is clear. Hand it three paragraphs and there is
@@ -103,15 +104,23 @@ only model calls are the two readers. They start in the background, so you keep 
    Both end with: *Reply with one markdown table, `| ¶ | verdict | sentence | why |`, one row per
    sentence that is not fine, the sentence quoted exactly; nothing else. No rows if every sentence
    reads.* So what comes back is the findings, not a restatement of every sentence.
-3. **Keep working.** Each reader's completion arrives as a notification.
-4. **Write the report, relay the table.** Save both answers verbatim, with the extract, to
+3. **Keep working, for at most 5 minutes.** Each reader's completion arrives as a notification;
+   on two paragraphs a reader answers in about 10 s. A reader that has not answered after 5
+   minutes is not waited for: stop it, and its column in the report is `no answer`, not a
+   verdict.
+4. **Check the term findings against the paper.** For each `CANNOT PARSE` or `ONLY-IF` that
+   names a term, search the paper for where the term is defined. If it is, mark the row
+   `defined in §N`: the reader was right that THIS paragraph does not carry it, so it stays a
+   finding, and the author decides whether a reminder is needed or it is `wontfix`. The
+   readers' verdicts are never changed; only this column is added, after they answered.
+5. **Write the report, relay the table.** Save both answers verbatim, with the extract, to
    `reviews/<date>-cold-read-diff.md` in the paper's folder. Show the author at most 15 lines:
    the count, the report's path, and one row per finding (the first ten).
-5. **The author decides the fixes.** The read changes nothing in the paper and builds nothing.
+6. **The author decides the fixes.** The read changes nothing in the paper and builds nothing.
    Apply a fix only when asked, or when your task already was "fix the prose", and then as a
    rewrite of the whole thought, never an excision (see the rule below). Record each finding in
    the report's frontmatter once it is decided.
-6. **Confirm once, on the fix.** Run steps 1–4 again on the rewritten paragraphs. An edit is not
+7. **Confirm once, on the fix.** Run steps 1–5 again on the rewritten paragraphs. An edit is not
    done until the engineer parses the replacement AND the reviewer finds its owner and its
    register. A fix for the engineer that goes colloquial is a new `REGISTER` finding, and the
    reverse holds too. One confirming round; do not loop past it.
