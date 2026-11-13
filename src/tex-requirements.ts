@@ -40,6 +40,7 @@ import {
   RESERVED_FIELD_KEYS,
   reservedKey,
   declareField,
+  type FieldDeclaration,
   type FieldJson,
   type VenueFields,
 } from "./domain/submission-fields.ts";
@@ -330,18 +331,18 @@ function submissionFieldsOf(
   const declared = Object.entries(j.fields).map(
     ([key, f]) => [key, declareField(f)] as const,
   );
-  const bad = declared.find(([, d]) => !d.ok);
-  if (bad !== undefined && !bad[1].ok)
-    throw new Error(
-      `${file}: "submission_fields" field "${bad[0]}": ${bad[1].error}`,
-    );
+  const fields: readonly (readonly [string, FieldDeclaration])[] =
+    declared.flatMap(([key, d]) => (d.ok ? [[key, d.value] as const] : []));
+  const errors = declared.flatMap(([key, d]) =>
+    d.ok ? [] : [`field "${key}": ${d.error}`],
+  );
+  if (errors.length > 0)
+    throw new Error(`${file}: "submission_fields" ${errors.join("; ")}`);
   return {
     source: j.source,
     url: j.url,
     read: j.read,
-    fields: Object.fromEntries(
-      declared.flatMap(([key, d]) => (d.ok ? [[key, d.value]] : [])),
-    ),
+    fields: Object.fromEntries(fields),
   };
 }
 
