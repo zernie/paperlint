@@ -144,7 +144,7 @@ export const SETTINGS_KEYS: Readonly<Record<string, string>> = Object.freeze({
   authors:
     'the authors as the venue\'s portal should record them, in order: [{ "name", "email", "affiliation"? }] — paperlint submission new. Set only in a paper\'s own paperlint.json; in the root paperlint.json it is an error',
   fields:
-    'the paper\'s answers to the venue\'s own form fields, keyed as the preset\'s "submission_fields" names them: { "topics": ["<an option>"], "pc_conflicts": { "<pc email>": "<conflict type>" }, … } — checked against those fields, then sent by paperlint submission new and update. Set only in a paper\'s own paperlint.json; in the root paperlint.json it is an error',
+    'the paper\'s answers to the venue\'s own form fields, keyed as the preset\'s "submission_fields" names them: { "topics": ["<an option>"], "paper_type": "<one option>", "pc_conflicts": { "<pc email>": "<conflict type>" }, … } — checked against those fields, every required one filled, then sent by paperlint submission new and update. Set only in a paper\'s own paperlint.json; in the root paperlint.json it is an error',
   cycles:
     "the paper's attempts at venues, oldest first: [{ id, venue, kind, opened, phase?, deadlines, submission?, outcome }] — extends, kind and submission are then the current attempt's, and the cycle/ rules judge the record. Set only in a paper's own paperlint.json; in the root paperlint.json it is an error",
   scripts: "how skill prose names the scripts — consumer.mjs",

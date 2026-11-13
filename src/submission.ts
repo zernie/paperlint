@@ -46,6 +46,7 @@ import {
 } from "./domain/submission.ts";
 import {
   droppedFields,
+  fileFieldKeys,
   parsePaperFields,
   type FieldValues,
   type VenueFields,
@@ -620,9 +621,15 @@ async function runUpdate(
   const change = changeOf(a, bytes, abstract.value, t.fields);
   const r = await portal.update(t.id, change, { save: a.save });
   if (!r.ok) return failed(r.error, deps);
-  const sent = { shown, bytes, save: a.save, plan: plan.value };
-  return afterUpdate(t, r.value, sent, deps);
+  return afterUpdate(t, r.value, sentOf(a, { shown, bytes }, plan.value), deps);
 }
+
+/** What `afterUpdate` needs to know of the send: the file, the flags, what a save freezes. Pure. */
+const sentOf = (
+  a: Pick<SubmissionArgs, "save" | "submit">,
+  file: { readonly shown: string; readonly bytes: Uint8Array },
+  plan: FreezePlan | null,
+) => ({ ...file, save: a.save, submit: a.submit, plan });
 
 /** The portal's answer to `update` printed, and what it kept frozen: the exit code. */
 function afterUpdate(
@@ -632,13 +639,15 @@ function afterUpdate(
     readonly shown: string;
     readonly bytes: Uint8Array;
     readonly save: boolean;
+    readonly submit: boolean;
     readonly plan: FreezePlan | null;
   },
   deps: RunDeps,
 ): number {
   const local = { shown: sent.shown, sha256: sha256Hex(sent.bytes) };
   const dropped = droppedLines(t.fields, t.venueFields, o);
-  logAll([...updateLines(o, local, sent.save), ...dropped], deps);
+  const draft = sent.submit ? draftWarning(t.venueFields) : [];
+  logAll([...updateLines(o, local, sent.save), ...dropped, ...draft], deps);
   const fine = took(o);
   const kept = fine && !o.dryRun ? sent.plan : null;
   const frozen = freezeKept(t, kept, sent.bytes, deps);
@@ -800,6 +809,17 @@ export function newLines(p: NewSubmission): readonly string[] {
   ];
 }
 
+/**
+ * With no form recorded, paperlint cannot tell which field the form requires, and a portal keeps a
+ * paper a draft while one is unset («Entry required to complete submission»): said, in so many words. Pure.
+ */
+export const draftWarning = (venue: VenueFields | null): readonly string[] =>
+  venue === null
+    ? [
+        "  - WARNING: the venue preset records no \"submission_fields\", so paperlint cannot tell which field the form requires; the portal may keep the paper a DRAFT until it is set on the site — read the portal's messages above and `show`'s status",
+      ]
+    : [];
+
 /** What is left after `new`: the venue's fields the paper did not answer, what only the site takes, the submit. Pure. */
 export function onTheSiteLines(
   site: PortalSite,
@@ -808,8 +828,9 @@ export function onTheSiteLines(
   paperArg: string,
 ): readonly string[] {
   const sent = Object.keys(t.fields);
+  const files = fileFieldKeys(t.venueFields);
   const unanswered = Object.keys(t.venueFields?.fields ?? {}).filter(
-    (k) => !sent.includes(k),
+    (k) => !sent.includes(k) && !files.includes(k),
   );
   return [
     `still to do for ${site.submissionPage(id)} — paperlint sent the title, the abstract, the authors and the PDF${sent.length ? `, and ${sent.join(", ")}` : ""}:`,
@@ -817,7 +838,11 @@ export function onTheSiteLines(
       (k) =>
         `  - answer ${k} in the paper's paperlint.json "fields" (the venue preset records it), then: npx paperlint submission update ${paperArg} (a dry run; --save after your yes)`,
     ),
+    ...files.map(
+      (k) => `  - on the site: ${k} (a file upload; paperlint sends none)`,
+    ),
     ...site.siteOnly.map((f) => `  - on the site: ${f}`),
+    ...draftWarning(t.venueFields),
     `  - then mark it submitted: npx paperlint submission update ${paperArg} --submit (a dry run; --save after your yes)`,
   ];
 }

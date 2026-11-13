@@ -239,3 +239,50 @@ test("identityHints: Ajv's null errors give none; a hint two violations share is
   assert.equal(hints.length, 1);
   assert.deepEqual(hints, [identityHint(missing)]);
 });
+
+/** A venue preset recording one field of the form, whatever the field says. */
+const withField = (field: object) => ({
+  type: "venue",
+  name: "X",
+  url: "https://example.org/cfp",
+  extends: "paperlint:acm-sigconf",
+  submission_fields: {
+    source: "form",
+    url: "https://example.org/paper/new",
+    read: "2026-11-13",
+    fields: { f: field },
+  },
+});
+
+test.each([
+  ["a checkbox", { kind: "checkbox", required: true }],
+  ["a choice", { kind: "choice", options: ["Full", "Short"] }],
+  ["a multi-line text", { kind: "multiline_text" }],
+  ["a whole number with bounds", { kind: "integer", min: 1, max: 9 }],
+  ["a number with one bound", { kind: "number", max: 2.5 }],
+  ["a file upload", { kind: "document" }],
+  ["attachments", { kind: "attachments", required: true }],
+])("a preset recording %s is accepted", (_what, field) => {
+  assert.equal(refusalOf("v.jsonc", withField(field)), "");
+});
+
+test.each([
+  ["a choice without options", { kind: "choice" }],
+  ["a checkbox with options", { kind: "checkbox", options: ["a"] }],
+  ["a text with a bound", { kind: "text", min: 1 }],
+  ["an unknown kind", { kind: "radio", options: ["a"] }],
+  ["an integer with an unknown key", { kind: "integer", step: 1 }],
+])("🔴 a preset recording %s is refused by the schema", (_what, field) => {
+  assert.match(
+    refusalOf("v.jsonc", withField(field)),
+    /^v\.jsonc does not match venue-profile\.schema\.json:/u,
+  );
+});
+
+test("🔴 a field the schema lets through but the kind forbids is refused, naming the field", () => {
+  // JSON Schema cannot compare `min` with `max`; the typed declaration is the second check.
+  assert.equal(
+    refusalOf("v.jsonc", withField({ kind: "integer", min: 5, max: 1 })),
+    'v.jsonc: "submission_fields" field "f": min 5 is above max 1',
+  );
+});

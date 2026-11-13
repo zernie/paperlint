@@ -39,7 +39,9 @@ import type { Reading } from "./domain/deadline.ts";
 import {
   RESERVED_FIELD_KEYS,
   reservedKey,
-  type FieldKind,
+  declareField,
+  type FieldDeclaration,
+  type FieldJson,
   type VenueFields,
 } from "./domain/submission-fields.ts";
 
@@ -312,20 +314,10 @@ interface SubmissionFieldsJson {
   readonly source: VenueFields["source"];
   readonly url: string;
   readonly read: string;
-  readonly fields: Readonly<
-    Record<
-      string,
-      {
-        readonly kind: FieldKind;
-        readonly required?: boolean;
-        readonly label?: string;
-        readonly options?: readonly string[];
-      }
-    >
-  >;
+  readonly fields: Readonly<Record<string, FieldJson>>;
 }
 
-/** A preset's `submission_fields`, or null when it records none; a reserved field name is refused. */
+/** A preset's `submission_fields`, or null when it records none; a reserved field name, or a field that contradicts its kind, is refused. */
 function submissionFieldsOf(
   j: SubmissionFieldsJson | undefined,
   file: string,
@@ -336,21 +328,21 @@ function submissionFieldsOf(
     throw new Error(
       `${file}: "submission_fields" names "${reserved}", which paperlint sends itself (${RESERVED_FIELD_KEYS.join(", ")}) — a field of that name would overwrite it`,
     );
+  const declared = Object.entries(j.fields).map(
+    ([key, f]) => [key, declareField(f)] as const,
+  );
+  const fields: readonly (readonly [string, FieldDeclaration])[] =
+    declared.flatMap(([key, d]) => (d.ok ? [[key, d.value] as const] : []));
+  const errors = declared.flatMap(([key, d]) =>
+    d.ok ? [] : [`field "${key}": ${d.error}`],
+  );
+  if (errors.length > 0)
+    throw new Error(`${file}: "submission_fields" ${errors.join("; ")}`);
   return {
     source: j.source,
     url: j.url,
     read: j.read,
-    fields: Object.fromEntries(
-      Object.entries(j.fields).map(([key, f]) => [
-        key,
-        {
-          kind: f.kind,
-          required: f.required ?? false,
-          label: f.label ?? null,
-          options: f.options ?? [],
-        },
-      ]),
-    ),
+    fields: Object.fromEntries(fields),
   };
 }
 

@@ -38,7 +38,13 @@ own venue preset"); steps 1 to 7 are the same.
    \`src/preset-card-rule.test.ts\`, \`src/tex-venue-rules.test.ts\`, \`src/venue-rules.test.ts\`,
    \`src/paper-settings-commands.test.ts\`, the count in \`test/preset-cards.test.ts\`. Then
    \`npx prettier --write\` on what you wrote.
-8. **Run**: \`npx eslint presets/\`, then \`npx vitest run\` on those files plus \`scripts/refresh-deadlines\`
+8. **A portal's form fields** (\`"submission_fields"\`): record them only from a logged-in read of
+   the form, never from memory or from another venue's preset. Each field gets the kind that matches
+   its control (\`docs/submission.md\` lists them: \`checkbox\`, \`choice\` for a dropdown or radio
+   buttons, \`checkboxes\`, \`integer\`, \`number\`, \`text\`, \`multiline_text\`, \`email\`, \`pc_conflicts\`,
+   \`document\`, \`attachments\`) and \`"required": true\` when the form marks it required; a choice
+   lists its options spelled as the form spells them.
+9. **Run**: \`npx eslint presets/\`, then \`npx vitest run\` on those files plus \`scripts/refresh-deadlines\`
    and \`src/folder-venue-rule.test.ts\`. \`npm run refresh-deadlines -- --presets <copy of presets/>\`
    shows whether the portal agrees with the preset; it also rewrites portal readings, so run it on a
    copy. Not the full \`npm run check\`.
