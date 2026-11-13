@@ -348,3 +348,7 @@ export const WANT: NewSubmission = {
 /** What `new` leaves to the site of a venue whose preset records none of the form's own fields. */
 export const ON_THE_SITE =
   '  - on the site: every field of the form the venue preset does not record in "submission_fields" (with none recorded: the topics, the PC conflicts, a paper type, consent boxes …)';
+
+/** What `new` and `update --submit` add when the venue preset records no form: the portal may keep a draft. */
+export const DRAFT_WARNING =
+  "  - WARNING: the venue preset records no \"submission_fields\", so paperlint cannot tell which field the form requires; the portal may keep the paper a DRAFT until it is set on the site — read the portal's messages above and `show`'s status";

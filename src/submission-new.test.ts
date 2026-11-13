@@ -21,6 +21,7 @@ import {
   DEFAULT_TEX,
   newFiles,
   WANT,
+  DRAFT_WARNING,
   ON_THE_SITE,
   NO_ERRORS,
 } from "../test/submission-fixtures.ts";
@@ -45,6 +46,7 @@ test("new: a dry run by default — title from \\title, abstract from \\begin{ab
     "changes       new, title, abstract, authors, submission",
     `still to do for ${SITE}/paper/<its number> — paperlint sent the title, the abstract, the authors and the PDF:`,
     ON_THE_SITE,
+    DRAFT_WARNING,
     "  - then mark it submitted: npx paperlint submission update papers/p --submit (a dry run; --save after your yes)",
   ]);
   // A dry run writes nothing.

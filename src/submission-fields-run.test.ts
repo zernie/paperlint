@@ -9,6 +9,7 @@ import {
   fakePortal,
   run,
   SUBMISSION_FIELDS,
+  DRAFT_WARNING,
 } from "../test/submission-fixtures.ts";
 
 const FIELDS = {
@@ -186,7 +187,9 @@ test("🔴 update on a venue whose form requires a topic, the paper giving no fi
   const r = await run({ sub: "update" }, { files: paperWith(undefined) });
   expect(r.code).toBe(2);
   expect(r.seen).toStrictEqual([]);
-  expect(r.errs[0]).toMatch(/paperlint\.json: "fields"\.topics: /);
+  expect(r.errs[0]).toMatch(
+    /paperlint\.json: "fields" does not fill 1 field the venue's form requires: topics /,
+  );
 });
 
 test("🔴 new: a topic the portal did not take — said, and exit 1 even though it created the submission", async () => {
@@ -244,4 +247,92 @@ test("topics: a failure in the portal's words, exit 1", async () => {
   );
   expect(r.code).toBe(1);
   expect(r.errs[0]).toBe("the portal cannot be reached: down");
+});
+
+/** A form with a required "Submission Type" choice and a required file upload, as #411 met one. */
+const TYPED = {
+  source: "form",
+  url: "https://example.org/form",
+  read: "2026-11-13",
+  fields: {
+    paper_type: {
+      kind: "choice",
+      required: true,
+      label: "Submission Type",
+      options: ["Full", "Short"],
+    },
+    appendix: { kind: "attachments", required: true },
+  },
+};
+
+const typedPaper = (fields: unknown) =>
+  files({
+    submissionFields: TYPED,
+    paper: { extends: "../../venue.jsonc", submission: { id: 7 }, fields },
+  });
+
+test("🔴 update --submit: a required field the paper leaves unfilled is refused BEFORE anything is sent, naming it", async () => {
+  const portal = fakePortal({});
+  const r = await run(
+    { sub: "update", submit: true, save: true },
+    { files: typedPaper(undefined), portal },
+  );
+  expect(r.code).toBe(2);
+  expect(r.errs).toStrictEqual([
+    '/w/papers/p/paperlint.json: "fields" does not fill 1 field the venue\'s form requires: paper_type "Submission Type" (choice: one of "Full", "Short")',
+  ]);
+  expect(r.seen).toStrictEqual([]);
+});
+
+test("update --submit: the choice filled, it is sent as the option's own spelling; the file field stays on the site", async () => {
+  const portal = fakePortal({
+    update: ok({
+      httpStatus: 200,
+      valid: true,
+      changes: ["Submission Type"],
+      messages: [],
+      dryRun: true,
+    }),
+  });
+  const r = await run(
+    { sub: "update", submit: true },
+    { files: typedPaper({ paper_type: "Short" }), portal },
+  );
+  expect(r.code).toBe(0);
+  const call = r.seen[0]?.calls[0];
+  expect(Array.isArray(call) ? call[2] : null).toMatchObject({
+    submit: true,
+    fields: { paper_type: "Short" },
+  });
+  expect(r.out.join("\n")).not.toContain("DRAFT");
+});
+
+test("🔴 update --submit on a venue whose preset records no form: the send goes on, and says the portal may keep the paper a draft", async () => {
+  const portal = fakePortal({});
+  const r = await run({ sub: "update", submit: true }, { portal });
+  expect(r.code).toBe(0);
+  expect(r.out).toContain(DRAFT_WARNING);
+  const plain = await run({ sub: "update" }, { portal: fakePortal({}) });
+  expect(plain.out.join("\n")).not.toContain("DRAFT");
+});
+
+test("new: a file field of the form is named as an upload only the site takes, not as an answer to give", async () => {
+  const fs = files({
+    submissionFields: TYPED,
+    paper: {
+      extends: "../../venue.jsonc",
+      authors: [{ name: "Ada", email: "ada@example.org" }],
+      fields: { paper_type: "Full" },
+    },
+    extra: {
+      [`${PAPER}/paper.tex`]:
+        "\\title{T}\\begin{document}\\begin{abstract}An abstract.\\end{abstract}\\end{document}",
+    },
+  });
+  const r = await run({ sub: "new" }, { files: fs, portal: fakePortal({}) });
+  expect(r.code).toBe(0);
+  expect(r.out).toContain(
+    "  - on the site: appendix (a file upload; paperlint sends none)",
+  );
+  expect(r.out.join("\n")).not.toContain("answer appendix");
 });

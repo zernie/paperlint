@@ -118,7 +118,7 @@
       }
     },
     "submission_fields": {
-      "description": "The fields the edition's submission form asks beyond the title, the abstract, the authors and the PDF, as READ — where (`source`: `portal`, through the portal's API; `form`, copied from the form), from which page and on which day. Read by `paperlint submission`: a paper answers them in its paperlint.json `fields`, checked against these before anything is sent, so an option the form does not offer is refused here instead of dropped by the portal without a word. `fields` maps the portal API's key to its kind: `checkboxes` (a list of `options`, HotCRP's topics spelled \"Group: Topic\"), `text`, `email`, `pc_conflicts` (PC member's email → conflict type). `required`: the form does not complete without it. A child's value replaces its parent's.",
+      "description": "The fields the edition's submission form asks beyond the title, the abstract, the authors and the PDF, as READ — where (`source`: `portal`, through the portal's API; `form`, copied from the form), from which page and on which day. Read by `paperlint submission`: a paper answers them in its paperlint.json `fields`, checked against these before anything is sent, so an option the form does not offer is refused here instead of dropped by the portal without a word. `fields` maps the portal API's key to its kind: `checkbox` (true or false), `choice` (one of `options`, a dropdown or radio buttons), `checkboxes` (a list of `options`, HotCRP's topics spelled \"Group: Topic\"), `integer` and `number` (within `min` and `max`), `text`, `multiline_text`, `email`, `pc_conflicts` (PC member's email → conflict type), and `document` and `attachments` (file uploads, which paperlint declares but does not send). `required`: the form does not complete without it. A child's value replaces its parent's.",
       "type": "object",
       "additionalProperties": false,
       "required": ["source", "url", "read", "fields"],
@@ -140,7 +140,19 @@
             "properties": {
               "kind": {
                 "type": "string",
-                "enum": ["checkboxes", "text", "email", "pc_conflicts"]
+                "enum": [
+                  "checkbox",
+                  "choice",
+                  "checkboxes",
+                  "integer",
+                  "number",
+                  "text",
+                  "multiline_text",
+                  "email",
+                  "pc_conflicts",
+                  "document",
+                  "attachments"
+                ]
               },
               "required": { "type": "boolean" },
               "label": { "type": "string", "minLength": 1 },
@@ -149,11 +161,29 @@
                 "minItems": 1,
                 "uniqueItems": true,
                 "items": { "type": "string", "minLength": 1 }
-              }
+              },
+              "min": { "type": "number" },
+              "max": { "type": "number" }
             },
-            "if": { "properties": { "kind": { "const": "checkboxes" } } },
-            "then": { "required": ["options"] },
-            "else": { "not": { "required": ["options"] } }
+            "allOf": [
+              {
+                "if": {
+                  "properties": { "kind": { "enum": ["choice", "checkboxes"] } }
+                },
+                "then": { "required": ["options"] },
+                "else": { "not": { "required": ["options"] } }
+              },
+              {
+                "if": {
+                  "properties": { "kind": { "enum": ["integer", "number"] } }
+                },
+                "else": {
+                  "not": {
+                    "anyOf": [{ "required": ["min"] }, { "required": ["max"] }]
+                  }
+                }
+              }
+            ]
           }
         }
       }
