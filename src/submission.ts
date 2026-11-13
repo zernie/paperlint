@@ -621,15 +621,15 @@ async function runUpdate(
   const change = changeOf(a, bytes, abstract.value, t.fields);
   const r = await portal.update(t.id, change, { save: a.save });
   if (!r.ok) return failed(r.error, deps);
-  const sent = {
-    shown,
-    bytes,
-    save: a.save,
-    submit: a.submit,
-    plan: plan.value,
-  };
-  return afterUpdate(t, r.value, sent, deps);
+  return afterUpdate(t, r.value, sentOf(a, { shown, bytes }, plan.value), deps);
 }
+
+/** What `afterUpdate` needs to know of the send: the file, the flags, what a save freezes. Pure. */
+const sentOf = (
+  a: Pick<SubmissionArgs, "save" | "submit">,
+  file: { readonly shown: string; readonly bytes: Uint8Array },
+  plan: FreezePlan | null,
+) => ({ ...file, save: a.save, submit: a.submit, plan });
 
 /** The portal's answer to `update` printed, and what it kept frozen: the exit code. */
 function afterUpdate(

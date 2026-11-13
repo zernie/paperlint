@@ -324,3 +324,43 @@ test("declareField: the declaration is typed by kind, absent values made explici
     error: 'options repeat "A"',
   });
 });
+
+test("🔴 parsePaperFields: the line for an unfilled field says what each kind takes, bounds included", () => {
+  const venue: VenueFields = {
+    source: "form",
+    url: "https://example.org/form",
+    read: "2026-11-13",
+    fields: {
+      n: { kind: "integer", required: true, label: null, min: 1, max: 12 },
+      x: { kind: "number", required: true, label: null, min: null, max: null },
+      y: { kind: "number", required: true, label: null, min: 0, max: null },
+      pc: { kind: "pc_conflicts", required: true, label: null },
+      many: { kind: "checkboxes", required: true, label: null, options: ["a"] },
+      mail: { kind: "email", required: true, label: null },
+    },
+  };
+  const r = parsePaperFields({}, venue, "v");
+  expect(r.ok ? "accepted" : r.error).toBe(
+    '"fields" does not fill 6 fields the venue\'s form requires: n (a whole number from 1 up to 12), x (a number), y (a number from 0), pc (pc_conflicts: PC member\'s email → conflict type), many (checkboxes: one or more of "a"), mail (email)',
+  );
+});
+
+test("🔴 parsePaperFields: a required multiline text may not be blank; an optional one may be empty", () => {
+  const venue: VenueFields = {
+    source: "form",
+    url: "https://example.org/form",
+    read: "2026-11-13",
+    fields: {
+      must: { kind: "multiline_text", required: true, label: null },
+      may: { kind: "multiline_text", required: false, label: null },
+    },
+  };
+  expect(parsePaperFields({ must: " \n " }, venue, "v")).toStrictEqual({
+    ok: false,
+    error: '"fields".must: the form requires an entry',
+  });
+  expect(parsePaperFields({ must: "x", may: "" }, venue, "v")).toStrictEqual({
+    ok: true,
+    value: { must: "x", may: "" },
+  });
+});

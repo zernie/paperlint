@@ -80,26 +80,30 @@ interface FieldBase {
  */
 export type FieldDeclaration = FieldBase &
   (
-    | {
-        readonly kind: "choice" | "checkboxes";
-        readonly options: readonly [string, ...string[]];
-      }
-    | {
-        readonly kind: "integer" | "number";
-        readonly min: number | null;
-        readonly max: number | null;
-      }
-    | {
-        readonly kind:
-          | "checkbox"
-          | "text"
-          | "multiline_text"
-          | "email"
-          | "pc_conflicts"
-          | "document"
-          | "attachments";
-      }
+    | Each<
+        "choice" | "checkboxes",
+        { readonly options: readonly [string, ...string[]] }
+      >
+    | Each<
+        "integer" | "number",
+        { readonly min: number | null; readonly max: number | null }
+      >
+    | Each<
+        | "checkbox"
+        | "text"
+        | "multiline_text"
+        | "email"
+        | "pc_conflicts"
+        | "document"
+        | "attachments",
+        object
+      >
   );
+
+/** One declaration member per kind, so a switch on `kind` narrows to exactly one. */
+type Each<K extends FieldKind, X extends object> = K extends unknown
+  ? { readonly kind: K } & X
+  : never;
 
 /** A field as the preset's JSON holds it, after the schema accepted its shape. */
 export interface FieldJson {
@@ -140,12 +144,33 @@ function optionsOf(
 ): Result<readonly [string, ...string[]], string> {
   const [first, ...rest] = options ?? [];
   if (first === undefined) return err("a choice needs options");
-  const twice = repeated([first, ...rest]);
-  return twice === null
-    ? first === "" || rest.includes("")
-      ? err("an option is empty")
-      : ok([first, ...rest])
-    : err(`options repeat ${JSON.stringify(twice)}`);
+  const all = [first, ...rest];
+  const twice = repeated(all);
+  if (twice !== null) return err(`options repeat ${JSON.stringify(twice)}`);
+  return all.includes("") ? err("an option is empty") : ok([first, ...rest]);
+}
+
+/** A choice or checkboxes declaration from its JSON. Pure. */
+function declareOptions(
+  j: FieldJson & { readonly kind: "choice" | "checkboxes" },
+  base: FieldBase,
+): Result<FieldDeclaration, string> {
+  const options = optionsOf(j.options);
+  return options.ok
+    ? ok({ ...base, kind: j.kind, options: options.value })
+    : options;
+}
+
+/** An integer or number declaration from its JSON. Pure. */
+function declareBounds(
+  j: FieldJson & { readonly kind: "integer" | "number" },
+  base: FieldBase,
+): Result<FieldDeclaration, string> {
+  const min = j.min ?? null;
+  const max = j.max ?? null;
+  return min !== null && max !== null && min > max
+    ? err(`min ${String(min)} is above max ${String(max)}`)
+    : ok({ ...base, kind: j.kind, min, max });
 }
 
 /** A preset's field → the typed declaration, or the one line saying what is wrong with it. Pure. */
@@ -153,19 +178,10 @@ export function declareField(j: FieldJson): Result<FieldDeclaration, string> {
   const base = { required: j.required ?? false, label: j.label ?? null };
   const stray = strayKeys(j);
   if (stray !== null) return err(stray);
-  if (j.kind === "choice" || j.kind === "checkboxes") {
-    const options = optionsOf(j.options);
-    return options.ok
-      ? ok({ ...base, kind: j.kind, options: options.value })
-      : options;
-  }
-  if (j.kind === "integer" || j.kind === "number") {
-    const min = j.min ?? null;
-    const max = j.max ?? null;
-    return min !== null && max !== null && min > max
-      ? err(`min ${String(min)} is above max ${String(max)}`)
-      : ok({ ...base, kind: j.kind, min, max });
-  }
+  if (j.kind === "choice" || j.kind === "checkboxes")
+    return declareOptions({ ...j, kind: j.kind }, base);
+  if (j.kind === "integer" || j.kind === "number")
+    return declareBounds({ ...j, kind: j.kind }, base);
   return ok({ ...base, kind: j.kind });
 }
 
@@ -187,52 +203,54 @@ const CONFLICT = z.union([z.literal(true), z.string().trim().min(1)]);
 
 /** A number schema within the declaration's bounds. Pure. */
 const bounded = (
-  s: z.ZodNumber,
+  s: Readonly<z.ZodNumber>,
   d: { readonly min: number | null; readonly max: number | null },
-): z.ZodNumber => {
+): Readonly<z.ZodNumber> => {
   const lo = d.min === null ? s : s.min(d.min);
   return d.max === null ? lo : lo.max(d.max);
 };
 
-/** One field's value schema, from its declaration: what a paper may give for it, not whether it must. Pure. */
-function valueSchema(d: FieldDeclaration): Readonly<z.ZodType> {
+type Of<K extends FieldKind> = FieldDeclaration & { readonly kind: K };
+
+const notAnOption = (i: { readonly input?: unknown }): string =>
+  `${JSON.stringify(i.input)} is not one of the form's options`;
+
+/** A choice's or a checkbox list's value schema. Pure. */
+function optionsSchema(d: Of<"choice" | "checkboxes">): Readonly<z.ZodType> {
+  const one = z
+    .string()
+    .refine((v) => d.options.includes(v), { error: notAnOption });
+  return d.kind === "choice"
+    ? one
+    : z
+        .array(one)
+        .min(d.required ? 1 : 0, { error: "the form requires at least one" })
+        .refine((l) => new Set(l).size === l.length, {
+          error: "an option is given twice",
+        });
+}
+
+/** A text's value schema; a multiline one keeps its line breaks. Pure. */
+function textSchema(d: Of<"text" | "multiline_text">): Readonly<z.ZodType> {
+  return d.kind === "text"
+    ? z
+        .string()
+        .trim()
+        .min(d.required ? 1 : 0)
+    : z.string().refine((v) => !d.required || v.trim() !== "", {
+        error: "the form requires an entry",
+      });
+}
+
+/** The value schema of a kind that takes no option and no bound. Pure. */
+function plainSchema(
+  d: Of<"checkbox" | "email" | "pc_conflicts" | "document" | "attachments">,
+): Readonly<z.ZodType> {
   switch (d.kind) {
     case "checkbox":
       return d.required
         ? z.literal(true, { error: "the form requires this box to be ticked" })
         : z.boolean();
-    case "choice":
-      return z.string().refine((v) => d.options.includes(v), {
-        error: (i) =>
-          `${JSON.stringify(i.input)} is not one of the form's options`,
-      });
-    case "checkboxes":
-      return z
-        .array(
-          z.string().refine((v) => d.options.includes(v), {
-            error: (i) =>
-              `${JSON.stringify(i.input)} is not one of the form's options`,
-          }),
-        )
-        .min(d.required ? 1 : 0, {
-          error: "the form requires at least one",
-        })
-        .refine((l) => new Set(l).size === l.length, {
-          error: "an option is given twice",
-        });
-    case "integer":
-      return bounded(z.number().int(), d);
-    case "number":
-      return bounded(z.number(), d);
-    case "text":
-      return z
-        .string()
-        .trim()
-        .min(d.required ? 1 : 0);
-    case "multiline_text":
-      return z.string().refine((v) => !d.required || v.trim() !== "", {
-        error: "the form requires an entry",
-      });
     case "email":
       return z.email();
     case "pc_conflicts":
@@ -243,6 +261,15 @@ function valueSchema(d: FieldDeclaration): Readonly<z.ZodType> {
         error: "paperlint sends no file for this field — add it on the site",
       });
   }
+}
+
+/** One field's value schema, from its declaration: what a paper may give for it, not whether it must. Pure. */
+function valueSchema(d: FieldDeclaration): Readonly<z.ZodType> {
+  if (d.kind === "choice" || d.kind === "checkboxes") return optionsSchema(d);
+  if (d.kind === "integer") return bounded(z.number().int(), d);
+  if (d.kind === "number") return bounded(z.number(), d);
+  if (d.kind === "text" || d.kind === "multiline_text") return textSchema(d);
+  return plainSchema(d);
 }
 
 /** The schema of a paper's `fields` for these venue fields: every key declared, each value of its kind. Pure. */
@@ -264,25 +291,39 @@ export const fileFieldKeys = (venue: VenueFields | null): readonly string[] =>
     .filter(([, d]) => FILE_KINDS.includes(d.kind))
     .map(([key]) => key);
 
+const plainShape: Readonly<
+  Record<
+    Of<
+      | "checkbox"
+      | "text"
+      | "multiline_text"
+      | "email"
+      | "pc_conflicts"
+      | "document"
+      | "attachments"
+    >["kind"],
+    string
+  >
+> = {
+  checkbox: "checkbox: true",
+  text: "text",
+  multiline_text: "multiline_text",
+  email: "email",
+  pc_conflicts: "pc_conflicts: PC member's email → conflict type",
+  document: "document",
+  attachments: "attachments",
+};
+
 /** What a kind takes, in a few words, for the line that says a field is unfilled. Pure. */
 function shapeOf(d: FieldDeclaration): string {
   const list = (o: readonly string[]): string =>
     o.map((x) => JSON.stringify(x)).join(", ");
-  switch (d.kind) {
-    case "checkbox":
-      return "checkbox: true";
-    case "choice":
-      return `choice: one of ${list(d.options)}`;
-    case "checkboxes":
-      return `checkboxes: one or more of ${list(d.options)}`;
-    case "integer":
-    case "number":
-      return `${d.kind === "integer" ? "a whole number" : "a number"}${d.min === null ? "" : ` from ${String(d.min)}`}${d.max === null ? "" : ` up to ${String(d.max)}`}`;
-    case "pc_conflicts":
-      return "pc_conflicts: PC member's email → conflict type";
-    default:
-      return d.kind;
-  }
+  if (d.kind === "choice") return `choice: one of ${list(d.options)}`;
+  if (d.kind === "checkboxes")
+    return `checkboxes: one or more of ${list(d.options)}`;
+  if (d.kind === "integer" || d.kind === "number")
+    return `${d.kind === "integer" ? "a whole number" : "a number"}${d.min === null ? "" : ` from ${String(d.min)}`}${d.max === null ? "" : ` up to ${String(d.max)}`}`;
+  return plainShape[d.kind];
 }
 
 /** The line naming every required field the paper left unfilled, or null when it filled them all. Pure. */

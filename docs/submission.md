@@ -52,23 +52,48 @@ paper already has a submission id.
 ## The venue's own fields
 
 A venue preset records its form's own fields in `"submission_fields"`, as read (`source`, `url`,
-`read`), each by the API's key with a kind: `checkboxes` (with its `options`), `text`, `email`,
-`pc_conflicts`. The paper answers them in `"fields"`:
+`read`), each by the API's key with a kind, `required: true` when the form will not complete
+without it, and a `label` when the form's own name differs from the key. The kinds are the HotCRP
+form controls the API can set (the list, with the HotCRP source it was read from:
+[`hotcrp-option-types.md`](prior-art/hotcrp-option-types.md)):
+
+| kind                      | form control               | preset records                                          | the paper gives (`"fields"`)                                                |
+| ------------------------- | -------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `checkbox`                | one checkbox               | `{ "kind": "checkbox", "required": true }`              | `"attest": true` (a required one must be `true`)                            |
+| `choice`                  | dropdown or radio buttons  | `{ "kind": "choice", "options": ["Full", "Short"] }`    | `"paper_type": "Short"` — one option, spelled as listed                     |
+| `checkboxes`              | checkboxes, topic selector | `{ "kind": "checkboxes", "options": ["Group: Topic"] }` | `"topics": ["Group: Topic"]` — none twice                                   |
+| `integer`                 | whole number               | `{ "kind": "integer", "min": 1, "max": 12 }`            | `"pages": 8`                                                                |
+| `number`                  | decimal number             | `{ "kind": "number", "min": 0 }`                        | `"score": 2.5`                                                              |
+| `text`                    | one-line text              | `{ "kind": "text" }`                                    | `"note": "free text"`                                                       |
+| `multiline_text`          | multi-line text            | `{ "kind": "multiline_text" }`                          | `"summary": "line one\nline two"`                                           |
+| `email`                   | author selector            | `{ "kind": "email" }`                                   | `"ACMCorAut": "you@example.org"` — an author's email                        |
+| `pc_conflicts`            | PC conflicts               | `{ "kind": "pc_conflicts" }`                            | `"pc_conflicts": { "someone@example.org": "collaborator" }`                 |
+| `document`, `attachments` | file uploads               | `{ "kind": "attachments" }`                             | nothing: paperlint sends no file for it; `new` lists it under "on the site" |
 
 ```json
 "fields": {
+  "paper_type": "Short",
   "topics": ["SE Topic: AI for software engineering"],
   "pc_conflicts": { "someone@example.org": "collaborator" },
   "ACMCorAut": "you@example.org"
 }
 ```
 
-They are checked against the preset before anything is sent: a key the form does not ask, a topic it
-does not offer, a missing required one, each stops the command with exit 2. HotCRP keeps a topic it
-does not know as nothing, without an error (a bare `"AI for software engineering"`, without its
-group, is one), so after the portal answers, a topic list it did not take prints `NOT TAKEN` and
-exits 1. `paperlint submission topics` reads the topics the portal offers and marks each against
-the preset.
+They are checked against the preset before anything is sent: a key the form does not ask, a value
+of the wrong kind (a choice that is not one of the options, a whole number that is not whole or is
+outside `min`/`max`, a required box left unticked), and every required field the paper leaves unfilled
+(named together, each with what it takes) stop the command with exit 2 — for `new` and for `update`,
+`--submit` included, so a paper the portal would keep a draft («Entry required to complete
+submission») is not sent as if it were done. A field the form has and the preset does not record is not
+checked: when the preset records no `submission_fields` at all, the command goes on, and after the
+send it says plainly that the portal may keep the paper a draft until the unrecorded fields are set
+on the site. HotCRP keeps a topic it does not know as nothing, without an error (a bare
+`"AI for software engineering"`, without its group, is one), so after the portal answers, a topic
+list it did not take prints `NOT TAKEN` and exits 1. `paperlint submission topics` reads the topics
+the portal offers and marks each against the preset.
+
+Not supported: file uploads (declared, never sent), the author certification (each author's own
+attestation), section breaks (no value). HotCRP has no date type: a date is a `text` field.
 
 ## `show`
 

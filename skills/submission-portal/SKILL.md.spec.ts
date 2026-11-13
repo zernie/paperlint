@@ -21,7 +21,10 @@ Only HotCRP is supported; for any other portal the command says so and the uploa
 \`new\` and \`update\` also send the paper's \`"fields"\` — its answers to the venue's own form
 fields (topics, PC conflicts, a corresponding author …), which the venue preset records in
 \`"submission_fields"\` (\`paperlint:msr\` does). A value the form does not offer is refused before
-anything is sent; a topic the portal did not take prints \`NOT TAKEN\` and fails the command. What
+anything is sent, and so is a paper that leaves a required field unfilled (the command names each);
+a topic the portal did not take prints \`NOT TAKEN\` and fails the command. A field is a checkbox
+(\`true\`), a choice (one option, spelled as listed), checkboxes, a whole number, a number, text,
+multi-line text, an author's email or PC conflicts; file uploads stay on the site. What
 the preset records no field for stays on the site: the command prints that list, with the
 submission's page, after \`new\`.
 
@@ -43,9 +46,10 @@ their own environment.
   in from the paper, a profile or memory.
 - **For \`show\` and \`update\`: \`"submission": { "id": <number> }\`** — \`new --save\` writes it.
 - **\`"fields"\` in the paper's \`paperlint.json\`**, keyed as the preset's \`"submission_fields"\`
-  names them: \`{ "topics": ["<an option, spelled as listed>"], "pc_conflicts": { "<pc email>":
-  "<conflict type>" }, "ACMCorAut": "<an author's email>" }\`. Written only with the author's
-  choices, below.
+  names them: \`{ "topics": ["<an option, spelled as listed>"], "paper_type": "<one option, spelled
+  as listed>", "attest": true, "pages": 8, "pc_conflicts": { "<pc email>": "<conflict type>" },
+  "ACMCorAut": "<an author's email>" }\`. Written only with the author's choices, below; every
+  required field must be there before \`update --submit\`, or the command refuses and names them.
 
 A missing key or token stops the command with exit 2 and a line naming what to set — fix exactly that.
 
