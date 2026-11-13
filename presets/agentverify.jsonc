@@ -31,6 +31,32 @@
     "url": "https://icse2027-agentverify.hotcrp.com",
   },
 
+  // The form's own fields, read 2026-11-13 with an author's token. `/api/searchcompletion` names
+  // the paper-type field `SubTyp` with three options; registering a paper without it answered
+  // «Submission Type: Entry required to complete submission» and left it a draft, so it is required.
+  // The portal offers no topics (`paperlint submission topics`: 0). `ACMCorAut` is offered
+  // (`show:ACMCorAut`) and was not required. The field's API key is HotCRP's `json_key ?? name`
+  // (`src/paperoption.php`); a dry run took `SubTyp` (see the PR that added this block).
+  "submission_fields": {
+    "source": "portal",
+    "url": "https://icse2027-agentverify.hotcrp.com/api/searchcompletion",
+    "read": "2026-11-13",
+    "fields": {
+      "SubTyp": {
+        "kind": "choice",
+        "required": true,
+        "label": "Submission Type",
+        "options": [
+          "Full Paper (Maximum of 8 pages, including references)",
+          "Short & Demonstration Paper (Maximum of 4 pages, including references)",
+          "Extended Abstract (Maximum of 2 pages, including references)",
+        ],
+      },
+      "pc_conflicts": { "kind": "pc_conflicts" },
+      "ACMCorAut": { "kind": "email", "label": "ACM corresponding author" },
+    },
+  },
+
   // The portal's reading: `"sub":1794657599` = 2026-11-14T11:59:59Z = the end of 13 Nov AoE. It
   // agrees with the call and with the ICSE workshops page; the organizers' email of 2026-10-23
   // (agentverify.md) says the same and that there is no separate abstract deadline, so there is no
