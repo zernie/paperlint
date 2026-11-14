@@ -420,3 +420,157 @@ it("the gates' messages: which gate, then and now, the output's commit, and what
       PAGE,
   ]);
 });
+
+// ── self-checks are not results (issue #483) ─────────────────────────────────────────────────────
+
+const C = { commit: "c".repeat(40), date: "2026-10-16T10:30:00+05:00" };
+const CHECKED: DecideFirstStudy = {
+  ...STUDY,
+  mode: {
+    ...STUDY.mode,
+    outputs: ["data/**"],
+    checks: ["data/gate.json"],
+  },
+  tree: ["plan.json", "README.md", "decision.md", "data/gate.json"],
+  facts: {
+    kind: "read",
+    decision: D,
+    decisionDeleted: false,
+    files: [
+      { path: "decision.md", ...D, order: "same" },
+      { path: "plan.json", ...D, order: "same" },
+      { path: "data/gate.json", ...C, order: "after" },
+      { path: "data/scores.json", ...A, order: "after" },
+    ],
+  },
+};
+
+it("the gates are held to the first result, never to a self-check that came before it", () => {
+  const files = CHECKED.facts.kind === "read" ? CHECKED.facts.files : [];
+  // Guards: the harness's own check (`data/gate.json`) matches the outputs' glob and came first; the
+  // plan is dated against the scored file, and with only the check in history there is no result yet.
+  expect([
+    firstOutputAfter(CHECKED, files),
+    firstOutputAfter(CHECKED, files.slice(0, 3)),
+  ]).toEqual([{ path: "data/scores.json", ...A, order: "after" }, null]);
+});
+
+it("a self-check committed with or before its decision is still reported, as a check", () => {
+  const facts = {
+    kind: "read",
+    decision: D,
+    decisionDeleted: false,
+    files: [
+      { path: "data/gate.json", ...D, order: "same" },
+      { path: "data/scores.json", ...A, order: "after" },
+    ],
+  } as const;
+  // Guards: a check run before its decision is as wrong as a result run before it; named as a check.
+  expect([
+    judgeOrder({ ...CHECKED, facts }),
+    judgeOrder({
+      ...CHECKED,
+      facts: {
+        kind: "read",
+        decision: null,
+        decisionDeleted: false,
+        files: [],
+      },
+    }),
+  ]).toEqual([
+    [
+      {
+        problem: "output-before-decision",
+        id: "P1-S01",
+        folder: "P1-S01-x",
+        path: "data/gate.json",
+        role: "check",
+        output: D,
+        decision: D,
+        same: true,
+      },
+    ],
+    [
+      {
+        problem: "undecided-output",
+        id: "P1-S01",
+        folder: "P1-S01-x",
+        path: "data/gate.json",
+        role: "check",
+        decision: "repro/P1-S01-x/decision.md",
+      },
+    ],
+  ]);
+});
+
+it("a file both an output and a check is a finding: the plan does not say whether it is a result", () => {
+  const both = {
+    ...CHECKED,
+    mode: { ...CHECKED.mode, checks: ["data/*.json"] },
+  };
+  // Guards: each such file once, from the tree or from history; the clean plan is silent.
+  expect([judgeOrder(CHECKED), judgeOrder(both)]).toEqual([
+    [],
+    [
+      {
+        problem: "output-and-check",
+        id: "P1-S01",
+        folder: "P1-S01-x",
+        path: "data/gate.json",
+        output: "data/**",
+        check: "data/*.json",
+      },
+      {
+        problem: "output-and-check",
+        id: "P1-S01",
+        folder: "P1-S01-x",
+        path: "data/scores.json",
+        output: "data/**",
+        check: "data/*.json",
+      },
+    ],
+  ]);
+});
+
+it("the messages of a check: before its decision, with no decision, and both an output and a check", () => {
+  // Guards: the whole text a person reads for each.
+  expect(
+    (
+      [
+        {
+          problem: "output-before-decision",
+          id: "P1-S01",
+          folder: "P1-S01-x",
+          path: "data/gate.json",
+          role: "check",
+          output: A,
+          decision: D,
+          same: false,
+        },
+        {
+          problem: "undecided-output",
+          id: "P1-S01",
+          folder: "P1-S01-x",
+          path: "data/gate.json",
+          role: "check",
+          decision: "repro/P1-S01-x/decision.md",
+        },
+        {
+          problem: "output-and-check",
+          id: "P1-S01",
+          folder: "P1-S01-x",
+          path: "data/gate.json",
+          output: "data/**",
+          check: "data/*.json",
+        },
+      ] as const
+    ).map(orderMessage),
+  ).toEqual([
+    `\`repro/P1-S01-x/data/gate.json\`, a self-check of \`P1-S01\` (\`mode.checks\`), entered history in ${"a".repeat(12)} (${A.date}), not after the commit that first recorded its decision, ${"d".repeat(12)} (${D.date}). The study is declared decided before its run, and its history does not show that order. What to do: if the decision really came first, nothing in this history can prove it — declare the study \`exploratory\` with the reason, or run it again after the decision; never rewrite the history to make it pass.` +
+      PAGE,
+    "`repro/P1-S01-x/data/gate.json` is a self-check of `P1-S01` (`mode.checks`) — in the tree, or in its history — and the study is decided before its run, but its decision `repro/P1-S01-x/decision.md` was never committed. What to do: write and commit the decision, check it with `npx paperlint studies gate <paper-dir> P1-S01`, then run the study again; if the self-check was made before any decision, declare the study `exploratory` with the reason. Deleting the self-check does not undo it: history keeps it." +
+      PAGE,
+    "`repro/P1-S01-x/data/gate.json` is matched by both the output `data/**` and the self-check `data/*.json` of `P1-S01`: the plan does not say whether it is a result. A self-check (a harness reproducing stored results, a gate run) is never a result, and the plan's gates are dated against the first result. What to do: make the globs disjoint — narrow `mode.outputs` or `mode.checks` so the file matches one of them." +
+      PAGE,
+  ]);
+});
