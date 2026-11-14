@@ -37,6 +37,13 @@
   "deadlines": [
     {
       "what": "submission",
+      "at": "2026-11-21T11:59:59Z",
+      "source": "portal",
+      "url": "https://icse2027-nlbse.hotcrp.com/deadlines",
+      "read": "2026-11-14",
+    },
+    {
+      "what": "submission",
       "at": "2026-11-14T11:59:59Z",
       "source": "call",
       "url": "https://conf.researchr.org/home/icse-2027/nlbse-2027",

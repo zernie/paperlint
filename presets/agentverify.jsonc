@@ -70,6 +70,13 @@
       "read": "2026-10-26",
     },
     {
+      "what": "resubmission",
+      "at": "2026-11-16T11:59:59Z",
+      "source": "portal",
+      "url": "https://icse2027-agentverify.hotcrp.com/deadlines",
+      "read": "2026-11-14",
+    },
+    {
       "what": "notification",
       "at": "2026-12-12T11:59:59Z",
       "source": "call",
