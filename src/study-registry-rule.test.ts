@@ -67,6 +67,16 @@ const registered = (
 
 const P1 = (...studies: Study[]): StudyRegistry => ({ prefix: "P1", studies });
 
+/**
+ * A study that has run names its plan (issue #483): a spike's, ready with no mode, so the index's
+ * mode columns stay `—`. `ran` is the row, `planFile` the file its folder holds.
+ */
+const ran = (over: Partial<Study>): Study =>
+  study({ kind: "spike", plan: "plan.json", ...over });
+const planFile = (s: Study): Record<string, string> => ({
+  [`${DIR}/repro/${s.folder}/plan.json`]: planText(planOf(undefined)),
+});
+
 interface Reported {
   readonly messageId: string;
   readonly message: string;
@@ -108,7 +118,7 @@ const messages = (tree: Readonly<Record<string, string>>): string[] =>
 
 describe("repro/study-registered — silent", () => {
   it("on a registered repro/ with its index in sync, beside tools/, data/ and byproducts", () => {
-    const done = study({
+    const done = ran({
       id: "P1-S02",
       folder: "P1-S02-ablation",
       status: "done",
@@ -118,6 +128,7 @@ describe("repro/study-registered — silent", () => {
     expect(
       lint({
         ...registered(P1(study(), done)),
+        ...planFile(done),
         [`${DIR}/repro/P1-S02-ablation/out/results.tsv`]: "x\n",
         [`${DIR}/repro/tools/run.py`]: "x",
         [`${DIR}/repro/data/numbers.tsv`]: "x",
@@ -195,7 +206,8 @@ describe("repro/study-registered — reports, once each, on line 1", () => {
 
 describe("repro/study-registered — reports a row's status and the index", () => {
   it("done without a result", () => {
-    expect(messages(registered(P1(study({ status: "done" }))))).toEqual([
+    const s = ran({ status: "done" });
+    expect(messages({ ...registered(P1(s)), ...planFile(s) })).toEqual([
       studyMessage({
         problem: "no-result",
         id: "P1-S01",
@@ -205,13 +217,8 @@ describe("repro/study-registered — reports a row's status and the index", () =
   });
 
   it("done with a result_file that is not there", () => {
-    expect(
-      messages(
-        registered(
-          P1(study({ status: "done", result: "x", result_file: "r.tsv" })),
-        ),
-      ),
-    ).toEqual([
+    const s = ran({ status: "done", result: "x", result_file: "r.tsv" });
+    expect(messages({ ...registered(P1(s)), ...planFile(s) })).toEqual([
       studyMessage({
         problem: "result-file",
         id: "P1-S01",
@@ -222,7 +229,8 @@ describe("repro/study-registered — reports a row's status and the index", () =
   });
 
   it("superseded without a target", () => {
-    expect(messages(registered(P1(study({ status: "superseded" }))))).toEqual([
+    const s = ran({ status: "superseded" });
+    expect(messages({ ...registered(P1(s)), ...planFile(s) })).toEqual([
       studyMessage({
         problem: "no-successor",
         id: "P1-S01",
@@ -236,6 +244,57 @@ describe("repro/study-registered — reports a row's status and the index", () =
     expect(messages(registered(r, withIndex("# x\n", P1(), NO_FACTS)))).toEqual(
       [studyMessage({ problem: "stale-index", why: "differs" })],
     );
+  });
+});
+
+describe("repro/study-registered — a study that has run names a plan, whatever it measures (issue #483)", () => {
+  /** A re-analysis of stored data, done, in no measurement: the case the issue reports. */
+  const recount = study({
+    status: "done",
+    result: "4 re-counts agree",
+    result_file: "RESULTS.md",
+  });
+  const RESULT = {
+    [`${DIR}/repro/P1-S01-baseline/RESULTS.md`]: "4 of 4\n",
+  };
+
+  it("reports a done study whose row names no plan", () => {
+    // Guards: before #483 this tree linted clean — only a headline measurement's study was asked.
+    expect(lint({ ...registered(P1(recount)), ...RESULT })).toEqual([
+      {
+        messageId: "no-plan",
+        message: studyMessage({
+          problem: "no-plan",
+          id: "P1-S01",
+          status: "done",
+        }),
+        line: 1,
+      },
+    ]);
+  });
+
+  it("is silent once the row names an exploratory plan with its reason", () => {
+    const row = { ...recount, plan: "plan.json" };
+    const plan = planOf({
+      kind: "exploratory",
+      reason:
+        "re-counts of stored data, registered after the numbers were seen",
+    });
+    const r = P1(row);
+    const readme = withIndex("# Reproduction index\n", r, {
+      plans: new Map([
+        ["P1-S01-baseline/plan.json", { kind: "ready", plan } as const],
+      ]),
+      history: new Map(),
+    });
+    // Guards: a plan written after the run, saying so, is what the rule asks for.
+    expect(
+      lint({
+        ...registered(r, readme),
+        ...RESULT,
+        [`${DIR}/repro/P1-S01-baseline/plan.json`]: planText(plan),
+      }),
+    ).toEqual([]);
   });
 });
 
@@ -307,9 +366,11 @@ describe("repro/study-registered — a directory where the registry should be", 
 
 describe("repro/study-registered — a result_file the disk cannot hold", () => {
   it("reads as missing, and the disk is never asked (the disk adapter throws on a NUL)", () => {
-    const r = P1(study({ status: "running", result_file: "a\u0000b.tsv" }));
+    const s = ran({ status: "running", result_file: "a\u0000b.tsv" });
+    const r = P1(s);
     const files = memoryFiles({
       ...SCAFFOLD,
+      ...planFile(s),
       [`${DIR}/repro/studies.json`]: registryText(r),
       [`${DIR}/repro/README.md`]: withIndex("# index\n", r, NO_FACTS),
       [`${DIR}/repro/P1-S01-baseline/README.md`]: "# s\n",

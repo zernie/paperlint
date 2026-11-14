@@ -9,7 +9,9 @@ import { describe, expect, it } from "vitest";
 import {
   INDEX_BEGIN,
   INDEX_END,
+  PLAN_FILE,
   addStudy,
+  folderKey,
   embeddedIndex,
   isStudyKind,
   indexBlock,
@@ -25,6 +27,7 @@ import {
   type RegistryState,
   type Study,
   type StudyInput,
+  type StudyPlan,
   type StudyRegistry,
   type IndexInput,
 } from "./study-registry.ts";
@@ -41,8 +44,19 @@ const study = (over: Partial<Study> = {}): Study => ({
   status: "designing",
   date: "2026-10-15",
   in_paper: "no",
+  // Every study that has run names its plan (issue #483); `input` gives each a ready one.
+  plan: PLAN_FILE,
   ...over,
 });
+
+/** A ready plan of no mode: what every row's plan holds unless a test says otherwise. */
+const PLAN: StudyPlan = {
+  question: "How often does the agent pass?",
+  population: { source: "tasks", draw: { kind: "all", method: "census" } },
+  arms: [],
+  primary_outcome: "pass rate",
+  author_check: null,
+};
 
 const reg = (...studies: Study[]): StudyRegistry => ({
   prefix: "P1",
@@ -63,7 +77,18 @@ const input = (
   registry: read(r),
   readme: withIndex("# Reproduction index\n", r, NO_FACTS),
   results: new Map(),
-  plans: new Map(),
+  plans: new Map(
+    r.studies.flatMap((s) =>
+      s.plan === undefined
+        ? []
+        : [
+            [
+              folderKey(s.folder, s.plan),
+              { kind: "ready", plan: PLAN } as const,
+            ],
+          ],
+    ),
+  ),
   ...over,
 });
 

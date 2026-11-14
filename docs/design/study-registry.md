@@ -193,9 +193,11 @@ two commands that write it.
 
    The schemas live beside the registry's, in `src/adapters/study-registry/`. The rule reports a
    `plan` outside the folder, missing, or not of the schema, and — once the study has run (`running`,
-   `done`, `stopped`, `superseded`) — a draft (`bad-plan`); a study of a headline measurement
-   that has run with no `author_check` in its plan, no plan, or a check by anyone but `author`
-   (`author-check`). A `designing` study's template is clean, so `studies new` never leaves the lint
+   `done`, `stopped`, `superseded`) — a draft (`bad-plan`); a study that has run whose row names
+   no plan, whatever its kind or measurement (`no-plan`, issue #483: a re-count of data already seen
+   is the forking path a plan records, and an exploratory plan with its reason answers it); a study
+   of a headline measurement that has run whose plan has no `author_check`, or a check by anyone but
+   `author` (`author-check`). A `designing` study's template is clean, so `studies new` never leaves the lint
    red.
 
    **Compatibility.** A row may name `prereg.json` as its plan: it is parsed by a loose schema of

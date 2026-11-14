@@ -8,6 +8,7 @@ import type {
   ParsedRegistry,
   StudyKind,
 } from "../domain/study-registry.ts";
+import type { DeclaredGates } from "../domain/study-gates.ts";
 import type { ParsedResult } from "../domain/study-result.ts";
 
 export interface StudyRegistryCodec {
@@ -18,6 +19,11 @@ export interface StudyRegistryCodec {
    * study of a `kind` that must declare its mode (a measurement) is ready only with one.
    */
   readonly parsePlan: (text: string, kind: StudyKind) => ParsedPlan;
+  /**
+   * A plan's text read for its gates alone (src/domain/study-gates.ts): a plan v2 whose gate fields
+   * parse, whatever the rest of it holds; a plan v1; or why its gates cannot be read.
+   */
+  readonly parseGates: (text: string) => DeclaredGates;
   /** A plan still named `prereg.json`, loose: the same three outcomes. */
   readonly parseLegacyPlan: (text: string) => ParsedPlan;
   /** A study's `result.json`: its numbers, or why it is none (src/domain/study-result.ts). */

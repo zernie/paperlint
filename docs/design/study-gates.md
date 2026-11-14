@@ -66,13 +66,18 @@ another.
 - **Not checked:** that the number named is the right one to decide the question — the author's
   check.
 
-**Frozen at the first output.** All five gates are held by git's history
+**Frozen at the first result.** All five gates are held by git's history
 ([`repro/outputs-before-decision`](../rules/repro/outputs-before-decision.md)): the plan as it stood
-at the commit of the study's first output (the first that came after its decision) must declare each
-gate exactly as HEAD's plan does. A gate edited since is `gates-changed`: a threshold moved after the
-result was seen can only follow the result. A plan that was not in history yet at that commit, or was
-a v1 or unreadable there, is `gates-not-fixed`. Edits to other parts of the plan (its question, its
-source) are not reported.
+at the commit of the study's first result (the first file an output glob matches and no
+`mode.checks` glob does, among those that came after its decision) must declare each gate exactly as
+HEAD's plan does. A self-check — a harness reproducing an earlier study's stored verdicts, a gate run
+— is never that result: named in `mode.checks`, it is held to the decision like an output and the
+gates are dated past it (issue #483). A gate edited since is `gates-changed`: a threshold moved after
+the result was seen can only follow the result. A plan that was not in history yet at that commit, or
+was a v1 there, or not JSON, or whose gate field was not of its schema, is `gates-not-fixed`. The gates
+are read there on their own: a plan v2 that failed the schema in another field (a draw's `kind`) still
+fixed the gates it declared. Edits to other parts of the plan (its question, its source) are not
+reported.
 
 ### `second_check` — two raters on each labelling step
 

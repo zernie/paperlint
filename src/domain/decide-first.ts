@@ -14,20 +14,32 @@
  * Outputs that were committed and later deleted count: an output that existed before the decision is
  * evidence after it is gone.
  *
+ * A plan may name its self-checks apart from its outputs (`mode.checks`: a harness reproducing stored
+ * verdicts, a gate run). A check is held to the decision exactly like an output — run before its
+ * decision, it is as wrong — but it is never a RESULT: the gates below are dated against the first
+ * file that is an output and no check. A check glob carves files out of a wider output glob
+ * (`data/**` less `data/gate.json`), so a plan need not rewrite its outputs to name its checks; the
+ * same glob listed as both is refused by the plan's parser.
+ *
  * A plan v2's gates (src/domain/study-gates.ts) are frozen by the same history: the plan as it stood
- * at the commit of the study's first output must declare them exactly as HEAD's does. A gate changed
+ * at the commit of the study's first result must declare them exactly as HEAD's does. A gate changed
  * since is `gates-changed` (a threshold moved after the result was seen); a plan absent from that
- * commit, or one without gates there (v1, or unreadable), is `gates-not-fixed`. Pure.
+ * commit, or one without gates there (v1, not JSON, or a gate field not of its schema), is
+ * `gates-not-fixed`. The gates are read there on their own: a plan v2 that failed the schema in some
+ * other field still fixed the gates it declared. Pure.
  */
-import { isDeepEqual } from "remeda";
+import { isDeepEqual, unique } from "remeda";
 import { README } from "./repro-layout.ts";
 import { GATE_NAMES, type PlanGates } from "./study-gates.ts";
 import {
   decisionAsOutput,
   inStudy,
-  isOutput,
+  matchingGlob,
   type DecideFirst,
 } from "./study-mode.ts";
+
+/** What a file the decision gates is to the plan: a result of the run, or a self-check. */
+export type Role = "output" | "check";
 
 /** What a decision path names on disk when it is no file git can vouch for. */
 export type NotAFile = "directory" | "symbolic link" | "special file";
@@ -142,6 +154,7 @@ export type OrderFinding =
       readonly id: string;
       readonly folder: string;
       readonly path: string;
+      readonly role: Role;
       readonly decision: string;
     }
   | {
@@ -167,27 +180,43 @@ export type OrderFinding =
       readonly id: string;
       readonly folder: string;
       readonly path: string;
+      readonly role: Role;
       readonly output: CommitAt;
       readonly decision: CommitAt;
       readonly same: boolean;
     };
 
-/** Whether `path` (relative to the study's folder) is an output and none of the study's own files. */
-const outputOf =
+/** Whether `path` (relative to the study's folder) is one of the study's own files: never gated. */
+const ownFile = (s: DecideFirstStudy, path: string): boolean =>
+  [README, s.plan, inStudy(s.folder, s.mode.decision.file)].includes(path);
+
+/**
+ * What `path` (relative to the study's folder) is to the decision: a self-check when a check glob
+ * matches it, else an output when an output glob does; null when neither, or one of the study's own.
+ */
+const roleOf =
+  (s: DecideFirstStudy) =>
+  (path: string): Role | null => {
+    if (ownFile(s, path)) return null;
+    if (matchingGlob(s.mode.checks ?? [], path) !== null) return "check";
+    return matchingGlob(s.mode.outputs, path) === null ? null : "output";
+  };
+
+/** Whether `path` is a result: an output, and no check. */
+const resultOf =
   (s: DecideFirstStudy) =>
   (path: string): boolean =>
-    ![README, s.plan, inStudy(s.folder, s.mode.decision.file)].includes(path) &&
-    isOutput(s.mode.outputs, path);
+    roleOf(s)(path) === "output";
 
-/** The files of a read history that are outputs of the study, oldest first commit first. */
+/** The files of a read history that are results of the study (outputs, no checks), oldest first commit first. */
 export const outputCommits = (
   s: DecideFirstStudy,
   files: readonly FirstCommit[],
-): readonly FirstCommit[] => files.filter((f) => outputOf(s)(f.path));
+): readonly FirstCommit[] => files.filter((f) => resultOf(s)(f.path));
 
 /**
- * The first output of the study that entered history after its decision: the commit whose plan the
- * gates are held to. None while no output followed the decision.
+ * The first result of the study that entered history after its decision: the commit whose plan the
+ * gates are held to. A self-check is never it. None while no result followed the decision.
  */
 export const firstOutputAfter = (
   s: DecideFirstStudy,
@@ -225,30 +254,59 @@ const ordered = (
   s: DecideFirstStudy,
   decision: CommitAt | null,
   files: readonly FirstCommit[],
-): readonly OrderFinding[] => {
-  const isOut = outputOf(s);
-  const at = { id: s.id, folder: s.folder };
-  if (decision === null)
-    // The tree's outputs, then those only history holds: deleting an output does not erase it.
-    return [...new Set([...s.tree, ...files.map((f) => f.path)])]
-      .filter(isOut)
-      .map((path) => ({
-        problem: "undecided-output",
-        ...at,
-        path,
-        decision: s.mode.decision.file,
-      }));
-  return files
-    .filter((f) => isOut(f.path) && f.order !== "after")
-    .map((f) => ({
-      problem: "output-before-decision",
-      ...at,
-      path: f.path,
-      output: { commit: f.commit, date: f.date },
-      decision,
-      same: f.order === "same",
-    }));
-};
+): readonly OrderFinding[] =>
+  decision === null ? undecided(s, files) : early(s, decision, files);
+
+/** Each output and check while the decision was never committed: the tree's, then history's — deleting one does not erase it. */
+const undecided = (
+  s: DecideFirstStudy,
+  files: readonly FirstCommit[],
+): readonly OrderFinding[] =>
+  everyPath(s, files).flatMap((path): readonly OrderFinding[] => {
+    const role = roleOf(s)(path);
+    return role === null
+      ? []
+      : [
+          {
+            problem: "undecided-output",
+            id: s.id,
+            folder: s.folder,
+            path,
+            role,
+            decision: s.mode.decision.file,
+          },
+        ];
+  });
+
+/** Each output and check whose first commit is not a strict descendant of the decision's. */
+const early = (
+  s: DecideFirstStudy,
+  decision: CommitAt,
+  files: readonly FirstCommit[],
+): readonly OrderFinding[] =>
+  files.flatMap((f): readonly OrderFinding[] => {
+    const role = roleOf(s)(f.path);
+    return role === null || f.order === "after"
+      ? []
+      : [
+          {
+            problem: "output-before-decision",
+            id: s.id,
+            folder: s.folder,
+            path: f.path,
+            role,
+            output: { commit: f.commit, date: f.date },
+            decision,
+            same: f.order === "same",
+          },
+        ];
+  });
+
+/** Every path of the study once: the tree's, then those only history holds. */
+const everyPath = (
+  s: DecideFirstStudy,
+  files: readonly FirstCommit[],
+): readonly string[] => unique([...s.tree, ...files.map((f) => f.path)]);
 
 /** Every defect of a decide-first study, in a fixed order: the plan's, then the history's. */
 export const judgeOrder = (s: DecideFirstStudy): readonly OrderFinding[] => {
@@ -310,7 +368,18 @@ const NOT_A_FILE: Readonly<Record<NotAFile, string>> = {
 const GATES_THEN: Readonly<Record<"absent" | "v1" | "unreadable", string>> = {
   absent: "was not in history yet",
   v1: "was a plan v1, which declares no gates,",
-  unreadable: "was no plan paperlint could read",
+  unreadable:
+    "was not JSON, or declared gates paperlint could not read (each gate is read on its own, whatever the rest of the plan held),",
+};
+
+/** What a gated file is of its study, in a message: `an output of`, `a self-check of`. */
+const ROLE: Readonly<Record<Role, string>> = {
+  output: "an output of",
+  check: "a self-check of",
+};
+const NOUN: Readonly<Record<Role, string>> = {
+  output: "output",
+  check: "self-check",
 };
 
 const short = (c: CommitAt): string => `${c.commit.slice(0, 12)} (${c.date})`;
@@ -331,13 +400,13 @@ const HEADS: {
   shallow: (f) =>
     `\`${f.id}\` is decided before its run, and this clone is shallow: every file's first commit is the clone's first, so the order of decision and outputs cannot be read. What to do: fetch the whole history (\`git fetch --unshallow\`; in GitHub Actions, \`actions/checkout\` with \`fetch-depth: 0\`).`,
   "undecided-output": (f) =>
-    `\`repro/${f.folder}/${f.path}\` is an output of \`${f.id}\` — in the tree, or in its history — and the study is decided before its run, but its decision \`${f.decision}\` was never committed. What to do: write and commit the decision, check it with \`npx paperlint studies gate <paper-dir> ${f.id}\`, then run the study again; if the output was made before any decision, declare the study \`exploratory\` with the reason. Deleting the output does not undo it: history keeps it.`,
+    `\`repro/${f.folder}/${f.path}\` is ${ROLE[f.role]} \`${f.id}\`${f.role === "check" ? " (`mode.checks`)" : ""} — in the tree, or in its history — and the study is decided before its run, but its decision \`${f.decision}\` was never committed. What to do: write and commit the decision, check it with \`npx paperlint studies gate <paper-dir> ${f.id}\`, then run the study again; if the ${NOUN[f.role]} was made before any decision, declare the study \`exploratory\` with the reason. Deleting the ${NOUN[f.role]} does not undo it: history keeps it.`,
   "gates-changed": (f) =>
     `The gate \`${f.gate}\` in the plan of \`${f.id}\`, \`repro/${f.folder}/${f.plan}\`, was ${JSON.stringify(f.then)} when its first output, \`${f.output.path}\`, entered history in ${short(f.output)}, and is ${JSON.stringify(f.now)} now. A gate is fixed before the run: moved after a result exists, it can only follow the result. What to do: put the gate back as it was; if it was wrong, say so in the paper and run the study again under the corrected plan — never edit the history to make it pass.`,
   "gates-not-fixed": (f) =>
     `The plan of \`${f.id}\`, \`repro/${f.folder}/${f.plan}\`, ${GATES_THEN[f.why]} when its first output, \`${f.output.path}\`, entered history in ${short(f.output)}: its gates were not fixed before the run. What to do: run the study again now that the plan v2 is committed; if the outputs must stand, declare the study \`exploratory\` with the reason.`,
   "output-before-decision": (f) =>
-    `\`repro/${f.folder}/${f.path}\`, an output of \`${f.id}\`, entered history in ${short(f.output)}, ${f.same ? "the very commit" : "not after the commit"} that first recorded its decision, ${short(f.decision)}. The study is declared decided before its run, and its history does not show that order. What to do: if the decision really came first, nothing in this history can prove it — declare the study \`exploratory\` with the reason, or run it again after the decision; never rewrite the history to make it pass.`,
+    `\`repro/${f.folder}/${f.path}\`, ${ROLE[f.role]} \`${f.id}\`${f.role === "check" ? " (`mode.checks`)" : ""}, entered history in ${short(f.output)}, ${f.same ? "the very commit" : "not after the commit"} that first recorded its decision, ${short(f.decision)}. The study is declared decided before its run, and its history does not show that order. What to do: if the decision really came first, nothing in this history can prove it — declare the study \`exploratory\` with the reason, or run it again after the decision; never rewrite the history to make it pass.`,
 };
 
 const headOf = <P extends keyof FindingOf>(p: P, f: FindingOf[P]): string =>

@@ -14,6 +14,7 @@ A study decided before its run — its plan's `mode` is `decide_before_run`, the
   "mode": {
     "kind": "decide_before_run",
     "outputs": ["out/**", "RESULTS.md"],
+    "checks": ["out/gate.json"],
     "decision": {
       "file": "repro/P1-S01-outcome/decision.md",
       "note": "exclusions, veto, and the sample approved"
@@ -22,12 +23,19 @@ A study decided before its run — its plan's `mode` is `decide_before_run`, the
 }
 ```
 
-- **`output-before-decision`** — an output (a file the `outputs` globs match, under the study's
-  folder) whose FIRST commit is not a strict descendant of the decision file's FIRST commit: earlier,
-  on a line of history the decision is not on, or in the very same commit, which says nothing about
-  which came first. An output committed and later deleted still counts.
-- **`undecided-output`** — an output in the tree, or one ever committed and since deleted, while the
-  decision file has never been committed.
+`checks` (optional) names the study's **self-checks**: files its harness writes that are never
+results — a re-run of an earlier study's stored verdicts to prove the harness reproduces them, a gate
+run. A check glob carves its files out of a wider output glob (`out/**` less `out/gate.json`), so a
+plan names its checks without rewriting its outputs; the same glob listed in both is refused when the
+plan is parsed ([`repro/study-registered`](study-registered.md) reports it as `bad-plan`).
+
+- **`output-before-decision`** — an output or a self-check (a file the `outputs` or `checks` globs
+  match, under the study's folder) whose FIRST commit is not a strict descendant of the decision
+  file's FIRST commit: earlier, on a line of history the decision is not on, or in the very same
+  commit, which says nothing about which came first. An output committed and later deleted still
+  counts. A self-check is held to its decision like an output, and the message names it as one.
+- **`undecided-output`** — an output or a self-check in the tree, or one ever committed and since
+  deleted, while the decision file has never been committed.
 - **`decision-is-output`** — the decision file lies in the study's folder and an output glob matches
   it: the decision would be a file its own run produces.
 - **`decision-deleted`** — the decision file was committed and later deleted: it is not in HEAD, so
@@ -44,10 +52,14 @@ A study decided before its run — its plan's `mode` is `decide_before_run`, the
 - **`no-history`** — git could not answer (not installed, not a repository).
 - **`gates-changed`** — the plan is a plan v2 ([`docs/design/study-gates.md`](../../design/study-gates.md)),
   and one of its gates (`mode.we_lose_if`, `second_check`, `self_test`, `funnel`, `recall_audit`) differs from what
-  the plan declared at the commit of the study's first output after its decision: a threshold moved
-  after a result exists. One finding per changed gate, with its value then and now.
-- **`gates-not-fixed`** — the plan v2 was not in history at that commit, or was a plan v1 or no
-  readable plan there: its gates were not fixed before the run.
+  the plan declared at the commit of the study's first **result** after its decision — the first file
+  an output glob matches and no check glob does; a self-check is never it: a threshold moved after a
+  result exists. One finding per changed gate, with its value then and now.
+- **`gates-not-fixed`** — the plan v2 was not in history at that commit, or was a plan v1 there, or
+  not JSON, or a gate field there was not of its schema: its gates were not fixed before the run. The
+  gates are read on their own: a plan v2 that failed the schema in another field at that commit (a
+  draw's `kind`, an arm) still fixed the gates it declared, and HEAD's plan is
+  [`repro/study-registered`](study-registered.md)'s to judge.
 
 The study's own files — `plan.json`, `README.md` and the decision file — are never outputs. A symbolic
 link in the study's folder is one entry, as git stores it, and is never followed: a link to the folder
@@ -115,6 +127,8 @@ No rule options. The study declares its mode in its plan.
 
 ## What it does not check
 
+- That a file named in `checks` really is a self-check. A result listed there is never dated against
+  the gates; the plan, and the author's check of it, are where that is caught.
 - What the decision says. The gate is that it is committed, not its content.
 - **A decision amended after the outputs**: the order is between FIRST commits. A later edit of the
   decision file is visible in its history (`git log -- <file>`) but not reported.

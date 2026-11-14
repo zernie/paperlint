@@ -75,6 +75,7 @@ it("the template of a measurement is a draft decided before its run, its decisio
   expect(t.mode).toEqual({
     kind: "decide_before_run",
     outputs: [],
+    checks: [],
     decision: { file: "repro/P1-S02-x/decision.md", note: "" },
     we_lose_if: null,
   });
@@ -156,6 +157,39 @@ it("refuses a decision path that names the paper's folder or a directory, and ke
   expect(
     empty(withMode({ ...DECIDED, decision: { file: "", note: "n" } })),
   ).toEqual(["mode.decision.file"]);
+});
+
+it("a decide-first mode names its self-checks apart from its outputs: optional, inside the folder, each once", () => {
+  const checked = {
+    ...DECIDED,
+    outputs: ["data/**"],
+    checks: ["data/gate.json"],
+  };
+  // Guards: a check narrower than an output glob is the field's use; with none, or none listed, the
+  // plan is ready as before.
+  expect([
+    parse(withMode(checked)),
+    parse(withMode({ ...DECIDED, checks: [] })).kind,
+  ]).toEqual([{ kind: "ready", plan: { ...PLAN, mode: checked } }, "ready"]);
+  // Guards: the same refusals as an output's; an exploratory mode has no checks.
+  expect([
+    why(withMode({ ...DECIDED, checks: ["../x"] })),
+    why(withMode({ ...DECIDED, checks: ["a", "a"] })),
+    why(withMode({ ...EXPLORATORY, checks: ["a"] })),
+  ]).toEqual([
+    "mode.checks.0: is not a path inside the study's folder, or names its README.md",
+    "mode.checks: the check «a» is listed more than once",
+    'mode: Unrecognized key: "checks"',
+  ]);
+});
+
+it("refuses one glob listed both as an output and as a check: a self-check is never a result", () => {
+  // Guards: the same files cannot be a result and not a result; a narrower check stays legal (above).
+  expect(
+    why(withMode({ ...DECIDED, checks: ["RESULTS.md", "gate.json"] })),
+  ).toBe(
+    "mode.checks: «RESULTS.md» is listed both as an output and as a check — a self-check is never a result: keep it in one of the two",
+  );
 });
 
 it("mode is a field of the plan, so extra cannot carry it", () => {

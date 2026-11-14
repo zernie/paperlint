@@ -11,7 +11,8 @@
  * "None" and "two at once" cannot be written: the plan holds one `mode`, a union on its `kind`, and a
  * measurement study's plan is not ready without it (the parser, `src/adapters/study-registry/`).
  *
- * Paths: `outputs` are globs relative to the study's folder (the study's results live there); the
+ * Paths: `outputs` and `checks` are globs relative to the study's folder (the study's results and its
+ * self-checks live there); the
  * decision's `file` is relative to the PAPER's folder, so a decision may live beside the study or
  * anywhere in the paper (`research/decisions.md`). Pure.
  */
@@ -32,6 +33,12 @@ export interface DecideFirst {
   readonly kind: "decide_before_run";
   /** Globs relative to the study's folder: the files the run produces. */
   readonly outputs: readonly string[];
+  /**
+   * Globs relative to the study's folder: the files that are self-checks, never results — a harness
+   * reproducing stored verdicts, a gate run. Held to the decision like an output, never the result
+   * the plan's gates are dated against. A file both an output and a check is a finding. Absent: none.
+   */
+  readonly checks?: readonly string[] | undefined;
   readonly decision: Decision;
   /**
    * A plan v2's falsifier (src/domain/study-gates.ts): when the claim loses; null while undecided.
@@ -65,9 +72,11 @@ export const inStudy = (folder: string, paperPath: string): string | null => {
   return n.startsWith(prefix) ? n.slice(prefix.length) : null;
 };
 
-/** Whether the file at `path` (relative to the study's folder) is one of `outputs`. */
-export const isOutput = (outputs: readonly string[], path: string): boolean =>
-  outputs.some((g) => posix.matchesGlob(path, g));
+/** The first of `globs` that matches `path` (relative to the study's folder); null when none does. */
+export const matchingGlob = (
+  globs: readonly string[],
+  path: string,
+): string | null => globs.find((g) => posix.matchesGlob(path, g)) ?? null;
 
 /**
  * The output glob that matches the study's own decision file, when the file lies in the study's

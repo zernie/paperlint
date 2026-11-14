@@ -144,6 +144,7 @@ author's check of the drawn units. `paperlint studies new` writes the template b
   "mode": {
     "kind": "decide_before_run",
     "outputs": [],
+    "checks": [],
     "decision": { "file": "repro/P1-S02-census/decision.md", "note": "" },
     "we_lose_if": null
   },
@@ -169,6 +170,7 @@ That is a measurement's template, a plan v2. Another kind's has no `$schema`, `m
 | `extra`                  | optional: the paper's own keys (hypotheses, models, budget), kept unread             |
 | `mode`                   | a measurement's: exactly one of `decide_before_run` or `exploratory`                 |
 | `$schema`                | a plan v2 says so here; without it the plan is v1                                    |
+| `mode.checks`            | decide-first, optional: globs of the study's self-checks, never results (below)      |
 | `mode.we_lose_if`        | v2, decide-first only: the number its claim loses by, `below` or `above` a threshold |
 | `second_check`           | v2: per labelling step, the least kappa between two raters, or `"none"`              |
 | `self_test`              | v2: how the study's check is run on known answers first, or `"none"`                 |
@@ -195,7 +197,10 @@ counted from the source, and a stored copy could only contradict it.
 The plan is closed at every level, and holds no contradiction. Each of these makes the file "not a
 study plan" (`bad-plan`, with the reason): a misspelt key; a key of the paper's own outside `extra`,
 or a key of `extra` that is a field of the plan; a missing key — `null` is the one way to say "not
-yet"; a `seeded` draw without its seed, or an `all` draw with one; two arms of one name; and an
+yet"; a `seeded` draw without its seed, or an `all` draw with one; two arms of one name; one glob
+listed both in `mode.outputs` and in `mode.checks` (a self-check is never a result; a narrower check
+inside a wider output glob is what `checks` is for, see
+[`repro/outputs-before-decision`](outputs-before-decision.md)); and an
 `author_check` on a plan whose required texts are still empty — the author approves a complete plan.
 
 A plan named `prereg.json`, its old name, is parsed by a loose schema — keys of its own accepted at
@@ -236,8 +241,13 @@ The rule reports:
   (`bad-plan`);
 - a measurement registered on or after 2026-10-31 whose plan is v1, without `$schema`
   (`plan-version`): its gates are not declared. A measurement registered earlier keeps its plan v1;
-- a study of a `headline` measurement that has run with no `author_check` in its plan — or no plan —
-  or, when the registry names its `author`, a check by anyone else (`author-check`).
+- a study that has run (`running`, `done`, `stopped`, `superseded`) whose row names no `plan`,
+  whatever its kind and whether or not it belongs to a measurement (`no-plan`). A re-count or a
+  re-analysis of data already seen is the forking path a plan records; a plan written after the run
+  says so with `"mode": { "kind": "exploratory", "reason": "…" }`, which answers it;
+- a study of a `headline` measurement that has run, whose plan has no `author_check`, or, when the
+  registry names its `author`, a check by anyone else (`author-check`). A row with no plan at all is
+  `no-plan`'s, reported once.
 
 A study that is still `designing` owes neither a filled plan nor the author's check: the template
 `studies new` writes is clean until the first run. A `dropped` study owes neither.

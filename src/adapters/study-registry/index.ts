@@ -47,6 +47,7 @@ import {
 import {
   NONE,
   PLAN_V2,
+  type DeclaredGates,
   type Funnel,
   type KappaStep,
   type RecallAudit,
@@ -278,6 +279,8 @@ const mode = z.discriminatedUnion("kind", [
   z.strictObject({
     kind: z.literal("decide_before_run"),
     outputs,
+    // Self-checks, never results (issue #483): globs inside the folder, each once; optional.
+    checks: z.array(inFolder).superRefine(once("the check")).optional(),
     decision: decisionShape,
     we_lose_if: weLoseIf.nullable().optional(),
   }),
@@ -519,9 +522,33 @@ const readyOrDraft =
     return z.NEVER;
   };
 
+/**
+ * A decide-first mode never lists one glob both as an output and as a check: it would name the same
+ * files a result and not a result. A narrower check inside a wider output glob is what `checks` is for.
+ */
+const checksApartFromOutputs = (
+  p: Readonly<z.output<typeof planShape>>,
+  ctx: Readonly<z.core.$RefinementCtx>,
+): void => {
+  const m = p.mode;
+  if (m?.kind !== "decide_before_run") return;
+  (m.checks ?? [])
+    .filter((g) => m.outputs.includes(g))
+    .forEach((g) => {
+      ctx.addIssue({
+        code: "custom",
+        path: ["mode", "checks"],
+        message: `«${g}» is listed both as an output and as a check — a self-check is never a result: keep it in one of the two`,
+      });
+    });
+};
+
 /** A `plan.json` of a study of `kind`: strict, then ready or draft — a measurement's ready only with its mode. */
 const planFor = (kind: StudyKind) =>
-  planShape.superRefine(gatesOfItsVersion).transform(readyOrDraft(kind));
+  planShape
+    .superRefine(gatesOfItsVersion)
+    .superRefine(checksApartFromOutputs)
+    .transform(readyOrDraft(kind));
 
 /**
  * A `prereg.json`: loose, mapped onto the plan, then ready or draft. Written before modes existed, it
@@ -634,6 +661,45 @@ export const parseStudyPlan = (text: string, kind: StudyKind): ParsedPlan =>
 /** A plan still named `prereg.json`: loose, read only when a row names it. */
 export const parseLegacyPlan = planParser(legacyPlan);
 
+/** Whether a plan's JSON says it is a plan v2: an object whose `$schema` is `PLAN_V2`. */
+const saysV2 = z.looseObject({ $schema: z.literal(PLAN_V2) });
+
+/**
+ * A plan v2 read for its gates alone: open everywhere else, so a field outside the gates that fails
+ * the schema (a draw's `kind`, an arm) does not hide gates that were fixed. Each gate is held to its
+ * own schema, and a v2 declares each of the four at its top.
+ */
+const gatesAlone = z.looseObject({
+  mode: z
+    .looseObject({ we_lose_if: weLoseIf.nullable().optional() })
+    .optional(),
+  second_check: secondCheck.nullable(),
+  self_test: selfTest.nullable(),
+  funnel: funnel.nullable(),
+  recall_audit: recallAudit.nullable(),
+});
+
+/** A plan's text read for its gates alone (src/domain/study-gates.ts, `DeclaredGates`). */
+export function parsePlanGates(text: string): DeclaredGates {
+  const json = jsonOf(text);
+  if (json === undefined) return { kind: "unreadable", why: "not JSON" };
+  if (!saysV2.safeParse(json).success) return { kind: "v1" };
+  const parsed = gatesAlone.safeParse(json);
+  if (!parsed.success)
+    return { kind: "unreadable", why: reasons(parsed.error.issues) };
+  const p = parsed.data;
+  return {
+    kind: "gates",
+    gates: {
+      we_lose_if: p.mode?.we_lose_if ?? null,
+      second_check: p.second_check,
+      self_test: p.self_test,
+      funnel: p.funnel,
+      recall_audit: p.recall_audit,
+    },
+  };
+}
+
 /** A study's `result.json` text, parsed once at the boundary: the result, or every reason it is none. */
 export function parseStudyResult(text: string): ParsedResult {
   const json = jsonOf(text);
@@ -647,6 +713,7 @@ export function parseStudyResult(text: string): ParsedResult {
 export const studyRegistryCodec: StudyRegistryCodec = {
   parse: parseStudyRegistry,
   parsePlan: parseStudyPlan,
+  parseGates: parsePlanGates,
   parseLegacyPlan,
   parseResult: parseStudyResult,
 };

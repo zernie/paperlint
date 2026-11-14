@@ -189,6 +189,7 @@ const PROBLEMS: readonly StudyFinding["problem"][] = [
   "empty-measurement",
   "unknown-requirement",
   "headline-approval",
+  "no-plan",
   "bad-plan",
   "plan-version",
   "author-check",
