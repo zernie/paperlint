@@ -44,7 +44,10 @@ A study's `plan.json` holds one `mode`, a union on its `kind` (`src/domain/study
   left to fill — a draft until they are. The decision file itself is NOT created: an empty
   placeholder that got committed would open the gate on nothing.
 - **Paths.** `outputs` are globs relative to the study's folder, inside it, never the study's
-  `README.md`. A decision `file` is relative to the **paper's** folder, so it may live beside the
+  `README.md`. So are the optional `checks`: the study's self-checks (a harness reproducing stored
+  verdicts, a gate run), held to the decision like outputs but never a result — the plan's gates are
+  dated against the first file an output glob matches and no check glob does. A check glob may carve
+  files out of a wider output glob (`data/**` less `data/gate.json`); the same glob in both is refused. A decision `file` is relative to the **paper's** folder, so it may live beside the
   study or anywhere in the paper (`research/decisions.md`); it may not leave the paper, and it is a
   file's path — names joined by `/`, none empty, `.` or `..` — so `.` (the paper itself) or a path
   ending in `/` cannot be written. A name that is a directory on disk is the gate's to refuse and the
@@ -98,7 +101,7 @@ columns for this (`src/domain/index-columns.ts`):
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | `mode`         | `decide_before_run`, `exploratory: <reason>`, or `—` for a study whose plan has none                                         |
 | `decision`     | the decision file's first commit (12 characters) and its date (`, deleted since` when it is not in HEAD), or `not committed` |
-| `first output` | the first commit of the oldest output and its date, or `none`                                                                |
+| `first output` | the first commit of the oldest output that is no self-check (`mode.checks`) and its date, or `none`                          |
 
 A sample row:
 

@@ -254,42 +254,53 @@ const ordered = (
   s: DecideFirstStudy,
   decision: CommitAt | null,
   files: readonly FirstCommit[],
-): readonly OrderFinding[] => {
-  const role = roleOf(s);
-  const at = { id: s.id, folder: s.folder };
-  if (decision === null)
-    // The tree's outputs, then those only history holds: deleting an output does not erase it.
-    return everyPath(s, files).flatMap((path): readonly OrderFinding[] => {
-      const r = role(path);
-      return r === null
-        ? []
-        : [
-            {
-              problem: "undecided-output",
-              ...at,
-              path,
-              role: r,
-              decision: s.mode.decision.file,
-            },
-          ];
-    });
-  return files.flatMap((f): readonly OrderFinding[] => {
-    const r = role(f.path);
-    return r === null || f.order === "after"
+): readonly OrderFinding[] =>
+  decision === null ? undecided(s, files) : early(s, decision, files);
+
+/** Each output and check while the decision was never committed: the tree's, then history's — deleting one does not erase it. */
+const undecided = (
+  s: DecideFirstStudy,
+  files: readonly FirstCommit[],
+): readonly OrderFinding[] =>
+  everyPath(s, files).flatMap((path): readonly OrderFinding[] => {
+    const role = roleOf(s)(path);
+    return role === null
+      ? []
+      : [
+          {
+            problem: "undecided-output",
+            id: s.id,
+            folder: s.folder,
+            path,
+            role,
+            decision: s.mode.decision.file,
+          },
+        ];
+  });
+
+/** Each output and check whose first commit is not a strict descendant of the decision's. */
+const early = (
+  s: DecideFirstStudy,
+  decision: CommitAt,
+  files: readonly FirstCommit[],
+): readonly OrderFinding[] =>
+  files.flatMap((f): readonly OrderFinding[] => {
+    const role = roleOf(s)(f.path);
+    return role === null || f.order === "after"
       ? []
       : [
           {
             problem: "output-before-decision",
-            ...at,
+            id: s.id,
+            folder: s.folder,
             path: f.path,
-            role: r,
+            role,
             output: { commit: f.commit, date: f.date },
             decision,
             same: f.order === "same",
           },
         ];
   });
-};
 
 /** Every path of the study once: the tree's, then those only history holds. */
 const everyPath = (

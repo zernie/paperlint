@@ -124,6 +124,13 @@ const input = (
 const findings = (r: StudyRegistry, over: Partial<StudyInput> = {}) =>
   judgeStudies(input(r, over));
 
+/** A row of a registry without the new keys: `measurement` is a field of its own. */
+const LEGACY_ROW = study({
+  measurement: "census",
+  measurement_title: "Census",
+  plan: PLAN_FILE,
+});
+
 describe("measurements and plans — silent", () => {
   it("on a headline measurement approved by the author, its study's plan checked by the author", () => {
     expect(findings(reg())).toEqual([]);
@@ -132,13 +139,7 @@ describe("measurements and plans — silent", () => {
   it("on a registry without the new keys: a row's `measurement` is a field of its own, as before", () => {
     const r: StudyRegistry = {
       prefix: "P1",
-      studies: [
-        study({
-          measurement: "census",
-          measurement_title: "Census",
-          plan: PLAN_FILE,
-        }),
-      ],
+      studies: [LEGACY_ROW],
     };
     expect(findings(r)).toEqual([]);
   });
@@ -700,30 +701,32 @@ describe("plans — a measurement registered from PLAN_V2_FROM has a plan v2", (
   });
 });
 
-describe("plans — every study that has run names one, whatever its measurement (issue #483)", () => {
-  const RESULT = "RESULTS.md";
-  /** A row of `status`, in no measurement, whose other fields stand for that status. */
-  const ran = (status: Study["status"], over: Partial<Study> = {}): Study =>
-    study({
-      status,
-      ...(status === "done" ? { result: "4 of 5", result_file: RESULT } : {}),
-      ...(status === "superseded" ? { superseded_by: "P1-S01" } : {}),
-      ...over,
-    });
-  /** The registry of one row, with no author, requirement or measurement. */
-  const alone = (s: Study): StudyRegistry => ({ prefix: "P1", studies: [s] });
-  const withResult = (s: Study): Partial<StudyInput> => ({
-    results: new Map([[folderKey(s.folder, RESULT), { kind: "file" }]]),
-  });
-  const EXPLORATORY: StudyPlan = {
-    ...PLAN,
-    author_check: null,
-    mode: {
-      kind: "exploratory",
-      reason: "a re-count of stored data, written after the numbers were seen",
-    },
-  };
+// ── every study that has run names a plan (issue #483) ─────────────────────────────────────────
 
+const RESULT = "RESULTS.md";
+/** A row of `status`, in no measurement, whose other fields stand for that status. */
+const ran = (status: Study["status"], over: Partial<Study> = {}): Study =>
+  study({
+    status,
+    ...(status === "done" ? { result: "4 of 5", result_file: RESULT } : {}),
+    ...(status === "superseded" ? { superseded_by: "P1-S01" } : {}),
+    ...over,
+  });
+/** The registry of one row, with no author, requirement or measurement. */
+const alone = (s: Study): StudyRegistry => ({ prefix: "P1", studies: [s] });
+const withResult = (s: Study): Partial<StudyInput> => ({
+  results: new Map([[folderKey(s.folder, RESULT), { kind: "file" }]]),
+});
+const EXPLORATORY: StudyPlan = {
+  ...PLAN,
+  author_check: null,
+  mode: {
+    kind: "exploratory",
+    reason: "a re-count of stored data, written after the numbers were seen",
+  },
+};
+
+describe("plans — every study that has run names one, whatever its measurement (issue #483)", () => {
   it("a study that has run with no plan is reported, in every ran status, with no measurement", () => {
     const statuses = ["running", "done", "stopped", "superseded"] as const;
     // Guards: a re-analysis marked `done` with no plan passed silently; the status alone decides.

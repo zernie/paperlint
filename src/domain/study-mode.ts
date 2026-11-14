@@ -11,7 +11,8 @@
  * "None" and "two at once" cannot be written: the plan holds one `mode`, a union on its `kind`, and a
  * measurement study's plan is not ready without it (the parser, `src/adapters/study-registry/`).
  *
- * Paths: `outputs` are globs relative to the study's folder (the study's results live there); the
+ * Paths: `outputs` and `checks` are globs relative to the study's folder (the study's results and its
+ * self-checks live there); the
  * decision's `file` is relative to the PAPER's folder, so a decision may live beside the study or
  * anywhere in the paper (`research/decisions.md`). Pure.
  */
@@ -70,10 +71,6 @@ export const inStudy = (folder: string, paperPath: string): string | null => {
   const n = posix.normalize(paperPath);
   return n.startsWith(prefix) ? n.slice(prefix.length) : null;
 };
-
-/** Whether the file at `path` (relative to the study's folder) is one of `outputs`. */
-export const isOutput = (outputs: readonly string[], path: string): boolean =>
-  outputs.some((g) => posix.matchesGlob(path, g));
 
 /** The first of `globs` that matches `path` (relative to the study's folder); null when none does. */
 export const matchingGlob = (

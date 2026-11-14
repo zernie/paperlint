@@ -149,6 +149,7 @@ describe.skipIf(SKIP)(
       ).toEqual({
         kind: "decide_before_run",
         outputs: ["RESULTS.md"],
+        checks: [],
         decision: {
           file: "repro/P1-S01-outcome/decision.md",
           note: "exclusions",
