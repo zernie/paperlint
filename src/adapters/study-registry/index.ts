@@ -47,6 +47,7 @@ import {
 import {
   NONE,
   PLAN_V2,
+  type DeclaredGates,
   type Funnel,
   type KappaStep,
   type RecallAudit,
@@ -660,6 +661,45 @@ export const parseStudyPlan = (text: string, kind: StudyKind): ParsedPlan =>
 /** A plan still named `prereg.json`: loose, read only when a row names it. */
 export const parseLegacyPlan = planParser(legacyPlan);
 
+/** Whether a plan's JSON says it is a plan v2: an object whose `$schema` is `PLAN_V2`. */
+const saysV2 = z.looseObject({ $schema: z.literal(PLAN_V2) });
+
+/**
+ * A plan v2 read for its gates alone: open everywhere else, so a field outside the gates that fails
+ * the schema (a draw's `kind`, an arm) does not hide gates that were fixed. Each gate is held to its
+ * own schema, and a v2 declares each of the four at its top.
+ */
+const gatesAlone = z.looseObject({
+  mode: z
+    .looseObject({ we_lose_if: weLoseIf.nullable().optional() })
+    .optional(),
+  second_check: secondCheck.nullable(),
+  self_test: selfTest.nullable(),
+  funnel: funnel.nullable(),
+  recall_audit: recallAudit.nullable(),
+});
+
+/** A plan's text read for its gates alone (src/domain/study-gates.ts, `DeclaredGates`). */
+export function parsePlanGates(text: string): DeclaredGates {
+  const json = jsonOf(text);
+  if (json === undefined) return { kind: "unreadable", why: "not JSON" };
+  if (!saysV2.safeParse(json).success) return { kind: "v1" };
+  const parsed = gatesAlone.safeParse(json);
+  if (!parsed.success)
+    return { kind: "unreadable", why: reasons(parsed.error.issues) };
+  const p = parsed.data;
+  return {
+    kind: "gates",
+    gates: {
+      we_lose_if: p.mode?.we_lose_if ?? null,
+      second_check: p.second_check,
+      self_test: p.self_test,
+      funnel: p.funnel,
+      recall_audit: p.recall_audit,
+    },
+  };
+}
+
 /** A study's `result.json` text, parsed once at the boundary: the result, or every reason it is none. */
 export function parseStudyResult(text: string): ParsedResult {
   const json = jsonOf(text);
@@ -673,6 +713,7 @@ export function parseStudyResult(text: string): ParsedResult {
 export const studyRegistryCodec: StudyRegistryCodec = {
   parse: parseStudyRegistry,
   parsePlan: parseStudyPlan,
+  parseGates: parsePlanGates,
   parseLegacyPlan,
   parseResult: parseStudyResult,
 };

@@ -83,6 +83,18 @@ export interface PlanGates {
   readonly recall_audit: RecallAudit | null;
 }
 
+/**
+ * The gates a plan's text declares, read ALONE: a plan v2 whose gate fields parse yields them even when
+ * another field of it fails the schema (that is `repro/study-registered`'s to report, on HEAD's plan).
+ * Read from the plan as it stood at a study's first result, to tell whether its gates were fixed then.
+ */
+export type DeclaredGates =
+  | { readonly kind: "gates"; readonly gates: PlanGates }
+  /** No `$schema` naming a plan v2: a plan v1 declares no gates. */
+  | { readonly kind: "v1" }
+  /** Not JSON, not an object, or a gate field that is not of its schema. */
+  | { readonly kind: "unreadable"; readonly why: string };
+
 /** The gates' names, in the order they are reported. */
 export const GATE_NAMES = [
   "we_lose_if",

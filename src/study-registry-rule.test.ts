@@ -247,6 +247,57 @@ describe("repro/study-registered — reports a row's status and the index", () =
   });
 });
 
+describe("repro/study-registered — a study that has run names a plan, whatever it measures (issue #483)", () => {
+  /** A re-analysis of stored data, done, in no measurement: the case the issue reports. */
+  const recount = study({
+    status: "done",
+    result: "4 re-counts agree",
+    result_file: "RESULTS.md",
+  });
+  const RESULT = {
+    [`${DIR}/repro/P1-S01-baseline/RESULTS.md`]: "4 of 4\n",
+  };
+
+  it("reports a done study whose row names no plan", () => {
+    // Guards: before #483 this tree linted clean — only a headline measurement's study was asked.
+    expect(lint({ ...registered(P1(recount)), ...RESULT })).toEqual([
+      {
+        messageId: "no-plan",
+        message: studyMessage({
+          problem: "no-plan",
+          id: "P1-S01",
+          status: "done",
+        }),
+        line: 1,
+      },
+    ]);
+  });
+
+  it("is silent once the row names an exploratory plan with its reason", () => {
+    const row = { ...recount, plan: "plan.json" };
+    const plan = planOf({
+      kind: "exploratory",
+      reason:
+        "re-counts of stored data, registered after the numbers were seen",
+    });
+    const r = P1(row);
+    const readme = withIndex("# Reproduction index\n", r, {
+      plans: new Map([
+        ["P1-S01-baseline/plan.json", { kind: "ready", plan } as const],
+      ]),
+      history: new Map(),
+    });
+    // Guards: a plan written after the run, saying so, is what the rule asks for.
+    expect(
+      lint({
+        ...registered(r, readme),
+        ...RESULT,
+        [`${DIR}/repro/P1-S01-baseline/plan.json`]: planText(plan),
+      }),
+    ).toEqual([]);
+  });
+});
+
 describe("repro/study-registered — reports the registry itself, once", () => {
   it("study folders and no studies.json: one finding naming the file", () => {
     expect(

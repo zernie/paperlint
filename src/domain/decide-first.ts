@@ -24,7 +24,9 @@
  * A plan v2's gates (src/domain/study-gates.ts) are frozen by the same history: the plan as it stood
  * at the commit of the study's first result must declare them exactly as HEAD's does. A gate changed
  * since is `gates-changed` (a threshold moved after the result was seen); a plan absent from that
- * commit, or one without gates there (v1, or unreadable), is `gates-not-fixed`. Pure.
+ * commit, or one without gates there (v1, not JSON, or a gate field not of its schema), is
+ * `gates-not-fixed`. The gates are read there on their own: a plan v2 that failed the schema in some
+ * other field still fixed the gates it declared. Pure.
  */
 import { isDeepEqual, unique } from "remeda";
 import { README } from "./repro-layout.ts";
@@ -355,7 +357,8 @@ const NOT_A_FILE: Readonly<Record<NotAFile, string>> = {
 const GATES_THEN: Readonly<Record<"absent" | "v1" | "unreadable", string>> = {
   absent: "was not in history yet",
   v1: "was a plan v1, which declares no gates,",
-  unreadable: "was no plan paperlint could read",
+  unreadable:
+    "was not JSON, or declared gates paperlint could not read (each gate is read on its own, whatever the rest of the plan held),",
 };
 
 /** What a gated file is of its study, in a message: `an output of`, `a self-check of`. */

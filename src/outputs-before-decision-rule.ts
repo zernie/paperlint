@@ -33,8 +33,7 @@ import {
   type OrderFinding,
   type PlanThen,
 } from "./domain/decide-first.ts";
-import { gatesOf, type PlanGates } from "./domain/study-gates.ts";
-import type { StudyKind } from "./domain/study-registry.ts";
+import type { PlanGates } from "./domain/study-gates.ts";
 import { REPRO_DIR } from "./domain/repro-layout.ts";
 import type { DecideFirst } from "./domain/study-mode.ts";
 import type {
@@ -83,7 +82,7 @@ export const decideFirstStudies = (
     };
     return {
       ...study,
-      gates: gateHistory(study, { now: gates, kind: row.kind, folder }, deps),
+      gates: gateHistory(study, { now: gates, folder }, deps),
     };
   });
 };
@@ -109,40 +108,37 @@ const readyStudies = (
   );
 
 /**
- * The gates of a plan v2 now, and the plan at the study's first output after its decision: none for
- * a plan v1, a history not read, or a study with no such output yet.
+ * The gates of a plan v2 now, and the plan at the study's first result after its decision (a
+ * self-check in `mode.checks` is never it): none for a plan v1, a history not read, or a study with
+ * no such result yet.
  */
 const gateHistory = (
   s: DecideFirstStudy,
-  from: {
-    readonly now: PlanGates | null;
-    readonly kind: StudyKind;
-    readonly folder: string;
-  },
+  from: { readonly now: PlanGates | null; readonly folder: string },
   deps: OrderDeps,
 ): GateHistory | undefined => {
   if (from.now === null || s.facts.kind !== "read") return undefined;
   const output = firstOutputAfter(s, s.facts.files);
   if (output === null) return undefined;
   const at = deps.git.fileAt(callerPath(from.folder), output.commit, s.plan);
-  return { now: from.now, output, then: planThen(at, from.kind, deps) };
+  return { now: from.now, output, then: planThen(at, deps) };
 };
 
-/** What the plan held at that commit, by gates. */
+/**
+ * What the plan held at that commit, by gates — read for its gates alone: a plan v2 whose gates parse
+ * there fixed them, even when another of its fields failed the schema at that commit (HEAD's plan is
+ * `repro/study-registered`'s to judge, and this rule's question is only whether the gates came first).
+ */
 const planThen = (
   at: ReturnType<OrderDeps["git"]["fileAt"]>,
-  kind: StudyKind,
   deps: OrderDeps,
 ): PlanThen => {
   if (at.kind === "unknown") return at;
   if (at.kind === "absent") return { kind: "no-gates", why: "absent" };
-  const parsed = deps.codec.parsePlan(at.text, kind);
-  if (parsed.kind === "unreadable")
-    return { kind: "no-gates", why: "unreadable" };
-  const gates = gatesOf(parsed.plan);
-  return gates === null
-    ? { kind: "no-gates", why: "v1" }
-    : { kind: "gates", gates };
+  const declared = deps.codec.parseGates(at.text);
+  return declared.kind === "gates"
+    ? declared
+    : { kind: "no-gates", why: declared.kind };
 };
 
 /** Only a ready plan decides: a draft may name no outputs, or an empty decision file. */

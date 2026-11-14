@@ -179,3 +179,65 @@ it("the shipped schemas/plan.v2.schema.json is the one the parser generates", ()
   // Guards: an editor's suggestions for a plan v2 never drift from what the parser accepts.
   expect(shipped).toEqual(planV2JsonSchema());
 });
+
+// ── the gates read alone: what the plan at a study's first result fixed ─────────────────────────
+
+const gatesOfText = (p: unknown) =>
+  studyRegistryCodec.parseGates(typeof p === "string" ? p : JSON.stringify(p));
+
+const DECLARED = {
+  we_lose_if: { result: "share_upper95", below: 0.2 },
+  second_check: V2.second_check,
+  self_test: V2.self_test,
+  funnel: V2.funnel,
+  recall_audit: V2.recall_audit,
+};
+
+it("a plan v2's gates are read even when another field fails the schema there", () => {
+  const badDraw = {
+    ...V2,
+    population: { ...V2.population, draw: { kind: "census", method: "all" } },
+  };
+  const exploratory = {
+    ...V2,
+    mode: { kind: "exploratory", reason: "a first look" },
+  };
+  // Guards: the strict parser refuses the plan with the census draw, and its gates still stand;
+  // an exploratory mode declares no falsifier, so it reads as null.
+  expect([
+    parse(badDraw).kind,
+    gatesOfText(badDraw),
+    gatesOfText(V2),
+    gatesOfText(exploratory),
+  ]).toEqual([
+    "unreadable",
+    { kind: "gates", gates: DECLARED },
+    { kind: "gates", gates: DECLARED },
+    { kind: "gates", gates: { ...DECLARED, we_lose_if: null } },
+  ]);
+});
+
+it("no gates are read from a plan v1, a text that is not JSON, or a gate not of its schema", () => {
+  const { second_check, ...missing } = V2;
+  // Guards: a v1 declares none; each gate is held to its own schema, and a v2 declares all four.
+  expect(second_check).toBeDefined();
+  expect([
+    gatesOfText(V1),
+    gatesOfText("{ not json"),
+    gatesOfText([]),
+    gatesOfText({ ...V2, funnel: [] }),
+    gatesOfText(missing),
+  ]).toEqual([
+    { kind: "v1" },
+    { kind: "unreadable", why: "not JSON" },
+    { kind: "v1" },
+    {
+      kind: "unreadable",
+      why: 'funnel: lists no reason — write "none" when no unit is dropped',
+    },
+    {
+      kind: "unreadable",
+      why: "second_check: Invalid input",
+    },
+  ]);
+});

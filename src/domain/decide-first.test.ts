@@ -422,7 +422,7 @@ it("the gates' messages: which gate, then and now, the output's commit, and what
       PAGE,
     `The plan of \`P1-S01\`, \`repro/P1-S01-x/plan.json\`, was a plan v1, which declares no gates, when its first output, ${when}: its gates were not fixed before the run. ${fix}` +
       PAGE,
-    `The plan of \`P1-S01\`, \`repro/P1-S01-x/plan.json\`, was no plan paperlint could read when its first output, ${when}: its gates were not fixed before the run. ${fix}` +
+    `The plan of \`P1-S01\`, \`repro/P1-S01-x/plan.json\`, was not JSON, or declared gates paperlint could not read (each gate is read on its own, whatever the rest of the plan held), when its first output, ${when}: its gates were not fixed before the run. ${fix}` +
       PAGE,
   ]);
 });

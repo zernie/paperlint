@@ -362,3 +362,121 @@ it("asks nothing of the gates while no output followed the decision, or no order
   // for that alone, never for gates it could not compare.
   expect([lint(waiting), lint(unread)]).toEqual([[], ["decision-not-file"]]);
 });
+
+// ── a self-check is not a result (issue #483) ───────────────────────────────────────────────────
+
+/**
+ * A ready plan v2 whose outputs are everything under `data/`, losing below `below`; `checks` names
+ * the harness's self-check apart, when given.
+ */
+const checkedPlan = (below: number, checks?: readonly string[]): string =>
+  planText({
+    ...planOf({
+      ...DECIDED,
+      outputs: ["data/**"],
+      ...(checks === undefined ? {} : { checks }),
+      we_lose_if: { result: "share", below },
+    }),
+    $schema: PLAN_V2,
+    second_check: "none",
+    self_test: "none",
+    funnel: "none",
+    recall_audit: "none",
+  });
+
+/** The paper with `plan`, the decision, then `steps` in order, one commit each from 11:00. */
+const history = (
+  name: string,
+  plan: string,
+  steps: readonly Readonly<Record<string, string>>[],
+  early: Readonly<Record<string, string>> = {},
+): string => {
+  const repo = join(root, name);
+  initRepo(repo);
+  commit(repo, { ...PAPER, [`${S}/plan.json`]: plan, ...early }, T(9));
+  commit(repo, { [`${S}/decision.md`]: "exclude run 7\n" }, T(10));
+  steps.forEach((files, i) => {
+    commit(repo, files, T(11 + i));
+  });
+  return repo;
+};
+
+const GATE = { [`${S}/data/gate.json`]: '{"reproduced": 1071, "of": 1071}\n' };
+const SCORES = { [`${S}/data/scores.json`]: '{"share": 0.31}\n' };
+
+it("silent when the gate moved after a self-check but before the first result; loud without `checks`", () => {
+  const steps = (plan: string) => [GATE, { [`${S}/plan.json`]: plan }, SCORES];
+  const checks = ["data/gate.json"];
+  const named = history(
+    "check-then-amend",
+    checkedPlan(0.2, checks),
+    steps(checkedPlan(0.1, checks)),
+  );
+  const unnamed = history(
+    "check-unnamed",
+    checkedPlan(0.2),
+    steps(checkedPlan(0.1)),
+  );
+  // Guards: the report's timeline — the harness check landed, the threshold was amended, then the
+  // scores. Named in `checks`, the check is no result; left unnamed it reads as the first output.
+  expect([lint(named), lint(unnamed)]).toEqual([[], ["gates-changed"]]);
+});
+
+it("loud when the gate moved after a real result, the self-check named or not", () => {
+  const checks = ["data/gate.json"];
+  const repo = history("result-then-amend", checkedPlan(0.2, checks), [
+    SCORES,
+    GATE,
+    { [`${S}/plan.json`]: checkedPlan(0.1, checks) },
+  ]);
+  // Guards: `checks` moves the date to the first result, never past it.
+  expect(lint(repo)).toEqual(["gates-changed"]);
+});
+
+it("loud on a self-check committed before its decision: it is held to the decision like an output", () => {
+  const repo = history(
+    "check-before-decision",
+    checkedPlan(0.2, ["data/gate.json"]),
+    [SCORES],
+    GATE,
+  );
+  // Guards: a check run before the decision is reported, the result after it is not.
+  expect(lint(repo)).toEqual(["output-before-decision"]);
+});
+
+// ── the gates at the first result are read alone ───────────────────────────────────────────────
+
+/** `plan`'s text with a draw kind the schema does not know (`census`): the plan fails, its gates do not. */
+const badDraw = (plan: string): string =>
+  plan.replace('"kind": "all"', '"kind": "census"');
+
+it("silent when the plan at the first result failed the schema elsewhere but declared these gates", () => {
+  const repo = history("gates-in-a-bad-plan", badDraw(checkedPlan(0.2)), [
+    SCORES,
+    { [`${S}/plan.json`]: checkedPlan(0.2) },
+  ]);
+  // Guards: the plan committed first is no plan to the strict parser (before #483 this read as
+  // `gates-not-fixed`), yet its gates came before the result; the draw fixed since is no gate.
+  expect([
+    studyRegistryCodec.parsePlan(badDraw(checkedPlan(0.2)), "measurement").kind,
+    lint(repo),
+  ]).toEqual(["unreadable", []]);
+});
+
+it("loud when such a plan's gate moved since, and when the gate itself could not be read there", () => {
+  const moved = history(
+    "gates-in-a-bad-plan-moved",
+    badDraw(checkedPlan(0.2)),
+    [SCORES, { [`${S}/plan.json`]: checkedPlan(0.1) }],
+  );
+  const unreadable = history(
+    "gate-unreadable-then",
+    checkedPlan(0.2).replace('"funnel": "none"', '"funnel": []'),
+    [SCORES, { [`${S}/plan.json`]: checkedPlan(0.2) }],
+  );
+  // Guards: reading the gates alone never passes a moved gate, nor one that was not of its schema.
+  expect([lint(moved), lint(unreadable)]).toEqual([
+    ["gates-changed"],
+    ["gates-not-fixed"],
+  ]);
+});
