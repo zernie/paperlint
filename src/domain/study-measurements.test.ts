@@ -132,7 +132,13 @@ describe("measurements and plans — silent", () => {
   it("on a registry without the new keys: a row's `measurement` is a field of its own, as before", () => {
     const r: StudyRegistry = {
       prefix: "P1",
-      studies: [study({ measurement: "census", measurement_title: "Census" })],
+      studies: [
+        study({
+          measurement: "census",
+          measurement_title: "Census",
+          plan: PLAN_FILE,
+        }),
+      ],
     };
     expect(findings(r)).toEqual([]);
   });
@@ -143,7 +149,7 @@ describe("measurements and plans — silent", () => {
     expect(findings(r)).toEqual([]);
   });
 
-  it("on a baseline measurement with no approval, and a study of it with no plan", () => {
+  it("on a baseline measurement with no approval, and a study of it whose plan has no author check", () => {
     const r = reg({
       measurements: [
         HEADLINE,
@@ -151,7 +157,12 @@ describe("measurements and plans — silent", () => {
       ],
       studies: [
         study({ measurement: "M1", plan: PLAN_FILE }),
-        study({ id: "P1-S02", folder: "P1-S02-base", measurement: "M2" }),
+        study({
+          id: "P1-S02",
+          folder: "P1-S02-base",
+          measurement: "M2",
+          plan: PLAN_FILE,
+        }),
       ],
     });
     expect(findings(r)).toEqual([]);
@@ -190,7 +201,12 @@ describe("measurements — a row's measurement, and a measurement's studies", ()
     const r = reg({
       studies: [
         study({ measurement: "M1", plan: PLAN_FILE }),
-        study({ id: "P1-S02", folder: "P1-S02-pilot", measurement: "M9" }),
+        study({
+          id: "P1-S02",
+          folder: "P1-S02-pilot",
+          measurement: "M9",
+          plan: PLAN_FILE,
+        }),
       ],
     });
     expect(findings(r)).toEqual([
@@ -274,19 +290,6 @@ describe("plans — the file a row names", () => {
   it("a plan that is not there", () => {
     expect(findings(reg(), { plans: new Map() })).toEqual([
       { problem: "bad-plan", id: "P1-S01", path: PLAN_FILE, why: "missing" },
-    ]);
-  });
-
-  it("a running study of a headline measurement whose row names no plan", () => {
-    const r = reg({ studies: [study({ measurement: "M1" })] });
-    expect(findings(r)).toEqual([
-      {
-        problem: "author-check",
-        id: "P1-S01",
-        measurement: "M1",
-        status: "running",
-        why: "no-plan",
-      },
     ]);
   });
 
@@ -560,16 +563,6 @@ const MESSAGES = [
       id: "P1-S01",
       measurement: "M1",
       status: "running",
-      why: "no-plan",
-    },
-    "`P1-S01` is `running` in the headline measurement `M1`, and its row names no plan to hold the author's check of the drawn units. What to do: write its plan (`plan.json` in its folder, named in the row's `plan`) with `author_check` — `by`, `date`, and the author's words in `quote`.",
-  ],
-  [
-    {
-      problem: "author-check",
-      id: "P1-S01",
-      measurement: "M1",
-      status: "running",
       why: "missing",
     },
     "`P1-S01` is `running` in the headline measurement `M1`, and its plan has no `author_check`. What to do: show the author the drawn units, then record their answer in the plan's `author_check` — `by`, `date`, and their words in `quote`.",
@@ -775,7 +768,7 @@ describe("plans — every study that has run names one, whatever its measurement
     expect(
       studyMessage({ problem: "no-plan", id: "P1-S01", status: "done" }),
     ).toBe(
-      "`repro/studies.json`: `P1-S01` is `done`, and its row names no plan. Every study that has run has one, whatever it measures: a re-count or a re-analysis of data already seen is the forking path a plan is there to record. What to do: write its plan (`plan.json` in its folder) and name it in the row's `plan`; a plan written after the run says so with `\"mode\": { \"kind\": \"exploratory\", \"reason\": \"…\" }`. A study of a headline measurement records the author's check of its drawn units there too (`author_check`).\nRule repro/study-registered: https://github.com/zernie/paperlint/blob/main/docs/rules/repro/study-registered.md",
+      '`repro/studies.json`: `P1-S01` is `done`, and its row names no plan. Every study that has run has one, whatever it measures: a re-count or a re-analysis of data already seen is the forking path a plan is there to record. What to do: write its plan (`plan.json` in its folder) and name it in the row\'s `plan`; a plan written after the run says so with `"mode": { "kind": "exploratory", "reason": "…" }`. A study of a headline measurement records the author\'s check of its drawn units there too (`author_check`).\nRule repro/study-registered: https://github.com/zernie/paperlint/blob/main/docs/rules/repro/study-registered.md',
     );
   });
 });

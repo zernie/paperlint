@@ -62,6 +62,7 @@ it("an output in the decision's commit, or not after it, deleted or not, is one 
       id: "P1-S01",
       folder: "P1-S01-x",
       path: "RESULTS.md",
+      role: "output",
       output: D,
       decision: D,
       same: true,
@@ -71,6 +72,7 @@ it("an output in the decision's commit, or not after it, deleted or not, is one 
       id: "P1-S01",
       folder: "P1-S01-x",
       path: "out/gone.csv",
+      role: "output",
       output: A,
       decision: D,
       same: false,
@@ -96,6 +98,7 @@ it("an output in the tree while the decision was never committed", () => {
       id: "P1-S01",
       folder: "P1-S01-x",
       path: "RESULTS.md",
+      role: "output",
       decision: "repro/P1-S01-x/decision.md",
     },
   ]);
@@ -243,6 +246,7 @@ const ALL: readonly OrderFinding[] = [
     id: "P1-S01",
     folder: "P1-S01-x",
     path: "RESULTS.md",
+    role: "output",
     decision: "repro/P1-S01-x/decision.md",
   },
   {
@@ -250,6 +254,7 @@ const ALL: readonly OrderFinding[] = [
     id: "P1-S01",
     folder: "P1-S01-x",
     path: "RESULTS.md",
+    role: "output",
     output: D,
     decision: D,
     same: true,
@@ -259,6 +264,7 @@ const ALL: readonly OrderFinding[] = [
     id: "P1-S01",
     folder: "P1-S01-x",
     path: "RESULTS.md",
+    role: "output",
     output: A,
     decision: D,
     same: false,
@@ -503,36 +509,13 @@ it("a self-check committed with or before its decision is still reported, as a c
   ]);
 });
 
-it("a file both an output and a check is a finding: the plan does not say whether it is a result", () => {
-  const both = {
-    ...CHECKED,
-    mode: { ...CHECKED.mode, checks: ["data/*.json"] },
-  };
-  // Guards: each such file once, from the tree or from history; the clean plan is silent.
-  expect([judgeOrder(CHECKED), judgeOrder(both)]).toEqual([
-    [],
-    [
-      {
-        problem: "output-and-check",
-        id: "P1-S01",
-        folder: "P1-S01-x",
-        path: "data/gate.json",
-        output: "data/**",
-        check: "data/*.json",
-      },
-      {
-        problem: "output-and-check",
-        id: "P1-S01",
-        folder: "P1-S01-x",
-        path: "data/scores.json",
-        output: "data/**",
-        check: "data/*.json",
-      },
-    ],
-  ]);
+it("a check glob carves its files out of a wider output glob: the clean history is silent", () => {
+  // Guards: the plan of the report — outputs `data/**`, its check `data/gate.json` — needs no rewrite
+  // of its outputs, and a check after the decision is no finding.
+  expect(judgeOrder(CHECKED)).toEqual([]);
 });
 
-it("the messages of a check: before its decision, with no decision, and both an output and a check", () => {
+it("the messages of a check: before its decision, and with no decision", () => {
   // Guards: the whole text a person reads for each.
   expect(
     (
@@ -555,22 +538,12 @@ it("the messages of a check: before its decision, with no decision, and both an 
           role: "check",
           decision: "repro/P1-S01-x/decision.md",
         },
-        {
-          problem: "output-and-check",
-          id: "P1-S01",
-          folder: "P1-S01-x",
-          path: "data/gate.json",
-          output: "data/**",
-          check: "data/*.json",
-        },
       ] as const
     ).map(orderMessage),
   ).toEqual([
     `\`repro/P1-S01-x/data/gate.json\`, a self-check of \`P1-S01\` (\`mode.checks\`), entered history in ${"a".repeat(12)} (${A.date}), not after the commit that first recorded its decision, ${"d".repeat(12)} (${D.date}). The study is declared decided before its run, and its history does not show that order. What to do: if the decision really came first, nothing in this history can prove it — declare the study \`exploratory\` with the reason, or run it again after the decision; never rewrite the history to make it pass.` +
       PAGE,
     "`repro/P1-S01-x/data/gate.json` is a self-check of `P1-S01` (`mode.checks`) — in the tree, or in its history — and the study is decided before its run, but its decision `repro/P1-S01-x/decision.md` was never committed. What to do: write and commit the decision, check it with `npx paperlint studies gate <paper-dir> P1-S01`, then run the study again; if the self-check was made before any decision, declare the study `exploratory` with the reason. Deleting the self-check does not undo it: history keeps it." +
-      PAGE,
-    "`repro/P1-S01-x/data/gate.json` is matched by both the output `data/**` and the self-check `data/*.json` of `P1-S01`: the plan does not say whether it is a result. A self-check (a harness reproducing stored results, a gate run) is never a result, and the plan's gates are dated against the first result. What to do: make the globs disjoint — narrow `mode.outputs` or `mode.checks` so the file matches one of them." +
       PAGE,
   ]);
 });

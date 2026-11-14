@@ -322,6 +322,7 @@ export const planTemplate = (kind: StudyKind, folder: string): DraftPlan => ({
         mode: {
           kind: "decide_before_run",
           outputs: [],
+          checks: [],
           decision: { file: decisionPath(folder), note: "" },
           we_lose_if: null,
         },
@@ -472,11 +473,16 @@ export type StudyFinding =
       readonly status: StudyStatus;
     }
   | {
+      readonly problem: "no-plan";
+      readonly id: string;
+      readonly status: StudyStatus;
+    }
+  | {
       readonly problem: "author-check";
       readonly id: string;
       readonly measurement: string;
       readonly status: StudyStatus;
-      readonly why: "no-plan" | "missing";
+      readonly why: "missing";
     }
   | {
       readonly problem: "author-check";
@@ -772,26 +778,38 @@ const legacyPlan: RowCheck = ({ s }) =>
     : null;
 
 /**
+ * A study that has run names its plan, whatever its kind or its measurement's role: a re-count of
+ * data already seen is the forking path a plan records, and an exploratory plan with its reason is
+ * enough. Whether the file is there and filled is `badPlan`'s.
+ */
+const noPlan: RowCheck = ({ s }) =>
+  s.plan === undefined && hasRun(s)
+    ? { problem: "no-plan", id: s.id, status: s.status }
+    : null;
+
+/**
  * A study of a headline measurement that has run carries the author's check of its drawn units in
- * its plan, by the registry's author when it names one. A plan that cannot be read is `badPlan`'s.
+ * its plan, by the registry's author when it names one. A row with no plan is `noPlan`'s, a plan
+ * that cannot be read `badPlan`'s.
  */
 const authorCheck: RowCheck = (row) => {
   const { r, s } = row;
   const m = r.measurements?.find((o) => o.id === s.measurement);
-  if (m?.role !== "headline" || !hasRun(s)) return null;
-  const at = {
-    problem: "author-check",
-    id: s.id,
-    measurement: m.id,
-    status: s.status,
-  } as const;
   const state = planOf(row);
-  if (state === null) return { ...at, why: "no-plan" };
+  if (m?.role !== "headline" || !hasRun(s) || state === null) return null;
   const wrong =
     state.kind === "ready" || state.kind === "draft"
       ? checkProblem(r, state.plan)
       : null;
-  return wrong === null ? null : { ...at, ...wrong };
+  return wrong === null
+    ? null
+    : {
+        problem: "author-check",
+        id: s.id,
+        measurement: m.id,
+        status: s.status,
+        ...wrong,
+      };
 };
 
 /** What a read plan's author check lacks: it is not there, or it is not the registry's author's. */
@@ -836,6 +854,7 @@ const ROW_CHECKS: readonly RowCheck[] = [
   resultFile,
   noSuccessor,
   unknownMeasurement,
+  noPlan,
   badPlan,
   planVersion,
   legacyPlan,
@@ -1219,11 +1238,11 @@ const HEADS: { readonly [P in Problem]: (f: FindingOf[P]) => string } = {
         return `${plan} leaves ${listed(f.fields)} empty, and the study is ${tick(f.status)}: a plan is written before the runs. What to do: fill them in, or set the study back to \`designing\`.`;
     }
   },
+  "no-plan": (f) =>
+    `${REGISTRY}: ${tick(f.id)} is ${tick(f.status)}, and its row names no plan. Every study that has run has one, whatever it measures: a re-count or a re-analysis of data already seen is the forking path a plan is there to record. What to do: write its plan (\`${PLAN_FILE}\` in its folder) and name it in the row's \`plan\`; a plan written after the run says so with \`"mode": { "kind": "exploratory", "reason": "…" }\`. A study of a headline measurement records the author's check of its drawn units there too (\`author_check\`).`,
   "author-check": (f) => {
     const head = `${tick(f.id)} is ${tick(f.status)} in the headline measurement ${tick(f.measurement)}, and`;
     switch (f.why) {
-      case "no-plan":
-        return `${head} its row names no plan to hold the author's check of the drawn units. What to do: write its plan (\`${PLAN_FILE}\` in its folder, named in the row's \`plan\`) with \`author_check\` — \`by\`, \`date\`, and the author's words in \`quote\`.`;
       case "missing":
         return `${head} its plan has no \`author_check\`. What to do: show the author the drawn units, then record their answer in the plan's \`author_check\` — \`by\`, \`date\`, and their words in \`quote\`.`;
       case "not-author":

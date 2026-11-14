@@ -278,6 +278,8 @@ const mode = z.discriminatedUnion("kind", [
   z.strictObject({
     kind: z.literal("decide_before_run"),
     outputs,
+    // Self-checks, never results (issue #483): globs inside the folder, each once; optional.
+    checks: z.array(inFolder).superRefine(once("the check")).optional(),
     decision: decisionShape,
     we_lose_if: weLoseIf.nullable().optional(),
   }),
@@ -519,9 +521,33 @@ const readyOrDraft =
     return z.NEVER;
   };
 
+/**
+ * A decide-first mode never lists one glob both as an output and as a check: it would name the same
+ * files a result and not a result. A narrower check inside a wider output glob is what `checks` is for.
+ */
+const checksApartFromOutputs = (
+  p: Readonly<z.output<typeof planShape>>,
+  ctx: Readonly<z.core.$RefinementCtx>,
+): void => {
+  const m = p.mode;
+  if (m?.kind !== "decide_before_run") return;
+  (m.checks ?? [])
+    .filter((g) => m.outputs.includes(g))
+    .forEach((g) => {
+      ctx.addIssue({
+        code: "custom",
+        path: ["mode", "checks"],
+        message: `«${g}» is listed both as an output and as a check — a self-check is never a result: keep it in one of the two`,
+      });
+    });
+};
+
 /** A `plan.json` of a study of `kind`: strict, then ready or draft — a measurement's ready only with its mode. */
 const planFor = (kind: StudyKind) =>
-  planShape.superRefine(gatesOfItsVersion).transform(readyOrDraft(kind));
+  planShape
+    .superRefine(gatesOfItsVersion)
+    .superRefine(checksApartFromOutputs)
+    .transform(readyOrDraft(kind));
 
 /**
  * A `prereg.json`: loose, mapped onto the plan, then ready or draft. Written before modes existed, it

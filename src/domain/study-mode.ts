@@ -32,6 +32,12 @@ export interface DecideFirst {
   readonly kind: "decide_before_run";
   /** Globs relative to the study's folder: the files the run produces. */
   readonly outputs: readonly string[];
+  /**
+   * Globs relative to the study's folder: the files that are self-checks, never results — a harness
+   * reproducing stored verdicts, a gate run. Held to the decision like an output, never the result
+   * the plan's gates are dated against. A file both an output and a check is a finding. Absent: none.
+   */
+  readonly checks?: readonly string[] | undefined;
   readonly decision: Decision;
   /**
    * A plan v2's falsifier (src/domain/study-gates.ts): when the claim loses; null while undecided.
@@ -68,6 +74,12 @@ export const inStudy = (folder: string, paperPath: string): string | null => {
 /** Whether the file at `path` (relative to the study's folder) is one of `outputs`. */
 export const isOutput = (outputs: readonly string[], path: string): boolean =>
   outputs.some((g) => posix.matchesGlob(path, g));
+
+/** The first of `globs` that matches `path` (relative to the study's folder); null when none does. */
+export const matchingGlob = (
+  globs: readonly string[],
+  path: string,
+): string | null => globs.find((g) => posix.matchesGlob(path, g)) ?? null;
 
 /**
  * The output glob that matches the study's own decision file, when the file lies in the study's
