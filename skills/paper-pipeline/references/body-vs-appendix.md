@@ -73,14 +73,14 @@ here and keep no order of their own. Spend in this order until the measured over
    from the build, and what the limit counts from the paper's resolved preset, never from memory.
    Name the venue's limit text in the plan. Strike a step the venue makes worthless, and say so:
 
-   | read in the resolved preset                                                      | what the limit counts                                     | strike                                                           |
-   | -------------------------------------------------------------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------- |
-   | `ref_pages_max: "unlimited"`                                                     | references are outside the limit                          | step 5                                                           |
-   | `body_pages_max` with an integer `ref_pages_max`                                 | references have an allowance of their own                 | step 5, unless the reference pages are what overflow             |
-   | `pages_max` alone                                                                | every page of the PDF, references and appendices included | step 6                                                           |
-   | `pages_max` beside `body_pages_max`                                              | a body limit and a total limit, both checked              | step 6, unless the body is what overflows and the total has room |
-   | `format.appendix_in_body: true` (with `body_ends_at: "references"`)              | appendices count in the body                              | step 6                                                           |
-   | `body_pages_max` with `format.body_ends_at: "references"`, no `appendix_in_body` | the body ends at the references or the appendix           | none: steps 5 and 6 are open when the limit text allows          |
+   | read in the resolved preset                                                      | what the limit counts                                     | strike                                                                                                  |
+   | -------------------------------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+   | `ref_pages_max: "unlimited"`                                                     | references are outside the limit                          | step 5                                                                                                  |
+   | `body_pages_max` with an integer `ref_pages_max`                                 | references have an allowance of their own                 | step 5, unless the reference pages overflow, or a `pages_max` total counts them and the total overflows |
+   | `pages_max` alone                                                                | every page of the PDF, references and appendices included | step 6                                                                                                  |
+   | `pages_max` beside `body_pages_max`                                              | a body limit and a total limit, both checked              | step 6, unless the body is what overflows and the total has room                                        |
+   | `format.appendix_in_body: true` (with `body_ends_at: "references"`)              | appendices count in the body                              | step 6                                                                                                  |
+   | `body_pages_max` with `format.body_ends_at: "references"`, no `appendix_in_body` | the body ends at the references or the appendix           | none: steps 5 and 6 are open when the limit text allows                                                 |
 
    A limit like "including references" with appendices counted strikes step 6 and leaves step 5
    standing. A preset that sets none of these fields has no checked limit: read the venue card and
