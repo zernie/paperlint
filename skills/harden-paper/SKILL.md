@@ -4,7 +4,7 @@ description: Use when asking "is this paper actually ready to submit?" / "what's
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:aa4d005d27fce4f8 compiled from skills/harden-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:7411ad93c1623245 compiled from skills/harden-paper/SKILL.md.spec.ts -->
 
 # harden-paper — the multi-axis pre-submit gate
 
@@ -24,6 +24,12 @@ don't just list. Below, each axis says what to run / check and the specific trap
 > body of work, citability is not optional polish; run it as a gate too.
 
 ## The axes (run all; each is a gate)
+
+**Venue bar for the soundness and novelty axes.** Before scoring them, apply
+`../paper-pipeline/references/venue-bar.md`: read `<papers-root>/venues/<venue>/summary.md` when it
+exists, pass it to every scoring step (including the reviews axis 1 calls), and state each rigour
+finding's position against the accepted papers' denominators. With no summary, the report says
+"main-conference bar assumed" in its first lines.
 
 **Order matters: STRUCTURE before SENTENCES.** Run axis 0 FIRST. There is no point polishing prose (axis 8),
 verifying claims, or scoring a section that a structural pass says to cut or fold to the artifact. The 2026-07

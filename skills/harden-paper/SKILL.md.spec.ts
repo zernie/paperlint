@@ -42,6 +42,12 @@ don't just list. Below, each axis says what to run / check and the specific trap
 
 ## The axes (run all; each is a gate)
 
+**Venue bar for the soundness and novelty axes.** Before scoring them, apply
+\`../paper-pipeline/references/venue-bar.md\`: read \`<papers-root>/venues/<venue>/summary.md\` when it
+exists, pass it to every scoring step (including the reviews axis 1 calls), and state each rigour
+finding's position against the accepted papers' denominators. With no summary, the report says
+"main-conference bar assumed" in its first lines.
+
 **Order matters: STRUCTURE before SENTENCES.** Run axis 0 FIRST. There is no point polishing prose (axis 8),
 verifying claims, or scoring a section that a structural pass says to cut or fold to the artifact. The 2026-07
 AISec session did this backwards — a full sentence-level polish, *then* the author said "it's too long and the

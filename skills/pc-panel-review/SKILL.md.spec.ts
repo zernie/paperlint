@@ -43,6 +43,10 @@ prose-only read can.
 1. **Get the venue rubric + bar** (fetch the CFP; quote the criteria). Calibrate to the *track*: a
    WIP/short/workshop bar rewards promise and discussion value; a full-paper/top-tier bar demands
    completeness. Do not import top-tier standards into a WIP review.
+   **Then load the venue's measured bar** per \`paper-pipeline/references/venue-bar.md\`: read
+   \`<papers-root>/venues/<venue>/summary.md\` when it exists and hand it to every reviewer seat and to
+   the chair; each rigour finding states the paper's position against its denominators. Without it,
+   the report opens with "main-conference bar assumed" and the accept probability carries that flag.
 2. **Collect the two readability/structure artifacts — the panel is BLOCKED without them.** Before any
    reviewer spawns, there must exist for THIS draft: (a) the **persona stall inventory** from
    \`grade-paper-writing\` (the "Sam" per-section cold read), and (b) the **structural verdict** from

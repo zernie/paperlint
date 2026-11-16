@@ -5,7 +5,7 @@ context: fork
 allowed-tools: [Read, Write, Grep, Glob, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:1d043d340969f47b compiled from skills/paper-adversarial-review/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:ae315e6c0931a90c compiled from skills/paper-adversarial-review/SKILL.md.spec.ts -->
 
 # paper-adversarial-review — be the reviewer who wants to reject it
 
@@ -24,6 +24,11 @@ reviewer and returns an actionable critique.
 Prefer a **separate model as the reviewer** (e.g. Fable via a subagent) so it's not the author
 grading itself. Give the reviewer the full paper text (Read the `.tex`/PDF) and the target
 venue + paper type (short/full/position/benchmark). Ask for the structured output below.
+
+**Venue bar.** Also hand it the venue's measured bar and follow
+`paper-pipeline/references/venue-bar.md`: `<papers-root>/venues/<venue>/summary.md` when it exists, each
+rigour finding stating the paper's position against the accepted papers' denominators; with no summary,
+the report's first lines say "main-conference bar assumed".
 
 ## The review must cover (ranked by how often it kills a paper)
 
