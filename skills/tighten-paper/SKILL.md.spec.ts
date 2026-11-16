@@ -175,7 +175,8 @@ called it "fat for no reason" after a pass that cut almost nothing and left it 1
   ranks against the other kinds of cut is not decided here (next rule).
 - **The ORDER in which kinds of content are spent has one owner:** \`paper-pipeline/references/body-vs-appendix.md\`,
   section "When the body overruns". Rank the plan by it, not by words saved and not by a list of your own. A plan
-  that proposes cutting a result or an abstract sentence carries that section's ledger first.
+  that proposes cutting a result or an abstract sentence carries that section's ledger (steps 1–5: N candidates, M
+  taken, reason for each left) first.
 - **Length is calibrated to CONTRIBUTION WEIGHT, not to the page limit.** A moderate finding + a moderate-complexity
   benchmark does not need to sit at the limit; being over-length for the weight of the contribution is itself a
   defect — it reads as padding even when each sentence is individually "true." Right-size to the contribution's
@@ -259,7 +260,7 @@ as at least one clause, and each credit as its citation. The Threats section tha
 like any other section: its paragraphs, its "why this matters" explanations and its restatements get
 \`SHORTEN −Nw\` when they run long. A Threats section of 689 words, 9.1% of the body (one consumer
 paper, #486), is weighed for a \`SHORTEN\`, not waved through as a \`KEEP\`; a section already at one clause per limitation is a \`KEEP\`, and
-the plan says so. Shortening this wording is class (1) below, and a step of the cut order.
+the plan says so. Shortening this wording is class (1) below, and step 4 of the cut order.
 
 🔴 **A \`MOVE\` or \`CUT\` verdict on an appendix block is INVALID unless the note says what points at
 the block.** State the pointer, or state that a search found none — and if one exists, the verdict
@@ -321,8 +322,9 @@ Produce:
   because it's padded?
 - **The cut/fold/merge/reorder plan:** a list ranked by the cut order in
   \`paper-pipeline/references/body-vs-appendix.md\` (section "When the body overruns") — for each: section, action
-  (CUT / FOLD-TO-ARTIFACT / MERGE with X / REORDER / TIGHTEN), its kind in that order, why, and rough length saved.
-  Within one kind, lead with the most words saved.
+  (CUT / FOLD-TO-ARTIFACT / MERGE with X / REORDER / TIGHTEN), its step in that order, why, and rough length saved.
+  Open with step 0: the measured overflow, the venue's limit text, and the steps its preset strikes. Within one step,
+  lead with the most words saved.
 - **The middle-sag diagnosis** and the fix (consolidate these findings, lead each with its point).
 - **Skim-test failures** (headings/lead-sentences that don't carry the argument).
 

@@ -37,8 +37,10 @@ const SECTION = "When the body overruns";
 
 /** The kinds of cut, in the required order, each known by a phrase of its bold lead. */
 const KINDS: readonly (readonly [string, string])[] = [
+  ["measure-and-strike", "measure, then strike"],
   ["duplicate", "duplicates another block"],
-  ["scaffolding", "cut scaffolding"],
+  ["sentences-about-the-text", "sentences about the text itself"],
+  ["bibliography-and-floats", "bibliography format and float layout"],
   ["threats-wording", "wording of threats to validity"],
   ["once-cited-reference", "reference cited once"],
   ["appendix", "to the appendix"],
@@ -88,7 +90,10 @@ function cutOrderKinds(md: string): string[] {
   return tokens
     .slice(list, close)
     .filter(
-      (t, i, xs) => t.type === "inline" && xs[i - 2]?.type === "list_item_open",
+      (t, i, xs) =>
+        t.type === "inline" &&
+        xs[i - 2]?.type === "list_item_open" &&
+        xs[i - 2]?.level === open.level + 1,
     )
     .map((t) => {
       const lead = boldLead(t).toLowerCase();
@@ -109,6 +114,24 @@ const hasLedgerRule = (md: string): boolean =>
       ),
   );
 
+/** Whether a paragraph of the cut-order section contains every one of `phrases`. */
+const sectionSays = (md: string, phrases: readonly string[]): boolean =>
+  section(md, SECTION).some(
+    (t) =>
+      t.type === "inline" &&
+      phrases.every((p) => flat(t.content).toLowerCase().includes(p)),
+  );
+
+/** The ledger's definition of exhausted, the spend rule, and the closing rule of short last lines. */
+const hasSpendRule = (md: string): boolean =>
+  sectionSays(md, [
+    "spend in this order until the measured overflow is covered",
+  ]);
+const hasLedgerDefinition = (md: string): boolean =>
+  sectionSays(md, ["n candidates, m taken, reason for each left"]);
+const hasClosingRule = (md: string): boolean =>
+  sectionSays(md, ["short last lines", "text is frozen", "#489"]);
+
 /** Whether one paragraph or list item names the reference in a code span AND its section. */
 const pointsToCutOrder = (md: string): boolean =>
   parse(md).some(
@@ -119,6 +142,9 @@ const pointsToCutOrder = (md: string): boolean =>
       ) &&
       flat(t.content).includes(SECTION),
   );
+
+/** The old name of the step about sentences on the text itself: in an agentic-coding paper it means the harness. */
+const OLD_NAME = /scaffolding/iu;
 
 /** Orderings of their own the three skills carried before #486, so none comes back unnoticed. */
 const RETIRED = [
@@ -146,6 +172,17 @@ function revert(text: string, now: string, before: string): string {
 
 describe("the cut order lives in body-vs-appendix.md", () => {
   const md = read(REFERENCE);
+  const SEVEN_KIND_LIST = [
+    "1. **Cut a whole block that duplicates another block.** Free.",
+    "2. **Cut scaffolding**: signposts.",
+    "3. **Shorten the wording of Threats to validity, related work and discussion.**",
+    "4. **Cut a reference cited once, in a sentence that is not a claim**: background.",
+    "5. **Move a whole block to the appendix**, leaving a one-clause statement.",
+    "6. **Move a measurement to the artifact** and cite it.",
+    "7. **Drop a claim.** An honest reduction in scope.",
+    "",
+    "",
+  ].join("\n");
   const OLD_LIST = [
     "1. **Cut a whole block that duplicates another block.** Free.",
     "2. **Cut scaffolding**: signposts.",
@@ -156,7 +193,7 @@ describe("the cut order lives in body-vs-appendix.md", () => {
     "",
   ].join("\n");
   const listNow = md.slice(
-    md.indexOf("1. **Cut a whole block"),
+    md.indexOf("0. **Measure, then strike"),
     md.indexOf("🔴 **Never pay by trimming"),
   );
   const ledgerNow = md.slice(
@@ -164,14 +201,26 @@ describe("the cut order lives in body-vs-appendix.md", () => {
     md.indexOf("A qualification that narrows a number in the body has no rank"),
   );
 
-  it("names every kind, the wording of Threats and once-cited references before any move of a block", () => {
+  it("measures first, spends layout before prose and prose before references, and moves a block last", () => {
     expect(cutOrderKinds(md)).toEqual(KINDS.map(([id]) => id));
+  });
+
+  it("fires on the seven-kind list it had before the measure step", () => {
+    expect(cutOrderKinds(revert(md, listNow, SEVEN_KIND_LIST))).toEqual([
+      "duplicate",
+      "unknown: cut scaffolding",
+      "threats-wording",
+      "once-cited-reference",
+      "appendix",
+      "artifact",
+      "drop-claim",
+    ]);
   });
 
   it("fires on the five-kind list it had before", () => {
     expect(cutOrderKinds(revert(md, listNow, OLD_LIST))).toEqual([
       "duplicate",
-      "scaffolding",
+      "unknown: cut scaffolding",
       "appendix",
       "artifact",
       "drop-claim",
@@ -182,6 +231,44 @@ describe("the cut order lives in body-vs-appendix.md", () => {
     expect([
       hasLedgerRule(md),
       hasLedgerRule(revert(md, ledgerNow, "")),
+    ]).toEqual([true, false]);
+  });
+});
+
+describe("the rules around the cut order", () => {
+  const md = read(REFERENCE);
+
+  it("spends in order until the measured overflow is covered, not at the first that fits", () => {
+    expect(flat(md)).not.toContain("Stop at the first one that fits");
+    expect([
+      hasSpendRule(md),
+      hasSpendRule(
+        revert(
+          md,
+          "Spend in this order until the measured overflow is covered.",
+          "Stop at the first one that fits.",
+        ),
+      ),
+    ]).toEqual([true, false]);
+  });
+
+  it("defines exhausted as candidates, taken and the reason for each left, and fires without it", () => {
+    expect([
+      hasLedgerDefinition(md),
+      hasLedgerDefinition(
+        revert(md, "N candidates, M taken, reason for each left", "the words"),
+      ),
+    ]).toEqual([true, false]);
+  });
+
+  it("closes with short last lines as a rule outside the steps, and fires without it", () => {
+    const closing = md.slice(
+      md.indexOf("**Closing rule"),
+      md.indexOf("🔴 **Never pay by trimming"),
+    );
+    expect([
+      hasClosingRule(md),
+      hasClosingRule(revert(md, closing, "")),
     ]).toEqual([true, false]);
   });
 });
@@ -198,7 +285,7 @@ const SKILLS = {
     ],
   },
   "harden-paper": {
-    now: "If it spills, spend the overrun in the cut order of",
+    now: "If it spills, measure the overflow and spend it in the cut order of",
     before:
       "Trim the reference list to the essential subset if it spills — the body text + a lean ~10 refs is what must fit. Before:",
     expected: [
@@ -234,6 +321,21 @@ describe.each(Object.entries(SKILLS))(
     });
   },
 );
+
+describe("the old name of step 2 is gone", () => {
+  it.each([
+    REFERENCE,
+    ...["tighten-paper", "harden-paper", "paper-adversarial-review"].map(
+      (n) => `skills/${n}/SKILL.md`,
+    ),
+  ])("%s does not call sentences about the text scaffolding", (path) => {
+    const md = read(path);
+    expect([
+      OLD_NAME.test(md),
+      OLD_NAME.test(`${md} Cut scaffolding.`),
+    ]).toEqual([false, true]);
+  });
+});
 
 describe("tighten-paper's own changes of #486", () => {
   const md = flat(read("skills/tighten-paper/SKILL.md"));

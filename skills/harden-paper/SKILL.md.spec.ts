@@ -252,7 +252,7 @@ middle sags" — wasting the polish on possibly-cut sections.
   typical proxy) with the exact content + table + refs, and render with headless Chromium:
   \`/opt/pw-browsers/chromium-*/chrome-linux/chrome --headless --no-pdf-header-footer
   --print-to-pdf=fit.pdf fit.html\`, then read the page-tree \`/Count N\` from the PDF (\`grep -aoE
-  '/Count [0-9]+' fit.pdf | head -1\`). If it spills, spend the overrun in the cut order of
+  '/Count [0-9]+' fit.pdf | head -1\`). If it spills, measure the overflow and spend it in the cut order of
   \`paper-pipeline/references/body-vs-appendix.md\`, section "When the body overruns", and keep no order of
   your own here. \`tighten-paper\` applies that order; this gate only counts the pages.
 - **Format template.** Confirm the venue's actual template (ACM sigconf / Word / 2-part SiP). Match its
