@@ -1,7 +1,7 @@
 /**
  * tighten-paper, the LOUD half of #486 — the PAID tier for what the skill does. A paper one page over
  * its limit, with a Threats section that spends a paragraph per limitation and five references cited
- * once in sentences that carry no claim (`cut-order.fixture.ts`). Over several trials:
+ * once in sentences that carry no claim (`fixtures/cut-order.ts`). Over several trials:
  *
  *   - the plan takes words from Threats;
  *   - the plan names at least two of the once-cited references;
@@ -26,7 +26,7 @@ import {
   makePlugin,
   planLines,
   takesFromThreats,
-} from "./cut-order.fixture.ts";
+} from "./fixtures/cut-order.ts";
 
 /** The first plan line that satisfies `p`, or Infinity when none does. */
 const firstLine = (ctx: RunContext, p: (line: string) => boolean): number => {

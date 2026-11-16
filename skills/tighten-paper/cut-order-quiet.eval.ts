@@ -1,6 +1,6 @@
 /**
  * tighten-paper, the QUIET half of #486 — the same paper as `cut-order-loud.eval.ts`, with a Threats
- * section already down to one clause per limitation (`cut-order.fixture.ts`). Over several trials the
+ * section already down to one clause per limitation (`fixtures/cut-order.ts`). Over several trials the
  * plan proposes no cut of Threats: KEEP the item, SHORTEN the prose, and here there is no prose left.
  *
  * Not yet run: estimated about $0.5–1.5 a trial on sonnet, about $2–5 for 3 trials. Not CI.
@@ -16,7 +16,7 @@ import {
   makePlugin,
   planLines,
   takesFromThreats,
-} from "./cut-order.fixture.ts";
+} from "./fixtures/cut-order.ts";
 
 export default defineEval<"measure">({
   assert: (report) => {
