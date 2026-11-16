@@ -31,6 +31,11 @@ Prefer a **separate model as the reviewer** (e.g. Fable via a subagent) so it's 
 grading itself. Give the reviewer the full paper text (Read the \`.tex\`/PDF) and the target
 venue + paper type (short/full/position/benchmark). Ask for the structured output below.
 
+**Venue bar.** Also hand it the venue's measured bar and follow
+\`paper-pipeline/references/venue-bar.md\`: \`<papers-root>/venues/<venue>/summary.md\` when it exists, each
+rigour finding stating the paper's position against the accepted papers' denominators; with no summary,
+the report's first lines say "main-conference bar assumed".
+
 ## The review must cover (ranked by how often it kills a paper)
 
 1. **"So what / is this enough?" (contribution & novelty).** State the single contribution in one

@@ -4,7 +4,7 @@ description: Use when asking "what would the program committee decide?" / "simul
 allowed-tools: [Read, Write, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:1d086a8e42bb8443 compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:e698f866a26cba42 compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
 
 # pc-panel-review — model the whole PC, not one reviewer
 
@@ -27,6 +27,10 @@ prose-only read can.
 1. **Get the venue rubric + bar** (fetch the CFP; quote the criteria). Calibrate to the *track*: a
    WIP/short/workshop bar rewards promise and discussion value; a full-paper/top-tier bar demands
    completeness. Do not import top-tier standards into a WIP review.
+   **Then load the venue's measured bar** per `paper-pipeline/references/venue-bar.md`: read
+   `<papers-root>/venues/<venue>/summary.md` when it exists and hand it to every reviewer seat and to
+   the chair; each rigour finding states the paper's position against its denominators. Without it,
+   the report opens with "main-conference bar assumed" and the accept probability carries that flag.
 2. **Collect the two readability/structure artifacts — the panel is BLOCKED without them.** Before any
    reviewer spawns, there must exist for THIS draft: (a) the **persona stall inventory** from
    `grade-paper-writing` (the "Sam" per-section cold read), and (b) the **structural verdict** from

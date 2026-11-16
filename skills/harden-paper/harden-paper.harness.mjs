@@ -18,6 +18,7 @@
  * What it does NOT prove: that the skill fires, or that its guidance produces a
  * good result. Those need a real model — see `harden-paper.eval.mjs`.
  */
-import { checkSkill } from "../../lib/skill-checks.mjs";
+import { checkSkill, checkVenueBar } from "../../lib/skill-checks.mjs";
 
 await checkSkill("harden-paper");
+checkVenueBar("harden-paper");
