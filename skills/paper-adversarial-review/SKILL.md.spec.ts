@@ -84,7 +84,9 @@ venue + paper type (short/full/position/benchmark). Ask for the structured outpu
 - **Line/section-level nits** (overclaims, TMI, inconsistencies) as a checklist.
 - **Missing citations** (specific, real — do not invent).
 - **Strongest reframing** if the contribution is undersold or misframed.
-- **What to cut** (for length / TMI) and **what to add** (for soundness).
+- **What to cut** (for length / TMI) and **what to add** (for soundness). Rank the cuts by the cut order in
+  \`paper-pipeline/references/body-vs-appendix.md\`, section "When the body overruns", not by your own; a cut
+  of a result or an abstract sentence carries the ledger that section asks for (steps 1–5 shown first).
 
 ## Rules
 - Be adversarial but *fair* and *specific* — "weak" is useless; "the 65% claim in the abstract isn't
