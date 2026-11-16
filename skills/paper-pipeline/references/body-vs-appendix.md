@@ -1,8 +1,9 @@
 # Body, appendix, or artifact — the one rule that decides
 
 Shared reference. Read by `draft-paper` (where do I put this as I write?), `tighten-paper` (what
-moves out when the body overruns?) and `harden-paper` (is the body self-contained?). Do not copy it
-into those skills — link it, the way they link `review-ratchet.md`.
+moves out when the body overruns?), `harden-paper` (is the body self-contained, and does it fit?)
+and `paper-adversarial-review` (what to cut). Do not copy it into those skills — link it, the way
+they link `review-ratchet.md`.
 
 ## Why this file exists
 
@@ -65,19 +66,50 @@ other way round.
 
 ## When the body overruns
 
-In order. Stop at the first one that fits.
+This list is the one cut order. `tighten-paper`, `harden-paper` and `paper-adversarial-review` point
+here and keep no order of their own. In order. Stop at the first one that fits.
 
 1. **Cut a whole block that duplicates another block.** Free.
 2. **Cut scaffolding**: rhetorical questions staging results the next sentence delivers, signpost
    sentences restating subsection headings, a lead-in that restates its own next clause.
-3. **Move a whole block to the appendix**, leaving a one-clause statement of what it concluded.
-4. **Move a measurement to the artifact** and cite it.
-5. **Drop a claim.** An honest reduction in scope, recorded as a decision.
+3. **Shorten the wording of Threats to validity, related work and discussion.** Every limitation
+   survives as at least one clause, and every claim and every stated delta over a cited work stays.
+   Merging paragraphs is allowed, and so is dropping a "why this matters" explanation: the sentence
+   that tells the reader why a limitation or a related work deserves attention. That is not the
+   explaining clause of the rule below. A "why this matters" sentence argues for attention; an
+   explaining clause says what its sentence means. A Threats section already down to one clause per
+   limitation has nothing left here: say so and go on.
+4. **Cut a reference cited once, in a sentence that is not a claim**: background the reader
+   already has, a "see also", a tool named in passing. Remove the citation, and the sentence too if
+   it then carries nothing. Never on this list: the nearest competitor, the source of a number, the
+   only citation of a dataset or tool the study used, and the credit for a borrowed idea. Price each
+   entry for the template before weighing it against the next kind. `_build/paper.facts.json`
+   records no per-entry cost and no entry count. It records `bib_anchor_page` (the page the first
+   entry is anchored on), `ref_pages` (pages holding only references), `columns`, `ref_pt`, and each
+   page's text in `pages_text`. So count the entries in the build's `.bbl`, find how many columns
+   the bibliography fills in `pages_text` from `bib_anchor_page` on, and divide by the entries: that
+   is one entry's cost in columns. Multiply by the body's words per column to weigh it against
+   prose. Issue #486 estimates about 28 pt, roughly 22 body words, per entry for one consumer paper
+   in two-column IEEE. LaTeX breaks columns and places floats, so a cut entry saves a page only when
+   the total crosses a column boundary: rebuild and count.
+5. **Move a whole block to the appendix**, leaving a one-clause statement of what it concluded.
+6. **Move a measurement to the artifact** and cite it.
+7. **Drop a claim.** An honest reduction in scope, recorded as a decision.
 
 🔴 **Never pay by trimming the subordinate clause that EXPLAINS a sentence.** It carries no fact, so
 its loss is invisible to every fact-checker and every threshold, and what remains is short, true,
 and comprehensible only to someone who already knows the idea. This is the single most common way a
 paper gets worse while every metric improves.
+
+🔴 **Before proposing to cut, move or drop a result, or any sentence of the abstract, show kinds 1–4
+exhausted, or name why each was left**: one line per kind, with the words it took or the reason it
+took none ("Threats: 0 words, already one clause for each of four limitations"). A results cut
+without that ledger is not yet a proposal. On one consumer paper (#486) a pass took 0 of 689 words
+of Threats and no once-cited reference on its own merits, and proposed cutting an outside-benchmark
+result, a base-rate anchor and an abstract sentence instead.
+
+A qualification that narrows a number in the body has no rank on this list at all: it stays (the
+asymmetric rule under "Sorting test").
 
 ## When the appendix is the thing that looks wrong
 

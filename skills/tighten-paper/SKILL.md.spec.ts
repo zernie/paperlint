@@ -54,6 +54,13 @@ owned **0, 28 and 38** words before their first subsection. Nothing in the toolc
 question, because every metric was per-sentence or per-document and none was per-section. The author's
 word for the result was a "salad" — a jumbled mix — and he was right while the numbers said fine.
 
+**Then the bibliography, as a row of its own** — it costs page space like prose, and a table of body
+words never shows it. Write: the number of entries; one entry's page cost for this template, worked
+out from \`_build/paper.facts.json\` the way the once-cited-references step of the cut order says
+(\`paper-pipeline/references/body-vs-appendix.md\`, section "When the body overruns"; the file holds
+no per-entry cost, so do not quote one from it); and every key cited exactly once, beside the
+sentence that cites it. That list is what that step spends.
+
 **What the count does NOT decide, and you must:** the ORDER, the NAMES, and whether a section earns
 its place. Those are judgement, and pretending otherwise would be the failure this whole pipeline
 exists to prevent.
@@ -159,13 +166,16 @@ called it "fat for no reason" after a pass that cut almost nothing and left it 1
   decided before its run (with its decision's commit and date, from the index in \`repro/README.md\`)
   or is exploratory — and the word "exploratory" beside an exploratory number — is the claim's
   warrant, not its explanation: cut around it, never it.
-- **"Fold to the artifact" is the PRIMARY length lever for a measurement/benchmark paper — not a last resort.**
-  FIRST verify the artifact exists and recomputes the numbers (it usually does for these papers). Then per-case
+- **"Fold to the artifact" is a real length lever for a measurement/benchmark paper, not a last resort.**
+  First verify the artifact exists and recomputes the numbers (it usually does for these papers). Then per-case
   breakdowns, secondary analyses, exhaustive robustness sub-results, ablation walkthroughs, and every "we also
   checked X" MOVE there: keep the headline number + one pointer ("the artifact's per-guard matrix reports the
   rest"), cut the in-paper walkthrough. This is NOT dropping a claim by omission — the public artifact recomputes
-  it. **A dense benchmark paper that folds NOTHING to its own artifact has not been tightened.** Make a fold list
-  first, before any sentence-level cutting.
+  it. **A dense benchmark paper that folds NOTHING to its own artifact has not been tightened.** Where a fold
+  ranks against the other kinds of cut is not decided here (next rule).
+- **The ORDER in which kinds of content are spent has one owner:** \`paper-pipeline/references/body-vs-appendix.md\`,
+  section "When the body overruns". Rank the plan by it, not by words saved and not by a list of your own. A plan
+  that proposes cutting a result or an abstract sentence carries that section's ledger first.
 - **Length is calibrated to CONTRIBUTION WEIGHT, not to the page limit.** A moderate finding + a moderate-complexity
   benchmark does not need to sit at the limit; being over-length for the weight of the contribution is itself a
   defect — it reads as padding even when each sentence is individually "true." Right-size to the contribution's
@@ -201,7 +211,7 @@ produced it:
 
 🔴 **Before assigning any \`MOVE→\` verdict, read \`paper-pipeline/references/body-vs-appendix.md\`.**
 It holds the one rule that decides where a block lives — quoted from the ACL/ARR guidelines, not
-invented — plus the ordered list of what to cut first when the body overruns, and the asymmetric
+invented — plus the cut order this skill ranks by (section "When the body overruns"), and the asymmetric
 case that matters most: **a qualification narrowing a number in the body belongs in the body**,
 however tight the page count. Moving it out does not fix the overclaim, it hides it.
 
@@ -243,6 +253,13 @@ Observed 2026-08-06, first run of this format: a block crediting a section title
 named Supreme Court dissent scored 2/10 and came back \`CUT\`, described as "a courtesy footnote, not
 evidence". Deleting the credit while keeping the borrowing is not a saving. The pass was applying
 the scale exactly as written, which made it a defect in the scale.
+
+**KEEP is about the item, not its wording: KEEP the item, SHORTEN the prose.** Each limitation survives
+as at least one clause, and each credit as its citation. The Threats section that holds them is weighed
+like any other section: its paragraphs, its "why this matters" explanations and its restatements get
+\`SHORTEN −Nw\` when they run long. A Threats section of 689 words, 9.1% of the body (one consumer
+paper, #486), is weighed for a \`SHORTEN\`, not waved through as a \`KEEP\`; a section already at one clause per limitation is a \`KEEP\`, and
+the plan says so. Shortening this wording is class (1) below, and a step of the cut order.
 
 🔴 **A \`MOVE\` or \`CUT\` verdict on an appendix block is INVALID unless the note says what points at
 the block.** State the pointer, or state that a search found none — and if one exists, the verdict
@@ -302,8 +319,10 @@ Produce:
 - **The one-sentence point** (as you could best extract it) + whether the paper delivers it clearly (yes / buried / no).
 - **Length verdict:** is it too long? by roughly how much? Is it at the page limit because it's full of argument, or
   because it's padded?
-- **The cut/fold/merge/reorder plan:** a ranked list — for each: section, action (CUT / FOLD-TO-ARTIFACT / MERGE
-  with X / REORDER / TIGHTEN), why, and rough length saved. Lead with the highest-impact.
+- **The cut/fold/merge/reorder plan:** a list ranked by the cut order in
+  \`paper-pipeline/references/body-vs-appendix.md\` (section "When the body overruns") — for each: section, action
+  (CUT / FOLD-TO-ARTIFACT / MERGE with X / REORDER / TIGHTEN), its kind in that order, why, and rough length saved.
+  Within one kind, lead with the most words saved.
 - **The middle-sag diagnosis** and the fix (consolidate these findings, lead each with its point).
 - **Skim-test failures** (headings/lead-sentences that don't carry the argument).
 

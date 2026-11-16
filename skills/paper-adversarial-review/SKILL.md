@@ -5,7 +5,7 @@ context: fork
 allowed-tools: [Read, Write, Grep, Glob, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:cb852f6fb5fb9988 compiled from skills/paper-adversarial-review/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:041f0b21b175bc92 compiled from skills/paper-adversarial-review/SKILL.md.spec.ts -->
 
 # paper-adversarial-review — be the reviewer who wants to reject it
 
@@ -78,7 +78,9 @@ venue + paper type (short/full/position/benchmark). Ask for the structured outpu
 - **Line/section-level nits** (overclaims, TMI, inconsistencies) as a checklist.
 - **Missing citations** (specific, real — do not invent).
 - **Strongest reframing** if the contribution is undersold or misframed.
-- **What to cut** (for length / TMI) and **what to add** (for soundness).
+- **What to cut** (for length / TMI) and **what to add** (for soundness). Rank the cuts by the cut order in
+  `paper-pipeline/references/body-vs-appendix.md`, section "When the body overruns", not by your own; a cut
+  of a result or an abstract sentence carries the ledger that section asks for.
 
 ## Rules
 - Be adversarial but *fair* and *specific* — "weak" is useless; "the 65% claim in the abstract isn't
