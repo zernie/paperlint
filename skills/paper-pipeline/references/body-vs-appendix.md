@@ -1,8 +1,9 @@
 # Body, appendix, or artifact — the one rule that decides
 
 Shared reference. Read by `draft-paper` (where do I put this as I write?), `tighten-paper` (what
-moves out when the body overruns?) and `harden-paper` (is the body self-contained?). Do not copy it
-into those skills — link it, the way they link `review-ratchet.md`.
+moves out when the body overruns?), `harden-paper` (is the body self-contained, and does it fit?)
+and `paper-adversarial-review` (what to cut). Do not copy it into those skills — link it, the way
+they link `review-ratchet.md`.
 
 ## Why this file exists
 
@@ -65,19 +66,89 @@ other way round.
 
 ## When the body overruns
 
-In order. Stop at the first one that fits.
+This list is the one cut order. `tighten-paper`, `harden-paper` and `paper-adversarial-review` point
+here and keep no order of their own. Spend in this order until the measured overflow is covered.
 
-1. **Cut a whole block that duplicates another block.** Free.
-2. **Cut scaffolding**: rhetorical questions staging results the next sentence delivers, signpost
-   sentences restating subsection headings, a lead-in that restates its own next clause.
-3. **Move a whole block to the appendix**, leaving a one-clause statement of what it concluded.
-4. **Move a measurement to the artifact** and cite it.
-5. **Drop a claim.** An honest reduction in scope, recorded as a decision.
+0. **Measure, then strike the steps this venue makes worthless.** Read the overflow (pt or lines)
+   from the build, and what the limit counts from the paper's resolved preset, never from memory.
+   Name the venue's limit text in the plan. Strike a step the venue makes worthless, and say so:
+
+   | read in the resolved preset                                                      | what the limit counts                                     | strike                                                                                                  |
+   | -------------------------------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+   | `ref_pages_max: "unlimited"`                                                     | references are outside the limit                          | step 5                                                                                                  |
+   | `body_pages_max` with an integer `ref_pages_max`                                 | references have an allowance of their own                 | step 5, unless the reference pages overflow, or a `pages_max` total counts them and the total overflows |
+   | `pages_max` alone                                                                | every page of the PDF, references and appendices included | step 6                                                                                                  |
+   | `pages_max` beside `body_pages_max`                                              | a body limit and a total limit, both checked              | step 6, unless the body is what overflows and the total has room                                        |
+   | `format.appendix_in_body: true` (with `body_ends_at: "references"`)              | appendices count in the body                              | step 6                                                                                                  |
+   | `body_pages_max` with `format.body_ends_at: "references"`, no `appendix_in_body` | the body ends at the references or the appendix           | none: steps 5 and 6 are open when the limit text allows                                                 |
+
+   A limit like "including references" with appendices counted strikes step 6 and leaves step 5
+   standing. A preset that sets none of these fields has no checked limit: read the venue card and
+   quote its limit text.
+
+1. **Cut a whole block that duplicates another block.** Free. When a caption and a body paragraph
+   say the same thing, the body copy goes: the skim reader reads captions.
+2. **Cut sentences about the text itself**: rhetorical questions staging results the next sentence
+   delivers, signpost sentences restating subsection headings, a lead-in that restates its own next
+   clause. A signpost that adds new orientation stays.
+3. **Bibliography format and float layout, no body sentence changed.**
+   - Bibliography, only within the venue's own style: abbreviated venue names; drop a URL where a
+     DOI or the full venue is printed; drop month and note fields. "et al." only where the style
+     allows it: IEEEtran truncates long author lists by its own rule; ACM's ACM-Reference-Format
+     lists all authors and prints "et al." only for a literal `and others`, so do not truncate
+     there. A truncated list can hide a reviewer's name.
+   - Floats: crop whitespace inside figures, merge two small tables that share columns, turn a table
+     of about four cells into a sentence, a short list into run-in prose, fold a footnote into text
+     or delete it. Every changed float is re-read as a rendered crop.
+   - Forbidden: `\vspace`, font or margin changes, float-separation lengths, reference type below
+     the preset's size.
+4. **Shorten the wording of Threats to validity, related work, discussion and captions.** Every
+   limitation survives as at least one clause, and every claim and every stated delta over a cited
+   work stays. A caption keeps what the float shows, its N, and any bound on its numbers. Merging
+   paragraphs is allowed, and so is dropping a "why this matters" explanation: the sentence that
+   tells the reader why a limitation or a related work deserves attention. That is not the
+   explaining clause of the rule below. A "why this matters" sentence argues for attention; an
+   explaining clause says what its sentence means. A Threats section already down to one clause per
+   limitation has nothing left here: say so and go on.
+5. **Cut a reference cited once, in a sentence that is not a claim**: background the reader
+   already has, a "see also", a tool named in passing. Remove the citation, and the sentence too if
+   it then carries nothing. Never on this list: the nearest competitor, the source of a number, the
+   only citation of a dataset or tool the study used, the credit for a borrowed idea, and a work a
+   sibling-paper card marks must-cite. Price each
+   entry for the template before weighing it against the next kind. `_build/paper.facts.json`
+   records no per-entry cost and no entry count. It records `bib_anchor_page` (the page the first
+   entry is anchored on), `ref_pages` (pages holding only references), `columns`, `ref_pt`, and each
+   page's text in `pages_text`. So count the entries in the build's `.bbl`, find how many columns
+   the bibliography fills in `pages_text` from `bib_anchor_page` on, and divide by the entries: that
+   is one entry's cost in columns. Multiply by the body's words per column to weigh it against
+   prose. Issue #486 estimates about 28 pt, roughly 22 body words, per entry for one consumer paper
+   in two-column IEEE. LaTeX breaks columns and places floats, so a cut entry saves a page only when
+   the total crosses a column boundary: rebuild and count.
+6. **Move a whole block to the appendix**, leaving a one-clause statement of what it concluded. Only
+   where step 0 left it standing.
+7. **Move a measurement to the artifact** and cite it.
+8. **Drop a claim.** An honest reduction in scope, recorded as a decision.
+
+**Closing rule, not a step: short last lines.** Only once the text is frozen and the residual
+overflow is a few lines: trim paragraphs whose last line holds one to three words. It comes last in
+time because any later edit undoes it. It stays under the rule below: never trim the clause that
+explains. Issue #489 proposes a tool to list them.
 
 🔴 **Never pay by trimming the subordinate clause that EXPLAINS a sentence.** It carries no fact, so
 its loss is invisible to every fact-checker and every threshold, and what remains is short, true,
 and comprehensible only to someone who already knows the idea. This is the single most common way a
 paper gets worse while every metric improves.
+
+🔴 **Before proposing to cut, move or drop a result, or any sentence of the abstract (steps 6–8 on a
+result), show steps 1–5 exhausted, or name why each was left.** "Exhausted" for a step means
+"N candidates, M taken, reason for each left": one line per step, with the counts and the reason
+("Threats: 1 candidate paragraph, 0 taken, already one clause for each of four limitations"). A results cut
+without that ledger is not yet a proposal. On one consumer paper (#486) a pass took 0 of 689 words
+of Threats and no once-cited reference on its own merits, and proposed cutting an outside-benchmark
+result, a base-rate anchor and an abstract sentence instead.
+
+A qualification that narrows a number in the body has no rank on this list at all: it stays (the
+asymmetric rule under "Sorting test").
 
 ## When the appendix is the thing that looks wrong
 
