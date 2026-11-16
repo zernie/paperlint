@@ -23,7 +23,8 @@ import { fileURLToPath } from "node:url";
 import type { Check, RunContext } from "vigiles/eval";
 import { z } from "zod";
 
-const SKILL_DIR = dirname(fileURLToPath(import.meta.url));
+/** This file sits in `skills/tighten-paper/fixtures/`, so the skills directory is two levels up. */
+const SKILL_DIR = dirname(dirname(fileURLToPath(import.meta.url)));
 const SKILLS = dirname(SKILL_DIR);
 
 /** Keys cited exactly once, each in a sentence that is not a claim. */
