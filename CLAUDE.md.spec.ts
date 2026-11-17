@@ -85,6 +85,9 @@ Before writing machinery, **run the thing you are about to replace and paste its
     "installing-paperlint-is-smooth": guidance(
       "The target is `npm i` plus one command; any further manual step is a paperlint defect, except a choice that really belongs to the user, named when it is asked. An automatic step that can fail silently is worse than an explicit one.",
     ),
+    "the-default-set-is-what-the-venue-decides": guidance(
+      "A check ships on by default only when the venue's own text decides it (page limit, template, anonymity, required sections, dates) or a desk reject or a broken build does (an undefined reference, a missing citation, a forbidden font). Writing preferences (length caps, density, structure, register, style proxies) and anything a careful author could dispute ship off, and their docs page says opt-in. A real author who installs paperlint should get no default finding they could reasonably disagree with. A rule moves into the default set only with evidence that a venue requires it or that it causes desk rejects. The author decided this on 2026-11-17, after a length cap set to error on a consumer paper forced its abstract into compression.",
+    ),
     "every-check-has-both-halves": guidance(
       "Every check — lint rule, script, hook, harness — fires on a planted defect AND stays quiet on a clean fixture, and the test goes red before the fix lands. A check only ever seen quiet is indistinguishable from a dead one.",
       { details: file("docs/testing.md") },
