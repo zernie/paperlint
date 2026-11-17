@@ -99,4 +99,17 @@ export interface LatexReader {
    * what stops it, with its offset in `src`.
    */
   readonly abstractText: (src: string) => Result<string, AbstractProblem>;
+  /** The keys of every citation command of `src`, captions and floats included, in order. */
+  readonly citeKeys: (src: string) => readonly string[];
+  /** The numbers `src` registers with `\num{…}` and `\SI{…}{…}`: each one's first argument. */
+  readonly registeredNumbers: (src: string) => readonly string[];
+  /**
+   * The text of the first `{…}` argument of each macro of `src` called one of `names`, whitespace
+   * collapsed, empty ones left out: its words, its control symbols (`\\{`) as written, its groups
+   * unwrapped.
+   */
+  readonly macroTexts: (
+    src: string,
+    names: readonly string[],
+  ) => readonly string[];
 }

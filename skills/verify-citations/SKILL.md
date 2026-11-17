@@ -4,9 +4,11 @@ description: Verify every citation is a real work with correct metadata, and tha
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:47a4b53679a716dd compiled from skills/verify-citations/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:519bc353fb71f90c compiled from skills/verify-citations/SKILL.md.spec.ts -->
 
 # verify-citations — every cite real, the delta explicit
+
+Editing the paper's text after an approved copy exists (`paperlint versions approve`): declare each change in `versions/<cycle>/changes.yaml`, `paperlint versions diff` shows what was lost (EXPERIMENTAL; `docs/rules/cycle/changes-since-approved.md`).
 
 Reviewers reject on a single fabricated or wrong citation — it reads as either sloppiness or a
 hallucinated bibliography, and either one is fatal. And they reject on "this was already done by ___" if

@@ -4,6 +4,7 @@
  *
  *   versions/
  *   ├── alpha-2026/            ← a cycle id
+ *   │   ├── approved.tex       ← the text the author approved (`paperlint versions approve`)
  *   │   ├── submitted.pdf      ← what the venue's reviewers read
  *   │   └── submitted.tex      ← the source it was built from (a multi-file paper: assembled)
  *   ├── beta-2027/
@@ -45,7 +46,12 @@ export const VERSIONS_DIR = "versions";
 export const LOCK_FILE = "lock.json";
 
 /** The stages a version is frozen at, in the order an attempt reaches them. */
-export const VERSION_STAGES = ["submitted", "camera-ready", "arxiv"] as const;
+export const VERSION_STAGES = [
+  "approved",
+  "submitted",
+  "camera-ready",
+  "arxiv",
+] as const;
 export type VersionStage = (typeof VERSION_STAGES)[number];
 export type VersionExt = "pdf" | "tex";
 
@@ -63,7 +69,10 @@ export function frozenName(name: string): FrozenName | null {
   const m = /^([a-z-]+)\.(pdf|tex)$/.exec(name);
   const stage = m?.[1];
   const ext = m?.[2];
-  return isStage(stage) && (ext === "pdf" || ext === "tex")
+  // `approved` is a source only: an older paperlint rejects a whole lock that holds a stage it does
+  // not know, so the new stage reaches the lock through one name, `approved.tex`.
+  return isStage(stage) &&
+    (ext === "tex" || (ext === "pdf" && stage !== "approved"))
     ? { stage, ext }
     : null;
 }
@@ -255,7 +264,10 @@ const stray = (path: string, hint: string): VersionFinding => ({
 
 const MIGRATE_HINT =
   "a frozen version in the layout before folders per attempt: `npx paperlint versions migrate <paper>` moves it into versions/<cycle>/";
-const LAYOUT_HINT = `versions/ holds lock.json and one folder per cycle, each with <stage>.pdf and <stage>.tex (${STAGES_TEXT}) — anything else goes to extra/`;
+const LAYOUT_HINT = `versions/ holds lock.json and one folder per cycle, each with <stage>.pdf and <stage>.tex (${STAGES_TEXT}; approved has a .tex only) and optionally changes.yaml — anything else goes to extra/`;
+
+/** The declared changelist beside a cycle's approved.tex (src/changelist.ts): in the folder, not a stage. */
+export const CHANGES_FILE = "changes.yaml";
 
 /** An entry directly in `versions/`: fine, a cycle's folder, or a finding. */
 function rootFinding(
@@ -300,7 +312,10 @@ function folderContents(input: LayoutInput): {
         : [{ ...name, cycle, key: frozenKey(cycle, name.stage, name.ext) }],
     ),
     strays: named
-      .filter(({ e, name }) => name === null && !e.name.startsWith("."))
+      .filter(
+        ({ e, name }) =>
+          name === null && !e.name.startsWith(".") && e.name !== CHANGES_FILE,
+      )
       .map(({ cycle, e }) => stray(`${cycle}/${e.name}`, LAYOUT_HINT)),
   };
 }
@@ -513,6 +528,7 @@ export interface VersionRow {
 /** What a frozen stage of a cycle IS, from the cycle's outcome. Pure. */
 export function stateOf(c: Cycle, stage: VersionStage): string {
   if (stage === "arxiv") return "arXiv copy";
+  if (stage === "approved") return "approved by the author";
   switch (c.outcome.kind) {
     case "open":
       return stage === "submitted"

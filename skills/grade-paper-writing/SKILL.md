@@ -4,9 +4,11 @@ description: Grade how a paper reads and fix it sentence by sentence. Use when a
 allowed-tools: [Read, Write, Edit, Grep, Glob, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:2b7193c739a374e6 compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:5f5f44953117ab39 compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
 
 # grade-paper-writing — grade how the paper READS, then fix it sentence by sentence
+
+Editing the paper's text after an approved copy exists (`paperlint versions approve`): declare each change in `versions/<cycle>/changes.yaml`, `paperlint versions diff` shows what was lost (EXPERIMENTAL; `docs/rules/cycle/changes-since-approved.md`).
 
 The review skills hunt scientific defects; `study-accepted-papers` scores the contribution on the
 strong-accept scorecard. Neither tells you the paper is a slog to read. This skill does exactly that: it

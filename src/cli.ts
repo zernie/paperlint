@@ -185,6 +185,8 @@ export { nextSteps } from "./init.ts";
 import paperStages from "#eslint-rules/paper-stages";
 import preregCoverage from "#eslint-rules/prereg-coverage";
 import { CYCLE_RULE_LEVELS, cycleRules } from "./cycle-rules.ts";
+import { changesRules } from "./changes-rule.ts";
+import { latexDiff, withTexBin } from "./adapters/latexdiff/index.ts";
 import { runVersions } from "./versions-command.ts";
 import { parseYaml } from "./adapters/yaml/index.ts";
 import {
@@ -300,14 +302,18 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
   npx paperlint submission topics [paper]
                                       the topics the venue's portal offers, against the ones its
                                       preset records; exit 1 when they differ
-  npx paperlint versions [show|lock|migrate] [paper]
+  npx paperlint versions [show|lock|migrate|approve|diff] [paper]
                                       the paper's frozen versions, one folder per attempt:
                                       versions/<cycle>/<stage>.{pdf,tex}. show (the default): each
                                       version and its state — under review, historical, camera-ready
                                       base, final — and how far paper.tex has moved. lock: record the
                                       files in versions/lock.json (submission --save does it for what
                                       it sends). migrate: move the stages: list's dated files into
-                                      their cycles' folders, write the lock, drop the list
+                                      their cycles' folders, write the lock, drop the list.
+                                      approve: freeze paper.tex as versions/<cycle>/approved.tex
+                                      (the text you accept) and lock it. diff: latexdiff of the
+                                      newest approved.tex against paper.tex, written to
+                                      _build/diff/diff.tex, and the sentences that are gone
   npx paperlint studies new <paper-dir> "<title>" [--kind <kind>]
                                       register a study: the next id in repro/studies.json, the folder
                                       repro/<id>-<slug>/ with its README.md and plan.json (a template),
@@ -478,6 +484,7 @@ const CYCLE_PAPER_RULES = {
   ...cyclePortRules(TEX_RULE_DEPS),
   ...draftRules(TEX_RULE_DEPS),
   ...priorReviewsRules({ ...TEX_RULE_DEPS, yaml: parseYaml }),
+  ...changesRules({ ...TEX_RULE_DEPS, yaml: parseYaml }),
 };
 const CYCLE_PAPER_RULE_LEVELS = {
   ...CYCLE_PORT_RULE_LEVELS,
@@ -2082,6 +2089,16 @@ const SIMPLE: Readonly<
       yaml: parseYaml,
       latex: latexReader,
       codec: sourcesCodec,
+      // latexdiff may live in the managed TeX Live (`paperlint toolchain`), which is not on PATH.
+      latexdiff: latexDiff({
+        proc: spawnProcess(),
+        env: withTexBin(
+          gitEnv(process.env),
+          cachedTree(cacheRoot(process.env)),
+        ),
+        files: nodeFiles,
+        latex: latexReader,
+      }),
       now: isoNow,
       cwd,
       log,

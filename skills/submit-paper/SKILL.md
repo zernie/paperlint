@@ -4,7 +4,7 @@ description: End-to-end playbook for submitting a peer-reviewed paper to a doubl
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Skill]
 ---
 
-<!-- vigiles:sha256:567bfff9583abdf1 compiled from skills/submit-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:313e0b34c0b00e40 compiled from skills/submit-paper/SKILL.md.spec.ts -->
 
 # submit-paper — get a reviewed paper from "done" to "ready for review"
 
@@ -139,6 +139,8 @@ Many workshop HotCRPs have **no supplementary-upload field** — check first; if
 
 🔴 **What the reviewers read is the one version git cannot rebuild for you later** — it was built
 outside the repo and lives on the portal. Freeze it at the send.
+
+With an approved copy (`versions/<cycle>/approved.tex`), `--save` refuses while the source differs from it: what is sent is what was approved.
 
 In a paper that keeps `cycles` in `paperlint.json`, the send freezes it:
 `paperlint submission update <paper> --save` (and `new --save`) writes the exact PDF it sent and the

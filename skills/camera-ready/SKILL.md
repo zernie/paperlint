@@ -4,9 +4,11 @@ description: On acceptance, turn the anonymized-for-review paper into the de-ano
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch]
 ---
 
-<!-- vigiles:sha256:66444fd7ce0e56a0 compiled from skills/camera-ready/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:fb3e15168397cb3f compiled from skills/camera-ready/SKILL.md.spec.ts -->
 
 # camera-ready — de-anonymize an accepted paper into the final proceedings version
+
+Editing the paper's text after an approved copy exists (`paperlint versions approve`): declare each change in `versions/<cycle>/changes.yaml`, `paperlint versions diff` shows what was lost (EXPERIMENTAL; `docs/rules/cycle/changes-since-approved.md`). With an approved copy, `submission … --save` refuses while the source differs from it; approve it first (the author does, never the agent).
 
 The reviewed PDF was anonymized on purpose. Acceptance flips that: the camera-ready carries your
 real name, your real repo, and an archival DOI — and it's the version that gets indexed, so it's the

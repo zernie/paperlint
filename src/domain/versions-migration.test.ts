@@ -408,3 +408,19 @@ describe("rehearse", () => {
     );
   });
 });
+
+describe("planMigration, the approved stage", () => {
+  it("🔴 a `stages:` list cannot name `approved`: it has no dated file to move", () => {
+    const r = planMigration(
+      input({
+        cycleIds: [cycleId("alpha-2026")],
+        stages: [
+          { stage: "approved", cycle: "alpha-2026", date: "2026-07-22" },
+        ],
+      }),
+    );
+    expect(!r.ok && r.error.join()).toContain(
+      "the stage «approved» has no place in versions/<cycle>/",
+    );
+  });
+});

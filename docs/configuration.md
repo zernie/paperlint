@@ -255,10 +255,26 @@ versions/
 │   ├── submitted.pdf
 │   └── submitted.tex
 ├── beta-2027/                 ← open: CURRENT, under review
+│   ├── approved.tex           ← the text the author approved (optional, EXPERIMENTAL)
+│   ├── changes.yaml           ← what the draft changed since it (optional, EXPERIMENTAL)
 │   ├── submitted.pdf
 │   └── submitted.tex
 └── lock.json                  ← generated: bytes, sha256 and when each file was frozen
 ```
+
+**The approved version (EXPERIMENTAL: the commands and file names may change).** `npx paperlint versions approve [paper]` freezes `paper.tex` (its `\input`s
+spliced, as `submitted.tex` is) as `versions/<cycle>/approved.tex` of the open or accepted attempt and
+records it in the lock; approving again replaces it. `approved` is a source only (`approved.tex`, no PDF), and a lock that holds an `approved` entry needs this paperlint or newer in every checkout: an older one rejects the whole lock. Known limitation: an agent can run `approve` itself and reset the baseline; until paperlint gates it, add a Claude Code ask rule for the command. It is the one place the approved text lives: no
+tag, no second record. `npx paperlint versions diff [paper]` runs `latexdiff` on the newest
+`approved.tex` and the current `paper.tex`, writes `_build/diff/diff.tex` (not built into a PDF), and
+prints the sentences the approved text had that the draft no longer has, read from latexdiff's
+`\DIFdel` markup: a changed figure or macro is not listed. Without `latexdiff` on PATH it exits 2 with
+one line saying so; `npx paperlint toolchain` installs it with TeX Live. `changes.yaml` beside it
+declares each change since (`cycle/changes-since-approved`,
+[page](rules/cycle/changes-since-approved.md)).
+
+You approve exactly what is sent: with an approved copy, `submission new|update --save` refuses while the
+source differs from it, so approve as often as you like before sending. Without one, nothing changes.
 
 Each version's state follows from its cycle's `outcome`, never typed: a `submitted` version of the
 open cycle is under review; anything in a rejected or withdrawn cycle's folder is historical; an

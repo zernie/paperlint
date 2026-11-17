@@ -148,11 +148,14 @@ With no findings it prints one line, `venue rules at their default options: no e
 run at paperlint's default levels and options: a `rules` override in your `paperlint.json` or
 preset is applied by `paperlint lint`, not here.
 
-The command refuses two things by itself, each with exit 2 and nothing sent: `--save` when no build
-facts describe this PDF (none, or of other bytes), and — in a paper that keeps `cycles` — `--save`
-when the sources changed since the build, because the PDF and the source on disk would no longer be a
-pair to freeze. Rebuild (`paperlint build`) and run the dry run again. Everything else, including over
-the limit, is the person's call.
+The command refuses three things by itself, each with exit 2 and nothing sent. `--save` when no build
+facts describe this PDF (none, or of other bytes). `--save` while a reviewer point of the last reviewed
+rejection is unanswered. And, in a paper that keeps `cycles`, `--save` when the sources changed since the
+build, because the PDF and the source on disk would no longer be a pair to freeze; rebuild
+(`paperlint build`) and run the dry run again. A paper with an approved copy has a fourth: `--save`
+when the source differs from `versions/<cycle>/approved.tex`: what is sent is what was approved, so
+approve it (`paperlint versions approve`) or restore it. The dry run prints the same line. Everything
+else, including over the limit, is the person's call.
 
 **The `submission-confirm` hook** (installed by `paperlint init`) stops any `submission new|update`
 with `--save` or `--submit` until the person has said yes to that exact PDF in that exact folder. The flow:

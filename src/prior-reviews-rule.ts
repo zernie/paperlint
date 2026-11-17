@@ -13,9 +13,12 @@
  *   the same, at `submission new|update --save` → refused there, nothing sent (`src/submission.ts`)
  *   whether that section really answers the point → no machine: `pc-panel-review`'s prior-reviews seat
  *
- * Only the attempt just before the open one is read: an earlier rejection's points were the earlier
- * attempt's to answer. A desk rejection, an open attempt after an acceptance or a withdrawal, no
- * attempt after the rejection yet, and the flat form (no `cycles`) have nothing to answer: silent.
+ * The last reviewed rejection is read, walking back from the open attempt over attempts that brought
+ * no reviews: a withdrawal and a desk rejection produce none, so the last reviews the paper received
+ * still stand, and the text has changed since, so an answer's `where` may name a section that is
+ * gone. The walk stops at the first reviewed rejection (read), at an acceptance, or when the
+ * attempts run out (silent). An earlier rejection's points were the earlier attempt's to answer.
+ * No attempt after the rejection yet, and the flat form (no `cycles`), have nothing to answer: silent.
  * Sections are the assembled paper's (`readPaper`: the includes the build recorded, spliced), as
  * `tex/required-section` reads them: `\section` and `\section*`, whitespace collapsed.
  */
@@ -54,11 +57,20 @@ export type PointsRead =
   | { readonly kind: "broken"; readonly why: string }
   | { readonly kind: "read"; readonly points: readonly ReviewerPoint[] };
 
-/** The reviewed rejection just before the open attempt, or null when there is none. Pure. */
+/** Whether an attempt ended without reviews: withdrawn, or desk-rejected. */
+const bringsNoReviews = (c: Cycle): boolean =>
+  c.outcome.kind === "withdrawn" ||
+  (c.outcome.kind === "rejected" && c.outcome.desk);
+
+/**
+ * The last reviewed rejection before the open attempt, walking back over attempts that brought no
+ * reviews (a withdrawal, a desk rejection); null at an acceptance or when the list runs out. Pure.
+ */
 export function priorReviewsOf(cycles: Cycles): PriorReviews | null {
   if (cycles.current.kind !== "cycle") return null;
   const open = cycles.current.cycle;
-  const before = cycles.list[cycles.list.indexOf(open) - 1];
+  const earlier = cycles.list.slice(0, cycles.list.indexOf(open));
+  const before = earlier.findLast((c) => !bringsNoReviews(c));
   const o = before?.outcome;
   if (before === undefined || o?.kind !== "rejected" || o.desk) return null;
   return { rejected: before, file: o.points, open };

@@ -27,6 +27,7 @@ import {
   parseTemplate,
   replaceDocumentClass,
 } from "./document-class.ts";
+import { citeKeysOf, macroTextsOf, registeredNumbersOf } from "./facts.ts";
 import { headingsOf } from "./headings.ts";
 import { documentBodyOf, includesOf } from "./includes.ts";
 import { outlineOf } from "./outline.ts";
@@ -74,4 +75,7 @@ export const latexReader: LatexReader = {
   layoutOverrides: (src) => layoutOverridesOf(parseLatex(src)),
   filecontents: (src, jobname) => filecontentsOf(parseLatex(src), jobname),
   abstractText,
+  citeKeys: (src) => citeKeysOf(parseLatex(src)),
+  registeredNumbers: registeredNumbersOf,
+  macroTexts: macroTextsOf,
 };

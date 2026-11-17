@@ -2,6 +2,7 @@
  * `paperlint versions [show|lock|migrate] [paper]`: the version → state table, the lock written from
  * the files on disk, and the one-command migration from `stages:` — over in-memory files.
  */
+import { err } from "./domain/result.ts";
 import { describe, expect, it } from "vitest";
 import { latexReader } from "./adapters/latex/index.ts";
 import {
@@ -111,6 +112,7 @@ const deps = (
   yaml: parseYaml,
   latex: latexReader,
   codec: sourcesCodec,
+  latexdiff: { removedSince: () => err("unused") },
   now: () => "2026-10-27T12:00:00.000Z",
   cwd,
   log: (l) => out.push(l),

@@ -5,14 +5,20 @@ file the rejection names (`outcome.points`) · **Reported on:** `paper.tex`
 
 ## What it catches
 
-The current attempt is open, and the attempt just before it was rejected with reviews
-(`"desk": false`). Then:
+The current attempt is open, and the last attempt that received reviews was rejected with them
+(`"desk": false`). Attempts in between that brought no reviews, a withdrawal or a desk rejection,
+are walked past. Then:
 
 - the rejection's points file is missing, is not YAML, or is not of the shape below;
 - a point has no `answer`;
 - a `changed` or `argued` answer names a place (`where`) that is no `\section` of the paper.
 
 ## Why
+
+A withdrawal and a desk rejection produce no reviews, so the last reviews the paper received are
+still the earlier reviewed rejection's, and they still stand. The text has changed since (sections
+renamed or cut), so an answer's `where` may point at a section that no longer exists. The rule reads
+the nearest reviewed rejection before the open attempt and stops at an acceptance.
 
 A paper rejected with reviews goes to the next venue, and nothing kept the reviews in view: which
 points the rewrite answers was tracked from memory. A reviewer at the next venue who read the
@@ -103,8 +109,9 @@ papers/my-paper/paper.tex
 Passing:
 
 - every point answered, each `changed` or `argued` answer in a `\section` the paper has;
-- a desk rejection (`"desk": true`): there are no reviews to answer;
-- a rejection with no attempt after it yet, or an open attempt after an acceptance or a withdrawal;
+- no reviewed rejection before the open attempt: only desk rejections or withdrawals, or an
+  acceptance after the last reviewed rejection;
+- a rejection with no attempt after it yet;
 - a paper whose `paperlint.json` has no `cycles`.
 
 ## Options / preset fields
@@ -115,8 +122,7 @@ No rule options and no preset fields.
 
 - Whether the section really answers the point: a reader decides that, not a machine —
   `pc-panel-review`'s prior-reviews reviewer reads each answer against its quote.
-- Rejections before the one just before the open attempt: their points were the earlier attempt's
-  to answer.
+- Reviewed rejections before the last one: their points were the earlier attempt's to answer.
 - `\subsection` titles: `where` names a `\section` (or `\section*`), compared with whitespace
   collapsed, as [`tex/required-section`](../tex/required-section.md) compares.
 

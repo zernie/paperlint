@@ -210,6 +210,15 @@ describe("versions/layout", () => {
   });
 });
 
+describe("the approved stage is a source only", () => {
+  it("🔴 approved.tex is a frozen name; approved.pdf is not, so an older paperlint reads the lock", () => {
+    expect([frozenName("approved.tex"), frozenName("approved.pdf")]).toEqual([
+      { stage: "approved", ext: "tex" },
+      null,
+    ]);
+  });
+});
+
 describe("versions/layout, entries outside it", () => {
   it("an entry outside the convention: a dated file says how to migrate it, the rest where things go", () => {
     const found = judgeVersions(
@@ -226,6 +235,7 @@ describe("versions/layout, entries outside it", () => {
                 file("submitted.pdf"),
                 file("submitted.tex"),
                 file("final.pdf"),
+                file("changes.yaml"),
                 dir("figs"),
               ]
             : [file("submitted.pdf"), file("submitted.tex")],
@@ -243,7 +253,7 @@ describe("versions/layout, entries outside it", () => {
         "stray",
         {
           path: "notes.md",
-          hint: "versions/ holds lock.json and one folder per cycle, each with <stage>.pdf and <stage>.tex (submitted, camera-ready, arxiv) — anything else goes to extra/",
+          hint: "versions/ holds lock.json and one folder per cycle, each with <stage>.pdf and <stage>.tex (approved, submitted, camera-ready, arxiv; approved has a .tex only) and optionally changes.yaml — anything else goes to extra/",
         },
       ],
       ["unknownCycle", { folder: "old", known: "alpha-2026 · beta-2027" }],

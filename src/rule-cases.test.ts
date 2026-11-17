@@ -736,7 +736,57 @@ const PRIOR_REVIEWS_CYCLES = [
 const POINTS_UNANSWERED =
   "points:\n  - id: A1\n    reviewer: A\n    quote: Two repositories only.\n";
 
+/** The open attempt, with the two changelist rules turned on (opt-in, experimental). */
+const CHANGES_ON = (level: string): Readonly<Record<string, string>> => ({
+  [`${P}/paperlint.json`]: JSON.stringify({
+    cycles: [PRIOR_REVIEWS_CYCLES[1]],
+    rules: {
+      "cycle/changes-since-approved": level,
+      "cycle/changes-since-approved-coverage": level,
+    },
+  }),
+});
+const APPROVED_TEX = tex(
+  "We measured 63 repositories.\n\nThe rest is as before.",
+);
+const APPROVED_AT = `${P}/versions/beta-2027/approved.tex`;
+const CHANGES_AT = `${P}/versions/beta-2027/changes.yaml`;
+const DECLARED_CUT =
+  '- type: cut\n  before: "We measured 63 repositories."\n  why: too long\n  reader_loses: the sample size\n  drops: ["63"]\n';
+
 const CASES: Readonly<Record<string, RuleCases>> = {
+  "cycle/changes-since-approved": {
+    reports: {
+      tree: paper(tex("The rest is as before."), {
+        ...CHANGES_ON("error"),
+        [APPROVED_AT]: APPROVED_TEX,
+      }),
+      file: TEX_FILE,
+      severity: 2,
+      line: 1,
+    },
+    silent: paper(tex("The rest is as before."), {
+      ...CHANGES_ON("error"),
+      [APPROVED_AT]: APPROVED_TEX,
+      [CHANGES_AT]: DECLARED_CUT,
+    }),
+  },
+  "cycle/changes-since-approved-coverage": {
+    reports: {
+      tree: paper(tex("The rest is as before."), {
+        ...CHANGES_ON("warn"),
+        [APPROVED_AT]: APPROVED_TEX,
+      }),
+      file: TEX_FILE,
+      severity: 1,
+      line: 1,
+    },
+    silent: paper(tex("The rest is as before."), {
+      ...CHANGES_ON("warn"),
+      [APPROVED_AT]: APPROVED_TEX,
+      [CHANGES_AT]: DECLARED_CUT,
+    }),
+  },
   "paper/stages": {
     reports: {
       tree: { ...paper(tex("x")), [STATUS_FILE]: SHIPPED_STATUS },

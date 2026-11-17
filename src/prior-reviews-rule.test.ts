@@ -46,6 +46,14 @@ const OPEN = {
   opened: "2026-09-09",
   deadlines: [],
 };
+const between = (outcome: object) => ({
+  id: "gamma-2026",
+  venue: { kind: "named", name: "Gamma", url: "https://gamma.example" },
+  opened: "2026-09-09",
+  deadlines: [],
+  outcome: { date: "2026-10-01", evidence: "reviews/gamma.eml", ...outcome },
+});
+const LATER = { ...OPEN, opened: "2026-10-02" };
 const REVIEWED = rejected({ desk: false, points: POINTS });
 
 const YAML_ANSWERED = [
@@ -127,6 +135,46 @@ describe("cycle/prior-reviews-answered — every point answered, in a section th
       `${POINTS}: point A1 (reviewer A) is answered in «Limitations», and paper.tex has no \\section titled so — correct the title in the answer, or the section`,
     ]);
   });
+});
+
+describe("cycle/prior-reviews-answered — past attempts that brought no reviews", () => {
+  it("🔴 a withdrawal between the reviewed rejection and the open attempt: the rejection's points are still checked", () => {
+    expect(
+      lint(
+        [REVIEWED, between({ kind: "withdrawn" }), LATER],
+        YAML_ANSWERED.replace("Threats to Validity", "Limitations"),
+      ),
+    ).toEqual([
+      `${POINTS}: point A1 (reviewer A) is answered in «Limitations», and paper.tex has no \\section titled so — correct the title in the answer, or the section`,
+    ]);
+  });
+
+  it("🔴 a desk rejection between the reviewed rejection and the open attempt: the rejection's points are still checked", () => {
+    expect(
+      lint(
+        [REVIEWED, between({ kind: "rejected", desk: true }), LATER],
+        YAML_ANSWERED.replace("Threats to Validity", "Limitations"),
+      ),
+    ).toHaveLength(1);
+  });
+
+  it("🔴 two withdrawals in a row are walked past too", () => {
+    expect(
+      lint(
+        [
+          REVIEWED,
+          between({ kind: "withdrawn" }),
+          {
+            ...between({ kind: "withdrawn" }),
+            id: "delta-2026",
+            opened: "2026-10-02",
+          },
+          { ...OPEN, opened: "2026-10-03" },
+        ],
+        YAML_ANSWERED.replace("Threats to Validity", "Limitations"),
+      ),
+    ).toHaveLength(1);
+  });
 
   it.each([
     [
@@ -157,6 +205,14 @@ describe("cycle/prior-reviews-answered — quiet where there is nothing to answe
       [rejected({ desk: true }), OPEN],
     ],
     ["no attempt after the rejection yet", [REVIEWED]],
+    [
+      "a withdrawal only, no reviews anywhere",
+      [between({ kind: "withdrawn" }), LATER],
+    ],
+    [
+      "an acceptance between a reviewed rejection and the open attempt",
+      [REVIEWED, between({ kind: "accepted" }), LATER],
+    ],
     ["no cycles at all (the flat form)", undefined],
     [
       "an open attempt that follows an acceptance",

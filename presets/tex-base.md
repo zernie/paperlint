@@ -14,7 +14,7 @@ What it is for: a plain `article` paper with the usual tools, typeset in Type 1 
 names the files that prove it is installed — `kpsewhich` must find them after an install, because
 an installer's exit code is not the criterion. `cm-super` is there because without it pdflatex
 silently rasterizes Computer Modern in some contexts, a bitmap font that ACM and ACL both reject.
-`texcount` and `checkcites` are programs the skills run, not files LaTeX loads.
+`texcount`, `checkcites` and `latexdiff` are programs the skills run, not files LaTeX loads.
 
 ## What the preset resolves to
 
