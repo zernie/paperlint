@@ -23,8 +23,8 @@ import { callerPath } from "./caller-path.ts";
 import { venueCycleOf, type Cycles } from "./domain/cycle.ts";
 import { removedSentences } from "./domain/latexdiff-removed.ts";
 import { err, ok, type Result } from "./domain/result.ts";
-import { frozenKey } from "./domain/versions.ts";
-import { draftText, versionsDir } from "./versions.ts";
+import { frozenKey, LOCK_FILE, lockText } from "./domain/versions.ts";
+import { draftText, lockEntry, readLock, versionsDir } from "./versions.ts";
 import type { VersionsCommandDeps } from "./versions-command.ts";
 
 const DIFF_DIR = "_build/diff";
@@ -33,12 +33,42 @@ const LATEXDIFF_MISSING =
 
 const bytes = (t: string): Uint8Array => new TextEncoder().encode(t);
 
-/** `approve`: freeze paper.tex as the attempt's `approved.tex`, then `lock` records it. */
+/**
+ * Only this file's lock entry is written: every other entry stays as it was recorded, so approving
+ * never legitimizes a frozen file that changed (versions/layout still reports it).
+ */
+function recordApproved(
+  paperDir: string,
+  key: string,
+  file: Uint8Array,
+  deps: VersionsCommandDeps,
+): number {
+  const lock = readLock(paperDir, deps.files) ?? ok({});
+  if (!lock.ok)
+    return (
+      deps.err(
+        `versions/lock.json does not read (${lock.error}): \`${key}\` is frozen, not recorded — restore the lock from git, or \`npx paperlint versions lock\` writes it anew`,
+      ),
+      2
+    );
+  deps.files.writeAtomic(
+    callerPath(join(versionsDir(paperDir), LOCK_FILE)),
+    bytes(
+      lockText({
+        ...lock.value,
+        [key]: lockEntry(file, deps.now()),
+      }),
+    ),
+  );
+  deps.log(`locked        versions/${key} (${String(file.length)} bytes)`);
+  return 0;
+}
+
+/** `approve`: freeze paper.tex as the attempt's `approved.tex`, then its lock entry written. */
 export function runApprove(
   paperDir: string,
   cycles: Cycles,
   deps: VersionsCommandDeps,
-  lock: () => number,
 ): number {
   const c = venueCycleOf(cycles.current);
   if (c === null)
@@ -51,14 +81,12 @@ export function runApprove(
   const source = draftText(paperDir, deps);
   if (source === null) return (deps.err("no paper.tex to approve"), 2);
   const key = frozenKey(c.id, "approved", "tex");
-  deps.files.writeAtomic(
-    callerPath(join(versionsDir(paperDir), key)),
-    bytes(source),
-  );
+  const file = bytes(source);
+  deps.files.writeAtomic(callerPath(join(versionsDir(paperDir), key)), file);
   deps.log(
     `approved      versions/${key} — \`npx paperlint versions diff\` lists what changed since`,
   );
-  return lock();
+  return recordApproved(paperDir, key, file, deps);
 }
 
 /** The newest attempt's `approved.tex`: its key and bytes, or null when no attempt has one. */

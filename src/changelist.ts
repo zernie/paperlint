@@ -13,6 +13,7 @@
  * one is the proper form.
  */
 import { NUMBER } from "./claim-provenance.ts";
+import { CITATION_MACROS } from "./domain/citation-macros.ts";
 import { fieldOf, isRecord } from "./domain/record.ts";
 import { err, isOk, ok, type Result } from "./domain/result.ts";
 import { runOf } from "./domain/sentences.ts";
@@ -111,10 +112,16 @@ const endOfPiece = (p: ProsePiece): number =>
 
 /** The keys a `\cite…{a,b}` mark names: the last brace group of its source. */
 const keysOf = (mark: string): readonly string[] =>
-  (/^\\\w*cite[^{]*\{([^}]*)\}\s*$/.exec(mark)?.[1] ?? "")
-    .split(",")
-    .map((k) => k.trim())
-    .filter((k) => k !== "");
+  [...CITATION_MACROS].some(
+    (m) =>
+      mark.startsWith(`\\${m}`) && !/^[A-Za-z]/.test(mark.slice(m.length + 1)),
+  )
+    ? mark
+        .slice(mark.lastIndexOf("{") + 1, mark.lastIndexOf("}"))
+        .split(",")
+        .map((k) => k.trim())
+        .filter((k) => k !== "")
+    : [];
 
 /** The paragraphs, numbers and cite keys of `src`, from its body prose. */
 export function factsOf(src: string, passages: readonly Passage[]): Facts {

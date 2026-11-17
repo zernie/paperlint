@@ -10,6 +10,7 @@
  * the other, so it is signed too, and `KEY_ARGUMENT` says which of its arguments is not text.
  */
 import type * as Ast from "@unified-latex/unified-latex-types";
+import { CITATION_MACROS } from "../../domain/citation-macros.ts";
 import { getParser } from "@unified-latex/unified-latex-util-parse";
 import { once } from "remeda";
 import { withoutFalseBranches } from "./conditionals.ts";
@@ -20,24 +21,7 @@ const signed = (
 ): readonly (readonly [string, { readonly signature: string }])[] =>
   names.map((m) => [m, { signature }] as const);
 
-/** Citation commands: their `{…}` argument is a key, their `[…]` ones are notes the reader sees. */
-export const CITATION_MACROS: ReadonlySet<string> = new Set([
-  "cite",
-  "citep",
-  "citet",
-  "citealp",
-  "citealt",
-  "citeauthor",
-  "citeyear",
-  "citeyearpar",
-  "Citep",
-  "Citet",
-  "nocite",
-  "parencite",
-  "textcite",
-  "autocite",
-  "footcite",
-]);
+export { CITATION_MACROS };
 
 /** Commands that print nothing: line-breaking and spacing hints, and the two that only protect. */
 export const SILENT_MACROS: ReadonlySet<string> = new Set([

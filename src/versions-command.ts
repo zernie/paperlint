@@ -347,11 +347,7 @@ const NO_CYCLES_APPROVED =
 const NEEDS_CYCLES = {
   lock: { run: runLock, without: NO_CYCLES_LOCK },
   migrate: { run: runMigrate, without: NO_CYCLES_MIGRATE },
-  approve: {
-    run: (p: string, c: Cycles, d: VersionsCommandDeps) =>
-      runApprove(p, c, d, () => runLock(p, c, d)),
-    without: NO_CYCLES_APPROVED,
-  },
+  approve: { run: runApprove, without: NO_CYCLES_APPROVED },
   diff: { run: runDiff, without: NO_CYCLES_APPROVED },
 } as const;
 

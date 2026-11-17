@@ -224,7 +224,7 @@ export interface FreezeDeps {
   readonly now: () => string;
 }
 
-const lockEntry = (bytes: Uint8Array, frozen: string): LockEntry => ({
+export const lockEntry = (bytes: Uint8Array, frozen: string): LockEntry => ({
   kind: "file",
   bytes: bytes.length,
   sha256: sha256Hex(bytes),

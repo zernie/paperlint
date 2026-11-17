@@ -17,6 +17,7 @@ import { parseYaml } from "./adapters/yaml/index.ts";
 import { absolutePath } from "./domain/paths.ts";
 import { removedSentences } from "./domain/latexdiff-removed.ts";
 import type { Command, ProcessExit } from "./ports/process.ts";
+import { lockText, parseLock } from "./domain/versions.ts";
 import { runVersions, type VersionsCommandDeps } from "./versions-command.ts";
 
 const PAPER = "/w/papers/p";
@@ -130,8 +131,9 @@ describe("paperlint versions approve", () => {
     );
     const again = run(["approve", "papers/p"], fs);
     expect(again.out[1]).toMatch(
-      /^re-locked {5}versions\/beta-2027\/approved\.tex/,
+      /^locked {8}versions\/beta-2027\/approved\.tex/,
     );
+    expect(read(fs, `${PAPER}/versions/beta-2027/approved.tex`)).toBe(V2);
     expect(run(["papers/p"], fs).out.join("\n")).toContain(
       "approved by the author",
     );
@@ -148,6 +150,65 @@ describe("paperlint versions approve", () => {
   ])("refused, exit 2: %s", (_, fs, says) => {
     const r = run(["approve", "papers/p"], fs);
     expect([r.code, r.errs[0]?.includes(says)]).toEqual([2, true]);
+  });
+});
+
+describe("paperlint versions approve, the lock", () => {
+  it("🔴 only the approved.tex entry is written: a damaged frozen file stays damaged in the lock's eyes", () => {
+    const recorded = {
+      kind: "file",
+      bytes: 3,
+      sha256: "a".repeat(64),
+      frozen: "2026-10-01",
+    };
+    const gone = {
+      kind: "file",
+      bytes: 9,
+      sha256: "b".repeat(64),
+      frozen: "2026-10-01",
+    };
+    const fs = paper([REJECTED, OPEN]);
+    fs.writeAtomic(
+      absolutePath(`${PAPER}/versions/beta-2027/submitted.tex`),
+      new TextEncoder().encode("changed after freezing"),
+    );
+    fs.writeAtomic(
+      absolutePath(`${PAPER}/versions/lock.json`),
+      new TextEncoder().encode(
+        lockText({
+          "beta-2027/submitted.tex": recorded,
+          "beta-2027/submitted.pdf": gone,
+        }),
+      ),
+    );
+    const r = run(["approve", "papers/p"], fs);
+    const lock = parseLock(
+      JSON.parse(read(fs, `${PAPER}/versions/lock.json`) ?? "null"),
+    );
+    expect([r.code, r.out[1]]).toEqual([
+      0,
+      `locked        versions/beta-2027/approved.tex (${String(V1.length)} bytes)`,
+    ]);
+    expect(lock.ok && lock.value["beta-2027/submitted.tex"]).toEqual(recorded);
+    expect(lock.ok && lock.value["beta-2027/submitted.pdf"]).toEqual(gone);
+    expect(lock.ok && lock.value["beta-2027/approved.tex"]).toMatchObject({
+      kind: "file",
+      bytes: V1.length,
+    });
+  });
+
+  it("a lock that does not read: the file is frozen, the lock untouched, exit 2", () => {
+    const fs = paper([OPEN]);
+    fs.writeAtomic(
+      absolutePath(`${PAPER}/versions/lock.json`),
+      new TextEncoder().encode("{not json"),
+    );
+    const r = run(["approve", "papers/p"], fs);
+    expect([r.code, r.errs[0]?.includes("versions/lock.json")]).toEqual([
+      2,
+      true,
+    ]);
+    expect(read(fs, `${PAPER}/versions/lock.json`)).toBe("{not json");
   });
 });
 
@@ -236,6 +297,18 @@ describe("latexdiff's removed text", () => {
         "\\DIFdel{A {nested} one.} x \\DIFdel{\\DIFdelend} \\DIFdel{  B\n two. }",
       ),
     ).toEqual(["A {nested} one.", "B two."]);
+  });
+
+  it("🔴 an escaped brace inside a group is text, not a delimiter", () => {
+    expect(
+      removedSentences(
+        "\\DIFdel{The opening symbol \\{ is used.} \\DIFdel{Next.}",
+      ),
+    ).toEqual(["The opening symbol \\{ is used.", "Next."]);
+    expect(removedSentences("\\DIFdel{a \\} b \\\\} \\DIFdel{c}")).toEqual([
+      "a \\} b \\\\",
+      "c",
+    ]);
   });
 
   it("an unclosed group ends the list", () => {

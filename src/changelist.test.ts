@@ -68,6 +68,25 @@ describe("changes.yaml shape", () => {
   });
 });
 
+describe("cite keys, by the reader's own citation commands", () => {
+  it("🔴 \\Citep and \\parencite keys are read; a link is not a citation", () => {
+    const f = facts(
+      "A \\Citep{smith24} and \\parencite[p. 3]{lee23, kim22} and \\url{https://x.example}.",
+    );
+    expect([...f.cites]).toEqual(["smith24", "lee23", "kim22"]);
+  });
+
+  it("🔴 \\citep → \\Citep with the same key drops nothing; removing \\Citep drops its key", () => {
+    expect(
+      removedFrom(facts("A \\citep{smith24}."), facts("A \\Citep{smith24}."))
+        .tokens,
+    ).toEqual([]);
+    expect(
+      removedFrom(facts("A \\Citep{smith24}."), facts("A.")).tokens,
+    ).toEqual(["smith24"]);
+  });
+});
+
 describe("what the draft lost", () => {
   const removed = removedFrom(OLD, NEW);
 
