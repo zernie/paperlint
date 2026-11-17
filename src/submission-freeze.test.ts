@@ -325,3 +325,41 @@ test("a valid id round-trips: frozen by --save, then `versions lock` reads the l
     "versions/lock.json records every frozen file as it stands",
   ]);
 });
+
+const APPROVED_AT = `${PAPER}/versions/venue-2026/approved.tex`;
+const DIFFERS =
+  "the source differs from versions/venue-2026/approved.tex — approve it (`paperlint versions approve`) or restore it";
+
+test("🔴 --save refuses when the source differs from the approved copy: nothing is sent, nothing frozen", async () => {
+  const fs = built({ cycles: [SENT] });
+  fs.writeAtomic(absolutePath(APPROVED_AT), enc("An older text.\n"));
+  const r = await run({ sub: "update", save: true }, { files: fs });
+  expect(r.code).toBe(2);
+  expect(r.seen[0]?.calls).toStrictEqual([]);
+  expect(r.errs).toStrictEqual([`refused: ${DIFFERS}; nothing was sent`]);
+  expect(text(fs, `${PAPER}/versions/venue-2026/submitted.tex`)).toBeNull();
+});
+
+test("--save passes when the source is the approved copy, and when there is none", async () => {
+  const same = built({ cycles: [SENT] });
+  same.writeAtomic(absolutePath(APPROVED_AT), enc(ASSEMBLED));
+  expect((await run({ sub: "update", save: true }, { files: same })).code).toBe(
+    0,
+  );
+  const none = built({ cycles: [SENT] });
+  expect((await run({ sub: "update", save: true }, { files: none })).code).toBe(
+    0,
+  );
+});
+
+test("🔴 the dry run says the same, and sends nothing either way", async () => {
+  const fs = built({ cycles: [SENT] });
+  fs.writeAtomic(absolutePath(APPROVED_AT), enc("An older text.\n"));
+  const r = await run({ sub: "update" }, { files: fs });
+  expect(r.out).toContain(DIFFERS);
+  const same = built({ cycles: [SENT] });
+  same.writeAtomic(absolutePath(APPROVED_AT), enc(ASSEMBLED));
+  expect((await run({ sub: "update" }, { files: same })).out).not.toContain(
+    DIFFERS,
+  );
+});

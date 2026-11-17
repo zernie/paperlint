@@ -273,6 +273,9 @@ one line saying so; `npx paperlint toolchain` installs it with TeX Live. `change
 declares each change since (`cycle/changes-since-approved`,
 [page](rules/cycle/changes-since-approved.md)).
 
+You approve exactly what is sent: with an approved copy, `submission new|update --save` refuses while the
+source differs from it, so approve as often as you like before sending. Without one, nothing changes.
+
 Each version's state follows from its cycle's `outcome`, never typed: a `submitted` version of the
 open cycle is under review; anything in a rejected or withdrawn cycle's folder is historical; an
 accepted cycle's `submitted` is the camera-ready's base, and its `camera-ready` is final. When a

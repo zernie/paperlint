@@ -68,7 +68,7 @@ npx paperlint lint                          # every error is a blocker
 - Report the build's own verdict line verbatim. Do not paraphrase \`BLOCKED\` into "nearly there".
 - **Every \`paperlint lint\` error is a blocker**, listed as the rule names it — among them
   \`cycle/prior-reviews-answered\`: a reviewed rejection's points unanswered once the next attempt is
-  open. A rule decides it, so this skill does not re-judge it; \`submission … --save\` refuses on it too.
+  open. A rule decides it, so this skill does not re-judge it; \`submission … --save\` refuses on it too, and while the source differs from an approved copy (\`versions/<cycle>/approved.tex\`).
 
 ### 2. Detect stale gates — the part memory always gets wrong
 

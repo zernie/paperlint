@@ -194,6 +194,25 @@ function sourceProblem(
 }
 
 /**
+ * The line saying the source about to be sent is not the text the author approved, or null: when the
+ * attempt has a `versions/<cycle>/approved.tex` and the spliced `paper.tex` (the text `approve` wrote)
+ * is not it. Silent without an approved copy.
+ */
+export function approvedProblem(
+  paperDir: string,
+  cycle: CycleId,
+  deps: ProseDeps,
+): string | null {
+  const key = frozenKey(cycle, "approved", "tex");
+  const approved = decoded(
+    deps.files.readBytes(callerPath(frozenPath(paperDir, key))),
+  );
+  return approved === null || approved === draftText(paperDir, deps)
+    ? null
+    : `the source differs from versions/${key} — approve it (\`paperlint versions approve\`) or restore it`;
+}
+
+/**
  * Before a `--save` sends: what it will freeze — the open cycle's `submitted`, or the accepted one's
  * `camera-ready` — and the source to freeze beside the PDF. Refused when the build's record does not
  * say the source on disk is the one the PDF was built from: a PDF frozen with another source is a
@@ -207,6 +226,9 @@ export function freezePlan(
   const c = cycles === null ? null : venueCycleOf(cycles.current);
   if (cycles === null || c === null) return ok({ kind: "flat" });
   const source = sourceProblem(paperDir, deps);
+  const unapproved = approvedProblem(paperDir, c.id, deps);
+  if (unapproved !== null)
+    return err(`refused: ${unapproved}; nothing was sent`);
   return source.ok
     ? ok({
         kind: "freeze",

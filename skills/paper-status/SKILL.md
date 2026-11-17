@@ -4,7 +4,7 @@ description: Answer "what's the status of the paper?" in one pass — MEASURE wh
 allowed-tools: [Bash, Read, Grep, Glob]
 ---
 
-<!-- vigiles:sha256:adc55537b91f87a8 compiled from skills/paper-status/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:5ca74b261eb64c3b compiled from skills/paper-status/SKILL.md.spec.ts -->
 
 # paper-status — state, measured before it is narrated
 
@@ -62,7 +62,7 @@ npx paperlint lint                          # every error is a blocker
 - Report the build's own verdict line verbatim. Do not paraphrase `BLOCKED` into "nearly there".
 - **Every `paperlint lint` error is a blocker**, listed as the rule names it — among them
   `cycle/prior-reviews-answered`: a reviewed rejection's points unanswered once the next attempt is
-  open. A rule decides it, so this skill does not re-judge it; `submission … --save` refuses on it too.
+  open. A rule decides it, so this skill does not re-judge it; `submission … --save` refuses on it too, and while the source differs from an approved copy (`versions/<cycle>/approved.tex`).
 
 ### 2. Detect stale gates — the part memory always gets wrong
 

@@ -4,7 +4,7 @@ description: "Create, read or change a paper's submission on the venue's HotCRP 
 allowed-tools: [Read, Grep, Glob, Bash, Edit, AskUserQuestion]
 ---
 
-<!-- vigiles:sha256:7e976e9846ec2f5f compiled from skills/submission-portal/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:9b1400eb8ee2c221 compiled from skills/submission-portal/SKILL.md.spec.ts -->
 
 # submission-portal — create, read and update the submission on the portal, then prove it landed
 
@@ -86,6 +86,8 @@ A missing key or token stops the command with exit 2 and a line naming what to s
    the last build is not of this PDF: rebuild, dry run again.
 6. **Prove it landed.** `show` again: `match` must read `yes — the portal holds this build`, and
    the status must be what was intended. Anything else is not done — say so.
+
+If `versions/<cycle>/approved.tex` exists, `--save` refuses while the source differs from it (the dry run prints that line): re-approving with `paperlint versions approve` is the author's decision, never the agent's.
 
 🔴 `--save` creates or changes a real submission that reviewers will see: never without the
 author's own yes, never "to test", never because a dry run passed. Before every `--save`, ask the

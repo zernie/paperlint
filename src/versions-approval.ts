@@ -15,8 +15,8 @@
  *             `_build/diff/diff.tex`, and the sentences the approved text had that the draft lacks
  *
  * `diff.tex` is not built into a PDF: that needs the paper's whole TeX setup, and the list answers
- * "what did I take out". Removed text is read from latexdiff's `\DIFdel` markup (src/domain/
- a changed figure or macro is not listed.
+ * "what did I take out". Removed text is read from latexdiff's `\DIFdel` markup through the
+ * LaTeX reader; a changed figure or macro is not listed.
  */
 import { delimiter, join } from "node:path";
 import { callerPath } from "./caller-path.ts";

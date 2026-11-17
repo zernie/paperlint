@@ -83,7 +83,7 @@ need to wait for them or make them up.
 
 Camera-ready is a separate **stage** in `versions/`: once the cycle's `outcome` is `accepted`,
 `paperlint submission update <paper> --save` freezes the PDF it sends and its source as
-`versions/<cycle>/camera-ready.{pdf,tex}` and records them in `versions/lock.json`. A camera-ready
+`versions/<cycle>/camera-ready.{pdf,tex}` and records them in `versions/lock.json`; with an approved copy it refuses while the source differs from it. A camera-ready
 uploaded through the publisher's own system (not the review portal) goes there by hand, followed by
 `npx paperlint versions lock <paper>`.
 

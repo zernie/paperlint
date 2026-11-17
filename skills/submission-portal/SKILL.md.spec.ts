@@ -91,6 +91,8 @@ A missing key or token stops the command with exit 2 and a line naming what to s
 6. **Prove it landed.** \`show\` again: \`match\` must read \`yes — the portal holds this build\`, and
    the status must be what was intended. Anything else is not done — say so.
 
+If \`versions/<cycle>/approved.tex\` exists, \`--save\` refuses while the source differs from it (the dry run prints that line): re-approving with \`paperlint versions approve\` is the author's decision, never the agent's.
+
 🔴 \`--save\` creates or changes a real submission that reviewers will see: never without the
 author's own yes, never "to test", never because a dry run passed. Before every \`--save\`, ask the
 author with \`AskUserQuestion\`, naming the paper folder, the PDF's sha256 and quoting the dry run's venue check; where

@@ -26,6 +26,7 @@
  * 🔴 THE TOKEN IS AN INPUT, AND ONLY AN INPUT. It comes from the environment (the root reads it), is
  * handed to the adapter, and never appears in anything printed here.
  */
+import { venueCycleOf } from "./domain/cycle.ts";
 import { basename, join, resolve } from "node:path";
 import { absolutePath } from "./domain/paths.ts";
 import { messageOf } from "./domain/text.ts";
@@ -86,6 +87,7 @@ import { priorReviewsLines } from "./prior-reviews-rule.ts";
 import { MAIN } from "./build.ts";
 import { assessSent, venueMessages, type VenueMessage } from "./venue-rules.ts";
 import {
+  approvedProblem,
   freezePlan,
   freezeSent,
   NOT_FROZEN,
@@ -547,7 +549,19 @@ async function venueCheck(
   // Checked on its own: a cycle still porting skips the venue rules, not this.
   const refused = save && factsOfSent(t.paperDir, bytes, deps) === null;
   if (refused) deps.err(REBUILD_REFUSAL);
+  approvedNote(t, save, deps);
   return refused || priorReviewsStop(tex, source, save, deps);
+}
+
+/**
+ * The dry run's line when the source differs from the approved copy (`versions/<cycle>/approved.tex`).
+ * A `--save` says it as a refusal in `freezePlan`, before anything is sent.
+ */
+function approvedNote(t: SubmissionTarget, save: boolean, deps: RunDeps): void {
+  const cycles = t.resolved.settings.cycles;
+  const c = cycles === null ? null : venueCycleOf(cycles.current);
+  const why = c === null ? null : approvedProblem(t.paperDir, c.id, deps);
+  if (why !== null && !save) deps.log(why);
 }
 
 /**
