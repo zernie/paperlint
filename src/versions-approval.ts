@@ -32,14 +32,14 @@ const DIFF_DIR = "_build/diff";
 const LATEXDIFF_MISSING =
   "latexdiff is not on PATH — `npx paperlint toolchain` installs it (the TeX Live package latexdiff), or install it with your TeX distribution";
 
-/** `env` with a TeX Live `bin` directory first on PATH; unchanged without one. */
+/** `env` with the managed TeX Live tree's `bin` first on PATH; unchanged without a tree. */
 export const withTexBin = (
   env: Readonly<Record<string, string>>,
-  bin: string | undefined,
+  tree: { readonly bin: string } | null,
 ): Readonly<Record<string, string>> =>
-  bin === undefined
+  tree === null
     ? env
-    : { ...env, PATH: [bin, env["PATH"] ?? ""].join(delimiter) };
+    : { ...env, PATH: [tree.bin, env["PATH"] ?? ""].join(delimiter) };
 
 const bytes = (t: string): Uint8Array => new TextEncoder().encode(t);
 

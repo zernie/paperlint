@@ -2093,7 +2093,7 @@ const SIMPLE: Readonly<
       // latexdiff may live in the managed TeX Live (`paperlint toolchain`), which is not on PATH.
       processEnv: withTexBin(
         gitEnv(process.env),
-        cachedTree(cacheRoot(process.env))?.bin,
+        cachedTree(cacheRoot(process.env)),
       ),
       now: isoNow,
       cwd,

@@ -211,15 +211,18 @@ describe("paperlint versions approve, a paper with includes", () => {
 describe("latexdiff's PATH", () => {
   it("🔴 the managed TeX Live bin comes first; without one the environment is unchanged", () => {
     expect(
-      withTexBin({ PATH: "/usr/bin", HOME: "/h" }, "/cache/2026/bin/x"),
+      withTexBin(
+        { PATH: "/usr/bin", HOME: "/h" },
+        { bin: "/cache/2026/bin/x" },
+      ),
     ).toEqual({
       PATH: "/cache/2026/bin/x:/usr/bin",
       HOME: "/h",
     });
-    expect(withTexBin({ PATH: "/usr/bin" }, undefined)).toEqual({
+    expect(withTexBin({ PATH: "/usr/bin" }, null)).toEqual({
       PATH: "/usr/bin",
     });
-    expect(withTexBin({}, "/b")).toEqual({ PATH: "/b:" });
+    expect(withTexBin({}, { bin: "/b" })).toEqual({ PATH: "/b:" });
   });
 });
 
