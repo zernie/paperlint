@@ -28,8 +28,6 @@ const factParser = once(() =>
       numrange: { signature: "o m m" },
       SIrange: { signature: "o m m o m" },
       qtyrange: { signature: "o m m m" },
-      DIFdel: { signature: "m" },
-      DIFdelFL: { signature: "m" },
     },
   }),
 );
@@ -87,13 +85,13 @@ const SYMBOLS: ReadonlySet<string> = new Set([
   "_",
 ]);
 
-/** What a deleted stretch says: its words, its control symbols as written, its groups unwrapped. */
-function deletedText(nodes: readonly Node[]): string {
+/** What a stretch says: its words, its control symbols as written, its groups unwrapped. */
+function stretchText(nodes: readonly Node[]): string {
   return nodes
     .map((n) => {
       if (n.type === "string") return stringText(n.content);
       if (n.type === "whitespace" || n.type === "parbreak") return " ";
-      if (n.type === "group") return deletedText(n.content);
+      if (n.type === "group") return stretchText(n.content);
       return n.type === "macro" && SYMBOLS.has(n.content)
         ? `\\${n.content}`
         : textOf([n]);
@@ -101,14 +99,29 @@ function deletedText(nodes: readonly Node[]): string {
     .join("");
 }
 
-/** The text of each `\DIFdel{…}` group of latexdiff's output, whitespace collapsed, empty ones left out. */
-export const deletedTextOf = (diff: string): readonly string[] =>
-  macrosNamed(
-    factParser().parse(diff),
-    new Set(["DIFdel", "DIFdelFL"]),
-  ).flatMap((m) =>
+/** One parser per set of macro names, each signed with one mandatory argument: building a parser compiles its grammar. */
+const parsers = new Map<string, ReturnType<typeof getParser>>();
+const parserFor = (names: readonly string[]) => {
+  const key = [...names].sort().join(" ");
+  const hit = parsers.get(key);
+  const made =
+    hit ??
+    getParser({
+      macros: Object.fromEntries(names.map((n) => [n, { signature: "m" }])),
+    });
+  // eslint-disable-next-line functional/immutable-data -- the memo, see above
+  parsers.set(key, made);
+  return made;
+};
+
+/** The text of the first argument of each macro called one of `names`, whitespace collapsed, empty ones left out. */
+export const macroTextsOf = (
+  src: string,
+  names: readonly string[],
+): readonly string[] =>
+  macrosNamed(parserFor(names).parse(src), new Set(names)).flatMap((m) =>
     mandatory(m)
       .slice(0, 1)
-      .map((a) => collapse(deletedText(a.content)))
+      .map((a) => collapse(stretchText(a.content)))
       .filter((t) => t !== ""),
   );

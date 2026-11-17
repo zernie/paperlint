@@ -40,7 +40,7 @@ import {
   type OnDisk,
 } from "./domain/versions.ts";
 import type { CopyFile, MoveFile } from "./ports/move-file.ts";
-import type { RunProcess } from "./ports/process.ts";
+import type { LatexDiff } from "./ports/latexdiff.ts";
 import type { ParseYaml } from "./ports/yaml.ts";
 import type { ProseDeps } from "./tex-paper.ts";
 import { runApprove, runDiff } from "./versions-approval.ts";
@@ -64,10 +64,8 @@ export interface VersionsCommandDeps extends ProseDeps, VersionsDeps {
   readonly move: MoveFile;
   readonly copy: CopyFile;
   readonly yaml: ParseYaml;
-  /** `latexdiff`, for `diff`. */
-  readonly proc: RunProcess;
-  /** The whole environment `latexdiff` gets. */
-  readonly processEnv: Readonly<Record<string, string>>;
+  /** The text differ behind `diff`. */
+  readonly latexdiff: LatexDiff;
   /** The instant a lock entry records, ISO 8601. */
   readonly now: () => string;
   readonly cwd: string;

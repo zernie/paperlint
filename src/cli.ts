@@ -186,7 +186,7 @@ import paperStages from "#eslint-rules/paper-stages";
 import preregCoverage from "#eslint-rules/prereg-coverage";
 import { CYCLE_RULE_LEVELS, cycleRules } from "./cycle-rules.ts";
 import { changesRules } from "./changes-rule.ts";
-import { withTexBin } from "./versions-approval.ts";
+import { latexDiff, withTexBin } from "./adapters/latexdiff/index.ts";
 import { runVersions } from "./versions-command.ts";
 import { parseYaml } from "./adapters/yaml/index.ts";
 import {
@@ -2089,12 +2089,16 @@ const SIMPLE: Readonly<
       yaml: parseYaml,
       latex: latexReader,
       codec: sourcesCodec,
-      proc: spawnProcess(),
       // latexdiff may live in the managed TeX Live (`paperlint toolchain`), which is not on PATH.
-      processEnv: withTexBin(
-        gitEnv(process.env),
-        cachedTree(cacheRoot(process.env)),
-      ),
+      latexdiff: latexDiff({
+        proc: spawnProcess(),
+        env: withTexBin(
+          gitEnv(process.env),
+          cachedTree(cacheRoot(process.env)),
+        ),
+        files: nodeFiles,
+        latex: latexReader,
+      }),
       now: isoNow,
       cwd,
       log,

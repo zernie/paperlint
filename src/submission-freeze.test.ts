@@ -16,7 +16,7 @@ import { runVersions } from "./versions-command.ts";
 import { builtPaper } from "../test/recorded-fixture.ts";
 import { absolutePath } from "./domain/paths.ts";
 import { sha256Hex } from "./domain/sha256.ts";
-import { ok } from "./domain/result.ts";
+import { err, ok } from "./domain/result.ts";
 import { parseLock } from "./domain/versions.ts";
 import type { Files } from "./ports/files.ts";
 import {
@@ -313,8 +313,7 @@ test("a valid id round-trips: frozen by --save, then `versions lock` reads the l
     yaml: parseYaml,
     latex: latexReader,
     codec: sourcesCodec,
-    proc: { run: () => ({ kind: "not-found", file: "latexdiff" }) },
-    processEnv: {},
+    latexdiff: { removedSince: () => err("unused") },
     now: () => NOW,
     cwd: "/",
     log: (l) => out.push(l),

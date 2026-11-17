@@ -18,10 +18,10 @@
  * "what did I take out". Removed text is read from latexdiff's `\DIFdel` markup through the
  * LaTeX reader; a changed figure or macro is not listed.
  */
-import { delimiter, join } from "node:path";
+import { join } from "node:path";
 import { callerPath } from "./caller-path.ts";
 import { venueCycleOf, type Cycles } from "./domain/cycle.ts";
-import { err, ok, type Result } from "./domain/result.ts";
+import { ok } from "./domain/result.ts";
 import { frozenKey, LOCK_FILE, lockText } from "./domain/versions.ts";
 import { paperRecord } from "./paper-record.ts";
 import { decoded } from "./tex-paper.ts";
@@ -29,18 +29,6 @@ import { draftText, lockEntry, readLock, versionsDir } from "./versions.ts";
 import type { VersionsCommandDeps } from "./versions-command.ts";
 
 const DIFF_DIR = "_build/diff";
-const LATEXDIFF_MISSING =
-  "latexdiff is not on PATH — `npx paperlint toolchain` installs it (the TeX Live package latexdiff), or install it with your TeX distribution";
-
-/** `env` with the managed TeX Live tree's `bin` first on PATH; unchanged without a tree. */
-export const withTexBin = (
-  env: Readonly<Record<string, string>>,
-  tree: { readonly bin: string } | null,
-): Readonly<Record<string, string>> =>
-  tree === null
-    ? env
-    : { ...env, PATH: [tree.bin, env["PATH"] ?? ""].join(delimiter) };
-
 const bytes = (t: string): Uint8Array => new TextEncoder().encode(t);
 
 /**
@@ -145,26 +133,6 @@ function newestApproved(
   );
 }
 
-/** latexdiff run in `dir` on the two files written there: its output, or the one line saying why not. */
-function latexdiff(
-  dir: string,
-  deps: VersionsCommandDeps,
-): Result<string, string> {
-  const r = deps.proc.run({
-    file: "latexdiff",
-    args: ["approved.tex", "current.tex"],
-    env: deps.processEnv,
-    timeoutMs: 60_000,
-    maxOutputBytes: 64 * 1024 * 1024,
-    cwd: callerPath(dir),
-  });
-  if (r.kind === "not-found") return err(LATEXDIFF_MISSING);
-  if (r.kind === "exited" && r.status === 0) return ok(r.stdout);
-  return err(
-    `latexdiff failed: ${r.kind === "exited" ? r.stderr.trim() || `exit ${String(r.status)}` : r.kind}`,
-  );
-}
-
 /** What `diff` prints: where it compared, where it wrote, and each sentence that is gone. */
 const report = (key: string, gone: readonly string[]): readonly string[] => [
   `approved      versions/${key}`,
@@ -191,16 +159,13 @@ export function runDiff(
     );
   const now = draftText(paperDir, deps);
   if (now === null) return (deps.err("no paper.tex to compare"), 2);
-  const dir = join(paperDir, DIFF_DIR);
-  const put = (name: string, b: Uint8Array): void => {
-    deps.files.writeAtomic(callerPath(join(dir, name)), b);
-  };
-  put("approved.tex", approved.bytes);
-  put("current.tex", bytes(now));
-  const diff = latexdiff(dir, deps);
+  const diff = deps.latexdiff.removedSince(
+    new TextDecoder().decode(approved.bytes),
+    now,
+    callerPath(join(paperDir, DIFF_DIR)),
+  );
   if (!diff.ok) return (deps.err(diff.error), 2);
-  put("diff.tex", bytes(diff.value));
-  report(approved.key, deps.latex.deletedText(diff.value)).forEach((l) => {
+  report(approved.key, diff.value.removed).forEach((l) => {
     deps.log(l);
   });
   return 0;

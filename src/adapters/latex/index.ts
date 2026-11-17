@@ -27,7 +27,7 @@ import {
   parseTemplate,
   replaceDocumentClass,
 } from "./document-class.ts";
-import { citeKeysOf, deletedTextOf, registeredNumbersOf } from "./facts.ts";
+import { citeKeysOf, macroTextsOf, registeredNumbersOf } from "./facts.ts";
 import { headingsOf } from "./headings.ts";
 import { documentBodyOf, includesOf } from "./includes.ts";
 import { outlineOf } from "./outline.ts";
@@ -77,5 +77,5 @@ export const latexReader: LatexReader = {
   abstractText,
   citeKeys: (src) => citeKeysOf(parseLatex(src)),
   registeredNumbers: registeredNumbersOf,
-  deletedText: deletedTextOf,
+  macroTexts: macroTextsOf,
 };

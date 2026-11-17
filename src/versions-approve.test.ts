@@ -18,7 +18,7 @@ import { absolutePath } from "./domain/paths.ts";
 import type { Command, ProcessExit } from "./ports/process.ts";
 import { lockText, parseLock } from "./domain/versions.ts";
 import { builtPaper } from "../test/recorded-fixture.ts";
-import { withTexBin } from "./versions-approval.ts";
+import { latexDiff } from "./adapters/latexdiff/index.ts";
 import { runVersions, type VersionsCommandDeps } from "./versions-command.ts";
 
 const PAPER = "/w/papers/p";
@@ -75,13 +75,17 @@ function run(
     yaml: parseYaml,
     latex: latexReader,
     codec: sourcesCodec,
-    proc: {
-      run: (c) => {
-        calls.push(c);
-        return latexdiff(c);
+    latexdiff: latexDiff({
+      proc: {
+        run: (c) => {
+          calls.push(c);
+          return latexdiff(c);
+        },
       },
-    },
-    processEnv: { PATH: "/bin" },
+      env: { PATH: "/bin" },
+      files,
+      latex: latexReader,
+    }),
     now: () => "2026-11-01T10:00:00.000Z",
     cwd: "/w",
     log: (l) => out.push(l),
@@ -205,24 +209,6 @@ describe("paperlint versions approve, a paper with includes", () => {
     expect(read(fs, `${PAPER}/versions/beta-2027/approved.tex`)).toContain(
       "Intro text.",
     );
-  });
-});
-
-describe("latexdiff's PATH", () => {
-  it("🔴 the managed TeX Live bin comes first; without one the environment is unchanged", () => {
-    expect(
-      withTexBin(
-        { PATH: "/usr/bin", HOME: "/h" },
-        { bin: "/cache/2026/bin/x" },
-      ),
-    ).toEqual({
-      PATH: "/cache/2026/bin/x:/usr/bin",
-      HOME: "/h",
-    });
-    expect(withTexBin({ PATH: "/usr/bin" }, null)).toEqual({
-      PATH: "/usr/bin",
-    });
-    expect(withTexBin({}, { bin: "/b" })).toEqual({ PATH: "/b:" });
   });
 });
 
@@ -359,44 +345,6 @@ describe("paperlint versions diff, when it cannot run", () => {
     });
     expect(run(["diff", "papers/p"], m).errs).toEqual([
       "no paper.tex to compare",
-    ]);
-  });
-});
-
-const removedSentences = (diff: string) => latexReader.deletedText(diff);
-
-describe("latexdiff's removed text", () => {
-  it("reads nested groups, skips bare commands, keeps the order", () => {
-    expect(
-      removedSentences(
-        "\\DIFdel{A {nested} one.} x \\DIFdel{\\DIFdelend} \\DIFdel{  B\n two. }",
-      ),
-    ).toEqual(["A nested one.", "B two."]);
-  });
-
-  it("🔴 a deleted caption (\\DIFdelFL) is listed too", () => {
-    expect(
-      removedSentences("\\DIFdelFL{A deleted caption.} \\DIFdel{Prose.}"),
-    ).toEqual(["A deleted caption.", "Prose."]);
-  });
-
-  it("a diff of many deletions is read in linear time, one group at a time", () => {
-    const many = Array.from(
-      { length: 20000 },
-      (_, i) => `\\DIFdel{d${String(i)}}`,
-    ).join(" ");
-    expect(removedSentences(many)).toHaveLength(20000);
-  }, 30000);
-
-  it("🔴 an escaped brace inside a group is text, not a delimiter", () => {
-    expect(
-      removedSentences(
-        "\\DIFdel{The opening symbol \\{ is used.} \\DIFdel{Next.}",
-      ),
-    ).toEqual(["The opening symbol \\{ is used.", "Next."]);
-    expect(removedSentences("\\DIFdel{a \\} b \\\\} \\DIFdel{c}")).toEqual([
-      "a \\} b \\\\",
-      "c",
     ]);
   });
 });

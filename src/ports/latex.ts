@@ -103,6 +103,13 @@ export interface LatexReader {
   readonly citeKeys: (src: string) => readonly string[];
   /** The numbers `src` registers with `\num{…}` and `\SI{…}{…}`: each one's first argument. */
   readonly registeredNumbers: (src: string) => readonly string[];
-  /** The text of each `\DIFdel{…}` group in latexdiff's output `diff`, whitespace collapsed. */
-  readonly deletedText: (diff: string) => readonly string[];
+  /**
+   * The text of the first `{…}` argument of each macro of `src` called one of `names`, whitespace
+   * collapsed, empty ones left out: its words, its control symbols (`\\{`) as written, its groups
+   * unwrapped.
+   */
+  readonly macroTexts: (
+    src: string,
+    names: readonly string[],
+  ) => readonly string[];
 }
