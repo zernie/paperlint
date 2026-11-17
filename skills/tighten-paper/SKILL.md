@@ -4,9 +4,11 @@ description: "Use when a paper \"feels long / bloated / overly complex / hard to
 allowed-tools: [Read, Write, Edit, Grep, Glob, Agent]
 ---
 
-<!-- vigiles:sha256:be70e0928894888f compiled from skills/tighten-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:8107291c42c0564e compiled from skills/tighten-paper/SKILL.md.spec.ts -->
 
 # tighten-paper — the developmental edit
+
+🔴 **A cut is proposed, never made.** Write each proposed cut as an entry of `versions/<cycle>/changes.yaml` (`type: cut`, `before`, `why`, `reader_loses`, and `drops` for the numbers and citations it removes), run `npx paperlint versions diff` to show the author what the draft would lose against the approved copy, and apply the cut only after his explicit yes. Never cut before that. (EXPERIMENTAL: `docs/rules/cycle/changes-since-approved.md`.)
 
 Sentence-level passes make a wall of text into readable text. They do **not** tell you the wall shouldn't be there
 at all. This pass is the editor who reads the whole paper once and asks: *is this the right paper, at the right

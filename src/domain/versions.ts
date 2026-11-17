@@ -261,7 +261,10 @@ const stray = (path: string, hint: string): VersionFinding => ({
 
 const MIGRATE_HINT =
   "a frozen version in the layout before folders per attempt: `npx paperlint versions migrate <paper>` moves it into versions/<cycle>/";
-const LAYOUT_HINT = `versions/ holds lock.json and one folder per cycle, each with <stage>.pdf and <stage>.tex (${STAGES_TEXT}) — anything else goes to extra/`;
+const LAYOUT_HINT = `versions/ holds lock.json and one folder per cycle, each with <stage>.pdf and <stage>.tex (${STAGES_TEXT}) and optionally changes.yaml — anything else goes to extra/`;
+
+/** The declared changelist beside a cycle's approved.tex (src/changelist.ts): in the folder, not a stage. */
+export const CHANGES_FILE = "changes.yaml";
 
 /** An entry directly in `versions/`: fine, a cycle's folder, or a finding. */
 function rootFinding(
@@ -306,7 +309,10 @@ function folderContents(input: LayoutInput): {
         : [{ ...name, cycle, key: frozenKey(cycle, name.stage, name.ext) }],
     ),
     strays: named
-      .filter(({ e, name }) => name === null && !e.name.startsWith("."))
+      .filter(
+        ({ e, name }) =>
+          name === null && !e.name.startsWith(".") && e.name !== CHANGES_FILE,
+      )
       .map(({ cycle, e }) => stray(`${cycle}/${e.name}`, LAYOUT_HINT)),
   };
 }

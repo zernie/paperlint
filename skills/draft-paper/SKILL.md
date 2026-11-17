@@ -4,9 +4,11 @@ description: Use when the numbers exist and it's time to WRITE the paper — "dr
 allowed-tools: [Read, Write, Edit, Grep, Glob, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:a68aebea0917e4a6 compiled from skills/draft-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:df42ddc82286acca compiled from skills/draft-paper/SKILL.md.spec.ts -->
 
 # draft-paper — prose that survives review and gets cited
+
+Editing the paper's text after an approved copy exists (`paperlint versions approve`): declare each change in `versions/<cycle>/changes.yaml`, `paperlint versions diff` shows what was lost (EXPERIMENTAL; `docs/rules/cycle/changes-since-approved.md`).
 
 A measurement paper lives or dies on two things reviewers actually reward: a **reusable method/norm**
 they can apply to the next system, and **claim-sizing so precise it can't be attacked**. Numbers alone

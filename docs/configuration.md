@@ -255,7 +255,8 @@ versions/
 │   ├── submitted.pdf
 │   └── submitted.tex
 ├── beta-2027/                 ← open: CURRENT, under review
-│   ├── approved.tex           ← the text the author approved (optional)
+│   ├── approved.tex           ← the text the author approved (optional, EXPERIMENTAL)
+│   ├── changes.yaml           ← what the draft changed since it (optional, EXPERIMENTAL)
 │   ├── submitted.pdf
 │   └── submitted.tex
 └── lock.json                  ← generated: bytes, sha256 and when each file was frozen
@@ -268,7 +269,9 @@ tag, no second record. `npx paperlint versions diff [paper]` runs `latexdiff` on
 `approved.tex` and the current `paper.tex`, writes `_build/diff/diff.tex` (not built into a PDF), and
 prints the sentences the approved text had that the draft no longer has, read from latexdiff's
 `\DIFdel` markup: a changed figure or macro is not listed. Without `latexdiff` on PATH it exits 2 with
-one line saying so; `npx paperlint toolchain` installs it with TeX Live.
+one line saying so; `npx paperlint toolchain` installs it with TeX Live. `changes.yaml` beside it
+declares each change since (`cycle/changes-since-approved`,
+[page](rules/cycle/changes-since-approved.md)).
 
 Each version's state follows from its cycle's `outcome`, never typed: a `submitted` version of the
 open cycle is under review; anything in a rejected or withdrawn cycle's folder is historical; an

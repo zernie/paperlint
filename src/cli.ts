@@ -185,6 +185,7 @@ export { nextSteps } from "./init.ts";
 import paperStages from "#eslint-rules/paper-stages";
 import preregCoverage from "#eslint-rules/prereg-coverage";
 import { CYCLE_RULE_LEVELS, cycleRules } from "./cycle-rules.ts";
+import { changesRules } from "./changes-rule.ts";
 import { runVersions } from "./versions-command.ts";
 import { parseYaml } from "./adapters/yaml/index.ts";
 import {
@@ -482,6 +483,7 @@ const CYCLE_PAPER_RULES = {
   ...cyclePortRules(TEX_RULE_DEPS),
   ...draftRules(TEX_RULE_DEPS),
   ...priorReviewsRules({ ...TEX_RULE_DEPS, yaml: parseYaml }),
+  ...changesRules({ ...TEX_RULE_DEPS, yaml: parseYaml }),
 };
 const CYCLE_PAPER_RULE_LEVELS = {
   ...CYCLE_PORT_RULE_LEVELS,

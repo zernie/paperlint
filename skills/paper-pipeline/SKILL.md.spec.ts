@@ -25,6 +25,8 @@ export default experimental_skill({
   body: `
 # paper-pipeline — the conductor for the whole organism
 
+Editing the paper's text after an approved copy exists (\`paperlint versions approve\`): declare each change in \`versions/<cycle>/changes.yaml\`, \`paperlint versions diff\` shows what was lost (EXPERIMENTAL; \`docs/rules/cycle/changes-since-approved.md\`).
+
 This is the entry point. Each lifecycle stage is its own skill; this routes through them in order and
 owns the shared reference docs the others cite. **These papers are written to COUNT as credentials** —
 every stage is graded against \`references/credit-criteria.md\`, not abstract "impact." The personal half

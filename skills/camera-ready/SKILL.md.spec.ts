@@ -23,6 +23,8 @@ export default experimental_skill({
   body: `
 # camera-ready — de-anonymize an accepted paper into the final proceedings version
 
+Editing the paper's text after an approved copy exists (\`paperlint versions approve\`): declare each change in \`versions/<cycle>/changes.yaml\`, \`paperlint versions diff\` shows what was lost (EXPERIMENTAL; \`docs/rules/cycle/changes-since-approved.md\`).
+
 The reviewed PDF was anonymized on purpose. Acceptance flips that: the camera-ready carries your
 real name, your real repo, and an archival DOI — and it's the version that gets indexed, so it's the
 actual authorship evidence. This skill is the reverse of the anonymization you did at

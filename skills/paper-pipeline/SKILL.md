@@ -4,9 +4,11 @@ description: The orchestrator for writing a research paper end-to-end, from idea
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:da7c692384fb79aa compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:6a338499d0d8686a compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
 
 # paper-pipeline — the conductor for the whole organism
+
+Editing the paper's text after an approved copy exists (`paperlint versions approve`): declare each change in `versions/<cycle>/changes.yaml`, `paperlint versions diff` shows what was lost (EXPERIMENTAL; `docs/rules/cycle/changes-since-approved.md`).
 
 This is the entry point. Each lifecycle stage is its own skill; this routes through them in order and
 owns the shared reference docs the others cite. **These papers are written to COUNT as credentials** —

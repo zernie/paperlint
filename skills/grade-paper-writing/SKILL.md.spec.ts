@@ -14,6 +14,8 @@ export default experimental_skill({
   body: `
 # grade-paper-writing — grade how the paper READS, then fix it sentence by sentence
 
+Editing the paper's text after an approved copy exists (\`paperlint versions approve\`): declare each change in \`versions/<cycle>/changes.yaml\`, \`paperlint versions diff\` shows what was lost (EXPERIMENTAL; \`docs/rules/cycle/changes-since-approved.md\`).
+
 The review skills hunt scientific defects; \`study-accepted-papers\` scores the contribution on the
 strong-accept scorecard. Neither tells you the paper is a slog to read. This skill does exactly that: it
 grades the **writing craft** against how the best-written papers actually read, and turns each low score

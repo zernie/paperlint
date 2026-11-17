@@ -4,9 +4,11 @@ description: Use when asking "is this paper actually ready to submit?" / "what's
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:7411ad93c1623245 compiled from skills/harden-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:f089c7c5157cf69a compiled from skills/harden-paper/SKILL.md.spec.ts -->
 
 # harden-paper — the multi-axis pre-submit gate
+
+Editing the paper's text after an approved copy exists (`paperlint versions approve`): declare each change in `versions/<cycle>/changes.yaml`, `paperlint versions diff` shows what was lost (EXPERIMENTAL; `docs/rules/cycle/changes-since-approved.md`).
 
 > **Which paper skill?** `paper-adversarial-review` / `pc-panel-review` (whose venue-fit mode covers the
 > CFP-fit score) = the *reviewer's-eye* axis (defects, fit, accept-prob). `verify-citations` = the

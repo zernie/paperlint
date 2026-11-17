@@ -25,6 +25,8 @@ export default experimental_skill({
   body: `
 # harden-paper — the multi-axis pre-submit gate
 
+Editing the paper's text after an approved copy exists (\`paperlint versions approve\`): declare each change in \`versions/<cycle>/changes.yaml\`, \`paperlint versions diff\` shows what was lost (EXPERIMENTAL; \`docs/rules/cycle/changes-since-approved.md\`).
+
 > **Which paper skill?** \`paper-adversarial-review\` / \`pc-panel-review\` (whose venue-fit mode covers the
 > CFP-fit score) = the *reviewer's-eye* axis (defects, fit, accept-prob). \`verify-citations\` = the
 > *citation* axis.

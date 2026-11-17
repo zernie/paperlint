@@ -24,6 +24,8 @@ export default experimental_skill({
   body: `
 # verify-citations — every cite real, the delta explicit
 
+Editing the paper's text after an approved copy exists (\`paperlint versions approve\`): declare each change in \`versions/<cycle>/changes.yaml\`, \`paperlint versions diff\` shows what was lost (EXPERIMENTAL; \`docs/rules/cycle/changes-since-approved.md\`).
+
 Reviewers reject on a single fabricated or wrong citation — it reads as either sloppiness or a
 hallucinated bibliography, and either one is fatal. And they reject on "this was already done by ___" if
 your delta over the nearest prior work isn't spelled out. This skill closes both holes before submit.
