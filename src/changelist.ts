@@ -6,22 +6,14 @@
  * arithmetic below, never for being true (`type` is declared, not checked).
  *
  * TODO(changes-type-check): `type` is not verified against what the text actually did.
- * TODO(cite-keys): cite keys are read from the source of each citation mark in the body prose with a
- * small pattern; the reader port has no `citeKeys`, and captions, tables and the appendix are not
- * body prose, so a key cited only there is not seen.
  * TODO(changes-schema): the shape is checked by hand here; a JSON schema beside the review-frontmatter
  * one is the proper form.
  */
-import { NUMBER } from "./claim-provenance.ts";
-import { CITATION_MACROS } from "./domain/citation-macros.ts";
 import { fieldOf, isRecord } from "./domain/record.ts";
 import { err, isOk, ok, type Result } from "./domain/result.ts";
+import type { LatexReader } from "./ports/latex.ts";
 import { runOf } from "./domain/sentences.ts";
-import {
-  runText,
-  type Passage,
-  type ProsePiece,
-} from "./domain/tex-document.ts";
+import { runText, type ProsePiece } from "./domain/tex-document.ts";
 
 export const CHANGE_TYPES = [
   "rewrite",
@@ -49,8 +41,9 @@ const isType = (v: unknown): v is ChangeType =>
 const text = (v: unknown): v is string =>
   typeof v === "string" && v.trim() !== "";
 
-const strings = (v: unknown): v is readonly string[] =>
-  Array.isArray(v) && v.every((d) => typeof d === "string");
+const scalars = (v: unknown): v is readonly (string | number)[] =>
+  Array.isArray(v) &&
+  v.every((d) => typeof d === "string" || typeof d === "number");
 
 /** An entry's fields as a change, or what is wrong with them. */
 function fields(
@@ -65,10 +58,19 @@ function fields(
     return err(`\`type\` is one of ${CHANGE_TYPES.join(" | ")}`);
   if (!text(before) || !text(why))
     return err("`before` and `why` are non-empty strings");
-  if (!strings(drops)) return err("`drops` is a list of strings");
+  if (!scalars(drops))
+    return err(
+      '`drops` is a list of numbers and cite keys — quote decimals with a trailing zero ("3.50")',
+    );
   return type === "cut" && !text(loses)
     ? err("a `cut` says what the reader loses (`reader_loses`)")
-    : ok({ type, before, why, drops, readerLoses: text(loses) ? loses : null });
+    : ok({
+        type,
+        before,
+        why,
+        drops: drops.map(String),
+        readerLoses: text(loses) ? loses : null,
+      });
 }
 
 /** One entry of the list, or what is wrong with it. */
@@ -90,7 +92,19 @@ export function parseChanges(
   return bad.length > 0 ? err(bad) : ok(each.filter(isOk).map((r) => r.value));
 }
 
+/**
+ * A number the changelist follows: digits with an optional decimal part (point or comma), and a sign
+ * only where it stands alone (`-3.2`, `−4`), not where it joins two numbers (`3-5`, `10--20`) or
+ * belongs to a name. The reader's own pattern (`claim-provenance.ts`) skips a run after a hyphen and
+ * a decimal comma, which are exactly the numbers a cut can take away.
+ */
+const NUMBER_TOKEN =
+  /(?<![\p{L}\p{N}_-])[-−]\d+(?:[.,]\d+)?|(?<![\p{L}\p{N}_])\d+(?:[.,]\d+)?/gu;
+
 const norm = (s: string): string => s.replace(/\s+/g, " ").trim();
+
+/** A text without any white space: a comment between two lines renders as no space, so spaces are not compared. */
+const unspaced = (s: string): string => s.split(/\s+/u).join("");
 
 /** A paragraph of a text: as a reader sees it, and as it is written. */
 export interface Paragraph {
@@ -110,23 +124,18 @@ const startOfPiece = (p: ProsePiece): number =>
 const endOfPiece = (p: ProsePiece): number =>
   p.kind === "text" ? p.segment.at + p.segment.text.length : p.span.end;
 
-/** The keys a `\cite…{a,b}` mark names: the last brace group of its source. */
-const keysOf = (mark: string): readonly string[] =>
-  [...CITATION_MACROS].some(
-    (m) =>
-      mark.startsWith(`\\${m}`) && !/^[A-Za-z]/.test(mark.slice(m.length + 1)),
-  )
-    ? mark
-        .slice(mark.lastIndexOf("{") + 1, mark.lastIndexOf("}"))
-        .split(",")
-        .map((k) => k.trim())
-        .filter((k) => k !== "")
-    : [];
-
 /** The paragraphs, numbers and cite keys of `src`, from its body prose. */
-export function factsOf(src: string, passages: readonly Passage[]): Facts {
+export function factsOf(src: string, latex: LatexReader): Facts {
+  const passages = latex.bodyProse(src);
   const paragraphs = passages.map((p) => ({
-    seen: norm(runText(runOf(p))),
+    // The reader's text, plus each inline math's source: `runOf` stands in one mark for it, and a
+    // number in math (`$63$`) is still a number the draft can lose.
+    seen: norm(
+      [
+        runText(runOf(p)),
+        ...p.pieces.flatMap((x) => (x.kind === "math" ? [x.tex] : [])),
+      ].join(" "),
+    ),
     written: norm(
       src.slice(
         Math.min(...p.pieces.map(startOfPiece)),
@@ -134,19 +143,15 @@ export function factsOf(src: string, passages: readonly Passage[]): Facts {
       ),
     ),
   }));
-  const cites = passages.flatMap((p) =>
-    p.pieces.flatMap((x) =>
-      x.kind === "owner" ? keysOf(src.slice(x.span.start, x.span.end)) : [],
-    ),
-  );
   return {
     paragraphs,
-    numbers: new Set(
-      paragraphs.flatMap((p) =>
-        [...p.seen.matchAll(NUMBER)].map((m) => norm(m[0])),
+    numbers: new Set([
+      ...paragraphs.flatMap((p) =>
+        [...p.seen.matchAll(NUMBER_TOKEN)].map((m) => norm(m[0])),
       ),
-    ),
-    cites: new Set(cites),
+      ...latex.registeredNumbers(src),
+    ]),
+    cites: new Set(latex.citeKeys(src)),
   };
 }
 
@@ -157,13 +162,13 @@ export interface Removed {
 }
 
 export function removedFrom(approved: Facts, now: Facts): Removed {
-  const here = new Set(now.paragraphs.map((p) => p.seen));
+  const here = new Set(now.paragraphs.map((p) => unspaced(p.seen)));
   return {
     tokens: [
       ...[...approved.numbers].filter((n) => !now.numbers.has(n)),
       ...[...approved.cites].filter((k) => !now.cites.has(k)),
     ],
-    paragraphs: approved.paragraphs.filter((p) => !here.has(p.seen)),
+    paragraphs: approved.paragraphs.filter((p) => !here.has(unspaced(p.seen))),
   };
 }
 

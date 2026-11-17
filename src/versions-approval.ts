@@ -16,20 +16,30 @@
  *
  * `diff.tex` is not built into a PDF: that needs the paper's whole TeX setup, and the list answers
  * "what did I take out". Removed text is read from latexdiff's `\DIFdel` markup (src/domain/
- * latexdiff-removed.ts); a changed figure or macro is not listed.
+ a changed figure or macro is not listed.
  */
-import { join } from "node:path";
+import { delimiter, join } from "node:path";
 import { callerPath } from "./caller-path.ts";
 import { venueCycleOf, type Cycles } from "./domain/cycle.ts";
-import { removedSentences } from "./domain/latexdiff-removed.ts";
 import { err, ok, type Result } from "./domain/result.ts";
 import { frozenKey, LOCK_FILE, lockText } from "./domain/versions.ts";
+import { paperRecord } from "./paper-record.ts";
+import { decoded } from "./tex-paper.ts";
 import { draftText, lockEntry, readLock, versionsDir } from "./versions.ts";
 import type { VersionsCommandDeps } from "./versions-command.ts";
 
 const DIFF_DIR = "_build/diff";
 const LATEXDIFF_MISSING =
   "latexdiff is not on PATH — `npx paperlint toolchain` installs it (the TeX Live package latexdiff), or install it with your TeX distribution";
+
+/** `env` with a TeX Live `bin` directory first on PATH; unchanged without one. */
+export const withTexBin = (
+  env: Readonly<Record<string, string>>,
+  bin: string | undefined,
+): Readonly<Record<string, string>> =>
+  bin === undefined
+    ? env
+    : { ...env, PATH: [bin, env["PATH"] ?? ""].join(delimiter) };
 
 const bytes = (t: string): Uint8Array => new TextEncoder().encode(t);
 
@@ -64,7 +74,31 @@ function recordApproved(
   return 0;
 }
 
+/**
+ * Why paper.tex cannot be frozen whole: it has includes and the build's record is missing or stale, so
+ * they would not be spliced in (`readPaper`). Null for a single file, or a fresh record.
+ */
+function includesNotRead(
+  paperDir: string,
+  deps: VersionsCommandDeps,
+): string | null {
+  const main = decoded(
+    deps.files.readBytes(callerPath(join(paperDir, "paper.tex"))),
+  );
+  if (main === null || deps.latex.includes(main).length === 0) return null;
+  const record = paperRecord(paperDir, deps);
+  switch (record.kind) {
+    case "fresh":
+      return null;
+    case "none":
+      return "paper.tex has includes and there is no record of the build (_build/sources.json), so the approved copy would lack them — run `paperlint build`, then approve";
+    case "stale":
+      return `${record.changed.map((x) => x.path).join(", ")} changed since the build, so the approved copy would not match the includes — run \`paperlint build\`, then approve`;
+  }
+}
+
 /** `approve`: freeze paper.tex as the attempt's `approved.tex`, then its lock entry written. */
+// TODO(approve-gate): an agent can run approve itself and reset the baseline; the gate belongs in paperlint (zernie/paperlint issue on the approve gate, P1). Until then consumers add Claude Code ask rules for the command.
 export function runApprove(
   paperDir: string,
   cycles: Cycles,
@@ -80,6 +114,8 @@ export function runApprove(
     );
   const source = draftText(paperDir, deps);
   if (source === null) return (deps.err("no paper.tex to approve"), 2);
+  const incomplete = includesNotRead(paperDir, deps);
+  if (incomplete !== null) return (deps.err(incomplete), 2);
   const key = frozenKey(c.id, "approved", "tex");
   const file = bytes(source);
   deps.files.writeAtomic(callerPath(join(versionsDir(paperDir), key)), file);
@@ -164,7 +200,7 @@ export function runDiff(
   const diff = latexdiff(dir, deps);
   if (!diff.ok) return (deps.err(diff.error), 2);
   put("diff.tex", bytes(diff.value));
-  report(approved.key, removedSentences(diff.value)).forEach((l) => {
+  report(approved.key, deps.latex.deletedText(diff.value)).forEach((l) => {
     deps.log(l);
   });
   return 0;

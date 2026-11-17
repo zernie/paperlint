@@ -15,9 +15,10 @@ import {
 import { sourcesCodec } from "./adapters/sources-record/index.ts";
 import { parseYaml } from "./adapters/yaml/index.ts";
 import { absolutePath } from "./domain/paths.ts";
-import { removedSentences } from "./domain/latexdiff-removed.ts";
 import type { Command, ProcessExit } from "./ports/process.ts";
 import { lockText, parseLock } from "./domain/versions.ts";
+import { builtPaper } from "../test/recorded-fixture.ts";
+import { withTexBin } from "./versions-approval.ts";
 import { runVersions, type VersionsCommandDeps } from "./versions-command.ts";
 
 const PAPER = "/w/papers/p";
@@ -150,6 +151,75 @@ describe("paperlint versions approve", () => {
   ])("refused, exit 2: %s", (_, fs, says) => {
     const r = run(["approve", "papers/p"], fs);
     expect([r.code, r.errs[0]?.includes(says)]).toEqual([2, true]);
+  });
+});
+
+const MAIN_INPUT =
+  "\\begin{document}\n\\input{sections/intro}\n\\end{document}\n";
+const INTRO = "Intro text.\n";
+const multi = (record: boolean) =>
+  memoryFiles({
+    [`${PAPER}/paperlint.json`]: JSON.stringify({ cycles: [OPEN] }),
+    ...(record
+      ? builtPaper(
+          PAPER,
+          { "paper.tex": MAIN_INPUT, "sections/intro.tex": INTRO },
+          [
+            { path: "paper.tex", role: "body" },
+            { path: "sections/intro.tex", role: "body" },
+          ],
+        )
+      : {
+          [`${PAPER}/paper.tex`]: MAIN_INPUT,
+          [`${PAPER}/sections/intro.tex`]: INTRO,
+        }),
+  });
+
+describe("paperlint versions approve, a paper with includes", () => {
+  it("🔴 refused without a build record: an approved copy without its includes would be incomplete", () => {
+    const fs = multi(false);
+    const r = run(["approve", "papers/p"], fs);
+    expect([r.code, r.errs[0]?.includes("_build/sources.json")]).toEqual([
+      2,
+      true,
+    ]);
+    expect(read(fs, `${PAPER}/versions/beta-2027/approved.tex`)).toBeNull();
+  });
+
+  it("🔴 refused when an included file changed since the build", () => {
+    const fs = multi(true);
+    fs.writeAtomic(
+      absolutePath(`${PAPER}/sections/intro.tex`),
+      new TextEncoder().encode("Edited.\n"),
+    );
+    const r = run(["approve", "papers/p"], fs);
+    expect([r.code, r.errs[0]?.includes("sections/intro.tex")]).toEqual([
+      2,
+      true,
+    ]);
+  });
+
+  it("with a fresh record the includes are spliced into the approved copy", () => {
+    const fs = multi(true);
+    expect(run(["approve", "papers/p"], fs).code).toBe(0);
+    expect(read(fs, `${PAPER}/versions/beta-2027/approved.tex`)).toContain(
+      "Intro text.",
+    );
+  });
+});
+
+describe("latexdiff's PATH", () => {
+  it("🔴 the managed TeX Live bin comes first; without one the environment is unchanged", () => {
+    expect(
+      withTexBin({ PATH: "/usr/bin", HOME: "/h" }, "/cache/2026/bin/x"),
+    ).toEqual({
+      PATH: "/cache/2026/bin/x:/usr/bin",
+      HOME: "/h",
+    });
+    expect(withTexBin({ PATH: "/usr/bin" }, undefined)).toEqual({
+      PATH: "/usr/bin",
+    });
+    expect(withTexBin({}, "/b")).toEqual({ PATH: "/b:" });
   });
 });
 
@@ -290,14 +360,30 @@ describe("paperlint versions diff, when it cannot run", () => {
   });
 });
 
+const removedSentences = (diff: string) => latexReader.deletedText(diff);
+
 describe("latexdiff's removed text", () => {
   it("reads nested groups, skips bare commands, keeps the order", () => {
     expect(
       removedSentences(
         "\\DIFdel{A {nested} one.} x \\DIFdel{\\DIFdelend} \\DIFdel{  B\n two. }",
       ),
-    ).toEqual(["A {nested} one.", "B two."]);
+    ).toEqual(["A nested one.", "B two."]);
   });
+
+  it("🔴 a deleted caption (\\DIFdelFL) is listed too", () => {
+    expect(
+      removedSentences("\\DIFdelFL{A deleted caption.} \\DIFdel{Prose.}"),
+    ).toEqual(["A deleted caption.", "Prose."]);
+  });
+
+  it("a diff of many deletions is read in linear time, one group at a time", () => {
+    const many = Array.from(
+      { length: 20000 },
+      (_, i) => `\\DIFdel{d${String(i)}}`,
+    ).join(" ");
+    expect(removedSentences(many)).toHaveLength(20000);
+  }, 30000);
 
   it("🔴 an escaped brace inside a group is text, not a delimiter", () => {
     expect(
@@ -309,9 +395,5 @@ describe("latexdiff's removed text", () => {
       "a \\} b \\\\",
       "c",
     ]);
-  });
-
-  it("an unclosed group ends the list", () => {
-    expect(removedSentences("\\DIFdel{never closed")).toEqual([]);
   });
 });

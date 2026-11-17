@@ -210,6 +210,15 @@ describe("versions/layout", () => {
   });
 });
 
+describe("the approved stage is a source only", () => {
+  it("🔴 approved.tex is a frozen name; approved.pdf is not, so an older paperlint reads the lock", () => {
+    expect([frozenName("approved.tex"), frozenName("approved.pdf")]).toEqual([
+      { stage: "approved", ext: "tex" },
+      null,
+    ]);
+  });
+});
+
 describe("versions/layout, entries outside it", () => {
   it("an entry outside the convention: a dated file says how to migrate it, the rest where things go", () => {
     const found = judgeVersions(

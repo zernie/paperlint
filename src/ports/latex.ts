@@ -99,4 +99,10 @@ export interface LatexReader {
    * what stops it, with its offset in `src`.
    */
   readonly abstractText: (src: string) => Result<string, AbstractProblem>;
+  /** The keys of every citation command of `src`, captions and floats included, in order. */
+  readonly citeKeys: (src: string) => readonly string[];
+  /** The numbers `src` registers with `\num{…}` and `\SI{…}{…}`: each one's first argument. */
+  readonly registeredNumbers: (src: string) => readonly string[];
+  /** The text of each `\DIFdel{…}` group in latexdiff's output `diff`, whitespace collapsed. */
+  readonly deletedText: (diff: string) => readonly string[];
 }

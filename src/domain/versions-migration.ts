@@ -71,8 +71,10 @@ interface Part {
 const NONE: Part = { moves: [], lock: {}, problems: [] };
 const problem = (why: string): Part => ({ ...NONE, problems: [why] });
 
+/** The stages a `stages:` list can name: the ones that were there before `approved`, which has no dated file. */
+const LISTED_STAGES = VERSION_STAGES.filter((v) => v !== "approved");
 const isStage = (s: unknown): s is VersionStage =>
-  VERSION_STAGES.some((v) => v === s);
+  LISTED_STAGES.some((v) => v === s);
 
 const text = (v: unknown): string =>
   typeof v === "string" ? v : v === undefined ? "" : JSON.stringify(v);
@@ -189,7 +191,7 @@ function targetOf(
   const stage = rec["stage"];
   if (!isStage(stage))
     return err(
-      `${at}: the stage «${text(stage)}» has no place in versions/<cycle>/ — the stages are ${VERSION_STAGES.join(", ")}`,
+      `${at}: the stage «${text(stage)}» has no place in versions/<cycle>/ — the stages are ${LISTED_STAGES.join(", ")}`,
     );
   const cycle = ids.find((id) => id === rec["cycle"]);
   if (cycle === undefined)

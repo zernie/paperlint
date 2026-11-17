@@ -98,8 +98,8 @@ function judged(
   const changes = read.ok ? read.value : [];
   const paper = readPaper(filename, text, deps);
   const removed = removedFrom(
-    factsOf(approved, deps.latex.bodyProse(approved)),
-    factsOf(paper.text, deps.latex.bodyProse(paper.text)),
+    factsOf(approved, deps.latex),
+    factsOf(paper.text, deps.latex),
   );
   return {
     cycle: c.id,

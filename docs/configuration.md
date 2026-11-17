@@ -264,7 +264,7 @@ versions/
 
 **The approved version (EXPERIMENTAL: the commands and file names may change).** `npx paperlint versions approve [paper]` freezes `paper.tex` (its `\input`s
 spliced, as `submitted.tex` is) as `versions/<cycle>/approved.tex` of the open or accepted attempt and
-records it in the lock; approving again replaces it. It is the one place the approved text lives: no
+records it in the lock; approving again replaces it. `approved` is a source only (`approved.tex`, no PDF), and a lock that holds an `approved` entry needs this paperlint or newer in every checkout: an older one rejects the whole lock. Known limitation: an agent can run `approve` itself and reset the baseline; until paperlint gates it, add a Claude Code ask rule for the command. It is the one place the approved text lives: no
 tag, no second record. `npx paperlint versions diff [paper]` runs `latexdiff` on the newest
 `approved.tex` and the current `paper.tex`, writes `_build/diff/diff.tex` (not built into a PDF), and
 prints the sentences the approved text had that the draft no longer has, read from latexdiff's

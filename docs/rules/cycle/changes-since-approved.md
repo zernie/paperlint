@@ -40,7 +40,7 @@ the loss a line in a file the author read, not a surprise in a diff.
 ```
 
 `type` is declared, not checked. `before` is text from `approved.tex`, a paragraph or part of one.
-`reader_loses` is required for `cut`. `paperlint versions diff` shows what the draft lost.
+`reader_loses` is required for `cut`. Quote decimals with a trailing zero in `drops` (`"3.50"`): YAML reads an unquoted `3.50` as `3.5`. `paperlint versions diff` shows what the draft lost.
 
 ## Turning it on
 
@@ -51,5 +51,5 @@ the loss a line in a file the author read, not a surprise in a diff.
 ## What it does not check
 
 - Whether an entry is true, or its `type` right.
-- A number or cite key that only the captions, tables or appendix held: only the body's prose is read.
+- A number outside the body's prose, except those typeset by `\num`, `\SI`, `\qty` and their range forms, and numbers inside inline math; cite keys are read from every citation command, captions included.
 - Whether a paragraph that is still there says the same thing.

@@ -201,15 +201,15 @@ describe("planMigration, refused", () => {
     );
     expect(r).toStrictEqual(
       err([
-        "stages[0]: the stage «accepted» has no place in versions/<cycle>/ — the stages are approved, submitted, camera-ready, arxiv",
-        "stages[1]: the stage «» has no place in versions/<cycle>/ — the stages are approved, submitted, camera-ready, arxiv",
+        "stages[0]: the stage «accepted» has no place in versions/<cycle>/ — the stages are submitted, camera-ready, arxiv",
+        "stages[1]: the stage «» has no place in versions/<cycle>/ — the stages are submitted, camera-ready, arxiv",
         "stages[2] («submitted»): names no cycle of paperlint.json — add `cycle: <id>` (alpha-2026), the attempt the PDF was sent in, then migrate",
         'stages[3] («submitted»): "date" is not YYYY-MM-DD',
         'stages[4] («arxiv»): "date" is not YYYY-MM-DD',
         'stages[5] («arxiv»): no "pdf"',
         "stages[6]: `versions/2026-07-22-submitted.pdf` has 305412 bytes, the stage declares 1 — it is not the file that was frozen: restore it from git first",
         "stages[6]: `versions/none.tex` is not on disk",
-        'stages[9]: the stage «["submitted"]» has no place in versions/<cycle>/ — the stages are approved, submitted, camera-ready, arxiv',
+        'stages[9]: the stage «["submitted"]» has no place in versions/<cycle>/ — the stages are submitted, camera-ready, arxiv',
         "versions/2026-07-22-submitted.tex: no stage in `stages:` names it — declare it with its cycle, or move it to extra/, then migrate",
         "versions/alpha-2026/submitted.pdf: `versions/2026-10-23-submitted.pdf` and `versions/2026-09-01-arxiv.pdf` would both go there — an attempt keeps its last upload per stage: move the older to extra/, drop its entry from `stages:`, then migrate",
       ]),
@@ -405,6 +405,22 @@ describe("rehearse", () => {
         "move versions/s.pdf → versions/c/submitted.pdf: versions/c/submitted.pdf is already there at that step",
         "versions/lock.json would vouch for versions/c/arxiv.pdf, which would not be there after the migration",
       ]),
+    );
+  });
+});
+
+describe("planMigration, the approved stage", () => {
+  it("🔴 a `stages:` list cannot name `approved`: it has no dated file to move", () => {
+    const r = planMigration(
+      input({
+        cycleIds: [cycleId("alpha-2026")],
+        stages: [
+          { stage: "approved", cycle: "alpha-2026", date: "2026-07-22" },
+        ],
+      }),
+    );
+    expect(!r.ok && r.error.join()).toContain(
+      "the stage «approved» has no place in versions/<cycle>/",
     );
   });
 });

@@ -69,7 +69,10 @@ export function frozenName(name: string): FrozenName | null {
   const m = /^([a-z-]+)\.(pdf|tex)$/.exec(name);
   const stage = m?.[1];
   const ext = m?.[2];
-  return isStage(stage) && (ext === "pdf" || ext === "tex")
+  // `approved` is a source only: an older paperlint rejects a whole lock that holds a stage it does
+  // not know, so the new stage reaches the lock through one name, `approved.tex`.
+  return isStage(stage) &&
+    (ext === "tex" || (ext === "pdf" && stage !== "approved"))
     ? { stage, ext }
     : null;
 }

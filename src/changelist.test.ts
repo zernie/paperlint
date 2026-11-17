@@ -19,10 +19,8 @@ import {
 } from "./changelist.ts";
 import { presetsDir } from "./package-dirs.ts";
 
-const facts = (body: string) => {
-  const src = `\\begin{document}\n${body}\n\\end{document}\n`;
-  return factsOf(src, latexReader.bodyProse(src));
-};
+const facts = (body: string) =>
+  factsOf(`\\begin{document}\n${body}\n\\end{document}\n`, latexReader);
 
 const OLD = facts(
   "We measured 63 repositories \\cite{smith24, lee23} (see \\url{https://x.example}).\n\nThe second paragraph stays.",
@@ -50,12 +48,17 @@ describe("changes.yaml shape", () => {
     });
   });
 
+  it("🔴 an unquoted number in `drops` is read as its text", () => {
+    const r = parseChanges([{ ...good, drops: [63, "smith24"] }]);
+    expect(r.ok && r.value[0]?.drops).toEqual(["63", "smith24"]);
+  });
+
   it.each<[string, unknown, string]>([
     ["not a list", {}, "is a list of entries"],
     ["an entry that is no mapping", ["x"], "entry 1: is not a mapping"],
     ["an unknown type", [{ ...good, type: "trim" }], "`type` is one of"],
     ["no why", [{ ...good, why: "" }], "`before` and `why`"],
-    ["drops of the wrong kind", [{ ...good, drops: [1] }], "`drops` is a list"],
+    ["drops of the wrong kind", [{ ...good, drops: [{}] }], "quote decimals"],
     ["drops not a list", [{ ...good, drops: "63" }], "`drops` is a list"],
     [
       "a cut that does not say what the reader loses",
@@ -68,7 +71,75 @@ describe("changes.yaml shape", () => {
   });
 });
 
+describe("numbers in inline math", () => {
+  it("🔴 $63$ replaced by $5$ is an undeclared drop and an uncovered paragraph; unchanged math is no finding", () => {
+    const old = facts("We saw $63$ items here.");
+    const gone = removedFrom(old, facts("We saw $5$ items here."));
+    expect(gone.tokens).toEqual(["63"]);
+    expect(gone.paragraphs).toHaveLength(1);
+    const same = removedFrom(old, facts("We saw $63$ items here."));
+    expect([same.tokens, same.paragraphs]).toEqual([[], []]);
+  });
+});
+
+describe("numbers a reader sees, in the changelist's own tokens", () => {
+  it.each<[string, string, readonly string[]]>([
+    ["a range end", "Runs of 10--20 steps.", ["10", "20"]],
+    ["a hyphenated range", "Runs of 3-5 steps.", ["3", "5"]],
+    ["a negative", "A drop of -3.2 points.", ["-3.2"]],
+    ["a minus sign", "A drop of −4 points.", ["−4"]],
+    ["a decimal comma", "A rate of 0,5 here.", ["0,5"]],
+    ["not glued to a name", "Model GPT4 and COVID-19.", ["19"]],
+  ])("🔴 %s", (_, body, want) => {
+    expect([...facts(body).numbers]).toEqual(want);
+  });
+});
+
+describe("a comment-only edit", () => {
+  it("🔴 changes no paragraph: whitespace is not compared", () => {
+    const old = facts("One two three.\nFour five six.");
+    const edited = facts("One two three. % reviewer asked\nFour five six.");
+    const r = removedFrom(old, edited);
+    expect([r.tokens, r.paragraphs]).toEqual([[], []]);
+  });
+});
+
+describe("registered numbers", () => {
+  it("🔴 \\qty, \\numrange, \\SIrange and \\qtyrange give their numbers; \\si and \\percent none", () => {
+    expect([
+      ...facts(
+        "A \\qty{1.5}{m}, \\numrange{2}{4}, \\SIrange{5}{6}{s}, \\qtyrange{7}{8}{m}, \\si{\\meter}, \\percent.",
+      ).numbers,
+    ]).toEqual(["1.5", "2", "4", "5", "6", "7", "8"]);
+  });
+
+  it("🔴 \\num{0.91} to \\num{0.71} is a lost number", () => {
+    expect(
+      removedFrom(facts("A \\num{0.91}."), facts("A \\num{0.71}.")).tokens,
+    ).toEqual(["0.91"]);
+  });
+
+  it("🔴 \\num{63} and \\SI{63}{ms} are numbers the draft can lose", () => {
+    const old = facts("We saw \\num{63} items in \\SI{12}{ms}.");
+    expect([...old.numbers]).toEqual(["63", "12"]);
+    expect(removedFrom(old, facts("We saw items.")).tokens).toEqual([
+      "63",
+      "12",
+    ]);
+    expect(
+      removedFrom(old, facts("We saw \\num{63} items in \\SI{12}{ms}.")).tokens,
+    ).toEqual([]);
+  });
+});
+
 describe("cite keys, by the reader's own citation commands", () => {
+  it("🔴 keys come from the parsed citation macros, captions included", () => {
+    const f = facts(
+      "A \\citep{x1}.\n\\begin{figure}\\caption{See \\cite{cap9}.}\\end{figure}",
+    );
+    expect([...f.cites]).toEqual(["x1", "cap9"]);
+  });
+
   it("🔴 \\Citep and \\parencite keys are read; a link is not a citation", () => {
     const f = facts(
       "A \\Citep{smith24} and \\parencite[p. 3]{lee23, kim22} and \\url{https://x.example}.",
