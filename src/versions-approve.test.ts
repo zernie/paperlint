@@ -156,13 +156,13 @@ describe("paperlint versions approve", () => {
 describe("paperlint versions approve, the lock", () => {
   it("🔴 only the approved.tex entry is written: a damaged frozen file stays damaged in the lock's eyes", () => {
     const recorded = {
-      kind: "file",
+      kind: "file" as const,
       bytes: 3,
       sha256: "a".repeat(64),
       frozen: "2026-10-01",
     };
     const gone = {
-      kind: "file",
+      kind: "file" as const,
       bytes: 9,
       sha256: "b".repeat(64),
       frozen: "2026-10-01",
