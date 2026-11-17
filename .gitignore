@@ -34,3 +34,7 @@ projectStructure.cache.json
 # Python bytecode: the novelty checkers (skills/assess-novelty/scripts) are Python
 __pycache__/
 *.pyc
+
+# vigiles audit report (generated)
+vigiles-report.json
+vigiles-report.html
