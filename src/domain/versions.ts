@@ -4,6 +4,7 @@
  *
  *   versions/
  *   ├── alpha-2026/            ← a cycle id
+ *   │   ├── approved.tex       ← the text the author approved (`paperlint versions approve`)
  *   │   ├── submitted.pdf      ← what the venue's reviewers read
  *   │   └── submitted.tex      ← the source it was built from (a multi-file paper: assembled)
  *   ├── beta-2027/
@@ -45,7 +46,12 @@ export const VERSIONS_DIR = "versions";
 export const LOCK_FILE = "lock.json";
 
 /** The stages a version is frozen at, in the order an attempt reaches them. */
-export const VERSION_STAGES = ["submitted", "camera-ready", "arxiv"] as const;
+export const VERSION_STAGES = [
+  "approved",
+  "submitted",
+  "camera-ready",
+  "arxiv",
+] as const;
 export type VersionStage = (typeof VERSION_STAGES)[number];
 export type VersionExt = "pdf" | "tex";
 
@@ -513,6 +519,7 @@ export interface VersionRow {
 /** What a frozen stage of a cycle IS, from the cycle's outcome. Pure. */
 export function stateOf(c: Cycle, stage: VersionStage): string {
   if (stage === "arxiv") return "arXiv copy";
+  if (stage === "approved") return "approved by the author";
   switch (c.outcome.kind) {
     case "open":
       return stage === "submitted"

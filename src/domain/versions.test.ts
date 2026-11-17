@@ -243,7 +243,7 @@ describe("versions/layout, entries outside it", () => {
         "stray",
         {
           path: "notes.md",
-          hint: "versions/ holds lock.json and one folder per cycle, each with <stage>.pdf and <stage>.tex (submitted, camera-ready, arxiv) — anything else goes to extra/",
+          hint: "versions/ holds lock.json and one folder per cycle, each with <stage>.pdf and <stage>.tex (approved, submitted, camera-ready, arxiv) — anything else goes to extra/",
         },
       ],
       ["unknownCycle", { folder: "old", known: "alpha-2026 · beta-2027" }],

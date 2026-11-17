@@ -48,9 +48,11 @@
     //   texcount   — the word count a paper's length is measured by. Added to the old CTAN list on
     //                2026-09-17 after a consumer's CI went red on a cache miss without it.
     //   checkcites — asks whether a bibliography entry is uncited.
+    //   latexdiff  — `paperlint versions diff`: the approved text against the draft.
     "tools": {
       "texcount": ["texcount"],
       "checkcites": ["checkcites"],
+      "latexdiff": ["latexdiff"],
     },
   },
 }

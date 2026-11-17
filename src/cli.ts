@@ -300,14 +300,18 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
   npx paperlint submission topics [paper]
                                       the topics the venue's portal offers, against the ones its
                                       preset records; exit 1 when they differ
-  npx paperlint versions [show|lock|migrate] [paper]
+  npx paperlint versions [show|lock|migrate|approve|diff] [paper]
                                       the paper's frozen versions, one folder per attempt:
                                       versions/<cycle>/<stage>.{pdf,tex}. show (the default): each
                                       version and its state — under review, historical, camera-ready
                                       base, final — and how far paper.tex has moved. lock: record the
                                       files in versions/lock.json (submission --save does it for what
                                       it sends). migrate: move the stages: list's dated files into
-                                      their cycles' folders, write the lock, drop the list
+                                      their cycles' folders, write the lock, drop the list.
+                                      approve: freeze paper.tex as versions/<cycle>/approved.tex
+                                      (the text you accept) and lock it. diff: latexdiff of the
+                                      newest approved.tex against paper.tex, written to
+                                      _build/diff/diff.tex, and the sentences that are gone
   npx paperlint studies new <paper-dir> "<title>" [--kind <kind>]
                                       register a study: the next id in repro/studies.json, the folder
                                       repro/<id>-<slug>/ with its README.md and plan.json (a template),
@@ -2082,6 +2086,8 @@ const SIMPLE: Readonly<
       yaml: parseYaml,
       latex: latexReader,
       codec: sourcesCodec,
+      proc: spawnProcess(),
+      processEnv: gitEnv(process.env),
       now: isoNow,
       cwd,
       log,

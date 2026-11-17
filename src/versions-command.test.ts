@@ -111,6 +111,8 @@ const deps = (
   yaml: parseYaml,
   latex: latexReader,
   codec: sourcesCodec,
+  proc: { run: () => ({ kind: "not-found", file: "latexdiff" }) },
+  processEnv: {},
   now: () => "2026-10-27T12:00:00.000Z",
   cwd,
   log: (l) => out.push(l),

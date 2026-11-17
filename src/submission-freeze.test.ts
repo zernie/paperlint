@@ -313,6 +313,8 @@ test("a valid id round-trips: frozen by --save, then `versions lock` reads the l
     yaml: parseYaml,
     latex: latexReader,
     codec: sourcesCodec,
+    proc: { run: () => ({ kind: "not-found", file: "latexdiff" }) },
+    processEnv: {},
     now: () => NOW,
     cwd: "/",
     log: (l) => out.push(l),

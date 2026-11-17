@@ -25,7 +25,7 @@ The rule reports:
   before folders per attempt (`2026-07-22-submitted.pdf`) is named with the command that moves it;
 - a folder that names no cycle in `paperlint.json`;
 - a file in a cycle's folder that is not `<stage>.pdf` or `<stage>.tex`, the stage one of
-  `submitted`, `camera-ready`, `arxiv`;
+  `approved`, `submitted`, `camera-ready`, `arxiv`;
 - a frozen PDF without its source beside it, unless the lock records the source as lost;
 - a `submitted` or `camera-ready` PDF in a cycle whose `phase` is still `porting`;
 - frozen files and no lock, a lock that does not read, a frozen file the lock does not record, a file

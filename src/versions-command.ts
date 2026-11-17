@@ -1,5 +1,5 @@
 /**
- * `paperlint versions [show|lock|migrate] [paper]` — a paper's frozen versions, one folder per
+ * `paperlint versions [show|lock|migrate|approve|diff] [paper]` — a paper's frozen versions, one folder per
  * attempt (src/domain/versions.ts):
  *
  *   show      (the default) each attempt's frozen versions and what they are, newest first, then the
@@ -7,6 +7,8 @@
  *   lock      record the files of versions/ in versions/lock.json: what `submission --save` did not
  *             freeze — a file put there by hand, an arXiv copy, a recovered upload
  *   migrate   from the `stages:` list and dated files to folders per attempt, once
+ *   approve   freeze paper.tex as versions/<cycle>/approved.tex and lock it: the text the author accepts
+ *   diff      latexdiff of the newest approved.tex against paper.tex, and the sentences that are gone
  *
  * ── WHY ONE NOUN, THREE VERBS ───────────────────────────────────────────────────────────────
  * docs/prior-art/multi-mode-tools.md: tools that stay small add verbs to a noun the project already
@@ -38,8 +40,10 @@ import {
   type OnDisk,
 } from "./domain/versions.ts";
 import type { CopyFile, MoveFile } from "./ports/move-file.ts";
+import type { RunProcess } from "./ports/process.ts";
 import type { ParseYaml } from "./ports/yaml.ts";
 import type { ProseDeps } from "./tex-paper.ts";
+import { runApprove, runDiff } from "./versions-approval.ts";
 import {
   cyclesIn,
   entriesIn,
@@ -50,7 +54,7 @@ import {
   type VersionsDeps,
 } from "./versions.ts";
 
-const SUBS = ["show", "lock", "migrate"] as const;
+const SUBS = ["show", "lock", "migrate", "approve", "diff"] as const;
 type Sub = (typeof SUBS)[number];
 const isSub = (s: unknown): s is Sub => SUBS.some((x) => x === s);
 
@@ -60,6 +64,10 @@ export interface VersionsCommandDeps extends ProseDeps, VersionsDeps {
   readonly move: MoveFile;
   readonly copy: CopyFile;
   readonly yaml: ParseYaml;
+  /** `latexdiff`, for `diff`. */
+  readonly proc: RunProcess;
+  /** The whole environment `latexdiff` gets. */
+  readonly processEnv: Readonly<Record<string, string>>;
   /** The instant a lock entry records, ISO 8601. */
   readonly now: () => string;
   readonly cwd: string;
@@ -332,6 +340,21 @@ const NO_CYCLES_LOCK =
 const NO_CYCLES_MIGRATE =
   'the paper keeps no "cycles" in paperlint.json: its stages: list stays its record — folders per attempt are named by cycle ids (docs/configuration.md, "The paper\'s cycles")';
 
+const NO_CYCLES_APPROVED =
+  'the paper keeps no "cycles" in paperlint.json: an approved version belongs to an attempt (docs/configuration.md, "The paper\'s cycles")';
+
+/** What each subcommand that needs the cycles does with them, and what it says when there are none. */
+const NEEDS_CYCLES = {
+  lock: { run: runLock, without: NO_CYCLES_LOCK },
+  migrate: { run: runMigrate, without: NO_CYCLES_MIGRATE },
+  approve: {
+    run: (p: string, c: Cycles, d: VersionsCommandDeps) =>
+      runApprove(p, c, d, () => runLock(p, c, d)),
+    without: NO_CYCLES_APPROVED,
+  },
+  diff: { run: runDiff, without: NO_CYCLES_APPROVED },
+} as const;
+
 /** `paperlint versions …`: exit 0, or 2 for a command line or a paper it cannot run on. */
 export function runVersions(
   words: readonly string[],
@@ -352,9 +375,8 @@ export function runVersions(
     return (logAll(lines.value, deps), 0);
   }
   const cycles = cyclesIn(paperDir, deps.files);
-  if (cycles === null)
-    return (deps.err(a.sub === "lock" ? NO_CYCLES_LOCK : NO_CYCLES_MIGRATE), 2);
-  return a.sub === "lock"
-    ? runLock(paperDir, cycles, deps)
-    : runMigrate(paperDir, cycles, deps);
+  const sub = NEEDS_CYCLES[a.sub];
+  return cycles === null
+    ? (deps.err(sub.without), 2)
+    : sub.run(paperDir, cycles, deps);
 }
