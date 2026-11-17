@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:354045654138202f compiled from CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:b5bc5bc7f15cfac4 compiled from CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -96,7 +96,7 @@ Before writing machinery, **run the thing you are about to replace and paste its
 
 ### The Default Set Is What The Venue Decides
 
-**Guidance only** — A check ships on by default only when the venue's own text decides it (page limit, template, anonymity, required sections, dates) or a desk reject or a broken build does (an undefined reference, a missing citation, a forbidden font). Writing preferences (length caps, density, structure, register, style proxies) and anything a careful author could dispute ship off, and their docs page says opt-in. A real author who installs paperlint should get no default finding they could reasonably disagree with. A rule moves into the default set only with evidence that a venue requires it or that it causes desk rejects. The author decided this on 2026-11-17, after a length cap set to error on a consumer paper forced its abstract into compression.
+**Guidance only** — A check ships on by default only when the venue's own text decides it (page limit, template, anonymity, required sections, dates) or a desk reject or a broken build does (an undefined reference, a missing citation, a forbidden font). Writing preferences (length caps, density, structure, register, style proxies) and anything a careful author could dispute ship off, and their docs page says opt-in. A real author who installs paperlint should get no default finding they could reasonably disagree with. A rule moves into the default set only with evidence that a venue requires it or that it causes desk rejects. The same holds for what `paperlint init` installs: the build, the venue presets and the default-set rules, nothing opinionated. The skills are mostly judgement and partly disputable, so they are opt-in (today init still links them all: #510). The author decided this on 2026-11-17, after a length cap set to error on a consumer paper forced its abstract into compression.
 
 ### Every Check Has Both Halves
 
