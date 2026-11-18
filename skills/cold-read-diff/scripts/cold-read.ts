@@ -4,7 +4,7 @@
  * readers are given. Everything it does is in `cold-read-core.ts`; this file only runs it. A consumer runs
  * the compiled `cold-read.js` (Node strips no types under node_modules).
  *
- * Usage: node cold-read.js <paper.tex> [--base=REV] [--max=N]
+ * Usage: node cold-read.js <paper.tex> [--base=REV] [--max=N] [--venue=NAME]
  */
 import { messageOf } from "#src/domain/text";
 import { main } from "./cold-read-core.ts";

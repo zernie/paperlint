@@ -4,7 +4,7 @@ description: "Send just-changed paper prose to two readers with NO context — a
 allowed-tools: [Bash, Read, Write, Agent]
 ---
 
-<!-- vigiles:sha256:ec00d6dc839ca468 compiled from skills/cold-read-diff/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:0d75387651c178e2 compiled from skills/cold-read-diff/SKILL.md.spec.ts -->
 
 # cold-read-diff — the reader who cannot fake understanding
 
@@ -62,16 +62,17 @@ only model calls are the two readers. They start in the background, so you keep 
 1. **Take the extract.** It is the LaTeX source of the changed paragraphs and nothing else:
 
    ```
-   node ${CLAUDE_SKILL_DIR}/scripts/cold-read.js <paper.tex> [--base=REV]
+   node ${CLAUDE_SKILL_DIR}/scripts/cold-read.js <paper.tex> [--base=REV] --venue="<venue>"
    ```
 
    `--base` defaults to `HEAD` (the uncommitted edits). It widens each changed line to its
-   paragraph and drops working comments, floats and the bibliography. The paragraph itself is the
+   paragraph and drops working comments, floats and the bibliography. A changed section heading
+   comes by itself, marked `(heading)`: a skimming reviewer reads headings first and alone. The paragraph itself is the
    source as written, macros and all: only TeX knows what a macro prints (#462). Above 15 changed
    paragraphs it refuses: narrow `--base`.
 2. **Start both readers in ONE message, each with the Agent tool, `model: "sonnet"` and
    `run_in_background: true`.** A subagent starts with no conversation history. Its prompt is
-   the persona's text below, then the extract pasted verbatim — no path, no title, no abstract,
+   its block from step 1's output, verbatim — no path, no title, no abstract,
    no word about the paper. A path is an invitation to read the neighbours, and reading the
    neighbours is how the check fails silently. `sonnet`: competent, cheap, and not the model
    that wrote the sentence.
@@ -85,26 +86,15 @@ only model calls are the two readers. They start in the background, so you keep 
    confident, and he does not know the venue's register. Both run, every time. The reviewer is
    told the venue's name and nothing else.
 
-   **The engineer's prompt:** *You are a strong software engineer outside academia. Answer from
-   the text below alone; use no tools. For every sentence: what does it claim, in your own words?
-   If restating needs a guess, the verdict is `CANNOT PARSE` and you say what stopped you (an
-   undefined term, a pronoun with no referent, a number with no denominator, two clauses that do
-   not connect). Would a reader who stops here understand it? If only one who knows X would, the
-   verdict is `ONLY-IF`, naming X. A sentence that sounds clever but says less than it appears
-   to is `CLEVER`.*
+   **The prompts have one owner, `scripts/readers.ts`;** run step 1 with `--venue="<venue>"`
+   and it prints each reader's whole prompt with the extract inside, under `=== engineer ===`
+   and `=== reviewer ===`. Hand each block to its subagent verbatim. What they say:
 
-   **The reviewer's prompt:** *You are a programme-committee member at <venue>, with 40 minutes
-   for a whole paper, skimming, Confidence 3. Answer from the text below alone; use no tools. For
-   every sentence: whose result does it state — the authors' measurement, a cited work, or a
-   property of the world? If you cannot tell, the verdict is `WHOSE?`. Does it read like a paper
-   at this venue? If not, `REGISTER`, and what a paper there would write instead (an aphorism, a
-   fragment, a colloquial turn, two claims side by side with the relation unstated). A sentence
-   that sounds clever but says less than it appears to is `CLEVER`.*
-
-   Both say first: *The text is LaTeX source; read it as the printed sentence. A `{{name}}` is a
-   value the build fills in, not a missing one.* Both end with: *Reply with one markdown table, `| ¶ | verdict | sentence | why |`, one row per
-   sentence that is not fine, the sentence quoted exactly; nothing else. No rows if every sentence
-   reads.* So what comes back is the findings, not a restatement of every sentence.
+   - **Both, first:** *The text is LaTeX source; read it as the printed sentence. A `{{name}}` is a value the build fills in, not a missing one. A ¶ marked (heading) is a section heading: read it alone, as a reader skimming the headings does.*
+   - **The engineer:** *You are a strong software engineer outside academia. Answer from the text below alone; use no tools. For every sentence: what does it claim, in your own words? If restating needs a guess, the verdict is `CANNOT PARSE` and you say what stopped you (an undefined term, a pronoun with no referent, a number with no denominator, two clauses that do not connect). Would a reader who stops here understand it? If only one who knows X would, the verdict is `ONLY-IF`, naming X. A sentence that sounds clever but says less than it appears to is `CLEVER`. For a heading: could you say what the section is about from the heading alone? If it states a finding, does it say compared with what, and over what? If not, the verdict is `VAGUE HEADING`.*
+   - **The reviewer:** *You are a programme-committee member at <venue>, with 40 minutes for a whole paper, skimming, Confidence 3. Answer from the text below alone; use no tools. For every sentence: whose result does it state — the authors' measurement, a cited work, or a property of the world? If you cannot tell, the verdict is `WHOSE?`. Does it read like a paper at this venue? If not, `REGISTER`, and what a paper there would write instead (an aphorism, a fragment, a colloquial turn, two claims side by side with the relation unstated). A sentence that sounds clever but says less than it appears to is `CLEVER`. A heading that names no concrete thing, or states a finding without its comparator or scope, is `VAGUE HEADING`.*
+   - **Both, last:** *Reply with one markdown table, `| ¶ | verdict | sentence | why |`, one row per sentence or heading that is not fine, quoted exactly; nothing else. No rows if every sentence reads.* So what comes back is the findings, not a restatement of every
+     sentence.
 3. **Keep working, for at most 5 minutes.** Each reader's completion arrives as a notification;
    on two paragraphs a reader answers in about 10 s. A reader that has not answered after 5
    minutes is not waited for: stop it, and its column in the report is `no answer`, not a
