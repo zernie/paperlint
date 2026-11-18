@@ -75,7 +75,7 @@ their grade/result, what's open,* and a one-line **submit-ready verdict**. Rules
  │  new error   │          │                │       │                │    │                │
  │ paper-lint   │ nudges   │  numbers gate  │       │  numbers gate  │REFUSES  numbers+self│
  │  post        │          │                │       │                │    │                 │
- │   prose-lint │          │  prose-lint    │ nudge │  page count    │    │  prose-lint     │
+ │              │          │                │ nudge │  page count    │    │                 │
  │   SHAVE      │          │  self-test if  │       │  overfull      │    │  check-anon     │
  │   numbers    │          │   you touched  │       │  unresolved    │    │  verify-cites   │
  │  paper-edit- │ BLOCKS   │   a gate       │       │   refs         │    │  provenance     │

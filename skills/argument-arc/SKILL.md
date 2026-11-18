@@ -4,7 +4,7 @@ description: Build or repair the paper's argument architecture — the one-sente
 allowed-tools: [Read, Write, Grep, Glob, Agent]
 ---
 
-<!-- vigiles:sha256:b50812467eb9cbbe compiled from skills/argument-arc/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:e2fcc69a4f57f521 compiled from skills/argument-arc/SKILL.md.spec.ts -->
 
 # argument-arc — does the paper carry the reader to one conclusion
 
@@ -75,8 +75,15 @@ Then read the list on its own, without the paper:
 
 ### 2a. The headings as a set
 
-Print every heading in order and read them as a table of contents, with nothing else. **A stranger
-should be able to reconstruct the argument from the headings alone.** Two rules:
+Print every heading in order and read them as a table of contents, with nothing else:
+
+```bash
+node ${CLAUDE_SKILL_DIR}/scripts/headings.js <paper-dir>/paper.tex
+```
+
+It reads `paper.tex` with the files its last build recorded spliced in, so a section in an
+`\input` file is listed where it stands. **A stranger should be able to reconstruct the argument
+from the headings alone.** Two rules:
 
 - **A heading names a thing** — a linter, a configuration, a repository, a build, a constraint —
   never an abstraction (*answers · kinds · moves · demotion · what X removes*). Two headings that a

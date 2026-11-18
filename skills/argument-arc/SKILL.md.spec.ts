@@ -81,8 +81,15 @@ Then read the list on its own, without the paper:
 
 ### 2a. The headings as a set
 
-Print every heading in order and read them as a table of contents, with nothing else. **A stranger
-should be able to reconstruct the argument from the headings alone.** Two rules:
+Print every heading in order and read them as a table of contents, with nothing else:
+
+\`\`\`bash
+node \${CLAUDE_SKILL_DIR}/scripts/headings.js <paper-dir>/paper.tex
+\`\`\`
+
+It reads \`paper.tex\` with the files its last build recorded spliced in, so a section in an
+\`\\input\` file is listed where it stands. **A stranger should be able to reconstruct the argument
+from the headings alone.** Two rules:
 
 - **A heading names a thing** — a linter, a configuration, a repository, a build, a constraint —
   never an abstraction (*answers · kinds · moves · demotion · what X removes*). Two headings that a

@@ -4,7 +4,7 @@ description: "Send just-changed paper prose to two readers with NO context — a
 allowed-tools: [Bash, Read, Write, Agent]
 ---
 
-<!-- vigiles:sha256:d04b2bfe501a7aea compiled from skills/cold-read-diff/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:3de7406b087ef93f compiled from skills/cold-read-diff/SKILL.md.spec.ts -->
 
 # cold-read-diff — the reader who cannot fake understanding
 
@@ -35,7 +35,7 @@ Every reader in it knows too much or cannot read at all:
 | the author | maximally — that is the curse of knowledge | yes |
 | the persona subagent | **yes: it is handed the paper and the framing** | yes |
 | the review panel | yes | yes |
-| `prose-lint` | no | **no — it counts patterns** |
+| the lint rules (`npx paperlint lint`) | no | **no — they count patterns** |
 
 The gap between "knows too much" and "cannot read" is exactly where these sentences live. Closing it
 needs a reader who is competent and **structurally uninformed**, and the only way to guarantee that

@@ -53,7 +53,7 @@ export {
   textOf,
 } from "./nodes.ts";
 export { documentBodyOf, includesOf } from "./includes.ts";
-export { captionProse, captionsOf } from "./captions.ts";
+export { captionProse } from "./captions.ts";
 export { headingsOf } from "./headings.ts";
 export { outlineOf } from "./outline.ts";
 export { parseLatex, type ParsedTex } from "./parse.ts";
