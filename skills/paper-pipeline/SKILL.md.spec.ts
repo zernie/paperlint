@@ -71,8 +71,8 @@ their grade/result, what's open,* and a one-line **submit-ready verdict**. Rules
       ▼                            ▼                         ▼                      ▼
  ┌──────────────┐          ┌────────────────┐       ┌────────────────┐    ┌────────────────┐
  │ PostToolUse  │          │  .githooks/    │       │ build-         │    │ GitHub Actions │
- │ paper-lint   │ BLOCKS   │  pre-commit    │REFUSES│ submission.sh  │    │ paper-gates    │
- │  pre >55 wds │          │                │       │                │    │                │
+ │ lint-edited  │ BLOCKS   │  pre-commit    │REFUSES│ submission.sh  │    │ paper-gates    │
+ │  new error   │          │                │       │                │    │                │
  │ paper-lint   │ nudges   │  numbers gate  │       │  numbers gate  │REFUSES  numbers+self│
  │  post        │          │                │       │                │    │                 │
  │   prose-lint │          │  prose-lint    │ nudge │  page count    │    │  prose-lint     │

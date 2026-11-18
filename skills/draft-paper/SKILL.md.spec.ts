@@ -66,8 +66,8 @@ number in the body stays in the body**.
 - **A reusable method/norm over a one-off result.** "Tool Y scores 40%" dies; "here's how to measure
   Z, and by it Y scores 40%" survives, because the method outlives Y. Frame every result as an instance
   of a general procedure.
-- **A crisp, generalizable bound or insight** the reader can quote without your paper open — one
-  sentence they'll paraphrase back to you in review. That sentence is the abstract's spine.
+- **A crisp, generalizable bound or insight**, stated as its literal claim, not as a saying
+  (\`rewrite-unclear\`, rule 2). That sentence is the abstract's spine.
 - **Precise claim-sizing.** Say exactly how big the claim is and no bigger. Include an explicit
   **"What we do NOT claim"** paragraph — it pre-empts Reviewer 2's whole attack surface and reads as
   rigor, not weakness. (Both real papers have one; it's the highest-leverage paragraph in the draft.)
@@ -96,15 +96,15 @@ grade.
 Before any review pass, run the draft through the paper-side prose QA — it catches what a self-read won't:
 - **\`grade-paper-writing\`** — the 10-dim rubric + the PERSONA cold-read stall pass (a committed
   non-academic persona, per-section — the localized "wait, what does that even mean?" axis authors are
-  blind to). Its avoid-list grep also strips the AI-writing tropes (hedge-stacking, "it's worth
-  noting", limp connectives, fake balance) that make a draft read unserious to a human PC.
+  blind to). Its avoid-list grep also flags the AI-writing tropes (hedge-stacking, "it's worth
+  noting", fake balance) that make a draft read unserious to a human PC.
 - **\`../paper-pipeline/references/writing-craft.md\`** — write toward the rubric; its
   register-calibration buckets decide which jargon to keep / gloss / rename for the venue's actual reader.
 - **\`rewrite-unclear\`** — rewrites each passage the QA above flags, and any passage the author calls
   unclear; a section is not done while one of its flagged passages is unrewritten or undecided.
 
 **Boundary:** the site repo's \`writing-quality\` + \`audience-test\` skills are for **blog posts only**.
-For papers they duplicate — and are superseded by — \`grade-paper-writing\` + writing-craft's persona
+For papers they duplicate — and are superseded by — \`grade-paper-writing\`'s persona
 pass (the blog skills lack the persona fix, so they under-fire on paper prose). Never route paper
 prose QA to them.
 

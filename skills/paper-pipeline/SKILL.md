@@ -4,7 +4,7 @@ description: The orchestrator for writing a research paper end-to-end, from idea
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:2d9e6480db9c97bd compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:b293d02b6fb91f25 compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
 
 # paper-pipeline — the conductor for the whole organism
 
@@ -54,8 +54,8 @@ their grade/result, what's open,* and a one-line **submit-ready verdict**. Rules
       ▼                            ▼                         ▼                      ▼
  ┌──────────────┐          ┌────────────────┐       ┌────────────────┐    ┌────────────────┐
  │ PostToolUse  │          │  .githooks/    │       │ build-         │    │ GitHub Actions │
- │ paper-lint   │ BLOCKS   │  pre-commit    │REFUSES│ submission.sh  │    │ paper-gates    │
- │  pre >55 wds │          │                │       │                │    │                │
+ │ lint-edited  │ BLOCKS   │  pre-commit    │REFUSES│ submission.sh  │    │ paper-gates    │
+ │  new error   │          │                │       │                │    │                │
  │ paper-lint   │ nudges   │  numbers gate  │       │  numbers gate  │REFUSES  numbers+self│
  │  post        │          │                │       │                │    │                 │
  │   prose-lint │          │  prose-lint    │ nudge │  page count    │    │  prose-lint     │
