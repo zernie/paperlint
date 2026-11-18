@@ -1,5 +1,7 @@
 /**
- * The notice an upgrade owes a project whose hooks are only partly wired. `paperlint init` wires the
+ * The notice an upgrade owes a project whose hooks are only partly wired or whose shipped skills
+ * are not all linked into `.claude/skills/` (16.8.0 shipped `rewrite-unclear`; a project that ran
+ * `init` before it never got the link, and only a hand-run `doctor` said so). `paperlint init` wires the
  * hooks once, so a release that ships one more (16.2.0 added `lint-edited`) leaves every project that
  * ran `init` before it without that hook, and nothing says so: `paperlint doctor` is run by hand,
  * and nobody does. The hooks that ARE wired run the NEW version's code after an upgrade, so one of
@@ -13,11 +15,15 @@
  *
  * ── WHO DECIDES WHAT IS MISSING ──────────────────────────────────────────────────
  * `unwiredHooks` (`src/hooks-settings.ts`), the function `paperlint doctor` reports with; this module
- * only words the answer and remembers that it was given.
+ * only words the answer and remembers that it was given. The skills come from `unlinkedSkills`
+ * (`src/link-skills.ts`), the report `paperlint doctor` and `init` read: a skill is named only when
+ * its status is `missing`; a name taken by the project's own entry (`foreign`) is its choice, and
+ * `doctor` reports it.
  */
 import { join } from "node:path";
 import { callerPath } from "./caller-path.ts";
 import { isRecord } from "./domain/record.ts";
+import { SKILLS_HOME } from "./link-skills.ts";
 import type { Files } from "./ports/files.ts";
 
 /** The hooks that may carry the notice: PostToolUse ones. A PreToolUse hook never does. */
@@ -35,20 +41,54 @@ export const NOTICE_STATE = join(
   "unwired-hooks.json",
 );
 
-/** The instruction the agent reads. `byHand`: `init` writes nothing then, so the remedy differs. */
+const SKILLS_HOME_SHOWN = `${SKILLS_HOME}/`;
+
+/** The instruction the agent reads. `byHand`: `init` writes no hooks then, so the remedy differs. */
 export const noticeText = (
   version: string,
   missing: readonly string[],
   byHand: boolean,
-): string =>
-  `⚠ paperlint ${version} expects hooks that this project has not wired: ${missing.join(", ")}. ` +
-  (byHand
-    ? `Some paperlint hooks are wired by hand, so \`npx paperlint init\` writes nothing: add the missing ones in the same form, then run \`npx paperlint doctor\` to confirm.`
-    : `Run \`npx paperlint init\` now, then \`npx paperlint doctor\` to confirm.`);
+  skills: readonly string[] = [],
+): string => {
+  const what = [
+    ...(missing.length === 0
+      ? []
+      : [
+          `expects hooks that this project has not wired: ${missing.join(", ")}`,
+        ]),
+    ...(skills.length === 0
+      ? []
+      : [
+          `ships skills that are not linked into ${SKILLS_HOME_SHOWN}: ${skills.join(", ")}`,
+        ]),
+  ].join(", and ");
+  const handHooks = byHand && missing.length > 0;
+  return (
+    `⚠ paperlint ${version} ${what}. ` +
+    (handHooks
+      ? `Some paperlint hooks are wired by hand, so \`npx paperlint init\` writes no hooks: add the missing ones in the same form${skills.length === 0 ? "" : " (init does link the skills)"}, then run \`npx paperlint doctor\` to confirm.`
+      : `Run \`npx paperlint init\` now, then \`npx paperlint doctor\` to confirm.`)
+  );
+};
 
 /** The one stderr line `paperlint lint` prints. */
-export const lintLine = (version: string, missing: readonly string[]): string =>
-  `paperlint ${version}: ${missing.length === 1 ? "hook" : "hooks"} ${missing.join(", ")} ${missing.length === 1 ? "is" : "are"} not wired — run \`npx paperlint init\`, then \`npx paperlint doctor\``;
+export const lintLine = (
+  version: string,
+  missing: readonly string[],
+  skills: readonly string[] = [],
+): string =>
+  `paperlint ${version}: ${[
+    ...(missing.length === 0
+      ? []
+      : [
+          `${missing.length === 1 ? "hook" : "hooks"} ${missing.join(", ")} ${missing.length === 1 ? "is" : "are"} not wired`,
+        ]),
+    ...(skills.length === 0
+      ? []
+      : [
+          `${skills.length === 1 ? "skill" : "skills"} ${skills.join(", ")} ${skills.length === 1 ? "is" : "are"} not linked`,
+        ]),
+  ].join("; ")} — run \`npx paperlint init\`, then \`npx paperlint doctor\``;
 
 const statePath = (root: string) => callerPath(join(root, NOTICE_STATE));
 

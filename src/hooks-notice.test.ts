@@ -13,6 +13,7 @@ import { test } from "vitest";
 import { z } from "zod";
 import { useTempDir, writeTree } from "../test/support.ts";
 import { run, runHook, spawnHook } from "./cli.ts";
+import type { LinkReport } from "./link-skills.ts";
 import {
   NOTICE_STATE,
   lintLine,
@@ -72,6 +73,7 @@ async function hook(
   file: string,
   newString: string,
   version = "9.9.9",
+  skillLinks?: () => LinkReport,
 ) {
   const out: string[] = [];
   const err: string[] = [];
@@ -89,6 +91,7 @@ async function hook(
     },
     projectDir: dir,
     version,
+    ...(skillLinks === undefined ? {} : { skillLinks }),
   });
   return { code, out: out.join(""), err };
 }
@@ -418,5 +421,129 @@ test("paperlint lint: a settings file it cannot read is no second finding — th
   assert.deepEqual(
     err.filter((l) => /wired/.test(l)),
     [],
+  );
+});
+
+/** What `linkSkills(root, { write: false })` reports: one skill per status given. */
+const linked =
+  (...links: [string, "present" | "missing" | "foreign"][]) =>
+  (): LinkReport => ({
+    ok: true,
+    home: ".claude/skills",
+    example: null,
+    links: links.map(([name, status]) =>
+      status === "foreign"
+        ? { name, status, reason: "a directory" }
+        : { name, status },
+    ),
+  });
+
+test("an upgrade that ships a skill the project never linked: the notice names it once per version, and not the skill whose name the project's own directory holds", async () => {
+  const dir = project("skill-missing", wiringWithout([]));
+  const file = join(dir, "papers/p/paper.tex");
+  const links = linked(
+    ["paper-pipeline", "present"],
+    ["rewrite-unclear", "missing"],
+    ["mine-already", "foreign"],
+  );
+  const first = await hook("lint-edited", dir, file, "Fine.", "9.9.9", links);
+  assert.deepEqual(first.err, []);
+  const { additionalContext } = Notice.parse(
+    JSON.parse(first.out),
+  ).hookSpecificOutput;
+  assert.match(additionalContext, /paperlint 9\.9\.9/);
+  assert.match(additionalContext, /rewrite-unclear/);
+  assert.doesNotMatch(additionalContext, /paper-pipeline|mine-already/);
+  assert.doesNotMatch(additionalContext, /hooks/);
+  assert.match(additionalContext, /Run `npx paperlint init` now/);
+  assert.deepEqual(
+    await hook("lint-edited", dir, file, "Fine.", "9.9.9", links),
+    { code: 0, out: "", err: [] },
+  );
+  const next = await hook("lint-edited", dir, file, "Fine.", "9.9.10", links);
+  assert.match(
+    Notice.parse(JSON.parse(next.out)).hookSpecificOutput.additionalContext,
+    /rewrite-unclear/,
+  );
+});
+
+test("a project missing a hook and a skill hears both in one notice; every skill linked, or no package to read, says nothing about skills", async () => {
+  const both = project("both", wiringWithout(["lint-edited"]));
+  const said = await hook(
+    "paper-skills-nudge",
+    both,
+    join(both, "papers/p/paper.tex"),
+    "Fine.",
+    "9.9.9",
+    linked(["rewrite-unclear", "missing"]),
+  );
+  const text = Notice.parse(JSON.parse(said.out)).hookSpecificOutput
+    .additionalContext;
+  assert.match(text, /lint-edited/);
+  assert.match(text, /rewrite-unclear/);
+  const whole = project("skills-whole", wiringWithout([]));
+  const file = join(whole, "papers/p/paper.tex");
+  const quiet = { code: 0, out: "", err: [] };
+  assert.deepEqual(
+    await hook(
+      "lint-edited",
+      whole,
+      file,
+      "Fine.",
+      "9.9.9",
+      linked(["a", "present"], ["b", "foreign"]),
+    ),
+    quiet,
+  );
+  assert.deepEqual(
+    await hook("lint-edited", whole, file, "Fine.", "9.9.9", () => ({
+      ok: false,
+      error: "does not resolve",
+    })),
+    quiet,
+  );
+});
+
+test("paperlint lint: one stderr line names the unlinked skills, and none when they are all linked", async () => {
+  const lint = async (dir: string, skillLinks: () => LinkReport) => {
+    const err: string[] = [];
+    const code = await run(["lint"], {
+      log: () => undefined,
+      err: (...a: unknown[]) => err.push(a.join(" ")),
+      cwd: dir,
+      skillLinks,
+    });
+    return { code, err: err.filter((l) => /not linked|not wired/.test(l)) };
+  };
+  const missing = await lint(
+    project("lint-skill-missing", wiringWithout([])),
+    linked(["rewrite-unclear", "missing"], ["x", "foreign"]),
+  );
+  assert.equal(missing.err.length, 1);
+  assert.match(
+    missing.err[0] ?? "",
+    /skill rewrite-unclear is not linked — run `npx paperlint init`/,
+  );
+  assert.doesNotMatch(missing.err[0] ?? "", /\bx\b/);
+  const whole = await lint(
+    project("lint-skill-whole", wiringWithout([])),
+    linked(["rewrite-unclear", "present"]),
+  );
+  assert.deepEqual(whole.err, []);
+  assert.equal(missing.code, whole.code);
+});
+
+test("lintLine and noticeText word skills beside hooks", () => {
+  assert.match(
+    lintLine("9.9.9", ["lint-edited"], ["a", "b"]),
+    /hook lint-edited is not wired; skills a, b are not linked/,
+  );
+  assert.match(
+    noticeText("9.9.9", ["lint-edited"], true, ["a"]),
+    /by hand.*\(init does link the skills\)/,
+  );
+  assert.match(
+    noticeText("9.9.9", [], false, ["a"]),
+    /skills that are not linked into \.claude\/skills\/: a\./,
   );
 });

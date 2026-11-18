@@ -106,17 +106,20 @@ paperlint hooks present, others missing) or any hook wired twice. A hook set wir
 counts as wired. Not wired at all, a missing external program and an unlinked skill are printed and exit 0,
 because `--no-hooks` and the skills you do not use are choices.
 
-**After upgrading, the first paper edit tells you which hooks to wire.** `init` wires the hooks once, so a release
-that ships one more leaves a project that ran `init` earlier without it. The hooks that are wired run the new
+**After upgrading, the first paper edit tells you which hooks to wire and which skills to link.** `init` wires the hooks once, so a release
+that ships one more leaves a project that ran `init` earlier without it, and a release that ships a skill (16.8.0 added
+`rewrite-unclear`) leaves it unlinked in `.claude/skills/`. The hooks that are wired run the new
 version's code: the first time one of them acts on a file inside a paper (an Edit or Write there, or a Read for
 `paper-skills-nudge`), it adds one instruction to the session, "paperlint 16.2.1 expects hooks that this project has not
 wired: lint-edited. Run `npx paperlint init` now, then `npx paperlint doctor` to confirm", as Claude Code's
-`additionalContext`. It is said once per installed version (remembered in
+`additionalContext`; shipped skills that are not linked are named in the same notice ("ships skills that are not
+linked into .claude/skills/: rewrite-unclear"). A skill is named only when it is missing: a name that your own
+directory holds is your choice, and `doctor` reports it. It is said once per installed version (remembered in
 `node_modules/.cache/paperlint/unwired-hooks.json`), only by the PostToolUse hooks (`lint-edited`,
 `paper-skills-nudge`, `paper-status-gates`) and never by a PreToolUse hook, so it cannot change an allow or a deny;
 it never blocks, and an error while checking is one stderr line. `paperlint lint` prints the same finding as one
 stderr line on every run, without changing its exit code, and the GitHub action fails on it when `check-hooks` is
-set ([`ci.md`](ci.md)). Nothing is said when no hook is wired (`--no-hooks`) or the settings file cannot be read.
+set ([`ci.md`](ci.md)). Nothing is said about hooks when none is wired (`--no-hooks`) or the settings file cannot be read, and nothing about skills when all are linked or the package does not resolve from the project.
 
 ### How comparable tools install
 

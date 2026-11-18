@@ -220,6 +220,7 @@ import {
   recordTold,
 } from "./hooks-notice.ts";
 import { unwiredHooks } from "./hooks-settings.ts";
+import { linkSkills, unlinkedSkills, type LinkReport } from "./link-skills.ts";
 import {
   lintEditedHook,
   type LintResult,
@@ -1451,7 +1452,12 @@ interface HookOptions {
   readonly projectDir?: string;
   /** The installed paperlint version the notice names. */
   readonly version?: string;
+  /** What `paperlint doctor` reads to find unlinked skills; the disk by default. */
+  readonly skillLinks?: (root: string) => LinkReport;
 }
+
+const readSkillLinks = (root: string): LinkReport =>
+  linkSkills(root, { write: false });
 
 const defaultStdin = (): string => readFileSync(0, "utf8");
 const defaultOut = (text: string): void => {
@@ -1502,10 +1508,12 @@ function pendingNotice(io: ResolvedHookOptions): Pending | null {
   try {
     const root = hookRoot(io);
     const { missing, byHand } = unwiredHooks(root);
+    const skills = unlinkedSkills((io.skillLinks ?? readSkillLinks)(root));
     const version = io.version ?? packageVersion();
-    return missing.length === 0 || !notYetTold(nodeFiles, root, version)
+    return (missing.length === 0 && skills.length === 0) ||
+      !notYetTold(nodeFiles, root, version)
       ? null
-      : { text: noticeText(version, missing, byHand), root, version };
+      : { text: noticeText(version, missing, byHand, skills), root, version };
   } catch (e) {
     io.err(
       `paperlint: the unwired-hooks check did not run: ${firstLine(messageOf(e))}`,
@@ -1525,10 +1533,16 @@ const touchesAPaper = (payload: string): boolean => {
 };
 
 /** `paperlint lint`'s one stderr line when the project's hooks are only partly wired. Never throws. */
-function hooksLine(root: string, err: typeof console.error): void {
+function hooksLine(
+  root: string,
+  err: typeof console.error,
+  skillLinks: (root: string) => LinkReport,
+): void {
   try {
     const { missing } = unwiredHooks(root);
-    if (missing.length > 0) err(lintLine(packageVersion(), missing));
+    const skills = unlinkedSkills(skillLinks(root));
+    if (missing.length > 0 || skills.length > 0)
+      err(lintLine(packageVersion(), missing, skills));
   } catch {
     // The report above is the verdict; this line is advice, and a broken settings read is not worth a second one.
   }
@@ -2234,6 +2248,7 @@ export async function run(
     now = () => performance.now(),
     checkReferences = onlineReferences,
     loadTexLanguage = loadLatexLanguage,
+    skillLinks = readSkillLinks,
   }: {
     log?: typeof console.log;
     err?: typeof console.error;
@@ -2250,6 +2265,8 @@ export async function run(
      * fake: no test depends on Crossref, Semantic Scholar or DBLP answering.
      */
     checkReferences?: CheckReferences;
+    /** The skills report `lint`'s stderr line reads; a test hands a fixed one. */
+    skillLinks?: (root: string) => LinkReport;
   } = {},
 ): Promise<number> {
   const a = parseArgs(argv);
@@ -2404,7 +2421,7 @@ export async function run(
       .map((d) => join(d, MAIN))
       .filter((f) => existsSync(f)),
   });
-  hooksLine(root, err);
+  hooksLine(root, err, skillLinks);
   // On stderr, so `--json` leaves stdout a clean array.
   timingLines({
     files: results.length,
