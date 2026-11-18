@@ -19,6 +19,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 import { visit } from "@unified-latex/unified-latex-util-visit";
+import { last } from "remeda";
 import { latexReader, parseLatex } from "#src/adapters/latex/index";
 import type { Passage, Span } from "#src/domain/tex-document";
 import { ENGINEER, promptFor, reviewer } from "./readers.ts";
@@ -154,7 +155,7 @@ const headingRanges = (src: string): { start: number; end: number }[] =>
     .filter((h) => h.command.kind === "heading" && h.argument === "title")
     .map((h) => ({
       start: lineAt(src, h.title.segments[0].at),
-      end: lineAt(src, h.title.segments.at(-1)?.at ?? h.title.segments[0].at),
+      end: lineAt(src, last(h.title.segments).at),
     }));
 
 /**
