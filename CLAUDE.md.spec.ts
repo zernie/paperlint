@@ -91,6 +91,9 @@ Before writing machinery, **run the thing you are about to replace and paste its
     "the-linter-is-the-core": guidance(
       "paperlint is one instrument, and its lint rules are the core: deterministic, checked on every build. Skills and hooks are opt-in and less reliable, so they sit on top of the linter and never compete with it. Where a lint rule decides something (a count, a threshold, a required section), a skill or hook names the rule id and does not restate its number, apply a different one, or tell the author to do the opposite; a hook never changes what `paperlint lint` reports. A skill or hook that duplicates or contradicts a rule is a defect in the skill or hook, never in the rule. The author decided this on 2026-11-19.",
     ),
+    "skills-only-shrink": guidance(
+      "Deterministic checks beat judgement, so the LLM layer only shrinks: fewer skills, fewer hooks, shorter skills. Every instruction in a skill moves down this ladder as far as it can go: (1) a lint rule, when the engine can decide it; (2) a tested script (a file in the skill's `scripts/` with tests of both halves) whose output the skill reads, when it needs a program but no reader; (3) the skill's own text, only for a judgement a reader must make. History, rationale and examples go to `docs/`, not into the skill. A pull request that adds a skill or grows one names each instruction that stayed on rung 3 and why it cannot go lower; \"it is easier as prose\" is not a reason. The author decided this on 2026-11-19, after an audit measured the 29 skills at about 7% mechanical words, 46% procedure and 22% history.",
+    ),
     "every-check-has-both-halves": guidance(
       "Every check — lint rule, script, hook, harness — fires on a planted defect AND stays quiet on a clean fixture, and the test goes red before the fix lands. A check only ever seen quiet is indistinguishable from a dead one.",
       { details: file("docs/testing.md") },
