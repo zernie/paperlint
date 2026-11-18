@@ -149,8 +149,8 @@ describe("(f) a hands-to arrow never points at an earlier stage", () => {
       planted({
         "gate-skill": { stage: "review", [kind]: ["cut-skill"] },
         "cut-skill": { stage: "draft" },
-        "next-skill": { stage: "review", hands: ["gate-skill"] },
-      });
+        "next-skill": { stage: "review", hands: ["gate-skill", "gone-skill"] },
+      }).concat([{ name: "bare-skill", text: "", flow: undefined }]);
     expect(handsBackwards(back("hands"))).toEqual([
       "gate-skill hands to cut-skill, an earlier stage (5 · Review → 4 · Draft): use loopsBackTo or calls",
     ]);

@@ -55,6 +55,9 @@ const STAGE_TITLES: Readonly<Record<Stage, string>> = {
   extend: "8 · Extend",
 };
 
+/** The stages drawn as pictures; `across` is the router, written as text. */
+const PICTURED = STAGES.filter((st) => st !== "across");
+
 /** What a skill spec's default export carries that this script reads. */
 export interface SkillSpec {
   readonly name: string;
@@ -181,7 +184,7 @@ export function findCycle(skills: readonly Skill[]): string | undefined {
 const tokens = (text: string): ReadonlySet<string> =>
   new Set(text.split(/[^a-z0-9-]+/));
 
-/** Check 3: an arrow whose source's SKILL.md never names its target. One-way: data → text. */
+/** Check 4: an edge whose source's SKILL.md never names its target. One-way: data → text. */
 export function unnamedTargets(skills: readonly Skill[]): string[] {
   return skills.flatMap((s) => {
     const named = tokens(s.text);
@@ -198,24 +201,49 @@ export function unnamedTargets(skills: readonly Skill[]): string[] {
   });
 }
 
-/** Check 5: a hand-off to a skill of an earlier stage; a call or a loop back may go there. */
-export function handsBackwards(skills: readonly Skill[]): string[] {
-  const stageOf = new Map(skills.map((s) => [s.name, s.flow?.stage]));
-  const rank = (stage: Stage | undefined) =>
-    stage === undefined ? -1 : STAGES.indexOf(stage);
-  return skills.flatMap((s) =>
-    handsTo(s)
-      .filter((t) => rank(stageOf.get(t)) < rank(s.flow?.stage))
-      .map((t) => {
-        const [from, to] = [s.flow?.stage, stageOf.get(t)].map((x) =>
-          x === undefined ? "?" : STAGE_TITLES[x],
-        );
-        return `${s.name} hands to ${t}, an earlier stage (${String(from)} → ${String(to)}): use loopsBackTo or calls`;
-      }),
-  );
+/** An edge between two skills that both have a flow, with the stage of each end. */
+interface Edge {
+  readonly from: string;
+  readonly to: string;
+  readonly kind: "hands" | "loops";
+  readonly fromStage: Stage;
+  readonly toStage: Stage;
 }
 
-/** Check 4: a job with no owner, or an owner that is not a skill folder. */
+/** The hand-offs and loops back whose two ends are known; an unknown end is check 1's to report. */
+function edges(skills: readonly Skill[]): readonly Edge[] {
+  const stageOf = new Map(
+    skills.flatMap((s) => (s.flow ? [[s.name, s.flow.stage] as const] : [])),
+  );
+  return skills.flatMap(({ name, flow }) => {
+    const of = (kind: Edge["kind"], to: string): Edge[] => {
+      const toStage = stageOf.get(to);
+      return flow === undefined || toStage === undefined
+        ? []
+        : [{ from: name, to, kind, fromStage: flow.stage, toStage }];
+    };
+    return [
+      ...(flow?.handsTo() ?? []).flatMap((t) => of("hands", t.name)),
+      ...(flow?.loopsBackTo?.() ?? []).flatMap((t) => of("loops", t.name)),
+    ];
+  });
+}
+
+/** Check 3: a hand-off to a skill of an earlier stage; a call or a loop back may go there. */
+export function handsBackwards(skills: readonly Skill[]): string[] {
+  return edges(skills)
+    .filter(
+      (e) =>
+        e.kind === "hands" &&
+        STAGES.indexOf(e.toStage) < STAGES.indexOf(e.fromStage),
+    )
+    .map(
+      (e) =>
+        `${e.from} hands to ${e.to}, an earlier stage (${STAGE_TITLES[e.fromStage]} → ${STAGE_TITLES[e.toStage]}): use loopsBackTo or calls`,
+    );
+}
+
+/** Check 5: a job with no owner, or an owner that is not a skill folder. */
 export function jobProblems(jobs: Jobs, skills: readonly Skill[]): string[] {
   const names = new Set(skills.map((s) => s.name));
   return Object.entries(jobs).flatMap(([job, owner]) =>
@@ -259,121 +287,94 @@ const wrap = (names: readonly string[]): string =>
     .map((line) => line.join(", "))
     .join(",<br/>");
 
-/** One arrow of a stage picture: `from` hands to (solid) or loops back to (dashed) `to`. */
-interface Arrow {
-  readonly from: string;
-  readonly to: string;
-  readonly solid: boolean;
-}
+/** The arrow between two boxes: solid for a hand-off, dashed for a loop back. */
+const arrow = (e: Edge, from: string, to: string, label?: string): string => {
+  const solid = e.kind === "hands";
+  return label === undefined
+    ? `  ${from} ${solid ? "-->" : "-.->"} ${to}`
+    : `  ${from} ${solid ? "--" : "-."} "${label}" ${solid ? "-->" : ".->"} ${to}`;
+};
 
-/** Everything the pictures are drawn from, computed once. */
-interface Model {
-  readonly skills: readonly Skill[];
-  readonly stageOf: ReadonlyMap<string, Stage>;
-  readonly arrows: readonly Arrow[];
-  readonly owned: (name: string) => readonly string[];
-}
-
-function model(skills: readonly Skill[], jobs: Jobs): Model {
-  return {
-    skills,
-    stageOf: new Map(
-      skills.flatMap((s) => (s.flow ? [[s.name, s.flow.stage] as const] : [])),
-    ),
-    arrows: skills.flatMap((s) => [
-      ...handsTo(s).map((to) => ({ from: s.name, to, solid: true })),
-      ...loopsBackTo(s).map((to) => ({ from: s.name, to, solid: false })),
-    ]),
-    owned: (name) =>
-      Object.entries(jobs)
-        .filter(([, owner]) => owner?.name === name)
-        .map(([job]) => jobLine(job)),
-  };
-}
-
-const inStage = (m: Model, stage: Stage): readonly Skill[] =>
-  m.skills.filter((s) => s.flow?.stage === stage);
+/** The skills of one stage, in name order. */
+const inStage = (skills: readonly Skill[], stage: Stage): readonly Skill[] =>
+  skills.filter((s) => s.flow?.stage === stage);
 
 /** The overview: a box per stage, left to right, its skills listed; arrows only between stages. */
-function overview(m: Model): string[] {
+function overview(skills: readonly Skill[]): string[] {
   const between = uniqueBy(
-    m.arrows.flatMap((a) => {
-      const [from, to] = [m.stageOf.get(a.from), m.stageOf.get(a.to)];
-      return from === undefined || to === undefined || from === to
-        ? []
-        : [{ from, to, solid: a.solid }];
-    }),
-    (a) => `${a.from} ${a.to} ${String(a.solid)}`,
+    edges(skills).filter((e) => e.fromStage !== e.toStage),
+    (e) => `${e.fromStage} ${e.toStage} ${e.kind}`,
   );
-  // In stage order, solid first: Mermaid places boxes in the order their edges come.
+  // In stage order, hand-offs first: Mermaid places boxes in the order their edges come.
   const ordered = sortBy(
     between,
-    (a) => (a.solid ? 0 : 1),
-    (a) => STAGES.indexOf(a.from),
-    (a) => STAGES.indexOf(a.to),
+    (e) => e.kind,
+    (e) => STAGES.indexOf(e.fromStage),
+    (e) => STAGES.indexOf(e.toStage),
   );
   return [
     "flowchart LR",
-    ...STAGES.filter((st) => st !== "across").map(
+    ...PICTURED.map(
       (st) =>
-        `  ${stageId(st)}["<b>${STAGE_TITLES[st]}</b><br/>${inStage(m, st)
+        `  ${stageId(st)}["<b>${STAGE_TITLES[st]}</b><br/>${inStage(skills, st)
           .map((s) => s.name)
           .join("<br/>")}"]`,
     ),
-    ...ordered.map(
-      (a) =>
-        `  ${stageId(a.from)} ${a.solid ? "-->" : "-.->"} ${stageId(a.to)}`,
-    ),
+    ...ordered.map((e) => arrow(e, stageId(e.fromStage), stageId(e.toStage))),
   ];
 }
 
+/** A skill's box: its name, the jobs it owns, and the skills it runs. */
+const box = (s: Skill, jobs: Jobs): string => {
+  const owned = Object.entries(jobs)
+    .filter(([, owner]) => owner?.name === s.name)
+    .map(([job]) => jobLine(job));
+  const runs = calls(s);
+  return `  ${id(s.name)}["${[
+    `<b>${s.name}</b>`,
+    ...owned,
+    ...(runs.length > 0 ? [`runs: ${wrap(runs)}`] : []),
+  ].join("<br/>")}"]`;
+};
+
 /** One stage's picture: its skills, the arrows inside it, and one stub box per stage an arrow leaves for. */
-function stagePicture(m: Model, stage: Stage): string[] {
-  const here = inStage(m, stage);
-  const leaving = m.arrows.filter(
-    (a) =>
-      m.stageOf.get(a.from) === stage &&
-      m.stageOf.get(a.to) !== stage &&
-      m.stageOf.has(a.to),
-  );
-  const stubs = groupBy(
-    leaving,
-    (a) => `${a.from}|${String(m.stageOf.get(a.to))}|${String(a.solid)}`,
-  );
-  const node = (s: Skill) =>
-    `  ${id(s.name)}["${[
-      `<b>${s.name}</b>`,
-      ...m.owned(s.name),
-      ...(calls(s).length > 0 ? [`runs: ${wrap(calls(s))}`] : []),
-    ].join("<br/>")}"]`;
+function stagePicture(
+  skills: readonly Skill[],
+  jobs: Jobs,
+  stage: Stage,
+): string[] {
+  const from = edges(skills).filter((e) => e.fromStage === stage);
+  const leaving = from.filter((e) => e.toStage !== stage);
+  const stub = (e: Edge) => `to_${stageId(e.toStage)}`;
   return [
     "flowchart TB",
-    ...here.map(node),
-    ...m.arrows
-      .filter(
-        (a) => m.stageOf.get(a.from) === stage && m.stageOf.get(a.to) === stage,
-      )
-      .map((a) => `  ${id(a.from)} ${a.solid ? "-->" : "-.->"} ${id(a.to)}`),
-    ...uniqueBy(leaving, (a) => String(m.stageOf.get(a.to))).map((a) => {
-      const to = m.stageOf.get(a.to) ?? stage;
-      return `  to_${stageId(to)}(["→ ${STAGE_TITLES[to]}"])`;
-    }),
-    ...Object.values(stubs).map((group) => {
-      const [first] = group;
-      const to = `to_${stageId(m.stageOf.get(first.to) ?? stage)}`;
-      const label = wrap(group.map((a) => a.to));
-      return first.solid
-        ? `  ${id(first.from)} -- "${label}" --> ${to}`
-        : `  ${id(first.from)} -. "${label}" .-> ${to}`;
-    }),
+    ...inStage(skills, stage).map((s) => box(s, jobs)),
+    ...from
+      .filter((e) => e.toStage === stage)
+      .map((e) => arrow(e, id(e.from), id(e.to))),
+    ...uniqueBy(leaving, (e) => e.toStage).map(
+      (e) => `  ${stub(e)}(["→ ${STAGE_TITLES[e.toStage]}"])`,
+    ),
+    ...Object.values(
+      groupBy(leaving, (e) => `${e.from} ${e.toStage} ${e.kind}`),
+    ).map((group) =>
+      arrow(
+        group[0],
+        id(group[0].from),
+        stub(group[0]),
+        wrap(group.map((e) => e.to)),
+      ),
+    ),
   ];
 }
 
 /** The skills of no single stage, as text: the router's calls would be one arrow per stage skill. */
-function across(m: Model): string[] {
-  return inStage(m, "across").map((s) => {
-    const jobs = m.owned(s.name);
-    const owns = jobs.length > 0 ? ` (owns: ${jobs.join("; ")})` : "";
+function across(skills: readonly Skill[], jobs: Jobs): string[] {
+  return inStage(skills, "across").map((s) => {
+    const owned = Object.entries(jobs)
+      .filter(([, owner]) => owner?.name === s.name)
+      .map(([job]) => jobLine(job));
+    const owns = owned.length > 0 ? ` (owns: ${owned.join("; ")})` : "";
     const runs = calls(s);
     return runs.length > 0
       ? `- \`${s.name}\`${owns} runs ${String(runs.length)} skills: ${runs.map((r) => `\`${r}\``).join(", ")}.`
@@ -387,9 +388,8 @@ const fence = (lines: readonly string[]): string[] => [
   "```",
 ];
 
-/** `docs/pipeline.md`: what the pictures are, the overview, the router, then one picture per stage. */
-export function render(skills: readonly Skill[], jobs: Jobs): string {
-  const m = model(skills, jobs);
+/** The text above the pictures: what they are drawn from and what each kind of edge means. */
+function intro(skills: readonly Skill[]): string[] {
   const count = (of: (s: Skill) => readonly string[]) =>
     String(skills.reduce((n, s) => n + of(s).length, 0));
   return [
@@ -405,21 +405,28 @@ export function render(skills: readonly Skill[], jobs: Jobs): string {
     "written inside the box, never drawn. `test/pipeline.test.ts` fails on a cycle of hand-offs, a",
     "hand-off to an earlier stage, an edge the skill's own text never names, a job without an owner,",
     "and this file when it is stale. The stages are those of [`skills.md`](skills.md).",
+  ];
+}
+
+/** `docs/pipeline.md`: what the pictures are, the overview, the router, then one picture per stage. */
+export function render(skills: readonly Skill[], jobs: Jobs): string {
+  return [
+    ...intro(skills),
     "",
     "## The stages",
     "",
     "Each arrow stands for one or more edges between skills of the two stages.",
     "",
-    ...fence(overview(m)),
+    ...fence(overview(skills)),
     "",
     "## Across every stage",
     "",
-    ...across(m),
-    ...STAGES.filter((st) => st !== "across").flatMap((st) => [
+    ...across(skills, jobs),
+    ...PICTURED.flatMap((st) => [
       "",
       `## ${STAGE_TITLES[st]}`,
       "",
-      ...fence(stagePicture(m, st)),
+      ...fence(stagePicture(skills, jobs, st)),
     ]),
     "",
   ].join("\n");
