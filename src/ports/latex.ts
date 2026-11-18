@@ -99,6 +99,11 @@ export interface LatexReader {
    * what stops it, with its offset in `src`.
    */
   readonly abstractText: (src: string) => Result<string, AbstractProblem>;
+  /**
+   * Where the abstract environment stands, `\\begin` to `\\end`, or null when the source has none:
+   * a rule over the body's prose leaves out what stands in it (`bodyProse` reads it as body).
+   */
+  readonly abstractSpan: (src: string) => Span | null;
   /** The keys of every citation command of `src`, captions and floats included, in order. */
   readonly citeKeys: (src: string) => readonly string[];
   /** The numbers `src` registers with `\num{…}` and `\SI{…}{…}`: each one's first argument. */

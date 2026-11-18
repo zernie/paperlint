@@ -75,6 +75,17 @@ export function lineColumn(text: string, at: number): string {
   return `${String(line)}:${String(column)}`;
 }
 
+/**
+ * Where a span of the assembled text stands, as an author looks for it: `paper.tex:151`, or the
+ * included file and its line (`sections/intro.tex:12`). A span outside the text names the main file.
+ */
+export function whereIn(paper: PaperSource, at: Span): string {
+  const o = originOf(paper, at);
+  return o === null
+    ? paper.main
+    : `${o.file}:${String(o.source.slice(0, o.span.start).split("\n").length)}`;
+}
+
 /** A message template with its data filled in, the way ESLint fills it. */
 const filled = (
   template: string,

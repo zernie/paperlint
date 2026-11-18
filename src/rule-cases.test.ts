@@ -192,6 +192,20 @@ const MAX_PARAGRAPH_WORDS_ON: Readonly<Record<string, string>> = {
   }),
 };
 
+/** `tex/term-before-definition` and `tex/term-defined-twice` are off by default; a paper turns them on. */
+const TERMS_ON: Readonly<Record<string, string>> = {
+  [`${P}/paperlint.json`]: JSON.stringify({
+    extends: null,
+    rules: {
+      "tex/term-before-definition": "warn",
+      "tex/term-defined-twice": "warn",
+    },
+  }),
+};
+/** A body that defines «gate» once, and uses it only after. */
+const GATE_DEFINED =
+  "A \\emph{gate} is a check that blocks a call. The gate holds.";
+
 /** `tex/max-paragraph-numbers` and `tex/max-sentence-words` are off by default too. */
 const CEILINGS_ON: Readonly<Record<string, string>> = {
   [`${P}/paperlint.json`]: JSON.stringify({
@@ -1312,6 +1326,28 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     },
     silent: paper(tex(longSentence(55)), CEILINGS_ON),
   },
+  // A term against its definition: off by default, on in these cases' paperlint.json.
+  "tex/term-before-definition": {
+    reports: {
+      tree: paper(tex(`A gate runs first.\n\n${GATE_DEFINED}`), TERMS_ON),
+      file: TEX_FILE,
+      severity: 1,
+      line: 3,
+    },
+    silent: paper(tex(GATE_DEFINED), TERMS_ON),
+  },
+  "tex/term-defined-twice": {
+    reports: {
+      tree: paper(
+        tex(`${GATE_DEFINED}\n\nAgain, a \\emph{gate} blocks.`),
+        TERMS_ON,
+      ),
+      file: TEX_FILE,
+      severity: 1,
+      line: 5,
+    },
+    silent: paper(tex(GATE_DEFINED), TERMS_ON),
+  },
   // The three register bands judge a body against the anchor of BlindConf's preset; the body opens
   // on line 3, right after the \\section, where the finding about the whole body stands.
   "tex/contrast-frames": {
@@ -1555,6 +1591,20 @@ describe("the other two ceilings are off by default", () => {
     const on = await ids(paper(tex(body), CEILINGS_ON));
     expect(on).toContain("tex/max-paragraph-numbers");
     expect(on).toContain("tex/max-sentence-words");
+  });
+});
+
+describe("the term rules are off by default", () => {
+  it("a use before its definition and a second definition produce nothing until the paper turns them on", async () => {
+    const ids = async (tree: Record<string, string>) =>
+      (await lintTree(tree)).map((m) => m.ruleId);
+    const body = `A gate runs first.\n\n${GATE_DEFINED}\n\nAgain, a \\emph{gate} blocks.`;
+    const off = await ids(paper(tex(body)));
+    expect(off).not.toContain("tex/term-before-definition");
+    expect(off).not.toContain("tex/term-defined-twice");
+    const on = await ids(paper(tex(body), TERMS_ON));
+    expect(on).toContain("tex/term-before-definition");
+    expect(on).toContain("tex/term-defined-twice");
   });
 });
 

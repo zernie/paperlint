@@ -24,6 +24,7 @@ import {
 import { replaceNode } from "@unified-latex/unified-latex-util-replace";
 import { fieldOf } from "../../domain/record.ts";
 import { err, ok, type Result } from "../../domain/result.ts";
+import type { Span } from "../../domain/tex-document.ts";
 import type { AbstractProblem } from "../../ports/latex.ts";
 import { INVISIBLE, LINE_BREAKS, TRANSPARENT } from "./headings.ts";
 import {
@@ -248,6 +249,17 @@ function typeset(
   );
   expandUnicodeLigatures(body);
   return body;
+}
+
+/**
+ * Where the first live `abstract` environment of `src` stands, `\\begin` to `\\end`, or null when it
+ * has none: not one in a comment, and nothing after `\\end{document}`.
+ */
+export function abstractSpan(src: string): Span | null {
+  const env = visited(liveRoot(parseLatex(src)), () => false)
+    .filter(isNode)
+    .find((n) => n.type === "environment" && n.env === "abstract");
+  return env === undefined ? null : { start: at(env), end: end(env) };
 }
 
 /** The abstract of `src` as one paragraph of plain text, or what stops it; nothing after `\\end{document}` is read. */

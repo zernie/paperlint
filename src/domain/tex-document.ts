@@ -177,6 +177,12 @@ export type EmphasisPlace = "opening" | "inline";
  */
 export interface Emphasis {
   readonly style: EmphasisStyle;
+  /**
+   * The macro or declaration that set it, without its backslash: `emph`, `textit`, `em`, `itshape`…
+   * Two of one style are not one convention: `\emph` may mark a definition where `\textit` sets a
+   * title.
+   */
+  readonly command: string;
   readonly place: EmphasisPlace;
   readonly text: string;
   readonly span: Span;
