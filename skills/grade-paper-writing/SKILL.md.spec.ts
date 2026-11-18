@@ -100,12 +100,12 @@ stall on different sentences.
 
 | persona | reads | stalls on |
 |---|---|---|
-| **the engineer** — a strong practitioner outside academia (\`Sam\` in the reference) | every section, one subagent per section | terms, walls, sentences that mean nothing to someone who does not already hold the idea |
+| **the engineer** — a strong practitioner outside academia | every section, one subagent per section | terms, walls, sentences that mean nothing to someone who does not already hold the idea |
 | **the workshop reviewer** — a PC member at the target venue with 40 minutes for the paper, Confidence 3 | the abstract, the introduction and the conclusion, skimmed in that order | a sentence whose result has no owner (the authors? a cited work? a population?), a relation between claims left for the reader to infer, and anything that does not read like a paper at this venue |
 
 The engineer cannot report the second column by construction: he does not know what a paper at the
 venue sounds like, and a sentence with no stated owner reads to him as confident, not as ambiguous.
-The reviewer persona's full prompt is in the reference, next to the engineer's. Its findings go into
+Both prompts have one owner, \`skills/cold-read-diff/scripts/readers.ts\`; \`cold-read-diff\` prints them (\`cold-read.js --venue\`). Its findings go into
 the same stall inventory, under their own classes (7 and 8 below).
 
 ### The one question, per sentence

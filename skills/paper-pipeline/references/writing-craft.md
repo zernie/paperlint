@@ -171,14 +171,10 @@ subagent with no context on the work), because the author literally cannot run i
 under-fires: telling a frontier model to "imagine you don't know the terms" is an abstract instruction it glides
 past — it still knows everything, so it glances over the jargon a real reader would trip on. A subagent
 _committed to a specific persona_ flags authentically, because it is answering AS someone who genuinely lacks the
-vocabulary. Spawn a fresh subagent with a prompt like:
-
-> You are Sam, a senior software engineer — 10 years building production web backends, sharp, but you have NEVER
-> read an academic paper in this subfield and you do NOT know its vocabulary. Read this start to finish, linearly.
-> EVERY time you hit a word, symbol, table cell, or sentence you would not use in a normal code review — STOP and
-> write down the exact trigger (quote it) and what you'd need to get it. Do not be polite, do not push through, do
-> not assume "it'll be explained later." If you'd mutter "what the fuck does that mean," that is a stall — log it.
-> Output the stall inventory only.
+vocabulary. Spawn a fresh subagent with the engineer's prompt. **The two prompts have one owner,
+`skills/cold-read-diff/scripts/readers.ts`:** `cold-read-diff`'s SKILL.md shows them, and its
+`cold-read.js --venue=<venue>` prints both around an extract. For a pass over a whole section, give each reader the
+section's source where the extract would go.
 
 Match the persona to the paper's ACTUAL target reader, and keep it inside the venue's field but OUTSIDE academia
 (a security paper → a security-adjacent engineer who still doesn't know stats/measurement jargon), so it keeps
@@ -186,23 +182,14 @@ bucket-1 field terms and trips on buckets 2–3. Optionally also run it on a **d
 lacks the vocabulary for real (not by role-play) and stalls even more like a human. The persona's inventory feeds
 straight into the fix pass.
 
-**Run the second persona too — the workshop reviewer. Both, never one instead of the other.** Sam cannot see two
+**Run the second persona too — the workshop reviewer. Both, never one instead of the other.** The engineer cannot see two
 defects by construction: he does not know what a paper at this venue sounds like, and a sentence with no stated
 owner reads to him as confident rather than ambiguous. Those are exactly the two a real reviewer wrote down
 ("difficult at first to distinguish among properties of LLMs, statistical observations from repositories, and
-experimental findings produced by the authors"; "blogpost"). Spawn a second fresh subagent:
+experimental findings produced by the authors"; "blogpost"). Spawn a second fresh subagent with the reviewer's prompt
+from the same file.
 
-> You are a program-committee member at <venue>. You review for it every year, you have eleven papers this
-> round, and you have 40 minutes for this one. Your confidence will be 3: you know the area, not this exact
-> topic. Read the abstract, then the introduction, then the conclusion — nothing else. For EVERY sentence ask:
-> whose result does this state — the authors' own measurement, a cited work, or a general property of the
-> world? If you cannot tell, quote it and write WHOSE?. Where two sentences sit side by side and you have to
-> work out yourself how they relate, quote the pair and write RELATION?. Where a sentence would not appear in
-> a paper at <venue> — an aphorism, a punchline, a fragment, a colloquial turn — quote it and write REGISTER.
-> Then give the overall recommendation you would write after these 40 minutes, and the one sentence of your
-> review a chair would read first. Output the list and the recommendation only.
-
-Its WHOSE? / RELATION? / REGISTER lines go into the stall inventory as classes 7 and 8 of `grade-paper-writing`.
+Its `WHOSE?` and `REGISTER` rows go into the stall inventory as classes 7 and 8 of `grade-paper-writing`.
 Give it the three sections as text, and no framing: it is a reviewer who has not talked to the authors.
 
 **Run the persona PER SECTION for a dense or long (>~6pp) paper — never one whole-paper pass.** A single pass over
