@@ -179,6 +179,9 @@ called it "fat for no reason" after a pass that cut almost nothing and left it 1
   section "When the body overruns". Rank the plan by it, not by words saved and not by a list of your own. A plan
   that proposes cutting a result or an abstract sentence carries that section's ledger (steps 1–5: N candidates, M
   taken, reason for each left) first.
+- **This skill owns length; no other skill cuts for it.** A clearer rewrite elsewhere may add words.
+  Whether the paper still fits is measured by the build afterwards, and a measured overflow comes here, to be
+  paid in the order above, never by shortening a sentence that explains something.
 - **Length is calibrated to CONTRIBUTION WEIGHT, not to the page limit.** A moderate finding + a moderate-complexity
   benchmark does not need to sit at the limit; being over-length for the weight of the contribution is itself a
   defect — it reads as padding even when each sentence is individually "true." Right-size to the contribution's
@@ -338,9 +341,10 @@ a sentence-level readability pass needs (cut a TMI section → the core mechanis
 
 ## Honesty / scope caveats
 - **Separate the two risk classes — they are NOT the same, and conflating them is what makes this pass timid.**
-  (1) **Prose/TMI cutting** — deleting fat sentences, folding enumerations to the artifact, collapsing hedge-stacks,
-  re-voicing academic sentences plainly — removes words that don't change what the reader believes. **LOW risk;
-  apply it aggressively even the day of the deadline.** Timidity here IS the failure, not the safe choice.
+  (1) **Prose/TMI cutting** — deleting fat sentences, folding enumerations to the artifact, collapsing hedge-stacks
+  — removes words that don't change what the reader believes. **LOW risk; apply it aggressively even the day of
+  the deadline.** A sentence that explains something is not fat: it is never shortened to save space, and when it
+  reads badly it goes to \`rewrite-unclear\`, not into a cut. Timidity here IS the failure, not the safe choice.
   (2) **Skeleton surgery** — merging, reordering, or deleting whole sections — can destabilize a done paper. **THIS
   is the deadline judgment call:** propose it, get author sign-off, hold for camera-ready if unsure. Never let
   caution about (2) suppress (1) — a "hold big cuts for later" reflex applied to *prose* fat is exactly how a

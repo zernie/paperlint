@@ -47,13 +47,14 @@ Where each stage writes, and the check that guards each place: [`layout.md`](lay
 
 ## 4 · Draft
 
-| you get                                                                            | skill            |
-| ---------------------------------------------------------------------------------- | ---------------- |
-| a first draft from your results: claims sized, threats to validity written         | `draft-paper`    |
-| an outline where each section follows from the one before                          | `argument-arc`   |
-| a cut plan: what to cut, merge or move to the appendix                             | `tighten-paper`  |
-| what a reader with no context understood from your last edit, sentence by sentence | `cold-read-diff` |
-| the compiled pages as images, to read on a screen or a phone                       | `render-paper`   |
+| you get                                                                              | skill             |
+| ------------------------------------------------------------------------------------ | ----------------- |
+| a first draft from your results: claims sized, threats to validity written           | `draft-paper`     |
+| an outline where each section follows from the one before                            | `argument-arc`    |
+| a cut plan: what to cut, merge or move to the appendix                               | `tighten-paper`   |
+| what a reader with no context understood from your last edit, sentence by sentence   | `cold-read-diff`  |
+| an unclear passage rewritten, checked by a reader with no context, every number kept | `rewrite-unclear` |
+| the compiled pages as images, to read on a screen or a phone                         | `render-paper`    |
 
 ## 5 · Review
 

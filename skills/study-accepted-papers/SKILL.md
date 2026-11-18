@@ -5,7 +5,7 @@ context: fork
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:607eaf7930ecaf30 compiled from skills/study-accepted-papers/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:9e20c6ebfac26459 compiled from skills/study-accepted-papers/SKILL.md.spec.ts -->
 
 # study-accepted-papers — what this venue rewards, measured on its own papers
 
@@ -42,7 +42,7 @@ not start until the author answers (or the caller already passed a mode).
 | **A idea** | an idea and a target venue; no paper source | the venue's winners against its ordinary papers | what this venue rewards, written as **requirements for the study**: what the oracle is, which stated belief the claim targets, which factor must be a column | L1 (+ L0) |
 | **B design** | a planned claim and measurements (the `frame` row, a design note in `research/`); no text | the planned claim and evidence against M1–M10 | **design gaps before anything runs** ("the headline rests on model labels", "no named belief") | L1 + the M1–M10 check of the plan |
 | **C draft** | the paper's text | the draft against M1–M10 and the deep reads | the **scorecard**: pass / partial / fail per mechanism with `file:line`, blockers with cost and owner, a plan, probabilities against stated base rates | L2 + L3 |
-| **D final** | near-final text, the deadline close | the abstract and introduction, sentence by sentence, against the closest winners | **wording**: the denominator in every claim sentence, the named belief, no drift between abstract and body | L3, wording only |
+| **D final** | near-final text, the deadline close | the abstract and introduction, sentence by sentence, against the closest winners | **wording**: the denominator in every claim sentence, the named belief, no drift between abstract and body; the sentences to change go to `rewrite-unclear` | L3, wording only |
 
 Suggest from the project: no `paper.tex` → A, or B if a claim is already written down; `paper.tex`
 with a body → C; the current cycle's submission deadline within about a week → D. Say why you suggest it

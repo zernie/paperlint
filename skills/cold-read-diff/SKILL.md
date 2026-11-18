@@ -4,7 +4,7 @@ description: "Send just-changed paper prose to two readers with NO context — a
 allowed-tools: [Bash, Read, Write, Agent]
 ---
 
-<!-- vigiles:sha256:ec00d6dc839ca468 compiled from skills/cold-read-diff/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:b1bfa3a3e8407716 compiled from skills/cold-read-diff/SKILL.md.spec.ts -->
 
 # cold-read-diff — the reader who cannot fake understanding
 
@@ -117,10 +117,11 @@ only model calls are the two readers. They start in the background, so you keep 
 5. **Write the report, relay the table.** Save both answers verbatim, with the extract, to
    `reviews/<date>-cold-read-diff.md` in the paper's folder. Show the author at most 15 lines:
    the count, the report's path, and one row per finding (the first ten).
-6. **The author decides the fixes.** The read changes nothing in the paper and builds nothing.
-   Apply a fix only when asked, or when your task already was "fix the prose", and then as a
-   rewrite of the whole thought, never an excision (see the rule below). Record each finding in
-   the report's frontmatter once it is decided.
+6. **The author decides the fixes; `rewrite-unclear` writes them.** The read changes nothing in
+   the paper and builds nothing. When the author asks for fixes, or your task already was "fix the
+   prose", hand the rows to `rewrite-unclear`, the one skill that rewrites for clarity: each row's
+   paragraph, its verdict and the reader's words. Record each finding in the report's frontmatter
+   once it is decided.
 7. **Confirm once, on the fix.** Run steps 1–5 again on the rewritten paragraphs. An edit is not
    done until the engineer parses the replacement AND the reviewer finds its owner and its
    register. A fix for the engineer that goes colloquial is a new `REGISTER` finding, and the
@@ -171,15 +172,6 @@ findings:
   agent rules files". Every sentence of background handed to the reader is a sentence of confusion
   they will no longer report. The one exception is the venue's name, given to the reviewer persona:
   judging register without knowing the venue is guessing.
-- 🔴 **A fix that removes the flagged construction and keeps the compression is not a fix.** Proven
-  twice in one hour: *"not through any defect in how we write it, but because that is what English
-  is"* → *"that is what English is for"* (tic gone, meaning inverted into nonsense); *"the agent
-  turns out not to be the weak link"* → *"The agent obeys"* (three words, zero flags, wrong finding).
-  Rewrite the **thought** in plain words. The tic is usually a symptom of a compressed idea, and
-  decompressing removes it as a side effect.
-- **Length is not the constraint here — meaning is.** If plain language needs more words, take them
-  and pay from an appendix, which is outside the page limit. Paying by shortening another sentence
-  is what created the problem.
 - **`CANNOT PARSE` is a result, not a failure of the reader.** Never argue with it. The author's
   ability to understand his own sentence is not evidence about anyone else's.
 - **Run it on your own fixes too.** The author is the least qualified judge of whether his repair
@@ -187,6 +179,7 @@ findings:
 
 ## Compose with
 
+- `rewrite-unclear` — writes the fixes for the rows this read returns; step 7 confirms them.
 - `grade-paper-writing` — the batch readability gate; this is its continuous counterpart. That one
   produces a stall inventory over the whole paper; this one asks whether the last edit means anything.
 - `tighten-paper` — structural cuts. Note the interaction: a tighten pass that pays for an addition
