@@ -2,7 +2,8 @@
 
 A paper moves through eight stages ([the flow](#the-flow)). Each stage writes into one
 place, and a check guards that place. This page is the map: the places, who writes each one, and the
-moment each check runs. The skills, stage by stage: [`skills.md`](skills.md).
+moment each check runs. The skills, stage by stage: [`skills.md`](skills.md); which skill hands
+work to which, generated from the skills themselves: [`pipeline.md`](pipeline.md).
 
 ## The flow
 

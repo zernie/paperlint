@@ -4,6 +4,17 @@
 // up front, two labelled corpora, and the results' homes (the shared venue corpus, the scorecard
 // section of PIPELINE-STATUS.md, dated reports, the `venuebar` row, the references beside this file).
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
+import analyzeSiblingPaper from "../analyze-sibling-paper/SKILL.md.spec.ts";
+import argumentArc from "../argument-arc/SKILL.md.spec.ts";
+import buildBenchmark from "../build-benchmark/SKILL.md.spec.ts";
+import extendPaper from "../extend-paper/SKILL.md.spec.ts";
+import hardenPaper from "../harden-paper/SKILL.md.spec.ts";
+import paperAdversarialReview from "../paper-adversarial-review/SKILL.md.spec.ts";
+import pcPanelReview from "../pc-panel-review/SKILL.md.spec.ts";
+import planPaperTimeline from "../plan-paper-timeline/SKILL.md.spec.ts";
+import rewriteUnclear from "../rewrite-unclear/SKILL.md.spec.ts";
+import verifyCitations from "../verify-citations/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "study-accepted-papers",
@@ -191,3 +202,19 @@ weak accept, so check these first); the **review criteria**; the **award criteri
 - \`extend-paper\` — the home of every expensive lever deferred past this submission.
 `,
 });
+
+export const flow = {
+  stage: "venue",
+  handsTo: () => [
+    argumentArc,
+    buildBenchmark,
+    rewriteUnclear,
+    verifyCitations,
+    planPaperTimeline,
+    analyzeSiblingPaper,
+    paperAdversarialReview,
+    pcPanelReview,
+    hardenPaper,
+    extendPaper,
+  ],
+} satisfies Flow;

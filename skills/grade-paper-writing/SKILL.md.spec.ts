@@ -5,6 +5,10 @@
 // `SkillSpec` in vigiles branch `claude/skill-disallowed-tools` and is not in a release
 // this repo installs, so writing one here would not compile.
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
+import argumentArc from "../argument-arc/SKILL.md.spec.ts";
+import renderPaper from "../render-paper/SKILL.md.spec.ts";
+import rewriteUnclear from "../rewrite-unclear/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "grade-paper-writing",
@@ -478,3 +482,9 @@ was grounded by dissecting Peyton Jones / McEnerney / Gopen & Swan and honestly 
 (Attention = impact-not-prose; Trusting Trust / Carlini / Greshake = the real craft models), then applied
 as the instrument that graded the rewritten paper.`,
 });
+
+export const flow = {
+  stage: "review",
+  handsTo: () => [rewriteUnclear],
+  loopsBackTo: () => [renderPaper, argumentArc],
+} satisfies Flow;

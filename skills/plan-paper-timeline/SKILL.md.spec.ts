@@ -5,6 +5,9 @@
 // `SkillSpec` in vigiles branch `claude/skill-disallowed-tools` and is not in a release
 // this repo installs, so writing one here would not compile.
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
+import findVenue from "../find-venue/SKILL.md.spec.ts";
+import submitPaper from "../submit-paper/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "plan-paper-timeline",
@@ -162,3 +165,9 @@ This session scheduled two real papers with spacing rather than back-to-back: **
 (submission 24 Jul). Nine days apart, deliberately staggered so notifications and any camera-ready work
 don't collapse into one pre-filing month — the FILING-SPACING rule applied in practice, not in theory.`,
 });
+
+export const flow = {
+  stage: "venue",
+  handsTo: () => [submitPaper],
+  loopsBackTo: () => [findVenue],
+} satisfies Flow;

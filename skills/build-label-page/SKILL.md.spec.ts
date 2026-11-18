@@ -1,6 +1,10 @@
 // Compiled to SKILL.md by `vigiles compile`. Edit THIS file, never the markdown.
 import { experimental_skill } from "vigiles/spec";
 import { COMMANDS } from "./scripts/label-page-commands.ts";
+import type { Flow } from "../../scripts/pipeline.ts";
+import buildBenchmark from "../build-benchmark/SKILL.md.spec.ts";
+import draftPaper from "../draft-paper/SKILL.md.spec.ts";
+import labelAgentRuns from "../label-agent-runs/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "build-label-page",
@@ -210,3 +214,9 @@ Do not iterate on a page you cannot see.
 - **submit-paper** — a published artifact page is not anonymous. Do not link it from an anonymized
   submission; the exported JSON is what goes into the reproduction artifact.`,
 });
+
+export const flow = {
+  stage: "study",
+  handsTo: () => [draftPaper],
+  loopsBackTo: () => [buildBenchmark, labelAgentRuns],
+} satisfies Flow;

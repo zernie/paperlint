@@ -1,5 +1,9 @@
 import { experimental_skill, file, prose } from "vigiles/spec";
 import { COMMANDS } from "./scripts/grid-guard-commands.ts";
+import type { Flow } from "../../scripts/pipeline.ts";
+import buildLabelPage from "../build-label-page/SKILL.md.spec.ts";
+import labelAgentRuns from "../label-agent-runs/SKILL.md.spec.ts";
+import osfArtifactUpload from "../osf-artifact-upload/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "run-agent-grid",
@@ -194,3 +198,8 @@ any stack the fix touched, then resume. A harness change is an addendum like any
   registry and the smoke before the first counted run.
 `,
 });
+
+export const flow = {
+  stage: "study",
+  handsTo: () => [labelAgentRuns, buildLabelPage, osfArtifactUpload],
+} satisfies Flow;

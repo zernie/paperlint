@@ -7,6 +7,8 @@
 // subagents. What it does is measured with a real model in `cold-read-behaviour.eval.ts`.
 import { experimental_skill } from "vigiles/spec";
 import { CLOSING, ENGINEER, OPENING, reviewer } from "./scripts/readers.ts";
+import type { Flow } from "../../scripts/pipeline.ts";
+import rewriteUnclear from "../rewrite-unclear/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "cold-read-diff",
@@ -190,3 +192,8 @@ Built 2026-08-05, the day before the \`the reference paper\` deadline, after the
 found eleven unreadable passages in twenty minutes — none of which any automated check had flagged,
 and several of which had been introduced that same morning by fixes to other automated checks.`,
 });
+
+export const flow = {
+  stage: "draft",
+  handsTo: () => [rewriteUnclear],
+} satisfies Flow;

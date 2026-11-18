@@ -5,6 +5,10 @@
 // fence yet: the field exists on `SkillSpec` as of the branch `claude/skill-disallowed-tools`
 // but is not in a release the consumer installs, so adding it here would not compile.
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
+import buildBenchmark from "../build-benchmark/SKILL.md.spec.ts";
+import rewriteUnclear from "../rewrite-unclear/SKILL.md.spec.ts";
+import sweepDesignSpace from "../sweep-design-space/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "argument-arc",
@@ -166,3 +170,8 @@ different ideas, references, and benchmarks at them"* — and got five local edi
 for length, a skill for sentences and a skill for defects; the question *does this paper carry the
 reader to one conclusion* belonged to nobody, and that is the one that failed.`,
 });
+
+export const flow = {
+  stage: "draft",
+  handsTo: () => [rewriteUnclear, buildBenchmark, sweepDesignSpace],
+} satisfies Flow;

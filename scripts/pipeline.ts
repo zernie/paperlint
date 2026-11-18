@@ -20,13 +20,28 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { DepGraph, type DepGraphCycleError } from "dependency-graph";
+import { DepGraph } from "dependency-graph";
 import { z } from "zod";
 import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
 import { JOBS } from "../skills/jobs.ts";
 
-/** The stages of `docs/skills.md`, in order, with the title each subgraph shows. */
-const STAGE_TITLES = {
+/** The stages of `docs/skills.md`, in order. */
+const STAGES = [
+  "across",
+  "idea",
+  "venue",
+  "study",
+  "draft",
+  "review",
+  "submit",
+  "camera-ready",
+  "extend",
+] as const;
+
+export type Stage = (typeof STAGES)[number];
+
+/** The title each stage's subgraph shows. */
+const STAGE_TITLES: Readonly<Record<Stage, string>> = {
   across: "Across every stage",
   idea: "1 · Idea",
   venue: "2 · Venue",
@@ -36,10 +51,7 @@ const STAGE_TITLES = {
   submit: "6 · Submit",
   "camera-ready": "7 · Camera-ready",
   extend: "8 · Extend",
-} as const;
-
-export type Stage = keyof typeof STAGE_TITLES;
-const STAGES = Object.keys(STAGE_TITLES) as readonly Stage[];
+};
 
 /** What a skill spec's default export carries that this script reads. */
 export interface SkillSpec {
@@ -50,7 +62,7 @@ export interface SkillSpec {
 export interface Flow {
   readonly stage: Stage;
   readonly handsTo: () => readonly SkillSpec[];
-  readonly loopsBackTo?: () => readonly SkillSpec[];
+  readonly loopsBackTo?: (() => readonly SkillSpec[]) | undefined;
 }
 
 /** A skill folder as read from disk: its name, its flow (if the spec exports one) and its SKILL.md. */
@@ -67,12 +79,13 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = join("docs", "pipeline.md");
 const SPEC = "SKILL.md.spec.ts";
 
+const CycleError = z.object({ cyclePath: z.array(z.string()) });
 const isFunction = (v: unknown): v is () => unknown => typeof v === "function";
 const SpecModule = z.object({
   default: z.object({ name: z.string() }),
   flow: z
     .object({
-      stage: z.enum(STAGES as [Stage, ...Stage[]]),
+      stage: z.enum(STAGES),
       handsTo: z.custom<() => readonly SkillSpec[]>(isFunction),
       loopsBackTo: z.custom<() => readonly SkillSpec[]>(isFunction).optional(),
     })
@@ -115,9 +128,7 @@ export function missing(skills: readonly Skill[]): string[] {
     skills.flatMap((s) =>
       of(s)
         .filter((t) => !names.has(t))
-        .map(
-          (t) => `"${s.name}" ${verb} "${t}", which is not a skill folder`,
-        ),
+        .map((t) => `"${s.name}" ${verb} "${t}", which is not a skill folder`),
     );
   return [
     ...skills
@@ -131,19 +142,23 @@ export function missing(skills: readonly Skill[]): string[] {
 /** Check 2: the first cycle in the hands-to arrows, as a message naming its path; loops back excluded. */
 export function findCycle(skills: readonly Skill[]): string | undefined {
   const graph = new DepGraph<string>({ circular: false });
-  skills.forEach((s) => graph.addNode(s.name));
-  skills.forEach((s) =>
+  skills.forEach((s) => {
+    graph.addNode(s.name);
+  });
+  skills.forEach((s) => {
     handsTo(s)
       .filter((t) => graph.hasNode(t))
-      .forEach((t) => graph.addDependency(s.name, t)),
-  );
+      .forEach((t) => {
+        graph.addDependency(s.name, t);
+      });
+  });
   try {
     graph.overallOrder();
     return undefined;
   } catch (e) {
     // `overallOrder` on a graph built only from `addNode` and `addDependency` between existing
-    // nodes throws one thing: the cycle, with its path.
-    const { cyclePath } = e as DepGraphCycleError;
+    // nodes throws one thing: `DepGraphCycleError`, with the cycle's path.
+    const { cyclePath } = CycleError.parse(e);
     return `cycle in handsTo: ${cyclePath.join(" → ")} (mark the edge that returns as loopsBackTo)`;
   }
 }
@@ -161,7 +176,10 @@ export function unnamedTargets(skills: readonly Skill[]): string[] {
       ...loopsBackTo(s).map((t) => ["loops back to", t] as const),
     ]
       .filter(([, t]) => !named.has(t))
-      .map(([verb, t]) => `${s.name} ${verb} ${t}, but its SKILL.md never names it`);
+      .map(
+        ([verb, t]) =>
+          `${s.name} ${verb} ${t}, but its SKILL.md never names it`,
+      );
   });
 }
 
@@ -195,12 +213,12 @@ const id = (name: string): string => name.replaceAll("-", "_");
 
 /** A job key `find unclear sentences/the last edit` as a box line: `find unclear sentences (the last edit)`. */
 const jobLine = (job: string): string => {
-  const [what, scope] = job.split("/");
-  return scope === undefined ? job : `${what} (${scope})`;
+  const slash = job.indexOf("/");
+  return slash < 0 ? job : `${job.slice(0, slash)} (${job.slice(slash + 1)})`;
 };
 
-/** `docs/pipeline.md`: a subgraph per stage, a box per skill with its jobs, then the arrows. */
-export function render(skills: readonly Skill[], jobs: Jobs): string {
+/** The Mermaid lines: a subgraph per stage with a box per skill listing its jobs, then the arrows. */
+function flowchart(skills: readonly Skill[], jobs: Jobs): string[] {
   const owned = (name: string) =>
     Object.entries(jobs)
       .filter(([, owner]) => owner?.name === name)
@@ -209,17 +227,23 @@ export function render(skills: readonly Skill[], jobs: Jobs): string {
     `    ${id(s.name)}["${[`<b>${s.name}</b>`, ...owned(s.name)].join("<br/>")}"]`;
   const inStage = (stage: Stage) =>
     skills.filter((s) => s.flow?.stage === stage);
-  const groups = STAGES.filter((stage) => inStage(stage).length > 0).flatMap(
-    (stage) => [
-      `  subgraph ${id(stage)}["${STAGE_TITLES[stage]}"]`,
+  return [
+    "flowchart TB",
+    ...STAGES.filter((stage) => inStage(stage).length > 0).flatMap((stage) => [
+      // `stage_`: the stage `camera-ready` and the skill `camera-ready` would share an id.
+      `  subgraph stage_${id(stage)}["${STAGE_TITLES[stage]}"]`,
       ...inStage(stage).map(box),
       "  end",
-    ],
-  );
-  const arrows = skills.flatMap((s) => [
-    ...handsTo(s).map((t) => `  ${id(s.name)} --> ${id(t)}`),
-    ...loopsBackTo(s).map((t) => `  ${id(s.name)} -.-> ${id(t)}`),
-  ]);
+    ]),
+    ...skills.flatMap((s) => [
+      ...handsTo(s).map((t) => `  ${id(s.name)} --> ${id(t)}`),
+      ...loopsBackTo(s).map((t) => `  ${id(s.name)} -.-> ${id(t)}`),
+    ]),
+  ];
+}
+
+/** `docs/pipeline.md`: what the diagram is and where it comes from, then the diagram. */
+export function render(skills: readonly Skill[], jobs: Jobs): string {
   const count = (of: (s: Skill) => readonly string[]) =>
     String(skills.reduce((n, s) => n + of(s).length, 0));
   return [
@@ -236,47 +260,54 @@ export function render(skills: readonly Skill[], jobs: Jobs): string {
     "[`skills.md`](skills.md).",
     "",
     "```mermaid",
-    "flowchart TB",
-    ...groups,
-    ...arrows,
+    ...flowchart(skills, jobs),
     "```",
     "",
   ].join("\n");
 }
 
+/** What `main` reads and writes through; a test replaces any of them. */
+interface Deps {
+  readonly root: string;
+  readonly load: (root: string) => Promise<readonly Skill[]>;
+  readonly jobs: Jobs;
+  readonly log: (line: string) => void;
+  readonly err: (line: string) => void;
+}
+
+const DEPS: Deps = {
+  root: ROOT,
+  load: loadSkills,
+  jobs: JOBS,
+  log: console.log,
+  err: console.error,
+};
+
+/** `--check`: 0 when the file on disk is `text`, else 1 naming the fix. */
+function compare(path: string, text: string, { log, err }: Deps): number {
+  const current = existsSync(path) && readFileSync(path, "utf8") === text;
+  if (current) log(`${OUT} is current`);
+  else err(`${OUT} is stale: run npm run pipeline`);
+  return current ? 0 : 1;
+}
+
 /** Write `docs/pipeline.md`, or with `--check` compare it. Refuses a broken pipeline either way. */
 export async function main(
   argv: readonly string[],
-  {
-    root = ROOT,
-    load = loadSkills,
-    jobs = JOBS,
-    log = console.log,
-    err = console.error,
-  }: {
-    root?: string;
-    load?: (root: string) => Promise<readonly Skill[]>;
-    jobs?: Jobs;
-    log?: (line: string) => void;
-    err?: (line: string) => void;
-  } = {},
+  overrides: Partial<Deps> = {},
 ): Promise<number> {
-  const skills = await load(root);
-  const found = problems(skills, jobs);
-  if (found.length > 0) {
-    found.forEach((p) => err(p));
-    return 1;
-  }
-  const text = render(skills, jobs);
-  const path = join(root, OUT);
-  if (argv.includes("--check")) {
-    const current = existsSync(path) && readFileSync(path, "utf8") === text;
-    if (current) log(`${OUT} is current`);
-    else err(`${OUT} is stale: run npm run pipeline`);
-    return current ? 0 : 1;
-  }
+  const deps = { ...DEPS, ...overrides };
+  const skills = await deps.load(deps.root);
+  const found = problems(skills, deps.jobs);
+  found.forEach((p) => {
+    deps.err(p);
+  });
+  if (found.length > 0) return 1;
+  const text = render(skills, deps.jobs);
+  const path = join(deps.root, OUT);
+  if (argv.includes("--check")) return compare(path, text, deps);
   writeFileSync(path, text);
-  log(`wrote ${OUT}`);
+  deps.log(`wrote ${OUT}`);
   return 0;
 }
 

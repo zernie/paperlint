@@ -5,6 +5,9 @@
 // `SkillSpec` in vigiles branch `claude/skill-disallowed-tools` and is not in a release
 // this repo installs, so writing one here would not compile.
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
+import gradePaperWriting from "../grade-paper-writing/SKILL.md.spec.ts";
+import rewriteUnclear from "../rewrite-unclear/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "tighten-paper",
@@ -343,3 +346,8 @@ a sentence-level readability pass needs (cut a TMI section → the core mechanis
 - Cutting changes claims by omission. Anything cut/folded still gets the claim-preservation diff (the \`claims\` row) — a
   removed hedge or caveat is a claim change.`,
 });
+
+export const flow = {
+  stage: "draft",
+  handsTo: () => [gradePaperWriting, rewriteUnclear],
+} satisfies Flow;

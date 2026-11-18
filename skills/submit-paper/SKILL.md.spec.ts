@@ -5,6 +5,12 @@
 // `SkillSpec` in vigiles branch `claude/skill-disallowed-tools` and is not in a release
 // this repo installs, so writing one here would not compile.
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
+import osfArtifactUpload from "../osf-artifact-upload/SKILL.md.spec.ts";
+import paperAdversarialReview from "../paper-adversarial-review/SKILL.md.spec.ts";
+import pcPanelReview from "../pc-panel-review/SKILL.md.spec.ts";
+import renderPaper from "../render-paper/SKILL.md.spec.ts";
+import submissionPortal from "../submission-portal/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "submit-paper",
@@ -196,3 +202,9 @@ artifact hosted on an OSF anonymized view-only link (no supplementary field at t
 ready-for-review. The friction points here — no supplementary slot, 4open needing a repo, the abstract
 re-paste, "ready for review" being a separate step, the PDF-only rule — are the ones that cost time.`,
 });
+
+export const flow = {
+  stage: "submit",
+  handsTo: () => [osfArtifactUpload, submissionPortal],
+  loopsBackTo: () => [pcPanelReview, paperAdversarialReview, renderPaper],
+} satisfies Flow;

@@ -5,6 +5,18 @@
 // `SkillSpec` in vigiles branch `claude/skill-disallowed-tools` and is not in a release
 // this repo installs, so writing one here would not compile.
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
+import analyzeSiblingPaper from "../analyze-sibling-paper/SKILL.md.spec.ts";
+import argumentArc from "../argument-arc/SKILL.md.spec.ts";
+import extendPaper from "../extend-paper/SKILL.md.spec.ts";
+import gradePaperWriting from "../grade-paper-writing/SKILL.md.spec.ts";
+import paperAdversarialReview from "../paper-adversarial-review/SKILL.md.spec.ts";
+import pcPanelReview from "../pc-panel-review/SKILL.md.spec.ts";
+import renderPaper from "../render-paper/SKILL.md.spec.ts";
+import rewriteUnclear from "../rewrite-unclear/SKILL.md.spec.ts";
+import submitPaper from "../submit-paper/SKILL.md.spec.ts";
+import tightenPaper from "../tighten-paper/SKILL.md.spec.ts";
+import verifyCitations from "../verify-citations/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "harden-paper",
@@ -306,3 +318,20 @@ preprint). If every gate passes and every axis is PASS/FIXED → hand off to \`s
 \`pc-panel-review\` + \`verify-citations\` + \`grade-paper-writing\` (called by this), \`render-paper\` (if LaTeX
 toolchain exists), \`submit-paper\` (downstream), \`extend-paper\` (the dropped refs / deferred axes live here).`,
 });
+
+export const flow = {
+  stage: "review",
+  handsTo: () => [
+    tightenPaper,
+    paperAdversarialReview,
+    pcPanelReview,
+    verifyCitations,
+    analyzeSiblingPaper,
+    gradePaperWriting,
+    rewriteUnclear,
+    renderPaper,
+    argumentArc,
+    submitPaper,
+    extendPaper,
+  ],
+} satisfies Flow;

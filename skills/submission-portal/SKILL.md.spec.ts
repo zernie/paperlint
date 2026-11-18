@@ -1,5 +1,6 @@
 // Compiled to SKILL.md by `vigiles compile`. Edit THIS file, never the markdown.
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
 
 export default experimental_skill({
   name: "submission-portal",
@@ -132,3 +133,8 @@ npx paperlint submission show papers/my-paper
 It does not decide whether the paper is ready (\`harden-paper\`), anonymize it, or set the fields the
 venue preset does not record — see \`submit-paper\`.`,
 });
+
+export const flow = {
+  stage: "submit",
+  handsTo: () => [],
+} satisfies Flow;

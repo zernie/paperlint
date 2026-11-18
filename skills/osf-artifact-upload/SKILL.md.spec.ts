@@ -5,6 +5,7 @@
 // `SkillSpec` in vigiles branch `claude/skill-disallowed-tools` and is not in a release
 // this repo installs, so writing one here would not compile.
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
 
 export default experimental_skill({
   name: "osf-artifact-upload",
@@ -63,3 +64,8 @@ and its decision file; and \`repro/README.md\` with the index regenerated (\`npx
 - If the artifact is stored unpacked (README.md, reproduce.py, data/…) rather than as a zip, replace each
   stale file the same way (each has its own \`links.upload\`).`,
 });
+
+export const flow = {
+  stage: "submit",
+  handsTo: () => [],
+} satisfies Flow;

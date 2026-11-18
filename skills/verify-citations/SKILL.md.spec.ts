@@ -5,6 +5,9 @@
 // `SkillSpec` in vigiles branch `claude/skill-disallowed-tools` and is not in a release
 // this repo installs, so writing one here would not compile.
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
+import analyzeSiblingPaper from "../analyze-sibling-paper/SKILL.md.spec.ts";
+import mapPriorWork from "../map-prior-work/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "verify-citations",
@@ -341,3 +344,9 @@ made them land:
   ablation evaluation of real command-guards rather than a new defense. Each of these was verified real,
   with correct venue/year, before submit.`,
 });
+
+export const flow = {
+  stage: "review",
+  handsTo: () => [analyzeSiblingPaper],
+  loopsBackTo: () => [mapPriorWork],
+} satisfies Flow;

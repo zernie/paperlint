@@ -5,6 +5,11 @@
 // `SkillSpec` in vigiles branch `claude/skill-disallowed-tools` and is not in a release
 // this repo installs, so writing one here would not compile.
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
+import buildBenchmark from "../build-benchmark/SKILL.md.spec.ts";
+import paperAdversarialReview from "../paper-adversarial-review/SKILL.md.spec.ts";
+import pcPanelReview from "../pc-panel-review/SKILL.md.spec.ts";
+import researchIdeate from "../research-ideate/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "sweep-design-space",
@@ -246,3 +251,13 @@ produced 24 candidates across 8 groups, of which the three least obvious came fr
 was reachable from the thread, and two of the thread's own front-runners turned out to be shipped
 already. The catalog exists so the next sweep starts from named constructs instead of from memory.`,
 });
+
+export const flow = {
+  stage: "idea",
+  handsTo: () => [
+    researchIdeate,
+    buildBenchmark,
+    paperAdversarialReview,
+    pcPanelReview,
+  ],
+} satisfies Flow;

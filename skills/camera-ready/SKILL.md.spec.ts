@@ -5,6 +5,8 @@
 // `SkillSpec` in vigiles branch `claude/skill-disallowed-tools` and is not in a release
 // this repo installs, so writing one here would not compile.
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
+import extendPaper from "../extend-paper/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "camera-ready",
@@ -143,3 +145,8 @@ accepted) and AISec "Safety Theater" (ships an anonymized artifact; hook names a
 disclosure to named maintainers owed before any de-anonymized public release). ORCID is identical
 across both so every indexed version resolves to one researcher.`,
 });
+
+export const flow = {
+  stage: "camera-ready",
+  handsTo: () => [extendPaper],
+} satisfies Flow;

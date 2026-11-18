@@ -88,12 +88,12 @@ describe("(a) every skill folder declares its flow, and nothing it names is miss
   });
 
   it("a handover to a skill that has no folder fails by name", () => {
-    expect(missing(planted({ "a-skill": { hands: ["gone-skill"] } }))).toEqual(
-      ['"a-skill" hands to "gone-skill", which is not a skill folder'],
-    );
-    expect(missing(planted({ "a-skill": { loops: ["gone-skill"] } }))).toEqual(
-      ['"a-skill" loops back to "gone-skill", which is not a skill folder'],
-    );
+    expect(missing(planted({ "a-skill": { hands: ["gone-skill"] } }))).toEqual([
+      '"a-skill" hands to "gone-skill", which is not a skill folder',
+    ]);
+    expect(missing(planted({ "a-skill": { loops: ["gone-skill"] } }))).toEqual([
+      '"a-skill" loops back to "gone-skill", which is not a skill folder',
+    ]);
   });
 });
 
@@ -171,8 +171,10 @@ describe("(c) docs/pipeline.md is the generator's output", () => {
     const deps = { root, load: () => Promise.resolve(REAL), jobs: JOBS };
     expect((await run(["--check"], deps)).code).toBe(1);
   });
+});
 
-  it("a broken pipeline is refused before anything is written", async () => {
+describe("main refuses a broken pipeline", () => {
+  it("before anything is written", async () => {
     const root = useTempDir("pipeline-broken-");
     const skills = planted({
       "a-skill": { hands: ["b-skill"], text: "b-skill" },

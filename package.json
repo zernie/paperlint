@@ -16,6 +16,7 @@
     "lint": "eslint --cache --cache-location node_modules/.cache/eslint/ .",
     "test:changed": "node scripts/test.ts --changed",
     "check": "node scripts/check.ts",
+    "pipeline": "node scripts/pipeline.ts",
     "refresh-deadlines": "node --conditions=paperlint-source scripts/refresh-deadlines/main.ts",
     "fmt": "prettier --write .",
     "fmt:check": "prettier --check ."

@@ -5,6 +5,13 @@
 // `SkillSpec` in vigiles branch `claude/skill-disallowed-tools` and is not in a release
 // this repo installs, so writing one here would not compile.
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
+import gradePaperWriting from "../grade-paper-writing/SKILL.md.spec.ts";
+import paperAdversarialReview from "../paper-adversarial-review/SKILL.md.spec.ts";
+import pcPanelReview from "../pc-panel-review/SKILL.md.spec.ts";
+import renderPaper from "../render-paper/SKILL.md.spec.ts";
+import rewriteUnclear from "../rewrite-unclear/SKILL.md.spec.ts";
+import verifyCitations from "../verify-citations/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "draft-paper",
@@ -130,3 +137,15 @@ prose QA to them.
   hostile review. Both papers win on precise claim-sizing and an honest threats section, not on the
   size of the effect.`,
 });
+
+export const flow = {
+  stage: "draft",
+  handsTo: () => [
+    gradePaperWriting,
+    rewriteUnclear,
+    renderPaper,
+    verifyCitations,
+    paperAdversarialReview,
+    pcPanelReview,
+  ],
+} satisfies Flow;

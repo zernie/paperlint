@@ -5,6 +5,10 @@
 // mode D, draft-paper) hands the passage here instead of carrying its own repair instructions.
 // The ten rules are what an author's accepted rewrites did, one rule per kind of change.
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
+import argumentArc from "../argument-arc/SKILL.md.spec.ts";
+import coldReadDiff from "../cold-read-diff/SKILL.md.spec.ts";
+import tightenPaper from "../tighten-paper/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "rewrite-unclear",
@@ -134,3 +138,9 @@ When the passage came from a report with \`findings\` frontmatter (\`cold-read-d
 - \`argument-arc\` — when step 1 fails because the section has no claim, the problem is the arc, not the sentence.
 `,
 });
+
+export const flow = {
+  stage: "draft",
+  handsTo: () => [],
+  loopsBackTo: () => [coldReadDiff, tightenPaper, argumentArc],
+} satisfies Flow;

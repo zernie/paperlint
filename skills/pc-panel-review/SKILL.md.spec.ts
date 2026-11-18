@@ -5,6 +5,9 @@
 // `SkillSpec` in vigiles branch `claude/skill-disallowed-tools` and is not in a release
 // this repo installs, so writing one here would not compile.
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
+import gradePaperWriting from "../grade-paper-writing/SKILL.md.spec.ts";
+import tightenPaper from "../tighten-paper/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "pc-panel-review",
@@ -275,3 +278,9 @@ accept and the artifact reproduces clean; don't loop past one confirming round.
   reproduction/anonymization leak — live in the ARTIFACT, so the artifact-runner + an ethics lens are
   non-optional at security venues.`,
 });
+
+export const flow = {
+  stage: "review",
+  handsTo: () => [],
+  loopsBackTo: () => [gradePaperWriting, tightenPaper],
+} satisfies Flow;
