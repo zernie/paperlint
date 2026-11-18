@@ -325,6 +325,7 @@ export const ruleDocsUrl = (
     | "contrast-frames"
     | "claim-emphasis"
     | "relation-markers"
+    | "negated-sentences"
     | "heading-case"
     | "max-paragraph-words"
     | "max-paragraph-numbers"

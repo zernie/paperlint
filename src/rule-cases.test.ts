@@ -287,7 +287,8 @@ const STATEMENT_TITLE = "LLM Usage Statement";
  * A double-blind venue on the IEEE template: the class options it requires, the section it requires
  * last, and one accepted paper of 10,000 words for the register bands. Its rates (contrast frames 4,
  * claims in bold 4, relation markers 64 per 10,000 words), widened by two Poisson standard
- * deviations, set the bands 0–8, 0–8 and 48–80.
+ * deviations, set the bands 0–8, 0–8 and 48–80; its 50 negated sentences of 500, 10%, set
+ * tex/negated-sentences' band at 7.2–12.8%.
  */
 const BLINDCONF = venuePreset("BlindConf", {
   extends: "paperlint:ieee-conference",
@@ -302,6 +303,8 @@ const BLINDCONF = venuePreset("BlindConf", {
         contrast_frames: 4,
         claim_emphasis: 4,
         relation_markers: 64,
+        sentences: 500,
+        negated_sentences: 50,
       },
     ],
   },
@@ -477,6 +480,15 @@ const blind = (body: string, cls = IEEE) =>
     tex(`\\section{Introduction}\n${body}\n${STATEMENT}`, cls),
     BLIND_PAPER,
   );
+/** A BlindConf paper that turns `tex/negated-sentences` on, which is off by default. */
+const blindNegation = (body: string) =>
+  paper(tex(`\\section{Introduction}\n${body}\n${STATEMENT}`, IEEE), {
+    ...BLIND_PAPER,
+    [`${P}/paperlint.json`]: JSON.stringify({
+      ...BLIND,
+      rules: { "tex/negated-sentences": "warn" },
+    }),
+  });
 
 // ── a paper that declares a talk: a preset of its own over ExampleConf, and synthetic media ──────
 
@@ -1397,6 +1409,19 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     reports: { tree: blind(FORMAL), file: TEX_FILE, severity: 1, line: 3 },
     silent: blind(LINKED),
   },
+  // Off by default; on in this paper's paperlint.json. FORMAL holds no negator (0%, below 7.2%);
+  // 25 negated sentences of 225 are 11.1%, inside the band.
+  "tex/negated-sentences": {
+    reports: {
+      tree: blindNegation(FORMAL),
+      file: TEX_FILE,
+      severity: 1,
+      line: 3,
+    },
+    silent: blindNegation(
+      formalWith(25, "The rule does not count this sentence twice."),
+    ),
+  },
   "bib/reachable-entry": {
     reports: {
       tree: inlineBuilt("@book{a,\n  title = {A},\n  year = {2026}\n}"),
@@ -1627,6 +1652,15 @@ describe("tex/max-caption-words is off by default", () => {
     expect(await ids(paper(captioned(120), CAPTIONS_ON))).toContain(
       "tex/max-caption-words",
     );
+  });
+});
+
+describe("tex/negated-sentences is off by default", () => {
+  it("a body with no negator against BlindConf's band produces nothing until the paper turns it on", async () => {
+    const ids = async (tree: Record<string, string>) =>
+      (await lintTree(tree)).map((m) => m.ruleId);
+    expect(await ids(blind(FORMAL))).not.toContain("tex/negated-sentences");
+    expect(await ids(blindNegation(FORMAL))).toContain("tex/negated-sentences");
   });
 });
 

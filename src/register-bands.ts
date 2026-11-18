@@ -8,6 +8,9 @@
  *                               is reported where it stands
  *   tex/relation-markers  warn  words naming how a sentence relates to the one before (because,
  *                               therefore, however, for example …) outside the band
+ *   tex/negated-sentences off   the share of the body's sentences that hold a negator (not, no,
+ *                               never, without …) outside the band — a percent of sentences, not
+ *                               a rate per words; off until a project turns it on
  *
  * ── WHY ──────────────────────────────────────────────────────────────────────────
  * Reviewers called a paper "too informal" and "a blogpost". Its text differed from the accepted
@@ -28,10 +31,14 @@ import {
   bodySentences,
   claimEmphasis,
   contrastFrames,
+  negatedSentences,
+  negationBandOf,
   rateOf,
   relationMarkers,
+  shareOf,
   wordsOf,
   type Band,
+  type BodySentence,
   type Occurrence,
   type RegisterAnchor,
   type RegisterMeasureName,
@@ -52,13 +59,21 @@ import type { VenueRuleDeps } from "./venue-rules.ts";
 /** What the three rules read: the preset store, the LaTeX reader, and the paper's files as the build recorded them. */
 export interface RegisterBandDeps extends VenueRuleDeps, ProseDeps {}
 
-export type RegisterBandRuleName =
+/** The band rules on by default: each a rate per 10,000 words. */
+export type WordBandRuleName =
   "contrast-frames" | "claim-emphasis" | "relation-markers";
 
-/** What one body measures for one rule: its words, the occurrences, where the body starts. */
+export type RegisterBandRuleName = WordBandRuleName | "negated-sentences";
+
+/**
+ * What one body measures for one rule: its words and sentences, the occurrences, their rate as the
+ * rule reads it (per 10,000 words, or a percent of sentences), where the body starts.
+ */
 export interface BodyMeasure {
   readonly words: number;
+  readonly sentences: number;
   readonly occurrences: readonly Occurrence[];
+  readonly rate: number;
   readonly at: Span | null;
 }
 
@@ -82,7 +97,8 @@ function dataOf(
   return {
     count: m.occurrences.length,
     words: m.words,
-    rate: fixed(rateOf(m.occurrences.length, m.words)),
+    sentences: m.sentences,
+    rate: fixed(m.rate),
     venue,
     min: fixed(band.min),
     max: fixed(band.max),
@@ -108,7 +124,7 @@ export function judgeBand(
   each: boolean,
 ): readonly Located[] {
   if (band === null || m.words < MIN_WORDS) return [];
-  const standing = standingOf(rateOf(m.occurrences.length, m.words), band);
+  const standing = standingOf(m.rate, band);
   if (standing === "within") return [];
   const data = dataOf(m, band, venue);
   const whole: Located = { messageId: standing, data, at: m.at };
@@ -125,29 +141,44 @@ export function judgeBand(
 const AGAINST =
   "{{rate}} per 10,000 words; {{venue}}'s {{anchors}} anchor papers measure {{anchorMin}}–{{anchorMax}}, and this rule warns outside {{min}}–{{max}}";
 
-/** The body as the measures read it: its prose, and the phrases emphasised in it (read on demand). */
+/** The band words of the share of sentences: a percent, and where the anchors put it. */
+const AGAINST_SHARE =
+  "{{rate}}% of its {{sentences}} sentences; {{venue}}'s {{anchors}} anchor papers measure {{anchorMin}}–{{anchorMax}}%, and this rule warns outside {{min}}–{{max}}%";
+
+/** The body as the measures read it: its sentences, and the phrases emphasised in it (read on demand). */
 interface Body {
-  readonly passages: readonly Passage[];
+  readonly sentences: readonly BodySentence[];
   readonly emphasis: () => readonly Emphasis[];
 }
 
 /** What each rule counts, how it reads the paper, and what it says. */
 interface Measure {
-  readonly name: RegisterMeasureName;
   readonly description: string;
   /** Above the band, report every occurrence where it stands. */
   readonly each: boolean;
   readonly count: (body: Body) => readonly Occurrence[];
+  /** The occurrences as a rate: per 10,000 words, or a percent of sentences. */
+  readonly rate: (count: number, words: number, sentences: number) => number;
+  /** The band the preset's anchors set for it; null when they set none. */
+  readonly band: (anchors: readonly RegisterAnchor[]) => Band | null;
   readonly messages: Readonly<Record<string, string>>;
 }
 
+/** A measure per 10,000 words, its band the anchors' counts of `name`. */
+const perWords = (
+  name: RegisterMeasureName,
+): Pick<Measure, "rate" | "band"> => ({
+  rate: (count, words) => rateOf(count, words),
+  band: (anchors) => bandOf(anchors, name),
+});
+
 const MEASURES: Readonly<Record<RegisterBandRuleName, Measure>> = {
   "contrast-frames": {
-    name: "contrast_frames",
+    ...perWords("contrast_frames"),
     description:
       "contrast frames («X, not Y», «rather than», «instead of») stay within the rate the venue's accepted papers show",
     each: true,
-    count: (b) => contrastFrames(bodySentences(b.passages)),
+    count: (b) => contrastFrames(b.sentences),
     messages: {
       above: `{{count}} contrast frames («X, not Y», «not X but Y», «rather than», «instead of», «as opposed to») — ${AGAINST}. First: {{examples}}. Say what the thing is and why, with the evidence; keep a frame only where a reader would otherwise assume the rejected alternative`,
       below: `{{count}} contrast frames — ${AGAINST}. A rewrite may have dropped relations the argument needs: check that each claim still says what it is set against`,
@@ -155,7 +186,7 @@ const MEASURES: Readonly<Record<RegisterBandRuleName, Measure>> = {
     },
   },
   "claim-emphasis": {
-    name: "claim_emphasis",
+    ...perWords("claim_emphasis"),
     description:
       "claims set in bold inside a sentence stay within the rate the venue's accepted papers show",
     each: true,
@@ -167,14 +198,26 @@ const MEASURES: Readonly<Record<RegisterBandRuleName, Measure>> = {
     },
   },
   "relation-markers": {
-    name: "relation_markers",
+    ...perWords("relation_markers"),
     description:
       "words that name how a sentence relates to the one before (because, therefore, however, for example) stay within the rate the venue's accepted papers show",
     each: false,
-    count: (b) => relationMarkers(bodySentences(b.passages)),
+    count: (b) => relationMarkers(b.sentences),
     messages: {
       below: `{{count}} words name how a sentence relates to the one before (because, therefore, however, in contrast, for example, that is …) — ${AGAINST}. Where two sentences stand side by side, say whether the second is the cause, the consequence, an example or a limit of the first`,
       above: `{{count}} relation markers — ${AGAINST}. First: {{examples}}`,
+    },
+  },
+  "negated-sentences": {
+    description:
+      "the share of the body's sentences that hold a negator (not, no, never, without, cannot …) stays within the share the venue's accepted papers show. Off until a project turns it on",
+    each: false,
+    count: (b) => negatedSentences(b.sentences),
+    rate: (count, _words, sentences) => shareOf(count, sentences),
+    band: negationBandOf,
+    messages: {
+      above: `{{count}} sentences hold a negator (not, no, never, without, cannot …) — ${AGAINST_SHARE}. First: {{examples}}. Say what a thing is and does; keep a negation where a reader would otherwise assume the opposite`,
+      below: `{{count}} sentences hold a negator — ${AGAINST_SHARE}`,
     },
   },
 };
@@ -187,16 +230,30 @@ export function measureBody(
 ): BodyMeasure {
   const passages = latex.bodyProse(src);
   const [first] = passages;
-  const body: Body = { passages, emphasis: () => latex.bodyEmphasis(src) };
+  const body = bodyOf(passages, src, latex);
+  const words = wordsOf(body.sentences);
+  const occurrences = MEASURES[rule].count(body);
   return {
-    words: wordsOf(bodySentences(passages)),
-    occurrences: MEASURES[rule].count(body),
+    words,
+    sentences: body.sentences.length,
+    occurrences,
+    rate: MEASURES[rule].rate(occurrences.length, words, body.sentences.length),
     at: first === undefined ? null : startOf(first),
   };
 }
 
+/** The body as the measures read it. */
+const bodyOf = (
+  passages: readonly Passage[],
+  src: string,
+  latex: LatexReader,
+): Body => ({
+  sentences: bodySentences(passages),
+  emphasis: () => latex.bodyEmphasis(src),
+});
+
 /** Which rule counts each measure an anchor records. */
-const RULE_OF: Readonly<Record<RegisterMeasureName, RegisterBandRuleName>> = {
+const RULE_OF: Readonly<Record<RegisterMeasureName, WordBandRuleName>> = {
   contrast_frames: "contrast-frames",
   claim_emphasis: "claim-emphasis",
   relation_markers: "relation-markers",
@@ -211,17 +268,20 @@ export function anchorOf(
   src: string,
   latex: LatexReader,
 ): RegisterAnchor {
-  const passages = latex.bodyProse(src);
-  const body: Body = { passages, emphasis: () => latex.bodyEmphasis(src) };
+  const body = bodyOf(latex.bodyProse(src), src, latex);
   const count = (m: RegisterMeasureName): number =>
     MEASURES[RULE_OF[m]].count(body).length;
   return {
     paper,
-    words: wordsOf(bodySentences(passages)),
+    words: wordsOf(body.sentences),
     counts: {
       contrast_frames: count("contrast_frames"),
       claim_emphasis: count("claim_emphasis"),
       relation_markers: count("relation_markers"),
+    },
+    negation: {
+      sentences: body.sentences.length,
+      negated: negatedSentences(body.sentences).length,
     },
   };
 }
@@ -235,7 +295,7 @@ function judgePaper(
   const p = paperPreset(dirname(context.filename), deps);
   if (p.kind !== "resolved") return;
   const measure = MEASURES[name];
-  const band = bandOf(p.preset.registerAnchors, measure.name);
+  const band = measure.band(p.preset.registerAnchors);
   if (band === null) return;
   const sc = context.sourceCode;
   const paper = readPaper(context.filename, sc.raw ?? sc.text, deps);
@@ -268,7 +328,7 @@ function rule(
   };
 }
 
-/** The three rules, as rules of the `tex` plugin. */
+/** The four rules, as rules of the `tex` plugin. */
 export function registerBandRules(
   deps: RegisterBandDeps,
 ): Readonly<Record<RegisterBandRuleName, TexRuleModule>> {
@@ -276,12 +336,17 @@ export function registerBandRules(
     "contrast-frames": rule("contrast-frames", deps),
     "claim-emphasis": rule("claim-emphasis", deps),
     "relation-markers": rule("relation-markers", deps),
+    "negated-sentences": rule("negated-sentences", deps),
   };
 }
 
-/** The level each rule is on at in paperlint's own config, for every `paper.tex`. */
+/**
+ * The level each rule is on at in paperlint's own config, for every `paper.tex`. `tex/negated-sentences`
+ * is not here: a writing measure added after the default set was fixed to what the venue decides,
+ * it ships off.
+ */
 export const REGISTER_BAND_RULE_LEVELS: Readonly<
-  Record<`tex/${RegisterBandRuleName}`, "warn">
+  Record<`tex/${WordBandRuleName}`, "warn">
 > = {
   "tex/contrast-frames": "warn",
   "tex/claim-emphasis": "warn",

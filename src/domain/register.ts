@@ -42,6 +42,14 @@ export interface RegisterAnchor {
   readonly paper: string;
   readonly words: number;
   readonly counts: Readonly<Record<RegisterMeasureName, number>>;
+  /**
+   * Its body's sentences, and how many hold a negator (`negatedSentences`). A share of sentences,
+   * not a rate per words; absent from a preset written before the measure, which sets no band for it.
+   */
+  readonly negation?: {
+    readonly sentences: number;
+    readonly negated: number;
+  };
 }
 
 /** How far the band reaches past the anchors: this many Poisson standard deviations. */
@@ -64,25 +72,27 @@ export interface Band {
 }
 
 /** One anchor's rate of a measure, and how far one standard deviation of its count reaches. */
-const anchorRate = (a: RegisterAnchor, m: RegisterMeasureName) => {
-  const count = a.counts[m];
-  return {
-    rate: rateOf(count, a.words),
-    sd: rateOf(Math.sqrt(Math.max(count, 1)), a.words),
-  };
-};
+interface Point {
+  readonly rate: number;
+  readonly sd: number;
+}
 
-/** The band the anchors set for a measure; null when there are no anchors. */
-export function bandOf(
-  anchors: readonly RegisterAnchor[],
-  m: RegisterMeasureName,
-): Band | null {
-  const rates = anchors.map((a) => anchorRate(a, m));
-  const low = rates.reduce<(typeof rates)[number] | null>(
+/**
+ * A count over a base, as a rate `per` units of it, with its Poisson standard deviation. A preset's
+ * schema requires a base of at least one word and one sentence.
+ */
+const pointOf = (count: number, base: number, per: number): Point => ({
+  rate: (per * count) / base,
+  sd: (per * Math.sqrt(Math.max(count, 1))) / base,
+});
+
+/** The band a set of anchors' points sets; null when there is none. */
+function bandFrom(points: readonly Point[]): Band | null {
+  const low = points.reduce<Point | null>(
     (lo, r) => (lo === null || r.rate < lo.rate ? r : lo),
     null,
   );
-  const high = rates.reduce<(typeof rates)[number] | null>(
+  const high = points.reduce<Point | null>(
     (hi, r) => (hi === null || r.rate > hi.rate ? r : hi),
     null,
   );
@@ -92,9 +102,38 @@ export function bandOf(
     max: high.rate + NOISE_SDS * high.sd,
     anchorMin: low.rate,
     anchorMax: high.rate,
-    anchors: anchors.length,
+    anchors: points.length,
   };
 }
+
+/** The band the anchors set for a measure; null when there are no anchors. */
+export const bandOf = (
+  anchors: readonly RegisterAnchor[],
+  m: RegisterMeasureName,
+): Band | null =>
+  bandFrom(anchors.map((a) => pointOf(a.counts[m], a.words, PER)));
+
+/** Percent: a share of sentences is read per hundred. */
+export const PERCENT = 100;
+
+/** A share of `n` as a percent; 0 of none. */
+export const shareOf = (count: number, n: number): number =>
+  n === 0 ? 0 : (PERCENT * count) / n;
+
+/**
+ * The band the anchors set for the share of sentences holding a negator: over the anchors that
+ * record it, widened like every other band; null when none does.
+ */
+export const negationBandOf = (
+  anchors: readonly RegisterAnchor[],
+): Band | null =>
+  bandFrom(
+    anchors.flatMap((a) =>
+      a.negation === undefined
+        ? []
+        : [pointOf(a.negation.negated, a.negation.sentences, PERCENT)],
+    ),
+  );
 
 // ── sentences, as every register measure reads them ───────────────────────────────
 
@@ -191,6 +230,14 @@ const CONTRAST_FRAME = anyOf([
 const RELATION_MARKERS =
   /(?<![\p{L}])(?:therefore|thus|hence|consequently|as a result|because|since|this means|this implies|which explains|in turn|that is,|i\.e\.|in contrast|by contrast|however|nevertheless|nonetheless|whereas|in other words|for this reason|it follows|accordingly|specifically,|in particular,|for example|for instance|e\.g\.)(?![\p{L}])/giu;
 
+/**
+ * A negator: the list the grade-paper-writing script counted (not, no, none, never, cannot, n't,
+ * neither, nor, without, fail to, unable), whole words, case ignored. `n't` ends a word
+ * («don't», «isn't»), so it is matched there; the script's own pattern for it never matched.
+ */
+const NEGATOR =
+  /(?<![\p{L}])(?:not|no|none|never|cannot|neither|nor|without|unable|fail(?:s|ed)?\s+to)(?![\p{L}])|(?<=\p{L})n['’]t(?![\p{L}])/giu;
+
 /** How many characters of context an excerpt keeps on each side of a match. */
 const CONTEXT = 40;
 
@@ -236,6 +283,15 @@ export const contrastFrames = (
 export const relationMarkers = (
   ss: readonly BodySentence[],
 ): readonly Occurrence[] => occurrences(ss, RELATION_MARKERS);
+
+/**
+ * The sentences that hold a negator, one occurrence each: its first negator, with where it stands.
+ * What the share of negated sentences counts.
+ */
+export const negatedSentences = (
+  ss: readonly BodySentence[],
+): readonly Occurrence[] =>
+  ss.flatMap((s) => occurrences([s], NEGATOR).slice(0, 1));
 
 /** A phrase this long or longer states something rather than names it. */
 export const CLAIM_WORDS = 6;
