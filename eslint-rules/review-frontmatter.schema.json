@@ -26,7 +26,15 @@
           "enum": ["skill-defect", "missing-skill", "hook", "rule"]
         },
         "title": { "type": "string" },
-        "note": { "type": "string" }
+        "note": { "type": "string" },
+        "where": {
+          "description": "Where in the paper the finding is, such as paper.tex:83. Optional.",
+          "type": "string"
+        },
+        "found_by": {
+          "description": "The skill, rule or person that found it. Optional.",
+          "type": "string"
+        }
       },
       "additionalProperties": false,
       "if": { "properties": { "status": { "const": "open" } } },

@@ -6,9 +6,10 @@ import { describe, expect, it } from "vitest";
 import { ESLint } from "eslint";
 import markdown from "@eslint/markdown";
 import review, { errorsOf } from "./review-frontmatter.ts";
+import { parseFrontmatter } from "./frontmatter-record.ts";
 import sibling from "./sibling-frontmatter.ts";
 
-async function lint(text) {
+async function lint(text, rule = "review/frontmatter") {
   const eslint = new ESLint({
     overrideConfigFile: true,
     overrideConfig: [
@@ -18,7 +19,7 @@ async function lint(text) {
         language: "markdown/gfm",
         languageOptions: { frontmatter: "yaml" },
         rules: {
-          "review/frontmatter": "error",
+          [rule]: "error",
         },
       },
     ],
@@ -150,5 +151,119 @@ describe("sibling/frontmatter — the same mechanism, the package's own sibling-
     expect(await card(fm("read: skimmed"))).toEqual([
       "`read` must be one of: full, abstract, none",
     ]);
+  });
+});
+
+describe("review/frontmatter — the optional `where` and `found_by` fields", () => {
+  it("silent when a finding names where it was found and by what", async () => {
+    expect(
+      await lint(
+        fm(
+          "findings:\n  - id: 1\n    status: fixed\n    where: paper.tex:83\n    found_by: tex/register",
+        ),
+      ),
+    ).toEqual([]);
+  });
+
+  it("silent on an old record that has neither — every existing review stays valid", async () => {
+    expect(await lint(fm("findings:\n  - id: 1\n    status: fixed"))).toEqual(
+      [],
+    );
+  });
+
+  it("a `where` or `found_by` that is not a string is reported", async () => {
+    expect(
+      await lint(
+        fm(
+          "findings:\n  - id: 1\n    status: fixed\n    where: 83\n    found_by: [a]",
+        ),
+      ),
+    ).toEqual([
+      "`findings[0].where` should be string",
+      "`findings[0].found_by` should be string",
+    ]);
+  });
+});
+
+describe("review/findings-closed — an open finding is a finding", () => {
+  const closed = (text) => lint(text, "review/findings-closed");
+
+  it("🔴 reports each open finding once, naming its id, title and where", async () => {
+    expect(
+      await closed(
+        fm(
+          [
+            "findings:",
+            "  - id: 1",
+            "    status: open",
+            "    cause: rule",
+            "    title: Abstract overclaims",
+            "    where: paper.tex:83",
+            "  - id: 2",
+            "    status: fixed",
+            "  - id: x7",
+            "    status: open",
+            "    cause: hook",
+            "    title: Table 2 is unreferenced",
+            "  - id: 4",
+            "    status: open",
+            "    cause: rule",
+          ].join("\n"),
+        ),
+      ),
+    ).toEqual([
+      "finding 1 is still open: Abstract overclaims (paper.tex:83)",
+      "finding x7 is still open: Table 2 is unreferenced",
+      "finding 4 is still open",
+    ]);
+  });
+
+  it("quiet when every finding is fixed or wontfix", async () => {
+    expect(
+      await closed(
+        fm(
+          "findings:\n  - id: 1\n    status: fixed\n    title: a\n  - id: 2\n    status: wontfix\n    note: by design",
+        ),
+      ),
+    ).toEqual([]);
+  });
+
+  it("quiet on a review with no findings, no frontmatter, an empty list or unparseable YAML", async () => {
+    expect(await closed(fm("title: old review"))).toEqual([]);
+    expect(await closed("# no header\n")).toEqual([]);
+    expect(await closed(fm("findings: []"))).toEqual([]);
+    expect(await closed(fm("findings: [unclosed"))).toEqual([]);
+    expect(await closed("---\n---\n# Review\n")).toEqual([]);
+  });
+
+  it("reads what it can of a malformed record: an entry that is no mapping, or has no status, is skipped", async () => {
+    expect(
+      await closed(
+        fm(
+          "findings:\n  - just a string\n  - id: 1\n  - id: 2\n    status: open\n    title: 7",
+        ),
+      ),
+    ).toEqual(["finding 2 is still open"]);
+    expect(await closed(fm("findings: nope"))).toEqual([]);
+  });
+
+  it("is not part of what review/frontmatter checks: an open finding with a cause passes there", async () => {
+    expect(
+      await lint(fm("findings:\n  - id: 1\n    status: open\n    cause: rule")),
+    ).toEqual([]);
+  });
+});
+
+describe("parseFrontmatter — the one reading both rules share", () => {
+  it("returns the record, `{}` for an empty block, and the reason when it does not parse", () => {
+    expect(parseFrontmatter("findings:\n  - id: 1")).toEqual({
+      ok: true,
+      data: { findings: [{ id: 1 }] },
+    });
+    expect(parseFrontmatter(undefined)).toEqual({ ok: true, data: {} });
+    expect(parseFrontmatter("findings: [unclosed")).toEqual({
+      ok: false,
+      why: expect.stringMatching(/./),
+    });
   });
 });

@@ -39,28 +39,17 @@
  */
 import Ajv from "ajv";
 import type { ErrorObject } from "ajv";
-import { CORE_SCHEMA, load } from "js-yaml";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { z } from "zod";
 import type { RuleContext } from "./rule-context.ts";
+import { parseFrontmatter } from "./frontmatter-record.ts";
+import findingsClosed from "./review-findings-closed.ts";
 
 /** A compiled schema, as far as `errorsOf` uses one. Ajv's `ValidateFunction` is one. */
 export interface Validate {
   (data: unknown): unknown;
   readonly errors?: readonly ErrorObject[] | null;
 }
-
-/**
- * What a parser failure says about itself. js-yaml's `YAMLException` carries a `reason`; anything
- * else thrown may carry a `message`, or be a bare value that says nothing.
- */
-const Thrown = z
-  .object({
-    reason: z.string().optional().catch(undefined),
-    message: z.string().optional().catch(undefined),
-  })
-  .catch({});
 
 /** One ajv error as a line a person can act on. `if` errors only repeat their `then`. */
 function describe(e: ErrorObject): string {
@@ -105,17 +94,14 @@ export function frontmatterRule(schemaUrl: URL | string, description: string) {
       return {
         yaml(node: { readonly value?: string }) {
           frontmatter = node;
-          try {
-            data = load(node.value ?? "", { schema: CORE_SCHEMA }) ?? {};
-          } catch (e) {
-            data = null;
-            const { reason, message } = Thrown.parse(e);
+          const read = parseFrontmatter(node.value);
+          data = read.ok ? read.data : null;
+          if (!read.ok)
             context.report({
               node,
               messageId: "malformed",
-              data: { why: reason ?? message ?? "unparseable" },
+              data: { why: read.why },
             });
-          }
         },
         "root:exit"(root: object) {
           if (data === null) return;
@@ -133,6 +119,7 @@ export function frontmatterRule(schemaUrl: URL | string, description: string) {
 
 export default {
   rules: {
+    "findings-closed": findingsClosed,
     frontmatter: frontmatterRule(
       new URL("./review-frontmatter.schema.json", import.meta.url),
       "a review's frontmatter is a record: its findings, each with a status and, when open, the pipeline cause — validated by JSON Schema",
