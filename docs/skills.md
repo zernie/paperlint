@@ -9,6 +9,7 @@ the skill whose description matches starts. `paperlint init` installs them into
 `skills/<name>/SKILL.md`.
 
 Where each stage writes, and the check that guards each place: [`layout.md`](layout.md).
+Which skill hands work to which, drawn from each skill's own `flow`: [`pipeline.md`](pipeline.md).
 
 `test/skills-catalog.test.ts` fails when this list and the shipped `skills/` directory disagree.
 
