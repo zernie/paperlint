@@ -12,24 +12,32 @@
  * changed paragraphs it refuses: a read that size is the 35-minute batch #301 records, so the
  * caller narrows `--base` instead.
  *
- * Usage: node cold-read.js <paper.tex> [--base=REV] [--max=N]
+ * Usage: node cold-read.js <paper.tex> [--base=REV] [--max=N] [--venue=NAME]
  * Exit: 0 — the paragraphs on stdout · 2 — refused (nothing changed, too many, a bad flag).
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 import { visit } from "@unified-latex/unified-latex-util-visit";
+import { last } from "remeda";
 import { latexReader, parseLatex } from "#src/adapters/latex/index";
 import type { Passage, Span } from "#src/domain/tex-document";
+import { ENGINEER, promptFor, reviewer } from "./readers.ts";
 
 /** Above this many changed paragraphs the run refuses and asks for a narrower range (#301). */
 export const DEFAULT_MAX = 15;
 
-/** A changed paragraph as a reader gets it. */
+/**
+ * A changed paragraph or heading as a reader gets it. A heading carries `kind: "heading"`: a
+ * skimming reviewer reads headings first and alone, so a heading is handed over by itself, not with
+ * its section (paper 3, 2026-11-18: 5 of 20 headings flagged when read this way, none ever reached a
+ * reader before).
+ */
 export interface Paragraph {
   readonly start: number;
   readonly end: number;
   readonly text: string;
+  readonly kind?: "heading";
 }
 
 /** Each hunk header's new-file side `+c,d` of a `git diff -U0`, as numbers; `d` absent is 1. */
@@ -137,11 +145,26 @@ const touched = (
   deletions.some((d) => d >= b.start && d + 1 <= b.end);
 
 /**
+ * The line range of every section heading in `src` (`\section` to `\subparagraph`; not the paper's
+ * `\title`, not a short title in brackets), read off the parse, so a heading inside a comment
+ * environment or a macro definition is not one.
+ */
+const headingRanges = (src: string): { start: number; end: number }[] =>
+  latexReader
+    .headings(src)
+    .filter((h) => h.command.kind === "heading" && h.argument === "title")
+    .map((h) => ({
+      start: lineAt(src, h.title.segments[0].at),
+      end: lineAt(src, last(h.title.segments).at),
+    }));
+
+/**
  * The changed paragraphs of `src`: every body passage (`bodyProse`: the parse of the paper, without
  * comments, headings, floats, code or the back matter) that a changed line falls in, whole, and
  * every passage that holds both sides of a `deletions` point. The parse only finds the paragraph;
  * its text is the source as written, so no macro is rendered, dropped or guessed at. A changed line
- * that is only a `%` note changes no prose, so it selects nothing.
+ * that is only a `%` note changes no prose, so it selects nothing. Each changed section heading
+ * comes too, by itself and marked `kind: "heading"`; all of them in document order.
  */
 export const extract = (
   src: string,
@@ -152,7 +175,7 @@ export const extract = (
     src.split("\n").flatMap((line, i) => (isNote(line) ? [i + 1] : [])),
   );
   const prose = lines.filter((n) => !notes.has(n));
-  return merged(
+  const paragraphs: Paragraph[] = merged(
     latexReader.bodyProse(src).map((p) => {
       const span = spanOf(p);
       return { start: lineAt(src, span.start), end: lineAt(src, span.end - 1) };
@@ -160,6 +183,14 @@ export const extract = (
   )
     .filter((b) => touched(b, prose, deletions))
     .map((b) => ({ ...b, text: sourceOf(src, b.start, b.end) }));
+  const headings: Paragraph[] = headingRanges(src)
+    .filter((b) => touched(b, prose, []))
+    .map((b) => ({
+      ...b,
+      text: sourceOf(src, b.start, b.end),
+      kind: "heading",
+    }));
+  return [...headings, ...paragraphs].sort((a, b) => a.start - b.start);
 };
 
 /** The flags a run reads. */
@@ -167,12 +198,14 @@ interface Options {
   readonly paper: string;
   readonly base: string;
   readonly max: number;
+  /** With a venue, the output is both readers' whole prompts, not the bare extract. */
+  readonly venue: string | undefined;
 }
 
 /** A refusal: printed as one line, exit 2. */
 class Refusal extends Error {}
 
-const KNOWN = ["base", "max"];
+const KNOWN = ["base", "max", "venue"];
 
 /** The command line as options, or a refusal naming what is wrong with it. */
 export const optionsOf = (argv: readonly string[]): Options => {
@@ -196,6 +229,7 @@ export const optionsOf = (argv: readonly string[]): Options => {
     paper,
     base: flags.get("base") || "HEAD",
     max,
+    venue: flags.get("venue") || undefined,
   };
 };
 
@@ -230,16 +264,28 @@ const checked = (o: Options, found: Paragraph[]): Paragraph[] => {
   return found;
 };
 
-/** The paragraphs as a reader gets them: numbered, one blank line apart, nothing else. */
+/** The paragraphs as a reader gets them: numbered, a heading marked, one blank line apart, nothing else. */
 export const numbered = (paragraphs: readonly Paragraph[]): string =>
-  paragraphs.map((p, i) => `¶${String(i + 1)} ${p.text}`).join("\n\n");
+  paragraphs
+    .map(
+      (p, i) =>
+        `¶${String(i + 1)}${p.kind === "heading" ? " (heading)" : ""} ${p.text}`,
+    )
+    .join("\n\n");
+
+/** What the command prints: the extract, or with a venue both readers' prompts around it. */
+const output = (text: string, venue: string | undefined): string =>
+  venue === undefined
+    ? text
+    : `=== engineer ===\n${promptFor(ENGINEER, text)}\n\n` +
+      `=== reviewer ===\n${promptFor(reviewer(venue), text)}`;
 
 /** The command. Returns its exit code; a refusal is one line on stderr and exit 2. */
 export function main(argv: readonly string[]): number {
   try {
     const o = optionsOf(argv);
     const found = paragraphsFor(o);
-    process.stdout.write(`${numbered(found)}\n`);
+    process.stdout.write(`${output(numbered(found), o.venue)}\n`);
     return 0;
   } catch (e) {
     if (!(e instanceof Refusal)) throw e;

@@ -9,7 +9,7 @@ import { experimental_skill } from "vigiles/spec";
 export default experimental_skill({
   name: "grade-paper-writing",
   description:
-    "Grade how a paper reads and fix it sentence by sentence. Use when asked if a paper reads well or to grade the prose, or when the writing is a wall of text, jargon-heavy, or reads like a blog post. Returns 1–5 scores, the sentences cold readers could not follow, and a rewrite for each. Not for cuts (tighten-paper), one edited paragraph (cold-read-diff), scientific flaws (paper-adversarial-review, pc-panel-review), submit readiness (harden-paper) or what the venue rewards (study-accepted-papers).",
+    "Judge how a paper reads and find the sentences a reader stalls on. Use whenever someone wants a verdict on the writing rather than a rewrite: does the draft, a section or the abstract read well, is the prose good or bad, score or grade it, give an honest opinion of how it reads — in English or Russian — including when it reads like a wall of jargon or a blog post, sounds off, or every sentence parses but the paragraphs do not add up. Returns 1–5 scores and the sentences cold readers could not follow, each with the fix it needs; the rewrites come from rewrite-unclear. Not for rewriting one unclear passage (rewrite-unclear), cuts (tighten-paper), one edited paragraph (cold-read-diff), scientific flaws (paper-adversarial-review, pc-panel-review), submit readiness (harden-paper) or what the venue rewards (study-accepted-papers).",
   tools: ["Read", "Write", "Edit", "Grep", "Glob", "Agent", "Skill"],
   body: `
 # grade-paper-writing — grade how the paper READS, then fix it sentence by sentence
@@ -100,12 +100,12 @@ stall on different sentences.
 
 | persona | reads | stalls on |
 |---|---|---|
-| **the engineer** — a strong practitioner outside academia (\`Sam\` in the reference) | every section, one subagent per section | terms, walls, sentences that mean nothing to someone who does not already hold the idea |
+| **the engineer** — a strong practitioner outside academia | every section, one subagent per section | terms, walls, sentences that mean nothing to someone who does not already hold the idea |
 | **the workshop reviewer** — a PC member at the target venue with 40 minutes for the paper, Confidence 3 | the abstract, the introduction and the conclusion, skimmed in that order | a sentence whose result has no owner (the authors? a cited work? a population?), a relation between claims left for the reader to infer, and anything that does not read like a paper at this venue |
 
 The engineer cannot report the second column by construction: he does not know what a paper at the
 venue sounds like, and a sentence with no stated owner reads to him as confident, not as ambiguous.
-The reviewer persona's full prompt is in the reference, next to the engineer's. Its findings go into
+Both prompts have one owner, \`skills/cold-read-diff/scripts/readers.ts\`; \`cold-read-diff\` prints them (\`cold-read.js --venue\`). Its findings go into
 the same stall inventory, under their own classes (7 and 8 below).
 
 ### The one question, per sentence
@@ -142,15 +142,13 @@ Then the **stall inventory + density per page**, which is the artifact other ski
 the rubric number. Then, separately, the sentences the reader could not restate at all: that list is
 the pass's headline, above any score.
 
-### The fix rule
+### Who fixes a stall
 
-🔴 **A fix that removes the flagged wording and keeps the compression is not a fix.** Proven twice in
-one hour on 2026-08-05: *"not through any defect in how we write it, but because that is what English
-is"* → *"that is what English is for"* (tic gone, meaning inverted into nonsense); *"the agent turns
-out not to be the weak link"* → *"The agent obeys"* (three words, every threshold green, the wrong
-finding). **Rewrite the whole thought in plain words.** The construction is usually a symptom of a
-compressed idea, and decompressing it removes the construction as a side effect. Then re-read the
-replacement cold — the author is least able to judge his own repair exactly when he feels most sure.
+This skill finds and grades; it does not rewrite. Hand every stall, with its quoted trigger and the
+reader's question, to **\`rewrite-unclear\`**, the one skill that rewrites for clarity: it states the
+claim first, rewrites by its rules, has a reader with no context restate the result, and runs the
+claim-preservation diff. A structural fix (move a point to another paragraph, gloss a term where it
+first appears, split a wall) is named here as the fix and applied by the author or that skill.
 
 ### Scope: whole paper here, diff continuously
 
@@ -166,7 +164,7 @@ is what happened.
 2. **Run the cold-read stall pass FIRST — the full specification is below, under "The stall pass".**
    It was previously a pointer to a reference section that did not exist, which is why the pass drifted
    into "log where I stumbled" and stopped catching the class it exists for.
-2. **Score all ten dimensions 1–5** using the anchors in the reference, on the **absolute scale** defined
+3. **Score all ten dimensions 1–5** using the anchors in the reference, on the **absolute scale** defined
    there (5 = best-in-field, **3 = the default for a solid paper**; most dimensions are 2–3). Weight Prose
    (#5), Jargon (#6), Landing (#7) and Register (#10) ×2 — the first three are where "wall of jargon"
    lives, the fourth is where "blog post" lives. Report raw /50 + weighted /70.
@@ -177,9 +175,10 @@ is what happened.
    and the field's best.** Report the **distribution (per-dimension + overall min / median / max)**, not one
    number; flag any dimension where graders disagree by >1 as genuinely ambiguous. (See "Scoring
    calibration" in the reference; this is the writing-axis analogue of \`pc-panel-review\`.)
-3. **For every dimension scoring ≤3, name the specific offending sentence or section** and write the fix —
-   not "tighten the prose" but the rewritten sentence, or "move the point from ¶3 to ¶1", or "gloss
-   \`operation-normalized\` in plain words at first use." Fixes must be applyable, not vibes.
+4. **For every dimension scoring ≤3, name the specific offending sentence or section** and the fix it
+   needs — not "tighten the prose" but "move the point from ¶3 to ¶1", "gloss \`operation-normalized\`
+   in plain words at first use", or "rewrite: the reader cannot restate it". Fixes must be applyable,
+   not vibes. The rewritten sentences come from \`rewrite-unclear\`, not from this pass.
 3a. **Grade #10, register distance, against the venue's own papers, section by section — not against
    the exemplars.** The rules count and this step judges; it starts from their numbers, not from a
    count of its own.
@@ -203,27 +202,25 @@ is what happened.
      sentence); how often a point is made by what it is not; what is set in bold; and whether any
      sentence is an aphorism, a fragment or a closing punchline. Quote the reference sentence beside
      each draft sentence you flag.
-   - **Return concrete rewrites, and every one keeps every number and claim.** For each flagged sentence:
-     the draft sentence → the rewrite → the reference sentence it is modelled on → one line saying that
-     every number, citation and hedge is unchanged and the claim is neither softened nor strengthened.
-     A contrast frame is rewritten by saying what the thing is and naming the relation (*because*,
-     *as a result*), not by switching to another contrast form; a claim in bold loses the bold and
-     gains its owner (*we measured*, \`\\ref\` to the table); a relation left to infer gets its word.
-     Where the frame IS the claim (the paper's thesis sets one mechanism against another), keep it
-     once, in the abstract and the introduction, and say so.
+   - **List the flagged sentences, each with the reference sentence beside it, and hand the list to
+     \`rewrite-unclear\`.** The reference sentence is the model for the rewrite: a contrast frame becomes
+     what the thing is with the relation named (*because*, *as a result*), a claim in bold loses the
+     bold and gains its owner (*we measured*, \`\\ref\` to the table), a relation left to infer gets its
+     word. Where the frame IS the claim (the paper's thesis sets one mechanism against another), do not
+     flag it in the abstract and the introduction, and say so.
    - **Score the distance:** 5 = a reviewer could not tell the draft from the reference papers by
      register, section by section; 1 = it reads as a different genre. After the rewrites, run
      \`npx paperlint lint\` again: every register rule inside its band is the floor for a 4, not the
      score itself.
    If no accepted paper can be fetched or supplied, write \`#10: not graded — no reference papers\` and
    say which were tried; a register score from memory is the guess this dimension exists to replace.
-4. **Find the paper's three-move opportunities:** what held assumption could open it? what is its single
+5. **Find the paper's three-move opportunities:** what held assumption could open it? what is its single
    most visceral concrete instance (lead with that, not the mean)? what one sentence should the reader
    quote? If the draft is missing any, that's the highest-leverage fix.
-5. **Flag the two prose traps by name:** (a) Attention-style dense contribution-less prose used where the
+6. **Flag the two prose traps by name:** (a) Attention-style dense contribution-less prose used where the
    audience does NOT already care; (b) hedge-stacking ("may possibly in some cases potentially") — replace
    each pile with one precise scope sentence.
-6. 🔴 **Run \`prose-lint.mjs\` on the paper and treat every FLAG as a finding, not as context:**
+7. 🔴 **Run \`prose-lint.mjs\` on the paper and treat every FLAG as a finding, not as context:**
 
    \`\`\`
    node \${CLAUDE_SKILL_DIR}/prose-lint.mjs <paper-dir>/paper.tex             # the report
@@ -247,41 +244,27 @@ is what happened.
 
 6b. 🔴 **A lint fix that costs meaning is a REGRESSION, and no linter can see it.** The metrics above
    are diagnostics, never objectives. Optimising one directly is how a sentence gets worse while the
-   number gets better — and the number is exactly what makes it feel like progress.
+   number gets better, and the number is exactly what makes it feel like progress. So a FLAG is not
+   fixed here by rewording until the count drops: the flagged sentence goes to \`rewrite-unclear\`,
+   whose cold reader checks that the replacement still says the thing. If it does not, the flag stays
+   open: an open flag is a truthful state, and a passing metric over a sentence nobody can parse is not.
 
-   Observed 2026-08-05, twice in one pass, both by the author of this rule:
-   - *"English cannot be exact — not through any defect in how we write it, but because that is what
-     English is"* became *"English cannot be exact; that is what English is for"*. The tic went. So
-     did the meaning: the new clause says English **exists in order to** be inexact, which is not a
-     claim anyone holds. The author's reaction was *«what the fuck does that even mean»*.
-   - *"Yet the agent turns out not to be the weak link"* became **"The agent obeys."** Three words,
-     zero flags, and the wrong finding — the experiment measured whether *writing a rule down* works,
-     while the replacement reads as a claim about agents being submissive.
-
-   **The procedure, and it is not optional:** after replacing a flagged sentence, read the
-   replacement as someone who has not read the paper. Does it still say the thing? Would they know
-   what it means? If the honest answer is no, the original was better and the flag stays open — an
-   open flag is a truthful state, and a passing metric over a sentence nobody can parse is not.
-   Prefer rewriting the whole **thought** in plain words to surgically excising the construction:
-   the tic is usually a symptom of a compressed idea, and decompressing it removes the tic as a
-   side effect.
-
-7. 🔴 **Put \`WORST-SECTION: <section>\` on the FIRST LINE of the report.** Machine-readable, one
+8. 🔴 **Put \`WORST-SECTION: <section>\` on the FIRST LINE of the report.** Machine-readable, one
    section, lowercase, no decoration, so the next round can compare it with the last report. This exists because the abstract
    was named worst **five consecutive times**, was faithfully recorded in the scorecard all five
    times, and was never once the next task. A review loop that only appends findings converges on a
    paper whose defects are all thoroughly documented and none of them fixed. **Naming the worst
    section is not the deliverable — a fix for it, or a recorded decision to ship with it, is.**
 
-8. **Run the avoid-list grep (mechanical).** Grep the source for the slop / web-slang / filler / hype words
+9. **Run the avoid-list grep (mechanical).** Grep the source for the slop / web-slang / filler / hype words
    in \`../paper-pipeline/references/writing-craft.md\` → "The avoid-list", and report every hit with its line number and a
    replacement. These are scrutinize-words, not absolute bans — but each hit is a readability debit against
    dimension #6 (Jargon) and the north star — readable by the target reader, in the venue's register. (This session's miss that motivated
    it: "listicle" survived into a submitted-ready AISec draft.)
-7. **Wall-of-text sweep (see \`writing-craft.md\` → "The wall-of-text check").** Flag any paragraph running
+10. **Wall-of-text sweep (see \`writing-craft.md\` → "The wall-of-text check").** Flag any paragraph running
    >~15 source lines / ~150 words or covering >3 sub-points — a visual wall the reader's eye slides off
    (distinct from stall density). Prescribe the fix: break into run-in-headed chunks. Caps dimension #4.
-8. **Conclusion & quotability sweep (explicit — see \`writing-craft.md\` → "The conclusion & quotability
+11. **Conclusion & quotability sweep (explicit — see \`writing-craft.md\` → "The conclusion & quotability
    check").** Grade the CONCLUSION on its own, not just the intro: does it pay off in plain language, name the
    stakes, point past the result, and hand the reader a concrete action — or is it a limp results-recap (a 2)?
    Then check the abstract AND the conclusion each carry one extractable, quotable line (the "paste onto a
@@ -297,13 +280,14 @@ is what happened.
 2. **Cold-read stall inventory** — the ranked list of "what does that even mean?" points (location → quoted
    trigger → reader's question → fix) plus the stall density per page. This is the most directly actionable
    output; a fix pass works straight off it.
-2. **Sentence-level fix list** — for every ≤3 dimension: the offending text → the concrete rewrite/move.
-   Ordered by leverage (the fix that most improves how it reads first).
-3. **The three-move audit** — the assumption to open on, the visceral instance to lead with, the one
+3. **Sentence-level fix list** — for every ≤3 dimension: the offending text → the fix it needs (a move,
+   a gloss, or "rewrite" handed to \`rewrite-unclear\`). Ordered by leverage (the fix that most improves
+   how it reads first).
+4. **The three-move audit** — the assumption to open on, the visceral instance to lead with, the one
    repeatable sentence — supplied or flagged as missing.
-4. **A one-paragraph verdict** — is this a pleasant read for a busy, skeptical reviewer yet, and the single
+5. **A one-paragraph verdict** — is this a pleasant read for a busy, skeptical reviewer yet, and the single
    change that would move it most.
-5. **SAVE the report colocated — don't let it evaporate.** A grade run in a subagent reports into a
+6. **SAVE the report colocated — don't let it evaporate.** A grade run in a subagent reports into a
    transcript that is gone next session. Write the scorecard + stall inventory + fix list to
    **\`<paper-dir>/reviews/<YYYY-MM-DD>-grade-paper-writing.md\`** and link it from the paper's
    \`PIPELINE-STATUS.md\` (Wc row). Same rule as \`pc-panel-review\`'s ledger and \`analyze-sibling-paper\`'s
@@ -331,15 +315,11 @@ findings:
 ## Rules
 - Grade **writing, not science.** A correct paper can still score a 2 here; say so. Don't drift into
   content/defect review — that's \`paper-adversarial-review\` / \`pc-panel-review\`.
-- **Every low score comes with the offending sentence and its fix.** No abstract advice.
-- **Preserve claims.** Suggested rewrites must not change any result, number, or hedge — only how it reads.
-  (This mirrors the constraint on any prose rewrite of a real submission.)
-- **After applying sentence fixes, run the \`claims\` claim-preservation diff** (owner:
-  \`../paper-pipeline/references/writing-craft.md\` → "The claim-preservation diff") — an adversarial
-  (Fable) before/after diff verifying **no number moved, no hedge dropped, no claim strengthened, no
-  new absolute, no self-contradiction**. The fix pass is not done until it's clean; record it in the
-  \`claims\` row of the paper's \`PIPELINE-STATUS.md\`. This step is mandatory after EVERY rewrite, not optional.
-- **Respect the page budget.** Prefer fixes that cut or hold length; a paper at its page ceiling can't grow.
+- **Every low score comes with the offending sentence and the fix it needs.** No abstract advice.
+- **Rewrites belong to \`rewrite-unclear\`**, which keeps every result, number and hedge and runs the
+  \`claims\` claim-preservation diff after each one. This skill applies no sentence rewrite of its own.
+- **Length belongs to \`tighten-paper\`.** A fix this report names may take more words; never propose
+  shortening another sentence that explains something to make room.
 - **Honesty over flattery.** If the abstract is a stat-wall, score it a 2 and show the five-move rewrite.
 
 ## 🔴 The tell that says a machine wrote it: three findings in one sentence

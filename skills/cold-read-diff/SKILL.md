@@ -4,7 +4,7 @@ description: "Send just-changed paper prose to two readers with NO context — a
 allowed-tools: [Bash, Read, Write, Agent]
 ---
 
-<!-- vigiles:sha256:ec00d6dc839ca468 compiled from skills/cold-read-diff/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:d04b2bfe501a7aea compiled from skills/cold-read-diff/SKILL.md.spec.ts -->
 
 # cold-read-diff — the reader who cannot fake understanding
 
@@ -62,16 +62,17 @@ only model calls are the two readers. They start in the background, so you keep 
 1. **Take the extract.** It is the LaTeX source of the changed paragraphs and nothing else:
 
    ```
-   node ${CLAUDE_SKILL_DIR}/scripts/cold-read.js <paper.tex> [--base=REV]
+   node ${CLAUDE_SKILL_DIR}/scripts/cold-read.js <paper.tex> [--base=REV] --venue="<venue>"
    ```
 
    `--base` defaults to `HEAD` (the uncommitted edits). It widens each changed line to its
-   paragraph and drops working comments, floats and the bibliography. The paragraph itself is the
+   paragraph and drops working comments, floats and the bibliography. A changed section heading
+   comes by itself, marked `(heading)`: a skimming reviewer reads headings first and alone. The paragraph itself is the
    source as written, macros and all: only TeX knows what a macro prints (#462). Above 15 changed
    paragraphs it refuses: narrow `--base`.
 2. **Start both readers in ONE message, each with the Agent tool, `model: "sonnet"` and
    `run_in_background: true`.** A subagent starts with no conversation history. Its prompt is
-   the persona's text below, then the extract pasted verbatim — no path, no title, no abstract,
+   its block from step 1's output, verbatim — no path, no title, no abstract,
    no word about the paper. A path is an invitation to read the neighbours, and reading the
    neighbours is how the check fails silently. `sonnet`: competent, cheap, and not the model
    that wrote the sentence.
@@ -85,26 +86,15 @@ only model calls are the two readers. They start in the background, so you keep 
    confident, and he does not know the venue's register. Both run, every time. The reviewer is
    told the venue's name and nothing else.
 
-   **The engineer's prompt:** *You are a strong software engineer outside academia. Answer from
-   the text below alone; use no tools. For every sentence: what does it claim, in your own words?
-   If restating needs a guess, the verdict is `CANNOT PARSE` and you say what stopped you (an
-   undefined term, a pronoun with no referent, a number with no denominator, two clauses that do
-   not connect). Would a reader who stops here understand it? If only one who knows X would, the
-   verdict is `ONLY-IF`, naming X. A sentence that sounds clever but says less than it appears
-   to is `CLEVER`.*
+   **The prompts have one owner, `scripts/readers.ts`;** run step 1 with `--venue="<venue>"`
+   and it prints each reader's whole prompt with the extract inside, under `=== engineer ===`
+   and `=== reviewer ===`. Hand each block to its subagent verbatim. What they say:
 
-   **The reviewer's prompt:** *You are a programme-committee member at <venue>, with 40 minutes
-   for a whole paper, skimming, Confidence 3. Answer from the text below alone; use no tools. For
-   every sentence: whose result does it state — the authors' measurement, a cited work, or a
-   property of the world? If you cannot tell, the verdict is `WHOSE?`. Does it read like a paper
-   at this venue? If not, `REGISTER`, and what a paper there would write instead (an aphorism, a
-   fragment, a colloquial turn, two claims side by side with the relation unstated). A sentence
-   that sounds clever but says less than it appears to is `CLEVER`.*
-
-   Both say first: *The text is LaTeX source; read it as the printed sentence. A `{{name}}` is a
-   value the build fills in, not a missing one.* Both end with: *Reply with one markdown table, `| ¶ | verdict | sentence | why |`, one row per
-   sentence that is not fine, the sentence quoted exactly; nothing else. No rows if every sentence
-   reads.* So what comes back is the findings, not a restatement of every sentence.
+   - **Both, first:** *The text is LaTeX source; read it as the printed sentence. A `{{name}}` is a value the build fills in, not a missing one. A ¶ marked (heading) is a section heading: read it alone, as a reader skimming the headings does.*
+   - **The engineer:** *You are a strong software engineer outside academia. Answer from the text below alone; use no tools. For every sentence: what does it claim, in your own words? If restating needs a guess, the verdict is `CANNOT PARSE` and you say what stopped you (an undefined term, a pronoun with no referent, a number with no denominator, two clauses that do not connect). Would a reader who stops here understand it? If only one who knows X would, the verdict is `ONLY-IF`, naming X. A sentence that sounds clever but says less than it appears to is `CLEVER`. For a heading: could you say what the section is about from the heading alone? If it states a finding, does it say compared with what, and over what? If not, the verdict is `VAGUE HEADING`.*
+   - **The reviewer:** *You are a programme-committee member at <venue>, with 40 minutes for a whole paper, skimming, Confidence 3. Answer from the text below alone; use no tools. For every sentence: whose result does it state — the authors' measurement, a cited work, or a property of the world? If you cannot tell, the verdict is `WHOSE?`. Does it read like a paper at this venue? If not, `REGISTER`, and what a paper there would write instead (an aphorism, a fragment, a colloquial turn, two claims side by side with the relation unstated). A sentence that sounds clever but says less than it appears to is `CLEVER`. A heading that names no concrete thing, or states a finding without its comparator or scope, is `VAGUE HEADING`.*
+   - **Both, last:** *Reply with one markdown table, `| ¶ | verdict | sentence | why |`, one row per sentence or heading that is not fine, quoted exactly; nothing else. No rows if every sentence reads.* So what comes back is the findings, not a restatement of every
+     sentence.
 3. **Keep working, for at most 5 minutes.** Each reader's completion arrives as a notification;
    on two paragraphs a reader answers in about 10 s. A reader that has not answered after 5
    minutes is not waited for: stop it, and its column in the report is `no answer`, not a
@@ -117,10 +107,11 @@ only model calls are the two readers. They start in the background, so you keep 
 5. **Write the report, relay the table.** Save both answers verbatim, with the extract, to
    `reviews/<date>-cold-read-diff.md` in the paper's folder. Show the author at most 15 lines:
    the count, the report's path, and one row per finding (the first ten).
-6. **The author decides the fixes.** The read changes nothing in the paper and builds nothing.
-   Apply a fix only when asked, or when your task already was "fix the prose", and then as a
-   rewrite of the whole thought, never an excision (see the rule below). Record each finding in
-   the report's frontmatter once it is decided.
+6. **The author decides the fixes; `rewrite-unclear` writes them.** The read changes nothing in
+   the paper and builds nothing. When the author asks for fixes, or your task already was "fix the
+   prose", hand the rows to `rewrite-unclear`, the one skill that rewrites for clarity: each row's
+   paragraph, its verdict and the reader's words. Record each finding in the report's frontmatter
+   once it is decided.
 7. **Confirm once, on the fix.** Run steps 1–5 again on the rewritten paragraphs. An edit is not
    done until the engineer parses the replacement AND the reviewer finds its owner and its
    register. A fix for the engineer that goes colloquial is a new `REGISTER` finding, and the
@@ -171,15 +162,6 @@ findings:
   agent rules files". Every sentence of background handed to the reader is a sentence of confusion
   they will no longer report. The one exception is the venue's name, given to the reviewer persona:
   judging register without knowing the venue is guessing.
-- 🔴 **A fix that removes the flagged construction and keeps the compression is not a fix.** Proven
-  twice in one hour: *"not through any defect in how we write it, but because that is what English
-  is"* → *"that is what English is for"* (tic gone, meaning inverted into nonsense); *"the agent
-  turns out not to be the weak link"* → *"The agent obeys"* (three words, zero flags, wrong finding).
-  Rewrite the **thought** in plain words. The tic is usually a symptom of a compressed idea, and
-  decompressing removes it as a side effect.
-- **Length is not the constraint here — meaning is.** If plain language needs more words, take them
-  and pay from an appendix, which is outside the page limit. Paying by shortening another sentence
-  is what created the problem.
 - **`CANNOT PARSE` is a result, not a failure of the reader.** Never argue with it. The author's
   ability to understand his own sentence is not evidence about anyone else's.
 - **Run it on your own fixes too.** The author is the least qualified judge of whether his repair
@@ -187,6 +169,7 @@ findings:
 
 ## Compose with
 
+- `rewrite-unclear` — writes the fixes for the rows this read returns; step 7 confirms them.
 - `grade-paper-writing` — the batch readability gate; this is its continuous counterpart. That one
   produces a stall inventory over the whole paper; this one asks whether the last edit means anything.
 - `tighten-paper` — structural cuts. Note the interaction: a tighten pass that pays for an addition

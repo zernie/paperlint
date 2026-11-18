@@ -16,6 +16,7 @@ import {
   main,
   numbered,
 } from "./cold-read-core.ts";
+import { CLOSING, ENGINEER, OPENING, promptFor, reviewer } from "./readers.ts";
 
 const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), "cold-read.ts");
 const root = useTempDir("cold-read-");
@@ -125,14 +126,55 @@ test("extract: whole paragraphs, comment lines and floats dropped, nothing rewri
     },
   ]);
   assert.deepEqual(
-    extract(EDITED, [3, 6, 11]),
+    extract(EDITED, [6, 11]),
     [],
-    "a heading, a comment or a table row is not prose",
+    "a comment or a table row is not prose",
   );
   assert.deepEqual(
     extract("One line.\n% a working note\nTwo line.\n", [1]).map((p) => p.text),
     ["One line.\nTwo line."],
     "a comment line inside the paragraph is not handed to the reader",
+  );
+});
+
+test("🔴 extract: a changed heading reaches the readers, marked, in document order; an unchanged one does not", () => {
+  const tex =
+    "\\section{Results}\nOne model disagrees with itself.\n\n\\subsection{A model disagrees less often}\nThe rate is low.\n";
+  assert.deepEqual(extract(tex, [4, 5]), [
+    {
+      start: 4,
+      end: 4,
+      text: "\\subsection{A model disagrees less often}",
+      kind: "heading",
+    },
+    { start: 5, end: 5, text: "The rate is low." },
+  ]);
+  assert.deepEqual(
+    extract(tex, [2]).map((p) => p.text),
+    ["One model disagrees with itself."],
+    "an unchanged heading is not handed over",
+  );
+  assert.equal(
+    numbered(extract(tex, [4, 5])),
+    "¶1 (heading) \\subsection{A model disagrees less often}\n\n¶2 The rate is low.",
+  );
+});
+
+test("extract: the paper's \\title and a heading's short title are not headings to read", () => {
+  assert.deepEqual(
+    extract("\\title{A study}\n\\section[Short]{Long title}\n", [1]),
+    [],
+  );
+  assert.deepEqual(
+    extract("\\title{A study}\n\\section[Short]{Long title}\n", [2]),
+    [
+      {
+        start: 2,
+        end: 2,
+        text: "\\section[Short]{Long title}",
+        kind: "heading",
+      },
+    ],
   );
 });
 
@@ -183,6 +225,26 @@ test("the command prints only the changed paragraphs, numbered, and leaves the p
     stderr: "",
   });
   assert.equal(readFileSync(join(dir, "paper.tex"), "utf8"), EDITED);
+});
+
+test("🔴 --venue prints both readers' whole prompts around the extract, from the one owner", () => {
+  const dir = paperRepo("venue");
+  const r = runMain([join(dir, "paper.tex"), "--venue=the X workshop"]);
+  const text =
+    "¶1 We measure it with \\texttt{--no-verify} on {{nRepos}} repositories~\\cite{x}.\nAgents followed 71\\% of them.\n\n" +
+    "¶2 Three answers, all of them after the fact.";
+  assert.deepEqual(r, {
+    status: 0,
+    stdout:
+      `=== engineer ===\n${promptFor(ENGINEER, text)}\n\n` +
+      `=== reviewer ===\n${promptFor(reviewer("the X workshop"), text)}\n`,
+    stderr: "",
+  });
+  assert.equal(
+    promptFor("P", "T"),
+    `${OPENING}\n\nP\n\n${CLOSING}\n\n---\n\nT`,
+  );
+  assert.ok(reviewer("the X workshop").includes("at the X workshop,"));
 });
 
 test("numbered: one block per paragraph, nothing else", () => {

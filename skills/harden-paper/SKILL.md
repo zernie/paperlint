@@ -4,7 +4,7 @@ description: Use when asking "is this paper actually ready to submit?" / "what's
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:a479e6af92ccd51b compiled from skills/harden-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:c4cfde22315c19c9 compiled from skills/harden-paper/SKILL.md.spec.ts -->
 
 # harden-paper — the multi-axis pre-submit gate
 
@@ -161,11 +161,11 @@ middle sags" — wasting the polish on possibly-cut sections.
    skimming abstract, introduction and conclusion for whose result each sentence states — the rubric SCORE under-fires because a
    frontier grader knows every term and never stalls (it scored a wall-heavy paper 44/60); the persona inventory,
    not the number, is the gate. (b) **A wall / spec-sheet / coined-jargon-heading HARD-FAILS this axis — it is not
-   a "minor" note.** Strip jargon the *target venue's* reviewers won't know (register-calibration: keep field-native
-   terms, gloss methodology shorthand, rename coinages), and confirm the paper leads with its most visceral concrete
-   instance. **After any rewrite here, run the claim-preservation diff (`claims` —
-   `../paper-pipeline/references/writing-craft.md` → "The claim-preservation diff") — rewording silently
-   changes claims.**
+   a "minor" note.** List the jargon the *target venue's* reviewers won't know (register-calibration: keep field-native
+   terms, gloss methodology shorthand, rename coinages) and hand those sentences, with the stall
+   inventory, to **`rewrite-unclear`**, which rewrites them and runs the claim-preservation diff
+   (`claims`) after each; this gate does not reword. Confirm the paper leads with its most visceral
+   concrete instance.
 
 9. **Internal consistency — matching is not enough; every headline count must be RECONSTRUCTIBLE from
    the object that presents it.** Two distinct checks:

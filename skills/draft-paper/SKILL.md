@@ -4,7 +4,7 @@ description: Use when the numbers exist and it's time to WRITE the paper — "dr
 allowed-tools: [Read, Write, Edit, Grep, Glob, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:df42ddc82286acca compiled from skills/draft-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:8773ffea6736518b compiled from skills/draft-paper/SKILL.md.spec.ts -->
 
 # draft-paper — prose that survives review and gets cited
 
@@ -94,6 +94,8 @@ Before any review pass, run the draft through the paper-side prose QA — it cat
   noting", limp connectives, fake balance) that make a draft read unserious to a human PC.
 - **`../paper-pipeline/references/writing-craft.md`** — write toward the rubric; its
   register-calibration buckets decide which jargon to keep / gloss / rename for the venue's actual reader.
+- **`rewrite-unclear`** — rewrites each passage the QA above flags, and any passage the author calls
+  unclear; a section is not done while one of its flagged passages is unrewritten or undecided.
 
 **Boundary:** the site repo's `writing-quality` + `audience-test` skills are for **blog posts only**.
 For papers they duplicate — and are superseded by — `grade-paper-writing` + writing-craft's persona

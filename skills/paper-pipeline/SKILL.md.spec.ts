@@ -229,7 +229,7 @@ Ordered, and the order is real: every one refuses to run without the output of t
 | Gate | Skill | Requires (hard) |
 |---|---|---|
 | **Structure** | **\`tighten-paper\`** | A rendered PDF and a page count. Produces the cut plan + structural verdict. *Before 2026-07-30 this appeared only INSIDE the harden stage — i.e. after the gate that requires it — so a literal reading sent you into a hard-blocked gate.* |
-| **Writing craft** | **\`grade-paper-writing\`** | The current draft. Produces the **persona stall inventory**, which the panel cannot run without. |
+| **Writing craft** | **\`grade-paper-writing\`** | The current draft. Produces the **persona stall inventory**, which the panel cannot run without. The stalls are rewritten by **\`rewrite-unclear\`**, the one skill that rewrites for clarity. |
 | **Review decision** | **\`pc-panel-review\`** | 🔴 **Both of the above.** N independent lenses (incl. an artifact-runner that executes the artifact) + a chair meta-review — predicts the PC's accept/reject. Its venue-fit mode is the one-reviewer CFP-fit spot-check. |
 | **Claim preservation** | Fable diff (\`claims\`) | The pre-pass baseline. Run after **every** aggressive rewrite, before committing. |
 | **Harden** | **\`harden-paper\`** | The panel's verdict. Closes the desk-reject axes a reviewer-sim misses: threat-model, ethics/dual-use, page-fit, citability, double-blind hygiene, artifact-runs-clean. Its structure and writing axes are the **re-run/confirm** pass, not the first invocation. |

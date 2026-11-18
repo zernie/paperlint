@@ -26,6 +26,7 @@ import { z } from "zod";
 import { useTempDir, writeTree } from "../test/support.ts";
 import grid from "../skills/run-agent-grid/run-agent-grid.eval.ts";
 import labels from "../skills/label-agent-runs/label-agent-runs.eval.ts";
+import rewrite from "../skills/rewrite-unclear/rewrite-unclear.eval.ts";
 
 const ROOT = join(import.meta.dirname, "..");
 
@@ -165,7 +166,11 @@ test("a planted new row, and a frozen name that left the table, both fail", () =
 
 test("no skill that declares its own trigger cases is also in the shared table", () => {
   const mine = colocated(join(ROOT, "skills"));
-  assert.deepEqual(mine, ["label-agent-runs", "run-agent-grid"]);
+  assert.deepEqual(mine, [
+    "label-agent-runs",
+    "rewrite-unclear",
+    "run-agent-grid",
+  ]);
   assert.deepEqual(
     mine.filter((s) => SHARED.some((r) => r.skill === s)),
     [],
@@ -195,7 +200,7 @@ test("an eval file is classified by its default export, parsed: defineEval yes, 
 
 test("each new eval declares diverse prompts on both sides, none of them a table row's", () => {
   const tablePrompts = new Set(SHARED.flatMap((r) => r.prompts));
-  for (const def of [grid, labels]) {
+  for (const def of [grid, labels, rewrite]) {
     const spec = def.measureTriggerRate;
     assert.ok(spec, "the eval declares measureTriggerRate");
     assertPromptDiversity(spec.prompts, { minPrompts: 4, label: "prompts" });
