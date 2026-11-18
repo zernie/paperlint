@@ -40,7 +40,7 @@ paragraph before it and the one after it too; they decide which terms the reader
 
 \`\`\`
 1. say the claim in one plain sentence ──── cannot? ──► stop: show the author, do not rewrite
-2. rewrite by the ten rules below (more words are allowed)
+2. smallest edit that says the claim, by the ten rules below (more words are allowed)
 3. a cold reader says back what the rewrite claims
         ├─ matches step 1 ──► step 4
         └─ does not ──► rewrite once more; still no ──► stop, show the author both versions
@@ -51,11 +51,18 @@ paragraph before it and the one after it too; they decide which terms the reader
    what, about what, with which number. If you cannot, the passage has no claim yet, or has two. Do
    not rewrite it: tell the author what you could not find. Rewriting a passage with no claim produces
    a fluent passage with no claim.
-2. **Rewrite by the rules below.** Rewrite the whole thought, not the flagged words. A fix that
-   removes the flagged construction and keeps the compression is not a fix: removing a "not X but Y"
-   tic from a compressed sentence tends to leave a shorter sentence that says something else, and
-   every count goes green while the meaning goes wrong. Decompress the idea and the construction
-   goes away as a side effect.
+2. **Make the smallest edit that says the claim, by the rules below.** Keep the author's sentence
+   where it works and change only what the flag needs: add the missing explanation, name the
+   concrete thing, split the sentence. Write a new sentence only when no edit of the old one can
+   state the claim, and say so in the output. Report the share of words that are new. Why: an AI
+   detector scored reports that an LLM rewrote "in its own words" as 53% AI-generated on average,
+   and reports it edited for clarity, keeping every point, as 1%, though 30% of their words changed
+   (Caldara and Fernández-Villaverde, "Can Peer Review Survive AI-Generated Text?", working paper,
+   2026, Table 1); an edit also has fewer places to change the meaning. Smallest is not
+   shortest: a fix that removes the flagged construction and keeps the compression is not a fix.
+   Removing a "not X but Y" tic from a compressed sentence tends to leave a shorter sentence that
+   says something else, and every count goes green while the meaning goes wrong. Decompress the
+   idea; the construction goes away as a side effect.
 3. **A cold reader restates it.** Spawn a fresh subagent with no context and give it only the
    rewritten passage and this instruction: *Answer from the text below alone; use no tools. The text
    is LaTeX source; read it as the printed sentence. A \`{{name}}\` is a value the build fills in. In one
@@ -99,7 +106,8 @@ measured overflow goes to \`tighten-paper\`, which owns length.
 ## Output
 
 Per passage: the location, why it was flagged, the step-1 claim, the rewritten LaTeX, the cold
-reader's restatement, what changed and which rule, and the step-4 result. Apply the rewrite with
+reader's restatement, what changed and which rule, the share of new words (and, when it is a new
+sentence, why no edit could say the claim), and the step-4 result. Apply the rewrite with
 \`Edit\` only when the author asked for fixes or the task already was "fix the prose"; otherwise the
 rewrites are a proposal the author accepts or rejects one by one.
 

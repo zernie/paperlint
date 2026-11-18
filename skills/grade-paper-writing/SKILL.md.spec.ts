@@ -164,7 +164,7 @@ is what happened.
 2. **Run the cold-read stall pass FIRST — the full specification is below, under "The stall pass".**
    It was previously a pointer to a reference section that did not exist, which is why the pass drifted
    into "log where I stumbled" and stopped catching the class it exists for.
-2. **Score all ten dimensions 1–5** using the anchors in the reference, on the **absolute scale** defined
+3. **Score all ten dimensions 1–5** using the anchors in the reference, on the **absolute scale** defined
    there (5 = best-in-field, **3 = the default for a solid paper**; most dimensions are 2–3). Weight Prose
    (#5), Jargon (#6), Landing (#7) and Register (#10) ×2 — the first three are where "wall of jargon"
    lives, the fourth is where "blog post" lives. Report raw /50 + weighted /70.
@@ -175,7 +175,7 @@ is what happened.
    and the field's best.** Report the **distribution (per-dimension + overall min / median / max)**, not one
    number; flag any dimension where graders disagree by >1 as genuinely ambiguous. (See "Scoring
    calibration" in the reference; this is the writing-axis analogue of \`pc-panel-review\`.)
-3. **For every dimension scoring ≤3, name the specific offending sentence or section** and the fix it
+4. **For every dimension scoring ≤3, name the specific offending sentence or section** and the fix it
    needs — not "tighten the prose" but "move the point from ¶3 to ¶1", "gloss \`operation-normalized\`
    in plain words at first use", or "rewrite: the reader cannot restate it". Fixes must be applyable,
    not vibes. The rewritten sentences come from \`rewrite-unclear\`, not from this pass.
@@ -214,13 +214,13 @@ is what happened.
      score itself.
    If no accepted paper can be fetched or supplied, write \`#10: not graded — no reference papers\` and
    say which were tried; a register score from memory is the guess this dimension exists to replace.
-4. **Find the paper's three-move opportunities:** what held assumption could open it? what is its single
+5. **Find the paper's three-move opportunities:** what held assumption could open it? what is its single
    most visceral concrete instance (lead with that, not the mean)? what one sentence should the reader
    quote? If the draft is missing any, that's the highest-leverage fix.
-5. **Flag the two prose traps by name:** (a) Attention-style dense contribution-less prose used where the
+6. **Flag the two prose traps by name:** (a) Attention-style dense contribution-less prose used where the
    audience does NOT already care; (b) hedge-stacking ("may possibly in some cases potentially") — replace
    each pile with one precise scope sentence.
-6. 🔴 **Run \`prose-lint.mjs\` on the paper and treat every FLAG as a finding, not as context:**
+7. 🔴 **Run \`prose-lint.mjs\` on the paper and treat every FLAG as a finding, not as context:**
 
    \`\`\`
    node \${CLAUDE_SKILL_DIR}/prose-lint.mjs <paper-dir>/paper.tex             # the report
@@ -249,22 +249,22 @@ is what happened.
    whose cold reader checks that the replacement still says the thing. If it does not, the flag stays
    open: an open flag is a truthful state, and a passing metric over a sentence nobody can parse is not.
 
-7. 🔴 **Put \`WORST-SECTION: <section>\` on the FIRST LINE of the report.** Machine-readable, one
+8. 🔴 **Put \`WORST-SECTION: <section>\` on the FIRST LINE of the report.** Machine-readable, one
    section, lowercase, no decoration, so the next round can compare it with the last report. This exists because the abstract
    was named worst **five consecutive times**, was faithfully recorded in the scorecard all five
    times, and was never once the next task. A review loop that only appends findings converges on a
    paper whose defects are all thoroughly documented and none of them fixed. **Naming the worst
    section is not the deliverable — a fix for it, or a recorded decision to ship with it, is.**
 
-8. **Run the avoid-list grep (mechanical).** Grep the source for the slop / web-slang / filler / hype words
+9. **Run the avoid-list grep (mechanical).** Grep the source for the slop / web-slang / filler / hype words
    in \`../paper-pipeline/references/writing-craft.md\` → "The avoid-list", and report every hit with its line number and a
    replacement. These are scrutinize-words, not absolute bans — but each hit is a readability debit against
    dimension #6 (Jargon) and the north star — readable by the target reader, in the venue's register. (This session's miss that motivated
    it: "listicle" survived into a submitted-ready AISec draft.)
-7. **Wall-of-text sweep (see \`writing-craft.md\` → "The wall-of-text check").** Flag any paragraph running
+10. **Wall-of-text sweep (see \`writing-craft.md\` → "The wall-of-text check").** Flag any paragraph running
    >~15 source lines / ~150 words or covering >3 sub-points — a visual wall the reader's eye slides off
    (distinct from stall density). Prescribe the fix: break into run-in-headed chunks. Caps dimension #4.
-8. **Conclusion & quotability sweep (explicit — see \`writing-craft.md\` → "The conclusion & quotability
+11. **Conclusion & quotability sweep (explicit — see \`writing-craft.md\` → "The conclusion & quotability
    check").** Grade the CONCLUSION on its own, not just the intro: does it pay off in plain language, name the
    stakes, point past the result, and hand the reader a concrete action — or is it a limp results-recap (a 2)?
    Then check the abstract AND the conclusion each carry one extractable, quotable line (the "paste onto a
@@ -280,14 +280,14 @@ is what happened.
 2. **Cold-read stall inventory** — the ranked list of "what does that even mean?" points (location → quoted
    trigger → reader's question → fix) plus the stall density per page. This is the most directly actionable
    output; a fix pass works straight off it.
-2. **Sentence-level fix list** — for every ≤3 dimension: the offending text → the fix it needs (a move,
+3. **Sentence-level fix list** — for every ≤3 dimension: the offending text → the fix it needs (a move,
    a gloss, or "rewrite" handed to \`rewrite-unclear\`). Ordered by leverage (the fix that most improves
    how it reads first).
-3. **The three-move audit** — the assumption to open on, the visceral instance to lead with, the one
+4. **The three-move audit** — the assumption to open on, the visceral instance to lead with, the one
    repeatable sentence — supplied or flagged as missing.
-4. **A one-paragraph verdict** — is this a pleasant read for a busy, skeptical reviewer yet, and the single
+5. **A one-paragraph verdict** — is this a pleasant read for a busy, skeptical reviewer yet, and the single
    change that would move it most.
-5. **SAVE the report colocated — don't let it evaporate.** A grade run in a subagent reports into a
+6. **SAVE the report colocated — don't let it evaporate.** A grade run in a subagent reports into a
    transcript that is gone next session. Write the scorecard + stall inventory + fix list to
    **\`<paper-dir>/reviews/<YYYY-MM-DD>-grade-paper-writing.md\`** and link it from the paper's
    \`PIPELINE-STATUS.md\` (Wc row). Same rule as \`pc-panel-review\`'s ledger and \`analyze-sibling-paper\`'s
