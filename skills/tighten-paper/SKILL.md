@@ -1,10 +1,10 @@
 ---
 name: tighten-paper
 description: "Use when a paper \"feels long / bloated / overly complex / hard to read / doesn't deliver its point / the middle drags\" — or after review rounds deposited hedge-mass. The developmental / editorial pass on a DRAFTED paper: what a real human editor thinks reading it cover to cover — the ONE point, does every section earn its place, can it be SKIMMED, is it too long for its contribution, which sections are TMI that belong in the artifact/appendix, does the conclusion pay off the intro's promise. Produces a structural verdict + a concrete cut / fold / merge / reorder plan — NOT sentence fixes. Its verdict is a required INPUT to pc-panel-review and a hard gate in harden-paper. NOT sentence craft or a writing grade (grade-paper-writing), NOT jargon stalls (the persona stall pass), NOT scientific defects (pc-panel-review / paper-adversarial-review). Run it BEFORE those on a bloated draft — no point polishing sentences in a section that should be cut."
-allowed-tools: [Read, Write, Edit, Grep, Glob, Agent]
+allowed-tools: [Read, Write, Edit, Grep, Glob, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:c692aa8a79379473 compiled from skills/tighten-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:d5a4cb99d204a7a5 compiled from skills/tighten-paper/SKILL.md.spec.ts -->
 
 # tighten-paper — the developmental edit
 
@@ -154,7 +154,8 @@ called it "fat for no reason" after a pass that cut almost nothing and left it 1
 - **"It's all load-bearing numbers" is the SECOND timid excuse — reject it too** (the first is "the skeleton is
   clean"). A paragraph can be FULL of protected numbers/cites and STILL be over-explained. Load-bearing protects
   the CLAIM + its number — NOT the three sentences that motivate, teach, and restate it around them. Method:
-  extract the claim+number into ONE tight sentence, cut the surrounding explanation. **Dense ≠ uncuttable** — a
+  extract the claim+number into ONE tight sentence, cut the surrounding explanation (deleting those sentences whole
+  is a deletion; the one tight sentence is a shortening, and takes the cold read below). **Dense ≠ uncuttable** — a
   measurement paper's fat HIDES as explanation of real numbers, which is exactly why "it's all numbers" lets it
   survive a lazy pass (GateBench 2026-07-25: a pass cut only 5% hiding behind this; the author correctly pushed
   back that whole sections were over-explained, not just number-dense).
@@ -180,7 +181,41 @@ called it "fat for no reason" after a pass that cut almost nothing and left it 1
   to THAT, not to the ceiling.
 - **Apply it — don't defer it (see caveats for why this is safe).** When invoked to TIGHTEN (not merely audit for
   harden/pc-panel input), APPLY the prose/TMI cuts directly and report the measured delta. A plan with no applied
-  cuts is only acceptable for a pure pre-review audit; "tighten this, it's fat" means CUT.
+  cuts is only acceptable for a pure pre-review audit; "tighten this, it's fat" means CUT. A shortened sentence that
+  explains something is applied only after its cold read (next section).
+
+## 🔴 Deleting a sentence and shortening one are two different cuts
+
+**Deleting a whole fat sentence** — one whose loss changes nothing the reader believes or can do, from the fat
+inventory above — stays low risk (class (1) under the caveats). Apply it.
+
+**Shortening a sentence that explains something is not that.** Dropping the clause that defines a term, says whose
+result a number is, names its denominator or gives the reason; re-voicing a sentence into fewer words; merging two
+explaining sentences into one: each leaves a sentence that is short, true and readable only by someone who already
+holds the idea. No fact-checker and no threshold sees the loss. It is how the paper in the first rule above lost its
+transitions and its antecedents, sixty characters at a time, and it is what `cold-read-diff` exists to catch
+("Paying by shortening another sentence is what created the problem"). The cut order says the same from the other
+side: never pay by trimming the subordinate clause that explains a sentence
+(`paper-pipeline/references/body-vs-appendix.md`, section "When the body overruns").
+
+So a shortening has a gate the deletion does not:
+
+1. **Mark each cut in the plan `delete` or `shorten`.** Whether a sentence explains something is a judgement this
+   skill makes; no rule decides it. When unsure, it is `shorten`.
+2. **Required sub-skill:** `cold-read-diff` — invoke it BY NAME with the Skill tool on the batch of shortened
+   sentences, **before the commit**, every time, the day of the deadline included. Once per batch, not after each
+   edit. Do not describe the need and hope the skill gets selected: selection from a description is unstable
+   (`pc-panel-review`, step 2).
+3. **A reader verdict of `CANNOT PARSE` or `ONLY-IF` on a shortened sentence rolls that cut back**: the sentence
+   returns as it was. Do not retry with a different shortening of the same sentence. Take the space from the cut
+   order instead — a whole block to the appendix (step 6, where step 0 left it standing), a measurement to the
+   artifact (step 7) — never from another explaining sentence.
+4. **Only then commit.** A batch whose readers did not answer is not committed as read; say `no answer`.
+
+**With `versions/<cycle>/approved.tex`**, a shortening is a `changes.yaml` proposal like every other cut (top of
+this skill), so `paper.tex` has not changed and the diff holds nothing to read. The reader reads the PROPOSED text:
+hand `cold-read-diff` each paragraph as it would read after the shortening, whole and in LaTeX source, in place of
+its script's extract. A reader failure removes that entry from the proposal before the author sees it.
 
 ## 🔴 Write the per-section verdict INTO the paper, not just into chat
 
@@ -256,7 +291,8 @@ as at least one clause, and each credit as its citation. The Threats section tha
 like any other section: its paragraphs, its "why this matters" explanations and its restatements get
 `SHORTEN −Nw` when they run long. A Threats section of 689 words, 9.1% of the body (one consumer
 paper, #486), is weighed for a `SHORTEN`, not waved through as a `KEEP`; a section already at one clause per limitation is a `KEEP`, and
-the plan says so. Shortening this wording is class (1) below, and step 4 of the cut order.
+the plan says so. Deleting a restatement or a "why this matters" sentence whole is class (1) below, and step 4 of the
+cut order; a limitation's own sentence shortened rather than deleted is a `shorten` and takes the cold read above.
 
 🔴 **A `MOVE` or `CUT` verdict on an appendix block is INVALID unless the note says what points at
 the block.** State the pointer, or state that a search found none — and if one exists, the verdict
@@ -330,11 +366,21 @@ polishing sentences in a section that should be folded to the artifact is wasted
 THEN run the sentence-level passes on what remains. On a page-limited paper, this pass is also what *buys* the space
 a sentence-level readability pass needs (cut a TMI section → the core mechanism gets room to breathe).
 
+Two kinds of link, and they are not the same:
+
+- **Required sub-skill:** `cold-read-diff` — on every batch that shortened a sentence that explains something,
+  before the commit (section "Deleting a sentence and shortening one are two different cuts"). Invoked BY NAME with
+  the Skill tool; this pass is not done without it.
+- **See also** — `grade-paper-writing`, the stall pass, `pc-panel-review`: they run after this pass, on what
+  remains; `harden-paper` calls this pass as a gate.
+
 ## Honesty / scope caveats
 - **Separate the two risk classes — they are NOT the same, and conflating them is what makes this pass timid.**
-  (1) **Prose/TMI cutting** — deleting fat sentences, folding enumerations to the artifact, collapsing hedge-stacks,
-  re-voicing academic sentences plainly — removes words that don't change what the reader believes. **LOW risk;
-  apply it aggressively even the day of the deadline.** Timidity here IS the failure, not the safe choice.
+  (1) **Prose/TMI deletion** — deleting whole fat sentences, folding enumerations to the artifact, collapsing
+  hedge-stacks — removes words that don't change what the reader believes. **LOW risk; apply it aggressively even
+  the day of the deadline.** Timidity here IS the failure, not the safe choice. **Shortening or re-voicing a sentence
+  that explains something is NOT in this class**, on any day: it goes through the cold read before the commit
+  (section "Deleting a sentence and shortening one are two different cuts"), and a reader failure rolls it back.
   (2) **Skeleton surgery** — merging, reordering, or deleting whole sections — can destabilize a done paper. **THIS
   is the deadline judgment call:** propose it, get author sign-off, hold for camera-ready if unsure. Never let
   caution about (2) suppress (1) — a "hold big cuts for later" reflex applied to *prose* fat is exactly how a
