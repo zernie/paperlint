@@ -45,7 +45,7 @@ Every reader in it knows too much or cannot read at all:
 | the author | maximally — that is the curse of knowledge | yes |
 | the persona subagent | **yes: it is handed the paper and the framing** | yes |
 | the review panel | yes | yes |
-| \`prose-lint\` | no | **no — it counts patterns** |
+| the lint rules (\`npx paperlint lint\`) | no | **no — they count patterns** |
 
 The gap between "knows too much" and "cannot read" is exactly where these sentences live. Closing it
 needs a reader who is competent and **structurally uninformed**, and the only way to guarantee that

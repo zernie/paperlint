@@ -160,6 +160,12 @@ export interface Passage {
   readonly registeredNumbers: number;
 }
 
+/** A caption a reader sees under a figure or a table: its prose, and the `\caption` it stands in. */
+export interface Caption {
+  readonly passages: readonly [Passage, ...Passage[]];
+  readonly span: Span;
+}
+
 /** How an emphasised phrase is set: bold, italic (or `\emph`), or underlined. */
 export type EmphasisStyle = "bold" | "italic" | "underline";
 
@@ -177,6 +183,12 @@ export type EmphasisPlace = "opening" | "inline";
  */
 export interface Emphasis {
   readonly style: EmphasisStyle;
+  /**
+   * The macro or declaration that set it, without its backslash: `emph`, `textit`, `em`, `itshape`…
+   * Two of one style are not one convention: `\emph` may mark a definition where `\textit` sets a
+   * title.
+   */
+  readonly command: string;
   readonly place: EmphasisPlace;
   readonly text: string;
   readonly span: Span;

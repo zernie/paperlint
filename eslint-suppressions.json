@@ -411,11 +411,6 @@
       "count": 1
     }
   },
-  "skills/grade-paper-writing/prose-lint.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
   "skills/harden-paper/harden-paper.eval.mjs": {
     "local/js-needs-reason": {
       "count": 1

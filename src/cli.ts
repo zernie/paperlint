@@ -87,6 +87,7 @@ import {
   texVenueRules,
 } from "./tex-venue-rules.ts";
 import { claimProvenanceRule } from "./claim-provenance.ts";
+import { termDefinitionRules } from "./term-definition-rules.ts";
 import { registerRule } from "./register.ts";
 import {
   REGISTER_BAND_RULE_LEVELS,
@@ -97,6 +98,7 @@ import {
   maxParagraphNumbersRule,
   maxParagraphWordsRule,
   maxSentenceWordsRule,
+  maxCaptionWordsRule,
 } from "./readability.ts";
 import {
   paperRules,
@@ -456,6 +458,8 @@ const REGISTER_AND_CASE_RULES = {
   "max-paragraph-words": maxParagraphWordsRule(TEX_RULE_DEPS),
   "max-paragraph-numbers": maxParagraphNumbersRule(TEX_RULE_DEPS),
   "max-sentence-words": maxSentenceWordsRule(TEX_RULE_DEPS),
+  "max-caption-words": maxCaptionWordsRule(TEX_RULE_DEPS),
+  ...termDefinitionRules(TEX_RULE_DEPS),
 };
 
 /**

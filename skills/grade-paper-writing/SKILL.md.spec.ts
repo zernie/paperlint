@@ -187,7 +187,8 @@ is what happened.
    the exemplars.** The rules count and this step judges; it starts from their numbers, not from a
    count of its own.
    - **Take the counts from the rules.** \`npx paperlint lint <paper-dir>\` reports
-     \`tex/contrast-frames\`, \`tex/claim-emphasis\` and \`tex/relation-markers\` when the venue preset
+     \`tex/contrast-frames\`, \`tex/claim-emphasis\` and \`tex/relation-markers\` (and
+     \`tex/negated-sentences\`, a share of sentences, when the paper turns it on) when the venue preset
      records anchors (AIDC does): each gives the body's rate per 10,000 words, the band, and the
      anchors' range, and above the band it reports every frame and every claim in bold where it
      stands. Those locations are the worklist. Do not recount them by grep — a narrower count is
@@ -221,28 +222,18 @@ is what happened.
 6. **Flag the two prose traps by name:** (a) Attention-style dense contribution-less prose used where the
    audience does NOT already care; (b) hedge-stacking ("may possibly in some cases potentially") — replace
    each pile with one precise scope sentence.
-7. 🔴 **Run \`prose-lint.mjs\` on the paper and treat every FLAG as a finding, not as context:**
+7. **Captions are prose a reader reads with the figure, outside the body the rules above count.**
+   \`tex/max-caption-words\` (opt-in, \`docs/rules/tex/max-caption-words.md\`) reports a caption over
+   100 words and a caption sentence over 40; with it off, read every caption as you read the body.
+   The headings as a set are \`argument-arc\`'s (its step 2a prints them).
 
-   \`\`\`
-   node \${CLAUDE_SKILL_DIR}/prose-lint.mjs <paper-dir>/paper.tex             # the report
-   node \${CLAUDE_SKILL_DIR}/prose-lint.mjs --headings <paper-dir>/paper.tex  # the headings, for argument-arc
-   \`\`\`
-
-   It measures the prose a reader sees — the files the last build read spliced in, no preamble,
-   comments, floats or inline \`.bib\` — so its rates are the paper's, not the source file's — and, on
-   its own line, the figure captions that float outside that prose, flagging a caption sentence over
-   40 words or a caption over 100. Run
-   \`npx paperlint build\` first: with no current build record it reads \`paper.tex\` alone and says so. The skill is what must ACT on it.
-   Its thresholds are sourced; a FLAG means the text sits above a published human or machine
-   baseline, which is a defect with a number attached, not an opinion.
-   Its "rather than" line is not the contrast-frame count: that count is \`tex/contrast-frames\`'s (step 3a).
-
-6b. 🔴 **A lint fix that costs meaning is a REGRESSION, and no linter can see it.** The metrics above
+6b. 🔴 **A lint fix that costs meaning is a REGRESSION, and no linter can see it.** The rules' counts
    are diagnostics, never objectives. Optimising one directly is how a sentence gets worse while the
-   number gets better, and the number is exactly what makes it feel like progress. So a FLAG is not
+   number gets better, and the number is exactly what makes it feel like progress. So a finding is not
    fixed here by rewording until the count drops: the flagged sentence goes to \`rewrite-unclear\`,
-   whose cold reader checks that the replacement still says the thing. If it does not, the flag stays
-   open: an open flag is a truthful state, and a passing metric over a sentence nobody can parse is not.
+   whose cold reader checks that the replacement still says the thing. If it does not, the finding
+   stays open: an open finding is a truthful state, and a passing count over a sentence nobody can
+   parse is not.
 
 8. 🔴 **Put \`WORST-SECTION: <section>\` on the FIRST LINE of the report.** Machine-readable, one
    section, lowercase, no decoration, so the next round can compare it with the last report. This exists because the abstract

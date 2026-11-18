@@ -704,6 +704,17 @@ describe("bodyEmphasis — each style, and edge cases", () => {
     ).toEqual(["bold/inline: this"]);
   });
 
+  it("🔴 each phrase names the command that set it: a macro, or the declaration opening its group", () => {
+    // Guards: \emph and \textit fold into one style, and tex/term-before-definition reads only \emph.
+    expect(
+      bodyEmphasis(
+        parseLatex(
+          "\\begin{document}\nA \\emph{b} c \\textit{d} e {\\em f} g {\\itshape h} i \\textbf{j}.\n\\end{document}",
+        ),
+      ).map((e) => `${e.command}: ${e.text}`),
+    ).toEqual(["emph: b", "textit: d", "em: f", "itshape: h", "textbf: j"]);
+  });
+
   it("the span is the macro with its argument, where the source has it", () => {
     const src = "\\begin{document}\nWe \\textbf{see it}.\n\\end{document}";
     const [e] = bodyEmphasis(parseLatex(src));

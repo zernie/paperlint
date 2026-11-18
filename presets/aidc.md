@@ -61,8 +61,9 @@ See `docs/rules/format/page-limit.md`.
   submission through HotCRP's API on that site.
 - **Names**: `AIDC` and `ACSAC`, what `tex/venue-leftover` looks for in another venue's paper.
 - **The register of the body** (`register`): the workshop's first edition has no accepted papers,
-  so the bands of `tex/contrast-frames`, `tex/claim-emphasis` and `tex/relation-markers` are set by
-  five accepted ACSAC papers on the same template, in `fixtures/accepted-papers/`.
+  so the bands of `tex/contrast-frames`, `tex/claim-emphasis` and `tex/relation-markers` (and of
+  `tex/negated-sentences`, off by default) are set by five accepted ACSAC papers on the same
+  template, in `fixtures/accepted-papers/`.
 
 ## What the preset resolves to
 

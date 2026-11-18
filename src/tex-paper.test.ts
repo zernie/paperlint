@@ -10,7 +10,7 @@ import { memoryFiles } from "./adapters/memory/index.ts";
 import { sourcesCodec } from "./adapters/sources-record/index.ts";
 import { join } from "node:path";
 import { texInputsDir } from "./package-dirs.ts";
-import { readPaper, reportInPaper } from "./tex-paper.ts";
+import { readPaper, reportInPaper, whereIn } from "./tex-paper.ts";
 import {
   builtFixture,
   builtPaper,
@@ -214,5 +214,22 @@ describe("readPaper — how an include names its file", () => {
       ],
     );
     expect(readPaper(MAIN, textOf(files), proseDeps(files)).text).toBe("xI\ny");
+  });
+});
+
+describe("whereIn — where a span of the paper stands, as an author looks for it", () => {
+  it("🔴 the main file and its line, or the included file and its own line; outside the text, the main file", () => {
+    // p1: paper.tex line 12 cites the inline entry; sections/intro.tex line 2 releases the harness.
+    const files = builtFixture("p1", "/p");
+    const p = readPaper(MAIN, textOf(files), proseDeps(files));
+    const at = (needle: string) => {
+      const start = p.text.indexOf(needle);
+      return { start, end: start + needle.length };
+    };
+    expect([
+      whereIn(p, at("We cite the inline entry")),
+      whereIn(p, at("We release the harness")),
+      whereIn(p, { start: p.text.length + 5, end: p.text.length + 6 }),
+    ]).toEqual(["paper.tex:12", "sections/intro.tex:2", "paper.tex"]);
   });
 });

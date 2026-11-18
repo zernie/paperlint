@@ -21,11 +21,15 @@
  * registered numbers the parser counted in it (`Passage.registeredNumbers`); inline math is a mark,
  * so nothing inside it is a number.
  */
-import type { Passage } from "./domain/tex-document.ts";
+import type { Caption, Passage } from "./domain/tex-document.ts";
 import { runText, spanIn } from "./domain/tex-document.ts";
 import { runOf } from "./domain/sentences.ts";
 import { NUMBER } from "./claim-provenance.ts";
-import { bodySentences, wordsOf } from "./domain/register.ts";
+import {
+  bodySentences,
+  wordsOf,
+  type BodySentence,
+} from "./domain/register.ts";
 import { fieldOf } from "./domain/record.ts";
 import { startOf } from "./register.ts";
 import { readPaper, reportInPaper, type ProseDeps } from "./tex-paper.ts";
@@ -43,6 +47,12 @@ export const DEFAULT_MAX_PARAGRAPH_NUMBERS = 8;
 
 /** The sentence ceiling when the config sets none: a 56th word fires. */
 export const DEFAULT_MAX_SENTENCE_WORDS = 55;
+
+/** The caption ceiling when the config sets none: a 101st word fires. */
+export const DEFAULT_MAX_CAPTION_WORDS = 100;
+
+/** The caption-sentence ceiling when the config sets none: a 41st word fires. */
+export const DEFAULT_MAX_CAPTION_SENTENCE_WORDS = 40;
 
 /** How many words of a paragraph a message quotes. */
 const HEAD_WORDS = 8;
@@ -79,8 +89,7 @@ export function maxOf(
   options: readonly unknown[] | undefined,
   fallback: number = DEFAULT_MAX_PARAGRAPH_WORDS,
 ): number {
-  const v = fieldOf(options?.[0], "max");
-  return typeof v === "number" ? v : fallback;
+  return optionOf(options, "max", fallback);
 }
 
 /**
@@ -128,6 +137,105 @@ export const judgeSentenceWords = (
       data: { words: s.words, max, head: headOf(s.text) },
       at: spanIn(s.run, s.from, s.from + 1),
     }));
+
+/**
+ * Every caption over `max` words, at its `\caption`, and every caption sentence over `maxSentence`
+ * words, at its start. Words and sentences are the body's: a formula or a citation is one word.
+ */
+export const judgeCaptionWords = (
+  captions: readonly Caption[],
+  max: number,
+  maxSentence: number,
+): readonly Located[] =>
+  captions.flatMap((c) => {
+    const ss = bodySentences(c.passages);
+    return [...captionOver(c, ss, max), ...sentencesOver(ss, maxSentence)];
+  });
+
+/** The caption itself, when its words run past `max`. */
+function captionOver(
+  c: Caption,
+  ss: readonly BodySentence[],
+  max: number,
+): readonly Located[] {
+  const words = wordsOf(ss);
+  if (words <= max) return [];
+  const head = headOf(ss.map((s) => s.text).join(" "));
+  return [{ messageId: "caption", data: { words, max, head }, at: c.span }];
+}
+
+/** Each sentence of a caption over `max` words, at its start. */
+const sentencesOver = (
+  ss: readonly BodySentence[],
+  max: number,
+): readonly Located[] =>
+  ss
+    .filter((s) => s.words > max)
+    .map((s) => ({
+      messageId: "captionSentence",
+      data: { words: s.words, max, head: headOf(s.text) },
+      at: spanIn(s.run, s.from, s.from + 1),
+    }));
+
+const CAPTION_MESSAGES = {
+  caption:
+    "a caption of {{words}} words, over {{max}} — «{{head}}». A reader reads a caption in one pass with its figure; move the method into the body and keep what the figure shows.",
+  captionSentence:
+    "a caption sentence of {{words}} words, over {{max}} — «{{head}}». Cut it where a clause could stand alone.",
+};
+
+/** An integer option the config sets, or the default: ESLint has validated it against the schema. */
+const optionOf = (
+  options: readonly unknown[] | undefined,
+  key: string,
+  fallback: number,
+): number => {
+  const v = fieldOf(options?.[0], key);
+  return typeof v === "number" ? v : fallback;
+};
+
+/**
+ * `tex/max-caption-words`: a caption over `max` words (default 100), a caption sentence over
+ * `maxSentence` (default 40). One rule with two options, as `max-len` has `comments`: both are a
+ * caption too long, with the same reason to switch them off. Not on in any default config.
+ */
+const CAPTION_META: TexRuleModule["meta"] = {
+  type: "suggestion",
+  docs: {
+    description: `a caption stays at or under \`max\` words (${String(DEFAULT_MAX_CAPTION_WORDS)}) and each of its sentences at or under \`maxSentence\` (${String(DEFAULT_MAX_CAPTION_SENTENCE_WORDS)}). Off until a project turns it on`,
+    url: ruleDocsUrl("max-caption-words"),
+  },
+  schema: [
+    {
+      type: "object",
+      properties: {
+        max: { type: "integer", minimum: 0 },
+        maxSentence: { type: "integer", minimum: 0 },
+      },
+      additionalProperties: false,
+    },
+  ],
+  messages: CAPTION_MESSAGES,
+};
+
+export const maxCaptionWordsRule = (deps: ProseDeps): TexRuleModule => ({
+  meta: CAPTION_META,
+  create(context) {
+    return {
+      root() {
+        const sc = context.sourceCode;
+        const paper = readPaper(context.filename, sc.raw ?? sc.text, deps);
+        const o = context.options;
+        const found = judgeCaptionWords(
+          deps.latex.captions(paper.text),
+          optionOf(o, "max", DEFAULT_MAX_CAPTION_WORDS),
+          optionOf(o, "maxSentence", DEFAULT_MAX_CAPTION_SENTENCE_WORDS),
+        );
+        reportInPaper(context, CAPTION_MESSAGES, paper, found);
+      },
+    };
+  },
+});
 
 const MESSAGES = {
   paragraph:

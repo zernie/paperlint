@@ -278,3 +278,23 @@ describe("abstractText — the edges of what the source may hold", () => {
     expect(abstractOfTree(tree, "")).toEqual({ ok: true, value: "A" });
   });
 });
+
+describe("abstractSpan — where the abstract stands, for a rule that leaves it out", () => {
+  it("🔴 the whole environment, \\begin to \\end, in the source as given", () => {
+    const src = doc("", "We find \\emph{gates}.");
+    const span = latexReader.abstractSpan(src);
+    expect(span && src.slice(span.start, span.end)).toBe(
+      "\\begin{abstract}\nWe find \\emph{gates}.\n\\end{abstract}",
+    );
+  });
+
+  it("none without an abstract, and none in a comment or after the document ends", () => {
+    expect(
+      [
+        "\\begin{document}\nText.\n\\end{document}\n",
+        "% \\begin{abstract}x\\end{abstract}\n\\begin{document}\n\\end{document}\n",
+        "\\begin{document}\n\\end{document}\n\\begin{abstract}x\\end{abstract}\n",
+      ].map((s) => latexReader.abstractSpan(s)),
+    ).toEqual([null, null, null]);
+  });
+});
