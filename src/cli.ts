@@ -886,11 +886,16 @@ export async function silentOptionalRules(
     ),
   );
   const reached = new Set<string>();
-  // A paper's rules reach it through two files: `paper.tex` and the `PIPELINE-STATUS.md` beside it,
-  // where the rules about the paper folder itself run.
+  // A paper's rules reach it through three files: `paper.tex`, the `PIPELINE-STATUS.md` beside it,
+  // where the rules about the paper folder itself run, and a file of its `reviews/`, where the rules
+  // about a review run. The review need not exist: ESLint answers for the path.
   const probes = [
     ...new Set(files.filter((p) => basename(p) === MAIN)),
-  ].flatMap((f) => [f, join(dirname(f), STATUS_FILE)]);
+  ].flatMap((f) => [
+    f,
+    join(dirname(f), STATUS_FILE),
+    join(dirname(f), "reviews", "review.md"),
+  ]);
   for (const probe of probes) {
     // Undefined for a file outside ESLint's cwd or scope: it reaches nothing.
     const cfg = ComputedConfig.parse(

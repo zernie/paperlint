@@ -721,6 +721,34 @@ test("silentOptionalRules: a rule that runs on the paper's PIPELINE-STATUS.md is
   );
 });
 
+test("silentOptionalRules: a rule that runs on the paper's reviews is reached through a review file, even before one exists", async () => {
+  const eslint = {
+    calculateConfigForFile: (f: string) =>
+      Promise.resolve(
+        f === join("p", "reviews", "review.md")
+          ? { rules: { "review/findings-closed": [2] } }
+          : { rules: {} },
+      ),
+  };
+  const closedOn = {
+    rules: [
+      { basePath: ".", rules: { "review/findings-closed": "error" as const } },
+    ],
+  };
+  assert.deepEqual(
+    await silentOptionalRules(eslint, ["p/paper.tex"], closedOn),
+    [],
+  );
+  assert.deepEqual(
+    await silentOptionalRules(
+      { calculateConfigForFile: () => Promise.resolve({ rules: {} }) },
+      ["p/paper.tex"],
+      closedOn,
+    ),
+    ["review/findings-closed"],
+  );
+});
+
 test("init with no path sets up the current directory, and its first paper is paper.tex", async () => {
   const dir = writeTree(join(root, "init-here"), { "package.json": "{}" });
   const r = await cli(["init", "--yes", "--no-hooks", "--paper", "first"], dir);

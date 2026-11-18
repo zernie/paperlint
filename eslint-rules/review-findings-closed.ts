@@ -60,12 +60,11 @@ export default {
       yaml(node: { readonly value?: string }) {
         const read = parseFrontmatter(node.value);
         if (read.ok)
-          R.forEach(openFindings(read.data), (f) =>
-            context.report({
+          R.forEach(openFindings(read.data), (f) => { context.report({
               node,
               messageId: "open",
               data: { problem: describe(f) },
-            }),
+            }); },
           );
       },
     };

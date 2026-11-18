@@ -184,6 +184,20 @@ const DECLARE_SAMPLE_ON: Readonly<Record<string, string>> = {
   }),
 };
 
+/** `review/findings-closed` is off by default; a paper turns it on in its `paperlint.json`. */
+const FINDINGS_CLOSED_ON: Readonly<Record<string, string>> = {
+  [`${P}/paperlint.json`]: JSON.stringify({
+    extends: null,
+    rules: { "review/findings-closed": "error" },
+  }),
+};
+
+/** A review whose one finding has the given status. */
+const reviewWith = (status: string): Readonly<Record<string, string>> => ({
+  ...FINDINGS_CLOSED_ON,
+  [`${P}/reviews/r1.md`]: `---\nfindings:\n  - id: 1\n    status: ${status}\n    cause: rule\n---\n# Review\n`,
+});
+
 /** `tex/max-paragraph-words` is off by default; a paper turns it on in its `paperlint.json`. */
 const MAX_PARAGRAPH_WORDS_ON: Readonly<Record<string, string>> = {
   [`${P}/paperlint.json`]: JSON.stringify({
@@ -1019,6 +1033,16 @@ const CASES: Readonly<Record<string, RuleCases>> = {
         "---\nfindings:\n  - id: 1\n    status: fixed\n---\n# Review\n",
     }),
   },
+  // Off by default: its cases turn it on in the paper's paperlint.json.
+  "review/findings-closed": {
+    reports: {
+      tree: paper(tex("x"), reviewWith("open")),
+      file: `${P}/reviews/r1.md`,
+      severity: 2,
+      line: 1,
+    },
+    silent: paper(tex("x"), reviewWith("fixed")),
+  },
   "sibling/frontmatter": {
     reports: {
       tree: paper(tex("x"), {
@@ -1555,6 +1579,21 @@ describe("the other two ceilings are off by default", () => {
     const on = await ids(paper(tex(body), CEILINGS_ON));
     expect(on).toContain("tex/max-paragraph-numbers");
     expect(on).toContain("tex/max-sentence-words");
+  });
+});
+
+describe("review/findings-closed is off by default", () => {
+  it("is silent on an open finding until the paper turns it on", async () => {
+    const ids = async (tree: Record<string, string>) =>
+      (await lintTree(tree)).map((m) => m.ruleId);
+    const open = reviewWith("open");
+    const { [`${P}/paperlint.json`]: _on, ...off } = open;
+    expect(await ids(paper(tex("x"), off))).not.toContain(
+      "review/findings-closed",
+    );
+    expect(await ids(paper(tex("x"), open))).toContain(
+      "review/findings-closed",
+    );
   });
 });
 
