@@ -339,7 +339,9 @@ findings:
   (Fable) before/after diff verifying **no number moved, no hedge dropped, no claim strengthened, no
   new absolute, no self-contradiction**. The fix pass is not done until it's clean; record it in the
   \`claims\` row of the paper's \`PIPELINE-STATUS.md\`. This step is mandatory after EVERY rewrite, not optional.
-- **Respect the page budget.** Prefer fixes that cut or hold length; a paper at its page ceiling can't grow.
+- **A clearer fix may take more words.** Pay for them by moving material to an appendix, never by shortening
+  another sentence that explains something. Whether the paper still fits is measured by the build after the fixes;
+  a measured overflow goes to \`tighten-paper\`.
 - **Honesty over flattery.** If the abstract is a stat-wall, score it a 2 and show the five-move rewrite.
 
 ## 🔴 The tell that says a machine wrote it: three findings in one sentence
