@@ -182,6 +182,18 @@ describe("tex/term-before-definition's finding: the first use before the first d
   });
 });
 
+describe("a term written in capitals keeps its case", () => {
+  it("🔴 \\emph{CI} is used before by «CI», never by «ci»; \\emph{ci} is another term, of any case", () => {
+    const src = doc(
+      "The ci script runs. Our CI blocks.\n\nWe call the check \\emph{CI}. Later a \\emph{ci} job.",
+    );
+    // «CI» matches only «CI» (one earlier use); «ci», written in lower case, matches every case:
+    // «ci», «CI», and the «CI» of the sentence defining the other term.
+    expect(before(src)).toEqual(["CI: CI @true ×1", "ci: ci @true ×3"]);
+    expect(again(src)).toEqual([]);
+  });
+});
+
 describe("tex/term-defined-twice's finding: each later definition", () => {
   it("🔴 every definition after the first, in document order, against the first", () => {
     expect(
