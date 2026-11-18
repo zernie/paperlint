@@ -1587,7 +1587,9 @@ describe("review/findings-closed is off by default", () => {
     const ids = async (tree: Record<string, string>) =>
       (await lintTree(tree)).map((m) => m.ruleId);
     const open = reviewWith("open");
-    const { [`${P}/paperlint.json`]: _on, ...off } = open;
+    const off = Object.fromEntries(
+      Object.entries(open).filter(([f]) => f !== `${P}/paperlint.json`),
+    );
     expect(await ids(paper(tex("x"), off))).not.toContain(
       "review/findings-closed",
     );
