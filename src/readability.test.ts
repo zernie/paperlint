@@ -8,9 +8,11 @@ import { memoryFiles } from "./adapters/memory/index.ts";
 import { sourcesCodec } from "./adapters/sources-record/index.ts";
 import {
   DEFAULT_MAX_PARAGRAPH_WORDS,
+  judgeCaptionWords,
   judgeParagraphNumbers,
   judgeParagraphWords,
   judgeSentenceWords,
+  maxCaptionWordsRule,
   maxOf,
   maxParagraphNumbersRule,
   maxParagraphWordsRule,
@@ -254,5 +256,91 @@ describe("the new rules, through create()", () => {
       run(maxParagraphNumbersRule(deps), "1 2 3 4 5 6 7 8 9."),
     ).toHaveLength(1);
     expect(run(maxParagraphWordsRule(deps), "Short.")).toHaveLength(0);
+  });
+});
+
+describe("tex/max-caption-words — a caption, or a caption sentence, over its ceiling", () => {
+  /** `n` words as one sentence. */
+  const words = (n: number): string =>
+    Array.from({ length: n }, () => "word").join(" ");
+  /** A sentence of `n` words: capitalised, so the splitter ends the one before it. */
+  const sentence = (n: number): string => `Word ${words(n - 1)}.`;
+  const fig = (caption: string): string =>
+    doc(`Text.\n\\begin{figure}\\caption{${caption}}\\end{figure}`);
+  const found = (caption: string, max = 100, maxSentence = 40) => {
+    const src = fig(caption);
+    return judgeCaptionWords(latexReader.captions(src), max, maxSentence).map(
+      (f) => ({
+        ...f,
+        at: f.at && src.slice(f.at.start, f.at.start + 9),
+      }),
+    );
+  };
+
+  it("🔴 a caption of 101 words fires at its \\caption; one of 100 does not", () => {
+    const four = [25, 25, 25, 26].map(sentence).join(" ");
+    expect(found(four)).toEqual([
+      {
+        messageId: "caption",
+        data: {
+          words: 101,
+          max: 100,
+          head: "Word word word word word word word word…",
+        },
+        at: "\\caption{",
+      },
+    ]);
+    expect(found([25, 25, 25, 25].map(sentence).join(" "))).toEqual([]);
+  });
+
+  it("🔴 a caption sentence of 41 words fires at its start; one of 40 does not", () => {
+    expect(found(`${words(41)}.`)).toEqual([
+      {
+        messageId: "captionSentence",
+        data: {
+          words: 41,
+          max: 40,
+          head: "word word word word word word word word…",
+        },
+        at: "word word",
+      },
+    ]);
+    expect(found(`${words(40)}.`)).toEqual([]);
+  });
+
+  it("🔴 a caption commented out or in verbatim is not measured", () => {
+    const src = doc(
+      `% \\caption{${words(120)}.}\n\\begin{verbatim}\\caption{${words(120)}.}\\end{verbatim}`,
+    );
+    expect(judgeCaptionWords(latexReader.captions(src), 100, 40)).toEqual([]);
+  });
+
+  it("the options move both ceilings, through create()", () => {
+    const rule = maxCaptionWordsRule({
+      files: memoryFiles({ "/p/paper.tex": "" }),
+      latex: latexReader,
+      codec: sourcesCodec,
+    });
+    const ids = (options: readonly unknown[]) => {
+      const src = fig(`${words(30)}.`);
+      const out: string[] = [];
+      rule
+        .create({
+          filename: "/p/paper.tex",
+          options,
+          sourceCode: {
+            text: src,
+            getLocFromIndex: () => ({ line: 1, column: 0 }),
+          },
+          report: (d) => out.push("messageId" in d ? d.messageId : d.message),
+        })
+        .root?.();
+      return out;
+    };
+    expect(ids([])).toEqual([]);
+    expect(ids([{ max: 20, maxSentence: 25 }])).toEqual([
+      "caption",
+      "captionSentence",
+    ]);
   });
 });

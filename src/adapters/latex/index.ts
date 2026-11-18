@@ -28,6 +28,7 @@ import {
   replaceDocumentClass,
 } from "./document-class.ts";
 import { citeKeysOf, macroTextsOf, registeredNumbersOf } from "./facts.ts";
+import { captionProse } from "./captions.ts";
 import { headingsOf } from "./headings.ts";
 import { documentBodyOf, includesOf } from "./includes.ts";
 import { outlineOf } from "./outline.ts";
@@ -52,7 +53,7 @@ export {
   textOf,
 } from "./nodes.ts";
 export { documentBodyOf, includesOf } from "./includes.ts";
-export { captionsOf } from "./captions.ts";
+export { captionProse, captionsOf } from "./captions.ts";
 export { headingsOf } from "./headings.ts";
 export { outlineOf } from "./outline.ts";
 export { parseLatex, type ParsedTex } from "./parse.ts";
@@ -68,6 +69,7 @@ export const latexReader: LatexReader = {
   renderedRuns: (src) => renderedRuns(parseLatex(src)),
   bodyProse: (src) => bodyProse(parseLatex(src)),
   bodyEmphasis: (src) => bodyEmphasis(parseLatex(src)),
+  captions: (src) => captionProse(parseLatex(src)),
   includes: (src) => includesOf(parseLatex(src)),
   documentBody: (src) => documentBodyOf(parseLatex(src)),
   template: parseTemplate,

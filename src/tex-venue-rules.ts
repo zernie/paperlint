@@ -329,6 +329,7 @@ export const ruleDocsUrl = (
     | "max-paragraph-words"
     | "max-paragraph-numbers"
     | "max-sentence-words"
+    | "max-caption-words"
     | "term-before-definition"
     | "term-defined-twice",
 ): string =>

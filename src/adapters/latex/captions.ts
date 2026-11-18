@@ -1,9 +1,12 @@
 /** The captions of a document: the text a reader sees under a figure or a table. */
-import { isDefined } from "remeda";
+import { hasAtLeast, isDefined } from "remeda";
+import type { Caption } from "../../domain/tex-document.ts";
 import { isDefinition, isUnrendered } from "./hidden.ts";
 import {
   collapse,
+  inPlace,
   isNode,
+  macroPlace,
   mandatory,
   textOf,
   visited,
@@ -11,6 +14,7 @@ import {
   type Node,
 } from "./nodes.ts";
 import type { ParsedTex } from "./parse.ts";
+import { proseOfNodes } from "./prose.ts";
 
 const isCaption = (n: Node): n is Macro =>
   n.type === "macro" && n.content === "caption";
@@ -53,4 +57,25 @@ export function captionsOf(t: ParsedTex): readonly string[] {
     .filter(isDefined)
     .map((a) => collapse(captionText(a.content)).trim())
     .filter((text) => text !== "");
+}
+
+/**
+ * Every `\caption` a reader sees, in document order, as prose read the way the body is (a citation
+ * or a formula is a mark, so one word) with the span of the `\caption` and its arguments. The same
+ * captions as `captionsOf`: its last mandatory argument, nothing commented out, in code or in a
+ * macro's definition; a caption with no word in it is left out.
+ */
+export function captionProse(t: ParsedTex): readonly Caption[] {
+  return visited(
+    t.root,
+    (v, parent) => isUnrendered(v, parent) || isDefinition(v),
+  )
+    .filter(isNode)
+    .filter(isCaption)
+    .flatMap((m) => {
+      const passages = proseOfNodes(t, mandatory(m).at(-1)?.content ?? []);
+      return hasAtLeast(passages, 1)
+        ? inPlace(macroPlace(m), (span) => [{ passages, span }])
+        : [];
+    });
 }

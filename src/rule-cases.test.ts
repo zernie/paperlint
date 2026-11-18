@@ -206,6 +206,19 @@ const TERMS_ON: Readonly<Record<string, string>> = {
 const GATE_DEFINED =
   "A \\emph{gate} is a check that blocks a call. The gate holds.";
 
+/** `tex/max-caption-words` is off by default; a paper turns it on. */
+const CAPTIONS_ON: Readonly<Record<string, string>> = {
+  [`${P}/paperlint.json`]: JSON.stringify({
+    extends: null,
+    rules: { "tex/max-caption-words": "warn" },
+  }),
+};
+/** A figure whose caption is `n` words, opening on line 4 of the paper. */
+const captioned = (n: number): string =>
+  tex(
+    `Text.\n\\begin{figure}\n\\caption{${Array.from({ length: n }, () => "word").join(" ")}}\n\\end{figure}`,
+  );
+
 /** `tex/max-paragraph-numbers` and `tex/max-sentence-words` are off by default too. */
 const CEILINGS_ON: Readonly<Record<string, string>> = {
   [`${P}/paperlint.json`]: JSON.stringify({
@@ -1326,6 +1339,16 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     },
     silent: paper(tex(longSentence(55)), CEILINGS_ON),
   },
+  // Captions: off by default; a 41-word caption is one sentence over 40, under the caption's 100.
+  "tex/max-caption-words": {
+    reports: {
+      tree: paper(captioned(41), CAPTIONS_ON),
+      file: TEX_FILE,
+      severity: 1,
+      line: 5,
+    },
+    silent: paper(captioned(40), CAPTIONS_ON),
+  },
   // A term against its definition: off by default, on in these cases' paperlint.json.
   "tex/term-before-definition": {
     reports: {
@@ -1591,6 +1614,19 @@ describe("the other two ceilings are off by default", () => {
     const on = await ids(paper(tex(body), CEILINGS_ON));
     expect(on).toContain("tex/max-paragraph-numbers");
     expect(on).toContain("tex/max-sentence-words");
+  });
+});
+
+describe("tex/max-caption-words is off by default", () => {
+  it("a 120-word caption produces nothing until the paper turns the rule on", async () => {
+    const ids = async (tree: Record<string, string>) =>
+      (await lintTree(tree)).map((m) => m.ruleId);
+    expect(await ids(paper(captioned(120)))).not.toContain(
+      "tex/max-caption-words",
+    );
+    expect(await ids(paper(captioned(120), CAPTIONS_ON))).toContain(
+      "tex/max-caption-words",
+    );
   });
 });
 

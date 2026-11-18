@@ -5,6 +5,7 @@
 import type { Include } from "../domain/paper-source.ts";
 import type { Result } from "../domain/result.ts";
 import type {
+  Caption,
   ClassLine,
   DocumentClass,
   Emphasis,
@@ -68,6 +69,11 @@ export interface LatexReader {
    * a heading, a run-in heading (`\textbf{Threats.} …`), a caption, a float or a table.
    */
   readonly bodyEmphasis: (src: string) => readonly Emphasis[];
+  /**
+   * Every `\caption` a reader sees, in document order, as prose read the way the body is, with the
+   * span of the command: never one commented out, in code, or in a macro's definition.
+   */
+  readonly captions: (src: string) => readonly Caption[];
   /** Every `\input`, `\include` and `\subfile`, in source order: the path as written, where it stands. */
   readonly includes: (src: string) => readonly Include[];
   /** The span of the `document` environment's body, or null when the source has none. */
@@ -100,7 +106,7 @@ export interface LatexReader {
    */
   readonly abstractText: (src: string) => Result<string, AbstractProblem>;
   /**
-   * Where the abstract environment stands, `\\begin` to `\\end`, or null when the source has none:
+   * Where the abstract environment stands, `\begin` to `\end`, or null when the source has none:
    * a rule over the body's prose leaves out what stands in it (`bodyProse` reads it as body).
    */
   readonly abstractSpan: (src: string) => Span | null;

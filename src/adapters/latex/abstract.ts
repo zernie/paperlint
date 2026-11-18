@@ -252,8 +252,8 @@ function typeset(
 }
 
 /**
- * Where the first live `abstract` environment of `src` stands, `\\begin` to `\\end`, or null when it
- * has none: not one in a comment, and nothing after `\\end{document}`.
+ * Where the first live `abstract` environment of `src` stands, `\begin` to `\end`, or null when it
+ * has none: not one in a comment, and nothing after `\end{document}`.
  */
 export function abstractSpan(src: string): Span | null {
   const env = visited(liveRoot(parseLatex(src)), () => false)
@@ -262,7 +262,7 @@ export function abstractSpan(src: string): Span | null {
   return env === undefined ? null : { start: at(env), end: end(env) };
 }
 
-/** The abstract of `src` as one paragraph of plain text, or what stops it; nothing after `\\end{document}` is read. */
+/** The abstract of `src` as one paragraph of plain text, or what stops it; nothing after `\end{document}` is read. */
 export const abstractText = (src: string): Result<string, AbstractProblem> =>
   abstractOfTree(liveRoot(parseLatex(src)), src);
 

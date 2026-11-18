@@ -610,6 +610,15 @@ const startOf = (p: Passage): number => {
 };
 
 /**
+ * What a list of nodes typesets, as passages: the prose of an argument read on its own (a caption).
+ * Nothing opens a paragraph here, so a bold label at its start stays prose.
+ */
+export const proseOfNodes = (
+  t: ParsedTex,
+  nodes: readonly Node[],
+): readonly Passage[] => passagesOf(walkList(t, nodes)).filter(hasProse);
+
+/**
  * The body's prose, in document order: the content of the `document` environment (the whole
  * source when there is none), up to the first back-matter node.
  */

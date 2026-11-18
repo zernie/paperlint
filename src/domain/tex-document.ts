@@ -160,6 +160,12 @@ export interface Passage {
   readonly registeredNumbers: number;
 }
 
+/** A caption a reader sees under a figure or a table: its prose, and the `\caption` it stands in. */
+export interface Caption {
+  readonly passages: readonly [Passage, ...Passage[]];
+  readonly span: Span;
+}
+
 /** How an emphasised phrase is set: bold, italic (or `\emph`), or underlined. */
 export type EmphasisStyle = "bold" | "italic" | "underline";
 
