@@ -1,10 +1,10 @@
 ---
 name: grade-paper-writing
-description: Grade how a whole paper reads and find the sentences a reader stalls on. Use when asked if a paper reads well or to grade the prose, or when the writing is a wall of text, jargon-heavy, or reads like a blog post. Returns 1–5 scores and the sentences cold readers could not follow, each with the fix it needs; the rewrites come from rewrite-unclear. Not for rewriting one unclear passage (rewrite-unclear), cuts (tighten-paper), one edited paragraph (cold-read-diff), scientific flaws (paper-adversarial-review, pc-panel-review), submit readiness (harden-paper) or what the venue rewards (study-accepted-papers).
+description: "Judge how a paper reads and find the sentences a reader stalls on. Use whenever someone wants a verdict on the writing rather than a rewrite: does the draft, a section or the abstract read well, is the prose good or bad, score or grade it, give an honest opinion of how it reads — in English or Russian — including when it reads like a wall of jargon or a blog post, sounds off, or every sentence parses but the paragraphs do not add up. Returns 1–5 scores and the sentences cold readers could not follow, each with the fix it needs; the rewrites come from rewrite-unclear. Not for rewriting one unclear passage (rewrite-unclear), cuts (tighten-paper), one edited paragraph (cold-read-diff), scientific flaws (paper-adversarial-review, pc-panel-review), submit readiness (harden-paper) or what the venue rewards (study-accepted-papers)."
 allowed-tools: [Read, Write, Edit, Grep, Glob, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:8ce86d8344dcbb3c compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:30bb7cab99f4bf77 compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
 
 # grade-paper-writing — grade how the paper READS, then fix it sentence by sentence
 

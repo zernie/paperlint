@@ -1,10 +1,10 @@
 ---
 name: rewrite-unclear
-description: "Make unclear paper text clear: rewrite a sentence, paragraph, heading, section or the abstract so a reader outside the subfield understands it, keeping every claim, number and citation; more words are allowed. Use whenever someone says paper text is unclear, confusing, hard to follow, too dense, full of undefined terms or reads like an LLM wrote it, or asks to simplify it, explain it plainly or rewrite it so a human gets it — \"make it simpler\", \"I can't follow this\", \"перепиши понятнее\", \"напиши проще\", \"не понимаю, что тут написано\" — and when grade-paper-writing or cold-read-diff hands over a flagged passage. Rewrite here, not inline: this skill checks each rewrite with a reader who has no context and with a claim-preservation diff. Not for cutting length (tighten-paper), grading (grade-paper-writing), finding unclear sentences (cold-read-diff) or the order of the argument (argument-arc)."
+description: "Rewrite an unclear passage of a paper — a sentence, paragraph, heading, section or the abstract — so a reader outside the subfield understands it, keeping every claim, number and citation; more words are allowed. Use whenever someone points at paper text and wants it changed because it is unclear, confusing, too dense, full of undefined terms or reads like an LLM wrote it: simplify it, explain it plainly, rewrite it so a human gets it — \"make it simpler\", \"I can't follow this, rewrite it\", \"перепиши понятнее\", \"напиши проще\", \"не понимаю, что тут написано, переделай\" — and when grade-paper-writing or cold-read-diff hands over a flagged passage. Rewrite here, not inline: this skill checks each rewrite with a reader who has no context and with a claim-preservation diff. Not for a verdict or score on how the writing reads (grade-paper-writing), cutting length (tighten-paper), finding unclear sentences (cold-read-diff) or the order of the argument (argument-arc)."
 allowed-tools: [Read, Edit, Grep, Glob, Agent]
 ---
 
-<!-- vigiles:sha256:c71a6c53b965ab30 compiled from skills/rewrite-unclear/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:21dea8c06583099f compiled from skills/rewrite-unclear/SKILL.md.spec.ts -->
 
 # rewrite-unclear — make a passage say its claim so a stranger gets it
 
