@@ -44,6 +44,13 @@ describe("abstractText — what TeX prints, as plain text", () => {
     });
   });
 
+  it("a brace group prints its contents, nested groups too", () => {
+    expect(text("", "{Braced} words {print {their} text}.")).toEqual({
+      ok: true,
+      value: "Braced words print their text.",
+    });
+  });
+
   it("citations and comments are dropped; formatting commands say what their argument says", () => {
     expect(
       text(
