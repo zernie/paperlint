@@ -161,6 +161,21 @@ describe("abstractText — where the refusal stands, and what is not read at all
     ]);
   });
 
+  it("an abstract inside a macro definition is not the paper's abstract, for the text and the span alike", () => {
+    const src = doc(
+      "\\newcommand{\\draft}{\\begin{abstract}old draft\\end{abstract}}",
+      "Real one.",
+    );
+    const span = latexReader.abstractSpan(src);
+    expect([
+      latexReader.abstractText(src),
+      span && src.slice(span.start, span.end),
+    ]).toStrictEqual([
+      { ok: true, value: "Real one." },
+      "\\begin{abstract}\nReal one.\n\\end{abstract}",
+    ]);
+  });
+
   it("no abstract environment: said so", () => {
     expect(
       latexReader.abstractText(

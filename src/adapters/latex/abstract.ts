@@ -27,6 +27,7 @@ import { err, ok, type Result } from "../../domain/result.ts";
 import type { Span } from "../../domain/tex-document.ts";
 import type { AbstractProblem } from "../../ports/latex.ts";
 import { INVISIBLE, LINE_BREAKS, TRANSPARENT } from "./headings.ts";
+import { isDefinition, isUnrendered } from "./hidden.ts";
 import {
   argumentsOf,
   isNode,
@@ -256,11 +257,18 @@ function typeset(
  * has none: not one in a comment, and nothing after `\end{document}`.
  */
 export function abstractSpan(src: string): Span | null {
-  const env = visited(liveRoot(parseLatex(src)), () => false)
-    .filter(isNode)
-    .find((n) => n.type === "environment" && n.env === "abstract");
+  const env = firstAbstract(liveRoot(parseLatex(src)));
   return env === undefined ? null : { start: at(env), end: end(env) };
 }
+
+/**
+ * The first `abstract` environment the PDF shows: the walk skips what never prints and a macro
+ * definition's body, as the outline's does, so a draft abstract kept in a `\newcommand` is not it.
+ */
+const firstAbstract = (root: Readonly<Ast.Root>): Node | undefined =>
+  visited(root, (v, parent) => isUnrendered(v, parent) || isDefinition(v))
+    .filter(isNode)
+    .find((n) => n.type === "environment" && n.env === "abstract");
 
 /** The abstract of `src` as one paragraph of plain text, or what stops it; nothing after `\end{document}` is read. */
 export const abstractText = (src: string): Result<string, AbstractProblem> =>
@@ -271,12 +279,9 @@ export function abstractOfTree(
   root: Readonly<Ast.Root>,
   src: string,
 ): Result<string, AbstractProblem> {
-  const nodes = visited(root, () => false).filter(isNode);
-  const env = nodes.find(
-    (n) => n.type === "environment" && n.env === "abstract",
-  );
+  const env = firstAbstract(root);
   if (env?.type !== "environment") return err({ kind: "none" });
-  const defs = definitionsIn(nodes);
+  const defs = definitionsIn(visited(root, () => false).filter(isNode));
   const start = at(env);
   const body = typeset(env.content, defs, start);
   const t = joined(body.content, (n) => textNode(n, { src, defs, start }));
