@@ -113,5 +113,6 @@ the report's first lines say "main-conference bar assumed".
 export const flow = {
   stage: "review",
   handsTo: () => [pcPanelReview],
-  loopsBackTo: () => [gradePaperWriting, tightenPaper],
+  calls: () => [gradePaperWriting],
+  loopsBackTo: () => [tightenPaper],
 } satisfies Flow;

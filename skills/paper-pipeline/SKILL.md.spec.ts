@@ -524,7 +524,8 @@ after a panel round + confirm). The stage skills and shared refs are distilled f
 
 export const flow = {
   stage: "across",
-  handsTo: () => [
+  handsTo: () => [],
+  calls: () => [
     researchIdeate,
     mapPriorWork,
     findVenue,

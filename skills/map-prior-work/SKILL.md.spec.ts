@@ -197,5 +197,6 @@ you looked.
 
 export const flow = {
   stage: "idea",
-  handsTo: () => [analyzeSiblingPaper, draftPaper],
+  handsTo: () => [draftPaper],
+  calls: () => [analyzeSiblingPaper],
 } satisfies Flow;

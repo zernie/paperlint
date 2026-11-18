@@ -218,5 +218,6 @@ Do not iterate on a page you cannot see.
 export const flow = {
   stage: "study",
   handsTo: () => [draftPaper],
-  loopsBackTo: () => [buildBenchmark, labelAgentRuns],
+  calls: () => [buildBenchmark],
+  loopsBackTo: () => [labelAgentRuns],
 } satisfies Flow;

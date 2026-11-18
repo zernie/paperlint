@@ -254,10 +254,6 @@ already. The catalog exists so the next sweep starts from named constructs inste
 
 export const flow = {
   stage: "idea",
-  handsTo: () => [
-    researchIdeate,
-    buildBenchmark,
-    paperAdversarialReview,
-    pcPanelReview,
-  ],
+  handsTo: () => [researchIdeate, buildBenchmark],
+  calls: () => [paperAdversarialReview, pcPanelReview],
 } satisfies Flow;

@@ -6,6 +6,7 @@
 // this repo installs, so writing one here would not compile.
 import { experimental_skill } from "vigiles/spec";
 import type { Flow } from "../../scripts/pipeline.ts";
+import cameraReady from "../camera-ready/SKILL.md.spec.ts";
 import osfArtifactUpload from "../osf-artifact-upload/SKILL.md.spec.ts";
 import paperAdversarialReview from "../paper-adversarial-review/SKILL.md.spec.ts";
 import pcPanelReview from "../pc-panel-review/SKILL.md.spec.ts";
@@ -205,6 +206,12 @@ re-paste, "ready for review" being a separate step, the PDF-only rule — are th
 
 export const flow = {
   stage: "submit",
-  handsTo: () => [osfArtifactUpload, submissionPortal],
-  loopsBackTo: () => [pcPanelReview, paperAdversarialReview, renderPaper],
+  handsTo: () => [cameraReady],
+  calls: () => [
+    osfArtifactUpload,
+    submissionPortal,
+    pcPanelReview,
+    paperAdversarialReview,
+    renderPaper,
+  ],
 } satisfies Flow;

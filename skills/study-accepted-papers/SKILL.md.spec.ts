@@ -208,13 +208,11 @@ export const flow = {
   handsTo: () => [
     argumentArc,
     buildBenchmark,
-    rewriteUnclear,
-    verifyCitations,
     planPaperTimeline,
-    analyzeSiblingPaper,
     paperAdversarialReview,
     pcPanelReview,
     hardenPaper,
     extendPaper,
   ],
+  calls: () => [verifyCitations, analyzeSiblingPaper, rewriteUnclear],
 } satisfies Flow;

@@ -110,6 +110,7 @@ n), and every relabel after the analysis with its note.
 
 export const flow = {
   stage: "study",
-  handsTo: () => [buildLabelPage],
+  handsTo: () => [],
+  calls: () => [buildLabelPage],
   loopsBackTo: () => [buildBenchmark],
 } satisfies Flow;

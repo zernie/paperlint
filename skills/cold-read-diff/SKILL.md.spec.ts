@@ -195,5 +195,6 @@ and several of which had been introduced that same morning by fixes to other aut
 
 export const flow = {
   stage: "draft",
-  handsTo: () => [rewriteUnclear],
+  handsTo: () => [],
+  calls: () => [rewriteUnclear],
 } satisfies Flow;

@@ -349,5 +349,6 @@ a sentence-level readability pass needs (cut a TMI section → the core mechanis
 
 export const flow = {
   stage: "draft",
-  handsTo: () => [gradePaperWriting, rewriteUnclear],
+  handsTo: () => [gradePaperWriting],
+  calls: () => [rewriteUnclear],
 } satisfies Flow;

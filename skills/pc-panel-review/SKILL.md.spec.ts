@@ -282,5 +282,5 @@ accept and the artifact reproduces clean; don't loop past one confirming round.
 export const flow = {
   stage: "review",
   handsTo: () => [],
-  loopsBackTo: () => [gradePaperWriting, tightenPaper],
+  calls: () => [gradePaperWriting, tightenPaper],
 } satisfies Flow;

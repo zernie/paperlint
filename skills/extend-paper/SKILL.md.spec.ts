@@ -81,5 +81,6 @@ explicitly invites journal extensions; the same ORCID links the workshop paper a
 export const flow = {
   stage: "extend",
   handsTo: () => [],
-  loopsBackTo: () => [researchIdeate, findVenue, planPaperTimeline],
+  calls: () => [findVenue, planPaperTimeline],
+  loopsBackTo: () => [researchIdeate],
 } satisfies Flow;

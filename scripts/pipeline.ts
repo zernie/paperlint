@@ -2,18 +2,19 @@
 /**
  * pipeline.ts — the skill pipeline, read from the skills themselves, checked, and drawn.
  *
- * Each `skills/<name>/SKILL.md.spec.ts` exports `flow`: its stage, the skills its text hands work to
- * (`handsTo`), and the skills it sends work back to (`loopsBackTo`), as imports of their specs, so a
- * misspelled or deleted skill fails the type-check. `skills/jobs.ts` maps each job on a paper's text
- * to its one owner. This script refuses a pipeline that:
+ * Each `skills/<name>/SKILL.md.spec.ts` exports `flow`: its stage and three kinds of edge (see `Flow`),
+ * as imports of other specs, so a misspelled or deleted skill fails the type-check. `skills/jobs.ts`
+ * maps each job on a paper's text to its one owner. This script refuses a pipeline that:
  *
- *   1. has a skill folder whose spec exports no `flow`, or names a skill that has no folder;
- *   2. has a cycle in the hands-to arrows (a loop back is drawn, but not followed);
- *   3. hands to a skill the handing skill's own SKILL.md never names;
- *   4. has a job with no owner, or an owner that is not a skill folder;
+ *   1. has a skill folder whose spec exports no `flow`, or an edge to a skill that has no folder;
+ *   2. has a cycle in the hands-to edges (calls and loops back may circle; they are not the path);
+ *   3. hands to a skill of an earlier stage (that edge is a call or a loop back);
+ *   4. has an edge to a skill the source's own SKILL.md never names;
+ *   5. has a job with no owner, or an owner that is not a skill folder;
  *
- * and then writes `docs/pipeline.md` (a Mermaid flowchart, a box per skill grouped by stage, each
- * box listing the jobs it owns). `--check` writes nothing and fails when the file on disk differs.
+ * and then writes `docs/pipeline.md`: an overview of the stages with the hand-offs and loops between
+ * them, the router as text, and one small picture per stage whose boxes list the jobs a skill owns
+ * and the skills it runs. `--check` writes nothing and fails when the file on disk differs.
  *
  * Run: `npm run pipeline` (write) · `node scripts/pipeline.ts --check` (also `test/pipeline.test.ts`)
  */
@@ -21,6 +22,7 @@ import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { DepGraph } from "dependency-graph";
+import { chunk, groupBy, sortBy, uniqueBy } from "remeda";
 import { z } from "zod";
 import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
 import { JOBS } from "../skills/jobs.ts";
@@ -242,39 +244,152 @@ export function problems(skills: readonly Skill[], jobs: Jobs): string[] {
 /** A Mermaid id: `cold-read-diff` → `cold_read_diff` (a hyphen in an id can read as an arrow). */
 const id = (name: string): string => name.replaceAll("-", "_");
 
+/** The id of a stage's box; `stage_` keeps the stage `camera-ready` apart from the skill `camera-ready`. */
+const stageId = (stage: Stage): string => `stage_${id(stage)}`;
+
 /** A job key `find unclear sentences/the last edit` as a box line: `find unclear sentences (the last edit)`. */
 const jobLine = (job: string): string => {
   const slash = job.indexOf("/");
   return slash < 0 ? job : `${job.slice(0, slash)} (${job.slice(slash + 1)})`;
 };
 
-/** The Mermaid lines: a subgraph per stage with a box per skill listing its jobs, then the arrows. */
-function flowchart(skills: readonly Skill[], jobs: Jobs): string[] {
-  const owned = (name: string) =>
-    Object.entries(jobs)
-      .filter(([, owner]) => owner?.name === name)
-      .map(([job]) => jobLine(job));
-  const box = (s: Skill) =>
-    `    ${id(s.name)}["${[`<b>${s.name}</b>`, ...owned(s.name)].join("<br/>")}"]`;
-  const inStage = (stage: Stage) =>
-    skills.filter((s) => s.flow?.stage === stage);
+/** Names three to a line, so a box or a label stays narrow. */
+const wrap = (names: readonly string[]): string =>
+  chunk(names, 3)
+    .map((line) => line.join(", "))
+    .join(",<br/>");
+
+/** One arrow of a stage picture: `from` hands to (solid) or loops back to (dashed) `to`. */
+interface Arrow {
+  readonly from: string;
+  readonly to: string;
+  readonly solid: boolean;
+}
+
+/** Everything the pictures are drawn from, computed once. */
+interface Model {
+  readonly skills: readonly Skill[];
+  readonly stageOf: ReadonlyMap<string, Stage>;
+  readonly arrows: readonly Arrow[];
+  readonly owned: (name: string) => readonly string[];
+}
+
+function model(skills: readonly Skill[], jobs: Jobs): Model {
+  return {
+    skills,
+    stageOf: new Map(
+      skills.flatMap((s) => (s.flow ? [[s.name, s.flow.stage] as const] : [])),
+    ),
+    arrows: skills.flatMap((s) => [
+      ...handsTo(s).map((to) => ({ from: s.name, to, solid: true })),
+      ...loopsBackTo(s).map((to) => ({ from: s.name, to, solid: false })),
+    ]),
+    owned: (name) =>
+      Object.entries(jobs)
+        .filter(([, owner]) => owner?.name === name)
+        .map(([job]) => jobLine(job)),
+  };
+}
+
+const inStage = (m: Model, stage: Stage): readonly Skill[] =>
+  m.skills.filter((s) => s.flow?.stage === stage);
+
+/** The overview: a box per stage, left to right, its skills listed; arrows only between stages. */
+function overview(m: Model): string[] {
+  const between = uniqueBy(
+    m.arrows.flatMap((a) => {
+      const [from, to] = [m.stageOf.get(a.from), m.stageOf.get(a.to)];
+      return from === undefined || to === undefined || from === to
+        ? []
+        : [{ from, to, solid: a.solid }];
+    }),
+    (a) => `${a.from} ${a.to} ${String(a.solid)}`,
+  );
+  // In stage order, solid first: Mermaid places boxes in the order their edges come.
+  const ordered = sortBy(
+    between,
+    (a) => (a.solid ? 0 : 1),
+    (a) => STAGES.indexOf(a.from),
+    (a) => STAGES.indexOf(a.to),
+  );
   return [
-    "flowchart TB",
-    ...STAGES.filter((stage) => inStage(stage).length > 0).flatMap((stage) => [
-      // `stage_`: the stage `camera-ready` and the skill `camera-ready` would share an id.
-      `  subgraph stage_${id(stage)}["${STAGE_TITLES[stage]}"]`,
-      ...inStage(stage).map(box),
-      "  end",
-    ]),
-    ...skills.flatMap((s) => [
-      ...handsTo(s).map((t) => `  ${id(s.name)} --> ${id(t)}`),
-      ...loopsBackTo(s).map((t) => `  ${id(s.name)} -.-> ${id(t)}`),
-    ]),
+    "flowchart LR",
+    ...STAGES.filter((st) => st !== "across").map(
+      (st) =>
+        `  ${stageId(st)}["<b>${STAGE_TITLES[st]}</b><br/>${inStage(m, st)
+          .map((s) => s.name)
+          .join("<br/>")}"]`,
+    ),
+    ...ordered.map(
+      (a) =>
+        `  ${stageId(a.from)} ${a.solid ? "-->" : "-.->"} ${stageId(a.to)}`,
+    ),
   ];
 }
 
-/** `docs/pipeline.md`: what the diagram is and where it comes from, then the diagram. */
+/** One stage's picture: its skills, the arrows inside it, and one stub box per stage an arrow leaves for. */
+function stagePicture(m: Model, stage: Stage): string[] {
+  const here = inStage(m, stage);
+  const leaving = m.arrows.filter(
+    (a) =>
+      m.stageOf.get(a.from) === stage &&
+      m.stageOf.get(a.to) !== stage &&
+      m.stageOf.has(a.to),
+  );
+  const stubs = groupBy(
+    leaving,
+    (a) => `${a.from}|${String(m.stageOf.get(a.to))}|${String(a.solid)}`,
+  );
+  const node = (s: Skill) =>
+    `  ${id(s.name)}["${[
+      `<b>${s.name}</b>`,
+      ...m.owned(s.name),
+      ...(calls(s).length > 0 ? [`runs: ${wrap(calls(s))}`] : []),
+    ].join("<br/>")}"]`;
+  return [
+    "flowchart TB",
+    ...here.map(node),
+    ...m.arrows
+      .filter(
+        (a) => m.stageOf.get(a.from) === stage && m.stageOf.get(a.to) === stage,
+      )
+      .map((a) => `  ${id(a.from)} ${a.solid ? "-->" : "-.->"} ${id(a.to)}`),
+    ...uniqueBy(leaving, (a) => String(m.stageOf.get(a.to))).map((a) => {
+      const to = m.stageOf.get(a.to) ?? stage;
+      return `  to_${stageId(to)}(["→ ${STAGE_TITLES[to]}"])`;
+    }),
+    ...Object.values(stubs).map((group) => {
+      const [first] = group;
+      const to = `to_${stageId(m.stageOf.get(first.to) ?? stage)}`;
+      const label = wrap(group.map((a) => a.to));
+      return first.solid
+        ? `  ${id(first.from)} -- "${label}" --> ${to}`
+        : `  ${id(first.from)} -. "${label}" .-> ${to}`;
+    }),
+  ];
+}
+
+/** The skills of no single stage, as text: the router's calls would be one arrow per stage skill. */
+function across(m: Model): string[] {
+  return inStage(m, "across").map((s) => {
+    const jobs = m.owned(s.name);
+    const owns = jobs.length > 0 ? ` (owns: ${jobs.join("; ")})` : "";
+    const runs = calls(s);
+    return runs.length > 0
+      ? `- \`${s.name}\`${owns} runs ${String(runs.length)} skills: ${runs.map((r) => `\`${r}\``).join(", ")}.`
+      : `- \`${s.name}\`${owns}.`;
+  });
+}
+
+const fence = (lines: readonly string[]): string[] => [
+  "```mermaid",
+  ...lines,
+  "```",
+];
+
+/** `docs/pipeline.md`: what the pictures are, the overview, the router, then one picture per stage. */
 export function render(skills: readonly Skill[], jobs: Jobs): string {
+  const m = model(skills, jobs);
   const count = (of: (s: Skill) => readonly string[]) =>
     String(skills.reduce((n, s) => n + of(s).length, 0));
   return [
@@ -283,16 +398,29 @@ export function render(skills: readonly Skill[], jobs: Jobs): string {
     "<!-- Generated by `npm run pipeline` from each skill's `flow` export and `skills/jobs.ts`. Do not edit by hand. -->",
     "",
     "Who hands work to whom, read from the skills themselves: each `skills/<name>/SKILL.md.spec.ts`",
-    "exports `flow` (its stage, the skills its text hands work to, the skills it sends work back to),",
-    "and `skills/jobs.ts` names the one owner of each job on a paper's text, listed in its box.",
-    `A solid arrow hands work on (${count(handsTo)}); a dashed arrow loops back to a skill that runs earlier (${count(loopsBackTo)}).`,
-    "`test/pipeline.test.ts` fails on a cycle of solid arrows, an arrow the skill's own text never",
-    "names, a job without an owner, and this file when it is stale. The stages are those of",
-    "[`skills.md`](skills.md).",
+    "exports `flow`, and `skills/jobs.ts` names the one owner of each job on a paper's text. A flow",
+    `has three kinds of edge: **hands to** (${count(handsTo)}), the next step on the main path, drawn`,
+    `solid; **loops back to** (${count(loopsBackTo)}), work sent back to an earlier skill, drawn dashed;`,
+    `**runs** (${count(calls)}), a skill this one runs as one of its own steps or whose output it needs,`,
+    "written inside the box, never drawn. `test/pipeline.test.ts` fails on a cycle of hand-offs, a",
+    "hand-off to an earlier stage, an edge the skill's own text never names, a job without an owner,",
+    "and this file when it is stale. The stages are those of [`skills.md`](skills.md).",
     "",
-    "```mermaid",
-    ...flowchart(skills, jobs),
-    "```",
+    "## The stages",
+    "",
+    "Each arrow stands for one or more edges between skills of the two stages.",
+    "",
+    ...fence(overview(m)),
+    "",
+    "## Across every stage",
+    "",
+    ...across(m),
+    ...STAGES.filter((st) => st !== "across").flatMap((st) => [
+      "",
+      `## ${STAGE_TITLES[st]}`,
+      "",
+      ...fence(stagePicture(m, st)),
+    ]),
     "",
   ].join("\n");
 }

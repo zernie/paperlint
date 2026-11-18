@@ -236,13 +236,6 @@ Before submitting, verify the artifact you built with the reviewer-side reproduc
 
 export const flow = {
   stage: "study",
-  handsTo: () => [
-    runAgentGrid,
-    labelAgentRuns,
-    buildLabelPage,
-    draftPaper,
-    pcPanelReview,
-    submitPaper,
-  ],
-  loopsBackTo: () => [argumentArc],
+  handsTo: () => [runAgentGrid, draftPaper, pcPanelReview, submitPaper],
+  calls: () => [argumentArc, labelAgentRuns, buildLabelPage],
 } satisfies Flow;

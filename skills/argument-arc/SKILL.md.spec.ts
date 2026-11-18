@@ -173,5 +173,7 @@ reader to one conclusion* belonged to nobody, and that is the one that failed.`,
 
 export const flow = {
   stage: "draft",
-  handsTo: () => [rewriteUnclear, buildBenchmark, sweepDesignSpace],
+  handsTo: () => [],
+  calls: () => [rewriteUnclear],
+  loopsBackTo: () => [buildBenchmark, sweepDesignSpace],
 } satisfies Flow;

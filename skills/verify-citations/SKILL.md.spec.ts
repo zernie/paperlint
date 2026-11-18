@@ -347,6 +347,6 @@ made them land:
 
 export const flow = {
   stage: "review",
-  handsTo: () => [analyzeSiblingPaper],
-  loopsBackTo: () => [mapPriorWork],
+  handsTo: () => [],
+  calls: () => [analyzeSiblingPaper, mapPriorWork],
 } satisfies Flow;

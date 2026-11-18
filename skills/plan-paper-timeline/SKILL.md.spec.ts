@@ -169,5 +169,5 @@ don't collapse into one pre-filing month — the FILING-SPACING rule applied in 
 export const flow = {
   stage: "venue",
   handsTo: () => [submitPaper],
-  loopsBackTo: () => [findVenue],
+  calls: () => [findVenue],
 } satisfies Flow;

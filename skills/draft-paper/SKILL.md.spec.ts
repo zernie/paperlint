@@ -140,12 +140,11 @@ prose QA to them.
 
 export const flow = {
   stage: "draft",
-  handsTo: () => [
+  handsTo: () => [paperAdversarialReview, pcPanelReview],
+  calls: () => [
     gradePaperWriting,
     rewriteUnclear,
     renderPaper,
     verifyCitations,
-    paperAdversarialReview,
-    pcPanelReview,
   ],
 } satisfies Flow;

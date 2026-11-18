@@ -485,6 +485,7 @@ as the instrument that graded the rewritten paper.`,
 
 export const flow = {
   stage: "review",
-  handsTo: () => [rewriteUnclear],
-  loopsBackTo: () => [renderPaper, argumentArc],
+  handsTo: () => [],
+  calls: () => [rewriteUnclear, renderPaper],
+  loopsBackTo: () => [argumentArc],
 } satisfies Flow;

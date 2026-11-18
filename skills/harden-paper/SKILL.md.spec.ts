@@ -321,7 +321,8 @@ toolchain exists), \`submit-paper\` (downstream), \`extend-paper\` (the dropped 
 
 export const flow = {
   stage: "review",
-  handsTo: () => [
+  handsTo: () => [submitPaper, extendPaper],
+  calls: () => [
     tightenPaper,
     paperAdversarialReview,
     pcPanelReview,
@@ -331,7 +332,5 @@ export const flow = {
     rewriteUnclear,
     renderPaper,
     argumentArc,
-    submitPaper,
-    extendPaper,
   ],
 } satisfies Flow;
