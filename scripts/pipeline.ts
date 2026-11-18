@@ -58,10 +58,18 @@ export interface SkillSpec {
   readonly name: string;
 }
 
-/** The `flow` export of a skill spec. The lists are functions, so two specs may import each other. */
+/**
+ * The `flow` export of a skill spec. The lists are functions, so two specs may import each other.
+ *
+ * - `handsTo`: this skill is done, and the named skill is the next step on the main path;
+ * - `calls`: this skill runs or delegates to the named skill as one of its own steps, or needs its
+ *   output (an orchestrator or a gate running sub-skills);
+ * - `loopsBackTo`: work is sent back to an earlier skill.
+ */
 export interface Flow {
   readonly stage: Stage;
   readonly handsTo: () => readonly SkillSpec[];
+  readonly calls?: (() => readonly SkillSpec[]) | undefined;
   readonly loopsBackTo?: (() => readonly SkillSpec[]) | undefined;
 }
 
@@ -87,6 +95,7 @@ const SpecModule = z.object({
     .object({
       stage: z.enum(STAGES),
       handsTo: z.custom<() => readonly SkillSpec[]>(isFunction),
+      calls: z.custom<() => readonly SkillSpec[]>(isFunction).optional(),
       loopsBackTo: z.custom<() => readonly SkillSpec[]>(isFunction).optional(),
     })
     .optional(),
@@ -118,6 +127,8 @@ export async function loadSkills(root: string): Promise<readonly Skill[]> {
 
 const handsTo = (s: Skill): readonly string[] =>
   (s.flow?.handsTo() ?? []).map((t) => t.name);
+const calls = (s: Skill): readonly string[] =>
+  (s.flow?.calls?.() ?? []).map((t) => t.name);
 const loopsBackTo = (s: Skill): readonly string[] =>
   (s.flow?.loopsBackTo?.() ?? []).map((t) => t.name);
 
@@ -135,6 +146,7 @@ export function missing(skills: readonly Skill[]): string[] {
       .filter((s) => s.flow === undefined)
       .map((s) => `skills/${s.name}/${SPEC} exports no \`flow\``),
     ...arrows("hands to", handsTo),
+    ...arrows("calls", calls),
     ...arrows("loops back to", loopsBackTo),
   ];
 }
@@ -173,6 +185,7 @@ export function unnamedTargets(skills: readonly Skill[]): string[] {
     const named = tokens(s.text);
     return [
       ...handsTo(s).map((t) => ["hands to", t] as const),
+      ...calls(s).map((t) => ["calls", t] as const),
       ...loopsBackTo(s).map((t) => ["loops back to", t] as const),
     ]
       .filter(([, t]) => !named.has(t))
@@ -181,6 +194,23 @@ export function unnamedTargets(skills: readonly Skill[]): string[] {
           `${s.name} ${verb} ${t}, but its SKILL.md never names it`,
       );
   });
+}
+
+/** Check 5: a hand-off to a skill of an earlier stage; a call or a loop back may go there. */
+export function handsBackwards(skills: readonly Skill[]): string[] {
+  const stageOf = new Map(skills.map((s) => [s.name, s.flow?.stage]));
+  const rank = (stage: Stage | undefined) =>
+    stage === undefined ? -1 : STAGES.indexOf(stage);
+  return skills.flatMap((s) =>
+    handsTo(s)
+      .filter((t) => rank(stageOf.get(t)) < rank(s.flow?.stage))
+      .map((t) => {
+        const [from, to] = [s.flow?.stage, stageOf.get(t)].map((x) =>
+          x === undefined ? "?" : STAGE_TITLES[x],
+        );
+        return `${s.name} hands to ${t}, an earlier stage (${String(from)} → ${String(to)}): use loopsBackTo or calls`;
+      }),
+  );
 }
 
 /** Check 4: a job with no owner, or an owner that is not a skill folder. */
@@ -203,6 +233,7 @@ export function problems(skills: readonly Skill[], jobs: Jobs): string[] {
   return [
     ...missing(skills),
     ...(cycle === undefined ? [] : [cycle]),
+    ...handsBackwards(skills),
     ...unnamedTargets(skills),
     ...jobProblems(jobs, skills),
   ];

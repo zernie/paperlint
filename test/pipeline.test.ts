@@ -16,32 +16,37 @@ import {
   jobProblems,
   loadSkills,
   main,
+  handsBackwards,
   missing,
   render,
   unnamedTargets,
   type Skill,
+  type Stage,
 } from "../scripts/pipeline.ts";
 import { useTempDir, writeTree } from "./support.ts";
 
 const ROOT = join(import.meta.dirname, "..");
 const REAL = await loadSkills(ROOT);
 
-/** A planted skill: `handsTo` and `loopsBackTo` name other planted skills, `text` is its SKILL.md. */
-function planted(
-  spec: Readonly<
-    Record<
-      string,
-      { hands?: readonly string[]; loops?: readonly string[]; text?: string }
-    >
-  >,
-): readonly Skill[] {
+/** One planted skill: the skills it hands to, calls and loops back to, its stage and its SKILL.md. */
+interface Plant {
+  readonly hands?: readonly string[];
+  readonly calls?: readonly string[];
+  readonly loops?: readonly string[];
+  readonly stage?: Stage;
+  readonly text?: string;
+}
+
+/** Planted skills whose arrows name other planted skills; every one is in stage `draft` unless given. */
+function planted(spec: Readonly<Record<string, Plant>>): readonly Skill[] {
   const byName = (n: string) => ({ name: n });
   return Object.entries(spec).map(([name, s]) => ({
     name,
     text: s.text ?? `# ${name}\n`,
     flow: {
-      stage: "draft",
+      stage: s.stage ?? "draft",
       handsTo: () => (s.hands ?? []).map(byName),
+      calls: () => (s.calls ?? []).map(byName),
       loopsBackTo: () => (s.loops ?? []).map(byName),
     },
   }));
@@ -94,6 +99,9 @@ describe("(a) every skill folder declares its flow, and nothing it names is miss
     expect(missing(planted({ "a-skill": { loops: ["gone-skill"] } }))).toEqual([
       '"a-skill" loops back to "gone-skill", which is not a skill folder',
     ]);
+    expect(missing(planted({ "a-skill": { calls: ["gone-skill"] } }))).toEqual([
+      '"a-skill" calls "gone-skill", which is not a skill folder',
+    ]);
   });
 });
 
@@ -113,6 +121,14 @@ describe("(b) the hands-to arrows form no cycle; loops back are excluded", () =>
     );
   });
 
+  it("calls may run in a circle: they are steps, not the order of the path", () => {
+    const skills = planted({
+      "a-skill": { calls: ["b-skill"] },
+      "b-skill": { calls: ["a-skill"] },
+    });
+    expect(findCycle(skills)).toBeUndefined();
+  });
+
   it("the same arrows with the returning one as a loop back are clean", () => {
     const skills = planted({
       "a-skill": { hands: ["b-skill"] },
@@ -120,6 +136,26 @@ describe("(b) the hands-to arrows form no cycle; loops back are excluded", () =>
       "c-skill": { loops: ["a-skill"] },
     });
     expect(findCycle(skills)).toBeUndefined();
+  });
+});
+
+describe("(f) a hands-to arrow never points at an earlier stage", () => {
+  it("the real skills hand only forward or within their stage", () => {
+    expect(handsBackwards(REAL)).toEqual([]);
+  });
+
+  it("a planted backward hand-off fails; the same edge as a call or a loop back is clean", () => {
+    const back = (kind: "hands" | "calls" | "loops") =>
+      planted({
+        "gate-skill": { stage: "review", [kind]: ["cut-skill"] },
+        "cut-skill": { stage: "draft" },
+        "next-skill": { stage: "review", hands: ["gate-skill"] },
+      });
+    expect(handsBackwards(back("hands"))).toEqual([
+      "gate-skill hands to cut-skill, an earlier stage (5 · Review → 4 · Draft): use loopsBackTo or calls",
+    ]);
+    expect(handsBackwards(back("calls"))).toEqual([]);
+    expect(handsBackwards(back("loops"))).toEqual([]);
   });
 });
 
@@ -202,13 +238,16 @@ describe("(d) a handover the handing skill's own text never names", () => {
       "a-skill": {
         hands: ["b-skill"],
         loops: ["c-skill"],
+        calls: ["d-skill"],
         text: "Hand the rows to `b-skill-two`. Then run c-skill again.",
       },
       "b-skill": {},
       "c-skill": {},
+      "d-skill": {},
     });
     expect(unnamedTargets(skills)).toEqual([
       "a-skill hands to b-skill, but its SKILL.md never names it",
+      "a-skill calls d-skill, but its SKILL.md never names it",
     ]);
   });
 });
