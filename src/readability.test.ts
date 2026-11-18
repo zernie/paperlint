@@ -259,14 +259,16 @@ describe("the new rules, through create()", () => {
   });
 });
 
+/** `n` words as one run. */
+const captionWords = (n: number): string =>
+  Array.from({ length: n }, () => "word").join(" ");
+/** A sentence of `n` words: capitalised, so the splitter ends the one before it. */
+const sentence = (n: number): string => `Word ${captionWords(n - 1)}.`;
+/** A paper whose one figure has `caption`. */
+const fig = (caption: string): string =>
+  doc(`Text.\n\\begin{figure}\\caption{${caption}}\\end{figure}`);
+
 describe("tex/max-caption-words — a caption, or a caption sentence, over its ceiling", () => {
-  /** `n` words as one sentence. */
-  const words = (n: number): string =>
-    Array.from({ length: n }, () => "word").join(" ");
-  /** A sentence of `n` words: capitalised, so the splitter ends the one before it. */
-  const sentence = (n: number): string => `Word ${words(n - 1)}.`;
-  const fig = (caption: string): string =>
-    doc(`Text.\n\\begin{figure}\\caption{${caption}}\\end{figure}`);
   const found = (caption: string, max = 100, maxSentence = 40) => {
     const src = fig(caption);
     return judgeCaptionWords(latexReader.captions(src), max, maxSentence).map(
@@ -294,7 +296,7 @@ describe("tex/max-caption-words — a caption, or a caption sentence, over its c
   });
 
   it("🔴 a caption sentence of 41 words fires at its start; one of 40 does not", () => {
-    expect(found(`${words(41)}.`)).toEqual([
+    expect(found(`${captionWords(41)}.`)).toEqual([
       {
         messageId: "captionSentence",
         data: {
@@ -305,24 +307,26 @@ describe("tex/max-caption-words — a caption, or a caption sentence, over its c
         at: "word word",
       },
     ]);
-    expect(found(`${words(40)}.`)).toEqual([]);
+    expect(found(`${captionWords(40)}.`)).toEqual([]);
   });
 
   it("🔴 a caption commented out or in verbatim is not measured", () => {
     const src = doc(
-      `% \\caption{${words(120)}.}\n\\begin{verbatim}\\caption{${words(120)}.}\\end{verbatim}`,
+      `% \\caption{${captionWords(120)}.}\n\\begin{verbatim}\\caption{${captionWords(120)}.}\\end{verbatim}`,
     );
     expect(judgeCaptionWords(latexReader.captions(src), 100, 40)).toEqual([]);
   });
+});
 
-  it("the options move both ceilings, through create()", () => {
+describe("tex/max-caption-words, through create()", () => {
+  it("the options move both ceilings", () => {
     const rule = maxCaptionWordsRule({
       files: memoryFiles({ "/p/paper.tex": "" }),
       latex: latexReader,
       codec: sourcesCodec,
     });
     const ids = (options: readonly unknown[]) => {
-      const src = fig(`${words(30)}.`);
+      const src = fig(`${captionWords(30)}.`);
       const out: string[] = [];
       rule
         .create({
