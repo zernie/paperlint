@@ -94,4 +94,12 @@ describe("main — the command", () => {
       stderr: "",
     });
   });
+
+  it("the entry's refusal goes to stderr with exit 2", () => {
+    expect(runNode(SCRIPT, [], { cwd: useTempDir("headings-") })).toEqual({
+      status: 2,
+      stdout: "",
+      stderr: "usage: node headings.js <paper.tex>\n",
+    });
+  });
 });
