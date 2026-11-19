@@ -166,7 +166,9 @@ which cross-references break and how many.
   taken, reason for each left) first.
 - **This skill owns length; no other skill cuts for it.** A clearer rewrite elsewhere may add words.
   Whether the paper still fits is measured by the build afterwards, and a measured overflow comes here, to be
-  paid in the order above, never by shortening a sentence that explains something.
+  paid in the order above, never by shortening a sentence that explains something. After the final review is
+  closed, this skill does not run again: the overflow is paid from the next cut not yet taken in the plan its
+  report recorded, on the author's yes.
 - **Length is calibrated to CONTRIBUTION WEIGHT, not to the page limit.** A moderate finding + a moderate-complexity
   benchmark does not need to sit at the limit; being over-length for the weight of the contribution is itself a
   defect — it reads as padding even when each sentence is individually "true." Right-size to the contribution's

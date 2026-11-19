@@ -101,7 +101,9 @@ Rules 6–9 are partly countable, so a lint rule may find the case; this skill w
 A clearer passage may take more words. Pay for them by moving material to an appendix or the
 artifact, never by shortening another sentence that explains something: that is how the unclear
 passage was made. Whether the paper still fits is measured by the build after the rewrites, and a
-measured overflow goes to \`tighten-paper\`, which owns length.
+measured overflow goes to \`tighten-paper\`, which owns length. After the final review is closed,
+\`tighten-paper\` does not run again: the overflow is paid from the next cut not yet taken in its
+recorded ranked plan (\`reviews/<date>-tighten-paper.md\`), on the author's yes.
 
 ## Output
 
@@ -128,7 +130,8 @@ When the passage came from a report with \`findings\` frontmatter (\`cold-read-d
 ## Compose with
 
 - \`cold-read-diff\` — finds the sentences; it confirms a rewrite only when the author asks.
-- \`tighten-paper\` — owns length; a measured overflow after rewrites goes there.
+- \`tighten-paper\` — owns length; a measured overflow after rewrites goes there, or, after the final review
+  is closed, to the next cut in its recorded plan.
 - \`argument-arc\` — when step 1 fails because the section has no claim, the problem is the arc, not the sentence.
 `,
 });
