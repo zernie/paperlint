@@ -1163,6 +1163,12 @@ const tokenNames = (site: PortalSite) => ({
   siteLess: site.siteLessVariable,
 });
 
+/** The lines for a refusal, naming the variable the token came from. */
+const refusedWith =
+  (portal: SupportedPortal, site: PortalSite, used: string) =>
+  (f: PortalFailure) =>
+    tokenRefusedLines(portal, site, f, used);
+
 /** No token to use: the complete instruction, exit 2 — nothing is sent. */
 function tokenMissing(
   portal: SupportedPortal,
@@ -1196,8 +1202,7 @@ export async function runSubmission(
   const withToken: RunDeps = {
     ...deps,
     portalSite: site,
-    refused: (f) =>
-      tokenRefusedLines(t.value.portal, site, f, found.value.variable),
+    refused: refusedWith(t.value.portal, site, found.value.variable),
   };
   const sending = { ...t.value, fields: ready.value.fields };
   if (a.sub === "topics") return runTopics(sending, portal, withToken);
