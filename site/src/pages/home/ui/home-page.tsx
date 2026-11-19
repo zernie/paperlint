@@ -165,7 +165,7 @@ export function HomePage() {
           venues={venueNames}
           install={readme.install}
           preview={firstRun}
-          caption="Run in your project's folder. Needs Node.js 22.13 or newer."
+          caption="Paste into a terminal, in your project's folder."
         />
         <FirstRun findings={firstRun} />
         <Journey stops={stops} />
