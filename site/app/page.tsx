@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { readmeContent, shortName } from "../lib/content.ts";
+import { readmeContent, shortName } from "@/shared/lib/readme";
 import { CopyButton } from "./copy-button.tsx";
 import { Journey } from "./journey.tsx";
 import { VenueCycle } from "./venue-cycle.tsx";

@@ -1,18 +1,9 @@
 import type { Metadata } from "next";
-import { Instrument_Serif, Inter, JetBrains_Mono } from "next/font/google";
 import type { ReactNode } from "react";
+import { fontVariables } from "@/app";
+// The page's older plain CSS, after the Tailwind entry so it still wins while the page moves to
+// the design tokens (src/app/styles/globals.css).
 import "./globals.css";
-
-// next/font downloads each font once, at build time, and serves it from this site: a visitor's
-// browser never asks Google for anything.
-const display = Instrument_Serif({
-  weight: "400",
-  style: ["normal", "italic"],
-  subsets: ["latin"],
-  variable: "--font-display",
-});
-const sans = Inter({ subsets: ["latin"], variable: "--font-sans" });
-const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://paperlint.dev"),
@@ -27,10 +18,7 @@ export default function RootLayout({
   readonly children: ReactNode;
 }) {
   return (
-    <html
-      lang="en"
-      className={`${display.variable} ${sans.variable} ${mono.variable}`}
-    >
+    <html lang="en" className={fontVariables}>
       <body>{children}</body>
     </html>
   );

@@ -37,3 +37,4 @@ skills/build-label-page/scripts/page-template.html
 site/.next/
 site/out/
 site/next-env.d.ts
+site/coverage/

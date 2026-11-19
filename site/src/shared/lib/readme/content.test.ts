@@ -10,9 +10,8 @@ import {
   shortName,
   tableAfter,
 } from "./content.ts";
-import { all, render, type Finding } from "./findings.ts";
 
-const root = fileURLToPath(new URL("../../", import.meta.url));
+const root = fileURLToPath(new URL("../../../../../", import.meta.url));
 const read = (rel: string): string => readFileSync(root + rel, "utf8");
 
 const README = `# x
@@ -73,7 +72,7 @@ describe("readmeContent", () => {
     expect(() =>
       readmeContent(README.replace("npm i -D paperlint", "echo")),
     ).toThrow(
-      "site: no `npm i` in the install block — the README changed; update site/lib/content.ts to match",
+      "site: no `npm i` in the install block — the README changed; update site/src/shared/lib/readme/content.ts to match",
     );
   });
 });
@@ -161,31 +160,5 @@ describe("layoutEntries", () => {
     expect(layoutEntries(read("docs/layout.md"), ["paper.tex"])).toEqual([
       { name: "paper.tex", note: "the source; `paperlint build` compiles it" },
     ]);
-  });
-});
-
-describe("findings", () => {
-  const fake: Finding = {
-    rule: "r",
-    level: "error",
-    template: "\\`${s.a}\\` {{b}} {{c}} ${s.z}",
-    values: { a: "x", b: "y" },
-    source: "",
-  };
-
-  it("fills both placeholder syntaxes, leaves an unknown one, unescapes backticks", () => {
-    expect(render(fake)).toBe("`x` y {{c}} ${s.z}");
-  });
-
-  it.each(all.map((f) => [f.rule, f] as const))(
-    "quotes %s verbatim from its source, and docs/rules.md lists it",
-    (rule, f) => {
-      expect(read(f.source)).toContain(f.template);
-      expect(read("docs/rules.md")).toContain("`" + rule + "`");
-    },
-  );
-
-  it("a reworded message is caught", () => {
-    expect(read("README.md")).not.toContain("1 column(s), AgenticDev wants 2");
   });
 });

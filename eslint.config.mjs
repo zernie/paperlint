@@ -607,13 +607,11 @@ export default [
       "docs/prior-art/repro/",
       "dist/",
       "skills/*/scripts/*.js",
-      // paperlint.dev (site/CLAUDE.md): Next.js's build output, and the app's own config, which
-      // imports `next` from site/node_modules and is type-checked by `next build`, not here.
-      // site/lib/ is linted like the rest: it holds what the page reads and its test.
-      "site/.next/",
-      "site/out/",
-      "site/next-env.d.ts",
-      "site/next.config.ts",
+      // paperlint.dev (site/CLAUDE.md) is its own project with its own install and its own lint
+      // (site/eslint.config.mjs: typed TypeScript, Tailwind tokens, Steiger), run by the `site` CI
+      // job. ESLint 10 judges a file by the config nearest to it, so a file under site/ named on
+      // this command line is judged by site's config, CLAUDE.md.spec.ts included.
+      "site/",
     ],
   },
   // 🔴 THE PACKAGE'S TYPESCRIPT, and before 2026-09-24 no block matched it — the same silent

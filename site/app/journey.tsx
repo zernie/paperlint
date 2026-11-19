@@ -1,7 +1,6 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { Fragment, type ReactNode } from "react";
-import { layoutEntries } from "../lib/content.ts";
 import {
   desk,
   folder,
@@ -9,7 +8,8 @@ import {
   render,
   study,
   type Finding,
-} from "../lib/findings.ts";
+} from "@/entities/finding";
+import { layoutEntries } from "@/shared/lib/readme";
 import "./journey.css";
 
 // `next build` runs in site/; the repository it describes is one level up.

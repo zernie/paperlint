@@ -1,16 +1,19 @@
-<!-- vigiles:sha256:c5fb580ba632309c compiled from site/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:5f4f0a5cb3dfd709 compiled from site/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
 ## `site/`
 
 paperlint.dev: a static Next.js export (`site/next.config.ts`) with its own
-`site/package.json` and lock, so the npm package carries none of it. `site/lib/content.ts` reads
+`site/package.json` and lock, so the npm package carries none of it. `site/src/shared/lib/readme/content.ts` reads
 the install commands, the lint output, the venue table and the disclaimer from the README at build time, and
 throws when one is gone, so the build fails instead of the page losing a section; it reads the folder
-tree from `docs/layout.md` the same way. `site/lib/findings.ts` quotes each finding the
-journey shows from the file that holds it, and `site/lib/content.test.ts` fails when a quote is no
-longer there. Build it with `npm run site:build` from the root; deploying is in `docs/website.md`. The
+tree from `docs/layout.md` the same way. `site/src/entities/finding/model/findings.ts` quotes each finding the
+journey shows from the file that holds it, and `site/src/entities/finding/model/findings.test.ts` fails when a quote is no
+longer there. Code lives in `site/src/` in Feature-Sliced Design layers, checked by Steiger (`site/steiger.config.mjs`);
+Next's routes stay in `site/app/`. A class name uses only the design tokens of `site/src/app/styles/globals.css`
+(Tailwind v4, its palette cleared), which `site/eslint.config.mjs` enforces. Build it with `npm run site:build`
+from the root, which runs site/'s lint, type check and tests first; deploying is in `docs/website.md`. The
 design below was decided with the author on 2026-11-19, over three rounds of mockups.
 
 ## Rules
@@ -25,11 +28,11 @@ design below was decided with the author on 2026-11-19, over three rounds of moc
 
 ### Modern Not 2010
 
-**Guidance only** — Large display type (the headline 110–130 px on desktop), generous space, a real product shot (the lint output) under the hero, cards with soft depth. The author rejected two small-type, narrow-column versions as looking like 2010; a change that shrinks the type or crowds the page needs a screenshot and the author's yes.
+**Guidance only** — Editorial, in the manner of Stripe Press and Anthropic: a large serif headline, warm paper, generous margins, illustrations set like plates. Layout on a 12-column grid, max width about 1200 px, every gap a multiple of 8 px, text left-aligned; sections are separated by hairlines and space, not by cards with drop shadows. The author rejected the earlier versions as looking like 2010 and then 2015 (2026-11-19): the dated parts were the spacing and grid, and cards with shadows. A change that shrinks the type, crowds the page or brings shadows back needs a screenshot and the author's yes.
 
 ### Type And Colour
 
-**Guidance only** — Palette and type follow zernie.com: paper #faf9f5, ink #181816, the ink-blue accent #305e8b; terracotta #c15f3c only for an error. Instrument Serif for headings, Inter for text, JetBrains Mono for code, all through next/font, which downloads them at build time and serves them from this site. Fonts matter to the author: a font change is shown side by side first.
+**Guidance only** — Palette follows zernie.com: paper #faf9f5, ink #181816, the ink-blue accent #305e8b; terracotta #c15f3c only for an error. Newsreader (optical sizes, its italic for the venue name) for headings, Inter for body text and UI, JetBrains Mono for code, all through next/font, which downloads them at build time and serves them from this site. The author chose Newsreader over Source Serif 4, Literata and Instrument Serif from a side-by-side sheet on 2026-11-19; a font change is shown side by side first.
 
 ### The Journey
 

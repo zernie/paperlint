@@ -430,8 +430,8 @@ test("the exclude list is exactly the justified set", () => {
     "skills/*/scripts/*.js",
     // the test runner's own configuration, read by vitest, not code the package runs
     "vitest.config.ts",
-    // the website's Next.js configuration, read by `next build` in site/'s own install
-    "site/next.config.ts",
+    // paperlint.dev: its own project, with its own tests and coverage gate (site/vitest.config.ts)
+    "site/**",
   ]);
   assert.deepEqual(CONFIG.include, [
     "bin/**",
@@ -442,8 +442,6 @@ test("the exclude list is exactly the justified set", () => {
     "skills/**",
     "scripts/**",
     "eslint.config.mjs",
-    // what paperlint.dev reads from the README and docs (site/CLAUDE.md)
-    "site/lib/**",
   ]);
   assert.deepEqual(CONFIG.typeOnly, [
     "src/types.ts",

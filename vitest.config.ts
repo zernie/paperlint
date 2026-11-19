@@ -7,6 +7,8 @@ const EXCLUDE = [
   "**/.tmp*/**",
   ".claude/**",
   "test/fixtures/**",
+  // paperlint.dev: its own project, whose tests need its own install (site/vitest.config.ts).
+  "site/**",
 ];
 
 // Unit tests (`*.test.ts`, project `unit`) and the end-to-end runs (`*.e2e.ts`, one project per

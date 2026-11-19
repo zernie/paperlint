@@ -20,7 +20,7 @@ export interface ReadmeContent {
 
 const fail = (what: string): never => {
   throw new Error(
-    `site: ${what} — the README changed; update site/lib/content.ts to match`,
+    `site: ${what} — the README changed; update site/src/shared/lib/readme/content.ts to match`,
   );
 };
 

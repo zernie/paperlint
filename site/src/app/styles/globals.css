@@ -1,0 +1,152 @@
+/* paperlint.dev's design tokens (site/CLAUDE.md, "Type and colour"). Every colour, size and space a
+   class name may use is declared here; site/eslint.config.mjs reads this file, so a class outside it
+   (`bg-red-500`, `w-[13px]`, `text-[#fff]`) fails `npm run lint`. Add a token here, never a literal in
+   a class name. */
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* The site has no dark mode. shadcn's components carry `dark:` classes; bound to a `.dark` class
+   that no element has, they never apply, instead of following the reader's OS setting. */
+@custom-variant dark (&:is(.dark *));
+
+/* Colour: Tailwind's palette is cleared, so only these exist. A name is shadcn's where shadcn has
+   one, because its components use it: `muted` is a quiet surface and the quiet text (#5f5d58) is
+   `muted-foreground`; the running text (#45433e) is `copy`, since `text-text` reads as a typo. */
+@theme {
+  --color-*: initial;
+
+  /* The palette, from zernie.com. */
+  --color-paper: #faf9f5;
+  --color-ink: #181816;
+  --color-copy: #45433e;
+  --color-border: #e4e1d8;
+  --color-surface: #ffffff;
+  --color-card: #f2efe9;
+  /* The one accent. */
+  --color-ink-blue: #305e8b;
+  /* Terracotta, for an error only. */
+  --color-signal: #c15f3c;
+  /* The dark band and the text on it. */
+  --color-band: #1f1d19;
+  --color-on-ink: #f0eee9;
+  --color-on-ink-muted: #bab7b0;
+  /* The journey's road. */
+  --color-road: #f6f1e6;
+  --color-road-edge: #ebe4d4;
+  /* A finding's level: text on its tint. */
+  --color-warn: #8a6a1c;
+  --color-warn-surface: #f3ead3;
+  --color-error: #a24a2b;
+  --color-error-surface: #f6e3db;
+
+  /* shadcn's semantic names, mapped onto the palette. */
+  --color-background: var(--color-paper);
+  --color-foreground: var(--color-ink);
+  --color-card-foreground: var(--color-ink);
+  --color-popover: var(--color-surface);
+  --color-popover-foreground: var(--color-ink);
+  --color-primary: var(--color-ink-blue);
+  --color-primary-foreground: var(--color-paper);
+  --color-secondary: var(--color-card);
+  --color-secondary-foreground: var(--color-ink);
+  --color-muted: var(--color-card);
+  --color-muted-foreground: #5f5d58;
+  --color-accent: var(--color-card);
+  --color-accent-foreground: var(--color-ink);
+  --color-destructive: var(--color-signal);
+  --color-input: var(--color-border);
+  --color-ring: var(--color-ink-blue);
+}
+
+/* Type. next/font sets the three families' variables on <html> (src/app/styles/fonts.ts); `static`
+   emits these even before a class uses them, because the older plain CSS in app/ reads them too. */
+@theme static {
+  --font-display: var(--font-instrument-serif), Georgia, serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, Menlo, monospace;
+  --font-heading: var(--font-display);
+}
+
+/* The type scale beyond Tailwind's (xs 12px … 9xl 128px): the landing page's named sizes, each
+   fluid between a phone and a desktop, so no class needs `text-[128px]`. */
+@theme {
+  /* The headline: 56px on a phone, 128px on a desktop. */
+  --text-hero: clamp(3.5rem, 9vw, 8rem);
+  --text-hero--line-height: 0.95;
+  --text-hero--letter-spacing: -0.02em;
+  /* A section's headline: 48–72px. */
+  --text-display: clamp(3rem, 6vw, 4.5rem);
+  --text-display--line-height: 1;
+  --text-display--letter-spacing: -0.02em;
+  /* A stop's title on the journey: 44–64px. */
+  --text-title: clamp(2.75rem, 5vw, 4rem);
+  --text-title--line-height: 1;
+  /* The paragraph under a headline: 18–22px. */
+  --text-lead: clamp(1.125rem, 2vw, 1.375rem);
+  --text-lead--line-height: 1.45;
+  /* Running text. */
+  --text-body: 1.125rem;
+  --text-body--line-height: 1.55;
+  /* The lint output and other code. */
+  --text-code: 0.90625rem;
+  --text-code--line-height: 1.9;
+}
+
+/* Space and size. Tailwind's spacing scale (`p-6` = 24px, steps of 4px) stays; these name the
+   landing page's large distances and widths. */
+@theme {
+  /* Above the hero, under the fixed header: 170px. */
+  --spacing-hero: 10.625rem;
+  /* Between sections: 150px. */
+  --spacing-section: 9.375rem;
+  /* Between two stops of the journey: 200px. */
+  --spacing-stop: 12.5rem;
+  /* The page's content width (1120px) and a paragraph's (640px). */
+  --container-page: 70rem;
+  --container-prose: 40rem;
+
+  /* Soft depth: a card, the product shot under the hero, a raised button. */
+  --shadow-soft: 0 40px 80px -48px rgb(24 24 22 / 0.4);
+  --shadow-shot: 0 50px 100px -40px rgb(24 24 22 / 0.5);
+  --shadow-raised: 0 18px 40px -18px rgb(24 24 22 / 0.55);
+
+  /* shadcn's radius scale. */
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  --radius: 0.625rem;
+}
+
+/* Named utilities for the three layouts shadcn's components wrote as arbitrary values. */
+@utility grid-cols-card-header {
+  grid-template-columns: 1fr auto;
+}
+@utility grid-rows-card-header {
+  grid-template-rows: auto auto;
+}
+@utility translate-y-tooltip-arrow {
+  translate: 0 calc(-50% - 2px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    /* The page's older CSS in app/ was laid out against the browser's `normal`, not Tailwind's
+       1.5: measured, 1.5 made the page 52px taller on a desktop. Drop once app/ is on tokens. */
+    line-height: normal;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

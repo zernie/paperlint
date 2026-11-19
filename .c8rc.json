@@ -18,7 +18,7 @@
     "skills/*/scripts/*.js: a skill's scripts compiled from the .ts beside them (tsconfig.skills.json); the .ts is measured.",
     "vitest.config.ts: the test runner's configuration. The pins in scripts/coverage-config.test.ts",
     "also require every tracked source to be either included or excluded here.",
-    "site/lib/**: what paperlint.dev reads from the README and docs, measured like the package's code. site/next.config.ts: the website's Next.js config, read only by `next build` in site/'s own install; its .tsx pages are not a measured extension."
+    "site/**: paperlint.dev, its own project with its own install, tests and 100% coverage gate (site/vitest.config.ts), run by `npm run site:build` and the `site` CI job; this run does not load it."
   ],
   "all": true,
   "src": ["."],
@@ -30,8 +30,7 @@
     "hooks/**",
     "skills/**",
     "scripts/**",
-    "eslint.config.mjs",
-    "site/lib/**"
+    "eslint.config.mjs"
   ],
   "exclude": [
     "**/*.harness.*",
@@ -60,7 +59,7 @@
     "docs/prior-art/repro/**",
     "skills/*/scripts/*.js",
     "vitest.config.ts",
-    "site/next.config.ts"
+    "site/**"
   ],
   "extension": [".js", ".mjs", ".ts"],
   "excludeAfterRemap": false,
