@@ -98,6 +98,8 @@ describe("the shipped cards", () => {
       "ase.md",
       "ccs.md",
       "fse.md",
+      "icml-2027.md",
+      "icml-style.md",
       "icse.md",
       "ieee-conference.md",
       "msr.md",

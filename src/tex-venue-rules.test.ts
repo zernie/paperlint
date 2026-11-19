@@ -1391,6 +1391,8 @@ describe("otherVenues", () => {
       "ASE",
       "ACM CCS",
       "FSE 2027",
+      "ICML",
+      "icml-style",
       "ICSE 2028",
       "MSR",
       "NeurIPS",
@@ -1756,6 +1758,138 @@ describe("tex/venue-leftover — AAAI counts only with a year beside it (`mentio
     expect(leftovers(lint(aaaiPaper(`For AAAI 2027.\n${BODY}`), AAAI))).toEqual(
       [],
     );
+  });
+});
+
+const ICML = { extends: "paperlint:icml-2027", kind: "main" };
+const IMPACT = "\\section*{Impact Statement}\nThis paper advances the field.\n";
+const ACK = "\\section*{Acknowledgements}\nThanks.\n";
+/** A paper in the kit's template: article, the style loaded after it. */
+const icmlPaper = (body: string, preamble = "") =>
+  paper(`\\documentclass{article}\n\\usepackage{icml2027}\n${preamble}`, body);
+const ICML_BIB =
+  "\\begin{thebibliography}{1}\\bibitem{a} A. Author. Learning.\\end{thebibliography}\n";
+
+describe("tex/required-section — ICML's impact statement", () => {
+  it.each<[string, string]>([
+    [
+      "before the acknowledgements and the references, as the kit puts it",
+      BODY + IMPACT + ACK + ICML_BIB + APPENDIX,
+    ],
+    [
+      "after the acknowledgements: «the two may appear in either order»",
+      BODY + ACK + IMPACT + ICML_BIB,
+    ],
+  ])("passes %s", (_, body) => {
+    expect(lint(icmlPaper(body), ICML)).toEqual([]);
+  });
+
+  it.each<[string, string, number]>([
+    ["🔴 no impact statement at all", BODY + ICML_BIB, 12],
+    [
+      "🔴 a heading other than the kit's",
+      BODY + "\\section*{Broader Impact}\nx\n" + ICML_BIB,
+      14,
+    ],
+  ])("%s", (_, body, line) => {
+    expect(required(lint(icmlPaper(body), ICML))).toEqual([
+      {
+        rule: "tex/required-section",
+        messageId: "missing",
+        message:
+          "ICML requires a section titled «Impact Statement» and there is none — add `\\section*{Impact Statement}` (the title exactly; a bold paragraph does not count)",
+        line,
+      },
+    ]);
+  });
+
+  it("the AI Disclosure Statement, required by the call under no fixed title, is not checked", () => {
+    expect(
+      lint(icmlPaper(BODY + IMPACT + ICML_BIB), ICML).filter(
+        (f) => f.rule === "tex/required-section",
+      ),
+    ).toEqual([]);
+  });
+});
+
+describe("the ICML style under tex/template, format/layout-override and cycle/port-done", () => {
+  const found = (tex: string, settings: object = ICML) =>
+    lint(tex, settings).map((f) => `${f.rule}:${f.messageId}`);
+
+  it("the kit's two lines pass; an option of the paper's own too", () => {
+    expect(found(icmlPaper(BODY + IMPACT))).toEqual([]);
+    expect(
+      found(
+        paper(
+          "\\documentclass{article}\n\\usepackage[accepted]{icml2027}",
+          BODY + IMPACT,
+        ),
+      ),
+    ).toEqual([]);
+  });
+
+  it("🔴 another class, a margin, another venue's style, another ICML edition's: each reported", () => {
+    expect(
+      found(paper("\\documentclass[sigconf]{acmart}", BODY + IMPACT)),
+    ).toEqual(["tex/template:wrongClass", "tex/template:missingStyle"]);
+    expect(
+      found(icmlPaper(BODY + IMPACT, "\\usepackage[margin=0.6in]{geometry}")),
+    ).toEqual(["format/layout-override:override"]);
+    expect(
+      found(
+        paper(
+          "\\documentclass{article}\n\\usepackage{neurips_2025}",
+          BODY + IMPACT,
+        ),
+      ),
+    ).toEqual(["tex/template:missingStyle"]);
+    expect(
+      found(
+        paper(
+          "\\documentclass{article}\n\\usepackage{neurips_2026}",
+          BODY + IMPACT,
+        ),
+      ),
+    ).toEqual(["tex/template:wrongStyle"]);
+    expect(
+      found(
+        paper(
+          "\\documentclass{article}\n\\usepackage{icml2026}",
+          BODY + IMPACT,
+        ),
+      ),
+    ).toEqual(["tex/template:wrongStyle"]);
+  });
+});
+
+describe("tex/venue-leftover — ICML counts only with a year beside it (`mentions`)", () => {
+  const under = (text: string) =>
+    leftovers(lint(aidcPaper(`${text}\n${BODY}${STATEMENT}`), AIDC));
+
+  it.each([
+    ["the venue named alone", "Benchmarks popular at ICML are smaller."],
+    // Measured in a NeurIPS 2025 paper's prose: a citation tag glued to its year is no whole word.
+    ["a tag glued to its year", "ELLM(ICML23) uses an LLM as a planner."],
+  ])("silent: %s", (_, text) => {
+    expect(under(text)).toEqual([]);
+  });
+
+  it.each([
+    ["First written for ICML 2027."],
+    ["A version appeared as ICML'27 work."],
+    ["Submitted to ICML~2027."],
+    // 🔴 Any year: a citation in the text of last year's ICML paper is reported too (icml-2027.md).
+    ["As shown at ICML 2025, the bound is tight."],
+  ])("🔴 reported: «%s»", (text) => {
+    expect(under(text).map((f) => f.message)).toEqual([
+      expect.stringMatching(/^«ICML» names ICML, and this paper extends AIDC/),
+    ]);
+  });
+
+  it("under icml-2027 itself, its own name with a year is never a leftover", () => {
+    expect(
+      leftovers(lint(icmlPaper(`For ICML 2027.\n${BODY}${IMPACT}`), ICML)),
+    ).toEqual([]);
   });
 });
 

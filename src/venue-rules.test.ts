@@ -271,13 +271,13 @@ describe("pdf/profile — the declaration must resolve, or nothing is judged", (
       "an unknown venue (a typo would silently disable every check)",
       { extends: "paperlint:agentic-dev", kind: "short" },
       "preset",
-      /agent, agenticdev, agentverify, aidc, aisec, ase, ccs, fse, icse, ieee-conference, msr, neurips-2026, neurips-style, nlbse, realm, sp/,
+      /agent, agenticdev, agentverify, aidc, aisec, ase, ccs, fse, icml-2027, icml-style, icse, ieee-conference, msr, neurips-2026, neurips-style, nlbse, realm, sp/,
     ],
     [
       "the base TeX set is not a venue",
       { extends: "paperlint:tex-base" },
       "preset",
-      /agent, agenticdev, agentverify, aidc, aisec, ase, ccs, fse, icse, ieee-conference, msr, neurips-2026, neurips-style, nlbse, realm, sp/,
+      /agent, agenticdev, agentverify, aidc, aisec, ase, ccs, fse, icml-2027, icml-style, icse, ieee-conference, msr, neurips-2026, neurips-style, nlbse, realm, sp/,
     ],
     [
       "paperlint.json that is not JSON",
@@ -1152,6 +1152,130 @@ describe("format/page-limit on AAAI-27: 7 pages of content, 2 more only of refer
       f.npages = body + refs;
     });
     expect(ids(lint({ venue: AAAI, facts }))).toEqual(want);
+  });
+});
+
+/**
+ * The facts of the ICML kit's example_paper.tex, measured for icml-style.jsonc (2026-11-19): the
+ * kit's icml2027.sty, references at the body's size (banal gives no reference size), an appendix
+ * after them. The kit's figure draws a non-embedded Times-Roman; left out here, it is pdf/fonts'
+ * finding on any venue.
+ */
+const icmlFacts = (patch: Patch = () => {}): Facts =>
+  withFacts((f) => {
+    f.page_w_in = 8.5;
+    f.page_h_in = 11;
+    f.columns = 2;
+    f.body_pt = 10.3;
+    f.ref_pt = null;
+    f.npages = 7;
+    f.body_pages = 5;
+    f.ref_pages = 2;
+    f.fonts = type1([
+      "NimbusRomNo9L-Regu",
+      "NimbusRomNo9L-Medi",
+      "NimbusRomNo9L-ReguItal",
+      "NimbusRomNo9L-MediItal",
+      "NimbusMonL-Regu",
+      "CMMI10",
+      "CMSY10",
+    ]);
+    patch(f);
+  });
+
+const ICML_STYLE = { extends: "paperlint:icml-style" };
+const ICML = {
+  extends: "paperlint:icml-2027",
+  kind: "main",
+  identity: ["Ada Example", "adaexample", "ada@example.org"],
+};
+
+describe("the ICML style family and ICML", () => {
+  it.each([
+    ["the family", ICML_STYLE],
+    ["icml-2027/main", ICML],
+  ])("the measured build passes %s", (_, venue) => {
+    expect(lint({ venue, facts: icmlFacts() })).toEqual([]);
+  });
+
+  it("🔴 the planted build in Computer Modern (\\rmdefault cmr) fails pdf/fonts", () => {
+    const facts = icmlFacts(
+      (f) =>
+        (f.fonts = type1(["CMBX10", "CMR10", "SFRM1000", "NimbusMonL-Regu"])),
+    );
+    const fs = lint({ venue: ICML, facts });
+    expect(ids(fs)).toEqual(["pdf/fonts:noFamily"]);
+    expect(fs[0]?.message).toMatch(/NimbusRomNo9L/);
+  });
+
+  it("🔴 another venue's one-column style (NeurIPS 2025's, measured) fails pdf/geometry", () => {
+    const fs = lint({ venue: ICML, facts: icmlFacts((f) => (f.columns = 1)) });
+    expect(fs.map((f) => f.message)).toEqual([
+      "1 column(s), ICML requires 2 — the wrong document class or class option",
+    ]);
+  });
+
+  it("🔴 an A4 page fails pdf/geometry", () => {
+    const facts = icmlFacts((f) => {
+      f.page_w_in = 8.27;
+      f.page_h_in = 11.69;
+    });
+    expect(ids(lint({ venue: ICML, facts }))).toEqual([
+      "pdf/geometry:dim",
+      "pdf/geometry:dim",
+    ]);
+  });
+
+  it("🔴 [11pt] (banal 11.3, measured) fails pdf/body-size", () => {
+    const fs = lint({
+      venue: ICML,
+      facts: icmlFacts((f) => (f.body_pt = 11.3)),
+    });
+    expect(ids(fs)).toEqual(["pdf/body-size:body"]);
+  });
+
+  it("🔴 a bibliography in \\small (banal 9.3, measured), below the body's size, fails pdf/body-size", () => {
+    const fs = lint({ venue: ICML, facts: icmlFacts((f) => (f.ref_pt = 9.3)) });
+    expect(fs.map((f) => f.message)).toEqual([
+      "the reference font size is 9.3 pt, outside 10 pt for ICML (allowing ±0.5 pt for the measuring drift) — fix the bibliography's font size",
+    ]);
+  });
+});
+
+describe("format/page-limit on ICML: 8 main-body pages, 9 in the camera-ready; references, statements and appendices not counted", () => {
+  const CAMERA = { ...ICML, kind: "camera-ready" };
+  // banal's counts on the kit's example with filler text (icml-2027.jsonc): 8 with the Impact
+  // Statement on page 9, 9 with the body run onto page 9.
+  it.each([
+    { name: "main: 8 + 4 pass", venue: ICML, body: 8, refs: 4, want: [] },
+    {
+      name: "🔴 main: a 9th body page fails",
+      venue: ICML,
+      body: 9,
+      refs: 4,
+      want: ["format/page-limit:pages"],
+    },
+    {
+      name: "camera-ready: 9 pass",
+      venue: CAMERA,
+      body: 9,
+      refs: 4,
+      want: [],
+    },
+    {
+      name: "🔴 camera-ready: a 10th body page fails",
+      venue: CAMERA,
+      body: 10,
+      refs: 4,
+      want: ["format/page-limit:pages"],
+    },
+  ])("$name", ({ venue, body, refs, want }) => {
+    const facts = icmlFacts((f) => {
+      f.body_pages = body;
+      f.ref_pages = refs;
+      f.npages = body + refs;
+    });
+    expect(ids(lint({ venue, facts }))).toEqual(want);
   });
 });
 
