@@ -11,9 +11,12 @@
   "url": "https://conf.researchr.org/home/ase-2026/agenticdev-2026",
   "extends": "paperlint:acm-sigconf",
 
-  // What the venue is called in a paper's text (tex/venue-leftover). Its parent conference, ASE,
-  // is left out: a three-letter acronym that many sentences use for other things.
+  // What the venue is called in a paper's text (tex/venue-leftover).
   "aliases": ["AgenticDev"],
+
+  // The conference it is held at: the workshop's page is on the ASE 2026 site (the url above). An
+  // AgenticDev paper may say «ASE 2026»: the parent's names count as its own.
+  "parent": "paperlint:ase",
 
   "format": {
     // The limits are a property of the paper's TYPE at this venue, not of the venue itself.

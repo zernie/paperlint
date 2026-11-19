@@ -28,6 +28,14 @@
  *   template   the child wins, with its `template_forbids`; so does `name`, and `required_sections`, `register`, `talk`,
  *              `portal`, `deadlines` and `submission_fields` (each whole)
  *   aliases    union, with every `name` — what the venue is called along the chain
+ *   parent     the child wins: the conference a workshop is held at, a spec resolved from the
+ *              file that names it
+ *
+ * ── THE PARENT CONFERENCE ─────────────────────────────────────────────────────────
+ * A workshop names the venue it is held at (`"parent": "paperlint:ccs"` in aisec.jsonc). The parent
+ * is resolved like any spec and must be a venue; its names, and its own parent's, are
+ * `parentNames`: names a paper of this venue may use as its own. A parent that does not resolve to
+ * a venue, or parents that name each other, are refused naming the file that says it.
  *
  * ── THE ID AND THE LABEL ──────────────────────────────────────────────────────────
  * The facts file and the build plan carry the preset's `id`: the spec's file name without its
@@ -107,6 +115,11 @@ export interface Preset {
   readonly template: PresetTemplate | null;
   /** Every `name` and `aliases` along the chain: what this venue is called in a paper's text. */
   readonly aliases: readonly string[];
+  /**
+   * Every name of the conference this venue is held at (`parent`), and of that one's parent: names a
+   * paper of this venue may use as its own. Empty when no file of the chain names a parent.
+   */
+  readonly parentNames: readonly string[];
   /** Whether the venue reviews double-blind (`anonymity/identity`); false when no file of the chain says. */
   readonly blind: boolean;
   /**
@@ -154,7 +167,11 @@ export type PresetProblem =
       /** A family extending a venue, or anything extending the base set. */
       readonly parentType: "venue" | "base";
     }
-  | { readonly kind: "broken"; readonly file: string; readonly why: string };
+  | { readonly kind: "broken"; readonly file: string; readonly why: string }
+  /** `file` names a parent conference that does not resolve to a venue preset: `why`. */
+  | { readonly kind: "bad-parent"; readonly file: string; readonly why: string }
+  /** Venues that name each other as `parent`, in the order they were followed. */
+  | { readonly kind: "parent-cycle"; readonly chain: readonly string[] };
 
 /** The display label of a spec: the file name without its extension. Pure. */
 export function labelOf(spec: string): string {
@@ -285,12 +302,23 @@ const namesOf = (i: PresetIdentity): readonly string[] =>
   i.type === "venue" ? [i.name] : [];
 
 /** What the merge carries from file to file: the preset without what only the whole chain knows. */
-type Merging = Omit<Preset, "id" | "label" | "chain" | "identity"> & {
+type Merging = Omit<
+  Preset,
+  "id" | "label" | "chain" | "identity" | "parentNames"
+> & {
   readonly name: string | null;
+  readonly parent: ParentLink | null;
 };
+
+/** A `parent` as a file of the chain names it: the spec, and the file it is resolved from. */
+interface ParentLink {
+  readonly spec: string;
+  readonly file: string;
+}
 
 const NOTHING_MERGED: Merging = {
   name: null,
+  parent: null,
   template: null,
   aliases: [],
   blind: false,
@@ -334,6 +362,7 @@ const mergeOne = (
   { preset: p, file }: { readonly preset: PresetFile; readonly file: string },
 ): Merging => ({
   name: nameOf(p.identity) ?? acc.name,
+  parent: p.parent === null ? acc.parent : { spec: p.parent, file },
   template:
     p.template === null
       ? acc.template
@@ -351,12 +380,12 @@ const mergeOne = (
   ...wholeBlocks(acc, p),
 });
 
-/** The chain, root first, merged into one preset. Pure. */
+/** The chain, root first, merged into one preset, and the parent it names. Pure. */
 function merged(
   spec: string,
   rootFirst: readonly { readonly preset: PresetFile; readonly file: string }[],
   leaf: { readonly preset: PresetFile },
-): Preset {
+): Omit<Preset, "parentNames"> & { readonly parent: ParentLink | null } {
   const { name, ...rest } = rootFirst.reduce(mergeOne, NOTHING_MERGED);
   return {
     id: labelOf(spec),
@@ -365,6 +394,62 @@ function merged(
     identity: leaf.preset.identity,
     ...rest,
   };
+}
+
+/** A problem as a caller reads it: a missing file lists the shipped presets. */
+const refusal = (p: PresetProblem, venuesDir: string): PresetProblem =>
+  p.kind === "not-found" ? { ...p, shipped: shippedPresets(venuesDir) } : p;
+
+/**
+ * The names `parent` brings, resolved from the file that names it: the parent venue's names and its
+ * own `parentNames`. `below` is every venue whose parent led here, so a cycle is refused. A problem
+ * of a parent further up is passed on as it is: it names the file that says the bad parent.
+ */
+function parentNamesOf(
+  parent: ParentLink,
+  below: readonly string[],
+  deps: PresetDeps,
+): Result<readonly string[], PresetProblem> {
+  const up = resolveFrom(parent.spec, parent.file, deps, below);
+  const bad = (why: string): Result<readonly string[], PresetProblem> =>
+    err({ kind: "bad-parent", file: parent.file, why });
+  const named = `"parent": "${parent.spec}"`;
+  if (!up.ok) {
+    const p = up.error;
+    if (p.kind === "bad-parent" || p.kind === "parent-cycle") return up;
+    // The parent's own file is missing or misspelt: say it of `parent`, not of an `extends`.
+    return "spec" in p && p.spec === parent.spec
+      ? bad(presetProblemText(p, "parent"))
+      : bad(`${named} does not resolve: ${presetProblemText(p)}`);
+  }
+  if (up.value.identity.type !== "venue")
+    return bad(
+      `${named} is a ${up.value.identity.type}, and a workshop's parent is the venue it is held at`,
+    );
+  return ok([...new Set([...up.value.aliases, ...up.value.parentNames])]);
+}
+
+/** `resolvePreset`, inside the venues `below` whose `parent` led here. */
+function resolveFrom(
+  spec: string,
+  fromFile: string,
+  deps: PresetDeps,
+  below: readonly string[],
+): Result<Preset, PresetProblem> {
+  const leaf = readPreset(spec, fromFile, deps);
+  if (!leaf.ok) return err(refusal(leaf.error, deps.venuesDir));
+  const here = [...below, leaf.value.file];
+  if (below.includes(leaf.value.file))
+    return err({ kind: "parent-cycle", chain: here });
+  const chain = chainUp([leaf.value], leaf.value, deps);
+  if (!chain.ok) return err(refusal(chain.error, deps.venuesDir));
+  const { parent, ...preset } = merged(
+    spec,
+    [...chain.value].reverse(),
+    leaf.value,
+  );
+  const names = parent === null ? ok([]) : parentNamesOf(parent, here, deps);
+  return names.ok ? ok({ ...preset, parentNames: names.value }) : names;
 }
 
 /**
@@ -376,17 +461,7 @@ export function resolvePreset(
   fromFile: string,
   deps: PresetDeps,
 ): Result<Preset, PresetProblem> {
-  const refused = (p: PresetProblem): Result<Preset, PresetProblem> =>
-    err(
-      p.kind === "not-found"
-        ? { ...p, shipped: shippedPresets(deps.venuesDir) }
-        : p,
-    );
-  const leaf = readPreset(spec, fromFile, deps);
-  if (!leaf.ok) return refused(leaf.error);
-  const chain = chainUp([leaf.value], leaf.value, deps);
-  if (!chain.ok) return refused(chain.error);
-  return ok(merged(spec, [...chain.value].reverse(), leaf.value));
+  return resolveFrom(spec, fromFile, deps, []);
 }
 
 /** The shipped presets' names (each is spelled `paperlint:<name>`). */
@@ -434,13 +509,19 @@ export const venueOf = ({
 export const shippedVenueNames = (deps: PresetDeps): readonly ShippedVenue[] =>
   resolveShipped(deps).map(venueOf);
 
-/** One line for a problem, naming what to change. Pure. */
-export function presetProblemText(p: PresetProblem): string {
+/**
+ * One line for a problem, naming what to change. `key` is the setting that named the spec of an
+ * `unsupported` or `not-found` problem. Pure.
+ */
+export function presetProblemText(
+  p: PresetProblem,
+  key: "extends" | "parent" = "extends",
+): string {
   switch (p.kind) {
     case "unsupported":
-      return `"extends": "${p.spec}" — a preset is \`paperlint:<name>\` (shipped) or a path starting with ./ or ../ (your own); npm presets: not yet supported. Did you mean "${shippedSpec(p.spec)}"?`;
+      return `"${key}": "${p.spec}" — a preset is \`paperlint:<name>\` (shipped) or a path starting with ./ or ../ (your own); npm presets: not yet supported. Did you mean "${shippedSpec(p.spec)}"?`;
     case "not-found":
-      return `"extends": "${p.spec}" names no preset (${p.file}); shipped presets (${SHIPPED_PREFIX}<name>): ${p.shipped.join(", ")}${
+      return `"${key}": "${p.spec}" names no preset (${p.file}); shipped presets (${SHIPPED_PREFIX}<name>): ${p.shipped.join(", ")}${
         setMembers(p.spec) === null
           ? ""
           : `. ${p.spec} is a rule set, not a venue: turn it on in "rules": { "${p.spec}": "warn" }`
@@ -451,12 +532,22 @@ export function presetProblemText(p: PresetProblem): string {
       return `the preset chain is longer than ${String(MAX_PRESET_DEPTH)}: ${p.chain.join(" → ")}`;
     case "broken":
       return `the preset ${p.file} does not parse: ${p.why}`;
+    case "bad-parent":
+      return `the preset ${p.file} names a parent conference that does not resolve to a venue: ${p.why}`;
+    case "parent-cycle":
+      return `the presets name each other as "parent" in a cycle: ${p.chain.join(" → ")}`;
     case "wrong-parent":
-      return p.parentType === "base"
-        ? `the preset ${p.file} extends ${p.parent}, the TeX base set — every paper gets that set already, and no preset extends it`
-        : `the preset ${p.file} is a template family and extends ${p.parent}, a venue — a family builds only on a family; a venue extends a family or another venue`;
+      return wrongParentText(p);
   }
 }
+
+/** The line for a chain whose file extends a preset of a type it may not extend. Pure. */
+const wrongParentText = (
+  p: Extract<PresetProblem, { readonly kind: "wrong-parent" }>,
+): string =>
+  p.parentType === "base"
+    ? `the preset ${p.file} extends ${p.parent}, the TeX base set — every paper gets that set already, and no preset extends it`
+    : `the preset ${p.file} is a template family and extends ${p.parent}, a venue — a family builds only on a family; a venue extends a family or another venue`;
 
 // ── a paper's preset ────────────────────────────────────────────────────────────────────
 

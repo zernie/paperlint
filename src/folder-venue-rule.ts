@@ -11,7 +11,8 @@
  * The folder's name, as the path module gives it (the directory of the linted file), its words
  * against each shipped venue's label and `aliases` (`src/domain/venue-name.ts`). The venues are
  * `otherVenues` — the presets not on this paper's own chain, the same list `tex/venue-leftover`
- * reads — and the paper's own label and aliases are never reported.
+ * reads — and the paper's own label and aliases, and its parent conference's names (`parentNames`),
+ * are never reported.
  *
  * ── WHICH FILE IT REPORTS ON ─────────────────────────────────────────────────────
  * The folder itself is not a file ESLint lints. `PIPELINE-STATUS.md` is: every paper folder has one
@@ -71,15 +72,14 @@ const shown = (n: NamedIn): string =>
  */
 export function judgeFolder(
   folder: string,
-  preset: Pick<Preset, "label" | "aliases">,
+  preset: Pick<Preset, "label" | "aliases" | "parentNames">,
   others: readonly OtherVenue[],
 ): readonly Finding[] {
-  return venuesNamedBy(folder, others, [preset.label, ...preset.aliases]).map(
-    (n) => ({
-      messageId: "leftover",
-      data: { folder, other: shown(n), venue: preset.label },
-    }),
-  );
+  const own = [preset.label, ...preset.aliases, ...preset.parentNames];
+  return venuesNamedBy(folder, others, own).map((n) => ({
+    messageId: "leftover",
+    data: { folder, other: shown(n), venue: preset.label },
+  }));
 }
 
 /**

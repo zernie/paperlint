@@ -14,8 +14,9 @@ ignored. `aisec-2026`, `aisec_2026` and `aisec2026` all name AISec; `overrealm` 
 name REALM. A venue name of several words (`ACM CCS`) counts only when its words stand in a row.
 
 The venue names come from the preset registry: every shipped preset's label (`aisec`) and its `name`
-and `aliases` (`AISec`, `ACM CCS`), collected along `extends` — the same names `tex/venue-leftover`
-looks for in the text. A venue with no shipped preset is not recognized.
+and `aliases` (`AISec`), collected along `extends` — the same names `tex/venue-leftover` looks for in
+the text. A venue with no shipped preset is not recognized. The names of the conference the paper's
+venue is held at (its `parent`) are the paper's own.
 
 ## Why
 
@@ -41,14 +42,16 @@ papers/aisec-2026/PIPELINE-STATUS.md
                 paper/folder-venue-leftover
 ```
 
-Named by an alias, the message says which: `papers/acm-ccs-agents/` under `paperlint:aidc` names
-`aisec («ACM CCS»)`.
+Named by an alias, the message says which: `papers/emnlp-agents/` under `paperlint:aidc` names
+`REALM («EMNLP»)`.
 
 Passing:
 
 - `papers/agent-rule-drift/` — names no venue;
 - `papers/aidc-2026/` or `papers/acsac-2026/` under `paperlint:aidc` — the paper's own venue, by its
   label or its alias;
+- `papers/ase-agents/` under `paperlint:agenticdev` — the conference the workshop is held at
+  (`"parent": "paperlint:ase"`); under `paperlint:aidc` the same folder names ASE;
 - `papers/overrealm-study/` — `realm` inside another word is that other word;
 - any folder whose `paperlint.json` has no `extends` yet, or none at all;
 - `papers/secure-acsac24/` under `paperlint:ieee-conference` — a bare template family names no venue.
@@ -59,11 +62,11 @@ No rule options. It reads each shipped preset's `name` and `aliases`, the fields
 `tex/venue-leftover` reads too:
 
 ```jsonc
-"aliases": ["AISec", "ACM CCS"]
+"aliases": ["AISec"],
+"parent": "paperlint:ccs"
 ```
 
-A name the paper's own chain also declares (two workshops of one parent conference) is never
-reported.
+A name the paper's own chain also declares, or its `parent` conference's, is never reported.
 
 ## What it does not check
 
