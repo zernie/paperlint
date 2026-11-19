@@ -1,0 +1,260 @@
+// ICLR 2027 (the Fifteenth International Conference on Learning Representations, 26-30 April 2027)
+// — a STANDALONE venue preset: ICLR's template is a style file of its own author kit, not a
+// publisher's class, so no family holds its format and this file holds both the template's
+// measurements and the call's numbers.
+//
+// 🚧 DRAFT, NOT REGISTERED: the template check for a style-file venue is being decided with the
+// NeurIPS preset (an engine change). See "WHAT DOES NOT FIT" at the end of this comment.
+//
+// Verbatim, each read 2026-11-19:
+// https://iclr.cc/Conferences/2027/CallForPapers
+//   «Abstract deadline Sep 18, 2026 AOE», «Paper deadline Sep 25, 2026 AOE», under «The planned
+//    dates are as follows (all times are UTC-12h, aka "Anywhere on Earth")»
+//   «Submissions will be double blind: reviewers cannot see author names when conducting reviews,
+//    and authors cannot see reviewer names.»
+// https://iclr.cc/Conferences/2027/AuthorGuidelines
+//   «ICLR 2027 is double blind, which means that all submitted papers should be anonymous. Any paper
+//    where author identity is revealed in either the main text or the supplementary material will
+//    be desk rejected.»
+//   «At the time of submission, the main text should be 9 pages or fewer. During the
+//    discussion/rebuttal phase and for the camera ready, the page limit will be increased to 10
+//    pages to allow for new results/discussions. This limit will be strictly enforced. Papers with
+//    main text beyond the page limit will be desk-rejected.»
+//   «The list of references does not count towards the page limit, and unlimited additional pages
+//    are allowed for the bibliography/references.»
+//   «Authors may use as many pages of appendices (after the bibliography) as they wish, but
+//    reviewers are not required to read the appendix.»
+//   «Style files and Templates : To prepare your submission to ICLR 2027, please use the LaTeX style
+//    files provided at: https://media.iclr.cc/Conferences/ICLR2027/iclr-2027-style-files.zip»
+//   «Required: AI use statement (See the AI Policy for Authors for more details.) This section does
+//    not count toward the page limit.»
+//   «Recommended: Ethics statement» … «they are encouraged to include a paragraph of Ethics
+//    Statement (at the end of the main text before references)» … «The optional ethics statement
+//    will not count toward the page limit, but should not be more than 1 page.»
+//   «Recommended: Reproducibility statement» … «Authors are strongly encouraged to include a
+//    paragraph-long Reproducibility Statement at the end of the main text (before references)» …
+//    «This optional reproducibility statement is not part of the main text and therefore will not
+//    count toward the page limit.»
+//   «Q. Is the acknowledgement section included in the page limit? No.»
+//   «Page limit is identical with the rebuttal version (10 pages)» (camera-ready)
+// https://iclr.cc/Conferences/2027/AIPolicyForAuthors
+//   «we require authors to disclose AI use in a mandatory section in their paper (this section will
+//    not be counted towards the page limit). The ICLR paper template includes a boilerplate
+//    disclosure to give authors a sense of the expected detail. You are not required to follow this
+//    format exactly»
+// The kit's own example, iclr2027_conference.tex (the zip above, sha256 0d940dfa…2529e; identical
+// to github.com/ICLR/Master-Template iclr2027/ at 46ed6f4c, «2027 template», 2026-09-01):
+//   «\documentclass{article} % For LaTeX2e» then «\usepackage{iclr2027_conference,times}»
+//   «Authors are required to use the ICLR \LaTeX{} style files obtainable at the ICLR website.
+//    Please make sure you use the current files and not previous versions. Tweaking the style files
+//    may be grounds for rejection.»
+//   «The text must be confined within a rectangle 5.5~inches (33~picas) wide and 9~inches
+//    (54~picas) long. The left margin is 1.5~inch (9~picas). Use 10~point type with a vertical
+//    spacing of 11~points. Times New Roman is the preferred typeface throughout.»
+//   «do not change font sizes (except perhaps in the \textsc{References} section; see below)»
+//   «Please prepare PostScript or PDF files with paper size ``US Letter'', and not, for example,
+//    ``A4''.»
+//   «\subsection*{AI use statement} (This section is \textbf{required} and does not count toward
+//    the page limit.)»
+//
+// 🔴 THE NUMBERS ARE MEASURED, NOT COPIED. Built on 2026-11-19 from the kit's example (renamed
+// paper.tex, the kit's files beside it) with `paperlint build` on paperlint's TeX Live 2026
+// (pdfTeX 1.40.29) and banal 1.2; the dimensions by a `\typeout{\the\textwidth …}` after
+// `\begin{document}`:
+//   page (banal)          8.5 x 11 in          (\paperwidth 614.295pt x \paperheight 794.97pt;
+//                                               the style sets them, \setlength{\paperwidth}{8.5in})
+//   columns (banal)       1
+//   body size (banal)     10.3                 (\f@size 10, \baselineskip 11.0pt; the style
+//                                               redefines \normalsize as 10/11)
+//   \textwidth            397.485pt = 5.5 in   (\textwidth 5.5 true in)
+//   \textheight           650.43pt = 9.0 in    (\textheight 9.0 true in)
+//   \small, \footnotesize 9 pt each (the style)
+//   references            banal reports NO reference size: banal 1.2 writes one only when it
+//                         differs from the body's (banal line 1032), so the bibliography is set at
+//                         10 pt, measured on a 15-page variant with 3 pages of references only
+//   fonts (pdf.js)        NimbusRomNo9L-Regu / -Medi / -ReguItal (times), NimbusSanL-Bold (the
+//                         style's line-number ruler, `\font\iclrtenhv = phvb at 8pt`) and
+//                         NimbusSanL-ReguItal, NimbusMonL-Regu (\texttt), CM and AMS math fonts;
+//                         all Type 1, embedded
+//   pages                 7: body 7, references 0, appendix 0 (the 3 references and the
+//                         one-line appendix share page 7 with body text)
+// `\iclrfinalcopy` (the camera-ready switch) changes none of these: the same probe line, the same
+// facts; it drops the line numbers and swaps the header to «Published as a conference paper at
+// ICLR 2027».
+//
+// Planted defects, built the same way (what differs from the example):
+//   `\usepackage{iclr2026_conference,…}`  → NOTHING measured differs; only the running head reads
+//     (last year's style)                    «ICLR 2026». No rule reads it.
+//   no ICLR style (`\usepackage{times}` +  → \textwidth 345pt (4.77 in), \textheight 550pt
+//     natbib + fancyhdr, plain article)      (7.61 in), 9 pages instead of 7; page, columns, body
+//                                            size and fonts are THE SAME (8.5 x 11, 1, 10.3,
+//                                            NimbusRomNo9L). No rule reads the text block
+//                                            (textblock_* below are data), and `tex/template`
+//                                            passes: the class is still article.
+//   `\usepackage{iclr2027_conference}`     → \rmdefault cmr: the text in CMR10 …, no NimbusRomNo9L:
+//     without `times`                        caught only by `fonts_text`, which this draft leaves
+//                                            out (see below)
+//   `\documentclass[twocolumn]{article}`   → banal 2 columns, 5 pages: pdf/geometry
+//   `\documentclass[11pt]{article}`        → nothing: the style redefines \normalsize after the
+//                                            class option (\f@size 10, banal 10.3)
+//   `\documentclass[a4paper]{article}`     → nothing: the style sets \paperwidth 8.5in and
+//                                            \paperheight 11in after the class option
+//   `\usepackage[margin=1in]{geometry}`    → \textwidth 469.76pt; page, columns, size unchanged:
+//                                            format/layout-override reads it in the source
+//   the kit's natbib.sty and fancyhdr.sty  → the same probe and facts with TeX Live's copies
+//     removed from the paper's folder
+//
+// WHAT DOES NOT FIT the existing fields (reported, not solved here):
+//   1. The template is a class AND a style: `template` takes one `\documentclass` line, and
+//      parseTemplate refuses a second node, so `\usepackage{iclr2027_conference}` cannot be
+//      required. `\documentclass{article}` alone passes a paper with no ICLR style at all.
+//   2. src/tex-requirements.harness.ts holds every standalone preset of one class to ONE package
+//      list. realm.jsonc is standalone on article too, with another list (lineno, symbol,
+//      zapfding), so this file fails that check as it stands.
+//   3. The page limit counts the «main text»; the AI use statement (required), the ethics and
+//      reproducibility statements and the acknowledgements do not count, and the template places
+//      them BEFORE the references. banal counts them as body, and so does `body_ends_at:
+//      references` (it ends at the references): a 9-page main text with its AI use statement on
+//      page 10 measures 10 body pages (measured, below: format/page-limit «body pages: 10, over
+//      the limit 9»). `body_ends_at: references` did not count at all on the same build: «could
+//      not tell where the body ends … no line on page 14 reads «Appendix»» — the style sets
+//      headings in small caps, and the PDF's text reads «A APPENDIX». The same statements moved
+//      AFTER the references (before the appendix) measure body 9, references 4: banal types the
+//      statements' page as bibliography. The guidelines place the ethics and reproducibility
+//      statements «at the end of the main text before references», and the example places all three
+//      there.
+//   4. The AI use statement is required, but the template writes it as `\subsection*{AI use
+//      statement}`, and `tex/required-section` reads `\section`/`\section*` only; the policy also
+//      says «You are not required to follow this format exactly», so no exact title is required.
+//      Measured: `"required_sections": [{ "title": "AI use statement" }]` reports the kit's own
+//      example («requires a section titled «AI use statement» and there is none»).
+{
+  "type": "venue",
+  // «ICLR» alone is what ML papers write whenever they cite an ICLR paper («In ICLR, 2024»), so as a
+  // name it would flag nearly every paper of another ML venue (tex/venue-leftover), and
+  // `mentions: "with-year"` would still flag «ICLR 2024». The edition is the name instead, the
+  // call's own spelling: «ICLR 2027». The kit writes it the same way in its running head.
+  "name": "ICLR 2027",
+  // The guidelines' other spelling: «To allow citation of papers that are under review at ICLR2027». «ICLR'27» occurs on
+  // none of the pages read, nor in the kit.
+  "aliases": ["ICLR2027"],
+  // The author guidelines, where the page limit, anonymity, statements and style files are stated;
+  // the call itself defers to them («Please see the author guidelines for all submission
+  // instructions and policies»).
+  "url": "https://iclr.cc/Conferences/2027/AuthorGuidelines",
+
+  // The class line of the kit's example. 🔴 It names the class only; the style file it loads,
+  // `\usepackage{iclr2027_conference,times}`, cannot be required here (see above).
+  "template": "\\documentclass{article}",
+
+  // «ICLR 2027 is double blind» … «will be desk rejected» (the guidelines above). anonymity/identity
+  // then requires the paper's `identity`.
+  "blind": true,
+
+  // «Abstracts and papers must be submitted using the conference submission system at:
+  // https://openreview.net/group?id=ICLR.cc/2027/Conference» (the guidelines above). paperlint has
+  // no OpenReview adapter: `paperlint submission` says so, and the scheduled deadline refresh skips
+  // this preset.
+  "portal": {
+    "kind": "openreview",
+    "url": "https://openreview.net/group?id=ICLR.cc/2027/Conference",
+  },
+
+  // The abstract («registration») has two readings. The portal: OpenReview's submission
+  // invitation, read 2026-11-19 from its public API, `"duedate": 1789819140000` =
+  // 2026-09-19T11:59:00Z (`"cdate"` 2026-08-19T11:59:00Z, `"expdate"` 2026-09-19T12:29:00Z: 30 min
+  // of grace). The call: «Abstract deadline Sep 18, 2026 AOE», the end of 18 Sep AoE,
+  // 2026-09-19T11:59:59Z. The portal's, 59 s earlier, binds.
+  // The paper: only the call's reading. OpenReview's API answers no public invitation for the full
+  // paper (`ICLR.cc/2027/Conference/-/Full_Submission`, the id the venue group names, returns `[]`).
+  // Both deadlines have passed; they are kept as the record of the edition. The guidelines and the
+  // dates page (https://iclr.cc/Conferences/2027/Dates) agree with the call.
+  "deadlines": [
+    {
+      "what": "registration",
+      "at": "2026-09-19T11:59:00Z",
+      "source": "portal",
+      "url": "https://api2.openreview.net/invitations?id=ICLR.cc/2027/Conference/-/Submission&expired=true",
+      "read": "2026-11-19",
+    },
+    {
+      "what": "registration",
+      "at": "2026-09-19T11:59:59Z",
+      "source": "call",
+      "url": "https://iclr.cc/Conferences/2027/CallForPapers",
+      "read": "2026-11-19",
+    },
+    {
+      "what": "submission",
+      "at": "2026-09-26T11:59:59Z",
+      "source": "call",
+      "url": "https://iclr.cc/Conferences/2027/CallForPapers",
+      "read": "2026-11-19",
+    },
+  ],
+
+  // No `required_sections` in this draft: the AI use statement is required, but see 4. above.
+
+  // TeX Live packages the ICLR kit needs ON TOP OF tex-base.jsonc. The style file, its .bst and the
+  // kit's copies of natbib.sty and fancyhdr.sty travel with the paper. Measured 2026-11-19: of the
+  // 119 TeX Live files the example read (pdflatex -recorder), all belong to scheme-basic, to
+  // tex-base.jsonc or to this list.
+  //   eso-pic — the style's first line, `\usepackage{eso-pic}` (its line-number ruler); not in
+  //     scheme-basic nor in any shipped preset: without it the style stops.
+  //   psnfss · times — `times` in the template's \usepackage; the text in the URW clone utmr8a.pfb,
+  //     which the PDF names NimbusRomNo9L.
+  //   helvetic — the ruler's font, `\font\iclrtenhv = phvb at 8pt` (phvb.tfm, uhvb8a.pfb).
+  //   courier — \texttt under times (pcrr7t.tfm, ucrr8a.pfb).
+  //   fancyhdr — the style's `\RequirePackage{fancyhdr}`, TeX Live's copy when the kit's is not
+  //     beside the paper (measured: the same facts).
+  "tex": {
+    "packages": {
+      "eso-pic": ["eso-pic.sty"],
+      "psnfss": ["times.sty"],
+      "times": ["ptmr7t.tfm", "utmr8a.pfb"],
+      "helvetic": ["phvb.tfm", "uhvb8a.pfb"],
+      "courier": ["pcrr7t.tfm", "ucrr8a.pfb"],
+      "fancyhdr": ["fancyhdr.sty"],
+    },
+  },
+
+  "format": {
+    // «paper size ``US Letter''» (the example); banal 8.5 x 11.
+    "page_size": "letter",
+    "page_w_in": 8.5,
+    "page_h_in": 11.0,
+
+    // «a rectangle 5.5~inches (33~picas) wide and 9~inches (54~picas) long»; \textwidth 397.485pt,
+    // \textheight 650.43pt. Data: no rule reads them yet.
+    "textblock_w_in": 5.5,
+    "textblock_h_in": 9.0,
+
+    "columns": 1,
+
+    // «Use 10~point type with a vertical spacing of 11~points»; banal 10.3, the 0.3 it reads high
+    // on every template measured.
+    "body_pt": 10,
+    "body_pt_tol": 0.5,
+
+    // No `ref_pt_min`/`ref_pt_max`, on purpose: the example allows a change of font size in the
+    // References section («except perhaps in the \textsc{References} section»), and banal reports
+    // no reference size when it equals the body's.
+
+    // No `fonts_text`, on purpose in this draft: «Times New Roman is the PREFERRED typeface»; the
+    // venue does not require it, and the style file itself loads no font (the template's `times`
+    // does). Setting `NimbusRomNo9L` would catch the `times`-less build above.
+
+    // «the main text should be 9 pages or fewer» at submission; «increased to 10 pages» for the
+    // rebuttal revision and the camera-ready; references «unlimited additional pages»; appendices
+    // after the bibliography «as many pages … as they wish». banal counts an appendix after the
+    // references as appendix, not body. 🔴 The statements before the references count as body
+    // (3. above): measured on a 15-page variant, main text ending on page 9, the AI use, ethics
+    // and reproducibility statements on page 10, references 11-13, appendix 14-15 → banal body
+    // 10, references 3, appendix 2.
+    "kinds": {
+      "submission": { "body_pages_max": 9, "ref_pages_max": "unlimited" },
+      // The same paper revised during the discussion, and its camera-ready.
+      "revision": { "body_pages_max": 10, "ref_pages_max": "unlimited" },
+    },
+  },
+}
