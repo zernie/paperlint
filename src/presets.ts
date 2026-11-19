@@ -509,6 +509,12 @@ export const venueOf = ({
 export const shippedVenueNames = (deps: PresetDeps): readonly ShippedVenue[] =>
   resolveShipped(deps).map(venueOf);
 
+/** For a rule set named where a venue belongs, where the set goes instead; "" otherwise. Pure. */
+const ruleSetHint = (spec: string): string =>
+  setMembers(spec) === null
+    ? ""
+    : `. ${spec} is a rule set, not a venue: turn it on in "rules": { "${spec}": "warn" }`;
+
 /**
  * One line for a problem, naming what to change. `key` is the setting that named the spec of an
  * `unsupported` or `not-found` problem. Pure.
@@ -521,11 +527,7 @@ export function presetProblemText(
     case "unsupported":
       return `"${key}": "${p.spec}" — a preset is \`paperlint:<name>\` (shipped) or a path starting with ./ or ../ (your own); npm presets: not yet supported. Did you mean "${shippedSpec(p.spec)}"?`;
     case "not-found":
-      return `"${key}": "${p.spec}" names no preset (${p.file}); shipped presets (${SHIPPED_PREFIX}<name>): ${p.shipped.join(", ")}${
-        setMembers(p.spec) === null
-          ? ""
-          : `. ${p.spec} is a rule set, not a venue: turn it on in "rules": { "${p.spec}": "warn" }`
-      }`;
+      return `"${key}": "${p.spec}" names no preset (${p.file}); shipped presets (${SHIPPED_PREFIX}<name>): ${p.shipped.join(", ")}${ruleSetHint(p.spec)}`;
     case "cycle":
       return `the presets extend each other in a cycle: ${p.chain.join(" → ")}`;
     case "too-deep":
