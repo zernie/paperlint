@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:cbf1747b1cd1bbf8 compiled from site/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:7ca8620df60c7d23 compiled from site/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -77,6 +77,10 @@ design below was decided with the author on 2026-11-19, over three rounds of moc
 ### Tasteful Motion
 
 **Guidance only** — Animation is quiet and short: elements fade and rise into place as they scroll in, the venue name changes, the road draws itself. Nothing loops for attention, nothing bounces, and everything stops for a reader who asks for reduced motion.
+
+### Deploy Only On Request
+
+**Guidance only** — Nothing deploys on its own: `site/vercel.json` turns off Git deployments, previews included. A preview or a production deploy happens only when the author asks for it, by the CLI or the Vercel API (`docs/website.md`). The author decided this on 2026-11-19.
 
 ### Static And Private
 

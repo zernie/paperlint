@@ -61,6 +61,9 @@ design below was decided with the author on 2026-11-19, over three rounds of moc
     "tasteful-motion": guidance(
       "Animation is quiet and short: elements fade and rise into place as they scroll in, the venue name changes, the road draws itself. Nothing loops for attention, nothing bounces, and everything stops for a reader who asks for reduced motion.",
     ),
+    "deploy-only-on-request": guidance(
+      "Nothing deploys on its own: `site/vercel.json` turns off Git deployments, previews included. A preview or a production deploy happens only when the author asks for it, by the CLI or the Vercel API (`docs/website.md`). The author decided this on 2026-11-19.",
+    ),
     "static-and-private": guidance(
       "A static export: no server, no analytics, no cookies, no request to a third party when the page is opened. `.dev` is HSTS-preloaded, so the domain serves HTTPS from its first deploy.",
     ),

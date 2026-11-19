@@ -44,4 +44,19 @@ The project and the domain are the maintainer's Vercel account. Once:
    to it). The domain was bought through Vercel, so its DNS is already there.
 5. Open `https://paperlint.dev` and check the certificate.
 
-Every push to `main` then redeploys, and every pull request gets a preview URL.
+## Deploys happen only when the maintainer asks
+
+`site/vercel.json` sets `git.deploymentEnabled: false`, so a push or a pull request deploys nothing,
+neither a preview nor production. The maintainer decided this on 2026-11-19. The Hobby plan has no
+project-level switch: Vercel's deployment policies need Pro (`pro_plan_required`, measured), so the
+switch lives in the repository.
+
+To deploy, on the maintainer's request only:
+
+- **A preview of a branch**: `vercel deploy` from `site/` on that branch, or the Vercel API's
+  create-deployment with the branch as its git source (an agent uses the Vercel MCP tool).
+- **Production**: the same with `--prod`, or `target: "production"`.
+
+A branch cut before `site/` reached `main` has no `site/vercel.json`, so Vercel still tries it and
+fails with «The specified Root Directory "site" does not exist»; that status is not the pull
+request's.
