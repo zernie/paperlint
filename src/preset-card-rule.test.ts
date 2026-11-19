@@ -109,7 +109,9 @@ describe("the shipped cards", () => {
       "tex-base.md",
     ]);
     expect(results.flatMap((r) => r.messages)).toEqual([]);
-  });
+    // Every card resolves its preset's whole chain: 21 cards took 5.0 s under `npm run test:changed`
+    // (2026-11-19), past vitest's default of 5 s.
+  }, 20_000);
 
   it("agenticdev: its own rules, linked to their page or to the index, and what it extends", async () => {
     const text = readFileSync(join(P, "agenticdev-2026.md"), "utf8");
