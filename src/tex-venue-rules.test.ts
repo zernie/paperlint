@@ -15,6 +15,7 @@ import {
   judgeRequiredSections,
   judgeStyle,
   judgeTemplate,
+  otherStyles,
   otherVenues,
   FORMAT_RULE_LEVELS,
   formatRules,
@@ -1580,6 +1581,26 @@ describe("tex/template — a style file the template loads (`template_style`): w
         template(paper("\\documentclass[sigconf]{acmart}", BODY + CHECKLIST)),
       ),
     ).toEqual(["tex/template:missingStyle", "tex/template:wrongClass"]);
+  });
+});
+
+describe("otherStyles — the styles of the shipped venues off a paper's chain", () => {
+  const files = memoryFiles(shipped);
+  const deps = { files, ...READERS };
+  const from = `${PAPER}/paperlint.json`;
+
+  it("names the other families' styles, not the paper's own; a style the reader cannot read is left out", () => {
+    const neurips = resolvePreset("paperlint:neurips-2026", from, deps);
+    expect(neurips.ok).toBe(true);
+    if (!neurips.ok) return;
+    const names = otherStyles(neurips.value, deps);
+    expect(names).toEqual(expect.arrayContaining(["icml2027", "aaai2027"]));
+    expect(names).not.toContain("neurips_2026");
+    const unreadable = {
+      ...deps,
+      latex: { ...latexReader, templateStyle: () => null },
+    };
+    expect(otherStyles(neurips.value, unreadable)).toEqual([]);
   });
 });
 

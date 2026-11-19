@@ -251,6 +251,12 @@ describe("parseTemplateStyle — a preset's template_style", () => {
 });
 
 describe("packagesOf — the packages the preamble loads", () => {
+  it("a \\usepackage with no argument loads nothing", () => {
+    expect(
+      packagesOf(parseLatex("\\documentclass{article}\n\\usepackage\n")),
+    ).toEqual([]);
+  });
+
   it("each package of each line, with the line's options and place; a comment loads nothing", () => {
     const src =
       "\\documentclass{article}\n% \\usepackage{x}\n\\usepackage[a, b]{p,q}\n\\RequirePackage{r}\n";
