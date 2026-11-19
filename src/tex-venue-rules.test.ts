@@ -324,6 +324,29 @@ describe("tex/template — the shipped ACM and ACL templates", () => {
     ).toEqual([]);
   });
 
+  it("🔴 acmart without acmsmall — the manuscript or the sigconf format — fails the single-column family and FSE", () => {
+    const FSE = { extends: "paperlint:fse", kind: "research" };
+    for (const settings of [{ extends: "paperlint:acm-acmsmall" }, FSE])
+      for (const cls of [
+        "\\documentclass{acmart}",
+        "\\documentclass[sigconf,review,anonymous]{acmart}",
+      ])
+        expect(lint(paper(cls), settings)).toEqual([
+          {
+            rule: "tex/template",
+            messageId: "missingOption",
+            message: `the class option \`acmsmall\` is missing: ${settings === FSE ? "FSE 2027" : "acm-acmsmall"} requires \`\\documentclass[acmsmall]{acmart}\``,
+            line: 2,
+          },
+        ]);
+    // The call's own line, and acmsmall without the options it only encourages.
+    for (const cls of [
+      "\\documentclass[acmsmall,screen,review,anonymous]{acmart}",
+      "\\documentclass[acmsmall]{acmart}",
+    ])
+      expect(lint(paper(cls), FSE)).toEqual([]);
+  });
+
   it("an ACL paper — article at 11pt, acl.sty as a package — passes realm", () => {
     expect(
       lint(paper("\\documentclass[11pt]{article}\n\\usepackage[review]{acl}"), {
@@ -694,6 +717,17 @@ describe("tex/required-section — what fails", () => {
   });
 });
 
+describe("tex/venue-leftover — FSE is named by its edition", () => {
+  it("🔴 «FSE 2027» in another venue's paper warns; FSE papers cited by other years do not", () => {
+    const leftover = (body: string) =>
+      lint(aidcPaper(body + STATEMENT), AIDC)
+        .filter((f) => f.rule === "tex/venue-leftover")
+        .map((f) => f.messageId);
+    expect(leftover("First written for FSE 2027.\n")).toEqual(["leftover"]);
+    expect(leftover("As shown at ESEC/FSE 2023 and FSE 2024.\n")).toEqual([]);
+  });
+});
+
 describe("tex/required-section — the edges", () => {
   it("an unmarked section after the bibliography is back matter, not body", () => {
     // A statement, then the bibliography, then an unmarked section: that section is back matter.
@@ -828,6 +862,23 @@ describe("tex/venue-leftover — a workshop's parent conference (`parent`) is th
         }),
       ),
     ).toEqual([]);
+  });
+
+  it("🔴 FSE and ASE do not collide: an AgenticDev paper names ASE as its own and FSE 2027 as another venue; an FSE paper reports ASE", () => {
+    expect(
+      named(lint(agenticdev("At ASE 2026, after FSE 2027."), AGENTICDEV)),
+    ).toEqual([["FSE 2027", "FSE 2027"]]);
+    expect(
+      named(
+        lint(
+          paper(
+            "\\documentclass[acmsmall]{acmart}",
+            "Formerly at ASE 2026, now FSE 2027.\nText.",
+          ),
+          { extends: "paperlint:fse", kind: "research" },
+        ),
+      ),
+    ).toEqual([["ASE", "ASE"]]);
   });
 
   it("the parent's names are the paper's own, not the workshop's: AgenticDev still reports AISec", () => {
@@ -1037,6 +1088,7 @@ describe("otherVenues", () => {
     expect(aidc.ok).toBe(true);
     if (!aidc.ok) return;
     expect(otherVenues(aidc.value, deps).map((o) => o.label)).toEqual([
+      "acm-acmsmall",
       "acm-sigconf",
       "AGENT 2027",
       "AgenticDev",
@@ -1044,6 +1096,7 @@ describe("otherVenues", () => {
       "AISec",
       "ASE",
       "ACM CCS",
+      "FSE 2027",
       "ICSE 2028",
       "MSR",
       "NLBSE",

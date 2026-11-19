@@ -1,0 +1,93 @@
+// FSE 2027 Research Papers (the ACM International Conference on the Foundations of Software
+// Engineering, Shenzhen, 12-16 July 2027) — a VENUE preset over the ACM single-column family.
+// Everything the acmart acmsmall template decides (page size, columns, fonts, font sizes, TeX
+// packages) comes from acm-acmsmall.jsonc; this file adds what FSE's call for papers sets. Its card,
+// in prose: `fse.md` beside this file.
+//
+// Verbatim from https://conf.researchr.org/track/fse-2027/fse-2027-papers (read 2026-11-19):
+//   «At the time of submission, each paper should have no more than 18 pages for all text and
+//    figures, plus 4 pages for references. Major revisions should have no more than 20 pages for
+//    all text and figures, plus 4 pages for references.»
+//   «Authors using LaTeX should use the sample-acmsmall-conf.tex file (found in the samples folder
+//    of the acmart package) with the acmsmall option. We also strongly encourage the use of the
+//    review, screen, and anonymous options as well. In summary, you want to use:
+//    \documentclass[acmsmall,screen,review,anonymous]{acmart}»
+//   «It is a single-column page layout. Submissions that do not comply with the above instructions
+//    will be desk rejected without review.»
+//   «the FSE 2027 Research Papers Track will employ a double-anonymous review process»
+//   «Papers that do not comply with the double-anonymous review process will be desk-rejected.»
+//   «Authors should provide a supporting statement on the availability of a replication package
+//    (or lack thereof) in their submitted papers in a section named Data Availability after the
+//    Conclusion section. This section will not be counted towards your page limit.»
+//   Its dates panel: «Fri 2 Oct 2026 Full paper submission», «Important Dates AoE (UTC-12h)»; and
+//   its banner: «Due to the system-wide HotCRP outage, we are extending the submission deadline by
+//   one day, to Oct. 3, AoE.»
+{
+  "type": "venue",
+  // «FSE» alone is what papers write when they cite an FSE paper («ESEC/FSE», «FSE 2024»), so as a
+  // name it would flag every software-engineering paper that cites one (tex/venue-leftover), and
+  // `mentions: "with-year"` would still flag «FSE 2024». The edition is the name instead, the
+  // call's own spelling: «FSE 2027». A paper written for this edition and moved elsewhere carries
+  // that; one that cites last year's FSE does not. No alias: the call spells it no other way.
+  "name": "FSE 2027",
+  // The call quoted above.
+  "url": "https://conf.researchr.org/track/fse-2027/fse-2027-papers",
+  "extends": "paperlint:acm-acmsmall",
+
+  // No `template`, on purpose: the call requires `acmsmall` («with the acmsmall option», desk
+  // reject otherwise), which the family's `\documentclass[acmsmall]{acmart}` already requires, and
+  // only «strongly encourage[s]» review, screen and anonymous — so a paper without them is not
+  // refused by the call, and is not refused here.
+
+  // «double-anonymous review process» (the call above), and `"blind":true` in the portal's data
+  // (https://fse2027.hotcrp.com/deadlines, read 2026-11-19). anonymity/identity then requires the
+  // paper's `identity`.
+  "blind": true,
+
+  // «Submission link: https://fse2027.hotcrp.com/» (the call above).
+  "portal": { "kind": "hotcrp", "url": "https://fse2027.hotcrp.com" },
+
+  // 🔴 TWO READINGS OF ONE DEADLINE, KEPT BOTH. The portal, read 2026-11-19 on its public
+  // deadlines page: «Submission deadline: Saturday Oct 3, 2026, 11:59 PM AoE» (`"sub":1791115140`
+  // = 2026-10-04T11:59:00Z). The call's dates panel still says «Fri 2 Oct 2026», and its banner
+  // extends that «by one day, to Oct. 3, AoE»: the end of 3 Oct AoE, 2026-10-04T11:59:59Z. The two
+  // differ by 59 s; the portal's, the earlier, binds. The deadline has passed: it is kept as
+  // the record of the edition. The later dates (author response, notification, major revision)
+  // are in the card.
+  "deadlines": [
+    {
+      "what": "submission",
+      "at": "2026-10-04T11:59:00Z",
+      "source": "portal",
+      "url": "https://fse2027.hotcrp.com/deadlines",
+      "read": "2026-11-19",
+    },
+    {
+      "what": "submission",
+      "at": "2026-10-04T11:59:59Z",
+      "source": "call",
+      "url": "https://conf.researchr.org/track/fse-2027/fse-2027-papers",
+      "read": "2026-11-19",
+    },
+  ],
+
+  // No `required_sections`, on purpose. The call asks for «a section named Data Availability after
+  // the Conclusion section», but only that authors «should» provide it, and no desk reject is
+  // named for its absence; a check ships on by default only when the venue's text requires it. The
+  // card says so.
+
+  "format": {
+    // «no more than 18 pages for all text and figures, plus 4 pages for references» — a body limit
+    // with its references, counted by banal (body and reference pages). 🔴 What the count cannot
+    // say, in the card: the Data Availability section «will not be counted towards your page
+    // limit», and no field excludes one section from the body count, so a Data Availability that
+    // fills a page of its own before the references counts as body here.
+    "kinds": {
+      "research": { "body_pages_max": 18, "ref_pages_max": 4 },
+      // «Major revisions should have no more than 20 pages for all text and figures, plus 4 pages
+      // for references.» The same paper after a major-revision decision: its paperlint.json
+      // switches `kind`.
+      "major-revision": { "body_pages_max": 20, "ref_pages_max": 4 },
+    },
+  },
+}
