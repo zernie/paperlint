@@ -5,6 +5,18 @@
 // `SkillSpec` in vigiles branch `claude/skill-disallowed-tools` and is not in a release
 // this repo installs, so writing one here would not compile.
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
+import analyzeSiblingPaper from "../analyze-sibling-paper/SKILL.md.spec.ts";
+import argumentArc from "../argument-arc/SKILL.md.spec.ts";
+import extendPaper from "../extend-paper/SKILL.md.spec.ts";
+import gradePaperWriting from "../grade-paper-writing/SKILL.md.spec.ts";
+import paperAdversarialReview from "../paper-adversarial-review/SKILL.md.spec.ts";
+import pcPanelReview from "../pc-panel-review/SKILL.md.spec.ts";
+import renderPaper from "../render-paper/SKILL.md.spec.ts";
+import rewriteUnclear from "../rewrite-unclear/SKILL.md.spec.ts";
+import submitPaper from "../submit-paper/SKILL.md.spec.ts";
+import tightenPaper from "../tighten-paper/SKILL.md.spec.ts";
+import verifyCitations from "../verify-citations/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "harden-paper",
@@ -173,14 +185,12 @@ middle sags" — wasting the polish on possibly-cut sections.
    An explicit call does not depend on selection at all. Without it this axis silently does not run,
    and a hardening pass that skipped its readability axis reports the same "done" as one that ran it.
    **Downstream of axis 0** (don't polish a
-   section slated to be cut). Two hard rules from the AISec session: (a) run the stall pass as **both persona
-   subagents** — "Sam", a non-expert engineer, per-section for a dense paper, and the workshop reviewer
-   skimming abstract, introduction and conclusion for whose result each sentence states — the rubric SCORE under-fires because a
+   section slated to be cut). Two hard rules from the AISec session: (a) the stall pass is
+   \`grade-paper-writing\`'s, with its two readers; the rubric SCORE under-fires because a
    frontier grader knows every term and never stalls (it scored a wall-heavy paper 44/60); the persona inventory,
    not the number, is the gate. (b) **A wall / spec-sheet / coined-jargon-heading HARD-FAILS this axis — it is not
-   a "minor" note.** List the jargon the *target venue's* reviewers won't know (register-calibration: keep field-native
-   terms, gloss methodology shorthand, rename coinages) and hand those sentences, with the stall
-   inventory, to **\`rewrite-unclear\`**, which rewrites them and runs the claim-preservation diff
+   a "minor" note.** Hand the stall
+   inventory to **\`rewrite-unclear\`**, which rewrites the sentences and runs the claim-preservation diff
    (\`claims\`) after each; this gate does not reword. Confirm the paper leads with its most visceral
    concrete instance.
 
@@ -202,11 +212,8 @@ middle sags" — wasting the polish on possibly-cut sections.
 11. **Citability** — soundness gets you accepted; citability gets you *cited* (the axis that actually
     moves an impact case). A correct-but-forgettable paper is a desk-accept and a dead end. Make the
     work the thing people reach for when they discuss the problem. Levers, in order of payoff:
-    - **Coin a reusable handle for the phenomenon** and ride an *existing* citation pattern. One named
-      concept that fills a naming gap ("the *install surface*", riding "the lethal trifecta") becomes the
-      noun people cite. Rules: it must name something readers already feel but can't point to; short,
-      literal, goog-able, not cute; **defined in one sentence on first use** (abstract if possible);
-      used consistently (grep — no synonym drift). One coinage per paper, max.
+    - **Names:** the paper's name budget, and one name for one thing, are \`argument-arc\`'s (step 4); a
+      name that brands instead of describing is fixed by \`rewrite-unclear\`.
     - **Frame the contribution as "first *taxonomy / benchmark / measurement* of X,"** not "we found Y is
       bad." A reusable framework (the four risk classes, the audit predicate) is what later work builds
       on and cites; a one-off result is a blog post. (This is the same reframe as axis 3, aimed at
@@ -216,11 +223,8 @@ middle sags" — wasting the polish on possibly-cut sections.
       open-source and reproducible (ties to axis 7).
     - **Give one quotable, load-bearing statistic** — a single number a talk/blog will repeat ("<1% carry
       any test"). Make it defensible and prominent; don't bury it.
-    - **Dry humour is a citability multiplier — but *framing only*.** One deadpan line that crystallizes
-      the absurdity ("comes with a README") makes the concept sticky and quotable. Strict scope: allowed
-      in intro/framing/section-openers; **never** in methodology, threat model, ethics, results, or
-      limitations (humour there reads as unrigorous and sinks trust). One or two lines total, deadpan not
-      jokey, load-bearing not decorative.
+    - **A line written to be quoted** is held to the venue's register (\`grade-paper-writing\`, #10: an
+      aphorism or a punchline closing scores 1); its literal claim comes from \`rewrite-unclear\` (rule 2).
     - **arXiv-first + plan the extended SoK.** A 2-page workshop paper is a flag-plant; the citations
       accrue to the extended/arXiv version. Log the follow-on (fuller taxonomy, bigger corpus, the
       dropped refs) so the citable artifact exists. Put a preprint where people can find and cite it.
@@ -314,3 +318,19 @@ preprint). If every gate passes and every axis is PASS/FIXED → hand off to \`s
 \`pc-panel-review\` + \`verify-citations\` + \`grade-paper-writing\` (called by this), \`render-paper\` (if LaTeX
 toolchain exists), \`submit-paper\` (downstream), \`extend-paper\` (the dropped refs / deferred axes live here).`,
 });
+
+export const flow = {
+  stage: "review",
+  handsTo: () => [submitPaper, extendPaper],
+  calls: () => [
+    tightenPaper,
+    paperAdversarialReview,
+    pcPanelReview,
+    verifyCitations,
+    analyzeSiblingPaper,
+    gradePaperWriting,
+    rewriteUnclear,
+    renderPaper,
+    argumentArc,
+  ],
+} satisfies Flow;

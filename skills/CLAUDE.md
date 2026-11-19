@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:5a8bf895a34de689 compiled from skills/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:b32ecb59311c8f85 compiled from skills/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -16,7 +16,7 @@ package's location come from `skills/paper-pipeline/scripts/consumer.mjs`; the l
 
 ### One Owner Per Job
 
-**Guidance only** — Each job on a paper's text has one owner skill, and the others hand over to it instead of carrying their own instructions for it: find unclear sentences — `cold-read-diff` (the last edit), `grade-paper-writing` (the whole paper); grade the prose — `grade-paper-writing`; rewrite for clarity — `rewrite-unclear`; cut for length — `tighten-paper`; the order of the argument — `argument-arc`; is it ready to submit — `harden-paper`; which stage runs next — `paper-pipeline`. A skill that finds a problem it does not own names the owner and stops. A second copy of an owner's rule in another skill is a defect: two copies drift, and the reader follows whichever it read last.
+**Guidance only** — Each job on a paper's text has one owner skill, and the others hand over to it instead of carrying their own instructions for it: find unclear sentences — `cold-read-diff` (the last edit), `grade-paper-writing` (the whole paper); grade the prose — `grade-paper-writing`; rewrite for clarity — `rewrite-unclear`; cut for length — `tighten-paper`; the order of the argument — `argument-arc`; judge headings — `cold-read-diff` (a heading in the last edit), `argument-arc` (the headings as a set); one name for one thing across the paper — `argument-arc` (the name budget); fix a heading or a name — `rewrite-unclear`; is it ready to submit — `harden-paper`; which stage runs next — `paper-pipeline`. The owners are `skills/jobs.ts`; who hands work to whom is each skill's `flow`, drawn in `docs/pipeline.md` and checked by `test/pipeline.test.ts`. A skill that finds a problem it does not own names the owner and stops. A second copy of an owner's rule in another skill is a defect: two copies drift, and the reader follows whichever it read last.
 
 ### A Criterion That Judges Prose
 

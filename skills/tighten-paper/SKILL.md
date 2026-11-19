@@ -4,7 +4,7 @@ description: "Use when a paper \"feels long / bloated / overly complex / hard to
 allowed-tools: [Read, Write, Edit, Grep, Glob, Agent]
 ---
 
-<!-- vigiles:sha256:91728db18876af2c compiled from skills/tighten-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:b31b300249a35350 compiled from skills/tighten-paper/SKILL.md.spec.ts -->
 
 # tighten-paper — the developmental edit
 
@@ -15,7 +15,7 @@ at all. This pass is the editor who reads the whole paper once and asks: *is thi
 length, delivering the right point?* Its deliverable is a **cut/fold/merge/reorder plan and a length verdict**, not
 reworded sentences.
 
-**Run it as a persona subagent too** (see `paper-pipeline/references/writing-craft.md` — the persona mechanic): an
+**Run it as a persona subagent too** (the persona mechanic: `grade-paper-writing`, "Two readers, and both run"): an
 editor persona who reads the whole thing once, fast, the way a busy reviewer skims before deciding. A frontier model
 grading section-by-section never feels the *cumulative* drag; a persona reading cover-to-cover does.
 
@@ -61,19 +61,9 @@ sentence that cites it. That list is what that step spends.
 its place. Those are judgement, and pretending otherwise would be the failure this whole pipeline
 exists to prevent.
 
-## 🔤 JUDGE THE HEADINGS AS A SET, NOT ONE AT A TIME (2026-08-05)
+## 🔤 Headings
 
-Print every heading in order and read them as a table of contents, with nothing else. **A stranger
-should be able to reconstruct the argument from the headings alone.** Two rules:
-
-- **A heading names a thing** — a linter, a configuration, a repository, a build, a constraint —
-  never an abstraction (*answers · kinds · moves · demotion · what X removes*). Two headings that a
-  reader called "VAGUE AF" and "why not mention the linter??" survived **six** consecutive passes,
-  because every pass looked only at the section it happened to be editing. Nobody ever looked at the
-  set.
-- **A heading that names two jobs means the section has two jobs.** *"Why the prose stays, and what
-  the construction costs"* is two different questions under one number, and that is visible from the
-  heading alone before you read a word of it.
+The headings as a set: `argument-arc`. Fixing a heading: `rewrite-unclear`.
 
 ## 🔀 JUDGE THE ORDER (2026-08-05)
 
@@ -131,7 +121,7 @@ which cross-references break and how many.
 7. **The payoff check.** Does the conclusion deliver the exact thing the intro promised — no more (no new claims), no
    less (no anticlimax)? Do intro and conclusion agree on what the paper is about?
 
-## Aggression — the default verdict for a sentence is DELETE
+## Aggression
 The failure this skill keeps hitting is **timidity**: it concludes "the skeleton is clean, nothing major to cut"
 and trims lightly, so the paper stays at the page limit and still *feels* fat (GateBench 2026-07-25: the author
 called it "fat for no reason" after a pass that cut almost nothing and left it 10pp). Fix the posture:
@@ -139,8 +129,8 @@ called it "fat for no reason" after a pass that cut almost nothing and left it 1
   section to cut" is **NOT a stopping condition** — go INSIDE each section and cut at the paragraph and sentence
   level. A tightening pass whose conclusion is "structure is already clean" has not done its job.
 - **Burden of proof is on the words, not the editor.** Do not ask "can I justify removing this?" Ask "does this
-  sentence change what the reader BELIEVES or can DO?" If not — cut. The default verdict for any sentence is
-  DELETE unless it visibly advances the one-point.
+  sentence change what the reader BELIEVES or can DO?" If not — cut. A sentence that explains something does,
+  and is never cut for length (see the caveats).
 - **Each section justifies its LENGTH, not just its existence.** Existence-justified but 2× too long is still a
   fail. Budget each section from its job (threat model ~0.5pp not 1.5; related-work ~0.75pp; a discussion that
   re-states results ~0). Over budget → cut to budget.
@@ -152,12 +142,11 @@ called it "fat for no reason" after a pass that cut almost nothing and left it 1
   does not move the line count materially DID NOT HAPPEN** — say so and cut harder. On a paper that "feels fat,"
   −20–30% of body prose is a normal result, not an extreme one.
 - **"It's all load-bearing numbers" is the SECOND timid excuse — reject it too** (the first is "the skeleton is
-  clean"). A paragraph can be FULL of protected numbers/cites and STILL be over-explained. Load-bearing protects
-  the CLAIM + its number — NOT the three sentences that motivate, teach, and restate it around them. Method:
-  extract the claim+number into ONE tight sentence, cut the surrounding explanation. **Dense ≠ uncuttable** — a
-  measurement paper's fat HIDES as explanation of real numbers, which is exactly why "it's all numbers" lets it
-  survive a lazy pass (GateBench 2026-07-25: a pass cut only 5% hiding behind this; the author correctly pushed
-  back that whole sections were over-explained, not just number-dense).
+  clean"). A paragraph can be FULL of protected numbers/cites and STILL carry restatements and per-case
+  walkthroughs. Load-bearing protects the claim, its number and the sentences that explain it — not a sentence
+  that restates it. An explanation the body cannot afford is never shortened: it moves, whole, to the appendix
+  or the artifact (`MOVE→`). **Dense ≠ unmovable** (GateBench 2026-07-25: a pass cut only 5% hiding behind
+  this; the author correctly pushed back that whole sections were over-explained, not just number-dense).
 - **The study-mode sentence is never cut for length.** The Methods sentence that says a study was
   decided before its run (with its decision's commit and date, from the index in `repro/README.md`)
   or is exploratory — and the word "exploratory" beside an exploratory number — is the claim's

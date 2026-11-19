@@ -5,6 +5,9 @@
 // `SkillSpec` in vigiles branch `claude/skill-disallowed-tools` and is not in a release
 // this repo installs, so writing one here would not compile.
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
+import gradePaperWriting from "../grade-paper-writing/SKILL.md.spec.ts";
+import tightenPaper from "../tighten-paper/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "pc-panel-review",
@@ -73,13 +76,11 @@ prose-only read can.
    (grade-paper-writing) as its required inputs.)*
 3. **Pick 3 (or 4) reviewer lenses** that a real PC for THIS venue would field. One is fixed; the rest
    come from the menu, by fit:
-   - **Genre/register reviewer — MANDATORY on every panel, at every venue.** Confidence 3 (knows the
-     area, not this topic), reads ONLY the abstract, the introduction and the conclusion, and judges
-     whether this reads as a paper at this venue: whose result each sentence states, whether the
-     relations between claims are signposted or left to infer, and whether anything is an aphorism,
-     a fragment or a colloquial turn. This is the reviewer who writes one short review, scores low,
+   - **Genre/register reviewer — MANDATORY on every panel, at every venue.** Its prompt has one
+     owner, \`skills/cold-read-diff/scripts/readers.ts\` (the reviewer; \`cold-read.js --venue\` prints
+     it). This is the reviewer who writes one short review, scores low,
      and calls the paper a blog post — the one reviewer a panel of careful full readers never
-     predicts. Give it the three sections as text and the venue's name, nothing else.
+     predicts. Give it the abstract, the introduction and the conclusion as text and the venue's name, nothing else.
    - **Methods/stats skeptic** — sample size, construct validity, multiple comparisons, overclaims,
      whether the CIs support the claims, and **whether every confirmatory claim rests on a study
      decided before its run**. Run \`npx paperlint studies index <paper-dir>\` and give this reviewer the index in
@@ -277,3 +278,9 @@ accept and the artifact reproduces clean; don't loop past one confirming round.
   reproduction/anonymization leak — live in the ARTIFACT, so the artifact-runner + an ethics lens are
   non-optional at security venues.`,
 });
+
+export const flow = {
+  stage: "review",
+  handsTo: () => [],
+  calls: () => [gradePaperWriting, tightenPaper],
+} satisfies Flow;

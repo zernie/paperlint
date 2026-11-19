@@ -5,6 +5,10 @@
 // `SkillSpec` in vigiles branch `claude/skill-disallowed-tools` and is not in a release
 // this repo installs, so writing one here would not compile.
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
+import findVenue from "../find-venue/SKILL.md.spec.ts";
+import planPaperTimeline from "../plan-paper-timeline/SKILL.md.spec.ts";
+import researchIdeate from "../research-ideate/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "extend-paper",
@@ -73,3 +77,10 @@ The AgenticDev 2026 "Measuring the Wrong Number" workshop paper's **planned** ex
 higher-prestige indexed publication that turns one accepted paper into a body of work. AgenticDev's CFP
 explicitly invites journal extensions; the same ORCID links the workshop paper and its extension.`,
 });
+
+export const flow = {
+  stage: "extend",
+  handsTo: () => [],
+  calls: () => [findVenue, planPaperTimeline],
+  loopsBackTo: () => [researchIdeate],
+} satisfies Flow;

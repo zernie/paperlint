@@ -5,6 +5,9 @@
 // `SkillSpec` in vigiles branch `claude/skill-disallowed-tools` and is not in a release
 // this repo installs, so writing one here would not compile.
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
+import analyzeSiblingPaper from "../analyze-sibling-paper/SKILL.md.spec.ts";
+import draftPaper from "../draft-paper/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "map-prior-work",
@@ -191,3 +194,9 @@ you looked.
   that you can quote justifies your section far better than any adjective.
 - **Do not delegate the claim decision.** A subagent maps; you decide what the paper claims.`,
 });
+
+export const flow = {
+  stage: "idea",
+  handsTo: () => [draftPaper],
+  calls: () => [analyzeSiblingPaper],
+} satisfies Flow;

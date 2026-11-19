@@ -5,6 +5,10 @@
 // fence yet: the field exists on `SkillSpec` as of the branch `claude/skill-disallowed-tools`
 // but is not in a release the consumer installs, so adding it here would not compile.
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
+import buildBenchmark from "../build-benchmark/SKILL.md.spec.ts";
+import rewriteUnclear from "../rewrite-unclear/SKILL.md.spec.ts";
+import sweepDesignSpace from "../sweep-design-space/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "argument-arc",
@@ -79,6 +83,29 @@ Then read the list on its own, without the paper:
 - **A line that is a topic, not a belief** ("we survey related work") → rewrite it as a belief or
   admit the section is filler.
 
+### 2a. The headings as a set
+
+Print every heading in order and read them as a table of contents, with nothing else:
+
+\`\`\`bash
+node \${CLAUDE_SKILL_DIR}/scripts/headings.js <paper-dir>/paper.tex
+\`\`\`
+
+It reads \`paper.tex\` with the files its last build recorded spliced in, so a section in an
+\`\\input\` file is listed where it stands. **A stranger should be able to reconstruct the argument
+from the headings alone.** Two rules:
+
+- **A heading names a thing** — a linter, a configuration, a repository, a build, a constraint —
+  never an abstraction (*answers · kinds · moves · demotion · what X removes*). Two headings that a
+  reader called "VAGUE AF" and "why not mention the linter??" survived **six** consecutive passes,
+  because every pass looked only at the section it happened to be editing. Nobody ever looked at the
+  set.
+- **A heading that names two jobs means the section has two jobs.** *"Why the prose stays, and what
+  the construction costs"* is two different questions under one number, and that is visible from the
+  heading alone before you read a word of it.
+
+A heading in the last edit: \`cold-read-diff\`. Fixing a heading: \`rewrite-unclear\`.
+
 ### 3. The inevitability pass — bottom to top
 Start at the conclusion and walk **upward**, asking at each section: *does this make the conclusion
 harder to escape?* A section that merely supports the conclusion is not enough; the test is whether
@@ -90,7 +117,9 @@ sections that are true, interesting and load-bearing for nothing.
 ### 4. Count the names
 Count every named system, benchmark, corpus and acronym in the body. For each, ask: **must the reader
 remember this later?** If the answer is no, it becomes an unnamed instance ("one corpus study",
-"a trace monitor") or a citation, and the name moves to the artifact or a footnote.
+"a trace monitor") or a citation, and the name moves to the artifact or a footnote. A name the reader
+keeps is the only one its thing goes by across the paper (no synonym drift); a second name is a
+finding, and \`rewrite-unclear\` fixes it (rule 8).
 
 Report the count. A reader who says they cannot hold the paper in their head is usually telling you
 this number, not the word count. There is no correct threshold — but a body carrying more names than
@@ -148,3 +177,10 @@ different ideas, references, and benchmarks at them"* — and got five local edi
 for length, a skill for sentences and a skill for defects; the question *does this paper carry the
 reader to one conclusion* belonged to nobody, and that is the one that failed.`,
 });
+
+export const flow = {
+  stage: "draft",
+  handsTo: () => [],
+  calls: () => [rewriteUnclear],
+  loopsBackTo: () => [buildBenchmark, sweepDesignSpace],
+} satisfies Flow;

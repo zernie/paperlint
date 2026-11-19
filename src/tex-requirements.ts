@@ -301,6 +301,9 @@ interface PresetBodyJson {
     readonly anchors: readonly ({
       readonly paper: string;
       readonly words: number;
+      /** The schema requires both or neither. */
+      readonly sentences?: number;
+      readonly negated_sentences?: number;
     } & Readonly<Record<RegisterMeasureName, number>>)[];
   };
   readonly talk?: VenueTalkJson;
@@ -474,6 +477,14 @@ const anchorsOf = (
           claim_emphasis: a.claim_emphasis,
           relation_markers: a.relation_markers,
         },
+        ...(a.sentences === undefined || a.negated_sentences === undefined
+          ? {}
+          : {
+              negation: {
+                sentences: a.sentences,
+                negated: a.negated_sentences,
+              },
+            }),
       }));
 
 /** A preset's `portal`, or null when it names none. */

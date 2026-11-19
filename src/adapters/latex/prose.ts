@@ -296,6 +296,7 @@ const EMPHASIS_DECLARATIONS: ReadonlyMap<string, EmphasisStyle> = new Map([
 /** An emphasised phrase over `place`, typesetting what `inner` typesets; nothing when it has no place or no text. */
 const emphasisOf = (
   style: EmphasisStyle,
+  command: string,
   place: Place,
   inner: readonly Event[],
 ): readonly Event[] =>
@@ -306,7 +307,7 @@ const emphasisOf = (
       : [
           {
             kind: "emphasis",
-            emphasis: { style, place: "inline", text, span },
+            emphasis: { style, command, place: "inline", text, span },
           },
         ];
   });
@@ -317,26 +318,28 @@ function formattingEvents(t: ParsedTex, m: Macro): readonly Event[] {
   const style = EMPHASIS_MACROS.get(m.content);
   return style === undefined
     ? inner
-    : [...emphasisOf(style, macroPlace(m), inner), ...inner];
+    : [...emphasisOf(style, m.content, macroPlace(m), inner), ...inner];
 }
 
-/** The style a group's opening declaration sets, when it opens with one (`{\bfseries …}`). */
-function declaredStyle(list: readonly Node[]): EmphasisStyle | undefined {
+/** The declaration a group opens with (`{\bfseries …}`) and the style it sets, or undefined for none. */
+function openingDeclaration(
+  list: readonly Node[],
+): { readonly command: string; readonly style: EmphasisStyle } | undefined {
   const first = list.find(
     (n) => n.type !== "whitespace" && n.type !== "comment",
   );
-  return first?.type === "macro"
-    ? EMPHASIS_DECLARATIONS.get(first.content)
-    : undefined;
+  if (first?.type !== "macro") return undefined;
+  const style = EMPHASIS_DECLARATIONS.get(first.content);
+  return style === undefined ? undefined : { command: first.content, style };
 }
 
 /** A group's events: what it typesets, and — when it opens with an emphasis declaration — the phrase. */
 function groupEvents(t: ParsedTex, g: NodeOf<"group">): readonly Event[] {
   const inner = walkList(t, g.content);
-  const style = declaredStyle(g.content);
-  return style === undefined
+  const d = openingDeclaration(g.content);
+  return d === undefined
     ? inner
-    : [...emphasisOf(style, placeOf(g), inner), ...inner];
+    : [...emphasisOf(d.style, d.command, placeOf(g), inner), ...inner];
 }
 
 function macroEvents(t: ParsedTex, m: Macro): readonly Event[] {
@@ -518,7 +521,7 @@ const asOpening = (node: Node, events: readonly Event[]): readonly Event[] => {
   const n = unwrapped(node);
   const emphasises =
     (n.type === "macro" && EMPHASIS_MACROS.has(n.content)) ||
-    (n.type === "group" && declaredStyle(n.content) !== undefined);
+    (n.type === "group" && openingDeclaration(n.content) !== undefined);
   return emphasises && own?.kind === "emphasis"
     ? [
         { kind: "emphasis", emphasis: { ...own.emphasis, place: "opening" } },
@@ -605,6 +608,15 @@ const startOf = (p: Passage): number => {
   const first = p.pieces[0];
   return first.kind === "text" ? first.segment.at : first.span.start;
 };
+
+/**
+ * What a list of nodes typesets, as passages: the prose of an argument read on its own (a caption).
+ * Nothing opens a paragraph here, so a bold label at its start stays prose.
+ */
+export const proseOfNodes = (
+  t: ParsedTex,
+  nodes: readonly Node[],
+): readonly Passage[] => passagesOf(walkList(t, nodes)).filter(hasProse);
 
 /**
  * The body's prose, in document order: the content of the `document` environment (the whole

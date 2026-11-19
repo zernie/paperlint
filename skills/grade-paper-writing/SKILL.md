@@ -4,9 +4,9 @@ description: "Judge how a paper reads and find the sentences a reader stalls on.
 allowed-tools: [Read, Write, Edit, Grep, Glob, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:0a1abae238103d33 compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:651ff14b0951402c compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
 
-# grade-paper-writing — grade how the paper READS, then fix it sentence by sentence
+# grade-paper-writing — grade how the paper READS
 
 Editing the paper's text after an approved copy exists (`paperlint versions approve`): declare each change in `versions/<cycle>/changes.yaml`, `paperlint versions diff` shows what was lost (EXPERIMENTAL; `docs/rules/cycle/changes-since-approved.md`).
 
@@ -122,7 +122,7 @@ every 2026-08-05 defect lived.
 | 3 | unreadable exhibit | a table cell or caption that needs the body to decode | — |
 | 4 | 🔴 **means nothing** | every word is known, the sentence parses grammatically, and the reader still cannot say what it claims | *"the state to remove is not the rule but its claim about itself"* · *"constructions nobody built"* |
 | 5 | 🔴 **sounds clever, carries nothing** | reads smoothly, feels like a payoff, and its content is a restatement or is borrowed from a section the reader has not read | *"nine deletions against four fixes is §5.1's cheap way out, winning again"* |
-| 6 | 🔴 **vague heading** | a heading naming no concrete object — no linter, no configuration, no agent, no file | *"Three answers, all of them after the fact"* · *"The configuration nobody resolves"* |
+| 6 | 🔴 **vague heading** | the readers' `VAGUE HEADING`; the headings as a set: `argument-arc`; the fix: `rewrite-unclear` | *"Three answers, all of them after the fact"* · *"The configuration nobody resolves"* |
 | 7 | 🔴 **whose result?** (reviewer persona) | the reader cannot tell whether a claim is a property of the world, a cited finding, or the authors' own measurement | *"asked twice about the same repositories, it changes its mind on a fifth"* — the paper's own experiment, read as a fact about LLMs |
 | 8 | 🔴 **off-register** (reviewer persona) | a sentence the venue's accepted papers would not contain: an aphorism, a fragment, a colloquial closing line, an unmarked jump between claims | *"Measure the bill, not the syllables."* — quoted back by a reviewer as "too informal" |
 
@@ -177,7 +177,8 @@ is what happened.
    the exemplars.** The rules count and this step judges; it starts from their numbers, not from a
    count of its own.
    - **Take the counts from the rules.** `npx paperlint lint <paper-dir>` reports
-     `tex/contrast-frames`, `tex/claim-emphasis` and `tex/relation-markers` when the venue preset
+     `tex/contrast-frames`, `tex/claim-emphasis` and `tex/relation-markers` (and
+     `tex/negated-sentences`, a share of sentences, when the paper turns it on) when the venue preset
      records anchors (AIDC does): each gives the body's rate per 10,000 words, the band, and the
      anchors' range, and above the band it reports every frame and every claim in bold where it
      stands. Those locations are the worklist. Do not recount them by grep — a narrower count is
@@ -197,10 +198,7 @@ is what happened.
      sentence is an aphorism, a fragment or a closing punchline. Quote the reference sentence beside
      each draft sentence you flag.
    - **List the flagged sentences, each with the reference sentence beside it, and hand the list to
-     `rewrite-unclear`.** The reference sentence is the model for the rewrite: a contrast frame becomes
-     what the thing is with the relation named (*because*, *as a result*), a claim in bold loses the
-     bold and gains its owner (*we measured*, `\ref` to the table), a relation left to infer gets its
-     word. Where the frame IS the claim (the paper's thesis sets one mechanism against another), do not
+     `rewrite-unclear`**, with the reference sentence as the model. Where the frame IS the claim (the paper's thesis sets one mechanism against another), do not
      flag it in the abstract and the introduction, and say so.
    - **Score the distance:** 5 = a reviewer could not tell the draft from the reference papers by
      register, section by section; 1 = it reads as a different genre. After the rewrites, run
@@ -214,34 +212,18 @@ is what happened.
 6. **Flag the two prose traps by name:** (a) Attention-style dense contribution-less prose used where the
    audience does NOT already care; (b) hedge-stacking ("may possibly in some cases potentially") — replace
    each pile with one precise scope sentence.
-7. 🔴 **Run `prose-lint.mjs` on the paper and treat every FLAG as a finding, not as context:**
+7. **Captions are prose a reader reads with the figure, outside the body the rules above count.**
+   `tex/max-caption-words` (opt-in, `docs/rules/tex/max-caption-words.md`) reports a caption over
+   100 words and a caption sentence over 40; with it off, read every caption as you read the body.
+   The headings as a set are `argument-arc`'s (its step 2a prints them).
 
-   ```
-   node ${CLAUDE_SKILL_DIR}/prose-lint.mjs <paper-dir>/paper.tex             # the report
-   node ${CLAUDE_SKILL_DIR}/prose-lint.mjs --headings <paper-dir>/paper.tex  # the headings as a set
-   ```
-
-   It measures the prose a reader sees — the files the last build read spliced in, no preamble,
-   comments, floats or inline `.bib` — so its rates are the paper's, not the source file's — and, on
-   its own line, the figure captions that float outside that prose, flagging a caption sentence over
-   40 words or a caption over 100. Run
-   `npx paperlint build` first: with no current build record it reads `paper.tex` alone and says so. The skill is what must ACT on it.
-   Its thresholds are sourced; a FLAG means the text sits above a published human or machine
-   baseline, which is a defect with a number attached, not an opinion.
-   Two entries in `THRESHOLDS` exist because this skill previously ran five times without either
-   firing: the `"not X, but Y"` density had **no threshold at all** and printed as a neutral line
-   while standing at 50.8 per 10,000 words against an LLM baseline of 7.8, and the lexicon missed
-   both variants a reader spotted by eye — the bare inversion (*"Reading the file is not the weak
-   point; judging it is"*) and the appositive that reaches headings (*"Admission, not translation"*).
-   A number printed without a threshold is prose; that is this project's own thesis, and the linter
-   was violating it.
-
-6b. 🔴 **A lint fix that costs meaning is a REGRESSION, and no linter can see it.** The metrics above
+6b. 🔴 **A lint fix that costs meaning is a REGRESSION, and no linter can see it.** The rules' counts
    are diagnostics, never objectives. Optimising one directly is how a sentence gets worse while the
-   number gets better, and the number is exactly what makes it feel like progress. So a FLAG is not
+   number gets better, and the number is exactly what makes it feel like progress. So a finding is not
    fixed here by rewording until the count drops: the flagged sentence goes to `rewrite-unclear`,
-   whose cold reader checks that the replacement still says the thing. If it does not, the flag stays
-   open: an open flag is a truthful state, and a passing metric over a sentence nobody can parse is not.
+   whose cold reader checks that the replacement still says the thing. If it does not, the finding
+   stays open: an open finding is a truthful state, and a passing count over a sentence nobody can
+   parse is not.
 
 8. 🔴 **Put `WORST-SECTION: <section>` on the FIRST LINE of the report.** Machine-readable, one
    section, lowercase, no decoration, so the next round can compare it with the last report. This exists because the abstract
@@ -255,14 +237,14 @@ is what happened.
    replacement. These are scrutinize-words, not absolute bans — but each hit is a readability debit against
    dimension #6 (Jargon) and the north star — readable by the target reader, in the venue's register. (This session's miss that motivated
    it: "listicle" survived into a submitted-ready AISec draft.)
-10. **Wall-of-text sweep (see `writing-craft.md` → "The wall-of-text check").** Flag any paragraph running
-   >~15 source lines / ~150 words or covering >3 sub-points — a visual wall the reader's eye slides off
+10. **Wall-of-text sweep (see `writing-craft.md` → "The wall-of-text check").** Flag any paragraph
+   `tex/max-paragraph-words` reports (opt-in, `docs/rules/tex/max-paragraph-words.md`) or covering >3 sub-points — a visual wall the reader's eye slides off
    (distinct from stall density). Prescribe the fix: break into run-in-headed chunks. Caps dimension #4.
 11. **Conclusion & quotability sweep (explicit — see `writing-craft.md` → "The conclusion & quotability
    check").** Grade the CONCLUSION on its own, not just the intro: does it pay off in plain language, name the
    stakes, point past the result, and hand the reader a concrete action — or is it a limp results-recap (a 2)?
    Then check the abstract AND the conclusion each carry one extractable, quotable line (the "paste onto a
-   talk slide" test); if a surface has none, flag it and draft the candidate line. Report both explicitly —
+   talk slide" test); if a surface has none, flag it. Report both explicitly —
    these feed dimension #7 (which is graded on both surfaces). This is the axis that catches "the conclusion
    isn't strong enough" and "nothing here is quotable."
 
@@ -314,7 +296,7 @@ findings:
   `claims` claim-preservation diff after each one. This skill applies no sentence rewrite of its own.
 - **Length belongs to `tighten-paper`.** A fix this report names may take more words; never propose
   shortening another sentence that explains something to make room.
-- **Honesty over flattery.** If the abstract is a stat-wall, score it a 2 and show the five-move rewrite.
+- **Honesty over flattery.** If the abstract is a stat-wall, score it a 2; the rewrite comes from `rewrite-unclear`.
 
 ## 🔴 The tell that says a machine wrote it: three findings in one sentence
 
@@ -356,8 +338,7 @@ changes neither meaning nor register — and never rewrite a cited work's title 
 markers and relation words — *we show*, *this section*, *first … finally*, *in contrast*, *therefore*,
 *however* — are how academic prose tells the reader what kind of claim comes next and how it relates to
 the last one. Relation words are a floor: `tex/relation-markers` reports a body below the band its
-venue's accepted papers set (AIDC: 25.4 per 10,000 words; the paper reviewers called a blog post stood
-at 19.1, and never wrote *however* once, where every accepted ACSAC paper writes it 6–11 times). Frame
+venue's accepted papers set. Frame
 markers do not separate a draft from accepted papers in either direction (see "Contrast framing"
 below). Flag a connective only when it asserts a relation the two sentences do not have (a *therefore*
 that does not follow), or when it is empty filler (*it is worth noting that*). Never flag one for being
@@ -365,8 +346,8 @@ academic.
 
 **Other markers worth a pass:** nominalisation density (*an honest accounting of what the construction
 costs* — abstract nouns doing the work verbs should do) and statistics chained through a paragraph
-instead of sitting in a table. Numbers belong in a table the moment there are more than about six of
-them in one paragraph.
+instead of sitting in a table. Numbers per paragraph: `tex/max-paragraph-numbers` counts them, and
+above its limit they belong in a table.
 
 
 ## 🔴 The class the rubric could not see, and why it kept coming back (2026-08-04)
@@ -389,13 +370,10 @@ Two separable failures:
 
 **What separates this corpus from accepted papers is contrast, not signposting — and a rule counts
 it.** `tex/contrast-frames` counts every form (*X, not Y* · *not X but Y* · *rather than* ·
-*instead of* · *as opposed to*) per 10,000 words against the band the venue preset's anchors set: the
-five accepted ACSAC papers measure 1.3–5.5, AIDC's band is 0–10.4, and the paper reviewers called a blog
-post measured 101 before its rewrite and 28 after it. Every sentence that defines its point by what
-it is not is a sentence whose point the reader must reconstruct. **Rewrite heuristic:** state the
-thing and name the relation; move the rejected alternative to its own sentence, or drop it if nobody
-proposed it. Swapping one form for another (*, not* → *rather than*) moves nothing — the rule counts
-both, and so does a reviewer.
+*instead of* · *as opposed to*) per 10,000 words against the band the venue preset's anchors set. Every
+sentence that defines its point by what it is not is a sentence whose point the reader must
+reconstruct. Rewrites: `rewrite-unclear`. Swapping one form for another (*, not* → *rather than*)
+moves nothing — the rule counts both, and so does a reviewer.
 
 **Frame markers do not separate us from accepted papers, and are not a target in either direction.**
 Hyland's *frame markers* (*this paper · this section · we show · first … finally · in what follows*)
@@ -407,12 +385,7 @@ signposting to reach a number" is a fix. A published average from a different co
 What IS a defect is a frame that carries nothing. *"Two findings come first, because they bind
 whatever else you build"* says nothing about rules files, agents, or repositories: the frame is
 there, and the claim it announces is not. List the frames whose announced content never arrives
-within the next two sentences; those are the findings. **Rewrite heuristic:** keep the frame and make
-it carry the claim. *"Two findings come first, because they bind whatever else you build. Asked the
-same question twice…"* → *"We first report two properties of the model that constrain any harness
-built on it. Asked the same question twice with identical inputs, it changed its verdict on 21.5% of
-rows (Section 4.5)."* The frame now names what follows, and the sentence after it says whose
-measurement it is.
+within the next two sentences; those are the findings. Rewrites: `rewrite-unclear`.
 
 ⚠️ **Vocabulary lists are not a register signal.** *robust*, *significant*, *comprehensive* and the
 rest of the AI-tells vocabulary fire on every one of the five accepted papers. Flag such a word only
@@ -439,10 +412,7 @@ subordinate clauses (*though · while · although · albeit*) inside a sentence 
 result. Target: all standalone. Also count sentences ending on a cross-reference, citation or hedge
 while the sentence's own number sits earlier — Gopen & Swan's stress position, spent on a pointer.
 
-**Rewrite heuristic — the order matters:** state the finding as a whole sentence, then qualify it in
-the **next** sentence. Never inside it. *"Violations went from 17% to 100%, back to the rate with no
-file at all. That is one cell of five, and it does not clear the multiplicity correction we
-pre-registered (Appendix A.2)."* Same words, same honesty, and the claim survives the reading.
+Rewrites: `rewrite-unclear`.
 
 ### 3. Phrases that reference an unstated alternative
 

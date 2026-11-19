@@ -248,19 +248,19 @@ Everything in `.claude/skills/paper-pipeline/scripts/`, `.claude/lib/` and `<pap
 construction — that is why it is trustworthy, and it is not a coincidence but a selection effect: a
 program is what you can write only when the question is Type A.
 
-| unit                                                             | question                                                        | rung                                                                                                                  |
-| ---------------------------------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `repro/tools/report-submission.py`                               | body pages, overfull boxes, unresolved refs, dropped characters | A (3)                                                                                                                 |
-| `repro/tools/check-anon.sh`, `check-figure.sh`                   | deanonymising strings; does the figure fit the column           | A (3)                                                                                                                 |
-| `prose-lint.mjs`                                                 | thresholds with published baselines                             | A (3) — _measuring_ a B question, which is legitimate and is not the same as answering it                             |
-| rules `refs/*` (facts by `extract-ref-facts.mjs`)                | does the registry have this record                              | A (3), **external adjudicator**                                                                                       |
-| `paper-lint.mjs`                                                 | appendix ratio, shaved passages                                 | A (3)                                                                                                                 |
-| `repro/tools/arm_permutation.py`, `repro/tools/delivered_pdf.py` | is the quantity bound to its arm; did it survive typesetting    | A (3), metamorphic                                                                                                    |
-| **`repro/tools/paper_numbers.py` + `numbers.tsv`**               | —                                                               | **rung 1: no PDF exists in which the number is wrong**                                                                |
-| `paper-edit-guard.hook.ts`                                       | writing to a paper from Bash                                    | rung 2 — **leaky**, an interpreter reading its program from stdin still gets through (`papers/CLAUDE.md`, 2026-08-06) |
+| unit                                                                         | question                                                        | rung                                                                                                                  |
+| ---------------------------------------------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `repro/tools/report-submission.py`                                           | body pages, overfull boxes, unresolved refs, dropped characters | A (3)                                                                                                                 |
+| `repro/tools/check-anon.sh`, `check-figure.sh`                               | deanonymising strings; does the figure fit the column           | A (3)                                                                                                                 |
+| rules `tex/contrast-frames`, `tex/relation-markers`, `tex/negated-sentences` | a rate against the band the venue's accepted papers set         | A (3) — _measuring_ a B question, which is legitimate and is not the same as answering it                             |
+| rules `refs/*` (facts by `extract-ref-facts.mjs`)                            | does the registry have this record                              | A (3), **external adjudicator**                                                                                       |
+| `paper-lint.mjs`                                                             | appendix ratio, shaved passages                                 | A (3)                                                                                                                 |
+| `repro/tools/arm_permutation.py`, `repro/tools/delivered_pdf.py`             | is the quantity bound to its arm; did it survive typesetting    | A (3), metamorphic                                                                                                    |
+| **`repro/tools/paper_numbers.py` + `numbers.tsv`**                           | —                                                               | **rung 1: no PDF exists in which the number is wrong**                                                                |
+| `paper-edit-guard.hook.ts`                                                   | writing to a paper from Bash                                    | rung 2 — **leaky**, an interpreter reading its program from stdin still gets through (`papers/CLAUDE.md`, 2026-08-06) |
 
-`prose-lint.mjs` deserves its note. It puts a **number with a threshold** on a question that is
-Type B — is this sentence readable. That is not
+The register band rules deserve their note. They put a **number with a band** on a question that is
+Type B — does this read like the venue's papers. That is not
 cheating and it is not acquittal either: a threshold breach is a fact, and the fact drives a human or
 a judgement pass. The failure to avoid is reading a green threshold as an acquittal, which is what
 happened when a prose metric stood at 50.8 against a machine norm of 7.8 and printed as a neutral
@@ -307,8 +307,8 @@ questions into programs.
   the question it asked. The `refs/*` rules acquit "this record exists with this metadata" and say
   nothing about whether the citation supports the sentence it sits in.
 - **Not a licence to call a measurement an acquittal.** A threshold breach is a fact; a threshold
-  passed is also a fact, and it is a fact about a proxy. `prose-lint` being quiet is not "the writing
-  is fine".
+  passed is also a fact, and it is a fact about a proxy. A register rule being quiet is not "the
+  writing is fine".
 - **Not a claim that cross-family review would make a PASS mean much.** Borrowing ARIS's own honesty:
   a cross-model PASS is a heterogeneous second opinion, not ground truth. It does not mean the work
   is correct, novel or publishable. Same-family review does not even clear that bar.

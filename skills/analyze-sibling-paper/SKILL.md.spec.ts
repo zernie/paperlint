@@ -5,6 +5,8 @@
 // `SkillSpec` in vigiles branch `claude/skill-disallowed-tools` and is not in a release
 // this repo installs, so writing one here would not compile.
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
+import extendPaper from "../extend-paper/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "analyze-sibling-paper",
@@ -158,3 +160,8 @@ was never opened at all. Both are now steps 1–2, and both are machine-checked 
 the previous version of this rule already said "read the paper, not the abstract" in prose and that did
 not stop it happening. Prose isn't policy.`,
 });
+
+export const flow = {
+  stage: "idea",
+  handsTo: () => [extendPaper],
+} satisfies Flow;

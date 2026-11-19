@@ -132,6 +132,15 @@ export type LinkReport =
     }
   | { readonly ok: false; readonly error: string };
 
+/**
+ * The shipped skills a read-only report found `missing`: not linked, and the name free. A `foreign`
+ * entry is the project's own and is not named; a report that could not be made names nothing.
+ */
+export const unlinkedSkills = (report: LinkReport): readonly string[] =>
+  report.ok
+    ? report.links.filter((l) => l.status === "missing").map((l) => l.name)
+    : [];
+
 /** The filesystem calls linking makes — the disk by default; a test stages a race or a refusal. */
 export interface LinkFs {
   readonly lstatSync: (p: string) => {

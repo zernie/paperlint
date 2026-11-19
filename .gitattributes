@@ -2,3 +2,5 @@
 # not hand-written lines.
 fixtures/arxiv-papers/** linguist-vendored linguist-generated
 fixtures/arxiv-manifest.json linguist-generated
+# Written by `npm run pipeline` from the skills' `flow` exports (scripts/pipeline.ts): not hand-written lines.
+docs/pipeline.md linguist-generated

@@ -5,6 +5,14 @@
 // `SkillSpec` in vigiles branch `claude/skill-disallowed-tools` and is not in a release
 // this repo installs, so writing one here would not compile.
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
+import argumentArc from "../argument-arc/SKILL.md.spec.ts";
+import buildLabelPage from "../build-label-page/SKILL.md.spec.ts";
+import draftPaper from "../draft-paper/SKILL.md.spec.ts";
+import labelAgentRuns from "../label-agent-runs/SKILL.md.spec.ts";
+import pcPanelReview from "../pc-panel-review/SKILL.md.spec.ts";
+import runAgentGrid from "../run-agent-grid/SKILL.md.spec.ts";
+import submitPaper from "../submit-paper/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "build-benchmark",
@@ -225,3 +233,9 @@ Before submitting, verify the artifact you built with the reviewer-side reproduc
   \`evaluate.py\`/\`mutate.py\`/\`reproduce.mjs\`/\`ablation.mjs\`, each self-asserting on run. Both artifacts
   are hosted anonymized on OSF.`,
 });
+
+export const flow = {
+  stage: "study",
+  handsTo: () => [runAgentGrid, draftPaper, pcPanelReview, submitPaper],
+  calls: () => [argumentArc, labelAgentRuns, buildLabelPage],
+} satisfies Flow;

@@ -312,7 +312,7 @@
       "type": "object"
     },
     "register": {
-      "description": "The register rules' anchors (`tex/contrast-frames`, `tex/claim-emphasis`, `tex/relation-markers`): accepted papers of the venue, or of its parent conference, each with its body's word count and its count of each measure as paperlint's own counters give them. A measure's band is the anchors' range widened by two Poisson standard deviations at each end (docs/rules/tex/contrast-frames.md). A child preset's block replaces its parent's.",
+      "description": "The register rules' anchors (`tex/contrast-frames`, `tex/claim-emphasis`, `tex/relation-markers`, `tex/negated-sentences`): accepted papers of the venue, or of its parent conference, each with its body's word count and its count of each measure as paperlint's own counters give them. A measure's band is the anchors' range widened by two Poisson standard deviations at each end (docs/rules/tex/contrast-frames.md). A child preset's block replaces its parent's.",
       "type": "object",
       "additionalProperties": false,
       "required": ["anchors"],
@@ -352,7 +352,21 @@
               "relation_markers": {
                 "type": "integer",
                 "minimum": 0
+              },
+              "sentences": {
+                "description": "Sentences of the body, as the register rules cut them. With negated_sentences, the base of tex/negated-sentences' share; an anchor without the pair sets no band for it.",
+                "type": "integer",
+                "minimum": 1
+              },
+              "negated_sentences": {
+                "description": "Sentences of the body that hold a negator (tex/negated-sentences).",
+                "type": "integer",
+                "minimum": 0
               }
+            },
+            "dependencies": {
+              "sentences": ["negated_sentences"],
+              "negated_sentences": ["sentences"]
             }
           }
         }

@@ -5,6 +5,9 @@
 // fence yet: the field exists on `SkillSpec` as of the branch `claude/skill-disallowed-tools`
 // but is not in a release the consumer installs, so adding it here would not compile.
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
+import extendPaper from "../extend-paper/SKILL.md.spec.ts";
+import planPaperTimeline from "../plan-paper-timeline/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "find-venue",
@@ -104,3 +107,8 @@ MSR/NeurIPS 2027**, not a switch — proving the rule: ship the best-fit archiva
 later. **AISec 2026 @ ACM CCS** confirmed the archival-weight logic at a top-tier security bar. Both
 papers are indexed proceedings; neither was down-ranked for the workshop's newness.`,
 });
+
+export const flow = {
+  stage: "venue",
+  handsTo: () => [planPaperTimeline, extendPaper],
+} satisfies Flow;

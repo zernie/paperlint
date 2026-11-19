@@ -5,6 +5,10 @@
 // fence yet: the field exists on `SkillSpec` as of the branch `claude/skill-disallowed-tools`
 // but is not in a release the consumer installs, so adding it here would not compile.
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
+import paperAdversarialReview from "../paper-adversarial-review/SKILL.md.spec.ts";
+import pcPanelReview from "../pc-panel-review/SKILL.md.spec.ts";
+import tightenPaper from "../tighten-paper/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "render-paper",
@@ -128,3 +132,8 @@ python3 -c "import fitz; d=fitz.open('paper.pdf'); \\
 ## Compose with
 - \`paper-adversarial-review\` / \`pc-panel-review\` (incl. its venue-fit mode) — review the rendered draft.`,
 });
+
+export const flow = {
+  stage: "draft",
+  handsTo: () => [tightenPaper, paperAdversarialReview, pcPanelReview],
+} satisfies Flow;

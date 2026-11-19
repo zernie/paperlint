@@ -1,5 +1,8 @@
 import { experimental_skill, file, prose } from "vigiles/spec";
 import { COMMANDS } from "./scripts/labels-commands.ts";
+import type { Flow } from "../../scripts/pipeline.ts";
+import buildBenchmark from "../build-benchmark/SKILL.md.spec.ts";
+import buildLabelPage from "../build-label-page/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "label-agent-runs",
@@ -104,3 +107,10 @@ n), and every relabel after the analysis with its note.
 - **build-benchmark** — the statistics computed from the labels.
 `,
 });
+
+export const flow = {
+  stage: "study",
+  handsTo: () => [],
+  calls: () => [buildLabelPage],
+  loopsBackTo: () => [buildBenchmark],
+} satisfies Flow;

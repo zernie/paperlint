@@ -5,6 +5,11 @@
 // `SkillSpec` in vigiles branch `claude/skill-disallowed-tools` and is not in a release
 // this repo installs, so writing one here would not compile.
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
+import buildBenchmark from "../build-benchmark/SKILL.md.spec.ts";
+import draftPaper from "../draft-paper/SKILL.md.spec.ts";
+import findVenue from "../find-venue/SKILL.md.spec.ts";
+import planPaperTimeline from "../plan-paper-timeline/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "research-ideate",
@@ -104,3 +109,8 @@ lane:
   the security-of-AI-coding lane. Together the two form a *connected corpus* — exactly what axis (e)
   rewards — rather than two scattered one-offs.`,
 });
+
+export const flow = {
+  stage: "idea",
+  handsTo: () => [findVenue, buildBenchmark, draftPaper, planPaperTimeline],
+} satisfies Flow;

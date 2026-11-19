@@ -11,7 +11,10 @@ import {
   claimEmphasis,
   contrastFrames,
   excerpt,
+  negatedSentences,
+  negationBandOf,
   rateOf,
+  shareOf,
   relationMarkers,
   type RegisterAnchor,
 } from "./register.ts";
@@ -137,6 +140,68 @@ describe("bandOf — the anchors' range, widened by two Poisson standard deviati
   it("no anchors, no band; a body of no words has a rate of zero", () => {
     expect(bandOf([], "contrast_frames")).toBeNull();
     expect(rateOf(3, 0)).toBe(0);
+  });
+});
+
+describe("negatedSentences — the sentences that hold a negator, each once", () => {
+  const negated = (body: string): readonly string[] =>
+    negatedSentences(sentencesOf(body)).map((o) => o.match);
+
+  it("🔴 each negator of the list, whole words, case ignored; a sentence with two counts once", () => {
+    expect(
+      negated(
+        "It is not run. No gate fires. None passed. It never blocks. We cannot tell. It isn't kept. They don't run. Neither holds. Nor this. It runs without a gate. It fails to stop. The gate failed to stop it. It is unable to read. It is not here and never was.",
+      ),
+    ).toEqual([
+      "It is not run.",
+      "No gate fires.",
+      "None passed.",
+      "It never blocks.",
+      "We cannot tell.",
+      "It isn't kept.",
+      "They don't run.",
+      "Neither holds.",
+      "Nor this.",
+      "It runs without a gate.",
+      "It fails to stop.",
+      "The gate failed to stop it.",
+      "It is unable to read.",
+      "It is not here and never was.",
+    ]);
+  });
+
+  it("🔴 silent on words that only contain one: note, know, another, nothing, failure, notion, snow", () => {
+    expect(
+      negated(
+        "Note the knot. We know another notion. Nothing failed here. A failure to load. The snow fell. Nones and nevermore.",
+      ),
+    ).toEqual([]);
+  });
+});
+
+describe("negationBandOf — the share of negated sentences the anchors set", () => {
+  const anchor = (negation?: RegisterAnchor["negation"]): RegisterAnchor => ({
+    paper: "p",
+    words: 1000,
+    counts: { contrast_frames: 0, claim_emphasis: 0, relation_markers: 0 },
+    ...(negation === undefined ? {} : { negation }),
+  });
+
+  it("🔴 the anchors' range in percent, widened by two Poisson standard deviations of the edge anchor", () => {
+    // 25 of 100: 25 %, sd 5 → max 35. 9 of 100: 9 %, sd 3 → min 3.
+    expect(
+      negationBandOf([
+        anchor({ sentences: 100, negated: 25 }),
+        anchor({ sentences: 100, negated: 9 }),
+        anchor(),
+      ]),
+    ).toEqual({ min: 3, max: 35, anchorMin: 9, anchorMax: 25, anchors: 2 });
+  });
+
+  it("no anchor that records it, no band; a body of no sentences has a share of zero", () => {
+    expect(negationBandOf([anchor(), anchor()])).toBeNull();
+    expect(shareOf(3, 0)).toBe(0);
+    expect(shareOf(1, 4)).toBe(25);
   });
 });
 

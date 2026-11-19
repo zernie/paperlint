@@ -5,6 +5,30 @@
 // `SkillSpec` in vigiles branch `claude/skill-disallowed-tools` and is not in a release
 // this repo installs, so writing one here would not compile.
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
+import analyzeSiblingPaper from "../analyze-sibling-paper/SKILL.md.spec.ts";
+import argumentArc from "../argument-arc/SKILL.md.spec.ts";
+import buildBenchmark from "../build-benchmark/SKILL.md.spec.ts";
+import buildLabelPage from "../build-label-page/SKILL.md.spec.ts";
+import cameraReady from "../camera-ready/SKILL.md.spec.ts";
+import draftPaper from "../draft-paper/SKILL.md.spec.ts";
+import extendPaper from "../extend-paper/SKILL.md.spec.ts";
+import findVenue from "../find-venue/SKILL.md.spec.ts";
+import gradePaperWriting from "../grade-paper-writing/SKILL.md.spec.ts";
+import hardenPaper from "../harden-paper/SKILL.md.spec.ts";
+import labelAgentRuns from "../label-agent-runs/SKILL.md.spec.ts";
+import mapPriorWork from "../map-prior-work/SKILL.md.spec.ts";
+import paperAdversarialReview from "../paper-adversarial-review/SKILL.md.spec.ts";
+import pcPanelReview from "../pc-panel-review/SKILL.md.spec.ts";
+import planPaperTimeline from "../plan-paper-timeline/SKILL.md.spec.ts";
+import renderPaper from "../render-paper/SKILL.md.spec.ts";
+import researchIdeate from "../research-ideate/SKILL.md.spec.ts";
+import rewriteUnclear from "../rewrite-unclear/SKILL.md.spec.ts";
+import runAgentGrid from "../run-agent-grid/SKILL.md.spec.ts";
+import studyAcceptedPapers from "../study-accepted-papers/SKILL.md.spec.ts";
+import submitPaper from "../submit-paper/SKILL.md.spec.ts";
+import tightenPaper from "../tighten-paper/SKILL.md.spec.ts";
+import verifyCitations from "../verify-citations/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "paper-pipeline",
@@ -71,11 +95,11 @@ their grade/result, what's open,* and a one-line **submit-ready verdict**. Rules
       ▼                            ▼                         ▼                      ▼
  ┌──────────────┐          ┌────────────────┐       ┌────────────────┐    ┌────────────────┐
  │ PostToolUse  │          │  .githooks/    │       │ build-         │    │ GitHub Actions │
- │ paper-lint   │ BLOCKS   │  pre-commit    │REFUSES│ submission.sh  │    │ paper-gates    │
- │  pre >55 wds │          │                │       │                │    │                │
+ │ lint-edited  │ BLOCKS   │  pre-commit    │REFUSES│ submission.sh  │    │ paper-gates    │
+ │  new error   │          │                │       │                │    │                │
  │ paper-lint   │ nudges   │  numbers gate  │       │  numbers gate  │REFUSES  numbers+self│
  │  post        │          │                │       │                │    │                 │
- │   prose-lint │          │  prose-lint    │ nudge │  page count    │    │  prose-lint     │
+ │              │          │                │ nudge │  page count    │    │                 │
  │   SHAVE      │          │  self-test if  │       │  overfull      │    │  check-anon     │
  │   numbers    │          │   you touched  │       │  unresolved    │    │  verify-cites   │
  │  paper-edit- │ BLOCKS   │   a gate       │       │   refs         │    │  provenance     │
@@ -497,3 +521,33 @@ Two real papers this session ran this pipeline end-to-end: **AgenticDev 2026 @ A
 Wrong Number," ~90%, submitted #20) and **AISec 2026 @ ACM CCS** ("Safety Theater," Weak-Accept→~87–88%
 after a panel round + confirm). The stage skills and shared refs are distilled from exactly those runs.`,
 });
+
+export const flow = {
+  stage: "across",
+  handsTo: () => [],
+  calls: () => [
+    researchIdeate,
+    mapPriorWork,
+    findVenue,
+    studyAcceptedPapers,
+    planPaperTimeline,
+    argumentArc,
+    buildBenchmark,
+    runAgentGrid,
+    labelAgentRuns,
+    buildLabelPage,
+    draftPaper,
+    verifyCitations,
+    analyzeSiblingPaper,
+    renderPaper,
+    tightenPaper,
+    gradePaperWriting,
+    rewriteUnclear,
+    paperAdversarialReview,
+    pcPanelReview,
+    hardenPaper,
+    submitPaper,
+    cameraReady,
+    extendPaper,
+  ],
+} satisfies Flow;

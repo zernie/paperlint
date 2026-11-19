@@ -136,7 +136,7 @@ one that just wrote, rewrote, or verified the paper_ — scoring on optimism and
 `Bonferroni`, `construct validity`, `null`, `coarse` — so a blind 3-grader panel can _converge_ on 44/60 and
 all be wrong the same way (this happened; the human target reader then found the paper unreadable). The panel
 fixes _optimism/anchoring_, not _"the graders are experts and the reader isn't."_ Defenses: (1) every grader
-runs the stall pass with expertise DEMOTED to the target reader (above); (2) **if the human target reader
+runs the stall pass, with its two readers (owner: `grade-paper-writing`); (2) **if the human target reader
 stalls where the panel didn't, the human wins — they ARE the reader the grade is for.** A panel consensus that
 contradicts the actual reader's "I was bored / lost" is a mis-grade, not a tie.
 
@@ -161,57 +161,9 @@ panel confirms it; if graders disagree by >1 on a dimension, that dimension is g
 
 ## The cold-read stall pass (the "wait, what does that even mean?" axis)
 
-The rubric's Prose, Jargon, and Figure dimensions are scored holistically — but the most _actionable_ signal
-is localized: the exact spots where a reader who did NOT write the paper stops and thinks "what does that even
-mean?" Those stalls are what make a paper _feel_ like a wall, and **authors are blind to them because they
-already know what everything means.** This is the pass most worth delegating to a cold grader (a fresh
-subagent with no context on the work), because the author literally cannot run it honestly on themselves.
-
-**Run it as a PERSONA subagent, not as yourself "demoting expertise."** This is the fix for why the pass
-under-fires: telling a frontier model to "imagine you don't know the terms" is an abstract instruction it glides
-past — it still knows everything, so it glances over the jargon a real reader would trip on. A subagent
-_committed to a specific persona_ flags authentically, because it is answering AS someone who genuinely lacks the
-vocabulary. Spawn a fresh subagent with the engineer's prompt. **The two prompts have one owner,
-`skills/cold-read-diff/scripts/readers.ts`:** `cold-read-diff`'s SKILL.md shows them, and its
-`cold-read.js --venue=<venue>` prints both around an extract. For a pass over a whole section, give each reader the
-section's source where the extract would go.
-
-Match the persona to the paper's ACTUAL target reader, and keep it inside the venue's field but OUTSIDE academia
-(a security paper → a security-adjacent engineer who still doesn't know stats/measurement jargon), so it keeps
-bucket-1 field terms and trips on buckets 2–3. Optionally also run it on a **deliberately weaker model**, which
-lacks the vocabulary for real (not by role-play) and stalls even more like a human. The persona's inventory feeds
-straight into the fix pass.
-
-**Run the second persona too — the workshop reviewer. Both, never one instead of the other.** The engineer cannot see two
-defects by construction: he does not know what a paper at this venue sounds like, and a sentence with no stated
-owner reads to him as confident rather than ambiguous. Those are exactly the two a real reviewer wrote down
-("difficult at first to distinguish among properties of LLMs, statistical observations from repositories, and
-experimental findings produced by the authors"; "blogpost"). Spawn a second fresh subagent with the reviewer's prompt
-from the same file.
-
-Its `WHOSE?` and `REGISTER` rows go into the stall inventory as classes 7 and 8 of `grade-paper-writing`.
-Give it the three sections as text, and no framing: it is a reviewer who has not talked to the authors.
-
-**Run the persona PER SECTION for a dense or long (>~6pp) paper — never one whole-paper pass.** A single pass over
-a full paper skims the middle: this session a whole-paper sweep scored 44/60 and missed the walls that per-section
-persona reads (intro, method, results) each caught immediately. Chunk it to 2–3pp / one section per subagent, so
-the reader's attention doesn't degrade across the length.
-
-**This persona-proxy technique generalizes.** Any skill that needs the LLM to stand in for a _limited_ human —
-a naive first-time-user docs walkthrough, a "can a newcomer follow this setup," a non-native-speaker read, a
-"would a busy exec get the point in 10s" test — hits the same wall: the model's omniscience makes it a bad proxy.
-The fix is always the same: **give it a committed persona (and/or a weaker model), don't ask it to "imagine" the
-limitation.** When adding a skill that simulates a human constraint, reach for a persona subagent by default.
-
-**Read as the paper's ACTUAL target reader — a strong practitioner/engineer who is NOT an academic in this
-subfield — NOT as "a smart non-author."** This is the fix for the failure that let a jargon-dense paper score
-"above average": _you, the LLM grader, know what `Bonferroni`, `construct validity`, `coarse`, `null`, `TOST`,
-`ablation`, `orthogonal` mean — the target reader does not._ An LLM's default failure is never stalling because
-it knows every term. **Deliberately demote your own expertise** and flag every term, notation, or construction
-the target reader wouldn't get in ~5 seconds. If a strong engineer who is not a researcher would type "fuck
-does that even mean" — it is a stall, no matter how standard the term is in the field. That "fuck does that mean"
-reflex is the FLAG pass (catch broadly); the **Register calibration** below is the TRIAGE (keep field-native terms,
-gloss/cut methodology shorthand, rename coinages) — run both, in that order.
+The stall pass has one owner: `grade-paper-writing`, section "The stall pass — specification"; the two
+readers' prompts have one owner, `skills/cold-read-diff/scripts/readers.ts`. Rewrites of what it finds:
+`rewrite-unclear`. Kept here: the term buckets below and the density caps the rubric applies.
 
 ### Register calibration — which terms to KEEP vs kill (the hard balance)
 
@@ -239,61 +191,7 @@ methodologist.** Sort every candidate term into three buckets:
 3. **RENAME — labels the authors COINED that brand instead of describe** (sound like marketing, mean nothing to the
    reader): `robust coverage` → _coverage under evasion_; `honest residue` → _what still gets through_; a "corner"
    / "split" / "axis" used before it's shown. Test: **did we invent this label, and does it describe the thing or
-   just brand it?** If it brands, make it say the thing.
-
-**The failure is the reader STALLING or getting BORED — not fancy words per se.** A paragraph with zero jargon can
-still be a wall: a **comma-list of mechanism steps where a story belongs** (the reader can't find the point through
-the enumeration — e.g. a guard described as "resolves quoting, reduces the interpreter to its basename, strips a
-backslash head, canonicalizes flag aliases, expands \$HOME…" instead of "it strips the disguises so every spelling
-of `rm -rf` collapses to one"), a triple-nested-em-dash sentence you parse twice, or a dutiful flat paragraph.
-**Fix by leading with the plain story in 1–2 sentences, THEN the precise mechanism/term — never the reverse.**
-(the author's rule: don't open on the spec sheet.) When unsure which bucket a term is in, ask: _would a reviewer at THIS
-venue use it, or is it imported from stats/philosophy/our own coinage?_
-
-**De-jargon is RE-VOICING the sentence, not swapping the word — and the new voice is the venue's, not
-a conversation's.** Replacing a coined term with a plainer noun inside a sentence built around nominalizations
-leaves the stall in place (GateBench 2026-07-25: a term-level de-jargon pass cleared the flagged words but the
-author still hit sections "way too academicy for 0 reason"). The fix is the sentence shape: subject–verb–object,
-active voice, the actor named, no nominalizations ("performs an evaluation of" → "checks"). **The fix stops at the
-register of the venue's accepted papers:** no contractions, no fragments, no colloquial asides, and the signposting
-stays (_therefore_, _in contrast_, _we show_). E.g. "We therefore position the guard as a defense against
-trigger~A and a measurement instrument, not an injection defense" → "The guard is therefore a defense against
-accidental triggers and an instrument for measuring them; it is not designed to stop an attacker." — plainer,
-and still a sentence the venue prints. "So the guard is there to catch accidents — it is not built to stop an
-attacker" goes one step too far: it is what a reviewer quotes back as informal. Test each rewrite against a
-sentence from the reference papers of dimension #10, not against how it sounds aloud.
-
-**Step 0 — mechanical pre-scan (BEFORE reading, so the pass can't rubber-stamp).** Run the coined-compound
-grep from the avoid-list against the source and add EVERY hit to the stall inventory as a candidate; grep the
-named avoid-list terms too. This is the FLOOR the repeated 44/60 mis-grades kept falling through — a persona
-that "reads and feels" keeps waving these past because the model knows them. The persona's real job is to ADD
-what a regex can't see (walls, boredom, read-twice sentences, a coinage used before it's defined), not to
-re-discover terms a grep already finds. **A hyphenated coinage or a listed avoid-term that survives to the
-final draft unglossed is a FAIL of this pass, full stop — not a "minor" left for later.**
-
-**Run it as a linear cold read**, start to finish. Every time that reader would stop, log a stall. Trigger on:
-
-- **Gloss-or-die: any academic/technical term used without a plain-words gloss at first use.** These are the
-  ones LLM graders wave through because they know them — flag every one: `Bonferroni`, `construct validity`,
-  `null` (meaning "no effect"), `ablation`, `TOST`, `coarse`, `orthogonal`, `monotone`, `a priori`,
-  `first-class` (as jargon), an unexpanded acronym (`MCP`, `CI` on first use), or a **coined handle used before
-  it's defined** ("the corner", "the split", "output-share bound", "the input-dominance fact our audit
-  presupposes"). Rule: **gloss in plain words at first use, or cut.** A coined handle is fine _once glossed_.
-- a **bare number with no source on the page** — "where did 31.7% come from?", a naked p-value;
-- **"what am I looking at?"** — a table cell needing a dagger legend, a figure whose caption isn't self-contained;
-- a **sentence you had to read twice** to parse (usually an em-dash-nested composite);
-- **boredom** — a paragraph the reader skims because it's dutiful and flat. Boring is a defect, not a neutral.
-
-**No paragraph is exempt — and Related-Work / "grounding" citation clusters are the WORST jargon nests.**
-A sentence like "grounded in construct-validity and benchmarking-pitfall work [4,10,20]" stacks field terms
-to sound rigorous and is exactly where a de-jargon pass tends to skip (it "looks like citations"). Sweep it
-like everything else: gloss or kill each term. **A term glossed once and then reused unglossed pages later is
-still a stall on reuse** — the reader can't hold a definition from three pages ago; prefer the plain wording
-every time over relying on an earlier gloss (`construct validity` recurring = fix it everywhere, not once).
-
-**Each stall:** location → the exact trigger (quote it) → the reader's question → the one-line fix
-(gloss / define / cut / move / add a source). The **stall inventory is the deliverable** — hand it straight to
-a fix pass.
+   just brand it?** If it brands, it is a stall; the new name comes from `rewrite-unclear`.
 
 **Stall density HARD-CAPS the score (mechanical, not "considered").** A paper the target reader stalls on every
 paragraph is NOT "above average," however correct or clean-sentenced. Apply as a ceiling:
@@ -301,28 +199,8 @@ paragraph is NOT "above average," however correct or clean-sentenced. Apply as a
 - **> 1 stall/page → Jargon (#6) ≤ 2.**
 - **> 2 stalls/page → Jargon ≤ 2, Prose (#5) ≤ 2, and Landing (#7) ≤ 3.**
 - **A row of 4s on a paper with > 2 stalls/page is a MIS-GRADE — you read as an expert, not the target
-  reader. Re-run the pass demoting your expertise.** Report stalls/page next to the scorecard; if it exceeds
+  reader. Re-run the stall pass.** Report stalls/page next to the scorecard; if it exceeds
   these thresholds and the dimension scores don't reflect the cap, the grade is wrong.
-
-**Why this pass UNDER-FIRES in practice — and how to make it bite.** Cautionary case (2026-07 AISec paper): the
-blind panel scored it 44/60 and called the remaining walls "minor," yet the author — a real non-expert reading
-linearly — hit ~15 WTF stalls it had waved through (`exfiltrate`-adjacent terms, `robust coverage`, `honest
-residue`, `held-out`, a spec-sheet mechanism paragraph, `construct validity`, `existence result`). **Root cause:
-a frontier LLM cannot authentically stall — it knows every term, so "did _I_ stop and go 'what's that'?"
-systematically under-counts. "Demote your expertise" only half-works.** Remedies:
-
-- **Count stalls MECHANICALLY, not by felt confusion.** Auto-stall regardless of whether you understand it:
-  (1) any bucket-2 methodology term unglossed at first use; (2) any bucket-3 coined label — a metric or heading
-  name the authors invented (`robust coverage`, `honest residue`); (3) any **comma-list of ≥3 mechanism steps**
-  standing in for a story; (4) any run-in heading that's cute rather than descriptive. These fire by
-  pattern-match, so the count no longer depends on the grader's knowledge.
-- **Walls and spec-sheets HARD-FAIL — never "minor."** "Minor walls left" is the signature of a mis-grade: a
-  wall's fix is cheap and mandatory, so an un-fixed wall caps Prose/Landing — it does not get a pass because the
-  sentences around it are clean.
-- **The LLM pass is a PROXY that under-fires by design; the ground truth is a human linear read.** Budget for one
-  (the author, or a deliberately WEAKER model that actually lacks the vocabulary and so stalls like a human). When
-  a human read surfaces stalls the LLM missed, that is a **skill miss, not just a paper bug** — feed the specific
-  terms back into the Register-calibration buckets so the next paper never ships them.
 
 ## The claim-preservation diff (`claims`) — mandatory after EVERY rewrite
 
@@ -338,7 +216,7 @@ match, median 1/10"); "both estimates point to no saving **at all**" (proven-zer
 before/after that verifies — **no number moved, no hedge dropped, no claim strengthened, no new
 absolute, no self-contradiction with unchanged text.** Pair every readability/fix pass with this
 check; the pass isn't complete without it, and the `claims` row in `PIPELINE-STATUS.md` records the run.
-`grade-paper-writing` runs it after applying its sentence fixes; `harden-paper` gates on it
+`rewrite-unclear` runs it after every rewrite (its step 4); `harden-paper` gates on it
 (claims-honest gate).
 
 ## The wall-of-text check (visual density — distinct from stall density)
@@ -347,7 +225,7 @@ Stall density is about COMPREHENSION (unglossed terms, sourceless numbers). This
 paragraph so long and unbroken the reader slides off it before reading a word. The classic offender is a
 Related-work or Discussion section dumped as one 30+-line block covering a dozen works. Rules:
 
-- **A paragraph running >~15 source lines / ~150 words, or covering >3 distinct sub-points, is a wall —
+- **A paragraph `tex/max-paragraph-words` reports, or covering >3 distinct sub-points, is a wall —
   break it.** Split into 2–4 chunks, each led by a **bold or italic run-in sub-head** that names its theme
   (`\textbf{Denylist fragility.}`, `\emph{Syntax vs.\ intent.}`), exactly as the section's other paragraph
   heads do. This costs ~no length and transforms scannability.
@@ -355,7 +233,7 @@ Related-work or Discussion section dumped as one 30+-line block covering a dozen
   undifferentiated block. Related work, Discussion, and Threats are the usual offenders.
 - **Watch orphaned run-in heads:** a bold head must not dangle alone at the bottom of a column/page with its
   content overleaf — keep it with its first sentence (no paragraph break immediately after a standalone head).
-- **Mechanical signal (grep-able):** flag any paragraph in the source exceeding ~15 lines / ~150 words. A wall
+- **Mechanical signal:** `tex/max-paragraph-words` counts it (opt-in, `docs/rules/tex/max-paragraph-words.md`). A wall
   caps dimension #4 no matter how good the individual sentences are.
 - **Session-earned:** GateBench's "Concurrent agent-safety work" block was one 38-line wall of ~11 works;
   broken into 3 run-in-headed groups (syntax-vs-intent / guard-failure / capability-scoping) it became
@@ -375,23 +253,9 @@ axis that catches "the conclusion isn't strong enough."
   on Monday after reading this?
 - **Quotability — is there a line that travels?** The abstract needs one extractable sentence; the conclusion
   needs one. Test: could a reader paste it onto a talk slide or into a post and it still lands, standing
-  alone? If every sentence is a hedged composite, there is nothing to quote — flag it as a miss and draft the
-  candidate line. (Complements `harden-paper`'s citability axis, which coins the handle / stat that gets cited.)
-- **The money-line must be the LAST sentence, ISOLATED, and liftable VERBATIM.** "Is there a quotable line
-  somewhere" is not enough — the commonest real miss is a genuinely quotable CORE buried inside a clause-heavy
-  closer with a preamble, so a reader can't copy it without trimming. Session example (GateBench 2026-07-25, the
-  author had to hand-extract it): _"For unattended agents at scale, enterprises most of all, a copied
-  string-matcher is not a safety layer but a liability shaped like one"_ — the core ("a copied string-matcher is
-  a liability shaped like one, not a safety layer") is strong but not liftable as-is. **Mechanical rule: the
-  paper must END on ONE short standalone sentence** — no leading "For X, Y most of all," preamble, no
-  comma-spliced second idea — that a reader copies onto a slide unedited, sitting on **its own line (its own
-  short paragraph)**. Test the LAST sentence specifically: if it carries a subordinate-clause preamble or two
-  independent clauses, it is NOT yet the money-line — split the quote off and make it the final sentence.
-- **Session-earned example:** the GateBench conclusion went from a weak results-recap to: the plain theater
-  call-out ("checking spelling, not meaning"), a coined verdict a reader can quote ("a copied string-matcher
-  is not a safety layer but a liability shaped like one"), a direction past the result ("cannot be
-  _expressed_, not merely caught after the fact"), and a reader directive ("before you trust a hook to guard
-  an unattended agent, make it clear more than one disaster").
+  alone? If every sentence is a hedged composite, there is nothing to quote — flag it as a miss. (Complements `harden-paper`'s citability axis, which names the stat that gets cited.)
+- **A line written to be quoted is held to rubric #10:** an aphorism or a punchline closing scores 1 there,
+  and its literal claim comes from `rewrite-unclear` (rule 2).
 
 ## The avoid-list — words that read as slop or stall a human (flag every hit)
 
@@ -447,7 +311,7 @@ number, so the paper does not have to print them all — divide the labor:
 - **In the artifact:** the exhaustive tables — per-item breakdowns, full sweep grids, ablation cells,
   secondary p-values — cited as "the artifact reports X (Table Y)." A number that supports only a
   _secondary_ point lives there, not inline.
-- **Test:** if a sentence carries 3+ numbers and only one is load-bearing, push the rest to the artifact.
+- **Test:** when `tex/max-paragraph-numbers` reports a paragraph and only one of its numbers is load-bearing, push the rest to the artifact.
   This is the concrete fix when Abstract / Prose / Figure score low for stat-density — it is not hiding
   (the artifact is public and recomputes them), it is letting the reader see the point.
   Cross-ref: `build-benchmark` (the artifact that holds the numbers) · `draft-paper` (the drafting decision).

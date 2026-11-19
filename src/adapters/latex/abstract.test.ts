@@ -44,6 +44,13 @@ describe("abstractText — what TeX prints, as plain text", () => {
     });
   });
 
+  it("a brace group prints its contents, nested groups too", () => {
+    expect(text("", "{Braced} words {print {their} text}.")).toEqual({
+      ok: true,
+      value: "Braced words print their text.",
+    });
+  });
+
   it("citations and comments are dropped; formatting commands say what their argument says", () => {
     expect(
       text(
@@ -151,6 +158,21 @@ describe("abstractText — where the refusal stands, and what is not read at all
     ]).toStrictEqual([
       { ok: true, value: "a." },
       { ok: false, error: { kind: "none" } },
+    ]);
+  });
+
+  it("an abstract inside a macro definition is not the paper's abstract, for the text and the span alike", () => {
+    const src = doc(
+      "\\newcommand{\\draft}{\\begin{abstract}old draft\\end{abstract}}",
+      "Real one.",
+    );
+    const span = latexReader.abstractSpan(src);
+    expect([
+      latexReader.abstractText(src),
+      span && src.slice(span.start, span.end),
+    ]).toStrictEqual([
+      { ok: true, value: "Real one." },
+      "\\begin{abstract}\nReal one.\n\\end{abstract}",
     ]);
   });
 
@@ -276,5 +298,25 @@ describe("abstractText — the edges of what the source may hold", () => {
       ],
     };
     expect(abstractOfTree(tree, "")).toEqual({ ok: true, value: "A" });
+  });
+});
+
+describe("abstractSpan — where the abstract stands, for a rule that leaves it out", () => {
+  it("🔴 the whole environment, \\begin to \\end, in the source as given", () => {
+    const src = doc("", "We find \\emph{gates}.");
+    const span = latexReader.abstractSpan(src);
+    expect(span && src.slice(span.start, span.end)).toBe(
+      "\\begin{abstract}\nWe find \\emph{gates}.\n\\end{abstract}",
+    );
+  });
+
+  it("none without an abstract, and none in a comment or after the document ends", () => {
+    expect(
+      [
+        "\\begin{document}\nText.\n\\end{document}\n",
+        "% \\begin{abstract}x\\end{abstract}\n\\begin{document}\n\\end{document}\n",
+        "\\begin{document}\n\\end{document}\n\\begin{abstract}x\\end{abstract}\n",
+      ].map((s) => latexReader.abstractSpan(s)),
+    ).toEqual([null, null, null]);
   });
 });

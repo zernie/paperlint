@@ -192,6 +192,33 @@ const MAX_PARAGRAPH_WORDS_ON: Readonly<Record<string, string>> = {
   }),
 };
 
+/** `tex/term-before-definition` and `tex/term-defined-twice` are off by default; a paper turns them on. */
+const TERMS_ON: Readonly<Record<string, string>> = {
+  [`${P}/paperlint.json`]: JSON.stringify({
+    extends: null,
+    rules: {
+      "tex/term-before-definition": "warn",
+      "tex/term-defined-twice": "warn",
+    },
+  }),
+};
+/** A body that defines «gate» once, and uses it only after. */
+const GATE_DEFINED =
+  "A \\emph{gate} is a check that blocks a call. The gate holds.";
+
+/** `tex/max-caption-words` is off by default; a paper turns it on. */
+const CAPTIONS_ON: Readonly<Record<string, string>> = {
+  [`${P}/paperlint.json`]: JSON.stringify({
+    extends: null,
+    rules: { "tex/max-caption-words": "warn" },
+  }),
+};
+/** A figure whose caption is `n` words, opening on line 4 of the paper. */
+const captioned = (n: number): string =>
+  tex(
+    `Text.\n\\begin{figure}\n\\caption{${Array.from({ length: n }, () => "word").join(" ")}}\n\\end{figure}`,
+  );
+
 /** `tex/max-paragraph-numbers` and `tex/max-sentence-words` are off by default too. */
 const CEILINGS_ON: Readonly<Record<string, string>> = {
   [`${P}/paperlint.json`]: JSON.stringify({
@@ -260,7 +287,8 @@ const STATEMENT_TITLE = "LLM Usage Statement";
  * A double-blind venue on the IEEE template: the class options it requires, the section it requires
  * last, and one accepted paper of 10,000 words for the register bands. Its rates (contrast frames 4,
  * claims in bold 4, relation markers 64 per 10,000 words), widened by two Poisson standard
- * deviations, set the bands 0–8, 0–8 and 48–80.
+ * deviations, set the bands 0–8, 0–8 and 48–80; its 50 negated sentences of 500, 10%, set
+ * tex/negated-sentences' band at 7.2–12.8%.
  */
 const BLINDCONF = venuePreset("BlindConf", {
   extends: "paperlint:ieee-conference",
@@ -275,6 +303,8 @@ const BLINDCONF = venuePreset("BlindConf", {
         contrast_frames: 4,
         claim_emphasis: 4,
         relation_markers: 64,
+        sentences: 500,
+        negated_sentences: 50,
       },
     ],
   },
@@ -450,6 +480,15 @@ const blind = (body: string, cls = IEEE) =>
     tex(`\\section{Introduction}\n${body}\n${STATEMENT}`, cls),
     BLIND_PAPER,
   );
+/** A BlindConf paper that turns `tex/negated-sentences` on, which is off by default. */
+const blindNegation = (body: string) =>
+  paper(tex(`\\section{Introduction}\n${body}\n${STATEMENT}`, IEEE), {
+    ...BLIND_PAPER,
+    [`${P}/paperlint.json`]: JSON.stringify({
+      ...BLIND,
+      rules: { "tex/negated-sentences": "warn" },
+    }),
+  });
 
 // ── a paper that declares a talk: a preset of its own over ExampleConf, and synthetic media ──────
 
@@ -1312,6 +1351,38 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     },
     silent: paper(tex(longSentence(55)), CEILINGS_ON),
   },
+  // Captions: off by default; a 41-word caption is one sentence over 40, under the caption's 100.
+  "tex/max-caption-words": {
+    reports: {
+      tree: paper(captioned(41), CAPTIONS_ON),
+      file: TEX_FILE,
+      severity: 1,
+      line: 5,
+    },
+    silent: paper(captioned(40), CAPTIONS_ON),
+  },
+  // A term against its definition: off by default, on in these cases' paperlint.json.
+  "tex/term-before-definition": {
+    reports: {
+      tree: paper(tex(`A gate runs first.\n\n${GATE_DEFINED}`), TERMS_ON),
+      file: TEX_FILE,
+      severity: 1,
+      line: 3,
+    },
+    silent: paper(tex(GATE_DEFINED), TERMS_ON),
+  },
+  "tex/term-defined-twice": {
+    reports: {
+      tree: paper(
+        tex(`${GATE_DEFINED}\n\nAgain, a \\emph{gate} blocks.`),
+        TERMS_ON,
+      ),
+      file: TEX_FILE,
+      severity: 1,
+      line: 5,
+    },
+    silent: paper(tex(GATE_DEFINED), TERMS_ON),
+  },
   // The three register bands judge a body against the anchor of BlindConf's preset; the body opens
   // on line 3, right after the \\section, where the finding about the whole body stands.
   "tex/contrast-frames": {
@@ -1337,6 +1408,19 @@ const CASES: Readonly<Record<string, RuleCases>> = {
   "tex/relation-markers": {
     reports: { tree: blind(FORMAL), file: TEX_FILE, severity: 1, line: 3 },
     silent: blind(LINKED),
+  },
+  // Off by default; on in this paper's paperlint.json. FORMAL holds no negator (0%, below 7.2%);
+  // 25 negated sentences of 225 are 11.1%, inside the band.
+  "tex/negated-sentences": {
+    reports: {
+      tree: blindNegation(FORMAL),
+      file: TEX_FILE,
+      severity: 1,
+      line: 3,
+    },
+    silent: blindNegation(
+      formalWith(25, "The rule does not count this sentence twice."),
+    ),
   },
   "bib/reachable-entry": {
     reports: {
@@ -1555,6 +1639,42 @@ describe("the other two ceilings are off by default", () => {
     const on = await ids(paper(tex(body), CEILINGS_ON));
     expect(on).toContain("tex/max-paragraph-numbers");
     expect(on).toContain("tex/max-sentence-words");
+  });
+});
+
+describe("tex/max-caption-words is off by default", () => {
+  it("a 120-word caption produces nothing until the paper turns the rule on", async () => {
+    const ids = async (tree: Record<string, string>) =>
+      (await lintTree(tree)).map((m) => m.ruleId);
+    expect(await ids(paper(captioned(120)))).not.toContain(
+      "tex/max-caption-words",
+    );
+    expect(await ids(paper(captioned(120), CAPTIONS_ON))).toContain(
+      "tex/max-caption-words",
+    );
+  });
+});
+
+describe("tex/negated-sentences is off by default", () => {
+  it("a body with no negator against BlindConf's band produces nothing until the paper turns it on", async () => {
+    const ids = async (tree: Record<string, string>) =>
+      (await lintTree(tree)).map((m) => m.ruleId);
+    expect(await ids(blind(FORMAL))).not.toContain("tex/negated-sentences");
+    expect(await ids(blindNegation(FORMAL))).toContain("tex/negated-sentences");
+  });
+});
+
+describe("the term rules are off by default", () => {
+  it("a use before its definition and a second definition produce nothing until the paper turns them on", async () => {
+    const ids = async (tree: Record<string, string>) =>
+      (await lintTree(tree)).map((m) => m.ruleId);
+    const body = `A gate runs first.\n\n${GATE_DEFINED}\n\nAgain, a \\emph{gate} blocks.`;
+    const off = await ids(paper(tex(body)));
+    expect(off).not.toContain("tex/term-before-definition");
+    expect(off).not.toContain("tex/term-defined-twice");
+    const on = await ids(paper(tex(body), TERMS_ON));
+    expect(on).toContain("tex/term-before-definition");
+    expect(on).toContain("tex/term-defined-twice");
   });
 });
 

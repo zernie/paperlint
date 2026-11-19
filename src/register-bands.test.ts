@@ -20,7 +20,9 @@ import { nodeFiles } from "./adapters/node/index.ts";
 import { sourcesCodec } from "./adapters/sources-record/index.ts";
 import {
   bandOf,
+  negationBandOf,
   rateOf,
+  shareOf,
   REGISTER_MEASURES,
   type Band,
   type RegisterAnchor,
@@ -207,6 +209,76 @@ describe("variants of real accepted papers, one change each, leave the band on t
   );
 });
 
+/** Where a paper's share of negated sentences stands against AIDC's band. */
+const negationStanding = (a: RegisterAnchor): string => {
+  const band = negationBandOf(aidc.registerAnchors);
+  return band === null || a.negation === undefined
+    ? "no band"
+    : standingOf(shareOf(a.negation.negated, a.negation.sentences), band);
+};
+
+describe("tex/negated-sentences: AIDC's band from the same five ACSAC papers", () => {
+  it("🔴 the band is the anchors' 5.3–17.8%, widened to 3.0–21.8%", () => {
+    const band = negationBandOf(aidc.registerAnchors);
+    expect(
+      band &&
+        [band.anchorMin, band.anchorMax, band.min, band.max].map((x) =>
+          x.toFixed(1),
+        ),
+    ).toEqual(["5.3", "17.8", "3.0", "21.8"]);
+  });
+
+  it.each(ACSAC)(
+    "%s stands inside it",
+    { timeout: PAPER_TIMEOUT_MS },
+    (paper) => {
+      expect(negationStanding(anchorFor(paper))).toBe("within");
+    },
+  );
+
+  it(
+    "🔴 secure-acsac24 with every «is», «are», «was» and «were» negated: above",
+    { timeout: PAPER_TIMEOUT_MS },
+    () => {
+      const src = inBody(
+        sourceOf("secure-acsac24"),
+        /\b(?:is|are|was|were)\b/gu,
+        (m) => `${m} not`,
+        Number.POSITIVE_INFINITY,
+      );
+      expect(negationStanding(anchorFor("secure-acsac24", src))).toBe("above");
+    },
+  );
+
+  it(
+    "🔴 rr-dataset-quality-acsac24 with its negators struck out: below",
+    { timeout: PAPER_TIMEOUT_MS },
+    () => {
+      const src = inBody(
+        sourceOf("rr-dataset-quality-acsac24"),
+        /\b(?:not|no|none|never|without|nor|neither|unable)\b|n't\b/giu,
+        () => "",
+        Number.POSITIVE_INFINITY,
+      );
+      expect(
+        negationStanding(anchorFor("rr-dataset-quality-acsac24", src)),
+      ).toBe("below");
+    },
+  );
+
+  it("a preset whose anchors record no negation sets no band", () => {
+    expect(
+      negationBandOf(
+        aidc.registerAnchors.map((a) => ({
+          paper: a.paper,
+          words: a.words,
+          counts: a.counts,
+        })),
+      ),
+    ).toBeNull();
+  });
+});
+
 describe("judgeBand — a body's rate against a band", () => {
   const band: Band = {
     min: 20,
@@ -222,7 +294,9 @@ describe("judgeBand — a body's rate against a band", () => {
   });
   const body = (n: number, words = MIN_WORDS) => ({
     words,
+    sentences: 100,
     occurrences: Array.from({ length: n }, (_, i) => occurrence(i)),
+    rate: rateOf(n, words),
     at: { start: 0, end: 1 },
   });
   const ids = (n: number, each = true, words = MIN_WORDS) =>
@@ -326,6 +400,12 @@ describe("the rules, as ESLint calls them", () => {
       "\\documentclass{article}\n\\begin{document}\n\\end{document}\n",
       latexReader,
     );
-    expect(m).toEqual({ words: 0, occurrences: [], at: null });
+    expect(m).toEqual({
+      words: 0,
+      sentences: 0,
+      occurrences: [],
+      rate: 0,
+      at: null,
+    });
   });
 });

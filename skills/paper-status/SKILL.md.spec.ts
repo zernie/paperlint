@@ -5,6 +5,7 @@
 // fence yet: the field exists on `SkillSpec` as of the branch `claude/skill-disallowed-tools`
 // but is not in a release the consumer installs, so adding it here would not compile.
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
 
 export default experimental_skill({
   name: "paper-status",
@@ -152,3 +153,8 @@ Built 2026-08-04, the day before the \`compile-rules-2026\` deadline, after the 
 for the fourth time in one session and pointed out it should be a command: *"I ask this so often... there should be a skill"*. He was right, and the two things the skill measures first are the two
 things chat had most recently gotten wrong.`,
 });
+
+export const flow = {
+  stage: "across",
+  handsTo: () => [],
+} satisfies Flow;

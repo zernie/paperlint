@@ -5,6 +5,10 @@
 // `SkillSpec` in vigiles branch `claude/skill-disallowed-tools` and is not in a release
 // this repo installs, so writing one here would not compile.
 import { experimental_skill } from "vigiles/spec";
+import type { Flow } from "../../scripts/pipeline.ts";
+import gradePaperWriting from "../grade-paper-writing/SKILL.md.spec.ts";
+import pcPanelReview from "../pc-panel-review/SKILL.md.spec.ts";
+import tightenPaper from "../tighten-paper/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "paper-adversarial-review",
@@ -105,3 +109,10 @@ the report's first lines say "main-conference bar assumed".
 - \`pc-panel-review\` — this atom's scorecard is one reviewer's card; the panel aggregates N of them (same 1–5 scale) into the decision.
 - The venue CFP (fit/format). Prose QA for papers routes to \`grade-paper-writing\` + \`paper-pipeline/references/writing-craft.md\` — NOT the site repo's \`writing-quality\` / \`audience-test\` skills (those are for blog posts only; the paper suite's persona pass supersedes them here).`,
 });
+
+export const flow = {
+  stage: "review",
+  handsTo: () => [pcPanelReview],
+  calls: () => [gradePaperWriting],
+  loopsBackTo: () => [tightenPaper],
+} satisfies Flow;
