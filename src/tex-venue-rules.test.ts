@@ -1943,6 +1943,42 @@ describe("the style check over what the reader reads but TeX may not run", () =>
   });
 });
 
+describe("the style check reads what TeX reads: nothing after \\end{document}", () => {
+  const parked = (preamble: string, after: string) =>
+    `${paper(`\\documentclass{article}\n${preamble}`, "Text.")}${after}\n`;
+
+  it("🔴 a load parked after \\end{document} is no load: missingStyle, and the port is not done", () => {
+    const tex = parked("", "\\usepackage{neurips_2026}");
+    expect(styleFindings(tex)).toEqual(["tex/template:missingStyle"]);
+    expect(styleFindings(tex, NEURIPS_PORT)).not.toContain(
+      "cycle/port-done:done",
+    );
+  });
+
+  it("🔴 options passed and the style loaded again after \\end{document} do not count: missingStyleOption", () => {
+    const tex = `${paper("\\documentclass[letterpaper]{article}\n\\usepackage{aaai2027}", "Text.")}\\PassOptionsToPackage{submission}{aaai2027}\n\\usepackage[submission]{aaai2027}\n`;
+    expect(
+      lint(tex, AAAI_MAIN)
+        .filter((f) => f.rule === "tex/template")
+        .map((f) => f.messageId),
+    ).toEqual(["missingStyleOption"]);
+  });
+
+  it("🔴 a load inside a macro after \\end{document} hides nothing: missingStyle", () => {
+    const tex = parked(
+      "",
+      "\\newcommand{\\loadstyle}{\\usepackage{neurips_2026}}",
+    );
+    expect(styleFindings(tex)).toEqual(["tex/template:missingStyle"]);
+  });
+
+  it("a load before \\end{document} still counts, with text after it: no finding, and the port is done", () => {
+    const tex = parked("\\usepackage{neurips_2026}", "% notes");
+    expect(styleFindings(tex)).toEqual([]);
+    expect(styleFindings(tex, NEURIPS_PORT)).toEqual(["cycle/port-done:done"]);
+  });
+});
+
 describe("the style check still speaks where the reader sees the whole preamble", () => {
   it.each<[string, string, string]>([
     [

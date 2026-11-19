@@ -275,6 +275,24 @@ describe("packagesOf — options passed to a package before it is loaded (`\\Pas
   });
 });
 
+describe("packagesOf — only what TeX reads: nothing after \\end{document}", () => {
+  const doc =
+    "\\documentclass{article}\n\\usepackage{a}\n\\begin{document}\nx\n\\end{document}\n";
+
+  it("🔴 a load and a \\PassOptionsToPackage parked after it are not read", () => {
+    const src = `${doc}\\PassOptionsToPackage{o}{a}\n\\usepackage[p]{b}\n`;
+    expect(packagesOf(parseLatex(src)).map((p) => [p.name, p.options])).toEqual(
+      [["a", []]],
+    );
+  });
+
+  it("🔴 a load inside a macro after it hides nothing; one in the preamble's macro still does", () => {
+    const after = "\\newcommand{\\x}{\\usepackage{c}}\n";
+    expect(packagesUnseen(parseLatex(`${doc}${after}`))).toBe(false);
+    expect(packagesUnseen(parseLatex(`${after}${doc}`))).toBe(true);
+  });
+});
+
 describe("packagesOf — the options LaTeX hands a package: global, passed, its own (latex.ltx)", () => {
   const loads = (src: string) =>
     packagesOf(parseLatex(src)).map((p) => [p.name, p.options, p.unread]);

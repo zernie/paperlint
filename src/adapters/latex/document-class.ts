@@ -23,7 +23,7 @@ import {
   type Node,
   type Macro,
 } from "./nodes.ts";
-import { parseLatex, type ParsedTex } from "./parse.ts";
+import { liveRoot, parseLatex, type ParsedTex } from "./parse.ts";
 
 const isDocumentClass = (n: Node): n is Macro =>
   n.type === "macro" && n.content === "documentclass";
@@ -215,12 +215,12 @@ interface PassedToPackage extends Options {
 }
 
 /**
- * Every `\PassOptionsToPackage` at the top of the tree: LaTeX adds its options to each package's
- * own list (`\@pass@ptions`, latex.ltx), so they count for a load of one of its packages after it.
- * One missing an argument passes nothing.
+ * Every `\PassOptionsToPackage` at the top of the tree, none after `\end{document}` (`liveRoot`):
+ * LaTeX adds its options to each package's own list (`\@pass@ptions`, latex.ltx), so they count for
+ * a load of one of its packages after it. One missing an argument passes nothing.
  */
 const passedToPackagesOf = (t: ParsedTex): readonly PassedToPackage[] =>
-  t.root.content.flatMap((n, index) => {
+  liveRoot(t).content.flatMap((n, index) => {
     if (n.type !== "macro" || n.content !== "PassOptionsToPackage") return [];
     const [opts, pkgs] = mandatory(n);
     if (opts === undefined || pkgs === undefined) return [];
@@ -277,15 +277,17 @@ function packageLoads(
 
 /**
  * Every package the `\usepackage`, `\RequirePackage` and `\RequirePackageWithOptions` lines at the
- * top of the tree load, in source order: the preamble's, as the class line is read, each with the
- * options LaTeX hands it (`packageLoads`). A comment is not a line; several lines behind a TeX
- * switch are each read. A package loaded twice keeps the options of its first load in LaTeX, and a
+ * top of the tree load, in source order, none after `\end{document}` (TeX stops there): the
+ * preamble's, as the class line is read, each with the options LaTeX hands it (`packageLoads`). A
+ * comment is not a line; several lines behind a TeX switch are each read. A package loaded twice keeps the options of its first load in LaTeX, and a
  * second load asking for more stops the build («Option clash»), so each line is read as its own.
  */
 export function packagesOf(t: ParsedTex): readonly PackageLoad[] {
   const passed = passedToPackagesOf(t);
-  return t.root.content
-    .flatMap((node, index) => (isPackageLine(node) ? [{ node, index }] : []))
+  return liveRoot(t)
+    .content.flatMap((node, index) =>
+      isPackageLine(node) ? [{ node, index }] : [],
+    )
     .flatMap((at) =>
       packageLoads(t.src, at, { passed, global: globalAt(t, at.index) }),
     );
@@ -299,8 +301,9 @@ export function packagesOf(t: ParsedTex): readonly PackageLoad[] {
  * (`\usepackage{\style}`), or a file read through another loader (`\InputIfFileExists`, `\import`).
  */
 export function packagesUnseen(t: ParsedTex): boolean {
-  const top = new Set<unknown>(t.root.content);
-  const hidden = visited(t.root, () => false).some(
+  const live = liveRoot(t);
+  const top = new Set<unknown>(live.content);
+  const hidden = visited(live, () => false).some(
     (v) =>
       isNode(v) &&
       (isPackageLine(v) || isPassToPackage(v)) &&
