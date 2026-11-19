@@ -114,10 +114,10 @@ try {
   const reachedModel = r.modelRequests
     .map((q) => [q.system, ...q.messages.map((m) => m.text)].join("\n"))
     .join("\n");
-  if (!reachedModel.includes("FILING-SPACING"))
+  if (!reachedModel.includes("CAN YOU PHYSICALLY SUBMIT?"))
     throw new Error(
       `the Skill call resolved but the skill BODY never reached the model ` +
-        `("FILING-SPACING", a §4 heading, is absent from all ${String(r.modelRequests.length)} requests). ` +
+        `("CAN YOU PHYSICALLY SUBMIT?", the §0 heading, is absent from all ${String(r.modelRequests.length)} requests). ` +
         `Activation without a body is a loaded skill that guides nothing.`,
     );
 

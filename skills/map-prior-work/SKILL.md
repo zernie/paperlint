@@ -5,15 +5,14 @@ context: fork
 allowed-tools: [WebSearch, WebFetch, Read, Write, Grep, Glob, Bash, Agent]
 ---
 
-<!-- vigiles:sha256:474b3d7b8e0542ae compiled from skills/map-prior-work/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:739bde6ff7b876e4 compiled from skills/map-prior-work/SKILL.md.spec.ts -->
 
 # map-prior-work — find out who already did it, while you can still change course
 
 The expensive failure this prevents, in one sentence: **you discover the paper that already did your
 contribution after the draft is finished, when the only move left is rewriting the claim under deadline.**
 
-Grounding: the original-contribution criterion. A paper
-a reviewer reads as a repackaging earns no authorship credit even if it is accepted. Composes with
+A paper a reviewer reads as a repackaging is rejected as incremental. Composes with
 `research-ideate` (upstream: it validated *whether* the idea is worth doing; this validates whether it is
 still *yours*), `analyze-sibling-paper` (this hands it the papers that need a full read), and
 `draft-paper` (which consumes the related-work skeleton).

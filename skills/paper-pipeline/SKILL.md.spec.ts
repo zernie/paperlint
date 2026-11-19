@@ -31,7 +31,7 @@ import verifyCitations from "../verify-citations/SKILL.md.spec.ts";
 export default experimental_skill({
   name: "paper-pipeline",
   description:
-    "The orchestrator for writing a research paper end-to-end, from idea to accepted-and-extended, with every stage graded for the credit it earns a body of work. START HERE when writing/hardening a paper (AgenticDev, AISec, and future ones) and want the whole lifecycle driven, not one step. Routes to the stage skills — research-ideate, find-venue, plan-paper-timeline, build-benchmark, draft-paper, verify-citations, the review skills, submit-paper (+ venue cards), camera-ready, extend-paper — and owns the shared references.",
+    "The orchestrator for writing a research paper end-to-end, from idea to accepted-and-extended. START HERE when writing/hardening a paper (AgenticDev, AISec, and future ones) and want the whole lifecycle driven, not one step. Routes to the stage skills — research-ideate, find-venue, plan-paper-timeline, build-benchmark, draft-paper, verify-citations, the review skills, submit-paper (+ venue cards), camera-ready, extend-paper — and owns the shared references.",
   tools: [
     "Read",
     "Write",
@@ -50,13 +50,9 @@ export default experimental_skill({
 Editing the paper's text after an approved copy exists (\`paperlint versions approve\`): declare each change in \`versions/<cycle>/changes.yaml\`, \`paperlint versions diff\` shows what was lost (EXPERIMENTAL; \`docs/rules/cycle/changes-since-approved.md\`). With an approved copy, \`submission … --save\` refuses while the source differs from it; approve it first (the author does, never the agent).
 
 This is the entry point. Each lifecycle stage is its own skill; this routes through them in order and
-owns the shared reference docs the others cite. **These papers are written to COUNT as credentials** —
-every stage is graded against \`references/credit-criteria.md\`, not abstract "impact." The personal half
-of that — who is filing what, and when — stays in the author's own private notes, never in a public repo.
+owns the shared reference docs the others cite.
 
 ## Shared references (single source of truth — all skills cite these)
-- \`references/credit-criteria.md\` — which criteria a paper feeds; where venue quality bites; the
-  decisions credit value forces on the pipeline.
 - \`references/artifact-checklist.md\` — the self-checking reproduction artifact.
 - \`references/anonymization.md\` — the double-blind deny-list + hygiene (and its reverse at camera-ready).
 - \`references/writing-craft.md\` — how well-written papers read (craft rules + exemplar lessons);
@@ -186,9 +182,9 @@ Ordered, because each really does gate the next. Two pairs run in parallel; that
 | Step | Skill | What it settles |
 |---|---|---|
 | **Orient** | — | Read \`<papers-root>/HANDOFF.md\` + \`<papers-root>/research/README.md\`. Never restart from scratch. |
-| **Validate the idea** | **\`research-ideate\`** | Is it a reusable method (survives review) in your lane, and does it feed the credit criteria? Go/no-go + the MVP finding. |
+| **Validate the idea** | **\`research-ideate\`** | Is it a reusable method (survives review) in your lane? Go/no-go + the MVP finding. |
 | **Map the competition** ‖ | **\`map-prior-work\`** | 🔴 **Who already did this?** Multi-angle sweep; date each hit against your submission (5 months = prior, not concurrent); triage by which layer of your claim it threatens; deep-read the dangerous ones. Output: **what you can still claim** + a related-work skeleton. *Added 2026-07-27 after a five-month-older paper surfaced at T−10 days on a finished draft.* |
-| **Pick the venue** ‖ | **\`find-venue\`** | Rank by credit-weight (peer-reviewed + indexed) × fit × accept-odds × deadline × remote. |
+| **Pick the venue** ‖ | **\`find-venue\`** | Rank by archival weight (peer-reviewed + indexed) × fit × accept-odds × deadline × remote. |
 | **Learn what the venue rewards** | **\`study-accepted-papers\`** (mode A idea, B design) | 🔴 **What does this venue REWARD, before the study is designed?** The venue's award winners against its ordinary accepted papers over 5–7 years (plus award papers on the topic at other venues, labelled apart), coded for substance as well as form, written as **requirements for the study**: what the oracle under the headline is, which belief stated on record the claim targets, which factor is a column. The corpus goes to \`<papers-root>/venues/<venue>/\`, shared by every paper for that venue; the stage is row \`venuebar\`. **The same skill comes back once text exists** (mode C draft: the strong-accept scorecard, M1–M10, in \`PIPELINE-STATUS.md\`; mode D final: the abstract and introduction). The skill always asks which mode. Venue format facts go in its preset (\`presets/<venue>.jsonc\` in the package, or the project's own) and the venue card beside it (\`presets/<venue>.md\`); confirm family rules (\`references/acl-venue-rules.md\`). *Promoted to its own step 2026-08-03: every judgement of a paper's quality had come from instruments this pipeline itself generated, with no external grounding. Moved to modes on 2026-10-12 (#207): run only on a draft, its main findings arrived after they could change the design.* |
 | 🔴 **Can you physically submit?** | **\`plan-paper-timeline\`** | **The step that owns the question no stage used to own.** Create the portal account NOW; drive the profile to **ACTIVE**, not "pending moderation"; confirm the form's fields and the artifact-hosting requirement. OpenReview moderation runs **up to two weeks**, and an author with no institutional email has no expedite route. Scorecard row \`access\`. *Added 2026-08-03, when this was the sole critical-path item on a finished paper at T−4 days: the science was done and there was nowhere to put it.* |
 | **Schedule it** | **\`plan-paper-timeline\`** | Deadlines → calendar with buffers, in the author's own zone (AoE − 12h ≠ your clock). Space papers apart. |
@@ -505,8 +501,6 @@ Override per call when a stage clearly needs otherwise; this is the default, not
 - **Never fabricate** a citation, number, or result. Mark \`% VERIFY\` and check (\`verify-citations\`).
 - **Commit + push after each stage**, keep the tree clean (resume-safe across \`/compact\`); update
   \`<papers-root>/research/README.md\` in the same commit as any new research file (its CLAUDE.md enforces this).
-- **Two roles, never double-counted:** authoring = the *authorship* criterion; reviewing others at the
-  venue (the organizer review-offer email) = the *judging* criterion — a separate credential.
 
 ## Provenance
 Two real papers this session ran this pipeline end-to-end: **AgenticDev 2026 @ ASE** ("Measuring the

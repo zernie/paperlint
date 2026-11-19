@@ -1,10 +1,10 @@
 ---
 name: submit-paper
-description: "End-to-end playbook for submitting a peer-reviewed paper to a double-blind venue (HotCRP workshops/conferences) — from a hardened draft to \"ready for review.\" Covers building and anonymously hosting a reproduction artifact, HotCRP profile + form mechanics, double-blind hygiene, and the authorship/credential angles for an independent researcher. Use when the paper is drafted and reviewed and it's time to actually submit, and for the HotCRP portal via `paperlint submission`: register the paper, choose its topics and PC conflicts, replace the PDF or abstract, and prove the portal holds the latest build. Compose with pc-panel-review (harden first), and with the venue card (presets/<venue>.md in the paperlint package) for venue specifics."
+description: "End-to-end playbook for submitting a peer-reviewed paper to a double-blind venue (HotCRP workshops/conferences) — from a hardened draft to \"ready for review.\" Covers building and anonymously hosting a reproduction artifact, HotCRP profile + form mechanics, and double-blind hygiene. Use when the paper is drafted and reviewed and it's time to actually submit, and for the HotCRP portal via `paperlint submission`: register the paper, choose its topics and PC conflicts, replace the PDF or abstract, and prove the portal holds the latest build. Compose with pc-panel-review (harden first), and with the venue card (presets/<venue>.md in the paperlint package) for venue specifics."
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Skill]
 ---
 
-<!-- vigiles:sha256:0e4109a3b9953e46 compiled from skills/submit-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:e0cf7e375521013f compiled from skills/submit-paper/SKILL.md.spec.ts -->
 
 # submit-paper — get a reviewed paper from "done" to "ready for review"
 
@@ -88,8 +88,7 @@ Many workshop HotCRPs have **no supplementary-upload field** — check first; if
   "Anonymous" and your name nowhere. Then put the URL in Availability via `\url{}` and rebuild.
 
 ## 3. HotCRP profile (do this once, before the form)
-- **Name = your canonical / passport legal name**, identical on every paper you submit. (For
-  a dossier, name consistency across papers/LinkedIn/letters is load-bearing — see §6.)
+- **Name = one spelling of your name**, identical on every paper you submit.
 - **Affiliation**: `None` (or `Unaffiliated`) if independent.
 - **Country/region = where you actually reside**, not citizenship — this sidesteps ACM/IEEE
   sanctions/payment friction for authors from sanctioned countries.
@@ -107,7 +106,7 @@ Many workshop HotCRPs have **no supplementary-upload field** — check first; if
   reviewers; the *PDF* is what's anonymized. That's how double-blind works; it's correct, not a leak.
 - **ACM corresponding author**: default (first author).
 - **PC conflicts**: check only genuine COIs (past advisor/student, same affiliation, ≤2-yr coauthor).
-  An independent researcher with no ties usually checks **none** — that's honest.
+  An author with no such ties checks **none** — that's honest.
 
 ## 5. Submit
 - **Before the PDF goes up — and before every Replace — hand the last check to the author, in plain
@@ -148,18 +147,7 @@ package. What the command cannot decide is yours:
 - **Prove it landed.** `show` must read `match yes — the portal holds this build` and the intended
   status; anything else is not done, say so.
 
-## 6. Independent-researcher / dossier notes
-- **Name consistency** is the quiet risk: publications, LinkedIn, passport, letters must resolve to one
-  person. ORCID is the tool; pick one surname and use it everywhere from paper #1.
-- Keep the **organizer review-offer email** + any PC/reviewer confirmation — that's the *judging*
-  criterion evidence (separate from authorship).
-- **Space submissions out** — don't cluster all papers in the month before an external
-  filing — the FILING-SPACING rule `plan-paper-timeline` applies. A burst right before a filing reads
-  as manufactured rather than sustained, and that is an observed, documented refusal ground.
-- After acceptance: plan the **camera-ready de-anonymization** and an **extension to a higher-prestige
-  venue** (workshop → conference, ≥30% new) as a second, stronger publication.
-
-## 7. Freeze the version you actually uploaded
+## 6. Freeze the version you actually uploaded
 
 🔴 **What the reviewers read is the one version git cannot rebuild for you later** — it was built
 outside the repo and lives on the portal. Freeze it at the send.

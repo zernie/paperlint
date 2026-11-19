@@ -6,7 +6,7 @@ model: sonnet
 allowed-tools: [WebSearch, WebFetch, Read, Write, Grep, Glob, Bash, Agent]
 ---
 
-<!-- vigiles:sha256:17c3e0a4c03c6a33 compiled from skills/analyze-sibling-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:005f40779a7cd653 compiled from skills/analyze-sibling-paper/SKILL.md.spec.ts -->
 
 # analyze-sibling-paper — settle "isn't this just X?" before a reviewer does
 
@@ -15,8 +15,7 @@ leaves a scoop risk you can't see and a reviewer can. This skill reads the *actu
 whether your contribution genuinely differs, and produces a saved analysis with concrete action points
 (the exact positioning clause to add, or — if it's a real scoop — an escalation, not a clause).
 
-Grounding: the original-contribution criterion (a paper a
-reviewer thinks is a repackaging earns no authorship credit even if accepted). Composes with
+A paper a reviewer reads as a repackaging is rejected as incremental. Composes with
 `verify-citations` (which surfaces the nearest neighbors) and `harden-paper` (whose scoop axis calls this).
 
 ## When it fires

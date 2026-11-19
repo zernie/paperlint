@@ -12,18 +12,16 @@ import planPaperTimeline from "../plan-paper-timeline/SKILL.md.spec.ts";
 export default experimental_skill({
   name: "find-venue",
   description:
-    "Discover and rank real venues for a given paper, scored by authorship credit not just prestige. Fetch candidate CFPs (WebSearch/WebFetch), capture deadline / page limit / paper-type fit / indexing (ACM DL / IEEE Xplore / archival vs non-archival) / double-blind / remote-attendance / selectivity, then rank by credit-weight (peer-reviewed + indexed + parent-venue prestige) × topic fit × accept-probability × deadline feasibility × remote-friendliness. Emit a comparison table and a keep/switch recommendation. Encodes: workshop newness does NOT hurt authorship; non-archival workshops rank LOW; the prestige move is to EXTEND the accepted paper later, not hold out. Compose with research-ideate (upstream), plan-paper-timeline, the venue cards (presets/<venue>.md in the paperlint package), and extend-paper.",
+    "Discover and rank real venues for a given paper, scored by whether it is archival and indexed, not just prestige. Fetch candidate CFPs (WebSearch/WebFetch), capture deadline / page limit / paper-type fit / indexing (ACM DL / IEEE Xplore / archival vs non-archival) / double-blind / remote-attendance / selectivity, then rank by archival weight (peer-reviewed + indexed + parent-venue prestige) × topic fit × accept-probability × deadline feasibility × remote-friendliness. Emit a comparison table and a keep/switch recommendation. Encodes: a new workshop's indexed proceedings count the same; non-archival workshops rank LOW; the prestige move is to EXTEND the accepted paper later, not hold out. Compose with research-ideate (upstream), plan-paper-timeline, the venue cards (presets/<venue>.md in the paperlint package), and extend-paper.",
   tools: ["Read", "Write", "Grep", "Glob", "WebSearch", "WebFetch", "Agent"],
   body: `
-# find-venue — rank real venues by what earns the credit, then keep or switch
+# find-venue — rank real venues by what makes a publication, then keep or switch
 
 Takes a paper (or the candidate venue *types* from \`research-ideate\`) and finds the best real place to
 submit it. "Best" here means **best for the publication record**, which is not the same as most prestigious —
 an indexed workshop you can actually hit beats a top conference whose deadline already closed. This
 skill produces a ranked table and a keep/switch call; it does NOT do the submission mechanics (that's
 \`submit-paper\` + the venue card).
-
-Grounding: the authorship criterion — why archival + indexed is the whole game.
 
 ## Gather candidates (fetch, don't guess)
 
@@ -34,8 +32,8 @@ capture, from the actual CFP page:
   short/WIP/workshop limit changes what you must produce.
 - **Paper-type fit** — does the CFP call for measurement/benchmark/short/WIP/full papers of this shape?
 - **Indexing** — the single most load-bearing field. Does acceptance land in **ACM DL / IEEE Xplore /
-  archival proceedings** (counts for authorship) or is it **non-archival** (talk-only, no indexed
-  proceedings — does NOT count)?
+  archival proceedings** (a publication) or is it **non-archival** (talk-only, no indexed
+  proceedings — not a publication)?
 - **Double-blind?** — determines anonymization work (see \`anonymization.md\`).
 - **Remote attendance** — can the author present/attend without international travel?
 - **Selectivity / prestige** — the parent venue's tier (workshop @ CCS/ASE/FSE inherits weight).
@@ -45,11 +43,11 @@ capture, from the actual CFP page:
 Score each candidate by:
 
 \`\`\`
-rank = credit-weight × topic-fit × accept-probability × deadline-feasibility × remote-friendliness
+rank = archival-weight × topic-fit × accept-probability × deadline-feasibility × remote-friendliness
 \`\`\`
 
-- **credit-weight** = (peer-reviewed? — required) × (indexed/archival? — required) × parent-venue
-  prestige (a bonus, not a gate). **Non-archival ⇒ credit-weight ≈ 0** — it earns no authorship credit,
+- **archival-weight** = (peer-reviewed? — required) × (indexed/archival? — required) × parent-venue
+  prestige (a bonus, not a gate). **Non-archival ⇒ archival-weight ≈ 0** — it is not a publication,
   so it sinks to the bottom no matter how nice the CFP reads.
 - **topic-fit** — how squarely the paper matches the CFP scope (a stretch fit raises reject risk).
 - **accept-probability** — realistic odds given the paper's maturity and how selective the venue is.
@@ -58,11 +56,9 @@ rank = credit-weight × topic-fit × accept-probability × deadline-feasibility 
 - **remote-friendliness** — remote-OK is a real weight here, not a footnote.
 
 ### Facts to encode while ranking
-- **Workshop newness does NOT hurt the authorship criterion.** A brand-new workshop's indexed
-  proceedings count the same; venue prestige only matters at final merits, never for authorship. Do not
-  down-rank a venue just for being new.
-- **Non-archival workshops rank LOW for authorship** — no indexed proceedings, no credit. A great talk
-  slot with no DOI is worth little to the dossier.
+- **Workshop newness does not hurt.** A brand-new workshop's indexed proceedings are as archival as an
+  old one's. Do not down-rank a venue just for being new.
+- **Non-archival workshops rank LOW** — no indexed proceedings, no DOI: a talk, not a publication.
 - **Prestige is a later move, not a hold-out.** Do NOT sit on a finished paper waiting for a fancier
   venue. Ship to the best-fit archival venue open now, then **EXTEND** the accepted paper (≥30% new) to
   a higher-prestige venue as a *second, stronger* publication — see \`extend-paper\`. Two indexed papers

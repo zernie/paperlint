@@ -12,7 +12,7 @@ import submitPaper from "../submit-paper/SKILL.md.spec.ts";
 export default experimental_skill({
   name: "plan-paper-timeline",
   description:
-    "Turn a venue's CFP dates into a scheduled, buffered plan on the Google Calendar — build the timeline backwards from the AoE submission deadline (harden + panel-review + artifact + anonymized host all land BEFORE it), create calendar events in the author's own time zone for submit-day / deadline / camera-ready, and apply the FILING-SPACING rule so multiple papers don't cluster in the month before a planned external filing. Use right after find-venue hands you real deadlines and before you start drafting. Compose with find-venue (deadline source) and submit-paper.",
+    "Turn a venue's CFP dates into a scheduled, buffered plan on the Google Calendar — build the timeline backwards from the AoE submission deadline (harden + panel-review + artifact + anonymized host all land BEFORE it), create calendar events in the author's own time zone for submit-day / deadline / camera-ready. Use right after find-venue hands you real deadlines and before you start drafting. Compose with find-venue (deadline source) and submit-paper.",
   tools: [
     "Read",
     "Write",
@@ -24,12 +24,11 @@ export default experimental_skill({
     "mcp__Google_Calendar__update_event",
   ],
   body: `
-# plan-paper-timeline — CFP dates → a buffered, filing-aware schedule
+# plan-paper-timeline — CFP dates → a buffered schedule
 
 A deadline is not a plan. This skill converts the four dates every CFP gives you — **submission (AoE),
 notification, camera-ready, event** — into calendar events with the buffers that actually keep a
-submission from slipping, and sequences *multiple* papers so the cadence reads as sustained acclaim,
-not a pre-filing burst.
+submission from slipping.
 
 ## 0. 🔴 CAN YOU PHYSICALLY SUBMIT? — do this in the FIRST week (scorecard row \`access\`)
 
@@ -133,25 +132,11 @@ the two review/host milestones (§1) as your own working reminders; the three ab
 > file and replays it against a stand-in server carrying the REAL API's schema, so a prescription this
 > section gets wrong fails in the harness rather than on a live run. Edit it like code.
 
-## 4. FILING-SPACING rule (the reason this skill exists)
-Where the papers are the authorship pillar of some external filing — a grant, a tenure packet, an
-immigration petition — **do not let multiple submissions or acceptances cluster in the month before
-that filing.** A burst of activity right before a deadline reads as *manufactured* rather than
-*sustained*, and that is a documented reason for refusal, not a stylistic worry. A steady cadence with
-recent-but-not-crammed activity reads far better.
-
-When scheduling paper N against papers already on the calendar and a known/likely filing date:
-- Spread submission and (projected) notification dates across months; avoid two acceptances landing in
-  the same pre-filing window.
-- If two CFPs force a cluster, stagger which one you *extend* later (workshop → conference) so the
-  second, stronger publication lands in a later month on purpose.
-- Prefer a paper with an earlier, safely-past deadline over one that would pile onto the filing month.
-
 ## Scorecard rows this skill owns
 Two, and they fail differently — see \`paper-pipeline/references/pipeline-status-template.md\`:
 - **\`access\`** — *can you physically submit?* (§0). Account · profile ACTIVE since \`<ISO>\` · portal
   reachable · form fields known · artifact-host requirement known. \`submit-paper\` is blocked on it.
-- **\`schedule\`** — the schedule itself (§1–§4): the buffered backwards plan and its calendar events.
+- **\`schedule\`** — the schedule itself (§1–§3): the buffered backwards plan and its calendar events.
 
 ## Compose with
 - **\`find-venue\`** — the source of the four CFP dates this skill consumes; run it first.
@@ -159,10 +144,8 @@ Two, and they fail differently — see \`paper-pipeline/references/pipeline-stat
   sure the runway before it exists, **and that the account it executes through is already ACTIVE**.
 
 ## Provenance
-This session scheduled two real papers with spacing rather than back-to-back: **AgenticDev 2026 @ ASE**
-(submission 15 Jul, notify 21 Aug, camera-ready 28 Aug, workshop 12 Oct) and **AISec 2026 @ ACM CCS**
-(submission 24 Jul). Nine days apart, deliberately staggered so notifications and any camera-ready work
-don't collapse into one pre-filing month — the FILING-SPACING rule applied in practice, not in theory.`,
+Two real papers were scheduled with this skill: **AgenticDev 2026 @ ASE** (submission 15 Jul, notify
+21 Aug, camera-ready 28 Aug, workshop 12 Oct) and **AISec 2026 @ ACM CCS** (submission 24 Jul).`,
 });
 
 export const flow = {
