@@ -1729,6 +1729,38 @@ describe("otherStyles — the styles of the shipped venues off a paper's chain",
   });
 });
 
+describe("tex/template under AAAI — a required style option passed with `\\PassOptionsToPackage`", () => {
+  const AAAI_MAIN = { extends: "paperlint:aaai-2027", kind: "main" };
+  const template = (preamble: string) =>
+    lint(
+      paper(`\\documentclass[letterpaper]{article}\n${preamble}`, "Text."),
+      AAAI_MAIN,
+    ).filter((f) => f.rule === "tex/template");
+
+  it("🔴 passed before the load, alone or in a list of packages: the option is in effect", () => {
+    expect(
+      template(
+        "\\PassOptionsToPackage{submission}{aaai2027}\n\\usepackage{aaai2027}",
+      ),
+    ).toEqual([]);
+    expect(
+      template(
+        "\\PassOptionsToPackage{submission}{times,aaai2027}\n\\usepackage{aaai2027}",
+      ),
+    ).toEqual([]);
+  });
+
+  it("🔴 passed after the load, or to another package: the option is missing", () => {
+    for (const preamble of [
+      "\\usepackage{aaai2027}\n\\PassOptionsToPackage{submission}{aaai2027}",
+      "\\PassOptionsToPackage{submission}{times}\n\\usepackage{aaai2027}",
+    ])
+      expect(template(preamble).map((f) => f.messageId)).toEqual([
+        "missingStyleOption",
+      ]);
+  });
+});
+
 describe("judgeStyle — another shipped venue's style, and a required option", () => {
   const neurips = resolvePreset(
     "paperlint:neurips-2026",

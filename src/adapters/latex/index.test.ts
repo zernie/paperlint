@@ -250,6 +250,30 @@ describe("parseTemplateStyle — a preset's template_style", () => {
   });
 });
 
+describe("packagesOf — options passed to a package before it is loaded (`\\PassOptionsToPackage`)", () => {
+  const optionsOf = (src: string) =>
+    packagesOf(parseLatex(src)).map((p) => [p.name, p.options]);
+
+  it("🔴 options passed before the load are in effect, to each package of a comma list", () => {
+    expect(
+      optionsOf(
+        "\\documentclass{article}\n\\PassOptionsToPackage{submission, x}{other, aaai2027}\n\\usepackage[y]{aaai2027}\n\\usepackage{other}\n",
+      ),
+    ).toEqual([
+      ["aaai2027", ["y", "submission", "x"]],
+      ["other", ["submission", "x"]],
+    ]);
+  });
+
+  it("options passed after the load, or to another package, are not", () => {
+    expect(
+      optionsOf(
+        "\\documentclass{article}\n\\PassOptionsToPackage{a}{other}\n\\usepackage{aaai2027}\n\\PassOptionsToPackage{submission}{aaai2027}\n\\PassOptionsToPackage{b}\n",
+      ),
+    ).toEqual([["aaai2027", []]]);
+  });
+});
+
 describe("packagesOf — the packages the preamble loads", () => {
   it("a \\usepackage with no argument loads nothing", () => {
     expect(

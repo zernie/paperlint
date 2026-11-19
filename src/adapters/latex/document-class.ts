@@ -189,25 +189,69 @@ const isPackageLine = (n: Node): n is Macro =>
   n.type === "macro" &&
   (n.content === "usepackage" || n.content === "RequirePackage");
 
-/** One package line: each package it names, with the line's options and place. */
-function packageLoads(src: string, node: Macro): readonly PackageLoad[] {
-  const place = macroPlace(node);
-  const options = splitWhere(optional(node)?.content ?? [], isComma)
+/** A comma list of names (`a, b`), each whitespace-collapsed, empty ones left out. */
+const namesIn = (nodes: readonly Node[] | undefined): readonly string[] =>
+  splitWhere(nodes ?? [], isComma)
+    .map((part) => collapse(textOf(part)))
+    .filter(Boolean);
+
+/** A comma list of options as written, empty ones left out. */
+const optionsIn = (src: string, nodes: readonly Node[]): readonly string[] =>
+  splitWhere(nodes, isComma)
     .map((part) => optionText(src, part))
     .filter(Boolean);
-  return splitWhere(mandatory(node)[0]?.content ?? [], isComma)
-    .map((part) => collapse(textOf(part)))
-    .filter(Boolean)
-    .map((name) => ({ name, options, place }));
+
+/** One `\PassOptionsToPackage{options}{packages}`: the packages it names, its options, its index. */
+interface PassedToPackage {
+  readonly packages: readonly string[];
+  readonly options: readonly string[];
+  readonly index: number;
+}
+
+/**
+ * Every `\PassOptionsToPackage` at the top of the tree: its options count for a load of one of its
+ * packages after it, as LaTeX reads them. One missing an argument passes nothing.
+ */
+const passedToPackagesOf = (t: ParsedTex): readonly PassedToPackage[] =>
+  t.root.content.flatMap((n, index) => {
+    if (n.type !== "macro" || n.content !== "PassOptionsToPackage") return [];
+    const [opts, pkgs] = mandatory(n);
+    if (opts === undefined || pkgs === undefined) return [];
+    const options = optionsIn(t.src, opts.content);
+    return [{ packages: namesIn(pkgs.content), options, index }];
+  });
+
+/** One package line, at `index` at the top: each package it names, with the line's options, those passed before it, and its place. */
+function packageLoads(
+  src: string,
+  { node, index }: AtTop,
+  passed: readonly PassedToPackage[],
+): readonly PackageLoad[] {
+  const place = macroPlace(node);
+  const own = optionsIn(src, optional(node)?.content ?? []);
+  const before = (name: string): readonly string[] =>
+    passed
+      .filter((p) => p.index < index && p.packages.includes(name))
+      .flatMap((p) => p.options);
+  return namesIn(mandatory(node)[0]?.content).map((name) => ({
+    name,
+    options: [...own, ...before(name)],
+    place,
+  }));
 }
 
 /**
  * Every package the `\usepackage` and `\RequirePackage` lines at the top of the tree load, in source
- * order: the preamble's, as the class line is read. A comment is not a line; several lines behind a
- * TeX switch are each read.
+ * order: the preamble's, as the class line is read, each with the options its line names and the
+ * ones `\PassOptionsToPackage` gave it before the line. A comment is not a line; several lines behind
+ * a TeX switch are each read.
  */
-export const packagesOf = (t: ParsedTex): readonly PackageLoad[] =>
-  t.root.content.filter(isPackageLine).flatMap((n) => packageLoads(t.src, n));
+export function packagesOf(t: ParsedTex): readonly PackageLoad[] {
+  const passed = passedToPackagesOf(t);
+  return t.root.content
+    .flatMap((node, index) => (isPackageLine(node) ? [{ node, index }] : []))
+    .flatMap((at) => packageLoads(t.src, at, passed));
+}
 
 /**
  * A preset's `template_style` → the package it names and the options it requires: one whole
@@ -221,7 +265,7 @@ export function parseTemplateStyle(text: string): StylePackage | null {
   const [only, ...rest] = nodes;
   if (only === undefined || rest.length > 0 || !isPackageLine(only))
     return null;
-  const loads = packageLoads(t.src, only);
+  const loads = packageLoads(t.src, { node: only, index: 0 }, []);
   const [load, ...more] = loads;
   return load === undefined || more.length > 0
     ? null

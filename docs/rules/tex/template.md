@@ -101,7 +101,8 @@ For a template that is a style file from the venue's author kit, loaded into a p
 (NeurIPS's `neurips_2026.sty` into `article`): the whole `\usepackage[…]{…}` line, one package and
 the options it requires. The paper must then load that package (`\usepackage` or
 `\RequirePackage`, in the preamble or a file it `\input`s, alone or in a list) with every option
-named; options of its own are allowed, and one of several lines behind a TeX switch is enough. What
+named, on its line or given before it by `\PassOptionsToPackage` (one given after the line is not in
+effect); options of its own are allowed, and one of several lines behind a TeX switch is enough. What
 is reported, at error:
 
 ```latex
