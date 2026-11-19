@@ -47,6 +47,7 @@ import {
   FRAGMENT_FILES,
   includeBlocks,
   paperBodies,
+  type PaperBody,
 } from "./paper-includes.ts";
 import { omit } from "remeda";
 import { refusalOf } from "./unowned-file.ts";
@@ -858,13 +859,19 @@ export const OPTIONAL_RULES: ReadonlySet<string> = new Set(
  * reaches no paper of the project at all still fails, from a subset as from the whole.
  *
  * A paper's rules reach it through its `PIPELINE-STATUS.md` too, and the typography rules through
- * every body file its last build recorded (`bodyFiles`, src/paper-includes.ts): a block whose
- * `files` name only `sections/*.tex` runs there, and was refused as reaching nothing until each
- * paper's recorded body files were probed as well.
+ * every body file handed to ESLint (`bodyFiles`): a block whose `files` name only `sections/*.tex`
+ * runs there, and was refused as reaching nothing until those files were probed as well. They are
+ * the files read from each paper's record BEFORE the run (`bodyFilesOf`), never read again after
+ * it: `--fix` rewrites a body file, the record no longer matches it, and a second read found no
+ * body files and refused a run whose rule had just fixed one.
  */
-/** The body files the last build of the paper at `main` recorded: the ones the fragment block lints. */
-const recordedBodyFiles = (main: string): readonly string[] =>
-  paperBodies([dirname(main)], RECORD_DEPS).flatMap((b) => b.files);
+/** The body files `bodies` handed to ESLint, for the paper whose `paper.tex` is `main`. */
+const bodyFilesOf =
+  (bodies: readonly PaperBody[]) =>
+  (main: string): readonly string[] =>
+    bodies
+      .filter((b) => resolve(b.main) === resolve(main))
+      .flatMap((b) => b.files);
 
 /** What `calculateConfigForFile` answers, read for its rules: undefined for a file outside ESLint's cwd or scope. */
 const ComputedConfig = z
@@ -875,7 +882,7 @@ export async function silentOptionalRules(
   eslint: Pick<ESLint, "calculateConfigForFile">,
   files: readonly string[],
   opts: PaperlintConfig,
-  bodyFiles: (main: string) => readonly string[] = recordedBodyFiles,
+  bodyFiles: (main: string) => readonly string[] = () => [],
 ): Promise<string[]> {
   const turnedOn = new Set(
     (opts.rules ?? []).flatMap((b) =>
@@ -2361,7 +2368,7 @@ export async function run(
     stats: true,
   });
   if (!engine.ok) return (err(engine.error), 2);
-  const { eslint, opts: withPapers } = engine.value;
+  const { eslint, opts: withPapers, bodies } = engine.value;
 
   const unowned = await firstUnownedFile(eslint, paths);
   if (unowned !== null) {
@@ -2418,6 +2425,7 @@ export async function run(
       .flatMap((r) => papersIn(r))
       .map((d) => join(d, MAIN))
       .filter((f) => existsSync(f)),
+    bodies,
   });
   hooksLine(root, err, skillLinks);
   // On stderr, so `--json` leaves stdout a clean array.
@@ -2449,7 +2457,14 @@ async function paperEslint(
     /** ESLint's own per-rule timings on each result (`paperlint lint` reads them; the hook does not). */
     readonly stats: boolean;
   },
-): Promise<Parsed<{ eslint: ESLint; opts: PaperlintConfig }>> {
+): Promise<
+  Parsed<{
+    eslint: ESLint;
+    opts: PaperlintConfig;
+    /** The body files handed to ESLint, read from each paper's record BEFORE the run (`--fix` may change them). */
+    bodies: readonly PaperBody[];
+  }>
+> {
   // The order, most general first so the most specific wins (ESLint: a later block wins): each
   // paper's venue preset → the root paperlint.json → the paper's own paperlint.json.
   const papers = paperRuleBlocks(paths);
@@ -2485,7 +2500,7 @@ async function paperEslint(
     fix,
     stats,
   });
-  return { ok: true, value: { eslint, opts } };
+  return { ok: true, value: { eslint, opts, bodies } };
 }
 
 /**
@@ -2629,6 +2644,7 @@ async function reportLint(
     where,
     opts,
     projectPapers,
+    bodies,
   }: {
     a: Args;
     log: typeof console.log;
@@ -2636,12 +2652,15 @@ async function reportLint(
     where: string;
     opts: PaperlintConfig;
     projectPapers: readonly string[];
+    /** The body files handed to ESLint, as read before the run. */
+    bodies: readonly PaperBody[];
   },
 ): Promise<number> {
   const silent = await silentOptionalRules(
     eslint,
     [...results.map((r) => r.filePath), ...projectPapers],
     opts,
+    bodyFilesOf(bodies),
   );
   if (silent.length > 0) {
     err(

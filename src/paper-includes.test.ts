@@ -232,10 +232,10 @@ describe("an opt-in rule turned on for a paper's body files only", () => {
       rules: [{ files, rules: { "paper/leading-zero": "warn" } }],
     }),
   });
-  const lintCode = async (root: string) => {
+  const lintCode = async (root: string, args: string[] = []) => {
     const out: string[] = [];
     const err: string[] = [];
-    const code = await run(["lint", "--json"], {
+    const code = await run(["lint", "--json", ...args], {
       cwd: root,
       log: (s: string) => out.push(s),
       err: (s: string) => err.push(s),
@@ -255,13 +255,30 @@ describe("an opt-in rule turned on for a paper's body files only", () => {
     ]);
   });
 
-  it("a glob that reaches no file of any paper still fails the run", async () => {
-    const r = await lintCode(project(onlyFor(["papers/a/nothing/**/*.tex"])));
-    expect(r.code).toBe(1);
-    expect(r.err).toMatch(
-      /^paper\/leading-zero is turned on in "rules", but no paper\.tex of the project gets it/m,
-    );
+  it("🔴 with --fix too: the fix rewrites the included file, which leaves the build's record behind it, and the run is still not refused", async () => {
+    const root = project(onlyFor(["papers/a/sections/**/*.tex"]));
+    const r = await lintCode(root, ["--fix"]);
+    expect(r.err).not.toMatch(/no paper\.tex of the project gets it/);
+    expect(r.code).toBe(0);
+    expect(lintReport(r.out).length).toBeGreaterThan(0);
+    expect(
+      readFileSync(join(root, "papers/a/sections/intro.tex"), "utf8"),
+    ).toBe(INTRO.replace(".05", "0.05"));
   });
+
+  it.each([[[]], [["--fix"]]])(
+    "a glob that reaches no file of any paper still fails the run (args %j)",
+    async (args) => {
+      const r = await lintCode(
+        project(onlyFor(["papers/a/nothing/**/*.tex"])),
+        args,
+      );
+      expect(r.code).toBe(1);
+      expect(r.err).toMatch(
+        /^paper\/leading-zero is turned on in "rules", but no paper\.tex of the project gets it/m,
+      );
+    },
+  );
 });
 
 describe("a paper whose record is missing, stale or silent about a file", () => {
