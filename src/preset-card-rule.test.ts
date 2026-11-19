@@ -86,6 +86,8 @@ describe("the shipped cards", () => {
     const results = await eslint().lintFiles([join(P, "*.md")]);
     // Guards: a glob that matched nothing lints nothing and reports clean.
     expect(results.map((r) => r.filePath.slice(P.length + 1)).sort()).toEqual([
+      "aaai-2027.md",
+      "aaai-press.md",
       "acm-acmsmall.md",
       "acm-sigconf.md",
       "agent.md",

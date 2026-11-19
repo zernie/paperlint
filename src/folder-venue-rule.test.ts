@@ -158,6 +158,21 @@ describe("paper/folder-venue-leftover — NeurIPS, whose year counts only in the
   });
 });
 
+describe("paper/folder-venue-leftover — AAAI, whose year counts only in the text", () => {
+  it("🔴 «aaai-…» is reported in another venue's paper, with or without a year; not under aaai-2027", () => {
+    for (const folder of ["aaai-2027-planning", "aaai-planning"])
+      expect(
+        lint(folder, AIDC).map(
+          (r) => /names the venue (.*?), and/u.exec(r.message)?.[1],
+        ),
+      ).toEqual(["AAAI"]);
+    expect(
+      lint("aaai-planning", { extends: "paperlint:aaai-2027", kind: "main" }),
+    ).toEqual([]);
+    expect(lint("planning-bounds", AIDC)).toEqual([]);
+  });
+});
+
 describe("paper/folder-venue-leftover — a workshop's parent conference", () => {
   it("🔴 in another venue's paper it is reported once, as itself", () => {
     const named = (folder: string) =>

@@ -232,6 +232,50 @@ describe("shipped presets: paperlint:neurips-2026", () => {
   });
 });
 
+describe("shipped presets: paperlint:aaai-2027", () => {
+  it("paperlint:aaai-2027 → aaai-2027 over aaai-press: the kit's two lines, letter and two columns in newtxtext, 7 + 2 pages, both readings of each deadline", () => {
+    const r = resolve("paperlint:aaai-2027");
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.value.chain.map((f) => f.split("/").pop())).toEqual([
+      "aaai-press.jsonc",
+      "aaai-2027.jsonc",
+    ]);
+    expect(r.value.template?.text).toBe(
+      "\\documentclass[letterpaper]{article}",
+    );
+    expect(r.value.format.columns).toBe(2);
+    expect(r.value.format.pageWidthIn).toBe(8.5);
+    expect(r.value.format.pageHeightIn).toBe(11);
+    expect(r.value.format.bodyPt).toBe(10);
+    expect([r.value.format.refPtMin, r.value.format.refPtMax]).toEqual([9, 10]);
+    // newtxtext's Times, not the URW Times of the AAAI-26 kit (NimbusRomNo9L).
+    expect(r.value.format.fontsText).toBe("TeXGyreTermesX");
+    expect(r.value.format.fontsTitle).toBeNull();
+    expect(r.value.format.bodyEndsAt).toBeNull();
+    expect([...r.value.format.kinds]).toEqual([
+      ["main", { pagesMax: 9, bodyPagesMax: 7, refPagesMax: 2 }],
+    ]);
+    expect(Object.keys(r.value.tex.packages)).toEqual(
+      expect.arrayContaining(["newtx", "kastrup", "tex-gyre", "placeins"]),
+    );
+    expect(r.value.blind).toBe(true);
+    expect(r.value.portal).toBeNull();
+    expect(r.value.requiredSections).toEqual([]);
+    expect(r.value.deadlines.map((d) => [d.what, d.source, d.at])).toEqual([
+      ["registration", "call", "2026-07-22T11:59:00Z"],
+      ["registration", "portal", "2026-07-22T11:59:00Z"],
+      ["submission", "call", "2026-07-29T11:59:00Z"],
+      ["submission", "portal", "2026-07-29T11:59:00Z"],
+      ["camera-ready", "call", "2026-12-15T11:59:59Z"],
+    ]);
+    expect(r.value.label).toBe("AAAI");
+    expect(r.value.aliases).toEqual(["AAAI"]);
+    expect(r.value.mentions).toBe("with-year");
+    expect(r.value.rules).toEqual({});
+  });
+});
+
 describe("shipped presets: a family, and a venue that stands alone", () => {
   it("a paper may extend a family directly: format and fonts, and no kinds", () => {
     const r = resolve("paperlint:acm-sigconf");
@@ -269,6 +313,12 @@ const FAMILIES = PARSED.filter((p) =>
 
 // What each shipped preset declares itself to be; a new preset adds its row here.
 const DECLARED = {
+  "aaai-press.jsonc": { type: "family" },
+  "aaai-2027.jsonc": {
+    type: "venue",
+    name: "AAAI",
+    url: "https://aaai.org/conference/aaai/aaai-27/main-technical-track-call/",
+  },
   "acm-acmsmall.jsonc": { type: "family" },
   "acm-sigconf.jsonc": { type: "family" },
   "agenticdev.jsonc": {
@@ -379,6 +429,7 @@ describe("the naming convention of shipped presets (docs/rules.md)", () => {
 
   it("there are families to check (else the checks below see nothing)", () => {
     expect(families.map((f) => f.name).sort()).toEqual([
+      "aaai-press",
       "acm-acmsmall",
       "acm-sigconf",
       "ieee-conference",
@@ -606,7 +657,7 @@ describe("what does not resolve, and says why", () => {
       "a shipped name with a typo",
       "paperlint:agenticdve",
       "not-found",
-      /acm-acmsmall, acm-sigconf, agent, agenticdev, agentverify, aidc, aisec, ase, ccs, fse, icse, ieee-conference, msr, neurips-2026, neurips-style, nlbse, realm, sp/,
+      /aaai-2027, aaai-press, acm-acmsmall, acm-sigconf, agent, agenticdev, agentverify, aidc, aisec, ase, ccs, fse, icse, ieee-conference, msr, neurips-2026, neurips-style, nlbse, realm, sp/,
     ],
     ["the base TeX set", "paperlint:tex-base", "not-found", /agenticdev/],
     [
@@ -883,6 +934,8 @@ describe("shippedVenueNames — what each shipped venue is called", () => {
     const names = shippedVenueNames(deps());
     // A venue is labelled by its `name`, a family by its file name.
     expect(names.map((n) => n.label)).toEqual([
+      "AAAI",
+      "aaai-press",
       "acm-acmsmall",
       "acm-sigconf",
       "AGENT 2027",
@@ -915,6 +968,8 @@ describe("shippedVenueNames — what each shipped venue is called", () => {
     expect(
       shippedVenueNames({ files, venuesDir: VENUES }).map((n) => n.label),
     ).toEqual([
+      "AAAI",
+      "aaai-press",
       "acm-acmsmall",
       "acm-sigconf",
       "AGENT 2027",

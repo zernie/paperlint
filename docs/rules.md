@@ -158,9 +158,11 @@ family, which holds everything the ACM template decides.
 | `paperlint:msr`             | `paperlint:ieee-conference` | IEEE `IEEEtran` `[10pt,conference]`, no `compsoc` | `technical` (10 + 2 of only references)                  | yes, appendices included — see below     | — (`blind`)                                 |
 | `paperlint:neurips-style`   | —                           | `article` + NeurIPS's `neurips_2026.sty`          | none                                                     | no (no kinds)                            | —                                           |
 | `paperlint:neurips-2026`    | `paperlint:neurips-style`   | `article` + NeurIPS's `neurips_2026.sty`          | `main` (9 content pages), `camera-ready` (10)            | yes, references and the rest not counted | — (`blind`)                                 |
+| `paperlint:aaai-press`      | —                           | `article` + AAAI Press's `aaai2027.sty`           | none                                                     | no (no kinds)                            | —                                           |
+| `paperlint:aaai-2027`       | `paperlint:aaai-press`      | `article` + AAAI Press's `aaai2027.sty`           | `main` (7 + 2 refs, 9 in all)                            | yes                                      | — (`blind`)                                 |
 
-That is all that ships today. There is no ICML, ICLR, AAAI, IJCAI, USENIX or Springer preset. NeurIPS's
-template is a style file loaded into `article`, not a class: its family names the class in
+That is all that ships today. There is no ICML, ICLR, IJCAI, USENIX or Springer preset. NeurIPS's
+template (and AAAI's) is a style file loaded into `article`, not a class: its family names the class in
 `template` and the style in `template_style`, and `tex/template` requires both
 ([`neurips-style.md`](../presets/neurips-style.md)). A paper for an ACM or
 IEEE conference venue nobody has profiled can extend `paperlint:acm-sigconf` or
