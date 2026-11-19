@@ -84,47 +84,51 @@ const STALE =
 /**
  * The first test lints every card in presets/, and that grows with each venue. Measured in CI's
  * coverage job with 19 cards: 2.0 s and 3.5 s (run 44507805064, attempts 1 and 2); 1.4 s here with
- * 17. At that rate it passes vitest's 5 s default at about 27 cards.
+ * 17. At that rate it passes vitest's 5 s default at about 27 cards; 21 cards took 5.0 s under
+ * `npm run test:changed` (2026-11-19), past vitest's default.
  */
 const ALL_CARDS_MS = 30_000;
+
+/** Every card in presets/, by file name: a new preset adds its card here. */
+const SHIPPED_CARDS = [
+  "aaai-2027.md",
+  "aaai-press.md",
+  "acl-latex.md",
+  "acm-acmsmall.md",
+  "acm-sigconf.md",
+  "acsac-2026.md",
+  "agent-2027.md",
+  "agenticdev-2026.md",
+  "agentverify-2027.md",
+  "aidc-2026.md",
+  "aisec-2026.md",
+  "ase-2026.md",
+  "ccs-2026.md",
+  "emnlp-2026.md",
+  "fse-2027.md",
+  "icml-2027.md",
+  "icml-style.md",
+  "icse-2027.md",
+  "icse-2028.md",
+  "ieee-conference.md",
+  "msr-2027.md",
+  "neurips-2026.md",
+  "neurips-style.md",
+  "nlbse-2027.md",
+  "realm-2026.md",
+  "sp-2027.md",
+  "tex-base.md",
+];
 
 describe("the shipped cards", { timeout: ALL_CARDS_MS }, () => {
   it("every shipped card holds the section its preset resolves to", async () => {
     const results = await eslint().lintFiles([join(P, "*.md")]);
     // Guards: a glob that matched nothing lints nothing and reports clean.
-    expect(results.map((r) => r.filePath.slice(P.length + 1)).sort()).toEqual([
-      "aaai-2027.md",
-      "aaai-press.md",
-      "acl-latex.md",
-      "acm-acmsmall.md",
-      "acm-sigconf.md",
-      "acsac-2026.md",
-      "agent-2027.md",
-      "agenticdev-2026.md",
-      "agentverify-2027.md",
-      "aidc-2026.md",
-      "aisec-2026.md",
-      "ase-2026.md",
-      "ccs-2026.md",
-      "emnlp-2026.md",
-      "fse-2027.md",
-      "icml-2027.md",
-      "icml-style.md",
-      "icse-2027.md",
-      "icse-2028.md",
-      "ieee-conference.md",
-      "msr-2027.md",
-      "neurips-2026.md",
-      "neurips-style.md",
-      "nlbse-2027.md",
-      "realm-2026.md",
-      "sp-2027.md",
-      "tex-base.md",
-    ]);
+    expect(results.map((r) => r.filePath.slice(P.length + 1)).sort()).toEqual(
+      SHIPPED_CARDS,
+    );
     expect(results.flatMap((r) => r.messages)).toEqual([]);
-    // Every card resolves its preset's whole chain: 21 cards took 5.0 s under `npm run test:changed`
-    // (2026-11-19), past vitest's default of 5 s.
-  }, 20_000);
+  });
 
   it("agenticdev: its own rules, linked to their page or to the index, and what it extends", async () => {
     const text = readFileSync(join(P, "agenticdev-2026.md"), "utf8");
