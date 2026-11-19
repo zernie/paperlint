@@ -365,9 +365,10 @@ submission:
   — and, for new, its "authors": [{ "name", "email", "affiliation"? }]. Its "fields" answer the
   form's own fields the preset records in "submission_fields" ({ "topics": [...], "pc_conflicts":
   { "<pc email>": "<type>" }, … }); new and update send them, checked first. The token comes only from
-  the environment, one variable per site: HOTCRP_TOKEN_<subdomain> on *.hotcrp.com, else
-  HOTCRP_TOKEN_<host and path> — e.g. HOTCRP_TOKEN_MSR2027 for msr2027.hotcrp.com,
-  HOTCRP_TOKEN_AIDC_SUBMIT_ACSAC_ORG for aidc.submit.acsac.org (HotCRP: Account settings →
+  the environment: HOTCRP_TOKEN_HOTCRP_COM for every *.hotcrp.com site (an "All sites" token),
+  HOTCRP_TOKEN_<subdomain> to override it for one site, e.g. HOTCRP_TOKEN_MSR2027; a self-hosted
+  install only HOTCRP_TOKEN_<host and path>, e.g. HOTCRP_TOKEN_AIDC_SUBMIT_ACSAC_ORG for
+  aidc.submit.acsac.org, never the hotcrp.com one (HotCRP: Account settings →
   Developer). A plain HOTCRP_TOKEN is not read.
   [paper]             the paper's folder; default the current directory
   --pdf <file>        the PDF to compare (show) or send (update) instead of the paper's own
