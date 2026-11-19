@@ -15,9 +15,9 @@
  * the parser the language already uses.
  *
  * ── STATES, NOT NULL ─────────────────────────────────────────────────────────────
- * A class line is missing, empty or a class; a node the parser gave no position is `unplaced`, not
- * offset 0; a run of text is a non-empty list of contiguous segments, and a range outside it has
- * no span (`spanIn` in `src/domain/tex-document.ts`). A tree travels only with its own source
+ * A class line is missing, unseen, empty, unread or a class; a node the parser gave no position is
+ * `unplaced`, not offset 0; a run of text is a non-empty list of contiguous segments, and a range
+ * outside it has no span (`spanIn` in `src/domain/tex-document.ts`). A tree travels only with its own source
  * (`ParsedTex`, minted by `parseLatex` alone).
  */
 import type { LatexReader } from "../../ports/latex.ts";

@@ -1754,6 +1754,58 @@ describe("the register bands are in the writing set, on AIDC too", () => {
   });
 });
 
+describe("tex/template — an author silences a finding they dispute, with the reason", () => {
+  const template = async (tree: Record<string, string>) =>
+    (await lintTree(tree))
+      .filter((m) => m.ruleId === "tex/template")
+      .map((m) => `${String(m.line)} ${m.message}`);
+  const missing = "\\documentclass[conference]{IEEEtran}";
+
+  it("🔴 the finding the directive silences is there without it", async () => {
+    expect(await template(blind("Text.", missing))).toEqual([
+      "1 the class option `compsoc` is missing: BlindConf requires `\\documentclass[conference,compsoc]{IEEEtran}`",
+    ]);
+  });
+
+  it("a disable-next-line comment above the class line, with its reason after `--`, silences it", async () => {
+    const cls = `% eslint-disable-next-line tex/template -- the venue's chair allowed this class by email\n${missing}`;
+    expect(await template(blind("Text.", cls))).toEqual([]);
+  });
+
+  it("a disable comment on the first line silences a finding reported at the top of the file", async () => {
+    const tree = paper(
+      "% eslint-disable tex/template -- the class line is written by the build script\n\\begin{document}\nText.\n\\section*{LLM Usage Statement}\nNone.\n\\end{document}\n",
+      BLIND_PAPER,
+    );
+    expect(await template(tree)).toEqual([]);
+    // The other half: without the comment, the missing class is reported there.
+    const bare = paper(
+      "\\begin{document}\nText.\n\\section*{LLM Usage Statement}\nNone.\n\\end{document}\n",
+      BLIND_PAPER,
+    );
+    expect(await template(bare)).toEqual([
+      "1 paper.tex has no \\documentclass; BlindConf requires `\\documentclass[conference,compsoc]{IEEEtran}`",
+    ]);
+  });
+
+  it("🔴 the same holds for format/layout-override, the other rule that reports in the preamble", async () => {
+    const layout = async (directive: string) =>
+      (
+        await lintTree(
+          blind("Text.", `${IEEE}\n${directive}\\usepackage{geometry}`),
+        )
+      )
+        .filter((m) => m.ruleId === "format/layout-override")
+        .map((m) => m.line);
+    expect(await layout("")).toEqual([2]);
+    expect(
+      await layout(
+        "% eslint-disable-next-line format/layout-override -- the venue's call allows A4 margins\n",
+      ),
+    ).toEqual([]);
+  });
+});
+
 describe("tex/max-paragraph-words is off by default", () => {
   it("a 300-word paragraph produces nothing under the default config, and fires once the paper turns the rule on", async () => {
     const ids = async (tree: Record<string, string>) =>

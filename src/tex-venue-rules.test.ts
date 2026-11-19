@@ -307,6 +307,250 @@ describe("tex/template — several \\documentclass lines behind a TeX switch", (
   });
 });
 
+const MSR = { extends: "paperlint:msr", kind: "technical" };
+
+describe("tex/template — options passed before the class line (`\\PassOptionsToClass`)", () => {
+  it("🔴 an option passed to the class before \\documentclass is in effect: no missing-option finding", () => {
+    expect(
+      lint(
+        paper(
+          "\\PassOptionsToClass{compsoc}{IEEEtran}\n\\documentclass[conference]{IEEEtran}",
+        ),
+        AIDC,
+      ),
+    ).toEqual([]);
+  });
+
+  it("several options in one call, spaces and all, and a class line with no options of its own", () => {
+    expect(
+      lint(
+        paper(
+          "\\PassOptionsToClass{ conference , compsoc }{ IEEEtran }\n\\documentclass{IEEEtran}",
+        ),
+        AIDC,
+      ),
+    ).toEqual([]);
+  });
+
+  it("🔴 a forbidden option passed before the class line is reported where it is passed", () => {
+    const fs = lint(
+      paper(
+        "\\PassOptionsToClass{compsoc}{IEEEtran}\n\\documentclass[10pt,conference]{IEEEtran}",
+        "Text.",
+      ),
+      MSR,
+    );
+    expect(ids(fs)).toEqual(["tex/template:forbiddenOption"]);
+    expect(fs[0]?.message).toBe(
+      "the class option `compsoc` is forbidden: MSR requires `\\documentclass[10pt,conference]{IEEEtran}` without `compsoc`, `compsocconf`",
+    );
+    expect(fs[0]?.line).toBe(2);
+  });
+});
+
+describe("tex/template — `\\PassOptionsToClass` counts only before the line, for its class", () => {
+  it("options passed to another class, or after the class line, are not in effect", () => {
+    expect(
+      ids(
+        lint(
+          paper(
+            "\\PassOptionsToClass{compsoc}{article}\n\\documentclass[conference]{IEEEtran}",
+          ),
+          AIDC,
+        ),
+      ),
+    ).toEqual(["tex/template:missingOption"]);
+    expect(
+      ids(
+        lint(
+          paper(
+            "\\documentclass[conference]{IEEEtran}\n\\PassOptionsToClass{compsoc}{IEEEtran}",
+          ),
+          AIDC,
+        ),
+      ),
+    ).toEqual(["tex/template:missingOption"]);
+  });
+
+  it("behind a TeX switch, an option passed before a candidate counts for it", () => {
+    expect(
+      lint(
+        paper(
+          "\\PassOptionsToClass{compsoc}{IEEEtran}\n\\if\\v1 \\documentclass{article} \\fi\n\\if\\v2 \\documentclass[conference]{IEEEtran} \\fi",
+        ),
+        AIDC,
+      ),
+    ).toEqual([]);
+  });
+});
+
+describe("tex/template — a class line built by a macro is not read, and not reported", () => {
+  it("🔴 options from a macro: no missing-option finding", () => {
+    expect(
+      lint(
+        paper(
+          "\\newcommand{\\opts}{conference,compsoc}\n\\documentclass[\\opts]{IEEEtran}",
+        ),
+        AIDC,
+      ),
+    ).toEqual([]);
+  });
+
+  it("🔴 one option from a macro beside literal ones: no missing-option finding", () => {
+    expect(
+      lint(
+        paper(
+          "\\def\\venuemode{conference}\n\\documentclass[\\venuemode,compsoc]{IEEEtran}",
+        ),
+        AIDC,
+      ),
+    ).toEqual([]);
+  });
+
+  it("a literal forbidden option beside a macro is still reported: it is in effect whatever the macro holds", () => {
+    expect(
+      ids(
+        lint(
+          paper(
+            "\\def\\venuemode{conference}\n\\documentclass[10pt,\\venuemode,compsoc]{IEEEtran}",
+            "Text.",
+          ),
+          MSR,
+        ),
+      ),
+    ).toEqual(["tex/template:forbiddenOption"]);
+  });
+});
+
+describe("tex/template — a class name built by a macro, and a class line out of reach", () => {
+  it("🔴 the class name from a macro: no finding", () => {
+    expect(
+      lint(
+        paper(
+          "\\def\\cls{IEEEtran}\n\\documentclass[conference,compsoc]{\\cls}",
+        ),
+        AIDC,
+      ),
+    ).toEqual([]);
+  });
+
+  it("behind a TeX switch, a candidate built by a macro may be the venue's: no finding", () => {
+    expect(
+      lint(
+        paper(
+          "\\if\\v1 \\documentclass{article} \\fi\n\\if\\v2 \\documentclass[\\opts]{IEEEtran} \\fi",
+        ),
+        AIDC,
+      ),
+    ).toEqual([]);
+  });
+
+  it("the other half: an option that is no macro, beside the venue's class, still fires", () => {
+    expect(
+      ids(lint(paper("\\documentclass[conference,a4paper]{IEEEtran}"), AIDC)),
+    ).toEqual(["tex/template:missingOption"]);
+  });
+
+  it("🔴 a \\documentclass the parser reads as another macro's argument is not called missing", () => {
+    // unified-latex knows `\mode` (beamer's, with an argument), so `\def` takes the class line as
+    // its body: the line is in the tree, not at its top.
+    expect(
+      lint(
+        paper(
+          "\\def\\mode{conference}\n\\documentclass[conference,compsoc]{IEEEtran}",
+        ),
+        AIDC,
+      ),
+    ).toEqual([]);
+  });
+});
+
+describe("tex/template — a \\documentclass TeX never reads", () => {
+  it("in a verbatim block or a filecontents block: not the paper's class", () => {
+    const body =
+      "\\begin{verbatim}\n\\documentclass{article}\n\\end{verbatim}\n\\section*{LLM Usage Statement}\nNone.";
+    expect(
+      lint(paper("\\documentclass[conference,compsoc]{IEEEtran}", body), AIDC),
+    ).toEqual([]);
+    expect(
+      lint(
+        paper(
+          "\\begin{filecontents*}{old.tex}\n\\documentclass{article}\n\\end{filecontents*}\n\\documentclass[conference,compsoc]{IEEEtran}",
+        ),
+        AIDC,
+      ),
+    ).toEqual([]);
+  });
+
+  it("behind \\iffalse … \\fi: not a candidate — the live line alone is judged", () => {
+    expect(
+      lint(
+        paper(
+          "\\iffalse\n\\documentclass{article}\n\\fi\n\\documentclass[conference,compsoc]{IEEEtran}",
+        ),
+        AIDC,
+      ),
+    ).toEqual([]);
+    // The other half: the venue's line behind \iffalse does not rescue a wrong live line.
+    const fs = lint(
+      paper(
+        "\\iffalse\n\\documentclass[conference,compsoc]{IEEEtran}\n\\fi\n\\documentclass[conference]{IEEEtran}",
+      ),
+      AIDC,
+    );
+    expect(ids(fs)).toEqual(["tex/template:missingOption"]);
+    expect(fs[0]?.line).toBe(5);
+  });
+
+  it("a release date after the class name is not part of it", () => {
+    expect(
+      lint(
+        paper("\\documentclass[conference,compsoc]{IEEEtran}[2015/08/26]"),
+        AIDC,
+      ),
+    ).toEqual([]);
+  });
+});
+
+describe("tex/template — the class line kept in a file paper.tex \\inputs", () => {
+  const tex =
+    "\\input{preamble}\n\\begin{document}\nText.\n\\section*{LLM Usage Statement}\nNone.\n\\end{document}\n";
+
+  it("with the build's record, the included class line is judged, both halves", () => {
+    const built = (cls: string) =>
+      builtPaper(PAPER, { "paper.tex": tex, "preamble.tex": `${cls}\n` }, [
+        { path: "paper.tex", role: "body" },
+        { path: "preamble.tex", role: "preamble" },
+      ]);
+    expect(
+      lint(tex, AIDC, {
+        extra: built("\\documentclass[conference,compsoc]{IEEEtran}"),
+      }),
+    ).toEqual([]);
+    // A finding in an included file arrives as a whole message, at the \input, its file in front.
+    const fs = lint(tex, AIDC, {
+      extra: built("\\documentclass[conference]{IEEEtran}"),
+    });
+    expect(fs.map((f) => [f.rule, f.line, f.message])).toEqual([
+      [
+        "tex/template",
+        1,
+        "preamble.tex:1:1: the class option `compsoc` is missing: AIDC requires `\\documentclass[conference,compsoc]{IEEEtran}`",
+      ],
+    ]);
+  });
+
+  it("🔴 with no record yet, a paper.tex that \\inputs its preamble is not said to have no class", () => {
+    expect(lint(tex, AIDC)).toEqual([]);
+  });
+
+  it("an \\input only in the body does not hide a missing class", () => {
+    const bodyOnly =
+      "\\begin{document}\n\\input{intro}\n\\section*{LLM Usage Statement}\nNone.\n\\end{document}\n";
+    expect(ids(lint(bodyOnly, AIDC))).toEqual(["tex/template:noClass"]);
+  });
+});
+
 describe("tex/template — the shipped ACM and ACL templates", () => {
   it("🔴 acmart without sigconf — the manuscript format — fails every ACM preset", () => {
     for (const settings of [
@@ -398,7 +642,54 @@ describe("cycle/port-done — the declared port is finished", () => {
     ).toEqual([]);
     expect(lint(OFFICIAL, AIDC)).toEqual([]);
   });
+});
 
+describe("cycle/port-done — only a class line read whole ends the port", () => {
+  it("🔴 silent on a class line it cannot read: a line built by a macro is not known to be the venue's", () => {
+    const porting = (cls: string) =>
+      lint(paper(cls), { cycles: [PORTING] }).filter(
+        (f) => f.rule === "cycle/port-done",
+      );
+    expect(porting("\\documentclass[\\opts]{IEEEtran}")).toEqual([]);
+    expect(porting("\\documentclass[conference,compsoc]{\\cls}")).toEqual([]);
+    expect(porting("\\input{preamble}")).toEqual([]);
+  });
+
+  it("an option passed with \\PassOptionsToClass completes the venue's line; one candidate of a switch is enough", () => {
+    const done = (cls: string) => ids(lint(paper(cls), { cycles: [PORTING] }));
+    expect(
+      done(
+        "\\PassOptionsToClass{compsoc}{IEEEtran}\n\\documentclass[conference]{IEEEtran}",
+      ),
+    ).toEqual(["cycle/port-done:done"]);
+    expect(
+      done(
+        "\\if\\v1 \\documentclass{article} \\fi\n\\if\\v2 \\documentclass[conference,compsoc]{IEEEtran} \\fi",
+      ),
+    ).toEqual(["cycle/port-done:done"]);
+  });
+
+  it("silent when the venue's template cannot be read", () => {
+    const own = `${PAPER}/own.jsonc`;
+    const extra = {
+      [own]: JSON.stringify({
+        type: "family",
+        template: "\\documentclass[a]{}",
+        tex: { packages: { x: ["x"] } },
+      }),
+    };
+    const cycles = [
+      { ...PORTING, venue: { kind: "preset", extends: "./own.jsonc" } },
+    ];
+    expect(
+      lint(OFFICIAL, { cycles }, { extra }).filter(
+        (f) => f.rule === "cycle/port-done",
+      ),
+    ).toEqual([]);
+  });
+});
+
+describe("cycle/port-done — the source code, and nothing to compare", () => {
   it("judges the text when the source carries no `raw`", () => {
     expect(
       lint(OFFICIAL, { cycles: [PORTING] }, { raw: false }).map(

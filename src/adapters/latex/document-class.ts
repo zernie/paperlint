@@ -1,19 +1,25 @@
 /** The paper's `\documentclass`, a preset's template, and setting a class in a source. */
 import {
   documentClassLine,
+  optionsInEffect,
+  readWhole,
   venueClass,
   type ClassCandidate,
   type ClassLine,
   type DocumentClass,
   type PackageLoad,
+  type PassedOptions,
   type StylePackage,
 } from "../../domain/tex-document.ts";
+import { documentBodyOf, includesOf } from "./includes.ts";
 import {
   collapse,
+  isNode,
   macroPlace,
   mandatory,
   optional,
   textOf,
+  visited,
   type Node,
   type Macro,
 } from "./nodes.ts";
@@ -55,31 +61,110 @@ const optionText = (src: string, part: readonly Node[]): string =>
       .join(""),
   );
 
-/** Every `\documentclass` at the top of the tree, in source order. */
-const classNodes = (t: ParsedTex): readonly Macro[] =>
-  t.root.content.filter(isDocumentClass);
+/** A node at the top of the tree, with its index there: what stands before what. */
+interface AtTop {
+  readonly node: Macro;
+  readonly index: number;
+}
 
-/** A `\documentclass` node as a class line: empty, or the class with its options as read. */
-function classLine(src: string, node: Macro): ClassCandidate {
-  const place = macroPlace(node);
-  const cls = collapse(textOf(mandatory(node)[0]?.content));
-  if (cls === "") return { kind: "empty", place };
-  const options = splitWhere(optional(node)?.content ?? [], isComma)
-    .map((part) => optionText(src, part))
-    .filter(Boolean);
-  return { kind: "class", cls, options, place };
+/** Every `\documentclass` at the top of the tree, in source order. */
+const classNodes = (t: ParsedTex): readonly AtTop[] =>
+  t.root.content.flatMap((node, index) =>
+    isDocumentClass(node) ? [{ node, index }] : [],
+  );
+
+/** Whether nodes hold a macro, inside braces too: what TeX reads there is the macro's expansion. */
+const holdsMacro = (nodes: readonly Node[]): boolean =>
+  nodes.some(
+    (n) => n.type === "macro" || (n.type === "group" && holdsMacro(n.content)),
+  );
+
+/** A list of options (`a, b={c,d}`), each as written, and the ones of them built by a macro. */
+function optionList(
+  src: string,
+  nodes: readonly Node[],
+): Pick<PassedOptions, "options" | "unread"> {
+  const parts = splitWhere(nodes, isComma)
+    .map((part) => ({ text: optionText(src, part), unread: holdsMacro(part) }))
+    .filter((o) => o.text !== "");
+  return {
+    options: parts.map((o) => o.text),
+    unread: parts.filter((o) => o.unread).map((o) => o.text),
+  };
+}
+
+/** One `\PassOptionsToClass{options}{class}`: the class it names, its options, its index at the top. */
+interface Passed extends PassedOptions {
+  readonly cls: string;
+  readonly index: number;
 }
 
 /**
- * The `\documentclass` at the top of the tree: missing; empty (`\documentclass{}`); the class with
- * each of its options as written (`foo={a,b}` stays one option, braces kept), whitespace collapsed,
- * its place spanning the macro and its arguments; or, when there are several (behind a TeX switch),
- * each of them as a candidate.
+ * Every `\PassOptionsToClass` at the top of the tree: the options it gives a class count for a
+ * `\documentclass` of that class after it, as LaTeX reads them. One missing an argument passes
+ * nothing to any class.
+ */
+const passedOf = (t: ParsedTex): readonly Passed[] =>
+  t.root.content.flatMap((n, index) => {
+    if (n.type !== "macro" || n.content !== "PassOptionsToClass") return [];
+    const [opts, cls] = mandatory(n);
+    if (opts === undefined || cls === undefined) return [];
+    const list = optionList(t.src, opts.content);
+    const name = collapse(textOf(cls.content));
+    return [{ ...list, cls: name, place: macroPlace(n), index }];
+  });
+
+/**
+ * A `\documentclass` node as a class line: empty; a class built by a macro, unread; or the class
+ * with its options as read, and the options `passed` to that class before the line.
+ */
+function classLine(
+  src: string,
+  { node, index }: AtTop,
+  passed: readonly Passed[],
+): ClassCandidate {
+  const place = macroPlace(node);
+  const name = mandatory(node)[0]?.content;
+  if (name !== undefined && holdsMacro(name)) return { kind: "unread", place };
+  const cls = collapse(textOf(name));
+  if (cls === "") return { kind: "empty", place };
+  const before = passed
+    .filter((p) => p.cls === cls && p.index < index)
+    .map(({ options, unread, place: where }) => ({
+      options,
+      unread,
+      place: where,
+    }));
+  const own = optionList(src, optional(node)?.content ?? []);
+  return { kind: "class", cls, ...own, passed: before, place };
+}
+
+/** A `\documentclass` anywhere in the tree: in another macro's argument, a definition's body. */
+const classAnywhere = (t: ParsedTex): boolean =>
+  visited(t.root, () => false).some((v) => isNode(v) && isDocumentClass(v));
+
+/** An `\input` or `\include` in the preamble, left as written: a file this reader was not given. */
+function includesInPreamble(t: ParsedTex): boolean {
+  const body = documentBodyOf(t)?.start ?? Number.POSITIVE_INFINITY;
+  return includesOf(t).some((i) => i.span.start < body);
+}
+
+/**
+ * The `\documentclass` at the top of the tree: missing; unseen, when there is none at the top but
+ * one may stand where this reader does not look (`classAnywhere`, `includesInPreamble`); empty
+ * (`\documentclass{}`); unread (`\documentclass{\cls}`); the class with each of its options as
+ * written (`foo={a,b}` stays one option, braces kept), whitespace collapsed, its place spanning the
+ * macro and its arguments; or, when there are several (behind a TeX switch), each of them as a
+ * candidate.
  */
 export function documentClassOf(t: ParsedTex): ClassLine {
-  const lines = classNodes(t).map((n) => classLine(t.src, n));
+  const passed = passedOf(t);
+  const lines = classNodes(t).map((n) => classLine(t.src, n, passed));
   const [first, second, ...rest] = lines;
-  if (first === undefined) return { kind: "missing" };
+  if (first === undefined)
+    return classAnywhere(t) || includesInPreamble(t)
+      ? { kind: "unseen" }
+      : { kind: "missing" };
   return second === undefined
     ? first
     : { kind: "ambiguous", candidates: [first, second, ...rest] };
@@ -178,12 +263,15 @@ export function replaceDocumentClass(
   want: DocumentClass,
 ): string {
   // Several lines behind a switch: which one builds is not known, so none is rewritten.
-  const [node, ...others] = classNodes(t);
-  if (node === undefined || others.length > 0) return t.src;
-  const line = classLine(t.src, node);
+  const [top, ...others] = classNodes(t);
+  if (top === undefined || others.length > 0) return t.src;
+  const { node } = top;
+  const line = classLine(t.src, top, passedOf(t));
   if (line.kind !== "class" || line.place.kind === "unplaced") return t.src;
+  // A line with an option built by a macro: what it lacks is not known, so it is not rewritten.
+  if (!readWhole(line)) return t.src;
   const { start, end } = line.place.span;
-  const change = venueClass(line, want);
+  const change = venueClass(optionsInEffect(line), want);
   switch (change.kind) {
     case "keep":
       return t.src;
