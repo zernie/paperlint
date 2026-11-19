@@ -31,7 +31,7 @@ describe("nameTokens — a name as the words it is made of", () => {
 /**
  * The venues are the SHIPPED presets, read through the one source of venue names
  * (`shippedVenueNames`) — never a list of names written here. A case below depends on what a preset
- * says (`aidc`'s alias ACSAC, `aisec`'s ACM CCS); a preset edit that changes it shows here.
+ * says (`aidc`'s alias ACSAC, `ccs`'s name ACM CCS); a preset edit that changes it shows here.
  */
 const VENUES: readonly NamedVenue[] = shippedVenueNames({
   files: nodeFiles,
@@ -43,11 +43,11 @@ describe("venuesNamedBy — which venues a folder name names", () => {
     ["the label", "aisec-2026", [{ venue: "AISec", name: "AISec" }]],
     ["an alias", "acsac-2026", [{ venue: "AIDC", name: "ACSAC" }]],
     [
-      "a two-word alias, as two tokens in a row",
+      "a two-word name, as two tokens in a row",
       "acm-ccs-agents",
-      [{ venue: "AISec", name: "ACM CCS" }],
+      [{ venue: "ACM CCS", name: "ACM CCS" }],
     ],
-    ["the two words of an alias apart are not it", "acm-agents-ccs", []],
+    ["the two words of a name apart are not it", "acm-agents-ccs", []],
     ["glued to a year", "realm2026", [{ venue: "REALM", name: "REALM" }]],
     [
       "two venues, each once, in the order they are listed",

@@ -792,7 +792,7 @@ describe("tex/venue-leftover — another venue named in the text", () => {
     const fs = leftovers(lint(tex, AIDC));
     expect(fs.map((f) => f.message)).toEqual([
       "«AISec» names AISec, and this paper extends AIDC — a leftover from an earlier submission? A reviewer reads it before the abstract. Comments and citation keys are not reported; a sentence that names the other venue on purpose can keep it with a disable directive",
-      expect.stringContaining("«ACM CCS» names AISec"),
+      expect.stringContaining("«ACM CCS» names ACM CCS"),
     ]);
     const line = tex.split("\n").indexOf(INSTITUTION) + 1;
     expect(fs.map((f) => f.line)).toEqual([line, line]);
@@ -828,6 +828,63 @@ describe("tex/venue-leftover — another venue named in the text", () => {
         `${BODY}${STATEMENT}\\begin{thebibliography}{1}\\bibitem{a} In Proc. AISec.\\end{thebibliography}\n`,
     );
     expect(leftovers(lint(tex, AIDC))).toEqual([]);
+  });
+});
+
+describe("tex/venue-leftover — a workshop's parent conference (`parent`) is the paper's own", () => {
+  const agenticdev = (text: string) =>
+    paper("\\documentclass[sigconf]{acmart}", `${text}\nText.`);
+  const AGENTICDEV = { extends: "paperlint:agenticdev", kind: "full" };
+  const named = (fs: readonly Finding[]) =>
+    leftovers(fs).map((f) => /«(.*?)» names (.*?),/u.exec(f.message)?.slice(1));
+
+  it("an AgenticDev paper may name ASE 2026, the conference it is held at: silent", () => {
+    expect(
+      leftovers(lint(agenticdev("A workshop of ASE 2026."), AGENTICDEV)),
+    ).toEqual([]);
+  });
+
+  it("🔴 an AIDC paper naming ASE 2026 is reported once, as ASE", () => {
+    const tex = aidcPaper(`Formerly at ASE 2026.\n${BODY}${STATEMENT}`);
+    expect(named(lint(tex, AIDC))).toEqual([["ASE", "ASE"]]);
+  });
+
+  it("🔴 an AIDC paper naming ACM CCS 2026 is reported once, as ACM CCS; an AISec paper is silent", () => {
+    const text = "Co-located with ACM CCS 2026.";
+    expect(
+      named(lint(aidcPaper(`${text}\n${BODY}${STATEMENT}`), AIDC)),
+    ).toEqual([["ACM CCS", "ACM CCS"]]);
+    expect(
+      leftovers(
+        lint(agenticdev(text), {
+          extends: "paperlint:aisec",
+          kind: "research",
+        }),
+      ),
+    ).toEqual([]);
+  });
+
+  it("🔴 FSE and ASE do not collide: an AgenticDev paper names ASE as its own and FSE 2027 as another venue; an FSE paper reports ASE", () => {
+    expect(
+      named(lint(agenticdev("At ASE 2026, after FSE 2027."), AGENTICDEV)),
+    ).toEqual([["FSE 2027", "FSE 2027"]]);
+    expect(
+      named(
+        lint(
+          paper(
+            "\\documentclass[acmsmall]{acmart}",
+            "Formerly at ASE 2026, now FSE 2027.\nText.",
+          ),
+          { extends: "paperlint:fse", kind: "research" },
+        ),
+      ),
+    ).toEqual([["ASE", "ASE"]]);
+  });
+
+  it("the parent's names are the paper's own, not the workshop's: AgenticDev still reports AISec", () => {
+    expect(
+      named(lint(agenticdev("ASE 2026, after AISec."), AGENTICDEV)),
+    ).toEqual([["AISec", "AISec"]]);
   });
 });
 
@@ -1037,9 +1094,13 @@ describe("otherVenues", () => {
       "AgenticDev",
       "AGENTVERIFY",
       "AISec",
+      "ASE",
+      "ACM CCS",
       "FSE 2027",
+      "ICSE 2028",
       "MSR",
       "NLBSE",
+      "IEEE S&P",
     ]);
   });
 });

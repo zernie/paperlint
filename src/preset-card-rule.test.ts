@@ -93,11 +93,15 @@ describe("the shipped cards", () => {
       "agentverify.md",
       "aidc.md",
       "aisec.md",
+      "ase.md",
+      "ccs.md",
       "fse.md",
+      "icse.md",
       "ieee-conference.md",
       "msr.md",
       "nlbse.md",
       "realm.md",
+      "sp.md",
       "tex-base.md",
     ]);
     expect(results.flatMap((r) => r.messages)).toEqual([]);

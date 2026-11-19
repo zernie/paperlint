@@ -286,14 +286,15 @@ const literal = (s: string): string =>
 
 /**
  * Each place the rendered text names another venue — one of its aliases as a whole word, case
- * and all — unless that alias is also this paper's venue's own (a shared parent conference).
+ * and all — unless that alias is also this paper's venue's own, or its parent conference's
+ * (`parentNames`: an AgenticDev paper may say «ASE 2026»).
  */
 export function judgeLeftover(
   runs: readonly TextRun[],
   preset: Preset,
   others: readonly OtherVenue[],
 ): readonly Located[] {
-  const own = new Set(preset.aliases);
+  const own = new Set([...preset.aliases, ...preset.parentNames]);
   const names = others.flatMap((o) =>
     o.aliases
       .filter((a) => !own.has(a))

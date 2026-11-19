@@ -9,7 +9,8 @@ left over from an earlier submission: "Submission to VenueA 2026" in the author 
 now going to VenueB.
 
 It only knows the venues paperlint ships a preset for, by each preset's `name` and `aliases`. A
-venue with no preset is not recognized.
+venue with no preset is not recognized. The names of the conference the paper's venue is held at
+(its `parent`) are the paper's own, and never reported.
 
 It reads the whole paper — `paper.tex` with the files it `\input`s, `\include`s or `\subfile`s
 spliced in; a name found in an included file is reported at that include, with the file and line at
@@ -56,6 +57,17 @@ No rule options. It reads every shipped preset's `name` and `aliases`, collected
 
 A name the paper's own chain also declares (two workshops of one parent conference) is never
 reported.
+
+```jsonc
+"parent": "paperlint:ase"
+```
+
+The conference a workshop is held at. Its `name` and `aliases`, and its own parent's, count as the
+paper's own: under `paperlint:agenticdev`, whose parent is `paperlint:ase`, «a workshop of ASE 2026»
+is silent; under `paperlint:aidc`, the same sentence reports «ASE» once, as ASE. A conference's names
+belong to its own preset, not to each workshop's `aliases`, so another venue's paper that names it
+is reported once, as that conference: «ACM CCS 2026» in an AIDC paper names ACM CCS, not AISec. A
+`parent` that does not resolve to a venue preset, or parents that name each other, are refused.
 
 ```jsonc
 "mentions": "with-year"

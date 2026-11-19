@@ -56,8 +56,10 @@ still counts within them.
   `chicago-headline` style). The same producer's instructions: «The title should use headline-style
   capitalization» and «All levels of headings use headline-style capitalization», defined on its
   help page as Chicago Manual of Style §§8.157–8.159.
-- **Names**: `AgenticDev` is what `tex/venue-leftover` looks for in another venue's paper; ASE is
-  left out on purpose — a three-letter acronym too many sentences use for other things.
+- **Names**: `AgenticDev` is what `tex/venue-leftover` looks for in another venue's paper.
+- **The parent conference**, `"parent": "paperlint:ase"`: ASE's names count as an AgenticDev paper's
+  own, so «a workshop of ASE 2026» is no leftover here. In any other venue's paper, «ASE 2026» is
+  reported once, as ASE ([`ase.md`](ase.md)).
 - **The talk** (`talk`): remote presentation by video only, with the numbers below.
 
 ## Naming the venue correctly

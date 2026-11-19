@@ -85,10 +85,10 @@ describe("paper/folder-venue-leftover — the folder names another venue", () =>
 
   it("a venue named by an alias says which alias", () => {
     expect(
-      lint("acm-ccs-agents", AIDC).map(
+      lint("emnlp-agents", AIDC).map(
         (r) => /names the venue (.*?), and/u.exec(r.message)?.[1],
       ),
-    ).toEqual(["AISec («ACM CCS»)"]);
+    ).toEqual(["REALM («EMNLP»)"]);
   });
 
   it("two other venues are two findings", () => {
@@ -140,6 +140,17 @@ describe("paper/folder-venue-leftover — FSE is named by its edition", () => {
   });
 });
 
+describe("paper/folder-venue-leftover — a workshop's parent conference", () => {
+  it("🔴 in another venue's paper it is reported once, as itself", () => {
+    const named = (folder: string) =>
+      lint(folder, AIDC).map(
+        (r) => /names the venue (.*?), and/u.exec(r.message)?.[1],
+      );
+    expect(named("acm-ccs-agents")).toEqual(["ACM CCS"]);
+    expect(named("ase-agents")).toEqual(["ASE"]);
+  });
+});
+
 describe("paper/folder-venue-leftover — silent", () => {
   it.each<[string, string, object | undefined]>([
     [
@@ -148,6 +159,16 @@ describe("paper/folder-venue-leftover — silent", () => {
       { extends: "paperlint:agenticdev", kind: "short" },
     ],
     ["by its alias", "acsac-2026", AIDC],
+    [
+      "the conference the workshop is held at (`parent`)",
+      "ase-agents",
+      { extends: "paperlint:agenticdev", kind: "short" },
+    ],
+    [
+      "the parent conference by its two words",
+      "acm-ccs-agents",
+      { extends: "paperlint:aisec", kind: "research" },
+    ],
     ["the folder names no venue", "agent-rule-drift", AIDC],
     // Whole words only: REALM is not inside these.
     ["a venue's name inside another word", "overrealm-realms", AIDC],

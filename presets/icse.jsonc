@@ -1,0 +1,100 @@
+// ICSE 2028 Research Papers (the Research Track of the International Conference on Software
+// Engineering) — a VENUE preset over the ACM sigconf family. Everything the ACM template decides
+// (page size, columns, fonts, font sizes, TeX packages) comes from acm-sigconf.jsonc; this file
+// adds what ICSE's call for papers sets. Its card, in prose: `icse.md` beside this file.
+//
+// Verbatim from https://conf.researchr.org/track/icse-2028/icse-2028-papers (fetched 2026-11-19,
+// the raw HTML and a summarizing fetch, which agree):
+//   «All submissions must be in PDF format and conform, at time of submission, to the official
+//    "ACM Primary Article Template", which can be obtained from the ACM Proceedings Template page.
+//    LaTeX users should use the sigconf option, as well as the review (to produce line numbers for
+//    easy reference by the reviewers) and anonymous (omitting author names) options. To that end,
+//    the following LaTeX code can be placed at the start of the LaTeX document:» — and the raw
+//    HTML holds nothing after that colon: no class line is shown.
+//   «All submissions must not exceed 10 pages for the main text, inclusive of all figures, tables,
+//    appendices, etc. Two more pages containing only references are permitted. All submissions
+//    must be in PDF. Accepted papers will be allowed one extra page for the main text of the
+//    camera-ready version.»
+//   «The ICSE 2028 Research Track will employ a double-anonymous review process.»
+//   «(Mandatory) Abstract : June 24, 2027», «Submission : July 01, 2027», «Notification : October
+//    21, 2027», «All dates are 23:59:59 AoE (UTC-12h).»
+//   «Submissions will be handled through a dedicated HotCRP platform, which will be available soon.»
+//
+// 🔴 THE TEMPLATE FLIPS BETWEEN EDITIONS: ICSE 2027 asked for IEEEtran («Note that IEEE format is
+// being used this year, whereas last year it was ACM format.»,
+// https://conf.researchr.org/track/icse-2027/icse-2027-research-track, fetched 2026-11-19), and
+// ICSE 2028 asks for the ACM template. Re-read the call every year.
+{
+  "type": "venue",
+  // The call's own spelling, with the year: a bare «ICSE» would flag every paper that names an
+  // ICSE paper in its prose («published at ICSE 2024») and every folder of an ICSE workshop paper
+  // (paper/folder-venue-leftover and `paperlint new` match folder names by words), so the name is
+  // the edition, as AGENT 2027's is. The call never writes «ICSE'28», so there is no alias.
+  "name": "ICSE 2028",
+  // The call quoted above.
+  "url": "https://conf.researchr.org/track/icse-2028/icse-2028-papers",
+  "extends": "paperlint:acm-sigconf",
+
+  // «The ICSE 2028 Research Track will employ a double-anonymous review process. Thus, no
+  // submission may reveal its authors' identities.» (the call above). anonymity/identity then
+  // requires the paper's `identity`. No portal exists yet to confirm `"blind":true`.
+  "blind": true,
+
+  // No `template` here, on purpose: the call names the options sigconf, review and anonymous, but
+  // shows no class line (see above), and tex/template cannot tell a submission from a camera-ready,
+  // which drops `review` and `anonymous`. The family's `\documentclass[sigconf]{acmart}` stands;
+  // the other two options are in the card.
+
+  // No `portal`: «a dedicated HotCRP platform, which will be available soon» (the call above), and
+  // https://icse2028.hotcrp.com/deadlines answered «No such conference - icse2028» (404) on
+  // 2026-11-19. So these are the call's readings, in UTC at the end of the AoE day
+  // («All dates are 23:59:59 AoE (UTC-12h).»):
+  //   «(Mandatory) Abstract : June 24, 2027» → registration 2027-06-25T11:59:59Z
+  //   «Submission : July 01, 2027»           → submission   2027-07-02T11:59:59Z
+  //   «Notification : October 21, 2027»      → notification 2027-10-22T11:59:59Z
+  // The call has two camera-ready days (25 Nov 2027 for papers accepted directly, 26 Jan 2028 for
+  // accepted major revisions) and a revision day (18 Nov 2027), so camera-ready is in the card
+  // only: one reading per kind, and the earlier one would bind a major-revision paper.
+  "deadlines": [
+    {
+      "what": "registration",
+      "at": "2027-06-25T11:59:59Z",
+      "source": "call",
+      "url": "https://conf.researchr.org/track/icse-2028/icse-2028-papers",
+      "read": "2026-11-19",
+    },
+    {
+      "what": "submission",
+      "at": "2027-07-02T11:59:59Z",
+      "source": "call",
+      "url": "https://conf.researchr.org/track/icse-2028/icse-2028-papers",
+      "read": "2026-11-19",
+    },
+    {
+      "what": "notification",
+      "at": "2027-10-22T11:59:59Z",
+      "source": "call",
+      "url": "https://conf.researchr.org/track/icse-2028/icse-2028-papers",
+      "read": "2026-11-19",
+    },
+  ],
+
+  "format": {
+    // 🔴 THE MAIN TEXT INCLUDES THE APPENDICES, AND THE REFERENCE PAGES ARE THE ONES WITH ONLY
+    // REFERENCES: «10 pages for the main text, inclusive of all figures, tables, appendices, etc.
+    // Two more pages containing only references are permitted.» The same words as MSR 2027's call,
+    // so the same counting (msr.jsonc): format/page-limit counts from the text (`appendix_in_body`),
+    // the body every page up to the references plus every page from an appendix that follows them,
+    // the pages between the reference pages. An appendix after the references is found by
+    // hyperref's anchor. MSR's measurement of banal's miscount was on IEEEtran builds; no acmart
+    // build was measured for this preset.
+    "body_ends_at": "references",
+    "appendix_in_body": true,
+
+    // One kind: the Research Track's papers. The camera-ready's extra page, and the revised
+    // paper's («an additional page of text in a revised paper»), are not this limit.
+    "kinds": {
+      "research": { "body_pages_max": 10, "ref_pages_max": 2 },
+    },
+  },
+}

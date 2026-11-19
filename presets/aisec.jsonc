@@ -29,9 +29,15 @@
   "url": "https://aisec.cc/",
   "extends": "paperlint:acm-sigconf",
 
-  // What the venue is called in a paper's text (tex/venue-leftover): the workshop, and the
-  // conference it is held at.
-  "aliases": ["AISec", "ACM CCS"],
+  // What the venue is called in a paper's text (tex/venue-leftover).
+  "aliases": ["AISec"],
+
+  // The conference it is held at: «19th ACM Workshop on Artificial Intelligence and Security
+  // November 15th, 2026 - The Hague, Netherlands co-located with the 33rd ACM Conference on
+  // Computer and Communications Security» (the call above, read with curl 2026-11-19). Its names
+  // count as an AISec paper's own, so «ACM CCS 2026» is no leftover here; in any other venue's
+  // paper it is reported once, as ACM CCS (ccs.jsonc), not as AISec.
+  "parent": "paperlint:ccs",
 
   "format": {
     // Four tracks (original research · position/open-problem · SoK · benchmark) — the limits are

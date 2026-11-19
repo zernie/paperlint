@@ -243,10 +243,25 @@ const DECLARED = {
     name: "AISec",
     url: "https://aisec.cc/",
   },
+  "ase.jsonc": {
+    type: "venue",
+    name: "ASE",
+    url: "https://conf.researchr.org/track/ase-2026/ase-2026-research-track",
+  },
+  "ccs.jsonc": {
+    type: "venue",
+    name: "ACM CCS",
+    url: "https://www.sigsac.org/ccs/CCS2026/call-for/call-for-papers.html",
+  },
   "fse.jsonc": {
     type: "venue",
     name: "FSE 2027",
     url: "https://conf.researchr.org/track/fse-2027/fse-2027-papers",
+  },
+  "icse.jsonc": {
+    type: "venue",
+    name: "ICSE 2028",
+    url: "https://conf.researchr.org/track/icse-2028/icse-2028-papers",
   },
   "ieee-conference.jsonc": { type: "family" },
   "msr.jsonc": {
@@ -263,6 +278,11 @@ const DECLARED = {
     type: "venue",
     name: "REALM",
     url: "https://realm-workshop.github.io/call_for_papers",
+  },
+  "sp.jsonc": {
+    type: "venue",
+    name: "IEEE S&P",
+    url: "https://sp2027.ieee-security.org/cfpapers.html",
   },
   "tex-base.jsonc": { type: "base" },
 };
@@ -523,7 +543,7 @@ describe("what does not resolve, and says why", () => {
       "a shipped name with a typo",
       "paperlint:agenticdve",
       "not-found",
-      /acm-acmsmall, acm-sigconf, agent, agenticdev, agentverify, aidc, aisec, fse, ieee-conference, msr, nlbse, realm/,
+      /acm-acmsmall, acm-sigconf, agent, agenticdev, agentverify, aidc, aisec, ase, ccs, fse, icse, ieee-conference, msr, nlbse, realm, sp/,
     ],
     ["the base TeX set", "paperlint:tex-base", "not-found", /agenticdev/],
     [
@@ -634,6 +654,116 @@ describe("chains that do not resolve: the files themselves", () => {
   });
 });
 
+describe("a workshop's parent conference (`parent`)", () => {
+  it("agenticdev is held at ase and aisec at ccs: the parent's names, not the workshop's aliases", () => {
+    const names = (spec: string) => {
+      const r = resolve(spec);
+      return r.ok ? [r.value.aliases, r.value.parentNames] : r.error;
+    };
+    expect(names("paperlint:agenticdev")).toEqual([["AgenticDev"], ["ASE"]]);
+    expect(names("paperlint:aisec")).toEqual([["AISec"], ["ACM CCS"]]);
+    expect(names("paperlint:ccs")).toEqual([["ACM CCS"], []]);
+  });
+
+  it("a parent's own parent counts too, and a child of the workshop inherits its parent", () => {
+    const r = resolve("./w.jsonc", {
+      "/work/papers/p/w.jsonc": venue({
+        extends: "paperlint:acm-sigconf",
+        parent: "./c.jsonc",
+      }),
+      "/work/papers/p/c.jsonc": venue(
+        { extends: "paperlint:acm-sigconf", parent: "paperlint:ccs" },
+        "Our Conference",
+      ),
+    });
+    expect(r.ok && r.value.parentNames).toEqual(["Our Conference", "ACM CCS"]);
+    const mine = resolve("./mine.jsonc", {
+      "/work/papers/p/mine.jsonc": venue({ extends: "paperlint:agenticdev" }),
+    });
+    expect(mine.ok && mine.value.parentNames).toEqual(["ASE"]);
+  });
+});
+
+/** A parent that cannot be used, the files around it, and the line that refuses it. */
+const BAD_PARENTS: readonly [string, Record<string, string>, string][] = [
+  [
+    "a parent that names no preset",
+    {
+      "/work/papers/p/w.jsonc": venue({
+        extends: "paperlint:acm-sigconf",
+        parent: "paperlint:nope",
+      }),
+    },
+    `the preset /work/papers/p/w.jsonc names a parent conference that does not resolve to a venue: "parent": "paperlint:nope" names no preset (${join(VENUES, "nope.jsonc")}); shipped presets (paperlint:<name>): ${shippedPresets(VENUES).join(", ")}`,
+  ],
+  [
+    "a parent that is a template family",
+    {
+      "/work/papers/p/w.jsonc": venue({
+        extends: "paperlint:acm-sigconf",
+        parent: "paperlint:acm-sigconf",
+      }),
+    },
+    `the preset /work/papers/p/w.jsonc names a parent conference that does not resolve to a venue: "parent": "paperlint:acm-sigconf" is a family, and a workshop's parent is the venue it is held at`,
+  ],
+  [
+    "a parent whose own parent does not resolve: the file that names it",
+    {
+      "/work/papers/p/w.jsonc": venue({
+        extends: "paperlint:acm-sigconf",
+        parent: "./c.jsonc",
+      }),
+      "/work/papers/p/c.jsonc": venue({
+        extends: "paperlint:acm-sigconf",
+        parent: "./gone.jsonc",
+      }),
+    },
+    `the preset /work/papers/p/c.jsonc names a parent conference that does not resolve to a venue: "parent": "./gone.jsonc" names no preset (/work/papers/p/gone.jsonc); shipped presets (paperlint:<name>): ${shippedPresets(VENUES).join(", ")}`,
+  ],
+  [
+    "a parent whose own chain does not resolve",
+    {
+      "/work/papers/p/w.jsonc": venue({
+        extends: "paperlint:acm-sigconf",
+        parent: "./c.jsonc",
+      }),
+      "/work/papers/p/c.jsonc": venue({ extends: "./gone.jsonc" }),
+    },
+    `the preset /work/papers/p/w.jsonc names a parent conference that does not resolve to a venue: "parent": "./c.jsonc" does not resolve: "extends": "./gone.jsonc" names no preset (/work/papers/p/gone.jsonc); shipped presets (paperlint:<name>): ${shippedPresets(VENUES).join(", ")}`,
+  ],
+  [
+    "parents that name each other",
+    {
+      "/work/papers/p/w.jsonc": venue({
+        extends: "paperlint:acm-sigconf",
+        parent: "./c.jsonc",
+      }),
+      "/work/papers/p/c.jsonc": venue({
+        extends: "paperlint:acm-sigconf",
+        parent: "./w.jsonc",
+      }),
+    },
+    `the presets name each other as "parent" in a cycle: /work/papers/p/w.jsonc → /work/papers/p/c.jsonc → /work/papers/p/w.jsonc`,
+  ],
+];
+
+describe("a workshop's parent conference (`parent`): what is refused", () => {
+  it.each(BAD_PARENTS)("🔴 refused: %s", (_, files, text) => {
+    const r = resolve("./w.jsonc", files);
+    expect(r.ok ? "resolved" : presetProblemText(r.error)).toBe(text);
+  });
+
+  it("the schema refuses a parent on a template family", () => {
+    const r = resolve("./fam.jsonc", {
+      "/work/papers/p/fam.jsonc": family({
+        extends: "paperlint:acm-sigconf",
+        parent: "paperlint:ccs",
+      }),
+    });
+    expect(r.ok ? "resolved" : r.error.kind).toBe("broken");
+  });
+});
+
 describe("a preset's template: kept as its file spells it, with that file", () => {
   it("a child's template replaces its parent's, and names its own file", () => {
     const r = resolve("./own.jsonc", {
@@ -697,15 +827,18 @@ describe("shippedVenueNames — what each shipped venue is called", () => {
       "AGENTVERIFY",
       "AIDC",
       "AISec",
+      "ASE",
+      "ACM CCS",
       "FSE 2027",
+      "ICSE 2028",
       "ieee-conference",
       "MSR",
       "NLBSE",
       "REALM",
+      "IEEE S&P",
     ]);
-    expect(names.find((n) => n.label === "AISec")?.aliases).toEqual(
-      expect.arrayContaining(["AISec", "ACM CCS"]),
-    );
+    // AISec's parent conference is its `parent`, not an alias: ACM CCS is named by ccs alone.
+    expect(names.find((n) => n.label === "AISec")?.aliases).toEqual(["AISec"]);
   });
 
   it("a preset that does not resolve is left out", () => {
@@ -724,10 +857,14 @@ describe("shippedVenueNames — what each shipped venue is called", () => {
       "AGENTVERIFY",
       "AIDC",
       "AISec",
+      "ASE",
+      "ACM CCS",
       "FSE 2027",
+      "ICSE 2028",
       "ieee-conference",
       "MSR",
       "NLBSE",
+      "IEEE S&P",
     ]);
   });
 });
