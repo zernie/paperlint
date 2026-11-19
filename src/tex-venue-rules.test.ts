@@ -324,6 +324,31 @@ describe("tex/template — the shipped ACM and ACL templates", () => {
     ).toEqual([]);
   });
 
+  it("🔴 acmart without acmsmall — the manuscript or the sigconf format — fails the single-column family and FSE", () => {
+    const FSE = { extends: "paperlint:fse", kind: "research" };
+    const withStatement = (cls: string) =>
+      paper(cls, "Text.\n\\section{Data Availability}\nNone.");
+    for (const settings of [{ extends: "paperlint:acm-acmsmall" }, FSE])
+      for (const cls of [
+        "\\documentclass{acmart}",
+        "\\documentclass[sigconf,review,anonymous]{acmart}",
+      ])
+        expect(lint(withStatement(cls), settings)).toEqual([
+          {
+            rule: "tex/template",
+            messageId: "missingOption",
+            message: `the class option \`acmsmall\` is missing: ${settings === FSE ? "FSE 2027" : "acm-acmsmall"} requires \`\\documentclass[acmsmall]{acmart}\``,
+            line: 2,
+          },
+        ]);
+    // The call's own line, and acmsmall without the options it only encourages.
+    for (const cls of [
+      "\\documentclass[acmsmall,screen,review,anonymous]{acmart}",
+      "\\documentclass[acmsmall]{acmart}",
+    ])
+      expect(lint(withStatement(cls), FSE)).toEqual([]);
+  });
+
   it("an ACL paper — article at 11pt, acl.sty as a package — passes realm", () => {
     expect(
       lint(paper("\\documentclass[11pt]{article}\n\\usepackage[review]{acl}"), {
@@ -694,6 +719,47 @@ describe("tex/required-section — what fails", () => {
   });
 });
 
+describe("tex/required-section — FSE's «Data Availability»", () => {
+  const FSE = { extends: "paperlint:fse", kind: "research" };
+  const fsePaper = (body: string): string =>
+    paper("\\documentclass[acmsmall,screen,review,anonymous]{acmart}", body);
+  const DATA =
+    "\\section{Data Availability}\nThe package is at an anonymous link.\n";
+
+  it.each<[string, string]>([
+    ["after the Conclusion, as the call asks", BODY + DATA + BIB],
+    [
+      "with an unmarked closing section after it — the place is not checked",
+      BODY + DATA + "\\section*{Acknowledgments}\nx\n" + BIB,
+    ],
+  ])("passes %s", (_, body) => {
+    expect(lint(fsePaper(body), FSE)).toEqual([]);
+  });
+
+  it.each<[string, string]>([
+    ["no such section", BODY + BIB],
+    [
+      "another title for it",
+      BODY + "\\section{Data Availability Statement}\nx\n" + BIB,
+    ],
+  ])("🔴 fails with %s", (_, body) => {
+    expect(required(lint(fsePaper(body), FSE)).map((f) => f.message)).toEqual([
+      "FSE 2027 requires a section titled «Data Availability» and there is none — add `\\section*{Data Availability}` (the title exactly; a bold paragraph does not count)",
+    ]);
+  });
+});
+
+describe("tex/venue-leftover — FSE is named by its edition", () => {
+  it("🔴 «FSE 2027» in another venue's paper warns; FSE papers cited by other years do not", () => {
+    const leftover = (body: string) =>
+      lint(aidcPaper(body + STATEMENT), AIDC)
+        .filter((f) => f.rule === "tex/venue-leftover")
+        .map((f) => f.messageId);
+    expect(leftover("First written for FSE 2027.\n")).toEqual(["leftover"]);
+    expect(leftover("As shown at ESEC/FSE 2023 and FSE 2024.\n")).toEqual([]);
+  });
+});
+
 describe("tex/required-section — the edges", () => {
   it("an unmarked section after the bibliography is back matter, not body", () => {
     // A statement, then the bibliography, then an unmarked section: that section is back matter.
@@ -997,11 +1063,13 @@ describe("otherVenues", () => {
     expect(aidc.ok).toBe(true);
     if (!aidc.ok) return;
     expect(otherVenues(aidc.value, deps).map((o) => o.label)).toEqual([
+      "acm-acmsmall",
       "acm-sigconf",
       "AGENT 2027",
       "AgenticDev",
       "AGENTVERIFY",
       "AISec",
+      "FSE 2027",
       "MSR",
       "NLBSE",
     ]);

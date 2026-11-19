@@ -139,6 +139,46 @@ describe("shipped presets: paperlint:msr", () => {
   });
 });
 
+describe("shipped presets: paperlint:fse", () => {
+  it("paperlint:fse → fse over acm-acmsmall: one column, the family's template, two kinds, both readings of the deadline", () => {
+    const r = resolve("paperlint:fse");
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.value.chain.map((f) => f.split("/").pop())).toEqual([
+      "acm-acmsmall.jsonc",
+      "fse.jsonc",
+    ]);
+    expect(r.value.format.columns).toBe(1);
+    expect(r.value.format.pageWidthIn).toBe(6.75);
+    expect(r.value.format.pageHeightIn).toBe(10);
+    expect(r.value.format.fontsText).toBe("LinLibertine");
+    expect(r.value.format.fontsTitle).toBe("LinBiolinum");
+    expect([...r.value.format.kinds]).toEqual([
+      ["research", { pagesMax: null, bodyPagesMax: 18, refPagesMax: 4 }],
+      ["major-revision", { pagesMax: null, bodyPagesMax: 20, refPagesMax: 4 }],
+    ]);
+    // The call only encourages review, screen and anonymous, so the family's line stands.
+    expect(r.value.template).toEqual({
+      text: "\\documentclass[acmsmall]{acmart}",
+      file: join(VENUES, "acm-acmsmall.jsonc"),
+      forbids: [],
+    });
+    expect("acmart" in r.value.tex.packages).toBe(true);
+    expect(r.value.blind).toBe(true);
+    expect(r.value.portal).toEqual({
+      kind: "hotcrp",
+      url: "https://fse2027.hotcrp.com",
+    });
+    // One submission deadline, read twice: the portal's and the call's extended day, both kept.
+    expect(r.value.deadlines.map((d) => [d.what, d.source])).toEqual([
+      ["submission", "portal"],
+      ["submission", "call"],
+    ]);
+    expect(r.value.label).toBe("FSE 2027");
+    expect(r.value.rules).toEqual({});
+  });
+});
+
 describe("shipped presets: a family, and a venue that stands alone", () => {
   it("a paper may extend a family directly: format and fonts, and no kinds", () => {
     const r = resolve("paperlint:acm-sigconf");
@@ -176,6 +216,7 @@ const FAMILIES = PARSED.filter((p) =>
 
 // What each shipped preset declares itself to be; a new preset adds its row here.
 const DECLARED = {
+  "acm-acmsmall.jsonc": { type: "family" },
   "acm-sigconf.jsonc": { type: "family" },
   "agenticdev.jsonc": {
     type: "venue",
@@ -201,6 +242,11 @@ const DECLARED = {
     type: "venue",
     name: "AISec",
     url: "https://aisec.cc/",
+  },
+  "fse.jsonc": {
+    type: "venue",
+    name: "FSE 2027",
+    url: "https://conf.researchr.org/track/fse-2027/fse-2027-papers",
   },
   "ieee-conference.jsonc": { type: "family" },
   "msr.jsonc": {
@@ -254,6 +300,7 @@ describe("the naming convention of shipped presets (docs/rules.md)", () => {
 
   it("there are families to check (else the checks below see nothing)", () => {
     expect(families.map((f) => f.name).sort()).toEqual([
+      "acm-acmsmall",
       "acm-sigconf",
       "ieee-conference",
     ]);
@@ -476,7 +523,7 @@ describe("what does not resolve, and says why", () => {
       "a shipped name with a typo",
       "paperlint:agenticdve",
       "not-found",
-      /acm-sigconf, agent, agenticdev, agentverify, aidc, aisec, ieee-conference, msr, nlbse, realm/,
+      /acm-acmsmall, acm-sigconf, agent, agenticdev, agentverify, aidc, aisec, fse, ieee-conference, msr, nlbse, realm/,
     ],
     ["the base TeX set", "paperlint:tex-base", "not-found", /agenticdev/],
     [
@@ -643,12 +690,14 @@ describe("shippedVenueNames — what each shipped venue is called", () => {
     const names = shippedVenueNames(deps());
     // A venue is labelled by its `name`, a family by its file name.
     expect(names.map((n) => n.label)).toEqual([
+      "acm-acmsmall",
       "acm-sigconf",
       "AGENT 2027",
       "AgenticDev",
       "AGENTVERIFY",
       "AIDC",
       "AISec",
+      "FSE 2027",
       "ieee-conference",
       "MSR",
       "NLBSE",
@@ -668,12 +717,14 @@ describe("shippedVenueNames — what each shipped venue is called", () => {
     expect(
       shippedVenueNames({ files, venuesDir: VENUES }).map((n) => n.label),
     ).toEqual([
+      "acm-acmsmall",
       "acm-sigconf",
       "AGENT 2027",
       "AgenticDev",
       "AGENTVERIFY",
       "AIDC",
       "AISec",
+      "FSE 2027",
       "ieee-conference",
       "MSR",
       "NLBSE",

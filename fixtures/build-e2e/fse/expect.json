@@ -1,0 +1,15 @@
+{
+  "$comment": "A paper in FSE 2027's class line, \\documentclass[acmsmall,screen,review,anonymous]{acmart}, that meets every number of paperlint:fse over the acm-acmsmall family: one column on a 6.75 x 10 in page, Linux Libertine and Biolinum at 10 pt, 6 body pages and 1 of references, the Data Availability section. Its twin fse-over is the same paper with a body over 18 pages.",
+  "build": {
+    "outcome": "pdf",
+    "pages": 7
+  },
+  "fonts": {
+    "all": "^(LinLibertine|LinBiolinum)",
+    "none": "^(CMR|CMBX|CMTI|CMTT|CMSS|LMRoman|SFRM)",
+    "matchLog": true
+  },
+  "lint": {
+    "findings": []
+  }
+}

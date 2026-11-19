@@ -1,0 +1,16 @@
+{
+  "$comment": "The fse fixture with a body of 21 pages: format/page-limit reports it against FSE 2027's 18, and nothing else does — the class, the page, the fonts and the Data Availability section are the fse fixture's.",
+  "build": {
+    "outcome": "pdf",
+    "pages": 22
+  },
+  "lint": {
+    "findings": [
+      {
+        "rule": "format/page-limit",
+        "severity": 2,
+        "says": ["body pages: 21, over the limit 18 for FSE 2027/research"]
+      }
+    ]
+  }
+}

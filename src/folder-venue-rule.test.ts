@@ -129,6 +129,17 @@ describe("paper/folder-venue-leftover — the folder names another venue", () =>
   });
 });
 
+describe("paper/folder-venue-leftover — FSE is named by its edition", () => {
+  it("«fse-2027-…» is reported; a folder about FSE papers is not", () => {
+    expect(
+      lint("fse-2027-flaky", AIDC).map(
+        (r) => /names the venue (.*?), and/u.exec(r.message)?.[1],
+      ),
+    ).toEqual(["FSE 2027"]);
+    expect(lint("fse-replication", AIDC)).toEqual([]);
+  });
+});
+
 describe("paper/folder-venue-leftover — silent", () => {
   it.each<[string, string, object | undefined]>([
     [

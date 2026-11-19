@@ -1,0 +1,42 @@
+% A paper in the class line FSE 2027's call gives, built by the e2e on paperlint's own TeX Live,
+% that MEETS the Research Papers limit: body pages within 18, references within 4, the Data
+% Availability section after the conclusion. It is what the acm-acmsmall family was measured on,
+% made checkable: one column on a 6.75 x 10 in page, Linux Libertine and Biolinum at 10 pt.
+%
+% The prose is one paragraph set many times; each copy carries its own number in words on every
+% line, so no line repeats from page to page as a running header would.
+\documentclass[acmsmall,screen,review,anonymous]{acmart}
+\newcount\paracount
+\newcommand{\n}{\romannumeral\paracount}
+\newcommand{\para}{\global\advance\paracount by 1
+Paragraph \n{} studies the history of a repository, and \n{} counts its commits by author \n{}
+and by month \n{}, so that the measurement \n{} has a body of prose \n{} set in the one column
+\n{} of the single-column format. Paragraph \n{} says nothing new, and \n{} does not need to: the
+fixture \n{} is about the class, \n{} the fonts and \n{} the page count, and \n{} not about its
+content. A reviewer of \n{} would find it dull, \n{} which is what a measurement \n{} should be.\par}
+\newcount\loopcount
+\newcommand{\paras}[1]{\loopcount=0 \loop\para\advance\loopcount by 1 \ifnum\loopcount<#1\repeat}
+\newcount\bibcount
+\newcommand{\entries}[1]{\bibcount=0 \loop\advance\bibcount by 1
+\bibitem{r\the\bibcount} A. Author. 2024. Mining study \romannumeral\bibcount. In \emph{Proc.
+Workshop}. 1--10.\ifnum\bibcount<#1\repeat}
+\begin{document}
+\title{A Fixture Typeset in the Class the Venue Requires}
+\author{Anonymous Author}
+\affiliation{\institution{Anonymous Institution}\city{City}\country{Country}}
+\begin{abstract}
+The abstract exists so the build has the front matter an ACM paper carries.
+\end{abstract}
+\maketitle
+\section{Introduction}
+\paras{20}
+\section{Part Two}
+\paras{20}
+\section{Conclusion}
+\paras{10}
+\section{Data Availability}
+The replication package is at an anonymous link.
+\begin{thebibliography}{99}
+\entries{40}
+\end{thebibliography}
+\end{document}
