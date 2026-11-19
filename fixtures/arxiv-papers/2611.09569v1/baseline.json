@@ -7,7 +7,6 @@
     "tex/claim-provenance": 5,
     "paper/allowed-files-only": 2,
     "pdf/measured": 1,
-    "tex/acm-frontmatter-override": 1,
-    "tex/template": 1
+    "tex/acm-frontmatter-override": 1
   }
 }
