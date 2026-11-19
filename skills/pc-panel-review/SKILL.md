@@ -4,7 +4,7 @@ description: Use when asking "what would the program committee decide?" / "simul
 allowed-tools: [Read, Write, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:3fb0bd4b021ed100 compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:8b83b62d377a03a9 compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
 
 # pc-panel-review — model the whole PC, not one reviewer
 
@@ -28,11 +28,11 @@ prose-only read can.
    `<papers-root>/venues/<venue>/summary.md` when it exists and hand it to every reviewer seat and to
    the chair; each rigour finding states the paper's position against its denominators. Without it,
    the report opens with "main-conference bar assumed" and the accept probability carries that flag.
-2. **Collect the two readability/structure artifacts.** Before any reviewer spawns, there must exist
-   for THIS draft: (a) the **structural verdict** from `tighten-paper` (length / sag / TMI / cut
-   plan), and (b) the **whole-paper cold-read report** from `cold-read-diff --whole`. In the final
-   review they are its first two steps; a panel outside it invokes both by name with the Skill tool
-   first. Venue-fit mode needs neither.
+2. **Collect the two readability/structure artifacts.** Before any reviewer spawns, there must exist: (a) the **structural verdict** from `tighten-paper` (length / sag / TMI / cut
+   plan), and (b) the **whole-paper cold-read report** from `cold-read-diff --whole`. They are the
+   final review's first two steps. A confirming panel, or a seat run after close, reuses the closed
+   review's two reports as they stand and never reruns `tighten-paper` or the cold read. Venue-fit
+   mode needs neither.
 
    Why these inputs: a frontier-LLM reviewer knows every term and cannot feel reader
    fatigue, so a panel scoring on its own felt read will score a bloated, unreadable paper high
