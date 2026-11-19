@@ -107,6 +107,8 @@ export const KEY_SIGNATURES: Readonly<
   ...signed(["nobibliography"], "m"),
   ...signed(["includegraphics"], "s o o m"),
   ...signed(["usepackage", "RequirePackage", "documentclass"], "o m o"),
+  // Options for a class, given before its `\documentclass`: `tex/template` reads them as the line's.
+  ...signed(["PassOptionsToClass"], "m m"),
 ]);
 
 /**

@@ -52,6 +52,9 @@ Passing:
 - a cycle still porting whose `paper.tex` still has the old venue's class line — the port is open
   work, as declared;
 - a preset that names no `template`: there is nothing to compare, as for `tex/template`;
+- a class line the rule cannot read whole — its class or an option built by a macro, or a class kept
+  in a preamble file with no build yet: `tex/template` is silent on it, and it is not known to be
+  the venue's either;
 - a paper whose `paperlint.json` has no `cycles`.
 
 ## Options / preset fields

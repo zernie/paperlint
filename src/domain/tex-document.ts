@@ -24,18 +24,56 @@ export interface DocumentClass {
   readonly options: readonly string[];
 }
 
-/** One `\documentclass` line: one that names no class, or a class with its options. */
-export type ClassCandidate =
-  | { readonly kind: "empty"; readonly place: Place }
-  | ({ readonly kind: "class"; readonly place: Place } & DocumentClass);
+/**
+ * Options given to a class before its line, by `\PassOptionsToClass{options}{class}`: in effect as
+ * if the line carried them. Each option as written; `unread` holds the ones built by a macro.
+ */
+export interface PassedOptions {
+  readonly options: readonly string[];
+  readonly unread: readonly string[];
+  readonly place: Place;
+}
 
 /**
- * A paper's `\documentclass`: none, exactly one, or several — a source that picks its class behind
- * a TeX switch (`\if\venue1 \documentclass{article} \fi …`). Which branch builds is not
- * evaluated, so several lines are candidates, in source order, and none of them is THE class.
+ * One `\documentclass` line: one that names no class; one whose class is built by a macro
+ * (`\documentclass{\cls}`), which no macro is expanded to read; or a class with each option as
+ * written. Of those options, `unread` holds the ones built by a macro (`[\opts]`): what they carry
+ * is not known. `passed` are the options `\PassOptionsToClass` gave this class before the line.
+ */
+export type ClassCandidate =
+  | { readonly kind: "empty"; readonly place: Place }
+  | { readonly kind: "unread"; readonly place: Place }
+  | ({
+      readonly kind: "class";
+      readonly place: Place;
+      readonly unread: readonly string[];
+      readonly passed: readonly PassedOptions[];
+    } & DocumentClass);
+
+/** Every option a class line puts in effect: its own, then the ones passed to its class before it. */
+export const optionsInEffect = (
+  line: Extract<ClassCandidate, { readonly kind: "class" }>,
+): DocumentClass => ({
+  cls: line.cls,
+  options: [...line.options, ...line.passed.flatMap((p) => p.options)],
+});
+
+/** Whether every option a class line puts in effect was read: none is built by a macro. */
+export const readWhole = (
+  line: Extract<ClassCandidate, { readonly kind: "class" }>,
+): boolean =>
+  line.unread.length === 0 && line.passed.every((p) => p.unread.length === 0);
+
+/**
+ * A paper's `\documentclass`: none; none the reader can see, though one may stand where it does not
+ * look (`unseen`: inside another macro's argument, or in a file the preamble `\input`s that was not
+ * read); exactly one; or several — a source that picks its class behind a TeX switch
+ * (`\if\venue1 \documentclass{article} \fi …`). Which branch builds is not evaluated, so several
+ * lines are candidates, in source order, and none of them is THE class.
  */
 export type ClassLine =
   | { readonly kind: "missing" }
+  | { readonly kind: "unseen" }
   | ClassCandidate
   | {
       readonly kind: "ambiguous";

@@ -41,6 +41,8 @@ describe("documentClassOf — the class line's three states", () => {
       kind: "class",
       cls: "IEEEtran",
       options: ["conference", "compsoc"],
+      unread: [],
+      passed: [],
       place: {
         kind: "at",
         span: { start: 4, end: src.indexOf("}") + 1 },
@@ -74,6 +76,81 @@ describe("documentClassOf — the class line's three states", () => {
   it("a group in the class name and a paragraph break are read as text", () => {
     const line = documentClassOf(parseLatex("\\documentclass{{IEEE}\n\ntran}"));
     expect(line.kind === "class" && line.cls).toBe("IEEE tran");
+  });
+});
+
+describe("documentClassOf — options passed before the line, and what a macro builds", () => {
+  it("🔴 `\\PassOptionsToClass` before the line, for its class: each option as written, with its place", () => {
+    const src =
+      "\\PassOptionsToClass{compsoc}{IEEEtran}\n\\PassOptionsToClass{x}{article}\n\\documentclass[conference]{IEEEtran}\n\\PassOptionsToClass{late}{IEEEtran}";
+    expect(documentClassOf(parseLatex(src))).toEqual({
+      kind: "class",
+      cls: "IEEEtran",
+      options: ["conference"],
+      unread: [],
+      passed: [
+        {
+          options: ["compsoc"],
+          unread: [],
+          place: { kind: "at", span: { start: 0, end: 38 } },
+        },
+      ],
+      place: {
+        kind: "at",
+        span: {
+          start: src.indexOf("\\documentclass"),
+          end: src.indexOf("}\n\\PassOptionsToClass{late}") + 1,
+        },
+      },
+    });
+  });
+
+  it("an option built by a macro is unread, in the line and in a passed list; braces do not hide one", () => {
+    const src =
+      "\\PassOptionsToClass{\\more}{IEEEtran}\\documentclass[\\opts, a, b={\\c}]{IEEEtran}";
+    const line = documentClassOf(parseLatex(src));
+    expect(
+      line.kind === "class" && [
+        line.options,
+        line.unread,
+        line.passed.map((p) => p.unread),
+      ],
+    ).toEqual([
+      ["\\opts", "a", "b={\\c}"],
+      ["\\opts", "b={\\c}"],
+      [["\\more"]],
+    ]);
+  });
+});
+
+describe("documentClassOf — a line with a part missing, a class from a macro, a class out of reach", () => {
+  it("a \\PassOptionsToClass missing an argument passes nothing; a \\documentclass with no name is empty", () => {
+    const line = (src: string) => documentClassOf(parseLatex(src));
+    // At the end of the file: before a line, the parser would take the line as its argument.
+    for (const pass of ["\\PassOptionsToClass", "\\PassOptionsToClass{a}"]) {
+      const l = line(`\\documentclass{IEEEtran}\n${pass}`);
+      expect(l.kind === "class" && l.passed).toEqual([]);
+    }
+    expect(line("\\documentclass[a]").kind).toBe("empty");
+  });
+
+  it("🔴 a class name built by a macro is unread, not empty", () => {
+    expect(documentClassOf(parseLatex("\\documentclass[a]{\\cls}")).kind).toBe(
+      "unread",
+    );
+  });
+
+  it("🔴 unseen: no class line at the top, and one inside another macro, or an \\input in the preamble", () => {
+    const kind = (src: string) => documentClassOf(parseLatex(src)).kind;
+    expect(kind("{\\documentclass{article}}")).toBe("unseen");
+    expect(kind("\\input{preamble}\n\\begin{document}\\end{document}")).toBe(
+      "unseen",
+    );
+    expect(kind("\\input{preamble}")).toBe("unseen");
+    // The other half: an \input in the body does not stand where a class line goes.
+    expect(kind("\\begin{document}\\input{intro}\\end{document}")).toBe(
+      "missing",
+    );
   });
 });
 
@@ -187,6 +264,22 @@ describe("replaceDocumentClass — the class `paperlint new` writes", () => {
   it("no class, or an empty one, is returned as it is", () => {
     expect(replaced("just text")).toBe("just text");
     expect(replaced("\\documentclass{}\nx")).toBe("\\documentclass{}\nx");
+  });
+
+  it("🔴 an option passed with \\PassOptionsToClass is not added again; only the one still missing is", () => {
+    expect(
+      replaced(
+        "\\PassOptionsToClass{compsoc}{IEEEtran}\n\\documentclass{IEEEtran}",
+      ),
+    ).toBe(
+      "\\PassOptionsToClass{compsoc}{IEEEtran}\n\\documentclass[conference]{IEEEtran}",
+    );
+  });
+
+  it("🔴 a line built by a macro is returned as it is: what it lacks is not known", () => {
+    const opts = "\\documentclass[\\opts]{IEEEtran}";
+    expect(replaced(opts)).toBe(opts);
+    expect(replaced("\\documentclass{\\cls}")).toBe("\\documentclass{\\cls}");
   });
 
   it("the port does the same over a source", () => {

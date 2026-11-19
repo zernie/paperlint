@@ -20,6 +20,19 @@ candidate names every one:
 \if\venue2 \documentclass[conference,compsoc]{IEEEtran} \fi   % passes: the second candidate matches
 ```
 
+An option given to the class before its line with `\PassOptionsToClass` is in effect, as LaTeX
+reads it, and counts as the line's: it satisfies a required option, and a forbidden one is reported
+where it is passed. One passed after the `\documentclass`, or to another class, does nothing in
+LaTeX and counts for nothing here:
+
+```latex
+\PassOptionsToClass{compsoc}{IEEEtran}
+\documentclass[conference]{IEEEtran}   % passes under AIDC: compsoc is passed above
+```
+
+With a build's record, a class line kept in a file `paper.tex` `\input`s is read where the
+`\input` stands, and a finding in it is reported at that `\input`, naming the file and line.
+
 It only knows the class a preset names. A paper whose `paperlint.json` names no preset, or a
 preset with no `template`, gets no finding.
 
@@ -84,11 +97,29 @@ Class options the venue's call forbids, each reported where the class line carri
 - An option a venue forbids that its preset does not list in `template_forbids` (`review` in a
   camera-ready).
 - The version of the class file (#94).
-- A `\documentclass` inside a comment: the rule reads the parse tree, so it does not count.
+- A `\documentclass` inside a comment, a `verbatim` or `filecontents` block, or behind `\iffalse …
+\fi`: TeX does not read it, and the rule does not count it.
 - Which branch of a TeX switch builds: with several class lines, one matching candidate is enough.
+- A line it cannot read, which stays silent rather than guess. No macro is expanded, so the rule
+  does not know what a macro holds:
+  - an option built by a macro (`\documentclass[\opts]{IEEEtran}`, or `\PassOptionsToClass{\opts}{…}`):
+    no option is said to be missing; a forbidden option written out beside it is still reported,
+    since it is in effect whatever the macro holds;
+  - a class name built by a macro (`\documentclass{\cls}`): no finding; behind a TeX switch, such a
+    candidate may be the venue's, so the switch gets no finding either;
+  - no `\documentclass` at the top of `paper.tex`, but one inside another macro's argument, or an
+    `\input` before `\begin{document}` whose file the rule has not read (no build yet, so no record
+    of the files TeX read): no finding — the class may be there. After `paperlint build`, the
+    included file is read and judged.
+
+  [`cycle/port-done`](../cycle/port-done.md) does not take such a line for the venue's either.
 
 ## How to fix
 
 Set the `\documentclass` line to the one the message quotes, keeping your own extra options
 and dropping a forbidden one. A new
 paper made with `paperlint new <name> --venue <preset>` already has it.
+
+If a finding is wrong for your paper, put a comment with the reason on the line above the one it
+points at — `% eslint-disable-next-line tex/template -- <why>` — or, for a finding at the top of the
+file, `% eslint-disable tex/template -- <why>` on the first line.

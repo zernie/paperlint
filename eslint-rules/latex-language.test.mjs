@@ -5,7 +5,11 @@
  */
 import assert from "node:assert/strict";
 import { test } from "vitest";
-import { texLanguage, texToMdast } from "./latex-language.ts";
+import {
+  preambleDirectives,
+  texLanguage,
+  texToMdast,
+} from "./latex-language.ts";
 
 /** The projection plus each node's type, lang/title and start–end offsets. */
 const project = (src) => {
@@ -215,4 +219,63 @@ test("🔴 a heading written over several lines keeps every newline, so the proj
     [...src].flatMap((c, i) => (c === "\n" ? [i] : [])),
   );
   assert.equal(text.split("\n")[3], "Text.");
+});
+
+test("🔴 a disable directive in the preamble is one the source code gives ESLint; other preamble comments are not", () => {
+  const body = [
+    "% a note, not a directive",
+    "\\usepackage{x} % eslint-disable-line format/layout-override -- allowed",
+    "% eslint-disable-next-line tex/template -- the chair allowed it",
+    "\\documentclass{article}",
+    "\\begin{document}",
+    "% eslint-disable-next-line tex/heading-case -- the body's own",
+    "\\section{a}",
+    "\\end{document}",
+  ].join("\n");
+  const parsed = texLanguage.parse({ body });
+  const code = texLanguage.createSourceCode({ body }, parsed);
+  assert.deepEqual(
+    code
+      .getDisableDirectives()
+      .directives.map((d) => [d.type, d.value, d.node.position.start.line]),
+    [
+      ["disable-line", "format/layout-override", 2],
+      ["disable-next-line", "tex/template", 3],
+      ["disable-next-line", "tex/heading-case", 6],
+    ],
+  );
+  // Each spans its `%` to the end of its line, in source order among the projection's nodes.
+  assert.deepEqual(
+    parsed.ast.children
+      .filter((c) => c.type === "html")
+      .map((c) => [
+        c.position.start.line,
+        c.position.start.column,
+        c.position.end.column,
+      ]),
+    [
+      [2, 16, 71],
+      [3, 1, 64],
+      [6, 1, 62],
+    ],
+  );
+});
+
+test("a source with no document environment is all body: its directive is read once, not twice", () => {
+  const body =
+    "% eslint-disable-next-line tex/template -- x\n\\documentclass{a}\n";
+  const parsed = texLanguage.parse({ body });
+  const code = texLanguage.createSourceCode({ body }, parsed);
+  assert.deepEqual(
+    code.getDisableDirectives().directives.map((d) => d.value),
+    ["tex/template"],
+  );
+});
+
+test("preambleDirectives: a comment the parser gave no position is skipped", () => {
+  const tree = {
+    content: [{ type: "comment", content: " eslint-disable tex/template" }],
+  };
+  const src = "\\begin{document}\\end{document}";
+  assert.deepEqual(preambleDirectives(tree, src), []);
 });

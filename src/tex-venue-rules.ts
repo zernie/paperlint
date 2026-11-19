@@ -33,6 +33,8 @@ import {
   collapse,
   documentClassLine,
   missingOptions,
+  optionsInEffect,
+  readWhole,
   runText,
   spanIn,
   type ClassCandidate,
@@ -46,7 +48,12 @@ import {
   type TextRun,
 } from "./domain/tex-document.ts";
 import type { LatexReader } from "./ports/latex.ts";
-import { paperPreset, shippedVenueNames, type Preset } from "./presets.ts";
+import {
+  paperPreset,
+  shippedVenueNames,
+  type Preset,
+  type PresetTemplate,
+} from "./presets.ts";
 import type { NamedVenue } from "./domain/venue-name.ts";
 import type { PaperSource } from "./domain/paper-source.ts";
 import { readPaper, reportInPaper, type ProseDeps } from "./tex-paper.ts";
@@ -117,7 +124,10 @@ interface Wanted {
 
 /**
  * A class line that names a class, against the template's: the same class, with every option, and
- * none of the options the preset forbids.
+ * none of the options the preset forbids. An option `\PassOptionsToClass` gave the class before the
+ * line counts as the line's, and a forbidden one is reported where it is passed. When an option is
+ * built by a macro, what it carries is not known: no option is said to be missing, and a forbidden
+ * option written out is still reported — it is in effect whatever the macro holds.
  */
 function judgeClass(
   line: Extract<ClassLine, { readonly kind: "class" }>,
@@ -127,15 +137,22 @@ function judgeClass(
   const at = spanOf(line.place);
   if (line.cls !== want.cls.cls)
     return [{ messageId: "wrongClass", data: { ...data, got: line.cls }, at }];
-  const forbidden = want.forbids.filter((o) => line.options.includes(o));
   const without = want.forbids.map((o) => `\`${o}\``).join(", ");
+  const forbidden = (options: readonly string[], where: Span | null) =>
+    want.forbids
+      .filter((o) => options.includes(o))
+      .map((option) => ({
+        messageId: "forbiddenOption",
+        data: { ...data, option, without },
+        at: where,
+      }));
+  const missing = readWhole(line)
+    ? missingOptions(optionsInEffect(line), want.cls)
+    : [];
   return [
-    ...forbidden.map((option) => ({
-      messageId: "forbiddenOption",
-      data: { ...data, option, without },
-      at,
-    })),
-    ...missingOptions(line, want.cls).map((option) => ({
+    ...line.passed.flatMap((p) => forbidden(p.options, spanOf(p.place))),
+    ...forbidden(line.options, at),
+    ...missing.map((option) => ({
       messageId: "missingOption",
       data: { ...data, option },
       at,
@@ -143,23 +160,33 @@ function judgeClass(
   ];
 }
 
-/** A candidate as the message names it: its line, or an empty `\documentclass{}`. */
+/**
+ * A candidate as the message names it: its line, or an empty `\documentclass{}` — the one other
+ * kind a message names, since an unread candidate may match and silences the switch.
+ */
 const candidateLine = (c: ClassCandidate): string =>
   c.kind === "class" ? documentClassLine(c) : "\\documentclass{}";
 
+/** Whether a candidate may be the template's line: a class line with no finding, or an unread one. */
+const mayMatch = (
+  c: ClassCandidate,
+  want: Wanted,
+  data: TemplateData,
+): boolean =>
+  c.kind === "unread" ||
+  (c.kind === "class" && judgeClass(c, want, data).length === 0);
+
 /**
  * Several class lines behind a TeX switch: satisfied when any candidate is the template's class
- * with its options; otherwise one finding, at the first candidate, naming every one.
+ * with its options, or may be (one built by a macro); otherwise one finding, at the first
+ * candidate, naming every one.
  */
 function judgeCandidates(
   candidates: readonly [ClassCandidate, ...ClassCandidate[]],
   want: Wanted,
   data: TemplateData,
 ): readonly Located[] {
-  const matches = candidates.some(
-    (c) => c.kind === "class" && judgeClass(c, want, data).length === 0,
-  );
-  if (matches) return [];
+  if (candidates.some((c) => mayMatch(c, want, data))) return [];
   const named = candidates.map((c) => `\`${candidateLine(c)}\``).join(", ");
   const found = { ...data, count: candidates.length, candidates: named };
   return [
@@ -176,6 +203,10 @@ function judgeClassLine(
   switch (line.kind) {
     case "missing":
       return [{ messageId: "noClass", data, at: null }];
+    // A class this reader cannot see or read is not judged: it may be the venue's.
+    case "unseen":
+    case "unread":
+      return [];
     case "empty":
       return [{ messageId: "emptyClass", data, at: spanOf(line.place) }];
     case "class":
@@ -204,6 +235,30 @@ export function judgeTemplate(
   }
   const data = { venue: preset.label, template: documentClassLine(want) };
   return judgeClassLine(line, { cls: want, forbids: t.forbids }, data);
+}
+
+/**
+ * Whether the paper's class line is known to be the template's: read whole — no class or option
+ * built by a macro, no class unseen — and judged without a finding; behind a switch, one candidate
+ * so. Silence from `judgeTemplate` is not enough: it is also silent on a line it cannot read.
+ */
+export function isTemplate(
+  line: ClassLine,
+  t: PresetTemplate,
+  venue: string,
+  latex: Pick<LatexReader, "template">,
+): boolean {
+  const want = latex.template(t.text);
+  if (want === null) return false;
+  const wanted = { cls: want, forbids: t.forbids };
+  const data = { venue, template: documentClassLine(want) };
+  const proved = (c: ClassLine): boolean =>
+    c.kind === "class" &&
+    readWhole(c) &&
+    judgeClass(c, wanted, data).length === 0;
+  return line.kind === "ambiguous"
+    ? line.candidates.some(proved)
+    : proved(line);
 }
 
 /** Where a heading starts, or null when the parser gave it no place. */
@@ -563,25 +618,14 @@ export function judgePortDone(
   r: Pick<Reading, "src" | "latex" | "preset">,
   cycleId: string,
 ): readonly Located[] {
-  if (r.preset.template === null) return [];
-  const mismatch = judgeTemplate(
-    r.latex.documentClass(r.src),
-    r.preset,
-    r.latex,
-  );
-  return mismatch.length > 0
-    ? []
-    : [
-        {
-          messageId: "done",
-          data: {
-            venue: r.preset.label,
-            template: r.preset.template.text,
-            id: cycleId,
-          },
-          at: null,
-        },
-      ];
+  const t = r.preset.template;
+  if (t === null) return [];
+  const line = r.latex.documentClass(r.src);
+  // Only a class line read whole and found to be the venue's ends the port: one built by a macro
+  // gets no finding from tex/template, and is not the venue's for that.
+  if (!isTemplate(line, t, r.preset.label, r.latex)) return [];
+  const data = { venue: r.preset.label, template: t.text, id: cycleId };
+  return [{ messageId: "done", data, at: null }];
 }
 
 const PORT_DONE_META: TexRuleModule["meta"] = {
