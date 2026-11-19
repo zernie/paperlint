@@ -1,5 +1,5 @@
 /**
- * What the build records for the accepted papers of `fixtures/accepted-papers/`, written beside each
+ * What the build records for the accepted papers of `fixtures/real-papers/accepted/`, written beside each
  * one as `tex-truth.json` — TeX's own answer to "which files make up this paper", so the tests that
  * read a paper whole (the register measures, the baselines of every rule) are fed what TeX read and
  * not a list written by hand (docs/design/paper-sources.md §1, §8).
@@ -17,7 +17,7 @@
  * packages (subfig, svg, cleveref, listings … eleven in all) are in no preset — and a test requires
  * each of them to still fail, so the exclusion cannot outlive the reason for it. Such a paper carries
  * `record-by-hand.json` instead of `tex-truth.json`: the files its `\input`s name, in order — not
- * TeX's answer, and named so (fixtures/accepted-papers/README.md).
+ * TeX's answer, and named so (fixtures/real-papers/accepted/README.md).
  *
  *   npm run test:e2e:tex
  */
@@ -50,13 +50,25 @@ import { cacheRoot, cachedTree } from "../../../dist/toolchain.js";
 import { missing } from "../need.ts";
 
 const ROOT = dirname(dirname(dirname(dirname(fileURLToPath(import.meta.url)))));
-const CORPUS = join(ROOT, "fixtures", "accepted-papers");
+const CORPUS = join(ROOT, "fixtures", "real-papers", "accepted");
 const TRUTH = "tex-truth.json";
 /** Papers that do not compile in paperlint's TeX tree (see the header). */
 const NOT_BUILT: readonly string[] = ["llm-splained-acsac25"];
+/** The six older accepted papers: the other papers of the folder carry a record by hand, not TeX's. */
+const SIX: readonly string[] = [
+  "agenticdev-acm26",
+  "barovox-acsac24",
+  "leaking-queries-acsac25",
+  "llm-splained-acsac25",
+  "rr-dataset-quality-acsac24",
+  "secure-acsac24",
+];
 const PAPERS = readdirSync(CORPUS, { withFileTypes: true })
   .filter(
-    (d) => d.isDirectory() && existsSync(join(CORPUS, d.name, "paper.tex")),
+    (d) =>
+      d.isDirectory() &&
+      SIX.includes(d.name) &&
+      existsSync(join(CORPUS, d.name, "paper.tex")),
   )
   .map((d) => d.name)
   .filter((name) => !NOT_BUILT.includes(name));
@@ -122,7 +134,7 @@ function recordOf(paper: string): string {
 }
 
 describe.skipIf(missing("pdflatex and bibtex", hasTex))(
-  "what the build records for the accepted papers of fixtures/accepted-papers",
+  "what the build records for the accepted papers of fixtures/real-papers/accepted",
   () => {
     it.each(PAPERS)("%s: tex-truth.json is TeX's own answer", async (paper) => {
       await expect(recordOf(paper)).toMatchFileSnapshot(

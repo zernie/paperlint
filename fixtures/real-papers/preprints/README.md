@@ -1,13 +1,13 @@
-# `arxiv-papers` — 108 real preprints, every rule, in the real-papers test
+# `preprints` — 108 real preprints, every rule, in the real-papers test
 
-Run, with the six papers of [`../accepted-papers/`](../accepted-papers/README.md), by
+Run, with the accepted papers of [`../accepted/`](../accepted/README.md), by
 `fixtures/real-papers.test.ts`: ONE `paperlint lint --json` over a temporary project holding every
 paper under `papers/<name>/`, then each paper's findings per rule are compared with its
 `baseline.json` — more than recorded fails, a recorded rule going fully quiet fails (reader and
-comparison: `../accepted-papers/baseline.ts`, one owner). It is the vitest project `real-papers`,
+comparison: `../baseline.ts`, one owner). It is the vitest project `real-papers`,
 outside `unit` (so the macOS shards and the coverage run do not repeat it), run as a step of the CI
 job `e2e-node` (`npx vitest run --project real-papers`; no npm script, no job of its own; local
-`npm run check` has a gate for it). Not in the TeX record e2e: its corpus is `accepted-papers` alone.
+`npm run check` has a gate for it). Not in the TeX record e2e: its corpus is the six older papers of `accepted/` alone.
 The run lints with the default rules plus the eight opt-in rules it ran by default before they
 moved into the writing set (`RECORDED_OPT_IN` in `baseline.ts`); the rest of the set is not run
 here.
@@ -17,7 +17,7 @@ here.
 These are drafts, under no venue's checklist: they are where paperlint should FIND real errors. The
 findings are counts and none is classified as true or false, so recall is not yet a number. The
 opposite measure — a finding on a paper a venue published is presumed false — is
-[`../venue-papers/`](../venue-papers/README.md), the accepted camera-ready papers, each linted
+[`../accepted/`](../accepted/README.md), the accepted papers, the camera-ready ones each linted
 against the venue that accepted it.
 
 ## What each paper extends
@@ -39,7 +39,7 @@ Other comments name an acceptance at a venue with no shipped edition (SIGCSE 202
 its workshops, BlackboxNLP 2026, …): those papers take the family of their class, or none. One names
 an edition that ships but is not in its class: 2611.09734v1, «Accepted to EMNLP 2026 Findings», is
 `\documentclass[letterpaper,twocolumn,10pt]{article}`, not ACL's template, so it stays `{}`, as
-`venue-papers/` leaves out a paper re-typeset outside the venue's class.
+`accepted/` leaves out a paper re-typeset outside the venue's class.
 
 `{}` is measured: the paper is linted, every prose rule runs, `pdf/measured` says no venue preset is
 named, and the rules that need a venue — `tex/template`, `format/layout-override`,
@@ -90,7 +90,7 @@ arXiv default licence. Over 300 KB, left out so that all 141 (28.5 MB) are not c
 2611.07194, 2611.07286, 2611.07461, 2611.07476, 2611.07486, 2611.07634, 2611.07650, 2611.07772, 2611.07887, 2611.08229, 2611.08343, 2611.08456, 2611.08704, 2611.09178, 2611.09212, 2611.09375, 2611.09400, 2611.09411, 2611.09412, 2611.09414, 2611.09446, 2611.09501, 2611.09598, 2611.09600, 2611.09621, 2611.09682, 2611.09700, 2611.09703, 2611.09707, 2611.09712, 2611.09769, 2611.09805, 2611.09822.
 
 Provenance — versioned id, licence URL, sha256 of the arXiv source, main file, class, category, size —
-is [`../arxiv-manifest.json`](../arxiv-manifest.json); `node --experimental-strip-types
+is [`../../arxiv-manifest.json`](../../arxiv-manifest.json); `node --experimental-strip-types
 fixtures/arxiv-fetch.ts` re-downloads exactly those versions and checks the hashes (a maintenance helper,
 not run by any test, not an npm script). The folder is not in the npm package (`package.json` `files`).
 
@@ -98,7 +98,7 @@ not run by any test, not an npm script). The folder is not in the npm package (`
 
 - **The record is not TeX's answer.** `record-by-hand.json` lists `paper.tex`, the class and style files
   at the root, then the `\input`/`\include` files in the order the source names them. Nothing was
-  compiled. The accepted papers carry `tex-truth.json`, written by a real build; these do not, so what is
+  compiled. The six older accepted papers carry `tex-truth.json`, written by a real build; these do not, so what is
   measured here is measured on a belief about TeX, as for `llm-splained-acsac25`. An `\input` that is
   conditional or computed is not followed.
 - **The label is the paper's class, not a venue that accepted it** (below, «What each paper extends»).
@@ -108,7 +108,7 @@ not run by any test, not an npm script). The folder is not in the npm package (`
 - **Baselines store counts, not verdicts.** Nobody has classified a finding of these papers as real or
   false. A count that grows fails; why a count is what it is is not written down.
 - **Preprints are not accepted papers**: unpolished, under no venue's checklist. That is why they are not
-  in `accepted-papers/`, whose README states what its papers are.
+  in `accepted/`, whose README states what its papers are.
 - **Figures are omitted**, so the figure rules see no figure files.
 - **A sample of 114 is still a sample**, of five categories of one week; and it grows slower than it
   rots: an arXiv source is the author's, with whatever the author left in it.

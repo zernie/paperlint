@@ -46,7 +46,7 @@ export default defineConfig({
           exclude: [...EXCLUDE, "fixtures/real-papers.test.ts"],
         },
       },
-      // Every real paper of the corpus in one run of the CLI, with its baseline (fixtures/arxiv-papers/README.md).
+      // Every real paper of the corpus in one run of the CLI, with its baseline (fixtures/real-papers/preprints/README.md).
       {
         extends: true,
         test: {

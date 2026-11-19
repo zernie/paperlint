@@ -67,7 +67,7 @@ TeX Live's scheme-basic, the base set, this family's list, or a dependency of on
 | the 1990s «NIPS Macros» saved as `neurips_2026.sty`            | cm-super: `pdf/fonts`                                       |
 | `\newgeometry{textwidth=6.5in,textheight=9.5in,top=0.75in}`    | `format/layout-override`; the PDF: same page, fonts, sizes  |
 
-The «NIPS Macros» case is real: one preprint in `fixtures/arxiv-papers` ships that file under the
+The «NIPS Macros» case is real: one preprint in `fixtures/real-papers/preprints` ships that file under the
 name `neurips_2026.sty`. Of the 16 NeurIPS-style preprints there, 7 carry the kit's file byte for
 byte and 6 an earlier one with the same version line (2026-01-29) and no `education` option.
 

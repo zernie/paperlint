@@ -52,7 +52,7 @@ spliced from its recorded build (2026-11-19):
 | `llm-splained-acsac25` (ACSAC 2025)       |       454 |      81 | 17.8% |
 | `agenticdev-acm26` (ours, ACM)            |       171 |      63 | 36.8% |
 
-Over the 106 arXiv preprints of `fixtures/arxiv-papers/` with more than 2 000 words of body, the
+Over the 106 arXiv preprints of `fixtures/real-papers/preprints/` with more than 2 000 words of body, the
 share runs from 2.6% to 38.7%, median 13.3%, and 26 of them stand above AIDC's band. The measure
 separates a paper that argues by negation from the venue's accepted ones; whether a given paper
 should change is the author's call.

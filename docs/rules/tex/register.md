@@ -35,7 +35,7 @@ to a post's register, not one a little above the median. Mean sentence length di
 two groups. The share of sentences under eight words did not either, once measured on the parse
 tree: 3.3–7.3% on the two accepted papers in this repository's corpus, 5.1–7.0% on three of ours.
 
-On the corpus (`fixtures/accepted-papers/`) the rule measures:
+On the corpus (`fixtures/real-papers/accepted/`) the rule measures:
 
 | paper                               | per 1000 words |
 | ----------------------------------- | -------------: |

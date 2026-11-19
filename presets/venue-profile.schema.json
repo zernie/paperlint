@@ -347,7 +347,7 @@
             ],
             "properties": {
               "paper": {
-                "description": "The anchor: a directory under fixtures/accepted-papers/ when the paper is there, or how to find it.",
+                "description": "The anchor: a directory under fixtures/real-papers/accepted/ when the paper is there, or how to find it.",
                 "type": "string",
                 "minLength": 1
               },

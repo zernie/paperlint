@@ -79,7 +79,7 @@
 
   // THE REGISTER OF THE BODY IS JUDGED AGAINST ACSAC, AIDC'S PARENT CONFERENCE: AIDC 2026 is the
   // workshop's first edition, so it has no accepted papers yet, and it uses ACSAC's template. The
-  // anchors are the five accepted ACSAC papers in fixtures/accepted-papers/, measured by paperlint's
+  // anchors are the five accepted ACSAC papers in fixtures/real-papers/accepted/, measured by paperlint's
   // own counters on their LaTeX source (tex/contrast-frames, tex/claim-emphasis, tex/relation-markers).
   // src/register-bands.test.ts re-measures every anchor that has a fixture and requires these exact
   // numbers, so a change to a counter changes this list in the same commit. The bands they set, per
