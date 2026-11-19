@@ -13,7 +13,7 @@ paper, the sections it requires. The template is [IEEEtran on CTAN](https://ctan
 ## What the family encodes
 
 - **The class**: `\documentclass[conference]{IEEEtran}`. A venue that requires `compsoc` names it
-  in its own template and its own text block (as `aidc` does).
+  in its own template and its own text block (as `aidc-2026` does).
 - **The page**: US letter, 8.5 × 11 in; the text block of `[conference]`, 7.14 × 9.30 in; two
   columns.
 - **The fonts**: Times (the URW clone the PDF names NimbusRomNo9L) for text, headings and title;

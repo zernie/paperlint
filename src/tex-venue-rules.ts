@@ -345,6 +345,34 @@ export function namesAnotherEdition(
   return n.inLine || (year !== null && recent);
 }
 
+/** A name to look for, with the pattern that finds it as a whole word. */
+type NameMatcher = NameToJudge & { readonly re: RegExp };
+
+/**
+ * The findings of one name in one run: each whole-word match judged with the year beside it and
+ * whether it stands in a venue-stating command (`inLine`). Pure.
+ */
+function matchesIn(
+  run: TextRun,
+  n: NameMatcher,
+  paper: {
+    readonly inLine: (at: Span | null) => boolean;
+    readonly year: number | null;
+    readonly venue: string;
+  },
+): readonly Located[] {
+  const { inLine, venue } = paper;
+  const text = runText(run);
+  return [...text.matchAll(n.re)].flatMap((m) => {
+    const at = spanIn(run, m.index, m.index + m[0].length);
+    const year = yearAfter(text, m.index + m[0].length);
+    const judged = { own: n.own, inLine: inLine(at) };
+    if (!namesAnotherEdition(judged, year, paper.year)) return [];
+    const other = editionLabel(n.shows, year);
+    return [{ messageId: "leftover", data: { name: m[0], other, venue }, at }];
+  });
+}
+
 /**
  * Each place the rendered text names another venue than the paper's edition — a name as a whole
  * word, case and all, judged with the year beside it (`namesAnotherEdition`). `lines` are the spans
@@ -359,32 +387,20 @@ export function judgeLeftover(
   const venue = editionLabel(preset.label, preset.year);
   const inLine = (at: Span | null): boolean =>
     at !== null && lines.some((l) => l.start <= at.start && at.start < l.end);
-  const names = namesToJudge(preset, others).map((n) => ({
-    ...n,
-    re: new RegExp(
-      `(?<![\\p{L}\\p{N}])${literal(n.name)}(?![\\p{L}\\p{N}])`,
-      "gu",
+  const names: readonly NameMatcher[] = namesToJudge(preset, others).map(
+    (n) => ({
+      ...n,
+      re: new RegExp(
+        `(?<![\\p{L}\\p{N}])${literal(n.name)}(?![\\p{L}\\p{N}])`,
+        "gu",
+      ),
+    }),
+  );
+  return runs.flatMap((run) =>
+    names.flatMap((n) =>
+      matchesIn(run, n, { inLine, year: preset.year, venue }),
     ),
-  }));
-  return runs.flatMap((run) => {
-    const text = runText(run);
-    return names.flatMap((n) =>
-      [...text.matchAll(n.re)].flatMap((m) => {
-        const at = spanIn(run, m.index, m.index + m[0].length);
-        const year = yearAfter(text, m.index + m[0].length);
-        const judged = { own: n.own, inLine: inLine(at) };
-        return namesAnotherEdition(judged, year, preset.year)
-          ? [
-              {
-                messageId: "leftover",
-                data: { name: m[0], other: editionLabel(n.shows, year), venue },
-                at,
-              },
-            ]
-          : [];
-      }),
-    );
-  });
+  );
 }
 
 /** Where a rule's page lives: `docs/rules/tex/<name>.md` on the default branch. */

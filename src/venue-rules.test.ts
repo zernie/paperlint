@@ -271,13 +271,13 @@ describe("pdf/profile — the declaration must resolve, or nothing is judged", (
       "an unknown venue (a typo would silently disable every check)",
       { extends: "paperlint:agentic-dev", kind: "short" },
       "preset",
-      /agent, agenticdev, agentverify, aidc, aisec, ase, ccs, fse, icse, ieee-conference, msr, nlbse, realm, sp/,
+      /acsac-2026, agent-2027, agenticdev-2026, agentverify-2027, aidc-2026, aisec-2026, ase-2026, ccs-2026, emnlp-2026, fse-2027, icse-2027, icse-2028, ieee-conference, msr-2027, nlbse-2027, realm-2026, sp-2027/,
     ],
     [
       "the base TeX set is not a venue",
       { extends: "paperlint:tex-base" },
       "preset",
-      /agent, agenticdev, agentverify, aidc, aisec, ase, ccs, fse, icse, ieee-conference, msr, nlbse, realm, sp/,
+      /acsac-2026, agent-2027, agenticdev-2026, agentverify-2027, aidc-2026, aisec-2026, ase-2026, ccs-2026, emnlp-2026, fse-2027, icse-2027, icse-2028, ieee-conference, msr-2027, nlbse-2027, realm-2026, sp-2027/,
     ],
     [
       "paperlint.json that is not JSON",
@@ -541,7 +541,10 @@ describe("format/page-limit", () => {
       "format/page-limit:pages",
     ]);
     expect(
-      lint({ venue: { extends: "paperlint:agenticdev-2026", kind: "full" }, facts }),
+      lint({
+        venue: { extends: "paperlint:agenticdev-2026", kind: "full" },
+        facts,
+      }),
     ).toEqual([]);
   });
 });
@@ -563,7 +566,7 @@ describe("format/page-limit on a venue whose limit includes the references (AGEN
     expect(fs.map((f) => [f.messageId, f.message])).toEqual([
       [
         "pages",
-        "pages, references included: 9, over the limit 8 for AGENT 2027/full — a desk reject; cut the text",
+        "pages, references included: 9, over the limit 8 for AGENT/full — a desk reject; cut the text",
       ],
     ]);
   });

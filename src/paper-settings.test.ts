@@ -86,7 +86,8 @@ describe("parsePaperSettings — optional keys", () => {
 
   it("accepts $comment, JSON Schema's comment keyword, and ignores it", () => {
     expect(
-      parsePaperSettings({ extends: "paperlint:aisec-2026", $comment: "why" }).ok,
+      parsePaperSettings({ extends: "paperlint:aisec-2026", $comment: "why" })
+        .ok,
     ).toBe(true);
   });
 
@@ -221,7 +222,9 @@ describe("readPaperSettings — the root paperlint.json's defaults, the paper's 
 
   it("paper only: its own values", () => {
     expect(
-      read({ [`${PAPER}/paperlint.json`]: '{"extends":"paperlint:aisec-2026"}' }),
+      read({
+        [`${PAPER}/paperlint.json`]: '{"extends":"paperlint:aisec-2026"}',
+      }),
     ).toEqual({
       extends: "paperlint:aisec-2026",
       kind: null,

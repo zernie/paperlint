@@ -70,6 +70,12 @@ counts every page of the PDF: references that spill onto a page after a full bod
   role of natural language, dataset version, methods, findings, reproducibility link).
 - **The template's class line** and **whether a non-archival route exists**: not stated.
 
+## Its parent conference
+
+- **The parent conference**, `"workshop": true` and `"parent": "paperlint:icse-2027"`
+  ([`icse-2027.md`](icse-2027.md)): ICSE's names count as this paper's own in the 2027 edition, so
+  «an ICSE 2027 workshop» is no leftover here; «ICSE 2028» in its text is.
+
 ## What the preset resolves to
 
 <!-- paperlint:preset-rules -->

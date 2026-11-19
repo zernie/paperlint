@@ -180,7 +180,10 @@ try {
     "build.sh": "exit 0\n",
   });
   const facts = readFacts(venued);
-  check("the venue comes from paperlint.json", facts.venue === "agenticdev-2026");
+  check(
+    "the venue comes from paperlint.json",
+    facts.venue === "agenticdev-2026",
+  );
   check(
     "a leftover build.sh is a FACT (reported), not a step",
     JSON.stringify(facts.ignoredScripts) === JSON.stringify(["build.sh"]) &&

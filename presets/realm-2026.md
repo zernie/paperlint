@@ -53,7 +53,14 @@ counter that knows where the body ends; the two kinds exist so a paper can name 
   11 pt, references between 9 and 11 pt — measured on a build, not copied from ACL's text.
 - **TeX packages** `acl.sty` needs: lineno, and the Times, Helvetica, Courier, Symbol and Zapf
   Dingbats fonts (without them: "Font ptmr8t not loadable" and no PDF).
-- **Names**: `REALM` and `EMNLP`, what `tex/venue-leftover` looks for in another venue's paper.
+- **Names**: `REALM`, what `tex/venue-leftover` looks for in another venue's paper.
+- **The parent conference**, `"workshop": true` and `"parent": "paperlint:emnlp-2026"`
+  ([`emnlp-2026.md`](emnlp-2026.md)): EMNLP's names count as a REALM paper's own in 2026; in any
+  other venue's paper «EMNLP 2026» is reported once, as EMNLP. «EMNLP» was one of REALM's aliases
+  before the parent existed.
+- **The template**, through `extends: paperlint:acl-latex` ([`acl-latex.md`](acl-latex.md)): the
+  class line and the TeX packages are the family's; the page, the sizes and the fonts above stay
+  here, measured on one build.
 
 ## 🔴 The submission form has no supplementary field
 

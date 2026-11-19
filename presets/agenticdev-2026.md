@@ -57,7 +57,7 @@ still counts within them.
   capitalization» and «All levels of headings use headline-style capitalization», defined on its
   help page as Chicago Manual of Style §§8.157–8.159.
 - **Names**: `AgenticDev` is what `tex/venue-leftover` looks for in another venue's paper.
-- **The parent conference**, `"parent": "paperlint:ase-2026"`: ASE's names count as an AgenticDev paper's
+- **The parent conference**, `"workshop": true` and `"parent": "paperlint:ase-2026"`: ASE's names count as an AgenticDev paper's
   own, so «a workshop of ASE 2026» is no leftover here. In any other venue's paper, «ASE 2026» is
   reported once, as ASE ([`ase-2026.md`](ase-2026.md)).
 - **The talk** (`talk`): remote presentation by video only, with the numbers below.

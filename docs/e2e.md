@@ -86,7 +86,10 @@ lines of the build output say, its fonts, its last page's text, files in its dir
 the build measured, and — for `paperlint lint` after the build — the exit code and **exactly** the
 findings for each rule it names (`[]` is "none"). One `describe` per fixture directory turns each
 declared field into a test. A folder without `expect.json`, or with one the schema rejects, fails.
-A new venue fixture is a new folder: its paper, its `paperlint.json`, its `expect.json`.
+A new venue fixture is a new folder: its paper, its `paperlint.json`, its `expect.json`. A fixture
+on an edition whose deadlines have passed turns `paper/edition-over` off in its `paperlint.json`:
+the e2e judges the build, not the calendar, and that rule has its own cases with a fixed clock
+(`src/edition-rule.test.ts`).
 
 | fixture              | what it is there to prove                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |

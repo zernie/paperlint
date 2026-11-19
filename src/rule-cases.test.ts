@@ -1158,6 +1158,28 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       ...onBlindConf("papers/blindconf-2026"),
     },
   },
+  // A paper on AIDC 2026, whose every deadline passed in 2026: the edition is over, and stays over.
+  "paper/edition-over": {
+    reports: {
+      tree: {
+        "papers/drift/PIPELINE-STATUS.md": STATUS,
+        "papers/drift/paper.tex": tex("x"),
+        "papers/drift/paperlint.json": JSON.stringify({
+          extends: "paperlint:aidc-2026",
+          kind: "regular",
+        }),
+      },
+      file: "papers/drift/PIPELINE-STATUS.md",
+      severity: 1,
+      line: 1,
+    },
+    // A venue of one's own whose preset records no deadline: nothing says when it ends.
+    silent: {
+      "papers/drift/PIPELINE-STATUS.md": STATUS,
+      "papers/drift/paper.tex": tex("x"),
+      ...onBlindConf("papers/drift"),
+    },
+  },
   // A plan beside the paper: the root holds only paperlint's own files and folders.
   "paper/allowed-files-only": {
     reports: {
@@ -1311,10 +1333,10 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       }),
     }),
   },
-  // EMNLP, a shipped venue's name (REALM's conference), in a BlindConf paper's text.
+  // EMNLP 2026, a shipped venue (REALM's conference), named with its year in a BlindConf paper's text.
   "tex/venue-leftover": {
     reports: {
-      tree: blind("First written for EMNLP."),
+      tree: blind("First written for EMNLP 2026."),
       file: TEX_FILE,
       severity: 1,
       line: 4,

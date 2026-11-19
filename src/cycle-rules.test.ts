@@ -135,7 +135,9 @@ describe("cycle/record", () => {
   });
 
   it("the flat form, no settings file, or a file that is not JSON: silent — not this rule's to say", () => {
-    expect(lint({ extends: "paperlint:aidc-2026", kind: "regular" })).toEqual([]);
+    expect(lint({ extends: "paperlint:aidc-2026", kind: "regular" })).toEqual(
+      [],
+    );
     expect(lint(undefined)).toEqual([]);
     expect(lint("{ not json")).toEqual([]);
   });

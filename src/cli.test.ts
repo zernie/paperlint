@@ -645,7 +645,9 @@ test("build --dry-run on a paper with a venue plans for the preset's packages", 
     "package.json": "{}",
     "papers/v/paper.tex":
       "\\documentclass{acmart}\\begin{document}x\\end{document}\n",
-    "papers/v/paperlint.json": JSON.stringify({ extends: "paperlint:aisec-2026" }),
+    "papers/v/paperlint.json": JSON.stringify({
+      extends: "paperlint:aisec-2026",
+    }),
   });
   const r = await withoutTex(dir, () =>
     cli(["build", "papers/v", "--dry-run"], dir),

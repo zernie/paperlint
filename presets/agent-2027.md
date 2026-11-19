@@ -49,9 +49,13 @@ body that fills the pages and references that spill onto one more page is a find
 ## What else the preset encodes
 
 - **The IEEE template**, through `extends: paperlint:ieee-conference` ([`ieee-conference.md`](ieee-conference.md)).
-- **The venue's name** is `AGENT 2027`, with the aliases `AGENT'27` and `AGENT’27` (what
-  `tex/venue-leftover` looks for in another venue's paper). «AGENT» alone is an ordinary word, and
-  as a name it would flag every paper folder called `agent-…` (`paper/folder-venue-leftover`).
+- **The venue's name** is `AGENT`, without a year: the year is the id's (`agent-2027`). «AGENT» is
+  an ordinary word, so `tex/venue-leftover` counts it in prose only beside a recent year («AGENT
+  2027», «AGENT'27») and `paper/folder-venue-leftover` matches the edition, «AGENT 2027»: a folder
+  called `agent-…` is not flagged. No alias.
+- **The parent conference**, `"workshop": true` and `"parent": "paperlint:icse-2027"`
+  ([`icse-2027.md`](icse-2027.md)): ICSE's names count as this paper's own in the 2027 edition, so
+  «an ICSE 2027 workshop» is no leftover here; «ICSE 2028» in its text is.
 - **Portal and deadlines** (`portal`, `deadlines`): the submission reading is the portal's and is
   refreshed by paperlint's scheduled workflow; notification and camera-ready are the call's.
 

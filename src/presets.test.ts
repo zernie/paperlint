@@ -907,7 +907,9 @@ describe("shippedVenueNames — what each shipped venue is called", () => {
       ["icse-2028", 2028],
     ]);
   });
+});
 
+describe("shippedVenueNames — what does not resolve", () => {
   it("a preset that does not resolve is left out", () => {
     const files = memoryFiles(
       Object.fromEntries(

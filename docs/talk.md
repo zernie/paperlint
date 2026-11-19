@@ -59,7 +59,7 @@ A video named after the paper is declared once:
 
 Every key is optional. Durations are seconds. `kinds` uses the names of `format.kinds`, and the
 paper's `kind` picks one. `video.captions: "required"` adds the captions to the files the video's
-mode owes. A child preset's `talk` block replaces its parent's whole. The shipped `agenticdev`
+mode owes. A child preset's `talk` block replaces its parent's whole. The shipped `agenticdev-2026`
 preset carries the organizers' numbers, each quoted beside it; it states no one-slide size, because
 the venue did not.
 

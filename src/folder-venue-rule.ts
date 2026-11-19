@@ -96,7 +96,7 @@ export function judgeFolder(
  * "family"`), which a paper for a venue paperlint has no preset for extends directly. Such a paper
  * declares a format, not a venue, so a venue in its folder name may be its own: the accepted ACSAC
  * papers in `fixtures/accepted-papers/` extend `ieee-conference` from folders named `…-acsac24`, and
- * ACSAC is the parent conference `aidc` names as an alias.
+ * ACSAC is a shipped venue, the parent conference of `aidc-2026`.
  */
 const isFamily = (preset: Preset): boolean => preset.identity.type === "family";
 

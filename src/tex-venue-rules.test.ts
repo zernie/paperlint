@@ -934,7 +934,9 @@ describe("tex/venue-leftover — in prose, a name counts only beside a recent ye
     ]);
     expect(fs[0]?.line).toBe(4);
   });
+});
 
+describe("tex/venue-leftover — the paper's own series, and its parent's, in another edition", () => {
   it("under msr itself, its own name with its own year is never a leftover", () => {
     const tex = paper(
       "\\documentclass[10pt,conference]{IEEEtran}",

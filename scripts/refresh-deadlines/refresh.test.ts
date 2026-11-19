@@ -282,7 +282,7 @@ describe("runRefresh — a changed preset", () => {
     );
     expect(lines.at(-1)).toBe("1 preset(s) changed");
     expect(summaries[0]).toMatch(
-      /^- `msr\.jsonc` \(https:\/\/msr2027\.hotcrp\.com\/deadlines\)\n {2}- submission: 2026-10-19T04:00:00Z → 2026-10-21T11:59:59Z$/m,
+      /^- `msr-2027\.jsonc` \(https:\/\/msr2027\.hotcrp\.com\/deadlines\)\n {2}- submission: 2026-10-19T04:00:00Z → 2026-10-21T11:59:59Z$/m,
     );
   });
 });

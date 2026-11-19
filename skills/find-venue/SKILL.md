@@ -4,7 +4,7 @@ description: "Discover and rank real venues for a given paper, scored by whether
 allowed-tools: [Read, Write, Grep, Glob, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:d63449710e4800b6 compiled from skills/find-venue/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:784a0e1bfaa6e736 compiled from skills/find-venue/SKILL.md.spec.ts -->
 
 # find-venue — rank real venues by what makes a publication, then keep or switch
 

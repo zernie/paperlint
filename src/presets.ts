@@ -4,7 +4,7 @@
  * A venue is a preset, the way an ESLint config is a shareable config: a file with the venue's
  * format (page size, columns, fonts, font sizes, page limits per kind), the TeX packages its
  * template needs, and the rules it implies. A preset may build on another with its own `extends`:
- * `agenticdev` extends the family `acm-sigconf`, which holds everything the ACM template decides.
+ * `agenticdev-2026` extends the family `acm-sigconf`, which holds everything the ACM template decides.
  *
  * ── TWO SPEC FORMS, AND ONLY TWO ─────────────────────────────────────────────────
  *   paperlint:<name>   a preset shipped in the package's venues directory
@@ -106,7 +106,7 @@ export interface PresetTemplate {
 /** A resolved chain, merged. */
 export interface Preset {
   /**
-   * The preset's id: the spec's file name without its extension (`agenticdev`, `usenix-sec`). The
+   * The preset's id: the spec's file name without its extension (`agenticdev-2026`, `usenix-sec`). The
    * stable key a machine reads — the facts file and the build plan carry it — whatever `name` says.
    */
   readonly id: string;
@@ -448,16 +448,27 @@ function parentNamesOf(
       ? bad(presetProblemText(p, "parent"))
       : bad(`${named} does not resolve: ${presetProblemText(p)}`);
   }
-  if (up.value.identity.type !== "venue")
-    return bad(
-      `${named} is a ${up.value.identity.type}, and a workshop's parent is the venue it is held at`,
-    );
-  const year = editionOf(labelOf(parent.file))?.year ?? null;
-  if (year !== null && up.value.year !== null && up.value.year !== year)
-    return bad(
-      `${named} is the ${String(up.value.year)} edition, and this workshop is of ${String(year)} — a workshop's parent is the edition it is held at, of the same year`,
-    );
-  return ok([...new Set([...up.value.aliases, ...up.value.parentNames])]);
+  const why = parentProblem(named, parent.file, up.value);
+  return why === null
+    ? ok([...new Set([...up.value.aliases, ...up.value.parentNames])])
+    : bad(why);
+}
+
+/**
+ * Why a resolved parent cannot be the one `file` names, or null: it must be a venue, and an edition
+ * of the year `file`'s id carries, when both ids carry one. Pure.
+ */
+function parentProblem(
+  named: string,
+  file: string,
+  up: Pick<Preset, "identity" | "year">,
+): string | null {
+  if (up.identity.type !== "venue")
+    return `${named} is a ${up.identity.type}, and a workshop's parent is the venue it is held at`;
+  const year = editionOf(labelOf(file))?.year ?? null;
+  return year === null || up.year === null || up.year === year
+    ? null
+    : `${named} is the ${String(up.year)} edition, and this workshop is of ${String(year)} — a workshop's parent is the edition it is held at, of the same year`;
 }
 
 /** `resolvePreset`, inside the venues `below` whose `parent` led here. */
@@ -579,13 +590,8 @@ export function presetProblemText(
   p: PresetProblem,
   key: "extends" | "parent" = "extends",
 ): string {
+  if (isSpecProblem(p)) return specProblemText(p, key);
   switch (p.kind) {
-    case "bare-series":
-      return bareSeriesText(p, key);
-    case "unsupported":
-      return `"${key}": "${p.spec}" — a preset is \`paperlint:<name>\` (shipped) or a path starting with ./ or ../ (your own); npm presets: not yet supported. Did you mean "${shippedSpec(p.spec)}"?`;
-    case "not-found":
-      return `"${key}": "${p.spec}" names no preset (${p.file}); shipped presets (${SHIPPED_PREFIX}<name>): ${p.shipped.join(", ")}${ruleSetHint(p.spec)}`;
     case "cycle":
       return `the presets extend each other in a cycle: ${p.chain.join(" → ")}`;
     case "too-deep":
@@ -599,6 +605,23 @@ export function presetProblemText(
     case "wrong-parent":
       return wrongParentText(p);
   }
+}
+
+/** A problem of the spec itself, which names no file: what a line for it says depends on `key`. */
+type SpecProblem = Extract<
+  PresetProblem,
+  { readonly kind: "bare-series" | "unsupported" | "not-found" }
+>;
+
+const isSpecProblem = (p: PresetProblem): p is SpecProblem =>
+  ["bare-series", "unsupported", "not-found"].includes(p.kind);
+
+/** The line for a spec that names no file: what it should look like, or what ships. Pure. */
+function specProblemText(p: SpecProblem, key: "extends" | "parent"): string {
+  if (p.kind === "bare-series") return bareSeriesText(p, key);
+  return p.kind === "unsupported"
+    ? `"${key}": "${p.spec}" — a preset is \`paperlint:<name>\` (shipped) or a path starting with ./ or ../ (your own); npm presets: not yet supported. Did you mean "${shippedSpec(p.spec)}"?`
+    : `"${key}": "${p.spec}" names no preset (${p.file}); shipped presets (${SHIPPED_PREFIX}<name>): ${p.shipped.join(", ")}${ruleSetHint(p.spec)}`;
 }
 
 /** The line for a bare series: the editions that ship, the latest offered. Pure. */

@@ -137,11 +137,14 @@ test("parsePaperFields: an optional checkbox list may be empty; a required text 
 });
 
 test("🔴 parsePaperFields: fields on a venue whose preset records none — refused, naming where it looked", () => {
-  assert.deepEqual(parsePaperFields({ topics: ["x"] }, null, "msr-2027.jsonc"), {
-    ok: false,
-    error:
-      '"fields" is set, but the venue preset records no "submission_fields" (read: msr-2027.jsonc) — record the form\'s fields in the venue\'s preset first, or drop "fields"',
-  });
+  assert.deepEqual(
+    parsePaperFields({ topics: ["x"] }, null, "msr-2027.jsonc"),
+    {
+      ok: false,
+      error:
+        '"fields" is set, but the venue preset records no "submission_fields" (read: msr-2027.jsonc) — record the form\'s fields in the venue\'s preset first, or drop "fields"',
+    },
+  );
 });
 
 test("🔴 droppedFields: a checkbox list sent, missing from the changes and named by the portal — dropped; otherwise not", () => {

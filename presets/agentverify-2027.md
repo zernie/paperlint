@@ -82,6 +82,12 @@ body are a finding.
 - **Digital library**: whether the 2027 companion volume goes to IEEE Xplore or the ACM DL.
 - **AI / LLM usage policy and required sections**: none stated.
 
+## Its parent conference
+
+- **The parent conference**, `"workshop": true` and `"parent": "paperlint:icse-2027"`
+  ([`icse-2027.md`](icse-2027.md)): ICSE's names count as this paper's own in the 2027 edition, so
+  «an ICSE 2027 workshop» is no leftover here; «ICSE 2028» in its text is.
+
 ## What the preset resolves to
 
 <!-- paperlint:preset-rules -->

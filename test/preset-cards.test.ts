@@ -55,7 +55,10 @@ describe("every preset has a card beside it", () => {
         "🔥 File 'aidc-2026.jsonc' enforces the existence of other folders/files. 🔥\n\nEnforce existence = ./presets/aidc-2026.md\nError location = ./presets/aidc-2026.jsonc\n\n",
       ],
     ]);
-    cpSync(join(REPO, "presets", "aidc-2026.md"), join(root, "presets", "aidc-2026.md"));
+    cpSync(
+      join(REPO, "presets", "aidc-2026.md"),
+      join(root, "presets", "aidc-2026.md"),
+    );
     expect(await lintPresets()).toEqual([]);
   });
 });

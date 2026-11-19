@@ -13,10 +13,12 @@ The folder name is read as words: runs of letters and runs of digits, split on e
 ignored. `aisec-2026`, `aisec_2026` and `aisec2026` all name AISec; `overrealm` and `realms` do not
 name REALM. A venue name of several words (`ACM CCS`) counts only when its words stand in a row.
 
-The venue names come from the preset registry: every shipped preset's label (`aisec`) and its `name`
-and `aliases` (`AISec`), collected along `extends` — the same names `tex/venue-leftover` looks for in
-the text. A venue with no shipped preset is not recognized. The names of the conference the paper's
-venue is held at (its `parent`) are the paper's own.
+The venue names come from the preset registry: each shipped edition as its `name` and the year of its
+id (`AISec 2026` for `aisec-2026`), and the `aliases` its files declare (`AISec`). The bare `name`
+alone is not matched: it may be an ordinary word (`AGENT`, so `papers/agent-study/` names nothing,
+while `papers/agent-2027-study/` names AGENT 2027) or the series of every edition (`ICSE`). A venue
+with no shipped preset is not recognized. The paper's own names, and those of the conference its
+venue is held at (its `parent`, of the same year), are the paper's own, bare or with the year.
 
 ## Why
 
@@ -36,20 +38,22 @@ in `papers/aisec-2026/`:
 
 ```text
 papers/aisec-2026/PIPELINE-STATUS.md
-  1:1  warning  the folder name «aisec-2026» names the venue AISec, and this paper extends AIDC — the
+  1:1  warning  the folder name «aisec-2026» names the venue AISec 2026, and this paper extends AIDC — the
                 name went stale when the venue changed, and venues change on every resubmission. Name
                 the folder after the work (what the paper shows), not the venue
                 paper/folder-venue-leftover
 ```
 
-Named by an alias, the message says which: `papers/emnlp-agents/` under `paperlint:aidc-2026` names
-`REALM («EMNLP»)`.
+Named by an alias, the message says which (`IEEE S&P 2027 («Oakland»)`); named by the series
+alone, it says the series: `papers/emnlp-agents/` under `paperlint:aidc-2026` names `EMNLP`. Another
+edition of the paper's own series is another venue: `papers/icse-2027-flaky/` under
+`paperlint:icse-2028` names `ICSE 2027`.
 
 Passing:
 
 - `papers/agent-rule-drift/` — names no venue;
-- `papers/aidc-2026/` or `papers/acsac-2026/` under `paperlint:aidc-2026` — the paper's own venue, by its
-  label or its alias;
+- `papers/aidc-2026/` or `papers/acsac-2026/` under `paperlint:aidc-2026` — the paper's own edition, or
+  that of the conference it is held at (`"parent": "paperlint:acsac-2026"`);
 - `papers/ase-agents/` under `paperlint:agenticdev-2026` — the conference the workshop is held at
   (`"parent": "paperlint:ase-2026"`); under `paperlint:aidc-2026` the same folder names ASE;
 - `papers/overrealm-study/` — `realm` inside another word is that other word;
@@ -58,8 +62,8 @@ Passing:
 
 ## Options / preset fields
 
-No rule options. It reads each shipped preset's `name` and `aliases`, the fields
-`tex/venue-leftover` reads too:
+No rule options. It reads each shipped preset's `name`, the year of its id, and its `aliases`, the
+fields `tex/venue-leftover` reads too:
 
 ```jsonc
 "aliases": ["AISec"],
@@ -80,7 +84,7 @@ A name the paper's own chain also declares, or its `parent` conference's, is nev
 - A paper whose `extends` names only a template family (`paperlint:acm-sigconf`,
   `paperlint:ieee-conference` — a preset with no kinds). It declares a format, not a venue, so a venue
   in its folder name may well be its own: the accepted ACSAC papers this rule is checked on live in
-  `…-acsac24` folders and extend `ieee-conference`, while ACSAC is an alias of `aidc`.
+  `…-acsac24` folders and extend `ieee-conference`, while ACSAC is a shipped venue (`acsac-2026`).
 
 ## How to fix
 

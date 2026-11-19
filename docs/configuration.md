@@ -18,9 +18,10 @@ papers/
 venues/usenix-sec.jsonc      (optional, your own) a VENUE PRESET: format, page limits, TeX packages, rules
 ```
 
-The shipped presets (`paperlint:<name>`) live in the package, under
-`presets/`: `acm-sigconf`, `agenticdev`, `aidc`, `aisec`,
-`ieee-conference`, `msr`, `realm`. Each declares what it is — `"type": "venue"` with the venue's `name` and
+The shipped presets live in the package, under `presets/`: a venue preset is one edition,
+`paperlint:<series>-<year>` (`paperlint:aidc-2026`), and a template family has no year
+(`paperlint:acm-sigconf`); every one is listed in [`venues.md`](venues.md#what-paperlint-ships). A bare
+series (`paperlint:aidc`) is refused, naming the editions. Each declares what it is — `"type": "venue"` with the venue's `name` and
 the `url` of its call for papers, or `"type": "family"` for a publisher's template, which names no
 venue (`tex-base.jsonc`, the TeX packages every paper gets, is `"base"`).
 

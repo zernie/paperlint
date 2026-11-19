@@ -31,7 +31,7 @@ Failing — AgenticDev allows only remote video:
 }
 ```
 
-> `agenticdev` allows the talk modes remote-video; this paper declares `in-person`
+> `AgenticDev` allows the talk modes remote-video; this paper declares `in-person`
 
 Failing — the email gave the short-paper slot only:
 
