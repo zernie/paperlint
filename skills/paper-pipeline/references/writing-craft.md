@@ -90,8 +90,7 @@ grade says so.
    acronyms/in-group terms stacked to sound rigorous, OR standard field-jargon (`Bonferroni`, `construct
 validity`, `null`, `coarse`, coined handles) used with no plain-words gloss — the LLM-grader trap: you know
    them so you don't stall, but the reader does. 5 = every term earns its place and is glossed in plain language
-   at first use; analogy before term; a strong engineer who is not a researcher never hits a wall. **Hard-capped
-   by stall density (see the stall pass): > 1 stall/page ⇒ ≤ 2 here.**
+   at first use; analogy before term; a strong engineer who is not a researcher never hits a wall.
 7. **Landing-the-point / reader value (graded on BOTH the intro AND the conclusion).** 1 = abstractions all
    the way down; reader finishes thinking "so what?" 5 = exposes an assumption, breaks it with the most
    visceral concrete instance, quantifies stakes, and **the abstract and the conclusion each leave a
@@ -164,9 +163,9 @@ check; the pass isn't complete without it, and the `claims` row in `PIPELINE-STA
 `rewrite-unclear` runs it after every rewrite (its step 4); `harden-paper` gates on it
 (claims-honest gate).
 
-## The wall-of-text check (visual density — distinct from stall density)
+## The wall-of-text check (visual density — distinct from comprehension stalls)
 
-Stall density is about COMPREHENSION (unglossed terms, sourceless numbers). This is about the EYE: a
+A stall is about COMPREHENSION (unglossed terms, sourceless numbers). This is about the EYE: a
 paragraph so long and unbroken the reader slides off it before reading a word. The classic offender is a
 Related-work or Discussion section dumped as one 30+-line block covering a dozen works. Rules:
 

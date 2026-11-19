@@ -4,7 +4,7 @@ description: "Use when asking \"what would the program committee decide?\" / \"s
 allowed-tools: [Read, Write, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:6645ef143ffeb66c compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:1ea89db69dac0856 compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
 
 # pc-panel-review — model the whole PC, not one reviewer
 
@@ -106,8 +106,9 @@ prose-only read can.
   up as an explicit "clarity" mark. Each reviewer must let prose/structure quality move their overall
   rec and confidence — but the SOURCE of that signal is the handed-in **cold-read report +
   tighten-paper verdict**, never the reviewer's own felt read: a frontier LLM knows every term and
-  cannot experience reader fatigue, so its felt judgment systematically under-fires. If the inventory
-  shows high stall density / walls, or the structural verdict says bloated, the overall score takes a
+  cannot experience reader fatigue, so its felt judgment systematically under-fires. If the cold-read
+  report has severe findings (a `CANNOT PARSE` on a sentence the contribution rests on, a wall
+  paragraph, a heading in coined jargon), or the structural verdict says bloated, the overall score takes a
   real hit even when every explicit criterion passes. Never score a slog as if it read cleanly — that
   is the gap between this sim and a real PC.
 - Top 3 issues for PC discussion, ranked, with severity (blocker/major/minor).
