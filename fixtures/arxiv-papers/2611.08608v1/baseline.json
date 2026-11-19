@@ -5,7 +5,6 @@
   ],
   "findings": {
     "tex/claim-provenance": 10,
-    "tex/venue-leftover": 4,
     "paper/figure-ref-style": 3,
     "paper/allowed-files-only": 2,
     "paper/leading-zero": 2,

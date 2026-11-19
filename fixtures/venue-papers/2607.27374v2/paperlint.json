@@ -1,0 +1,17 @@
+{
+  "cycles": [
+    {
+      "id": "ase-2026-industry",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:acm-sigconf"
+      },
+      "opened": "2026-09-20",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2026-09-20",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

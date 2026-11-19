@@ -1,1 +1,17 @@
-{ "extends": "paperlint:ieee-conference" }
+{
+  "cycles": [
+    {
+      "id": "acsac-2026",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:acsac-2026"
+      },
+      "opened": "2026-11-05",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2026-11-05",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

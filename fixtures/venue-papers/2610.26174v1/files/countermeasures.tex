@@ -1,0 +1,39 @@
+\section{Countermeasures and Discussion}
+\label{sec:Countermeasures}
+
+\subsection{Countermeasures}
+The core attack of {\name} is that an attacker can alter the output of the magnetic tactile sensor via an external magnetic tag.
+To address this issue, we discuss a potential defense strategy grounded in multimodal sensor fusion.
+
+Modern robotic or manipulator systems typically provide additional motion-related signals, such as joint torques, gripper motor currents ~\cite{frankaRobotState}, and the pose, velocity ~\cite{urRTDEGuide}, and motion status of the end-effector ~\cite{robotiq2fManual}. 
+Although these signals may not provide the same spatial resolution as tactile sensors, they offer independent sources of physical interaction information. 
+Such information can be used to verify whether the tactile response is consistent with the actual motion of the robot.
+
+Specifically, the controller can maintain a short time window for both tactile readings and proprioceptive signals. 
+A contact event is accepted only when the increase in tactile force is accompanied by other varying signals, such as an increase in gripper motor current, an increase in joint torque, a decrease in gripper closing velocity, or restricted movement of the end-effector.
+If the tactile sensor reports a large normal force while the gripper motor current remains close to the neutral pose, the system can flag this as a potential false contact event and prevent the controller from prematurely stopping the gripper.
+
+Similarly, during a negative normal force injection attack, the tactile sensor may continue to report insufficient contact force even if the gripper has already contacted the object. 
+In this case, the system can compare the tactile signal with the gripper motor load, joint torques, and gripper motion status. 
+If the gripper motor current or joint torque increases while the gripper closing velocity decreases or the end-effector movement is mechanically restricted, the controller can infer that physical contact has actually occurred despite the low tactile readings. 
+Then, the system can stop further increases in force or switch to a safe recovery strategy, rather than continuing to apply pressure on the object.
+
+In practical applications, this defense can be implemented as a lightweight monitoring module. 
+For each control cycle, it checks whether the tactile force and other signals show a consistent pattern within a sliding window. 
+When inconsistencies persist over several consecutive frames, the robotic system can trigger an alarm, ignore suspicious tactile readings, or enter a conservative fail-safe mode. 
+This design aims to reduce false positives while making tactile spoofing attacks more difficult.
+
+\subsection{
+Discussion
+}
+
+
+\noindent\textbf{Cross-model applicability.}
+As shown in Sec.~\ref {sec:background_limitation} and Sec.~\ref {sec:across_models}, the underlying vulnerability is present across multiple evaluated magnetic tactile sensor models. However, the sensor responses differ across models. Therefore, deterministic force injection remains model-specific and may require offline characterization of the target model and corresponding tag customization. As described in Sec.~\ref {sec:reverse engineering}, the offline characterization can be performed on a separately obtained sensor of the same model and requires no access to the robotic system.
+
+
+{\emergencystretch=1em
+\noindent\textbf{Sensing-modality scope.}
+This cross-model generalizability is modality-specific. {\name} relies on magnetic-field manipulation and therefore directly targets magnetic sensing components. It does not directly apply to purely optical, capacitive, or resistive tactile sensors. In multimodal tactile systems, {\name} can affect the magnetic sensing component, while its system-level impact depends on the sensor configuration and fusion mechanism.
+
+\par}

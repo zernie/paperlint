@@ -1,0 +1,132 @@
+\section{Results}
+We report the results contribution by contribution: the dataset characteristics and inter-rater reliability of C1, the in-distribution and cross-distribution behavior of the C2 classifier, and the retrieval quality and practitioner design feedback gathered for C3.
+
+\subsection*{C1 Results}
+The C1 release contains $288$ backlog items ($80$ \texttt{security-relevant}, $27.8\%$), drawn from an $84{,}878$-item filtered TAWOS pool and annotated by a pool of nine security experts.
+Each released item received at least two independent assessments, resulting in 972 binary security-relevance judgments in total. 
+Inter-rater reliability on the released items is substantial: Fleiss' $\kappa = 0.787$, and raw observed agreement $P_o = 0.800$, which confirms a reliable but non-trivial task.
+
+Of the $288$ items, $249$ are unanimous ($55$ \texttt{security-relevant}, $194$ \texttt{non-security-relevant}) and $39$ ($13.5\%$) show at least one dissenting assessor. Disagreement items are retained with the majority-vote label.
+As \Cref{fig:c1-text-length} highlights, text descriptions are long enough to support text-classification methods: median $124$ words (range $21$--$748$); security-relevant backlog items are meaningfully longer (median $145$) than non-security-relevant backlog items (median $119$), suggesting implicit security concerns surface more often in backlog items with richer contextual descriptions.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{figures/graphs/c1/dataset-text-length.pdf}
+    \caption[Frequency of Labels based on Text Length on C1]{Frequency of Labels based on Text Length on C1, in Groups of 25 Words.}
+    \Description[Stacked histogram of C1 backlog item word counts, split by security and non-security labels, with both classes concentrated below 200 words and a long right tail]{A stacked histogram of the 288 C1 backlog items, binned by description length in groups of 25 words. The horizontal axis is word count, running from 0 to about 650. The vertical axis is the number of items, running from 0 to about 33. Each bar is stacked from two series given in the legend: non-security items, 208 in total, drawn in pale blue-grey, and security-relevant items, 80 in total, drawn in terracotta. The distribution is strongly right-skewed. Almost all mass falls between 25 and 300 words, with the tallest bars, around 30 to 33 items each, in the bins spanning roughly 50 to 125 words. Counts fall away steadily above 150 words. Below about 200 words the bars are dominated by the pale non-security series; from roughly 200 to 300 words the terracotta security series makes up most or all of each bar, so security-relevant items are proportionally more common among longer descriptions. Beyond 300 words the data thin to isolated bars of one or two items, extending to a final non-security bar near 650 words.}
+    \label{fig:c1-text-length}
+\end{figure}
+
+\begin{table}[t]
+    \centering
+    \caption[C1 Dataset Characteristics Relative to the Wu et al.\ Benchmark Family]{C1 Dataset Characteristics Relative to the Wu et al.\ Benchmark Family. C1 is Smaller but Provides Multi-Rater Expert Annotation with Reported IRR.}
+    \Description[Table comparing C1 with the five Wu et al. datasets by item count, security-relevant count and prevalence]{A table with five columns: dataset, source, number of items, number of security-relevant items, and prevalence. The first row, highlighted, is C1 (ours), drawn from Atlassian Jira and Confluence: 288 items, 80 security-relevant, 27.8 percent prevalence. The remaining five rows are the Wu et al. benchmarks. Chromium, from Chromium bugs, has 41,940 items, 808 security-relevant, 1.9 percent. Ambari, Camel and Wicket, all from the Apache JIRA, each have 1,000 items, with 56, 74 and 47 security-relevant items and prevalences of 5.6, 7.4 and 4.7 percent respectively. Derby, also Apache JIRA, has 1,000 items, 179 security-relevant, 17.9 percent. C1 is by far the smallest dataset but has the highest prevalence of security-relevant items.}
+    \label{fig:c1-wu-comparison}
+    \input{figures/graphs/c1/dataset-wu-comparison-table}
+\end{table}
+
+Relative to the Wu et al.\ family of benchmarks ($1{,}000$--$41{,}940$ items, $1.9$--$17.9\%$ prevalence, community-assigned labels), C1 is smaller, but to the best of our knowledge, the only publicly released backlog-security dataset with independent multi-rater expert annotation and reported IRR, positioning it as a high-precision training dataset that complements Wu's larger-scale datasets.
+An overview of the items and prevalence of the \texttt{security-relevant} label across C1 and the datasets from Wu et al.~\cite{wu2022data-quality} is available at \Cref{fig:c1-wu-comparison}.
+
+\subsection*{C2 Results}
+
+The best in-distribution F2 overall is achieved by DistilRoBERTa + LogReg (L2).
+However, as determined in \Cref{sec:methodology-c2}, $\ell_2$ variants are treated as in-distribution references rather than deployment candidates because they are more exposed to project-specific overfitting on the two-project scope of C1.
+Within the transfer-oriented deployment candidate set, \textbf{MPNet + elastic-net logistic regression} achieves the highest held-out F2 and is therefore selected at threshold $0.5$ for integration into C3.
+On the held-out C1 test set ($n=58$) it reaches F2 $=0.774$, precision $0.650$, recall $0.812$, and ROC-AUC $0.903$. This poses an improvement over the TF-IDF+LogReg baseline (F2 $=0.542$, AUC $0.750$) and comparable to the other sentence-embedder-based variants explored.
+Across all $8$ sentence-encoder variants, F2 clusters between $0.625$ and $0.824$ with AUC between $0.839$ and $0.939$, suggesting that the task is well-posed and the signal is recoverable with any competitive text representation (see \Cref{fig:c2-in-dist}).
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{figures/graphs/c2/classifier-scatter.pdf}
+    \caption{In-Distribution (C1 Held-Out) Precision/Recall of All C2 Variants at the Fixed Operating Threshold of $0.5$.}
+    \Description[Precision-recall scatter plot of nine C2 classifier variants at a fixed threshold of 0.5, overlaid with iso-F2 contour curves]{A scatter plot comparing nine classifier variants on the held-out C1 test split at a fixed operating threshold of 0.5. The horizontal axis is recall and the vertical axis is precision, both from 0.0 to 1.0. Four dashed grey contour curves sweep across the plot marking constant F2 scores, labelled at the right edge as F2 equals 0.4, 0.6, 0.7 and 0.8; curves further toward the upper right indicate better performance. Each variant is one coloured dot, identified in the legend together with its F2 score, in descending order: DistilRoBERTa with L2 logistic regression, F2 of 0.824; MPNet with elastic-net logistic regression, F2 of 0.774; DistilRoBERTa with elastic-net logistic regression, F2 of 0.741; MPNet with an MLP head, F2 of 0.723; DistilRoBERTa with an MLP head, F2 of 0.688; MiniLM-L12 with elastic-net logistic regression, F2 of 0.663; RoBERTa-Large with elastic-net logistic regression, F2 of 0.655; MiniLM-L6 with elastic-net logistic regression, F2 of 0.625; and a TF-IDF with logistic regression baseline, F2 of 0.542. All nine points fall in a loose cluster spanning roughly 0.55 to 0.87 recall and 0.47 to 0.71 precision. The two best variants sit furthest to the right, trading a little precision for markedly higher recall, while the TF-IDF baseline sits alone at the lower left, below every neural variant on both axes.}
+    \label{fig:c2-in-dist}
+\end{figure}
+
+\subsubsection*{Cross-Distribution Generalizability}
+
+\Cref{fig:c2-wu-summary} summarizes mean G-measure and cross-project standard deviation across two of our models and the literature baselines.
+
+Applied to the Wu et al. benchmarks~\cite{wu2022data-quality}, MPNet + LogReg (Elastic) achieves mean G-measure $=0.649$ (per-dataset: Ambari $0.716$, Camel $0.58$, Chromium $0.80$, Derby $0.5$, and Wicket $0.64$), with mean per-project recall of $0.771$ (ranging from $0.66$ to $0.91$), despite a prevalence shift from $27.8\%$ (C1) to $1.9\%$--$17.9\%$ (Wu et al. datasets~\cite{wu2022data-quality}). 
+
+Against the published baselines on the same benchmarks, MPNet + LogReg (Elastic)'s mean G-measure ($0.65$) is on par with the strongest classical ML baseline from Wu et al.~\cite{wu2022data-quality} (FARSEC, mean $0.64$), with a mixed per-project picture: it outperforms all of Wu et al.'s classical ML baselines (FARSEC + RF/NB/LR/KNN/MLP) on Ambari and Camel, is competitive on Chromium and Wicket without exceeding the best FARSEC variants, and trails Wu et al.'s baselines on Derby.
+Against França et al.~\cite{franca2025gpts}, MPNet + LogReg (Elastic) outperforms every open-source GPT zero-shot and classical ML baseline on Ambari and Wicket, ties with França's strongest classical baseline (RF) on Camel, and trails the same baseline on Derby.
+It is competitive with the best fine-tuned small LLMs (BERT, DistilBERT) from Soltaniani et al.~\cite{soltaniani2026evaluating-llms} while being a frozen-encoder with a linear head (no LLM fine-tuning, orders of magnitude cheaper).
+MPNet + LogReg (Elastic) does not outperform the best-performing Gemini 2.5 configuration from Soltaniani et al.~\cite{soltaniani2026evaluating-llms}.
+Alqahtani's~\cite{alqahtani2024fasttext} \texttt{fastText} in-distribution $10$-fold CV numbers are also higher, though that comparison is not cross-distribution and therefore not directly informative.
+
+\begin{table}[t]
+    \centering
+    \caption{Per-Project G-Measure Heatmap Across All Evaluated Models on the Five Wu et al.\ Benchmarks.}
+    \label{fig:c2-wu-summary}
+    \input{figures/graphs/c2/wu_et_al_all-literature-comparison-table}
+\end{table}
+
+Cross-distribution stability is high: G-measure standard deviation across the five projects ($\sigma \approx 0.102$) is comparable to FARSEC ($\sigma = 0.101$), the strongest within-project baseline from Wu et al.~\cite{wu2022data-quality}.
+MiniLM-L12 + LogReg (Elastic), the most stable of our variants, achieves $\sigma = 0.046$, the lowest cross-project standard deviation of all reported methods, while having a mean G-measure of $0.65$, which matches MPNet + LogReg (Elastic)'s mean G-measure of  $0.649$.
+G-measure across fine-tuned small LLMs from Soltaniani et al., which train on each project's own data, exhibits substantially higher standard deviation (BERT $\sigma = 0.211$, DistilBERT $\sigma = 0.194$, Qwen2.5B $\sigma = 0.238$), suggesting that per-project fine-tuning amplifies sensitivity to distributional shifts rather than suppressing it.
+
+\subsection*{C3: Preliminary Evaluation}
+
+We evaluated the pipeline (requirement extraction $\to$ bi-encoder recall $\to$ cross-encoder rerank $\to$ LLM semantic filter) through semi-structured interviews with industry practitioners, using internal security policies as the primary source corpus and CIS Benchmarks (nginx, docker-ce) as a secondary corpus to probe generalization to concrete best-practice security guidelines.
+This evaluation served to provide preliminary performance evidence and to surface design requirements.
+
+Two semi-structured practitioner interview sessions are reported. Together they covered $24$ scored clauses and recommendations, drawn from both corpora, across six backlog items.
+Items were selected from the set flagged by C2 at confidence scores between $0.55$ and $0.93$, spanning high-confidence and low-confidence regions of the classifier's output, hence representative of what the pipeline would surface in practice.
+
+
+\subsubsection*{Retrieval Quality}\label{sec:results-c3-retrieval}
+
+The analysis of the retrieval quality is reported over the $24$ rated clauses, hence summarizing $24$ ratings from two raters over six backlog items.
+They thus characterize the study sample and their role is to contextualize the qualitative findings and to highlight failure modes.
+As presented in \Cref{tab:c3-rating-distribution}, ratings cluster bimodally: $12/24$ at $\geq 4/5$, $7/24$ at $\leq 1/5$, and $5/24$ in the $2$--$3$ band, a distribution consistent with, but not sufficient to confirm, a pipeline whose shortlists are confident and whose applicability is determined by item-security requirement granularity alignment rather than by rater noise.
+Internal-policy clauses dominated the high-rated band on items with well-structured descriptions, while the CIS Benchmark shortlists showed greater within-shortlist standard deviation, concentrated on a single infrastructure item.
+
+\begin{table}[h]
+    \centering
+    \small
+    \caption{Distribution of Requirements Relevance Ratings Across the 24 Security Requirements Scored in the Interview Sessions.}
+    \label{tab:c3-rating-distribution}
+    \begin{tabular}{lcc}
+        \hline
+        Rating band & Count & Share \\
+        \hline
+        $\geq 4/5$ (directly applicable) & $12$ & $50\%$ \\
+        $2$--$3/5$ (partial)             & $5$  & $21\%$ \\
+        $\leq 1/5$ (poor/irrelevant)     & $7$  & $29\%$ \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\textbf{Failure modes.}
+Two failure modes account for the low-rated security requirements and are architecturally informative.
+\emph{Surface-keyword mismatch.} A JWT-generation item retrieved a password-handling clause because both topics involve authentication credentials at the embedding level, but the clause's normative content (``passwords must not be logged'') is inapplicable to JWT issuance.
+
+\emph{Shortlist heterogeneity.} On one infrastructure item the CIS Benchmark retrieval returned a strongly applicable recommendation (rated $5/5$) alongside weakly applicable recommendations on adjacent topics (rated $1/5$) on the same shortlist, with the internal-policy retrieval on the same item rated more precisely.
+
+\subsubsection*{Top-ranked examples}\label{sec:results-c3-examples}
+
+Two items illustrate the two most informative patterns in the case.
+
+\emph{Item~A} --- C2 confidence $0.86$. A logging configuration task. Three out of four retrieved clauses were rated $\geq 4/5$. Practitioner commentary described them as directly usable without paraphrasing. The last clause was rated $2/5$ and was thus not described as relevant. This is the pipeline's best-case output: concrete task, rule-level corpus, precise lexical and normative overlap.
+
+\emph{Item~B} --- C2 confidence $0.93$. A scan and event notification configuration task. Only one of the retrieved clauses from the internal policy was rated $\geq 4/5$, the rest of them were rated $\leq 2/5$ and described as not quite relevant to the source topic.
+
+Both items lie in the top tercile of C2 confidence, matching the deployment scenario in which the tool would provide information to an engineer.
+
+\subsubsection*{Practitioner Design Feedback}\label{sec:results-c3-feedback}
+
+Valuable insights were gained from the semi-structured interview, which are reported here. These insights serve to justify future design decisions to integrate the tool into further workflows.
+
+\textbf{In-backlog-system integration.}
+Both practitioners identified integration into the existing issue tracker systems as the primary precondition for practical adoption.
+A standalone interface adds tool-fatigue. Retrieval output surfaced as issue comments or side-panel content can be consumed at the point where security planning actually occurs.
+
+\textbf{Security Requirements Verbosity.}
+Retrieved security requirements from both corpora are often too long for inline reading.
+The recommended mitigation, using the same LLM stage to generate a short, concrete action-item summary per retained requirement with a link back to the authoritative security requirement, would address this directly without modifying the retrieval architecture.
+
+\textbf{Corpus coverage.}
+The one recurring gap was that the source corpus occasionally omits cross-cutting requirements.
+Backwards-compatibility obligations flagged in one session are not expressed as security requirements in any of the evaluated documents, confirming that the tool cannot surface what is not in the corpus.

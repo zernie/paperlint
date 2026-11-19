@@ -1,0 +1,56 @@
+\section{Methodology}
+We describe our methodology, spanning data collection, feature extraction, and classification. Figure~\ref{fig:diagram} presents an overview of the framework that extracts diff-aware features from commits using LLMs for quantitative metrics and static analyzers for qualitative indicators, then applies ML classifiers to predict change risk.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=1\linewidth]{figures/diagram.png}
+  \caption{Methodology Overview}
+  \label{fig:diagram}
+\end{figure}
+
+
+\subsection{Data Collection}
+
+We collected ground truth data by linking Correction of Error (CoE)\cite{aws_coe_2020} reports, a mandatory post-incident review process in which engineers document root causes and link the specific commits responsible, to the corresponding commits that directly triggered the incident relating to the outage. Starting with 377 CoEs flagged as change-induced, we parsed each report to extract the Code Reviews (CRs) identified as root causes. Extracting structured information from CoE reports was challenging due to inconsistent formatting across teams. We used Claude Sonnet 3.7 to parse these reports and extract commit references. Domain experts then manually verified all extracted CoE-to-commit linkages from 2024 to ensure correct attribution, confirming that each linked commit was indeed the root cause identified in the corresponding CoE report. We ranked packages by the number of associated CRs and selected the top 40 packages with the highest CR occurrences, yielding a total of 100 CRs. For each CR, we collected the corresponding commit linked to it. These commits form our ground truth dataset of risky changes.
+
+To focus on widely-used languages in our dataset, we selected Java, Kotlin, and TypeScript for our experiments, which are the predominant languages in the Prime Video codebase. After analyzing our deployment data, we found that approximately 5\% of commits to production result in CoE-flagged incidents. We prioritized labeling precision over dataset size, retaining only commits with high-confidence CoE linkage, and maintained the natural 1:19 risky-to-safe ratio, resulting in 149 risky and 2,831 non-risky commits (2,980 total) that reflect realistic production conditions. For external validation, we used the ApacheJIT dataset~\cite{apachejit2022}, using the most recent three years of data across all 14 Apache projects and sampling 1,115 bug-inducing and 21,185 clean commits (22,300 total) to maintain the 1:19 class ratio.
+
+\subsection{Feature Extraction}
+
+This study leverages diff-aware features extracted from software changes to evaluate change riskiness. We focus on diff-aware features for the following reasons:
+
+\begin{itemize}
+\item \textbf{Direct Causality to Change:} Diff-aware features have clear causal connections to potential issues, as changes in code structure, size, and complexity directly impact risk.
+\item \textbf{Immediate Applicability:} Diff-aware features apply to new projects or repositories without historical data, supporting first-time contributors and scenarios with limited project history.
+\item \textbf{Lower Maintenance:} Diff-aware features eliminate the need to maintain historical data or complex metadata, simplifying implementation and reducing computational overhead.
+\end{itemize}
+
+While diff-opaque features (e.g., developer experience, historical defect rates) could potentially enhance performance, they raise privacy concerns and limit generalizability; exploring their integration represents a promising direction for future work. We extracted 28 features categorized into quantitative and qualitative groups. Quantitative features include: (1) \emph{code-level metrics} capturing file structure (lines of code, comments, blank lines, declarations), complexity (cyclomatic complexity, maximum nesting depth), and scope (class, method, and function counts with visibility modifiers); and (2) \emph{change-level metrics} measuring modification extent (added/deleted/modified lines and chunks, churn, files changed). Qualitative features include change type classification (Adaptive, Corrective, Perfective, Preventive) derived from commit messages and coding style violations detected across 13 categories (e.g., naming conventions, code organization, documentation issues).
+
+%\input{tables/quantitative_features}
+%\input{tables/qualitative_features}
+
+To extract quantitative features, we employed Claude Sonnet 3.7, which generalizes across multiple languages (Java, Kotlin, TypeScript)
+without language-specific reimplementation. We initially developed language-specific scripts using regular expressions and AST patterns, but maintaining separate extractors proved brittle; we therefore adopted LLM-based extraction, retaining the scripts as validation baselines. We validated LLM-extracted features against script-based ground truth (n=60 samples across Java/Kotlin/TypeScript) using two metrics: Pearson correlation~\cite{pearson1895}, which measures linear agreement in magnitude and trend, and Intraclass Correlation Coefficient (ICC)~\cite{shrout1979icc}, which assesses measurement reproducibility. The validation achieved Pearson correlation of 0.730 and ICC of 0.861~\cite{Li2023StaticAnalysisLLMs}.
+
+\input{tables/comparison_result}
+
+Table~\ref{tab:comparative_analysis_results} presents the comparison results between the feature values from the script and the LLM. 
+The Pearson correlation coefficient and ICC indicate a strong linear relationship between the two sets of values. These results demonstrate that while LLM-extracted values may not be identical in magnitude to script-generated ones, they capture underlying trends and relative patterns with reasonable reliability, making LLMs a viable alternative for feature extraction in change risk assessment.
+
+
+\input{tables/style_categories}
+
+
+For extracting the type of change, we adopted categories from previous works~\cite{LevinYehudai2017} (Adaptive, Corrective, Perfective, Preventive). We prompted Claude Sonnet 3.7 to classify the type of change into one of the four categories. To verify the correctness of the LLM's output for this specific feature, we performed stratified sampling across all four categories (n=50) with independent annotation by domain experts.
+
+To extract style violations, we employed static analyzers rather than LLMs, as style violation identification requires consistency and objectivity. We used language-specific analyzers: Checkstyle for Java~\cite{checkstyleCheckstyle1101}, Detekt for Kotlin~\cite{detektHelloFrom}, and ESLint for TypeScript~\cite{typescripteslintTypescripteslint}. Since each analyzer uses different rulesets, we manually mapped all rules to common categories (Table~\ref{tab:style_categories}) based on official documentation, ensuring uniformity across languages. For model input, we counted violation occurrences per category and formatted them as numerical features.
+
+
+\subsection{Classification}
+\label{subsec:classification}
+We applied machine learning models to classify change riskiness. For commits with multiple file modifications, we created unified commit-level representations by averaging quantitative features across files and diffs, and averaging violation counts across files for qualitative features.
+
+We applied XGBoost and Random Forest classifiers, evaluated using 10-fold cross-validation within each dataset separately with hyperparameter tuning via grid search. Because our framework is designed as a guardrail that flags changes for human review rather than blocking them autonomously, we favor recall over precision: missing a risky change is costlier than surfacing a safe one for review. To select the classification threshold, we performed a grid search over candidate thresholds $\{0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5\}$ \emph{within} each cross-validation fold to prevent information leakage, optimizing for F1-score. The threshold of 0.2 consistently maximized F1 across folds: given the 1:19 class imbalance, the default 0.5 threshold yields low recall, and lowering the threshold to 0.2 recovers sufficient true positives to improve F1 despite the precision trade-off. Lower thresholds (e.g., 0.1) yielded marginal recall gains at disproportionate precision cost, while higher thresholds (e.g., 0.3+) sacrificed recall without meaningful precision improvement. We evaluated models using precision, recall, and F1-score. As a baseline, we also performed Logistic regression and zero-shot and few-shot prompting with Claude Sonnet 3.7 and Sonnet 4.5, providing the model with the commit diff, commit description, extracted diff-aware features, and business context for risk classification. We additionally evaluated Claude Sonnet 4.5 under both settings to assess whether newer LLMs narrow the gap with feature-engineered models. The few-shot configuration included three risky and three safe labeled examples, stratified across packages to avoid bias, selected randomly with a fixed seed and excluded from evaluation.
+
+We conducted an ablation study to identify the most influential feature groups using our best-performing model. We tested six configurations: three that excluded one feature group while retaining the other two (Quantitative Code-Level, Quantitative Change-Level, or Qualitative), and three that used only a single feature group to isolate its individual impact.

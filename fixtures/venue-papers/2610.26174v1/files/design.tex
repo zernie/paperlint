@@ -1,0 +1,117 @@
+\section{Magnetic Tag Design and Fabrication}
+\label{sec:design}
+\subsection{Inverse Magnetic Design}
+\label{sec:design1}
+To precisely localize the response-sensitive regions of the magnetic tactile sensor across $F_x, F_y,$ and $F_z$, we first performed interpolation of the aforementioned dataset.
+Given that each discrete sampling point $(x, y, z, F_x, F_y, F_z)$ represents a physical state, we model the force reading as a unified vector output.
+Based on these data-coupling requirements, we employed the Radial Basis Function (RBF) interpolation technique to construct a continuous force-field mapping model, $F = f(x, y, z)$. 
+Given a set comprising $N$ spatially discrete sampling points $\{\mathbf{x}_i\}_{i=1}^N$, the three-dimensional force field predictive output at an arbitrary target spatial coordinate $\mathbf{x} = (x, y, z)$ can be defined as:
+
+\begin{equation}
+f(\mathbf{x}) = \sum_{i=1}^{N} \mathbf{w}_i \phi(\|\mathbf{x} - \mathbf{x}_i\|)    
+\end{equation}
+
+Here, $\|\mathbf{x} - \mathbf{x}_i\|$ denotes the Euclidean spatial distance, and $\phi(\cdot)$ represents the basis function.
+In this paper, we adopt the Thin Plate Spline (TPS) kernel function, $\phi(r) = r^2 \ln(r)$. $\mathbf{w}_i \in \mathbb{R}^3$ is derived as three-dimensional vectors.
+This approach enables us to jointly interpret the shear force and normal force at the same coordinate.
+
+To evaluate the predictive robustness of the reconstructed response model, we introduced a Monte Carlo cross-validation procedure in the model construction phase.
+In each of the 1000 iterations, 3\% of the dataset was randomly selected as the test set, while the remaining 97\% was used for the training process.
+
+To comprehensively evaluate the predictive goodness-of-fit for the three-dimensional force in the blind tests, this study introduces three evaluation metrics: predictive performance score, median score, and 50-iteration moving average. 
+When calculating the predictive performance score, we first clip the model outputs to their respective valid measurement ranges, i.e., the range for $F_x$ and $F_y$ is $[-10.0, 10.0]$, and the range for $F_z$ is $[0, 25.0]$. 
+Subsequently, we compute the coefficient of determination (i.e., $R^2$) independently for the three coordinate axes, $F_x$, $F_y$, and $F_z$. 
+The final score is defined as the arithmetic mean percentage of the non-negative $R^2$ values across the three axes, namely:
+
+\begin{equation}
+\text{Score} = \frac{1}{3} \sum_{i \in \{x,y,z\}} \max(0, R^2_i) \times 100\% 
+\end{equation}
+
+As shown in Fig.~\ref{fig:design1}, the model exhibited high robustness.
+The median predictive scores for the 3~mm and 2.5~mm magnet datasets reached $90.74\%$ and $89.33\%$, respectively.  
+The mean absolute errors (MAE) remained below 0.09~N, while the root mean square error (RMSE) was around 0.16~N. 
+The 50-iteration moving average remained stable within the 80\% --- 90\% range.
+These results indicate that the model achieves stable predictive performance without substantial overfitting on the sampled response data.
+
+\begin{figure}[t]
+  \centering
+  \begin{subfigure}{0.48\linewidth}
+    \centering
+    \includegraphics[width=1.05\linewidth]{figures/design1_1.pdf}
+    \Description{
+    Blind test results for 3 mm diameter magnets, showing the measured responses or classification outcomes of the tactile sensing system under different test samples.
+    }
+    \caption{}
+  \end{subfigure}
+  \hspace{1pt}  %
+  \begin{subfigure}{0.48\linewidth}
+    \centering
+    \includegraphics[width=1.05\linewidth]{figures/design1_2.pdf}
+    \Description{
+    Blind test results for 2.5 mm diameter magnets, showing the measured responses or classification outcomes of the tactile sensing system under different test samples.
+    }
+    \caption{}
+  \end{subfigure}
+  \caption{Blind test results with magnets of different diameters. (a) Blind test results of 3 mm diameter magnets. (b) Blind test results of 2.5 mm diameter magnets.}
+  \label{fig:design1}
+\end{figure}
+
+\begin{figure*}[htbp] 
+  \centering
+  \includegraphics[width=0.9\textwidth]{figures/design2_new.pdf} 
+  \Description{Fabrication process of PhantomTac attack tags based on contour comparison of magnetic tactile sensor force-feedback patterns, showing how sensor response contours are analyzed and used to construct effective attack tags.}
+  \caption{Fabricate attack tags based on the contour comparison of magnetic tactile sensor feedback force.}
+  \label{fig:design2}
+\end{figure*}
+
+\begin{figure}[t]
+  \centering
+  \begin{subfigure}{0.485\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/evaluation1.pdf}
+    \Description{
+Test setup for robotic grasping on the Dofbot-pi4B platform with a magnetic tactile sensor mounted on the inner side of the gripper.
+}
+    \caption{}
+  \end{subfigure}
+  \hspace{1pt}  %
+  \begin{subfigure}{0.485\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/evaluation3.pdf}
+    \Description{
+Test setup for the Unitree G1 humanoid robot with a magnetic tactile sensor mounted on the back of the hand.
+}
+    \caption{}
+  \end{subfigure}
+  \caption{(a) Test setup for robotic grasping (Dofbot-pi4B). Note that the magnetic tactile sensor was mounted on the inner side of the gripper. (b) Test setup for humanoid robot (Unitree G1). Note that the magnetic tactile sensor was mounted on the back of the hand.}
+  \label{fig:evaluation1}
+\end{figure}
+
+\subsection{Fabrication of Stealth Tags}
+Utilizing the reconstructed response functions (as we presented in Sec. ~\ref{sec:design1}), we localized optimal coordinates for magnetic perturbation. 
+We adopted a vertical offset of $Z=0.2$~mm as our design baseline, corresponding to the maximum thickness of standard commercial labels (Table~\ref{tab:label_thickness}).
+
+First, we utilize the constructed continuous spatial response functions to perform an analysis at the $Z=0.2~\mathrm{mm}$ plane. 
+{\name} needs to ensure decoupled signal injection.
+That is, if the attacker intends to inject a normal force, then an effective attack should minimize the injected force in the X-Y plane. To achieve this goal, we prioritized ``independent regions'' where the sensitivity of the target force component is maximized while interference with other force components is minimized, e.g., the regions highlighted in Fig.~\ref{fig:design2}.
+
+After determining the relatively independent sensitive regions, we place a magnet with a diameter of $3~\mathrm{mm}$ at the center of this region to serve as the main attack magnet.
+It should be noted that the magnetic tactile sensor typically has multiple sensitive regions, and the directions of the interpreted force in different regions may be opposite.
+This is because when constructing the dataset (as shown in Sec.~\ref{sec:vulnerability}), the magnet used was oriented with the N-pole facing the magnetic tactile sensor. 
+Therefore, the response distribution in Fig.~\ref{fig:design2} corresponds to the scenario where the N-pole faces the sensor. 
+Based on our empirical tests, when the S-pole faces the sensor, the direction of the force response will be reversed. 
+For example, when the N-pole faces the sensor, a response of $F_x=1.5~\mathrm{N}$ is generated at a certain location. 
+If the same magnet is changed to have the S-pole facing the sensor at the same location, a response of $F_x=-1.5~\mathrm{N}$ will be induced. 
+Therefore, we can combine the spatial distribution of the response regions and the polarity direction of the magnets to deploy multiple main attack magnets in order to enhance the injection effect on the target force component.
+
+Furthermore, in real-world application scenarios, certain offsets may exist in robotic arm grasping, robot motion, and the contact position between the tag and the sensor. 
+To improve the fault tolerance and stability of the attack, we deploy auxiliary attack magnets with a diameter of $2.5~\mathrm{mm}$ around the main attack magnet based on the distribution characteristics of the sensitive regions.
+We present the tag layout in Fig.~\ref{fig:design2}. 
+We evaluated the performance of this design and presented the results in Sec.~\ref{sec:Robustness}. Beyond the single-tag design, multiple {\name} tags could be deployed to cover a wider range of likely contact regions. 
+For example, multiple tags could be arranged as a distributed array over likely contact areas on large objects. 
+For symmetric objects, one can deploy tags by following a circumferential layout around the contact regions, e.g., the centroid of the object. 
+Such geometry-aware placements can enlarge the effective contact region and improve tolerance to contact-position variations.
+
+Finally, we implement the designed magnet layout by placing magnets on a grid paper. 
+We stabilize each magnet at its predetermined position with adhesives.
+

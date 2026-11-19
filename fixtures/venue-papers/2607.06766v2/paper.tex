@@ -1,0 +1,107 @@
+\documentclass[sigconf,nonacm]{acmart}
+
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{comment}
+
+\begin{document}
+
+\title{Deployment Risk Assessment Using Diff-Aware Features: A Case Study at Prime Video}
+
+\author{Mayur Kurup}
+\authornote{Both authors contributed equally to this work}
+\affiliation{%
+  \institution{Amazon.com}
+  \city{Austin}
+  \state{Texas}
+  \country{USA}
+}
+
+\author{Hyunjae Suh}
+\authornotemark[1]
+\authornote{Work done during Amazon internship}
+\affiliation{%
+  \institution{University of California}
+  \city{Irvine}
+  \state{California}
+  \country{USA}
+}
+
+\author{Swathi Vaidyanathan}
+\affiliation{%
+  \institution{Amazon.com}
+  \city{Seattle}
+  \state{Washington}
+  \country{USA}
+}
+
+
+\author{Pranesh Vyas}
+\affiliation{%
+  \institution{Amazon.com}
+  \city{Austin}
+  \state{Texas}
+  \country{USA}
+}
+
+
+
+\author{Srinidhi Madabhushi}
+\affiliation{%
+  \institution{Amazon.com}
+  \city{Seattle}
+  \state{Washington}
+  \country{USA}
+}
+
+\author{Yegor Silyutin}
+\affiliation{%
+  \institution{Amazon.com}
+  \city{Seattle}
+  \state{Washington}
+  \country{USA}
+}
+
+\begin{abstract}
+At Amazon Prime Video, we face the critical operational challenge of managing code deployments during live events and rapid feature releases without causing service outages. Current change control approaches use blanket deployment freezes that block all changes regardless of risk, creating significant developer toil. While prior research has explored risky change predictors, these rely on developer-specific metadata or extensive historical data, raising privacy concerns and limiting applicability to new projects. We introduce a framework centered on diff-aware features---characteristics derived directly from code modifications. Our key contribution is the systematic identification of which quantitative metrics (code-level and change-level metrics) and qualitative indicators (coding style violations, change type classification) are necessary for risk prediction. We employ LLMs as multi-language feature extractors, demonstrating their effectiveness for code analysis beyond generation tasks and eliminating the need for language-specific tooling. We evaluated our framework on two datasets: Prime Video's production environment and the public ApacheJIT dataset. Our best-performing model achieves an average recall of \textbf{0.83} and F1 score of \textbf{0.81} across both datasets for detecting risky code changes. Notably, ablation analysis reveals that change-level volume metrics (e.g., lines added/deleted) are noisy predictors, while structural code complexity provides a substantially stronger risk signal. These results demonstrate that thoughtful feature curation enables effective change risk assessment across different programming languages and organizational contexts while avoiding privacy concerns.
+\end{abstract}
+
+\begin{CCSXML}
+<ccs2012>
+   <concept>
+       <concept_id>10011007.10011074.10011099.10011102.10011103</concept_id>
+       <concept_desc>Software and its engineering~Software testing and debugging</concept_desc>
+       <concept_significance>500</concept_significance>
+   </concept>
+   <concept>
+       <concept_id>10011007.10011074.10011099.10011692</concept_id>
+       <concept_desc>Software and its engineering~Software maintenance tools</concept_desc>
+       <concept_significance>500</concept_significance>
+   </concept>
+</ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Software and its engineering~Software testing and debugging}
+\ccsdesc[500]{Software and its engineering~Software maintenance tools}
+
+\keywords{Change Control, Code Freeze, Change Risk, Proactive Safety, Just-in-Time Defect Prediction}
+
+\maketitle
+
+\input{01-intro}
+\input{02-rw}
+\input{03-methodology}
+\input{04-result}
+\input{05-discussion}
+\input{06-ttv}
+\input{07-conclusion}
+
+\section{Data Availability Statement}
+The primary dataset in this study is derived from Amazon's proprietary production systems and cannot be released due to the confidentiality of internal source code, deployment records, and operational data. To support external validation, we additionally evaluate on the publicly available ApacheJIT dataset~\cite{apachejit2022}. All diff-aware features are defined in full in Section~3, enabling reproduction of our feature-extraction pipeline on other codebases.
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+\end{document}

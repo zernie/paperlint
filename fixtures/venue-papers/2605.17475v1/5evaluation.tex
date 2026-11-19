@@ -1,0 +1,257 @@
+\section{Evaluation}
+
+Event-B Agent is evaluated through the following research questions:
+\begin{itemize}
+    \item \textbf{RQ1.} Is Event-B Agent effective in constructing consistent and correct models? How does it compare against existing approaches attempting this problem?
+    \item \textbf{RQ2.} How does each component of Event-B Agent contribute to its overall performance?
+    \item \textbf{RQ3.} How efficient is Event-B Agent in the task of formal model synthesis and repair?
+    \item \textbf{RQ4}. How does Event-B Agent construct and repair models across different refinement steps, and what atomic repair functions does it employ?
+\end{itemize}
+
+\subsection{Experimental Setting} \label{sec:evalsetting}
+\textbf{Tool.}
+We developed a proof-of-concept implementation of Event-B Agent integrated into the Rodin IDE \cite{rodin}.
+The structured JSON schema described in Section~\ref{sec:modelsynthesis} enables the generated Event-B specification to be parsed and incorporated into the IDE, which natively supports structured Event-B code.
+In our experiments, model checking was performed by ProB \cite{ProB}, a model checker for Event-B that checks deadlock-freeness, liveliness, consistency of axioms, and invariants preservation.
+
+\noindent\textbf{Backbone LLM.}
+We use GPT-5 (medium reasoning configuration, 2025-08-07 version)~\cite{openai_gpt5} as the backbone LLM in our experiments to demonstrate that formal model synthesis and repair remain challenging even for one of the most advanced LLMs.
+
+\noindent
+\textbf{Baselines.}
+To the best of our knowledge, no prior work formulates formal development as a coordinated process of model construction and proof derivation to achieve correct-by-construction development.
+For empirical evaluation, we therefore consider the closest existing approaches that share the same input–output setting.
+For comparison, the outputs must support proof obligation generation and theorem proving.
+A common specification language with such support is therefore required.
+We chose Event-B because it provides unbounded proving and model checking, enabling the comparison and allowing the model checking based approaches to operate.
+Specifically, we evaluate against three representative baselines below:
+
+\begin{enumerate}
+    \item \textbf{LLM Model Synthesis with Automated Provers.} A straightforward baseline is to generate specifications with an LLM and discharge the resulting proof obligations using automated provers. Within Rodin, this includes built-in engines such as PP (Predicator Prover) and integrated SMT solvers (CVC4 \cite{barrett2011cvc4}, Z3 \cite{de2008z3}, etc.).
+    \item \textbf{Adapted General Purpose Coding Agent (Cursor).} We evaluate Cursor~\cite{CursorAI}, a commercial coding LLM agent that integrates features such as file editing, codebase search, and terminal execution. In our setup, web search is disabled, while other features remain enabled. Cursor is guided by high-level task instructions and explicit commands to parse Event-B specifications (JSON) into a formal model and run the model checker.
+    \item \textbf{Adapted PAT-Agent.} To evaluate existing formal agents in our problem setting, we adapt PAT-Agent~\cite{zuo2025pat}, originally designed for autoformalization in PAT \cite{sun2009pat}. PAT and Event-B are both event/state-based specification languages, differing mainly in syntax and prover support. Our adaptation generates Event-B models by mapping context and machine constructs to PAT’s constants, variables, guarded actions, and processes; rewriting syntax documentation and examples in Event-B; replacing the PAT model checker with ProB for verification feedback; and omitting proof obligations, as PAT-Agent focuses solely on model checking. This adapted version serves as a baseline to contrast with Event-B Agent’s dual approach, integrating both model checking and theorem proving.
+\end{enumerate}
+After model synthesis by Cursor and PAT-Agent, we apply the automated provers from baseline~(1) to their outputs, ensuring all baselines are evaluated under comparable conditions.
+
+\noindent \textbf{Dataset.}
+We collected a dataset with 27 formal systems, including classic examples and algorithms collected by Jean-Raymond Abrial (the designer of the B Method and Event-B) and widely regarded as representative Event-B developments~\cite{abrial2010modeling}, together with real-world systems~\cite{riviere2025extending, riviere2023formalising}.
+For the dataset on classic algorithms and real-world systems, we manually construct the requirement document based on the descriptions of the systems.
+We partition the dataset into three subsets, ``Simple'', ``Medium'', and ``Complex'', based on the number of requirements (3–8, 9–13, and 14–24, respectively), with nine systems in each partition.
+Although requirement count is not the only possible criterion, it is available prior to model construction and correlates with modeling complexity, as reflected by the increasing average number of POs in Event-B models generated by our method (89.22, 173.7, and 284.3).
+Other potential metrics (e.g., proof size or structural properties) are either unavailable before construction or do not reliably reflect modeling difficulty.
+Therefore, we adopt the requirement count as a deterministic and practical partition criterion.
+
+\noindent \textbf{Metrics.}
+In this work, we design three metrics to evaluate the consistency and correctness of the constructed formal models.
+
+\paragraph{Consistency}
+A formal model is consistent if it is not contradictory to itself.
+We evaluate the consistency level of a model through the Proof Obligation Discharge Rate (PDR).
+For a model $M$ with a set of proof obligations $PO_M$, the PDR is defined as follows:
+{\footnotesize \[
+PDR = \frac{\sum_{po \in PO_M} \mathbb{I}[Discharged(M,po)]}{|PO_M|}
+\]}
+The $PDR$ metric corresponds to the second conjunct in \autoref{eq:correctness}, measuring the proportion of proof obligations that are successfully discharged.
+In our experiment, we report the $PDR$ of the final model after refinement and repair, since the final model's consistency reflects the consistency of the entire refinement chain.
+
+\paragraph{Correctness}
+A model $M$ is correct if it covers and fulfills all requirements from the requirement document $REQ_M$.
+A requirement $req \in REQ_M$ is considered covered if it is presented in $M$ without errors, and $req$ is fulfilled if:
+\begin{enumerate}
+    \item It is covered in $M$, i.e. $Covered(M,req)$
+    \item POs associated with $req$ are discharged, i.e. $\bigwedge_{po \in PO_{req}} Discharged(M, po)$
+\end{enumerate}
+During model construction, we instruct the corresponding LLM to generate labels for elements corresponding to the requirements they represent.
+In this way, we can compute both requirement coverage (RC) and requirement fulfillment (RF):
+
+{\footnotesize \[
+\begin{aligned}
+RC = \frac{\sum_{req \in REQ_M} \mathbb{I}[Covered(M,req)]}{|REQ_M|}, \quad
+RF = \frac{\sum_{req \in REQ_M} \mathbb{I}[Covered(M,req) \land (\bigwedge_{po \in PO_{req}} Discharged(M, po))]}{|REQ_M|}
+\end{aligned}
+\]
+}
+$RC$ and $RF$ are computed across multiple refinement layers, since the refine layer hides the preserved requirements and only includes new requirements or updated requirements.
+
+\paragraph{Validity of Assumption}
+When computing the metrics, we assume that once a requirement is covered and fulfilled in an abstract model $M_i$, it remains so in the subsequent refinement models $M_{i+1}, \dots, M_n$.
+This assumption holds provided the refinement is correct, i.e., all refinement POs are discharged.
+In practice, a failed refinement PO does not necessarily imply that all requirements from $M_i$ are violated, but it is also unclear which subset of requirements may be affected.
+To make $RC$ and $RF$ computable across refinement layers, we therefore adopt this assumption, and validate it empirically by reporting the $PDR$ for refinement-related POs for all refinement layers.
+
+
+
+
+
+\subsection{RQ1. Overall Performance} \label{sec:rq1}
+We assess the effectiveness of Event-B Agent for end-to-end formal model synthesis and repair by comparing it with the three baseline methods introduced in Section~\ref{sec:evalsetting}.
+\autoref{tab:RQ1} summarizes the performance of all four methods across datasets partitioned by system complexity, as defined in Section~\ref{sec:evalsetting}, and reports their overall results.
+The methods under comparison are:
+\begin{itemize}
+    \item \textbf{LLM + auto provers}: a naive baseline that synthesizes models using an LLM and attempts to discharge the proofs with SMT solvers and theorem provers.
+    \item \textbf{Cursor}: a general-purpose coding agent baseline implemented with Cursor.
+    \item \textbf{PAT-Agent}: a baseline for formal model synthesis without exploiting proof information.
+    \item \textbf{Event-B Agent}: our proposed framework.
+\end{itemize}
+The results demonstrate that our method consistently outperforms the three baselines on the metrics $PDR$, $RC$, and $RF$, both overall and across different levels of system complexity.
+
+
+
+\noindent
+\textbf{Consistency.}
+Event-B Agent attains an overall $PDR$ of 97.86\%, indicating that the synthesized models are largely self-consistent, with only 2.14\% of proof obligations remaining undischarged. 
+In contrast, the LLM + auto provers, Cursor, and PAT-Agent baselines achieves $PDR$s of 89.20\%, 90.07\%, and 95.56\% respectively, falling short of our method and exhibiting greater variance. 
+Notably, Cursor’s $PDR$ fluctuates by 12.5\% across different complexity levels, which makes it the most unstable method among all.
+Without a structured framework, its performance solely relies on the capability of the underlying LLM.
+While PAT-Agent attains stronger performance, its $PDR$ still varies more than ours and declines as system complexity increases. 
+In contrast, Event-B Agent consistently maintains $PDR$ above 97.0\% across all dataset partitions.
+
+\noindent
+\textbf{Correctness w.r.t. Requirements.}
+Metrics $RC$ and $RF$ measure how well a formal model covers and satisfies system requirements. 
+As discussed in Section~\ref{sec:evalsetting}, this requires validating the assumption of refinement correctness. 
+The $PDR$ for refinement-specific proof obligations (Refinement $PDR$) achieved by Event-B Agent is reported in \autoref{tab:RQ2_refine}. 
+The full version of Event-B Agent reaches a Refinement $PDR$ of 92.56\%, indicating that the assumption holds for most refined models. 
+On this basis, $RC$ and $RF$ can be used as approximations of requirement-level correctness.  
+
+The last two columns of \autoref{tab:RQ1} show that Event-B Agent achieves overall $RC$ and $RF$ values of 97.13\% and 93.79\%, respectively, which are the highest among all evaluated methods. 
+In particular, $RC$ exceeds the second-best method by 4.63\% and $RF$ by 18.01\%.
+Across all dataset partitions, our method consistently delivers the best performance with lower variance on both metrics, demonstrating that models produced by Event-B Agent cover and satisfy the largest proportion of system requirements. 
+It is also worth noting that lower $RC$ and $RF$ values imply that $PDR$ could have been superficially inflated, as the generated formal system may bypass more challenging requirements.
+Moreover, the ratio $RF/RC$ for our method is 0.97, substantially higher than those of the three baselines (0.75, 0.77, and 0.82). 
+This indicates that once a requirement is captured in the formal model, Event-B Agent is able to discharge nearly all corresponding proof obligations. 
+We therefore conclude that Event-B Agent performs the best in terms of correctness with respect to system requirements.
+
+
+
+\input{tables/RQ1}
+
+\subsection{RQ2. Ablation Study}
+
+The two key components of Event-B Agent are the refinement strategy planning step and the model \& proof repair step.
+The latter integrates formal verification with a novel repair guidance system, namely, repair rules recommendation, fix strategy decision LLM, and atomic repair function execution.
+As shown in Section~\ref{sec:rq1}, Event-B Agent outperforms the baselines, which do not exploit proof information for repairing.
+To address RQ2, we perform a finer-grained evaluation regarding the model \& proof repair step.
+Specifically, we examine the performance of Event-B Agent when proof information is available, but repair guidance is disabled, leaving the LLM to directly repair the model based on the proof state.
+
+\noindent
+\textbf{Ablation Baselines.}
+The ablation study evaluates Event-B Agent against three variants:
+\begin{enumerate}
+    \item \textbf{None Enabled}: Both refinement and repair guidance are removed. This baseline isolates the capability of the LLM in model construction and repair when provided only with the model and verification results from the model checker and theorem provers.  
+    \item \textbf{Refinement only}: Refinement is retained, but repair guidance is removed. Since refinement introduces additional proof obligations and helps to reduce proving efforts at the same time, this baseline assesses how refinement affects the overall performance.
+    \item \textbf{Repair guidance only}: Refinement is omitted while repair guidance is retained. This baseline isolates the effectiveness of the repair guidance component.  
+\end{enumerate}
+
+\noindent
+\textbf{Results and Discussion.}
+\autoref{tab:RQ2} summarizes the ablation results. 
+Across all metrics, the full version of Event-B Agent consistently delivers the strongest overall performance, outperforming the ablation baselines. 
+On the ``Simple'' and ``Medium'' partitions, some ablations obtain marginally higher scores, but these gains are limited and do not persist across the dataset as a whole.
+For $RC$ and $RF$, the overall performance of the full version of Event-B Agent again surpasses all baselines by a significant margin, confirming the pattern observed in Section~\ref{sec:rq1}. 
+Since these metrics reflect requirement-level correctness, lower coverage may unexpectedly inflate the observed $PDR$ values.
+Taken together, these results highlight the complementary contributions of refinement and repair guidance to the effectiveness of Event-B Agent.
+
+\input{tables/RQ2}
+% \input{tables/RQ2_refine}
+
+While comparing baseline 2 (``Refinement only'') and Event-B Agent with their counterparts without refinement (baseline 1, ``None enabled'', and baseline 3, ``Repair guidance only''), we generally observe a positive trend across all metrics when refinement is present. 
+There are, however, two notable exceptions. 
+First, in the ``Simple'' partition, although Event-B Agent achieves a higher $PDR$ than baseline 3, its $RC$ and $RF$ values are slightly lower. 
+As system complexity increases, the $RC$ and $RF$ values for baseline 3 decline, and Event-B Agent surpasses it. 
+This suggests that refinement becomes increasingly important for ensuring correctness in more complex systems.
+Second, in the ``Complex'' partition, baseline 2 achieves only slightly better $RF$ than baseline 1, and a lower $RC$. 
+From \autoref{tab:RQ2_refine}, we observe that the ``Refinement only'' baseline attains a Refinement $PDR$ of just 46.53\% in this partition, compared to 77.78\% and 78.78\% in the other two. 
+This correlation between low Refinement $PDR$ and reduced performance is consistent with the explanation in Section~\ref{sec:evalsetting}: without sufficiently validated refinement steps, the observed requirement-level metrics become inflated and unreliable.
+Overall, these results confirm that high Refinement $PDR$ is essential for validating refinement links and preserving the inductive property in Event-B.
+
+Regarding the repair guidance component, we observe that the ``Repair guidance only'' baseline performs significantly better than baseline 1 in the ``Simple'' partition, demonstrating its effectiveness in less complex systems. 
+However, its $PDR$ decreases as system complexity increases, likely due to implementation limitations.
+The repair module currently supports only a fixed set of atomic repair functions, which suffices for simple cases but is inadequate for more complex obligations.
+When combined with refinement, this limitation is mitigated.
+Refinement decomposes complex systems into smaller ones, in which proofs fall within the reach of the repair guidance system, underscoring the complementary nature of the two components.
+This synergy is reflected in the Event-B Agent achieving the highest $PDR$ in two partitions and in the overall results.
+
+In summary, RQ2 shows that refinement and repair guidance are mutually reinforcing. 
+Refinement reduces the complexity of individual proofs by decomposing model construction into smaller steps, making them more amenable to repair. 
+Conversely, effective model and proof repairs improve the discharge of refinement obligations, enabling the construction of higher-quality models that provably preserve the requirements established in simpler abstract models.
+
+
+\subsection{RQ3. Efficiency}
+
+\input{tables/RQ3_efficiency}
+
+\noindent
+We evaluate the efficiency of Event-B Agent using three metrics: Time, the total execution time (in minutes) per component and overall, \#Calls, the number of LLM invocations, and \#Tokens, the number of tokens consumed.
+\autoref{tab:efficiency} reports their distributions across components and the overall model construction cost.
+Time and \#Calls for refinement strategy planning remain stable across system complexities, as it runs once per system.
+Variation in \#Tokens likely reflects differences in requirement counts.
+For model synthesis, \#Calls are similar across partitions, while Time and \#Tokens increase with system complexity, indicating higher per-call cost for complex systems.
+For model \& proof repair, both Time and \#Calls increase with complexity.
+Notably, \#Tokens for ``Complex'' is lower than ``Medium'', consistent with our observation that refinement reduces proving effort.
+Although the “Complex” partition has more POs, they are not necessarily harder to discharge.
+
+The model \& proof repair step takes on average \SI{43.71}{minutes}, \SI{42.74}{LLM} calls, and 1552789.15 tokens, largely due to high number of proof obligations (182.41 on average).
+\#Calls is lower than PO count because many POs are discharged automatically, while the remaining require more complex reasoning or additional premises, where LLM-based model \& proof repair becomes necessary.
+In practice, Event-B experts typically spend substantially more time on interactive proofs.
+In contrast, the average time to attempt discharging a single PO in Event-B Agent remains below \SI{0.30}{minutes} across all partitions (0.18, 0.30, and \SI{0.22}{minutes}), with an overall average of \SI{0.24}{minutes}.
+Overall, this suggests that the repair overhead scales primarily with the number of POs, rather than exhibiting uncontrolled growth with system complexity.
+
+
+\subsection{RQ4. How does Event-B Agent construct and repair models?}
+% \subsection{RQ3. How does Event-B Agent construct and repair models?}
+
+% % Initial version
+% \begin{figure}[t]
+% \centering
+% \includegraphics[width=0.9\linewidth]{figures/rq4.drawio.png}
+% \caption{Evolution of metrics across refinement steps (left) and distribution of commonly used model and proof repair functions (right).}
+% \label{fig:refinement}
+% \end{figure}
+
+% \begin{figure}[t]
+% \includegraphics[width=12cm]{figures/modelfixing.drawio.png}
+% \caption{Workflow for the Model Repair Component.
+% }
+% \label{fig:modelrepair}
+% \centering
+% \end{figure}
+
+\input{figures/RQ4_figures}
+
+\noindent
+\textbf{Refinement.}
+In \autoref{fig:refinement}, we present how the three metrics evolve as refinement proceeds.
+Across all refinement steps, the average $PDR$ is maintained at a consistently high level (97.86–98.50\%). 
+The average $RC$ gradually increases from 31.19\% in the abstract models to 97.13\% in the final model, while average $RF$ rises from 30.24\% to 93.79\%.
+This trend shows that refinement effectively expands requirement coverage and fulfillment without compromising proof obligation discharge rate.
+
+\noindent
+\textbf{Atomic Repair Functions.}
+In \autoref{fig:distribution}, we show the frequency of atomic repair functions invoked by Event-B Agent that successfully contributed to discharging proof obligations.  
+Overall, functions from all four categories are involved, demonstrating their effectiveness. 
+Among them, model modifications account for 38.36\% of successful invocations, followed by proof modifications at 33.62\%. 
+Joint model–proof modifications contribute 18.97\%, showing the impact of operations that simultaneously affect both the model and the proof. 
+Finally, retrieve information functions, such as model checking, make up 9.10\%, indicating that even non-modifying actions play a role in guiding future repairs. 
+This distribution shows that while proof- and model-level operations dominate individually, the hybrid category provides a substantial contribution.
+
+\noindent
+\textbf{Qualitative Evaluation of Repair.}
+In this section, we present three representative repairs from the motivating example (\autoref{fig:running_example}) to illustrate how Event-B Agent uses POs to guide model repair.
+
+\textbf{(1) Ensuring Well-Definedness.}
+Initially, the invariant $FUN$--1 generated by Event-B Agent is $has\_j=TRUE \Rightarrow f(j)=min(ran(f))$, which is not well defined because $j$ could be out of the domain of $f$.
+The agent then enters the repair step and calls $StrengthenInvariant$ on this invariant, and updates it to be $has\_j=TRUE \land j \in dom(f) \Rightarrow f(j)=min(ran(f))$.
+After this repair to the model, the well-definedness PO for this invariant is successfully discharged.
+
+\textbf{(2) Ensuring Refinement Correctness.}
+In the abstract machine $M_{abstract}$, the event $stop\_empty$ doesn't assign a value to $j$, while the corresponding event in the concrete machine $M_{concrete}$ assigns $j:=0$.
+As a result, a PO has been generated to ensure that under guard $n=0$ of this event, $j$ must be 0.
+This PO cannot be discharged due to missing hypotheses.
+Event-B Agent repairs this by calling the $StrengthenInvariant$ function, and adds invariant $n=0 \Rightarrow j=0$ to $M_{concrete}$, which helps to discharge the generated PO.
+Furthermore, invariant preservation POs are generated for this new invariant, and are all discharged in $M_{concrete}$, guaranteeing that the repair is consistent and correct.
+
+\textbf{(3) Invariant Preservation.}
+As discussed in Section~\ref{sec:repair}, Event-B Agent is capable of ensuring that every event preserves the invariants.
+In the motivating example, Event-B Agent calls the $StrengthenGuard$ function and adds $grd7: 1 \leq i$ to event $find\_not\_better$, since $i$ can never be 0 due to the design of the algorithm.
+As a result, the post-state invariant $inv'$ becomes vacuously true and the invariant preservation PO is discharged.

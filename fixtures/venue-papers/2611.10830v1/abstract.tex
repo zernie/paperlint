@@ -1,0 +1,33 @@
+Agentic AI ecosystems increasingly rely on reusable agent skills
+that combine executable code, natural-language instructions,
+configuration artifacts, and external tool integrations.
+These hybrid artifacts create software supply-chain risks
+because malicious intent may be distributed across instructions,
+code, metadata, and runtime behavior, making isolated alerts
+difficult to interpret.
+
+We evaluate three open-source scanners on a held-out test set
+of 140 skills comprising 80 malicious and 60 benign samples,
+including Cisco Skill Scanner with and without its
+optional LLM analyzer. The default Cisco configuration achieves
+a recall of 0.91 with 33 false positives among the 60 benign
+skills, while the LLM-enabled configuration using
+Qwen3:8B achieves a recall of 0.85 with 40 false positives.
+
+We then present a framework that combines static findings,
+safety-constrained sandbox evidence, and LLM-based reasoning
+to assess malicious intent. The framework tracks the origins
+of findings and relates evidence across analysis layers.
+In a within-system evidence-source ablation using the same
+reasoning backend, adding dynamic evidence to skill-content
+reasoning increases F1 from 0.70 to 0.85. Combining static
+and dynamic evidence further increases F1 to 0.89, with
+five false positives among 60 benign skills. Dynamic evidence
+provides the largest observed improvement.
+
+The Full Pipeline detects 68 of 80 malicious skills,
+achieving 0.88 accuracy, 0.93 precision, and 0.85 recall.
+It matches the observed recall of Cisco Skill Scanner with
+LLM while reducing false positives from 40 to five.
+This system-level comparison does not isolate model
+or architecture effects.

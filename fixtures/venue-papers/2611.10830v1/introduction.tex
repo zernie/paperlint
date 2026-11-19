@@ -1,0 +1,116 @@
+\section{Introduction}
+
+Large language model (LLM)-based agents increasingly rely on external extensions to perform specialized tasks. In ecosystems such as Claude Code, these extensions are packaged as \emph{skills}, which may contain natural-language instructions, scripts, configuration files, and supporting resources that are loaded when relevant~\cite{anthropicSkills,anthropicSkillsGithub}. Although skills support software engineering, deployment, API integration, and workflow automation, they also introduce security risks because both instructions and executable artifacts can influence future agent behavior. Figure~\ref{fig:install-to-execution} illustrates the install-to-execution lifecycle of an agent skill, from developer publication to runtime effects, and highlights how trust assumptions change across stages. Different points in this lifecycle create multiple trust surfaces that cannot be fully validated at any single stage~\cite{liuMaliciousSkillsWild2026}. Unlike traditional software packages, agent skills are interpreted and executed through an AI agent, which means that malicious behavior may arise not only from code execution but also from hidden instructions, excessive agency, tool poisoning, permission abuse, or mismatches between the documented purpose and the actual behavior~\cite{krishna2026clawdpwned,liuMaliciousSkillsWild2026,virustotal2026openclaw}.
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/install_to_execution_chain.png}
+\caption{Install-to-execution trust chain in agent skill ecosystems.}
+\label{fig:install-to-execution}
+\end{figure*}
+
+
+Recent studies have shown that agent skills represent an emerging attack surface. Liu et al.~\cite{liuAgentSkillsWild2026} reported vulnerabilities such as prompt injection, data exfiltration, privilege escalation, and supply-chain risks in large-scale public skill ecosystems. A follow-up study further showed that confirmed malicious skills often contain multiple vulnerabilities spanning several stages of an attack chain, including data theft and agent hijacking~\cite{liuMaliciousSkillsWild2026}. These findings suggest that malicious behavior is rarely captured by a single suspicious keyword or command. Instead, attacks are often distributed across instructions, scripts, configurations, runtime actions, and external communications.
+
+Liu et al.~\cite{liu2026trust} show that malicious agent skills do not always contain explicit malware indicators. They propose a technique called \textit{Dependency Steering}, which manipulates coding agents into recommending attacker-selected packages during otherwise benign programming tasks. Lin et al.~\cite{lin2026phantomskill} demonstrate a technique for concealing malicious behavior in auxiliary skill resources by rewriting explicit payloads as vulnerability-shaped code. These attacks show that skill-induced harm may manifest through downstream agent decisions, trigger-dependent behavior, or code that resembles an ordinary software vulnerability.
+
+% Figure~\ref{fig:install-to-execution} illustrates the install-to-execution lifecycle of an agent skill, from developer publication to runtime effects, and highlights how trust assumptions change across stages. Different points in the lifecycle can create multiple trust surfaces that cannot be fully validated at a single stage of the lifecycle~\cite{liu2026malicious}. The effective trust boundary of an agent skill extends far beyond the executable code installed on disk. Agent execution implicitly relies on a broad set of artifacts and runtime dependencies: the executable code itself, natural language instructions embedded in SKILL.md, MCP server configurations, tool descriptions, external API responses, and runtime-fetched dependencies. The critical problem is that each of these surfaces is resolved at a different stage of the lifecycle  and no prior stage can validate what a later stage will encounter. A static scan at install time can inspect code structure but cannot reason about the semantic intent hidden in a tool description. A clean SKILL.md at review time cannot guarantee that an MCP server will return benign output at invocation time. An artifact that passes all pre-deployment checks today may behave differently tomorrow if a remote endpoint changes its response, a dependency updates silently, or a conditional branch is triggered by a specific user context. There is therefore no single stage in the install-to-execution chain at which security can be conclusively asserted.
+
+
+% Recent studies show that malicious agent skills increasingly resemble supply-chain threats against agentic ecosystems such as OpenClaw and MCP-based tool environments.
+%Table~\ref{tab:agent_instruction_attack_vectors} shows the major attack vectors and detection methods.
+
+Industry and academia have proposed scanners for malicious agent skills. Cisco Skill
+Scanner~\cite{cisco_skill_scanner}, for example, combines signatures, code and bytecode
+inspection, static behavioral analysis, and optional LLM analysis. However, existing
+tools lack systematic evaluation on real-world skills, particularly regarding detection
+performance and false-positive noise. We therefore ask the following research question:
+\begin{itemize}
+    \item \textbf{RQ1:} How do existing open-source scanners perform on a dataset of malicious and benign agent skills?
+\end{itemize}
+
+To answer this research question, we evaluate existing malicious-skill scanners on a set of malicious and benign agent skills. 
+For scanner configurations evaluated using alert counts,
+we classify a skill as malicious when its number of reported
+alerts reaches or exceeds a selected threshold. These thresholds
+are selected exclusively on the development split and applied
+unchanged to the held-out test set. Configurations that provide
+a native binary verdict are evaluated using that verdict directly.
+Here, the development split supports detector configuration
+and threshold selection rather than LLM weight training.
+% For scanners requiring thresholding, operating thresholds are selected exclusively using the training data and then applied unchanged to the test set. Scanner configurations exposing a native binary verdict are evaluated using that verdict directly. 
+We compare the tools in terms of detection performance, ranking quality, and false-positive noise. This evaluation provides a baseline that quantifies the limitations of existing scanners and motivates the design requirements of our framework.
+%; it is not the primary technical contribution of this paper. The primary contribution is the multi-layer detection framework evaluated in RQ2.
+
+% For example, attackers could exploit a \textit{shadow feature } to plan a malicious code, which is a capability implemented in the skill but absent from its public documentation or \texttt{SKILL.md} description~\cite{liu2026malicious}. This creates a trust gap: users may approve a skill based on its visible description, while the actual implementation performs additional actions during execution. For example, a skill may be documented as a Markdown formatter, project summarizer, or GitHub helper, but its helper script may silently inspect environment variables, search for \texttt{.env} files, or attempt outbound connections to an undocumented endpoint~\cite{snyk2026toxicskills, liu2026malicious}. Such shadow features are especially dangerous in agentic environments because the skill's behavior is mediated by the AI agent and may not be obvious from static documentation alone. A ``GitHub helper'' skill, for instance, may claim to validate repository metadata and generate issue summaries, while also attempting to collect variables such as \texttt{GITHUB\_TOKEN}, \texttt{API\_KEY}, or other credential-like values and transmit them externally. Detecting this type of abuse requires comparing the declared purpose of the skill with observed runtime behavior, including filesystem access, system calls, network activity, and agent output~\cite{liu2026malicious,virustotal2026openclaw}.
+
+Agent skills differ from traditional open-source packages in that they contain code, such as Python scripts, as well as natural-language text, such as instructions in \texttt{SKILL.md}. Static analysis techniques examine an agent skill without
+executing it. Rule-based techniques can identify suspicious
+code patterns, but interpreting these findings requires
+context about the skill's intended behavior. Dynamic analysis complements static analysis by providing runtime evidence of actions such as
+credential access, outbound data transfer, and persistence
+attempts that may be difficult to confirm from skill artifacts
+alone~\cite{cisco_skill_scanner, liuMaliciousSkillsWild2026}. Interpreting static findings alongside runtime evidence
+can help assess whether suspicious operations are
+consistent with a skill's stated purpose. This motivates
+our second research question:
+
+
+% Existing malicious agent skills scanners commonly use static and dynamic analysis techniques to detect malicious patterns in agent skills. Static analysis techniques examine an agent skill without executing it. A static scan at install time can inspect code structure but cannot reason about the semantic intent hidden in a tool description. Runtime observation is necessary to capture behaviors such as credential access, outbound exfiltration, and persistence attempts that are invisible to pre-deployment inspection~\cite{cisco_skill_scanner, liu2026malicious}. 
+
+
+\begin{itemize}
+\item \textbf{RQ2:} How can static analysis, dynamic analysis, and LLM-based reasoning be combined to correlate evidence and improve the detection of malicious agent skills?
+\end{itemize}
+
+To answer this research question, we propose a framework that combines static analysis, dynamic analysis, and agentic reasoning to detect malicious agent skills. We evaluate the framework on a curated dataset of malicious and benign skills and compare its performance with that of existing scanners.
+
+In summary, this paper makes three contributions:
+% \begin{itemize}
+% \item We establish a comparative baseline by evaluating existing open-source malware scanners for agent skills and analyzing their respective strengths and limitations.
+% \item We propose a multi-layer scanning framework that combines static analysis, dynamic analysis, and agentic reasoning to identify malicious intent in agent skills.
+% \end{itemize}
+
+\begin{itemize}
+    \item We benchmark three open-source scanners on a common
+    development/test split, including Cisco Skill Scanner both
+    with and without its optional LLM analyzer, and characterize
+    their detection performance and false-positive burden.
+
+    % \item We present a framework with provenance-aware
+    % cross-layer evidence correlation that tracks findings
+    % to their originating skill artifacts and relates static
+    % findings to sandbox evidence for LLM-based assessment
+    % of malicious intent.
+
+    % \item We conduct a within-system evidence-source ablation
+    % using the same reasoning backend. Dynamic evidence provides
+    % the largest observed improvement, while combining static
+    % and dynamic evidence achieves an F1-score of 0.89 with
+    % five false positives among 60 benign test skills.
+
+    \item We present a framework that combines static findings,
+    safety-constrained sandbox evidence, and LLM-based reasoning.
+    The framework traces findings to their sources and relates
+    evidence across analysis layers to assess malicious intent.
+
+    \item We evaluate the contribution of static and dynamic evidence
+    using the same reasoning backend. Adding dynamic evidence to
+    skill content yields the largest observed F1 gain, from 0.70
+    to 0.85. Combining both evidence sources raises F1 to 0.89,
+    with five false positives among 60 benign test skills.
+\end{itemize}
+
+
+% The framework produces a unified numerical risk score for direct comparison.
+
+% Traditional Static analysis alone is insufficient: it operates on a frozen snapshot of the artifact and cannot observe intent that manifests only at runtime. 
+%  And because individual signals are ambiguous in isolation, behavioral correlation across multiple evidence sources is required to distinguish malicious intent from normal developer tooling. This motivates a hybrid detection pipeline grounded in these requirements: a static layer for pre-deployment triage, a dynamic sandbox layer for runtime observation, and an LLM-based reasoning layer for evidence correlation and semantic disambiguation.
+% Current agent-skill scanning tools are primarily finding-based rather than score-based. They report alerts, issues, detections, or policy violations, but
+
+ 
+% Therefore, in our evaluation, Cisco-style MCP and Grit are treated as rule/finding-based scanners.
+% Since their outputs are not expressed on a common risk scale, we normalize them into a binary decision rule: if a tool reports at least one issue, finding, detection, or alert, the sample is flagged as malicious; otherwise, it is treated as benign. 
+% This enables fair comparison with our detector using standard binary classification metrics.
+
+

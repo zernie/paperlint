@@ -1,0 +1,21 @@
+\begin{table*}[htbp]
+\centering
+\caption{Watermarking methods used in the evaluation. All methods are evaluated for payload recovery. For MaskWM and WAM, which return pixel-level maps of watermark presence, we report watermark-region localization using intersection-over-union (IoU). MaskWM and WAM are native local methods; OmniGuard, TrustMark, and PixelSeal are adapted reference methods originally designed for global (i.e., full-image) watermarking.}
+\label{tab:semantics}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{@{}l >{\raggedright\arraybackslash}X c >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Method} & \textbf{Embedding setup} & \textbf{Payload bits} & \textbf{Decoder output} \\
+\midrule
+MaskWM~\cite{maskwm} & Native embedding only within local regions & 64 & Payload + pixel-level map of watermark presence \\
+WAM~\cite{wam} & Native embedding only within local regions & 32 & Payload + pixel-level map of watermark presence \\
+OmniGuard~\cite{omniguard} & Global embedding confined to watermark region & 100 & Payload + tamper map$^{\dagger}$ \\
+TrustMark~\cite{trustmark} & Global embedding confined to watermark region & 100 & Payload + rectangular region$^{*}$ \\
+PixelSeal~\cite{pixelseal} & Global embedding confined to watermark region & 256 & Payload only \\
+\addlinespace[0.25em]
+\multicolumn{4}{@{}p{\dimexpr\textwidth-2\tabcolsep\relax}@{}}{\footnotesize $^{*}$ For TrustMark, the predicted watermark region is the rectangular output of its optional watermark-region detector.} \\
+\multicolumn{4}{@{}p{\dimexpr\textwidth-2\tabcolsep\relax}@{}}{\footnotesize $^{\dagger}$ OmniGuard's tamper map estimates edited content rather than the watermark region.} \\
+\bottomrule
+\end{tabularx}
+\end{table*}

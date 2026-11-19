@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acmart.cls",
+      "role": "preamble"
+    },
+    {
+      "path": "01-intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "02-rw.tex",
+      "role": "body"
+    },
+    {
+      "path": "03-methodology.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/comparison_result.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/style_categories.tex",
+      "role": "body"
+    },
+    {
+      "path": "04-result.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/classification_result.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/ablation_study_result.tex",
+      "role": "body"
+    },
+    {
+      "path": "05-discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "06-ttv.tex",
+      "role": "body"
+    },
+    {
+      "path": "07-conclusion.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "fd9a1d2619c81d892666de49e634a058e7583de134059a660bd6e91a8dc1c7da",
+    "acmart.cls": "c8fbf6a083bd6a25b6b7ef0c026411f8d0ad7f253fa3b7b0b4817a9d81840618",
+    "01-intro.tex": "ddcef2cf70c2095dcaa3862c0ad8327194b80e382bfb5e7be6063fdd9e5cb7f1",
+    "02-rw.tex": "08c8e0b654c8dd24fd9dbfb6b212897b6d3b552328bd94aff50a59991ab00339",
+    "03-methodology.tex": "3993ee347587d3860e97247c09f0163bda9d504b99c594d285974b0897ce8cae",
+    "tables/comparison_result.tex": "30dd9096d2161444e386d9abc95173b7b9cdbb7afed9514e937652baaf1e69ea",
+    "tables/style_categories.tex": "1cf24701d1b6e8cd5ec0886d5606847798aafd6ef5498086d267d382d4e569f9",
+    "04-result.tex": "ffdd04979bc4591b7664d626aaba04583038c34e82727beba2a869a98dbe4d47",
+    "tables/classification_result.tex": "08a2dbdc7f8a09bfef06957af3c314fad631242b4c321e7781251577bec29961",
+    "tables/ablation_study_result.tex": "a4470cc07e61017b8263dd9b2f14d4d20579349130e8a02ab53b0cd6c6a03c36",
+    "05-discussion.tex": "6d014d420e8cc70864f3d2315a23306dfb6fe8c03c7d5e69117e1dc0b791819f",
+    "06-ttv.tex": "01255b1f3e77984811fc5c5174ec6599f67fe1c2e1167450fbe368832b181a3c",
+    "07-conclusion.tex": "7043b2ef4385c96d77f41677e994b1fccaf38d6836ec0c9787f4593d669580d1"
+  }
+}

@@ -1,0 +1,50 @@
+\section{Related Work}
+
+\subsection{Autoformalization and Repair}
+
+LLMs have been explored to reduce the effort of translating informal natural language requirements into formal specifications~\cite{zhang2025position}.
+One direction is property synthesis, where natural language is mapped to LTL~\cite{cosler2023nl2spec, fuggitti2023nl2ltl}, though this covers only a fragment of specification languages and cannot capture full system models.
+Other work addresses program specification generation~\cite{wen2024enchanting, wu2023lemur} or proof synthesis and repair~\cite{first2023baldur, lu2024proof, carrott2024coqpyt}, but these remain task-specific rather than providing an integrated modeling and verification workflow.
+
+More recent studies target system-level models, such as Alloy~\cite{hong2025effectiveness} and Event-B~\cite{capozucca2025ai}, but these approaches are limited in scope and rely on direct text-to-code mappings.
+The closest work is PAT-Agent~\cite{zuo2025pat}, which synthesizes PAT models and validates them via model checking.
+While effective for complex systems and requirements, its verification is confined to full-state-space model checking.
+By contrast, Event-B Agent combines bounded model checking with theorem proving, enabling counterexample-guided repair and proof-based correctness.
+
+% Beyond LLM-based work, the B and Event-B community has studied complementary directions such as construction and refinement methods~\cite{alkhammash2015building,dupont2021event,mashkoor2017refinement}, automated model repair~\cite{cai2019automatic,cai2022fast,kobayashi2024repairing}, and code generation frameworks for producing executable implementations~\cite{mery2011automatic,furst2014code,rivera2017code}. In comparison, prior B or Event-B efforts have focused on human-guided construction, specialized repair techniques, or code generation, whereas Event-B Agent brings these strands together under an automated and unified framework.
+Beyond LLMs, the B and Event-B community has advanced construction and refinement methods~\cite{alkhammash2015building,dupont2021event,mashkoor2017refinement}, model repair~\cite{cai2019automatic,cai2022fast,kobayashi2024repairing}, and code generation~\cite{mery2011automatic,furst2014code,rivera2017code}.
+These efforts remain human-guided, repair-specific, or downstream, whereas Event-B Agent unifies synthesis, repair, and verification in an automated framework.
+
+% PAT-Agent: \cite{zuo2025pat}
+% Alloy Synthesis: \cite{hong2025effectiveness}
+% Event-B Synthesis: \cite{capozucca2025ai}
+% LTL Synthesis: \cite{cosler2023nl2spec, fuggitti2023nl2ltl}
+% Program Specification Synthesis: \cite{wen2024enchanting, wu2023lemur}
+% Proof Synthesis: \cite{first2023baldur, lu2024proof, carrott2024coqpyt}
+
+\subsection{Neurosymbolic Methods}
+Neurosymbolic methods \cite{chaudhuri2021neurosymbolic} combine the expressiveness of neural learning with the verifiability of symbolic reasoning.
+Recent directions include minimal neural activation patterns for verifiable robustness~\cite{geng2024learning}, automata embeddings for reinforcement learning with semantic guarantees~\cite{yalcinkaya2025provably}, and specification learning from combined membership and preference queries~\cite{shah2023learning}.
+Other efforts integrate logic into differentiable frameworks, such as tensorized LTL\textsubscript{f} constraints verified in Isabelle/HOL and utilized for neural training~\cite{chevallier2025formally}, or world models that follow principles for physical interpretability, such as structuring latent spaces by physical intent and partitioning outputs for verifiability~\cite{peper2025four}.
+
+Event-B Agent shares this neurosymbolic philosophy but targets formal verification, using LLMs for semantic tasks while ensuring correctness through model checking and theorem proving in a unified synthesis-and-repair loop.
+
+\subsection{Proof Tactic Recommendation}
+% Recommending tactics in interactive theorem proving has long been studied to lower users' burden. Early studies focused on learning from human proofs and replaying strategies in a given prover. 
+% Examples include PaMpeR~\cite{nagashima2018pamper}, which provides proof method recommendations for Isabelle/HOL, TacticToe~\cite{gauthier2021tactictoe}, which learns and searches tactic sequences in HOL4 using Monte Carlo Tree Search, and Tactician~\cite{blaauwbroek2020tactician}, which records tactic applications in Coq and reuses them to suggest or search for proofs. 
+% PSL~\cite{nagashima2017proof} further introduced a high-level proof-strategy language that expands into concrete tactic sequences during execution.
+
+Tactic recommendation in interactive theorem proving has long aimed to reduce user effort. Early approaches learned from existing proofs and replayed strategies, including PaMpeR for Isabelle/HOL~\cite{nagashima2018pamper}, TacticToe for HOL4~\cite{gauthier2021tactictoe}, Tactician for Coq~\cite{blaauwbroek2020tactician}, and PSL, a strategy language that expands into concrete tactic sequences~\cite{nagashima2017proof}.
+
+% With the rise of transformers and large language models, recent research has shifted toward retrieval- and LLM-based approaches. 
+% MagnusHammer~\cite{mikula2023magnushammer} improves premise selection using transformer-based contrastive learning, while LeanDojo~\cite{yang2023leandojo} builds a retrieval-augmented prover that combines LLMs with large proof libraries. 
+% Other directions explore proof-step prediction for Lean using fine-tuned LLMs~\cite{gloeckle2023temperature}, recursive proof generation strategies~\cite{wang2024proving}, and lifelong or curriculum-based learning agents such as LeanAgent~\cite{kumarappan2024leanagent}. 
+% Lean-STaR~\cite{lin2024lean} further integrates chain-of-thought style reasoning with tactic prediction, interleaving planning and proving to improve success rates.
+Recent work leverages transformers and LLMs. MagnusHammer~\cite{mikula2023magnushammer} enhances premise selection with contrastive learning, while LeanDojo~\cite{yang2023leandojo} combines LLMs with large proof libraries in a retrieval-augmented prover. Other directions explore proof-step prediction~\cite{gloeckle2023temperature}, recursive proof generation~\cite{wang2024proving}, lifelong agents such as LeanAgent~\cite{kumarappan2024leanagent}, and approaches such as Lean-STaR~\cite{lin2024lean}, which interleave chain-of-thought reasoning with tactic prediction to improve proof success.
+
+These efforts center on tactic prediction and retrieval within provers, whereas Event-B Agent embeds tactic guidance in a broader neurosymbolic framework, where model construction, verification, and repair progress together rather than as isolated tasks.
+
+% \subsection{Event-B Synthesis and Repair}
+
+% \textcolor{red}{TODO: add this only if there's enough space.\\
+% TODO: neurosymbolic methods?}

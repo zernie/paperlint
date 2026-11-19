@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acmart.cls",
+      "role": "preamble"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "254afbf2bd14734c4e7ab8652a641f2de8789dbcebdbb48b65058b8972535936",
+    "acmart.cls": "7a9b6535aafd31738b6cd959608be38a4958f3246da12dd6972e8ae71ac858bb"
+  }
+}

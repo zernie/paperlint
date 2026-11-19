@@ -1,0 +1,18 @@
+{
+  "cycles": [
+    {
+      "id": "aidc-2026",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:aidc-2026"
+      },
+      "kind": "regular",
+      "opened": "2026-11-07",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2026-11-07",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

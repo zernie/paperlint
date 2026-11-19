@@ -7,7 +7,6 @@
     "tex/claim-provenance": 12,
     "paper/allowed-files-only": 2,
     "paper/figure-ref-style": 1,
-    "pdf/measured": 1,
-    "tex/template": 1
+    "pdf/measured": 1
   }
 }
