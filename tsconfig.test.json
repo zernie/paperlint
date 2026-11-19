@@ -14,10 +14,7 @@
     "plugin/CLAUDE.md.spec.ts",
     ".claude/skills/add-venue/SKILL.md.spec.ts",
     ".claude/skills/add-venue/add-venue.eval.ts",
-    "site/CLAUDE.md.spec.ts",
-    "site/lib/content.ts",
-    "site/lib/findings.ts",
-    "site/lib/content.test.ts"
+    "site/CLAUDE.md.spec.ts"
   ],
   "exclude": [
     "node_modules",

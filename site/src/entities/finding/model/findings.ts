@@ -1,6 +1,6 @@
 // The findings the journey shows. Each message is quoted from the file named in `source`, in that
 // file's own placeholder syntax (`{{x}}` for an ESLint message, `${s.x}` for a template literal);
-// `site/lib/findings.test.ts` fails when the quoted text is no longer in that file, so a reworded
+// `findings.test.ts` beside this file fails when the quoted text is no longer in that file, so a reworded
 // rule message cannot leave a stale copy on the site.
 
 export interface Finding {

@@ -1,16 +1,19 @@
-<!-- vigiles:sha256:b3dfca4f377dfb92 compiled from site/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:6553c5968abeca6c compiled from site/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
 ## `site/`
 
 paperlint.dev: a static Next.js export (`site/next.config.ts`) with its own
-`site/package.json` and lock, so the npm package carries none of it. `site/lib/content.ts` reads
+`site/package.json` and lock, so the npm package carries none of it. `site/src/shared/lib/readme/content.ts` reads
 the install commands, the lint output, the venue table and the disclaimer from the README at build time, and
 throws when one is gone, so the build fails instead of the page losing a section; it reads the folder
-tree from `docs/layout.md` the same way. `site/lib/findings.ts` quotes each finding the
-journey shows from the file that holds it, and `site/lib/content.test.ts` fails when a quote is no
-longer there. Build it with `npm run site:build` from the root; deploying is in `docs/website.md`. The
+tree from `docs/layout.md` the same way. `site/src/entities/finding/model/findings.ts` quotes each finding the
+journey shows from the file that holds it, and `site/src/entities/finding/model/findings.test.ts` fails when a quote is no
+longer there. Code lives in `site/src/` in Feature-Sliced Design layers, checked by Steiger (`site/steiger.config.mjs`);
+Next's routes stay in `site/app/`. A class name uses only the design tokens of `site/src/app/styles/globals.css`
+(Tailwind v4, its palette cleared), which `site/eslint.config.mjs` enforces. Build it with `npm run site:build`
+from the root, which runs site/'s lint, type check and tests first; deploying is in `docs/website.md`. The
 design below was decided with the author on 2026-11-19, over three rounds of mockups.
 
 ## Rules

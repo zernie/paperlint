@@ -13,8 +13,10 @@ through Vercel. The site is `site/`: a static Next.js export, built from this re
 
 ## Where its content comes from
 
-`npm run site:build` installs `site/`'s own dependencies and runs `next build`, which writes plain HTML
-to `site/out/`. At build time the page reads:
+`npm run site:build` installs `site/`'s own dependencies, runs its gates (Steiger and ESLint, `tsc`,
+vitest with 100% coverage of the pure logic) and then `next build`, which writes plain HTML to
+`site/out/`. Vercel runs only `next build`; the gates run in the `site` CI job. At build time the page
+reads:
 
 | what the page shows                            | read from                                                                       |
 | ---------------------------------------------- | ------------------------------------------------------------------------------- |
@@ -23,10 +25,10 @@ to `site/out/`. At build time the page reads:
 | the venue cards and the headline's venue names | the "Supported venues" table in `README.md`                                     |
 | "An aid, not a guarantee"                      | the README's quote of that name                                                 |
 | the paper folder in the journey                | the generated tree in `docs/layout.md`                                          |
-| each finding in the journey                    | quoted in `site/lib/findings.ts` from the file it names                         |
+| each finding in the journey                    | quoted in `site/src/entities/finding/model/findings.ts` from the file it names  |
 
 When one of these is gone or reshaped, the build throws and names it, so the `site` CI job fails
-rather than the page losing a section. `site/lib/content.test.ts` fails when a quoted finding is no
+rather than the page losing a section. `findings.test.ts` beside it fails when a quoted finding is no
 longer in its source file.
 
 ## Deploying on Vercel

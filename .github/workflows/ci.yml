@@ -274,8 +274,10 @@ jobs:
 
   # paperlint.dev: `site/` is a static Next.js export with its own package.json and lock. Its build
   # reads README.md and docs/layout.md and throws when a block it shows is gone, so this job is the
-  # check that the site and the README still agree (#342). Measured 2026-11-19: 12 s from a clean
-  # `npm ci` to the exported HTML. Vercel builds the same command on deploy.
+  # check that the site and the README still agree (#342). Before the build, site/'s own gates:
+  # Steiger and ESLint, tsc, vitest at 100% coverage of the pure logic. The root's install is not
+  # needed and not done. Measured 2026-11-19: 29 s from a clean `npm ci` (warm npm cache, root
+  # node_modules absent) to the exported HTML. Vercel runs only `next build` on deploy.
   site:
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest

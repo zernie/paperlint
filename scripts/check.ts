@@ -189,7 +189,8 @@ export const GATES: readonly Gate[] = [
   },
   {
     // paperlint.dev (site/): its own package.json and lock, so the npm package does not carry Next.js.
-    // The build reads README.md and docs/ and fails when what it reads is gone (site/lib/content.ts).
+    // The build reads README.md and docs/ and fails when what it reads is gone
+    // (site/src/shared/lib/readme/content.ts); before it, site/'s own lint, tsc and tests.
     name: "the website builds from README.md and docs/ (site/)",
     job: "site",
     script: "site:build",

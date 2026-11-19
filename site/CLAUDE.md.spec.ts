@@ -4,12 +4,15 @@ import { file, guidance, instructionFile, prose } from "vigiles/spec";
 export default instructionFile({
   sections: {
     "`site/`": prose`paperlint.dev: a static Next.js export (${file("site/next.config.ts")}) with its own
-${file("site/package.json")} and lock, so the npm package carries none of it. ${file("site/lib/content.ts")} reads
+${file("site/package.json")} and lock, so the npm package carries none of it. ${file("site/src/shared/lib/readme/content.ts")} reads
 the install commands, the lint output, the venue table and the disclaimer from the README at build time, and
 throws when one is gone, so the build fails instead of the page losing a section; it reads the folder
-tree from ${file("docs/layout.md")} the same way. ${file("site/lib/findings.ts")} quotes each finding the
-journey shows from the file that holds it, and ${file("site/lib/content.test.ts")} fails when a quote is no
-longer there. Build it with \`npm run site:build\` from the root; deploying is in ${file("docs/website.md")}. The
+tree from ${file("docs/layout.md")} the same way. ${file("site/src/entities/finding/model/findings.ts")} quotes each finding the
+journey shows from the file that holds it, and ${file("site/src/entities/finding/model/findings.test.ts")} fails when a quote is no
+longer there. Code lives in \`site/src/\` in Feature-Sliced Design layers, checked by Steiger (${file("site/steiger.config.mjs")});
+Next's routes stay in \`site/app/\`. A class name uses only the design tokens of ${file("site/src/app/styles/globals.css")}
+(Tailwind v4, its palette cleared), which ${file("site/eslint.config.mjs")} enforces. Build it with \`npm run site:build\`
+from the root, which runs site/'s lint, type check and tests first; deploying is in ${file("docs/website.md")}. The
 design below was decided with the author on 2026-11-19, over three rounds of mockups.`,
   },
   rules: {
