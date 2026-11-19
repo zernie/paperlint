@@ -127,13 +127,26 @@ const readJson = (file: string): unknown =>
 const readText = (file: string): string | null =>
   existsSync(file) ? readFileSync(file, "utf8") : null;
 
-/** Every fixture directory, with its expectation parsed — or why it has none. */
+/**
+ * Every fixture directory, with its expectation parsed — or why it has none — and the files it
+ * `needs` that are not in its folder. A fixture missing one is not built: the repository does not
+ * ship a venue's author-kit file whose licence is unverified, and a build without it would fail for
+ * that reason, not for what the fixture claims.
+ */
 const fixtures = readdirSync(FIXTURES, { withFileTypes: true })
   .filter((d) => d.isDirectory())
-  .map((d) => ({
-    name: d.name,
-    expect: parseExpect(readText(join(FIXTURES, d.name, "expect.json"))),
-  }));
+  .map((d) => {
+    const expect = parseExpect(readText(join(FIXTURES, d.name, "expect.json")));
+    const absent = expect.ok
+      ? expect.value.needs.filter(
+          (n) => !existsSync(join(FIXTURES, d.name, n.file)),
+        )
+      : [];
+    return { name: d.name, expect, absent };
+  });
+
+/** The fixtures this run builds: every one whose needed files are present. */
+const runnable = fixtures.filter((f) => f.absent.length === 0);
 
 /**
  * A consumer holding every fixture under `papers/`. Copied, because the build leaves `paper.pdf`,
@@ -149,9 +162,13 @@ function consumer(): string {
   cpSync(FIXTURES, join(work, "papers"), {
     recursive: true,
     verbatimSymlinks: true,
-    filter: (src) => basename(src) !== "expect.json",
+    filter: (src) =>
+      basename(src) !== "expect.json" &&
+      !fixtures.some(
+        (f) => f.absent.length > 0 && src === join(FIXTURES, f.name),
+      ),
   });
-  for (const f of fixtures)
+  for (const f of runnable)
     if (f.expect.ok && f.expect.value.build.outcome === "failed")
       writeFileSync(join(work, "papers", f.name, "paper.pdf"), "%PDF-stale");
   // `--all` takes the papers directory from the config, not from an argument: the CONSUMER names
@@ -313,7 +330,7 @@ describe.skipIf(skip)("paperlint build --all on a real pdflatex", () => {
   });
 
   it("the run as a whole fails exactly when some fixture expects a failed build", () => {
-    const anyFails = fixtures.some(
+    const anyFails = runnable.some(
       (f) => f.expect.ok && f.expect.value.build.outcome === "failed",
     );
     expect(built.status !== 0).toBe(anyFails);
@@ -323,7 +340,9 @@ describe.skipIf(skip)("paperlint build --all on a real pdflatex", () => {
     it("declares what it must produce in a valid expect.json", () => {
       expect(f.expect.ok ? "" : f.expect.why).toBe("");
     });
-    if (f.expect.ok) fixtureTests(f.name, f.expect.value, () => built.out);
+    if (f.absent.length > 0)
+      it.skip(`skipped: needs ${f.absent.map((n) => `${n.file} (from ${n.from})`).join(", ")} beside paper.tex — not committed, its licence is unverified; place it in fixtures/build-e2e/${f.name}/ to run this fixture`, () => {});
+    else if (f.expect.ok) fixtureTests(f.name, f.expect.value, () => built.out);
   });
 
   describe("references — answered by the fake services, then from the committed cache", () => {

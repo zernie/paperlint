@@ -38,3 +38,7 @@ __pycache__/
 # vigiles audit report (generated)
 vigiles-report.json
 vigiles-report.html
+
+# NeurIPS's author-kit style file, placed beside the NeurIPS e2e fixtures to run them: not
+# committed, its licence is unverified (expect.json `needs`; test/e2e/tex/build.e2e.ts skips without it).
+fixtures/build-e2e/*/neurips_2026.sty
