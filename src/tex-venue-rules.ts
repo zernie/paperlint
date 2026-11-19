@@ -380,13 +380,17 @@ function matchesIn(
  */
 export function judgeLeftover(
   runs: readonly TextRun[],
-  lines: readonly Span[],
+  lines: readonly Place[],
   preset: Preset,
   others: readonly OtherVenue[],
 ): readonly Located[] {
   const venue = editionLabel(preset.label, preset.year);
   const inLine = (at: Span | null): boolean =>
-    at !== null && lines.some((l) => l.start <= at.start && at.start < l.end);
+    at !== null &&
+    lines.some(
+      (l) =>
+        l.kind === "at" && l.span.start <= at.start && at.start < l.span.end,
+    );
   const names: readonly NameMatcher[] = namesToJudge(preset, others).map(
     (n) => ({
       ...n,

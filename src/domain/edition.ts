@@ -44,10 +44,28 @@ export const editionLabel = (name: string, year: number | null): string =>
 export const editionsOf = (
   series: string,
   shipped: readonly string[],
+): readonly string[] => editionsWithIds(series, shipped).map((e) => e.id);
+
+/** The shipped editions of `series` after `e`'s year, oldest first, as ids. Pure. */
+export const newerEditions = (
+  e: Edition,
+  shipped: readonly string[],
 ): readonly string[] =>
+  editionsWithIds(e.series, shipped)
+    .filter((x) => x.year > e.year)
+    .map((x) => x.id);
+
+/** Each shipped edition of `series` with its id, oldest first. Pure. */
+const editionsWithIds = (
+  series: string,
+  shipped: readonly string[],
+): readonly (Edition & { readonly id: string })[] =>
   sortBy(
-    shipped.filter((id) => editionOf(id)?.series === series),
-    (id) => editionOf(id)?.year ?? 0,
+    shipped.flatMap((id) => {
+      const e = editionOf(id);
+      return e !== null && e.series === series ? [{ ...e, id }] : [];
+    }),
+    (e) => e.year,
   );
 
 /**

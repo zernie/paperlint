@@ -167,6 +167,8 @@ describe("paper/folder-venue-leftover — a workshop's parent conference", () =>
       );
     expect(named("acm-ccs-agents")).toEqual(["ACM CCS"]);
     expect(named("ase-agents")).toEqual(["ASE"]);
+    // An alias that is not the start of the edition's name says which alias it was.
+    expect(named("oakland-attacks")).toEqual(["IEEE S&P 2027 («Oakland»)"]);
   });
 });
 

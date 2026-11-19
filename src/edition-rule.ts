@@ -18,7 +18,7 @@
  */
 import { basename, dirname } from "node:path";
 import { sortBy } from "remeda";
-import { editionLabel, editionOf, editionsOf } from "./domain/edition.ts";
+import { editionLabel, editionOf, newerEditions } from "./domain/edition.ts";
 import type { Reading } from "./domain/deadline.ts";
 import type {
   FolderRuleContext,
@@ -53,13 +53,8 @@ export function judgeEdition(
     -1,
   );
   if (last === undefined || Date.parse(last.at) >= Date.parse(now)) return [];
-  const series = editionOf(preset.id)?.series ?? null;
-  const newer =
-    series === null || preset.year === null
-      ? []
-      : editionsOf(series, shipped).filter(
-          (id) => (editionOf(id)?.year ?? 0) > (preset.year ?? 0),
-        );
+  const edition = editionOf(preset.id);
+  const newer = edition === null ? [] : newerEditions(edition, shipped);
   const data = {
     venue: editionLabel(preset.label, preset.year),
     what: last.what,

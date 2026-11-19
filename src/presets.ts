@@ -75,6 +75,7 @@ import {
 } from "./paper-settings.ts";
 import { CONFIG_FILE } from "#lib/paper-config";
 import { messageOf } from "./domain/text.ts";
+import { hasAtLeast } from "remeda";
 import { editionLabel, editionOf, editionsOf } from "./domain/edition.ts";
 import type { NamedVenue } from "./domain/venue-name.ts";
 import { setMembers } from "./rule-sets.ts";
@@ -159,11 +160,11 @@ export interface Preset {
 /** Why a spec does not resolve. */
 export type PresetProblem =
   | { readonly kind: "unsupported"; readonly spec: string }
-  /** `paperlint:<series>` with no year, where `editions` of that series ship. */
+  /** `paperlint:<series>` with no year, where `editions` of that series ship, oldest first. */
   | {
       readonly kind: "bare-series";
       readonly spec: string;
-      readonly editions: readonly string[];
+      readonly editions: readonly [string, ...string[]];
     }
   | {
       readonly kind: "not-found";
@@ -421,7 +422,7 @@ function refusal(p: PresetProblem, venuesDir: string): PresetProblem {
   const editions = p.spec.startsWith(SHIPPED_PREFIX)
     ? editionsOf(p.spec.slice(SHIPPED_PREFIX.length), shipped)
     : [];
-  return editions.length > 0
+  return hasAtLeast(editions, 1)
     ? { kind: "bare-series", spec: p.spec, editions }
     : { ...p, shipped };
 }
@@ -629,7 +630,7 @@ export const bareSeriesText = (
   p: Extract<PresetProblem, { readonly kind: "bare-series" }>,
   key: "extends" | "parent" | "--venue",
 ): string => {
-  const latest = p.editions.at(-1) ?? "";
+  const latest = p.editions.reduce((_, id) => id);
   const said =
     key === "--venue" ? `--venue ${p.spec}` : `"${key}": "${p.spec}"`;
   return `${said} names a series, not an edition: a venue preset is one edition, so a new edition never changes a paper's rules unasked. Shipped editions: ${p.editions.map(shippedSpec).join(", ")} — did you mean ${shippedSpec(latest)}?`;

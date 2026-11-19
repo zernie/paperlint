@@ -13,6 +13,7 @@ import { latexReader } from "./adapters/latex/index.ts";
 import {
   cyclePortRules,
   judgeRequiredSections,
+  judgeLeftover,
   judgeTemplate,
   otherVenues,
   FORMAT_RULE_LEVELS,
@@ -1105,6 +1106,32 @@ describe("tex/venue-leftover — where names are found, and whose they are", () 
         .map((f) => /«(.*?)»/u.exec(f.message)?.[1])
         .sort(),
     ).toEqual(["AIDC", "AISec"]);
+  });
+});
+
+describe("tex/venue-leftover, judged on places the parser did not give", () => {
+  const files = memoryFiles(shipped);
+  const aidc = resolvePreset("paperlint:aidc-2026", `${PAPER}/paperlint.json`, {
+    files,
+    venuesDir: VENUES,
+  });
+  const preset = aidc.ok ? aidc.value : null;
+
+  it("a venue line with no place holds no name; a parent's name no shipped venue carries is shown as written", () => {
+    expect(preset).not.toBeNull();
+    if (preset === null) return;
+    const src = "Unlike AISec, and Gone 2025.";
+    const runs = latexReader.renderedRuns(src);
+    // The line is unplaced, so «AISec» without a year stands in prose: silent.
+    const found = judgeLeftover(
+      runs,
+      [{ kind: "unplaced" }],
+      { ...preset, parentNames: ["Gone"] },
+      [],
+    );
+    expect(found.map((f) => f.data)).toEqual([
+      { name: "Gone", other: "Gone 2025", venue: "AIDC 2026" },
+    ]);
   });
 });
 

@@ -49,7 +49,7 @@ import {
   paperBodies,
   type PaperBody,
 } from "./paper-includes.ts";
-import { omit } from "remeda";
+import { hasAtLeast, omit } from "remeda";
 import { refusalOf } from "./unowned-file.ts";
 import { ruleTimes, timingLines } from "./lint-timing.ts";
 import { prepareEngine } from "./build-engine.ts";
@@ -1846,7 +1846,7 @@ function venueSpec(
     ? venue.slice(SHIPPED_PREFIX.length)
     : venue;
   const editions = editionsOf(name, shipped);
-  if (!shipped.includes(name) && editions.length > 0)
+  if (!shipped.includes(name) && hasAtLeast(editions, 1))
     return bad(
       bareSeriesText(
         { kind: "bare-series", spec: shippedSpec(name), editions },
