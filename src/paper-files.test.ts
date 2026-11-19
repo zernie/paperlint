@@ -185,7 +185,7 @@ describe("🔴 a generated block never reaches a file paperlint does not lint (#
       "a venue preset's rules",
       {
         "papers/a/paperlint.json": JSON.stringify({
-          extends: "paperlint:agenticdev",
+          extends: "paperlint:agenticdev-2026",
         }),
       },
     ],

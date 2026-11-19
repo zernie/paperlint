@@ -13,7 +13,7 @@ import { frozenText } from "../test/frozen-presets.ts";
 const VENUES = presetsDir();
 const DIR = "/work/papers/p";
 /**
- * The shipped presets, so a cycle naming `paperlint:msr` resolves through the memory files — msr
+ * The shipped presets, so a cycle naming `paperlint:msr-2027` resolves through the memory files — msr
  * FROZEN (test/frozen-presets.ts): its deadlines are rewritten by the scheduled refresh, and the
  * tests below assert the readings they sit beside.
  */
@@ -23,7 +23,7 @@ const SHIPPED = {
       .filter((f) => f.endsWith(".jsonc"))
       .map((f) => [join(VENUES, f), readFileSync(join(VENUES, f), "utf8")]),
   ),
-  [join(VENUES, "msr.jsonc")]: frozenText("msr.jsonc"),
+  [join(VENUES, "msr-2027.jsonc")]: frozenText("msr-2027.jsonc"),
 };
 
 interface Reported {
@@ -68,10 +68,10 @@ const CALL = {
   url: "https://2027.msrconf.org/track/msr-2027-technical-papers",
   read: "2026-10-05",
 };
-/** A cycle at the shipped `paperlint:msr`, whose preset carries the portal's readings. */
+/** A cycle at the shipped `paperlint:msr-2027`, whose preset carries the portal's readings. */
 const msr = (deadlines: readonly object[]) => ({
   id: "msr-2027",
-  venue: { kind: "preset", extends: "paperlint:msr" },
+  venue: { kind: "preset", extends: "paperlint:msr-2027" },
   kind: "technical",
   opened: "2026-10-05",
   deadlines,
@@ -135,7 +135,9 @@ describe("cycle/record", () => {
   });
 
   it("the flat form, no settings file, or a file that is not JSON: silent — not this rule's to say", () => {
-    expect(lint({ extends: "paperlint:aidc", kind: "regular" })).toEqual([]);
+    expect(lint({ extends: "paperlint:aidc-2026", kind: "regular" })).toEqual(
+      [],
+    );
     expect(lint(undefined)).toEqual([]);
     expect(lint("{ not json")).toEqual([]);
   });
@@ -218,7 +220,7 @@ describe("cycle/record — a portal reading beside the preset's", () => {
       ],
     });
     expect(fs.map((f) => f.message)).toEqual([
-      "paperlint.json, cycle «msr-2027»: the \"submission\" deadline records a portal reading, and the preset paperlint:msr carries it (2026-10-21T11:59:59Z, the portal's reading on 2026-10-19 from https://msr2027.hotcrp.com/deadlines — venues move dates: re-check there before relying on it) — a second copy drifts when paperlint updates the preset: delete this one (the call's reading and an override stay)",
+      "paperlint.json, cycle «msr-2027»: the \"submission\" deadline records a portal reading, and the preset paperlint:msr-2027 carries it (2026-10-21T11:59:59Z, the portal's reading on 2026-10-19 from https://msr2027.hotcrp.com/deadlines — venues move dates: re-check there before relying on it) — a second copy drifts when paperlint updates the preset: delete this one (the call's reading and an override stay)",
     ]);
   });
 

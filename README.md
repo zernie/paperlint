@@ -51,27 +51,27 @@ before you submit.** It comes in two parts:
 
 ## 🎯 Supported venues
 
-A **venue preset** holds a venue's format and page limits. A paper's **kind** picks which limit
-applies: at AgenticDev a `short` paper gets 5 pages and a `full` one 10. You choose it once per paper.
+A **venue preset** holds one edition's format and page limits (`paperlint:icse-2028`); a paper's
+**kind** picks which limit applies: at AgenticDev a `short` paper gets 5 pages, a `full` one 10.
 
 | preset                      | venue                              | format                        | kinds and page limits                                                                                                                                    |
 | --------------------------- | ---------------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `paperlint:acm-sigconf`     | any ACM conference                 | ACM two-column                | no kinds: the format only, no page limit                                                                                                                 |
-| `paperlint:agenticdev`      | AgenticDev @ ASE                   | ACM two-column                | `short` 5, `full` 10, `demo` 5 pages, + 2 pages of references                                                                                            |
-| `paperlint:aisec`           | AISec @ ACM CCS                    | ACM two-column                | `research`, `benchmark`, `position`, `sok`: 10 pages + 2 pages of references                                                                             |
-| `paperlint:icse`            | ICSE 2028 (Research)               | ACM two-column                | `research` 10 pages, appendices included, + 2 pages of only references; double-blind                                                                     |
-| `paperlint:ase`             | ASE (Research)                     | ACM two-column                | `technical`, `experience` 10 pages, appendices included, + 2 pages of only references; requires a «Data Availability Statement»; double-blind            |
-| `paperlint:ccs`             | ACM CCS                            | ACM two-column                | `research` 12 pages, bibliography and appendices not counted; requires an «Open Science» appendix; double-blind                                          |
+| `paperlint:agenticdev-2026` | AgenticDev 2026 @ ASE 2026         | ACM two-column                | `short` 5, `full` 10, `demo` 5 pages, + 2 pages of references                                                                                            |
+| `paperlint:aisec-2026`      | AISec 2026 @ ACM CCS 2026          | ACM two-column                | `research`, `benchmark`, `position`, `sok`: 10 pages + 2 pages of references                                                                             |
+| `paperlint:icse-2028`       | ICSE 2028 (Research)               | ACM two-column                | `research` 10 pages, appendices included, + 2 pages of only references; double-blind                                                                     |
+| `paperlint:ase-2026`        | ASE 2026 (Research)                | ACM two-column                | `technical`, `experience` 10 pages, appendices included, + 2 pages of only references; requires a «Data Availability Statement»; double-blind            |
+| `paperlint:ccs-2026`        | ACM CCS 2026                       | ACM two-column                | `research` 12 pages, bibliography and appendices not counted; requires an «Open Science» appendix; double-blind                                          |
 | `paperlint:acm-acmsmall`    | any ACM conference (single-column) | ACM single-column             | no kinds: the format only, no page limit                                                                                                                 |
-| `paperlint:fse`             | FSE 2027 (Research)                | ACM single-column             | `research` 18, `major-revision` 20 pages, + 4 pages of references; double-blind                                                                          |
-| `paperlint:realm`           | REALM @ EMNLP                      | ACL two-column, A4            | `long` 8, `short` 4 — recorded, not checked ([why](docs/rules.md#checks-against-the-venue))                                                              |
+| `paperlint:fse-2027`        | FSE 2027 (Research)                | ACM single-column             | `research` 18, `major-revision` 20 pages, + 4 pages of references; double-blind                                                                          |
+| `paperlint:realm-2026`      | REALM 2026 @ EMNLP 2026            | ACL two-column, A4            | `long` 8, `short` 4 — recorded, not checked ([why](docs/rules.md#checks-against-the-venue))                                                              |
 | `paperlint:ieee-conference` | any IEEE conference                | IEEE two-column               | no kinds: the format only, no page limit                                                                                                                 |
-| `paperlint:aidc`            | AIDC @ IEEE ACSAC                  | IEEE two-column, `compsoc`    | `regular` 12, `short` 6, counted before the references ([why](docs/rules.md#checks-against-the-venue)); requires the «LLM Usage Statement»; double-blind |
-| `paperlint:msr`             | MSR (Technical)                    | IEEE two-column, no `compsoc` | `technical` 10 pages, appendices included, + 2 pages of only references ([why](docs/rules.md#checks-against-the-venue)); double-blind                    |
-| `paperlint:sp`              | IEEE S&P                           | IEEE two-column, `compsoc`    | `research` 13 pages + 5 of references and appendices, 18 in all; `sok` 13 pages, references not counted; double-blind                                    |
+| `paperlint:aidc-2026`       | AIDC 2026 @ IEEE ACSAC 2026        | IEEE two-column, `compsoc`    | `regular` 12, `short` 6, counted before the references ([why](docs/rules.md#checks-against-the-venue)); requires the «LLM Usage Statement»; double-blind |
+| `paperlint:msr-2027`        | MSR 2027 (Technical)               | IEEE two-column, no `compsoc` | `technical` 10 pages, appendices included, + 2 pages of only references ([why](docs/rules.md#checks-against-the-venue)); double-blind                    |
+| `paperlint:sp-2027`         | IEEE S&P 2027                      | IEEE two-column, `compsoc`    | `research` 13 pages + 5 of references and appendices, 18 in all; `sok` 13 pages, references not counted; double-blind                                    |
 
-Not shipped yet: USENIX, NeurIPS, Springer, ACM single-column venues other than FSE, IEEE venues other
-than AIDC, MSR and S&P, and ACL venues other than REALM.
+Also shipped: NLBSE, AGENT and AGENTVERIFY 2027, and more; every edition, and what is not shipped yet
+(USENIX, NeurIPS, Springer …): [`docs/venues.md`](docs/venues.md#what-paperlint-ships).
 [Add yours](#-add-a-venue-that-isnt-listed) in one small file.
 
 ## 🚀 Getting started
@@ -97,7 +97,7 @@ than AIDC, MSR and S&P, and ACL venues other than REALM.
    <!-- `vigiles:symbol src/new-paper.ts#ALLOW_VENUE_NAME` — the flag's one spelling; `npm run check` fails if it is renamed or removed. -->
 
    ```sh
-   npx paperlint new my-paper --venue agenticdev --kind short
+   npx paperlint new my-paper --venue agenticdev-2026 --kind short
    ```
 
    It writes `papers/my-paper/` with `paper.tex`, `paperlint.json` (venue and kind),
@@ -225,7 +225,8 @@ using the rules from your own ESLint config: [`docs/configuration.md`](docs/conf
 ### ➕ Add a venue that isn't listed
 
 A venue preset is a small JSONC file: the preset it builds on, and the page limit of each kind of
-paper. For an ACM workshop with a 4-page limit for short papers, `venues/my-workshop.jsonc`:
+paper. For an ACM workshop with a 4-page limit for short papers, `venues/my-workshop-2027.jsonc`
+(one edition, the year in its name):
 
 ```jsonc
 {
@@ -243,7 +244,7 @@ paper. For an ACM workshop with a 4-page limit for short papers, `venues/my-work
 ```
 
 ```sh
-npx paperlint new my-paper --venue ./venues/my-workshop.jsonc --kind short
+npx paperlint new my-paper --venue ./venues/my-workshop-2027.jsonc --kind short
 ```
 
 Give the path from where you run the command; `new` rewrites it relative to the paper's own
@@ -282,7 +283,7 @@ They are opt-in, in the writing set: `"rules": { "paperlint:writing": "warn" }` 
 
 - [`docs/skills.md`](docs/skills.md) — every skill, by stage
 - [`docs/layout.md`](docs/layout.md) — the pipeline's flow, where each stage writes, and what checks it when
-- [`docs/venues.md`](docs/venues.md) — a venue's corpus of accepted papers, presets and cards: three places, three jobs
+- [`docs/venues.md`](docs/venues.md) — every shipped edition by field; a venue's corpus of accepted papers, presets and cards
 - [`docs/ci.md`](docs/ci.md) — the two CI workflows, in full
 - [`docs/install.md`](docs/install.md) — what `init` does, the hooks, package managers, troubleshooting
 - [`docs/configuration.md`](docs/configuration.md) — every setting, how `build` compiles, using your own ESLint

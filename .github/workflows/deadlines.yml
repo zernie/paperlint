@@ -1,6 +1,6 @@
 # THE VENUE PRESETS' DEADLINES, RE-READ FROM THEIR PORTALS ONCE A DAY.
 #
-# A shipped venue preset (presets/msr.jsonc, presets/aidc.jsonc) carries its portal's deadlines,
+# A shipped venue preset (presets/msr-2027.jsonc, presets/aidc-2026.jsonc) carries its portal's deadlines,
 # each with the day it was read. Chairs move deadlines; a paper only learns it if the preset does.
 # So this job reads every preset's portal (`npm run refresh-deadlines`, through the HotCRP adapter
 # in src/adapters/hotcrp/ — the public deadlines page, no account, no secret) and, when a value

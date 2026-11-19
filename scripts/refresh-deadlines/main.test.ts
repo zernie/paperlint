@@ -28,8 +28,8 @@ const PRESETS = join(ROOT, "presets");
 const CASSETTE = join(ROOT, "src", "adapters", "hotcrp", "cassette");
 // Frozen at the portal's reading of 2026-10-19 (test/frozen-presets.ts): the shipped file's dates
 // are the refresh's own output.
-const MSR = join(FROZEN_DIR, "msr.jsonc");
-const msrText = frozenText("msr.jsonc");
+const MSR = join(FROZEN_DIR, "msr-2027.jsonc");
+const msrText = frozenText("msr-2027.jsonc");
 const readings = (text: string) => parsePreset(text, MSR).deadlines ?? [];
 /** MSR with its submission deadline two days before the portal's. */
 const earlier = msrText.replace(
@@ -71,7 +71,7 @@ describe("`npm run refresh-deadlines`, the command the workflow runs — with no
       const dir = tempDir("deadlines-");
       const atServer = (text: string, path: string) =>
         text.split("https://msr2027.hotcrp.com").join(`${base.url}/${path}`);
-      writeFileSync(join(dir, "msr.jsonc"), atServer(earlier, "msr"));
+      writeFileSync(join(dir, "msr-2027.jsonc"), atServer(earlier, "msr"));
       writeFileSync(join(dir, "gone.jsonc"), atServer(msrText, "gone"));
       writeFileSync(join(dir, "notes.md"), "not a preset\n");
       const summary = join(dir, "summary.md");
@@ -99,7 +99,7 @@ describe("`npm run refresh-deadlines`, the command the workflow runs — with no
         },
       ); // rejects on a non-zero exit, with the output
       expect(
-        readings(readFileSync(join(dir, "msr.jsonc"), "utf8"))[0]?.at,
+        readings(readFileSync(join(dir, "msr-2027.jsonc"), "utf8"))[0]?.at,
       ).toBe("2026-10-21T11:59:59Z");
       expect(r.stdout).toMatch(
         /^::warning title=deadlines::gone\.jsonc: could not read http:\/\/127\.0\.0\.1:\d+\/gone\/deadlines — the portal refused \(HTTP 404\): No such conference$/m,

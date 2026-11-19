@@ -35,6 +35,7 @@ import { outlineOf } from "./outline.ts";
 import { parseLatex } from "./parse.ts";
 import { bodyEmphasis, bodyProse } from "./prose.ts";
 import { renderedRuns } from "./rendered.ts";
+import { venueLinesOf } from "./venue-lines.ts";
 import { layoutOverridesOf } from "./layout.ts";
 import { filecontentsOf } from "./filecontents.ts";
 
@@ -59,6 +60,7 @@ export { outlineOf } from "./outline.ts";
 export { parseLatex, type ParsedTex } from "./parse.ts";
 export { bodyEmphasis, bodyProse } from "./prose.ts";
 export { renderedRuns } from "./rendered.ts";
+export { venueLinesOf } from "./venue-lines.ts";
 export { layoutOverridesOf } from "./layout.ts";
 
 /** The `LatexReader` port over unified-latex: each call parses its source once. */
@@ -67,6 +69,7 @@ export const latexReader: LatexReader = {
   outline: (src) => outlineOf(parseLatex(src)),
   headings: (src) => headingsOf(parseLatex(src)),
   renderedRuns: (src) => renderedRuns(parseLatex(src)),
+  venueLines: (src) => venueLinesOf(parseLatex(src)),
   bodyProse: (src) => bodyProse(parseLatex(src)),
   bodyEmphasis: (src) => bodyEmphasis(parseLatex(src)),
   captions: (src) => captionProse(parseLatex(src)),

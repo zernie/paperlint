@@ -153,7 +153,7 @@ banal reads 0.3 pt above the rendered size on both templates; `body_pt_tol` of 0
 ## The register band — AIDC's anchors are the ACSAC papers here
 
 `tex/contrast-frames`, `tex/claim-emphasis` and `tex/relation-markers` judge a body against the band
-its venue preset's anchors set. The five ACSAC papers are `paperlint:aidc`'s anchors (AIDC is ACSAC's
+its venue preset's anchors set. The five ACSAC papers are `paperlint:aidc-2026`'s anchors (AIDC is ACSAC's
 workshop, on its template, with no accepted papers of its own yet); the preset records each one's
 words and counts, and `src/register-bands.test.ts` re-measures them from these sources and requires
 the same numbers. The papers here extend `paperlint:ieee-conference`, which records no anchors, so

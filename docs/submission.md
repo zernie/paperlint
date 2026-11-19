@@ -14,12 +14,12 @@ npx paperlint submission update papers/my-paper --save    # changes the real sub
 
 ## What it needs
 
-| where                        | key                                                  | what it says                                                          |
-| ---------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------- |
-| the venue preset             | `"portal": { "kind": "hotcrp", "url": "https://…" }` | where the venue takes submissions (`paperlint:aidc`, `paperlint:msr`) |
-| the paper's `paperlint.json` | `"authors": [{ "name", "email", "affiliation"? }]`   | for `new`: every author, in the paper's order — never guessed         |
-| the paper's `paperlint.json` | `"submission": { "id": 7 }`                          | which submission is this paper's — `new --save` writes it             |
-| the environment              | `HOTCRP_TOKEN_HOTCRP_COM`, or `HOTCRP_TOKEN_<SITE>`  | your API token: one for all of hotcrp.com, one per self-hosted site   |
+| where                        | key                                                  | what it says                                                                    |
+| ---------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------- |
+| the venue preset             | `"portal": { "kind": "hotcrp", "url": "https://…" }` | where the venue takes submissions (`paperlint:aidc-2026`, `paperlint:msr-2027`) |
+| the paper's `paperlint.json` | `"authors": [{ "name", "email", "affiliation"? }]`   | for `new`: every author, in the paper's order — never guessed                   |
+| the paper's `paperlint.json` | `"submission": { "id": 7 }`                          | which submission is this paper's — `new --save` writes it                       |
+| the environment              | `HOTCRP_TOKEN_HOTCRP_COM`, or `HOTCRP_TOKEN_<SITE>`  | your API token: one for all of hotcrp.com, one per self-hosted site             |
 
 **The token** is read from the environment. One shared token for all of hotcrp.com is the normal
 case; a separate token is the exception — a self-hosted server, or a token made as "This site only".

@@ -51,7 +51,7 @@ names nobody, so nothing in `identity` matches it.
 
 ```json
 {
-  "extends": "paperlint:aidc",
+  "extends": "paperlint:aidc-2026",
   "kind": "regular",
   "identity": [
     "Ada Example",
@@ -87,7 +87,7 @@ No rule options.
   cannot drop them by accident. Put in everything that identifies you: every spelling of every
   author's name, handles, emails, affiliations, your own tools' and repositories' names.
 - `blind` in the preset — `true` where the venue's call says the review is double-blind. Shipped:
-  `paperlint:aidc`. A venue that is not blind: the rule is silent, `identity` or not.
+  `paperlint:aidc-2026`. A venue that is not blind: the rule is silent, `identity` or not.
 
 ## What it does not check
 

@@ -207,7 +207,7 @@ describe("paperlint lint — the venue preset's rules", () => {
   it("agenticdev's preset turns pdf/last-page-balance and tex/heading-case on for its paper alone", async () => {
     const root = project({
       "papers/a/paperlint.json": JSON.stringify({
-        extends: "paperlint:agenticdev",
+        extends: "paperlint:agenticdev-2026",
         kind: "short",
       }),
     });
@@ -236,7 +236,7 @@ describe("paperlint lint — the venue preset's rules", () => {
   it("🔴 an unbuilt agenticdev paper: two warnings (pdf/measured, paper/sources-fresh), and no balance error", async () => {
     const root = project({
       "papers/a/paperlint.json": JSON.stringify({
-        extends: "paperlint:agenticdev",
+        extends: "paperlint:agenticdev-2026",
         kind: "short",
       }),
       // In agenticdev's class, or tex/template would be the finding.
@@ -256,7 +256,7 @@ describe("paperlint lint — the paper over its preset, and the project's own pr
   it("the paper's own rules win over its preset's", async () => {
     const root = project({
       "papers/a/paperlint.json": JSON.stringify({
-        extends: "paperlint:agenticdev",
+        extends: "paperlint:agenticdev-2026",
         rules: { "pdf/last-page-balance": "off" },
       }),
     });
@@ -302,7 +302,7 @@ describe("paperlint lint — the paper over its preset, and the project's own pr
     const r = await lint(root);
     expect(r.code).toBe(1);
     expect(r.out).toMatch(
-      /acm-acmsmall, acm-sigconf, agent, agenticdev, agentverify, aidc, aisec, ase, ccs, fse, icse, ieee-conference, msr, nlbse, realm, sp/,
+      /acl-latex, acm-acmsmall, acm-sigconf, acsac-2026, agent-2027, agenticdev-2026, agentverify-2027, aidc-2026, aisec-2026, ase-2026, ccs-2026, emnlp-2026, fse-2027, icse-2027, icse-2028, ieee-conference, msr-2027, nlbse-2027, realm-2026, sp-2027/,
     );
   });
 });

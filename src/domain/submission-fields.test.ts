@@ -35,7 +35,7 @@ const VENUE: VenueFields = {
 };
 
 test("parsePaperFields: absent on a venue that records no fields → nothing to send; every kind's value passes as given", () => {
-  assert.deepEqual(parsePaperFields(null, null, "msr.jsonc"), {
+  assert.deepEqual(parsePaperFields(null, null, "msr-2027.jsonc"), {
     ok: true,
     value: {},
   });
@@ -48,7 +48,7 @@ test("parsePaperFields: absent on a venue that records no fields → nothing to 
     ACMCorAut: "author@example.org",
     note: "free text",
   };
-  assert.deepEqual(parsePaperFields(fields, VENUE, "msr.jsonc"), {
+  assert.deepEqual(parsePaperFields(fields, VENUE, "msr-2027.jsonc"), {
     ok: true,
     value: fields,
   });
@@ -59,7 +59,7 @@ test("🔴 parsePaperFields: a topic the form does not offer is refused, naming 
     parsePaperFields(
       { topics: ["AI for software engineering"] },
       VENUE,
-      "msr.jsonc",
+      "msr-2027.jsonc",
     ),
     {
       ok: false,
@@ -71,7 +71,7 @@ test("🔴 parsePaperFields: a topic the form does not offer is refused, naming 
 
 test("🔴 parsePaperFields: each other wrong answer is refused by key", () => {
   const refused = (v: unknown): string => {
-    const r = parsePaperFields(v, VENUE, "msr.jsonc");
+    const r = parsePaperFields(v, VENUE, "msr-2027.jsonc");
     return r.ok ? "accepted" : r.error;
   };
   assert.equal(
@@ -110,7 +110,7 @@ test("🔴 parsePaperFields: each other wrong answer is refused by key", () => {
 });
 
 test("🔴 parsePaperFields: no fields at all, on a venue whose form requires one — refused, naming it, not sent empty", () => {
-  const r = parsePaperFields(null, VENUE, "msr.jsonc");
+  const r = parsePaperFields(null, VENUE, "msr-2027.jsonc");
   expect(r.ok ? "accepted" : r.error).toBe(
     '"fields" does not fill 1 field the venue\'s form requires: topics (checkboxes: one or more of "SE Topic: AI for software engineering", "Performance analysis and testing")',
   );
@@ -137,11 +137,14 @@ test("parsePaperFields: an optional checkbox list may be empty; a required text 
 });
 
 test("🔴 parsePaperFields: fields on a venue whose preset records none — refused, naming where it looked", () => {
-  assert.deepEqual(parsePaperFields({ topics: ["x"] }, null, "msr.jsonc"), {
-    ok: false,
-    error:
-      '"fields" is set, but the venue preset records no "submission_fields" (read: msr.jsonc) — record the form\'s fields in the venue\'s preset first, or drop "fields"',
-  });
+  assert.deepEqual(
+    parsePaperFields({ topics: ["x"] }, null, "msr-2027.jsonc"),
+    {
+      ok: false,
+      error:
+        '"fields" is set, but the venue preset records no "submission_fields" (read: msr-2027.jsonc) — record the form\'s fields in the venue\'s preset first, or drop "fields"',
+    },
+  );
 });
 
 test("🔴 droppedFields: a checkbox list sent, missing from the changes and named by the portal — dropped; otherwise not", () => {
