@@ -202,6 +202,16 @@ const DECLARED = {
     name: "AISec",
     url: "https://aisec.cc/",
   },
+  "ccs.jsonc": {
+    type: "venue",
+    name: "ACM CCS",
+    url: "https://www.sigsac.org/ccs/CCS2026/call-for/call-for-papers.html",
+  },
+  "icse.jsonc": {
+    type: "venue",
+    name: "ICSE 2028",
+    url: "https://conf.researchr.org/track/icse-2028/icse-2028-papers",
+  },
   "ieee-conference.jsonc": { type: "family" },
   "msr.jsonc": {
     type: "venue",
@@ -217,6 +227,11 @@ const DECLARED = {
     type: "venue",
     name: "REALM",
     url: "https://realm-workshop.github.io/call_for_papers",
+  },
+  "sp.jsonc": {
+    type: "venue",
+    name: "IEEE S&P",
+    url: "https://sp2027.ieee-security.org/cfpapers.html",
   },
   "tex-base.jsonc": { type: "base" },
 };
@@ -476,7 +491,7 @@ describe("what does not resolve, and says why", () => {
       "a shipped name with a typo",
       "paperlint:agenticdve",
       "not-found",
-      /acm-sigconf, agent, agenticdev, agentverify, aidc, aisec, ieee-conference, msr, nlbse, realm/,
+      /acm-sigconf, agent, agenticdev, agentverify, aidc, aisec, ccs, icse, ieee-conference, msr, nlbse, realm, sp/,
     ],
     ["the base TeX set", "paperlint:tex-base", "not-found", /agenticdev/],
     [
@@ -649,10 +664,13 @@ describe("shippedVenueNames — what each shipped venue is called", () => {
       "AGENTVERIFY",
       "AIDC",
       "AISec",
+      "ACM CCS",
+      "ICSE 2028",
       "ieee-conference",
       "MSR",
       "NLBSE",
       "REALM",
+      "IEEE S&P",
     ]);
     expect(names.find((n) => n.label === "AISec")?.aliases).toEqual(
       expect.arrayContaining(["AISec", "ACM CCS"]),
@@ -674,9 +692,12 @@ describe("shippedVenueNames — what each shipped venue is called", () => {
       "AGENTVERIFY",
       "AIDC",
       "AISec",
+      "ACM CCS",
+      "ICSE 2028",
       "ieee-conference",
       "MSR",
       "NLBSE",
+      "IEEE S&P",
     ]);
   });
 });

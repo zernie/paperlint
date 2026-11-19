@@ -53,18 +53,21 @@ before you submit.** It comes in two parts:
 A **venue preset** holds a venue's format and page limits. A paper's **kind** picks which limit
 applies: at AgenticDev a `short` paper gets 5 pages and a `full` one 10. You choose it once per paper.
 
-| preset                      | venue               | format                        | kinds and page limits                                                                                                                                    |
-| --------------------------- | ------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `paperlint:acm-sigconf`     | any ACM conference  | ACM two-column                | no kinds: the format only, no page limit                                                                                                                 |
-| `paperlint:agenticdev`      | AgenticDev @ ASE    | ACM two-column                | `short` 5, `full` 10, `demo` 5 pages, + 2 pages of references                                                                                            |
-| `paperlint:aisec`           | AISec @ ACM CCS     | ACM two-column                | `research`, `benchmark`, `position`, `sok`: 10 pages + 2 pages of references                                                                             |
-| `paperlint:realm`           | REALM @ EMNLP       | ACL two-column, A4            | `long` 8, `short` 4 — recorded, not checked ([why](docs/rules.md#checks-against-the-venue))                                                              |
-| `paperlint:ieee-conference` | any IEEE conference | IEEE two-column               | no kinds: the format only, no page limit                                                                                                                 |
-| `paperlint:aidc`            | AIDC @ IEEE ACSAC   | IEEE two-column, `compsoc`    | `regular` 12, `short` 6, counted before the references ([why](docs/rules.md#checks-against-the-venue)); requires the «LLM Usage Statement»; double-blind |
-| `paperlint:msr`             | MSR (Technical)     | IEEE two-column, no `compsoc` | `technical` 10 pages, appendices included, + 2 pages of only references ([why](docs/rules.md#checks-against-the-venue)); double-blind                    |
+| preset                      | venue                | format                        | kinds and page limits                                                                                                                                    |
+| --------------------------- | -------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `paperlint:acm-sigconf`     | any ACM conference   | ACM two-column                | no kinds: the format only, no page limit                                                                                                                 |
+| `paperlint:agenticdev`      | AgenticDev @ ASE     | ACM two-column                | `short` 5, `full` 10, `demo` 5 pages, + 2 pages of references                                                                                            |
+| `paperlint:aisec`           | AISec @ ACM CCS      | ACM two-column                | `research`, `benchmark`, `position`, `sok`: 10 pages + 2 pages of references                                                                             |
+| `paperlint:icse`            | ICSE 2028 (Research) | ACM two-column                | `research` 10 pages, appendices included, + 2 pages of only references; double-blind                                                                     |
+| `paperlint:ccs`             | ACM CCS              | ACM two-column                | `research` 12 pages, bibliography and appendices not counted; requires an «Open Science» appendix; double-blind                                          |
+| `paperlint:realm`           | REALM @ EMNLP        | ACL two-column, A4            | `long` 8, `short` 4 — recorded, not checked ([why](docs/rules.md#checks-against-the-venue))                                                              |
+| `paperlint:ieee-conference` | any IEEE conference  | IEEE two-column               | no kinds: the format only, no page limit                                                                                                                 |
+| `paperlint:aidc`            | AIDC @ IEEE ACSAC    | IEEE two-column, `compsoc`    | `regular` 12, `short` 6, counted before the references ([why](docs/rules.md#checks-against-the-venue)); requires the «LLM Usage Statement»; double-blind |
+| `paperlint:msr`             | MSR (Technical)      | IEEE two-column, no `compsoc` | `technical` 10 pages, appendices included, + 2 pages of only references ([why](docs/rules.md#checks-against-the-venue)); double-blind                    |
+| `paperlint:sp`              | IEEE S&P             | IEEE two-column, `compsoc`    | `research` 13 pages + 5 of references and appendices, 18 in all; `sok` 13 pages, references not counted; double-blind                                    |
 
-Not shipped yet: USENIX, NeurIPS, Springer, IEEE venues other than AIDC and MSR, and ACL venues other than
-REALM.
+Not shipped yet: USENIX, NeurIPS, Springer, ACM's single-column `acmsmall` format (FSE uses it), IEEE
+venues other than AIDC, MSR and S&P, and ACL venues other than REALM.
 [Add yours](#-add-a-venue-that-isnt-listed) in one small file.
 
 ## 🚀 Getting started

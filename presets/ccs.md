@@ -171,4 +171,14 @@ Limit for all content, no extra pages» for CCS 2026. Not in the preset.
 ## What the preset resolves to
 
 <!-- paperlint:preset-rules -->
+<!-- prettier-ignore-start -->
+<!-- Generated from ccs.jsonc by `npx eslint --fix` (rule preset/card-rules). Edit the preset, not this section. -->
+
+**`paperlint:ccs`** — venue preset for ACM CCS · call for papers: <https://www.sigsac.org/ccs/CCS2026/call-for/call-for-papers.html> · extends `paperlint:acm-sigconf`
+
+| rule | severity | options | set in |
+| --- | --- | --- | --- |
+| [`pdf/last-page-balance`](../docs/rules.md) | error | `{"tolerancePt":120}` | this preset |
+
+<!-- prettier-ignore-end -->
 <!-- /paperlint:preset-rules -->

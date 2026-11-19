@@ -115,4 +115,12 @@ hyperref**: an appendix after the references is found by hyperref's anchor.
 ## What the preset resolves to
 
 <!-- paperlint:preset-rules -->
+<!-- prettier-ignore-start -->
+<!-- Generated from icse.jsonc by `npx eslint --fix` (rule preset/card-rules). Edit the preset, not this section. -->
+
+**`paperlint:icse`** — venue preset for ICSE 2028 · call for papers: <https://conf.researchr.org/track/icse-2028/icse-2028-papers> · extends `paperlint:acm-sigconf`
+
+No preset of this chain sets a rule: under it, every rule keeps paperlint's default.
+
+<!-- prettier-ignore-end -->
 <!-- /paperlint:preset-rules -->
