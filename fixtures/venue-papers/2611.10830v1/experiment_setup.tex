@@ -1,0 +1,454 @@
+% \section{Evaluation}
+% \label{sec:experiment-setup}
+
+% The evaluation examines how different slicing strategies reduce contextual noise while preserving malicious patterns, and how these representations affect LLM detection performance. Three code representations are evaluated. The naive splitting baseline uses full source code divided into non-overlapping \num{500}-token segments without slicing. It was re-implemented locally based on Wang et al.~\cite{wang2025malpacdetector} and evaluated on the same \num{2537}-package subset with the same model, prompt, aggregation operator, and threshold ($\tau = 0.8$) as the slicing strategies. Static slicing uses CFG-based backward reachability to capture broad control dependencies without tracking data flow. Taint-based slicing integrates CFG and DFG information to track data flow from sources to sensitive sinks (Section~\ref{sec:methodology}), focusing the LLM on code regions where malicious data is actively manipulated.
+
+% We implemented the slicing algorithms using the Joern framework~\cite{Yamaguchi2014ModelingAD} (JRE 21, Scala 2.13, sbt 1.11.7) to leverage its code property graph (CPG) capabilities for JavaScript analysis. The experiments utilized the \texttt{DeepSeek-Coder-6.7B} model, deployed using model parallelism with half-precision (FP16) weights on a server equipped with an Intel Core i9-10900X CPU, \num{64}~GB of RAM, and two NVIDIA GeForce RTX 3080 GPUs (each with 10~GB of VRAM).
+
+
+\section{Experiments}
+\label{sec:evaluation}
+% Technical evaluation for a balanced 200-skill benchmark (100 benign, 100 malware). Raters include OSS-Detect-Backdoor, YARA, static union (Combined), Snyk Agent Scan, a Cisco-style MCP policy scanner baseline, Grit, a Koi-style / Palo Alto--inspired logical OR ensemble across those agent-facing tools, and Dynamic Analysis tool (runtime sandbox analysis, n=198).
+
+\subsection{Dataset Preparation} \label{subsec:data-preparation}
+
+% We constructed a corpus of 700 agent skills, comprising 400 malicious and 300 benign samples collected from MalSkillBench~\cite{guo2026malskillbench}, the Datadog Malicious Software Packages Dataset~\cite{datadog2023malicious}, and the VoltAgent \textit{Awesome Agent Skills} repository~\cite{voltagentAwesomeAgentSkills}. The corpus was then partitioned into a training set of 560 skills (320 malicious and 240 benign) and a testing set of 140 skills (80 malicious and 60 benign). The training set is used exclusively for detector development, rule refinement, and dynamic-analysis calibration. To prevent data leakage between development and evaluation, we remove exact duplicate skills using recursive content-based SHA-256 hashing. Skills with identical content hashes are grouped and assigned to the same split.
+
+We constructed a corpus of 700 agent skills comprising 400 malicious
+and 300 benign samples from three public sources.
+Table~\ref{tab:dataset-provenance} summarizes the four source--label
+groups, their upstream subsets, and the basis for the labels used in
+our evaluation. The corpus includes 100 benign and 200 malicious skills sampled
+unchanged from the released MalSkillBench~\cite{guo2026malskillbench}
+partitions, together with 200 malicious skills from Datadog's
+AI-Skills collection~\cite{datadog2023malicious},
+specifically the \texttt{samples/ai-skills/malicious\_intent} subset.
+For these 500 samples, we retained the corresponding upstream labels.
+
+The remaining 200 samples were randomly selected from the VoltAgent
+\textit{Awesome Agent Skills} repository~
+\cite{voltagentAwesomeAgentSkills}. Because these samples were not
+independently security-adjudicated by us, we designate them as
+\emph{source-benign} rather than independently verified benign samples
+and account for possible source-label noise in
+Section~\ref{sec:threats-to-validity}.
+
+We partitioned the resulting corpus into a development set of 560 skills
+(320 malicious and 240 benign) and a held-out test set of 140 skills
+(80 malicious and 60 benign). The development split was used exclusively
+for detector development, rule refinement, threshold selection, and
+dynamic-analysis calibration. All reported test-set results were
+computed on the held-out split using the resulting frozen
+configurations.
+
+To prevent exact-duplicate leakage across splits, we recursively
+computed content-based SHA-256 hashes over skill contents. Skills with
+identical content hashes were grouped and assigned to the same split.
+
+% We constructed a corpus of 700 agent skills comprising 400 malicious
+% and 300 benign samples from three public sources. The corpus contains
+% four source--label groups. We directly sampled 100 benign and 200
+% malicious skills from the released MalSkillBench~\cite{guo2026malskillbench}
+% \texttt{Dataset/Skills/benign} and
+% \texttt{Dataset/Skills/malware} partitions, respectively, without
+% modifying their contents or upstream labels.
+
+% An additional 200 malicious skills were selected from Datadog's~\cite{datadog2023malicious}
+% \texttt{samples/ai-skills/malicious\_intent} subset. Thus, these
+% samples originate from Datadog's AI-Skills collection rather than
+% from generic npm or PyPI malware packages, and their upstream
+% malicious-intent labels were retained.
+
+% The remaining 200 benign samples were randomly selected from the
+% VoltAgent \textit{Awesome Agent Skills} repository~\cite{voltagentAwesomeAgentSkills}. Because these
+% samples were not independently security-adjudicated by us, we treat
+% them as source-benign and account for possible source-label noise in
+% Section~\ref{sec:threats-to-validity}.
+
+% The resulting corpus was partitioned into a training set of 560
+% skills (320 malicious and 240 benign) and a held-out test set of
+% 140 skills (80 malicious and 60 benign). The training set was used
+% exclusively for detector development, rule refinement, and
+% dynamic-analysis calibration. To prevent exact duplicate leakage,
+% we used recursive content-based SHA-256 hashing; skills with
+% identical content hashes were grouped and assigned to the same split.
+
+\begin{table*}[!t]
+\centering
+\caption{\textsc{Dataset provenance and label origin.}}
+\label{tab:dataset-provenance}
+
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.08}
+
+\begin{tabularx}{\textwidth}{
+>{\raggedright\arraybackslash}l
+>{\RaggedRight\arraybackslash}X
+>{\centering\arraybackslash}p{1.6cm}
+>{\centering\arraybackslash}p{0.8cm}
+>{\RaggedRight\arraybackslash}X
+}
+\toprule
+\textbf{Source}
+& \textbf{Upstream subset}
+& \textbf{Label}
+& \textbf{N}
+& \textbf{Selection and label basis} \\
+\midrule
+
+MalSkillBench
+& \textit{Dataset/Skills/benign}
+& Benign
+& 100
+& Sampled unchanged; upstream label retained. \\
+
+\rowcolor[HTML]{F2F2F2}
+MalSkillBench
+& \textit{Dataset/Skills/malware}
+& Malicious
+& 200
+& Sampled unchanged; upstream label retained. \\
+
+Datadog
+& \textit{samples/ai-skills/malicious\_intent}
+& Malicious
+& 200
+& Selected from the AI-Skills malicious-intent subset;
+  upstream label retained. \\
+
+\rowcolor[HTML]{F2F2F2}
+VoltAgent
+& \textit{Awesome Agent Skills}
+& Source-benign
+& 200
+& Randomly sampled; no independent security adjudication. \\
+
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+% , as shown in Table~\ref{tab:dataset_split}. The development split is used exclusively for detector development, rule refinement, and dynamic-analysis calibration.
+
+%  three public sources. From MalSkillBench~\cite{guo2026malskillbench}, we select 200 malicious and 100 benign skills. An additional 200 malicious samples are derived from the \texttt{malicious\_intent} subset of the Datadog Malicious Software Packages Dataset~\cite{datadog2023malicious}, while the remaining 200 benign skills are collected from the VoltAgent \textit{Awesome Agent Skills} repository~\cite{voltagentAwesomeAgentSkills}.
+
+%  The resulting corpus is partitioned into a development set of 560 skills (320 malicious and 240 benign) and a held-out evaluation set of 140 skills (80 malicious and 60 benign), as shown in Table~\ref{tab:dataset_split}. 
+
+% After removing duplicate or substantially equivalent samples, the corpus is partitioned into a development set of 560 skills (320 malicious and 240 benign) and a held-out evaluation set of 140 skills (80 malicious and 60 benign), as shown in Table~\ref{tab:dataset_split}. The development split is used for detector development and calibration. 
+
+% \begin{table}[htpb!] \centering \caption{Dataset composition and development/evaluation split.} \label{tab:dataset_split} \normalsize \begin{tabular}{lrrr} \toprule \textbf{Split} & \textbf{Benign} & \textbf{Malicious} & \textbf{Total} \\ \midrule Development & 240 & 320 & 560 \\ Evaluation & 60 & 80 & 140 \\ \midrule Total & 300 & 400 & 700 \\ \bottomrule \end{tabular} \end{table}
+
+
+\subsection{Malicious-Skill Scanner Selection}
+% \newcommand{\yes}{\ensuremath{\checkmark}}
+% \newcommand{\no}{--}
+% \newcommand{\partialyes}{\ensuremath{\triangle}}
+% \newcommand{\unknown}{?}
+
+\providecommand{\yes}{\ensuremath{\checkmark}}
+\providecommand{\no}{--}
+\providecommand{\partialyes}{\ensuremath{\triangle}}
+
+% Fixed-width header cell.
+% Header font is reduced independently from the table body.
+\newcommand{\tblhead}[2]{%
+    \parbox[c]{#1}{%
+        \centering
+        \fontsize{5.5}{6.3}\selectfont
+        \bfseries
+        #2
+    }%
+}
+
+% \begin{table}[!htb]
+% \centering
+% \caption{Comparison of malicious Agent Skill analysis approaches and evaluated security tools.}
+% \label{tab:malicious-skill-comparison}
+
+% % Body of the table
+% \scriptsize
+% \setlength{\tabcolsep}{0.6pt}
+% \renewcommand{\arraystretch}{1.18}
+
+% \begin{tabular}{
+% @{}
+% >{\raggedright\arraybackslash}p{2.15cm}
+% >{\centering\arraybackslash}p{1.10cm}
+% >{\centering\arraybackslash}p{1.05cm}
+% >{\centering\arraybackslash}p{1.55cm}
+% >{\centering\arraybackslash}p{1.35cm}
+% >{\centering\arraybackslash}p{1.30cm}
+% >{\centering\arraybackslash}p{1.25cm}
+% >{\centering\arraybackslash}p{1.30cm}
+% @{}
+% }
+
+% \toprule
+
+% % -------------------------------------------------
+% % Header
+% % -------------------------------------------------
+
+% \tblhead{2.15cm}{Approach}
+% &
+% \tblhead{1.10cm}{Skill-\par specific}
+% &
+% \tblhead{1.05cm}{Static\par analysis}
+% &
+% \tblhead{1.55cm}{Instruction\par analysis}
+% &
+% \tblhead{1.35cm}{Runtime\par execution}
+% &
+% \tblhead{1.30cm}{Source\par available}
+% &
+% \tblhead{1.25cm}{Rules\par available}
+% &
+% \tblhead{1.30cm}{Explicit\par verdict}
+% \\
+
+% \midrule
+
+% % -------------------------------------------------
+% % Research approaches
+% % -------------------------------------------------
+
+% \rowcolor[HTML]{EEEEEE}
+% SkillSieve~\cite{hou2026skillsieve}
+% & \yes
+% & \yes
+% & \yes
+% & \no
+% & \yes
+% & \yes
+% & \yes
+% \\
+
+% MalSkills~\cite{wang2026elementary}
+% & \yes
+% & \yes
+% & \yes
+% & \no
+% & \partialyes
+% & \partialyes
+% & \yes
+% \\
+
+% \rowcolor[HTML]{EEEEEE}
+% SkillsMetric~\cite{chenskillsmetric}
+% & \yes
+% & \yes
+% & \yes
+% & \no
+% & \no
+% & \no
+% & \partialyes
+% \\
+
+% \midrule
+
+% % -------------------------------------------------
+% % Evaluated security tools
+% % -------------------------------------------------
+
+% OSS-Detect-Backdoor~\cite{microsoft_ossgadget}
+% & \no
+% & \yes
+% & \no
+% & \no
+% & \yes
+% & \yes
+% & \no
+% \\
+
+% \rowcolor[HTML]{EEEEEE}
+% YARA~\cite{yara}
+% & \no
+% & \yes
+% & \no
+% & \no
+% & \yes
+% & \partialyes
+% & \no
+% \\
+
+% % Snyk Agent Scan~\cite{snykAgentScan}
+% % & \yes
+% % & \yes
+% % & \yes
+% % & \no
+% % & \partialyes
+% % & \no
+% % & \no
+% % \\
+
+
+% Cisco Skill Scanner~\cite{cisco_skill_scanner}
+% & \yes
+% & \yes
+% & \yes
+% & \no
+% & \yes
+% & \yes
+% & \partialyes
+% \\
+% % \rowcolor[HTML]{EEEEEE}
+% % GritQL~\cite{gritScanner}
+% % & \no
+% % & \yes
+% % & \no
+% % & \no
+% % & \yes
+% % & \no
+% % & \no
+% % \\
+
+% \bottomrule
+% \end{tabular}
+
+% \vspace{1mm}
+
+% \noindent
+% \textit{Legend:}
+% \yes~= supported;
+% \partialyes~= partially supported, optional, or only partially publicly available;
+% \no~= not supported or not publicly available.
+
+% \vspace{0.5mm}
+
+% \noindent
+
+
+
+% \end{table}
+
+%Our framework incorporated multiple independent rating mechanisms to establish a robust comparative baseline. These mechanisms were grouped into two broad categories:
+We used the following criteria to select the benchmark tools. These criteria are based on Vu et al.~\cite{vu2023bad}:
+\begin{itemize}
+\item We focus on tools that detect malicious patterns in skills. A candidate tool must either specialize in detecting malicious skills or provide general-purpose code-scanning capabilities. Tools that focus primarily on prompt injection or vulnerability analysis, such as Snyk Agent Scan~\cite{snyk}, are outside the scope of this benchmark.
+\item The scanner's source code must be publicly accessible. Tools that only provide APIs are excluded from the study.
+\item The detection rules must be publicly available for inspection.
+% \item Explicit verdict: indicates whether the approach directly provides a
+% skill-level security classification rather than only raw findings or risk
+% indicators.
+% \item Anomaly-based malware detection: Although several other tools analyze skills (e.g., Snyk Agent Scan~\cite{snyk}) for prompt injection and vulnerabilities, we focus on
+% tools that detect malicious patterns in skills. 
+% %(e.g., Snyk Agent Scan~\cite{snyk}) 
+\end{itemize}
+These criteria guided tool selection but do not imply
+that every eligible tool was evaluated.
+The benchmark covers the selected scanner configurations
+rather than an exhaustive set of malicious-skill detectors.
+MalSkills~\cite{wang2026elementary}, SkillsMetric~\cite{chenskillsmetric},
+Locate-and-Judge~\cite{etteib2026locatejudge}, SkillScreen~\cite{huang2026skillscreen}, and
+Scan Before You Install~\cite{gandhi2026scanbeforeinstall} are not included
+in the experimental comparison. The latter also evaluates
+malicious-skill detection on MalSkillBench but extends its scope to local and composite
+vulnerabilities. Consequently, the reported results do not establish
+the performance of our framework relative to these approaches.
+Based on the above criteria, we selected the following scanners for our evaluation. 
+%A tool was selected only if its source code and detection rules were publicly available.
+
+\begin{itemize}
+    \item \textbf{Microsoft OSS-Detect-Backdoor} (commit \texttt{a37dff})~\cite{microsoft_ossgadget}: A rule-based static scanner designed to identify potential backdoors and malicious code patterns in open-source packages.
+
+    % \item \textbf{Snyk Agent Scan~\cite{snykAgentScan}}:
+    % This tool performs pre-deployment security scanning of agent skills and MCP components using local checks and API-based validation. It detects risks such as prompt injection, malware payloads, tool poisoning, toxic flows, unsafe credential handling, and hardcoded secrets.
+    \item \textbf{Cisco Skill Scanner} (commit \texttt{d943c6})~\cite{cisco_skill_scanner}:
+Cisco Skill Scanner combines YAML/YARA signatures, source-code and
+bytecode inspection, static behavioral analysis, and an optional
+LLM-based semantic analyzer. 
+We evaluate two configurations: the default scanner without its LLM
+analyzer, denoted \emph{Cisco Skill Scanner}, and the LLM-enabled
+configuration, denoted \emph{Cisco Skill Scanner with LLM}. For
+Cisco Skill Scanner with LLM, we locally serve Qwen3:8B through
+Ollama while retaining Cisco's static, bytecode, pipeline, and LLM
+analyzers.
+
+For Cisco Skill Scanner with LLM, we use the scanner's
+native binary safety verdict rather than deriving an additional
+severity threshold. Specifically, we map
+\texttt{is\_safe=true} to Benign and
+\texttt{is\_safe=false} to Malicious. The LLM-enabled
+configuration locally serves Qwen3:8B through Ollama while
+retaining Cisco's static, bytecode, pipeline, and LLM analyzers.
+
+% We evaluate two configurations:
+% the default scanner without its LLM analyzer, denoted
+% \emph{Cisco}, and an LLM-enabled configuration, denoted
+% \emph{Cisco with LLM}. For Cisco with LLM, we locally serve Qwen3:8B through Ollama while retaining Cisco's static, bytecode, pipeline, and LLM analyzers.
+
+% For Cisco with LLM, the binary operating threshold was calibrated
+% exclusively on the 560-skill training split. We evaluated the
+% \textsc{Info}, \textsc{Low}, \textsc{Medium}, \textsc{High}, and
+% \textsc{Critical} severity cutoffs using balanced accuracy.
+% The selected cutoff was \textsc{High} and was frozen before
+% evaluation on the held-out test set.
+%     \item \textbf{Cisco Skill Scanne (commit \texttt{d943c6})~\cite{cisco_skill_scanner}}:  This tool employs a multi-engine
+% static analysis approach that combines YAML/YARA signatures, code
+% and bytecode inspection, static behavioral dataflow analysis, and optional LLM-based semantic analysis; however, the LLM component was disabled in our evaluation.
+
+    %  Although this version supports optional LLM-based
+    % semantic analysis, that component was disabled in our experiments. The
+    % evaluation therefore relied on its default static-signature, bytecode, and
+    % pipeline analyses. The bundled core rule pack contained 14 YARA files defining
+    % 17 YARA rules.
+    % It identifies prompt injection, data exfiltration, suspicious code execution, and unsafe filesystem or network operations.
+
+    % \item \textbf{Grit~\cite{gritScanner}}:
+    % provides pattern-based static code analysis for searching and linting source code such as network access, shell execution, and dangerous imports. Its rule-level findings can identify potential execution risks but may lack the broader semantic context needed to distinguish benign automation from malicious behavior.
+
+    \item \textbf{YARA~\cite{yara}}:
+    YARA is a signature-based static scanning framework that identifies suspicious files through rules over text strings, byte sequences, regular expressions, and Boolean conditions. We used YARA rule collections identified through the
+    cybersecurity-dev Awesome YARA resource
+    list~\cite{awesome_yara}.
+\end{itemize}
+
+
+
+
+% \begin{itemize}
+%     \item \textbf{Static:} OSS-Detect-Backdoor, YARA, a static union of the two.
+%     \item \textbf{Agent-scan:} Snyk Agent Scan, a Cisco-style MCP policy scanner baseline, Grit, and a Koi-style/Palo Alto--inspired logical OR ensemble combining these agent-facing tools.
+%     \item \textbf{Our Dynamic Analysis:} Sandbox-based runtime log analysis using our rule-based dynamic detector.
+% \end{itemize}
+% We considered the following scanners in our evaluation. 
+
+% \begin{itemize}
+%     \item \textbf{OSS-Detect-Backdoor (ODB)~\cite{microsoft_ossgadget}}: A rule-based static signature scanner originally designed to identify known backdoor patterns and malicious code artifacts in traditional software.
+%     \item \textbf{Snyk Agent Scan (SAS)~\cite{snyk2026}}: Snyk primarily captures semantic and data-flow-based vulnerabilities, including prompt injection and unsafe LLM interactions.
+%     \item \textbf{Cisco~\cite{cisco_skill_scanner}}: Cisco employs a hybrid static analysis approach that combines signature-based detection (YAML/YARA) and bytecode inspection with an LLM-based semantic evaluation layer. It focuses on behavioral and structural analysis, identifying execution risks, workflow misuse, and implicit malicious intents (like coercive instructions).
+%     \item \textbf{Grit~\cite{gritScanner}}: Grit operates as a pattern-based static detector, capturing low-level indicators such as unauthorized network calls, shell executions, and dangerous imports. By parsing code-layer findings, it identifies potential execution risks but frequently lacks the broader semantic context needed to differentiate between benign developer automation and genuine malicious intent.
+%     \item \textbf{YARA~\cite{yara}}: YARA is a signature-based static scanning framework that identifies suspicious files through pattern-matching rules over strings, byte sequences, regular expressions, and structural indicators. 
+%     % \item  \textbf{Koi~\cite{koi2026clawhavoc}}: Koi represents a logical OR ensemble approach (a Palo Alto Networks–inspired strategy) that aggregates signals from multiple agent-facing static tools (Snyk, Cisco, and Grit). It adopts an aggressive, parallel security posture—marking a sample as malicious if any single tool flags it.
+%     % \item \textbf{Our Jiffy Scanner}: Our approach utilizes a comprehensive dynamic analysis pipeline that executes agent skills within an isolated Docker sandbox. Instead of relying solely on static rules, it monitors concrete runtime evidence across four critical dimensions: agent outputs, system-call traces (strace), network captures (pcap), and filesystem changes.
+% \end{itemize}
+
+\subsection{Experiment Setup}
+
+\label{sec:experiment_setup}
+
+
+
+
+We conducted the experiments on a virtual machine running Ubuntu 24.04.4 LTS with 4 vCPUs and 15.6~GiB of RAM. The analysis pipeline was implemented in Python 3.13.12 and executed using Docker 29.5.2. Scanner versions and configuration files were fixed throughout the evaluation to ensure reproducibility. Each dynamic sandbox attempt was limited to 300~s and used Claude Opus 4.8 as the sandbox execution agent (Appendix~\ref{app:sandbox_configuration}). To run the Agentic layer, we used a cluster of eight NVIDIA A100 GPUs (40 GB each). Within this environment, we deployed a Qdrant vector database in a Docker container and used BGE-M3~\cite{bge-m3} as the embedding model. The evaluated agentic pipeline used
+Qwen3.5 122B~\cite{qwen35_122} for both the Planner
+and Evaluator agents, while the worker agents used Qwen3:8B. The Planner assigned investigative
+tasks to the predefined workers, and the Evaluator
+assessed their findings to produce the final verdict,
+risk score, and structured report.
+% The evaluated agentic pipeline used Qwen 8B for the
+% investigation and evidence-assessment agents. A separate Synthesizer Agent used
+% Qwen3.5 122B~\cite{qwen35_122} to aggregate their findings and produce the final verdict and score. The 122B model therefore participated directly in
+% the classification decisions reported in the evaluation, rather than serving only as a report formatter.
+% The agentic pipeline used Qwen 3.5 122B~\cite{qwen35_122} as the primary orchestrator for complex semantic-reasoning and coordination tasks.
+
+In our experiment, each skill was first processed by the static analysis layer and then examined in an isolated Docker sandbox. Dynamic execution was controlled by a safety-constrained prompt that permitted only local, reversible, and non-destructive operations. Unsafe actions were blocked and recorded as intent-level evidence. Runtime evidence included the Claude execution agent's output, \texttt{strace} logs, network captures, and filesystem-change logs. Each dynamic-analysis run was limited to 300 seconds.
+
+The saved SARIF artifacts record wall-clock duration for each agentic analysis invocation. Separate upstream static- and dynamic-analysis timings were not preserved in these artifacts; consequently, the latency results reported in Section~\ref{sec:operational-results} refer to the \emph{agentic stage}, not to the 300~s dynamic-sandbox timeout or to end-to-end pipeline latency.
+%To efficiently distribute the workload, four concurrent instances of Qwen 3 8B (4x Qwen 3 8B)~\cite{qwen3_8} were deployed to power the specialized sub-agents, handling lightweight, parallelizable tasks such as query generation, evidence summarization, and auxiliary retrieval.
+
+
+
+
+
+% We evaluated each scanner using true positives (TP), true negatives (TN), false positives (FP), and false negatives (FN). Based on these values, we reported accuracy, precision, recall, specificity, and F1-score. These metrics measure both the ability to detect malicious skills and the ability to avoid incorrectly flagging benign skills.

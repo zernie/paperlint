@@ -1,0 +1,176 @@
+\section{Background}
+\label{sec:background}
+
+\subsection{Primer on Magnetic Tactile Sensing}
+The rapid advancement of embodied intelligence, robotic manipulation, and dexterous grasping has underscored the critical importance of tactile perception. 
+Compared with visual sensing, tactile feedback directly captures fine-grained contact states, force variations, and slip --- information essential for fine manipulation, closed-loop control, and operation in harsh environments (e.g., visual blind spots). 
+Among emerging sensing modalities, magnetic tactile sensors have gained significant traction due to their high sensitivity, multidimensional force perception, and flexibility in integration.
+In academia, the number of related research efforts has exhibited a rapid growth trend in recent years~\cite{man2024bionic,bhirangi2025anyskin,pattabiraman2025eflesh,hu2024magneticskin,yan2021softmagnetic}.
+The industrial sector has also been heavily advancing magnetic tactile sensors since 2021.
+Specifically, PaXini introduced various models (e.g., fingertip, palm, and finger pad) of magnetic tactile sensors in 2021~\cite{paxini2026official}.
+Another leading manufacturer, XELA~\cite{xela2026official}, presented uSkin in 2021. 
+Meta has open-sourced ReSkin~\cite{bhirangi2021reskin} in 2021.
+Major semiconductor manufacturer, e.g., Melexis, introduced magnetic tactile sensors (Tactaxis) for a dexterous robotics system in 2022~\cite{le2022gradiometric}. 
+In the following, we first describe the components of a magnetic tactile sensor. Then, we elaborate on its advantages. 
+
+The fundamental working principle of magnetic tactile sensors is to convert mechanical forces 
+into measurable magnetic field variations. 
+As illustrated in Fig.~\ref{fig:background2} (a), the sensor typically consists of a flexible elastomer layer, an embedded magnet, and an underlying sensor array composed of several magnetometers, e.g., Hall-effect sensors~\cite{tomo2016hall} or magnetoresistive sensors~\cite{oh2017magnetic}. 
+When an external pressure is applied to the elastomer, the elastic structure undergoes compressive, bending, or shear deformation, which alters the relative position, distance, or pose between the magnet and the magnetic sensing units.
+As the magnetic field follows an inverse-cube law with the distance:
+\begin{equation}
+    \mathbf{B(r)}\propto\frac{1}{\mathbf{|r|}^3}
+    \label{eq:proportion}
+\end{equation}
+Here, $\mathbf{B(r)}$ is the three-dimensional magnetic field strength at position $\mathbf{r}$, whereas $\mathbf{r}$ is the position of the magnet relative to the sensor,
+$|\mathbf{r}|$ is the radial distance.
+Therefore, the positional changes lead to variations in the local magnetic field distribution. 
+Then, an analytical pipeline maps these magnetic field readings into tactile information such as contact location, normal force, shear force, and slip. 
+For example, XELA and PaXini provided detailed charts~\cite{xela2026technology,paxini2026itpu} for converting the magnetic field to fine-grained multi-dimensional force information.
+
+To better demonstrate the principles and structure of the magnetic tactile sensor, we disassembled a magnetic tactile sensor (PaXini PX6AX-GEN3-MC-M2020-Elite) to reveal the inside view, i.e., Fig.~\ref{fig:background2} (b).
+
+\begin{table}[t]
+    \centering
+    \caption{Comparison of tactile sensing modalities.}
+    \label{tab:tactile_comparison}
+    \scriptsize
+    \setlength{\tabcolsep}{3.5pt}
+    \renewcommand{\arraystretch}{1.12}
+    \resizebox{\columnwidth}{!}{%
+    \begin{tabular}{lccccc}
+        \toprule
+        \textbf{Metric} & \textbf{Optical} & \textbf{Capacitive} & \textbf{Resistive} & \textbf{Magnetic} \\
+        \midrule
+        Fine-grained force sensing                       & \greencheck    & \redcross      & \redcross     & \greencheck \\
+        Easy multi-dimensional force decoupling        & \greencheck    & \greencheck    & \redcross     & \greencheck \\
+        Low cost \& overheads                            & \redcross      & \redcross      & \greencheck   & \greencheck \\
+        Robust static \& dynamic sensing                 & \greencheck    & \greencheck    &\redcross      & \greencheck \\
+        \bottomrule
+    \end{tabular}%
+        }
+    \vspace{1pt}
+    \parbox{\columnwidth}{\scriptsize * The symbols \greencheck{} and \redcross{} are used to indicate the relative ease of implementation or the typical sensing performance, rather than absolute feasibility.}
+\end{table}
+
+\subsection{Advantages of Magnetic Tactile Sensors}
+
+\begin{figure*}[htbp] 
+  \centering
+  \includegraphics[width=0.95\textwidth]{figures/background3.pdf} 
+  \Description{Overview of existing robotic tactile sensing technologies and their underlying sensing principles.}
+  \caption{Experiment on Anti-Interference Mechanisms of Magnetic Tactile Sensors. The platform for the sample is 10 mm away from the bottom surface of the sensor. (a) presents the placement of the MLX90393 Module; whereas (b)---(e) denote the placement of various magnetic objects.}
+  \label{fig:background3}
+\end{figure*}
+
+\begin{figure}[t] 
+  \centering
+  \includegraphics[width=0.85\linewidth]{figures/background1.pdf}
+  \Description{Example of a robotic tactile sensing system showing the sensor structure and the physical interaction process during contact.}
+  \caption{Placement of PaXini and XELA Sensors. (a) XELA uSPa 46. (b) PX6AX-GEN3-MC-M2020-Elite.}
+  \label{fig:background1}
+\end{figure}
+
+\noindent\textbf{Fine-grained force sensing.} 
+Magnetic tactile sensors typically achieve perception by embedding magnets or magnetic materials within a flexible elastomer, e.g., silicone. 
+When external contact induces deformation in the elastomer, the position and/or orientation of the magnet changes accordingly, thereby altering the local magnetic field distribution. Magnetic field sensors exhibit high sensitivity to such variations.
+Consequently, even miniaturized displacements or slight contact forces can be effectively converted into measurable electrical signals, thereby enabling highly granular micro-force detection. 
+For example, a single sensing point of the XELA uSkin sensor achieves a resolution of 0.1~gf, approximately equivalent to 0.98~mN~\cite{xela2026technology}.
+
+\noindent\textbf{Multi-dimensional force decoupling.} 
+The magnetic field can be characterized as a $1\times3$ vector in three dimensions, i.e., x, y, and z.
+When forces are applied in different directions, they induce displacement or rotation of the magnet in distinct directions, thus leading to corresponding variations in the magnetic field. 
+For example, normal forces predominantly manifest as magnetic field variations in the vertical direction to the magnetometer array. 
+In contrast, shear forces are more readily reflected as magnetic field deviations in the horizontal plane of the magnetometer array. 
+For example, the IPTU GEN3 series from PaXini~\cite{paxini2026px6axgen3} can interpret three-dimensional forces.
+
+\noindent\textbf{Low cost \& overheads.}
+The magnetometer array of magnetic tactile sensors is commonly comprised of 8-16 magnetometers --- tiny, chip-level sensors with an edge length of around 2 mm.
+For each frame of the magnetic tactile data stream, the data is a $3\times Num$ matrix of single-precision (32-bit) floating-point numbers, thus minimizing the overhead in the peripheral readout.
+These features lead to a compact form factor and low prices of magnetic tactile sensors.
+For example, the price of the GelSight Mini (optical solution) is \$510~\cite{gelsightMiniProduct}, whereas the base kit of the SingleTact (capacitive solution) is around \$81~\cite{singletact2026calibration}.
+In contrast, the PaXini PX-6AX GEN3 (magnetic solution) is around \$29 per unit~\cite{paxini2026px6axgen3mall}.
+Thanks to the compact form factor, magnetic tactile sensors can also be integrated for various scenarios. 
+For example, both PaXini~\cite{paxini2026official} and XELA~\cite{xela2026official} offer magnetic tactile sensor solutions tailored for various locations, e.g., fingertips, finger pads, and palms.
+
+\noindent\textbf{Robust static \& dynamic sensing.} 
+Regarding static perception, magnetic tactile sensors are typically capable of directly measuring absolute magnetic fields or differential magnetic field signals. Therefore, they are more adept at stably characterizing the force state under continuous contact conditions. Regarding dynamic perception, their advantages primarily stem from the high sampling frequency of the underlying magnetic field chips, as well as the high sensitivity of the magnetic field to the displacement and rotation of the magnet. Taking the public data of the PaXini PX-6AX GEN3 as an example, its sampling frequency reaches up to 1,000,000~Hz, with a maximum output frequency of 1000~Hz~\cite{paxini2026itpu}. The 2023 paper by the Melexis team~\cite{LeSignor2023MassManufacturable} also indicates that magnetic tactile sensors possess high-speed three-dimensional perception capabilities, demonstrating their potential for slip detection applications in industrial grippers.
+
+In Table ~\ref{tab:tactile_comparison}, we characterized the key features of optical, capacitive, resistive, and magnetic tactile sensors. 
+However, to build practical systems based on these key features, it is also essential to mitigate the impact of common interferences, e.g., the magnetic field incurred by the Earth and everyday electronics.
+In the following, we will elaborate on existing efforts to overcome interference and highlight their limitations. 
+
+\subsection{Existing Methods for Mitigating Magnetic Interferences}
+\label{sec:background2.3}
+In a magnetic tactile sensor, the magnetic field sensed by a magnetometer, i.e., $\mathbf{B}$ can be denoted as the following formula:
+\begin{equation}
+\mathbf{B} = \mathbf{B_{em}} + \mathbf{B_{E}} + \mathbf{B_{others}}
+\label{eq:denoise}
+\end{equation}
+Here, $\mathbf{B_{em}}$ denotes the magnetic field of the embedded magnet, $\mathbf{B_{E}}$ and $\mathbf{B_{others}}$ denote the Earth's and other interfering magnetic fields (e.g., incurred by electronic devices), respectively.
+Hence, to improve the reliability of a magnetic tactile sensor, the core is removing the interfering components, i.e., $\mathbf{B_{E}} + \mathbf{B_{others}}$.
+
+For a single magnetometer, it is infeasible to differentiate $\mathbf{B_{em}}$ from other components.
+To overcome this challenge, Le Signor et al.~\cite{le2022gradiometric} proposed a gradiometric design that uses multiple closely aligned magnetometers within a single compact IC package (about 2~mm span).
+Now, based on Eq.~\ref{eq:denoise}, we can denote sensor $i$'s measurement of the magnetic field as:
+\begin{equation}
+\mathbf{B_i} = \mathbf{B_{em, i}} + \mathbf{B_{E}} + \mathbf{B_{others, i}}
+\end{equation}
+Note that the magnetic field strength shows cubic attenuation over distance as shown in Eq.~\ref{eq:proportion}.
+Hence, the magnetic field distribution incurred by electronics (e.g., earphones) demonstrates an approximately uniform distribution among these sensors.
+In contrast, the embedded magnet's distance is only a few millimeters away.
+Hence, by subtracting the readings of adjacent magnetometers, one can effectively remove the approximately uniform components of $\mathbf{B_{E}} + \mathbf{B_{others}}$, while preserving the spatial variation of $\mathbf{B_{em}}$. 
+This suppression relies on the assumption that the external interfering field shows an approximately uniform distribution across magnetometers.
+This approach has been adapted by major tactile sensor manufacturers such as Melexis~\cite{le2022gradiometric}.
+
+\subsubsection{Limitations}
+\label{sec:background_limitation}
+\begin{figure}[t] 
+  \centering
+  \includegraphics[width=0.97\linewidth]{figures/background4.pdf}
+  \Description{Illustration of magnetic tactile sensing mechanisms showing the relationship between magnetic fields and tactile sensor responses.}
+  \caption{Comparison of magnetic field intensity between common magnetic objects in daily life and small magnets.}
+  \label{fig:background4}
+\end{figure}
+
+\begin{figure}[t] 
+  \centering
+  \includegraphics[width=1.02\linewidth]{figures/background5_new.pdf}
+  \Description{Comparison of different tactile sensing modalities highlighting the characteristics and advantages of magnetic tactile sensors.}
+  \caption{Comparison of interference on magnetic tactile sensors caused by different objects.}
+  \label{fig:background5}
+\end{figure}
+
+Although the aforementioned approach can effectively remove $\mathbf{B_{E}}+\mathbf{B_{others}}$, there is a major loophole:
+If the interfering magnetic field is not uniformly distributed across the magnetometers, the subtraction approach would fail.
+Then we ask a question: Is it possible to produce such a magnet in the real world?
+The most intuitive interfering source is a small, strong magnet placed close to the underlying sensor array. Due to the short distance, its magnetic field varies across adjacent magnetometers instead of appearing as a uniformly distributed interference. 
+Therefore, subtraction cannot fully cancel this external magnetic field. 
+The remaining differential signal may therefore be interpreted as a change in the embedded magnet's field and converted by the tactile sensor into an erroneous force reading.
+
+To verify this, we selected up-to-date COTS magnetic tactile sensor models, i.e., PaXini PX6AX-GEN3-MC-M2020-Elite and XELA's uSPa 46 (as shown in Fig.~\ref{fig:background1}), to perform a real-world study.
+For the interfering magnetic field, we select representative electronic devices (e.g., earbuds and speakers) and a small passive magnet.
+Here, we use electronic devices to verify if the tactile sensors are competent for overcoming common interferences.
+We picked the passive magnet for verifying the aforementioned loophole.
+
+We designed a comparative experiment (as shown in Fig.~\ref{fig:background3}) that evaluated sensor behavior under two categories of external magnetic input. 
+Specifically, we categorized the test sources into two classes: ambient magnetic field sources and localized concentrated magnetic objects. 
+The ambient stray magnetic field sources encompass the natural background magnetic field and several everyday electronic devices (e.g., smart bands, Bluetooth earphones, and Bluetooth speakers); whereas localized concentrated magnetic objects (e.g., small strong magnets) are utilized to simulate external magnetic disturbances with higher spatial locality and more pronounced magnetic field gradients. 
+
+In this experiment, we maintained the installation configuration and relative testing posture of the magnetic tactile sensors consistent, exclusively varying the category of the external magnetic source (as shown in Fig.~\ref{fig:background3}(b)---(e)). 
+We first employed the MLX90393~\cite{melexis_mlx90393_datasheet} to record the magnetic field of each object (as shown in Fig.~\ref{fig:background3}(a)).
+This step is for verifying whether the object's magnetic field strength is sufficient.
+Next, we recorded the sensor outputs by putting the object close to the magnetic tactile sensor (as shown in Fig.~\ref{fig:background3}(b)---(e)).
+This step is for verifying whether the object's magnetic field can interfere with the tactile sensor.
+The distance is fixed to be 10 mm.
+
+As shown in Fig.~\ref{fig:background4}, all objects demonstrate strong magnetic field strength. Note that the earbuds' magnetic field is even stronger than the passive magnet.
+However, Fig.~\ref{fig:background5} demonstrated that for the PaXini sensor, electronic devices do not have a sustained effect on the tactile sensor. 
+Here, the force values in the figure represent the vector sum of $F_x$, $F_y$, and $F_z$.
+This experiment revealed two key findings: 
+(1) The small passive magnet produces erroneous readings on both major tactile sensors.
+(2) The PaXini model achieves better resilience against an interfering magnetic field compared with XELA's model. (That is, under magnetic interference from common electronic devices, the abnormal output of XELA is 5.8--7.7 times that of PaXini, and the abnormal output of XELA persists continuously.)
+
+This experiment demonstrates that a small passive magnet without sensor-specific customization can effectively interfere with multiple COTS magnetic tactile sensor models, indicating that the underlying vulnerability is not limited to a single sensor model.
+Next, we ask: Is it possible to formulate a practical attack for these tactile systems?
+

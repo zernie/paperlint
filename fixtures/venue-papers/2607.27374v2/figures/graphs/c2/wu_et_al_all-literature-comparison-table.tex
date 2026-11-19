@@ -1,0 +1,50 @@
+% Auto-generated from generalizability_evaluation.ipynb
+% Requires: \usepackage[table]{xcolor}
+% Requires: \usepackage{graphicx}
+\begingroup
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.08}
+% - = dataset not evaluated in that paper | Mean and sigma over available datasets
+\definecolor{litWuEtAl}{HTML}{DDE8F2}
+\definecolor{litWuEtAlSummary}{HTML}{C7D1DA}
+\definecolor{litSoltanianiEtAl}{HTML}{E8DDF2}
+\definecolor{litSoltanianiEtAlSummary}{HTML}{D1C7DA}
+\definecolor{litAlqahtani}{HTML}{F2E8DD}
+\definecolor{litAlqahtaniSummary}{HTML}{DAD1C7}
+\definecolor{litFranaEtAl}{HTML}{DDF2E8}
+\definecolor{litFranaEtAlSummary}{HTML}{C7DAD1}
+\definecolor{litOurs}{HTML}{A8DBA8}
+\definecolor{litOursSummary}{HTML}{97C597}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lllccccc!{\color[HTML]{444444}\vrule width 1.5pt}cc}
+\hline
+Paper & Group & Method & Chromium & Ambari & Camel & Derby & Wicket & Mean & $\sigma$ \\
+\hline
+\cellcolor{litWuEtAl}Wu et al. & \cellcolor{litWuEtAl}FARSEC baselines & \cellcolor{litWuEtAl}Farsec & \cellcolor{litWuEtAl}0.79 & \cellcolor{litWuEtAl}0.65 & \cellcolor{litWuEtAl}0.48 & \cellcolor{litWuEtAl}0.60 & \cellcolor{litWuEtAl}0.67 & \cellcolor{litWuEtAlSummary}0.64 & \cellcolor{litWuEtAlSummary}0.10 \\
+\cellcolor{litWuEtAl}Wu et al. & \cellcolor{litWuEtAl}FARSEC baselines & \cellcolor{litWuEtAl}Farsec+TunedLearner & \cellcolor{litWuEtAl}0.80 & \cellcolor{litWuEtAl}0.70 & \cellcolor{litWuEtAl}0.38 & \cellcolor{litWuEtAl}0.62 & \cellcolor{litWuEtAl}0.67 & \cellcolor{litWuEtAlSummary}0.63 & \cellcolor{litWuEtAlSummary}0.14 \\
+\cellcolor{litWuEtAl}Wu et al. & \cellcolor{litWuEtAl}FARSEC baselines & \cellcolor{litWuEtAl}Farsec+TunedSMOTE & \cellcolor{litWuEtAl}0.86 & \cellcolor{litWuEtAl}0.60 & \cellcolor{litWuEtAl}0.47 & \cellcolor{litWuEtAl}0.67 & \cellcolor{litWuEtAl}0.55 & \cellcolor{litWuEtAlSummary}0.63 & \cellcolor{litWuEtAlSummary}0.13 \\
+\cellcolor{litWuEtAl}Wu et al. & \cellcolor{litWuEtAl}Text classifiers & \cellcolor{litWuEtAl}RF & \cellcolor{litWuEtAl}0.84 & \cellcolor{litWuEtAl}0.40 & \cellcolor{litWuEtAl}0.54 & \cellcolor{litWuEtAl}0.63 & \cellcolor{litWuEtAl}0.65 & \cellcolor{litWuEtAlSummary}0.61 & \cellcolor{litWuEtAlSummary}0.14 \\
+\cellcolor{litWuEtAl}Wu et al. & \cellcolor{litWuEtAl}Text classifiers & \cellcolor{litWuEtAl}NB & \cellcolor{litWuEtAl}0.79 & \cellcolor{litWuEtAl}0.60 & \cellcolor{litWuEtAl}0.46 & \cellcolor{litWuEtAl}0.66 & \cellcolor{litWuEtAl}0.46 & \cellcolor{litWuEtAlSummary}0.59 & \cellcolor{litWuEtAlSummary}0.13 \\
+\cellcolor{litWuEtAl}Wu et al. & \cellcolor{litWuEtAl}Text classifiers & \cellcolor{litWuEtAl}MLP & \cellcolor{litWuEtAl}0.66 & \cellcolor{litWuEtAl}0.54 & \cellcolor{litWuEtAl}0.26 & \cellcolor{litWuEtAl}0.55 & \cellcolor{litWuEtAl}0.36 & \cellcolor{litWuEtAlSummary}0.47 & \cellcolor{litWuEtAlSummary}0.14 \\
+\cellcolor{litWuEtAl}Wu et al. & \cellcolor{litWuEtAl}Text classifiers & \cellcolor{litWuEtAl}LR & \cellcolor{litWuEtAl}0.73 & \cellcolor{litWuEtAl}0.40 & \cellcolor{litWuEtAl}0.26 & \cellcolor{litWuEtAl}0.55 & \cellcolor{litWuEtAl}0.23 & \cellcolor{litWuEtAlSummary}0.43 & \cellcolor{litWuEtAlSummary}0.19 \\
+\cellcolor{litWuEtAl}Wu et al. & \cellcolor{litWuEtAl}Text classifiers & \cellcolor{litWuEtAl}KNN & \cellcolor{litWuEtAl}0.73 & \cellcolor{litWuEtAl}0.40 & \cellcolor{litWuEtAl}0.26 & \cellcolor{litWuEtAl}0.55 & \cellcolor{litWuEtAl}0.23 & \cellcolor{litWuEtAlSummary}0.43 & \cellcolor{litWuEtAlSummary}0.19 \\
+\cellcolor{litSoltanianiEtAl}Soltaniani et al. & \cellcolor{litSoltanianiEtAl}Prompted LLMs & \cellcolor{litSoltanianiEtAl}GPT-4.1 & \cellcolor{litSoltanianiEtAl}0.48 & \cellcolor{litSoltanianiEtAl}0.40 & \cellcolor{litSoltanianiEtAl}0.23 & \cellcolor{litSoltanianiEtAl}0.41 & \cellcolor{litSoltanianiEtAl}0.29 & \cellcolor{litSoltanianiEtAlSummary}0.36 & \cellcolor{litSoltanianiEtAlSummary}0.09 \\
+\cellcolor{litSoltanianiEtAl}Soltaniani et al. & \cellcolor{litSoltanianiEtAl}Prompted LLMs & \cellcolor{litSoltanianiEtAl}Gemini-2.5 & \cellcolor{litSoltanianiEtAl}0.86 & \cellcolor{litSoltanianiEtAl}0.74 & \cellcolor{litSoltanianiEtAl}0.73 & \cellcolor{litSoltanianiEtAl}0.73 & \cellcolor{litSoltanianiEtAl}0.81 & \cellcolor{litSoltanianiEtAlSummary}0.77 & \cellcolor{litSoltanianiEtAlSummary}0.05 \\
+\cellcolor{litSoltanianiEtAl}Soltaniani et al. & \cellcolor{litSoltanianiEtAl}Fine-tuned LLMs & \cellcolor{litSoltanianiEtAl}BERT & \cellcolor{litSoltanianiEtAl}0.83 & \cellcolor{litSoltanianiEtAl}0.40 & \cellcolor{litSoltanianiEtAl}0.33 & \cellcolor{litSoltanianiEtAl}0.57 & \cellcolor{litSoltanianiEtAl}0.23 & \cellcolor{litSoltanianiEtAlSummary}0.47 & \cellcolor{litSoltanianiEtAlSummary}0.21 \\
+\cellcolor{litSoltanianiEtAl}Soltaniani et al. & \cellcolor{litSoltanianiEtAl}Fine-tuned LLMs & \cellcolor{litSoltanianiEtAl}DistilBERT & \cellcolor{litSoltanianiEtAl}0.85 & \cellcolor{litSoltanianiEtAl}0.32 & \cellcolor{litSoltanianiEtAl}0.33 & \cellcolor{litSoltanianiEtAl}0.56 & \cellcolor{litSoltanianiEtAl}0.47 & \cellcolor{litSoltanianiEtAlSummary}0.51 & \cellcolor{litSoltanianiEtAlSummary}0.19 \\
+\cellcolor{litSoltanianiEtAl}Soltaniani et al. & \cellcolor{litSoltanianiEtAl}Fine-tuned LLMs & \cellcolor{litSoltanianiEtAl}DistilGPT2 & \cellcolor{litSoltanianiEtAl}0.88 & \cellcolor{litSoltanianiEtAl}0.12 & \cellcolor{litSoltanianiEtAl}0.04 & \cellcolor{litSoltanianiEtAl}0.18 & \cellcolor{litSoltanianiEtAl}0.04 & \cellcolor{litSoltanianiEtAlSummary}0.25 & \cellcolor{litSoltanianiEtAlSummary}0.32 \\
+\cellcolor{litSoltanianiEtAl}Soltaniani et al. & \cellcolor{litSoltanianiEtAl}Fine-tuned LLMs & \cellcolor{litSoltanianiEtAl}Qwen2.5B & \cellcolor{litSoltanianiEtAl}0.87 & \cellcolor{litSoltanianiEtAl}0.22 & \cellcolor{litSoltanianiEtAl}0.26 & \cellcolor{litSoltanianiEtAl}0.43 & \cellcolor{litSoltanianiEtAl}0.30 & \cellcolor{litSoltanianiEtAlSummary}0.42 & \cellcolor{litSoltanianiEtAlSummary}0.24 \\
+\cellcolor{litAlqahtani}Alqahtani & \cellcolor{litAlqahtani}fasttext (10-fold CV) & \cellcolor{litAlqahtani}fasttext & \cellcolor{litAlqahtani}0.93 & \cellcolor{litAlqahtani}0.81 & \cellcolor{litAlqahtani}0.67 & \cellcolor{litAlqahtani}0.80 & \cellcolor{litAlqahtani}0.77 & \cellcolor{litAlqahtaniSummary}0.80 & \cellcolor{litAlqahtaniSummary}0.08 \\
+\cellcolor{litFranaEtAl}França et al. & \cellcolor{litFranaEtAl}GPT zero-shot & \cellcolor{litFranaEtAl}Falcon & \cellcolor{litFranaEtAl}- & \cellcolor{litFranaEtAl}0.55 & \cellcolor{litFranaEtAl}0.49 & \cellcolor{litFranaEtAl}0.45 & \cellcolor{litFranaEtAl}0.48 & \cellcolor{litFranaEtAlSummary}0.49 & \cellcolor{litFranaEtAlSummary}0.03 \\
+\cellcolor{litFranaEtAl}França et al. & \cellcolor{litFranaEtAl}GPT zero-shot & \cellcolor{litFranaEtAl}Instruct & \cellcolor{litFranaEtAl}- & \cellcolor{litFranaEtAl}0.61 & \cellcolor{litFranaEtAl}0.48 & \cellcolor{litFranaEtAl}0.44 & \cellcolor{litFranaEtAl}0.45 & \cellcolor{litFranaEtAlSummary}0.50 & \cellcolor{litFranaEtAlSummary}0.07 \\
+\cellcolor{litFranaEtAl}França et al. & \cellcolor{litFranaEtAl}GPT zero-shot & \cellcolor{litFranaEtAl}Openorca & \cellcolor{litFranaEtAl}- & \cellcolor{litFranaEtAl}0.54 & \cellcolor{litFranaEtAl}0.53 & \cellcolor{litFranaEtAl}0.54 & \cellcolor{litFranaEtAl}0.60 & \cellcolor{litFranaEtAlSummary}0.55 & \cellcolor{litFranaEtAlSummary}0.03 \\
+\cellcolor{litFranaEtAl}França et al. & \cellcolor{litFranaEtAl}GPT zero-shot & \cellcolor{litFranaEtAl}Wizard & \cellcolor{litFranaEtAl}- & \cellcolor{litFranaEtAl}0.50 & \cellcolor{litFranaEtAl}0.40 & \cellcolor{litFranaEtAl}0.47 & \cellcolor{litFranaEtAl}0.48 & \cellcolor{litFranaEtAlSummary}0.46 & \cellcolor{litFranaEtAlSummary}0.04 \\
+\cellcolor{litFranaEtAl}França et al. & \cellcolor{litFranaEtAl}ML random 80/20 & \cellcolor{litFranaEtAl}RF & \cellcolor{litFranaEtAl}- & \cellcolor{litFranaEtAl}0.04 & \cellcolor{litFranaEtAl}0.59 & \cellcolor{litFranaEtAl}0.68 & \cellcolor{litFranaEtAl}0.62 & \cellcolor{litFranaEtAlSummary}0.48 & \cellcolor{litFranaEtAlSummary}0.26 \\
+\cellcolor{litFranaEtAl}França et al. & \cellcolor{litFranaEtAl}ML random 80/20 & \cellcolor{litFranaEtAl}LR & \cellcolor{litFranaEtAl}- & \cellcolor{litFranaEtAl}0.34 & \cellcolor{litFranaEtAl}0.53 & \cellcolor{litFranaEtAl}0.66 & \cellcolor{litFranaEtAl}0.53 & \cellcolor{litFranaEtAlSummary}0.52 & \cellcolor{litFranaEtAlSummary}0.11 \\
+\cellcolor{litFranaEtAl}França et al. & \cellcolor{litFranaEtAl}ML random 80/20 & \cellcolor{litFranaEtAl}SVM & \cellcolor{litFranaEtAl}- & \cellcolor{litFranaEtAl}0.06 & \cellcolor{litFranaEtAl}0.19 & \cellcolor{litFranaEtAl}0.64 & \cellcolor{litFranaEtAl}0.35 & \cellcolor{litFranaEtAlSummary}0.31 & \cellcolor{litFranaEtAlSummary}0.22 \\
+\cellcolor{litOurs}\textbf{Ours} & \cellcolor{litOurs}\textbf{embed + LogReg} & \cellcolor{litOurs}\textbf{MPNet + LogReg (Elastic)} & \cellcolor{litOurs}\textbf{0.80} & \cellcolor{litOurs}\textbf{0.72} & \cellcolor{litOurs}\textbf{0.58} & \cellcolor{litOurs}\textbf{0.50} & \cellcolor{litOurs}\textbf{0.64} & \cellcolor{litOursSummary}\textbf{0.65} & \cellcolor{litOursSummary}\textbf{0.10} \\
+\cellcolor{litOurs}\textbf{Ours} & \cellcolor{litOurs}\textbf{embed + LogReg} & \cellcolor{litOurs}\textbf{MiniLM-L12 + LogReg (Elastic)} & \cellcolor{litOurs}\textbf{0.74} & \cellcolor{litOurs}\textbf{0.66} & \cellcolor{litOurs}\textbf{0.63} & \cellcolor{litOurs}\textbf{0.60} & \cellcolor{litOurs}\textbf{0.63} & \cellcolor{litOursSummary}\textbf{0.65} & \cellcolor{litOursSummary}\textbf{0.05} \\
+\hline
+\end{tabular}%
+}
+\endgroup

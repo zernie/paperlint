@@ -1,0 +1,813 @@
+% Journals
+
+% First the Full Name is given, then the abbreviation used in the AMS Math
+% Reviews, with an indication if it could not be found there.
+% Note the 2nd overwrites the 1st, so swap them if you want the full name.
+
+ %{AMS}
+@string{AMSTrans = "American Mathematical Society Translations" }
+@string{AMSTrans = "Amer. Math. Soc. Transl." }
+@string{BullAMS = "Bulletin of the American Mathematical Society" }
+@string{BullAMS = "Bull. Amer. Math. Soc." }
+@string{ProcAMS = "Proceedings of the American Mathematical Society" }
+@string{ProcAMS = "Proc. Amer. Math. Soc." }
+@string{TransAMS = "Transactions of the American Mathematical Society" }
+@string{TransAMS = "Trans. Amer. Math. Soc." }
+%ACM
+@string{CACM = "Communications of the {ACM}" }
+@string{CACM = "Commun. {ACM}" }
+@string{CompServ = "Comput. Surveys" }
+@string{JACM = "J. ACM" }
+@string{ACMMathSoft = "{ACM} Transactions on Mathematical Software" }
+@string{ACMMathSoft = "{ACM} Trans. Math. Software" }
+@string{SIGNUM = "{ACM} {SIGNUM} Newsletter" }
+@string{SIGNUM = "{ACM} {SIGNUM} Newslett." }
+@string{AmerSocio = "American Journal of Sociology" }
+@string{AmerStatAssoc = "Journal of the American Statistical Association" }
+@string{AmerStatAssoc = "J. Amer. Statist. Assoc." }
+@string{ApplMathComp = "Applied Mathematics and Computation" }
+@string{ApplMathComp = "Appl. Math. Comput." }
+@string{AmerMathMonthly = "American Mathematical Monthly" }
+@string{AmerMathMonthly = "Amer. Math. Monthly" }
+@string{BIT = "{BIT}" }
+@string{BritStatPsych = "British Journal of Mathematical and Statistical
+          Psychology" }
+@string{BritStatPsych = "Brit. J. Math. Statist. Psych." }
+@string{CanMathBull = "Canadian Mathematical Bulletin" }
+@string{CanMathBull = "Canad. Math. Bull." }
+@string{CompApplMath = "Journal of Computational and Applied Mathematics" }
+@string{CompApplMath = "J. Comput. Appl. Math." }
+@string{CompPhys = "Journal of Computational Physics" }
+@string{CompPhys = "J. Comput. Phys." }
+@string{CompStruct = "Computers and Structures" }
+@string{CompStruct = "Comput. \& Structures" }
+@string{CompJour = "The Computer Journal" }
+@string{CompJour = "Comput. J." }
+@string{CompSysSci = "Journal of Computer and System Sciences" }
+@string{CompSysSci = "J. Comput. System Sci." }
+@string{Computing = "Computing" }
+@string{ContempMath = "Contemporary Mathematics" }
+@string{ContempMath = "Contemp. Math." }
+@string{Crelle = "Crelle's Journal" }
+@string{GiornaleMath = "Giornale di Mathematiche" }
+@string{GiornaleMath = "Giorn. Mat." }
+% didn't find in AMS MR., ibid.
+
+ %IEEE
+@string{Computer = "{IEEE} Computer" }
+@string{IEEETransComp = "{IEEE} Transactions on Computers" }
+@string{IEEETransComp = "{IEEE} Trans. Comput." }
+@string{IEEETransAC = "{IEEE} Transactions on Automatic Control" }
+@string{IEEETransAC = "{IEEE} Trans. Automat. Control" }
+@string{IEEESpec = "{IEEE} Spectrum" }
+% didn't find in AMS MR
+@string{ProcIEEE = "Proceedings of the {IEEE}" }
+@string{ProcIEEE = "Proc. {IEEE}" }
+% didn't find in AMS MR
+@string{IEEETransAeroElec = "{IEEE} Transactions on Aerospace and Electronic
+     Systems" }
+@string{IEEETransAeroElec = "{IEEE} Trans. Aerospace Electron. Systems" }
+@string{IMANumerAna = "{IMA} Journal of Numerical Analysis" }
+@string{IMANumerAna = "{IMA} J. Numer. Anal." }
+@string{InfProcLet = "Information Processing Letters" }
+@string{InfProcLet = "Inform. Process. Lett." }
+@string{InstMathApp = "Journal of the Institute of Mathematics and
+     its Applications" }
+@string{InstMathApp = "J. Inst. Math. Appl." }
+@string{IntControl = "International Journal of Control" }
+@string{IntControl = "Internat. J. Control" }
+@string{IntNumerEng = "International Journal for Numerical Methods in
+     Engineering" }
+@string{IntNumerEng = "Internat. J. Numer. Methods Engrg." }
+@string{IntSuper = "International Journal of Supercomputing Applications" }
+@string{IntSuper = "Internat. J. Supercomputing Applic." }
+% didn't find
+%% in AMS MR
+@string{Kibernetika = "Kibernetika" }
+@string{JResNatBurStand = "Journal of Research of the National Bureau
+     of Standards" }
+@string{JResNatBurStand = "J. Res. Nat. Bur. Standards" }
+@string{LinAlgApp = "Linear Algebra and its Applications" }
+@string{LinAlgApp = "Linear Algebra Appl." }
+@string{MathAnaAppl = "Journal of Mathematical Analysis and Applications" }
+@string{MathAnaAppl = "J. Math. Anal. Appl." }
+@string{MathAnnalen = "Mathematische Annalen" }
+@string{MathAnnalen = "Math. Ann." }
+@string{MathPhys = "Journal of Mathematical Physics" }
+@string{MathPhys = "J. Math. Phys." }
+@string{MathComp = "Mathematics of Computation" }
+@string{MathComp = "Math. Comp." }
+@string{MathScand = "Mathematica Scandinavica" }
+@string{MathScand = "Math. Scand." }
+@string{TablesAidsComp = "Mathematical Tables and Other Aids to Computation" }
+@string{TablesAidsComp = "Math. Tables Aids Comput." }
+@string{NumerMath = "Numerische Mathematik" }
+@string{NumerMath = "Numer. Math." }
+@string{PacificMath = "Pacific Journal of Mathematics" }
+@string{PacificMath = "Pacific J. Math." }
+@string{ParDistComp = "Journal of Parallel and Distributed Computing" }
+@string{ParDistComp = "J. Parallel and Distrib. Comput." }
+% didn't find
+%% in AMS MR
+@string{ParComputing = "Parallel Computing" }
+@string{ParComputing = "Parallel Comput." }
+@string{PhilMag = "Philosophical Magazine" }
+@string{PhilMag = "Philos. Mag." }
+@string{ProcNAS = "Proceedings of the National Academy of Sciences
+                    of the USA" }
+@string{ProcNAS = "Proc. Nat. Acad. Sci. U. S. A." }
+@string{Psychometrika = "Psychometrika" }
+@string{QuartMath = "Quarterly Journal of Mathematics, Oxford, Series (2)" }
+@string{QuartMath = "Quart. J. Math. Oxford Ser. (2)" }
+@string{QuartApplMath = "Quarterly of Applied Mathematics" }
+@string{QuartApplMath = "Quart. Appl. Math." }
+@string{RevueInstStat = "Review of the International Statisical Institute" }
+@string{RevueInstStat = "Rev. Inst. Internat. Statist." }
+%SIAM
+@string{JSIAM = "Journal of the Society for Industrial and Applied
+     Mathematics" }
+@string{JSIAM = "J. Soc. Indust. Appl. Math." }
+@string{JSIAMB = "Journal of the Society for Industrial and Applied
+     Mathematics, Series B, Numerical Analysis" }
+@string{JSIAMB = "J. Soc. Indust. Appl. Math. Ser. B Numer. Anal." }
+@string{SIAMAlgMeth = "{SIAM} Journal on Algebraic and Discrete Methods" }
+@string{SIAMAlgMeth = "{SIAM} J. Algebraic Discrete Methods" }
+@string{SIAMAppMath = "{SIAM} Journal on Applied Mathematics" }
+@string{SIAMAppMath = "{SIAM} J. Appl. Math." }
+@string{SIAMComp = "{SIAM} Journal on Computing" }
+@string{SIAMComp = "{SIAM} J. Comput." }
+@string{SIAMMatrix = "{SIAM} Journal on Matrix Analysis and Applications" }
+@string{SIAMMatrix = "{SIAM} J. Matrix Anal. Appl." }
+@string{SIAMNumAnal = "{SIAM} Journal on Numerical Analysis" }
+@string{SIAMNumAnal = "{SIAM} J. Numer. Anal." }
+@string{SIAMReview = "{SIAM} Review" }
+@string{SIAMReview = "{SIAM} Rev." }
+@string{SIAMSciStat = "{SIAM} Journal on Scientific and Statistical
+     Computing" }
+@string{SIAMSciStat = "{SIAM} J. Sci. Statist. Comput." }
+@string{SoftPracExp = "Software Practice and Experience" }
+@string{SoftPracExp = "Software Prac. Experience" }
+% didn't find in AMS MR
+@string{StatScience = "Statistical Science" }
+@string{StatScience = "Statist. Sci." }
+@string{Techno = "Technometrics" }
+@string{USSRCompMathPhys = "{USSR} Computational Mathematics and Mathematical
+     Physics" }
+@string{USSRCompMathPhys = "{U. S. S. R.} Comput. Math. and Math. Phys." }
+@string{VLSICompSys = "Journal of {VLSI} and Computer Systems" }
+@string{VLSICompSys = "J. {VLSI} Comput. Syst." }
+@string{ZAngewMathMech = "Zeitschrift fur Angewandte Mathematik und
+     Mechanik" }
+@string{ZAngewMathMech = "Z. Angew. Math. Mech." }
+@string{ZAngewMathPhys = "Zeitschrift fur Angewandte Mathematik und Physik" }
+@string{ZAngewMathPhys = "Z. Angew. Math. Phys." }
+% Publishers % ================================================= |
+@string{Academic = "Academic Press" }
+@string{ACMPress = "{ACM} Press" }
+@string{AdamHilger = "Adam Hilger" }
+@string{AddisonWesley = "Addison-Wesley" }
+@string{AllynBacon = "Allyn and Bacon" }
+@string{AMS = "American Mathematical Society" }
+@string{Birkhauser = "Birkh{\"a}user" }
+@string{CambridgePress = "Cambridge University Press" }
+@string{Chelsea = "Chelsea" }
+@string{ClaredonPress = "Claredon Press" }
+@string{DoverPub = "Dover Publications" }
+@string{Eyolles = "Eyolles" }
+@string{HoltRinehartWinston = "Holt, Rinehart and Winston" }
+@string{Interscience = "Interscience" }
+@string{JohnsHopkinsPress = "The Johns Hopkins University Press" }
+@string{JohnWileySons = "John Wiley and Sons" }
+@string{Macmillan = "Macmillan" }
+@string{MathWorks = "The Math Works Inc." }
+@string{McGrawHill = "McGraw-Hill" }
+@string{NatBurStd = "National Bureau of Standards" }
+@string{NorthHolland = "North-Holland" }
+@string{OxfordPress = "Oxford University Press" }
+%address Oxford or London?
+@string{PergamonPress = "Pergamon Press" }
+@string{PlenumPress = "Plenum Press" }
+@string{PrenticeHall = "Prentice-Hall" }
+@string{SIAMPub = "{SIAM} Publications" }
+@string{Springer = "Springer-Verlag" }
+@string{TexasPress = "University of Texas Press" }
+@string{VanNostrand = "Van Nostrand" }
+@string{WHFreeman = "W. H. Freeman and Co." }
+
+%Entries
+@misc{adimulam2026orchestration,
+	title        = {The {{Orchestration}} of {{Multi-Agent Systems}}: {{Architectures}}, {{Protocols}}, and {{Enterprise Adoption}}},
+	author       = {Adimulam, Apoorva and Gupta, Rajesh and Kumar, Sumit},
+	year         = 2026,
+	publisher    = {arXiv},
+	number       = {arXiv:2601.13671},
+	doi          = {10.48550/arXiv.2601.13671}
+}
+@article{aird2024dynamic,
+	title        = {Dynamic {{Fairness-aware Recommendation Through Multi-agent Social Choice}}},
+	author       = {Aird, Amanda and Farastu, Paresha and Sun, Joshua and Stefancov{\'a}, Elena and All, Cassidy and Voida, Amy and Mattei, Nicholas and Burke, Robin},
+	year         = 2024,
+	journal      = {ACM Trans. Recomm. Syst.},
+	volume       = 3,
+	number       = 2,
+	pages        = {21:1--21:35},
+	doi          = {10.1145/3690653}
+}
+@inproceedings{ashkinaze2025plurals,
+	title        = {Plurals: {{A System}} for {{Guiding LLMs}} via {{Simulated Social Ensembles}}},
+	author       = {Ashkinaze, Joshua and Fry, Emily and Edara, Narendra and Gilbert, Eric and Budak, Ceren},
+	year         = 2025,
+	booktitle    = {Proceedings of the 2025 {{CHI Conference}} on {{Human Factors}} in {{Computing Systems}}},
+	publisher    = {ACM},
+	series       = {{{CHI}} '25},
+	pages        = {1--21},
+	doi          = {10.1145/3706598.3713675}
+}
+@inproceedings{baresi2024conceptual,
+	title        = {A {{Conceptual Framework}} for {{Quality Assurance}} of {{LLM-based Socio-critical Systems}}},
+	author       = {Baresi, Luciano and Camilli, Matteo and Dolci, Tommaso and Quattrocchi, Giovanni},
+	year         = 2024,
+	booktitle    = {Proceedings of the 39th {{IEEE}}/{{ACM International Conference}} on {{Automated Software Engineering}}},
+	publisher    = {ACM},
+	pages        = {2314--2318},
+	doi          = {10.1145/3691620.3695306}
+}
+@inproceedings{borah2024implicit,
+	title        = {Towards {{Implicit Bias Detection}} and {{Mitigation}} in {{Multi-Agent LLM Interactions}}},
+	author       = {Borah, Angana and Mihalcea, Rada},
+	year         = 2024,
+	booktitle    = {Findings of the {{Association}} for {{Computational Linguistics}}: {{EMNLP}} 2024},
+	publisher    = {ACL},
+	pages        = {9306--9326},
+	doi          = {10.18653/v1/2024.findings-emnlp.545}
+}
+@inproceedings{choi2025empirical,
+	title        = {An {{Empirical Study}} of {{Group Conformity}} in {{Multi-Agent Systems}}},
+	author       = {Choi, Min and Kim, Keonwoo and Chae, Sungwon and Baek, Sangyeop},
+	year         = 2025,
+	booktitle    = {Findings of the {{Association}} for {{Computational Linguistics}}: {{ACL}} 2025},
+	publisher    = {ACL},
+	pages        = {5123--5139},
+	doi          = {10.18653/v1/2025.findings-acl.265}
+}
+@inproceedings{jiang2019learning,
+	title        = {Learning {{Fairness}} in {{Multi-Agent Systems}}},
+	author       = {Jiang, Jiechuan and Lu, Zongqing},
+	year         = 2019,
+	booktitle    = {Advances in {{Neural Information Processing Systems}}},
+	publisher    = {Curran Associates, Inc.},
+	volume       = 32,
+	url          = {https://proceedings.neurips.cc/paper_files/paper/2019/hash/10493aa88605cad5ab4752b04a63d172-Abstract.html}
+}
+@article{raza2026trism,
+	title        = {{{TRiSM}} for {{Agentic AI}}: {{A}} Review of {{Trust}}, {{Risk}}, and {{Security Management}} in {{LLM-based Agentic Multi-Agent Systems}}},
+	author       = {Raza, Shaina and Sapkota, Ranjan and Karkee, Manoj and Emmanouilidis, Christos},
+	year         = 2026,
+	journal      = {AI Open},
+	volume       = 7,
+	pages        = {71--95},
+	doi          = {10.1016/j.aiopen.2026.02.006}
+}
+@article{ryan2020artificial,
+	title        = {Artificial Intelligence Ethics Guidelines for Developers and Users: Clarifying Their Content and Normative Implications},
+	author       = {Ryan, Mark and Stahl, Bernd Carsten},
+	year         = 2020,
+	journal      = {Journal of Information, Communication and Ethics in Society},
+	volume       = 19,
+	number       = 1,
+	pages        = {61--86},
+	doi          = {10.1108/JICES-12-2019-0138}
+}
+@inproceedings{vasista2025malibu,
+	title        = {{{MALIBU Benchmark}}: {{Multi-Agent LLM Implicit Bias Uncovered}}},
+	author       = {Vasista, Ishwara and Mirza, Imran and Huang, Cole and Patil, Rohan Rajasekhara and Akalin, Aslihan and Zhu, Kevin and O'Brien, Sean},
+	year         = 2025,
+	booktitle    = {{{ICLR}} 2025 {{Workshop}} on {{Building Trust}} in {{Language Models}} and {{Applications}}},
+	url          = {https://openreview.net/forum?id=iilhN2MycO}
+}
+@inproceedings{greshake2023not,
+	title        = {Not {{What You}}'ve {{Signed Up For}}: {{Compromising Real-World LLM-Integrated Applications}} with {{Indirect Prompt Injection}}},
+	author       = {Greshake, Kai and Abdelnabi, Sahar and Mishra, Shailesh and Endres, Christoph and Holz, Thorsten and Fritz, Mario},
+	year         = 2023,
+	booktitle    = {Proceedings of the 16th {{ACM Workshop}} on {{Artificial Intelligence}} and {{Security}}},
+	publisher    = {ACM},
+	series       = {{{AISec}} '23},
+	pages        = {79--90},
+	doi          = {10.1145/3605764.3623985}
+}
+@inproceedings{hong2023metagpt,
+	title        = {{{MetaGPT}}: {{Meta Programming}} for {{A Multi-Agent Collaborative Framework}}},
+	author       = {Hong, Sirui and Zhuge, Mingchen and Chen, Jonathan and Zheng, Xiawu and Cheng, Yuheng and Wang, Jinlin and Zhang, Ceyao and Wang, Zili and others},
+	year         = 2023,
+	booktitle    = {The {{Twelfth International Conference}} on {{Learning Representations}}},
+	url          = {https://openreview.net/forum?id=VtmBAGCN7o}
+}
+@article{mosqueira-rey2023humanintheloop,
+	title        = {Human-in-the-Loop Machine Learning: A State of the Art},
+	author       = {{Mosqueira-Rey}, Eduardo and {Hern{\'a}ndez-Pereira}, Elena and {Alonso-R{\'i}os}, David and {Bobes-Bascar{\'a}n}, Jos{\'e} and {Fern{\'a}ndez-Leal}, {\'A}ngel},
+	year         = 2023,
+	journal      = {Artificial Intelligence Review},
+	volume       = 56,
+	number       = 4,
+	pages        = {3005--3054},
+	doi          = {10.1007/s10462-022-10246-w}
+}
+@inproceedings{shinn2023reflexion,
+	title        = {Reflexion: Language Agents with Verbal Reinforcement Learning},
+	author       = {Shinn, Noah and Cassano, Federico and Gopinath, Ashwin and Narasimhan, Karthik R. and Yao, Shunyu},
+	year         = 2023,
+	booktitle    = {Thirty-Seventh {{Conference}} on {{Neural Information Processing Systems}}},
+	url          = {https://openreview.net/forum?id=vAElhFcKW6}
+}
+@misc{sumers2024cognitive,
+	title        = {Cognitive {{Architectures}} for {{Language Agents}}},
+	author       = {Sumers, Theodore R. and Yao, Shunyu and Narasimhan, Karthik and Griffiths, Thomas L.},
+	year         = 2024,
+	publisher    = {arXiv},
+	number       = {arXiv:2309.02427},
+	doi          = {10.48550/arXiv.2309.02427}
+}
+@misc{wei2026agentica,
+	title        = {Agentic {{Reasoning}} for {{Large Language Models}}},
+	author       = {Wei, Tianxin and Li, Ting-Wei and Liu, Zhining and Ning, Xuying and Yang, Ze and Zou, Jiaru and Zeng, Zhichen and Qiu, Ruizhong and others},
+	year         = 2026,
+	publisher    = {arXiv},
+	number       = {arXiv:2601.12538},
+	doi          = {10.48550/arXiv.2601.12538}
+}
+@article{xi2025rise,
+	title        = {The Rise and Potential of Large Language Model Based Agents: A Survey},
+	author       = {Xi, Zhiheng and Chen, Wenxiang and Guo, Xin and He, Wei and Ding, Yiwen and Hong, Boyang and Zhang, Ming and Wang, Junzhe and others},
+	year         = 2025,
+	journal      = {Science China Information Sciences},
+	volume       = 68,
+	number       = 2,
+	pages        = 121101,
+	doi          = {10.1007/s11432-024-4222-0}
+}
+@misc{yagoubi2026agentleak,
+	title        = {{{AgentLeak}}: {{A Full-Stack Benchmark}} for {{Privacy Leakage}} in {{Multi-Agent LLM Systems}}},
+	author       = {Yagoubi, Faouzi El and {Badu-Marfo}, Godwin and Mallah, Ranwa Al},
+	year         = 2026,
+	publisher    = {arXiv},
+	doi          = {10.48550/ARXIV.2602.11510}
+}
+@inproceedings{chan2023harms,
+	title        = {Harms from {{Increasingly Agentic Algorithmic Systems}}},
+	author       = {Chan, Alan and Salganik, Rebecca and Markelius, Alva and Pang, Chris and Rajkumar, Nitarshan and Krasheninnikov, Dmitrii and Langosco, Lauro and He, Zhonghao and others},
+	year         = 2023,
+	booktitle    = {Proceedings of the 2023 {{ACM Conference}} on {{Fairness}}, {{Accountability}}, and {{Transparency}}},
+	publisher    = {ACM},
+	series       = {{{FAccT}} '23},
+	pages        = {651--666},
+	doi          = {10.1145/3593013.3594033}
+}
+@misc{han2026llm,
+	title        = {{{LLM Multi-Agent Systems}}: {{Challenges}} and {{Open Problems}}},
+	author       = {Han, Shanshan and Zhang, Qifan and Jin, Weizhao and Xu, Zhaozhuo},
+	year         = 2026,
+	publisher    = {arXiv},
+	number       = {arXiv:2402.03578},
+	doi          = {10.48550/arXiv.2402.03578}
+}
+@misc{tran2025multiagent,
+	title        = {Multi-{{Agent Collaboration Mechanisms}}: {{A Survey}} of {{LLMs}}},
+	author       = {Tran, Khanh-Tung and Dao, Dung and Nguyen, Minh-Duong and Pham, Quoc-Viet and O'Sullivan, Barry and Nguyen, Hoang D.},
+	year         = 2025,
+	publisher    = {arXiv},
+	number       = {arXiv:2501.06322},
+	doi          = {10.48550/arXiv.2501.06322}
+}
+@inproceedings{feng2024modular,
+	title        = {Modular {{Pluralism}}: {{Pluralistic Alignment}} via {{Multi-LLM Collaboration}}},
+	author       = {Feng, Shangbin and Sorensen, Taylor and Liu, Yuhan and Fisher, Jillian and Park, Chan Young and Choi, Yejin and Tsvetkov, Yulia},
+	year         = 2024,
+	booktitle    = {Proceedings of the 2024 {{Conference}} on {{Empirical Methods}} in {{Natural Language Processing}}},
+	publisher    = {ACL},
+	pages        = {4151--4171},
+	doi          = {10.18653/v1/2024.emnlp-main.240}
+}
+@inproceedings{li2025123,
+	title        = {1-2-3 {{Check}}: {{Enhancing Contextual Privacy}} in {{LLM}} via {{Multi-Agent Reasoning}}},
+	author       = {Li, Wenkai and Sun, Liwen and Guan, Zhenxiang and Zhou, Xuhui and Sap, Maarten},
+	year         = 2025,
+	booktitle    = {Proceedings of the {{The First Workshop}} on {{LLM Security}} ({{LLMSEC}})},
+	publisher    = {ACL},
+	pages        = {115--128},
+	url          = {https://aclanthology.org/2025.llmsec-1.9/}
+}
+@misc{nguyen2025social,
+  title = {The {{Social Cost}} of {{Intelligence}}: {{Emergence}}, {{Propagation}}, and {{Amplification}} of {{Stereotypical Bias}} in {{Multi-Agent Systems}}},
+  author = {Nguyen, Thi-Nhung and Luo, Linhao and Kaur, Amardeep and Omari, Rollin and Abraham, Tamas and Kim, Junae and Vu, Thuy-Trang and Phung, Dinh},
+  year = 2026,
+  number = {arXiv:2510.10943},
+  publisher = {arXiv},
+  doi = {10.48550/arXiv.2510.10943}
+}
+@inproceedings{yu2025netsafe,
+	title        = {{{NetSafe}}: {{Exploring}} the {{Topological Safety}} of {{Multi-agent System}}},
+	author       = {Yu, Miao and Wang, Shilong and Zhang, Guibin and Mao, Junyuan and Yin, Chenlong and Liu, Qijiong and Wang, Kun and Wen, Qingsong and others},
+	year         = 2025,
+	booktitle    = {Findings of the {{Association}} for {{Computational Linguistics}}: {{ACL}} 2025},
+	publisher    = {ACL},
+	pages        = {2905--2938},
+	doi          = {10.18653/v1/2025.findings-acl.150}
+}
+@techreport{prem2022research,
+	title        = {Research, {{Innovation}}, and {{Education Roadmap}} for {{Digital Humanism}}},
+	author       = {Prem, Erich and Hardman, Lynda and Werthner, Hannes and Timmers, Paul},
+	year         = 2022,
+	doi          = {10.34726/3801},
+	type         = {Report},
+	institution  = {The Digital Humanism Initiative},
+	annotation   = {Accepted: 2023-03-17T08:53:24Z}
+}
+@book{hagedorn2026digital,
+	title        = {Digital {{Humanism}}: {{First Interdisciplinary Science}} and {{Research Conference}}, {{DIGHUM}} 2025, {{Vienna}}, {{Austria}}, {{November}} 20--21, 2025, {{Proceedings}}},
+	author       = {Hagedorn, Ludger and Schmid, Ute and Winter, Susan and Woltran, Stefan},
+	year         = 2026,
+	publisher    = {Springer Nature Switzerland},
+	series       = {Lecture {{Notes}} in {{Computer Science}}},
+	volume       = 16319,
+	doi          = {10.1007/978-3-032-11108-1}
+}
+@article{prem2024principles,
+	title        = {Principles of Digital Humanism: {{A}} Critical Post-Humanist View},
+	author       = {Prem, Erich},
+	year         = 2024,
+	journal      = {Journal of Responsible Technology},
+	volume       = 17,
+	pages        = 100075,
+	doi          = {10.1016/j.jrt.2024.100075}
+}
+@inproceedings{werthner2020viennaa,
+	title        = {The {{Vienna Manifesto}} on {{Digital Humanism}}},
+	author       = {Werthner, Hannes},
+	year         = 2020,
+	booktitle    = {Digital {{Transformation}} and {{Ethics}}},
+	publisher    = {Ecowin},
+	pages        = {338--357},
+	url          = {https://repositum.tuwien.at/handle/20.500.12708/30434}
+}
+@article{werthner2023digital,
+	title        = {Digital {{Humanism}}: {{The Time Is Now}}},
+	author       = {Werthner, Hannes and Stanger, Allison and Schiaffonati, Viola and Knees, Peter and Hardman, Lynda and Ghezzi, Carlo},
+	year         = 2023,
+	journal      = {Computer},
+	volume       = 56,
+	number       = 1,
+	pages        = {138--142},
+	doi          = {10.1109/MC.2022.3219528}
+}
+@book{werthner2022perspectives,
+	title        = {Perspectives on {{Digital Humanism}}},
+	author       = {Werthner, Hannes and Prem, Erich and Lee, Edward A. and Ghezzi, Carlo},
+	year         = 2022,
+	publisher    = {Springer International Publishing},
+	doi          = {10.1007/978-3-030-86144-5}
+}
+@book{werthner2024introduction,
+	title        = {Introduction to {{Digital Humanism}}: {{A Textbook}}},
+	author       = {Werthner, Hannes and Ghezzi, Carlo and Kramer, Jeff and {Nida-R{\"u}melin}, Julian and Nuseibeh, Bashar and Prem, Erich and Stanger, Allison},
+	year         = 2024,
+	publisher    = {Springer Nature Switzerland},
+	doi          = {10.1007/978-3-031-45304-5}
+}
+@incollection{knees2024recommender,
+	title        = {Recommender {{Systems}}: {{Techniques}}, {{Effects}}, and {{Measures Toward Pluralism}} and {{Fairness}}},
+	author       = {Knees, Peter and Neidhardt, Julia and Nalis, Irina},
+	year         = 2024,
+	booktitle    = {Introduction to {{Digital Humanism}}: {{A Textbook}}},
+	publisher    = {Springer Nature Switzerland},
+	pages        = {417--434},
+	doi          = {10.1007/978-3-031-45304-5_27}
+}
+@incollection{bennaceur2024responsible,
+	title        = {Responsible {{Software Engineering}}: {{Requirements}} and {{Goals}}},
+	author       = {Bennaceur, Amel and Ghezzi, Carlo and Kramer, Jeff and Nuseibeh, Bashar},
+	year         = 2024,
+	booktitle    = {Introduction to {{Digital Humanism}}: {{A Textbook}}},
+	publisher    = {Springer Nature Switzerland},
+	pages        = {299--315},
+	doi          = {10.1007/978-3-031-45304-5_20}
+}
+@misc{ieee2017ethically,
+	title        = {Ethically Aligned Design: A Vision for Prioritizing Human Well-being with Autonomous and Intelligent Systems, Version 2},
+	author       = {The IEEE Global Initiative on Ethics of Autonomous and Intelligent Systems},
+	year         = 2017,
+	note         = {\url{http://standards.ieee.org/develop/indconn/ec/autonomous_systems.html}},
+	howpublished = {IEEE}
+}
+@article{gogoll2021ethics,
+	title        = {Ethics in the software development process: from codes of conduct to ethical deliberation},
+	author       = {Gogoll, Jan and Zuber, Niina and Kacianka, Severin and Greger, Timo and Pretschner, Alexander and Nida-R{\"u}melin, Julian},
+	year         = 2021,
+	journal      = {Philosophy \& Technology},
+	publisher    = {Springer},
+	pages        = {1--24}
+}
+@misc{li2020build,
+	title        = {To Build Less-Biased AI, Hire a More-Diverse Team},
+	author       = {Li, Michael},
+	year         = 2020,
+	note         = {\url{https://hbr.org/2020/10/to-build-less-biased-ai-hire-a-more-diverse-team} Accessed: 28-02-2023},
+	howpublished = {Harvard Business Review}
+}
+@article{ferrario2023applying,
+	title        = {Applying Human Values Theory to Software Engineering Practice: Lessons and Implications},
+	shorttitle   = {Applying Human Values Theory to Software Engineering Practice},
+	author       = {Ferrario, Maria Angela and Winter, Emily},
+	year         = 2023,
+	journal      = {IEEE Transactions on Software Engineering},
+	volume       = 49,
+	number       = 3,
+	pages        = {973--990},
+	doi          = {10.1109/TSE.2022.3170087}
+}
+@article{lu2023operationalizing,
+	title        = {Operationalizing Responsible AI at Scale: CSIRO Data61's Pattern-Oriented Responsible AI Engineering Approach},
+	shorttitle   = {Operationalizing Responsible AI at Scale},
+	author       = {Lu, Qinghua and Zhu, Liming and Xu, Xiwei and Whittle, Jon and Zowghi, Didar and Jacquet, Aurelie},
+	year         = 2023,
+	journal      = {Communications of the ACM},
+	volume       = 66,
+	number       = 7,
+	pages        = {64--66},
+	doi          = {10.1145/3589946}
+}
+@inproceedings{mougouei2018operationalizing,
+	title        = {Operationalizing human values in software: a research roadmap},
+	shorttitle   = {Operationalizing human values in software},
+	author       = {Mougouei, Davoud and Perera, Harsha and Hussain, Waqar and Shams, Rifat and Whittle, Jon},
+	year         = 2018,
+	booktitle    = {Proceedings of the 2018 26th ACM Joint Meeting on European Software Engineering Conference and Symposium on the Foundations of Software Engineering},
+	publisher    = {ACM},
+	series       = {ESEC/FSE 2018},
+	pages        = {780--784},
+	doi          = {10.1145/3236024.3264843}
+}
+@article{shahin2022operationalizing,
+	title        = {Operationalizing Human Values in Software Engineering: A Survey},
+	shorttitle   = {Operationalizing Human Values in Software Engineering},
+	author       = {Shahin, Mojtaba and Hussain, Waqar and Nurwidyantoro, Arif and Perera, Harsha and Shams, Rifat and Grundy, John and Whittle, Jon},
+	year         = 2022,
+	journal      = {IEEE Access},
+	volume       = 10,
+	pages        = {75269--75295},
+	doi          = {10.1109/ACCESS.2022.3190975}
+}
+@article{whittle2021case,
+	title        = {A Case for Human Values in Software Engineering},
+	author       = {Whittle, Jon and Ferrario, Maria Angela and Simm, Will and Hussain, Waqar},
+	year         = 2021,
+	journal      = {IEEE Software},
+	volume       = 38,
+	number       = 1,
+	pages        = {106--113},
+	doi          = {10.1109/MS.2019.2956701}
+}
+@article{friedman2017survey,
+	title        = {A Survey of Value Sensitive Design Methods},
+	author       = {Friedman, Batya and Hendry, David G. and Borning, Alan},
+	year         = 2017,
+	journal      = {Foundations and Trends in Human{\textendash}Computer Interaction},
+	publisher    = {Now Publishers, Inc.},
+	volume       = 11,
+	number       = 2,
+	pages        = {63--125},
+	doi          = {10.1561/1100000015}
+}
+@article{knobel2011values,
+	title        = {Values in design},
+	author       = {Knobel, Cory and Bowker, Geoffrey C.},
+	year         = 2011,
+	journal      = {Communications of the ACM},
+	volume       = 54,
+	number       = 7,
+	pages        = {26--28},
+	doi          = {10.1145/1965724.1965735}
+}
+@inproceedings{hu2022if,
+	title        = {If a Human Can See It, So Should Your System: Reliability Requirements for Machine Vision Components},
+	author       = {Hu, Boyue Caroline and Marsso, Lina and Czarnecki, Krzysztof and Salay, Rick and Shen, Huakun and Chechik, Marsha},
+	year         = 2022,
+	booktitle    = {Proceedings of the 44th International Conference on Software Engineering},
+	pages        = {1145--1156},
+	doi          = {10.1145/3510003.3510109},
+	eprint       = {2202.03930},
+	primaryclass = {cs},
+	archiveprefix = {arxiv}
+}
+@misc{li2023darkskin,
+	title        = {Dark-Skin Individuals Are at More Risk on the Street: Unmasking Fairness Issues of Autonomous Driving Systems},
+	author       = {Li, Xinyue and Chen, Zhenpeng and Zhang, Jie M. and Sarro, Federica and Zhang, Ying and Liu, Xuanzhe},
+	year         = 2023,
+	publisher    = {arXiv},
+	number       = {arXiv:2308.02935},
+	eprint       = {2308.02935},
+	primaryclass = {cs},
+	archiveprefix = {arxiv}
+}
+@misc{ingold2016amazon,
+	title        = {Amazon Doesn’t Consider the Race of Its Customers. Should It?},
+	author       = {Ingold, David and Soper, Spencer},
+	year         = 2016,
+	note         = {\url{https://www.bloomberg.com/graphics/2016-amazon-same-day} Accessed: Dec. 2023},
+	howpublished = {Bloomberg}
+}
+@incollection{dastin2022amazon,
+	title        = {Amazon scraps secret AI recruiting tool that showed bias against women},
+	author       = {Dastin, Jeffrey},
+	year         = 2022,
+	booktitle    = {Ethics of data and analytics},
+	publisher    = {Auerbach Publications},
+	pages        = {296--299}
+}
+@misc{angwin2016machine,
+	title        = {Machine Bias},
+	author       = {Angwin, Julia and Larson, Jeff and Mattu, Surya and Kirchner, Lauren},
+	year         = 2016,
+	note         = {\url{https://www.propublica.org/article/machine-bias-risk-assessments-in-criminal-sentencing} Accessed: Dec. 2023},
+	howpublished = {ProPublica}
+}
+@inproceedings{aydemir2018roadmap,
+	title        = {A Roadmap for Ethics-Aware Software Engineering},
+	author       = {Aydemir, Fatma Ba{\c s}ak and Dalpiaz, Fabiano},
+	year         = 2018,
+	booktitle    = {Proceedings of the {{International Workshop}} on {{Software Fairness}}},
+	publisher    = {ACM},
+	pages        = {15--21},
+	doi          = {10.1145/3194770.3194778}
+}
+@inproceedings{lu2022roadmap,
+	title        = {Towards a Roadmap on Software Engineering for Responsible {{AI}}},
+	author       = {Lu, Qinghua and Zhu, Liming and Xu, Xiwei and Whittle, Jon and Xing, Zhenchang},
+	year         = 2022,
+	booktitle    = {Proceedings of the 1st {{International Conference}} on {{AI Engineering}}: {{Software Engineering}} for {{AI}}},
+	publisher    = {ACM},
+	pages        = {101--112},
+	doi          = {10.1145/3522664.3528607}
+}
+@incollection{schieferdecker2020responsible,
+	title        = {Responsible {{Software Engineering}}},
+	author       = {Schieferdecker, Ina},
+	year         = 2020,
+	booktitle    = {The {{Future}} of {{Software Quality Assurance}}},
+	publisher    = {Springer International Publishing},
+	pages        = {137--146},
+	doi          = {10.1007/978-3-030-29509-7_11}
+}
+@inproceedings{gavidia-calderon2022what,
+	title        = {What {{Do You Want From Me}}? {{Adapting Systems}} to the {{Uncertainty}} of {{Human Preferences}}},
+	author       = {{Gavidia-Calderon}, Carlos and Bennaceur, Amel and Kordoni, Anastasia and Levine, Mark and Nuseibeh, Bashar},
+	year         = 2022,
+	booktitle    = {2022 {{IEEE}}/{{ACM}} 44th {{International Conference}} on {{Software Engineering}}: {{New Ideas}} and {{Emerging Results}} ({{ICSE-NIER}})},
+	publisher    = {IEEE},
+	pages        = {126--130},
+	doi          = {10.1109/ICSE-NIER55298.2022.9793539}
+}
+@article{zowghi2023whats,
+	title        = {What's {{Missing}} in {{Requirements Engineering}} for {{Responsible AI}}?},
+	author       = {Zowghi, D. and Bano, M. and Borg, M.},
+	year         = 2023,
+	journal      = {IEEE Software},
+	volume       = 40,
+	number       = 6,
+	pages        = {11--15},
+	doi          = {10.1109/MS.2023.3302934}
+}
+@article{jacobs2021value,
+	title        = {Value {{Sensitive Design}} and Power in Socio-Technical Ecosystems},
+	author       = {Jacobs, Mattis and Kurtz, Christian and Simon, Judith and B{\"o}hmann, Tilo},
+	year         = 2021,
+	journal      = {Internet Policy Review},
+	volume       = 10,
+	number       = 3,
+	doi          = {10.14763/2021.3.1580}
+}
+@inproceedings{zhu2023software,
+	title        = {Software {{Engineering}} as the {{Linchpin}} of {{Responsible AI}}},
+	author       = {Zhu, Liming},
+	year         = 2023,
+	booktitle    = {2023 {{IEEE}}/{{ACM}} 45th {{International Conference}} on {{Software Engineering}} ({{ICSE}})},
+	publisher    = {IEEE},
+	pages        = {3--4},
+	doi          = {10.1109/ICSE48619.2023.00012}
+}
+@article{stahl2024ethicsa,
+	title        = {The Ethics of {{ChatGPT}} -- {{Exploring}} the Ethical Issues of an Emerging Technology},
+	author       = {Stahl, Bernd Carsten and Eke, Damian},
+	year         = 2024,
+	journal      = {International Journal of Information Management},
+	volume       = 74,
+	pages        = 102700,
+	doi          = {10.1016/j.ijinfomgt.2023.102700}
+}
+@article{he2025llmbaseda,
+	title        = {{{LLM-Based Multi-Agent Systems}} for {{Software Engineering}}: {{Literature Review}}, {{Vision}}, and the {{Road Ahead}}},
+	author       = {He, Junda and Treude, Christoph and Lo, David},
+	year         = 2025,
+	journal      = {ACM Transactions on Software Engineering and Methodology},
+	volume       = 34,
+	number       = 5,
+	pages        = {124:1--124:30},
+	doi          = {10.1145/3712003}
+}
+@inproceedings{bennaceur2023valuesruntime,
+	title        = {Values@{{Runtime}}: {{An Adaptive Framework}} for {{Operationalising Values}}},
+	author       = {Bennaceur, Amel and Hassett, Diane and Nuseibeh, Bashar and Zisman, Andrea},
+	year         = 2023,
+	booktitle    = {2023 {{IEEE}}/{{ACM}} 45th {{International Conference}} on {{Software Engineering}}: {{Software Engineering}} in {{Society}} ({{ICSE-SEIS}})},
+	pages        = {175--179},
+	doi          = {10.1109/ICSE-SEIS58686.2023.00024}
+}
+@inproceedings{yao2023react,
+	title        = {{{ReAct}}: {{Synergizing Reasoning}} and {{Acting}} in {{Language Models}}},
+	author       = {Yao, Shunyu and Zhao, Jeffrey and Yu, Dian and Du, Nan and Shafran, Izhak and Narasimhan, Karthik and Cao, Yuan},
+	year         = 2023,
+	booktitle    = {The {{Eleventh International Conference}} on {{Learning Representations}}},
+	url          = {https://openreview.net/forum?id=WE_vluYUL-X}
+}
+@article{liu2025agent,
+	title        = {Agent Design Pattern Catalogue: {{A}} Collection of Architectural Patterns for Foundation Model Based Agents},
+	author       = {Liu, Yue and Lo, Sin Kit and Lu, Qinghua and Zhu, Liming and Zhao, Dehai and Xu, Xiwei and Harrer, Stefan and Whittle, Jon},
+	year         = 2025,
+	journal      = {Journal of Systems and Software},
+	volume       = 220,
+	pages        = 112278,
+	doi          = {10.1016/j.jss.2024.112278}
+}
+@misc{kim2026attack,
+	title        = {The {{Attack}} and {{Defense Landscape}} of {{Agentic AI}}: {{A Comprehensive Survey}}},
+	author       = {Kim, Juhee and Liu, Xiaoyuan and Wang, Zhun and Qiu, Shi and Li, Bo and Guo, Wenbo and Song, Dawn},
+	year         = 2026,
+	publisher    = {arXiv},
+	number       = {arXiv:2603.11088},
+	doi          = {10.48550/arXiv.2603.11088}
+}
+@inproceedings{shamsujjoha2025swiss,
+	title        = {Swiss {{Cheese Model}} for {{AI Safety}}: {{A Taxonomy}} and {{Reference Architecture}} for {{Multi-Layered Guardrails}} of {{Foundation Model Based Agents}}},
+	author       = {Shamsujjoha, Md and Lu, Qinghua and Zhao, Dehai and Zhu, Liming},
+	year         = 2025,
+	booktitle    = {2025 {{IEEE}} 22nd {{International Conference}} on {{Software Architecture}} ({{ICSA}})},
+	pages        = {37--48},
+	doi          = {10.1109/ICSA65012.2025.00014}
+}
+@inproceedings{xiang2025guardagent,
+	title        = {{{GuardAgent}}: {{Safeguard LLM Agents}} via {{Knowledge-Enabled Reasoning}}},
+	author       = {Xiang, Zhen and Zheng, Linzhi and Li, Yanjie and Hong, Junyuan and Li, Qinbin and Xie, Han and Zhang, Jiawei and Xiong, Zidi and others},
+	year         = 2025,
+	booktitle    = {Forty-Second {{International Conference}} on {{Machine Learning}}},
+	url          = {https://openreview.net/forum?id=2nBcjCZrrP&referrer=%5Bthe%20profile%20of%20Han%20Xie%5D%28%2Fprofile%3Fid%3D~Han_Xie1%29}
+}
+@book{bass2003software,
+	title        = {Software Architecture in Practice},
+	author       = {Bass, Len and Clements, Paul and Kazman, Rick},
+	year         = 2003,
+	publisher    = {Addison-Wesley Longman Publishing Co., Inc.},
+	address      = {USA},
+	isbn         = {0321154959},
+	edition      = 2
+}
+@incollection{zuber2024valuesensitive,
+	title        = {Value-{{Sensitive Software Design}}: {{Ethical Deliberation}} in {{Agile Development Processes}}},
+	author       = {Zuber, N. and Gogoll, J. and Kacianka, S. and {Nida-R{\"u}melin}, J. and Pretschner, A.},
+	year         = 2024,
+	booktitle    = {Introduction to {{Digital Humanism}}: {{A Textbook}}},
+	publisher    = {Springer Nature Switzerland},
+	pages        = {339--358},
+	doi          = {10.1007/978-3-031-45304-5_22}
+}
+@inproceedings{sorensen2024position,
+	title        = {Position: {{A Roadmap}} to {{Pluralistic Alignment}}},
+	author       = {Sorensen, Taylor and Moore, Jared and Fisher, Jillian and Gordon, Mitchell L. and Mireshghallah, Niloofar and Rytting, Christopher Michael and Ye, Andre and Jiang, Liwei and Lu, Ximing and Dziri, Nouha and others},
+	year         = 2024,
+	booktitle    = {Forty-First {{International Conference}} on {{Machine Learning}}},
+	url          = {https://openreview.net/forum?id=gQpBnRHwxM}
+}
+@book{camilli2025software,
+  title={{Software Engineering-A Structured Journey from Inception to Delivery}},
+  author={Camilli, Matteo and Di Nitto, Elisabetta and Fuggetta, Alfonso and Margara, Alessandro and Rossi, Matteo Giovanni and Tamburri, Damian Andrew and others},
+  year={2025},
+  publisher={Bocconi University Press},
+  isbn={9791280623508}
+}
+@inproceedings{bolukbasi2016man,
+  title = {Man Is to {{Computer Programmer}} as {{Woman}} Is to {{Homemaker}}? {{Debiasing Word Embeddings}}},
+  booktitle = {Advances in {{Neural Information Processing Systems}}},
+  author = {Bolukbasi, Tolga and Chang, Kai-Wei and Zou, James and Saligrama, Venkatesh and Kalai, Adam T},
+  year = 2016,
+  volume = {29},
+  publisher = {Curran Associates, Inc.},
+  url = {https://proceedings.neurips.cc/paper_files/paper/2016/file/a486cd07e4ac3d270571622f4f316ec5-Paper.pdf},
+}
+@article{dolci2023improving,
+  title = {Improving {{Gender-Related Fairness}} in {{Sentence Encoders}}: {{A Semantics-Based Approach}}},
+  author = {Dolci, Tommaso and Azzalini, Fabio and Tanelli, Mara},
+  year = 2023,
+  journal = {Data Science and Engineering},
+  volume = {8},
+  number = {2},
+  pages = {177--195},
+  doi = {10.1007/s41019-023-00211-0}
+}

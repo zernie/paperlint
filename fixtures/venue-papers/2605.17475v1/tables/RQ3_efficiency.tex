@@ -1,0 +1,53 @@
+\begin{table*}[h!]
+\footnotesize
+\centering
+\begin{tabular}{p{0.06\linewidth} p{0.035\linewidth} p{0.035\linewidth} l p{0.035\linewidth} p{0.035\linewidth} l p{0.035\linewidth} p{0.035\linewidth} l p{0.035\linewidth} p{0.035\linewidth} l}
+
+\toprule
+Dataset &
+\multicolumn{3}{l}{\begin{tabular}[c]{@{}l@{}}
+Refinement Strategy \\
+Planning
+\end{tabular}} &
+\multicolumn{3}{l}{Model Synthesis} &
+\multicolumn{3}{l}{Model \& Proof Repair} &
+\multicolumn{3}{l}{Overall} \\
+
+\cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-10} \cmidrule(lr){11-13}
+ & Time & \#Calls & \#Tokens & Time & \#Calls & \#Tokens & Time & \#Calls & \#Tokens & Time & \#Calls & \#Tokens\\
+
+\midrule
+Simple & 
+1.22 & 1.00 & 4973.00 &
+19.75 & 13.55 & 79359.56 &
+15.76 & 15.55 & 127694.89 &
+37.00 & 30.11 & 212027.44 \\
+
+\midrule
+Medium & 
+1.20 & 1.00 & 4940.33 &
+25.48 & 13.33 & 97841.11 &
+52.89 & 53.22 & 2393013.44 &
+83.21 & 67.56 & 2495794.89 \\
+
+\midrule
+Complex &
+1.18 & 1.00 & 6131.22 &
+29.97 & 13.89 & 121982.78 &
+62.46 & 59.45 & 2137659.11 &
+103.14 & 74.33 & 2265773.11 \\
+
+\midrule
+Overall &
+1.20 & 1.00 & 5348.19 & 
+25.07 & 13.59 & 99727.81 &
+43.71 & 42.74 & 1552789.15 &
+74.45 & 57.33 & 1657865.15 \\
+\bottomrule
+
+\end{tabular}
+
+\caption{The efficiency of each Event-B Agent component and the overall framework.
+Time is the execution time in minutes, \#Calls is the number of LLM calls, and \#Tokens is the number of tokens consumed.}
+\label{tab:efficiency}
+\end{table*}

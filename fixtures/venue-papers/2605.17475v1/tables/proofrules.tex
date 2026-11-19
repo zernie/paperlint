@@ -1,0 +1,129 @@
+\begin{table}[h!]
+
+\footnotesize
+\centering
+
+% \setlength{\tabcolsep}{2pt}
+\begin{tabular}{p{0\linewidth} p{0.13\linewidth} p{0.23\linewidth} p{0.53\linewidth}}
+\toprule
+\textbf{} & \textbf{Category} & \textbf{Condition} & \textbf{Rules} \\ 
+
+\midrule
+1 & \begin{tabular}[c]{@{}l@{}}
+Contradictory \\
+Goal
+\end{tabular} & 
+\begin{tabular}[c]{@{}l@{}}
+Goal is $\bot$
+\end{tabular} & 
+\begin{tabular}[c]{@{}l@{}}
+1. PO is about an invariant $\rightarrow$ update the invariant to eliminate \\
+contradictions \\
+2. PO is about an event $\rightarrow$ add or update actions or guards to \\
+eliminate contradictions
+\end{tabular} \\
+
+\midrule
+2 & \begin{tabular}[c]{@{}l@{}}
+True by \\
+Definition 
+\end{tabular} & 
+\begin{tabular}[c]{@{}l@{}}
+Goal matches definitional \\
+pattern, 
+e.g. $x=y$, $x \in S$ etc.
+\end{tabular} & 
+\begin{tabular}[c]{@{}l@{}}
+1. Goal holds by definition $\rightarrow$ apply the corresponding tactics \\
+2. (a) Rule 1 doesn't update $\mathcal{P}$, or (b) Goal is false $\rightarrow$ Similar rules\\
+as \textbf{Category 1}
+\end{tabular} \\
+
+\midrule
+3 & Existential Goal & 
+\begin{tabular}[c]{@{}l@{}}
+Goal is an $\exists$ predicate, \\
+e.g. $\exists x \cdot <predicate>$
+\end{tabular} & 
+\begin{tabular}[c]{@{}l@{}}
+1. $x$ is a variable $\rightarrow$ add or update actions to define $x$ \\
+2. $x$ is a constant $\rightarrow$ add hypothesis as an axiom in the context to \\
+establish its existence
+\end{tabular} \\
+
+\midrule
+4 & 
+\begin{tabular}[c]{@{}l@{}}
+Equality PO
+\end{tabular} & 
+\begin{tabular}[c]{@{}l@{}}
+PO type is Equality, e.g. goal \\
+$G$ is $x=y$, where $x$, $y$ are \\
+from machines at different \\
+refinement steps
+\end{tabular} & 
+\begin{tabular}[c]{@{}l@{}}
+1. If there is an indirect relation $H$ (e.g. $f(x)=f(y)$), add axiom \\
+of the form $H \Rightarrow G$ if suitable.
+\end{tabular} \\
+
+\midrule
+5 & \begin{tabular}[c]{@{}l@{}}
+Well-\\
+Definedness 
+\end{tabular} & 
+\begin{tabular}[c]{@{}l@{}}
+PO type is Well-Definedness \\
+e.g. ensure $y \neq 0$ for $x/y$, \\
+ensure $x \in dom(f)$ for $f(x)$
+\end{tabular} & 
+\begin{tabular}[c]{@{}l@{}}
+1. PO is about guard $\rightarrow$ strengthen the guard based on the \\
+definition of well-definedness \\
+2. PO is about invariant $\rightarrow$ strengthen the invariant based on the \\
+definition of well-definedness
+\end{tabular} \\
+
+\midrule
+6 & 
+\begin{tabular}[c]{@{}l@{}}
+Quantified \\
+Invariant \\
+Preservation
+\end{tabular} & 
+\begin{tabular}[c]{@{}l@{}}
+PO is Invariant Preservation \\
+about a quantified invariant
+\end{tabular} & 
+\begin{tabular}[c]{@{}l@{}}
+1. Universal invariant $\rightarrow$ Find quantified hypothesis \\
+$\forall x \cdot H(x) \Rightarrow G(x)$, where $G(x)$ is similar to proof goal $G(x')$. \\
+Instantiate the hypothesis with $x'$. \\
+2. Existential invariant $\exists x \cdot P(x)$ $\rightarrow$ Similar 
+rules as \textbf{Category 3}
+\end{tabular} \\
+
+\midrule
+7 & 
+\begin{tabular}[c]{@{}l@{}}
+Uninstantiated \\
+Hypothesis
+\end{tabular} & 
+\begin{tabular}[c]{@{}l@{}}
+Previous repairs add \\
+quantified hypotheses that \\
+are not yet instantiated
+\end{tabular} & 
+\begin{tabular}[c]{@{}l@{}}
+1. Quantified hypothesis added but not 
+instantiated $\rightarrow$ suggest \\
+suitable instantiation values
+\end{tabular} \\
+
+\bottomrule
+\end{tabular}
+
+\caption{Categories of proof states and the corresponding repair rules supported by Event-B Agent.}
+\label{tab:rule-categories}
+
+\end{table}

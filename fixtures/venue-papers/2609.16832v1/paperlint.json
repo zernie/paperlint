@@ -1,0 +1,18 @@
+{
+  "cycles": [
+    {
+      "id": "aisec-2026",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:aisec"
+      },
+      "kind": "benchmark",
+      "opened": "2026-09-15",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2026-09-15",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

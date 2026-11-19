@@ -1,8 +1,9 @@
 /**
  * Every rule, on every real paper of the corpus, in ONE run of the CLI: the six accepted papers of
- * `accepted-papers/` and the arXiv preprints of `arxiv-papers/` (its README says what they are, and
- * why all of them run). The subject is the corpus as one object: each directory of those two folders
- * is a paper with its own `baseline.json`, so a paper added without a baseline fails here.
+ * `accepted-papers/`, the arXiv preprints of `arxiv-papers/` (its README says what they are, and
+ * why all of them run) and the accepted camera-ready papers of `venue-papers/`, each linted against
+ * the venue that accepted it. The subject is the corpus as one object: each directory of those
+ * folders is a paper with its own `baseline.json`, so a paper added without a baseline fails here.
  *
  * A rule that says MORE about a real paper than recorded has gained a false positive until shown
  * otherwise; a rule that goes fully quiet without the recording being updated has died. A partial
@@ -42,7 +43,9 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ACCEPTED = readdirSync(join(HERE, "accepted-papers")).filter((name) =>
   statSync(join(HERE, "accepted-papers", name)).isDirectory(),
 );
-const FOLDERS = ["accepted-papers", "arxiv-papers"].map((f) => join(HERE, f));
+const FOLDERS = ["accepted-papers", "arxiv-papers", "venue-papers"].map((f) =>
+  join(HERE, f),
+);
 
 /** Every paper: its directory name (unique across the folders) and where it is. */
 const PAPERS = FOLDERS.flatMap((root) =>

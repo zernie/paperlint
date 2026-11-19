@@ -1,0 +1,66 @@
+\section{Threats to Validity}
+
+\subsection{Internal Validity}
+
+\noindent\textbf{Potential Biases and Assumptions of Requirements.}
+Although our evaluation annotates requirements with lightweight labels (e.g., ``EQP''), Event-B Agent can operate on unstructured natural language.
+The labels are used solely to compute RC and RF, require minimal annotation effort, and do not encode modeling structure.
+Since all methods use the same requirements and specification language, any bias from requirement phrasing affects them uniformly.
+
+We also assume internally consistent requirements, whereas real-world specifications may be inconsistent.
+Handling such cases (e.g., supporting human-in-the-loop) is left for future work.
+
+
+% \delete{
+% \noindent\textbf{Internal validity.}
+% One concern arises from the Cursor baseline: the agent sometimes generates axioms or invariants that are vacuously true, thereby satisfying requirements. While this leads to artificially high requirement coverage (RC) and requirement fulfillment (RF), the resulting models may not in fact be meaningful.
+% }
+
+
+\noindent\textbf{Requirement Capturing.}
+To compute RC and RF, formal model elements are labeled with requirement identifiers during synthesis.
+In our experiments, this labeling is performed by LLMs but occasionally violates the expected format, affecting automatic matching and underestimating RC and RF.
+We manually corrected such cases for all methods to ensure fair and consistent evaluation.
+% \delete{Another issue is label generation.
+% LLMs occasionally produce labels for invariants, variants, or axioms that do not conform to the expected pattern, which complicates automatic requirement matching and reduces RC and RF.
+% In these cases, we performed manual alignment to ensure fair evaluation.
+% Finally, as with all LLM-based methods, Event-B Agent inherits the inherent stochasticity of language model generation.}
+
+
+
+\noindent \textbf{Prompt Sensitivity and Reproducibility.}
+LLM-based systems are sensitive to prompt phrasing.
+However, in Event-B Agent, the prompt structure is fixed for each task, with only task-specific information programmatically injected.
+More importantly, system behavior is governed by PO-guarded verification, and every LLM-proposed change is checked by deterministic tools (the Event-B compiler, model checker, and theorem provers), limiting the impact of minor prompt variations.
+
+Although GPT-5 introduces nondeterminism through stochastic decoding, we mitigate this via schema-based constraints and verifier-mediated acceptance.
+Moreover, reproducibility here refers to the stability of the improvement process rather than identical modeling outputs, as multiple correct models may exist.
+The PO-guarded repair ensures that accepted changes do not regress the model with respect to the target PO, and our ablation results empirically demonstrate the robustness of the pipeline to LLM nondeterminism.
+
+
+\subsection{External Validity}
+\noindent \textbf{Scalability.}
+Since theorem proving is unbounded in principle, there is no theoretical limit on the system size supported.
+Although LLMs impose context-window constraints, these were not encountered in our experiments.
+For larger systems, refinement and decomposition can limit prompt scope by operating on partial models while preserving correctness via POs.
+
+% \noindent\textbf{\delete{External validity}}
+
+\noindent\textbf{Implementation Limitations.}
+The current libraries of repair rules and fix strategies are not exhaustive, as they were derived empirically from proof patterns across diverse systems.
+Extending these libraries to cover additional rules, proof states, and repair functions is left for future work.
+
+
+% \newpage
+% \section{Threats to Validity}
+
+% \noindent\textbf{Internal Validity.}
+% Our evaluation assumes that the requirements are internally consistent. Under this assumption, inconsistencies detected are treated as modeling issues by our Event-B Agent, and repairs are attempted. In realistic development settings, specifications may contain ambiguities or contradictions, which require human judgment rather than automated repair.
+
+% Furthermore, RC and RF computations rely on automatically generated requirement identifiers linking formal model elements to requirements. However, LLM-generated labels occasionally deviated from expected patterns, requiring manual alignment to ensure fair evaluation and consistency across methods.
+
+% More generally, as with all LLM-based approaches, synthesis and repair exhibit inherent stochasticity and potential sensitivity to prompt phrasing. Event-B Agent mitigates these effects by fixing prompt structures, specifying the generation schema, and constraining model evolution through deterministic verifiers (compilation, model checking, theorem proving). Consequently, nondeterminism primarily affects intermediate proposals rather than verified outcomes. Reproducibility in this context, therefore, concerns the stability of verification results rather than identical model generation.
+
+% \noindent\textbf{External Validity.} The dataset comprises 27 systems, derived from the textbook, classic algorithms, and real-world systems. While these systems generate substantial proof obligations, they may not fully represent the diversity and scale of industrial specifications. However, Event-B’s underlying reasoning mechanisms are not inherently bounded by system size, and in our experiments, LLM context-window limits were not reached. For more complex systems, Event-B’s refinement and decomposition mechanisms can constrain reasoning and prompt size by operating on partial models while preserving correctness through proof obligations.
+
+% Finally, the repair rule base and atomic repair libraries are empirically derived and may not cover all proof scenarios, motivating future extensions.

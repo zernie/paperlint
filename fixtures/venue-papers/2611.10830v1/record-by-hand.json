@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "background_related_work.tex",
+      "role": "body"
+    },
+    {
+      "path": "methodology.tex",
+      "role": "body"
+    },
+    {
+      "path": "experiment_setup.tex",
+      "role": "body"
+    },
+    {
+      "path": "result.tex",
+      "role": "body"
+    },
+    {
+      "path": "Threats_to_Validity.tex",
+      "role": "body"
+    },
+    {
+      "path": "conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "063dcd77fc18322dda505225303c97ca3a84d4094da525ab4db8348fffa5374a",
+    "abstract.tex": "016b48d1da6db9ac4516d33fa39b07a39caa973fa80e3e952c402a88e20acde7",
+    "introduction.tex": "b8fe34ca6aa6faa3dafe77aea0bf41f4fffa965f766e71e3a14fa3e6071ee348",
+    "background_related_work.tex": "3878179ca27614b849ceb1a4f9eb6a677be799337776485c54d1cc2f74847837",
+    "methodology.tex": "98d4b90aaa1fe1ec003f8a8c0319a0ba498835ad891957805b2ff437bffb12c2",
+    "experiment_setup.tex": "491a5986d450019a6c860b8e7afaee996486f2eeb628ec8fb7d25e192d123e0b",
+    "result.tex": "174a5d5ab21e836a92b658fe6d1acd52803e462304b81b14b5282899234d9639",
+    "Threats_to_Validity.tex": "7158d14a9d43d90aa8566106e350078b4f4704965d99c0906b038aa9d3e78afe",
+    "conclusion.tex": "9427e624ba140955ec1dcc0155fa6144f22b7eede4712121e90099903376472d",
+    "appendix.tex": "90f734a109e462435efa7e20949427deaf63c2828eca1ad3fbd8cad50ec33487"
+  }
+}

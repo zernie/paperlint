@@ -1,0 +1,44 @@
+\begin{table*}[h!]
+\footnotesize
+\centering
+\begin{tabular}{llccc}
+
+\toprule
+System Complexity & Method & PDR & RC & RF \\
+\midrule
+\multirow{4}{*}{Simple}
+ & LLM + auto provers & 0.8615 & 0.8889 & 0.7546 \\
+ & Cursor & 0.8418 & 0.9278 & 0.6370 \\
+ & PAT Agent & 0.9783 & 0.9167 & 0.7806 \\
+ & Event-B Agent & \textbf{0.9954} & \textbf{0.9639} & \textbf{0.9417} \\
+
+
+\midrule
+\multirow{4}{*}{Medium}
+ & LLM + auto provers & 0.9492 & 0.8974 & 0.7090 \\
+ & Cursor & 0.9668 & 0.9057 & 0.8114 \\
+ & PAT Agent & 0.9653 & 0.8623 & 0.7572 \\
+ & Event-B Agent & \textbf{0.9700} & \textbf{0.9667} & \textbf{0.9347} \\
+
+
+\midrule
+\multirow{4}{*}{Complex}
+ & LLM + auto provers & 0.8653 & \textbf{0.9886} & 0.6051 \\
+ & Cursor & 0.8936 & 0.8450 & 0.6175 \\
+ & PAT Agent & 0.9232 & 0.9825 & 0.7357 \\
+ & Event-B Agent & \textbf{0.9706} & 0.9834 & \textbf{0.9373} \\
+
+
+\midrule
+\multirow{4}{*}{Overall}
+ & LLM + auto provers & 0.8920 & 0.9250 & 0.6896 \\
+ & Cursor & 0.9007 & 0.8928 & 0.6886 \\
+ & PAT Agent & 0.9556 & 0.9205 & 0.7578 \\
+ & Event-B Agent & \textbf{0.9786} & \textbf{0.9713} & \textbf{0.9379} \\
+\bottomrule
+
+\end{tabular}
+\caption{Overall performance of Event-B Agent compared to baselines with different dataset complexities.
+GPT-5 with medium reasoning level is used as the backbond LLM for all methods.}
+\label{tab:RQ1}
+\end{table*}

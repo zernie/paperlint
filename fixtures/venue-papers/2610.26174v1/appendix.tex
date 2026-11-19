@@ -1,0 +1,26 @@
+\appendix %
+
+\section{Open Science} %
+In the publicly released artifacts and demonstrations at:
+\url{https://phantomtac.org/},
+we provide the following materials:
+\begin{itemize}
+\item Python and MATLAB scripts for generating spatial heatmaps of three-dimensional force responses;
+\item Python source code for RBF model fitting and blind testing;
+\item Demonstration videos showing representative end-to-end attack outcomes on the Dofbot-pi4B robotic arm and Unitree G1 humanoid robot.
+\end{itemize}
+
+These materials support inspection of our modeling and visualization pipeline and provide qualitative evidence of the end-to-end experimental results. 
+To limit direct misuse, we do not provide the complete model-specific attack-tag designs or detailed deployment parameters required for deterministic force injection.
+
+
+\section{Ethical Considerations} 
+This research demonstrates a physical-layer injection attack against magnetic tactile sensors. The attack can cause significant disruptions in robotic manipulation. 
+These disruptions include abnormal gripping forces and object damage.
+
+Recognizing the potential real-world implications of these vulnerabilities, we have strictly adhered to ethical guidelines throughout our research.
+Specifically, all attack evaluations and system-level validations were conducted in a strictly controlled laboratory environment. Furthermore, safety measures, such as defining soft operational limits and emergency stop protocols, were active during testing to ensure the physical safety of the researchers. We responsibly disclosed the identified vulnerability to the affected sensor vendors.
+By highlighting the potential threats in current single-modality tactile perception, we aim to raise awareness within the robotics community and advocate for the adoption of more robust, multi-modal defense mechanisms, such as the proprioceptive consistency checks proposed in Sec.~\ref{sec:Countermeasures}.
+
+
+

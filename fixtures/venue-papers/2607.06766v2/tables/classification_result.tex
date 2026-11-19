@@ -1,0 +1,24 @@
+\begin{table}[h]
+\centering
+\caption{Model Performance Comparison (10-fold CV)}
+\label{tab:model_performance_comparison}
+\small
+\begin{tabular}{lccc|ccc}
+\hline
+\multirow{2}{*}{\textbf{Model}} & \multicolumn{3}{c}{\textbf{Prime Video}} & \multicolumn{3}{c}{\textbf{ApacheJIT$^\dagger$}} \\
+& \textbf{Prec.} & \textbf{Rec.} & \textbf{F1} & \textbf{Prec.} & \textbf{Rec.} & \textbf{F1} \\
+\hline
+LR (Baseline) & 0.116 & 0.199 & 0.145 & 0.124 & 0.218 & 0.158 \\
+XGBoost & \textbf{0.926} & 0.788 & \textbf{0.846} & \textbf{0.689} & 0.875 & \textbf{0.771} \\
+RandomForest & 0.811 & \textbf{0.830} & 0.815 & 0.603 & \textbf{0.978} & 0.746 \\
+\hline
+Sonnet 3.7 (Zero-Shot) & 0.087 & 0.641 & 0.153 & 0.098 & 0.810 & 0.175 \\
+Sonnet 3.7 (Few-Shot) & 0.137 & 0.615 & 0.216 & 0.115 & 0.885 & 0.204 \\
+Sonnet 4.5 (Zero-Shot) & 0.135 & 0.792 & 0.231 & 0.134 & 0.800 & 0.230 \\
+Sonnet 4.5 (Few-Shot) & 0.157 & 0.779 & 0.261 & 0.127 & 0.872 & 0.222 \\
+\hline
+\end{tabular}
+\vspace{2pt}
+\par\noindent\scriptsize
+$^\dagger$~LLM-based classifiers were evaluated on a stratified subsample of 2,980 ApacheJIT commits (149 buggy, 2,831 clean) matching the Prime Video dataset size to enable cost-effective comparison. ML models were evaluated on the full dataset.
+\end{table}

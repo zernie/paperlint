@@ -1,0 +1,27 @@
+\section{Results}
+
+\subsection{Classification Results}
+
+
+
+
+We trained and evaluated our models using 10-fold cross-validation on both Prime Video and ApacheJIT datasets, consistent with prior JIT studies~\cite{kamei2012large,hoang2019deepjit}, with results presented in Table~\ref{tab:model_performance_comparison}. XGBoost achieved F1-scores of 0.846 ($\pm$0.070) on Prime Video and 0.771 ($\pm$0.048) on ApacheJIT. On Prime Video, it attained recall of 0.788 with precision of 0.926; on ApacheJIT, recall of 0.875 with precision of 0.689, reflecting different dataset characteristics. The higher variance on Prime Video is expected given its smaller dataset size (2,980 vs.\ 22,300 commits). The Logistic Regression baseline achieved F1-scores of 0.145 on Prime Video and 0.158 on ApacheJIT.
+
+
+\input{tables/classification_result}
+
+The Random Forest model achieved comparable F1-scores (Prime Video: 0.815, ApacheJIT: 0.746). On Prime Video, it outperformed XGBoost in recall (0.830) but with lower precision (0.811). On ApacheJIT, it achieved exceptional recall of 0.978, though with lower precision (0.603).
+
+LLM-based classification with Claude Sonnet 3.7 achieved F1 of 0.153 (zero-shot) and 0.216 (few-shot) on Prime Video. Upgrading to Claude Sonnet 4.5 improved few-shot performance to 0.157 precision and 0.779 recall (F1: 0.261) on Prime Video and 0.127 precision and 0.872 recall (F1: 0.222) on ApacheJIT. While still below the feature-engineered XGBoost model (F1: 0.846), LLM-based classification shows promise with future steps such as fine-tuning on Prime Video's service dependency graph, incorporating diff-opaque features, and hybrid LLM-ML architectures.
+
+Direct comparison with prior JIT models is limited because most report AUC---which averages over all thresholds and error types---rather than threshold-specific metrics suited to our high-recall guardrail setting, and incorporate developer metadata unavailable in our diff-only approach.
+
+\subsection{Ablation Study}
+
+To understand the contribution of each feature group, we performed an ablation study using XGBoost. We tested six variants: three that excluded one feature group while retaining the others, and three that used only a single feature group.
+
+\input{tables/ablation_study_result}
+
+As presented in Table~\ref{tab:ablation_study_result}, the full model with all feature groups achieves the best performance. Excluding Quantitative Code-Level features caused the largest performance drop (F1: 0.781 vs.\ baseline 0.846), demonstrating their critical importance. Excluding Quantitative Change-Level features slightly improved performance (F1: 0.848), suggesting these features may introduce noise; we retained them because a marginal gain of 0.002 is unlikely to generalize. Excluding Qualitative features resulted in the highest precision (0.931) but lower recall (0.762) and F1 (0.832), indicating these features help balance the model's predictive capabilities.
+
+Among single-group variants, Quantitative Code-Level Only achieved the best F1 (0.809), confirming code-level metrics as the most influential predictors. Qualitative Only maintained reasonable performance (F1: 0.743), while Quantitative Change-Level Only exhibited severe degradation (F1: 0.565), suggesting these features provide limited value in isolation. These results indicate that structural code complexity, not raw change volume, is the primary driver of risk prediction---a practical insight for teams prioritizing which features to invest in when building change risk systems.

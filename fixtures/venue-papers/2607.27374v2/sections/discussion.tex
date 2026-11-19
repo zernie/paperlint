@@ -1,0 +1,114 @@
+\section{Discussion}
+We interpret the results contribution by contribution: the design choices and scope of the C1 dataset, the classifier-design rationale and cross-distribution behavior of C2, and the architectural rationale, abstraction-level findings, and workflow-fit signals of C3.
+
+
+\subsection*{C1: Dataset Quality and Scope}\label{sec:discussion-c1}
+
+Wu et al.~\cite{wu2022data-quality} document substantial label noise in community-assigned security fields across the widely used Jira-based benchmarks, and subsequent classifier work~\cite{alqahtani2024fasttext, franca2025gpts, soltaniani2026evaluating-llms} inherits that noise even after Wu's cleaning pass.
+C1 trades scale for annotation rigor: $288$ items fully multi-rated by $9$ security experts produce $972$ independent assessments at Fleiss' $\kappa = 0.787$.
+The design target is to complement Wu et al.'s dataset with a high-precision training signal whose labels were assigned by practitioners whose day-to-day role is to decide exactly the kind of question the annotation asks.
+Wu et al.'s datasets remain the larger-scale evaluation. C1 is the clean training supervision.
+
+The $13.5\%$ of items with at least one dissenting assessor, despite substantial inter-rater agreement overall, confirm that security relevance is not a sharp classification boundary.
+A natural generalizability question for any expert-annotated resource is whether a different expert pool would converge on similar labels.
+The annotators share a common organizational context, but that context is broad due to the size of the industrial partner, which operates across multiple highly regulated domains and is therefore subject to a wide cross-section of security standards and regulations.
+This implies that the practitioners' day-to-day decisions span much of the compliance landscape that other security-regulated organizations also face, making their experience representative of many industries rather than narrowly organization-specific.
+The working definition of \texttt{security-relevant} that they apply is in turn shaped by the same public standards (e.g., IEC 62443, CIS Benchmarks) that those organizations follow, so it is not idiosyncratic to a single industry.
+
+The source corpus is intentionally narrow: two Atlassian enterprise projects whose item language resembles the industrial backlogs targeted by C3.
+Datasets whose item descriptions are tersely phrased or centered on consumer-facing bug reports sit at a different item granularity and are better served by the Wu family.
+The $80$ security-related items also bound what future work can extract from C1 alone: frozen-encoder classifiers trained as in C2 reach the ceiling of this signal comfortably, but multi-class Firesmith-category models~\cite{firesmith2004specifying} would require augmentation or a second annotation round.
+
+\paragraph{Using C1 in practice.}
+Beyond its role as training supervision for C2, we see three concrete uses of the released dataset for industry practitioners.
+First, as expert-labeled seed data to bootstrap an organization-internal security-relevance classifier before internal labels exist, following the C2 procedure of a frozen encoder with a lightweight head.
+Second, as an audit set. Organizations already operating a triage classifier or LLM-based filter can evaluate it against expert consensus labels rather than community-assigned ones.
+Third, as realistic material for security training. The items are industry-style backlog texts with expert consensus security-relevance labels, which teams can use to align their own working definition of security relevance.
+
+\subsection*{C2: Classifier Design Decisions}\label{sec:discussion-c2}
+
+With $288$ annotated items, full fine-tuning of a contemporary transformer risks overfitting to the two source projects rather than learning a transferable notion of security-relevance.
+Linear-head coefficients are also inspectable: security-filtering decisions are reviewed internally, and an auditable decision path matters for trust and for error analysis.
+F2 as the selection criterion encodes the corresponding cost asymmetry fairly, since a missed security requirement is more expensive than a false alarm that C3 subsequently filters through its semantic stage.
+
+
+\subsubsection*{Generalizability evaluation}\label{sec:discussion-c2-generalizability}
+
+The generalizability results should be interpreted as evidence of transferability.
+The deployed C2 model is evaluated fully zero-shot across domains: trained only on C1 and then applied unchanged to the Wu et al.\ benchmarks, whereas most published baselines are evaluated in-distribution, with training and test data drawn from the same project.
+Matching or approaching those baselines is therefore a comparatively demanding target rather than a neutral head-to-head comparison.
+
+The comparison against prompted LLMs should also be read cautiously. Although they are evaluated in a nominally zero-shot setting, their pretraining data may plausibly already contain parts of these widely used benchmark projects, potentially resulting in overly optimistic results~\cite{deng2024llm-contamination, baltes2026guidelinesempiricalstudiessoftware}. We therefore treat competitive performance on Wu et al.\ as a positive result showing that C2 has learned a transferable notion of \texttt{security-relevant}.
+
+The reported superior performance of Gemini by Soltaniani et al.~\cite{soltaniani2026evaluating-llms}, while impressive, cannot be perceived as a stable baseline given recent insights on the non-reproducibility of research performed with commercial LLMs~\cite{angermeirReproducibility}.
+
+The tight clustering of in-distribution F2 across eight sentence-encoder-based combinations (F2 $\in [0.625, 0.824]$) suggests that the task is well-posed and recoverable by any competitive text representation. The bottleneck here is label quality.
+DistilRoBERTa + LogReg (L2) has the highest held-out F2 overall, but was not treated as a deployment candidate because on a two-project training resource its $\ell_2$ head is more exposed to project-specific overfitting than the sparser elastic-net alternatives.
+Among the transfer-oriented deployment candidates, MPNet + LogReg (Elastic) has the highest held-out F2 and was therefore selected for integration into the C3 retrieval system.
+The cross-distribution comparison uses mean G-measure as its primary transfer metric and across-project standard deviation $\sigma$ as a secondary stability metric.
+Under that criterion, MPNet + elastic-net logistic regression remains a strong deployment choice, but the stability comparison also surfaces a real trade-off: MiniLM-L12 + elastic-net logistic regression achieves essentially identical mean G-measure ($0.650$ vs.\ $0.649$) with half the cross-project standard deviation ($\sigma = 0.046$ vs.\ $0.102$).
+The fact that both variants are competitive with the strongest within-project baselines on stability, and that fine-tuned small LLMs are considerably less consistent despite per-project training supervision, supports the interpretation that the classifier's stability derives from the transferability of the learned representation.
+In deployments where cross-domain consistency is the primary concern, MiniLM-L12 + LogReg (Elastic) would therefore be the preferred variant.
+
+Probability calibration is deliberately deferred: C2 is used downstream as a hard filter into C3, where calibration does not affect retrieval-pipeline behavior.
+This would matter only if C2 output fed a downstream ranking, which is not the case in the current deployment.
+
+\subsection*{C3: Security Requirement Enrichment}\label{sec:discussion-c3}
+
+We discuss C3 along its design rationale, the practical value to developer workflows observed in the preliminary evaluation, and four findings that emerged in individual walkthroughs.
+
+\subsubsection*{Design rationale}
+
+\emph{Two-stage C2--C3 system.}
+Separating the high-recall relevance filter from the precision-oriented retrieval stage matches the asymmetric cost of each stage and lets each subsystem be tuned independently: C2 maximizes recall of security-relevant items, C3 maximizes precision of clause grounding.
+The LLM workload is therefore proportional to the number of security-relevant items, not to the full backlog size.
+
+\emph{RAG over pure LLM IR.}
+The bi-encoder shortlist imposes a document-grounded candidate set that the LLM filter cannot hallucinate out of, while the LLM filter rejects topically adjacent but non-applicable candidates that dense similarity alone cannot distinguish.
+
+\emph{Requirement extraction preprocessing.}
+Introduced after we observed a systematic failure mode where multi-concern backlog items diluted the retrieval signal of any single concern.
+Decomposing into atomic requirements before retrieval recovers concerns that the undecomposed retrieval pipeline misses.
+
+\emph{Open-weights LLMs.}
+Using on-premises open-weights models for both extraction and filtering satisfies two deployment constraints simultaneously: backlog contents cannot be sent to third-party inference services, and pinning a specific model version prevents silent behavior drift as commercial models are updated. More of the benefits of open LLMs can be found in the LLM guidelines by Baltes et al.~\cite{baltes2026guidelinesempiricalstudiessoftware}.
+
+\subsubsection*{Practical value}
+
+The tool surfaces implicit security requirements that would otherwise require manual expert review, delivering security requirements at the point of planning rather than as an after-the-fact compliance check, potentially addressing the lead-time burden identified by Moyón et al.~\cite{moyon2024challenges}.
+In the preliminary evaluation, both practitioners responded positively to this framing. The tool was perceived as useful at the item level, provided it integrates into existing workflows rather than introducing a parallel interface.
+
+\subsubsection*{Abstraction-level mismatch}\label{sec:discussion-c3-abstraction}
+
+Across both interview sessions, the granularity gap between security requirement documents and backlog items appeared to be the strongest predictor of retrieval usefulness.
+Rule-level documents, such as organizational security policies and implementation-level benchmarks such as CIS Benchmarks, operate below the capability abstraction of standards such as IEC 62443-3-3~\cite{iec2013iec62443-3-3}, and yielded actionable matches in both cases.
+However, the within-shortlist variance of CIS Benchmark retrievals was higher, consistent with their narrower implementation scope making them precise for specific infrastructure items but less broadly applicable across item types.
+Higher-abstraction capability standards, such as IEC 62443-3-3, produced retrievals that were topically correct but rarely directly actionable per item. The semantic gap between such control and a backlog item describing a specific feature is too large for retrieval to bridge reliably.
+If confirmed by the upcoming complete evaluation, this finding has a direct implication for deployment.
+The retrieval pipeline should be paired with documents whose security requirements granularity matches the typical specificity of the target backlog.
+
+A secondary observation is that retrieval shortlist quality appears to track backlog-item granularity itself. Coarse epics retrieve many weakly relevant security requirements, while atomic tasks retrieve fewer but more strongly relevant ones.
+This suggests a potential secondary use of C2\,+\,C3 output as a proxy signal for backlog-structuring quality, though we do not validate this claim in this paper.
+
+\subsubsection*{Workflow fit}
+
+Both practitioners independently identified in-backlog-system integration as the primary precondition for practical adoption.
+Standalone interfaces were perceived to add tool-fatigue. Retrieval output surfaced as issue comments or side-panel content can be consumed at the point where planning actually happens.
+This is considered the most consistent qualitative finding of the interview study.
+
+Security requirement verbosity was the dominant usability concern. Retrieved clauses from both internal policies and public benchmarks are often too long for inline reading.
+A natural next engineering step is to use the same LLM stage to generate a short, concrete action-item summary per retained security requirement, with a link back to the authoritative text for verification, an addition that has been implemented but must be evaluated.
+Perceived usefulness also appeared to correlate with source-item quality. Items with structured descriptions produced higher-rated retrievals than items with terse, unstructured titles.
+
+
+\subsubsection*{Missing items and concerns}
+
+The interviews produced few systematic gap reports.
+The one recurring finding was that the source corpus occasionally omits cross-cutting requirements. Backwards-compatibility obligations flagged in one session are not expressed as security clauses in any of the evaluated standards, and the tool cannot surface what is not in the corpus.
+The extractor continues to have difficulties with multi-concern items, which is why further multi-concern decomposition is an open direction.
+This limitation may also be mitigated by establishing guidelines for backlog item descriptions, since more detailed items may provide better source material for retrieving relevant security requirements.
+
+\subsubsection*{Generalizability}
+The C2 classifier is trained entirely on open-source TAWOS data and carries no organization-specific knowledge, so adopters applying C3 to their own internal security policies need no re-annotation or retraining.
+The strongest generalizability claim for C3, that the retrieval pipeline performs consistently across standards and organizations, is part of future work.
+The CIS Benchmark evaluation partially addresses this by demonstrating consistent pipeline behavior on a public security requirements document against the same items used for the internal-policy evaluation, but a second independent industrial corpus would be needed to convert the architectural document-agnosticism claim into a measured result.

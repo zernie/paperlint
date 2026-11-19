@@ -1,0 +1,18 @@
+{
+  "cycles": [
+    {
+      "id": "agenticdev-2026",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:agenticdev"
+      },
+      "kind": "short",
+      "opened": "2026-09-03",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2026-09-03",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

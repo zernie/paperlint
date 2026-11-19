@@ -1,0 +1,97 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acmart.cls",
+      "role": "preamble"
+    },
+    {
+      "path": "1intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "2motivation.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/example_requirements.tex",
+      "role": "body"
+    },
+    {
+      "path": "3preliminary.tex",
+      "role": "body"
+    },
+    {
+      "path": "grammars/grammar.tex",
+      "role": "body"
+    },
+    {
+      "path": "4methodology.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/proofrules.tex",
+      "role": "body"
+    },
+    {
+      "path": "5evaluation.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/RQ1.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/RQ2.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/RQ3_efficiency.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/RQ4_figures.tex",
+      "role": "body"
+    },
+    {
+      "path": "6related_work.tex",
+      "role": "body"
+    },
+    {
+      "path": "7threats_to_validity.tex",
+      "role": "body"
+    },
+    {
+      "path": "8conclusion.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "e36063b379664f723af7e65825a25af37c41209b18d29ac7846698db95ca7a34",
+    "acmart.cls": "6895475b24fe526c12831f5cc1d16f37218ce5d65161f811dde4bce8dc4551b9",
+    "1intro.tex": "fd20d1c6e87e5363ceb7fd3da943198a429e43bdff2653283d157d9a719d27e8",
+    "2motivation.tex": "2c2b085cdd121bee706dd460ee508b23e95f2af6f778bfd82666665f5c54680c",
+    "tables/example_requirements.tex": "f53c58b0cb51654c297b89569920dd4e407efee117e224a359b2cf3c95b2d10b",
+    "3preliminary.tex": "910d9d790e9adc81ef94893d517a9384961277b50a7d31c4d3f2aa90d2bfbb03",
+    "grammars/grammar.tex": "83976ac3f1e877ac664627e5d6b2cb1534d01e679923660bbe34a0cac4411f18",
+    "4methodology.tex": "27abaf14afa3850c8344d21ccbdcb60b97571992c76e8ddfa13b2a3f1857f8af",
+    "tables/proofrules.tex": "d0cd917b1e23902f232030599e70bd3fb86b434d7528b935f215ba4821bd7912",
+    "5evaluation.tex": "0c083ed73421233cbae5d5efb14c826a00860f24c48ed188e5ec369695d27f34",
+    "tables/RQ1.tex": "303c6519262075c63bc2df35eba2775cb0882f1a8667102abfdf0eb91e992079",
+    "tables/RQ2.tex": "dc872e9e462405616ffca9aa58f3b53acffed72f9024cccf55343fb7d8b163b8",
+    "tables/RQ3_efficiency.tex": "a58bb816b589ca14233a076385879db9a50a89ca0568bd208af4e81b107d7b4b",
+    "figures/RQ4_figures.tex": "3ab42d520991fbf009464bebf8dec28afdfa75945580a741363cd8526ee326d3",
+    "6related_work.tex": "ab9fc41206608169c562e38f2ae4ceaf6d98a7ba201df11cbba5f25341f65110",
+    "7threats_to_validity.tex": "afae78cf4f10bf5de4411096a307f3dd051bcf3f5ba7c4bf5d4faa7f45592c87",
+    "8conclusion.tex": "307de57ef4f6bfd935b94ccc7f496a6088acf903eeaa9dd77486f26fb9f8ad03"
+  }
+}

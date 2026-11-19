@@ -1,0 +1,9 @@
+\subsection{Transformation Parameters}
+\label{app:transformation-parameters}
+
+Table~\ref{tab:attack-implementation-summary} describes the clean reference and all 55 transformation conditions.
+For each image and transformation condition, we sample one predefined parameter configuration using fixed random seeds.
+For brightness and Gaussian blur, intervals denote uniform sampling within the selected configuration; the listed values are not an exhaustive sweep applied to every image.
+In the Gaussian blur configurations, \(k\) denotes a square \(k\times k\) kernel unless a rectangular kernel is specified, and \(U[a,b]\) denotes a uniform draw from \([a,b]\).
+
+\input{tables/attack_condition_definitions.tex}

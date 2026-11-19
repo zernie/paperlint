@@ -1,0 +1,1335 @@
+% \section{RQ1: Performance of Existing Malware Scanners}
+
+% \begin{table}[!htb]
+% \centering
+% \caption{Agreement with ground truth labels}
+% \label{agreement-ground-truth}
+% \renewcommand{\arraystretch}{1.15}
+% \small
+% \begin{tabularx}{\textwidth}{|X|c|c|c|c|c|c|c|c|}
+% \hline
+% \textbf{Tool} & \textbf{Accuracy} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{TP} & \textbf{FP} & \textbf{TN} & \textbf{FN} \\
+% \hline
+% OSS-Detect-Backdoor & 0.405 & 0.439 & 0.680 & 0.533 & 68 & 87 & 13 & 32 \\
+% \hline
+% YARA & 0.710 & 0.638 & 0.970 & 0.770 & 97 & 55 & 45 & 3 \\
+% \hline
+% \hline
+% Cisco MCP baseline & 0.535 & 0.519 & 0.960 & 0.674 & 96 & 89 & 11 & 4 \\
+% \hline
+% Grit baseline & 0.505 & 0.503 & 0.770 & 0.609 & 77 & 76 & 24 & 23 \\
+% \hline
+% % Our Dynamic Analysis (runtime, benign + malicious intent batch) & 0.631 & 0.846 & 0.330 & 0.475 & 33 & 6 & 92 & 67 \\
+% \end{tabularx}
+% \end{table}
+
+% As described in Table~\ref{tab:dataset_split}, we use 560 skills (320 malicious and 240 benign) for threshold selection and reserve 140 skills (80 malicious and 60 benign) for held-out testing. All thresholds reported below are selected exclusively on the training set and then applied unchanged to the testing set.
+
+\section{RQ1: Performance of Existing Malware Scanners}
+
+All scanners in this study were evaluated on the same development and held-out test splits described in Subsection~\ref{subsec:data-preparation}. Each skill was analyzed independently to prevent results from one sample from affecting another. The output of each scanner was converted into a binary prediction for comparison with the ground-truth label.
+
+Because the evaluated scanners expose different output interfaces, we
+convert their outputs into binary malicious-versus-benign predictions using
+tool-appropriate decision rules. For OSS-Detect-Backdoor, YARA, and the
+default Cisco Skill Scanner, alert-count thresholds were selected exclusively
+on the development split and frozen before held-out evaluation. For Cisco Skill
+Scanner with LLM, we use its native binary safety verdict, mapping
+\texttt{is\_safe=true} to \textsc{Benign} and
+\texttt{is\_safe=false} to \textsc{Malicious}, without applying an
+additional severity threshold.
+
+Table~\ref{tab:training-threshold-base-tools} reports the selected
+development-set operating points for the three alert-count scanners.
+OSS-Detect-Backdoor, YARA, and Cisco Skill Scanner use thresholds of
+$\geq 6$, $\geq 11$, and $\geq 1$ alerts, respectively.
+
+% For Cisco Skill Scanner with LLM, we evaluated the INFO, LOW, MEDIUM,
+% HIGH, and CRITICAL severity cutoffs on the 560-skill training split
+% and selected the operating point using balanced accuracy.
+% Table~\ref{tab:cisco-llm-cutoff} reports the complete cutoff sweep.
+% The HIGH cutoff achieves the highest training-set balanced accuracy
+% (0.529) among the evaluated severity thresholds and was therefore
+% frozen before held-out evaluation.
+
+% Training-set operating points for alert-count scanners
+% ---------------------------------------------------------
+\begin{table}[!t]
+\centering
+\caption{\textsc{Development-set operating points selected for the
+alert-count scanners.}}
+\label{tab:training-threshold-base-tools}
+
+\scriptsize
+\setlength{\tabcolsep}{5.4pt}
+\renewcommand{\arraystretch}{1.05}
+
+\begin{tabularx}{\columnwidth}{
+>{\RaggedRight\arraybackslash}X
+c c c c c c
+}
+\toprule
+\textbf{Tool}
+& \textbf{Thr.}
+& \textbf{Acc.}
+& \textbf{Prec.}
+& \textbf{Rec.}
+& \textbf{F1}
+& \textbf{AUC} \\
+\midrule
+
+OSS-Detect-Backdoor
+& $\geq 6$
+& 0.50
+& 0.59
+& 0.41
+& 0.48
+& 0.49 \\
+
+\rowcolor[HTML]{F2F2F2}
+YARA
+& $\geq 11$
+& 0.61
+& 0.61
+& 0.91
+& 0.73
+& 0.47 \\
+
+Cisco Skill Scanner
+& $\geq 1$
+& 0.72
+& 0.68
+& 0.95
+& 0.79
+& 0.72 \\
+
+\bottomrule
+\end{tabularx}
+\end{table}
+
+
+% ---------------------------------------------------------
+% Cisco Skill Scanner with LLM severity-cutoff sweep
+% ---------------------------------------------------------
+% \begin{table}[!t]
+% \centering
+% \caption{\textsc{Training-set severity-cutoff sweep for Cisco Skill
+% Scanner with LLM.}}
+% \label{tab:cisco-llm-cutoff}
+
+% \scriptsize
+% \setlength{\tabcolsep}{7.4pt}
+% \renewcommand{\arraystretch}{1.05}
+
+% \begin{tabularx}{\columnwidth}{
+% >{\RaggedRight\arraybackslash}X
+% c c c c c
+% }
+% \toprule
+% \textbf{Cutoff}
+% & \textbf{Rec.}
+% & \textbf{Spec.}
+% & \textbf{FP}
+% & \textbf{FN}
+% & \textbf{Bal. Acc.} \\
+% \midrule
+
+% INFO
+% & 0.997
+% & 0.021
+% & 235
+% & 1
+% & 0.509 \\
+
+% \rowcolor[HTML]{F2F2F2}
+% LOW
+% & 0.916
+% & 0.100
+% & 216
+% & 27
+% & 0.508 \\
+
+% MEDIUM
+% & 0.881
+% & 0.133
+% & 208
+% & 38
+% & 0.507 \\
+
+% \rowcolor[HTML]{F2F2F2}
+% \textbf{HIGH}
+% & 0.825
+% & 0.233
+% & 184
+% & 56
+% & \textbf{0.529} \\
+
+% CRITICAL
+% & 0.366
+% & 0.642
+% & 86
+% & 203
+% & 0.504 \\
+
+% \bottomrule
+% \end{tabularx}
+% \end{table}
+
+Figure~\ref{fig:roc-curves-training-tools} summarizes the
+development-set ranking behavior of the alert-count scanners and marks
+the selected operating points.
+While the ROC curves characterize ranking quality on the development split, the held-out alert distributions reveal how strongly the raw scores overlap across classes in practice.
+
+
+% Figure~\ref{fig:roc-curves-training-tools} summarizes the training-set
+% ranking behavior of the alert-count scanners. Detailed training
+% operating points and test-set alert-count distributions are reported
+% in Appendix~\ref{app:rq1_details}; the main text focuses on held-out
+% classification performance.
+
+% Because the evaluated scanners do not provide explicit verdicts on whether a given skill is malicious or benign, we analyze the alerts they generate. Figure~\ref{fig:roc-curves-training-tools} plots the true-positive and false-positive rates across a range of alert-count thresholds on the training set. Cisco Skill Scanner achieves the strongest ranking performance (AUC of 0.72), whereas YARA and OSS-Detect-Backdoor perform at or below random ranking.
+% % (AUCs of 0.47 and 0.49, respectively).
+
+% Table~\ref{tab:training-threshold-base-tools} reports scanner performance at the thresholds selected from the training-set ROC analysis in Figure~\ref{fig:roc-curves-training-tools}. Cisco Skill Scanner provides the strongest overall training result, achieving an F1-score of 0.79, but it produces 142 false positives. YARA favors recall (0.91), while its 189 false positives and AUC of 0.47 indicate poor ranking and specificity. OSS-Detect-Backdoor exhibits near-random ranking performance, with an AUC of 0.49 and an F1-score of 0.48.
+
+
+
+% Can be back
+% Table~\ref{tab:test-alert-statistics} shows the number of alerts generated by the scanners on the testing set. We observed that YARA generates more alerts on benign samples on average than on malicious samples (105.8 versus 60.1), and its medians are nearly identical (55.0 versus 54.5). OSS-Detect-Backdoor shows a similar inversion in its mean alert counts (11.7 benign versus 6.3 malicious), indicating that raw alert volume is poorly aligned with malicious intent for these tools. On the other hand, Cisco Skill Scanner exhibit partial but overlapping separation. Cisco has the same median alert count of 1.0 for both classes, which supports high recall but also produces many false positives at the selected threshold.
+
+ %and Grit 
+
+%Grit provides a stronger shift from benign to malicious samples, with medians of 5.5 and 8.0 and Q75 values of 11.25 and 25.25, respectively; however, the overlap remains substantial and limits recall when a stricter threshold is applied.
+
+% Can be back
+% \begin{table}[!htb]
+% \centering
+% \caption{Testing-set alert-count summary by ground truth.}
+% \label{tab:test-alert-statistics}
+% \scriptsize
+% \setlength{\tabcolsep}{4.5pt}
+% \renewcommand{\arraystretch}{1.18}
+
+% \begin{tabularx}{\textwidth}{Ylrrrrrr}
+% \toprule
+% \textbf{Tool}
+% & \textbf{Ground truth}
+% & \textbf{Mean}
+% & \textbf{Min}
+% & \textbf{Q25}
+% & \textbf{Median}
+% & \textbf{Q75}
+% & \textbf{Max} \\
+% \midrule
+
+% % Gray group
+% \rowcolor[HTML]{EEEEEE}
+% & Benign
+% & 11.7 & 0.0 & 0.0 & \textbf{1.0} & 8.25 & 137.0 \\
+
+% \rowcolor[HTML]{EEEEEE}
+% \multirow{-2}{=}{Microsoft's OSS-Detect-Backdoor%
+% ~\cite{microsoft_ossgadget}}
+% & Malicious
+% & 6.34 & 0.0 & 0.0 & \textbf{2.0} & 7.25 & 106.0 \\
+% \midrule
+
+% % White group
+% & Benign
+% & 105.78 & 0.0 & 22.0 & \textbf{55.0} & 123.75 & 814.0 \\
+
+% \multirow{-2}{=}{YARA~\cite{yara}}
+% & Malicious
+% & 60.05 & 0.0 & 22.0 & \textbf{54.5} & 79.5 & 304.0 \\
+% \midrule
+
+% % Gray group
+% \rowcolor[HTML]{EEEEEE}
+% & Benign
+% & 1.83 & 0.0 & 0.0 & \textbf{1.0} & 1.0 & 33.0 \\
+
+% \rowcolor[HTML]{EEEEEE}
+% \multirow{-2}{=}{Cisco Skill Scanner~\cite{cisco_skill_scanner}}
+% & Malicious
+% & 2.10 & 0.0 & 1.0 & \textbf{1.0} & 2.25 & 11.0 \\
+% \midrule
+
+% % White group
+% % & Benign
+% % & 9.18 & 0.0 & 2.0 & \textbf{5.5} & 11.25 & 49.0 \\
+
+% % \multirow{-2}{=}{GritQL~\cite{gritScanner}}
+% % & Malicious
+% % & 16.46 & 0.0 & 2.75 & \textbf{8.0} & 25.25 & 97.0 \\
+% %\bottomrule
+% \end{tabularx}
+% \end{table}
+
+
+
+
+% \begin{table}[!htb]
+% \centering
+% \caption{Per-tool raw alert-count summary by ground truth.}
+% \label{tab:per-tool-alert-statistics}
+% \scriptsize
+% \setlength{\tabcolsep}{4.5pt}
+% \renewcommand{\arraystretch}{1.18}
+
+% \begin{tabularx}{\textwidth}{Ylrrrrrr}
+% \toprule
+% \textbf{Tool}
+% & \textbf{Ground truth}
+% & \textbf{Mean}
+% & \textbf{Min}
+% & \textbf{Q25}
+% & \textbf{Median}
+% & \textbf{Q75}
+% & \textbf{Max} \\
+% \midrule
+
+% \rowcolor[HTML]{EEEEEE}
+% \multirow{2}{=}{Microsoft's OSS-Detect-Backdoor%
+% ~\cite{microsoft_ossgadget}}
+% & Benign
+% & 22.1 & 0.0 & 3.0 & \textbf{9.5} & 25.2 & 242.0 \\
+
+% & Malicious
+% & 21.0 & 0.0 & 0.0 & 1.5 & 11.2 & 1139.0 \\
+% \midrule
+
+% \rowcolor[HTML]{EEEEEE}
+% \multirow{2}{=}{YARA~\cite{yara}}
+% & Benign
+% & 3.7 & 0.0 & 0.0 & \textbf{1.0} & 5.0 & 34.0 \\
+
+% & Malicious
+% & 45.2 & 0.0 & 9.0 & \textbf{17.5} & 33.2 & \textbf{1704.0} \\
+% \midrule
+
+% \rowcolor[HTML]{EEEEEE}
+% \rowcolor[HTML]{EEEEEE}
+% \multirow{2}{=}{Cisco Skill Scanner~\cite{cisco_skill_scanner}}
+% & Benign
+% & 1.5 & 0.0 & 1.0 & 1.0 & 2.0 & \textbf{8.0} \\
+
+% & Malicious
+% & 2.9 & 0.0 & 1.0 & 1.0 & 2.2 & \textbf{49.0} \\
+% \midrule
+
+% \rowcolor[HTML]{EEEEEE}
+% \multirow{2}{=}{GritQL~\cite{gritScanner}}
+% & Benign
+% & 7.7 & 0.0 & 1.0 & \textbf{3.5} & 12.2 & 44.0 \\
+
+% & Malicious
+% & 12.1 & 0.0 & 1.0 & 4.5 & 17.0 & 74.0 \\
+% \bottomrule
+% \end{tabularx}
+% \end{table}
+
+
+
+% \begin{table}[!htb]
+% \centering
+% \caption{Per-tool raw alert-count summary by ground truth}
+% \label{per-tool-alert-statistics}
+% \scriptsize
+% \setlength{\tabcolsep}{4.5pt}
+% \renewcommand{\arraystretch}{1.18}
+% \begin{tabularx}{\textwidth}{Ylrrrrrr}
+% \toprule
+% \textbf{Tool} & \textbf{Ground truth} & \textbf{Mean} & \textbf{Min} & \textbf{Q25} & \textbf{Median} & \textbf{Q75} & \textbf{Max} \\
+% \midrule
+% \multirow{2}{=}{Microsoft's OSS-Detect-Backdoor~\cite{microsoft_ossgadget}} & Benign & 22.1 & 0.0 & 3.0 & \textbf{9.5} & 25.2 & 242.0 \\
+%  & Malicious & 21.0 & 0.0 & 0.0 & 1.5 & 11.2 & 1139.0 \\
+% \midrule
+% \multirow{2}{=}{YARA~\cite{yara}} & Benign & 3.7 & 0.0 & 0.0 & \textbf{1.0} & 5.0 & 34.0 \\
+%  & Malicious & 45.2 & 0.0 & 9.0 & \textbf{17.5} & 33.2 & \textbf{1704.0} \\
+% \midrule
+% \multirow{2}{=}{Cisco's Skill Scanner~\cite{cisco_skill_scanner}} & Benign & 1.5 & 0.0 & 1.0 & 1.0 & 2.0 & \textbf{8.0} \\
+%  & Malicious & 2.9 & 0.0 & 1.0 & 1.0 & 2.2 & \textbf{49.0} \\
+% \midrule
+% \multirow{2}{=}{Grit~\cite{gritScanner}} & Benign & 7.7 & 0.0 & 1.0 & \textbf{3.5} & 12.2 & 44.0 \\
+%  & Malicious & 12.1 & 0.0 & 1.0 & 4.5 & 17.0 & 74.0 \\
+% \bottomrule
+% \end{tabularx}
+% \end{table}
+
+% \paragraph{Training-set threshold selection.}
+% Table~\ref{tab:training-threshold-base-tools} reports the operating points selected on the 560-sample training set. Cisco MCP provides the strongest overall training result, achieving accuracy 0.718, precision 0.682, recall 0.950, F1-score 0.794, and AUC 0.724, but it produces 142 false positives. YARA also favors recall (0.906), while its 189 false positives and AUC of 0.472 indicate poor ranking and specificity. OSS-Detect-Backdoor remains close to random ranking,
+% with an AUC of 0.491 and an F1-score of 0.482. 
+%OSS-Detect-Backdoor and Grit remain close to random ranking, with AUC values of 0.491 and 0.578 and F1-scores below 0.50.
+
+
+% \footnotesize
+% \begin{table*}[!t]
+% \centering
+% \caption{Training-set performance of the evaluated malware scanners.}
+% \label{tab:training-threshold-base-tools}
+
+% \scriptsize
+% \setlength{\tabcolsep}{1.2pt}
+% \renewcommand{\arraystretch}{1.0}
+
+% \begin{tabularx}{\textwidth}{
+% @{}
+% >{\raggedright\arraybackslash}m{3cm}
+% >{\centering\arraybackslash}m{1.65cm}
+% >{\centering\arraybackslash}m{0.65cm}
+% >{\centering\arraybackslash}m{0.80cm}
+% >{\centering\arraybackslash}m{0.95cm}
+% >{\centering\arraybackslash}m{0.65cm}
+% *{4}{>{\centering\arraybackslash}m{0.65cm}}
+% >{\centering\arraybackslash}m{0.80cm}
+% @{}
+% }
+% \toprule
+% \textbf{Tool}
+% & \textbf{Optimal Threshold}
+% & \textbf{Acc.}
+% & \textbf{Prec.}
+% & \textbf{Recall}
+% & \textbf{F1}
+% & \textbf{TP}
+% & \textbf{FP}
+% & \textbf{TN}
+% & \textbf{FN}
+% & \textbf{AUC} \\
+% \midrule
+
+% OSS-Detect-Backdoor & $\geq 6.00$ & 0.50 & 0.59 & 0.41 & 0.48 & 130 & 89 & 151 & 190 & 0.49 \\
+
+% \rowcolor[HTML]{EEEEEE}
+% YARA & $\geq 11.00$ & 0.61 & 0.61 & 0.91 & 0.73 & 290 & 189 & 51 & 30 & 0.47 \\
+
+% Cisco Skill Scanner & $\geq 1.00$ & \textbf{0.72} & \textbf{0.68} & \textbf{0.95} & \textbf{0.79} & \textbf{304} & 142 & 98 & \textbf{16} & \textbf{0.72} \\
+% % Grit & $\geq 13.00$ & 0.54 & 0.68 & 0.38 & 0.49 & 123 & \textbf{59} & \textbf{181} & 197 & 0.58 \\
+% \bottomrule
+% \end{tabularx}
+% \end{table*}
+
+% Figure~\ref{fig:roc-curves-training-tools} visualizes the training-set ROC curves for the four evaluated scanners. Cisco provides the best ranking (AUC = 0.724), whereas YARA and OSS-Detect-Backdoor perform at or below random ranking.
+%; ``Cisco MCP'' and ``Yara'' in the legend denote Cisco Skill Scanner and YARA, respectively.
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=\columnwidth]{figures/train_roc_curve_v10.png}
+\caption{Development-set ROC curves for the evaluated malware scanners. Markers indicate the selected thresholds.}
+\label{fig:roc-curves-training-tools}
+\end{figure}
+
+% \paragraph{Held-out testing performance.}
+% Figure~\ref{fig:roc-curves-testing-tools} compares the four scanners on the held-out testing set. Cisco MCP retains the strongest ranking performance (AUC = 0.691), followed by Grit (AUC = 0.585) and OSS-Detect-Backdoor (AUC = 0.561). YARA achieves high recall at its training-derived threshold, but its test-set AUC of 0.454 confirms weak ranking performance across thresholds.
+
+The held-out alert-count distributions further illustrate the
+limitations of using raw alert volume as a maliciousness indicator.
+Table~\ref{tab:test-alert-statistics} summarizes the distributions by
+ground-truth class. OSS-Detect-Backdoor produces a higher mean alert
+count for benign skills than for malicious skills (11.70 versus
+6.34). YARA exhibits the same inversion (105.78 versus 60.05), while
+its medians are nearly identical across benign and malicious samples
+(55.0 versus 54.5). Cisco Skill Scanner provides only modest
+separation: both classes have a median alert count of 1.0, although
+the malicious group has a somewhat higher upper quartile.
+
+These overlapping distributions indicate that raw alert counts alone
+do not reliably separate malicious from benign skills and motivate
+evaluation at frozen, development-derived operating points.
+
+\begin{table*}[!t]
+\centering
+\caption{\textsc{Test-set alert-count statistics by ground truth.
+The minimum alert count is zero for all groups.}}
+\label{tab:test-alert-statistics}
+
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.08}
+
+\begin{tabularx}{\textwidth}{
+@{}
+>{\RaggedRight\arraybackslash}p{3.6cm}
+>{\centering\arraybackslash}X
+>{\centering\arraybackslash}X
+>{\centering\arraybackslash}X
+>{\centering\arraybackslash}X
+>{\centering\arraybackslash}X
+>{\centering\arraybackslash}X
+@{}
+}
+\toprule
+\textbf{Tool}
+& \textbf{Ground Truth}
+& \textbf{Mean}
+& \textbf{Median}
+& \textbf{Q25}
+& \textbf{Q75}
+& \textbf{Max} \\
+\midrule
+
+OSS-Detect-Backdoor
+& Benign
+& 11.70
+& 1.0
+& 0
+& 8.25
+& 137 \\
+
+\rowcolor[HTML]{F2F2F2}
+&
+Malicious
+& 6.34
+& 2.0
+& 0
+& 7.25
+& 106 \\
+
+YARA
+& Benign
+& 105.78
+& 55.0
+& 22
+& 123.75
+& 814 \\
+
+\rowcolor[HTML]{F2F2F2}
+&
+Malicious
+& 60.05
+& 54.5
+& 22
+& 79.5
+& 304 \\
+
+Cisco Skill Scanner
+& Benign
+& 1.83
+& 1.0
+& 0
+& 1.0
+& 33 \\
+
+\rowcolor[HTML]{F2F2F2}
+&
+Malicious
+& 2.10
+& 1.0
+& 1
+& 2.25
+& 11 \\
+
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+Applying the frozen development-derived operating
+points to the held-out test set yields the results
+in Table~\ref{tab:testing-threshold-base-tools}.
+Among the alert-count baselines, Cisco Skill Scanner
+achieves an F1-score of 0.79, detecting 73 of
+80 malicious skills (recall = 0.91), but flags
+33 of 60 benign skills (FPR = 0.55).
+YARA detects the same number of malicious skills
+while flagging 49 of 60 benign skills
+(FPR = 0.82), whereas OSS-Detect-Backdoor flags
+17 of 60 benign skills (FPR = 0.28) but detects
+only 26 of 80 malicious skills (recall = 0.33).
+% Applying the frozen development-derived operating points to the held-out
+% test set yields the results in
+% Table~\ref{tab:testing-threshold-base-tools}. Among the alert-count
+% baselines, Cisco Skill Scanner achieves an F1-score of 0.79 and recall
+% of 0.91, but still produces 33 false positives. YARA reaches the same
+% recall while producing 49 false positives, whereas
+% OSS-Detect-Backdoor produces fewer false positives but detects only
+% 26 of the 80 malicious skills.
+
+Enabling Cisco's optional LLM analyzer with locally served Qwen3:8B
+does not remove this false-positive burden in our configuration.
+Cisco Skill Scanner with LLM achieves a recall of 0.85 and an F1-score of 0.72, while
+classifying 40 of the 60 benign skills as malicious
+($\mathrm{FPR}=0.67$). 
+Thus, higher semantic sophistication does not by itself guarantee a better operating trade-off under this evaluation.
+
+% Detailed alert-count distributions for the
+% non-LLM scanner configurations are provided in
+% Appendix~\ref{app:rq1_details}.
+
+% Table~\ref{tab:scanner-alert-statistics} shows that YARA generates more alerts on benign
+% samples, on average, than on malicious samples (105.8 versus 60.1), while its median
+% alert counts are nearly identical (55.0 versus 54.5). OSS-Detect-Backdoor exhibits a
+% similar inversion in its mean alert counts (11.7 for benign samples versus 6.3 for
+% malicious samples). Cisco Skill Scanner provides limited separation between the two
+% classes, with substantial overlap. Its median alert count is 1.0 for both classes, which
+% supports high recall at the selected threshold but also results in many false positives Table~\ref{tab:testing-threshold-base-tools} shows that Cisco Skill Scanner provides the strongest overall result, with an F1-score of 0.79, but still generates 33 false positives. YARA achieves the same recall of 0.91 but produces 49 false positives and an AUC of 0.45. OSS-Detect-Backdoor produces fewer false positives (17) but achieves a recall of only 0.33.
+
+
+% \begin{table*}[!t]
+% \centering
+% \caption{Descriptive statistics for the number of alerts generated by the scanners on the test set.}
+% \label{tab:scanner-alert-statistics}
+% \scriptsize
+% \setlength{\tabcolsep}{4.5pt}
+% \renewcommand{\arraystretch}{1.18}
+
+% \begin{tabularx}{\textwidth}{Ylrrrrrr}
+% \toprule
+% \textbf{Tool}
+% & \textbf{Ground truth}
+% & \textbf{Mean}
+% & \textbf{Min}
+% & \textbf{Q25}
+% & \textbf{Median}
+% & \textbf{Q75}
+% & \textbf{Max} \\
+% \midrule
+
+% % Gray group
+% \rowcolor[HTML]{EEEEEE}
+% & Benign
+% & 11.7 & 0.0 & 0.0 & 1.0 & 8.25 & 137.0 \\
+
+% \rowcolor[HTML]{EEEEEE}
+% \multirow{-2}{=}{Microsoft's OSS-Detect-Backdoor%
+% ~\cite{microsoft_ossgadget}}
+% & Malicious
+% & 6.34 & 0.0 & 0.0 & 2.0 & 7.25 & 106.0 \\
+% \midrule
+
+% % White group
+% & Benign
+% & 105.78 & 0.0 & 22.0 & 55.0 & 123.75 & 814.0 \\
+
+% \multirow{-2}{=}{YARA~\cite{yara}}
+% & Malicious
+% & 60.05 & 0.0 & 22.0 & 54.5 & 79.5 & 304.0 \\
+% \midrule
+
+% % Gray group
+% \rowcolor[HTML]{EEEEEE}
+% & Benign
+% & 1.83 & 0.0 & 0.0 & 1.0 & 1.0 & 33.0 \\
+
+% \rowcolor[HTML]{EEEEEE}
+% \multirow{-2}{=}{Cisco Skill Scanner~\cite{cisco_skill_scanner}}
+% & Malicious
+% & 2.10 & 0.0 & 1.0 & 1.0 & 2.25 & 11.0 \\
+% \midrule
+
+% White group
+% & Benign
+% & 9.18 & 0.0 & 2.0 & \textbf{5.5} & 11.25 & 49.0 \\
+
+% \multirow{-2}{=}{GritQL~\cite{gritScanner}}
+% & Malicious
+% & 16.46 & 0.0 & 2.75 & \textbf{8.0} & 25.25 & 97.0 \\
+%\bottomrule
+% \end{tabularx}
+% \end{table*}
+%Grit and OSS-Detect-Backdoor produce fewer false positives (14 and 17) at the cost of low recalls of 0.388 and 0.325.
+
+\begin{table*}[!t]
+\centering
+\caption{\textsc{Held-out performance of the evaluated scanner
+configurations. Alert-count thresholds were selected exclusively on the
+development set and applied unchanged to the test set. Cisco Skill Scanner
+with LLM uses its native \texttt{is\_safe} verdict. All configurations are evaluated on the same 140
+held-out skills (80 malicious and 60 benign).}}
+\label{tab:testing-threshold-base-tools}
+
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.0}
+
+\begin{tabularx}{\textwidth}{
+>{\RaggedRight\arraybackslash}X
+*{7}{>{\centering\arraybackslash}p{1.15cm}}
+}
+\toprule
+\textbf{Scanner}
+& \textbf{Acc.}
+& \textbf{Prec.}
+& \textbf{Recall}
+& \textbf{F1}
+& \textbf{FPR}
+& \textbf{FP}
+& \textbf{FN} \\
+\midrule
+
+OSS-Detect-Backdoor
+& 0.49 & 0.61 & 0.33 & 0.42
+& 0.28 & 17 & 54 \\
+
+\rowcolor[HTML]{F2F2F2}
+YARA
+& 0.60 & 0.60 & 0.91 & 0.72
+& 0.82 & 49 & 7 \\
+
+Cisco Skill Scanner
+& 0.71 & 0.69 & 0.91 & 0.79
+& 0.55 & 33 & 7 \\
+
+\rowcolor[HTML]{F2F2F2}
+Cisco Skill Scanner with LLM
+& 0.63 & 0.63 & 0.85 & 0.72
+& 0.67 & 40 & 12 \\
+
+\bottomrule
+\end{tabularx}
+\end{table*}
+% \begin{table*}[!t]
+% \centering
+% \caption{Performance of the evaluated scanners on the test set.}
+% \label{tab:testing-threshold-base-tools}
+
+% \scriptsize
+% \setlength{\tabcolsep}{2.5pt}
+% \renewcommand{\arraystretch}{1.12}
+
+% \begin{tabularx}{\textwidth}{
+% @{}
+% >{\raggedright\arraybackslash}X
+% *{9}{>{\centering\arraybackslash}p{0.82cm}}
+% @{}
+% }
+% \toprule
+% \textbf{Tool}
+% & \textbf{Acc.}
+% & \textbf{Prec.}
+% & \textbf{Recall}
+% & \textbf{F1}
+% & \textbf{TP}
+% & \textbf{FP}
+% & \textbf{TN}
+% & \textbf{FN}
+% & \textbf{AUC} \\
+% \midrule
+
+% OSS-Detect-Backdoor
+% & 0.49 & 0.61 & 0.33 & 0.42
+% & 26 & 17 & 43 & 54 & 0.56 \\
+
+% \rowcolor[HTML]{EEEEEE}
+% YARA
+% & 0.60 & 0.60 & \textbf{0.91} & 0.72
+% & \textbf{73} & 49 & 11 & \textbf{7} & 0.45 \\
+
+% Cisco Skill Scanner
+% & 0.71
+% & 0.69
+% & \textbf{0.91}
+% & 0.79
+% & \textbf{73}
+% & 33
+% & 27
+% & \textbf{7}
+% & 0.69 \\
+
+% \bottomrule
+% \end{tabularx}
+% \end{table*}
+
+
+% \begin{table}[!htb]
+% \centering
+% \caption{Testing-set results using thresholds selected on the training set.}
+% \label{tab:testing-threshold-base-tools}
+% \renewcommand{\arraystretch}{1.15}
+% \scriptsize
+% \setlength{\tabcolsep}{5pt}
+% \resizebox{\textwidth}{!}{%
+% \begin{tabular}{lcccccccccc}
+% \hline
+% \textbf{Tool} & \textbf{Threshold from Train} & \textbf{Accuracy} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{TP} & \textbf{FP} & \textbf{TN} & \textbf{FN} & \textbf{AUC (Test)} \\
+% \rowcolor[HTML]{EEEEEE}
+% OSS-Detect-Backdoor & $\geq 6.00$ & 0.493 & 0.605 & 0.325 & 0.423 & 26 & 17 & 43 & 54 & 0.561 \\
+% YARA & $\geq 11.00$ & 0.600 & 0.598 & \textbf{0.912} & 0.723 & \textbf{73} & 49 & 11 & \textbf{7} & 0.454 \\
+% \rowcolor[HTML]{EEEEEE}
+% Cisco MCP & $\geq 1.00$ & \textbf{0.714} & \textbf{0.689} & \textbf{0.912} & \textbf{0.785} & \textbf{73} & 33 & 27 & \textbf{7} & \textbf{0.691} \\
+% % Grit & $\geq 13.00$ & 0.550 & \textbf{0.689} & 0.388 & 0.496 & 31 & \textbf{14} & \textbf{46} & 49 & 0.585 \\
+% \hline
+% \end{tabular}%
+% }
+% \end{table}
+
+
+% \begin{figure}[!htb]
+% \centering
+% \includegraphics[width=0.7\textwidth]{figures/test_roc_curve_existing_tools.pdf}
+% \caption{Testing-set ROC curves for OSS-Detect-Backdoor, YARA, Cisco MCP, and Grit. Markers indicate thresholds selected on training.}
+% \label{fig:roc-curves-testing-tools}
+% \end{figure}
+% The ROC curves also clarify why threshold choice matters. A permissive threshold can increase recall but may flag many benign skills, while a stricter threshold can reduce false positives but miss malicious samples. To choose the optimized thresholds , we treat each tool's raw alert count as a continuous score and use \texttt{roc\_curve} to sweep all score cutoffs. For each cutoff, we compute FPR and TPR, then select the threshold that maximizes Youden's $J$ statistic, $J = \mathrm{TPR} - \mathrm{FPR}$. This corresponds to the ROC point farthest from the random-classifier diagonal,
+% Since the selected scanners do not provide a definitive malicious-versus-benign verdict for agent skills. Instead, they report alerts, findings, or rule matches, which we convert into binary decisions for evaluation.
+
+\begin{tcolorbox}[colback=gray!5,colframe=gray!75!black,title=\textbf{Key Findings for RQ1}]
+% Across the 560-sample training set and the 140-sample held-out testing set, Cisco MCP provides the strongest overall result among the four evaluated scanners. Its training-derived threshold of $\geq 1.00$ achieves test accuracy 0.714, recall 0.912, F1-score 0.785, and AUC 0.691, but still produces 33 false positives. YARA reaches the same recall while generating 49 false positives and an AUC below random ranking (0.454). Grit and OSS-Detect-Backdoor reduce the false-positive count to 14--17 but detect fewer than 40\% of malicious skills. Thus, none of the evaluated scanners simultaneously provides high recall and a low false-positive burden.
+% , showing that alert-count thresholds alone cannot reliably separate malicious intent from benign agent-skill functionality.
+
+The evaluated scanner configurations exhibit a substantial
+recall--false-positive trade-off. YARA and Cisco Skill Scanner
+achieve recall of 0.91 but incur false-positive rates of 0.82 and
+0.55, respectively. Enabling Cisco's optional LLM analyzer with
+Qwen3:8B does not eliminate this trade-off in our configuration: using its native safety verdict, Cisco Skill Scanner with LLM achieves recall of 0.85 but produces 40 false positives
+among 60 benign skills ($\mathrm{FPR}=0.67$).
+ 
+These results motivate evaluating whether cross-layer evidence correlation can reduce false-positive noise while preserving malicious-skill coverage.
+
+% These results motivate
+% the need to correlate multiple evidence sources rather than relying
+% on alert counts or standalone semantic analysis.
+
+
+% The evaluated malware scanners exhibit varying levels of detection performance, with F1-scores ranging from 0.42 to 0.79. However, they also suffer from
+% false-positive rates of up to 81.7\%. This indicates the need for a different
+% approach that provides better overall detection performance while keeping
+% false-positive rates acceptable for human analysts.
+\end{tcolorbox}
+
+\section{RQ2: Performance of the Proposed Approach}
+\label{sec:rag-evaluation}
+
+\subsection{Evidence-Source Ablation}
+\label{sec:rq2-ablation}
+To isolate the contribution of each evidence source
+within our architecture, we evaluate four configurations
+on the same held-out test set using the same Agentic
+reasoning backend. The configurations differ only
+in the evidence supplied to the Agentic layer:
+skill content alone, skill content with static evidence,
+skill content with dynamic evidence, and the Full
+Pipeline with both static and dynamic evidence.
+The dynamic-evidence and Full Pipeline configurations
+use the same saved dynamic evidence for each skill;
+the sandbox is not rerun between these configurations.
+
+As shown in Table~\ref{tab:rag_evaluation_metrics}, skill-content
+reasoning alone achieves an F1-score of 0.70 with 21 false positives.
+Adding static evidence reduces false positives to three but yields a
+conservative detector with a recall of 0.35. Dynamic evidence provides
+the largest individual improvement, increasing F1 to 0.85 and recall
+to 0.79 while limiting false positives to five. Combining both
+evidence sources in the Full Pipeline retains five false positives
+while recovering five additional malicious skills, increasing recall
+from 0.79 to 0.85 and F1 from 0.85 to 0.89.
+
+% Table~\ref{tab:jiffy-score-statistics} summarizes the score distributions of the different detection configurations on the test set. The Static Layer provides moderate separation: malicious samples have a median score of 76.38, compared with 22.52 for benign samples. However, the maximum benign score of 86.67 overlaps with the range of scores assigned to malicious samples. The Dynamic Layer provides the clearest median separation, with a benign median of 0.00 and a malicious median of 100.00. Nevertheless, the maximum benign score also reaches 100.00, indicating that a small number of benign executions receive extreme scores.
+
+% The Agentic-derived modes exhibit substantial score saturation. The standalone Agentic Layer assigns a benign median of 100 and a malicious median of 90. Adding static or dynamic evidence does not remove this overlap. In particular, the combination of Agentic and Static modes still has a median of 100 for benign packages
+% , while Agentic with Dynamic produces medians of 100.00 for benign and 95.00 for malicious samples. 
+% The Full Three-Layer Combination is similarly concentrated near the upper boundary, with means of 92.12 and 94.80 for benign and malicious samples. These distributions indicate that the raw scores are not calibrated maliciousness probabilities and should not be interpreted using a single fixed cutoff. We therefore rely on the categorical verdict metrics in Table~\ref{tab:rag_evaluation_metrics} to assess final classification performance.
+
+% \begin{table}[!htb]
+% \centering
+% \caption{Score distributions of standalone and combined analysis configurations on the 140-sample evaluation set.}
+% \label{tab:jiffy-score-statistics}
+% \renewcommand{\arraystretch}{1.18}
+% \scriptsize
+% \setlength{\tabcolsep}{5pt}
+% \resizebox{\textwidth}{!}{%
+% \begin{tabular}{llrrrrrr}
+% \toprule
+% \textbf{Configuration} & \textbf{Ground Truth} & \textbf{Mean} & \textbf{Min} & \textbf{Q25} & \textbf{Median} & \textbf{Q75} & \textbf{Max} \\
+% \hline
+% \rowcolor[HTML]{EEEEEE}
+%  & Benign & 30.84 & 0.00 & 10.00 & 22.52 & 45.19 & 86.67 \\
+% \rowcolor[HTML]{EEEEEE}
+% \multirow{-2}{*}{Static Layer} & Malicious & 60.36 & 0.00 & 42.41 & 76.38 & 85.03 & 90.70 \\
+
+%  & Benign & 7.87 & 0.00 & 0.00 & 0.00 & 0.00 & 100.00 \\
+% \multirow{-2}{*}{Dynamic Layer} & Malicious & 76.31 & 0.00 & 85.00 & 100.00 & 100.00 & 100.00 \\
+
+% \rowcolor[HTML]{EEEEEE}
+%  & Benign & 76.75 & 0.00 & 85.00 & 100.00 & 100.00 & 100.00 \\
+% \rowcolor[HTML]{EEEEEE}
+% \multirow{-2}{*}{Package-only Agentic} & Malicious & 81.51 & 0.00 & 83.75 & 90.00 & 100.00 & 100.00 \\
+
+%  & Benign & 85.70 & 0.00 & 100.00 & 100.00 & 100.00 & 100.00 \\
+% \multirow{-2}{*}{Agentic with Static Layer} & Malicious & 87.34 & 0.00 & 90.00 & 100.00 & 100.00 & 100.00 \\
+
+% \rowcolor[HTML]{EEEEEE}
+%  & Benign & 85.28 & 0.00 & 100.00 & 100.00 & 100.00 & 100.00 \\
+% \rowcolor[HTML]{EEEEEE}
+% \multirow{-2}{*}{Agentic with Dynamic Layer} & Malicious & 89.88 & 0.00 & 90.00 & 95.00 & 100.00 & 100.00 \\
+
+%  & Benign & 92.12 & 5.00 & 100.00 & 100.00 & 100.00 & 100.00 \\
+% \multirow{-2}{*}{Full Three-Layer Combination} & Malicious & 94.80 & 82.50 & 90.00 & 95.00 & 100.00 & 100.00 \\
+% \bottomrule
+% \end{tabular}
+% }
+% \end{table}
+%
+% Figure~\ref{fig:static-roc-curve} compares the testing-set ranking
+% performance of the four Agentic configurations. The Package-only Agentic
+% configuration performs only slightly above random ranking, with an AUC of
+% 0.555. Adding static evidence increases the AUC to 0.641, whereas adding
+% dynamic evidence produces a substantially larger improvement to 0.796. The
+% Full Pipeline achieves the strongest ranking performance, with an AUC of
+% 0.874. This progression shows that runtime evidence provides the largest
+% individual gain, while combining static and dynamic evidence yields the most
+% reliable ordering of malicious samples above benign samples. Because
+% Table~\ref{tab:jiffy-score-statistics} also reveals strong score saturation,
+% the ROC curves should be interpreted as ranking performance rather than
+% evidence of calibrated maliciousness probabilities.
+% \begin{figure}[!htb]
+% \centering
+% \includegraphics[width=\textwidth]{figures/agentic_layers_roc_v2.pdf}
+% \caption{Testing-set ROC curves for the Package-only Agentic, Agentic + Static, Agentic + Dynamic, and Full Pipeline configurations.}
+% \label{fig:static-roc-curve}
+% \end{figure}
+
+
+
+% Because the training set was used to develop and refine our rules and optimize scanner
+% performance, we use the held-out test set for final evaluation. Table~\ref{tab:rag_evaluation_metrics} reports the performance of the four pipeline configurations on the test set. 
+% The Agentic with Skill Content mode identifies 54
+% malicious skills but produces 21 false positives and misses 26 malicious skills. Adding
+% static-analysis evidence reduces the false-positive count to three and increases precision
+% to 0.90; however, this mode remains conservative, detecting only 28 of the 80
+% malicious skills and yielding a recall of 0.35.  
+% The full Pipeline
+% provides the strongest overall performance, correctly identifying 68 of the 80 malicious
+% skills while producing only 5 false positives. These results demonstrate the benefit of combining static and
+% dynamic evidence within the Agentic reasoning layer.
+
+
+
+% achieving a precision of 0.72, recall of 0.68, and F1-score of 0.70,
+% We used the output of the
+% Agentic layer, which provides a binary verdict (malicious or benign) for each skill. Table~\ref{tab:rag_evaluation_metrics} reports the test-set performance of our scanner
+%under four configurations. 
+
+% In contrast, incorporating dynamic evidence considerably improves malicious
+% coverage. The Agentic with Dynamic configuration detects 63 malicious skills
+% with 5 false positives, achieving a precision of 0.93, recall of 0.79,
+% and F1-score of 0.85. 
+
+% The Full Pipeline provides the strongest overall
+% binary classification performance, correctly identifying 68 of the
+% 80 malicious skills while producing 5 false positives among the
+% 60 benign samples. This corresponds to a precision of 0.93,
+% recall of 0.85, and F1-score of 0.89. Compared with Agentic with Dynamic,
+% the Full Pipeline recovers five additional malicious skills without
+% increasing the number of false positives, demonstrating the benefit of
+% combining static and dynamic evidence within the Agentic reasoning layer.
+
+\begin{table*}[!t]
+\centering
+\caption{\textsc{Within-system evidence-source ablation on the held-out test
+set. All configurations use the same Agentic reasoning backend; only
+the supplied evidence differs. All configurations are evaluated on the same 140
+held-out skills (80 malicious and 60 benign).}}
+\label{tab:rag_evaluation_metrics}
+
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.08}
+
+\begin{tabularx}{\textwidth}{
+>{\RaggedRight\arraybackslash}X
+*{2}{>{\centering\arraybackslash}p{1.3cm}}
+*{6}{>{\centering\arraybackslash}p{1.1cm}}
+}
+\toprule
+&
+\multicolumn{2}{c}{\textbf{Evidence}}
+&
+\multicolumn{4}{c}{\textbf{Performance}}
+&
+\multicolumn{2}{c}{\textbf{Errors}} \\
+
+\textbf{Configuration}
+& \textbf{Static}
+& \textbf{Dynamic}
+& \textbf{Acc.}
+& \textbf{Prec.}
+& \textbf{Recall}
+& \textbf{F1}
+& \textbf{FP}
+& \textbf{FN} \\
+\midrule
+
+Skill content only
+& -- & --
+& 0.66 & 0.72 & 0.68 & 0.70
+& 21 & 26 \\
+
+\rowcolor[HTML]{F2F2F2}
+with Static evidence
+& $\checkmark$ & --
+& 0.61 & 0.90 & 0.35 & 0.50
+& 3 & 52 \\
+
+with Dynamic evidence
+& -- & $\checkmark$
+& 0.84 & 0.93 & 0.79 & 0.85
+& 5 & 17 \\
+
+\rowcolor[HTML]{F2F2F2}
+\textbf{Full Pipeline}
+& $\checkmark$ & $\checkmark$
+& \textbf{0.88}
+& \textbf{0.93}
+& \textbf{0.85}
+& \textbf{0.89}
+& 5
+& \textbf{12} \\
+
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+% \begin{table*}[!t]
+% \centering
+% \caption{Performance comparison of the four pipeline detection modes.}
+% \label{tab:rag_evaluation_metrics}
+
+% \scriptsize
+% \setlength{\tabcolsep}{2.5pt}
+% \renewcommand{\arraystretch}{1.12}
+
+% \begin{tabularx}{\textwidth}{
+% @{}
+% >{\raggedright\arraybackslash}X
+% *{8}{>{\centering\arraybackslash}p{0.82cm}}
+% @{}
+% }
+% \toprule
+% \textbf{Detection Mode}
+% & \textbf{Acc.}
+% & \textbf{Prec.}
+% & \textbf{Recall}
+% & \textbf{F1}
+% & \textbf{TP}
+% & \textbf{FP}
+% & \textbf{TN}
+% & \textbf{FN} \\
+% \midrule
+
+% Agentic with Skill Content
+% & 0.66 & 0.72 & 0.68 & 0.70
+% & 54 & 21 & 39 & 26 \\
+
+% \rowcolor[HTML]{EEEEEE}
+% Agentic with Static
+% & 0.61 & 0.90 & 0.35 & 0.50
+% & 28 & \textbf{3} & \textbf{57} & 52 \\
+
+% Agentic with Dynamic
+% & 0.84 & \textbf{0.93} & 0.79 & 0.85
+% & 63 & 5 & 55 & 17 \\
+
+% \rowcolor[HTML]{EEEEEE}
+% \textbf{Full Pipeline}
+% & \textbf{0.88}
+% & \textbf{0.93}
+% & \textbf{0.85}
+% & \textbf{0.89}
+% & \textbf{68}
+% & 5
+% & 55
+% & \textbf{12} \\
+% \bottomrule
+% \end{tabularx}
+% \end{table*}
+
+\subsection{Comparison with Existing Scanners}
+\label{sec:rq2-baseline-comparison}
+
+We next compare the Full Pipeline with the external scanner
+configurations evaluated in RQ1. Unlike the within-system ablation
+above, this comparison is descriptive rather than a controlled
+architecture ablation because the systems differ in model size,
+runtime evidence, and computational resources.
+
+As shown in Table~\ref{tab:full_vs_baselines}, the Full Pipeline
+achieves an accuracy of 0.88, a precision of 0.93, a recall of 0.85,
+and an F1-score of 0.89. YARA and the conventional Cisco
+configuration achieve a slightly higher recall of 0.91, but with
+substantially higher false-positive rates of 0.82 and 0.55,
+respectively.
+
+Cisco Skill Scanner with LLM provides a particularly useful
+system-level comparison. Cisco Skill Scanner with LLM and the Full Pipeline both identify
+68 of the 80 malicious skills, corresponding to the same recall
+of 0.85. However, Cisco Skill Scanner with LLM produces 40 false
+positives, whereas the Full Pipeline produces only five. At this
+operating point, the Full Pipeline therefore reduces false positives
+by 87.5\% while preserving the same observed recall.
+
+Enabling Cisco's optional semantic LLM analyzer on top of its core
+static, bytecode, and pipeline analyzers does not eliminate the
+false-positive burden in our evaluated configuration. However, this comparison is not a model-matched
+architecture ablation: Cisco Skill Scanner with LLM
+uses Qwen3:8B, whereas the Full Pipeline uses
+Qwen3.5 122B for planning and final evidence assessment,
+8B Qwen worker agents, retrieval, and runtime evidence.
+The observed false-positive reduction therefore
+reflects the evaluated systems as a whole and cannot
+be attributed solely to the framework architecture. 
+% However, this
+% comparison is not a model-matched architecture ablation: Cisco Skill
+% Scanner with LLM uses Qwen3:8B, whereas the Full Pipeline uses a
+% larger reasoning model together with retrieval and runtime evidence.
+% We therefore treat the within-system ablation in
+% Section~\ref{sec:rq2-ablation} as the primary evidence for the
+% contribution of cross-layer evidence correlation.
+The within-system ablation in
+Section~\ref{sec:rq2-ablation} evaluates the benefit of
+supplying different evidence sources to the same reasoning
+backend. It does not independently isolate the contribution
+of provenance-aware correlation from that of the supplied
+evidence. Establishing this contribution would require
+a controlled comparison with simpler evidence-fusion
+methods using the same inputs.
+% Table~\ref{tab:full_vs_baselines} shows that our approach demonstrates higher overall classification performance compared with existing security scanners on the held-out test set. It achieves the highest accuracy of 0.88, outperforming Cisco Skill Scanner at 0.71 and YARA at 0.60, while substantially exceeding the accuracy of OSS-Detect-Backdoor (0.49). Although YARA and Cisco Skill Scanner achieve high recall, they suffer from high false-positive rates (81.7\% and 55.0\%, respectively). In contrast, our approach incurs a modest reduction in recall to 0.85 while reducing the false-positive rate to 8.3\%. By reducing the number of false alarms by 70.6\%--89.8\% relative to the existing scanners, our approach may better satisfy the stringent operational constraints discussed by Vu et al.~\cite{vu2023bad}.
+% The LLM-enabled Cisco configuration provides a useful comparison.
+% Cisco+LLM and the Full Pipeline both identify 68 of the 80 malicious
+% skills, corresponding to the same recall of 0.85. However,
+% Cisco+LLM produces 40 false positives, whereas the Full Pipeline
+% produces only five. At this operating point, the Full Pipeline
+% therefore reduces false positives by 87.5\% while preserving the
+% same observed recall.
+
+% This comparison suggests that semantic LLM analysis alone does not
+% eliminate false-positive noise in our setting, and that grounding
+% semantic reasoning in correlated static and runtime evidence can
+% provide additional discrimination. However, the comparison is not
+% a model-matched ablation because Cisco+LLM uses Qwen3:8B whereas
+% the Full Pipeline uses a larger reasoning model and additional
+% runtime evidence.
+\begin{table*}[!t]
+\centering
+\caption{\textsc{Comparison on the same 140 held-out test
+skills, comprising 80 malicious and 60 benign samples.
+Baseline results are reproduced from
+Table~\ref{tab:testing-threshold-base-tools};
+the Full Pipeline result is reproduced from
+Table~\ref{tab:rag_evaluation_metrics}.
+FPR is computed over the 60 benign skills.}}
+\label{tab:full_vs_baselines}
+
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.08}
+
+\begin{tabularx}{\textwidth}{
+>{\RaggedRight\arraybackslash}X
+*{7}{>{\centering\arraybackslash}p{1.15cm}}
+}
+\toprule
+\textbf{Approach}
+& \textbf{Acc.}
+& \textbf{Prec.}
+& \textbf{Recall}
+& \textbf{F1}
+& \textbf{FPR}
+& \textbf{FP}
+& \textbf{FN} \\
+\midrule
+
+OSS-Detect-Backdoor
+& 0.49 & 0.61 & 0.33 & 0.42
+& 0.28 & 17 & 54 \\
+
+\rowcolor[HTML]{F2F2F2}
+YARA
+& 0.60 & 0.60 & 0.91 & 0.72
+& 0.82 & 49 & 7 \\
+
+Cisco Skill Scanner
+& 0.71 & 0.69 & 0.91 & 0.79
+& 0.55 & 33 & 7 \\
+
+\rowcolor[HTML]{F2F2F2}
+Cisco Skill Scanner with LLM
+& 0.63 & 0.63 & 0.85 & 0.72
+& 0.67 & 40 & 12 \\
+
+\textbf{Full Pipeline}
+& \textbf{0.88}
+& \textbf{0.93}
+& 0.85
+& \textbf{0.89}
+& \textbf{0.08}
+& \textbf{5}
+& 12 \\
+
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+% \begin{table*}[!t]
+% \centering
+% \caption{Comparison of our approach with existing scanners on the test set.}
+% \label{tab:full_vs_baselines}
+
+% \scriptsize
+% \setlength{\tabcolsep}{2.5pt}
+% \renewcommand{\arraystretch}{1.12}
+
+% \begin{tabularx}{\textwidth}{
+% @{}
+% >{\raggedright\arraybackslash}X
+% *{9}{>{\centering\arraybackslash}p{0.82cm}}
+% @{}
+% }
+% \toprule
+% \textbf{Approach}
+% & \textbf{Acc.}
+% & \textbf{Prec.}
+% & \textbf{Recall}
+% & \textbf{F1}
+% & \textbf{TP}
+% & \textbf{FP}
+% & \textbf{TN}
+% & \textbf{FN}
+% & \textbf{AUC} \\
+% \midrule
+
+% OSS-Detect-Backdoor
+% & 0.49 & 0.61 & 0.33 & 0.42
+% & 26 & 17 & 43 & 54 & 0.56 \\
+% \rowcolor[HTML]{EEEEEE}
+% YARA
+% & 0.60 & 0.60 & \textbf{0.91} & 0.72
+% & \textbf{73} & 49 & 11 & \textbf{7} & 0.45 \\
+
+% Cisco Skill Scanner
+% & 0.71 & 0.69 & \textbf{0.91} & 0.79
+% & \textbf{73} & 33 & 27 & \textbf{7} & 0.69 \\
+
+% \rowcolor[HTML]{EEEEEE}
+% Cisco Skill Scanner with LLM
+% & 0.63 & 0.63 & 0.85 & 0.72
+% & 68 & 40 & 20 & 12 \\
+
+
+% \textbf{Full Pipeline}
+% & \textbf{0.88}
+% & \textbf{0.93}
+% & 0.85
+% & \textbf{0.89}
+% & 68
+% & \textbf{5}
+% & \textbf{55}
+% & 12
+% & \textbf{0.87} \\
+
+% \bottomrule
+% \end{tabularx}
+% \end{table*}
+
+
+
+
+\subsection{Operational Latency}
+\label{sec:operational-results}
+The saved SARIF artifacts provide wall-clock timings for each agentic analysis invocation. Upstream static- and dynamic-analysis runtimes were not separately preserved; therefore, Table~\ref{tab:operational_latency} reports agentic-stage latency rather than end-to-end pipeline latency. The 300~s timeout described in Appendix~\ref{app:sandbox_configuration} applies to each dynamic sandbox attempt and does not cap the duration of the separate agentic analysis stage. All four configurations contain timing records for all 140 held-out runs.
+
+\begin{table*}[!t]
+\centering
+\caption{\textsc{Observed agentic-stage latency across the four evaluation configurations.}}
+\label{tab:operational_latency}
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.08}
+\begin{tabularx}{\textwidth}{
+>{\RaggedRight\arraybackslash}X
+*{4}{>{\centering\arraybackslash}p{1.7cm}}
+}
+\toprule
+\textbf{Mode} & \textbf{Mean (s)} & \textbf{Median (s)} & \textbf{P90 (s)} & \textbf{P95 (s)} \\
+\midrule
+Skill content only & 339.61 & 319.95 & 608.24 & 703.11 \\
+\rowcolor[HTML]{F2F2F2}
+with Static evidence & 150.38 & 94.75 & 275.94 & 376.16 \\
+with Dynamic evidence & 121.87 & 89.45 & 225.93 & 304.95 \\
+\rowcolor[HTML]{F2F2F2}
+Full Pipeline & 155.58 & 109.35 & 290.48 & 434.13 \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+The skill-content-only configuration exhibits the highest observed agentic-stage latency, with a median of 319.95~s and a P95 of 703.11~s. The evidence-conditioned configurations have median latencies of 94.75~s, 89.45~s, and 109.35~s with static evidence, dynamic evidence, and both evidence sources, respectively. These measurements are descriptive: they exclude upstream static and dynamic processing and should not be interpreted as a controlled comparison of end-to-end computational cost.
+
+
+\subsection{Case Study: False Positive Analysis}
+In order to address the limitations of our pipeline, we analyzed false-positive cases to identify how
+erroneous malicious classifications can arise.
+The Full Pipeline produces five false positives among
+60 benign-labeled skills. Sample-level comparison
+confirms that these are the same five skills flagged
+by the dynamic-evidence configuration, with no new
+false positives introduced when static evidence is added.
+
+A representative case is \texttt{research-lookup},
+which was classified as malicious based on findings
+concerning a \texttt{curl ... | bash} command in its
+documented installation procedure and the use of an
+API key required for its intended functionality.
+While these behaviors constitute valid security-relevant
+signals, the installation command is associated with
+the documented vendor setup workflow, and API-key
+use must be interpreted in relation to its destination
+and intended purpose. Neither behavior alone establishes
+malicious intent, although remote script execution
+remains a supply-chain risk.
+
+As shown in
+Appendix~\ref{app:research_lookup_false_positive},
+the report records a dynamic risk score of 27.5,
+below the dynamic threshold of 35, but assigns
+a final malicious verdict with a score of 92.0.
+The report contains conflicting interpretations of
+installation and API-authentication behavior, while
+the dynamic evidence does not confirm malicious
+execution. This case highlights that false positives
+can emerge from the aggregation and interpretation
+of security-relevant evidence when legitimate
+functionality is mistaken for malicious intent.
+It illustrates a possible failure mechanism rather
+than establishing the primary cause of all five
+false positives. 
+% we analyzed false-positive cases to identify the underlying sources of erroneous malicious classifications and the conditions under which they arise. Our analysis shows that false positives are primarily associated with skills exhibiting security-sensitive or dual-use behaviors, where individual signals may legitimately resemble malicious activity but the overall context does not support a malicious interpretation. A representative case is research-lookup, which was classified as malicious across all four experiments due to the presence of a \texttt{curl ... | bash} command in its documented installation procedure and the use of an API key required for its intended functionality. While these behaviors constitute legitimate security-relevant signals, the command is explicitly associated with the vendor's installation workflow, and dynamic analysis did not provide sufficiently strong evidence of malicious execution. This analysis highlights that false positives are not necessarily caused by individual detection errors, but can emerge from the aggregation and interpretation of otherwise valid evidence when the distinction between legitimate security-sensitive functionality and malicious intent is inherently ambiguous.
+
+
+
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75!black,
+    title=\textbf{Key Findings for RQ2}
+]
+
+% Static and dynamic evidence provide complementary signals to the Agentic
+% decision layer. Static evidence reduces false-positive noise but yields
+% limited malicious-skill coverage, whereas dynamic evidence substantially
+% improves recall. Combining both evidence sources in the Full Pipeline
+% achieves the strongest overall performance, with precision of 0.932,
+% recall of 0.850, F1-score of 0.889, and ROC AUC of 0.874. Compared with Agentic + Dynamic, the Full Pipeline recovers five additional malicious skills without
+% introducing additional false positives. However, the Agentic-derived score
+% distributions are strongly saturated for both classes, so the scores should
+% be treated as internal confidence signals rather than calibrated
+% maliciousness probabilities.
+
+% The static and dynamic analysis layers provide complementary signals to the Agentic
+% decision layer. The former reduces false-positive noise but provides limited coverage
+% of malicious skills, whereas the latter substantially improves recall.
+% Combining both evidence sources in the Full Pipeline yields the strongest classification
+% performance, with an F1-score of 0.89 and five false positives.
+The static and dynamic analysis layers provide
+complementary signals to the Agentic decision layer.
+Static evidence alone reduces false-positive noise
+but provides limited malicious-skill coverage,
+whereas dynamic evidence provides the largest
+observed improvement.
+Combining both evidence sources detects five
+additional malicious skills without losing any
+previously detected malicious skills or introducing
+new false positives relative to the dynamic-evidence
+configuration.
+The Full Pipeline yields the strongest observed
+classification performance among the evaluated
+configurations, with an F1-score of 0.89 and five
+false positives among 60 benign skills.
+\end{tcolorbox}

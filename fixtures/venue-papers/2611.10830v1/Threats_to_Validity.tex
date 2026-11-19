@@ -1,0 +1,51 @@
+\section{Threats to Validity}
+\label{sec:threats-to-validity}
+
+\textbf{Dataset size and representativeness.}
+The skills in our dataset may not cover all malicious skill families,
+benign developer workflows, or future agent-skill ecosystems.
+MalSkillBench and Datadog labels are inherited from their released
+upstream partitions. In contrast, the VoltAgent samples are
+source-benign skills randomly selected from a curated repository and
+were not independently security-adjudicated by us. Residual benign-label
+noise may therefore remain in this subset. Exact content hashing removes
+exact duplicates but does not guarantee removal of semantically
+equivalent or near-duplicate skills.
+% The skills in our dataset may not cover all malicious skill families, benign developer workflows, or future agent-skill ecosystems. Labels are inherited from the source datasets and repositories and may therefore contain source-specific labeling noise. Exact content hashing removes exact duplicates but does not guarantee removal of semantically equivalent or near-duplicate skills.
+
+\textbf{Sandbox coverage}
+Dynamic analysis depends on whether sandbox execution triggers the relevant behavior. Some malicious skills may require specific user inputs, credentials, environment variables, external services, or delayed execution. A benign dynamic result does not prove the absence of malicious behavior. Safety-constrained blocking means that some evidence represents source-grounded dangerous intent rather than successful real-world harm.
+
+\textbf{Run-to-run variability}
+Each skill underwent a single sandbox execution.
+The resulting dynamic evidence was saved and reused
+in both the dynamic-evidence and Full Pipeline
+configurations. Their comparison therefore uses
+the same collected runtime evidence rather than
+evidence from separate sandbox executions.
+However, repeated sandbox executions and repeated
+reasoning runs were not evaluated. The execution
+agent may explore different actions across runs,
+and the reasoning layer may interpret the same
+evidence differently. The reported results therefore
+describe the evaluated runs and do not establish
+run-to-run stability.
+
+\textbf{Human escalation and latency}
+The architecture supports human escalation after three unresolved
+reasoning rounds; however, no held-out test sample required human
+adjudication. All predictions reported in
+Tables~\ref{tab:rag_evaluation_metrics} and~\ref{tab:full_vs_baselines}
+were produced automatically by the pipeline without human modification
+of the final labels. This observation applies to the held-out
+evaluation and does not imply that future ambiguous samples will never
+require escalation. Latency values in
+Table~\ref{tab:operational_latency} cover only the agentic stage and
+should not be interpreted as end-to-end pipeline latency.
+% The design supports human escalation after three unresolved reasoning rounds. The interpretation of Tables~\ref{tab:rag_evaluation_metrics} and~\ref{tab:full_vs_baselines} therefore depends on the escalation count and whether human judgments entered the reported predictions, as stated in Section~\ref{sec:operational-results}. Latency values in Table~\ref{tab:operational_latency} cover only the agentic stage and should not be interpreted as end-to-end pipeline latency.
+
+\textbf{Adversarial resilience}
+We do not evaluate skills adaptively engineered to evade our static rules, sandbox constraints, provenance logic, or semantic reasoning. The current results therefore measure performance on the benchmark corpus rather than worst-case robustness against an adaptive attacker.
+
+\textbf{Scanner verdict interpretation.}
+For Cisco Skill Scanner with LLM, we use its native \texttt{is\_safe} verdict rather than imposing a severity-based threshold. The native verdict does not always align with finding severity: both \texttt{wallet-tracker} and \texttt{emotion-bird} are malicious ground-truth samples, yet the former is marked unsafe with \textsc{Critical} severity, whereas the latter is marked safe despite multiple \textsc{Medium}-severity findings. Therefore, our reported metrics reflect the scanner's native binary decision; alternative severity-based rules could yield different classifications.

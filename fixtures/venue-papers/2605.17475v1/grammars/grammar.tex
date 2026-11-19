@@ -1,0 +1,48 @@
+\begin{figure}[t]
+\centering
+\footnotesize
+\setlength{\jot}{0pt}
+
+\begin{minipage}[t]{0.4\columnwidth}
+\[
+\begin{alignedat}{2}
+i &\;::=\; \textit{literal}; &\quad& \text{Identifier} \\
+il &\;::=\; \{i\}; & & \text{List of identifiers} \\
+pred_{il} &\;::=\; predicate; & & \text{Predicate such that } \\
+ & & & \quad FV(pred_{il}) \subseteq il \\
+M &\;::=\; {Context}, & & \text{Formal model} \\
+ & \quad {Machine}; & & \\
+ & & & \\
+Context &\;::=\; i, & & \text{Context identifier} \\
+ & \quad [\text{``extends''},i], & & \text{Extended context} \\
+ & \quad \text{``sets''},s, & & s ::= il \\
+ & \quad \text{``constants''},c, & & c ::= il \\
+ & \quad \text{``axioms''},A, & & A ::= \{pred_{s \cup c}\} \\
+ & \quad \text{``theorems''},T; & & T ::= \{pred_{s \cup c}\} 
+\end{alignedat}
+\]
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.57\columnwidth}
+\[
+\begin{alignedat}{2}
+Machine &\;::=\; i, &\quad& \text{Machine identifier} \\
+ & \quad [\text{``refines''},i], & & \text{Refined machine} \\
+ & \quad [\text{``sees''},i], & & \text{Seen context} \\
+ & \quad \text{``variables''},v, & & v ::= il\\
+ & \quad \text{``invariants''},I, & & I ::= \{pred_{s \cup c \cup v}\} \\
+ & \quad \text{``variants''},N, & & N::= \{pred_{s \cup c \cup v}\} \\
+ & \quad \text{``theorems''},T, & & T ::= \{pred_{s \cup c \cup v}\} \\
+ & \quad \text{``events''},\mathcal{E}; & & \mathcal{E} ::= \{Event\} \\
+ & & & \\
+Event &\;::=\; i, & & \text{Event identifier} \\
+ & \quad \text{``any''},x, & & \text{Event parameters, } x ::= il \\
+ & \quad \text{``where''},G, & & \text{Event guards, } G ::= \{pred_{s \cup c \cup v \cup x}\} \\
+ & \quad \text{``then''},v \;:|\; BA; & & \text{Actions, } BA ::= \{pred_{s \cup c \cup v \cup x \cup v'}\} \\
+\end{alignedat}
+\]
+\end{minipage}
+
+\caption{The grammar of Event-B, where \(FV(pred)\) is the set of free variables in \(pred\).}
+\label{fig:grammar}
+\end{figure}
