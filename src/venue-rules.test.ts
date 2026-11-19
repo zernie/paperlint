@@ -1032,6 +1032,129 @@ describe("format/page-limit on NeurIPS: 9 content pages, 10 in the camera-ready;
   });
 });
 
+/**
+ * The facts of a build on the AAAI-27 kit's preamble, measured for aaai-press.jsonc (2026-11-19):
+ * aaai2027.sty, 7 body pages, references in \small on pages 8-9.
+ */
+const aaaiFacts = (patch: Patch = () => {}): Facts =>
+  withFacts((f) => {
+    f.page_w_in = 8.5;
+    f.page_h_in = 11;
+    f.columns = 2;
+    f.body_pt = 10.3;
+    f.ref_pt = 9.3;
+    f.npages = 9;
+    f.body_pages = 7;
+    f.ref_pages = 2;
+    f.fonts = type1([
+      "CMMI10",
+      "CMR10",
+      "NimbusMonL-Regu",
+      "TeXGyreTermesX-Bold",
+      "TeXGyreTermesX-Italic",
+      "TeXGyreTermesX-Regular",
+    ]);
+    patch(f);
+  });
+
+const AAAI_PRESS = { extends: "paperlint:aaai-press" };
+const AAAI = {
+  extends: "paperlint:aaai-2027",
+  kind: "main",
+  identity: ["Ada Example", "adaexample", "ada@example.org"],
+};
+
+describe("the AAAI Press style family and AAAI-27", () => {
+  it.each([
+    ["the family", AAAI_PRESS],
+    ["aaai-2027/main", AAAI],
+  ])("the measured build passes %s", (_, venue) => {
+    expect(lint({ venue, facts: aaaiFacts() })).toEqual([]);
+  });
+
+  it("references at the body's size: banal gives no reference size, and nothing is judged", () => {
+    const facts = aaaiFacts((f) => (f.ref_pt = null));
+    expect(lint({ venue: AAAI, facts })).toEqual([]);
+  });
+
+  it("🔴 the AAAI-26 kit (its paper loads times) fails pdf/fonts: NimbusRomNo9L, no TeXGyreTermesX", () => {
+    const facts = aaaiFacts(
+      (f) =>
+        (f.fonts = type1([
+          "CMMI10",
+          "CMR10",
+          "CMSY10",
+          "NimbusMonL-Regu",
+          "NimbusRomNo9L-Medi",
+          "NimbusRomNo9L-Regu",
+          "NimbusRomNo9L-ReguItal",
+        ])),
+    );
+    const fs = lint({ venue: AAAI, facts });
+    expect(ids(fs)).toEqual(["pdf/fonts:noFamily"]);
+    expect(fs[0]?.message).toMatch(/TeXGyreTermesX/);
+  });
+
+  it("🔴 `[a4paper]` for `[letterpaper]`: the measured A4 page fails pdf/geometry", () => {
+    const facts = aaaiFacts((f) => {
+      f.page_w_in = 8.264;
+      f.page_h_in = 11.694;
+    });
+    expect(ids(lint({ venue: AAAI, facts }))).toEqual([
+      "pdf/geometry:dim",
+      "pdf/geometry:dim",
+    ]);
+  });
+
+  it("🔴 one column fails pdf/geometry", () => {
+    const facts = aaaiFacts((f) => (f.columns = 1));
+    expect(ids(lint({ venue: AAAI, facts }))).toEqual(["pdf/geometry:columns"]);
+  });
+
+  it("🔴 \\tiny after \\maketitle (body 6.3) and a bibliography in \\scriptsize (7.3) fail pdf/body-size", () => {
+    expect(
+      lint({ venue: AAAI, facts: aaaiFacts((f) => (f.body_pt = 6.3)) }).map(
+        (f) => f.message,
+      ),
+    ).toEqual([
+      "the body font size measures 6.3 pt against 10 ± 0.5 pt for AAAI. The measurement is the mode of the rendered text, not the declared size — check \\documentclass and its options",
+    ]);
+    expect(
+      lint({ venue: AAAI, facts: aaaiFacts((f) => (f.ref_pt = 7.3)) }).map(
+        (f) => f.message,
+      ),
+    ).toEqual([
+      "the reference font size is 7.3 pt, outside 9–10 pt for AAAI (allowing ±0.5 pt for the measuring drift) — fix the bibliography's font size",
+    ]);
+  });
+});
+
+describe("format/page-limit on AAAI-27: 7 pages of content, 2 more only of references, 9 in all", () => {
+  it.each([
+    { name: "7 + 2 pass", body: 7, refs: 2, want: [] },
+    { name: "6 + 1 pass", body: 6, refs: 1, want: [] },
+    {
+      name: "🔴 an 8th content page fails, though the total is 9",
+      body: 8,
+      refs: 1,
+      want: ["format/page-limit:pages"],
+    },
+    {
+      name: "🔴 a third page of references fails, and so does the total",
+      body: 7,
+      refs: 3,
+      want: ["format/page-limit:pages", "format/page-limit:pages"],
+    },
+  ])("$name", ({ body, refs, want }) => {
+    const facts = aaaiFacts((f) => {
+      f.body_pages = body;
+      f.ref_pages = refs;
+      f.npages = body + refs;
+    });
+    expect(ids(lint({ venue: AAAI, facts }))).toEqual(want);
+  });
+});
+
 describe("pdf/body-size on the IEEE family: 10 pt body, 8 pt references", () => {
   it("a body size off the family's 10 pt fails pdf/body-size", () => {
     expect(

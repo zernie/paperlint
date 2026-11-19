@@ -1088,6 +1088,8 @@ describe("otherVenues", () => {
     expect(aidc.ok).toBe(true);
     if (!aidc.ok) return;
     expect(otherVenues(aidc.value, deps).map((o) => o.label)).toEqual([
+      "AAAI",
+      "aaai-press",
       "acm-acmsmall",
       "acm-sigconf",
       "AGENT 2027",
@@ -1238,6 +1240,45 @@ describe("tex/venue-leftover — NeurIPS counts only with a year beside it (`men
         lint(neuripsPaper(`For NeurIPS 2026.\n${BODY}${CHECKLIST}`), NEURIPS),
       ),
     ).toEqual([]);
+  });
+});
+
+const AAAI = { extends: "paperlint:aaai-2027", kind: "main" };
+/** A paper in the AAAI-27 kit's template: its two lines, as the kit writes them. */
+const aaaiPaper = (
+  body: string,
+  style = "\\usepackage[submission]{aaai2027}",
+) => paper(`\\documentclass[letterpaper]{article}\n${style}`, body);
+
+describe("tex/venue-leftover — AAAI counts only with a year beside it (`mentions`)", () => {
+  const under = (text: string) =>
+    leftovers(lint(aidcPaper(`${text}\n${BODY}${STATEMENT}`), AIDC));
+
+  it.each([
+    ["the venue named alone", "Planners popular at AAAI are larger."],
+    ["its press", "The AAAI Press style sets two columns."],
+    // 🔴 The call's own spelling is not reached: a hyphen is not a year beside the name (aaai-2027.md).
+    ["the call's spelling, with a hyphen", "First written for AAAI-27."],
+  ])("silent: %s", (_, text) => {
+    expect(under(text)).toEqual([]);
+  });
+
+  it.each([
+    ["First written for AAAI 2027."],
+    ["A version appeared as AAAI'27 work."],
+    ["Submitted to AAAI~2027."],
+    // 🔴 Any year: last year's AAAI in the text is reported too (aaai-2027.md).
+    ["As shown at AAAI 2024, the bound is tight."],
+  ])("🔴 reported: «%s»", (text) => {
+    expect(under(text).map((f) => f.message)).toEqual([
+      expect.stringMatching(/^«AAAI» names AAAI, and this paper extends AIDC/),
+    ]);
+  });
+
+  it("under aaai-2027 itself, its own name with a year is never a leftover", () => {
+    expect(leftovers(lint(aaaiPaper(`For AAAI 2027.\n${BODY}`), AAAI))).toEqual(
+      [],
+    );
   });
 });
 

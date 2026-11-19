@@ -71,7 +71,7 @@ applies: at AgenticDev a `short` paper gets 5 pages and a `full` one 10. You cho
 | `paperlint:sp`              | IEEE S&P                           | IEEE two-column, `compsoc`    | `research` 13 pages + 5 of references and appendices, 18 in all; `sok` 13 pages, references not counted; double-blind                                    |
 | `paperlint:neurips-2026`    | NeurIPS (Main Track, 2026 edition) | NeurIPS one-column, letter    | `main` 9 content pages, `camera-ready` 10; references, appendices and the checklist not counted; requires the «NeurIPS Paper Checklist»; double-blind    |
 
-Not shipped yet: USENIX, ICML, ICLR, AAAI, IJCAI, Springer, ACM single-column venues other than FSE,
+Not shipped yet: USENIX, ICML, ICLR, IJCAI, Springer, ACM single-column venues other than FSE,
 IEEE venues other than AIDC, MSR and S&P, and ACL venues other than REALM.
 [Add yours](#-add-a-venue-that-isnt-listed) in one small file.
 
