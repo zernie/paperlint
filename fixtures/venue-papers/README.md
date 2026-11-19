@@ -95,7 +95,7 @@ From the baselines (the run with `RECORDED_OPT_IN` on, as for every corpus):
 | --- | ---: | --- |
 | `tex/template` | 0 | — |
 | `anonymity/identity` | 0 | — (accepted: not blind) |
-| `tex/venue-leftover` | 5 | 2607.27374v2, 2609.10590v1 (each 2: «ASE», the venue that accepted them, in the ACM conference block, on the `acm-sigconf` family); 2611.10830v1 (1: «ASE» in the related work, on AIDC) |
+| `tex/venue-leftover` | 6 | 2607.27374v2, 2609.10590v1 (each 2: «ASE», the venue that accepted them, in the ACM conference block, on the `acm-sigconf` family); 2611.10830v1 (1: «ASE» in the related work, on AIDC); 2609.14098v2 (1: «NeurIPS 2025» in the related work, see below) |
 | `tex/required-section` | 1 | 2611.10830v1: AIDC's «LLM Usage Statement» not found |
 | `format/layout-override` | 1 | 2609.14098v2: `\setlength{\headheight}` |
 | `pdf/last-page-balance` | 3 | AgenticDev and ACM CCS turn it on; it says the paper was not built |
@@ -113,6 +113,13 @@ to the new minimal `acsac-2026`. One count moved: `paper/edition-over`, a rule #
 of 2607.27374v2 and 2609.10590v1 is a venue-stating command, which counts at any year, and the
 family has no edition of its own; 2611.10830v1's «A separate ASE 2026 study» is related work whose year
 is inside the rule's window (no older than 2026 minus one).
+
+With the NeurIPS, ICML and AAAI presets (#541), measured 2026-11-19 by the same run, one count
+moved: `tex/venue-leftover` 0 → 1 on 2609.14098v2, an ACM CCS 2026 paper whose related work cites
+«Lam et al. (CodeCrash, NeurIPS 2025)». It is a citation, not a leftover: the case of 2611.10830v1's
+«ASE 2026 study» above, a year inside the rule's window (no older than 2026 minus one), now with a
+name that ships. `tex/template`'s style check found nothing on the 12 papers (none is on a style
+family).
 
 ## The false positives the preprint corpus has caught, and what pins each
 
