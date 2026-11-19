@@ -11,6 +11,7 @@ import { test, vi } from "vitest";
 import { runNode, useTempDir, writeTree } from "../../../test/support.ts";
 import {
   changedLines,
+  chunked,
   deletionPoints,
   extract,
   main,
@@ -247,6 +248,34 @@ test("🔴 --venue prints both readers' whole prompts around the extract, from t
   assert.ok(reviewer("the X workshop").includes("at the X workshop,"));
 });
 
+test("🔴 --whole prints every paragraph and heading of the paper in chunks of --max, each numbered from ¶1", () => {
+  const dir = paperRepo("whole");
+  const r = runMain([join(dir, "paper.tex"), "--whole", "--max=2"]);
+  assert.deepEqual(r, {
+    status: 0,
+    stdout:
+      "=== chunk 1 of 2 ===\n" +
+      "¶1 (heading) \\section{Introduction}\n\n" +
+      "¶2 Coding agents read a rules file before every task.\n\n" +
+      "=== chunk 2 of 2 ===\n" +
+      "¶1 We measure it with \\texttt{--no-verify} on {{nRepos}} repositories~\\cite{x}.\nAgents followed 71\\% of them.\n\n" +
+      "¶2 Three answers, all of them after the fact.\n",
+    stderr: "",
+  });
+});
+
+test("chunked: with a venue, each chunk carries both readers' prompts around its own paragraphs only", () => {
+  const a = { start: 1, end: 1, text: "A." };
+  const b = { start: 3, end: 3, text: "B." };
+  assert.equal(
+    chunked([a, b], 1, "V"),
+    `=== chunk 1 of 2: engineer ===\n${promptFor(ENGINEER, "¶1 A.")}\n\n` +
+      `=== chunk 1 of 2: reviewer ===\n${promptFor(reviewer("V"), "¶1 A.")}\n\n` +
+      `=== chunk 2 of 2: engineer ===\n${promptFor(ENGINEER, "¶1 B.")}\n\n` +
+      `=== chunk 2 of 2: reviewer ===\n${promptFor(reviewer("V"), "¶1 B.")}`,
+  );
+});
+
 test("numbered: one block per paragraph, nothing else", () => {
   assert.equal(
     numbered([
@@ -266,6 +295,10 @@ test("the command refuses: above the cap, no change, a bad flag, no paper", () =
   };
   const capped = run([paper, "--max=1"]);
   execFileSync("git", ["checkout", "-q", "paper.tex"], { cwd: dir });
+  writeFileSync(
+    join(dir, "empty.tex"),
+    "\\documentclass{article}\n\\begin{document}\n\\end{document}\n",
+  );
   assert.deepEqual(
     [
       capped,
@@ -275,6 +308,8 @@ test("the command refuses: above the cap, no change, a bad flag, no paper", () =
       run([paper, paper]),
       run(["--max=0", paper]),
       run([join(dir, "nope.tex")]),
+      run([paper, "--whole", "--base=HEAD~1"]),
+      run([join(dir, "empty.tex"), "--whole"]),
     ],
     [
       [
@@ -287,6 +322,8 @@ test("the command refuses: above the cap, no change, a bad flag, no paper", () =
       [2, "cold read: name exactly one paper .tex file\n"],
       [2, "cold read: --max takes a positive integer\n"],
       [2, `cold read: ${join(dir, "nope.tex")} does not exist\n`],
+      [2, "cold read: --whole reads the whole paper: drop --base\n"],
+      [2, `cold read: no prose in ${join(dir, "empty.tex")}\n`],
     ],
   );
 });

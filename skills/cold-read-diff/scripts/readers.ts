@@ -1,7 +1,8 @@
 /**
  * readers.ts — the two cold readers' prompts: the one place their text lives. `cold-read-diff`'s
  * SKILL.md interpolates them, `cold-read.js --venue=NAME` prints them around the extract ready to
- * hand to a subagent, and `grade-paper-writing` uses the same two for its whole-paper pass. Before
+ * hand to a subagent (with `--whole`, around each chunk of the whole paper), and `pc-panel-review`
+ * seats the reviewer. Before
  * this file the personas were written out in three places that had drifted apart (#463).
  */
 
