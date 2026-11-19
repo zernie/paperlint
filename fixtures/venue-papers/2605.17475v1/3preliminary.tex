@@ -1,0 +1,27 @@
+\section{Preliminary}\label{sec:preliminary}
+
+\input{grammars/grammar}
+
+\textbf{The Event-B Notation.}
+\autoref{fig:grammar} summarizes the grammar of Event-B \cite{abrial2010modeling}.
+An Event-B model $M$ is a discrete transition system grounded in set theory and first-order logic, where all types are represented as sets.
+For instance, $STRING$ denotes the set of all strings, and $A \rightarrow B$ the set of total functions with domain $A$ and range $B$.
+
+A model $M$ consists of \emph{contexts} and \emph{machines}.
+Let $il$ be a list of identifiers. Sets $s$, constants $c$, variables before and after an event $v$ and $v'$, and event parameters $x$ are defined over $il$ and are disjoined.
+A predicate $pred$ with $FV(pred) = il$ is denoted by $pred_{il}$, where $FV(pred)$ is the set of free variables in $pred$.
+A list of predicates using only variables in $il$ is denoted by $\{pred_{il}\}$, which can be used to express components like axioms, $A ::= \{pred_{s \cup c}\}$.
+
+\noindent
+\textbf{Correctness by Construction.}
+Let $REQ_M$ denote the requirements of formal model $M$, and $PO_M$ the set of its proof obligations.
+Each $req \in REQ_M$ is associated with a predicate $Covered(M, req) \in \{\mathsf{true}, \mathsf{false}\}$, which holds iff $req$ is covered in $M$ as an invariant, variant, axiom, or event.
+Similarly, each $po \in PO_M$ has a predicate $Discharged(M,po) \in \{\mathsf{true}, \mathsf{false}\}$, which holds iff $po$ is discharged.
+We define a predicate $Correct(M)$ to indicate that $M$ is \emph{correct by construction}, namely:
+{\footnotesize\begin{equation}
+Correct(M) \;\triangleq\;
+\Bigl(\bigwedge_{req \in REQ_M} Covered(M, req)\Bigr)
+\;\wedge\;
+\Bigl(\bigwedge_{po \in PO_M} Discharged(M,po)\Bigr)
+\label{eq:correctness}
+\end{equation}}

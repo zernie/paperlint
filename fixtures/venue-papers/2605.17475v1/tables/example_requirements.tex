@@ -1,0 +1,20 @@
+\begin{table}[h!]
+\centering
+\footnotesize
+\begin{tabular}{l p{0.85\linewidth}}
+\toprule
+\textbf{ID} & \textbf{Description} \\
+\midrule
+EQP-1 & Provides a finite natural number function $f$ defined on the domain $\{0..n-1\}$. \\
+EQP-2 & Provides $n$ as the size of the domain of $f$. \\
+FUN-1 & The final condition requires $j \in \text{dom}(f)$ and $f(j) = \min(\text{ran}(f))$. \\
+FUN-2 & The system has a boolean variable \texttt{searching} to indicate whether the minimum has been fully identified. Two indices are maintained: $i$ as the scanning index and $j$ as the current candidate for the minimum. \\
+FUN-3 & Initialization sets i = 1 and j = 0, with searching = true. \\
+FUN-4 & While \texttt{searching} is true, if $i \neq n$ and $f(i) < f(j)$, update $j := i$ and increment $i$. \\
+FUN-5 & While \texttt{searching} is true, if $i \neq n$ and $f(i) \geq f(j)$, keep $j$ unchanged and increment $i$. \\
+FUN-6 & When $i = n$, \texttt{searching} becomes false, marking the completion of searching. \\
+\bottomrule
+\end{tabular}
+\caption{Equipment (EQP) and Function (FUN) requirements of minimum-searching model.}
+\label{tab:example}
+\end{table}

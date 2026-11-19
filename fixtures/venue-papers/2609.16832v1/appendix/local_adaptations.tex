@@ -1,0 +1,36 @@
+\subsection{Local Adaptation of Global Watermarking Methods}
+\label{app:local-adaptations}
+
+This section describes how we adapt three global watermarking methods, OmniGuard, TrustMark, and PixelSeal, to the local watermarking setting evaluated in this work.
+For each method, we explain how we restrict payload embedding to a selected image region and how the payload is subsequently recovered during decoding.
+We use the released pretrained weights without additional training or fine-tuning.
+During embedding, a binary mask specifies the selected region.
+We refer to the pixelwise difference between an image before and after embedding as the \emph{watermark residual}: it records the pixel changes introduced by the embedder.
+
+\paragraph{OmniGuard.}
+OmniGuard embeds two distinct signals: an auxiliary signal for tamper localization and a binary payload for copyright identification.
+We first apply its auxiliary embedding stage across the entire image.
+We then resize this intermediate image to \(256\times256\) and pass it through the binary payload encoder.
+Subtracting the encoder's input from its output gives the changes introduced specifically by payload embedding.
+We resize this payload residual back to the benchmark image resolution of \(512\times512\), retain it only within the selected mask, and add it to the intermediate image.
+Consequently, the auxiliary signal remains across the image, while the binary payload signal is confined to the selected region.
+For payload recovery, we resize the complete received image to \(256\times256\) and apply the payload decoder.
+
+\paragraph{TrustMark.}
+TrustMark operates on rectangular regions.
+We therefore replace the selected mask with its smallest enclosing axis-aligned bounding box, crop that region, and resize the crop to the encoder's native resolution.
+We compute the watermark residual from the encoder's output and subtract its spatial mean separately for each color channel.
+We then resize the residual back to the crop's original dimensions and add it to the corresponding region in the original image.
+During decoding, TrustMark's region detector first predicts bounding boxes from the received image.
+The predicted regions are cropped and resized to the decoder's native resolution for payload extraction.
+We use the Q variant with a 100-bit payload and error correction disabled.
+
+\paragraph{PixelSeal.}
+We first apply PixelSeal's embedder to the complete image to obtain a globally watermarked output.
+We subtract the original image from this output, multiply the resulting residual by the selected mask, and add the masked residual back to the original image.
+This confines all changes introduced by PixelSeal to the selected region.
+Unlike OmniGuard, this adaptation does not retain a separate auxiliary watermark outside that region.
+We use the released 256-bit model and decode the payload from the complete received image using its whole-image decoder.
+
+For all three methods, the selected mask is used only during embedding.
+Decoding receives neither the ground-truth mask nor its bounding box.

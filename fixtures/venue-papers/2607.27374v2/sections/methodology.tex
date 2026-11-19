@@ -1,0 +1,145 @@
+\section{Methodology}
+
+\Cref{fig:methodology-overview} summarizes the three contributions as a chained workflow: C1 produces the expert-labeled dataset on which C2 is trained.
+C2 flags security-relevant items from a backlog, and C3 retrieves applicable security requirements for each flagged backlog item.
+The subsections below describe the artifacts, activities, and evaluation protocol of each contribution.
+
+\begin{figure*}
+    \centering
+    \includegraphics[width=0.80\linewidth]{figures/diagrams/thesis-activities.pdf}
+    \caption{Overview of Contributions and Research Activities as a Chained Workflow}
+    \Description[Flowchart chaining contributions C1, C2 and C3, from the TAWOS dataset through classifier training to security clause retrieval and evaluation]{A flowchart showing how the three contributions chain together into a single workflow. Nodes are typed and colour-coded: green nodes are external resources, orange nodes are research activities, blue nodes are artifacts produced by this work, and red nodes are metrics or findings. Solid arrows carry the main workflow; dashed arrows lead to evaluation results. The C1 strand runs left to right along the top. The external TAWOS dataset feeds a C1 filtering pipeline, which produces an 84,878-item filtered labelling pool. That pool is annotated in the C1 annotation activity, and a label aggregation and inter-rater reliability activity then produces the C1 labelled dataset. A dashed arrow from the dataset reports Fleiss' kappa of 0.787 and observed agreement of 0.800. The C2 strand descends from the C1 labelled dataset: a model space sweep and training activity yields the selected classifier, an MPNet encoder with an elastic-net logistic regression head. Two dashed evaluation branches leave that classifier. The first leads to a cross-distribution evaluation, which additionally takes the external Wu et al. benchmarks covering five projects as input and reports a mean G-measure of 0.65 across those five projects. The second leads to an in-distribution evaluation, reporting an F2 score of 0.774 and an AUC of 0.903. The C3 strand runs right to left across the lower half. The selected classifier is applied to two industrial product backlogs, producing flagged backlog items, which enter the C3 retrieval pipeline. That pipeline is fed from below by a second path: internal organisation security policies and the CIS Benchmarks, both external resources, are processed by a security requirement segmentation activity into per-corpus indexed clauses, which in turn feed the retrieval pipeline. The pipeline outputs a C3 ranked clause list, which a dashed arrow passes to the C3 preliminary evaluation, producing 24 evaluated clause ratings together with design feedback.}
+    \label{fig:methodology-overview}
+\end{figure*}
+
+
+\subsection*{C1: Annotated Dataset of Security-Relevant Backlog Items}
+
+Contemporary approaches~\cite{alqahtani2024fasttext,franca2025gpts,soltaniani2026evaluating-llms} evaluate against the Wu et al.\ benchmark~\cite{wu2022data-quality}, whose security labels derive from the Jira \texttt{security} field in the dataset rather than from expert annotation.
+C1 contributes a smaller but independently expert-annotated dataset.
+
+We draw from TAWOS~\cite{tawosi2022tawos}, a public archive of over $500{,}000$ backlog items from $44$ open-source agile projects, selected for its scale, diversity, and redistributability.
+
+\textbf{Source Corpus.}
+From this pool we selected two Atlassian projects, \emph{Jira Server} and \emph{Confluence Server}, whose items describe enterprise software tooling and whose language resembles the industrial backlogs targeted by C3.
+A filtering pipeline applies title-level and full-text exact deduplication and removes near-duplicates via MinHash LSH ($128$ permutations, $5$-word shingles) at a Jaccard threshold of $0.8$, yielding an $84{,}878$-item labeling pool.
+
+\textbf{Labeling protocol.}
+Nine practitioners from a large enterprise were recruited on a voluntary and uncompensated basis.
+A web application distributes items for asynchronous, independent labeling over a two-week window, and a kick-off session introduced the task, boundary cases, and the tool.
+For each item, labelers record a binary \texttt{security-relevant} judgment after reading the title and description.
+One of the initial hypotheses was that security-requirement categories might improve the ultimately retrieved security requirements.
+For that purpose, practitioners additionally assigned a Firesmith security-requirement category~\cite{firesmith2004specifying} to each backlog item.
+As this hypothesis did not hold, we only store the Firesmith tags as metadata in the released artifact but did not use them further, e.g., as training labels.
+Reliability and agreement checks are not performed on this metadata.
+
+\textbf{Label aggregation and reliability.}
+Items require at least two independent assessments before release. As the labeling process was distributed asynchronously across a pool of nine practitioners, not every practitioner rated every backlog item. Reliability statistics are therefore computed over the available overlapping ratings in the released dataset.
+The published label is the majority vote of labelers' binary judgments.
+Following Artstein and Poesio~\cite{artstein2008irr}, we assess inter-rater reliability (IRR) with a generalized multi-rater coefficient rather than averaged pairwise coefficients, and additionally report observed agreement for transparency.
+Accordingly, for C1 we report Fleiss' $\kappa$, which quantifies  agreement beyond chance across all raters simultaneously, and raw observed agreement $P_o$, which provides an interpretable baseline of direct rater consensus.
+
+\subsection*{C2: Security-Relevance Detection Tool}\label{sec:methodology-c2}
+
+C2 is a lightweight binary classifier that flags potentially security-relevant backlog items as a first-stage filter for the downstream backlog enrichment system.
+Because it is more costly for an engineer to miss relevant security requirements for a backlog item than to discard irrelevant security requirements attached to it, we optimize C2 for recall-weighted performance and use F2 as the primary evaluation criterion, but do not tune the decision threshold as the validation split is too small for reliable threshold calibration.
+
+The input is the concatenated title and description of a backlog item.
+The output is a binary security-relevance prediction, with C1 as the gold standard.
+
+\textbf{Architecture.}
+We pair a frozen sentence-transformer encoder with a lightweight classification head, deliberately avoiding full fine-tuning in order to retain cross-domain generalizability.
+
+The reported C2 model space comprises one TF-IDF baseline and eight sentence-encoder variants.
+The sentence encoders are MiniLM-L6, MiniLM-L12, MPNet, DistilRoBERTa-v1, and RoBERTa-Large, all used via the Sentence Transformers library~\cite{reimers2019sbert}.
+All five encoders are evaluated with an elastic-net logistic-regression head.
+In addition, DistilRoBERTa-v1 and MPNet are also evaluated with a small Multilayer Perceptron (MLP) head, and DistilRoBERTa-v1 is additionally evaluated with an $\ell_2$-regularized logistic-regression head.
+
+\textbf{Training protocol.}
+The protocol follows established practices for recall-oriented binary classification on imbalanced software engineering datasets~\cite{tantithamthavorn2020rebalancing}.
+We apply a stratified hold-out split of C1 with class-balanced sample weighting during training.
+In the used dataset, security-relevant backlog items have a prevalence of $27.8\%$.
+Regularization strength (for logistic regression) and MLP width and depth are tuned via grid search over 5-fold stratified cross-validation on the training portion.
+All models are evaluated at a fixed threshold of $0.5$.
+
+For deployment selection, we treat the elastic-net and MLP variants as the transfer-oriented candidate set.
+The choice of an elastic-net head over $\ell_2$-regularized logistic regression and MLP is motivated by generalization risk on a small dataset: elastic-net's combined $\ell_1$ and $\ell_2$ penalty promotes sparsity and resists overfitting to the two-project scope of C1, whereas $\ell_2$-only regularization and unconstrained MLP heads are more susceptible to absorbing project-specific lexical patterns~\cite{zou2005elastic-net}.
+We therefore report $\ell_2$ results as an in-distribution reference, but do not treat the $\ell_2$ variant as deployment candidate.
+
+
+\textbf{Evaluation.}
+In-distribution performance is reported on the held-out C1 test set ($n=58$ and prevalence of the \texttt{security-relevant} class consistent with a stratified split over C1).
+The primary metric is F2 (the $F_\beta$ score at $\beta = 2$, which weights recall twice as heavily as precision).
+Secondary metrics are precision, recall, AUC, and per-model confusion matrices.
+
+To test whether the learned notion of \texttt{security-relevant} transfers across projects, we evaluate the reported C2 variants zero-shot on the five Wu et al.~\cite{wu2022data-quality} datasets (Chromium, Ambari, Camel, Derby, Wicket) and compare against four families of published baselines: Wu et al.~\cite{wu2022data-quality}: (FARSEC variants and classical text classifiers), Soltaniani et al.~\cite{soltaniani2026evaluating-llms} (prompted proprietary LLMs and fine-tuned LLMs), Alqahtani~\cite{alqahtani2024fasttext} (fastText), and França et al.~\cite{franca2025gpts} (open-source GPTs and classical ML).
+The held-out C1 F2 ranking is used separately to choose the variant integrated into C3.
+
+
+The primary cross-distribution metric is G-measure (harmonic mean of recall and $1{-}\mathrm{FPR}$), which is insensitive to the strong class imbalance present in both C1 and the Wu et al. datasets ($27.8\%$ vs.\ $1.9$--$17.9\%$).
+All four baseline families report or allow recomputation of G-measure, making it the single comparable metric across literature.
+We additionally report the per-project standard deviation $\sigma$ of G-measure as an indicator of cross-project stability, with the caveat that França et al.~\cite{franca2025gpts} do not evaluate on Chromium; their $\sigma$ is therefore computed over four projects rather than five and is not directly comparable to the other baseline families on equal footing.
+
+\subsection*{C3: Backlog Item Enrichment}\label{sec:methodology-c3}
+
+Given a security-relevant backlog item, C3 surfaces the subset of security requirements from relevant security requirements documents.
+This should help engineers and security experts to address security and compliance proactively during backlog refinement and planning, rather than through reactive checks later in the development lifecycle, directly addressing the lead-time and workload burdens reported by Moyón et al.~\cite{moyon2024challenges}.
+
+We frame this contribution as a document-grounded information retrieval problem: given the title and description of a backlog item, retrieve and rank the most relevant requirements from a corpus of segmented security documents.
+
+The backlog enrichment pipeline intended for C3 is developed for on-premises deployment and operation. It is designed as a four-stage retrieval-augmented generation (RAG)~\cite{lewis2020rag} architecture applied per backlog item.
+\begin{enumerate}
+    \item \emph{Requirement extraction.} An open-weights LLM decomposes the backlog-item text into one or more requirements, so multi-concern items do not dilute their retrieval signal across competing topics.
+    \item \emph{Bi-encoder recall.} A sentence-transformer bi-encoder~\cite{reimers2019sbert} embeds each extracted requirement and retrieves the top-$k$ candidate security requirements by exact cosine similarity over precomputed embeddings of all segmented security requirements.
+    \item \emph{Cross-encoder reranking.} A sentence-pair cross-encoder~\cite{nogueira2019bert} rescores the shortlist with direct query--security requirement attention, sharpening the ranking over the dense baseline.
+    \item \emph{LLM semantic filter.} An open-weights LLM reviews the reranked shortlist and retains only security requirements it judges semantically applicable to the requirement, producing the final ranked list. The LLM acts as a precision filter, not a reranker: its role is to retain or discard individual security requirements, grounded in the bi-encoder shortlist so identifiers cannot be hallucinated.
+\end{enumerate}
+
+
+The architecture was reached iteratively.
+\emph{Version~1 (Dense IR only)} uses the bi-encoder and cross-encoder as a standard two-stage retrieval baseline; it produces stable shortlists but admits topically adjacent false positives where lexical or vector similarity is high but the security requirement does not impose the same requirement.
+\emph{Version~2} adds the LLM semantic filter to prune the reranked shortlist with a brief per-security requirement justification.
+\emph{Version~3} adds requirement extraction as a preprocessing step, introduced after we observed that multi-concern backlog items (e.g., ``add OAuth2 login \emph{and} rate-limit the public API'') systematically retrieved security requirements relevant to only one of their concerns. Decomposing into atomic requirements before retrieval recovers the missed concerns.
+
+Both the extractor and the filter use open-weights LLMs so the pipeline can be deployed on-premises, satisfying a hard privacy requirement for the industrial deployment context.
+Additionally, pinning a specific open model version prevents silent behavior drifts known from commercial models~\cite{baltes2026guidelinesempiricalstudiessoftware, angermeirReproducibility}.
+For both requirement extraction and LLM-based clause scoring in C3, we used \texttt{alibayram/Qwen3-30B-A3B-Instruct-2507}, identified by the Ollama model ID \texttt{408ee351bdc6} (architecture \texttt{qwen3moe}, $30.5$B parameters, \texttt{Q4\_K\_M} quantization).
+
+\textbf{Security Requirement Segmentation.}
+Segmentation is a one-time, document-specific preprocessing step that converts each security document into a flat list of atomic, self-contained security requirements suitable for retrieval.
+We provide a segmentation backend for CIS Benchmarks~\cite{cis2024benchmarks} exported as PDF files, and the retrieval pipeline itself is segmentation-agnostic.
+The evaluation reported in this paper uses the internal-policy and CIS Benchmark backends.
+
+\subsubsection*{Preliminary Evaluation Protocol}\label{sec:methodology-c3-eval}
+
+We report a preliminary evaluation on the performance and workflow fit potential of C3.
+Insights gained on this analysis are then used to further develop the tool and ensure seamless and efficient integration into continuous software engineering workflows.
+
+The preliminary evaluation combines an artifact-level analysis of the pipeline's retrieval output with two semi-structured practitioner interviews conducted on industrial backlogs.
+The interviews contextualize the retrieval results and help identify design requirements that may be necessary for broader adoption.
+The units of analysis are retrieved clauses and controls in relation to their source backlog items.
+
+\textbf{Evaluation criteria.}
+We define success of the preliminary evaluation along three dimensions: \emph{relevance}, whether a retrieved security requirement applies to the backlog item, captured by the practitioner rating; \emph{actionability}, whether the requirement is concrete enough to change the engineer's next action on the item, captured by the upper rating anchor and the free-text commentary, and \emph{workflow fit}, whether practitioners would intend to consume the output within their existing tools, captured by the closing discussion questions.
+Redundancy and coverage gaps are recorded through the free-text commentary rather than quantified.
+The ratings serve as qualitative indicators for future design iteration.
+Quantifying retrieval precision with more raters, items, and backlogs is deferred to future work.
+
+\textbf{Source corpora.}
+We evaluate on two complementary corpora: internal security policies as the primary use case, and public CIS Benchmarks (nginx, docker-ce configurations) as a probe for generalization to concrete best-practice guidelines that any reader can reproduce against.
+Using both corpora in the same interview session, on the same backlog items, allows a direct within-session comparison of retrieval quality across security document types without modifying the retrieval pipeline.
+Only the security requirement segmenter backend has to be swapped.
+
+\textbf{Item selection.}
+Items for each session were drawn randomly from the set of backlog items that the selected C2 classifier flagged at confidence scores ranging from $0.55$ to $0.93$, spanning high-confidence and low-confidence regions of the classifier's output.
+This selection ensures that evaluated items are representative of what the pipeline would surface in normal operation.
+
+\textbf{Interview sessions.}
+Two $30$-minute interview sessions were conducted with practitioners from the product team owning the evaluated backlogs.
+In preparation, the deployed pipeline was run over each product's backlog using both corpora, the internal policies and CIS Benchmarks.
+Each session presents the resulting shortlists and collects two structured signals per security requirement: a $0$--$5$ relevance rating ($0 =$ not relevant, $5 =$ directly actionable) and free-text commentary capturing the reasoning.
+Item-level familiarity is recorded as descriptive context, but is not used to weight findings; the sessions target the scenario in which the tool is intended to be used, where the consumer of a security requirement might or might not be the author of the corresponding backlog item, as they might be an engineer or a security expert.
+
+Three open discussion questions close each session: (D1)~workflow fit and actionability, (D2)~missing security requirements or concerns, and (D3)~open feedback, including trust and integration preferences.
+
+A web application supported the sessions by loading the product backlog, retrieving relevant security requirements, and presenting them.

@@ -1,0 +1,54 @@
+\section{Attack Model and Challenges}
+
+\subsection{Attack Model}
+The attacker's goal is to stealthily interfere with the magnetic tactile sensors of a robotic system, e.g., a robotic arm or humanoid robot.  
+By corrupting its force perception, the attacker can hijack the closed-loop force feedback control and trigger severe physical consequences, including dropping or crushing the targeted objects (as shown in Fig.~\ref{fig:overview of PhantomTac}). 
+We make the following assumptions for the attack: 
+
+\begin{figure}[t] 
+  \centering
+  \includegraphics[width=\linewidth]{figures/attack_model.pdf}
+  \Description{Overview of the PhantomTac attack framework showing the attacker, deploy-and-forget magnetic tags, robotic tactile sensors, and the resulting manipulation of robotic perception.}
+  \caption{An overview of {\name}'s attack model.}
+  \label{fig:overview of PhantomTac}
+\end{figure}
+
+\noindent\textbf{No system intrusion required.} 
+{\emergencystretch=1em
+We assume that the attacker only needs brief physical access to a target object or its packaging to deploy a magnetic tag near an expected contact region. Such access can occur in scenarios such as logistics sorting, malicious parcel delivery, or shared human--robot environments. 
+No access to the robot's control system or software is required.
+\par}
+
+\noindent\textbf{Deploy-and-forget.} 
+We assume that the attacker requires only a single, one-time deployment to implement the attack. 
+The tag can be deployed in advance, and the attacker does not need to stay close to the target.
+The attack tag is a compact array of small permanent magnets and can be camouflaged as QR codes, trademarks, or even stickers. 
+As we will present in Sec.~\ref{sec:design}, the tag can be as small as 1.44 $cm^2$ and uses miniature magnets with a thickness of 0.5 mm.
+Once the tactile sensor contacts the tag, the sensor will be interfered with by the tag, thus requiring no further attacker involvement.
+
+\noindent\textbf{Knowledge of target sensor specifications.} 
+We assume that the attacker knows the brand and model of the target sensor. Specifications of tactile sensors deployed on commercial robots are often publicly available. 
+Such knowledge can be further refined by purchasing a sensor of the same model and performing offline characterization to quantify its magnetic vulnerabilities. This characterization requires no access to the victim robot, controller, software, runtime data, communication interfaces, or deployed tactile sensor.
+
+\subsection{Key Challenges}
+\noindent\textbf{Designing a stealthy and passive attack tag.} 
+Existing physical-layer injection attacks typically rely on bulky active signal generators or electromagnetic coils. 
+These require external power and are easily detected due to the bulky form factor.
+In contrast, {\name} utilizes purely passive permanent magnets as attack tags, overcoming the constraint of power sources.
+Now, the challenge lies in how to design tags that are compact, yet capable of generating sufficient magnetic flux to deceive high-sensitivity tactile sensors.
+Note that to conceal a {\name} tag, the attacker may cover it with a camouflage label (e.g., a sticker).
+Therefore, it is essential to assure this extra thickness would not impede the attack's efficacy.
+Achieving these goals can make {\name} even stealthier while assuring the attack's performance.
+
+
+\noindent\textbf{Achieving deterministic force injection.} 
+As elaborated in Sec.~\ref{sec:background}, magnetic tactile sensors commonly integrate \emph{differential sensing arrays} to overcome magnetic interference. 
+As we presented in Sec.~\ref{sec:background_limitation}, a small, passive magnet can disrupt the sensor reading.
+However, it is challenging to achieve deterministic force injection. 
+Meeting this objective is essential for fine-grained shear- and normal-force injection. Such injection can induce loose or overly tight grasps of objects such as a fragile vase.
+
+\noindent\textbf{Handling contact-position variations.}
+In practical robotic manipulation, the actual contact position may show subtle variations. 
+{\name} therefore needs to remain effective under the contact-position variations. In structured manipulation tasks, object geometry and grasp planning can constrain the likely contact region, making tag placement more predictable. We evaluate this robustness in detail in Sec.~\ref{sec:Robustness}.
+
+

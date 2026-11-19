@@ -1,0 +1,36 @@
+\centering
+\captionof{table}{Taxonomy of the 55 transformations; the clean setting is listed separately.}
+\label{tab:attack-taxonomy}
+\scriptsize
+\setlength{\tabcolsep}{2pt}
+\renewcommand{\arraystretch}{0.85}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.18\linewidth}>{\raggedright\arraybackslash}p{0.31\linewidth}Y@{}}
+\toprule
+\textbf{Category} & \textbf{Subcategory} & \textbf{Evaluation conditions} \\
+\midrule
+Clean & Reference & - \\
+\midrule
+Signal & Color and tone transformations & brightness, color jitter, randomized color jitter, contrast, gamma correction, grayscale conversion, histogram equalization, color inversion, RGB channel shift, saturation \\
+ & Filtering and enhancement & box blur, convolutional filter, Gaussian blur, high-pass filter, low-pass filter, median filter, motion blur, sharpening \\
+ & Noise & dither noise, Gaussian noise, Poisson noise, salt-and-pepper noise, speckle noise \\
+ & Compression and quantization & color quantization, GIF compression, JPEG compression, JPEG 2000 compression, posterization, uniform quantization \\
+ & Frequency-domain transformations & DCT transform, DWT transform, FFT transform \\
+\midrule
+Alignment & Geometric transformations & random affine transform, crop, interpolation resize, perspective transform, resize and crop, rotation, shearing, small geometric distortions, translation, grid warping \\
+ & Diagonal flip & diagonal flip \\
+ & Horizontal flip & horizontal flip \\
+ & Vertical flip & vertical flip \\
+ & Row/column removal & row/column removal \\
+ & Chained transformation & JPEG + crop + brightness chain \\
+ & Outpainting (expanded canvas) & outpainting (expanded canvas) \\
+\midrule
+Indirect local edits & Blackout (independent region) & blackout (independent region) \\
+ & Inpainting (independent region) & inpainting (independent region) \\
+ & Inpainting (independent region, outside restored) & inpainting (independent region, outside restored) \\
+ & Splicing (independent region) & splicing (independent region) \\
+ & Outpainting (fixed canvas) & outpainting (fixed canvas) \\
+\midrule
+Direct watermark edits & Inpainting (watermark region) & inpainting (watermark region) \\
+ & Splicing (watermark region) & splicing (watermark region) \\
+\bottomrule
+\end{tabularx}

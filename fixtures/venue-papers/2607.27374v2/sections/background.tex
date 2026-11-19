@@ -1,0 +1,46 @@
+\section{Background}
+
+Three threads of related work are relevant to the contributions of this paper: secure continuous software engineering and the role of the product backlog, detection of security-relevant development artifacts, and the operationalization of normative requirements, such as regulations or standards, into developer guidance.
+
+\subsection{Secure Continuous Software Engineering}
+
+Continuous software engineering shortens delivery cycles and emphasizes incremental, just-in-time work~\cite{fitzgerald2017continuous}.
+In contrast, security compliance is traditionally organized as a parallel, formalized track running alongside development, as it is composed of review checkpoints, traceable evidence, and audit-oriented documentation~\cite{moyon2018towardcsc, angermeir2024automatedcsc}.
+This parallelism is a practical bottleneck: through case studies in multiple industrial contexts Moyón et al.~\cite{moyon2024challenges} confirmed open industrial challenges blocking adoption at scale, whose consequences share a pattern at the artifact layer.
+A lack of item-level security visibility re-introduces compliance checks at release time as a blocking task, security 
+activities with high lead time are deferred under pressure and re-emerge as 
+security debt, and security knowledge concentrated on experts creates a review 
+bottleneck for the rest of the organization.
+The contribution of this paper handles these consequences directly: making security relevance visible at the item level (C1, C2) and attaching applicable requirements to backlog items at the point of planning (C3).
+
+\subsection{Product Backlog}
+
+Continuous software engineering teams use product backlogs and issue trackers as their central planning artifact~\cite{iso2018sse}.
+Backlog items are typically short, informal, and optimized for coordination rather than for documentation of non-functional concerns, such as security compliance~\cite{ferreira2022writing-agile-requirements}.
+As a consequence, when an item carries security implications, those implications are usually embedded implicitly in the free-text description rather than defined as labels, fields, or linked requirements~\cite{raharjana2021user-stories-nlp}, which is the artifact-layer gap that this paper targets.
+
+In this manuscript, we use the definition of Backlog and Backlog Item derived from the ISO/IEC/IEEE 26515:2018~\cite{iso2018sse}: \textit{``A collection of agile features (3.7) or stories of both functional and nonfunctional requirements that are typically sorted in an order based on value priority''}.
+Related to that definition is the definition of feature, also provided in that document: \textit{``functional or nonfunctional distinguishing characteristic of a system''}.
+
+Since our focus is on delivering security-relevant information to engineers during planning and development, this manuscript does not differentiate between different backlog types such as product backlogs or sprint backlogs.
+
+\subsection{Security Requirements}
+For this work we use the broad term security requirements to refer to requirements related to security formalized in various documents, such as company-internal security policies, security standards (e.g., IEC 62443-4-1), contracts, or public best practice guidelines (e.g., CIS Benchmarks). Depending on the document type, those requirements might be called differently. In internal security policies, security requirements are referred to as clauses, in security standards they often are called controls, and in public guidelines they are often coined recommendations. Hence, when we use the terms \textit{clauses}, \textit{controls}, or \textit{recommendations}, we refer to security requirements in the context of the respective document type formalizing those requirements.
+
+\subsection{Automated Detection of Security-Relevant Backlog Items}
+
+Another branch of prior work focuses on automatically identifying security-relevant backlog items.
+Wu et al.~\cite{wu2022data-quality} showed that widely used datasets contain substantial label noise and released cleaned datasets that have since become a benchmark for state-of-the-art approaches~\cite{alqahtani2024fasttext, franca2025gpts, soltaniani2026evaluating-llms}.
+Subsequent work has improved backlog item-based security-relevance identification on those benchmarks using lightweight neural text models~\cite{alqahtani2024fasttext}, open-source GPT-based approaches~\cite{franca2025gpts}, and fine-tuned or prompted LLMs~\cite{soltaniani2026evaluating-llms}.
+
+Relevant to our contributions are other detection approaches focusing on the privacy domain.
+Sangaroonsilp et al.~\cite{sangaroonsilp2023privacy-issue-reports} classify privacy requirements in backlog items by treating issue trackers as the central agile artifact and aligning backlog items with privacy-requirement categories to support compliance-oriented development.
+
+A second closely related line of work makes regulations actionable for engineers.
+Ayala-Rivera and Pasquale's GuideMe approach~\cite{ayala-rivera2018grace-period} supports the operationalization of GDPR obligations into solution requirements and privacy controls, and the SoCo approach~\cite{ayala-rivera2024soco} incorporates suitable privacy and security requirements into software design models.
+
+These approaches share the motivation of C3 but operate at the regulation-to-requirement or design-model level, rather than on the backlog level.
+
+Finally, software traceability research helps explain why this problem remains open in practice.
+Ruiz et al.~\cite{ruiz2023traceability} report that practitioners still perceive traceability as valuable but costly, with substantial manual effort and limited automated support.
+This strengthens the motivation for tooling that links the artifacts developers already use to the security requirements they are expected to satisfy.

@@ -1,0 +1,9 @@
+\section{Threats to Validity}
+
+While our models demonstrate strong performance across both industrial (Prime Video) and open-source (ApacheJIT) datasets, results may be influenced by dataset-specific characteristics.
+
+\paragraph{Construct Validity.} Prime Video uses CoE reports while ApacheJIT uses post-release defects as ground truth, representing different operationalizations of ``risky change.'' The Prime Video dataset is relatively small (149 risky commits) because not all faulty changes result in CoE reports, and high-confidence ground truth filtering further reduces the set. Domain experts manually verified all CoE-to-commit linkages from 2024, confirming correct attribution for all reviewed cases.
+
+\paragraph{Internal Validity.} Our feature set may not capture all aspects of a software change. LLM extraction noise (ICC: 0.861) is absorbed during model fitting since it applies identically at train and inference time; cross-validated F1 inherently reflects this. We evaluated LLM-based classification under zero-shot and few-shot settings with two model generations; few-shot yielded modest improvement, with larger gains on newer models (Sonnet 4.5), though fine-tuning could further narrow the gap. We use 10-fold cross-validation rather than temporal splits, consistent with prior JIT work~\cite{kamei2012large,pascarella2019fine}; temporal evaluation is future work.
+
+\paragraph{External Validity.} The language distribution (Java, Kotlin, TypeScript) may limit feature robustness for underrepresented languages. We mitigated this by evaluating across two distinct datasets with different languages, organizational contexts, and labeling practices. Our features remain applicable to AI-generated code, as structural complexity and style violations characterize the change itself regardless of authorship.

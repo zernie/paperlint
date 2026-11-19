@@ -1,0 +1,25 @@
+\section{Introduction}
+
+Security compliance is no longer confined to a small set of safety- or security-critical domains~\cite{moyon2020security-compliance-agile}.
+Regulations such as the EU Cyber Resilience Act~\cite{eu2024cra} and a growing body of sector-specific standards (e.g., IEC 62443 for industrial automation and control system development~\cite{iec2018secure}) are making security a baseline expectation for nearly every organization that builds or operates software.
+In organizations leveraging agile or DevOps, this circumstance requires engineering teams to continuously address security throughout the development process~\cite{fitzgerald2017continuous, turpe2017scrum}.
+In these settings the product backlog is the central planning artifact~\cite{iso2018sse, ferreira2022writing-agile-requirements}, yet backlog items rarely carry explicit security or compliance annotations~\cite{turpe2017scrum}.
+Security considerations are therefore mostly embedded implicitly in short, free-form engineering tasks. This leaves product teams without clear guidance on specific security matters and creates a practical mismatch between continuous software engineering and compliance efforts.
+Security planning and reviewing is still often performed manually and outside the main backlog flow, which does not scale to fast development cycles~\cite{moyon2020security-compliance-agile}.
+Moyón et al.~\cite{moyon2024challenges} describe this tension in secure continuous software engineering through several open practical challenges, such as making security architecture visible in backlog artifacts and documentation, involving security activities with minimal lead-time burden, and enabling security knowledge and ownership within engineering teams.
+
+
+This manuscript reports on building, deploying, and evaluating a natural-language backlog enrichment system that addresses this gap directly in the artifact developers already use.
+The system surfaces security-relevant context at the product planning stage by attaching security requirements relevant to the organization to flagged backlog items.
+The work was developed and evaluated at a large enterprise in highly regulated domains. To enable reproduction, we additionally evaluate the approach on public security guidelines.
+
+The paper makes three contributions:
+\begin{itemize}
+    \item[\textbf{C1}] An expert-annotated dataset of $288$ backlog items carrying binary security-relevance labels, drawn from two public Atlassian projects and multi-rated by $9$ security practitioners.
+    \item[\textbf{C2}] A recall-oriented binary classifier that flags security-relevant backlog items as a first-stage filter for the backlog enrichment system.
+    \item[\textbf{C3}] A retrieval pipeline that links backlog items to applicable security requirements from requirement documents.
+\end{itemize}
+
+We evaluate the three contributions from complementary perspectives: inter-rater reliability and dataset characterization for C1, in-distribution performance of C2 on C1 and cross-distribution transfer to the Wu et al.~\cite{wu2022data-quality} datasets, and a preliminary evaluation via two practitioner interviews on industrial backlogs for C3, which covers both proprietary and public security policy corpora.
+
+Across the three contributions, a single overarching finding emerges. Security-relevance of backlog items can be evaluated based on the ordinary item text, and concrete security requirements can be attached to those items in a form that engineers and security experts can act on without leaving their existing workflows.

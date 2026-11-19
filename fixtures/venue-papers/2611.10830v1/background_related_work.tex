@@ -1,0 +1,181 @@
+\section{Related Work}
+\label{sec:related-work}
+
+% \subsection{Security of Agent Skill Ecosystems}
+% \label{subsec:related-agent-skill-security}
+
+% Recent studies show that agent skills introduce a new supply-chain attack surface because they combine natural-language instructions, tool descriptions, executable helper code, dependencies, external services, and runtime permissions. 
+% Table~\ref{tab:detection-tools} compares the analysis types and core techniques of existing agent-skill scanning approaches with our proposed. 
+
+\subsection{Malicious Agent Skills in the Wild}
+Krishna et al.~\cite{krishna2026clawdpwned} provide a large-scale measurement of malicious instructions in the OpenClaw agent-skill ecosystem. The flagged skills are dominated by Sensitive Information Disclosure, Excessive Agency, and Supply Chain risks, indicating that malicious or dangerous skills commonly combine secret handling, autonomous high-impact actions, and fetch-and-execute patterns. However, this approach is limited to examining skill content and provides no mechanism for verifying whether suspicious behavior actually occurs during execution.
+
+Liu et al.~\cite{liuMaliciousSkillsWild2026} constructed a large-scale malicious agent-skill dataset by combining static triage with sandbox-based behavioral verification. They first used static analysis to identify suspicious candidates, which were then executed in isolated Docker containers. Two independent researchers manually reviewed the flagged skills by analyzing behavioral logs, inspecting code, comparing documented functionality with observed behavior, and assigning binary malicious/benign classifications with confidence ratings. In their study, researchers manually integrated static findings and runtime observations to assign skill labels.
+
+A separate ASE 2026 study examines credential leakage in skills through static secret extraction, sandbox tests with mock credentials, and comparisons between documented intent and runtime behavior~\cite{chen2026credentialleaks}. It finds that 76.3\% of cases require joint analysis of natural-language descriptions and program logic. Chen et al.~\cite{chen2026dymalskill} demonstrate a complementary runtime threat in which malicious instructions induce an agent to inject logic into an otherwise benign skill; their proposed mitigation prevents dynamic skill modification with read-only mounts.
+
+Guo et al.~\cite{guo2026malskillbench} introduced \textit{MalSkillBench}, a runtime-verified benchmark containing malicious skills and matched benign skills across code-injection, prompt-injection, and mixed attack vectors. Generated samples are included only when their expected behavior is observed during sandbox execution. Although the benchmark provides a unified basis for evaluating detection tools, its primary purpose is to support behavioral verification rather than malware detection.
+
+Wang et al.~\cite{wang2026maliciousskillbench} introduced the distinct \textit{MaliciousSkillBench}, consolidating data from multiple public sources and evaluating detectors under source-disjoint splits. This benchmark emphasizes cross-source generalization and false-positive control, complementing the runtime-verified sample construction of \textit{MalSkillBench}.
+% The study evaluates 2,556 publicly available ClawHub skills using an OWASP LLM Top 10-based rubric and computes a weighted Skill Risk Index (SRI) on a 0--100 scale. 
+% Each skill is evaluated across three independent trials, and the final risk label is derived from aggregated scores. 
+% The paper reports a mean SRI of 21.01, with 39 skills classified as High risk and 49 skills satisfying the paper's ``Likely Malicious'' heuristic~\cite{krishna2026clawdpwned}. 
+
+
+% The main difference between ClawdPwned and our work is the role of runtime evidence. 
+% ClawdPwned is primarily a static, documentation-level risk measurement study: the evaluator receives the skill content and assigns OWASP-category scores with supporting evidence snippets. 
+% The authors explicitly state that they do not execute skills or analyze runtime behavior, which makes the approach safe and scalable but unable to confirm whether suspicious behavior actually occurs during execution~\cite{krishna2026clawdpwned}. 
+% In contrast, our \textit{dynamic} module uses runtime artifacts collected from sandboxed skill execution. 
+% Rather than scoring only the visible skill description, it correlates agent output, system-call traces, network captures, and filesystem-change logs to identify behavioral patterns and produce an automated verdict, score, confidence level, and supporting evidence.
+
+% \subsection{Dynamic Behavioral Verification of Malicious Skills}
+% \label{subsec:related-dynamic-verification}
+
+% While static analysis detects suspicious patterns in source files without executing them, static signals alone are not always sufficient to determine whether an agent skill is malicious. Benign developer-oriented skills may contain installation commands, API-key checks, external-service setup instructions, or security-related examples. Therefore, our dynamic analysis layer complements static analysis by observing how a skill behaves, or attempts to behave, during controlled execution.
+%provide the closest related work to our dynamic analysis setting
+
+
+
+\subsection{Detection of Malicious Agent Skills}
+Several studies focus on pre-deployment static and semantic detection. \textit{SkillsMetric}~\cite{chenskillsmetric} combines pattern-density analysis, statistical anomaly detection, dataflow taint analysis, import anomaly detection, and capability-mismatch analysis. The study shows that static analysis is effective when attacks leave structural artifacts but is less effective against semantic and instruction-level threats. 
+
+\textit{SkillSieve}~\cite{hou2026skillsieve} uses a hierarchical detection pipeline. It first applies regex, AST, metadata, and surface-level checks, then performs structured LLM analysis of suspicious skills, and finally uses a multi-LLM jury for high-risk cases. Although this approach reduces analysis costs and improves semantic coverage, it lacks a mechanism for verifying an agent skill's runtime behavior.
+Scan Before You Install~\cite{gandhi2026scanbeforeinstall} extends malicious-skill scanning with local and composite vulnerability analysis, and also reports evaluation on MalSkillBench, making it an adjacent but relevant approach.
+
+Locate-and-Judge~\cite{etteib2026locatejudge} reduces review cost by using attention to select skill spans for detailed judgment, while SkillScreen~\cite{huang2026skillscreen} uses a compact decision model for high-recall screening. Both are recent academic detectors and are not part of our scanner comparison.
+
+Wang et al.~\cite{wang2026elementary} proposed \textit{MalSkills}, a neuro-symbolic framework for reasoning across heterogeneous skill artifacts. MalSkills extracts security-sensitive operations from prompts, source code, and manifests; constructs a skill dependency graph; and combines symbolic patterns with LLM-based reasoning. This approach captures cross-file and value-flow relationships, but its behavioral inferences are derived primarily from static artifacts rather than observed execution.
+
+Open-source scanners developed by industry provide complementary pre-deployment capabilities for detecting malicious skills. Cisco Skill Scanner~\cite{cisco_skill_scanner} combines YAML/YARA rules, code and bytecode inspection, static dataflow analysis, and optional LLM-based semantic analysis. 
+%Grit~\cite{gritScanner} provides pattern-based static code analysis for searching and linting source code. Security-oriented GritQL patterns identify constructs associated with shell execution, network access, dangerous imports, and other potentially unsafe operations. 
+Individual findings can be ambiguous because legitimate
+developer workflows may involve security-sensitive operations,
+such as downloading dependencies, accessing API credentials,
+or invoking external services. Such operations warrant
+inspection but do not, by themselves, establish malicious
+intent. Interpreting these findings therefore requires
+considering their source, purpose, and relationship to other
+evidence. Conversely, examining findings separately may
+obscure malicious workflows whose steps span multiple
+skill artifacts.
+% However, these tools report findings as independent and isolated alerts. Consequently, benign developer workflows may trigger false positives, while multi-step malicious behaviors may remain difficult to identify when individual alerts are analyzed in isolation.
+
+
+
+\begin{tcolorbox}[colback=gray!5,colframe=gray!75!black,title=\textbf{Summary}]
+Existing studies provide complementary capabilities for
+detecting malicious agent skills, including static inspection,
+cross-artifact reasoning, and runtime verification.
+Our work investigates how static findings and
+safety-constrained sandbox evidence can jointly support
+LLM-based assessment of malicious intent. We evaluate
+existing scanners and examine the contribution of these
+evidence sources within a common reasoning backend,
+with particular attention to false-positive reduction.
+% Researchers in academia and industry continue to establish benchmarks and develop tools for detecting malicious agent skills. However, existing work lacks a methodology for correlating evidence obtained from different analysis techniques and using that evidence to produce semantic alerts that security analysts can act upon.
+\end{tcolorbox}
+% In this paper, we propose feeding collected runtime logs into an automated detector. Our detector correlates agent output, system-call traces, network captures, and filesystem-change logs to identify patterns such as remote code execution, payload execution, possible data exfiltration, persistence attempts, suspicious installation instructions, unsafe skipped commands, and reconnaissance behavior.
+
+% The behavioral verification stage checks whether suspicious code paths are actually triggered during execution and whether the observed behavior is inconsistent with the skill's public documentation.
+
+% In Liu et al.'s pipeline, dynamic behavioral verification is not merely the collection of runtime logs. 
+% Rather, it is a validation process that uses runtime evidence to determine whether a candidate skill exhibits concrete malicious behavior, such as credential exfiltration, unauthorized network activity, obfuscated payload execution, or privilege escalation~\cite{liu2026malicious}. 
+% The dynamically flagged skills are then manually reviewed by two independent researchers through behavioral log analysis, code inspection, comparison between documented functionality and observed behavior, and binary malicious/benign classification with confidence ratings. 
+% A skill is confirmed as malicious only when both reviewers agree that the behavioral evidence is sufficient, resulting in 157 behaviorally confirmed malicious skills and 632 labeled vulnerability instances~\cite{liu2026malicious}.
+
+% Our method shares the same high-level principle that malicious skills should be evaluated using runtime evidence collected from sandboxed execution. 
+% However, the role of dynamic analysis in our pipeline is different. 
+% Liu et al. use sandbox evidence primarily as part of a behavioral verification and manual labeling workflow to construct a high-confidence ground-truth malicious dataset. 
+% In contrast, \textit{dynamic} treats the collected runtime artifacts as inputs to an automated detector. 
+% It correlates agent output, system-call traces, network captures, and filesystem-change logs to identify patterns such as remote code execution, payload execution, possible data exfiltration, persistence attempts, suspicious installation instructions, unsafe skipped commands, and reconnaissance behavior. 
+% The output is an automated verdict with a risk score, confidence level, and supporting evidence, making the method suitable for scalable batch detection and comparison with other scanners.
+
+% Cisco~\cite{cisco_skill_scanner} developed a Python-based static analysis tool for inspecting AI agent skill files prior to deployment. It combines multiple techniques, including signature-based static analysis (YAML and YARA rules), bytecode inspection to detect suspicious operations (e.g., subprocess execution, abnormal network access, or unauthorized file system interactions), and behavioral dataflow analysis to trace how inputs may propagate to external endpoints. However, its effectiveness is inherently limited: a “no findings” result does not guarantee security. 
+% Their reliance on predefined rules and known patterns fundamentally constrains their ability to detect emergent, context-dependent, and zero-day attack behaviors particularly in AI agent ecosystems.
+
+% Snyk~\cite{snyk2026} offers a CLI-based security analysis tool for auditing AI agent ecosystems, particularly MCP configurations and agent skill files. Its strengths include automatic discovery of agent setups, broad risk detection (e.g., prompt injection, tool poisoning, and credential leaks) via a cloud-based API, and support for CI/CD drift detection and cross-server “toxic flow” analysis, enabling identification of both individual and composite vulnerabilities. However, its reliance on cloud-based validation raises potential privacy concerns, and its effectiveness—largely vendor-reported—may not ensure comprehensive coverage, especially for novel or obfuscated threats. Therefore, it is best used as part of a defense-in-depth strategy rather than a standalone solution.
+
+
+
+%%%=======OLD ONE==== 
+% Cisco~\cite{cisco_skill_scanner} developed a Python-based pre-deployment scanner for AI agent skill files. It combines YAML/YARA rule matching, code and bytecode inspection, LLM-as-a-judge analysis, and behavioral dataflow analysis to detect suspicious operations, including subprocess execution, abnormal network access, unauthorized filesystem access, prompt injection, data exfiltration, and propagation of inputs or secrets to external endpoints. Cisco's scanner is therefore a multi-engine static analysis tool, not a purely pattern-based scanner. Still, it is a best-effort pre-deployment approach and cannot fully observe runtime-only behavior, dynamically generated commands, sandbox side effects, or context-dependent attacks. It provides a strong static baseline, but should be complemented with dynamic sandbox analysis.
+
+% Snyk~\cite{snyk2026} offers a CLI-based security analysis tool for auditing AI agent ecosystems, particularly MCP configurations and agent skill files. Its strengths include automatic discovery of agent setups, broad risk detection (e.g., prompt injection, tool poisoning, and credential leaks) via a cloud-based API, and support for CI/CD drift detection and cross-server ``toxic flow" analysis, enabling identification of both individual and composite vulnerabilities. However, its reliance on cloud-based validation raises potential privacy concerns, and its effectiveness largely vendor-reported may not ensure comprehensive coverage, especially for novel or obfuscated threats. Therefore, it is best used as part of a defense-in-depth strategy rather than a standalone solution.
+
+
+
+
+
+% \begin{table}[!htb]
+% \centering
+% \caption{Comparison of the existing open-source malicious agent skill scanning approaches}
+% \label{tab:detection-tools}
+% \renewcommand{\arraystretch}{1.3}
+% \small
+% \begin{tabularx}{\textwidth}{p{2.5cm}p{4.5cm}X}
+% \hline
+% \textbf{Tool} 
+% & \textbf{Type} 
+% & \textbf{Technique} \\
+% \hline
+
+% Cisco Skill Scanner~\cite{cisco_skill_scanner}
+% & Multi-engine static analysis with LLM integration.
+% & Combines YAML/YARA rules, code and bytecode inspection, AST-based dataflow analysis, and LLM-based semantic analysis. \\
+% \hline
+
+% & Pre-deployment static scanning with local and API-based analysis.
+% & Automatically discovers and analyzes skills and MCP components for prompt injection, malware payloads, tool poisoning, toxic flows, and exposed secrets. \\
+% \hline
+
+% Grit Baseline~\cite{gritScanner} & Pattern-based static code analysis. & Matches suspicious textual and code-level indicators, including shell execution, network access, dangerous imports, command invocation, and unsafe operations in skill definitions. \\ \hline
+
+% Liu et al.~\cite{liuMaliciousSkillsWild2026} 
+% & Hybrid static-dynamic analysis with manual verification.
+% & Uses static triage followed by sandbox execution, runtime trace analysis, and manual review to confirm malicious behavior. \\
+% \hline
+
+% Our Approach
+% & Automated hybrid static-dynamic analysis with LLM reasoning.
+% & Combines static findings, safe sandbox execution, runtime evidence correlation, maliciousness scoring, and LLM-assisted reasoning. \\
+% \hline
+
+% \end{tabularx}
+% \end{table}
+
+
+
+% \begin{table}[!htb]
+% \centering
+% \caption{Comparison of different malicious skills scanners}
+% \renewcommand{\arraystretch}{1.3}
+% \small
+% \begin{tabularx}{\textwidth}{p{2.5cm}p{4.5cm}X}
+% \hline
+% \textbf{Tool} 
+% & \textbf{Type} 
+% & \textbf{Technique} \\
+% \hline
+
+% Cisco 
+% & Hybrid static analysis (rule-based, semantic, and dataflow analysis) with LLM analysis integration.
+% & Performs multi-layer static analysis combining rule-based detection (YAML/YARA), LLM-based semantic inspection, and dataflow analysis to identify prompt injection, data exfiltration, and malicious code patterns in agent skills. \\
+% \hline
+
+% & Static analysis (code-level and prompt-level security scanning).
+% & Provides automated discovery and static inspection of agent components, detecting prompt injection, malware payloads, tool poisoning, toxic flows, and hardcoded secrets across skills and MCP servers. \\
+% \hline
+
+% Liu et al. 
+% & Hybrid analysis (static and dynamic behavioral analysis).
+% & Combines static inspection with sandbox-based dynamic execution to analyze behavioral traces (system calls, network activity, file operations), enabling detection of obfuscated or runtime-dependent malicious actions. \\
+% \hline
+
+% Our Approach
+% & Hybrid multi-layer analysis (static, dynamic, and LLM-based reasoning). 
+% & Static signatures, dynamic sandbox tracking, and LLM reasoning. \\
+% \hline
+
+% \end{tabularx}
+% \label{detection-tools}
+% \end{table}

@@ -1,0 +1,24 @@
+\section{Conclusion}
+
+We set out to reduce the security workload in continuous security compliance by automatically including security requirements on the backlog items engineers and security experts already use.
+The three contributions of this paper address complementary parts of that goal.
+
+C1 provides an independently expert-annotated backlog-security dataset: $288$ items annotated by a pool of nine security practitioners, resulting in $972$ independent binary assessments, Fleiss' $\kappa = 0.787$, and additional Firesmith security-requirement metadata available for many items.
+C1 is positioned as a high-precision complement to the larger Wu et al.\ benchmark family~\cite{wu2022data-quality}, and is released publicly to allow downstream work on security-relevance detection to train and audit against expert supervision.
+
+C2 is a recall-oriented binary classifier for security-relevance.
+A frozen MPNet encoder paired with an elastic-net logistic-regression head reaches F2 $=0.774$ on the C1 held-out split and, applied zero-shot to the five Wu cleaned benchmarks, achieves cross-distribution G-measure $\approx 0.65$, competitive with the published classical-ML and open-source-GPT baselines despite a prevalence shift from $27.8\%$ on C1 to $1.9$--$17.9\%$ on the Wu projects.
+
+C3 is a four-stage retrieval-augmented generation pipeline that maps a flagged backlog item to the subset of security requirements from relevant security documents.
+The C3 retrieval pipeline was evaluated preliminarily on two industrial product backlogs with industrial internal policies as the primary corpus and CIS Benchmarks as a public-standard probe.
+Semi-structured practitioner interviews produced a positive preliminary signal on items with well-structured descriptions, identified integration into backlog systems and security requirement summarization as the most important additions, and suggested a consistent lesson about the granularity gap between security requirement documents and backlog items.
+Rule-level documents yield more precise, actionable matches than higher-abstraction capability standards.
+
+Taken together, the results provide preliminary evidence that security-relevance can be decided directly from ordinary backlog text to support engineering work through concrete security requirements attached to those items in a way that potentially makes security both more visible and better integrated in the software engineering lifecycle, without requiring engineers to leave their existing workflow.
+
+~\label{sec:future-work}
+Open directions follow directly from the preliminary evaluation.
+First, a complete evaluation of C3 is required, including more practitioner interviews, multiple backlogs, ideally across organizations, and a controlled study design capable of measuring workflow impact and adoption.
+This would be achieved through a longitudinal study.
+Second, applying C3 to a second industrial corpus, and ideally to a second organization's policies, would convert the current document-agnostic architectural claim into a measured generalizability result.
+Third, in-tracker integration and per-security requirements action-item summarization are concrete engineering steps that the practitioners identified as the dominant preconditions for practical adoption.

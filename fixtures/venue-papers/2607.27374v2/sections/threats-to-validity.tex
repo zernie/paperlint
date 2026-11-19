@@ -1,0 +1,36 @@
+\section{Threats to Validity}
+We discuss the threats to validity of our research following the categorization of Runeson and Höst~\cite{Runeson2009}.
+\subsection{Construct Validity}
+
+The construct \emph{security-relevance} is operationalized through expert judgment rather than as an approximation of an objective ground truth. 
+Different expert pools might apply a different decision boundary, and the $13.5\%$ of C1 items with at least one disagreeing assessor confirm that the construct admits legitimate boundary cases, as discussed in ~\Cref{sec:discussion-c1}.
+We mitigate this by multi-rating every released item, and by reporting Fleiss' $\kappa$ and raw observed agreement rather than a single reliability number.
+For C3, \emph{retrieval usefulness} is characterized in two layers: an artifact-level analysis of shortlists (applicability relative to the retrieving item's requirement) and a practitioner $0$--$5$ rating used as calibration of that analysis.
+
+\subsection{Internal Validity}
+
+C2 thresholds and hyperparameters are selected on a single C1 validation split.
+The tight spread of F2 across the sentence-encoder variants bounds the risk of threshold-to-split overfitting but does not eliminate it, and probability calibration is not performed beyond threshold choice because C2 is used downstream as a hard filter into C3.
+The held-out C1 test set contains only $58$ items, so the reported in-distribution point estimates probably carry wide confidence intervals and, taken alone, cannot rule out overfitting to the two source projects.
+We mitigate this by not relying on the in-distribution split for the headline claim. Deployment selection is restricted to the transfer-oriented candidate set, and the zero-shot evaluation on the five Wu et al.\ benchmarks~\cite{wu2022data-quality}, spanning several thousand items from unrelated projects, provides the primary evidence that the learned notion of security relevance generalizes.
+The C3 evaluation is preliminary and performed over two industrial product backlogs and two practitioner interviews.
+Observations are descriptive and the apparent convergences across the two sessions are consistent with, but do not establish generalizable empirical evidence.
+The complete evaluation, involving more practitioners per backlog, multiple backlogs, ideally across organizations, and a study design capable of measuring workflow impact rather than perceived relevance, is deferred to future work.
+Item-level familiarity is recorded as descriptive context.
+The interviews target the engineer-consulting scenario in which the consumer of a security requirement is not necessarily the author of the corresponding backlog item.
+Prior familiarity with a specific backlog item does not, however, disqualify a practitioner's judgment of whether a retrieved security requirement is applicable.
+
+\subsection{External Validity}
+
+C1 is drawn from two Atlassian open-source projects whose item language resembles industrial enterprise backlogs. It is a precision resource by design and does not aim to cover the broader variance of public issue trackers (Wu et al.'s benchmarks fill that role).
+The nine C1 annotators share an organizational context, which could bias the operational definition of \texttt{security-relevant}.
+We argue in Section~\ref{sec:discussion-c1} that this context is operationally shaped by the same standards other security-regulated organizations follow.
+
+\subsection{Reliability}
+
+Both the C3 requirement extractor and the semantic filter are open-weights LLMs, and both stages introduce run-to-run variability in the resulting shortlist.
+We mitigate this by fixing the model identifier, sampling temperature, and prompts, and by reporting averaged behavior.
+We do not claim bitwise reproducibility of the C3 output.
+Although we do not quantify run-to-run variance formally, repeated executions during development informally suggested that the C3 pipeline was practically consistent: for the same backlog item and source corpus, it reliably returned the same clauses and only small differences in relevance scores.
+C1 and the full C2 pipeline are fully reproducible from the released artifacts and are deterministic up to library-level floating-point variation.
+The C3 cross-distribution probe on CIS Benchmarks is reproducible end-to-end against public documents. The internal-policy evaluation is reproducible only on the internal corpus.

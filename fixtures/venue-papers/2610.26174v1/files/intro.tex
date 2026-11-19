@@ -1,0 +1,90 @@
+\section{Introduction}
+\label{sec:intro}
+\begin{figure}[t]
+  \centering
+  \begin{subfigure}{0.95\linewidth}
+    \centering
+    \includegraphics[width=1.05\linewidth]{figures/background2-v2.pdf}
+    \Description{
+    Illustration of the compressed and shear states of a tactile sensor, showing how normal and shear forces are represented during tactile interaction.
+    }
+    \caption{The compressed and shear states characterize normal and shear forces, respectively.}
+  \end{subfigure}
+  \hspace{2pt}  %
+  \begin{subfigure}{0.95\linewidth}
+    \centering
+    \includegraphics[width=1.05\linewidth]{figures/background6.pdf}
+    \Description{
+    Internal view of a commercial magnetic tactile sensor,
+    showing the sensor structure and internal components.
+    }
+    \caption{Inside view of PaXini PX6AX-GEN3-MC-M2020-Elite.}
+  \end{subfigure}
+  \caption{Principle and structure of magnetic tactile sensors. (a) demonstrates the neutral, compressed, and shear states. (b) Structure of a COTS magnetic tactile sensor.}
+  \label{fig:background2}
+\end{figure}
+
+As embodied AI systems are deployed in increasingly complex physical environments, robotic manipulation has become critically dependent on multimodal sensing~\cite{zhao2025mpddm}. 
+Among predominant perceptual modalities, e.g., vision and audition, tactile perception is fast emerging as an indispensable sensing ability for contact-rich manipulation~\cite{meribout2024tactile,bhirangi2025anyskin}. 
+Tactile perception provides fine-grained measurements of contact states and force distributions that neither vision nor proprioception can fully replicate~\cite{andrussow2023minsight,mao2024multimodal}. 
+Specifically, visual perception is susceptible to environmental interference such as lighting variations and occlusion, making it difficult to perceive contact states within visual blind spots; proprioception mainly reflects the robot's internal motion state and therefore cannot acquire fine-grained interaction data at the contact interface~\cite{luo2024robotics}.
+
+In contrast, tactile perception demonstrates unique advantages in sensing granularity, real-time performance, and environmental resilience.
+Tactile sensors can directly acquire the precise force feedback at the physical contact points. 
+This core feature allows robots to accurately characterize key parameters~\cite{li2020tactile}, such as weight~\cite{silva2019mass}, stiffness~\cite{yuan2017hardness}, and friction coefficient~\cite{khamis2021friction}.
+In the system scope, tactile sensing enables closed-loop force control systems, thus adjusting the robot's fine-grained manipulation in real time. 
+It also prevents manipulation failures caused by perceptual deficits, thereby ensuring the safety and precision of human-robot collaboration.
+This capability can be the cornerstone for several crucial real-world tasks.
+For example, when a robotic gripper closes on an object, understanding subtle variations in the \emph{normal force} helps apply an appropriate force, thereby enabling a firm grip without crushing the object.
+When a robotic hand is holding a fragile object while moving, sensing the \emph{shear force} in real-time can prevent the gripper from dropping or damaging the object.
+
+To achieve tactile sensing, there are the following key approaches: optical, capacitive, resistive, and magnetic.
+Specifically, vision-based tactile sensors are commonly composed of light sensors and an elastomer~\cite{gelsight2026official}. 
+An applied force can incur deformation in the elastomer. 
+Then, the light sensor can interpret the deformation, thus characterizing the force.
+However, this approach is undermined by the cost of frame rate, image processing overhead, and packaging volume. 
+For example, the GelSight Mini is listed at USD 510 and integrates an 8MP camera with a nominal frame rate of 25 FPS, while its package size is approximately 32~mm by 31~mm by 28~mm~\cite{gelsightMiniProduct,gelsightMiniDatasheet}.
+Capacitive tactile sensors~\cite{singletact2026official} perform measurements via capacitance changes caused by force to decode tactile information.
+However, this approach is susceptible to parasitic capacitance, noise, humidity, and temperature variations. 
+Piezoresistive tactile sensors~\cite{tekscan2026official} utilize resistance changes caused by force to decode tactile information.
+Although being a low-cost option, this line of approaches is prone to hysteresis, drift, and insufficient long-term stability. 
+
+As we will elaborate in Sec.~\ref {sec:background}, magnetic tactile sensors are fast emerging as an approach that can achieve both multi-dimensional force sensing and low cost.
+For example, magnetic tactile sensors can be composed of an underlying array of magnetometers and a magnetic elastomer.
+As the magnetic field drops with distance cubed, subtle deformation of the elastomer can be captured by the sensor.
+Compared to other tactile solutions, magnetic tactile sensing possesses significant advantages: rich three-dimensional force sensing, compact form factor, low cost, and resilience against light conditions. 
+
+In this paper, we discover a fundamental physical vulnerability in magnetic tactile sensors.
+That is, one can alter the environment's magnetic field, thus injecting erroneous force into magnetic tactile sensors.
+As shown in Sec.~\ref {sec:background_limitation} and Sec.~\ref {sec:across_models}, this underlying vulnerability is present across multiple evaluated magnetic tactile sensor models.
+Exploiting this vulnerability, we propose {\name} (as shown in Fig.~\ref{fig:overview of PhantomTac}), the first stealthy physical adversarial attack targeting magnetic tactile sensors using passive magnetic tags.
+
+To achieve a fine-grained, stealthy attack on magnetic tactile sensors, it is crucial to answer the following key challenges:
+(1) How to characterize commercial-off-the-shelf (COTS) magnetic tactile sensors? 
+(2) How can the attack effectively alter/modulate the environment's magnetic field while staying stealthy? 
+(3) How to affect the closed-loop force control, thus achieving severe damage to real-world objects?
+
+Addressing the first challenge is essential for achieving an in-depth understanding of the magnetic tactile sensor's mechanism.
+Specifically, magnetometers interpret the magnetic field as a three-dimensional field strength, i.e., $B_x, B_y$, and $B_z$.
+
+Therefore, we conducted extensive reverse engineering research on representative COTS magnetic tactile sensors, e.g., {PX6AX-GEN3-MC-M2020-Elite}~\cite{paxini2026px6axgen3}. 
+Specifically, we collected sensor response data from magnetic tactile sensors under the intervention of external magnetic sources, utilized this dataset to construct a fitting model based on the Radial Basis Function (RBF), and used this model to characterize the response characteristics of magnetic tactile sensors to external magnetic sources.
+
+To address the second challenge, we employ micro-passive permanent magnets (with a thickness of 0.5 mm) as the attack source. 
+This endows {\name} with extremely high stealth characteristics: it requires no external power supply, generates no monitorable thermal signals or acoustic signatures, and causes almost no changes to the visual appearance of the target object. Furthermore, since the magnetic field itself can penetrate non-ferromagnetic materials without attenuation, this attack is completely independent of line-of-sight conditions, allowing the attack tag to be well hidden under normal labels on the object's surface. Based on this, we can achieve the injection of forged normal or shear force signals through carefully designed attack tags while staying stealthy.
+
+To address the third challenge, we characterize the target magnetic tactile sensor model's responses to external magnetic sources. 
+This one-time-effort allows the attacker to customize the attack tag using the aforementioned passive magnetic tag design framework for deterministic force injection. 
+Once deployed, when a humanoid robot or robotic arm performs a touching or grasping task, the attack tag prompts the sensor to generate erroneous raw force signals and feed them back into the closed-loop control system. 
+{\name} also shows high robustness in repetitive experiments. For example, {\name} maintains an attack success rate above 95\% for grasping-position offsets within 8 mm in our experiments.
+This signal injection causes the system to make erroneous judgments at the decision-making level, such as erroneously increasing or decreasing the contact force, ultimately leading to object damage or operational failure in the real world.
+We demonstrated these end-to-end attacks in the online artifact.
+
+In {\name}, we make the following contributions:
+\begin{itemize}
+    \item We discover and formally characterize an underlying hardware vulnerability in magnetic tactile sensors, namely the physical inseparability of internal and external magnetic flux, proving that current anti-interference mechanisms possess fundamental flaws when facing static adversarial magnetic fields.
+    
+    \item We propose {\name}, a passive and highly stealthy tactile perception attack framework. By utilizing reverse engineering, we design the passive magnetic tag that is as thin as a piece of paper.
+    
+    \item Based on the limitations of existing anti-magnetic interference mechanisms, we propose a novel defense mechanism to effectively mitigate such physical-layer security threats.
+\end{itemize}

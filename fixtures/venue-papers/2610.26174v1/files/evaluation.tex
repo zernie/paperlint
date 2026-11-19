@@ -1,0 +1,143 @@
+\section{Evaluation}
+
+\subsection{Evaluation Setup}
+
+To highlight the end-to-end impact of {\name}, we conducted real-world experiments on two robotic platforms. 
+We used a Dofbot-Pi4B~\cite{yahboom_dofbot_pi} robotic arm to assess {\name}'s performance in a popular grasping task.
+As shown in Fig.~\ref{fig:evaluation1}(a), the robot arm's goal is to move a small carton. 
+With a tactile sensor embedded on the claw, one can achieve a closed-loop force control, thus assuring the gripper will not drop or crush the object.
+We also used a Unitree G1~\cite{unitree_g1_developer} humanoid robot to evaluate a collision detection scenario.
+As shown in Fig.~\ref{fig:evaluation1}(b), the on-body tactile sensor should inform the robot when a contact occurs, thus preventing it from breaking a fragile object, e.g., a vase.
+Note that this control loop allows the robot to perform safe manipulation without seeing the object, mimicking how humans would perform safe tasks.
+In both experiments, {\name}'s tag was concealed by a camouflage (i.e., a QR code), which can be replaced by other camouflage labels as shown in Fig.~\ref{fig:vulnerability4}.
+We will elaborate on the details of these experiments in Sec.~\ref{sec:robotic_grasping} and Sec.~\ref{subsec:humanoid}, respectively.
+
+For magnetic tactile sensors, we adopted PaXini PX6AX-GEN3-MC-M2020-Elite.  As shown in Sec.~\ref{sec:background2.3}, PaXini shows stronger resistance to ambient magnetic fields incurred by everyday electronics compared with other major models (e.g., XELA uSPa 46), thus demonstrating superb performance against magnetic interference.
+We therefore selected the PaXini model as the primary experimental platform.
+
+\begin{figure*}[t]
+    \centering
+    \begin{subfigure}[b]{0.495\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/evaluation_all_1_new.pdf}
+        \Description{
+        End-to-end attack results of PhantomTac on a robotic manipulator, showing positive and negative normal force injection during the grasping task across different stages of operation.
+        }
+        \caption{{\name}'s attack on a robotic arm.}
+        \label{fig:subfig1}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.5\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/evaluation_all_2_new.pdf}
+        \Description{
+        End-to-end attack results of PhantomTac on a humanoid robot, showing positive and negative normal force injection during the collision detection task across different stages of operation.
+        }
+        \caption{{\name}'s attack on a humanoid robot. }
+        \label{fig:subfig2}
+    \end{subfigure}
+    \caption{End-to-end attack results on the robotic manipulator and the humanoid robot. 
+    (a) Positive and negative normal force injection in the grasping task. 
+    (b) Positive and negative normal force injection in the collision detection task.
+    Note that S1, S2, and S3 denote the different stages of a benign operation.
+    $S_{p}^{\prime}1$, $S_{p}^{\prime}2$, and $S_{p}^{\prime}3$ denote stages under positive force injection, whereas $S_{n}^{\prime}1$, $S_{n}^{\prime}2$, and $S_{n}^{\prime}3$ present negative ones.
+    }
+    \label{fig:mainfig}
+\end{figure*}
+
+\subsection{End-to-End Evaluation \#1: Robotic Grasping}
+\label{sec:robotic_grasping}
+The robotic arm followed a predetermined trajectory and executed a tactile closed-loop feedback controller adapted from existing open-source solutions, i.e., LeTac-MPC~\cite{xu2024letacmpc}. 
+Specifically, the controller monitored normal force ($F_z$) at high frequency and regulated gripper motion through force hysteresis: it tightened when $F_z$ drops below a preset lower limit, maintained its pose when $F_z$ is within a safe range, and loosened when $F_z$ exceeds the upper limit. 
+
+In a benign operation, the robotic arm grasped a small paper box, with a grasping-force threshold of 1.3--2~N. The normal grasping task typically contains three stages: approach (i.e., stage $S1$ as shown in Fig.~\ref{fig:mainfig}), grasp and stop at force threshold ($S2$), and transport ($S3$). During normal operation, the arm moves to a predefined pose, closes the gripper, and stops once tactile feedback reaches the threshold. The system then collects 5 tactile feedback frames (approximately 0.1~s at 50~Hz) to assess grasp stability. If all 5 consecutive force readings remain within the threshold range, the arm initiates transport as shown in Fig.~\ref{fig:mainfig}(a).
+To establish a baseline, we performed 20 grasping trials in an interference-free environment, and they all succeeded without damaging the box, confirming the controller's reliability in normal operation.
+
+\subsubsection{Positive Normal-Force Injection}
+Now we assess {\name}'s efficacy in this task. Specifically, positive injection aims to increase the perceived force of the sensor.
+For example, when the actual force is 1 N and a positive normal force of 1 N is injected, the normal force interpreted by the tactile sensor will rise to 2 N.
+
+Without attack, the robotic arm contacted the object at approximately 5~s and reached the force threshold at 6.5~s. The system then assesses the grasp stability and initiates transport.
+With positive normal-force injection, the sensor prematurely generates force readings at 4.1~s ($S'_P2$) due to the injected magnetic field. As the gripper closes, the injected force increases rapidly (magnetic field strength decays with distance cubed). The sensor reaches the force threshold at 4.5~s($S'_P3$), triggering premature stability assessment. The arm incorrectly determines the grasp is stable and begins transport. However, since the gripper has not yet firmly contacted the object, insufficient grasping force causes the object to drop during transport.
+
+\subsubsection{Negative Normal-Force Injection}
+Specifically, negative injection decreases the perceived force (e.g., based on an initial perceived force of 2~N, after injecting a negative normal force of 1~N, the normal force perceived by the tactile sensor will drop to 1~N).
+
+With a negative injection of normal force, the sensor begins generating force readings at 4~s ($S'_N2$) but rises slowly because the injected signal cancels out a portion of the actual contact feedback. 
+As the gripper continues closing, the object undergoes progressive deformation and the sensor readings exhibit significant fluctuations. The sensor does not reach the force threshold until approximately 9~s ($S'_N3$). By this point, the object has already experienced significant deformation from excessive grasping force. Because the negative normal force injection delayed the timing for the gripper to stop closing, the robotic arm continuously applied an excessive gripping force, ultimately causing the object to be excessively squeezed and damaged.
+
+\subsection{End-to-End Evaluation \#2: Humanoid Motion}
+\label{subsec:humanoid}
+For collision detection, the humanoid robot followed a fixed trajectory and executed a collision detection algorithm adapted from Danfoa~\cite{danfoaForceSensorUtils} for the robotic arm-environment interaction. 
+The collision force threshold was set to 1.5 --- 2.0~N, allowing stable contact with slight wobbling without knocking the vase over. During normal operation, the robot extends its arm along a predefined trajectory ($S1$). The system collects five tactile feedback frames (approximately 0.1~s at 50~Hz) to assess collision validity ($S2$). If all 5 consecutive force readings remain within the threshold range, the robot determines an effective collision has occurred and initiates retraction ($S3$). 
+
+In the experiment, the algorithm drove the robotic arm toward the target area at a constant low speed while continuously sampling normal force from local tactile sensors. 
+If the normal force exceeds the predefined contact threshold for several consecutive frames, the system will report a collision, trigger an emergency stop, and then return to its original position along the original path. Otherwise, it continues to execute the predefined waypoints. 
+We also performed 20 collision detection trials in an interference-free environment. 
+All trials correctly detected the contact, triggered the stop, and returned to the original position along the original path, verifying the reliability of the algorithm.
+
+\subsubsection{Positive Normal-Force Injection}
+As depicted in Fig.~\ref{fig:mainfig}, without attack, the robot contacts the vase at approximately 2.5~s and reaches the force threshold at 2.7~s. 
+The system assesses collision validity and initiates retraction.
+With positive normal-force injection, the sensor prematurely generates force readings at 2.1~s ($S'_P1$). The injected force increases as the robot moves, reaching the threshold at 2.3~s ($S'_P2$) and triggering premature collision detection ($S'_P3$). The robot incorrectly determines an effective collision has occurred and prematurely initiates retraction. Since the vase has not yet been contacted, this demonstrates that {\name} can generate false contact feedback and disrupt normal task execution (i.e., stalling as shown in Fig.~\ref{fig:overview of PhantomTac}).
+
+\subsubsection{Negative Normal-Force Injection}
+With negative normal-force injection, the sensor begins generating force readings at 2~s ($S'_N1$) but rises slowly because the injected signal cancels out a portion of the actual contact feedback. 
+As the robot continues moving, the pushing force on the vase gradually increases, causing progressive tilting and sensor fluctuations. 
+At approximately 4.7~s ($S'_N2$), the vase toppled over due to excessive tilting, losing contact with the sensor, and the sensor readings consequently returned to zero. 
+Because the negative normal force injection delays the timing for the robot's motion to stop, the robot applied an excessive pushing force, ultimately causing the vase to be pushed over and damaged.
+
+\subsection{Robustness to Grasp Position Offset}
+\label{sec:Robustness}
+\begin{figure*}[t] 
+  \centering
+  \includegraphics[width=0.95\textwidth]{figures/evaluation2.pdf} 
+  \Description{Robustness evaluation results of PhantomTac under contact position variation, showing how changes in the contact location affect the attack performance of the magnetic tactile sensing system.}
+  \caption{Result of robustness test for contact position variation.}
+  \label{fig:evaluation2}
+\end{figure*}
+In this experiment, we assess {\name}'s performance under positional variations.
+Modern robotic systems are capable of performing high-accuracy tasks repetitively.
+For example, the positioning repeatability of the grasping system of the FANUC LR Mate 200iD can reach 0.01~mm \cite{fanucLRMate200iD}.
+The gripper's pose repeatability of Universal Robots UR5e is 0.03~mm \cite{ur5eSpec}. 
+In addition, Kulecki et al.~\cite{kulecki2021practical} evaluated an object detection and grasping system for a mobile manipulator in unstructured environments. 
+In their experiment, the average position error remained below 6 mm. 
+However, it is still possible that the position of each grasp can vary.
+
+To evaluate the robustness of the designed magnetic tags against contact-position variations, we used the robotic arm setup described in Sec.~\ref{sec:robotic_grasping}, and defined the X and Y axes of the sensor's contact interface as shown in Fig.~\ref{fig:evaluation1}. 
+We implemented the attack by injecting a positive normal-force signal, and progressively shifted the grasping position during injection. 
+This resulted in misalignment between the gripper and {\name} when contacting the target object. 
+We considered four offset directions: the positive and negative directions along the X-axis and Y-axis. 
+For each direction, we increased the grasping-position offset from 0 mm to 11 mm in 1 mm increments. 
+At each offset distance, we performed 20 grasping trials and computed the attack success rate.
+
+The results are shown in Fig.~\ref{fig:evaluation2}. When the offset along any of the four directions is within 8~mm, the attack success rate remains above 95\%. 
+The attack success rate drops when the offset reaches 9~mm. 
+These results show that {\name} can tolerate moderate grasping-position offsets (up to 8~mm) in our experimental setup.
+
+\subsection{Generalizability of {\name} Across Different Models}
+\label{sec:across_models}
+\begin{figure}[t] 
+  \centering
+  \includegraphics[width=0.92\linewidth]{figures/evluation4_new.pdf}
+  \Description{Experimental setup for evaluating the generalizability of PhantomTac across different magnetic tactile sensors, showing two sensor models used in the evaluation: PX6AX-GEN3-DP-S2015-Elite and PX6AX-GEN3-IP-S1610-Elite.}
+  \caption{Generalizability experiment setup. 
+  (a) PX6AX-GEN3-DP-S2015-Elite. (b) PX6AX-GEN3-IP-S1610-Elite.
+  }
+  \label{fig:evaluation4}
+\end{figure}
+In previous experiments (Sec.~\ref{sec:background}), we compared two commercial magnetic tactile sensors: PaXini PX6AX-GEN3-MC-M2020-Elite and XELA uSPa 46.
+To verify the generalizability of the proposed vulnerability, we conducted additional tests on two other PaXini sensors: the finger-pad PX6AX-GEN3-IP-S1610-Elite and the fingertip PX6AX-GEN3-DP-S2015-Elite. 
+We present their form factors and experiment setup on grid papers in Fig.~\ref{fig:evaluation4}.
+
+Specifically, under the same experimental setup as in Sec.~\ref{sec:background}, we conducted magnetic interference resistance experiments on the finger pad PX6AX-GEN3-IP-S1610-Elite and the fingertip PX6AX-GEN3-DP-S2015-Elite.
+For electronics, none of these devices can interfere with the finger pad and fingertip tactile sensors.
+For the passive magnet, the empirical results indicate that the fingertip model continuously outputs a force with a vector sum of 1.31~N. 
+This value is only $85.6\%$ of the response from the palm model (i.e., PX6AX-GEN3-MC-M2020-Elite), which outputs 1.53~N.
+The finger-pad model continuously outputs a force with a vector sum of 1.05~N. 
+This value is approximately $68.6\%$ of the response from the palm one.
+Although the finger pad and fingertip models demonstrated better resilience than the palm model, a focused magnetic field (e.g., by a small magnet) can still incur distinctive interferences --- much stronger than the interference incurred by common electronic devices.
+{\emergencystretch=1em
+These results show that the underlying vulnerability generalizes across the evaluated magnetic tactile sensor models and is not specific to a single manufacturer or model. 
+
+\par}

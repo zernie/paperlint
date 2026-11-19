@@ -1,0 +1,18 @@
+{
+  "cycles": [
+    {
+      "id": "ccs-2026",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:ccs-2026"
+      },
+      "kind": "research",
+      "opened": "2026-10-06",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2026-10-06",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

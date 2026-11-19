@@ -1,0 +1,105 @@
+\section{Conclusion and Future Work}
+\label{sec:conclusion-future-work}
+
+
+% The rapid growth of agentic AI ecosystems introduces new software supply-chain risks because agent skills combine executable code, natural-language instructions, metadata, and external tool integrations. Among these risks, malicious agent skills are particularly concerning because they can exploit the capabilities and privileges of host agents to perform unauthorized or harmful actions. Detecting such skills is therefore essential for securing agentic AI ecosystems, yet their heterogeneous structure and diverse behaviors make reliable detection challenging. 
+
+% Our benchmarking of approaches for malware detection in agent skills reveals a clear finding: although existing malicious skill scanners can identify many harmful skills, they also generate a substantial number of false-positive alerts for benign skills (XXX), limiting their effectiveness as standalone security gates. To address this limitation, we propose a multi-layered framework for the analysis, detection, and verification of malicious agent skills. The framework integrates (i) static rule-based signals with severity-aware scoring, (ii) runtime-correlated behavioral evidence with severity weighting, and (iii) a context-aware LLM reasoning layer to determine whether an agent skill is malicious. An experiment on a dataset of XXX samples shows that our approach reduces the number of false positives by 87.5\%.
+
+
+
+% Future work will expand the evaluation to larger and more diverse agent-skill ecosystems, enhance sandbox coverage for trigger-dependent and environment-dependent behaviors, and assess the framework with additional reasoning models. Additionally, we plan to investigate the computational cost and practical integration into developer and CI/CD security workflows.
+
+Our paper's benchmarking of approaches for malware
+detection in agent skills yields a clear finding:
+the evaluated scanner configurations exhibit substantial
+limitations in detection coverage or false-positive burden
+on the held-out test set. YARA and the default Cisco
+Skill Scanner achieve a recall of 0.91 but produce
+49 and 33 false positives among 60 benign skills,
+respectively, while OSS-Detect-Backdoor detects only
+26 of 80 malicious skills. This trade-off also persists
+in the evaluated Cisco Skill Scanner with LLM
+configuration, which achieves a recall of 0.85 but
+produces 40 false positives among 60 benign skills.
+% Our paper's benchmarking of approaches for malware detection in agent skills yields a clear finding: existing scanners can identify many harmful skills, but their effectiveness as standalone security gates is limited by substantial false-positive noise. This trade-off also persists in the evaluated Cisco Skill Scanner with LLM configuration, which achieves a recall of 0.85 but produces 40 false positives among 60 benign skills. 
+
+To address this limitation, we propose a provenance-aware cross-layer evidence-correlation framework that integrates (i) static findings for pre-deployment inspection, (ii) safety-constrained runtime evidence for observed and blocked behaviors, and (iii) agentic semantic reasoning for cross-layer evidence interpretation and final decision making. Our within-system ablation shows that dynamic evidence provides the largest individual improvement, while combining static and dynamic evidence further improves malicious-skill coverage without increasing the observed false-positive count. The Full Pipeline achieves an F1-score of 0.89 and a recall of 0.85 with only five false positives on the held-out test set. 
+
+Future work will extend the evaluation to larger and more diverse agent-skill ecosystems, improve sandbox coverage for trigger-dependent and environment-dependent behaviors, and evaluate robustness against adaptive evasion strategies. We also plan to assess additional reasoning models, measure end-to-end computational cost, and investigate practical integration into developer and CI/CD security workflows.
+
+% Our evaluation shows that existing malicious-skill scanners exhibit
+% a substantial recall--false-positive trade-off on the held-out test
+% set. 
+%This limitation persists in our evaluated Cisco Skill Scanner with LLM configuration, which achieves a recall of 0.85 but produces 40 false positives among 60 benign skills.
+
+% To address this limitation, we propose a provenance-aware cross-layer
+% evidence-correlation framework that combines static findings,
+% safety-constrained runtime evidence, and agentic semantic reasoning.
+% The within-system ablation provides the primary evidence for this
+% design. Dynamic evidence produces the largest individual improvement,
+% increasing F1 from 0.70 to 0.85. Combining static and dynamic evidence
+% in the Full Pipeline retains the five false positives observed with
+% dynamic evidence alone while reducing false negatives from 17 to 12,
+% raising recall from 0.79 to 0.85 and F1 from 0.85 to 0.89.
+
+% At the system level, the Full Pipeline and Cisco Skill Scanner with
+% LLM achieve the same observed recall of 0.85, while the Full Pipeline
+% reduces false positives from 40 to five. This comparison is not a
+% model-matched ablation; we therefore treat the controlled
+% within-system ablation as the primary evidence for the contribution
+% of cross-layer evidence correlation.
+
+% The Full Pipeline's recorded agentic stage has a median latency of
+% 109.35~s and a P95 of 434.13~s across all 140 held-out runs. These
+% measurements exclude upstream static and dynamic processing and should
+% not be interpreted as end-to-end pipeline latency.
+
+% Future work will expand the evaluation to larger and more diverse
+% agent-skill ecosystems, enhance sandbox coverage for
+% trigger-dependent and environment-dependent behaviors, evaluate
+% adaptive evasion strategies, and assess the framework with additional
+% reasoning models. We also plan to investigate end-to-end computational
+% cost and practical integration into developer and CI/CD security
+% workflows.
+% Our paper's benchmarking of approaches for malware detection in agent skills yields a clear finding: although existing malicious skill scanners can identify many harmful skills, they also generate a substantial number of false-positive alerts for benign skills, limiting their effectiveness as standalone security gates. 
+
+% To address this limitation, we propose a multi-layered framework for the analysis, detection, and verification of malicious agent skills. The framework integrates (i) static rule-based signals with severity-aware scoring, (ii) runtime-correlated behavioral evidence with severity weighting, and (iii) a context-aware LLM reasoning layer to make the final determination of whether an agent skill is malicious. 
+
+% The Full Pipeline's recorded agentic stage has a median latency of 109.35~s and a P95 of 434.13~s across all 140 held-out runs; these values are distinct from the 300~s timeout applied to each dynamic sandbox attempt.
+
+% Future work will expand the evaluation to larger and more diverse agent-skill ecosystems, enhance sandbox coverage for trigger-dependent and environment-dependent behaviors, and assess the framework with additional reasoning models. Additionally, we plan to investigate computational cost and practical integration into developer and CI/CD security workflows.
+
+% that reduces false positives caused by dual-use functionality and ``security
+% documentation'' effects. This hybrid design preserves broad malicious-skill coverage
+% while improving the final decision boundary through evidence correlation and semantic
+% reasoning. 
+% On the held-out evaluation set, our Full Pipeline achieves the strongest
+% overall trade-off, detecting 68 of 80 malicious skills while producing only 5 false
+% positives among 60 benign samples, with a precision of 0.93, recall of 0.85, and F1-score of 0.89.
+
+% In this paper, we propose a hybrid framework that combines
+% static analysis, dynamic analysis, and Agentic reasoning to detect malicious AI agent skills. 
+% On the same held-out set of 140 skills, the Full Pipeline correctly
+% identifies 68 of 80 malicious skills while producing 5 false positives
+% among 60 benign samples, achieving an accuracy of 0.879, precision of
+% 0.932, recall of 0.850, F1-score of 0.889, and ROC AUC of 0.874. Compared with the
+% Agentic + Dynamic configuration, incorporating static evidence recovers
+% five additional malicious skills without increasing the number of false
+% positives. These results indicate that correlating complementary static
+% and runtime evidence improves the final malicious-skill classification
+% boundary. The score-distribution analysis also shows that Agentic-derived
+% scores saturate near the upper boundary for both classes. Consequently,
+% deployment decisions should rely on the evidence-grounded categorical
+% verdict rather than a universal numerical cutoff.
+
+
+%We also plan to investigate computational cost and practical integration into developer and CI/CD security workflows.
+
+
+\subsection{Code and Data Availability}
+The evaluation data and supporting artifacts are
+available at
+\url{https://doi.org/10.5281/zenodo.20796477}.
+The scanner implementations are available from
+the authors upon request.

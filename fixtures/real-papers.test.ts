@@ -1,8 +1,9 @@
 /**
  * Every rule, on every real paper of the corpus, in ONE run of the CLI: the six accepted papers of
- * `accepted-papers/` and the arXiv preprints of `arxiv-papers/` (its README says what they are, and
- * why all of them run). The subject is the corpus as one object: each directory of those two folders
- * is a paper with its own `baseline.json`, so a paper added without a baseline fails here.
+ * `accepted-papers/`, the arXiv preprints of `arxiv-papers/` (its README says what they are, and
+ * why all of them run) and the accepted camera-ready papers of `venue-papers/`, each linted against
+ * the venue that accepted it. The subject is the corpus as one object: each directory of those
+ * folders is a paper with its own `baseline.json`, so a paper added without a baseline fails here.
  *
  * A rule that says MORE about a real paper than recorded has gained a false positive until shown
  * otherwise; a rule that goes fully quiet without the recording being updated has died. A partial
@@ -21,7 +22,7 @@
 import { cpSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { run } from "../src/cli.ts";
 import { latexReader } from "../src/adapters/latex/index.ts";
 import { nodeFiles } from "../src/adapters/node/index.ts";
@@ -42,7 +43,9 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ACCEPTED = readdirSync(join(HERE, "accepted-papers")).filter((name) =>
   statSync(join(HERE, "accepted-papers", name)).isDirectory(),
 );
-const FOLDERS = ["accepted-papers", "arxiv-papers"].map((f) => join(HERE, f));
+const FOLDERS = ["accepted-papers", "arxiv-papers", "venue-papers"].map((f) =>
+  join(HERE, f),
+);
 
 /** Every paper: its directory name (unique across the folders) and where it is. */
 const PAPERS = FOLDERS.flatMap((root) =>
@@ -80,12 +83,20 @@ it("the corpus holds papers, with names that are unique — an empty or collidin
   expect(new Set(PAPERS.map((p) => p.name)).size).toBe(PAPERS.length);
 });
 
+/**
+ * The day the baselines were measured. `paper/edition-over` reads the clock: an edition preset whose
+ * last deadline passes (`sp-2027`'s on 2027-04-09) would grow a baseline on that day with no change
+ * to the code or the papers. The lint runs on this day, so a count moves only when something here does.
+ */
+const MEASURED_ON = "2026-11-19T12:00:00Z";
+
 describe("every real paper, in one run", () => {
   it(
     "says no more than recorded, and no recorded rule has gone quiet",
     { timeout: 10 * 60_000 },
     async () => {
-      const found = await lintAll();
+      vi.setSystemTime(MEASURED_ON);
+      const found = await lintAll().finally(() => vi.useRealTimers());
       const verdicts = PAPERS.map(({ name, dir }) => ({
         name,
         ...compareToBaseline(found[name] ?? {}, recordedFindings(dir)),

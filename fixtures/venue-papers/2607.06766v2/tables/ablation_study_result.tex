@@ -1,0 +1,20 @@
+\begin{table}[htb]
+\centering
+\small
+\caption{Ablation Study Results}
+\label{tab:ablation_study_result}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccc}
+\hline
+\textbf{Category} & \textbf{Prec.} & \textbf{Rec.} & \textbf{F1} \\
+\hline
+Baseline                    & 0.926 & 0.788 & 0.846 \\
+Exclude Quant. Code-Level   & 0.873 & 0.736 & 0.781 \\
+Exclude Quant. Change-Level & 0.888 & \textbf{0.822} & \textbf{0.848} \\
+Exclude Qualitative         & \textbf{0.931} & 0.762 & 0.832 \\
+Quant. Code-Level Only      & 0.853 & 0.778 & 0.809 \\
+Quant. Change-Level Only    & 0.541 & 0.608 & 0.565 \\
+Qualitative Only            & 0.759 & 0.737 & 0.743 \\
+\hline
+\end{tabular}
+\end{table}
