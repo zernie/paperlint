@@ -1,0 +1,178 @@
+---
+title: "ASE — venue card"
+---
+
+# ASE (Research Papers)
+
+The card of the venue preset `paperlint:ase` ([`ase.jsonc`](ase.jsonc)): what the venue asks for,
+in prose. The numbers a machine checks live in the preset; the section at the end is generated from
+it. The `submit-paper` skill reads this card for the venue's specifics. ASE's AgenticDev workshop is
+another venue, with its own preset: [`agenticdev.md`](agenticdev.md).
+
+**Re-verify the call for papers every year**
+([conf.researchr.org/track/ase-2026/ase-2026-research-track](https://conf.researchr.org/track/ase-2026/ase-2026-research-track)):
+dates, limits and the template change between editions — ASE's publisher has alternated by year
+(see [`agenticdev.md`](agenticdev.md)).
+
+## Sources
+
+All read 2026-11-19:
+
+- The call: `https://conf.researchr.org/track/ase-2026/ase-2026-research-track`. Read from the raw
+  HTML with curl; WebFetch's summary of the same page did not reach the call (it sits after the
+  accepted-papers list, past what the summary read).
+- The edition's policies page:
+  `https://conf.researchr.org/track/ase-2026/ase-2026-submission-instructions-and-policies`.
+- The portal's public deadlines page: `https://ase26.hotcrp.com/deadlines`.
+- The not-in-person page:
+  `https://conf.researchr.org/track/ase-2026/ase-2026-not-in-person-presentations`.
+- Conference Publishing Consulting's camera-ready instructions for the event:
+  `https://www.conference-publishing.com/Instructions.php?Event=ASE26`.
+- The next edition: `https://conf.researchr.org/track/ase-2027/ase-2027-research-track` and
+  `https://ase2027.hotcrp.com/deadlines`.
+
+## The venue (2026 edition)
+
+- **Venue**: the Research Papers track of **ASE 2026**, the 41st IEEE/ACM International Conference
+  on Automated Software Engineering, Munich, 12–16 October 2026.
+- 🔴 **The 2026 deadlines have passed.** The 2026 call is the most recent one published: on
+  2026-11-19 the ASE 2027 page says «Preliminary dates for the main track are released now to help
+  with planning. The full call for papers will be published soon.» Its preliminary dates, AoE
+  (UTC-12h): paper submission **Wed 10 Mar 2027**; early rejection notification Wed 12 May 2027;
+  author response Wed 12 – Mon 17 May 2027; initial notification Tue 8 Jun 2027; [Major
+  Revisions] revision submission Thu 8 Jul 2027; [Major Revisions] final notification Tue 27 Jul
+  2027; camera-ready (all papers) Wed 11 Aug 2027. ASE 2027 is in El Paso, Texas, 24–28 October 2027. Its HotCRP site, `https://ase2027.hotcrp.com`, lists no deadline yet and says
+  `"blind":true`. Not in the preset: rewrite it from the 2027 call when that is published.
+- **Portal**: HotCRP, `https://ase26.hotcrp.com/` («Abstracts and papers must be submitted
+  electronically through the ASE 2026 HotCRP submission site»).
+- **Dates** (the call's table, «AoE (UTC-12h)»): paper submission **Thu 26 Mar 2026**; early
+  rejection notification Mon 25 May 2026; author response Mon 25 – Wed 27 May 2026; initial
+  notification Thu 18 Jun 2026; revision submission (major revision only) Thu 16 Jul 2026;
+  notification (major revisions) Wed 29 Jul 2026; camera-ready (all papers) **Mon 3 Aug 2026**.
+- **The portal** (all listed as past): «Submission deadline: Thursday Mar 26, 2026, 11:59:59 PM AoE
+  — Submissions must be completed by this deadline to be reviewed.», «Resubmission deadline: Monday
+  Mar 30, 2026, 11:59:59 PM AoE — Completed submissions may be updated until this deadline.» and
+  «revision resubmission deadline: Thursday Jul 16, 2026, 11:59:59 PM AoE — Completed revision
+  submissions may be updated until this deadline.» The portal and the call agree on 26 March; the
+  four days of updates to 30 March are the portal's alone — the call's table does not list them.
+  The preset carries the portal's first two as `deadlines` (`submission`, `resubmission`) and the
+  call's camera-ready day (`source: "call"`); the revision resubmission has no kind of its own.
+- **An abstract stage the dates do not show.** The call says «For the abstract submissions, authors
+  are required to specify the title and the abstract of their papers, relevant research areas, and
+  their conflict of interests» and «submissions with dummy placeholders for titles/abstracts will
+  be rejected», but its date table and the portal name no abstract deadline. See «Not verified».
+- **Format**, verbatim from the call: «All submissions must be in PDF format and conform, at time
+  of submission, to the ACM Proceedings Template … LaTeX users must use the
+  \documentclass[sigconf,review,anonymous]{acmart} option.» The camera-ready instructions of
+  Conference Publishing Consulting for ASE 2026: «\documentclass[sigconf,screen]{acmart}», «acmart
+  v2.18 or newer».
+- **Double-anonymous**: «The ASE 2026 Research Track will employ a double-anonymous review process.
+  Thus, no submission may reveal its authors' identities.» The call adds: names and affiliations
+  omitted, prior work cited in the third person, and «Authors are encouraged to title their
+  submissions differently than preprints of the authors on arXiV or similar sites. During review,
+  authors should not publicly use the submission title.» The portal's data says `"blind":true`.
+- **Data Availability Statement**, mandatory: «Mandatory Data Availability Statement: to be placed
+  in the paper submission after Conclusions and within the 10-page limit.» Data are to be published
+  «via publication in a DOI-providing long-term repository such as Zenodo», or the statement
+  explains why not. At camera-ready it moves out of the limit: «The Data Availability Statement
+  (DAS) is not counted towards the page limit» (the policies page; its FAQ: «Only for the submission
+  version of the research track it had to be inside the page limit.»).
+- **Experience papers**: «Experience papers should contain the phrase “experience paper”
+  prominently in the abstract, to ensure that they are evaluated appropriately.» Not checked by any
+  rule.
+- **Generative AI**: the call quotes the ACM Policy on Authorship — «The use of generative AI tools
+  and technologies to create content is permitted but must be fully disclosed in the Work», for
+  example in the Acknowledgements; the policies page: «explicitly disclosed and documented in the
+  acknowledgments or a dedicated section of the manuscript». No section title is required, so the
+  preset requires none.
+- **The review**: «a paper that receives all negative scores will be rejected early, before the
+  rebuttal period»; the outcome is «Accept, Revision, Reject», a revision with «up to four weeks»
+  of changes.
+- **Attendance**: «If a submission is accepted, at least one author of the paper is required to
+  register for ASE 2026 and present the paper.» The not-in-person page: «ASE 2026 does not provide
+  presentation slots for papers that are not presented in-person by one of the authors», and invites
+  a video («recommendation: 10 min duration, mp4 file format, HD resolution»), a one-slide and a
+  poster instead (deadlines 2026-10-08 for the video and one-slide, 2026-09-21 for the poster). The
+  slot of an in-person talk is not stated, so the preset has no `talk`.
+- **Open access**: ACM is fully open access since 2026-01-01; the call gives the 2026 subsidised
+  article processing charge as «$250 APC for ACM/SIG members» and «$350 for non-members».
+
+## Paper kinds and limits
+
+| kind         | main-text pages | pages of only references | what the call says                                                                                                                                                            |
+| ------------ | --------------: | -----------------------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `technical`  |              10 |                        2 | «Technical Research Papers, which describe innovative research in automating software development or automating support to users engaged in software development activities.» |
+| `experience` |              10 |                        2 | «Experience Papers, which describe a significant experience in applying automated software engineering technology.»                                                           |
+
+The limit, for both: «Submissions must not exceed 10 pages for the main text, including all
+figures, tables, appendices, etc. Up to two additional pages containing ONLY references are
+permitted. Submissions that do not adhere to these limits or that violate the formatting guidelines
+will be desk-rejected without review.» The appendix and the Data Availability Statement are main
+text, wherever they sit; a reference page is one that holds only references. That is banal's count
+(a page holding any text that is not bibliography is a body page), so the preset sets no
+`body_ends_at`, as for AgenticDev on the same template.
+
+«Accepted papers will be permitted an additional page of content … The page limit for published
+papers will therefore be 11 pages (including all figures, tables, appendices) plus 2 pages
+containing only references.» The policies page's table reads «11 pages (excl. references) + 2 pages
+(data availability statement + references)». Not the submission's limit, so not in the preset.
+
+## What else the preset encodes
+
+- **The ACM template**, through `extends: paperlint:acm-sigconf` — letter paper, two columns,
+  Libertine at 9 pt, acmart's TeX packages ([`acm-sigconf.md`](acm-sigconf.md)). The class line
+  is the family's `\documentclass[sigconf]{acmart}`: the call's `review` and `anonymous` are not
+  required by `tex/template`, which does not know the paper's stage and would fail the camera-ready
+  (`[sigconf,screen]`). Add them for the submission.
+- **Double-blind review** (`blind`), so `anonymity/identity` checks the PDF against the paper's
+  declared `identity`.
+- **The Data Availability Statement** (`required_sections`): `\section*{Data Availability
+Statement}`, the title exactly, after the last section of the body (`tex/required-section`).
+- **Where submissions go** (`portal`): `paperlint submission` reads and updates a paper's
+  submission through HotCRP's API on `https://ase26.hotcrp.com`.
+- **Balanced columns on the last page** (`pdf/last-page-balance`, 120 pt tolerance) and
+  **headline-style capitalization** of the title and every heading (`tex/heading-case`,
+  `chicago-headline`). The proceedings are produced by Conference Publishing Consulting (the
+  not-in-person page sends authors to its «author-kit e-mail»), whose instructions for ASE 2026
+  say «has balanced columns on the last page, if the page is not filled», «The title should use
+  headline-style capitalization» and «All levels of headings use headline-style capitalization.»
+  Both are camera-ready requirements; a paper can turn either off in its own `paperlint.json`.
+- **Names**: `ASE`, what `tex/venue-leftover` looks for in another venue's paper — only with a year
+  beside it (`mentions: with-year`: «ASE 2026», «ASE'26»), since «ASE» is also a three-letter
+  acronym that sentences use for other things. AgenticDev names this preset as its `parent`, so an
+  AgenticDev paper may say «ASE 2026».
+- **Not encoded**: the register of the body (no accepted ASE paper is in
+  `fixtures/accepted-papers/` to anchor `tex/contrast-frames` and its siblings), the «experience
+  paper» phrase, and the submission form's fields (no logged-in read of the form was made).
+
+## Not verified
+
+- **An abstract registration deadline.** The call speaks of «abstract submissions» and a «full
+  paper submission stage», but neither its date table nor the portal gives an abstract date; an
+  earlier copy of the call (web.archive.org) could not be reached. No `registration` key.
+- **Why the portal accepts updates until 30 March** when the call's only date is 26 March. Both
+  are recorded; the call does not mention the second.
+- **The submission form's fields** (research area, paper type, compliance questions): the call's
+  tl;dr says «Categories: Choose a Research Area and a Paper Type (Technical/Experience)» and
+  «Compliance: Check compliance (double-blind, plagiarism, human studies, open access, etc.)», but
+  the form was not read logged in, so there is no `submission_fields`.
+- **Remote presentation** beyond the not-in-person track above: whether such a paper still counts
+  as «present the paper» is not stated.
+- **The 2027 template and limits**: the 2027 call is not published. The publisher has alternated
+  by year; the 2027 class line may differ.
+
+## What the preset resolves to
+
+<!-- paperlint:preset-rules -->
+<!-- prettier-ignore-start -->
+<!-- Generated from ase.jsonc by `npx eslint --fix` (rule preset/card-rules). Edit the preset, not this section. -->
+
+**`paperlint:ase`** — venue preset for ASE · call for papers: <https://conf.researchr.org/track/ase-2026/ase-2026-research-track> · extends `paperlint:acm-sigconf`
+
+| rule | severity | options | set in |
+| --- | --- | --- | --- |
+| [`pdf/last-page-balance`](../docs/rules.md) | error | `{"tolerancePt":120}` | this preset |
+| [`tex/heading-case`](../docs/rules/tex/heading-case.md) | error | `{"title":"chicago-headline","headings":"chicago-headline"}` | this preset |
+
+<!-- prettier-ignore-end -->
+<!-- /paperlint:preset-rules -->

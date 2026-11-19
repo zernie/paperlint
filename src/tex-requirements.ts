@@ -205,6 +205,8 @@ export interface PresetFile {
   readonly identity: PresetIdentity;
   /** The preset this one builds on: `paperlint:<name>` or a relative path. */
   readonly extends: string | null;
+  /** The conference a workshop is held at, spelled as `extends` is; null when the file names none. */
+  readonly parent: string | null;
   /** The `\\documentclass` the venue's template uses, as the file spells it; null when it names none. */
   readonly template: string | null;
   /** Class options the venue forbids, read with `template`; empty when the file names none. */
@@ -283,6 +285,7 @@ type PresetJson = PresetBodyJson &
 /** Every key of a preset but its identity. */
 interface PresetBodyJson {
   readonly extends?: string;
+  readonly parent?: string;
   readonly template?: string;
   readonly template_forbids?: readonly string[];
   readonly aliases?: readonly string[];
@@ -550,6 +553,7 @@ export function parsePreset(
   return {
     identity: identityOf(j),
     extends: orNull(j.extends),
+    parent: orNull(j.parent),
     template: orNull(j.template),
     templateForbids: j.template_forbids ?? [],
     aliases: j.aliases ?? [],
