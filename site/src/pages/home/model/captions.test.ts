@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { fencedAfter, readmeContent } from "@/shared/lib/readme";
-import { withCaption } from "./captions.ts";
+import { perPaperSteps, withCaption } from "./captions.ts";
 
 const root = fileURLToPath(new URL("../../../../../", import.meta.url));
 const readme = readFileSync(root + "README.md", "utf8");
@@ -28,5 +28,18 @@ describe("withCaption", () => {
       ...fencedAfter(readme, "Then check it:", "sh"),
     ];
     expect(commands.map((c) => withCaption(c).command)).toEqual(commands);
+  });
+
+  it("gives each paper the README's steps in order: create it, then build and check it", () => {
+    const create = fencedAfter(readme, "Create a paper.", "sh");
+    const check = fencedAfter(readme, "Then check it:", "sh");
+    expect(create).toHaveLength(1);
+    expect(create[0]).toMatch(/^npx paperlint new /);
+    expect(perPaperSteps(readme)).toEqual(
+      [...create, ...check].map(withCaption),
+    );
+    expect(withCaption(create[0] ?? "").caption).toBe(
+      "Creates a folder for one paper. --venue names its venue, --kind which of its page limits applies.",
+    );
   });
 });

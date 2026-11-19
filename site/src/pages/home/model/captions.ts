@@ -3,6 +3,8 @@
 // so the page never shows a bare command (site/CLAUDE.md, "Not Scary For Non Programmers"). Each
 // caption is checked against README.md and docs/install.md.
 
+import { fencedAfter } from "@/shared/lib/readme";
+
 export const captions: readonly (readonly [prefix: string, caption: string])[] =
   [
     [
@@ -12,6 +14,10 @@ export const captions: readonly (readonly [prefix: string, caption: string])[] =
     [
       "npx paperlint init",
       "Sets up the project: finds or asks where your papers live, then offers TeX Live and an automatic check on GitHub. It installs no software you did not say yes to.",
+    ],
+    [
+      "npx paperlint new",
+      "Creates a folder for one paper. --venue names its venue, --kind which of its page limits applies.",
     ],
     [
       "npx paperlint build",
@@ -36,3 +42,15 @@ export const withCaption = (
       })()
     : { command, caption: found[1] };
 };
+
+/**
+ * What "How do I start?" shows for each paper, in the README's order: the command that creates the
+ * paper (its "Create a paper." step), then the commands that build and check it.
+ */
+export const perPaperSteps = (
+  readme: string,
+): readonly { readonly command: string; readonly caption: string }[] =>
+  [
+    ...fencedAfter(readme, "Create a paper.", "sh"),
+    ...fencedAfter(readme, "Then check it:", "sh"),
+  ].map(withCaption);

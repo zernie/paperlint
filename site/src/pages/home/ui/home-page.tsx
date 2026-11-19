@@ -10,7 +10,6 @@ import {
   type Finding,
 } from "@/entities/finding";
 import {
-  fencedAfter,
   layoutEntries,
   readmeContent,
   headlineVenues,
@@ -27,7 +26,7 @@ import { SiteFooter } from "@/widgets/site-footer";
 import { SiteHeader } from "@/widgets/site-header";
 import { Venues } from "@/widgets/venues";
 import { readRepo } from "../api/read-repo.ts";
-import { withCaption } from "../model/captions.ts";
+import { perPaperSteps, withCaption } from "../model/captions.ts";
 import { facts } from "../model/facts.ts";
 
 const README = readRepo("README.md");
@@ -52,7 +51,7 @@ const install = readme.install.map(withCaption);
 const packageLicense = (
   JSON.parse(readRepo("package.json")) as { readonly license: string }
 ).license;
-const perPaper = fencedAfter(README, "Then check it:", "sh").map(withCaption);
+const perPaper = perPaperSteps(README);
 
 /** A finding of findings.ts, in the shape the README's explained lint lines have. */
 const asRow = (f: Finding): Explained => ({
