@@ -231,7 +231,7 @@ const RELATION_MARKERS =
   /(?<![\p{L}])(?:therefore|thus|hence|consequently|as a result|because|since|this means|this implies|which explains|in turn|that is,|i\.e\.|in contrast|by contrast|however|nevertheless|nonetheless|whereas|in other words|for this reason|it follows|accordingly|specifically,|in particular,|for example|for instance|e\.g\.)(?![\p{L}])/giu;
 
 /**
- * A negator: the list the grade-paper-writing script counted (not, no, none, never, cannot, n't,
+ * A negator: the list the earlier prose counter used (not, no, none, never, cannot, n't,
  * neither, nor, without, fail to, unable), whole words, case ignored. `n't` ends a word
  * («don't», «isn't»), so it is matched there; the script's own pattern for it never matched.
  */

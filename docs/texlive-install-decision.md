@@ -2,7 +2,7 @@
 title: "Where CI gets TeX Live from: three methods, measurements, what was chosen and why"
 created: 2026-09-01
 updated: 2026-09-24
-tags: [ci, texlive, render-paper, resheno-i-otkloneno, zamery]
+tags: [ci, texlive, render, resheno-i-otkloneno, zamery]
 ---
 
 # What to install TeX with in CI — a measured breakdown

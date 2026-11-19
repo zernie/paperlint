@@ -10,17 +10,25 @@
  * as its LaTeX source, unchanged: rebuilding the printed text macro by macro dropped `\num`,
  * `\verb` and math in turn (#460), and only TeX knows what a macro prints (#462). Above 15
  * changed paragraphs it refuses: a read that size is the 35-minute batch #301 records, so the
- * caller narrows `--base` instead.
+ * caller narrows `--base` instead. `--whole` reads every paragraph and heading of the paper instead
+ * of the diff, cut into chunks of at most `--max`: each chunk goes to its own pair of readers, so no
+ * reader is handed the whole paper to reconstruct an idea from (the final review, paper-pipeline).
+ * `--whole` reads the paper as its last build did, the files it recorded spliced in; a paper that
+ * includes files and has no fresh build record is refused, not read in part.
  *
- * Usage: node cold-read.js <paper.tex> [--base=REV] [--max=N] [--venue=NAME]
+ * Usage: node cold-read.js <paper.tex> [--base=REV | --whole] [--max=N] [--venue=NAME]
  * Exit: 0 — the paragraphs on stdout · 2 — refused (nothing changed, too many, a bad flag).
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 import { visit } from "@unified-latex/unified-latex-util-visit";
-import { last } from "remeda";
+import { chunk, last } from "remeda";
 import { latexReader, parseLatex } from "#src/adapters/latex/index";
+import { nodeFiles } from "#src/adapters/node/index";
+import { sourcesCodec } from "#src/adapters/sources-record/index";
+import { paperRecord } from "#src/paper-record";
+import { readPaper } from "#src/tex-paper";
 import type { Passage, Span } from "#src/domain/tex-document";
 import { ENGINEER, promptFor, reviewer } from "./readers.ts";
 
@@ -34,6 +42,11 @@ export const DEFAULT_MAX = 15;
  * reader before).
  */
 export interface Paragraph {
+  /**
+   * First and last line: of the main file in a diff read; of the spliced paper in a `--whole` read,
+   * so not a line of any one file there. They only order the paragraphs and are never printed:
+   * the paragraph's quoted text is what the author searches for in the source.
+   */
   readonly start: number;
   readonly end: number;
   readonly text: string;
@@ -198,6 +211,8 @@ interface Options {
   readonly paper: string;
   readonly base: string;
   readonly max: number;
+  /** Every paragraph of the paper, in chunks of `max`, instead of the diff since `base`. */
+  readonly whole: boolean;
   /** With a venue, the output is both readers' whole prompts, not the bare extract. */
   readonly venue: string | undefined;
 }
@@ -205,7 +220,14 @@ interface Options {
 /** A refusal: printed as one line, exit 2. */
 class Refusal extends Error {}
 
-const KNOWN = ["base", "max", "venue"];
+const KNOWN = ["base", "max", "venue", "whole"];
+
+/** Whether `--whole` was given; with `--base` beside it, a refusal. */
+const wholeOf = (flags: ReadonlyMap<string, string>): boolean => {
+  if (flags.has("whole") && flags.has("base"))
+    throw new Refusal("--whole reads the whole paper: drop --base");
+  return flags.has("whole");
+};
 
 /** The command line as options, or a refusal naming what is wrong with it. */
 export const optionsOf = (argv: readonly string[]): Options => {
@@ -225,18 +247,46 @@ export const optionsOf = (argv: readonly string[]): Options => {
   const max = Number(flags.get("max") ?? DEFAULT_MAX);
   if (!Number.isInteger(max) || max < 1)
     throw new Refusal("--max takes a positive integer");
+  const whole = wholeOf(flags);
   return {
     paper,
     base: flags.get("base") || "HEAD",
     max,
+    whole,
     venue: flags.get("venue") || undefined,
   };
 };
 
-/** The changed paragraphs `o` names, or a refusal saying why there is nothing to read. */
+/** The disk, the LaTeX reader and the build record's schema, as argument-arc's headings read a paper. */
+const DEPS = { files: nodeFiles, latex: latexReader, codec: sourcesCodec };
+
+/**
+ * Every paragraph and heading of the paper: the main file with the files its last build recorded
+ * spliced in (`readPaper`), and `extract` over it with every line counted as changed. Which files
+ * TeX reads is the record's to say, so a paper that includes files and has no fresh record refuses:
+ * the main file alone would skip them silently. No cap: the caller cuts it into chunks.
+ */
+const wholePaper = (o: Options, file: string, src: string): Paragraph[] => {
+  const includes = latexReader.includes(src).length;
+  if (includes > 0 && paperRecord(dirname(file), DEPS).kind !== "fresh")
+    throw new Refusal(
+      `${o.paper} includes ${String(includes)} file(s) and has no fresh build record, ` +
+        `so a whole read would skip them: run npx paperlint build first`,
+    );
+  const text = readPaper(file, src, DEPS).text;
+  const found = extract(
+    text,
+    text.split("\n").map((_, i) => i + 1),
+  );
+  if (!found.length) throw new Refusal(`no prose in ${o.paper}`);
+  return found;
+};
+
+/** The paragraphs `o` names, or a refusal saying why there is nothing to read. */
 const paragraphsFor = (o: Options): Paragraph[] => {
   const paper = resolve(o.paper);
   if (!existsSync(paper)) throw new Refusal(`${o.paper} does not exist`);
+  if (o.whole) return wholePaper(o, paper, readFileSync(paper, "utf8"));
   const diff = execFileSync(
     "git",
     ["diff", "-U0", "--no-color", o.base, "--", basename(paper)],
@@ -280,12 +330,37 @@ const output = (text: string, venue: string | undefined): string =>
     : `=== engineer ===\n${promptFor(ENGINEER, text)}\n\n` +
       `=== reviewer ===\n${promptFor(reviewer(venue), text)}`;
 
+/**
+ * The whole paper in chunks of at most `max` paragraphs, each under its own `=== chunk i of n ===`
+ * line, numbered from ¶1 again; with a venue, each chunk's two prompts. One pair of readers per chunk.
+ */
+export const chunked = (
+  found: readonly Paragraph[],
+  max: number,
+  venue: string | undefined,
+): string => {
+  const parts = chunk(found, max);
+  return parts
+    .map((part, i) => {
+      const label = `chunk ${String(i + 1)} of ${String(parts.length)}`;
+      const text = numbered(part);
+      return venue === undefined
+        ? `=== ${label} ===\n${text}`
+        : `=== ${label}: engineer ===\n${promptFor(ENGINEER, text)}\n\n` +
+            `=== ${label}: reviewer ===\n${promptFor(reviewer(venue), text)}`;
+    })
+    .join("\n\n");
+};
+
 /** The command. Returns its exit code; a refusal is one line on stderr and exit 2. */
 export function main(argv: readonly string[]): number {
   try {
     const o = optionsOf(argv);
     const found = paragraphsFor(o);
-    process.stdout.write(`${output(numbered(found), o.venue)}\n`);
+    const text = o.whole
+      ? chunked(found, o.max, o.venue)
+      : output(numbered(found), o.venue);
+    process.stdout.write(`${text}\n`);
     return 0;
   } catch (e) {
     if (!(e instanceof Refusal)) throw e;

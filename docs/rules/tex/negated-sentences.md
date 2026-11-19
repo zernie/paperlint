@@ -6,8 +6,8 @@
 
 A body in which the share of sentences holding a negator runs outside the band the accepted papers
 of its venue set. It is a share of the body's sentences, in percent, not a rate per words: a
-sentence with two negators counts once. The negators are the list the `grade-paper-writing` skill's
-prose counter used, whole words, case ignored:
+sentence with two negators counts once. The negators are the list the earlier prose counter
+used, whole words, case ignored:
 
 > not, no, none, never, cannot, n't, neither, nor, without, fail to (fails to, failed to), unable
 

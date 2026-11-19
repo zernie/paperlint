@@ -5,7 +5,7 @@ context: fork
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Agent]
 ---
 
-<!-- vigiles:sha256:ed855c5f3aa34b10 compiled from skills/build-benchmark/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:d4f703ce6391c49c compiled from skills/build-benchmark/SKILL.md.spec.ts -->
 
 # build-benchmark — the study + the artifact reviewers can run
 
@@ -207,14 +207,3 @@ Before submitting, verify the artifact you built with the reviewer-side reproduc
 - **pc-panel-review** — its artifact-runner reviewer `cd`s in and re-executes every harness; build so
   that pass is deterministic.
 - **submit-paper** — hosts the scrubbed artifact anonymously and links it in Availability.
-
-## Provenance
-- **AgenticDev 2026 @ ASE — "Measuring the Wrong Number":** a cost-aware, correctness-gated A/B harness
-  over 140 runs (7 tasks × 5 trials × 2 arms × 2 tools); Welch t + paired-t CIs + Bonferroni; the finding
-  that token-efficiency tools don't cut the dollar bill. Artifact = a stdlib-only `reproduce.py` that
-  recomputes every headline number from raw data and exits non-zero on drift.
-- **AISec 2026 @ ACM CCS — "Safety Theater":** a 10-command disaster battery against 46 real
-  command-guards, SAFE STATIC evaluation (transcribe each predicate, never execute), median coverage
-  2/10, plus mutation-evasion, held-out generalization, and per-step causal ablation axes. Artifact =
-  `evaluate.py`/`mutate.py`/`reproduce.mjs`/`ablation.mjs`, each self-asserting on run. Both artifacts
-  are hosted anonymized on OSF.

@@ -1,290 +1,70 @@
 ---
 name: harden-paper
-description: Use when asking "is this paper actually ready to submit?" / "what's still missing before I upload?" / "run the pre-submission gate" on a DRAFTED paper. The multi-axis hardening orchestrator — it runs the review skills AND closes the axes they miss (structure via tighten-paper, threat-model + ethics/dual-use, reproducibility artifact, double-blind hygiene, page/word-fit, citability), and its verdict is a VECTOR of gates reported worst-gate-first — any failing gate (readability, structure, claims, citations, nearest-neighbor scoop, mechanical) caps "ready" regardless of a high accept-probability. NOT for grading how the prose reads (grade-paper-writing), a structural cut plan alone (tighten-paper), or a single hostile review (paper-adversarial-review) — this calls all of those and makes the submit/no-submit decision. Composes with pc-panel-review / verify-citations (it calls them) and submit-paper (downstream).
-allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
+description: "Use when asking \"is this paper actually ready to submit?\" / \"what's still missing before I upload?\" / \"run the pre-submission gate\" on a DRAFTED paper. The submit checklist: runs `npx paperlint lint`, checks that the final review (tighten-paper → cold-read-diff → pc-panel-review) is closed, then walks the few items no rule decides — threat model and ethics, the artifact and every number it backs, the headline results table — and reports a vector of gates, worst first. It reads the review reports; it runs no review of its own. Hands off to submit-paper."
+allowed-tools: [Read, Write, Grep, Glob, Bash, Skill]
 ---
 
-<!-- vigiles:sha256:cd30df5ad517e24f compiled from skills/harden-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:45642cfc040166a9 compiled from skills/harden-paper/SKILL.md.spec.ts -->
 
-# harden-paper — the multi-axis pre-submit gate
+# harden-paper — the submit checklist
 
 Editing the paper's text after an approved copy exists (`paperlint versions approve`): declare each change in `versions/<cycle>/changes.yaml`, `paperlint versions diff` shows what was lost (EXPERIMENTAL; `docs/rules/cycle/changes-since-approved.md`). With an approved copy, `submission … --save` refuses while the source differs from it; approve it first (the author does, never the agent).
 
-> **Which paper skill?** `paper-adversarial-review` / `pc-panel-review` (whose venue-fit mode covers the
-> CFP-fit score) = the *reviewer's-eye* axis (defects, fit, accept-prob). `verify-citations` = the
-> *citation* axis.
-> **`harden-paper` (here) = the orchestrator** that runs those AND closes the axes a reviewer-sim
-> doesn't systematically hit — the submission-readiness gate. Run it after the draft is written and
-> before `submit-paper`. It does not re-implement the sub-skills; it calls them and checks the rest.
+Run once, after the final review is closed and before `submit-paper`. Each item below either names
+the lint rule that decides it or is a check no rule makes. A failing item is reported with its fix;
+the author decides what to apply. "Nothing fails" is a valid result.
 
-**Principle:** a paper dies from any *one* unclosed axis. Reviewers only *read* — so every claim,
-number, and omission must survive on the page. Go axis by axis; for each, **find → fix → re-verify**,
-don't just list. Below, each axis says what to run / check and the specific traps that recur.
+## The checklist
 
-> Axes 1–10 and 12 are **soundness** gates (get it accepted / avoid desk-reject). Axis 11 (**citability**) is
-> the *impact* gate — a correct-but-forgettable paper passes review and gets cited zero times. For a
-> body of work, citability is not optional polish; run it as a gate too.
+1. **`npx paperlint lint <paper-dir>`** — every error is a blocker, reported as the rule names it:
+   page fit (`format/page-limit`), template (`tex/template`), anonymity in the PDF
+   (`anonymity/identity`), required sections (`tex/required-section`), citations
+   (`paper/cite-exists`, `paper/refs-fresh`), the PDF itself (`pdf/*`), answered prior reviews
+   (`cycle/prior-reviews-answered`). Do not measure what a rule decides by another method. A word cap
+   the venue sets and no rule counts (an abstract limit): count it.
+2. **The final review is closed and its blockers are decided** (`paper-pipeline`, "The final review":
+   `tighten-paper` → `cold-read-diff --whole` → `pc-panel-review`). Read its reports; do not run it
+   again, and fix nothing. No closed review fails this item. Count its blockers (the panel's consensus
+   must-fixes and the cold read's `CANNOT PARSE` rows) by `status` in the reports' frontmatter:
+   `fixed`, waived (`wontfix` with a `waived by the author` note), `open`. Any `open` one fails.
+3. **Citations and the nearest neighbour.** `verify-citations` ran on the current bibliography
+   (`paper/refs-checked` warns when it did not). `map-prior-work`'s record exists
+   (`siblings/README.md` and its sweep file) and names the closest match with a disposition:
+   `distinguish` (the delta sentence is in the paper and the sibling has a card from `analyze-sibling-paper`,
+   checked by `sibling/frontmatter`) or `escalate` (a scoop the author decides on before submitting), or it says
+   `no close match found` and where it looked. Report the record's date beside its disposition. No
+   record, or a record with neither line, fails this item; an empty `siblings/` is not a pass. The
+   checklist reads the record and never launches a sweep.
+4. **Claims the reviewers' seats do not catch.** An absolute ("no", "never", "first", "only") that the
+   paper's own reference list refutes; a rhetorical hook that reality falsifies; a bound that narrows a
+   body number but lives only in an appendix with no pointer reaching it
+   (`paper-pipeline/references/body-vs-appendix.md`). Fix order:
+   `paper-pipeline/references/review-ratchet.md`. And the `claims` row of `PIPELINE-STATUS.md`
+   exists, written by `rewrite-unclear` step 4 for the rewrites; a missing row fails this item. Read
+   the row; the checklist runs no review and no diff.
+5. **Security and systems venues:** one paragraph of threat model (adversary and capability, trust
+   boundary, assets, what is assumed not compromised), and an ethics line: aggregate and anonymised
+   reporting of named systems, disclosure to maintainers before any de-anonymised release, a dual-use
+   sentence.
+6. **The artifact and every number it backs.** The artifact the paper promises exists; every "we
+   release X" is a shipped file (`check-release-claims.sh <paper-dir>` lists the release sentences
+   beside the `artifact/` tree), and every URL in such a sentence is fetched and holds what the
+   sentence says. Every quantity in the body traces to an artifact output or a `\cite`
+   (`check-numbers.sh <paper-dir>` enumerates them); a number that traces to neither is sourced or cut.
+   The cold re-run protocol is `../build-benchmark/references/adversarial-cold-repro.md`.
+7. **The headline results table and its counts.** Every number in the abstract and the conclusion has
+   a row in one table of the body: the result, its n, its source (the authors' measurement with its
+   section, a cited work, a public dataset), any correction applied, and the reading drawn from it.
+   Every "N categories / N rules / N repositories" in the abstract equals the rows of the object it
+   points to, and every number agrees across abstract, introduction, results and tables.
+8. **Anonymity beyond the PDF** — the artifact files and archives: `submit-paper`'s deny-list check.
 
-## The axes (run all; each is a gate)
+## Output — a vector of gates, worst first
 
-**Venue bar for the soundness and novelty axes.** Before scoring them, apply
-`../paper-pipeline/references/venue-bar.md`: read `<papers-root>/venues/<venue>/summary.md` when it
-exists, pass it to every scoring step (including the reviews axis 1 calls), and state each rigour
-finding's position against the accepted papers' denominators. With no summary, the report says
-"main-conference bar assumed" in its first lines.
-
-**Order matters: STRUCTURE before SENTENCES.** Run axis 0 FIRST. There is no point polishing prose (axis 8),
-verifying claims, or scoring a section that a structural pass says to cut or fold to the artifact. The 2026-07
-AISec session did this backwards — a full sentence-level polish, *then* the author said "it's too long and the
-middle sags" — wasting the polish on possibly-cut sections.
-
-0. **Structure / editorial (run FIRST)** — run **`tighten-paper`**: is this the right paper, at the right length,
-   delivering its ONE point, skimmable, with no TMI that belongs in the artifact? Apply its cut/fold/merge/reorder
-   plan BEFORE any sentence-level work. On a paper that "feels long / overly complex / middle drags," this is the
-   highest-leverage pass. (Near a deadline, apply the SAFE cuts and hold big restructures for camera-ready — state
-   the tradeoff, don't silently gut a submitted paper.)
-
-1. **Reviewer defects** — run `paper-adversarial-review` (quick) and, as the final decision gate,
-   `pc-panel-review`. Use a *separate model* (e.g. Fable subagent) as the reviewer, and — critically —
-   **run it blind**: give it ONLY the submission text, no author, no sibling papers, no outside context.
-   A sighted review judges overlap; a blind review predicts what the real double-blind PC sees. Do both:
-   sighted for overlap/de-anon, blind for the true score.
-
-2. **Overclaims — suite-specific traps only (the general hunt is delegated).** The general
-   overclaim hunt — every sentence stronger than the evidence, causal-from-correlational, headline
-   numbers vs reported stats, title over-promise — is `paper-adversarial-review`'s job, and axis 1
-   already runs it; don't redo it here. This axis adds the traps that recur in THIS suite's papers
-   and that a generic hunt keeps missing:
-   - **Absolute "no / none / never / first / only."** These are almost always false or unprovable.
-     Soften to "no *established / adopted / install-time* X," or "*first to* [narrow, true scope]."
-   - **Self-contradiction with your OWN citations** — an absolute your own reference list refutes
-     (e.g. "no provenance controls exist" while you cite an emerging provenance registry — a self-own).
-   - **Rhetorical hooks that reality falsifies** (e.g. "you'd never install a library that runs
-     arbitrary code" — npm postinstall does exactly that). Reframe to the *true* differentiator.
-   - **The review-ratchet rule — how to FIX a caught overclaim.** Tighten → cut → move to Threats →
-     only then inline-hedge; review only ever ADDS, so run `tighten-paper` AFTER the round to strip
-     what it deposited. Full rule: `paper-pipeline/references/review-ratchet.md`.
-   - 🔴 **A bound that lives only in an appendix is still an overclaim.** Check every headline number
-     in the abstract and intro against the appendices: if a qualification narrowing it sits out
-     there with no pointer reaching it, the body is overclaiming and "it's in the appendix" is not
-     a defence — reviewers are not required to read appendices, and ARR says so in as many words.
-     Rule and the sorting test: `paper-pipeline/references/body-vs-appendix.md`.
-   - 🔴 **A confirmatory claim on a study that was not confirmatory.** Every claim the paper presents
-     as tested — a prediction, a hypothesis confirmed, a headline effect — must rest on a study whose
-     `mode` is `decide_before_run` and whose `decision` commit precedes its `first output`, read
-     from the index in `repro/README.md` after `npx paperlint studies index <paper-dir>` (the plans and git, not
-     the prose). A confirmatory claim on an exploratory study, on one whose decision reads `not
-     committed`, or on one whose first output is not after its decision, is a **soundness** finding,
-     not a wording one: re-label the result exploratory, or rest the claim on a study decided first.
-     Flag every "pre-registered", "preregistered", "registered in advance" or "decided before" the
-     table does not support, and check the Methods sentence names each study's mode as the table does.
-   Mechanical leg: `tex/claim-provenance` (axis 7) reports every sentence that states a number and
-   does not say whose it is; `repro/outputs-before-decision` every output that entered history
-   before its decision.
-
-3. **Novelty vs the nearest neighbor** — the scoop check. Search for the paper that *already did your
-   thing* (`verify-citations` covers metadata; here, actively hunt the closest empirical/method twin).
-   For every genuine sibling found, run **`analyze-sibling-paper`** — deep-read the ACTUAL paper (not its
-   abstract), classify contribution type, date it prior-vs-concurrent, steelman the scoop, and judge the
-   delta with an adversarial model. If found: cite it, and **rewrite the delta honestly** — you are almost
-   never "first"; you are "first to [specific lens/surface/method]." Acknowledge a shared *concept*
-   head-on. A genuine scoop is an escalation (reframe / `extend-paper`), not a one-line patch. Missing the
-   neighbor = desk-reject. **Completeness check (the checkable part):** every close sibling must have a
-   saved analysis colocated in `<paper-dir>/siblings/` — a close competitor with no file there is an
-   unclosed axis, not a cleared one.
-
-4. **Citations** — run `verify-citations`: every \cite is a real work with correct arXiv-id/DOI/venue;
-   no fabrication; the delta over the nearest neighbor is explicit; the one obviously-expected cite is
-   present. Drop any cite you cannot verify (never invent metadata).
-
-5. **Threat model (security/systems venues)** — reviewers dock a security paper with no explicit one.
-   State: **adversary** (who, what capability), **trust boundary**, **assets**, and what you **assume
-   not** compromised. One crisp paragraph. `paper-adversarial-review` does not force this — add it.
-
-6. **Ethics / responsible disclosure / dual-use (security venues)** — often a hard CFP requirement.
-   If you measured weaknesses in *named real systems*: (a) report aggregate + anonymized; (b) plan
-   **disclosure to affected maintainers before any public de-anonymized release** (log it as a to-do);
-   (c) add a **dual-use** line (the work is defensive; introduces no new exploitation technique).
-
-7. **Reproducibility artifact** — if the paper says "artifact / query set accompanies this submission,"
-   that file must actually exist. Build a `REPRODUCE.md`: **every headline number → its exact query /
-   command → the count/output → the date**. State that snapshot counts drift (lower bounds), so
-   re-running gives similar magnitudes, not identical integers.
-   - **Availability-promise gate (verify, don't assume):** every "we release X" / "the full repo will be linked
-     at camera-ready" / "available at \url{...}" sentence must point to something that EXISTS or is concretely
-     deliverable NOW — actually fetch the repo/URL and confirm it holds what the sentence claims (the harness, the
-     task defs, the logs). A promise you can't cash is a camera-ready landmine. (This session: verified
-     `zernie/vigiles/bench/ecosystem` really contains the promised harness before trusting Paper 1's Availability
-     line.) If it's deferred to camera-ready, record the exact deliverable in the paper's camera-ready checklist so
-     it can't be dropped on accept.
-   - **Adversarial cold reproduction — run the protocol, don't restate it:**
-     **`../build-benchmark/references/adversarial-cold-repro.md`** (single home). It covers the cold
-     clean-checkout/clean-ENVIRONMENT re-run (incl. the `MODULE_NOT_FOUND` deps-in-release-script trap),
-     the three-way reconcile of every headline number, and robustness attacks under the paper's own
-     caveats. Default stance SKEPTIC; one honest REFUTED beats ten hand-wavy CONFIRMEDs.
-   - **Claim↔evidence reconciliation (mechanical — every number and every "we release X" must trace).**
-     The measurement gate above checks *headline* numbers; two things slip it. Run both enumerators:
-     - **`check-release-claims.sh <paper-dir>`** — greps release-verb prose and lists it beside the actual
-       `artifact/` tree. **Every "we release X" must be satisfied by a shipped file**; promised-but-absent
-       (claimed "raw runs" but shipped only aggregates) → soften to "(at camera-ready)" or add the file.
-       *(This session's exact miss: a paper about advertised-vs-delivered gaps claimed "we release the
-       harness and raw runs" while the artifact held only aggregates — the PC-panel caught it late.)*
-     - **`check-numbers.sh <paper-dir>`** — enumerates every quantitative token in the body so **each traces
-       to an artifact output or a `\cite`; an untraceable number is treated as fabricated** (source or cut).
-       *(This session: "37% growth to 18% cut across independent runs" was in neither — only the artifact
-       evaluator caught it.)*
-     - **`npx paperlint lint`** — the *overclaim* axis (axis 2), compiled, as `tex/claim-provenance`: every
-       sentence of the body that states a number and has no owner — no citation or link, no *we*/*our*, no
-       `\ref` or "Table 2", no named sample ("n = 134", "48 runs") — is reported, because a reader cannot
-       tell a cited finding from the authors' own measurement from a general fact. Fix each hit by saying
-       whose the number is in the sentence, or keep it with an `eslint-disable-next-line` **and the reason
-       on the spot**. What it cannot judge (whether the owner is the right one) is on its page,
-       `docs/rules/tex/claim-provenance.md`. Complementary to `check-numbers.sh`, not a dup: that one traces
-       **every** number to the artifact; this one asks each number's sentence for its owner.
-     Enumeration is mechanical; the per-line trace/reconcile stays judgment (prose isn't policy — compile the list).
-
-8. **Writing craft (audience-appropriate language + how it reads)** — run **`grade-paper-writing`** (the
-   10-dim rubric in `../paper-pipeline/references/writing-craft.md`).
-   🔴 **Invoke it BY NAME with the Skill tool — do not describe the need and hope it fires.**
-   Selection of this skill is **not reliable, and not reliably bad either**: the same eight prompts,
-   the same description and the same 36 competitors measured **21%** in the morning and **50–54%**
-   hours later on 2026-08-08, across two independent implementations
-   (`../paper-pipeline/repro/2026-08-08-grade-paper-writing-ablation-raw.log`,
-   `2026-08-08-parent-replication.log`). Seven description rewrites — shorter, no negations, no
-   internal machinery, persona-only — moved it by nothing, so the instability is not in the text and
-   cannot be edited away. Meanwhile a closed-book reader given that same text picks it 7–8 times in 8.
-   An explicit call does not depend on selection at all. Without it this axis silently does not run,
-   and a hardening pass that skipped its readability axis reports the same "done" as one that ran it.
-   **Downstream of axis 0** (don't polish a
-   section slated to be cut). Two hard rules from the AISec session: (a) the stall pass is
-   `grade-paper-writing`'s, with its two readers; the rubric SCORE under-fires because a
-   frontier grader knows every term and never stalls (it scored a wall-heavy paper 44/60); the persona inventory,
-   not the number, is the gate. (b) **A wall / spec-sheet / coined-jargon-heading HARD-FAILS this axis — it is not
-   a "minor" note.** Hand the stall
-   inventory to **`rewrite-unclear`**, which rewrites the sentences and runs the claim-preservation diff
-   (`claims`) after each; this gate does not reword. Confirm the paper leads with its most visceral
-   concrete instance.
-
-9. **Internal consistency — matching is not enough; every headline count must be RECONSTRUCTIBLE from
-   the object that presents it.** Two distinct checks:
-   - *(a) Matching:* every number agrees across abstract / intro / results / tables (86% = 19/22; the
-     "X trip nothing" complements the "Y have finding" count). One mismatch reads as sloppy.
-   - *(b) Countability:* for every "N categories / N rules / N repositories / N cases" in the abstract,
-     **open the table or figure it points to and count the rows.** If a reader cannot arrive at N from
-     that object alone, either the object is wrong or N needs its derivation stated in the caption.
-     Sub-items buried in a cell's prose are not rows. **Mechanical leg:** `grep -c` the table's row
-     marker and compare with the abstract's N — a mismatch is a finding, not a rounding difference.
-     Corollary: **never quote a count for an entity that has no row of its own.**
-
-10. **Honest scoping** — a threats-to-validity that pre-empts the obvious attacks (sample size,
-    selection bias, construct validity, "measured X not Y") earns trust. Turn limitations into stated
-    scope, not hidden holes.
-
-11. **Citability** — soundness gets you accepted; citability gets you *cited* (the axis that actually
-    moves an impact case). A correct-but-forgettable paper is a desk-accept and a dead end. Make the
-    work the thing people reach for when they discuss the problem. Levers, in order of payoff:
-    - **Names:** the paper's name budget, and one name for one thing, are `argument-arc`'s (step 4); a
-      name that brands instead of describing is fixed by `rewrite-unclear`.
-    - **Frame the contribution as "first *taxonomy / benchmark / measurement* of X,"** not "we found Y is
-      bad." A reusable framework (the four risk classes, the audit predicate) is what later work builds
-      on and cites; a one-off result is a blog post. (This is the same reframe as axis 3, aimed at
-      citability rather than novelty-defense.)
-    - **Ship a reusable artifact others can run against their own corpus** — a deterministic
-      benchmark/auditor + a listed query set turns readers into *users*, and users cite. State it's
-      open-source and reproducible (ties to axis 7).
-    - **Give one quotable, load-bearing statistic** — a single number a talk/blog will repeat ("<1% carry
-      any test"). Make it defensible and prominent; don't bury it.
-    - **A line written to be quoted** is held to the venue's register (`grade-paper-writing`, #10: an
-      aphorism or a punchline closing scores 1); its literal claim comes from `rewrite-unclear` (rule 2).
-    - **arXiv-first + plan the extended SoK.** A 2-page workshop paper is a flag-plant; the citations
-      accrue to the extended/arXiv version. Log the follow-on (fuller taxonomy, bigger corpus, the
-      dropped refs) so the citable artifact exists. Put a preprint where people can find and cite it.
-
-12. **Headline results table** — every number in the abstract and in the conclusion appears in ONE
-    table in the body, one row per headline result, with these columns: the result as stated, its
-    **n** (what was counted, and how many), its **ground-truth source** (the authors' own measurement
-    with the section that reports it, a cited work, or a public dataset), any correction applied
-    (multiplicity, a recall floor, a rerun), and the one-line reading the paper draws from it.
-    - **Find:** list every number in the abstract and the conclusion (`check-numbers.sh` enumerates
-      them), then look each one up in the table. A number with no row, a row with no n, or a row with
-      no source is a finding — one per number, not one for the axis.
-    - **Why it is an axis and not a nicety:** a reviewer who cannot tell *"properties of LLMs,
-      statistical observations from repositories, and experimental findings produced by the authors"*
-      apart asks for exactly this — *"a compact table summarizing each headline result, sample size,
-      ground-truth source, correction, and final interpretation"*. Prose cannot carry five attributes
-      per number; the table can, and it gives every headline claim the owner that
-      `tex/claim-provenance` asks of each sentence.
-    - **Fix:** build the table, point the abstract's and the conclusion's numbers at it, and move a
-      number that has no n or no source out of the abstract until it has both.
-
-## Mechanical submission gates (do these yourself — don't punt to the author)
-
-- **Double-blind hygiene.** Run the mechanical gate — it greps the deny-list across the PDF text +
-  every artifact file + inside any `*.zip`, so an identifier hiding in an artifact README (invisible to
-  a paper-only read) still trips it: `bash .claude/skills/submit-paper/check-deanon.sh <paper-dir>`
-  (must PASS/exit 0; deny-list at `.claude/skills/submit-paper/deanon-denylist.txt`). Beyond the
-  deny-list, also grep the *actual submission text* for author name, tool name, org, repo
-  URLs, self-authored issue links. For a tool you built that's publicly attributed: **anonymize its
-  name AND its distinctive output vocabulary** (a reviewer can fingerprint the tool by running it and
-  matching its exact strings → de-anon, and can *link* it to your other submissions). Anonymize the
-  artifact host too ("released on acceptance").
-- **Word / page fit — verify, don't estimate.** Word caps: count them. Page cap: **render and count.**
-  When a LaTeX toolchain exists in the env, the primary route is **`../render-paper/check-render.sh`**
-  (compile the real `.tex`, count real pages). The Chromium proxy below is the FALLBACK only.
-  No LaTeX in-env? Build an HTML at the venue's density (single-column 10pt Letter, 1in margins is a
-  typical proxy) with the exact content + table + refs, and render with headless Chromium:
-  `/opt/pw-browsers/chromium-*/chrome-linux/chrome --headless --no-pdf-header-footer
-  --print-to-pdf=fit.pdf fit.html`, then read the page-tree `/Count N` from the PDF (`grep -aoE
-  '/Count [0-9]+' fit.pdf | head -1`). If it spills, measure the overflow and spend it in the cut order of
-  `paper-pipeline/references/body-vs-appendix.md`, section "When the body overruns", and keep no order of
-  your own here. `tighten-paper` applies that order; this gate only counts the pages.
-- **Format template.** Confirm the venue's actual template (ACM sigconf / Word / 2-part SiP). Match its
-  structure, not just your draft's.
-
-## Output — a VECTOR of gates, never one number
-
-The verdict is a **vector of independent gates**, and **ANY failing gate caps the verdict at "not
-ready"** — the gates are orthogonal axes and do not average out. **Ready ⇔ ALL of these pass:**
-
-- **Science / defects** — `pc-panel-review` decision + accept-probability;
-- **Readability** — `grade-paper-writing`'s PERSONA stall pass (the inventory + density caps, not the
-  rubric number);
-- **Structure + length** — `tighten-paper`'s structural verdict (right length, no sag, no TMI);
-- **Claims-honest** — the Hn claim-preservation diff clean after every rewrite;
-- **Citations** — `verify-citations` clean: no \cite that fails to resolve, nothing marked VERIFY
-  left unresolved;
-- **Nearest-neighbor scoop** — axis 3 answered: the closest sibling found and either distinguished
-  or escalated (`analyze-sibling-paper`);
-- **Headline results table** — axis 12: every number in the abstract and the conclusion has a row
-  with its n and its ground-truth source;
-- **The mechanical gates** — de-anon hygiene, page/word-fit, format template.
-
-> 🔴 **Citations and scoop were MISSING from this list until 2026-08-31, and the omission had
-> teeth.** This same file calls axes 1–10 «soundness gates (get it accepted / **avoid
-> desk-reject**)» and says outright that a missed neighbor «= desk-reject». But the `--blocking`
-> rule below keys on *this list*: anything absent from it is «an axis **merely** being open», i.e.
-> non-blocking. So the two axes the file names as fatal were the two that could not stop a submit.
-> The list read as exhaustive because it is introduced by **«Ready ⇔ ALL of these pass»** — and a
-> list in that position is read as the definition, not as examples.
-> **Generalisable:** a rule stated as «not narrower than X», or a gate stated as «all of these»,
-> narrows to exactly what its list contains. Same defect class found the same night in
-> `corporate-english-lead-search` (geo list omitted Russia → a 357-employer scan with zero
-> Russian companies, unnoticed for 11 days).
-
-**A high pc-panel accept-probability does NOT mean "ready" if the readability or structure gate
-fails. A single scalar (e.g. "88% accept") hides multi-dimensional failure — never report it as the
-headline.** Report the verdict **WORST-GATE-FIRST**: lead with the failing gate and its concrete fix;
-the flattering numbers come after. (Proven failure mode: "44/60 writing, ~88% accept" reported as
-headlines on a paper whose readability + structure gates were failing — the human reader found it
-exhausting while the scalars said ship.)
-
-Then: the per-axis PASS / FIXED / OPEN report (each OPEN with the concrete fix), the **citability
-levers landed** (coined handle + its one-sentence definition, the "first taxonomy/benchmark of X"
-framing, the one quotable stat, the reusable artifact, any dry-humour line and where), and the short
-list of items only the author can close (host artifact, click submit, disclose-before-public, post the
-preprint). If every gate passes and every axis is PASS/FIXED → hand off to `submit-paper`.
-
-## Composes with
-`tighten-paper` (axis 0, run FIRST — structure before sentences), `paper-adversarial-review` +
-`pc-panel-review` + `verify-citations` + `grade-paper-writing` (called by this), `render-paper` (if LaTeX
-toolchain exists), `submit-paper` (downstream), `extend-paper` (the dropped refs / deferred axes live here).
+Ready ⇔ every item passes or is waived: the lint errors (1), the closed final review and its blockers (2), citations and scoop (3), claims (4), the
+venue's threat model and ethics (5), the artifact and numbers (6), the headline table (7), anonymity
+(8). Report three lists: **Failing** (each with its fix, worst first), **Waived** (each with the author's
+reason, quoted), **Passed**. A waived item never appears under Passed. An accept probability is never the headline, and a high
+one does not make a paper with a failing item ready. Then the items only the author can close (host
+the artifact, click submit, disclose before going public). When nothing is failing, hand off to
+`submit-paper`.

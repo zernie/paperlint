@@ -68,9 +68,26 @@ else
   echo "   whether this paper is submittable, which is the one question it exists to answer." >&2
 fi
 
-gates=$(grep -E '☐' "$STATUS" 2>/dev/null | grep -iE 'study-accepted|pc-panel|harden|verify.?citations' || true)
-if [ -n "$gates" ]; then
-  echo "⚠️ UNRUN GATES in $pdir/PIPELINE-STATUS.md (☐ — run them, don't 'anti-churn'-skip):" >&2
-  echo "$gates" | sed -E 's/\|.*//; s/^\| */   /' >&2
+# The gates a table row marks ☐ (not run), each with the skill that owns it. A report, not an order:
+# the final review runs once, and a row it closed (☑ closed) is not unrun. Only table rows count, so
+# the checklist line under the GATES table is not read as a gate.
+owner_of() { # $1 = the row's id; empty for a row that is not one of these gates
+  case "$1" in
+    structure | coldread | panel) echo "the final review, once (paper-pipeline, \"The final review\")" ;;
+    harden) echo "the submit checklist (harden-paper)" ;;
+    cites) echo "verify-citations, on every \\cite added or moved" ;;
+    venuebar) echo "study-accepted-papers" ;;
+  esac
+}
+ids=$(grep -E '^\|' "$STATUS" 2>/dev/null | grep '☐' | grep -v 'closed' |
+  awk -F'|' '{ gsub(/ /, "", $2); print $2 }' || true)
+report=""
+for g in $ids; do
+  o=$(owner_of "$g")
+  [ -n "$o" ] && report="$report   $g — $o"$'\n'
+done
+if [ -n "$report" ]; then
+  echo "📋 Not run yet in $pdir/PIPELINE-STATUS.md (☐):" >&2
+  printf '%s' "$report" >&2
 fi
 exit 0

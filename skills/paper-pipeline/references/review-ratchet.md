@@ -1,7 +1,7 @@
 # The review ratchet — how to fix a caught overclaim, and how to pay for it
 
-Cited by `paper-adversarial-review`, `pc-panel-review` and `harden-paper`. It lived as three
-near-identical paragraphs in those three skills until 2026-07-30; three copies of a rule drift, and
+Cited by `pc-panel-review` and `harden-paper`. It lived as three
+near-identical paragraphs in three skills until 2026-07-30; three copies of a rule drift, and
 the drift is invisible because each copy reads fine on its own.
 
 ## The rule
@@ -22,11 +22,8 @@ paper that survived four rounds reads like armor.
 
 ## Paying the ratchet back
 
-**After applying a round's consensus fixes, run `tighten-paper`** to strip the mass the round
-deposited. Structure-pruning is the counterweight; without it the paper monotonically inflates.
-
-Observed cost of skipping it: one session, seven overclaim fixes plus one panel round added roughly a
-page of pure hedge density.
+The final review's `tighten-paper` step is the counterweight, once (`paper-pipeline`, "The final
+review"); a review round does not schedule another tighten pass.
 
 ## What this rule does NOT license
 

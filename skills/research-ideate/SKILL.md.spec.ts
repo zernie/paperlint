@@ -14,32 +14,27 @@ import planPaperTimeline from "../plan-paper-timeline/SKILL.md.spec.ts";
 export default experimental_skill({
   name: "research-ideate",
   description:
-    'Decide whether a research idea is worth doing at all — before any work goes into it. Use when someone has an idea and asks: is this worth pursuing, should we take it on, is it a paper or just a blog post, is there a quick minimal result that doesn\'t need a dramatic finding, will it pull us away from our main line of work. Returns a go / no-go verdict with the sharpest framing, the minimal finding and the kinds of venue that would take it. Judges the idea by what counts in a body of work: a peer-reviewed indexed publication, a reusable method or benchmark rather than a one-off "tool X is bad", onward citations rather than GitHub stars, and one connected line rather than scattered topics. Stage: conception, before find-venue and before any draft; hands off to find-venue, build-benchmark, draft-paper.',
+    'Decide whether a research idea is worth doing at all — before any work goes into it. Use when someone has an idea and asks: is this worth pursuing, should we take it on, is it a paper or just a blog post, is there a quick minimal result that doesn\'t need a dramatic finding, will it pull us away from our main line of work. Returns a go / no-go verdict with the sharpest framing, the minimal finding and the kinds of venue that would take it. Judges the idea by what makes a publishable, citable paper: a peer-reviewed indexed publication, a reusable method or benchmark rather than a one-off "tool X is bad", onward citations rather than GitHub stars, and one connected line rather than scattered topics. Stage: conception, before find-venue and before any draft; hands off to find-venue, build-benchmark, draft-paper.',
   tools: ["Read", "Write", "Grep", "Glob", "Agent", "Skill"],
   body: `
-# research-ideate — is this idea worth a paper, and does the paper earn authorship credit?
+# research-ideate — is this idea worth a paper?
 
 Runs BEFORE any effort is spent. An idea can be interesting and still be a bad *publication*
-investment — the wrong framing produces something un-publishable or un-citable, which counts for
-nothing toward a body of work. This skill kills those ideas early and reshapes the survivors into the framing
+investment — the wrong framing produces something un-publishable or un-citable, effort spent for
+nothing. This skill kills those ideas early and reshapes the survivors into the framing
 that publishes. It does NOT do the venue search (that's \`find-venue\`) — it decides whether there's a
 paper worth taking to \`find-venue\` at all.
-
-Grounding for every judgment below: the authorship, judging and original-contribution criteria —
-what a reviewer of a body of work actually counts.
 
 ## Score the idea on five axes
 
 Answer each explicitly. A "no" on (a) is a hard stop; a "no" on the rest is a reshape signal.
 
 **(a) Does it yield a PEER-REVIEWED, INDEXED publication?**
-This is the authorship criterion, full stop. The paper must land in indexed proceedings (ACM DL /
-IEEE Xplore / archival workshop proceedings). Peer-reviewed + indexed papers count
-**regardless of caliber** — conference and workshop proceedings qualify. There is **no
-approved-venue list** and **venue newness does not hurt** the authorship criterion (prestige is
-only a late-stage enhancer). So the bar here is binary: will
-this produce something that goes through peer review and gets indexed? A blog post, a preprint that
-never gets reviewed, or a non-archival talk = **no credit**. If the idea can't clear this, stop.
+The paper must land in indexed proceedings (ACM DL / IEEE Xplore / archival workshop proceedings);
+conference and workshop proceedings both qualify, and a new workshop's indexed proceedings are as
+archival as an old one's. So the bar here is binary: will this produce something that goes through
+peer review and gets indexed? A blog post, a preprint that never gets reviewed, or a non-archival
+talk is not a publication. If the idea can't clear this, stop.
 
 **(b) Is the contribution a reusable METHOD/BENCHMARK, or a one-off result?**
 Reviewers accept methods and benchmarks; they reject "we ran tool X and it's bad." Name both framings:
@@ -50,10 +45,9 @@ Reviewers accept methods and benchmarks; they reject "we ran tool X and it's bad
   someone applies it to tool Y. Pick the strongest framing before writing a line.
 
 **(c) Will it generate downstream CITATIONS / ADOPTION?**
-This is the original-contribution criterion, and it is read through **citations and adoption, NOT
-GitHub stars**. Ask: when the next person studies this space, must they cite or reuse this? A
+Impact is read through **citations and adoption, NOT GitHub stars**. Ask: when the next person studies this space, must they cite or reuse this? A
 benchmark others rerun, a metric others report, a finding others build on — yes. A one-off teardown of
-one product — no. Methods/benchmarks (axis b) are exactly what earns this credit; scattered results do
+one product — no. Methods/benchmarks (axis b) are exactly what gets reused; scattered results are
 not.
 
 **(d) Is there a fast MVP finding — a "proof of method" that needs no scary result?**
@@ -65,8 +59,8 @@ result, it's slow and risky — reshape it toward a proof-of-method MVP.
 
 **(e) Does it stay in the researcher's coherent LANE?**
 **Name the lane explicitly** — the research area the existing corpus is already in. A
-connected corpus of papers in one lane beats scattered topics — review of a body of work rewards a
-sustained, coherent corpus, not a grab-bag. Score whether this idea deepens the existing corpus
+connected corpus of papers in one lane beats scattered topics: each paper builds on and cites the
+last, and readers who found one find the rest. Score whether this idea deepens the existing corpus
 (good) or wanders into an unrelated field (weak, even if publishable). Same lane compounds; scattered
 does not.
 
@@ -88,7 +82,7 @@ Emit a compact verdict:
 - Never justify an idea by GitHub stars, demo virality, or "it'd be a great blog post." Those don't
   count. Citations/adoption and indexed proceedings do.
 - Prefer the proof-of-method MVP over the heroic result — a shipped medium finding beats a stalled big
-  one, and it's what earns the credit on time.
+  one, and it is what gets published on time.
 - Keep it in lane. If it's a great idea in the wrong field, say so and note it belongs elsewhere.
 - Don't invent numbers, severities, or venue names here — this is a framing pass, not a study.
 
@@ -97,17 +91,7 @@ Emit a compact verdict:
 - \`build-benchmark\` — the MVP finding usually IS a small benchmark; this skill scopes it.
 - \`draft-paper\` — the sharpest-framing sentence becomes the paper's one-contribution seed.
 - \`plan-paper-timeline\` — once go/no-go is "go," size the effort against a real deadline.
-
-## Provenance
-Both real papers passed this filter as **proof-of-method, medium-severity-is-sufficient** ideas in one
-lane:
-- **AgenticDev 2026 @ ASE — "Measuring the Wrong Number"** (~90%, submitted). The contribution was the
-  *measurement method*, not a verdict on one tool; a medium-severity finding was enough because the
-  reusable way-to-measure was the point. Stayed in the AI-assisted-SE reliability lane.
-- **AISec 2026 @ ACM CCS — "Safety Theater in Agentic Coding"** (~87–88%). Same shape at a security
-  bar: a reusable probe/finding about agentic coding safety, proof-of-method sufficient, squarely in
-  the security-of-AI-coding lane. Together the two form a *connected corpus* — exactly what axis (e)
-  rewards — rather than two scattered one-offs.`,
+`,
 });
 
 export const flow = {

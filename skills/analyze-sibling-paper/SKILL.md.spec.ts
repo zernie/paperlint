@@ -35,8 +35,7 @@ leaves a scoop risk you can't see and a reviewer can. This skill reads the *actu
 whether your contribution genuinely differs, and produces a saved analysis with concrete action points
 (the exact positioning clause to add, or — if it's a real scoop — an escalation, not a clause).
 
-Grounding: the original-contribution criterion (a paper a
-reviewer thinks is a repackaging earns no authorship credit even if accepted). Composes with
+A paper a reviewer reads as a repackaging is rejected as incremental. Composes with
 \`verify-citations\` (which surfaces the nearest neighbors) and \`harden-paper\` (whose scoop axis calls this).
 
 ## When it fires
@@ -142,23 +141,7 @@ again at rebuttal. **A close sibling with no file in \`<paper-dir>/siblings/\` i
 - \`harden-paper\` — its nearest-neighbor-scoop axis (axis 3) calls this for each close competitor.
 - \`study-accepted-papers\` — venue-corpus levers (different axis: what the venue rewards, not a specific rival).
 - \`extend-paper\` — a scooped angle, or the un-scooped remainder, can become the next paper's pivot.
-
-## Provenance
-Built from the **AISec 2026 GateBench** run: \`verify-citations\` flagged **AgentTrust** (yang2026agenttrust,
-arXiv:2606.08539) as making the same lexical-vs-semantic split the paper's spelling→grammar→effect framing
-builds on — the sharpest "isn't this just X?" in the paper. Citing it from the abstract was not enough to
-know whether the framing was a repackaging; only a deep read of the actual paper, classified by
-contribution type (their trust-*system* vs our *measurement + benchmark + existence result*) and dated
-against submission, could settle the delta and produce the head-on positioning clause. That is exactly
-the workflow this skill encodes.
-
-**Extended 2026-07-29** — *What Breaks When LLMs Code?* (arXiv:2605.30777) was cited into the
-\`the reference paper\` introduction **from its abstract**, and a card was written saying so. Two gaps
-surfaced immediately: the full text was never read (so the "no scoop" verdict rested on an abstract),
-and its reference list — assembled by authors who had just screened 68,816 papers across 22 venues —
-was never opened at all. Both are now steps 1–2, and both are machine-checked in the saved card, because
-the previous version of this rule already said "read the paper, not the abstract" in prose and that did
-not stop it happening. Prose isn't policy.`,
+`,
 });
 
 export const flow = {

@@ -1,21 +1,19 @@
 ---
 name: pc-panel-review
-description: Use when asking "what would the program committee decide?" / "simulate the reviewers" / "what's this paper's accept probability?" on a drafted paper + artifact. Spawns N independent reviewers with DISTINCT lenses (one actually RUNS the artifact, one is a skimming genre/register reviewer), then synthesizes a PC-chair meta-review into an accept/reject decision reported as min/median/max, a calibrated probability, and consensus must-fixes. Requires grade-paper-writing's persona stall inventory + tighten-paper's structural verdict as inputs (blocked until they exist — the panel cannot feel reader fatigue on its own). Also has a lightweight single-reviewer VENUE-FIT MODE for a quick CFP-fit spot-check. NOT a single fast defect hunt (paper-adversarial-review), a writing grade (grade-paper-writing), or the full pre-submit gate (harden-paper, which calls this) — this models the PC decision itself.
+description: Use when asking "what would the program committee decide?" / "simulate the reviewers" / "what's this paper's accept probability?" / "red-team this paper" / "what would Reviewer 2 attack?" on a drafted paper + artifact. Spawns N independent reviewers with DISTINCT lenses (one actually RUNS the artifact, one is a skimming genre/register reviewer, one is the hostile Reviewer 2), then synthesizes a PC-chair meta-review into an accept/reject prediction reported as min/median/max, a calibrated probability, and consensus must-fixes (or none). Takes tighten-paper's structural verdict and cold-read-diff's whole-paper report as inputs — the panel cannot feel reader fatigue on its own. The third and last step of the final review. Before the final review, a red-team request runs the hostile seat (Reviewer 2) alone, without the readability inputs. Also runs the VENUE-FIT seat alone for a CFP-fit spot-check. NOT the submit checklist (harden-paper).
 allowed-tools: [Read, Write, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:c72f2f43fd3deb57 compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:c0b27cf6767dde05 compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
 
 # pc-panel-review — model the whole PC, not one reviewer
 
-> **Which review skill?** `paper-adversarial-review` = one hostile reviewer, fast defect hunt.
-> `pc-panel-review` (you are here) = the whole PC (N independent lenses incl. an artifact-runner) + a
-> chair meta-review — the real pre-submission GATE, run LAST. This skill also has a **Venue-fit mode**
-> (below): ONE reviewer scoring a named venue's CFP rubric to predict its accept/reject — the quick
-> single-lens spot-check (formerly the standalone `venue-review-sim` skill). Reach for Venue-fit mode or
-> `paper-adversarial-review` for a fast spot-check; run the full panel (this) for the decision.
+> The whole PC (N independent lenses incl. an artifact-runner) + a chair meta-review, run once as the
+> last step of the final review (`paper-pipeline`, "The final review"). Two seats also run alone:
+> the hostile seat, before the final review only (**Hostile-seat mode**, below), and **Venue-fit mode**
+> (below), a spot-check against a named venue's CFP rubric, recorded as `venue-fit`. Neither is
+> recorded as the panel.
 
-The Venue-fit mode gives ONE reviewer's fit score; `paper-adversarial-review` gives ONE defect hunt.
 A real decision is made by **2–4 reviewers with different priorities + a meta-review** that weighs
 consensus over any single voice. This skill runs that. The payoff over a single review: a **must-fix
 is what ≥2 independent reviewers flag** — that filters real blockers from one reviewer's hobbyhorse —
@@ -31,37 +29,39 @@ prose-only read can.
    `<papers-root>/venues/<venue>/summary.md` when it exists and hand it to every reviewer seat and to
    the chair; each rigour finding states the paper's position against its denominators. Without it,
    the report opens with "main-conference bar assumed" and the accept probability carries that flag.
-2. **Collect the two readability/structure artifacts — the panel is BLOCKED without them.** Before any
-   reviewer spawns, there must exist for THIS draft: (a) the **persona stall inventory** from
-   `grade-paper-writing` (the "Sam" per-section cold read), and (b) the **structural verdict** from
-   `tighten-paper` (length / sag / TMI / cut-plan). If either doesn't exist yet, STOP and run those
-   skills first.
+2. **Collect the two readability/structure artifacts.** Before any reviewer spawns, there must exist: (a) the **structural verdict** from `tighten-paper` (length / sag / TMI / cut
+   plan), and (b) the **whole-paper cold-read report** from `cold-read-diff --whole`. They are the
+   final review's first two steps. A confirming panel, or a seat run after close, reuses the closed
+   review's two reports as they stand and never reruns `tighten-paper` or the cold read. Hostile-seat
+   mode and venue-fit mode need neither.
 
-   🔴 **Invoke them BY NAME with the Skill tool — do not describe the need and hope.** Whether
-   `grade-paper-writing` gets selected from its description is **unstable**, and that is worse for a
-   hard gate than a low rate would be: identical prompts, identical description, identical roster
-   measured **21%** in the morning of 2026-08-08 and **50–54%** the same afternoon, in two
-   independently written implementations
-   (`../paper-pipeline/repro/2026-08-08-grade-paper-writing-ablation-raw.log`,
-   `2026-08-08-parent-replication.log`). Seven rewrites of the description — shorter, negations
-   stripped, machinery stripped, persona-only — all landed inside noise, so there is nothing to fix
-   in the text. Naming the skill explicitly does not depend on selection at all, so this gate stops
-   resting on the one part of the chain that does. Writing "run grade-paper-writing" and leaving the
-   invocation to a description match is the failure this line exists to remove.
-
-   Why hard-block: a frontier-LLM reviewer knows every term and cannot feel reader
+   Why these inputs: a frontier-LLM reviewer knows every term and cannot feel reader
    fatigue, so a panel scoring on its own felt read will score a bloated, unreadable paper high
    (proven: ~88% accept on a paper the human reader found exhausting). These two artifacts are the
    panel's only legitimate source for the readability/structure signal.
-   *(Scorecard: this gate is row **`panel`**, and it declares **`structure`** (tighten-paper) + **`writing`**
-   (grade-paper-writing) as its required inputs.)*
+   *(Scorecard: this gate is row **`panel`**, and it declares **`structure`** (tighten-paper) + the
+   cold-read report as its required inputs.)*
 3. **Pick 3 (or 4) reviewer lenses** that a real PC for THIS venue would field. One is fixed; the rest
    come from the menu, by fit:
-   - **Genre/register reviewer — MANDATORY on every panel, at every venue.** Its prompt has one
+   - **Genre/register reviewer — one seat on every panel, at every venue.** Its prompt has one
      owner, `skills/cold-read-diff/scripts/readers.ts` (the reviewer; `cold-read.js --venue` prints
-     it). This is the reviewer who writes one short review, scores low,
-     and calls the paper a blog post — the one reviewer a panel of careful full readers never
-     predicts. Give it the abstract, the introduction and the conclusion as text and the venue's name, nothing else.
+     it). It reads as a skimming PC member does, and judges whether the paper reads like one at this
+     venue. Give it the abstract, the introduction and the conclusion as text and the venue's name, nothing else.
+   - **Hostile reviewer (Reviewer 2) — one seat on every panel.** It wants to reject the paper and
+     says why, fairly and specifically. It states the one contribution in one sentence, as a reviewer
+     would paraphrase it, and whether that is enough for this venue and paper type (a reusable method
+     or benchmark survives review; "tool Y is bad" reads as a blog post). It hunts: every sentence
+     stronger than the evidence (absolutes, causal claims from correlational data, a title that
+     promises more than the body); methodology holes (missing baseline, sample size, confounds,
+     cherry-picked tasks, misused statistics, construct validity); threats to validity the authors did
+     not list (adaptive attackers, one model or dataset, a convenience sample); obvious uncited prior
+     work and an unstated delta over the nearest neighbour; desk-reject risks (length, template,
+     de-anonymising self-citations or repo links, unreadable figures, tables that contradict the text);
+     tone (naming small hobbyist projects as broken; prefer aggregate numbers and one named example);
+     and responsible disclosure (a weakness in a named, still-exploitable system that its maintainers
+     have not been told of before the paper goes public is a must-fix). Its form adds the strongest available reframing of the contribution. It does not
+     fabricate citations ("verify" when unsure), and if the paper is strong it says so: no weakness is
+     a valid answer.
    - **Methods/stats skeptic** — sample size, construct validity, multiple comparisons, overclaims,
      whether the CIs support the claims, and **whether every confirmatory claim rests on a study
      decided before its run**. Run `npx paperlint studies index <paper-dir>` and give this reviewer the index in
@@ -90,8 +90,8 @@ prose-only read can.
      uncited work.
 4. **Spawn them in PARALLEL, each on a separate model instance** (e.g. Fable via subagent), each blind
    to the others — independence is the whole point. Give each: the paper (`.tex`/PDF), the artifact
-   path, the quoted rubric, its lens, **and the two step-2 artifacts (persona stall inventory +
-   tighten-paper structural verdict)** — the genre/register reviewer gets only its three sections.
+   path, the quoted rubric, its lens, **and the two step-2 artifacts (tighten-paper structural verdict +
+   cold-read report)** — the genre/register reviewer gets only its three sections.
    Force a filled review form (below).
 
    🔴 **No reviewer is shown a previous round** — not its scores, not its reviews, not "the panel
@@ -103,17 +103,18 @@ prose-only read can.
 ## Each reviewer returns a review form
 - Per-criterion score on the venue's scale (map to 1–5 if unstated), one line each, grounded.
 - Overall rec (Reject … Strong Accept) + confidence (1–5).
-- **Readability's implicit drag — model the halo effect, DRIVEN BY THE PERSONA INVENTORY, not felt
+- **Readability's implicit drag — model the halo effect, DRIVEN BY THE COLD-READ REPORT, not felt
   judgment.** A real reviewer who finds the paper a slog silently loses confidence in the *science* and
   lowers the OVERALL score, while writing "methodology concerns" in the box — the penalty rarely shows
   up as an explicit "clarity" mark. Each reviewer must let prose/structure quality move their overall
-  rec and confidence — but the SOURCE of that signal is the handed-in **persona stall inventory +
+  rec and confidence — but the SOURCE of that signal is the handed-in **cold-read report +
   tighten-paper verdict**, never the reviewer's own felt read: a frontier LLM knows every term and
-  cannot experience reader fatigue, so its felt judgment systematically under-fires. If the inventory
-  shows high stall density / walls, or the structural verdict says bloated, the overall score takes a
-  real hit even when every explicit criterion passes. Never score a slog as if it read cleanly — that
+  cannot experience reader fatigue, so its felt judgment systematically under-fires. The cold read's
+  signal is one count, because its readers return verdicts, not severities: the `CANNOT PARSE` rows
+  still `open` in its report's frontmatter. If that count is above zero, or the structural verdict
+  says bloated, the overall score takes a real hit even when every explicit criterion passes. Never score a slog as if it read cleanly — that
   is the gap between this sim and a real PC.
-- Top 3 issues for PC discussion, ranked, with severity (blocker/major/minor).
+- Up to 3 issues for PC discussion, ranked, with severity (blocker/major/minor), or "none".
 - Any must-fix before *they'd* accept (or "none").
 - Artifact reviewer only: run outcome (does it execute? every number reproduce? PASS/FAIL per check),
   anonymization verdict, badge scope.
@@ -123,32 +124,24 @@ prose-only read can.
 - **Score table:** each reviewer × each criterion + overall + confidence, at a glance, and under it
   the overall score's **min / median / max** across reviewers — never a mean alone, which hides the
   one low review that decides a workshop.
-- **Decision:** for a **workshop**, the decision follows the **MIN**: a workshop PC with three
-  reviews and a short discussion does not overrule a reject, so one Reject or Strong Reject sinks the
-  paper however confident the others are. For a conference, the rec the PC discussion converges on,
-  weighted by confidence, with the min named beside it. Either way, a **calibrated accept probability**
-  for this venue and edition.
+- **Predicted decision:** for a **workshop**, name the **MIN** as the risk: a workshop PC with three
+  reviews and a short discussion rarely overrules a reject. For a conference, the rec the PC
+  discussion converges on, weighted by confidence, with the min named beside it. Either way, a
+  **calibrated accept probability** for this venue and edition. The prediction is the report; it is
+  not a condition for stopping (the final review closes after one panel, whatever the scores).
 - 🔴 **One reviewer is not a panel.** A run with fewer than three reviews and a meta-review — a
   Venue-fit spot-check, a single re-review, a panel whose other seats did not return — is recorded as
   what it is (`venue-fit`, `single review`), never in the scorecard's `panel` row. A single
   review recorded as a panel verdict is how a paper reaches submission on an 88% that three real
   reviewers turned into a reject.
-- **Consensus must-fixes:** issues **≥2 reviewers independently raised** — these are the real ones;
-  apply before submitting.
-- **Single-reviewer flags:** noted, triaged (fix if cheap, else defer to camera-ready).
+- **Consensus must-fixes:** issues **≥2 reviewers independently raised** — these are the real ones,
+  proposed to the author, who decides each. "None" is a valid result.
+- **Single-reviewer flags:** noted and proposed to the author, who decides each; none is fixed without his yes.
 - **Split calls:** where reviewers genuinely disagree, and which way the chair leans + why.
-- **Pre-submission checklist:** the surgical edits, ranked, that move the probability most.
 
-## 🔴 The ceiling is not a sentence — it is a PLAN, and the panel writes it
+## The ceiling plan, when the author asks what holds the score down
 
-**The corpus owner, 2026-08-05: "weak accept doesn't work for us. skills should suggest what to do to fix
-the situation."** He is right that this was missing. Three panels in a row named the same ceiling, it was
-faithfully recorded three times, and it never once became work. The fourth panel named it again — and
-the author wrote all three of its prongs off as *"facts, not worth chasing before the deadline"*. Two
-of the three were closed by an hour of editing that same afternoon.
-
-So a panel that reports Weak Accept or Borderline **must** end with a ceiling plan: every prong
-classified, no exceptions, using exactly these three labels.
+Classify each prong of the ceiling with exactly these three labels.
 
 | label | means | what the panel owes |
 |---|---|---|
@@ -169,9 +162,6 @@ the claim falsifiable: *TEXT* invites "then write it", and *IMMOVABLE* invites "
   as a shortfall until the paper says what rungs one and two would require and that nobody has built
   them. Also TEXT.
 
-🔴 **A deadline is a constraint on how much you rework, never an argument for the current form.** If
-the author invokes it against a TEXT prong, that is the failure this section exists to catch.
-
 ## Rules
 - **Independence is non-negotiable** — never let reviewers see each other's reviews before the
   meta-review; shared context collapses the panel into one voice.
@@ -182,9 +172,16 @@ the author invokes it against a TEXT prong, that is the failure this section exi
 - Report the run honestly — if the artifact fails or a number doesn't reproduce, that IS the finding.
 - Don't fabricate the CFP or citations; fetch/verify.
 - **Review-ratchet rule — when the panel's must-fixes include an overclaim, inline-hedging is the LAST
-  resort.** Tighten → cut → move to Threats → only then hedge; and run `tighten-paper` after the round
-  to strip what it deposited. Full rule, with the cost of skipping it:
+  resort.** Tighten → cut → move to Threats → only then hedge. Full rule:
   `paper-pipeline/references/review-ratchet.md`.
+
+## Hostile-seat mode (one seat, before the final review only)
+While drafting, a red-team request ("what would Reviewer 2 attack?") runs the hostile seat of step 3
+alone, on the paper and the quoted CFP. It gets no readability inputs: no structural verdict, no cold
+read, because readability is not its job. It is one reviewer, so it predicts no decision and yields no
+consensus must-fixes. Its report goes under `reviews/`, and the author decides each finding there
+(`fixed`, or `wontfix` with a `note` giving his reason; `review/frontmatter`). Once the final review
+starts, the hostile seat runs only inside the panel.
 
 ## Venue-fit mode (single-lens spot-check — the merged `venue-review-sim`)
 When a full panel is overkill and you just want to predict **"given THIS venue's criteria, bar, and
@@ -228,33 +225,11 @@ discussion-value for workshops, reserve full-paper rigor for full-paper tracks; 
 reject-risk without rubber-stamping. For the real decision, escalate to the full panel below.
 
 ## Compose with
-- `paper-adversarial-review` (defect hunt) as an *input* — this skill is the layer above it (and above
-  its own Venue-fit mode). Run the full panel LAST, after a hardening pass, as the final pre-submission
-  gate.
-- Append each panel's result to the paper's review ledger
-  (`papers/research/<date>-fable-rereview-<venue>.md`) so accept-probability progression is tracked
-  across rounds.
+- `paper-pipeline` — owns the final review; the panel is its last step.
 
 ## The reproduce loop (why this beats a prose review)
 This is "double-blind review as a real venue does it, WITH reproduction." The artifact-runner reviewer
 is the difference-maker on both runs so far: it doesn't judge the paper's numbers, it re-derives them.
-Run the panel, apply the consensus fixes, then **re-run the panel** — same lenses, FRESH reviewers,
-told nothing about the previous round — to confirm the fixes landed and nothing regressed; the
-artifact-runner re-executes every harness each round. The chair, not the reviewers, sets the new
-reviews beside the old ones and checks that each earlier must-fix is gone. Track the min / median / max
-progression in the review ledger. Stop when the panel converges to
-accept and the artifact reproduces clean; don't loop past one confirming round.
-
-## Provenance (two papers, battle-tested)
-- **AgenticDev 2026** (2026-07-12): 3 lenses (stats / practitioner / artifact-runner) + chair. Caught
-  what two prior single-lens rounds missed — a paper↔artifact mismatch ("raw 140-run data" vs shipped
-  per-arm aggregates) and a mislabeled "paired" test, both flagged by ≥2 reviewers. Round→confirm:
-  ~85%→90%.
-- **AISec 2026 @ CCS** (2026-07-13): same shape at a harder (top-tier security) bar. The artifact-runner
-  ran all four harnesses AND stress-tested the release gate (planted a leak, confirmed it caught it);
-  the ethics reviewer caught the release-vs-paper anonymization contradiction (the released artifact
-  named 46 maintainers) — the single highest reject-vector, invisible to a paper-only read. After the
-  fixes + a confirm round, all three moved to Accept (~87–88%, from Weak-Accept/conditional/leak-risk).
-  Lesson: the two things that most move a security paper — an ethics/disclosure contradiction and a
-  reproduction/anonymization leak — live in the ARTIFACT, so the artifact-runner + an ethics lens are
-  non-optional at security venues.
+The panel runs once. A confirming panel runs only when the author asks for it — same lenses, FRESH
+reviewers, told nothing about the previous round; the chair, not the reviewers, sets the new reviews
+beside the old ones and checks that each earlier must-fix is gone. There is no second confirmation.

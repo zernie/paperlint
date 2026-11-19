@@ -7,8 +7,8 @@
 import { experimental_skill } from "vigiles/spec";
 import type { Flow } from "../../scripts/pipeline.ts";
 import buildBenchmark from "../build-benchmark/SKILL.md.spec.ts";
+import researchIdeate from "../research-ideate/SKILL.md.spec.ts";
 import rewriteUnclear from "../rewrite-unclear/SKILL.md.spec.ts";
-import sweepDesignSpace from "../sweep-design-space/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "argument-arc",
@@ -18,7 +18,7 @@ export default experimental_skill({
   body: `
 # argument-arc — does the paper carry the reader to one conclusion
 
-> **Which structure skill?** \`tighten-paper\` = length, sag, what to cut. \`grade-paper-writing\` =
+> **Which structure skill?** \`tighten-paper\` = length, sag, what to cut. \`cold-read-diff\` =
 > sentences, jargon, where a reader stalls. **\`argument-arc\` (you are here) = the load-bearing order
 > of ideas.** The first two assume the argument is right and the delivery is wrong. This one asks
 > whether the argument exists. Run it *before* them — cutting words inside a broken arc is how a
@@ -59,7 +59,7 @@ only as a repair, which meant nobody stated the claim while stating it was still
 - Before a rewrite touching more than one section.
 - After a claim dies. When a refutation pass kills a load-bearing claim, the arc built on it is
   usually dead too, and it will not announce itself — the sections still read fine one at a time.
-- Before \`tighten-paper\` / \`grade-paper-writing\` / \`pc-panel-review\` on any draft whose thesis has
+- Before the final review (\`tighten-paper\` / \`cold-read-diff\` / \`pc-panel-review\`) on any draft whose thesis has
   changed since those gates last ran.
 
 ## How to run it
@@ -143,9 +143,6 @@ most needs help. This skill does:
   done yesterday by someone else, would I choose this shape?"* Time already spent is not evidence.
 - **Salvage explicitly, in writing:** which measurements survive the reframe untouched, which need
   re-analysis, which die with the old frame. Measurements usually survive; framing paragraphs rarely do.
-- **A deadline bounds how much you rebuild. It is never an argument that the current shape is right.**
-  If the author says the paper is *weak*, that is a quality judgment, not procrastination, and citing
-  the calendar against it is a category error.
 - **Rebuild produces a new outline through steps 1–4 above, and it too gets shown before editing.**
 
 ## Rules
@@ -163,24 +160,17 @@ most needs help. This skill does:
 
 ## Compose with
 
-- **Before** \`tighten-paper\` (length/sag) and \`grade-paper-writing\` (sentences/stalls) — both assume
+- **Before** \`tighten-paper\` (length/sag) and \`cold-read-diff\` (sentences/stalls) — both assume
   the arc holds. Their verdicts are the gate inputs \`pc-panel-review\` demands.
 - **After** any refutation pass that killed a load-bearing claim (see the paper's \`CLAIMS.md\`).
-- \`sweep-design-space\` when the outline shows the paper has no distinctive move to make — that is a
-  design problem, not an arc problem.
-
-## Provenance
-
-Built 2026-07-30 after a full-day rewrite of \`the reference paper\` in which the author said the same
-thing five times — *"does not guide the reader sequentially through the ideas, but simply throws a bunch of
-different ideas, references, and benchmarks at them"* — and got five local edits in reply. The pipeline had a skill
-for length, a skill for sentences and a skill for defects; the question *does this paper carry the
-reader to one conclusion* belonged to nobody, and that is the one that failed.`,
+- When the outline shows the paper has no distinctive move to make, stop and tell the author: that is
+  not an arc problem, and whether the idea carries a paper is \`research-ideate\`'s verdict.
+`,
 });
 
 export const flow = {
   stage: "draft",
   handsTo: () => [],
   calls: () => [rewriteUnclear],
-  loopsBackTo: () => [buildBenchmark, sweepDesignSpace],
+  loopsBackTo: () => [buildBenchmark, researchIdeate],
 } satisfies Flow;

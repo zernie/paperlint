@@ -10,7 +10,6 @@ import argumentArc from "../argument-arc/SKILL.md.spec.ts";
 import buildBenchmark from "../build-benchmark/SKILL.md.spec.ts";
 import extendPaper from "../extend-paper/SKILL.md.spec.ts";
 import hardenPaper from "../harden-paper/SKILL.md.spec.ts";
-import paperAdversarialReview from "../paper-adversarial-review/SKILL.md.spec.ts";
 import pcPanelReview from "../pc-panel-review/SKILL.md.spec.ts";
 import planPaperTimeline from "../plan-paper-timeline/SKILL.md.spec.ts";
 import rewriteUnclear from "../rewrite-unclear/SKILL.md.spec.ts";
@@ -19,7 +18,7 @@ import verifyCitations from "../verify-citations/SKILL.md.spec.ts";
 export default experimental_skill({
   name: "study-accepted-papers",
   description:
-    "Learn what a target venue rewards from its own accepted papers and award winners, and turn it into requirements for your study or a diagnosis of your draft. Use EARLY, in SETUP right after find-venue and before the study is designed, so what the venue rewards shapes the experiment (mode A idea, mode B design); and LATE, once text exists (mode C draft: score the paper against the strong-accept mechanisms M1–M10 with line references, blockers, owners and a plan; mode D final: the abstract and introduction, sentence by sentence). Always asks which mode, suggesting one from what exists, and asks the claim, breadth, depth (L0–L3) and budget up front, each with a default and a time estimate. Keeps one corpus per venue in <papers-root>/venues/<venue>/, shared by every paper that targets it; the venue's winners vs its ordinary papers and award papers on the topic at other venues are two corpora, labelled apart. Names the proxy for 'strong accept' and its base rate before any probability. Distinct from find-venue (picks WHERE), research-ideate (is the idea worth doing), map-prior-work and analyze-sibling-paper (your rivals, not what the venue rewards), and pc-panel-review / paper-adversarial-review (red-team your draft).",
+    "Learn what a target venue rewards from its own accepted papers and award winners, and turn it into requirements for your study or a diagnosis of your draft. Use EARLY, in SETUP right after find-venue and before the study is designed, so what the venue rewards shapes the experiment (mode A idea, mode B design); and LATE, once text exists (mode C draft: score the paper against the strong-accept mechanisms M1–M10 with line references, blockers, owners and a plan; mode D final: the abstract and introduction, sentence by sentence). Always asks which mode, suggesting one from what exists, and asks the claim, breadth, depth (L0–L3) and budget up front, each with a default and a time estimate. Keeps one corpus per venue in <papers-root>/venues/<venue>/, shared by every paper that targets it; the venue's winners vs its ordinary papers and award papers on the topic at other venues are two corpora, labelled apart. Names the proxy for 'strong accept' and its base rate before any probability. Distinct from find-venue (picks WHERE), research-ideate (is the idea worth doing), map-prior-work and analyze-sibling-paper (your rivals, not what the venue rewards), and pc-panel-review (red-team your draft).",
   context: "fork",
   tools: [
     "Read",
@@ -43,7 +42,7 @@ It answers a different question from its neighbours:
 - \`find-venue\`: *where* should this go?
 - \`research-ideate\`: is the *idea* worth doing?
 - \`map-prior-work\` / \`analyze-sibling-paper\`: who are the *rivals*, and is the delta real?
-- \`pc-panel-review\` / \`paper-adversarial-review\`: what is wrong with *my draft*?
+- \`pc-panel-review\`: what is wrong with *my draft*?
 - **\`study-accepted-papers\`: what does it take to be *strong* at THIS venue, judged by its own papers?**
 
 **Two entry points, one skill.** In \`paper-pipeline\` it sits in SETUP, right after \`find-venue\`: the
@@ -183,7 +182,7 @@ weak accept, so check these first); the **review criteria**; the **award criteri
 - **"Accepted" is the reference, "strong" is the target.** Isolate what got in enthusiastically, against
   ordinary papers of the same years, not what got in.
 - **Venue-specific, not generic.** A lever counts only if this venue's papers, rubric or committee ground
-  it. Prose craft is \`grade-paper-writing\` and \`tighten-paper\`.
+  it. Prose craft is \`cold-read-diff\` and \`tighten-paper\`.
 - **Cheap or expensive, and the deadline.** Tag every lever: CHEAP (framing, a scoped sentence, a cited
   belief, a missing citation) or EXPENSIVE (a new oracle, a new column, a new corpus). In mode C or D an
   expensive lever is normally an \`extend-paper\` task or an accepted ceiling, said explicitly; in modes A
@@ -195,7 +194,7 @@ weak accept, so check these first); the **review criteria**; the **award criteri
 - \`find-venue\` (upstream) → this skill in mode A; \`argument-arc\` (frame mode) takes its requirements.
 - \`build-benchmark\` — takes mode A/B requirements (the oracle, the column) into the study design.
 - \`harden-paper\` — the pre-submit gate; this skill gives it the venue-specific content axis.
-- \`pc-panel-review\` / \`paper-adversarial-review\` — red-team the draft; this skill says which bar the
+- \`pc-panel-review\` — red-team the draft; this skill says which bar the
   red-team should hold it to.
 - \`analyze-sibling-paper\` — a deep read that turns out to be a rival goes there for the scoop question.
 - \`verify-citations\` — takes the citation gaps.
@@ -209,7 +208,6 @@ export const flow = {
     argumentArc,
     buildBenchmark,
     planPaperTimeline,
-    paperAdversarialReview,
     pcPanelReview,
     hardenPaper,
     extendPaper,

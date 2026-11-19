@@ -38,19 +38,16 @@ the work he was complaining about is **the asking**, and a pull-only skill leave
 So on any turn that touched a paper, the reply ends with **three lines, unprompted**:
 
 1. **where it stands** — the build's own verdict line, page count, deadline countdown;
-2. **the single next action, with an owner** — not a menu. If it is mine, it is already started or
-   started in the same reply. If it is his, it says exactly what to click.
-3. **what is stale** — a gate whose verdict predates the current text, named.
+2. **the next action, with an owner** — not a menu; if it is his, it says exactly what to click. "None"
+   is a valid answer: a paper whose final review is closed and that waits only on the author has none.
+3. **what is stale** — a gate whose verdict predates the current text, named. After the final review
+   is closed (\`paper-pipeline\`, "The final review"), an ordinary edit leaves its gates as they are:
+   name the edit, not a stale gate.
 
-Three failures make this a rule rather than a preference, all in one session:
+Two failures make this a rule rather than a preference, both in one session:
 - I finished a page-fit cut and stopped, so he asked what the status was;
 - I left artifact hosting on his side of the split for a day and a half while the credential to clear
-  it sat in the environment;
-- three consecutive panels returned Weak Accept and the ceiling they named was never the next task,
-  because nothing turned "here is the score" into "here is what to do about it".
-
-**Never end a paper turn on a completed sub-task alone.** "Fits in 8 pages" is a measurement, not a
-status; the status is what that measurement makes possible next.
+  it sat in the environment.
 
 ## How to run it
 
@@ -85,6 +82,11 @@ gate's verdict **does not describe the current paper** — say so explicitly, an
 An accept-probability from a superseded draft is not evidence about this one; carrying it forward is
 the single most common way a status report lies.
 
+Two exceptions. Once the final review is closed (the \`panel\` row reads \`☑ closed <date>\`), its gates
+stand for the paper: list the edits made since the close, and never report its gates as due again.
+The \`cites\` row follows the bibliography, not the text (\`verify-citations\`): only a \`\\cite\` added
+or moved since its date leaves it short.
+
 ### 3. Read the judgement rows — from BOTH checklists, they answer different questions
 
 The project already carries the checklists this skill should report against. Do not invent a new list
@@ -112,7 +114,8 @@ Short. He is asking because he wants to decide what to do next, not to read a re
 2. **Blockers, worst first, split by owner** — 🔴 his (accounts, hosting, anything needing a human or a
    login) vs 🔵 mine (text, gates, artifacts). His come first: he can start them while I work.
 3. **Gates** (\`PIPELINE-STATUS.md\`), each marked ✅ ran against current text · ⚠️ ran against an older
-   text (name what changed) · ☐ never run. Cross-check against the hook's canonical gate list so a
+   text (name what changed; after the close, ✅ with the edits since the close named instead) · ☐ never
+   run. Cross-check against the hook's canonical gate list so a
    gate with no row at all shows up as ☐ rather than vanishing.
 4. **Format compliance** (\`SUBMIT-CHECKLIST.md\`) — one line: green, or the specific item that is not.
    Page limit and blind model come from the measured build, not from the checklist's memory of them.
@@ -126,8 +129,8 @@ Short. He is asking because he wants to decide what to do next, not to read a re
   after. If a task was not launched, the honest line is "not started".
 - **Owner-split is not decoration.** A blocker only he can clear (an account, an upload, a phone call)
   belongs at the top, because every hour it sits is an hour of pure schedule loss.
-- **Numbers, not adjectives.** "8/8 pages, fits" not "about right"; "78 stalls over 8 pages against a
-  threshold of 2" not "readable enough".
+- **Numbers, not adjectives.** "8/8 pages, fits" not "about right"; "3 \`CANNOT PARSE\` rows still
+  open" not "readable enough".
 - **Say what is NOT known.** A gate never run is a real answer and more useful than an optimistic one.
 - 🔴 **Send the built PDF with the report, every time, without being asked** (\`SendUserFile\`, from the
   outdir the report's page count came from — never an older copy). The corpus owner, 2026-08-05: *"and I often ask for the PDF to be delivered"*. He reads the paper, not the scorecard; a status report that makes him ask for the
@@ -146,12 +149,7 @@ Short. He is asking because he wants to decide what to do next, not to read a re
 - \`paper-pipeline\` — owns the stage contract this reads.
 - \`harden-paper\` — the decision to submit; this only reports the inputs to it.
 - \`handoff\` — end-of-session preservation; this is the start-of-session counterpart.
-
-## Provenance
-
-Built 2026-08-04, the day before the \`compile-rules-2026\` deadline, after the author asked for paper status
-for the fourth time in one session and pointed out it should be a command: *"I ask this so often... there should be a skill"*. He was right, and the two things the skill measures first are the two
-things chat had most recently gotten wrong.`,
+`,
 });
 
 export const flow = {

@@ -29,8 +29,8 @@ or in one paper's own `paperlint.json`, for that paper alone. See
 ## Why
 
 A reader sees a paragraph's length before reading a word. A page-long block is skimmed past, and what
-the argument turns on in the middle of it is lost. 150 is the wall the `grade-paper-writing` skill
-names; it is a general default, not a venue's.
+the argument turns on in the middle of it is lost. 150 is the wall `writing-craft.md` names (its
+"wall-of-text check"); it is a general default, not a venue's.
 
 Measured with this rule's own counter on the accepted papers of `fixtures/accepted-papers/`
 (p50 / p95 / p99 / max in words; one finding per paragraph over 150):

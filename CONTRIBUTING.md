@@ -242,7 +242,7 @@ Licensing differs too: that suite is CC BY-NC 4.0, this is MIT.
 
 **The skills** are markdown, one directory each, and they name the scripts
 they run. Point your agent at `skills/` and ask it for a stage by name. The stages that need taste
-stay taste and say so — `paper-adversarial-review` does not pretend to be a checker.
+stay taste and say so — `pc-panel-review` does not pretend to be a checker.
 
 **The 3 hooks** run on [vigiles](https://github.com/zernie/vigiles), a runner that executes checks
 inside an agent's edit loop. It is an ordinary dependency of this package, so it installs with it —

@@ -1047,7 +1047,7 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     reports: {
       tree: paper(tex("x"), {
         [`${P}/reviews/r1.md`]:
-          "---\nfindings:\n  - id: 1\n    status: open\n---\n# Review\n",
+          "---\nfindings:\n  - id: 1\n    status: done\n---\n# Review\n",
       }),
       file: `${P}/reviews/r1.md`,
       severity: 2,

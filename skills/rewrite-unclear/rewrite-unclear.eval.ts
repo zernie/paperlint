@@ -7,9 +7,8 @@
  *
  * The should-fire set is phrased the way authors complain about a passage (measured before this
  * skill existed: twelve such phrases, two trials each, fired no shipped skill at all). The
- * should-not-fire set is the neighbours: a length cut (`tighten-paper`), a whole-paper grade
- * (`grade-paper-writing`), a read of the last edit (`cold-read-diff`) and the argument's order
- * (`argument-arc`).
+ * should-not-fire set is the neighbours: a length cut (`tighten-paper`), a request for a writing
+ * grade, a read of the last edit (`cold-read-diff`) and the argument's order (`argument-arc`).
  *
  * Costs money; not CI.
  *   npx vigiles eval skills/rewrite-unclear/rewrite-unclear.eval.ts

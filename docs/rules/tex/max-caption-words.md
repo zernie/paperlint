@@ -40,8 +40,8 @@ No call for papers states a caption limit, so no venue preset carries the number
 A reader reads a caption in one pass with its figure. A caption that holds the method is a section
 under a picture.
 
-**Where 100 and 40 come from.** They are carried over unchanged from the script this rule replaced
-(the `grade-paper-writing` skill's prose counter), where they were set from one paper's own four
+**Where 100 and 40 come from.** They are carried over unchanged from the prose counter this rule
+replaced, where they were set from one paper's own four
 captions. They are not calibrated on accepted papers. On the real-papers corpus (114 papers, the
 files each build recorded spliced in), measured 2026-11-19 with this rule's counter:
 
