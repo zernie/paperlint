@@ -1,0 +1,1007 @@
+{
+  "2610.22056v1": {
+    "clsOpts": "",
+    "style": "neurips_2025",
+    "styleOpts": "final",
+    "mainCandidates": 1,
+    "presetWhy": "the NeurIPS style family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.bbl to paper.bbl",
+      "main.tex to paper.tex"
+    ],
+    "title": "Progress Reward Model for Reinforcement Learning via Large Language Models"
+  },
+  "2609.07876v1": {
+    "clsOpts": "",
+    "style": "neurips_2025",
+    "styleOpts": "final",
+    "mainCandidates": 1,
+    "presetWhy": "the NeurIPS style family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "neurips_2025.tex to paper.tex"
+    ],
+    "title": "LLM Layers Immediately Correct Each Other"
+  },
+  "2605.29097v2": {
+    "clsOpts": "",
+    "style": "neurips_2025",
+    "styleOpts": "final",
+    "mainCandidates": 1,
+    "presetWhy": "the NeurIPS style family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.tex to paper.tex"
+    ],
+    "title": "GeRaF: Neural Geometry Reconstruction from Radio Frequency Signals"
+  },
+  "2604.14149v2": {
+    "clsOpts": "",
+    "style": "neurips_2025",
+    "styleOpts": "final",
+    "mainCandidates": 1,
+    "presetWhy": "the NeurIPS style family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "neurips_2025.tex to paper.tex"
+    ],
+    "title": "One Token per Highly Selective Frame: Towards Extreme Compression for Long Video Understanding"
+  },
+  "2611.02620v1": {
+    "clsOpts": "",
+    "style": "icml2025",
+    "styleOpts": "accepted",
+    "mainCandidates": 1,
+    "presetWhy": "the ICML style family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.bbl to paper.bbl",
+      "main.tex to paper.tex"
+    ],
+    "title": "Adaptive Localization of Knowledge Negation for Continual LLM Unlearning"
+  },
+  "2608.30295v1": {
+    "clsOpts": "",
+    "style": "icml2025",
+    "styleOpts": "accepted",
+    "mainCandidates": 1,
+    "presetWhy": "the ICML style family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.tex to paper.tex"
+    ],
+    "title": "CateKV: On Sequential Consistency for Long-Context LLM Inference Acceleration"
+  },
+  "2606.16301v1": {
+    "clsOpts": "",
+    "style": "icml2025",
+    "styleOpts": "accepted",
+    "mainCandidates": 1,
+    "presetWhy": "the ICML style family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "example_paper.bbl to paper.bbl",
+      "example_paper.tex to paper.tex"
+    ],
+    "title": "One-Step Generalization Ratio Guided Optimization for Domain Generalization"
+  },
+  "2610.05501v1": {
+    "clsOpts": "",
+    "style": "iclr2025_conference",
+    "styleOpts": "",
+    "mainCandidates": 1,
+    "presetWhy": "no preset ships for this edition and no template family matches the class: no `extends`, as arxiv-papers does for such papers, but with the accepted cycle",
+    "edits": [],
+    "renames": [
+      "main.bbl to paper.bbl",
+      "main.tex to paper.tex"
+    ],
+    "title": "Logic-Logit: A Logic-Based Approach to Choice Modeling"
+  },
+  "2607.22012v1": {
+    "clsOpts": "",
+    "style": "iclr2025_conference",
+    "styleOpts": "",
+    "mainCandidates": 1,
+    "presetWhy": "no preset ships for this edition and no template family matches the class: no `extends`, as arxiv-papers does for such papers, but with the accepted cycle",
+    "edits": [],
+    "renames": [
+      "main.tex to paper.tex"
+    ],
+    "title": "Cross-Domain Off-Policy Evaluation and Learning for Contextual Bandits"
+  },
+  "2607.00671v1": {
+    "clsOpts": "",
+    "style": "iclr2025_conference",
+    "styleOpts": "",
+    "mainCandidates": 1,
+    "presetWhy": "no preset ships for this edition and no template family matches the class: no `extends`, as arxiv-papers does for such papers, but with the accepted cycle",
+    "edits": [],
+    "renames": [
+      "0-iclr2025.tex to paper.tex"
+    ],
+    "title": "Multi-Label Node Classification with Label Influence Propagation"
+  },
+  "2611.20445v1": {
+    "clsOpts": "",
+    "style": "icml2026",
+    "styleOpts": "accepted",
+    "mainCandidates": 1,
+    "presetWhy": "the ICML style family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.tex to paper.tex"
+    ],
+    "title": "Explainable Federated Learning via Global-Local Attribution Alignment"
+  },
+  "2611.18370v1": {
+    "clsOpts": "",
+    "style": "icml2026",
+    "styleOpts": "accepted",
+    "mainCandidates": 1,
+    "presetWhy": "the ICML style family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.tex to paper.tex"
+    ],
+    "title": "f-Divergence Self-Play for Tabular Anomaly Detection via Large Language Models"
+  },
+  "2611.06244v1": {
+    "clsOpts": "",
+    "style": "icml2026",
+    "styleOpts": "accepted",
+    "mainCandidates": 1,
+    "presetWhy": "the ICML style family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.tex to paper.tex"
+    ],
+    "title": "Rubric Curriculum RL: Exploiting the Generation-Verification Gap in Non-Verifiable Domains"
+  },
+  "2611.01870v1": {
+    "clsOpts": "",
+    "style": "iclr2026_conference",
+    "styleOpts": "",
+    "mainCandidates": 1,
+    "presetWhy": "no preset ships for this edition and no template family matches the class: no `extends`, as arxiv-papers does for such papers, but with the accepted cycle",
+    "edits": [],
+    "renames": [
+      "aspec_iclr.bbl to paper.bbl",
+      "aspec_iclr.tex to paper.tex"
+    ],
+    "title": "Automated Stateful Specialization for Adaptive Agent Systems"
+  },
+  "2607.26723v1": {
+    "clsOpts": "",
+    "style": "iclr2026_conference",
+    "styleOpts": "",
+    "mainCandidates": 1,
+    "presetWhy": "no preset ships for this edition and no template family matches the class: no `extends`, as arxiv-papers does for such papers, but with the accepted cycle",
+    "edits": [],
+    "renames": [
+      "main.tex to paper.tex"
+    ],
+    "title": "FARI: Robust One-Step Inversion for Watermarking in Diffusion Models"
+  },
+  "2607.22039v1": {
+    "clsOpts": "",
+    "style": "iclr2026_conference",
+    "styleOpts": "",
+    "mainCandidates": 1,
+    "presetWhy": "no preset ships for this edition and no template family matches the class: no `extends`, as arxiv-papers does for such papers, but with the accepted cycle",
+    "edits": [],
+    "renames": [
+      "iclr2026_conference.tex to paper.tex"
+    ],
+    "title": "Enough is as good as a feast: A Comprehensive Analysis of How Reinforcement Learning Mitigates Task Conflicts in LLMs"
+  },
+  "2611.24904v1": {
+    "clsOpts": "",
+    "style": "neurips_2026",
+    "styleOpts": "eandd, final",
+    "mainCandidates": 1,
+    "presetWhy": "the shipped edition preset neurips-2026",
+    "edits": [],
+    "renames": [
+      "neurips_2026.bbl to paper.bbl",
+      "neurips_2026.tex to paper.tex"
+    ],
+    "title": "ShadowTransfer: A Geographic Transfer Benchmark for Overhead Shadow Detection"
+  },
+  "2611.24376v1": {
+    "clsOpts": "",
+    "style": "neurips_2026",
+    "styleOpts": "main, final",
+    "mainCandidates": 1,
+    "presetWhy": "the shipped edition preset neurips-2026",
+    "edits": [],
+    "renames": [
+      "neurips_2026.tex to paper.tex"
+    ],
+    "title": "Teaching VLMs What to Say, Not How to Reason: Rethinking Counterfactual Reasoning in Autonomous Driving"
+  },
+  "2604.08115v1": {
+    "clsOpts": "11pt",
+    "style": "acl",
+    "styleOpts": "final",
+    "mainCandidates": 1,
+    "presetWhy": "the ACL style family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.tex to paper.tex"
+    ],
+    "title": "Revise: A Framework for Revising OCRed text in Practical Information Systems with Data Contamination Strategy"
+  },
+  "2603.02248v1": {
+    "clsOpts": "11pt",
+    "style": "acl",
+    "styleOpts": "final",
+    "mainCandidates": 1,
+    "presetWhy": "the ACL style family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.tex to paper.tex"
+    ],
+    "title": "HELIOS: Harmonizing Early Fusion, Late Fusion, and LLM Reasoning for Multi-Granular Table-Text Retrieval"
+  },
+  "2604.24052v1": {
+    "clsOpts": "11pt",
+    "style": "acl",
+    "styleOpts": "final",
+    "mainCandidates": 1,
+    "presetWhy": "the ACL style family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "acl_latex.tex to paper.tex"
+    ],
+    "title": "QEVA: A Reference-Free Evaluation Metric for Narrative Video Summarization with Multimodal Question Answering"
+  },
+  "2602.22696v1": {
+    "clsOpts": "11pt",
+    "style": "acl",
+    "styleOpts": "final",
+    "mainCandidates": 1,
+    "presetWhy": "the ACL style family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "acl_latex.tex to paper.tex"
+    ],
+    "title": "Enhancing Persuasive Dialogue Agents by Synthesizing Cross-Disciplinary Communication Strategies"
+  },
+  "2606.04286v1": {
+    "clsOpts": "11pt",
+    "style": "acl",
+    "styleOpts": "final",
+    "mainCandidates": 1,
+    "presetWhy": "the ACL style family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "causal-text-main.tex to paper.tex"
+    ],
+    "title": "Using Text-Based Causal Inference to Disentangle Factors Influencing Online Review Ratings"
+  },
+  "2603.05996v1": {
+    "clsOpts": "11pt",
+    "style": "acl",
+    "styleOpts": "",
+    "mainCandidates": 1,
+    "presetWhy": "the ACL style family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.tex to paper.tex"
+    ],
+    "title": "Track-SQL: Enhancing Generative Language Models with Dual-Extractive Modules for Schema and Context Tracking in Multi-turn Text-to-SQL"
+  },
+  "2610.17767v1": {
+    "clsOpts": "11pt",
+    "style": "acl",
+    "styleOpts": "final",
+    "mainCandidates": 1,
+    "presetWhy": "the ACL style family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.tex to paper.tex"
+    ],
+    "title": "Efficiently Learning To Reason or Not to Reason: Root-token Policy Optimization for Adaptive Thinking"
+  },
+  "2609.32684v1": {
+    "clsOpts": "11pt",
+    "style": "acl",
+    "styleOpts": "final",
+    "mainCandidates": 1,
+    "presetWhy": "the ACL style family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "acl_latex.bbl to paper.bbl",
+      "acl_latex.tex to paper.tex"
+    ],
+    "title": "Focusing Condition: Inference-Time Self-Contrastive Steering Elicits Better Conditional Text Embeddings in LLMs"
+  },
+  "2611.23969v1": {
+    "clsOpts": "11pt",
+    "style": "acl",
+    "styleOpts": "final",
+    "mainCandidates": 1,
+    "presetWhy": "the shipped edition preset emnlp-2026",
+    "edits": [],
+    "renames": [
+      "main.tex to paper.tex"
+    ],
+    "title": "ReflectRec: Cycle-Consistency Preference Verification for LLM-based Recommendation"
+  },
+  "2611.23530v1": {
+    "clsOpts": "11pt",
+    "style": "acl",
+    "styleOpts": "final",
+    "mainCandidates": 1,
+    "presetWhy": "the shipped edition preset emnlp-2026",
+    "edits": [],
+    "renames": [
+      "main.bbl to paper.bbl",
+      "main.tex to paper.tex"
+    ],
+    "title": "Dreaming Up Authors: Factual Prevalence and LLM Hallucinations in Academic Authorship Attribution"
+  },
+  "2610.17635v1": {
+    "clsOpts": "letterpaper",
+    "style": "aaai25",
+    "styleOpts": "",
+    "mainCandidates": 1,
+    "presetWhy": "the AAAI Press style family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "anonymous-submission-latex-2025.tex to paper.tex"
+    ],
+    "title": "Calibrated Disambiguation for Partial Multi-label Learning"
+  },
+  "2607.13812v1": {
+    "clsOpts": "letterpaper",
+    "style": "aaai25",
+    "styleOpts": "",
+    "mainCandidates": 1,
+    "presetWhy": "the AAAI Press style family as no preset ships for this edition",
+    "edits": [
+      "\\input{Formatting-Instructions-LaTeX-2025.tex} to \\input{paper.tex}"
+    ],
+    "renames": [
+      "Formatting-Instructions-LaTeX-2025.tex to paper.tex"
+    ],
+    "title": "TCAM-Diff: Triplane-Aware Cross-Attention Medical Diffusion Model"
+  },
+  "2611.15538v1": {
+    "clsOpts": "letterpaper",
+    "style": "aaai2026",
+    "styleOpts": "",
+    "mainCandidates": 1,
+    "presetWhy": "the AAAI Press style family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.tex to paper.tex"
+    ],
+    "title": "Faithful in Steps: Improving Generalization and Citation in RAG via Query Decomposition"
+  },
+  "2611.05979v1": {
+    "clsOpts": "letterpaper",
+    "style": "aaai2026",
+    "styleOpts": "",
+    "mainCandidates": 1,
+    "presetWhy": "the AAAI Press style family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.bbl to paper.bbl",
+      "main.tex to paper.tex"
+    ],
+    "title": "Learning Object-Centric Motion Priors from Human for Robotic Dexterous Manipulation"
+  },
+  "2609.20699v2": {
+    "clsOpts": "",
+    "style": "ijcai25",
+    "styleOpts": "",
+    "mainCandidates": 1,
+    "presetWhy": "no preset ships for this edition and no template family matches the class: no `extends`, as arxiv-papers does for such papers, but with the accepted cycle",
+    "edits": [],
+    "renames": [
+      "main.bbl to paper.bbl",
+      "main.tex to paper.tex"
+    ],
+    "title": "Large-Scale Trade-Off Curve Computation for Incentive Allocation with Cardinality and Matroid Constraints"
+  },
+  "2607.17290v1": {
+    "clsOpts": "",
+    "style": "ijcai26",
+    "styleOpts": "",
+    "mainCandidates": 1,
+    "presetWhy": "no preset ships for this edition and no template family matches the class: no `extends`, as arxiv-papers does for such papers, but with the accepted cycle",
+    "edits": [],
+    "renames": [
+      "ijcai26.tex to paper.tex"
+    ],
+    "title": "Lookahead Branching for Neural Network Verification"
+  },
+  "2607.00058v1": {
+    "clsOpts": "",
+    "style": "ijcai26",
+    "styleOpts": "",
+    "mainCandidates": 1,
+    "presetWhy": "no preset ships for this edition and no template family matches the class: no `extends`, as arxiv-papers does for such papers, but with the accepted cycle",
+    "edits": [],
+    "renames": [
+      "ijcai26.tex to paper.tex"
+    ],
+    "title": "Joint Medical Image Enhancement and Segmentation with Diffusion-based Symbiotic Information Interaction"
+  },
+  "2507.16372v1": {
+    "clsOpts": "letterpaper,twocolumn,10pt",
+    "style": "usenix-2020-09",
+    "styleOpts": "",
+    "mainCandidates": 1,
+    "presetWhy": "no preset ships for this edition and no template family matches the class: no `extends`, as arxiv-papers does for such papers, but with the accepted cycle",
+    "edits": [],
+    "renames": [
+      "arxiv.bbl to paper.bbl",
+      "arxiv.tex to paper.tex"
+    ],
+    "title": "Depth Gives a False Sense of Privacy: LLM Internal States Inversion"
+  },
+  "2503.10239v1": {
+    "clsOpts": "letterpaper,twocolumn,10pt",
+    "style": "usenix-2020-09",
+    "styleOpts": "",
+    "mainCandidates": 1,
+    "presetWhy": "no preset ships for this edition and no template family matches the class: no `extends`, as arxiv-papers does for such papers, but with the accepted cycle",
+    "edits": [],
+    "renames": [
+      "usenix-main.bbl to paper.bbl",
+      "usenix-main.tex to paper.tex"
+    ],
+    "title": "I Can Tell Your Secrets: Inferring Privacy Attributes from Mini-app Interaction History in Super-apps"
+  },
+  "2503.03494v2": {
+    "clsOpts": "letterpaper,twocolumn,10pt",
+    "style": "usenix-2020-09",
+    "styleOpts": "",
+    "mainCandidates": 1,
+    "presetWhy": "no preset ships for this edition and no template family matches the class: no `extends`, as arxiv-papers does for such papers, but with the accepted cycle",
+    "edits": [],
+    "renames": [
+      "main.bbl to paper.bbl",
+      "main.tex to paper.tex"
+    ],
+    "title": "Oblivious Digital Tokens"
+  },
+  "2411.10883v2": {
+    "clsOpts": "conference,compsoc",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the IEEE conference family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.bbl to paper.bbl",
+      "main.tex to paper.tex"
+    ],
+    "title": "I Know What You Sync: Covert and Side Channel Attacks on File Systems via syncfs"
+  },
+  "2410.15215v1": {
+    "clsOpts": "conference,compsoc",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the IEEE conference family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.bbl to paper.bbl",
+      "main.tex to paper.tex"
+    ],
+    "title": "DataSeal: Ensuring the Verifiability of Private Computation on Encrypted Data"
+  },
+  "2509.10895v1": {
+    "clsOpts": "sigconf",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the acmart sigconf family as no preset ships for this edition",
+    "edits": [],
+    "renames": [],
+    "title": "Finding SSH Strict Key Exchange Violations by State Learning"
+  },
+  "2509.09331v1": {
+    "clsOpts": "sigconf",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the acmart sigconf family as no preset ships for this edition",
+    "edits": [],
+    "renames": [],
+    "title": "On the Security of SSH Client Signatures"
+  },
+  "2509.07941v1": {
+    "clsOpts": "sigconf",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the acmart sigconf family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.bbl to paper.bbl",
+      "main.tex to paper.tex"
+    ],
+    "title": "ImportSnare: Directed \"Code Manual\" Hijacking in Retrieval-Augmented Code Generation"
+  },
+  "2502.03718v1": {
+    "clsOpts": "letterpaper,twocolumn,10pt",
+    "style": "usenix2019_v3",
+    "styleOpts": "",
+    "mainCandidates": 1,
+    "presetWhy": "no preset ships for this edition and no template family matches the class: no `extends`, as arxiv-papers does for such papers, but with the accepted cycle",
+    "edits": [],
+    "renames": [
+      "main.bbl to paper.bbl",
+      "main.tex to paper.tex"
+    ],
+    "title": "Following Devils' Footprint: Towards Real-time Detection of Price Manipulation Attacks"
+  },
+  "2503.09022v3": {
+    "clsOpts": "conference,compsoc",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the IEEE conference family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.bbl to paper.bbl",
+      "main.tex to paper.tex"
+    ],
+    "title": "Prompt Inversion Attack against Collaborative Inference of Large Language Models"
+  },
+  "2609.14475v1": {
+    "clsOpts": "sigconf",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the acmart sigconf family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "total_all.tex to paper.tex"
+    ],
+    "title": "EchoFuzz: Empowering Smart Contract Fuzzing with Large Language Models"
+  },
+  "2603.21530v1": {
+    "clsOpts": "sigconf",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the acmart sigconf family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.tex to paper.tex"
+    ],
+    "title": "LLM-Based Test Case Generation in DBMS through Monte Carlo Tree Search"
+  },
+  "2503.17220v2": {
+    "clsOpts": "sigconf,nonacm",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the acmart sigconf family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.bbl to paper.bbl",
+      "main.tex to paper.tex"
+    ],
+    "title": "InfraFix: Technology-Agnostic Repair of Infrastructure as Code"
+  },
+  "2412.16620v1": {
+    "clsOpts": "acmsmall,screen",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the acmart acmsmall family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.bbl to paper.bbl",
+      "main.tex to paper.tex"
+    ],
+    "title": "A Large-scale Empirical Study on Fine-tuning Large Language Models for Unit Testing"
+  },
+  "2510.14465v1": {
+    "clsOpts": "10pt,conference",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the IEEE conference family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "ase-main.bbl to paper.bbl",
+      "ase-main.tex to paper.tex"
+    ],
+    "title": "Towards Automated Governance: A DSL for Human-Agent Collaboration in Software Projects"
+  },
+  "2601.21761v1": {
+    "clsOpts": "sigconf",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the acmart sigconf family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.tex to paper.tex"
+    ],
+    "title": "Towards A Sustainable Future for Peer Review in Software Engineering"
+  },
+  "2510.00446v1": {
+    "clsOpts": "10pt,conference",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the IEEE conference family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.bbl to paper.bbl",
+      "main.tex to paper.tex"
+    ],
+    "title": "LongCodeZip: Compress Long Context for Code Language Models"
+  },
+  "2608.28713v1": {
+    "clsOpts": "acmsmall",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the acmart acmsmall family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.bbl to paper.bbl",
+      "main.tex to paper.tex"
+    ],
+    "title": "Rust's Type Checker Implementation Is Unsound: An Empirical Study on Soundness Bugs in rustc"
+  },
+  "2604.10875v1": {
+    "clsOpts": "sigconf",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the acmart sigconf family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.tex to paper.tex"
+    ],
+    "title": "Compliant But Unsatisfactory: The Gap Between Auditing Standards and Practices for Probabilistic Genotyping Software"
+  },
+  "2603.26520v1": {
+    "clsOpts": "sigconf,nonacm",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the acmart sigconf family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.tex to paper.tex"
+    ],
+    "title": "Characterizing Scam-Driven Human Trafficking Across Chinese Borders and Online Community Responses on RedNote"
+  },
+  "2504.18044v1": {
+    "clsOpts": "sigconf",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the acmart sigconf family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "sample-base.bbl to paper.bbl",
+      "sample-base.tex to paper.tex"
+    ],
+    "title": "AI Ethics and Social Norms: Exploring ChatGPT's Capabilities From What to How"
+  },
+  "2603.19504v1": {
+    "clsOpts": "sigconf",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the acmart sigconf family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.tex to paper.tex"
+    ],
+    "title": "Beyond the Desk: Barriers and Future Opportunities for AI to Assist Scientists in Embodied Physical Tasks"
+  },
+  "2505.21661v1": {
+    "clsOpts": "letterpaper,twocolumn,10pt",
+    "style": "usenix-2020-09",
+    "styleOpts": "",
+    "mainCandidates": 1,
+    "presetWhy": "no preset ships for this edition and no template family matches the class: no `extends`, as arxiv-papers does for such papers, but with the accepted cycle",
+    "edits": [],
+    "renames": [
+      "main.bbl to paper.bbl",
+      "main.tex to paper.tex"
+    ],
+    "title": "KPerfIR: Towards an Open and Compiler-centric Ecosystem for GPU Kernel Performance Tooling on Modern AI Workloads"
+  },
+  "2411.10188v2": {
+    "clsOpts": "english,acmsmall, screen, nonacm",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the acmart acmsmall family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "tech-report.bbl to paper.bbl",
+      "tech-report.tex to paper.tex"
+    ],
+    "title": "Reachability Analysis of the Domain Name System"
+  },
+  "2505.02146v1": {
+    "clsOpts": "letterpaper,twocolumn,10pt",
+    "style": "usenix2019_v3",
+    "styleOpts": "",
+    "mainCandidates": 1,
+    "presetWhy": "no preset ships for this edition and no template family matches the class: no `extends`, as arxiv-papers does for such papers, but with the accepted cycle",
+    "edits": [],
+    "renames": [
+      "main.bbl to paper.bbl",
+      "main.tex to paper.tex"
+    ],
+    "title": "QiMeng-Xpiler: Transcompiling Tensor Programs for Deep Learning Systems with a Neural-Symbolic Approach"
+  },
+  "2603.21710v2": {
+    "clsOpts": "acmsmall",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the acmart acmsmall family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "FastMerging-ACM.tex to paper.tex"
+    ],
+    "title": "FGIM: a Fast Graph-based Indexes Merging Framework for Approximate Nearest Neighbor Search"
+  },
+  "2602.20049v1": {
+    "clsOpts": "acmsmall, nonacm, screen,svgnames,x11names",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the acmart acmsmall family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.bbl to paper.bbl",
+      "main.tex to paper.tex"
+    ],
+    "title": "noDice: Inference for Discrete Probabilistic Programs with Nondeterminism and Conditioning"
+  },
+  "2601.19162v2": {
+    "clsOpts": "letterpaper,twocolumn,10pt",
+    "style": "usenix-2020-09",
+    "styleOpts": "",
+    "mainCandidates": 1,
+    "presetWhy": "no preset ships for this edition and no template family matches the class: no `extends`, as arxiv-papers does for such papers, but with the accepted cycle",
+    "edits": [],
+    "renames": [
+      "smec-paper.tex to paper.tex"
+    ],
+    "title": "Enabling SLO-Aware 5G Multi-Access Edge Computing with SMEC"
+  },
+  "2603.19671v1": {
+    "clsOpts": "acmsmall",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the acmart acmsmall family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.bbl to paper.bbl",
+      "main.tex to paper.tex"
+    ],
+    "title": "Acyclic Graph Pattern Counting under Local Differential Privacy"
+  },
+  "2606.21736v1": {
+    "clsOpts": "10pt,twocolumn,letterpaper",
+    "style": "cvpr",
+    "styleOpts": "",
+    "mainCandidates": 1,
+    "presetWhy": "no preset ships for this edition and no template family matches the class: no `extends`, as arxiv-papers does for such papers, but with the accepted cycle",
+    "edits": [],
+    "renames": [
+      "main.tex to paper.tex"
+    ],
+    "title": "Adversarial Domain Prompt Tuning and Generation for Single Domain Generalization"
+  },
+  "2501.05408v3": {
+    "clsOpts": "sigplan,10pt",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "no preset: the class is acmart with format [sigplan,10pt], which is neither the sigconf nor the acmsmall family, and no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.bbl to paper.bbl",
+      "main.tex to paper.tex"
+    ],
+    "title": "Tempo: Compiled Dynamic Deep Learning with Symbolic Dependence Graphs",
+    "versionNote": "latest arXiv version 2025-10-08; venue date 2025-01-09"
+  },
+  "2503.20191v2": {
+    "clsOpts": "sigplan,twocolumn",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "no preset: the class is acmart with format [sigplan,twocolumn], which is neither the sigconf nor the acmsmall family, and no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.tex to paper.tex"
+    ],
+    "title": "Maya: Optimizing Deep Learning Training Workloads using GPU Runtime Emulation",
+    "versionNote": "latest arXiv version 2025-11-15; venue date 2025-03-26"
+  },
+  "2501.17311v2": {
+    "clsOpts": "letterpaper, conference",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the IEEE conference family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.bbl to paper.bbl",
+      "main.tex to paper.tex"
+    ],
+    "title": "RLPP: A Residual Method for Zero-Shot Real-World Autonomous Racing on Scaled Platforms",
+    "versionNote": "latest arXiv version 2025-02-06; venue date 2025-01-28"
+  },
+  "2501.10143v1": {
+    "clsOpts": "sigconf,natbib=true,nonacm",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the acmart sigconf family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.tex to paper.tex"
+    ],
+    "title": "A Worrying Reproducibility Study of Intent-Aware Recommendation Models",
+    "versionNote": "latest arXiv version 2025-01-17; venue date 2025-01-17"
+  },
+  "2502.00626v2": {
+    "clsOpts": "acmtog, nonacm",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 2,
+    "presetWhy": "no preset: the class is acmart with format [acmtog, nonacm], which is neither the sigconf nor the acmsmall family, and no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.bbl to paper.bbl",
+      "main.tex to paper.tex"
+    ],
+    "title": "Lifting the Winding Number: Precise Discontinuities in Neural Fields for Physics Simulation",
+    "versionNote": "latest arXiv version 2025-09-11; venue date 2025-02-02"
+  },
+  "2501.02885v2": {
+    "clsOpts": "10pt,twocolumn,letterpaper",
+    "style": "iccv",
+    "styleOpts": "",
+    "mainCandidates": 1,
+    "presetWhy": "no preset ships for this edition and no template family matches the class: no `extends`, as arxiv-papers does for such papers, but with the accepted cycle",
+    "edits": [],
+    "renames": [
+      "main.bbl to paper.bbl",
+      "main.tex to paper.tex"
+    ],
+    "title": "MDP3: A Training-free Approach for List-wise Frame Selection in Video-LLMs",
+    "versionNote": "latest arXiv version 2025-10-28; venue date 2025-01-06"
+  },
+  "2511.17153v1": {
+    "clsOpts": "11pt",
+    "style": "acl",
+    "styleOpts": "final",
+    "mainCandidates": 1,
+    "presetWhy": "the ACL style family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "acl.tex to paper.tex"
+    ],
+    "title": "LangMark: A Multilingual Dataset for Automatic Post-Editing"
+  },
+  "2511.23391v1": {
+    "clsOpts": "11pt",
+    "style": "acl",
+    "styleOpts": "final",
+    "mainCandidates": 1,
+    "presetWhy": "the ACL style family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "acl.tex to paper.tex"
+    ],
+    "title": "Ambiguity Awareness Optimization: Towards Semantic Disambiguation for Direct Preference Optimization"
+  },
+  "2603.01806v1": {
+    "clsOpts": "",
+    "style": "ijcai25",
+    "styleOpts": "",
+    "mainCandidates": 1,
+    "presetWhy": "no preset ships for this edition and no template family matches the class: no `extends`, as arxiv-papers does for such papers, but with the accepted cycle",
+    "edits": [],
+    "renames": [
+      "ijcai25.tex to paper.tex"
+    ],
+    "title": "GCTAM: Global and Contextual Truncated Affinity Combined Maximization Model For Unsupervised Graph Anomaly Detection"
+  },
+  "2503.22283v1": {
+    "clsOpts": "sigconf",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the acmart sigconf family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "CHI_2025_Submission.bbl to paper.bbl",
+      "CHI_2025_Submission.tex to paper.tex"
+    ],
+    "title": "BanglAssist: A Bengali-English Generative AI Chatbot for Code-Switching and Dialect-Handling in Customer Service"
+  },
+  "2503.00228v1": {
+    "clsOpts": "sigconf",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the acmart sigconf family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.bbl to paper.bbl",
+      "main.tex to paper.tex"
+    ],
+    "title": "Seeing Eye to AI? Applying Deep-Feature-Based Similarity Metrics to Information Visualization"
+  },
+  "2501.18588v1": {
+    "clsOpts": "sigconf, screen",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the acmart sigconf family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.bbl to paper.bbl",
+      "main.tex to paper.tex"
+    ],
+    "title": "Inkspire: Supporting Design Exploration with Generative AI through Analogical Sketching"
+  },
+  "2609.17278v1": {
+    "clsOpts": "sigconf",
+    "style": null,
+    "styleOpts": null,
+    "mainCandidates": 1,
+    "presetWhy": "the acmart sigconf family as no preset ships for this edition",
+    "edits": [],
+    "renames": [
+      "main.bbl to paper.bbl",
+      "main.tex to paper.tex"
+    ],
+    "title": "\"Piecing Data Connections Together Like a Puzzle\": Effects of Increasing Task Complexity on the Effectiveness of Data Storytelling Enhanced Visualisations"
+  },
+  "2503.03003v1": {
+    "clsOpts": "letterpaper,twocolumn,10pt",
+    "style": "usenix-2020-09",
+    "styleOpts": "",
+    "mainCandidates": 1,
+    "presetWhy": "no preset ships for this edition and no template family matches the class: no `extends`, as arxiv-papers does for such papers, but with the accepted cycle",
+    "edits": [],
+    "renames": [
+      "usenix2019_v3.1.bbl to paper.bbl",
+      "usenix2019_v3.1.tex to paper.tex"
+    ],
+    "title": "Scaling IP Lookup to Large Databases using the CRAM Lens",
+    "versionNote": "latest arXiv version 2025-03-04; venue date 2025-03-04"
+  },
+  "2501.00740v3": {
+    "clsOpts": "10pt,twocolumn,letterpaper",
+    "style": "cvpr",
+    "styleOpts": "pagenumbers",
+    "mainCandidates": 1,
+    "presetWhy": "no preset ships for this edition and no template family matches the class: no `extends`, as arxiv-papers does for such papers, but with the accepted cycle",
+    "edits": [],
+    "renames": [
+      "RORem_arxiv.bbl to paper.bbl",
+      "RORem_arxiv.tex to paper.tex"
+    ],
+    "title": "RORem: Training a Robust Object Remover with Human-in-the-Loop",
+    "versionNote": "latest arXiv version 2025-04-15; venue date 2025-01-01"
+  }
+}

@@ -42,10 +42,16 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ACCEPTED_DIR = join(HERE, "real-papers", "accepted");
 const FOLDERS = [ACCEPTED_DIR, join(HERE, "real-papers", "preprints")];
 
+/** The directories of a folder that are not papers: the record of how `accepted/` was sampled. */
+const NOT_PAPERS: ReadonlySet<string> = new Set(["sampling"]);
+
 /** Every paper: its directory name (unique across the folders) and where it is. */
 const PAPERS = FOLDERS.flatMap((root) =>
   readdirSync(root)
-    .filter((name) => statSync(join(root, name)).isDirectory())
+    .filter(
+      (name) =>
+        !NOT_PAPERS.has(name) && statSync(join(root, name)).isDirectory(),
+    )
     .map((name) => ({ name, dir: join(root, name) })),
 );
 

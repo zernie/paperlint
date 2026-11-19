@@ -986,6 +986,11 @@ export default [
   // sets that rule for JavaScript today; being last keeps it that way).
   {
     files: TYPESCRIPT_ONLY,
+    // The collector that chose the accepted papers' second batch, committed as the record of that
+    // run (fixtures/real-papers/accepted/README.md, «Growing this set without bias»): JavaScript
+    // because it is evidence, and it says so at its top for local/js-needs-reason. Rewriting it in
+    // TypeScript, tested, is a change of its own; every other rule still lints it.
+    ignores: ["fixtures/real-papers/accepted/sampling/*.mjs"],
     rules: {
       "no-restricted-syntax": [
         "error",
