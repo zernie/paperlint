@@ -202,12 +202,18 @@ The one place this order is written; every other skill points here.
 3. **\`pc-panel-review\`** — one panel, with the reports of steps 1–2 as its inputs.
 
 - **Each pass runs once.** "No findings" from any of them is a valid result and ends that pass.
-- **The author decides each finding once**, accepted or rejected. Accepted ones are applied in one write:
-  a sentence through \`rewrite-unclear\`, a cut on his yes. A rejected finding is not raised again in this
-  review.
+- **The author decides each finding once**, and the pass's report records it: \`fixed\`, \`rejected\`, or
+  \`waived by the author: <reason>\`. Fixes are applied in one write: a sentence through
+  \`rewrite-unclear\`, a cut on his yes. A decided finding is not raised again in this review.
+- **Blockers** stop submission until \`fixed\` or \`waived by the author: <reason>\`; \`rejected\` is not
+  open to them. Two kinds: a scientific must-fix in the panel's meta-review, and a readability
+  hard-fail: a wall paragraph, a spec-sheet paragraph (numbers stacked with no reading of them), or a
+  heading in coined jargon, whether \`tighten-paper\` or a cold read (\`CANNOT PARSE\`, \`VAGUE HEADING\`)
+  found it.
 - **At most one confirmation, and only when the author asks for it:** he names the pass, and it runs once
   on what changed. No pass schedules another, and none reruns because a score is low.
-- **Then the review is closed,** whatever the scores and whatever is still open: mark the \`panel\` row of
+- **Then the review is closed,** whatever the scores; an undecided blocker stays open into the checklist.
+  Mark the \`panel\` row of
   \`PIPELINE-STATUS.md\` \`☑ closed <date>\`. Ordinary edits, a re-approval (\`versions approve\`) and a
   gate older than the text do not reopen it; only the author does, by asking for a new final review.
   What is left goes to \`harden-paper\`, then \`submit-paper\`.

@@ -33,9 +33,10 @@ the author decides what to apply. "Nothing fails" is a valid result.
    (\`paper/cite-exists\`, \`paper/refs-fresh\`), the PDF itself (\`pdf/*\`), answered prior reviews
    (\`cycle/prior-reviews-answered\`). Do not measure what a rule decides by another method. A word cap
    the venue sets and no rule counts (an abstract limit): count it.
-2. **The final review is closed** (\`paper-pipeline\`, "The final review": \`tighten-paper\` →
-   \`cold-read-diff --whole\` → \`pc-panel-review\`). If it has not run on this paper, run it first;
-   if it is closed, take its reports and do not run it again.
+2. **The final review is closed and its blockers are decided** (\`paper-pipeline\`, "The final review":
+   \`tighten-paper\` → \`cold-read-diff --whole\` → \`pc-panel-review\`). Read its reports; do not run it
+   again. No closed review fails this item. Every blocker it recorded (a scientific must-fix, a
+   readability hard-fail) is \`fixed\` or \`waived by the author: <reason>\`; an undecided one fails.
 3. **Citations and the nearest neighbour.** \`verify-citations\` ran on the current bibliography
    (\`paper/refs-checked\` warns when it did not). Every close sibling has a card in \`siblings/\`
    (\`analyze-sibling-paper\`; \`sibling/frontmatter\` checks the card); a close competitor with no
@@ -64,12 +65,12 @@ the author decides what to apply. "Nothing fails" is a valid result.
 
 ## Output — a vector of gates, worst first
 
-Ready ⇔ every item passes: the lint errors (1), the closed final review (2: the panel's prediction,
-the cold-read findings each decided, the tighten verdict), citations and scoop (3), claims (4), the
+Ready ⇔ every item passes or is waived: the lint errors (1), the closed final review and its blockers (2), citations and scoop (3), claims (4), the
 venue's threat model and ethics (5), the artifact and numbers (6), the headline table (7), anonymity
-(8). Lead with the failing item and its fix; an accept probability is never the headline, and a high
+(8). Report three lists: **Failing** (each with its fix, worst first), **Waived** (each with the author's
+reason, quoted), **Passed**. A waived item never appears under Passed. An accept probability is never the headline, and a high
 one does not make a paper with a failing item ready. Then the items only the author can close (host
-the artifact, click submit, disclose before going public). When every item passes, hand off to
+the artifact, click submit, disclose before going public). When nothing is failing, hand off to
 \`submit-paper\`.`,
 });
 
