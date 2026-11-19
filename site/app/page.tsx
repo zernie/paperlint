@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { readmeContent, shortName } from "../lib/content.ts";
 import { CopyButton } from "./copy-button.tsx";
+import { Journey } from "./journey.tsx";
 import { VenueCycle } from "./venue-cycle.tsx";
 
 // `next build` runs in site/; the repository it describes is one level up.
@@ -40,6 +41,7 @@ export default function Home() {
           paperlint
         </a>
         <div className="nav-links">
+          <a href="#journey">How it works</a>
           <a href="#venues">Venues</a>
           <a href={`${GITHUB}/blob/main/docs/rules.md`}>Rules</a>
           <a href={GITHUB}>GitHub</a>
@@ -69,8 +71,8 @@ export default function Home() {
               <span>{readme.install[0]}</span>
               <CopyButton text={installLine} />
             </div>
-            <a href={`${GITHUB}/blob/main/docs/rules.md`} className="ghost">
-              Read the checks
+            <a href="#journey" className="ghost">
+              How it works
             </a>
           </div>
         </div>
@@ -90,6 +92,8 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      <Journey />
 
       <section className="venues" id="venues">
         <div className="venues-inner">

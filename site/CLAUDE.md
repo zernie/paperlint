@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:1fc1ae24841b6ee5 compiled from site/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:b3dfca4f377dfb92 compiled from site/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -7,7 +7,10 @@
 paperlint.dev: a static Next.js export (`site/next.config.ts`) with its own
 `site/package.json` and lock, so the npm package carries none of it. `site/lib/content.ts` reads
 the install commands, the lint output, the venue table and the disclaimer from the README at build time, and
-throws when one is gone, so the build fails instead of the page losing a section. Build it with `npm run site:build` from the root; deploying is in `docs/website.md`. The
+throws when one is gone, so the build fails instead of the page losing a section; it reads the folder
+tree from `docs/layout.md` the same way. `site/lib/findings.ts` quotes each finding the
+journey shows from the file that holds it, and `site/lib/content.test.ts` fails when a quote is no
+longer there. Build it with `npm run site:build` from the root; deploying is in `docs/website.md`. The
 design below was decided with the author on 2026-11-19, over three rounds of mockups.
 
 ## Rules

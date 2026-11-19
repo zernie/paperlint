@@ -4,11 +4,13 @@ import { describe, expect, it } from "vitest";
 import {
   disclaimer,
   fencedAfter,
+  layoutEntries,
   plain,
   readmeContent,
   shortName,
   tableAfter,
 } from "./content.ts";
+import { all, render, type Finding } from "./findings.ts";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const read = (rel: string): string => readFileSync(root + rel, "utf8");
@@ -135,5 +137,55 @@ describe("plain and shortName", () => {
         shortName,
       ),
     ).toEqual(["AISec", "MSR", null]);
+  });
+});
+
+describe("layoutEntries", () => {
+  const doc =
+    "<!-- layout:begin -->\n\n```text\n<p>/\n├── paper.tex   ← the source\n└── repro/   ← the artifact\n```\n";
+
+  it("takes each named entry's note from the generated tree", () => {
+    expect(layoutEntries(doc, ["repro/", "paper.tex"])).toEqual([
+      { name: "repro/", note: "the artifact" },
+      { name: "paper.tex", note: "the source" },
+    ]);
+  });
+
+  it("fails the build for an entry the tree no longer has", () => {
+    expect(() => layoutEntries(doc, ["talk/"])).toThrow(
+      'site: no "talk/" in the docs/layout.md tree',
+    );
+  });
+
+  it("reads the real docs/layout.md", () => {
+    expect(layoutEntries(read("docs/layout.md"), ["paper.tex"])).toEqual([
+      { name: "paper.tex", note: "the source; `paperlint build` compiles it" },
+    ]);
+  });
+});
+
+describe("findings", () => {
+  const fake: Finding = {
+    rule: "r",
+    level: "error",
+    template: "\\`${s.a}\\` {{b}} {{c}} ${s.z}",
+    values: { a: "x", b: "y" },
+    source: "",
+  };
+
+  it("fills both placeholder syntaxes, leaves an unknown one, unescapes backticks", () => {
+    expect(render(fake)).toBe("`x` y {{c}} ${s.z}");
+  });
+
+  it.each(all.map((f) => [f.rule, f] as const))(
+    "quotes %s verbatim from its source, and docs/rules.md lists it",
+    (rule, f) => {
+      expect(read(f.source)).toContain(f.template);
+      expect(read("docs/rules.md")).toContain("`" + rule + "`");
+    },
+  );
+
+  it("a reworded message is caught", () => {
+    expect(read("README.md")).not.toContain("1 column(s), AgenticDev wants 2");
   });
 });

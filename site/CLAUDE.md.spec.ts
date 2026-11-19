@@ -6,7 +6,10 @@ export default instructionFile({
     "`site/`": prose`paperlint.dev: a static Next.js export (${file("site/next.config.ts")}) with its own
 ${file("site/package.json")} and lock, so the npm package carries none of it. ${file("site/lib/content.ts")} reads
 the install commands, the lint output, the venue table and the disclaimer from the README at build time, and
-throws when one is gone, so the build fails instead of the page losing a section. Build it with \`npm run site:build\` from the root; deploying is in ${file("docs/website.md")}. The
+throws when one is gone, so the build fails instead of the page losing a section; it reads the folder
+tree from ${file("docs/layout.md")} the same way. ${file("site/lib/findings.ts")} quotes each finding the
+journey shows from the file that holds it, and ${file("site/lib/content.test.ts")} fails when a quote is no
+longer there. Build it with \`npm run site:build\` from the root; deploying is in ${file("docs/website.md")}. The
 design below was decided with the author on 2026-11-19, over three rounds of mockups.`,
   },
   rules: {

@@ -127,3 +127,24 @@ export const readmeContent = (readme: string): ReadmeContent => {
 /** The venue's short name for the headline: "AISec @ ACM CCS" → "AISec"; null for "any … conference". */
 export const shortName = (venue: string): string | null =>
   venue.startsWith("any ") ? null : venue.replace(/ @ .*$| \(.*$/, "").trim();
+
+/** One line of the generated paper-folder tree in `docs/layout.md`: the entry and what it holds. */
+export interface TreeEntry {
+  readonly name: string;
+  readonly note: string;
+}
+
+/** The entries named in `names`, in that order, from the tree between the layout markers. */
+export const layoutEntries = (
+  layoutDoc: string,
+  names: readonly string[],
+): readonly TreeEntry[] => {
+  const tree = fencedAfter(layoutDoc, "<!-- layout:begin", "text");
+  return names.map((name) => {
+    const line = tree.find((l) =>
+      l.replace(/^[│├└─\s]+/, "").startsWith(name + " "),
+    );
+    const found = line ?? fail(`no "${name}" in the docs/layout.md tree`);
+    return { name, note: found.replace(/^[^←]*←?/, "").trim() };
+  });
+};

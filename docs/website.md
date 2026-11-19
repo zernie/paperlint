@@ -22,9 +22,12 @@ to `site/out/`. At build time the page reads:
 | the lint output under the hero                 | the `text` block after "the first run already catches something" in `README.md` |
 | the venue cards and the headline's venue names | the "Supported venues" table in `README.md`                                     |
 | "An aid, not a guarantee"                      | the README's quote of that name                                                 |
+| the paper folder in the journey                | the generated tree in `docs/layout.md`                                          |
+| each finding in the journey                    | quoted in `site/lib/findings.ts` from the file it names                         |
 
 When one of these is gone or reshaped, the build throws and names it, so the `site` CI job fails
-rather than the page losing a section.
+rather than the page losing a section. `site/lib/content.test.ts` fails when a quoted finding is no
+longer in its source file.
 
 ## Deploying on Vercel
 
