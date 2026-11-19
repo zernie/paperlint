@@ -173,7 +173,8 @@ Ordered, and the order is real: every one refuses to run without the output of t
 **\`extend-paper\`** — extend (≥30% new) to a higher-prestige venue, the "second, stronger publication."
 
 **Which review skill?** \`pc-panel-review\`: the full panel + meta-review predicts the accept/reject
-**decision**, and a red-team request runs it (its hostile seat is Reviewer 2); the **venue-fit seat**
+**decision**; before the final review, a red-team request runs its **hostile seat** alone, without
+the readability inputs, and in the final review that seat sits on the panel; the **venue-fit seat**
 alone is a spot-check for a CFP-fit score.
 
 **Four grading axes — don't confuse them.** A draft is judged on four independent axes, each its own

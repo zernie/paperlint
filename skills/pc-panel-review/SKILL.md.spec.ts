@@ -12,7 +12,7 @@ import tightenPaper from "../tighten-paper/SKILL.md.spec.ts";
 export default experimental_skill({
   name: "pc-panel-review",
   description:
-    'Use when asking "what would the program committee decide?" / "simulate the reviewers" / "what\'s this paper\'s accept probability?" / "red-team this paper" / "what would Reviewer 2 attack?" on a drafted paper + artifact. Spawns N independent reviewers with DISTINCT lenses (one actually RUNS the artifact, one is a skimming genre/register reviewer, one is the hostile Reviewer 2), then synthesizes a PC-chair meta-review into an accept/reject prediction reported as min/median/max, a calibrated probability, and consensus must-fixes (or none). Takes tighten-paper\'s structural verdict and cold-read-diff\'s whole-paper report as inputs — the panel cannot feel reader fatigue on its own. The third and last step of the final review; a red-team request runs the whole panel, whose hostile seat is Reviewer 2. Also runs the VENUE-FIT seat alone for a CFP-fit spot-check. NOT the submit checklist (harden-paper).',
+    'Use when asking "what would the program committee decide?" / "simulate the reviewers" / "what\'s this paper\'s accept probability?" / "red-team this paper" / "what would Reviewer 2 attack?" on a drafted paper + artifact. Spawns N independent reviewers with DISTINCT lenses (one actually RUNS the artifact, one is a skimming genre/register reviewer, one is the hostile Reviewer 2), then synthesizes a PC-chair meta-review into an accept/reject prediction reported as min/median/max, a calibrated probability, and consensus must-fixes (or none). Takes tighten-paper\'s structural verdict and cold-read-diff\'s whole-paper report as inputs — the panel cannot feel reader fatigue on its own. The third and last step of the final review. Before the final review, a red-team request runs the hostile seat (Reviewer 2) alone, without the readability inputs. Also runs the VENUE-FIT seat alone for a CFP-fit spot-check. NOT the submit checklist (harden-paper).',
   tools: [
     "Read",
     "Write",
@@ -28,9 +28,10 @@ export default experimental_skill({
 # pc-panel-review — model the whole PC, not one reviewer
 
 > The whole PC (N independent lenses incl. an artifact-runner) + a chair meta-review, run once as the
-> last step of the final review (\`paper-pipeline\`, "The final review"). The hostile seat runs only
-> inside the panel; the one seat that runs alone is **Venue-fit mode** (below), a spot-check against a
-> named venue's CFP rubric, recorded as \`venue-fit\`, never as the panel.
+> last step of the final review (\`paper-pipeline\`, "The final review"). Two seats also run alone:
+> the hostile seat, before the final review only (**Hostile-seat mode**, below), and **Venue-fit mode**
+> (below), a spot-check against a named venue's CFP rubric, recorded as \`venue-fit\`. Neither is
+> recorded as the panel.
 
 A real decision is made by **2–4 reviewers with different priorities + a meta-review** that weighs
 consensus over any single voice. This skill runs that. The payoff over a single review: a **must-fix
@@ -50,8 +51,8 @@ prose-only read can.
 2. **Collect the two readability/structure artifacts.** Before any reviewer spawns, there must exist: (a) the **structural verdict** from \`tighten-paper\` (length / sag / TMI / cut
    plan), and (b) the **whole-paper cold-read report** from \`cold-read-diff --whole\`. They are the
    final review's first two steps. A confirming panel, or a seat run after close, reuses the closed
-   review's two reports as they stand and never reruns \`tighten-paper\` or the cold read. Venue-fit
-   mode needs neither.
+   review's two reports as they stand and never reruns \`tighten-paper\` or the cold read. Hostile-seat
+   mode and venue-fit mode need neither.
 
    Why these inputs: a frontier-LLM reviewer knows every term and cannot feel reader
    fatigue, so a panel scoring on its own felt read will score a bloated, unreadable paper high
@@ -192,6 +193,14 @@ the claim falsifiable: *TEXT* invites "then write it", and *IMMOVABLE* invites "
 - **Review-ratchet rule — when the panel's must-fixes include an overclaim, inline-hedging is the LAST
   resort.** Tighten → cut → move to Threats → only then hedge. Full rule:
   \`paper-pipeline/references/review-ratchet.md\`.
+
+## Hostile-seat mode (one seat, before the final review only)
+While drafting, a red-team request ("what would Reviewer 2 attack?") runs the hostile seat of step 3
+alone, on the paper and the quoted CFP. It gets no readability inputs: no structural verdict, no cold
+read, because readability is not its job. It is one reviewer, so it predicts no decision and yields no
+consensus must-fixes. Its report goes under \`reviews/\`, and the author decides each finding there
+(\`fixed\`, or \`wontfix\` with a \`note\` giving his reason; \`review/frontmatter\`). Once the final review
+starts, the hostile seat runs only inside the panel.
 
 ## Venue-fit mode (single-lens spot-check — the merged \`venue-review-sim\`)
 When a full panel is overkill and you just want to predict **"given THIS venue's criteria, bar, and
