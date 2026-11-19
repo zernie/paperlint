@@ -321,32 +321,6 @@ const CASES = [
     ],
   },
   {
-    skill: "paper-adversarial-review",
-    why: "ONE hostile reviewer, fast",
-    pairs: [
-      {
-        origin: "ru",
-        ru: "red-team эту статью, чем будет бить reviewer 2",
-        en: "red-team this paper, what will reviewer 2 hit it with",
-      },
-      {
-        origin: "en",
-        en: "would reviewer 2 buy this claim about the hook finding",
-        ru: "купится ли reviewer 2 на это утверждение про находку с хуком",
-      },
-      {
-        origin: "ru",
-        ru: "найди слабые места до сабмита — один злой но честный рецензент",
-        en: "find the weak spots before submission — one hostile but fair reviewer",
-      },
-      {
-        origin: "en",
-        en: "what is our desk reject risk and where do we overclaim",
-        ru: "какой у нас риск desk reject и где мы переобещаем",
-      },
-    ],
-  },
-  {
     skill: "pc-panel-review",
     why: "the WHOLE committee + an accept probability, not one reviewer",
     pairs: [

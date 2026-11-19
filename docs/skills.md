@@ -48,24 +48,23 @@ Which skill hands work to which, drawn from each skill's own `flow`: [`pipeline.
 
 ## 4 · Draft
 
-| you get                                                                              | skill             |
-| ------------------------------------------------------------------------------------ | ----------------- |
-| a first draft from your results: claims sized, threats to validity written           | `draft-paper`     |
-| an outline where each section follows from the one before                            | `argument-arc`    |
-| a cut plan: what to cut, merge or move to the appendix                               | `tighten-paper`   |
-| what a reader with no context understood from your last edit, sentence by sentence   | `cold-read-diff`  |
-| an unclear passage rewritten, checked by a reader with no context, every number kept | `rewrite-unclear` |
-| the compiled pages as images, to read on a screen or a phone                         | `render-paper`    |
+| you get                                                                                                            | skill             |
+| ------------------------------------------------------------------------------------------------------------------ | ----------------- |
+| a first draft from your results: claims sized, threats to validity written                                         | `draft-paper`     |
+| an outline where each section follows from the one before                                                          | `argument-arc`    |
+| a cut plan: what to cut, merge or move to the appendix                                                             | `tighten-paper`   |
+| what a reader with no context understood from your last edit (or the whole paper, in chunks), sentence by sentence | `cold-read-diff`  |
+| an unclear passage rewritten, checked by a reader with no context, every number kept                               | `rewrite-unclear` |
+| the compiled pages as images, to read on a screen or a phone                                                       | `render-paper`    |
 
 ## 5 · Review
 
-| you get                                                                       | skill                      |
-| ----------------------------------------------------------------------------- | -------------------------- |
-| a writing grade, with the sentence to fix for each point                      | `grade-paper-writing`      |
-| every cited work confirmed to exist, with the right authors, title and year   | `verify-citations`         |
-| one hostile review: overclaims, missing baselines, holes in the method        | `paper-adversarial-review` |
-| a simulated program committee: several reviews, a decision and the must-fixes | `pc-panel-review`          |
-| ready or not ready to submit, worst problem first                             | `harden-paper`             |
+| you get                                                                                            | skill                 |
+| -------------------------------------------------------------------------------------------------- | --------------------- |
+| a writing grade, with the sentence to fix for each point                                           | `grade-paper-writing` |
+| every cited work confirmed to exist, with the right authors, title and year                        | `verify-citations`    |
+| a simulated program committee: several reviews, one of them hostile, a decision and the must-fixes | `pc-panel-review`     |
+| ready or not ready to submit, worst problem first                                                  | `harden-paper`        |
 
 ## 6 · Submit
 

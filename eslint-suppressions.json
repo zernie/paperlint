@@ -436,16 +436,6 @@
       "count": 1
     }
   },
-  "skills/paper-adversarial-review/paper-adversarial-review.eval.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
-  "skills/paper-adversarial-review/paper-adversarial-review.harness.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
   "skills/paper-pipeline/description-language.eval.mjs": {
     "local/js-needs-reason": {
       "count": 1

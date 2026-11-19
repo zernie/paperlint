@@ -38,19 +38,16 @@ the work he was complaining about is **the asking**, and a pull-only skill leave
 So on any turn that touched a paper, the reply ends with **three lines, unprompted**:
 
 1. **where it stands** — the build's own verdict line, page count, deadline countdown;
-2. **the single next action, with an owner** — not a menu. If it is mine, it is already started or
-   started in the same reply. If it is his, it says exactly what to click.
-3. **what is stale** — a gate whose verdict predates the current text, named.
+2. **the next action, with an owner** — not a menu; if it is his, it says exactly what to click. "None"
+   is a valid answer: a paper whose final review is closed and that waits only on the author has none.
+3. **what is stale** — a gate whose verdict predates the current text, named. After the final review
+   is closed (\`paper-pipeline\`, "The final review"), an ordinary edit leaves its gates as they are:
+   name the edit, not a stale gate.
 
-Three failures make this a rule rather than a preference, all in one session:
+Two failures make this a rule rather than a preference, both in one session:
 - I finished a page-fit cut and stopped, so he asked what the status was;
 - I left artifact hosting on his side of the split for a day and a half while the credential to clear
-  it sat in the environment;
-- three consecutive panels returned Weak Accept and the ceiling they named was never the next task,
-  because nothing turned "here is the score" into "here is what to do about it".
-
-**Never end a paper turn on a completed sub-task alone.** "Fits in 8 pages" is a measurement, not a
-status; the status is what that measurement makes possible next.
+  it sat in the environment.
 
 ## How to run it
 

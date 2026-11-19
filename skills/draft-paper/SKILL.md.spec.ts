@@ -7,7 +7,6 @@
 import { experimental_skill } from "vigiles/spec";
 import type { Flow } from "../../scripts/pipeline.ts";
 import gradePaperWriting from "../grade-paper-writing/SKILL.md.spec.ts";
-import paperAdversarialReview from "../paper-adversarial-review/SKILL.md.spec.ts";
 import pcPanelReview from "../pc-panel-review/SKILL.md.spec.ts";
 import renderPaper from "../render-paper/SKILL.md.spec.ts";
 import rewriteUnclear from "../rewrite-unclear/SKILL.md.spec.ts";
@@ -122,8 +121,8 @@ prose QA to them.
   QA, above. (Site-repo \`writing-quality\` / \`audience-test\` = blog posts only.)
 - **\`render-paper\`** — compile + eyeball pages 1–2 once prose is in.
 - **\`verify-citations\`** — every cite in Related Work must exist AND say what you claim.
-- Then the review loop: **\`paper-adversarial-review\`** → **\`pc-panel-review\`** (venue-fit mode for a
-  quick fit score, then the full panel as the gate).
+- Then the final review, once (\`paper-pipeline\`, "The final review"): \`tighten-paper\` →
+  \`cold-read-diff --whole\` → **\`pc-panel-review\`** (its venue-fit seat alone gives a quick fit score).
 
 ## Provenance (two real papers)
 - **AgenticDev 2026 @ ASE — "Measuring the Wrong Number."** The thesis IS the construct-validity frame:
@@ -140,7 +139,7 @@ prose QA to them.
 
 export const flow = {
   stage: "draft",
-  handsTo: () => [paperAdversarialReview, pcPanelReview],
+  handsTo: () => [pcPanelReview],
   calls: () => [
     gradePaperWriting,
     rewriteUnclear,

@@ -8,7 +8,6 @@ import { experimental_skill } from "vigiles/spec";
 import type { Flow } from "../../scripts/pipeline.ts";
 import cameraReady from "../camera-ready/SKILL.md.spec.ts";
 import osfArtifactUpload from "../osf-artifact-upload/SKILL.md.spec.ts";
-import paperAdversarialReview from "../paper-adversarial-review/SKILL.md.spec.ts";
 import pcPanelReview from "../pc-panel-review/SKILL.md.spec.ts";
 import renderPaper from "../render-paper/SKILL.md.spec.ts";
 import submissionPortal from "../submission-portal/SKILL.md.spec.ts";
@@ -16,7 +15,7 @@ import submissionPortal from "../submission-portal/SKILL.md.spec.ts";
 export default experimental_skill({
   name: "submit-paper",
   description:
-    'End-to-end playbook for submitting a peer-reviewed paper to a double-blind venue (HotCRP workshops/conferences) — from a hardened draft to "ready for review." Covers building and anonymously hosting a reproduction artifact, HotCRP profile + form mechanics, double-blind hygiene, and the authorship/credential angles for an independent researcher. Use when the paper is drafted and reviewed and it\'s time to actually submit. Compose with pc-panel-review / paper-adversarial-review (harden first), and with the venue card (presets/<venue>.md in the paperlint package) for venue specifics.',
+    'End-to-end playbook for submitting a peer-reviewed paper to a double-blind venue (HotCRP workshops/conferences) — from a hardened draft to "ready for review." Covers building and anonymously hosting a reproduction artifact, HotCRP profile + form mechanics, double-blind hygiene, and the authorship/credential angles for an independent researcher. Use when the paper is drafted and reviewed and it\'s time to actually submit. Compose with pc-panel-review (harden first), and with the venue card (presets/<venue>.md in the paperlint package) for venue specifics.',
   tools: [
     "Read",
     "Write",
@@ -31,8 +30,7 @@ export default experimental_skill({
   body: `
 # submit-paper — get a reviewed paper from "done" to "ready for review"
 
-Assumes the paper is already hardened (run \`pc-panel-review\` — incl. its venue-fit mode — +
-\`paper-adversarial-review\` first). This skill is the submission mechanics — the part that bit us with
+Assumes the paper is already hardened (\`harden-paper\`, after \`paper-pipeline\`'s final review). This skill is the submission mechanics — the part that bit us with
 avoidable friction the first time. Distilled from the AgenticDev 2026 submission.
 
 ## Venue specifics — a CARD beside the venue's preset, not a skill
@@ -191,7 +189,7 @@ cited \`L. 166\` and there was nothing to resolve the line against. A folder wit
 convention with no reader.
 
 ## Compose with
-- Harden first: \`pc-panel-review\` (incl. its venue-fit mode), \`paper-adversarial-review\`, \`render-paper\`.
+- Harden first: \`pc-panel-review\` (incl. its venue-fit seat), \`render-paper\`.
 - Publisher mechanics (camera-ready): \`references/publishers/<publisher>.md\`.
 - Venue specifics: the venue's card \`presets/<venue>.md\` in the paperlint package (e.g.
   \`presets/agenticdev.md\`) for deadlines, page limits, PC-member conflict lists, and whether a
@@ -211,7 +209,6 @@ export const flow = {
     osfArtifactUpload,
     submissionPortal,
     pcPanelReview,
-    paperAdversarialReview,
     renderPaper,
   ],
 } satisfies Flow;

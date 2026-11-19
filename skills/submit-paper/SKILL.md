@@ -1,15 +1,14 @@
 ---
 name: submit-paper
-description: End-to-end playbook for submitting a peer-reviewed paper to a double-blind venue (HotCRP workshops/conferences) — from a hardened draft to "ready for review." Covers building and anonymously hosting a reproduction artifact, HotCRP profile + form mechanics, double-blind hygiene, and the authorship/credential angles for an independent researcher. Use when the paper is drafted and reviewed and it's time to actually submit. Compose with pc-panel-review / paper-adversarial-review (harden first), and with the venue card (presets/<venue>.md in the paperlint package) for venue specifics.
+description: End-to-end playbook for submitting a peer-reviewed paper to a double-blind venue (HotCRP workshops/conferences) — from a hardened draft to "ready for review." Covers building and anonymously hosting a reproduction artifact, HotCRP profile + form mechanics, double-blind hygiene, and the authorship/credential angles for an independent researcher. Use when the paper is drafted and reviewed and it's time to actually submit. Compose with pc-panel-review (harden first), and with the venue card (presets/<venue>.md in the paperlint package) for venue specifics.
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Skill]
 ---
 
-<!-- vigiles:sha256:313e0b34c0b00e40 compiled from skills/submit-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:c180b55843d56678 compiled from skills/submit-paper/SKILL.md.spec.ts -->
 
 # submit-paper — get a reviewed paper from "done" to "ready for review"
 
-Assumes the paper is already hardened (run `pc-panel-review` — incl. its venue-fit mode — +
-`paper-adversarial-review` first). This skill is the submission mechanics — the part that bit us with
+Assumes the paper is already hardened (`harden-paper`, after `paper-pipeline`'s final review). This skill is the submission mechanics — the part that bit us with
 avoidable friction the first time. Distilled from the AgenticDev 2026 submission.
 
 ## Venue specifics — a CARD beside the venue's preset, not a skill
@@ -168,7 +167,7 @@ cited `L. 166` and there was nothing to resolve the line against. A folder witho
 convention with no reader.
 
 ## Compose with
-- Harden first: `pc-panel-review` (incl. its venue-fit mode), `paper-adversarial-review`, `render-paper`.
+- Harden first: `pc-panel-review` (incl. its venue-fit seat), `render-paper`.
 - Publisher mechanics (camera-ready): `references/publishers/<publisher>.md`.
 - Venue specifics: the venue's card `presets/<venue>.md` in the paperlint package (e.g.
   `presets/agenticdev.md`) for deadlines, page limits, PC-member conflict lists, and whether a

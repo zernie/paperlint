@@ -4,7 +4,7 @@ description: Compile a LaTeX paper (ACM/IEEE/arXiv) to PDF and render its pages 
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, SendUserFile]
 ---
 
-<!-- vigiles:sha256:ff8dca1e1be3977e compiled from skills/render-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:5c99994c63c9144e compiled from skills/render-paper/SKILL.md.spec.ts -->
 
 # render-paper — .tex → PDF → readable page PNGs
 
@@ -120,4 +120,4 @@ python3 -c "import fitz; d=fitz.open('paper.pdf'); \
   changed since the last render. Send the PDF too (`display: attach`) if they want the file.
 
 ## Compose with
-- `paper-adversarial-review` / `pc-panel-review` (incl. its venue-fit mode) — review the rendered draft.
+- `pc-panel-review` (incl. its hostile and venue-fit seats) — review the rendered draft.

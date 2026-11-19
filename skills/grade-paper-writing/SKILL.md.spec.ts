@@ -13,7 +13,7 @@ import rewriteUnclear from "../rewrite-unclear/SKILL.md.spec.ts";
 export default experimental_skill({
   name: "grade-paper-writing",
   description:
-    "Judge how a paper reads and find the sentences a reader stalls on. Use whenever someone wants a verdict on the writing rather than a rewrite: does the draft, a section or the abstract read well, is the prose good or bad, score or grade it, give an honest opinion of how it reads — in English or Russian — including when it reads like a wall of jargon or a blog post, sounds off, or every sentence parses but the paragraphs do not add up. Returns 1–5 scores and the sentences cold readers could not follow, each with the fix it needs; the rewrites come from rewrite-unclear. Not for rewriting one unclear passage (rewrite-unclear), cuts (tighten-paper), one edited paragraph (cold-read-diff), scientific flaws (paper-adversarial-review, pc-panel-review), submit readiness (harden-paper) or what the venue rewards (study-accepted-papers).",
+    "Judge how a paper reads and find the sentences a reader stalls on. Use whenever someone wants a verdict on the writing rather than a rewrite: does the draft, a section or the abstract read well, is the prose good or bad, score or grade it, give an honest opinion of how it reads — in English or Russian — including when it reads like a wall of jargon or a blog post, sounds off, or every sentence parses but the paragraphs do not add up. Returns 1–5 scores and the sentences cold readers could not follow, each with the fix it needs; the rewrites come from rewrite-unclear. Not for rewriting one unclear passage (rewrite-unclear), cuts (tighten-paper), one edited paragraph (cold-read-diff), scientific flaws (pc-panel-review), submit readiness (harden-paper) or what the venue rewards (study-accepted-papers).",
   tools: ["Read", "Write", "Edit", "Grep", "Glob", "Agent", "Skill"],
   body: `
 # grade-paper-writing — grade how the paper READS
@@ -154,22 +154,21 @@ claim first, rewrites by its rules, has a reader with no context restate the res
 claim-preservation diff. A structural fix (move a point to another paragraph, gloss a term where it
 first appears, split a wall) is named here as the fix and applied by the author or that skill.
 
-### Scope: whole paper here, diff continuously
+### Who runs the readers
 
-This pass covers the whole paper and is expensive, so it runs at gate time. The per-edit counterpart
-is the \`cold-read-diff\` skill, which asks the same question of just-changed paragraphs and is cheap
-enough to run every time. Running only this one leaves every sentence written after it unread, which
-is what happened.
+\`cold-read-diff --whole\` runs them: it cuts the paper into chunks of at most 15 paragraphs and
+hands each chunk to its own pair, so no reader holds the whole paper. Its report is this skill's
+stall inventory. Read the rendered PDF yourself for the layout stalls above, which its extract
+(LaTeX source, floats dropped) cannot show.
 
 ## How to run it
 
 1. **Read the actual draft** (the \`.tex\`, or run \`render-paper\` to read the built pages as a reader
    would). Grade the writing as written — never from a summary.
-2. **Run the cold-read stall pass FIRST — the full specification is below, under "The stall pass".**
-   It was previously a pointer to a reference section that did not exist, which is why the pass drifted
-   into "log where I stumbled" and stopped catching the class it exists for.
+2. **Take the stall inventory from \`cold-read-diff --whole\` FIRST** (run it if this draft has none);
+   the specification is above, under "The stall pass".
 3. **Score all ten dimensions 1–5** using the anchors in the reference, on the **absolute scale** defined
-   there (5 = best-in-field, **3 = the default for a solid paper**; most dimensions are 2–3). Weight Prose
+   there (5 = best-in-field; a dimension with nothing to fix scores 4 or 5). Weight Prose
    (#5), Jargon (#6), Landing (#7) and Register (#10) ×2 — the first three are where "wall of jargon"
    lives, the fourth is where "blog post" lives. Report raw /50 + weighted /70.
    **Do NOT trust a single grade.** A lone grader — especially one that just wrote or verified the paper —
@@ -179,8 +178,8 @@ is what happened.
    and the field's best.** Report the **distribution (per-dimension + overall min / median / max)**, not one
    number; flag any dimension where graders disagree by >1 as genuinely ambiguous. (See "Scoring
    calibration" in the reference; this is the writing-axis analogue of \`pc-panel-review\`.)
-4. **For every dimension scoring ≤3, name the specific offending sentence or section** and the fix it
-   needs — not "tighten the prose" but "move the point from ¶3 to ¶1", "gloss \`operation-normalized\`
+4. **Where a dimension loses points, name the specific offending sentence or section** and the fix it
+   needs; a dimension with no offending sentence gets no fix — not "tighten the prose" but "move the point from ¶3 to ¶1", "gloss \`operation-normalized\`
    in plain words at first use", or "rewrite: the reader cannot restate it". Fixes must be applyable,
    not vibes. The rewritten sentences come from \`rewrite-unclear\`, not from this pass.
 3a. **Grade #10, register distance, against the venue's own papers, section by section — not against
@@ -235,13 +234,6 @@ is what happened.
    stays open: an open finding is a truthful state, and a passing count over a sentence nobody can
    parse is not.
 
-8. 🔴 **Put \`WORST-SECTION: <section>\` on the FIRST LINE of the report.** Machine-readable, one
-   section, lowercase, no decoration, so the next round can compare it with the last report. This exists because the abstract
-   was named worst **five consecutive times**, was faithfully recorded in the scorecard all five
-   times, and was never once the next task. A review loop that only appends findings converges on a
-   paper whose defects are all thoroughly documented and none of them fixed. **Naming the worst
-   section is not the deliverable — a fix for it, or a recorded decision to ship with it, is.**
-
 9. **Run the avoid-list grep (mechanical).** Grep the source for the slop / web-slang / filler / hype words
    in \`../paper-pipeline/references/writing-craft.md\` → "The avoid-list", and report every hit with its line number and a
    replacement. These are scrutinize-words, not absolute bans — but each hit is a readability debit against
@@ -262,11 +254,12 @@ is what happened.
 1. **Scorecard** — ten dimensions with one-line justification each; raw /50 + weighted /70. When a blind
    panel was run (the default when the score matters), report the **distribution** — per-dimension and
    overall min / median / max across graders — not a single number, and name any dimension they split on.
-   Lead with the two or three dimensions dragging it down, ranked.
+   Lead with the dimensions dragging it down, ranked, if any.
 2. **Cold-read stall inventory** — the ranked list of "what does that even mean?" points (location → quoted
    trigger → reader's question → fix) plus the stall density per page. This is the most directly actionable
-   output; a fix pass works straight off it.
-3. **Sentence-level fix list** — for every ≤3 dimension: the offending text → the fix it needs (a move,
+   output; a fix pass works straight off it. No stalls and no fixes is a valid report: say so in one
+   line.
+3. **Sentence-level fix list** — for each dimension that lost points: the offending text → the fix it needs (a move,
    a gloss, or "rewrite" handed to \`rewrite-unclear\`). Ordered by leverage (the fix that most improves
    how it reads first).
 4. **The three-move audit** — the assumption to open on, the visceral instance to lead with, the one
@@ -300,7 +293,7 @@ findings:
 
 ## Rules
 - Grade **writing, not science.** A correct paper can still score a 2 here; say so. Don't drift into
-  content/defect review — that's \`paper-adversarial-review\` / \`pc-panel-review\`.
+  content/defect review — that's \`pc-panel-review\`.
 - **Every low score comes with the offending sentence and the fix it needs.** No abstract advice.
 - **Rewrites belong to \`rewrite-unclear\`**, which keeps every result, number and hedge and runs the
   \`claims\` claim-preservation diff after each one. This skill applies no sentence rewrite of its own.
@@ -444,9 +437,7 @@ reads before forming a view. Grade them **separately and harder**:
 - the last sentence of each is a **conclusion**, not an announcement of one;
 - nothing may refer forward to a section the reader has not read.
 
-A body section may be merely clear. These two have to be **sharp**, and if the abstract survives a
-tighten pass marked \`KEEP\` three rounds running, that is evidence it was never really read — this
-one did, and it was the worst section in the paper by measured density both times.
+A body section may be merely clear. These two have to be **sharp**.
 
 ### What is NOT mechanizable here
 
@@ -463,7 +454,7 @@ they did not know.
   and a threat-model check both miss).
 - \`draft-paper\` — the generative counterpart (writes the prose); this grades it. Both cite the same
   \`../paper-pipeline/references/writing-craft.md\`, so guidance and grading never diverge.
-- \`paper-adversarial-review\` / \`pc-panel-review\` — run those for scientific defects; run this for readability. Complementary axes, not redundant.
+- \`pc-panel-review\` — run it for scientific defects; run this for readability. Complementary axes, not redundant.
 - \`render-paper\` — build the PDF/PNGs first so you grade what the reviewer will actually see.
 
 ## Provenance

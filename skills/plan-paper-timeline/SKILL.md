@@ -4,7 +4,7 @@ description: Turn a venue's CFP dates into a scheduled, buffered plan on the Goo
 allowed-tools: [Read, Write, Grep, Glob, mcp__Google_Calendar__list_events, mcp__Google_Calendar__search_events, mcp__Google_Calendar__create_event, mcp__Google_Calendar__update_event]
 ---
 
-<!-- vigiles:sha256:0f95e8225033cd72 compiled from skills/plan-paper-timeline/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:93980bcdaac2f341 compiled from skills/plan-paper-timeline/SKILL.md.spec.ts -->
 
 # plan-paper-timeline — CFP dates → a buffered, filing-aware schedule
 
@@ -54,9 +54,8 @@ Everything that must be done *before* you can submit gets its own slot ending be
 never "the day of." Working back from the submission AoE date, reserve, in this order:
 
 - **Draft frozen** — prose done, `verify-citations` clean. Earliest.
-- **Harden** — `paper-adversarial-review` → `pc-panel-review` venue-fit mode, fix blockers, re-render.
-  Loops; give it room.
-- **Panel review** — `pc-panel-review` (multi-reviewer + artifact-runner) as the final gate. 1–2 days.
+- **Final review** — `paper-pipeline`'s final review, once: `tighten-paper` → `cold-read-diff`
+  over the whole paper → `pc-panel-review` (multi-reviewer + artifact-runner). 1–2 days.
 - **Artifact built + hosted anonymously** — build the self-checking artifact and mint the OSF/4open
   anonymized link (see `submit-paper` + `paper-pipeline/references/artifact-checklist.md`). This step
   reliably eats more time than expected; put it before, not on, submit-day.

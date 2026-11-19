@@ -1,7 +1,7 @@
 /**
  * ONE CUT ORDER (#486). What to spend first when a paper's body overruns its page limit is written
  * once, in `skills/paper-pipeline/references/body-vs-appendix.md`, section "When the body overruns".
- * The three skills that cut for length (`tighten-paper`, `harden-paper`, `paper-adversarial-review`)
+ * The skills that cut for length (`tighten-paper`, `harden-paper`)
  * point there and keep no order of their own: when each skill carried its own wording, the one the
  * pass followed ranked a result above a 689-word Threats section and 26 once-cited references.
  *
@@ -293,11 +293,6 @@ const SKILLS = {
       `own ordering: "lean ~10 refs"`,
     ],
   },
-  "paper-adversarial-review": {
-    now: "Rank the cuts by the cut order in",
-    before: "Lead with the highest-impact cut. Ranked by",
-    expected: [`own ordering: "Lead with the highest-impact"`],
-  },
 } as const;
 
 describe.each(Object.entries(SKILLS))(
@@ -325,9 +320,7 @@ describe.each(Object.entries(SKILLS))(
 describe("the old name of step 2 is gone", () => {
   it.each([
     REFERENCE,
-    ...["tighten-paper", "harden-paper", "paper-adversarial-review"].map(
-      (n) => `skills/${n}/SKILL.md`,
-    ),
+    ...["tighten-paper", "harden-paper"].map((n) => `skills/${n}/SKILL.md`),
   ])("%s does not call sentences about the text scaffolding", (path) => {
     const md = read(path);
     expect([

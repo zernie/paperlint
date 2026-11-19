@@ -332,17 +332,6 @@ const CASES = [
     collides: ["tighten-paper", "grade-paper-writing"],
   },
   {
-    skill: "paper-adversarial-review",
-    why: "ONE hostile reviewer, fast",
-    prompts: [
-      "red-team эту статью, чем будет бить reviewer 2",
-      "would reviewer 2 buy this claim about the hook finding",
-      "найди слабые места до сабмита — один злой но честный рецензент",
-      "what is our desk reject risk and where do we overclaim",
-    ],
-    collides: ["pc-panel-review"],
-  },
-  {
     skill: "pc-panel-review",
     why: "the WHOLE committee + an accept probability, not one reviewer",
     prompts: [
@@ -351,7 +340,7 @@ const CASES = [
       "что решат на PC discussion — accept или reject",
       "нужно несколько независимых ревьюеров с разными линзами плюс мета-ревью от чейра",
     ],
-    collides: ["paper-adversarial-review"],
+    collides: ["grade-paper-writing"],
   },
   {
     skill: "cold-read-diff",

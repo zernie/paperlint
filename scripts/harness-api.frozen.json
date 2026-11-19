@@ -27,7 +27,6 @@
     "skills/harden-paper/harden-paper.harness.mjs",
     "skills/map-prior-work/map-prior-work.harness.mjs",
     "skills/osf-artifact-upload/osf-artifact-upload.harness.ts",
-    "skills/paper-adversarial-review/paper-adversarial-review.harness.mjs",
     "skills/paper-pipeline/paper-pipeline.harness.mjs",
     "skills/paper-pipeline/scripts/consumer.harness.mjs",
     "skills/paper-pipeline/scripts/extract-ref-facts.harness.mjs",

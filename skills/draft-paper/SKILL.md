@@ -4,7 +4,7 @@ description: Use when the numbers exist and it's time to WRITE the paper — "dr
 allowed-tools: [Read, Write, Edit, Grep, Glob, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:8b45e02bf0f8044e compiled from skills/draft-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:0cd62e233a4a59ca compiled from skills/draft-paper/SKILL.md.spec.ts -->
 
 # draft-paper — prose that survives review and gets cited
 
@@ -109,8 +109,8 @@ prose QA to them.
   QA, above. (Site-repo `writing-quality` / `audience-test` = blog posts only.)
 - **`render-paper`** — compile + eyeball pages 1–2 once prose is in.
 - **`verify-citations`** — every cite in Related Work must exist AND say what you claim.
-- Then the review loop: **`paper-adversarial-review`** → **`pc-panel-review`** (venue-fit mode for a
-  quick fit score, then the full panel as the gate).
+- Then the final review, once (`paper-pipeline`, "The final review"): `tighten-paper` →
+  `cold-read-diff --whole` → **`pc-panel-review`** (its venue-fit seat alone gives a quick fit score).
 
 ## Provenance (two real papers)
 - **AgenticDev 2026 @ ASE — "Measuring the Wrong Number."** The thesis IS the construct-validity frame:

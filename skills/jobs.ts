@@ -12,8 +12,7 @@ import rewriteUnclear from "./rewrite-unclear/SKILL.md.spec.ts";
 import tightenPaper from "./tighten-paper/SKILL.md.spec.ts";
 
 export const JOBS = {
-  "find unclear sentences/the last edit": coldReadDiff,
-  "find unclear sentences/the whole paper": gradePaperWriting,
+  "find unclear sentences": coldReadDiff,
   "grade the prose": gradePaperWriting,
   "rewrite for clarity": rewriteUnclear,
   "cut for length": tightenPaper,
@@ -24,4 +23,5 @@ export const JOBS = {
   "fix a heading or a name": rewriteUnclear,
   "is it ready to submit": hardenPaper,
   "which stage runs next": paperPipeline,
+  "the final review": paperPipeline,
 } as const;

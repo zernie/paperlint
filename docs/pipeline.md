@@ -4,9 +4,9 @@
 
 Who hands work to whom, read from the skills themselves: each `skills/<name>/SKILL.md.spec.ts`
 exports `flow`, and `skills/jobs.ts` names the one owner of each job on a paper's text. A flow
-has three kinds of edge: **hands to** (37), the next step on the main path, drawn
-solid; **loops back to** (10), work sent back to an earlier skill, drawn dashed;
-**runs** (65), a skill this one runs as one of its own steps or whose output it needs,
+has three kinds of edge: **hands to** (33), the next step on the main path, drawn
+solid; **loops back to** (9), work sent back to an earlier skill, drawn dashed;
+**runs** (61), a skill this one runs as one of its own steps or whose output it needs,
 written inside the box, never drawn. `test/pipeline.test.ts` fails on a cycle of hand-offs, a
 hand-off to an earlier stage, an edge the skill's own text never names, a job without an owner,
 and this file when it is stale. The stages are those of [`skills.md`](skills.md).
@@ -21,7 +21,7 @@ flowchart LR
   stage_venue["<b>2 · Venue</b><br/>find-venue<br/>plan-paper-timeline<br/>study-accepted-papers"]
   stage_study["<b>3 · Study</b><br/>build-benchmark<br/>build-label-page<br/>label-agent-runs<br/>run-agent-grid"]
   stage_draft["<b>4 · Draft</b><br/>argument-arc<br/>cold-read-diff<br/>draft-paper<br/>render-paper<br/>rewrite-unclear<br/>tighten-paper"]
-  stage_review["<b>5 · Review</b><br/>grade-paper-writing<br/>harden-paper<br/>paper-adversarial-review<br/>pc-panel-review<br/>verify-citations"]
+  stage_review["<b>5 · Review</b><br/>grade-paper-writing<br/>harden-paper<br/>pc-panel-review<br/>verify-citations"]
   stage_submit["<b>6 · Submit</b><br/>osf-artifact-upload<br/>submission-portal<br/>submit-paper"]
   stage_camera_ready["<b>7 · Camera-ready</b><br/>camera-ready"]
   stage_extend["<b>8 · Extend</b><br/>extend-paper"]
@@ -50,7 +50,7 @@ flowchart LR
 
 ## Across every stage
 
-- `paper-pipeline` (owns: which stage runs next) runs 23 skills: `research-ideate`, `map-prior-work`, `find-venue`, `study-accepted-papers`, `plan-paper-timeline`, `argument-arc`, `build-benchmark`, `run-agent-grid`, `label-agent-runs`, `build-label-page`, `draft-paper`, `verify-citations`, `analyze-sibling-paper`, `render-paper`, `tighten-paper`, `grade-paper-writing`, `rewrite-unclear`, `paper-adversarial-review`, `pc-panel-review`, `harden-paper`, `submit-paper`, `camera-ready`, `extend-paper`.
+- `paper-pipeline` (owns: which stage runs next; the final review) runs 23 skills: `research-ideate`, `map-prior-work`, `find-venue`, `study-accepted-papers`, `plan-paper-timeline`, `argument-arc`, `build-benchmark`, `run-agent-grid`, `label-agent-runs`, `build-label-page`, `draft-paper`, `verify-citations`, `analyze-sibling-paper`, `render-paper`, `tighten-paper`, `grade-paper-writing`, `cold-read-diff`, `rewrite-unclear`, `pc-panel-review`, `harden-paper`, `submit-paper`, `camera-ready`, `extend-paper`.
 - `paper-status`.
 
 ## 1 · Idea
@@ -60,7 +60,7 @@ flowchart TB
   analyze_sibling_paper["<b>analyze-sibling-paper</b>"]
   map_prior_work["<b>map-prior-work</b><br/>runs: analyze-sibling-paper"]
   research_ideate["<b>research-ideate</b>"]
-  sweep_design_space["<b>sweep-design-space</b><br/>runs: paper-adversarial-review, pc-panel-review"]
+  sweep_design_space["<b>sweep-design-space</b><br/>runs: pc-panel-review"]
   sweep_design_space --> research_ideate
   to_stage_extend(["→ 8 · Extend"])
   to_stage_draft(["→ 4 · Draft"])
@@ -92,7 +92,7 @@ flowchart TB
   plan_paper_timeline -- "submit-paper" --> to_stage_submit
   study_accepted_papers -- "argument-arc" --> to_stage_draft
   study_accepted_papers -- "build-benchmark" --> to_stage_study
-  study_accepted_papers -- "paper-adversarial-review, pc-panel-review, harden-paper" --> to_stage_review
+  study_accepted_papers -- "pc-panel-review, harden-paper" --> to_stage_review
   study_accepted_papers -- "extend-paper" --> to_stage_extend
 ```
 
@@ -124,7 +124,7 @@ flowchart TB
 ```mermaid
 flowchart TB
   argument_arc["<b>argument-arc</b><br/>the order of the argument<br/>judge headings (the headings as a set)<br/>one name for one thing across the paper (the name budget)<br/>runs: rewrite-unclear"]
-  cold_read_diff["<b>cold-read-diff</b><br/>find unclear sentences (the last edit)<br/>judge headings (a heading in the last edit)<br/>runs: rewrite-unclear"]
+  cold_read_diff["<b>cold-read-diff</b><br/>find unclear sentences<br/>judge headings (a heading in the last edit)<br/>runs: rewrite-unclear"]
   draft_paper["<b>draft-paper</b><br/>runs: grade-paper-writing, rewrite-unclear, render-paper,<br/>verify-citations"]
   render_paper["<b>render-paper</b>"]
   rewrite_unclear["<b>rewrite-unclear</b><br/>rewrite for clarity<br/>fix a heading or a name"]
@@ -133,33 +133,30 @@ flowchart TB
   rewrite_unclear -.-> cold_read_diff
   rewrite_unclear -.-> tighten_paper
   rewrite_unclear -.-> argument_arc
+  tighten_paper --> cold_read_diff
   to_stage_study(["→ 3 · Study"])
   to_stage_idea(["→ 1 · Idea"])
   to_stage_review(["→ 5 · Review"])
   argument_arc -. "build-benchmark" .-> to_stage_study
   argument_arc -. "sweep-design-space" .-> to_stage_idea
-  draft_paper -- "paper-adversarial-review, pc-panel-review" --> to_stage_review
-  render_paper -- "paper-adversarial-review, pc-panel-review" --> to_stage_review
-  tighten_paper -- "grade-paper-writing" --> to_stage_review
+  draft_paper -- "pc-panel-review" --> to_stage_review
+  render_paper -- "pc-panel-review" --> to_stage_review
 ```
 
 ## 5 · Review
 
 ```mermaid
 flowchart TB
-  grade_paper_writing["<b>grade-paper-writing</b><br/>find unclear sentences (the whole paper)<br/>grade the prose<br/>runs: rewrite-unclear, render-paper"]
-  harden_paper["<b>harden-paper</b><br/>is it ready to submit<br/>runs: tighten-paper, paper-adversarial-review, pc-panel-review,<br/>verify-citations, analyze-sibling-paper, grade-paper-writing,<br/>rewrite-unclear, render-paper, argument-arc"]
-  paper_adversarial_review["<b>paper-adversarial-review</b><br/>runs: grade-paper-writing"]
-  pc_panel_review["<b>pc-panel-review</b><br/>runs: grade-paper-writing, tighten-paper"]
+  grade_paper_writing["<b>grade-paper-writing</b><br/>grade the prose<br/>runs: rewrite-unclear, render-paper"]
+  harden_paper["<b>harden-paper</b><br/>is it ready to submit<br/>runs: tighten-paper, pc-panel-review, verify-citations,<br/>analyze-sibling-paper, grade-paper-writing, rewrite-unclear,<br/>render-paper, argument-arc"]
+  pc_panel_review["<b>pc-panel-review</b><br/>runs: tighten-paper, cold-read-diff"]
   verify_citations["<b>verify-citations</b><br/>runs: analyze-sibling-paper, map-prior-work"]
-  paper_adversarial_review --> pc_panel_review
   to_stage_draft(["→ 4 · Draft"])
   to_stage_submit(["→ 6 · Submit"])
   to_stage_extend(["→ 8 · Extend"])
   grade_paper_writing -. "argument-arc" .-> to_stage_draft
   harden_paper -- "submit-paper" --> to_stage_submit
   harden_paper -- "extend-paper" --> to_stage_extend
-  paper_adversarial_review -. "tighten-paper" .-> to_stage_draft
 ```
 
 ## 6 · Submit
@@ -168,7 +165,7 @@ flowchart TB
 flowchart TB
   osf_artifact_upload["<b>osf-artifact-upload</b>"]
   submission_portal["<b>submission-portal</b>"]
-  submit_paper["<b>submit-paper</b><br/>runs: osf-artifact-upload, submission-portal, pc-panel-review,<br/>paper-adversarial-review, render-paper"]
+  submit_paper["<b>submit-paper</b><br/>runs: osf-artifact-upload, submission-portal, pc-panel-review,<br/>render-paper"]
   to_stage_camera_ready(["→ 7 · Camera-ready"])
   submit_paper -- "camera-ready" --> to_stage_camera_ready
 ```

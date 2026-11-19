@@ -10,7 +10,6 @@ import analyzeSiblingPaper from "../analyze-sibling-paper/SKILL.md.spec.ts";
 import argumentArc from "../argument-arc/SKILL.md.spec.ts";
 import extendPaper from "../extend-paper/SKILL.md.spec.ts";
 import gradePaperWriting from "../grade-paper-writing/SKILL.md.spec.ts";
-import paperAdversarialReview from "../paper-adversarial-review/SKILL.md.spec.ts";
 import pcPanelReview from "../pc-panel-review/SKILL.md.spec.ts";
 import renderPaper from "../render-paper/SKILL.md.spec.ts";
 import rewriteUnclear from "../rewrite-unclear/SKILL.md.spec.ts";
@@ -21,7 +20,7 @@ import verifyCitations from "../verify-citations/SKILL.md.spec.ts";
 export default experimental_skill({
   name: "harden-paper",
   description:
-    'Use when asking "is this paper actually ready to submit?" / "what\'s still missing before I upload?" / "run the pre-submission gate" on a DRAFTED paper. The multi-axis hardening orchestrator — it runs the review skills AND closes the axes they miss (structure via tighten-paper, threat-model + ethics/dual-use, reproducibility artifact, double-blind hygiene, page/word-fit, citability), and its verdict is a VECTOR of gates reported worst-gate-first — any failing gate (readability, structure, claims, citations, nearest-neighbor scoop, mechanical) caps "ready" regardless of a high accept-probability. NOT for grading how the prose reads (grade-paper-writing), a structural cut plan alone (tighten-paper), or a single hostile review (paper-adversarial-review) — this calls all of those and makes the submit/no-submit decision. Composes with pc-panel-review / verify-citations (it calls them) and submit-paper (downstream).',
+    'Use when asking "is this paper actually ready to submit?" / "what\'s still missing before I upload?" / "run the pre-submission gate" on a DRAFTED paper. The multi-axis hardening orchestrator — it runs the review skills AND closes the axes they miss (structure via tighten-paper, threat-model + ethics/dual-use, reproducibility artifact, double-blind hygiene, page/word-fit, citability), and its verdict is a VECTOR of gates reported worst-gate-first — any failing gate (readability, structure, claims, citations, nearest-neighbor scoop, mechanical) caps "ready" regardless of a high accept-probability. NOT for grading how the prose reads (grade-paper-writing), a structural cut plan alone (tighten-paper), or a single hostile review (pc-panel-review\'s hostile seat) — this calls all of those and makes the submit/no-submit decision. Composes with pc-panel-review / verify-citations (it calls them) and submit-paper (downstream).',
   tools: [
     "Read",
     "Write",
@@ -39,16 +38,16 @@ export default experimental_skill({
 
 Editing the paper's text after an approved copy exists (\`paperlint versions approve\`): declare each change in \`versions/<cycle>/changes.yaml\`, \`paperlint versions diff\` shows what was lost (EXPERIMENTAL; \`docs/rules/cycle/changes-since-approved.md\`). With an approved copy, \`submission … --save\` refuses while the source differs from it; approve it first (the author does, never the agent).
 
-> **Which paper skill?** \`paper-adversarial-review\` / \`pc-panel-review\` (whose venue-fit mode covers the
-> CFP-fit score) = the *reviewer's-eye* axis (defects, fit, accept-prob). \`verify-citations\` = the
+> **Which paper skill?** \`pc-panel-review\` (whose hostile and venue-fit seats run alone as spot-checks)
+> = the *reviewer's-eye* axis (defects, fit, accept-prob). \`verify-citations\` = the
 > *citation* axis.
 > **\`harden-paper\` (here) = the orchestrator** that runs those AND closes the axes a reviewer-sim
 > doesn't systematically hit — the submission-readiness gate. Run it after the draft is written and
 > before \`submit-paper\`. It does not re-implement the sub-skills; it calls them and checks the rest.
 
 **Principle:** a paper dies from any *one* unclosed axis. Reviewers only *read* — so every claim,
-number, and omission must survive on the page. Go axis by axis; for each, **find → fix → re-verify**,
-don't just list. Below, each axis says what to run / check and the specific traps that recur.
+number, and omission must survive on the page. Go axis by axis; for each, find what fails and name
+the fix; the author decides which to apply. Below, each axis says what to run / check and the specific traps that recur.
 
 > Axes 1–10 and 12 are **soundness** gates (get it accepted / avoid desk-reject). Axis 11 (**citability**) is
 > the *impact* gate — a correct-but-forgettable paper passes review and gets cited zero times. For a
@@ -62,27 +61,14 @@ exists, pass it to every scoring step (including the reviews axis 1 calls), and 
 finding's position against the accepted papers' denominators. With no summary, the report says
 "main-conference bar assumed" in its first lines.
 
-**Order matters: STRUCTURE before SENTENCES.** Run axis 0 FIRST. There is no point polishing prose (axis 8),
-verifying claims, or scoring a section that a structural pass says to cut or fold to the artifact. The 2026-07
-AISec session did this backwards — a full sentence-level polish, *then* the author said "it's too long and the
-middle sags" — wasting the polish on possibly-cut sections.
-
-0. **Structure / editorial (run FIRST)** — run **\`tighten-paper\`**: is this the right paper, at the right length,
-   delivering its ONE point, skimmable, with no TMI that belongs in the artifact? Apply its cut/fold/merge/reorder
-   plan BEFORE any sentence-level work. On a paper that "feels long / overly complex / middle drags," this is the
-   highest-leverage pass. (Near a deadline, apply the SAFE cuts and hold big restructures for camera-ready — state
-   the tradeoff, don't silently gut a submitted paper.)
-
-1. **Reviewer defects** — run \`paper-adversarial-review\` (quick) and, as the final decision gate,
-   \`pc-panel-review\`. Use a *separate model* (e.g. Fable subagent) as the reviewer, and — critically —
-   **run it blind**: give it ONLY the submission text, no author, no sibling papers, no outside context.
-   A sighted review judges overlap; a blind review predicts what the real double-blind PC sees. Do both:
-   sighted for overlap/de-anon, blind for the true score.
+0–1. **Structure and reviewer defects come from the final review** (\`paper-pipeline\`, "The final
+   review"): \`tighten-paper\` → \`cold-read-diff --whole\` → \`pc-panel-review\`, each once. Take their
+   reports; do not run them again here. If the final review has not run, run it first.
 
 2. **Overclaims — suite-specific traps only (the general hunt is delegated).** The general
    overclaim hunt — every sentence stronger than the evidence, causal-from-correlational, headline
-   numbers vs reported stats, title over-promise — is \`paper-adversarial-review\`'s job, and axis 1
-   already runs it; don't redo it here. This axis adds the traps that recur in THIS suite's papers
+   numbers vs reported stats, title over-promise — is the hostile seat of \`pc-panel-review\`, which
+   the final review already ran; don't redo it here. This axis adds the traps that recur in THIS suite's papers
    and that a generic hunt keeps missing:
    - **Absolute "no / none / never / first / only."** These are almost always false or unprovable.
      Soften to "no *established / adopted / install-time* X," or "*first to* [narrow, true scope]."
@@ -91,8 +77,7 @@ middle sags" — wasting the polish on possibly-cut sections.
    - **Rhetorical hooks that reality falsifies** (e.g. "you'd never install a library that runs
      arbitrary code" — npm postinstall does exactly that). Reframe to the *true* differentiator.
    - **The review-ratchet rule — how to FIX a caught overclaim.** Tighten → cut → move to Threats →
-     only then inline-hedge; review only ever ADDS, so run \`tighten-paper\` AFTER the round to strip
-     what it deposited. Full rule: \`paper-pipeline/references/review-ratchet.md\`.
+     only then inline-hedge. Full rule: \`paper-pipeline/references/review-ratchet.md\`.
    - 🔴 **A bound that lives only in an appendix is still an overclaim.** Check every headline number
      in the abstract and intro against the appendices: if a qualification narrowing it sits out
      there with no pointer reaching it, the body is overclaiming and "it's in the appendix" is not
@@ -128,7 +113,7 @@ middle sags" — wasting the polish on possibly-cut sections.
 
 5. **Threat model (security/systems venues)** — reviewers dock a security paper with no explicit one.
    State: **adversary** (who, what capability), **trust boundary**, **assets**, and what you **assume
-   not** compromised. One crisp paragraph. \`paper-adversarial-review\` does not force this — add it.
+   not** compromised. One crisp paragraph. The panel's hostile seat does not force this — add it.
 
 6. **Ethics / responsible disclosure / dual-use (security venues)** — often a hard CFP requirement.
    If you measured weaknesses in *named real systems*: (a) report aggregate + anonymized; (b) plan
@@ -276,8 +261,8 @@ The verdict is a **vector of independent gates**, and **ANY failing gate caps th
 ready"** — the gates are orthogonal axes and do not average out. **Ready ⇔ ALL of these pass:**
 
 - **Science / defects** — \`pc-panel-review\` decision + accept-probability;
-- **Readability** — \`grade-paper-writing\`'s PERSONA stall pass (the inventory + density caps, not the
-  rubric number);
+- **Readability** — the final review's cold-read report, every finding decided by the author (fixed
+  or \`wontfix\`);
 - **Structure + length** — \`tighten-paper\`'s structural verdict (right length, no sag, no TMI);
 - **Claims-honest** — the Hn claim-preservation diff clean after every rewrite;
 - **Citations** — \`verify-citations\` clean: no \\cite that fails to resolve, nothing marked VERIFY
@@ -314,8 +299,7 @@ list of items only the author can close (host artifact, click submit, disclose-b
 preprint). If every gate passes and every axis is PASS/FIXED → hand off to \`submit-paper\`.
 
 ## Composes with
-\`tighten-paper\` (axis 0, run FIRST — structure before sentences), \`paper-adversarial-review\` +
-\`pc-panel-review\` + \`verify-citations\` + \`grade-paper-writing\` (called by this), \`render-paper\` (if LaTeX
+the final review (\`tighten-paper\` → \`cold-read-diff\` → \`pc-panel-review\`, axes 0–1), \`verify-citations\` + \`grade-paper-writing\` (called by this), \`render-paper\` (if LaTeX
 toolchain exists), \`submit-paper\` (downstream), \`extend-paper\` (the dropped refs / deferred axes live here).`,
 });
 
@@ -324,7 +308,6 @@ export const flow = {
   handsTo: () => [submitPaper, extendPaper],
   calls: () => [
     tightenPaper,
-    paperAdversarialReview,
     pcPanelReview,
     verifyCitations,
     analyzeSiblingPaper,

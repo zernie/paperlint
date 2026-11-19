@@ -146,11 +146,10 @@ Two disciplines are mandatory:
 
 - **5** = the best-written papers in existence (Trusting-Trust tier: a non-expert reads it willingly, one
   unforgettable line). Vanishingly rare — almost no real paper earns a 5 on most dimensions.
-- **4** = clearly above average, a pleasure to read.
-- **3** = competent and publishable but a slog in places — **the DEFAULT for a solid accepted paper.**
+- **4** = clearly above average, a pleasure to read; nothing a reviewer would ask to fix.
+- **3** = competent and publishable but a slog in places.
 - **2** = a real weakness a reviewer gripes about. **1** = bad.
-  Most dimensions of most accepted papers are **2–3**. A row of 4s and 5s means you are being lenient —
-  recheck. "It improved from the last draft" is not evidence of a 4; grade only what is on the page today.
+  "It improved from the last draft" is not evidence of a 4; grade only what is on the page today.
 
 **2. One grade is not trustworthy — run a blind panel when the number matters.** Spawn **≥3 independent
 graders**, each blind to (a) any prior score, (b) each other, and (c) the "we improved X" framing — give
@@ -198,9 +197,7 @@ paragraph is NOT "above average," however correct or clean-sentenced. Apply as a
 
 - **> 1 stall/page → Jargon (#6) ≤ 2.**
 - **> 2 stalls/page → Jargon ≤ 2, Prose (#5) ≤ 2, and Landing (#7) ≤ 3.**
-- **A row of 4s on a paper with > 2 stalls/page is a MIS-GRADE — you read as an expert, not the target
-  reader. Re-run the stall pass.** Report stalls/page next to the scorecard; if it exceeds
-  these thresholds and the dimension scores don't reflect the cap, the grade is wrong.
+- Report stalls/page next to the scorecard.
 
 ## The claim-preservation diff (`claims`) — mandatory after EVERY rewrite
 

@@ -6,7 +6,6 @@
 // but is not in a release the consumer installs, so adding it here would not compile.
 import { experimental_skill } from "vigiles/spec";
 import type { Flow } from "../../scripts/pipeline.ts";
-import paperAdversarialReview from "../paper-adversarial-review/SKILL.md.spec.ts";
 import pcPanelReview from "../pc-panel-review/SKILL.md.spec.ts";
 import tightenPaper from "../tighten-paper/SKILL.md.spec.ts";
 
@@ -130,10 +129,10 @@ python3 -c "import fitz; d=fitz.open('paper.pdf'); \\
   changed since the last render. Send the PDF too (\`display: attach\`) if they want the file.
 
 ## Compose with
-- \`paper-adversarial-review\` / \`pc-panel-review\` (incl. its venue-fit mode) — review the rendered draft.`,
+- \`pc-panel-review\` (incl. its hostile and venue-fit seats) — review the rendered draft.`,
 });
 
 export const flow = {
   stage: "draft",
-  handsTo: () => [tightenPaper, paperAdversarialReview, pcPanelReview],
+  handsTo: () => [tightenPaper, pcPanelReview],
 } satisfies Flow;

@@ -10,6 +10,7 @@ import analyzeSiblingPaper from "../analyze-sibling-paper/SKILL.md.spec.ts";
 import argumentArc from "../argument-arc/SKILL.md.spec.ts";
 import buildBenchmark from "../build-benchmark/SKILL.md.spec.ts";
 import buildLabelPage from "../build-label-page/SKILL.md.spec.ts";
+import coldReadDiff from "../cold-read-diff/SKILL.md.spec.ts";
 import cameraReady from "../camera-ready/SKILL.md.spec.ts";
 import draftPaper from "../draft-paper/SKILL.md.spec.ts";
 import extendPaper from "../extend-paper/SKILL.md.spec.ts";
@@ -18,7 +19,6 @@ import gradePaperWriting from "../grade-paper-writing/SKILL.md.spec.ts";
 import hardenPaper from "../harden-paper/SKILL.md.spec.ts";
 import labelAgentRuns from "../label-agent-runs/SKILL.md.spec.ts";
 import mapPriorWork from "../map-prior-work/SKILL.md.spec.ts";
-import paperAdversarialReview from "../paper-adversarial-review/SKILL.md.spec.ts";
 import pcPanelReview from "../pc-panel-review/SKILL.md.spec.ts";
 import planPaperTimeline from "../plan-paper-timeline/SKILL.md.spec.ts";
 import renderPaper from "../render-paper/SKILL.md.spec.ts";
@@ -63,9 +63,8 @@ of that — who is filing what, and when — stays in the author's own private n
 - \`references/anonymization.md\` — the double-blind deny-list + hygiene (and its reverse at camera-ready).
 - \`references/writing-craft.md\` — how well-written papers read (craft rules + exemplar lessons + the
   gradeable 10-dim writing rubric); cited by \`draft-paper\`, \`grade-paper-writing\`, and \`harden-paper\`.
-- \`references/review-ratchet.md\` — how to fix a caught overclaim (tighten → cut → Threats → hedge)
-  and why every review round must be paid back with a \`tighten-paper\` pass; cited by
-  \`paper-adversarial-review\`, \`pc-panel-review\`, \`harden-paper\`.
+- \`references/review-ratchet.md\` — how to fix a caught overclaim (tighten → cut → Threats → hedge);
+  cited by \`pc-panel-review\` and \`harden-paper\`.
 - \`references/pipeline-status-template.md\` — the per-paper **readiness scorecard** (which stages ran,
   grades, open findings, submit-ready verdict). Copied into \`<paper-dir>/PIPELINE-STATUS.md\`.
 - \`references/acl-venue-rules.md\` — what holds at **every** ACL-family venue and workshop: the
@@ -252,11 +251,10 @@ Ordered, and the order is real: every one refuses to run without the output of t
 
 | Gate | Skill | Requires (hard) |
 |---|---|---|
-| **Structure** | **\`tighten-paper\`** | A rendered PDF and a page count. Produces the cut plan + structural verdict. *Before 2026-07-30 this appeared only INSIDE the harden stage — i.e. after the gate that requires it — so a literal reading sent you into a hard-blocked gate.* |
-| **Writing craft** | **\`grade-paper-writing\`** | The current draft. Produces the **persona stall inventory**, which the panel cannot run without. The stalls are rewritten by **\`rewrite-unclear\`**, the one skill that rewrites for clarity. |
-| **Review decision** | **\`pc-panel-review\`** | 🔴 **Both of the above.** N independent lenses (incl. an artifact-runner that executes the artifact) + a chair meta-review — predicts the PC's accept/reject. Its venue-fit mode is the one-reviewer CFP-fit spot-check. |
+| **Final review** | **\`tighten-paper\`** → **\`cold-read-diff --whole\`** → **\`pc-panel-review\`** | A rendered PDF and a page count. Once, in that order, then closed: the next section. Sentences the readers flag are rewritten by **\`rewrite-unclear\`**. |
+| **Writing grade** | **\`grade-paper-writing\`** | The current draft and the cold-read report. The 1–5 grade, when the author asks for one; not a step of the final review. |
 | **Claim preservation** | Fable diff (\`claims\`) | The pre-pass baseline. Run after **every** aggressive rewrite, before committing. |
-| **Harden** | **\`harden-paper\`** | The panel's verdict. Closes the desk-reject axes a reviewer-sim misses: threat-model, ethics/dual-use, page-fit, citability, double-blind hygiene, artifact-runs-clean. Its structure and writing axes are the **re-run/confirm** pass, not the first invocation. |
+| **Harden** | **\`harden-paper\`** | The closed final review. Closes the desk-reject axes a reviewer-sim misses: threat-model, ethics/dual-use, page-fit, citability, double-blind hygiene, artifact-runs-clean. It takes the final review's reports and does not run them again. |
 | **Submit** | **\`submit-paper\`** (+ the venue card) | 🔴 **The \`access\` row green.** Portal mechanics, PDF-only, artifact hosted anonymously, "ready for review" marked. |
 
 ## AFTER — only reachable by acceptance
@@ -264,33 +262,45 @@ Ordered, and the order is real: every one refuses to run without the output of t
 **\`camera-ready\`** — de-anonymize; public repo + archival DOI; complete disclosure. Then
 **\`extend-paper\`** — extend (≥30% new) to a higher-prestige venue, the "second, stronger publication."
 
-**Which review skill?** \`paper-adversarial-review\` = one hostile reviewer, fast defect hunt;
-\`pc-panel-review\` = the full panel + meta-review that makes the accept/reject **decision** (its
-**venue-fit mode** is the one-reviewer CFP-fit spot-check — formerly the standalone \`venue-review-sim\`).
-Use an atom for a quick spot-check; **run the panel for the decision.**
+**Which review skill?** \`pc-panel-review\`: the full panel + meta-review predicts the accept/reject
+**decision**; one of its seats run alone is a spot-check (the **hostile seat** for a red-team, the
+**venue-fit seat** for a CFP-fit score).
 
 **Four grading axes — don't confuse them.** A draft is judged on four independent axes, each its own
 skill: 🔴 **argument architecture** — does the whole thing carry the reader to one conclusion
 (\`argument-arc\`, in the LOOP; the axis that failed on \`compile-rules-2026\` precisely because it was
 nobody's) · **content strength** — does the contribution clear *this venue's* bar (\`study-accepted-papers\`,
 from the venue's own award winners: in SETUP as requirements for the study, and again on the draft as the strong-accept scorecard, M1–M10) ·
-**scientific defects** — what a hostile reviewer attacks (\`paper-adversarial-review\` / \`pc-panel-review\`)
+**scientific defects** — what a hostile reviewer attacks (\`pc-panel-review\`)
 · **writing craft** — does it read like a human wrote it (\`grade-paper-writing\`, the 10-dim rubric in
 \`references/writing-craft.md\`; called by \`harden-paper\`). A paper can ace one and fail another — grade all four.
 **The arc axis comes first**, because tightening length and polishing sentences inside a broken arc is
 how a day disappears and the same paper ships.
 
-**Panel vs harden — not rival gates, they're sequential.** \`pc-panel-review\` is the review DECISION
-gate: it predicts what the PC does. \`harden-paper\` is the pre-submit ORCHESTRATOR: it *calls* the review
-skills and then closes the desk-reject axes a reviewer-sim doesn't systematically hit (threat-model,
-ethics/dual-use, page-fit, citability, double-blind hygiene). Order is **review (decide) → harden (close
-every other axis) → submit** — neither is "the one final gate" alone.
+**Panel vs harden — not rival gates, they're sequential.** \`pc-panel-review\` predicts what the PC does.
+\`harden-paper\` takes the final review's reports and closes the desk-reject axes a reviewer-sim doesn't
+systematically hit (threat-model, ethics/dual-use, page-fit, citability, double-blind hygiene). Order is
+**final review → harden → submit**.
 
-## The review round (a cycle inside GATES)
-Review → **apply the consensus fixes → re-run the panel to confirm**. The artifact-runner re-executes
-the artifact each round. Stop when the panel converges to accept and the artifact reproduces clean —
-**don't loop past one confirming round**, and don't chase the last notch into the deadline. A defensible
-**Accept shipped on time beats a risky Strong that misses it**.
+## The final review — once, in this order, then closed
+
+The one place this order is written; every other skill points here.
+
+1. **\`tighten-paper\`** — the structural verdict and the proposed cuts. It applies nothing.
+2. **\`cold-read-diff --whole\`** — the whole paper in chunks of at most 15 paragraphs, two blind readers
+   per chunk; no reader sees more than its chunk.
+3. **\`pc-panel-review\`** — one panel, with the reports of steps 1–2 as its inputs.
+
+- **Each pass runs once.** "No findings" from any of them is a valid result and ends that pass.
+- **The author decides each finding once**, accepted or rejected. Accepted ones are applied in one write:
+  a sentence through \`rewrite-unclear\`, a cut on his yes. A rejected finding is not raised again in this
+  review.
+- **At most one confirmation, and only when the author asks for it:** he names the pass, and it runs once
+  on what changed. No pass schedules another, and none reruns because a score is low.
+- **Then the review is closed,** whatever the scores and whatever is still open: mark the \`panel\` row of
+  \`PIPELINE-STATUS.md\` \`☑ closed <date>\`. Ordinary edits, a re-approval (\`versions approve\`) and a
+  gate older than the text do not reopen it; only the author does, by asking for a new final review.
+  What is left goes to \`harden-paper\`, then \`submit-paper\`.
 
 ## 📝 Text pass vs evidence pass — two independent axes, ask which one you want
 
@@ -302,7 +312,7 @@ Every gate belongs to exactly one axis. **Sort by what invalidates it**, not by 
 
 | axis | invalidated by | gates |
 |---|---|---|
-| **TEXT** — does the argument land? | a change to the **prose**: any edit, cut, reorder | \`structure\` tighten-paper · \`writing\` grade-paper-writing · \`arc\` argument-arc · the prose lenses of \`panel\` pc-panel-review |
+| **TEXT** — does the argument land? | a change to the **prose**: any edit, cut, reorder (until the final review is closed) | \`structure\` tighten-paper · \`writing\` grade-paper-writing · \`arc\` argument-arc · the prose lenses of \`panel\` pc-panel-review |
 | **EVIDENCE** — is it true? | a change to the **data, code, or artifact** | \`claims\` claim-preservation · \`cites\` verify-citations · \`artifact\` the artifact-runner lens · the numeric half of \`harden\` harden-paper |
 
 **Why this matters more than it looks.** The two axes expire on completely different clocks. Rewriting
@@ -310,9 +320,8 @@ a paragraph invalidates every TEXT gate and no EVIDENCE gate. Re-running an expe
 reverse. Conflating them produces both classic wastes: re-verifying numbers nobody touched, and — worse
 — trusting a readability verdict on prose that has since been rewritten.
 
-**Text-only pass** (the common request, and the right default after a cut, a reorder, or a rewrite where
-the numbers did not move): run \`structure\` and \`writing\` in parallel, then \`panel\` with its artifact lens **explicitly
-disabled**, and hand each agent the sentence *"assume every number is correct and already verified — do
+**Text-only final review** (the numbers did not move since they were checked): run it with the panel's
+artifact lens **explicitly disabled**, and hand each agent the sentence *"assume every number is correct and already verified — do
 not re-derive anything; judge the writing, the structure and the argument."* Roughly halves the wall
 clock and removes the single most expensive stage.
 
@@ -428,22 +437,13 @@ own words on catching it, translated from Russian: *"you're cutting the text rig
 **What is still continuous:** rendering, and looking at pages 1–2. Seeing the number is fine. Acting
 on it is what waits.
 
-🔴 **Every round adds text; pay it back — in ONE pass.** Review is a ratchet — fixes are additive, so a
-paper that survives three rounds is longer and denser than the one that entered them. On \`compile-rules-2026\` the
-body oscillated 8 ↔ 9 pages for ~50 iterations, and the squeezing is what produced the unanimous 2/5 on
-clarity: the first compression took real repetition, the second had none left and took transitions,
-antecedents and the conclusion's honest half. After each round's fixes, run \`tighten-paper\` — and if the
-page limit is binding, **move** rather than delete (Limitations and Ethics do not count toward ACL page
+🔴 **Length is paid in ONE pass: the final review's \`tighten-paper\` step.** If the page limit is
+binding, **move** rather than delete (Limitations and Ethics do not count toward ACL page
 limits). The trap in that move is real and named in \`references/acl-venue-rules.md\`: relocating a caveat
 while its flattering number stays in the body is exactly the asymmetry reviewers punish.
 
-**Anti-churn ≠ skipping unrun gates.** "Don't loop past one confirming round" forbids *re-polishing prose
-that already passed a gate* — it does NOT license *skipping a gate that never ran*. A \`☐\` row in
-\`PIPELINE-STATUS.md\` for **study-accepted-papers, pc-panel-review, or full harden-paper** is an unrun
-quality gate, not churn: **if capacity exists, run it before calling the paper done.** (This session
-skipped those three under an "anti-churn" rationalization on a submitted paper; when the user forced them,
-the pc-panel caught real must-fixes — a release overclaim and an unsupported number — that the skip would
-have shipped.) Churn is re-touching FINE prose; a never-run gate is a hole. If a real
+**A gate that never ran is a hole, not churn.** A \`☐\` \`panel\` or \`harden\` row means the final review
+or the checklist has not run on this paper; it runs once. If a real
 objection is out of scope, name it in Threats to Validity (adversarial reviewers read Threats first; an
 honest limitation reads as strength).
 
@@ -479,9 +479,8 @@ magnitude, not a promise. Re-measure rather than inherit.
 
 **What the shape tells you, which matters more than the rows.**
 
-- **A full gate cycle — \`tighten\` → \`grade\` → \`panel\` — is about 1.2 hours.** That is cheap enough
-  to run after any substantial edit, and there is no excuse for a stale gate on a paper you are
-  still touching.
+- **A full gate cycle — \`tighten\` → \`grade\` → \`panel\` — measured about 1.2 hours.** The final
+  review runs it once, not after each edit.
 - **Reading, checking and reviewing are all minutes.** Anything whose cost is dominated by fetching,
   parsing or judging text lands in the 3–40 minute band regardless of how important it feels.
 - 🔴 **Anything that installs dependencies and runs an agent inside a real checkout is hours, and
@@ -495,7 +494,7 @@ magnitude, not a promise. Re-measure rather than inherit.
 ## Model policy (which model runs which stage)
 Single home for the whole suite — stage skills point here instead of each re-deciding. Default:
 - **Adversarial / red-team / verify a claim** → **Fable** (a separate model; never the author grading
-  itself): \`paper-adversarial-review\`, \`pc-panel-review\` reviewers, \`harden-paper\` threat-model +
+  itself): \`pc-panel-review\` reviewers, \`harden-paper\` threat-model +
   citability red-team, disputed \`verify-citations\` verdicts.
 - **Heavy generation / synthesis** → the session's main model (**Opus**): \`draft-paper\`,
   \`build-benchmark\` design, \`extend-paper\`, \`research-ideate\`.
@@ -542,8 +541,8 @@ export const flow = {
     renderPaper,
     tightenPaper,
     gradePaperWriting,
+    coldReadDiff,
     rewriteUnclear,
-    paperAdversarialReview,
     pcPanelReview,
     hardenPaper,
     submitPaper,

@@ -154,7 +154,7 @@ taste. That is the shape to copy.
 
 ---
 
-## The classification: all 22 verdict-bearing gates
+## The classification: all 21 verdict-bearing gates
 
 Every skill under `.claude/skills/` that records a verdict to the ledger — 21 with a `Record the
 verdict` block, plus `map-prior-work`, which was in `EXPECTED_GATES` with no block at all when this
@@ -168,41 +168,40 @@ we want more of.
 > morning). A concurrent change deleted the value it was recorded under; the classification is
 > unaffected and the reason it is unaffected is the interesting part.
 
-| gate                       | what a yes from it asserts                                                                       | type                                  | may it acquit?                                                                                                        |
-| -------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `render-paper`             | `check-render.sh` exited 0                                                                       | **A**                                 | ✅ yes                                                                                                                |
-| `draft-paper`              | sections were written to disk                                                                    | **A**                                 | ✅ yes (and its own SKILL.md says a generator that can only pass is a design smell — correct, and it is still Type A) |
-| `build-benchmark`          | the artifact recomputed every headline number and exited 0                                       | **A**                                 | ✅ yes                                                                                                                |
-| `paper-status`             | a program printed zero blockers                                                                  | **A**                                 | ✅ yes                                                                                                                |
-| `submit-paper`             | uploaded, marked ready, `check-deanon.sh` green, under the page limit                            | **A**                                 | ✅ yes (its SKILL.md already calls itself a mechanical gate)                                                          |
-| `plan-paper-timeline`      | the backwards plan is on the calendar and `access` is green                                      | **A** + B-tail                        | ⚠️ A-part only; "the deadline cannot be met from here" is taste                                                       |
-| `verify-citations`         | every cite resolves with correct metadata **and** the delta sentence is present                  | **A** (external adjudicator) + B-tail | ⚠️ the registry leg genuinely acquits; "is the delta stated" does not                                                 |
-| `camera-ready`             | de-anonymized, DOI live, limit re-checked, disclosure complete                                   | **A** + B-tail                        | ⚠️ A-part only; "disclosure is complete enough" is taste                                                              |
-| `extend-paper`             | ≥30% new material, one named venue, no dual submission                                           | **A** + B-tail                        | ⚠️ the three facts acquit; "genuinely new" does not                                                                   |
-| `find-venue`               | a ranked shortlist with a keep/switch call                                                       | B (+ A-part)                          | ❌ the indexing/peer-review facts are A; the ranking is taste                                                         |
-| `research-ideate`          | go                                                                                               | **B**                                 | ❌ drive only                                                                                                         |
-| `sweep-design-space`       | at least one candidate survived the filters                                                      | **B**                                 | ❌ drive only                                                                                                         |
-| `map-prior-work`           | what you may still claim after the sweep                                                         | **B**                                 | ❌ drive only                                                                                                         |
-| `argument-arc`             | the arc carries the reader end to end                                                            | **B**                                 | ❌ drive only                                                                                                         |
-| `cold-read-diff`           | every changed sentence came back restated correctly                                              | **B**                                 | ❌ drive only — **and the cold reader is the same family as the writer**                                              |
-| `tighten-paper`            | a cover-to-cover read produced no action                                                         | **B**                                 | ❌ drive only                                                                                                         |
-| `grade-paper-writing`      | the stall inventory came back empty                                                              | **B**                                 | ❌ drive only                                                                                                         |
-| `analyze-sibling-paper`    | the delta is real and no text has to change                                                      | **B**                                 | ❌ drive only                                                                                                         |
-| `study-accepted-papers`    | the draft already passes the strong-accept scorecard                                             | **B**                                 | ❌ drive only (the corpus is external; the comparison is ours)                                                        |
-| `paper-adversarial-review` | a hostile read found nothing                                                                     | **B**                                 | ❌ drive only                                                                                                         |
-| `pc-panel-review`          | accept with no must-fix                                                                          | **B**                                 | ❌ drive only — the flagship offender                                                                                 |
-| `harden-paper`             | every gate green and every axis PASS/FIXED — _the only verdict that hands off to `submit-paper`_ | **A over B**                          | ❌ the wrapper is A, the thing wrapped is B; the handoff is an acquittal                                              |
+| gate                    | what a yes from it asserts                                                                       | type                                  | may it acquit?                                                                                                        |
+| ----------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `render-paper`          | `check-render.sh` exited 0                                                                       | **A**                                 | ✅ yes                                                                                                                |
+| `draft-paper`           | sections were written to disk                                                                    | **A**                                 | ✅ yes (and its own SKILL.md says a generator that can only pass is a design smell — correct, and it is still Type A) |
+| `build-benchmark`       | the artifact recomputed every headline number and exited 0                                       | **A**                                 | ✅ yes                                                                                                                |
+| `paper-status`          | a program printed zero blockers                                                                  | **A**                                 | ✅ yes                                                                                                                |
+| `submit-paper`          | uploaded, marked ready, `check-deanon.sh` green, under the page limit                            | **A**                                 | ✅ yes (its SKILL.md already calls itself a mechanical gate)                                                          |
+| `plan-paper-timeline`   | the backwards plan is on the calendar and `access` is green                                      | **A** + B-tail                        | ⚠️ A-part only; "the deadline cannot be met from here" is taste                                                       |
+| `verify-citations`      | every cite resolves with correct metadata **and** the delta sentence is present                  | **A** (external adjudicator) + B-tail | ⚠️ the registry leg genuinely acquits; "is the delta stated" does not                                                 |
+| `camera-ready`          | de-anonymized, DOI live, limit re-checked, disclosure complete                                   | **A** + B-tail                        | ⚠️ A-part only; "disclosure is complete enough" is taste                                                              |
+| `extend-paper`          | ≥30% new material, one named venue, no dual submission                                           | **A** + B-tail                        | ⚠️ the three facts acquit; "genuinely new" does not                                                                   |
+| `find-venue`            | a ranked shortlist with a keep/switch call                                                       | B (+ A-part)                          | ❌ the indexing/peer-review facts are A; the ranking is taste                                                         |
+| `research-ideate`       | go                                                                                               | **B**                                 | ❌ drive only                                                                                                         |
+| `sweep-design-space`    | at least one candidate survived the filters                                                      | **B**                                 | ❌ drive only                                                                                                         |
+| `map-prior-work`        | what you may still claim after the sweep                                                         | **B**                                 | ❌ drive only                                                                                                         |
+| `argument-arc`          | the arc carries the reader end to end                                                            | **B**                                 | ❌ drive only                                                                                                         |
+| `cold-read-diff`        | every changed sentence came back restated correctly                                              | **B**                                 | ❌ drive only — **and the cold reader is the same family as the writer**                                              |
+| `tighten-paper`         | a cover-to-cover read produced no action                                                         | **B**                                 | ❌ drive only                                                                                                         |
+| `grade-paper-writing`   | the stall inventory came back empty                                                              | **B**                                 | ❌ drive only                                                                                                         |
+| `analyze-sibling-paper` | the delta is real and no text has to change                                                      | **B**                                 | ❌ drive only                                                                                                         |
+| `study-accepted-papers` | the draft already passes the strong-accept scorecard                                             | **B**                                 | ❌ drive only (the corpus is external; the comparison is ours)                                                        |
+| `pc-panel-review`       | accept with no must-fix                                                                          | **B**                                 | ❌ drive only — the flagship offender                                                                                 |
+| `harden-paper`          | every gate green and every axis PASS/FIXED — _the only verdict that hands off to `submit-paper`_ | **A over B**                          | ❌ the wrapper is A, the thing wrapped is B; the handoff is an acquittal                                              |
 
 ### The honest count
 
-**Of 22 verdict-bearing gates: 5 may acquit outright, 4 may acquit only their A-part, and 13 may
-only drive.** Seventeen of twenty-two therefore reach a verdict at least partly beyond what they are
+**Of 21 verdict-bearing gates: 5 may acquit outright, 4 may acquit only their A-part, and 12 may
+only drive.** Sixteen of twenty-one therefore reach a verdict at least partly beyond what they are
 entitled to give.
 
-🔴 **Narrow it to the review chain — the nine gates whose job is to decide whether the paper is good
-enough — and the number is 9 of 9. Every one of them can only drive.** They are `argument-arc`,
+🔴 **Narrow it to the review chain — the eight gates whose job is to decide whether the paper is good
+enough — and the number is 8 of 8. Every one of them can only drive.** They are `argument-arc`,
 `cold-read-diff`, `tighten-paper`, `grade-paper-writing`, `analyze-sibling-paper`,
-`study-accepted-papers`, `paper-adversarial-review`, `pc-panel-review`, `harden-paper`. Not one has a
+`study-accepted-papers`, `pc-panel-review`, `harden-paper`. Not one has a
 judge outside the family that wrote the text. Nothing in the review chain acquits; the entire chain
 drives, and `harden-paper`'s PASS then hands that driving to `submit-paper` as if it were an
 acquittal.
@@ -272,11 +271,11 @@ line because **nobody had given it a threshold at all**.
 
 Three things are actionable today, and one is not.
 
-1. **`single-family-jury` watches three gates; it should watch thirteen.**
+1. **`single-family-jury` watches two gates; it should watch twelve.**
    _(2026-08-26: this check now lives in `eslint-rules/pipeline-status.mjs` as the ESLint rule
    `pipeline/judge-recorded`, together with `unattributed-verdict`. The widening to fourteen names
    happened 2026-08-10 and moved with it.)_
-   The `ACQUITTING` set is `pc-panel-review`, `paper-adversarial-review`, `harden-paper`. The other
+   The `ACQUITTING` set is `pc-panel-review` and `harden-paper`. The other
    ten drive-only gates — `find-venue`, `research-ideate`, `sweep-design-space`, `map-prior-work`,
    `argument-arc`, `cold-read-diff`, `tighten-paper`, `grade-paper-writing`,
    `analyze-sibling-paper`, `study-accepted-papers` — report a clean run with no judge recorded and

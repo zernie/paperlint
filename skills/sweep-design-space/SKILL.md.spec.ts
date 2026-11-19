@@ -7,7 +7,6 @@
 import { experimental_skill } from "vigiles/spec";
 import type { Flow } from "../../scripts/pipeline.ts";
 import buildBenchmark from "../build-benchmark/SKILL.md.spec.ts";
-import paperAdversarialReview from "../paper-adversarial-review/SKILL.md.spec.ts";
 import pcPanelReview from "../pc-panel-review/SKILL.md.spec.ts";
 import researchIdeate from "../research-ideate/SKILL.md.spec.ts";
 
@@ -239,7 +238,7 @@ assurance levels already exist; the question is whether anyone has carried them 
 - \`research-ideate\` — validates ONE idea's research value; run after this picks a candidate.
 - \`map-prior-work\` / \`analyze-sibling-paper\` — occupancy at the level of a paper's contribution.
 - \`build-benchmark\` — once the mechanism exists, this measures it.
-- \`paper-adversarial-review\` / \`pc-panel-review\` — red-team the survivor.
+- \`pc-panel-review\` (its hostile seat) — red-team the survivor.
 
 ## Provenance
 Built 2026-07-29 during \`the reference paper\`, after a solution search stalled for hours. Four
@@ -255,5 +254,5 @@ already. The catalog exists so the next sweep starts from named constructs inste
 export const flow = {
   stage: "idea",
   handsTo: () => [researchIdeate, buildBenchmark],
-  calls: () => [paperAdversarialReview, pcPanelReview],
+  calls: () => [pcPanelReview],
 } satisfies Flow;

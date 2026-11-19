@@ -143,9 +143,6 @@ most needs help. This skill does:
   done yesterday by someone else, would I choose this shape?"* Time already spent is not evidence.
 - **Salvage explicitly, in writing:** which measurements survive the reframe untouched, which need
   re-analysis, which die with the old frame. Measurements usually survive; framing paragraphs rarely do.
-- **A deadline bounds how much you rebuild. It is never an argument that the current shape is right.**
-  If the author says the paper is *weak*, that is a quality judgment, not procrastination, and citing
-  the calendar against it is a category error.
 - **Rebuild produces a new outline through steps 1–4 above, and it too gets shown before editing.**
 
 ## Rules
