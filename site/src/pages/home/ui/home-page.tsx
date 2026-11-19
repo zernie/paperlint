@@ -148,13 +148,13 @@ const stops: readonly Stop[] = [
     short: "Prose",
     when: "When you write",
     title: "Writing limits, if you want them",
-    text: "Optional limits on sentence, paragraph and caption length, and a term used before it is defined. They stay off until you switch them on for a paper or a project.",
+    text: "Limits on sentence, paragraph and caption length, and three typographic slips (§, .05, mixed figure references). They stay off until you turn on one set, paperlint:writing, for a paper or a project.",
     badge: "Opt-in",
     on: false,
     example: (
       <Example
         file="paperlint.json"
-        code={`{ "rules": {\n    "tex/max-sentence-words": ["warn", { "max": 55 }] } }`}
+        code={`{ "rules": { "paperlint:writing": "warn" } }`}
         finding={prose}
       />
     ),

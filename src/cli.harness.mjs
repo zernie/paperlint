@@ -917,9 +917,13 @@ check(
       join(paper, "PIPELINE-STATUS.md"),
       `---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/2026-07-22-submitted.pdf\n    bytes: 100\n    source: versions/s.tex\n    sourceBytes: 4\n---\n# S\n\n| id | note |\n|---|---|\n| cites | bib-authors run |\n`,
     );
+    // `paper/section-word` is in the opt-in writing set: on for every paper here.
     writeFileSync(
       join(root, "paperlint.json"),
-      JSON.stringify({ [PAPERS_DIR_FIELD]: "papers" }),
+      JSON.stringify({
+        [PAPERS_DIR_FIELD]: "papers",
+        rules: { "paperlint:writing": "warn" },
+      }),
     );
 
     const lax = await cli(["lint"], root);
@@ -1036,10 +1040,17 @@ check(
 // (`"papers/p"`). Keys are computed against ESLint's `cwd`, so a run started from a
 // subdirectory, or with `--config` from elsewhere, silently stopped honouring the debt.
 {
+  // A message that names the paper's own `paperlint.json` names it as the reader typed it, so
+  // relative to where the run started: that path is the run's, like the file paths, and is masked.
   const findings = (r) => {
     try {
       return JSON.parse(r.stdout)
-        .flatMap((x) => x.messages.map((m) => `${m.ruleId}: ${m.message}`))
+        .flatMap((x) =>
+          x.messages.map(
+            (m) =>
+              `${m.ruleId}: ${m.message.replace(/\S*papers\/p\/paperlint\.json/g, "<paper>/paperlint.json")}`,
+          ),
+        )
         .sort();
     } catch {
       return [`UNPARSABLE: ${r.out}`];
@@ -1052,8 +1063,14 @@ check(
   try {
     const paper = join(tree, "papers", "p");
     mkdirSync(paper, { recursive: true });
-    // Two findings of different kinds: a structural one (no scorecard) and a rule one (`§`).
+    // Two findings of different kinds: a structural one (no scorecard) and a rule one (`§`). The
+    // `§` rule is in the opt-in writing set, turned on in the paper's own file, which is read
+    // wherever the command runs.
     writeFileSync(join(paper, "paper.tex"), tex("See § 3 and §4."));
+    writeFileSync(
+      join(paper, "paperlint.json"),
+      JSON.stringify({ rules: { "paperlint:writing": "warn" } }),
+    );
 
     const inside = await cli(["lint", "--json", "papers"], tree);
     const outside = await cli(
@@ -1077,12 +1094,15 @@ check(
     );
 
     // A `rules` block, its `files` relative to the config's directory, turns the `§` rule off
-    // for this paper — and it must reach the paper from wherever the command runs.
+    // for this paper — and it must reach the paper from wherever the command runs. The set moves
+    // to the root file, before the block: a paper's own file would win over the root's.
+    rmSync(join(paper, "paperlint.json"));
     writeFileSync(
       join(tree, "paperlint.json"),
       JSON.stringify({
         [PAPERS_DIR_FIELD]: "papers",
         rules: [
+          { rules: { "paperlint:writing": "warn" } },
           { files: ["papers/p/**"], rules: { "paper/section-word": "off" } },
         ],
       }),
@@ -1859,7 +1879,7 @@ console.log(
         ),
     );
     settings({
-      rules: [{ files: ["papers/**"], rules: { "paper/section-word": "off" } }],
+      rules: [{ files: ["papers/**"], rules: { "tex/future-promise": "off" } }],
     });
     check(
       "a built-in rule's severity can be changed the same way",

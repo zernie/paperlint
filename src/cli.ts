@@ -47,6 +47,7 @@ import {
   FRAGMENT_FILES,
   includeBlocks,
   paperBodies,
+  type PaperBody,
 } from "./paper-includes.ts";
 import { omit } from "remeda";
 import { refusalOf } from "./unowned-file.ts";
@@ -89,10 +90,7 @@ import {
 import { claimProvenanceRule } from "./claim-provenance.ts";
 import { termDefinitionRules } from "./term-definition-rules.ts";
 import { registerRule } from "./register.ts";
-import {
-  REGISTER_BAND_RULE_LEVELS,
-  registerBandRules,
-} from "./register-bands.ts";
+import { registerBandRules } from "./register-bands.ts";
 import { headingCaseRule } from "./heading-case.ts";
 import {
   maxParagraphNumbersRule,
@@ -577,11 +575,10 @@ export function buildConfig(
     ...referenceRules(RECORDED_DEPS),
     ...sourcesRules(RECORD_DEPS),
   };
-  // Each typography rule reports every occurrence where it is, and fixes it (`--fix`).
-  const prose = {
-    "paper/section-word": "warn",
-    "paper/leading-zero": "warn",
-  };
+  // The typography rules (each fixes what it reports, `--fix`), `tex/claim-provenance`,
+  // `tex/register` and the register bands are registered here and on for no file: they flag the
+  // writing, not what the venue decides, so they are in the opt-in set `paperlint:writing`
+  // (src/rule-sets.ts).
   const md = MARKDOWN_WITH_FRONTMATTER;
 
   const cfg: ConfigBlock[] = [
@@ -687,19 +684,10 @@ export function buildConfig(
       },
       language: "tex/latex",
       rules: {
-        ...prose,
         ...REFERENCE_RULE_LEVELS,
         ...SOURCES_RULE_LEVELS,
-        "paper/figure-ref-style": "warn",
         ...BIB_RULE_LEVELS,
         "tex/future-promise": "warn",
-        // A number with no owner: a prose rule, on beside the others above.
-        "tex/claim-provenance": "warn",
-        // Sentence-initial conjunctions over the whole body: register, not vocabulary.
-        "tex/register": "warn",
-        // Contrast frames, claims in bold, relation markers: each against the band the venue
-        // preset's anchors set, silent for a preset without anchors (src/register-bands.ts).
-        ...REGISTER_BAND_RULE_LEVELS,
         "tex/acm-frontmatter-override": "error",
         // Silent for a paper whose paperlint.json names no venue (src/venue-rules.ts).
         ...VENUE_RULE_LEVELS,
@@ -737,12 +725,9 @@ export function buildConfig(
             },
           },
           language: "tex/latex",
-          rules: {
-            "paper/section-word": "warn",
-            "paper/leading-zero": "warn",
-            "paper/figure-ref-style": "warn",
-            "tex/future-promise": "warn",
-          },
+          // The typography rules are registered here so the writing set reaches a body file too;
+          // like on `paper.tex`, they are on only where a `rules` setting turns them on.
+          rules: { "tex/future-promise": "warn" },
         },
       ]
     : [];
@@ -872,7 +857,22 @@ export const OPTIONAL_RULES: ReadonlySet<string> = new Set(
  * project. Judged against the run alone, `paperlint lint papers/c` failed on a block written for
  * papers a and b (#103) — a block that reaches a paper outside this run is not dead. A glob that
  * reaches no paper of the project at all still fails, from a subset as from the whole.
+ *
+ * A paper's rules reach it through its `PIPELINE-STATUS.md` too, and the typography rules through
+ * every body file handed to ESLint (`bodyFiles`): a block whose `files` name only `sections/*.tex`
+ * runs there, and was refused as reaching nothing until those files were probed as well. They are
+ * the files read from each paper's record BEFORE the run (`bodyFilesOf`), never read again after
+ * it: `--fix` rewrites a body file, the record no longer matches it, and a second read found no
+ * body files and refused a run whose rule had just fixed one.
  */
+/** The body files `bodies` handed to ESLint, for the paper whose `paper.tex` is `main`. */
+const bodyFilesOf =
+  (bodies: readonly PaperBody[]) =>
+  (main: string): readonly string[] =>
+    bodies
+      .filter((b) => resolve(b.main) === resolve(main))
+      .flatMap((b) => b.files);
+
 /** What `calculateConfigForFile` answers, read for its rules: undefined for a file outside ESLint's cwd or scope. */
 const ComputedConfig = z
   .object({ rules: z.record(z.string(), z.unknown()).optional() })
@@ -882,6 +882,7 @@ export async function silentOptionalRules(
   eslint: Pick<ESLint, "calculateConfigForFile">,
   files: readonly string[],
   opts: PaperlintConfig,
+  bodyFiles: (main: string) => readonly string[] = () => [],
 ): Promise<string[]> {
   const turnedOn = new Set(
     (opts.rules ?? []).flatMap((b) =>
@@ -891,11 +892,11 @@ export async function silentOptionalRules(
     ),
   );
   const reached = new Set<string>();
-  // A paper's rules reach it through two files: `paper.tex` and the `PIPELINE-STATUS.md` beside it,
-  // where the rules about the paper folder itself run.
+  // A paper's rules reach it through `paper.tex`, the `PIPELINE-STATUS.md` beside it, where the
+  // rules about the paper folder itself run, and the body files its last build recorded.
   const probes = [
     ...new Set(files.filter((p) => basename(p) === MAIN)),
-  ].flatMap((f) => [f, join(dirname(f), STATUS_FILE)]);
+  ].flatMap((f) => [f, join(dirname(f), STATUS_FILE), ...bodyFiles(f)]);
   for (const probe of probes) {
     // Undefined for a file outside ESLint's cwd or scope: it reaches nothing.
     const cfg = ComputedConfig.parse(
@@ -2367,7 +2368,7 @@ export async function run(
     stats: true,
   });
   if (!engine.ok) return (err(engine.error), 2);
-  const { eslint, opts: withPapers } = engine.value;
+  const { eslint, opts: withPapers, bodies } = engine.value;
 
   const unowned = await firstUnownedFile(eslint, paths);
   if (unowned !== null) {
@@ -2424,6 +2425,7 @@ export async function run(
       .flatMap((r) => papersIn(r))
       .map((d) => join(d, MAIN))
       .filter((f) => existsSync(f)),
+    bodies,
   });
   hooksLine(root, err, skillLinks);
   // On stderr, so `--json` leaves stdout a clean array.
@@ -2455,7 +2457,14 @@ async function paperEslint(
     /** ESLint's own per-rule timings on each result (`paperlint lint` reads them; the hook does not). */
     readonly stats: boolean;
   },
-): Promise<Parsed<{ eslint: ESLint; opts: PaperlintConfig }>> {
+): Promise<
+  Parsed<{
+    eslint: ESLint;
+    opts: PaperlintConfig;
+    /** The body files handed to ESLint, read from each paper's record BEFORE the run (`--fix` may change them). */
+    bodies: readonly PaperBody[];
+  }>
+> {
   // The order, most general first so the most specific wins (ESLint: a later block wins): each
   // paper's venue preset → the root paperlint.json → the paper's own paperlint.json.
   const papers = paperRuleBlocks(paths);
@@ -2491,7 +2500,7 @@ async function paperEslint(
     fix,
     stats,
   });
-  return { ok: true, value: { eslint, opts } };
+  return { ok: true, value: { eslint, opts, bodies } };
 }
 
 /**
@@ -2635,6 +2644,7 @@ async function reportLint(
     where,
     opts,
     projectPapers,
+    bodies,
   }: {
     a: Args;
     log: typeof console.log;
@@ -2642,12 +2652,15 @@ async function reportLint(
     where: string;
     opts: PaperlintConfig;
     projectPapers: readonly string[];
+    /** The body files handed to ESLint, as read before the run. */
+    bodies: readonly PaperBody[];
   },
 ): Promise<number> {
   const silent = await silentOptionalRules(
     eslint,
     [...results.map((r) => r.filePath), ...projectPapers],
     opts,
+    bodyFilesOf(bodies),
   );
   if (silent.length > 0) {
     err(

@@ -11,17 +11,17 @@ describe("explain", () => {
   it("reads a lint line into its level, rule, plain words and the raw line", () => {
     expect(
       explain(
-        "  8:4   warning  `§` instead of the word «Section» — `paperlint lint --fix` writes it              paper/section-word",
+        "    1:1   error    1 column(s), AgenticDev requires 2 — the wrong document class or class option   pdf/geometry",
       ),
     ).toEqual({
-      rule: "paper/section-word",
-      level: "warning",
-      title: "Write “Section”, not §",
+      rule: "pdf/geometry",
+      level: "error",
+      title: "One column; AgenticDev needs two",
       plain:
-        "Line 8 uses the § sign where the word “Section” belongs. paperlint can rewrite it for you.",
-      raw: "8:4   warning  `§` instead of the word «Section» — `paperlint lint --fix` writes it              paper/section-word",
+        "The PDF is set in one column, and AgenticDev requires two. Switch to the venue's document class and build again.",
+      raw: "1:1   error    1 column(s), AgenticDev requires 2 — the wrong document class or class option   pdf/geometry",
     });
-    expect(explain("  1:1   error    boom   pdf/fonts").level).toBe("error");
+    expect(explain("  1:1   warning  boom   pdf/fonts").level).toBe("warning");
   });
 
   it("fails the build on a line it cannot read, and on a rule with no plain words", () => {

@@ -26,11 +26,6 @@ export const plainByRule: Readonly<
     plain:
       "LaTeX fell back to Computer Modern (CMR10) instead of the Libertine font AgenticDev requires. Use the venue's template and build again.",
   },
-  "paper/section-word": {
-    title: "Write “Section”, not §",
-    plain:
-      "Line 8 uses the § sign where the word “Section” belongs. paperlint can rewrite it for you.",
-  },
 };
 
 const LINE = /^\s*\d+:\d+\s+(error|warning)\s+(.*?)\s{2,}(\S+)\s*$/;

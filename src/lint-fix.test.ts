@@ -59,9 +59,12 @@ const ruleIds = (stdout: string): string[] =>
     r.messages.map((m) => m.ruleId ?? "(fatal)"),
   );
 
+/** The writing set on for every paper: the typography rules `--fix` rewrites are in it. */
+const WRITING = { rules: { "paperlint:writing": "warn" } };
+
 describe("paperlint lint --fix", () => {
   it("🔴 three `§` and a bare decimal → --fix → zero findings, and the file says Section", async () => {
-    const root = project({});
+    const root = project(WRITING);
     const before = ruleIds((await lint(root)).out);
     expect(before.filter((r) => r === "paper/section-word")).toHaveLength(3);
     expect(before).toContain("paper/leading-zero");
@@ -74,10 +77,20 @@ describe("paperlint lint --fix", () => {
   });
 
   it("without --fix nothing is written", async () => {
-    const root = project({});
+    const root = project(WRITING);
     await lint(root);
     expect(readFileSync(join(root, "papers/a/paper.tex"), "utf8")).toMatch(
       /§5/,
+    );
+  });
+
+  it("🔴 without the writing set, the same paper gets no typography finding and --fix writes nothing", async () => {
+    const root = project({});
+    const ids = ruleIds((await lint(root, ["--fix"])).out);
+    expect(ids).not.toContain("paper/section-word");
+    expect(ids).not.toContain("paper/leading-zero");
+    expect(readFileSync(join(root, "papers/a/paper.tex"), "utf8")).toBe(
+      PAPER("See §5, §6 and §7; $p < .05$."),
     );
   });
 });

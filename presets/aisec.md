@@ -60,7 +60,10 @@ exception and reports the 13th page; a person clears that case by eye.
 
 - **The ACM template**, through `extends: paperlint:acm-sigconf` — AISec points to the main ACM
   CCS formatting instructions and publishes no numbers of its own ([`acm-sigconf.md`](acm-sigconf.md)).
-- **Names**: `AISec` and `ACM CCS`, what `tex/venue-leftover` looks for in another venue's paper.
+- **Names**: `AISec`, what `tex/venue-leftover` looks for in another venue's paper.
+- **The parent conference**, `"parent": "paperlint:ccs"`: ACM CCS's names count as an AISec paper's
+  own, so «co-located with ACM CCS 2026» is no leftover here. In any other venue's paper, «ACM CCS»
+  is reported once, as ACM CCS ([`ccs.md`](ccs.md)).
 - **No rules of its own**: nothing says who produces the AISec proceedings or whether they require
   a balanced last page. A paper turns `pdf/last-page-balance` on in its own `paperlint.json` if the
   camera-ready instructions ask for it.

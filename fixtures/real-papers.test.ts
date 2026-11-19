@@ -33,6 +33,7 @@ import { useTempDir, writeTree } from "../test/support.ts";
 import {
   compareToBaseline,
   countByPaper,
+  RECORDED_OPT_IN,
   recordedFindings,
 } from "./accepted-papers/baseline.ts";
 
@@ -54,6 +55,8 @@ const PAPERS = FOLDERS.flatMap((root) =>
 async function lintAll(): Promise<ReturnType<typeof countByPaper>> {
   const dir = writeTree(useTempDir("paperlint-real-papers-"), {
     "package.json": '{"name":"consumer","private":true}',
+    // The opt-in rules the baselines count, on for every paper (baseline.ts says why).
+    "paperlint.json": JSON.stringify({ rules: RECORDED_OPT_IN }),
   });
   for (const { name, dir: from } of PAPERS) {
     cpSync(from, join(dir, "papers", name), {

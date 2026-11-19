@@ -86,11 +86,12 @@ export function Faq({
       q: "Does it change my paper?",
       a: (
         <p>
-          Not unless you ask. Checking only reads your paper and reports. A fix
-          command can rewrite three small typographic slips (§ to “Section”, .05
-          to 0.05, one style of figure reference) and nothing else. Building
-          writes the PDF and its records next to your paper; creating a paper
-          never touches a paper.tex that already exists.
+          Not unless you ask. Checking only reads your paper and reports. If you
+          turn on the writing set, a fix command can rewrite three small
+          typographic slips (§ to “Section”, .05 to 0.05, one style of figure
+          reference) and nothing else. Building writes the PDF and its records
+          next to your paper; creating a paper never touches a paper.tex that
+          already exists.
         </p>
       ),
     },

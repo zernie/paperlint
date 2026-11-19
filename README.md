@@ -26,7 +26,8 @@ before you submit.** It comes in two parts:
   - 🔤 the wrong font — LaTeX silently fell back to Computer Modern because a package was missing;
   - 🔗 a bad reference — a cited work that does not exist, or lists the preprint's authors.
 
-  Smaller slips too: `§` for "Section", `.05` for `0.05` — fixed for you.
+  Writing preferences — `§` for "Section", `.05` for `0.05`, length caps — stay off until you
+  turn on the opt-in set `paperlint:writing`; `--fix` then fixes the slips for you.
 
 - 🧠 **Skills for [Claude Code](https://claude.com/claude-code)** — optional, covering the
   whole pipeline: the idea, the venue, the study, the draft, the reviews, submission.
@@ -53,18 +54,22 @@ before you submit.** It comes in two parts:
 A **venue preset** holds a venue's format and page limits. A paper's **kind** picks which limit
 applies: at AgenticDev a `short` paper gets 5 pages and a `full` one 10. You choose it once per paper.
 
-| preset                      | venue               | format                        | kinds and page limits                                                                                                                                    |
-| --------------------------- | ------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `paperlint:acm-sigconf`     | any ACM conference  | ACM two-column                | no kinds: the format only, no page limit                                                                                                                 |
-| `paperlint:agenticdev`      | AgenticDev @ ASE    | ACM two-column                | `short` 5, `full` 10, `demo` 5 pages, + 2 pages of references                                                                                            |
-| `paperlint:aisec`           | AISec @ ACM CCS     | ACM two-column                | `research`, `benchmark`, `position`, `sok`: 10 pages + 2 pages of references                                                                             |
-| `paperlint:realm`           | REALM @ EMNLP       | ACL two-column, A4            | `long` 8, `short` 4 — recorded, not checked ([why](docs/rules.md#checks-against-the-venue))                                                              |
-| `paperlint:ieee-conference` | any IEEE conference | IEEE two-column               | no kinds: the format only, no page limit                                                                                                                 |
-| `paperlint:aidc`            | AIDC @ IEEE ACSAC   | IEEE two-column, `compsoc`    | `regular` 12, `short` 6, counted before the references ([why](docs/rules.md#checks-against-the-venue)); requires the «LLM Usage Statement»; double-blind |
-| `paperlint:msr`             | MSR (Technical)     | IEEE two-column, no `compsoc` | `technical` 10 pages, appendices included, + 2 pages of only references ([why](docs/rules.md#checks-against-the-venue)); double-blind                    |
+| preset                      | venue                | format                        | kinds and page limits                                                                                                                                    |
+| --------------------------- | -------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `paperlint:acm-sigconf`     | any ACM conference   | ACM two-column                | no kinds: the format only, no page limit                                                                                                                 |
+| `paperlint:agenticdev`      | AgenticDev @ ASE     | ACM two-column                | `short` 5, `full` 10, `demo` 5 pages, + 2 pages of references                                                                                            |
+| `paperlint:aisec`           | AISec @ ACM CCS      | ACM two-column                | `research`, `benchmark`, `position`, `sok`: 10 pages + 2 pages of references                                                                             |
+| `paperlint:icse`            | ICSE 2028 (Research) | ACM two-column                | `research` 10 pages, appendices included, + 2 pages of only references; double-blind                                                                     |
+| `paperlint:ase`             | ASE (Research)       | ACM two-column                | `technical`, `experience` 10 pages, appendices included, + 2 pages of only references; requires a «Data Availability Statement»; double-blind            |
+| `paperlint:ccs`             | ACM CCS              | ACM two-column                | `research` 12 pages, bibliography and appendices not counted; requires an «Open Science» appendix; double-blind                                          |
+| `paperlint:realm`           | REALM @ EMNLP        | ACL two-column, A4            | `long` 8, `short` 4 — recorded, not checked ([why](docs/rules.md#checks-against-the-venue))                                                              |
+| `paperlint:ieee-conference` | any IEEE conference  | IEEE two-column               | no kinds: the format only, no page limit                                                                                                                 |
+| `paperlint:aidc`            | AIDC @ IEEE ACSAC    | IEEE two-column, `compsoc`    | `regular` 12, `short` 6, counted before the references ([why](docs/rules.md#checks-against-the-venue)); requires the «LLM Usage Statement»; double-blind |
+| `paperlint:msr`             | MSR (Technical)      | IEEE two-column, no `compsoc` | `technical` 10 pages, appendices included, + 2 pages of only references ([why](docs/rules.md#checks-against-the-venue)); double-blind                    |
+| `paperlint:sp`              | IEEE S&P             | IEEE two-column, `compsoc`    | `research` 13 pages + 5 of references and appendices, 18 in all; `sok` 13 pages, references not counted; double-blind                                    |
 
-Not shipped yet: USENIX, NeurIPS, Springer, IEEE venues other than AIDC and MSR, and ACL venues other than
-REALM.
+Not shipped yet: USENIX, NeurIPS, Springer, ACM's single-column `acmsmall` format (FSE uses it), IEEE
+venues other than AIDC, MSR and S&P, and ACL venues other than REALM.
 [Add yours](#-add-a-venue-that-isnt-listed) in one small file.
 
 ## 🚀 Getting started
@@ -111,7 +116,6 @@ REALM.
    papers/my-paper/paper.tex
      1:1   error    1 column(s), AgenticDev requires 2 — the wrong document class or class option   pdf/geometry
      1:1   error    no font starts with `LinLibertine` (body text of AgenticDev); the PDF has: CMR10, …   pdf/fonts
-     8:4   warning  `§` instead of the word «Section» — `paperlint lint --fix` writes it              paper/section-word
    ```
 
    After the findings, `lint` prints on stderr how long it took (`linted 12 file(s) in 4.3 s`) and,
@@ -191,7 +195,7 @@ Every skill, by stage: [`docs/skills.md`](docs/skills.md).
 | ------ | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | needs  | Node, TeX Live, the network                                                                  | Node                                                                                      |
 | does   | compiles `paper.tex`, measures the PDF, checks each reference online (exists, right authors) | checks the source, and judges what build recorded: page limit, fonts, references; offline |
-| writes | `paper.pdf`, `_build/`, `repro/data/references-cache.json` (commit it)                       | nothing (`--fix`: the three fixable slips)                                                |
+| writes | `paper.pdf`, `_build/`, `repro/data/references-cache.json` (commit it)                       | nothing (`--fix`: the three fixable slips of the writing set)                             |
 
 - If `paper.pdf` or the bibliography changed since the last build, lint fails and tells you to rebuild.
 - Lint also checks the pipeline's own records (`PIPELINE-STATUS.md`, reviews, notes on related
@@ -269,6 +273,8 @@ Yes. Each paper names its own venue preset in its own `paperlint.json`.
 **Does it change my paper?**
 Only `paperlint lint --fix`, and only three rules: `paper/section-word` (`§` → Section),
 `paper/leading-zero` (`.05` → `0.05`) and `paper/figure-ref-style` (one figure-reference style).
+They are opt-in, in the writing set: `"rules": { "paperlint:writing": "warn" }` in `paperlint.json`
+([`docs/optional-rules.md`](docs/optional-rules.md#the-writing-set-paperlintwriting)).
 
 ## 📚 Docs
 
@@ -281,7 +287,7 @@ Only `paperlint lint --fix`, and only three rules: `paper/section-word` (`§` �
 - [`docs/rules.md`](docs/rules.md) — every check, venue presets, recording a submitted PDF
 - [`docs/references.md`](docs/references.md) — the reference check, and the cache file to commit
 - [`docs/submission.md`](docs/submission.md) — creating, reading and updating a submission on the venue's portal (HotCRP); one token variable per site
-- [`docs/optional-rules.md`](docs/optional-rules.md) — checks only some venues need
+- [`docs/optional-rules.md`](docs/optional-rules.md) — checks only some venues need, and the opt-in writing set
 - [`docs/toolchain.md`](docs/toolchain.md) — TeX Live, and Banal (HotCRP's page-geometry checker, GPL)
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — how the package is tested and released, and adding a venue to it
 

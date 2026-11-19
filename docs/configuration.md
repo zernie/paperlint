@@ -43,13 +43,17 @@ It sits beside your `package.json`. Without it every setting has its default.
   "papersDir": "docs/papers",
   "extends": "paperlint:acm-sigconf",
   "rules": [
+    { "rules": { "paperlint:writing": "warn" } },
     {
       "files": ["docs/papers/old-draft/**"],
-      "rules": { "paper/section-word": "off" }
+      "rules": { "paperlint:writing": "off" }
     }
   ]
 }
 ```
+
+Here the opt-in writing set ([`optional-rules.md`](optional-rules.md#the-writing-set-paperlintwriting))
+is on for every paper but the old draft.
 
 | key         | default    | what it is                                                                                             |
 | ----------- | ---------- | ------------------------------------------------------------------------------------------------------ |
@@ -412,7 +416,7 @@ can turn on a rule that is off by default, or change the severity of one that is
   },
   {
     "files": ["papers/old-draft/**"],
-    "rules": { "paper/section-word": "off" }
+    "rules": { "tex/future-promise": "off" }
   }
 ]
 ```
@@ -428,6 +432,9 @@ can turn on a rule that is off by default, or change the severity of one that is
   never widen it. The [rule tables](rules.md) name each rule's file.
 - **A rule entry** is a severity (`"off"`, `"warn"`, `"error"`, or `0`/`1`/`2`), or a list whose
   first element is a severity and the rest are the rule's options.
+- **A rule set's name stands for its rules** — `"paperlint:writing": "warn"` is each rule of the
+  [writing set](optional-rules.md#the-writing-set-paperlintwriting) at `"warn"`, in that place, so
+  a later entry still wins. A set takes a severity alone.
 - **Only rules paperlint ships can be named** — the ones in [`docs/rules.md`](rules.md) and
   [`docs/optional-rules.md`](optional-rules.md). A rule id paperlint does not ship, a bad severity, a
   `rules` of another shape, or a block key other than `files`, `ignores` and `rules` stops the run

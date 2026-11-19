@@ -74,7 +74,7 @@ export const prose: Finding = {
   level: "warning",
   title: "A 61-word sentence",
   plain:
-    "The sentence that starts “Because the agent…” runs to 61 words, over the limit of 55 you set. Split it where a clause could stand alone.",
+    "The sentence that starts “Because the agent…” runs to 61 words, over the writing set's limit of 55. Split it where a clause could stand alone.",
   template:
     "a sentence of {{words}} words, over {{max}} — «{{head}}». A reader loses its subject before its verb; cut it where a clause could stand alone",
   values: { words: "61", max: "55", head: "Because the agent…" },
