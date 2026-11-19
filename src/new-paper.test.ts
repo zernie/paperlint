@@ -304,6 +304,17 @@ describe("paperlint new --venue — a venue it cannot use", () => {
     expect(r.err).toMatch(/--venue neurips: no such venue preset/);
     expect(existsSync(r.dir)).toBe(false);
   });
+
+  it("🔴 a bare series exits 2, names the editions, and creates nothing: it is never the latest edition", async () => {
+    for (const venue of ["icse", "paperlint:icse"]) {
+      const r = await newIn(["--venue", venue]);
+      expect(r.code).toBe(2);
+      expect(r.err).toContain(
+        "--venue paperlint:icse names a series, not an edition: a venue preset is one edition, so a new edition never changes a paper's rules unasked. Shipped editions: paperlint:icse-2027, paperlint:icse-2028 — did you mean paperlint:icse-2028?",
+      );
+      expect(existsSync(r.dir)).toBe(false);
+    }
+  });
 });
 
 describe("paperlint new --venue / --kind — refusals and defaults", () => {
