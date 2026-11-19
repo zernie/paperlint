@@ -13,6 +13,7 @@ import { latexReader } from "./adapters/latex/index.ts";
 import {
   cyclePortRules,
   judgeRequiredSections,
+  judgeStyle,
   judgeTemplate,
   otherVenues,
   FORMAT_RULE_LEVELS,
@@ -1194,17 +1195,202 @@ describe("tex/required-section — NeurIPS's paper checklist", () => {
   });
 });
 
-describe("NeurIPS names no template: what the source rules do not see (measured gaps, neurips-style.jsonc)", () => {
-  it("tex/template, format/layout-override and cycle/port-done are silent whatever the class and the margins", () => {
-    for (const tex of [
-      paper("\\documentclass[sigconf]{acmart}", BODY + CHECKLIST),
-      neuripsPaper(BODY + CHECKLIST, "\\usepackage[margin=0.5in]{geometry}"),
-      paper(
-        "\\documentclass{article}\n\\usepackage{neurips_2024}",
-        BODY + CHECKLIST,
+/** A paper whose preamble is `preamble`, under the NeurIPS family's class. */
+const articlePaper = (preamble: string, body = BODY + CHECKLIST) =>
+  paper(`\\documentclass{article}\n${preamble}`, body);
+
+describe("tex/template — a style file the template loads (`template_style`): what passes", () => {
+  it.each<[string, string]>([
+    ["the kit's own line", "\\usepackage{neurips_2026}"],
+    [
+      "with options of the paper's own",
+      "\\usepackage[preprint,nonatbib]{neurips_2026}",
+    ],
+    ["in a list with other packages", "\\usepackage{amsmath,neurips_2026}"],
+    ["as \\RequirePackage", "\\RequirePackage{neurips_2026}"],
+    [
+      "one of several lines behind a TeX switch",
+      "\\if\\venue1 \\usepackage{iclr2027_conference} \\fi\n\\if\\venue2 \\usepackage{neurips_2026} \\fi",
+    ],
+  ])("%s", (_, preamble) => {
+    expect(lint(articlePaper(preamble), NEURIPS)).toEqual([]);
+  });
+
+  it("from a preamble the paper \\inputs, as the build recorded it", () => {
+    const tex = articlePaper("\\input{preamble}");
+    const extra = builtPaper(
+      PAPER,
+      { "paper.tex": tex, "preamble.tex": "\\usepackage{neurips_2026}\n" },
+      [
+        { path: "paper.tex", role: "body" },
+        { path: "preamble.tex", role: "preamble" },
+      ],
+    );
+    expect(lint(tex, NEURIPS, { extra })).toEqual([]);
+  });
+
+  it("silent for a preset that names no style: REALM's article takes any package", () => {
+    expect(
+      lint(
+        paper(
+          "\\documentclass[11pt]{article}\n\\usepackage{neurips_2026}",
+          "Text.",
+        ),
+        {
+          extends: "paperlint:realm",
+          kind: "long",
+        },
       ),
-    ])
-      expect(lint(tex, NEURIPS)).toEqual([]);
+    ).toEqual([]);
+  });
+});
+
+describe("tex/template — a style file the template loads (`template_style`): what fails", () => {
+  const template = (tex: string) =>
+    lint(tex, NEURIPS).filter((f) => f.rule === "tex/template");
+
+  it("🔴 no style at all: the class alone does not pass", () => {
+    expect(template(articlePaper("\\usepackage{amsmath}"))).toEqual([
+      {
+        rule: "tex/template",
+        messageId: "missingStyle",
+        message:
+          "NeurIPS requires `\\usepackage{neurips_2026}`; paper.tex loads no such package — the page, the fonts and the margins the venue checks come from it",
+        line: 1,
+      },
+    ]);
+  });
+
+  it("🔴 another year's NeurIPS style, at its line", () => {
+    expect(template(articlePaper("\\usepackage{neurips_2025}"))).toEqual([
+      {
+        rule: "tex/template",
+        messageId: "wrongStyle",
+        message:
+          "paper.tex loads `neurips_2025`, another venue's or another year's style; NeurIPS requires `\\usepackage{neurips_2026}`",
+        line: 3,
+      },
+    ]);
+  });
+
+  it("🔴 a style commented out is not loaded", () => {
+    expect(ids(template(articlePaper("% \\usepackage{neurips_2026}")))).toEqual(
+      ["tex/template:missingStyle"],
+    );
+  });
+
+  it("🔴 the class is still judged beside the style: both findings", () => {
+    expect(
+      ids(
+        template(paper("\\documentclass[sigconf]{acmart}", BODY + CHECKLIST)),
+      ),
+    ).toEqual(["tex/template:missingStyle", "tex/template:wrongClass"]);
+  });
+});
+
+describe("judgeStyle — another shipped venue's style, and a required option", () => {
+  const neurips = resolvePreset(
+    "paperlint:neurips-2026",
+    `${PAPER}/paperlint.json`,
+    { files: memoryFiles(shipped), venuesDir: VENUES },
+  );
+  const at = (start: number) => ({
+    kind: "at" as const,
+    span: { start, end: start + 1 },
+  });
+
+  it("🔴 a style another shipped venue names is reported by name; an unknown package is the paper's own", () => {
+    expect(neurips.ok).toBe(true);
+    if (!neurips.ok) return;
+    const judge = (name: string) =>
+      judgeStyle(
+        {
+          packages: [{ name, options: [], place: at(5) }],
+          others: ["icml2027", "aaai2027"],
+        },
+        neurips.value,
+        latexReader,
+      ).map((f) => [f.messageId, f.data["got"] ?? ""]);
+    expect(judge("icml2027")).toEqual([["wrongStyle", "icml2027"]]);
+    expect(judge("aaai2027")).toEqual([["wrongStyle", "aaai2027"]]);
+    expect(judge("iclr2027_conference")).toEqual([["missingStyle", ""]]);
+  });
+
+  it("🔴 a required option missing is one finding per option, at the line; with it, silent", () => {
+    expect(neurips.ok).toBe(true);
+    if (!neurips.ok) return;
+    const withOption = {
+      ...neurips.value,
+      templateStyle: { text: "\\usepackage[main]{neurips_2026}", file: "x" },
+    };
+    const judge = (options: readonly string[]) =>
+      judgeStyle(
+        {
+          packages: [{ name: "neurips_2026", options, place: at(5) }],
+          others: [],
+        },
+        withOption,
+        latexReader,
+      ).map((f) => [f.messageId, f.data["option"] ?? ""]);
+    expect(judge([])).toEqual([["missingStyleOption", "main"]]);
+    expect(judge(["main", "final"])).toEqual([]);
+  });
+
+  it("a template_style that is not one \\usepackage line is said, naming the file", () => {
+    expect(neurips.ok).toBe(true);
+    if (!neurips.ok) return;
+    const odd = {
+      ...neurips.value,
+      templateStyle: { text: "\\usepackage{a,b}", file: "odd.jsonc" },
+    };
+    expect(
+      judgeStyle({ packages: [], others: [] }, odd, latexReader).map(
+        (f) => f.messageId,
+      ),
+    ).toEqual(["badStyle"]);
+  });
+});
+
+describe("format/layout-override and cycle/port-done under the NeurIPS style", () => {
+  it("🔴 layout-override reports a \\newgeometry and a margin option; silent on the kit's preamble", () => {
+    const overrides = (preamble: string, body = BODY + CHECKLIST) =>
+      lint(articlePaper(preamble, body), NEURIPS)
+        .filter((f) => f.rule === "format/layout-override")
+        .map((f) => f.line);
+    expect(
+      overrides(
+        "\\usepackage{neurips_2026}",
+        "\\newgeometry{textwidth=6.5in}\n" + BODY + CHECKLIST,
+      ),
+    ).toEqual([5]);
+    expect(
+      overrides(
+        "\\usepackage{neurips_2026}\n\\usepackage[margin=0.5in]{geometry}",
+      ),
+    ).toEqual([4]);
+    expect(overrides("\\usepackage{neurips_2026}")).toEqual([]);
+  });
+
+  const porting = {
+    cycles: [
+      {
+        ...PORTING,
+        id: "neurips-2026",
+        venue: { kind: "preset", extends: "paperlint:neurips-2026" },
+        kind: "main",
+      },
+    ],
+  };
+
+  it("🔴 port-done: a port from another article-based style is not done while its style stays; done once the style is NeurIPS's", () => {
+    const portDone = (preamble: string) =>
+      lint(articlePaper(preamble, "Text."), porting).map(
+        (f) => `${f.rule}:${f.messageId}`,
+      );
+    expect(portDone("\\usepackage{iclr2027_conference}")).toEqual([]);
+    expect(portDone("\\usepackage{neurips_2026}")).toEqual([
+      "cycle/port-done:done",
+    ]);
   });
 });
 

@@ -25,6 +25,12 @@ The style's options pick the track and the stage: none for the anonymous submiss
 
 ## What the family encodes
 
+- **The template**: `\documentclass{article}` with `\usepackage{neurips_2026}` (`template` and
+  `template_style`). `tex/template` requires both, in the source, before any build: the class, the
+  style loaded (options of the paper's own allowed), and it names another year's NeurIPS style
+  (`neurips_2025`) or another shipped venue's style loaded instead. `format/layout-override` reports
+  a `\newgeometry` or a margin option in the paper, and `cycle/port-done` judges the class and the
+  style together.
 - **The page**: US letter, 8.5 × 11 in («Please prepare submission files with paper size "US
   Letter," and not, for example, "A4."»); a text block of 5.5 × 9 in (`\textwidth` 397.485 pt,
   `\textheight` 650.43 pt); one column.
@@ -37,12 +43,14 @@ The style's options pick the track and the stage: none for the anonymous submiss
 
 ## What the family does not check
 
-- **That the style is loaded.** The family has no `template`: the class is plain `article`, and
-  `tex/template` compares only the class line. A build without the style is caught after it, by its
-  fonts (`pdf/fonts`, measured below); one with the style is not told apart from another year's.
-- **A changed style file or changed margins.** No rule reads the text block, and
-  `format/layout-override` runs only under a `template`. A `\newgeometry` that widens the text block
-  after `\begin{document}` passed every rule on the measured build.
+- **A changed style file.** The check reads the name of the package the paper loads, not the file:
+  a `neurips_2026.sty` edited, or another file saved under that name, passes it. The build sees the
+  file's fonts (the 1990s «NIPS Macros» below), not its margins; `_build/sources.json` records the
+  file's sha256, which no rule compares yet.
+- **The text block on the PDF.** No `pdf/*` rule reads it; a layout change the source does not show
+  (a macro of the style redefined) is not seen.
+- **Getting the style file.** It is on no TeX distribution, and `paperlint new --venue` writes the
+  class line only: copy `neurips_2026.sty` from the kit beside `paper.tex`, and `\usepackage` it.
 
 ## How the numbers were measured
 
@@ -55,9 +63,9 @@ TeX Live's scheme-basic, the base set, this family's list, or a dependency of on
 | -------------------------------------------------------------- | ----------------------------------------------------------- |
 | the kit's style, no option                                     | 8.5 × 11 in, 1 column, body 10.3, NimbusRomNo9L: no finding |
 | references in `\small` / at the body size / in `\footnotesize` | 9.3 / not measured by banal / 8.3, `pdf/body-size`          |
-| no `\usepackage{neurips_2026}`                                 | cm-super (SFRM1000, …): `pdf/fonts`                         |
+| no `\usepackage{neurips_2026}`                                 | `tex/template`; cm-super (SFRM1000, …): `pdf/fonts`         |
 | the 1990s «NIPS Macros» saved as `neurips_2026.sty`            | cm-super: `pdf/fonts`                                       |
-| `\newgeometry{textwidth=6.5in,textheight=9.5in,top=0.75in}`    | the same page, fonts and sizes, one page shorter: nothing   |
+| `\newgeometry{textwidth=6.5in,textheight=9.5in,top=0.75in}`    | `format/layout-override`; the PDF: same page, fonts, sizes  |
 
 The «NIPS Macros» case is real: one preprint in `fixtures/arxiv-papers` ships that file under the
 name `neurips_2026.sty`. Of the 16 NeurIPS-style preprints there, 7 carry the kit's file byte for

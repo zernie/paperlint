@@ -25,7 +25,9 @@ import {
   optional,
   outlineOf,
   parseLatex,
+  packagesOf,
   parseTemplate,
+  parseTemplateStyle,
   placeOf,
   renderedRuns,
   replaceDocumentClass,
@@ -149,6 +151,45 @@ describe("parseTemplate — a preset's template", () => {
     ["", null],
   ])("%j → %j", (text, want) => {
     expect(parseTemplate(text)).toEqual(want);
+  });
+});
+
+describe("parseTemplateStyle — a preset's template_style", () => {
+  it.each<[string, { name: string; options: string[] } | null]>([
+    ["\\usepackage{neurips_2026}", { name: "neurips_2026", options: [] }],
+    [
+      "% c\n\\usepackage[ main , final ]{neurips_2026}\n",
+      { name: "neurips_2026", options: ["main", "final"] },
+    ],
+    ["\\RequirePackage{icml2027}", { name: "icml2027", options: [] }],
+    ["\\usepackage{a,b}", null],
+    ["\\usepackage{}", null],
+    ["\\usepackage{a} \\usepackage{b}", null],
+    ["\\documentclass{article}", null],
+    ["neurips_2026", null],
+    ["", null],
+  ])("%j → %j", (text, want) => {
+    expect(parseTemplateStyle(text)).toEqual(want);
+  });
+});
+
+describe("packagesOf — the packages the preamble loads", () => {
+  it("each package of each line, with the line's options and place; a comment loads nothing", () => {
+    const src =
+      "\\documentclass{article}\n% \\usepackage{x}\n\\usepackage[a, b]{p,q}\n\\RequirePackage{r}\n";
+    expect(
+      packagesOf(parseLatex(src)).map((p) => [
+        p.name,
+        p.options,
+        p.place.kind === "at"
+          ? src.slice(p.place.span.start, p.place.span.end)
+          : "",
+      ]),
+    ).toEqual([
+      ["p", ["a", "b"], "\\usepackage[a, b]{p,q}"],
+      ["q", ["a", "b"], "\\usepackage[a, b]{p,q}"],
+      ["r", [], "\\RequirePackage{r}"],
+    ]);
   });
 });
 

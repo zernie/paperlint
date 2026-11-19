@@ -78,6 +78,25 @@ export function venueClass(
 export const documentClassLine = (d: DocumentClass): string =>
   `\\documentclass${d.options.length > 0 ? `[${d.options.join(",")}]` : ""}{${d.cls}}`;
 
+/** A style package as a template names it: the package and the options it requires. */
+export interface StylePackage {
+  readonly name: string;
+  readonly options: readonly string[];
+}
+
+/**
+ * One package a `\usepackage` or `\RequirePackage` of the paper loads, with the options of its line
+ * as written (whitespace collapsed), and where the line stands. A line loading several packages
+ * (`\usepackage{a,b}`) gives one each, with the line's options and place.
+ */
+export interface PackageLoad extends StylePackage {
+  readonly place: Place;
+}
+
+/** A style package as a `\usepackage` line, for a message. */
+export const usepackageLine = (s: StylePackage): string =>
+  `\\usepackage${s.options.length > 0 ? `[${s.options.join(",")}]` : ""}{${s.name}}`;
+
 /** One `\section` or `\section*`, its title's text with whitespace collapsed. */
 export interface Heading {
   readonly title: string;

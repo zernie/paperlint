@@ -79,7 +79,35 @@ Class options the venue's call forbids, each reported where the class line carri
 `template` of the same file, and only with it: the schema refuses it alone, and a child preset's
 `template` replaces both.
 
+```jsonc
+"template": "\\documentclass{article}",
+"template_style": "\\usepackage{neurips_2026}"
+```
+
+For a template that is a style file from the venue's author kit, loaded into a plain class
+(NeurIPS's `neurips_2026.sty` into `article`): the whole `\usepackage[…]{…}` line, one package and
+the options it requires. The paper must then load that package (`\usepackage` or
+`\RequirePackage`, in the preamble or a file it `\input`s, alone or in a list) with every option
+named; options of its own are allowed, and one of several lines behind a TeX switch is enough. What
+is reported, at error:
+
+```latex
+\documentclass{article}                       % fails: NeurIPS requires `\usepackage{neurips_2026}`;
+                                              %   paper.tex loads no such package
+\usepackage{neurips_2025}                     % fails: another year's style, named
+\usepackage{icml2027}                         % fails: another shipped venue's style, named
+\usepackage[preprint]{neurips_2026}           % passes: an option of the paper's own
+```
+
+"Instead" covers two cases only: a package another shipped preset names as its `template_style`, and
+a package of the same series as the template's in another edition — the name with its trailing
+year and what follows removed (`neurips_2025` and `neurips_2026` are both `neurips`). Any other
+package is the paper's own. A child preset's `template_style` replaces its parent's.
+
 ## What it does not check
+
+- The style file's content: a `neurips_2026.sty` edited, or another file saved under that name,
+  passes (the build records its sha256 in `_build/sources.json`; no rule compares it yet).
 
 - An option a venue forbids that its preset does not list in `template_forbids` (`review` in a
   camera-ready).

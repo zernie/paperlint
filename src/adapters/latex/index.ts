@@ -24,7 +24,9 @@ import type { LatexReader } from "../../ports/latex.ts";
 import { abstractSpan, abstractText } from "./abstract.ts";
 import {
   documentClassOf,
+  packagesOf,
   parseTemplate,
+  parseTemplateStyle,
   replaceDocumentClass,
 } from "./document-class.ts";
 import { citeKeysOf, macroTextsOf, registeredNumbersOf } from "./facts.ts";
@@ -40,7 +42,9 @@ import { filecontentsOf } from "./filecontents.ts";
 
 export {
   documentClassOf,
+  packagesOf,
   parseTemplate,
+  parseTemplateStyle,
   replaceDocumentClass,
 } from "./document-class.ts";
 export {
@@ -73,6 +77,8 @@ export const latexReader: LatexReader = {
   includes: (src) => includesOf(parseLatex(src)),
   documentBody: (src) => documentBodyOf(parseLatex(src)),
   template: parseTemplate,
+  packages: (src) => packagesOf(parseLatex(src)),
+  templateStyle: parseTemplateStyle,
   withDocumentClass: (src, want) => replaceDocumentClass(parseLatex(src), want),
   layoutOverrides: (src) => layoutOverridesOf(parseLatex(src)),
   filecontents: (src, jobname) => filecontentsOf(parseLatex(src), jobname),

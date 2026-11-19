@@ -88,9 +88,10 @@ A paper names its kind in its `paperlint.json`. After acceptance the same paper 
 The content pages are banal's body count. Measured on `fixtures/build-e2e/neurips`: banal types the
 pages from the references on as references and appendix, the checklist among them whether it follows
 the appendix or the references, and counts the page the references start on as content when the text
-runs onto it. Not `body_ends_at`: the anonymous submission has line numbers, and the references
-heading then reads «References346» in the PDF's text, which that count does not take for a heading
-(measured: `format/page-limit` could not tell where the body ends). In the camera-ready, the
+runs onto it. Not `body_ends_at`: its references heading, which line numbers turn into
+«References346», is now found, but the appendix after it opens with «A Technical Appendix», which
+that count does not take for an appendix heading (measured: `format/page-limit` could not tell where
+the body ends). In the camera-ready, the
 acknowledgements stand before the references and are counted as content, which the kit says they
 are not («Additional pages containing acknowledgments, references, checklist, and optional technical
 appendices do not count as content pages»).
@@ -99,8 +100,9 @@ appendices do not count as content pages»).
 
 - **The NeurIPS style**, through `extends: paperlint:neurips-style` — letter page, one column,
   Times at 10 pt, references at 9 to 10 pt, the TeX packages the style needs
-  ([`neurips-style.md`](neurips-style.md)). That the style file is loaded, is this year's, and is
-  unchanged is not checked: the family's card says why.
+  ([`neurips-style.md`](neurips-style.md)) — and the template itself: `\documentclass{article}` with
+  `\usepackage{neurips_2026}` (`tex/template`), no margin change (`format/layout-override`). That the
+  style file is unchanged is not checked: the family's card says why.
 - **Double-blind review** (`blind`), so `anonymity/identity` checks the PDF against the paper's
   declared `identity`.
 - **The checklist** (`required_sections`): a section titled exactly «NeurIPS Paper Checklist», as the

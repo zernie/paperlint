@@ -34,6 +34,11 @@
       "type": "string",
       "minLength": 1
     },
+    "template_style": {
+      "description": "The style package the venue's template loads into its class, for a template that is a style file from the venue's author kit and not a class: a whole `\\usepackage[…]{…}` line, the package and the options it requires (`\\usepackage{neurips_2026}`). `tex/template` then requires the paper to load that package with every option named here, and reports another venue's or another year's style loaded instead. A child's value replaces its parent's.",
+      "type": "string",
+      "minLength": 1
+    },
     "template_forbids": {
       "description": "Class options the venue's call forbids in the \\documentclass line (`[\"compsoc\", \"compsocconf\"]`: MSR's «without including the compsoc or compsocconf options»). `tex/template` reports each one a paper's class line carries. Read with the `template` of the same file, and only with it: a child's `template` replaces both.",
       "type": "array",
@@ -512,7 +517,8 @@
   },
   "required": ["type"],
   "dependencies": {
-    "template_forbids": ["template"]
+    "template_forbids": ["template"],
+    "template_style": ["template"]
   },
   "allOf": [
     {

@@ -5,6 +5,8 @@ import {
   type ClassCandidate,
   type ClassLine,
   type DocumentClass,
+  type PackageLoad,
+  type StylePackage,
 } from "../../domain/tex-document.ts";
 import {
   collapse,
@@ -96,6 +98,49 @@ export function parseTemplate(text: string): DocumentClass | null {
   const line = documentClassOf(t);
   if (line.kind === "class") return { cls: line.cls, options: line.options };
   return only.type === "string" ? { cls: only.content, options: [] } : null;
+}
+
+const isPackageLine = (n: Node): n is Macro =>
+  n.type === "macro" &&
+  (n.content === "usepackage" || n.content === "RequirePackage");
+
+/** One package line: each package it names, with the line's options and place. */
+function packageLoads(src: string, node: Macro): readonly PackageLoad[] {
+  const place = macroPlace(node);
+  const options = splitWhere(optional(node)?.content ?? [], isComma)
+    .map((part) => optionText(src, part))
+    .filter(Boolean);
+  return splitWhere(mandatory(node)[0]?.content ?? [], isComma)
+    .map((part) => collapse(textOf(part)))
+    .filter(Boolean)
+    .map((name) => ({ name, options, place }));
+}
+
+/**
+ * Every package the `\usepackage` and `\RequirePackage` lines at the top of the tree load, in source
+ * order: the preamble's, as the class line is read. A comment is not a line; several lines behind a
+ * TeX switch are each read.
+ */
+export const packagesOf = (t: ParsedTex): readonly PackageLoad[] =>
+  t.root.content.filter(isPackageLine).flatMap((n) => packageLoads(t.src, n));
+
+/**
+ * A preset's `template_style` → the package it names and the options it requires: one whole
+ * `\usepackage[…]{…}` line naming one package. Anything else is null.
+ */
+export function parseTemplateStyle(text: string): StylePackage | null {
+  const t = parseLatex(text);
+  const nodes = t.root.content.filter(
+    (n) => n.type !== "whitespace" && n.type !== "comment",
+  );
+  const [only, ...rest] = nodes;
+  if (only === undefined || rest.length > 0 || !isPackageLine(only))
+    return null;
+  const loads = packageLoads(t.src, only);
+  const [load, ...more] = loads;
+  return load === undefined || more.length > 0
+    ? null
+    : { name: load.name, options: load.options };
 }
 
 /** `src` with `text` in place of `[from, to)`. */

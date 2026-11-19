@@ -111,9 +111,11 @@
     // bibliography and appendix — the checklist with them, after the appendix or straight after the
     // references — and the page the references start on as body when the text runs onto it, as the
     // call counts it.
-    // 🔴 NOT `body_ends_at`: the submission has line numbers (the style's `\linenumbers`), and
-    // pdf.js reads the heading line as «References346», which the heading match does not take, so
-    // format/page-limit could not tell where the body ends on that same fixture (one error, measured).
+    // 🔴 NOT `body_ends_at`. The submission has line numbers (the style's `\linenumbers`) and pdf.js
+    // reads the heading as «References346»; the heading match now takes that (measured: without an
+    // appendix the fixture's body is found). With the kit's appendix after the references, hyperref
+    // anchors it and its heading reads «A Technical Appendix», which the appendix match does not take:
+    // «could not tell where the body ends» (measured on the same fixture). banal's count has neither problem.
     "kinds": {
       // The anonymous submission to the main track.
       "main": { "body_pages_max": 9, "ref_pages_max": "unlimited" },

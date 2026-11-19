@@ -11,6 +11,8 @@ import type {
   Emphasis,
   LayoutOverride,
   Outline,
+  PackageLoad,
+  StylePackage,
   Passage,
   Span,
   TextRun,
@@ -83,6 +85,13 @@ export interface LatexReader {
    * class name (no option). Null for anything else.
    */
   readonly template: (text: string) => DocumentClass | null;
+  /** Every package the preamble's `\usepackage` and `\RequirePackage` lines load, in source order. */
+  readonly packages: (src: string) => readonly PackageLoad[];
+  /**
+   * A preset's `template_style` → the package it names and the options it requires: one whole
+   * `\usepackage[…]{…}` line naming one package. Null for anything else.
+   */
+  readonly templateStyle: (text: string) => StylePackage | null;
   /**
    * `src` with its `\documentclass` set to `want` — unless it already is `want`'s class with every
    * option `want` names (the author's own options stay), or it has none.

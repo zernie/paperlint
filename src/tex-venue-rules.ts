@@ -35,18 +35,26 @@ import {
   missingOptions,
   runText,
   spanIn,
+  usepackageLine,
   type ClassCandidate,
   type ClassLine,
   type DocumentClass,
   type Heading,
   type LayoutOverride,
   type Outline,
+  type PackageLoad,
   type Place,
+  type StylePackage,
   type Span,
   type TextRun,
 } from "./domain/tex-document.ts";
 import type { LatexReader } from "./ports/latex.ts";
-import { paperPreset, shippedVenueNames, type Preset } from "./presets.ts";
+import {
+  paperPreset,
+  shippedStyles,
+  shippedVenueNames,
+  type Preset,
+} from "./presets.ts";
 import type { NamedVenue } from "./domain/venue-name.ts";
 import type { PaperSource } from "./domain/paper-source.ts";
 import { readPaper, reportInPaper, type ProseDeps } from "./tex-paper.ts";
@@ -193,7 +201,8 @@ function judgeClassLine(
 export function judgeTemplate(
   line: ClassLine,
   preset: Preset,
-  latex: Pick<LatexReader, "template">,
+  latex: Pick<LatexReader, "template" | "templateStyle">,
+  style: StyleInput = NO_STYLE_INPUT,
 ): readonly Located[] {
   const t = preset.template;
   if (t === null) return [];
@@ -203,7 +212,96 @@ export function judgeTemplate(
     return [{ messageId: "badTemplate", data, at: null }];
   }
   const data = { venue: preset.label, template: documentClassLine(want) };
-  return judgeClassLine(line, { cls: want, forbids: t.forbids }, data);
+  return [
+    ...judgeClassLine(line, { cls: want, forbids: t.forbids }, data),
+    ...judgeStyle(style, preset, latex),
+  ];
+}
+
+/** What the style check reads: the packages the paper loads, and the styles of other shipped venues. */
+export interface StyleInput {
+  readonly packages: readonly PackageLoad[];
+  /** The package names of the `template_style` of every shipped venue off this paper's chain. */
+  readonly others: readonly string[];
+}
+
+const NO_STYLE_INPUT: StyleInput = { packages: [], others: [] };
+
+/**
+ * A style's series: its name without the edition and what follows it — `neurips_2026` → `neurips`,
+ * `iclr2027_conference` → `iclr`, `ijcai26` → `ijcai`. Two names of one series and two editions are
+ * another year's style.
+ */
+const seriesOf = (name: string): string =>
+  name.replace(/[-_]?\d{2,4}(?:[-_].*)?$/u, "");
+
+/**
+ * Another style than the template's, loaded in its place: one a shipped preset off this paper's chain
+ * names, or one of the same series and another edition. Any other package is the paper's own.
+ */
+const isOtherStyle = (
+  name: string,
+  want: string,
+  others: readonly string[],
+): boolean =>
+  name !== want &&
+  (others.includes(name) ||
+    (seriesOf(name) !== "" && seriesOf(name) === seriesOf(want)));
+
+/**
+ * The lines that load the template's style: satisfied when any carries every option the style names;
+ * otherwise each option the first line lacks, at that line.
+ */
+function judgeLoaded(
+  loads: readonly PackageLoad[],
+  want: StylePackage,
+  data: { readonly venue: string; readonly style: string },
+): readonly Located[] {
+  const [first] = loads;
+  if (
+    first === undefined ||
+    loads.some((l) => want.options.every((o) => l.options.includes(o)))
+  )
+    return [];
+  return want.options
+    .filter((o) => !first.options.includes(o))
+    .map((option) => ({
+      messageId: "missingStyleOption",
+      data: { ...data, option },
+      at: spanOf(first.place),
+    }));
+}
+
+/**
+ * The paper's packages against the preset's `template_style`: loaded with every option it names (by
+ * any of the lines, as several class lines behind a switch); loaded without one; another venue's or
+ * another year's style loaded instead; or not loaded at all.
+ */
+export function judgeStyle(
+  { packages, others }: StyleInput,
+  preset: Preset,
+  latex: Pick<LatexReader, "templateStyle">,
+): readonly Located[] {
+  const s = preset.templateStyle;
+  if (s === null) return [];
+  const want = latex.templateStyle(s.text);
+  if (want === null) {
+    const data = { file: s.file, text: JSON.stringify(s.text) };
+    return [{ messageId: "badStyle", data, at: null }];
+  }
+  const data = { venue: preset.label, style: usepackageLine(want) };
+  const loads = packages.filter((p) => p.name === want.name);
+  if (loads.length > 0) return judgeLoaded(loads, want, data);
+  const instead = packages.find((p) => isOtherStyle(p.name, want.name, others));
+  return instead === undefined
+    ? [{ messageId: "missingStyle", data, at: null }]
+    : [
+        {
+          messageId: "wrongStyle",
+          data: { ...data, got: instead.name },
+          at: spanOf(instead.place),
+        },
+      ];
 }
 
 /** Where a heading starts, or null when the parser gave it no place. */
@@ -343,6 +441,8 @@ interface Reading {
   readonly latex: LatexReader;
   readonly preset: Preset;
   readonly others: () => readonly OtherVenue[];
+  /** The package names of the styles other shipped venues' templates load. */
+  readonly styles: () => readonly string[];
 }
 type Judge = (r: Reading) => readonly Located[];
 
@@ -374,7 +474,10 @@ const RULES: Readonly<
 > = {
   template: {
     judge: (r) =>
-      judgeTemplate(r.latex.documentClass(r.src), r.preset, r.latex),
+      judgeTemplate(r.latex.documentClass(r.src), r.preset, r.latex, {
+        packages: r.latex.packages(r.src),
+        others: r.styles(),
+      }),
     meta: {
       type: "problem",
       docs: {
@@ -396,6 +499,14 @@ const RULES: Readonly<
           "the class option `{{option}}` is missing: {{venue}} requires `{{template}}`",
         forbiddenOption:
           "the class option `{{option}}` is forbidden: {{venue}} requires `{{template}}` without {{without}}",
+        badStyle:
+          '{{file}}: the preset\'s "template_style" {{text}} is not one \\usepackage line naming one package, so the style cannot be checked',
+        missingStyle:
+          "{{venue}} requires `{{style}}`; paper.tex loads no such package — the page, the fonts and the margins the venue checks come from it",
+        wrongStyle:
+          "paper.tex loads `{{got}}`, another venue's or another year's style; {{venue}} requires `{{style}}`",
+        missingStyleOption:
+          "the style option `{{option}}` is missing: {{venue}} requires `{{style}}`",
         noCandidate:
           "none of the {{count}} \\documentclass lines is `{{template}}`, which {{venue}} requires: {{candidates}}. The source picks one behind a TeX switch, which is not evaluated; make one of them the venue's",
       },
@@ -484,6 +595,22 @@ export function otherVenues(
     .map(({ label, aliases, mentions }) => ({ label, aliases, mentions }));
 }
 
+/**
+ * The package names of the styles every shipped venue off this paper's chain loads into its class:
+ * what `tex/template` reports when a paper loads one instead of its own venue's.
+ */
+export function otherStyles(
+  preset: Pick<Preset, "chain">,
+  deps: TexVenueRuleDeps,
+): readonly string[] {
+  return shippedStyles(deps)
+    .filter((s) => !s.chain.every((f) => preset.chain.includes(f)))
+    .flatMap((s) => {
+      const parsed = deps.latex.templateStyle(s.text);
+      return parsed === null ? [] : [parsed.name];
+    });
+}
+
 /** What the venue-conformance rules are built with: the preset store, the LaTeX reader, and the paper's files as the build recorded them. */
 export interface TexVenueRuleDeps extends VenueRuleDeps, ProseDeps {}
 
@@ -506,9 +633,10 @@ function readingOf(
     return null;
   const preset = p.preset;
   const others = () => otherVenues(preset, deps);
+  const styles = () => otherStyles(preset, deps);
   const paper = readPaper(filename, src, deps);
   return {
-    reading: { src: paper.text, latex: deps.latex, preset, others },
+    reading: { src: paper.text, latex: deps.latex, preset, others, styles },
     paper,
   };
 }
@@ -564,10 +692,13 @@ export function judgePortDone(
   cycleId: string,
 ): readonly Located[] {
   if (r.preset.template === null) return [];
+  // The class AND the style: a port from one article-based style to another is not done while the
+  // class line already matches.
   const mismatch = judgeTemplate(
     r.latex.documentClass(r.src),
     r.preset,
     r.latex,
+    { packages: r.latex.packages(r.src), others: [] },
   );
   return mismatch.length > 0
     ? []

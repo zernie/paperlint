@@ -180,7 +180,7 @@ describe("shipped presets: paperlint:fse", () => {
 });
 
 describe("shipped presets: paperlint:neurips-2026", () => {
-  it("paperlint:neurips-2026 → neurips over neurips-style: no template, the style's page and fonts, two kinds, the checklist, both readings of each deadline", () => {
+  it("paperlint:neurips-2026 → neurips over neurips-style: article + the style file, the style's page and fonts, two kinds, the checklist, both readings of each deadline", () => {
     const r = resolve("paperlint:neurips-2026");
     expect(r.ok).toBe(true);
     if (!r.ok) return;
@@ -188,8 +188,16 @@ describe("shipped presets: paperlint:neurips-2026", () => {
       "neurips-style.jsonc",
       "neurips-2026.jsonc",
     ]);
-    // The class is plain article: a template would pass any article paper, with or without the style.
-    expect(r.value.template).toBeNull();
+    // The template is the class AND the style the kit loads into it, both from the family.
+    expect(r.value.template).toEqual({
+      text: "\\documentclass{article}",
+      file: join(VENUES, "neurips-style.jsonc"),
+      forbids: [],
+    });
+    expect(r.value.templateStyle).toEqual({
+      text: "\\usepackage{neurips_2026}",
+      file: join(VENUES, "neurips-style.jsonc"),
+    });
     expect(r.value.format.columns).toBe(1);
     expect(r.value.format.pageWidthIn).toBe(8.5);
     expect(r.value.format.pageHeightIn).toBe(11);
