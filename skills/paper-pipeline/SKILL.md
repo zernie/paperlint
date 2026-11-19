@@ -4,7 +4,7 @@ description: The orchestrator for writing a research paper end-to-end, from idea
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:3635e8a63ec1fb50 compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:66354b5d44875bdc compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
 
 # paper-pipeline — the conductor for the whole organism
 
@@ -124,7 +124,7 @@ Ordered, and the order is real: every one refuses to run without the output of t
 | Gate | Skill | Requires (hard) |
 |---|---|---|
 | **Final review** | **`tighten-paper`** → **`cold-read-diff`** `--whole` → **`pc-panel-review`** | A rendered PDF and a page count. Once, in that order, then closed: the next section. Sentences the readers flag are rewritten by **`rewrite-unclear`**. |
-| **Claim preservation** | Fable diff (`claims`) | The pre-pass baseline. Run after **every** aggressive rewrite, before committing. |
+| **Claim preservation** | `rewrite-unclear` step 4 (`claims`) | The pre-pass baseline. Run on each rewrite, before committing; it writes the `claims` row. |
 | **Harden** | **`harden-paper`** | The closed final review. The submit checklist: `npx paperlint lint`, then the items no rule decides (threat model and ethics, the artifact and its numbers, the headline table). It takes the final review's reports and does not run them again. |
 | **Submit** | **`submit-paper`** (+ the venue card) | 🔴 **The `access` row green.** Portal mechanics, PDF-only, artifact hosted anonymously, "ready for review" marked. |
 

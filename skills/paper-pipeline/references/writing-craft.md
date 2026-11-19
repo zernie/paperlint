@@ -112,8 +112,8 @@ match, median 1/10"); "both estimates point to no saving **at all**" (proven-zer
 before/after that verifies — **no number moved, no hedge dropped, no claim strengthened, no new
 absolute, no self-contradiction with unchanged text.** Pair every readability/fix pass with this
 check; the pass isn't complete without it, and the `claims` row in `PIPELINE-STATUS.md` records the run.
-`rewrite-unclear` runs it after every rewrite (its step 4); `harden-paper` gates on it
-(claims-honest gate).
+`rewrite-unclear` runs it after every rewrite and writes the `claims` row (its step 4);
+`harden-paper` checks that the row exists (checklist item 4).
 
 ## The wall-of-text check (visual density — distinct from comprehension stalls)
 

@@ -286,8 +286,8 @@ Rules for these verdicts:
 - **Stale beats absent, but not by much.** A verdict whose date precedes the last substantive edit to
   its section is stale; say so rather than trusting it.
 - **A verdict nobody executed is a note, not a decision.** List the blocks still carrying a
-  non-KEEP verdict — a paper full of unexecuted CUTs is worse than one never graded,
-  because it reads as decided.
+  non-KEEP verdict, each marked executed, rejected by the author (with his reason), or open. Only an
+  open one is undecided; a cut the author rejected is decided, not a defect.
 - The chat summary still gets written — but it is the *derivative*, and the report is the record.
 
 ## 🧱 Enforce subsections — a section without them is a wall
@@ -301,9 +301,6 @@ For every such section, either propose the subsection split (one heading per bel
 out, named by the belief and not by the topic) or explain why the section is genuinely one indivisible
 argument. Introductions and conclusions are the usual legitimate exceptions; a results or related-work
 section almost never is.
-
-Mechanical leg: \`paper-lint\`'s \`checkPaperWalls()\` reports oversized unsubsectioned sections on the Stop
-pass, so this does not depend on someone remembering to run the skill.
 
 ## Output — the verdict AND the proposed cuts
 Produce:

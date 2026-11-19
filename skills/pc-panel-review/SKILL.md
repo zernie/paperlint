@@ -4,7 +4,7 @@ description: Use when asking "what would the program committee decide?" / "simul
 allowed-tools: [Read, Write, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:cccdfad7ec8516c4 compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:c0b27cf6767dde05 compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
 
 # pc-panel-review — model the whole PC, not one reviewer
 
@@ -109,12 +109,12 @@ prose-only read can.
   up as an explicit "clarity" mark. Each reviewer must let prose/structure quality move their overall
   rec and confidence — but the SOURCE of that signal is the handed-in **cold-read report +
   tighten-paper verdict**, never the reviewer's own felt read: a frontier LLM knows every term and
-  cannot experience reader fatigue, so its felt judgment systematically under-fires. If the cold-read
-  report has severe findings (a `CANNOT PARSE` on a sentence the contribution rests on, a wall
-  paragraph, a heading in coined jargon), or the structural verdict says bloated, the overall score takes a
-  real hit even when every explicit criterion passes. Never score a slog as if it read cleanly — that
+  cannot experience reader fatigue, so its felt judgment systematically under-fires. The cold read's
+  signal is one count, because its readers return verdicts, not severities: the `CANNOT PARSE` rows
+  still `open` in its report's frontmatter. If that count is above zero, or the structural verdict
+  says bloated, the overall score takes a real hit even when every explicit criterion passes. Never score a slog as if it read cleanly — that
   is the gap between this sim and a real PC.
-- Top 3 issues for PC discussion, ranked, with severity (blocker/major/minor).
+- Up to 3 issues for PC discussion, ranked, with severity (blocker/major/minor), or "none".
 - Any must-fix before *they'd* accept (or "none").
 - Artifact reviewer only: run outcome (does it execute? every number reproduce? PASS/FAIL per check),
   anonymization verdict, badge scope.
@@ -136,7 +136,7 @@ prose-only read can.
   reviewers turned into a reject.
 - **Consensus must-fixes:** issues **≥2 reviewers independently raised** — these are the real ones,
   proposed to the author, who decides each. "None" is a valid result.
-- **Single-reviewer flags:** noted, triaged (fix if cheap, else defer to camera-ready).
+- **Single-reviewer flags:** noted and proposed to the author, who decides each; none is fixed without his yes.
 - **Split calls:** where reviewers genuinely disagree, and which way the chair leans + why.
 
 ## The ceiling plan, when the author asks what holds the score down
@@ -226,9 +226,6 @@ reject-risk without rubber-stamping. For the real decision, escalate to the full
 
 ## Compose with
 - `paper-pipeline` — owns the final review; the panel is its last step.
-- Append each panel's result to the paper's review ledger
-  (`papers/research/<date>-fable-rereview-<venue>.md`) so accept-probability progression is tracked
-  across rounds.
 
 ## The reproduce loop (why this beats a prose review)
 This is "double-blind review as a real venue does it, WITH reproduction." The artifact-runner reviewer

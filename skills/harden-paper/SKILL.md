@@ -4,7 +4,7 @@ description: "Use when asking \"is this paper actually ready to submit?\" / \"wh
 allowed-tools: [Read, Write, Grep, Glob, Bash, Skill]
 ---
 
-<!-- vigiles:sha256:c41ee4dc4b129ef0 compiled from skills/harden-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:45642cfc040166a9 compiled from skills/harden-paper/SKILL.md.spec.ts -->
 
 # harden-paper — the submit checklist
 
@@ -32,15 +32,16 @@ the author decides what to apply. "Nothing fails" is a valid result.
    (`siblings/README.md` and its sweep file) and names the closest match with a disposition:
    `distinguish` (the delta sentence is in the paper and the sibling has a card from `analyze-sibling-paper`,
    checked by `sibling/frontmatter`) or `escalate` (a scoop the author decides on before submitting), or it says
-   `no close match found` and where it looked. No record, or a record with neither line, fails this
-   item; an empty `siblings/` is not a pass.
+   `no close match found` and where it looked. Report the record's date beside its disposition. No
+   record, or a record with neither line, fails this item; an empty `siblings/` is not a pass. The
+   checklist reads the record and never launches a sweep.
 4. **Claims the reviewers' seats do not catch.** An absolute ("no", "never", "first", "only") that the
    paper's own reference list refutes; a rhetorical hook that reality falsifies; a bound that narrows a
    body number but lives only in an appendix with no pointer reaching it
    (`paper-pipeline/references/body-vs-appendix.md`). Fix order:
    `paper-pipeline/references/review-ratchet.md`. And the `claims` row of `PIPELINE-STATUS.md`
-   records a result dated after the last prose rewrite (`git log -1 --format=%cs -- <the sources>`);
-   a missing or older result fails this item. Read the row; the checklist runs no review.
+   exists, written by `rewrite-unclear` step 4 for the rewrites; a missing row fails this item. Read
+   the row; the checklist runs no review and no diff.
 5. **Security and systems venues:** one paragraph of threat model (adversary and capability, trust
    boundary, assets, what is assumed not compromised), and an ethics line: aggregate and anonymised
    reporting of named systems, disclosure to maintainers before any de-anonymised release, a dual-use

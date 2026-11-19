@@ -129,8 +129,8 @@ Short. He is asking because he wants to decide what to do next, not to read a re
   after. If a task was not launched, the honest line is "not started".
 - **Owner-split is not decoration.** A blocker only he can clear (an account, an upload, a phone call)
   belongs at the top, because every hour it sits is an hour of pure schedule loss.
-- **Numbers, not adjectives.** "8/8 pages, fits" not "about right"; "78 stalls over 8 pages against a
-  threshold of 2" not "readable enough".
+- **Numbers, not adjectives.** "8/8 pages, fits" not "about right"; "3 \`CANNOT PARSE\` rows still
+  open" not "readable enough".
 - **Say what is NOT known.** A gate never run is a real answer and more useful than an optimistic one.
 - 🔴 **Send the built PDF with the report, every time, without being asked** (\`SendUserFile\`, from the
   outdir the report's page count came from — never an older copy). The corpus owner, 2026-08-05: *"and I often ask for the PDF to be delivered"*. He reads the paper, not the scorecard; a status report that makes him ask for the

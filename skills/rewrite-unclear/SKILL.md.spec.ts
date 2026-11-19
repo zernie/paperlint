@@ -74,7 +74,9 @@ paragraph before it and the one after it too; they decide which terms the reader
    \`../paper-pipeline/references/writing-craft.md\` → "The claim-preservation diff" over the
    before and after: no number moved, no hedge dropped, no claim strengthened, no new absolute, no
    \`\\cite\` or \`\\ref\` lost, nothing that contradicts the unchanged text. A rewrite that fails it is
-   reverted, not patched.
+   reverted, not patched. Record the result in the \`claims\` row of \`PIPELINE-STATUS.md\` (date,
+   passages, passed or reverted) in the same commit as the rewrite: it is the record
+   \`harden-paper\` reads.
 
 ## The ten rules
 
