@@ -5,7 +5,7 @@ context: fork
 allowed-tools: [WebSearch, WebFetch, Read, Write, Grep, Glob, Bash, Agent]
 ---
 
-<!-- vigiles:sha256:739bde6ff7b876e4 compiled from skills/map-prior-work/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:581edbe15d25096f compiled from skills/map-prior-work/SKILL.md.spec.ts -->
 
 # map-prior-work — find out who already did it, while you can still change course
 
@@ -149,7 +149,9 @@ Per `../../CLAUDE.md` (research is recorded verbatim, in detail):
 
 ```
 <papers-root>/<paper>/siblings/
-├── README.md                      # index: table of every candidate + verdict + what's unread
+├── README.md                      # index: table of every candidate + verdict + what's unread;
+│                                  # first line: the closest match and its disposition (distinguish
+│                                  # or escalate), or "no close match found"
 ├── <date>-<name>.md               # one file per deep-read (analyze-sibling-paper's output)
 └── <date>-sweep.md                # the sweep itself: queries run, sources hit, candidates
                                    # dropped and WHY, coverage gaps stated honestly

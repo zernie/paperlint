@@ -38,9 +38,12 @@ the author decides what to apply. "Nothing fails" is a valid result.
    again. No closed review fails this item. Every blocker it recorded (a scientific must-fix, a
    readability hard-fail) is \`fixed\` or \`waived by the author: <reason>\`; an undecided one fails.
 3. **Citations and the nearest neighbour.** \`verify-citations\` ran on the current bibliography
-   (\`paper/refs-checked\` warns when it did not). Every close sibling has a card in \`siblings/\`
-   (\`analyze-sibling-paper\`; \`sibling/frontmatter\` checks the card); a close competitor with no
-   card is an open item.
+   (\`paper/refs-checked\` warns when it did not). \`map-prior-work\`'s record exists
+   (\`siblings/README.md\` and its sweep file) and names the closest match with a disposition:
+   \`distinguish\` (the delta sentence is in the paper and the sibling has a card from \`analyze-sibling-paper\`,
+   checked by \`sibling/frontmatter\`) or \`escalate\` (a scoop the author decides on before submitting), or it says
+   \`no close match found\` and where it looked. No record, or a record with neither line, fails this
+   item; an empty \`siblings/\` is not a pass.
 4. **Claims the reviewers' seats do not catch.** An absolute ("no", "never", "first", "only") that the
    paper's own reference list refutes; a rhetorical hook that reality falsifies; a bound that narrows a
    body number but lives only in an appendix with no pointer reaching it

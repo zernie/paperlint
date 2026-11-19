@@ -167,7 +167,9 @@ Per \`../../CLAUDE.md\` (research is recorded verbatim, in detail):
 
 \`\`\`
 <papers-root>/<paper>/siblings/
-├── README.md                      # index: table of every candidate + verdict + what's unread
+├── README.md                      # index: table of every candidate + verdict + what's unread;
+│                                  # first line: the closest match and its disposition (distinguish
+│                                  # or escalate), or "no close match found"
 ├── <date>-<name>.md               # one file per deep-read (analyze-sibling-paper's output)
 └── <date>-sweep.md                # the sweep itself: queries run, sources hit, candidates
                                    # dropped and WHY, coverage gaps stated honestly
