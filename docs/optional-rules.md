@@ -1,6 +1,7 @@
 # Optional rules
 
-Some checks matter only for some venues. paperlint ships them **off**. A venue preset that needs one
+Some checks matter only for some venues, and some flag the writing rather than what the venue
+decides. paperlint ships both **off**. A venue preset that needs one
 turns it on for its papers (AgenticDev's turns on `pdf/last-page-balance`), and a paper can turn one
 on or off for itself in its own `paperlint.json`
 ([`configuration.md`](configuration.md#a-papers-paperlintjson)). No glob is involved: a paper's
@@ -8,15 +9,51 @@ rules apply to that paper. The root `paperlint.json` can turn it on for every pa
 with a block ([`configuration.md`](configuration.md#the-rules-key-turning-rules-on-and-off)); a
 paper's own file still has the last word for that paper.
 
+## The writing set: `paperlint:writing`
+
+What is on by default is what the venue decides, what gets a paper desk-rejected or breaks its
+build, and what holds for every paper. The rules that flag the **writing** — a typography
+preference, a register or provenance proxy, a length cap — are off, and grouped in one named set,
+turned on in one line, in the root `paperlint.json` (every paper) or in a paper's own:
+
+```json
+{ "rules": { "paperlint:writing": "warn" } }
+```
+
+| rule                                                              | what it flags                                                                                            |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `paper/section-word`                                              | `§` instead of the word Section — `--fix` writes it                                                      |
+| `paper/leading-zero`                                              | `.05` instead of `0.05` — `--fix` inserts the zero                                                       |
+| `paper/figure-ref-style`                                          | `Fig.~\ref` and `Figure~\ref` mixed — `--fix` writes the majority                                        |
+| [`tex/claim-provenance`](rules/tex/claim-provenance.md)           | a number in the body that does not say whose it is                                                       |
+| [`tex/register`](rules/tex/register.md)                           | sentences opening with And, So, But … above the accepted papers' rate                                    |
+| [`tex/negated-sentences`](rules/tex/negated-sentences.md)         | negated sentences outside the band of the venue preset's anchors (AIDC); silent on a preset without them |
+| [`tex/max-paragraph-words`](rules/tex/max-paragraph-words.md)     | a paragraph over 150 words                                                                               |
+| [`tex/max-paragraph-numbers`](rules/tex/max-paragraph-numbers.md) | a paragraph holding more than 8 numbers                                                                  |
+| [`tex/max-sentence-words`](rules/tex/max-sentence-words.md)       | a sentence over 55 words                                                                                 |
+| [`tex/max-caption-words`](rules/tex/max-caption-words.md)         | a caption over 100 words, or a caption sentence over 40                                                  |
+
+- **The set's name stands for its rules, where it is written**, each at the set's severity with its
+  own default options. A later entry wins, as in ESLint:
+  `{ "paperlint:writing": "warn", "tex/register": "off", "tex/max-sentence-words": ["warn", { "max": 40 }] }`
+  is the set without `tex/register`, and a 40-word sentence cap.
+- **A set takes a severity alone**; options are one rule's, so they go in that rule's own entry.
+- **`"paperlint:writing": "off"`** in a paper's file turns the root's set off for that paper.
+- **`paperlint lint --fix`** fixes the three typography rules when the set is on, and nothing when
+  it is off.
+- **Not `extends`.** `extends` names the paper's one venue preset; `"extends": "paperlint:writing"`
+  is an error whose message says to turn the set on in `rules`.
+- **Not in the set:** `tex/heading-case`, which a venue requires and its preset turns on with the
+  venue's style (a set entry would lower it to the set's severity); and `tex/term-before-definition`
+  and `tex/term-defined-twice`, which read `\emph` as a definition and, on a paper that does not
+  mark definitions that way, report that they check nothing. Turn them on by name.
+
+## The other optional rules
+
 | rule                                                                                      | what it checks                                                                                                             | who needs it                                                                                                                                                                            |
 | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `pdf/last-page-balance`                                                                   | the two columns of the last page end at about the same height                                                              | two-column papers whose publisher asks for it — see below                                                                                                                               |
 | [`tex/heading-case`](rules/tex/heading-case.md)                                           | the words of the paper's title and of each heading are in the capitalization the venue asks                                | papers whose venue names a case style paperlint builds; only the AgenticDev preset turns it on (`chicago-headline` for the title and every heading) — [page](rules/tex/heading-case.md) |
-| [`tex/max-paragraph-words`](rules/tex/max-paragraph-words.md)                             | a paragraph of the body stays at or under `max` words (150)                                                                | any project that wants a ceiling on paragraph length; no venue states one, no preset turns it on — [page](rules/tex/max-paragraph-words.md)                                             |
-| [`tex/max-paragraph-numbers`](rules/tex/max-paragraph-numbers.md)                         | a paragraph of the body stays at or under `max` numbers (8)                                                                | any project that wants a ceiling; no venue states one, no preset turns it on — [page](rules/tex/max-paragraph-numbers.md)                                                               |
-| [`tex/max-sentence-words`](rules/tex/max-sentence-words.md)                               | a sentence of the body stays at or under `max` words (55)                                                                  | any project that wants a ceiling; no venue states one, no preset turns it on — [page](rules/tex/max-sentence-words.md)                                                                  |
-| [`tex/negated-sentences`](rules/tex/negated-sentences.md)                                 | the share of body sentences holding a negator stays within the band of the venue preset's anchors                          | papers on a preset with anchors that record it (AIDC); a writing measure, so off — [page](rules/tex/negated-sentences.md)                                                               |
-| [`tex/max-caption-words`](rules/tex/max-caption-words.md)                                 | a caption stays at or under `max` words (100), each of its sentences at or under `maxSentence` (40)                        | any project that wants a ceiling on captions; no venue states one — [page](rules/tex/max-caption-words.md)                                                                              |
 | [`tex/term-before-definition`](rules/tex/term-before-definition.md)                       | a term the body defines with `\emph` is not used before that definition                                                    | papers that mark each definition in italics; others mostly use italics for stress — [page](rules/tex/term-before-definition.md)                                                         |
 | [`tex/term-defined-twice`](rules/tex/term-defined-twice.md)                               | a term the body defines is set as a definition once                                                                        | the same papers — [page](rules/tex/term-defined-twice.md)                                                                                                                               |
 | [`study/declare-sample`](rules/study/declare-sample.md)                                   | experimental: a study's `prereg.json` declares its population, screens, coverage and the author's check of the drawn units | papers with a sampled study; no preset turns it on — [page](rules/study/declare-sample.md)                                                                                              |

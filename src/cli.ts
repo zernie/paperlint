@@ -577,11 +577,9 @@ export function buildConfig(
     ...referenceRules(RECORDED_DEPS),
     ...sourcesRules(RECORD_DEPS),
   };
-  // Each typography rule reports every occurrence where it is, and fixes it (`--fix`).
-  const prose = {
-    "paper/section-word": "warn",
-    "paper/leading-zero": "warn",
-  };
+  // The typography rules (each fixes what it reports, `--fix`), `tex/claim-provenance` and
+  // `tex/register` are registered here and on for no file: they flag the writing, not what the venue
+  // decides, so they are in the opt-in set `paperlint:writing` (src/rule-sets.ts).
   const md = MARKDOWN_WITH_FRONTMATTER;
 
   const cfg: ConfigBlock[] = [
@@ -687,16 +685,10 @@ export function buildConfig(
       },
       language: "tex/latex",
       rules: {
-        ...prose,
         ...REFERENCE_RULE_LEVELS,
         ...SOURCES_RULE_LEVELS,
-        "paper/figure-ref-style": "warn",
         ...BIB_RULE_LEVELS,
         "tex/future-promise": "warn",
-        // A number with no owner: a prose rule, on beside the others above.
-        "tex/claim-provenance": "warn",
-        // Sentence-initial conjunctions over the whole body: register, not vocabulary.
-        "tex/register": "warn",
         // Contrast frames, claims in bold, relation markers: each against the band the venue
         // preset's anchors set, silent for a preset without anchors (src/register-bands.ts).
         ...REGISTER_BAND_RULE_LEVELS,
@@ -737,12 +729,9 @@ export function buildConfig(
             },
           },
           language: "tex/latex",
-          rules: {
-            "paper/section-word": "warn",
-            "paper/leading-zero": "warn",
-            "paper/figure-ref-style": "warn",
-            "tex/future-promise": "warn",
-          },
+          // The typography rules are registered here so the writing set reaches a body file too;
+          // like on `paper.tex`, they are on only where a `rules` setting turns them on.
+          rules: { "tex/future-promise": "warn" },
         },
       ]
     : [];

@@ -60,6 +60,7 @@ import {
 } from "./paper-settings.ts";
 import { CONFIG_FILE } from "#lib/paper-config";
 import { messageOf } from "./domain/text.ts";
+import { setMembers } from "./rule-sets.ts";
 import type { RegisterAnchor } from "./domain/register.ts";
 import type { VenueTalk } from "./domain/talk.ts";
 import type { VenuePortal } from "./domain/submission.ts";
@@ -439,7 +440,11 @@ export function presetProblemText(p: PresetProblem): string {
     case "unsupported":
       return `"extends": "${p.spec}" — a preset is \`paperlint:<name>\` (shipped) or a path starting with ./ or ../ (your own); npm presets: not yet supported. Did you mean "${shippedSpec(p.spec)}"?`;
     case "not-found":
-      return `"extends": "${p.spec}" names no preset (${p.file}); shipped presets (${SHIPPED_PREFIX}<name>): ${p.shipped.join(", ")}`;
+      return `"extends": "${p.spec}" names no preset (${p.file}); shipped presets (${SHIPPED_PREFIX}<name>): ${p.shipped.join(", ")}${
+        setMembers(p.spec) === null
+          ? ""
+          : `. ${p.spec} is a rule set, not a venue: turn it on in "rules": { "${p.spec}": "warn" }`
+      }`;
     case "cycle":
       return `the presets extend each other in a cycle: ${p.chain.join(" → ")}`;
     case "too-deep":

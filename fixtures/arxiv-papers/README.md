@@ -8,6 +8,9 @@ comparison: `../accepted-papers/baseline.ts`, one owner). It is the vitest proje
 outside `unit` (so the macOS shards and the coverage run do not repeat it), run as a step of the CI
 job `e2e-node` (`npx vitest run --project real-papers`; no npm script, no job of its own; local
 `npm run check` has a gate for it). Not in the TeX record e2e: its corpus is `accepted-papers` alone.
+The run lints with the default rules plus the five opt-in rules the baselines were recorded with
+before they moved into the writing set (`RECORDED_OPT_IN` in `baseline.ts`); the rest of the set
+is not run here.
 
 ## Why real papers
 

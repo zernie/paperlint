@@ -55,6 +55,10 @@ function project(
   dirs.push(root);
   const all: Record<string, string> = {
     "package.json": JSON.stringify({ name: "c", private: true }),
+    // The typography rules these cases read are opt-in, in the writing set: on for every paper.
+    "paperlint.json": JSON.stringify({
+      rules: { "paperlint:writing": "warn" },
+    }),
     "papers/a/PIPELINE-STATUS.md": "---\nstages: []\n---\n",
     "papers/a/paper.tex": doc(
       "{article}",
@@ -215,7 +219,8 @@ describe("a built paper whose files are clean", () => {
     });
     expect({ code, out }).toEqual({
       code: 0,
-      out: ["✓ 3 file(s) checked, no findings"],
+      // The root file that turns the writing set on is named first, as every found config is.
+      out: ["config: paperlint.json", "✓ 3 file(s) checked, no findings"],
     });
   });
 });

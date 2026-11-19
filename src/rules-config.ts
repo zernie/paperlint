@@ -26,6 +26,7 @@
  * config (`buildConfig`), not listed a second time.
  */
 import { SETTINGS_KEYS } from "#lib/paper-config";
+import { RULE_SETS, setMembers } from "./rule-sets.ts";
 
 /** ESLint's severities, in both of its spellings. */
 export type Severity = "off" | "warn" | "error" | 0 | 1 | 2;
@@ -97,9 +98,31 @@ function parseEntry(v: unknown): RuleEntry | null {
   return Array.isArray(v) ? [sev, ...options] : sev;
 }
 
+/** A written entry once sets are expanded: a rule's, or a set given more than a severity. */
+type Expanded =
+  | { readonly kind: "rule"; readonly id: string; readonly raw: unknown }
+  | {
+      readonly kind: "set-options";
+      readonly set: string;
+      readonly raw: unknown;
+    };
+
+/** One written entry → the entries it stands for: a set's members at its severity, or itself. */
+const expandEntry = ([id, raw]: readonly [
+  string,
+  unknown,
+]): readonly Expanded[] => {
+  const members = setMembers(id);
+  if (members === null) return [{ kind: "rule", id, raw }];
+  return isSeverity(raw)
+    ? members.map((m): Expanded => ({ kind: "rule", id: m, raw }))
+    : [{ kind: "set-options", set: id, raw }];
+};
+
 /**
  * A `rules` object — rule id → severity or `[severity, ...options]` — with only the rules paperlint
- * ships. Read from every `paperlint.json`, the root's and each paper's.
+ * ships. Read from every `paperlint.json`, the root's and each paper's. A rule set's name
+ * (src/rule-sets.ts) stands for its members at its severity, in its place: a later entry wins.
  *
  * @param where  the key path to name in messages, e.g. `package.json → "paperlint".rules[0].rules`
  */
@@ -111,10 +134,15 @@ export function parseRuleEntries(
   if (typeof v !== "object" || v === null || Array.isArray(v))
     return bad(`${where} must be an object of rule id → severity`);
   const out: Record<string, RuleEntry> = {};
-  for (const [id, raw] of Object.entries(v)) {
+  for (const e of Object.entries(v).flatMap(expandEntry)) {
+    if (e.kind === "set-options")
+      return bad(
+        `${where}["${e.set}"]: ${JSON.stringify(e.raw)} — a rule set takes a severity alone ("off", "warn" or "error"); give one member its options in its own entry after the set`,
+      );
+    const { id, raw } = e;
     if (!shipped.has(id))
       return bad(
-        `${where}: "${id}" is not a rule paperlint ships — known: ${[...shipped].sort().join(", ")}`,
+        `${where}: "${id}" is not a rule paperlint ships — known: ${[...shipped].sort().join(", ")}; rule sets: ${[...RULE_SETS.keys()].join(", ")}`,
       );
     const entry = parseEntry(raw);
     if (entry === null)

@@ -12,6 +12,20 @@ import { z } from "zod";
 /** Findings per rule id. */
 export type Counts = Record<string, number>;
 
+/**
+ * The opt-in rules the recordings count. They were on by default when the counts were taken, and
+ * moved into the writing set (`paperlint:writing`, src/rule-sets.ts) on 2026-11-19; every run that
+ * compares against a baseline turns them on in a `rules` setting, so the corpus still holds them to
+ * what they said about real prose. The rest of the set was never recorded and stays off here.
+ */
+export const RECORDED_OPT_IN: Readonly<Record<string, "warn">> = {
+  "paper/section-word": "warn",
+  "paper/leading-zero": "warn",
+  "paper/figure-ref-style": "warn",
+  "tex/claim-provenance": "warn",
+  "tex/register": "warn",
+};
+
 const Baseline = z.object({ findings: z.record(z.string(), z.number()) });
 const LintOutput = z.array(
   z.object({

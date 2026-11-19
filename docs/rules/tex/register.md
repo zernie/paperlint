@@ -1,6 +1,6 @@
 # tex/register
 
-**Level:** warn · **Reads:** `paper.tex` and the files it includes
+**Level:** off by default; in the opt-in set [`paperlint:writing`](../../optional-rules.md#the-writing-set-paperlintwriting) · **Reads:** `paper.tex` and the files it includes
 
 ## What it catches
 
