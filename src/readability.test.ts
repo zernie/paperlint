@@ -225,6 +225,46 @@ describe("tex/max-sentence-words", () => {
       ),
     ).toHaveLength(1);
   });
+
+  it("🔴 a sentence that opens in lowercase is its own (#543): the 82-word «sentence» of arXiv 2611.09573v1 is two", () => {
+    // The source as the paper has it (sections/02_models_and_data.tex): `16\,GB. fp16 …`. The
+    // segmenter withholds a break before a lowercase word; read as one sentence it is 82 words.
+    const body = [
+      "We did not pursue these formats: they need",
+      "calibration and low-precision implementations of every operation, and in",
+      "tests with Aurora they were either slower than bf16 or did not fit in",
+      "16\\,GB. fp16 and bf16 are the",
+      "reduced-precision formats that most users of these models can apply",
+      "directly: they need no calibration, and fast fp16 arithmetic is",
+      "available on NVIDIA GPUs from 2017 on, bf16 arithmetic from 2020 on",
+      "\\citep{nvidia2017volta, nvidia2020ampere}, and both on current consumer and",
+      "data-centre models.",
+    ].join("\n");
+    expect(sFound(body)).toEqual([]);
+    expect(
+      judgeSentenceWords(latexReader.bodyProse(doc(body)), 40).map(
+        (f) => f.data,
+      ),
+    ).toEqual([
+      {
+        words: 48,
+        max: 40,
+        head: "fp16 and bf16 are the reduced-precision formats that…",
+      },
+    ]);
+  });
+
+  it("🔴 a `\\citet` that opens a sentence after a full stop starts it, and counts as its word", () => {
+    const w = (n: number) => Array.from({ length: n }, () => "w").join(" ");
+    expect(
+      sFound(`${w(29)} quantised. \\citet{b} applied ${w(26)} end.`),
+    ).toEqual([]);
+    expect(
+      sFound(`${w(29)} quantised. \\citet{b} applied ${w(53)} end.`),
+    ).toEqual([
+      { words: 56, max: 55, head: "applied w w w w w w w…" },
+    ]);
+  });
 });
 
 describe("the new rules, through create()", () => {
