@@ -27,7 +27,8 @@
  */
 import { basename, dirname } from "node:path";
 import { venuesNamedBy, type NamedIn } from "./domain/venue-name.ts";
-import { paperPreset, type Preset } from "./presets.ts";
+import { editionLabel } from "./domain/edition.ts";
+import { folderNamesOf, paperPreset, type Preset } from "./presets.ts";
 import { otherVenues, type OtherVenue } from "./tex-venue-rules.ts";
 import type { Finding, VenueRuleDeps } from "./venue-rules.ts";
 
@@ -60,11 +61,17 @@ export interface FolderRuleModule {
   create(context: FolderRuleContext): { root?: () => void };
 }
 
-/** A venue as the message names it: its label, and the alias when the folder used another name. */
+/**
+ * A venue as the message names it: its label, and the alias when the folder used another name. A
+ * name the edition's label begins with (`AISec` of `AISec 2026`) is said alone: the folder named
+ * the series, not that year.
+ */
 const shown = (n: NamedIn): string =>
   n.name.toLowerCase() === n.venue.toLowerCase()
     ? n.venue
-    : `${n.venue} («${n.name}»)`;
+    : n.venue.toLowerCase().startsWith(`${n.name.toLowerCase()} `)
+      ? n.name
+      : `${n.venue} («${n.name}»)`;
 
 /**
  * Each other venue the folder name names, as a finding. Pure: the folder's name, the paper's
@@ -72,11 +79,13 @@ const shown = (n: NamedIn): string =>
  */
 export function judgeFolder(
   folder: string,
-  preset: Pick<Preset, "label" | "aliases" | "parentNames">,
+  preset: Pick<Preset, "label" | "aliases" | "parentNames" | "year">,
   others: readonly OtherVenue[],
 ): readonly Finding[] {
-  const own = [preset.label, ...preset.aliases, ...preset.parentNames];
-  return venuesNamedBy(folder, others, own).map((n) => ({
+  // Its names, and its parent's (of its own year), bare and as this edition.
+  const names = [preset.label, ...preset.aliases, ...preset.parentNames];
+  const own = [...names, ...names.map((n) => editionLabel(n, preset.year))];
+  return venuesNamedBy(folder, others.map(folderNamesOf), own).map((n) => ({
     messageId: "leftover",
     data: { folder, other: shown(n), venue: preset.label },
   }));

@@ -1,7 +1,7 @@
 // NLBSE 2027 (the 6th Natural Language-based Software Engineering Workshop, an ICSE 2027 workshop)
 // — a VENUE preset over the IEEE conference family. Everything the IEEEtran template decides comes
 // from ieee-conference.jsonc; this file adds what NLBSE's call sets. Its card, in prose:
-// `nlbse.md` beside this file.
+// `nlbse-2027.md` beside this file.
 //
 // Verbatim from https://conf.researchr.org/home/icse-2027/nlbse-2027 (fetched 2026-10-26):
 //   «Full papers (maximum of 8 pages, including references).» · «Education tools and materials
@@ -21,6 +21,14 @@
   // The call quoted above.
   "url": "https://conf.researchr.org/home/icse-2027/nlbse-2027",
   "extends": "paperlint:ieee-conference",
+
+  // A workshop (`"workshop": true`): the schema then requires its `parent`, the edition of the
+  // conference it is held at, and paperlint refuses a parent of another year.
+  "workshop": true,
+
+  // The conference it is held at: «All submissions must conform to the ICSE’27 formatting and
+  // submission instructions» (the call above).
+  "parent": "paperlint:icse-2027",
 
   // «All submissions must be anonymized» (the call above), and `"blind":true` in the portal's
   // status data (https://icse2027-nlbse.hotcrp.com/deadlines, read 2026-10-26). The call never

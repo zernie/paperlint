@@ -1,0 +1,24 @@
+// ICSE 2027 — a MINIMAL venue preset: the conference NLBSE 2027, AGENT 2027 and AGENTVERIFY 2027
+// are held at, so they can name it as their `parent`. It carries the edition's names and its
+// template family, and no page limit or deadline: it exists so its workshops can name it, not as
+// the research track's preset. Its card: `icse-2027.md`.
+//
+// Verbatim from https://conf.researchr.org/track/icse-2027/icse-2027-research-track (fetched
+// 2026-11-19): «All submissions must conform to the IEEE conference proceedings template,
+// specified in the IEEE Conference Proceedings Formatting Guidelines (title in 24pt font and full
+// text in 10pt type, LaTeX users must use \documentclass[10pt,conference]{IEEEtran} without
+// including the compsoc or compsocconf options). Note that IEEE format is being used this year,
+// whereas last year it was ACM format.»
+//
+// 🔴 THE TEMPLATE FLIPS BETWEEN EDITIONS: ICSE 2027 is IEEE, ICSE 2028 is ACM (icse-2028.jsonc).
+// Its workshops follow ICSE 2027's: NLBSE «All submissions must conform to the ICSE’27 formatting
+// and submission instructions», AGENTVERIFY «IEEE format in line with ICSE 2027», AGENT «the IEEE
+// conference proceedings template».
+{
+  "type": "venue",
+  // The series, without a year: the year is the id's (icse-2027), the one source of it.
+  "name": "ICSE",
+  // The research track's call quoted above.
+  "url": "https://conf.researchr.org/track/icse-2027/icse-2027-research-track",
+  "extends": "paperlint:ieee-conference",
+}

@@ -10,7 +10,7 @@
   },
   "lint": {
     "paperlintJson": {
-      "extends": "paperlint:agenticdev",
+      "extends": "paperlint:agenticdev-2026",
       "kind": "short",
       "rules": {
         "pdf/last-page-balance": "error"

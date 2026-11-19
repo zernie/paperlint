@@ -14,9 +14,15 @@ import { frozenText } from "../test/frozen-presets.ts";
 import { presetsDir } from "./package-dirs.ts";
 import { parsePreset } from "./tex-requirements.ts";
 import {
+  deadlineYearProblems,
+  editionOf,
+  idProblem,
+} from "./domain/edition.ts";
+import {
   MAX_PRESET_DEPTH,
   SHIPPED_PREFIX,
   shippedPresets,
+  shippedSpec,
   shippedVenueNames,
   labelOf,
   presetProblemText,
@@ -29,11 +35,11 @@ const live = Object.fromEntries(
     .filter((f) => f.endsWith(".jsonc") || f.endsWith(".json"))
     .map((f) => [join(VENUES, f), readFileSync(join(VENUES, f))]),
 );
-// The shipped msr.jsonc's deadlines are rewritten by the scheduled refresh, so the tests of LOGIC
+// The shipped msr-2027.jsonc's deadlines are rewritten by the scheduled refresh, so the tests of LOGIC
 // read it FROZEN (test/frozen-presets.ts); only the shape test below reads the shipped file.
 const shipped = {
   ...live,
-  [join(VENUES, "msr.jsonc")]: frozenText("msr.jsonc"),
+  [join(VENUES, "msr-2027.jsonc")]: frozenText("msr-2027.jsonc"),
 };
 const PAPER_FILE = "/work/papers/p/paperlint.json";
 const deps = (extra: Record<string, string> = {}, base = shipped) => ({
@@ -58,13 +64,13 @@ const family = (body: Record<string, unknown>): string =>
   JSON.stringify({ type: "family", ...body });
 
 describe("shipped presets", () => {
-  it("paperlint:agenticdev → agenticdev over acm-sigconf: the family's format, the venue's kinds", () => {
-    const r = resolve("paperlint:agenticdev");
+  it("paperlint:agenticdev-2026 → agenticdev over acm-sigconf: the family's format, the venue's kinds", () => {
+    const r = resolve("paperlint:agenticdev-2026");
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.value.chain.map((f) => f.split("/").pop())).toEqual([
       "acm-sigconf.jsonc",
-      "agenticdev.jsonc",
+      "agenticdev-2026.jsonc",
     ]);
     expect(r.value.format.columns).toBe(2);
     expect(r.value.format.fontsText).toBe("LinLibertine");
@@ -79,7 +85,7 @@ describe("shipped presets", () => {
     // The label is the venue's own name, from its file's `name`; the id stays the file name — the
     // stable key the facts file and the build plan carry.
     expect(r.value.label).toBe("AgenticDev");
-    expect(r.value.id).toBe("agenticdev");
+    expect(r.value.id).toBe("agenticdev-2026");
     expect(r.value.identity).toEqual({
       type: "venue",
       name: "AgenticDev",
@@ -88,14 +94,14 @@ describe("shipped presets", () => {
   });
 });
 
-describe("shipped presets: paperlint:msr", () => {
-  it("paperlint:msr → msr over ieee-conference: one kind, appendices counted as body, compsoc forbidden", () => {
-    const r = resolve("paperlint:msr", {}, live);
+describe("shipped presets: paperlint:msr-2027", () => {
+  it("paperlint:msr-2027 → msr over ieee-conference: one kind, appendices counted as body, compsoc forbidden", () => {
+    const r = resolve("paperlint:msr-2027", {}, live);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.value.chain.map((f) => f.split("/").pop())).toEqual([
       "ieee-conference.jsonc",
-      "msr.jsonc",
+      "msr-2027.jsonc",
     ]);
     expect([...r.value.format.kinds]).toEqual([
       ["technical", { pagesMax: null, bodyPagesMax: 10, refPagesMax: 2 }],
@@ -105,7 +111,7 @@ describe("shipped presets: paperlint:msr", () => {
     expect(r.value.format.pageWidthIn).toBe(8.5);
     expect(r.value.template).toEqual({
       text: "\\documentclass[10pt,conference]{IEEEtran}",
-      file: join(VENUES, "msr.jsonc"),
+      file: join(VENUES, "msr-2027.jsonc"),
       forbids: ["compsoc", "compsocconf"],
     });
     expect(r.value.blind).toBe(true);
@@ -139,14 +145,14 @@ describe("shipped presets: paperlint:msr", () => {
   });
 });
 
-describe("shipped presets: paperlint:fse", () => {
-  it("paperlint:fse → fse over acm-acmsmall: one column, the family's template, two kinds, both readings of the deadline", () => {
-    const r = resolve("paperlint:fse");
+describe("shipped presets: paperlint:fse-2027", () => {
+  it("paperlint:fse-2027 → fse over acm-acmsmall: one column, the family's template, two kinds, both readings of the deadline", () => {
+    const r = resolve("paperlint:fse-2027");
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.value.chain.map((f) => f.split("/").pop())).toEqual([
       "acm-acmsmall.jsonc",
-      "fse.jsonc",
+      "fse-2027.jsonc",
     ]);
     expect(r.value.format.columns).toBe(1);
     expect(r.value.format.pageWidthIn).toBe(6.75);
@@ -174,7 +180,8 @@ describe("shipped presets: paperlint:fse", () => {
       ["submission", "portal"],
       ["submission", "call"],
     ]);
-    expect(r.value.label).toBe("FSE 2027");
+    expect(r.value.label).toBe("FSE");
+    expect(r.value.year).toBe(2027);
     expect(r.value.rules).toEqual({});
   });
 });
@@ -186,14 +193,20 @@ describe("shipped presets: a family, and a venue that stands alone", () => {
     expect(r.ok && r.value.format.pageWidthIn).toBe(8.5);
   });
 
-  it("realm (ACL) stands alone: A4, no parent", () => {
-    const r = resolve("paperlint:realm");
-    expect(r.ok && r.value.chain.length).toBe(1);
+  it("realm (ACL) extends the acl-latex family: its class line from the family, A4 from its own measurement", () => {
+    const r = resolve("paperlint:realm-2026");
+    expect(r.ok && r.value.chain).toEqual([
+      join(VENUES, "acl-latex.jsonc"),
+      join(VENUES, "realm-2026.jsonc"),
+    ]);
+    expect(r.ok && r.value.template?.text).toBe(
+      "\\documentclass[11pt]{article}",
+    );
     expect(r.ok && r.value.format.pageWidthIn).toBe(8.27);
   });
 
   it("agenticdev turns pdf/last-page-balance on — its producer asks for balanced columns", () => {
-    const r = resolve("paperlint:agenticdev");
+    const r = resolve("paperlint:agenticdev-2026");
     expect(r.ok && r.value.rules["pdf/last-page-balance"]).toEqual([
       "error",
       { tolerancePt: 120 },
@@ -216,70 +229,86 @@ const FAMILIES = PARSED.filter((p) =>
 
 // What each shipped preset declares itself to be; a new preset adds its row here.
 const DECLARED = {
+  "acl-latex.jsonc": { type: "family" },
   "acm-acmsmall.jsonc": { type: "family" },
   "acm-sigconf.jsonc": { type: "family" },
-  "agenticdev.jsonc": {
+  "agenticdev-2026.jsonc": {
     type: "venue",
     name: "AgenticDev",
     url: "https://conf.researchr.org/home/ase-2026/agenticdev-2026",
   },
-  "agent.jsonc": {
+  "acsac-2026.jsonc": {
     type: "venue",
-    name: "AGENT 2027",
+    name: "ACSAC",
+    url: "https://www.acsac.org/2026/submissions/papers/",
+  },
+  "agent-2027.jsonc": {
+    type: "venue",
+    name: "AGENT",
     url: "https://conf.researchr.org/home/icse-2027/agent-2027",
   },
-  "agentverify.jsonc": {
+  "agentverify-2027.jsonc": {
     type: "venue",
     name: "AGENTVERIFY",
     url: "https://agentverify2027.github.io/cfp.html",
   },
-  "aidc.jsonc": {
+  "aidc-2026.jsonc": {
     type: "venue",
     name: "AIDC",
     url: "https://aidcworkshop.github.io/",
   },
-  "aisec.jsonc": {
+  "aisec-2026.jsonc": {
     type: "venue",
     name: "AISec",
     url: "https://aisec.cc/",
   },
-  "ase.jsonc": {
+  "ase-2026.jsonc": {
     type: "venue",
     name: "ASE",
     url: "https://conf.researchr.org/track/ase-2026/ase-2026-research-track",
   },
-  "ccs.jsonc": {
+  "ccs-2026.jsonc": {
     type: "venue",
     name: "ACM CCS",
     url: "https://www.sigsac.org/ccs/CCS2026/call-for/call-for-papers.html",
   },
-  "fse.jsonc": {
+  "emnlp-2026.jsonc": {
     type: "venue",
-    name: "FSE 2027",
+    name: "EMNLP",
+    url: "https://2026.emnlp.org/calls/main_conference_papers/",
+  },
+  "fse-2027.jsonc": {
+    type: "venue",
+    name: "FSE",
     url: "https://conf.researchr.org/track/fse-2027/fse-2027-papers",
   },
-  "icse.jsonc": {
+  "icse-2027.jsonc": {
     type: "venue",
-    name: "ICSE 2028",
+    name: "ICSE",
+    url: "https://conf.researchr.org/track/icse-2027/icse-2027-research-track",
+  },
+  "icse-2028.jsonc": {
+    type: "venue",
+    name: "ICSE",
     url: "https://conf.researchr.org/track/icse-2028/icse-2028-papers",
   },
   "ieee-conference.jsonc": { type: "family" },
-  "msr.jsonc": {
+  "msr-2027.jsonc": {
     type: "venue",
     name: "MSR",
     url: "https://2027.msrconf.org/track/msr-2027-technical-papers",
   },
-  "nlbse.jsonc": {
+  "nlbse-2027.jsonc": {
     type: "venue",
     name: "NLBSE",
     url: "https://conf.researchr.org/home/icse-2027/nlbse-2027",
   },
-  "realm.jsonc": {
+  "realm-2026.jsonc": {
     type: "venue",
     name: "REALM",
     url: "https://realm-workshop.github.io/call_for_papers",
   },
-  "sp.jsonc": {
+  "sp-2027.jsonc": {
     type: "venue",
     name: "IEEE S&P",
     url: "https://sp2027.ieee-security.org/cfpapers.html",
@@ -320,6 +349,7 @@ describe("the naming convention of shipped presets (docs/rules.md)", () => {
 
   it("there are families to check (else the checks below see nothing)", () => {
     expect(families.map((f) => f.name).sort()).toEqual([
+      "acl-latex",
       "acm-acmsmall",
       "acm-sigconf",
       "ieee-conference",
@@ -336,7 +366,9 @@ describe("the naming convention of shipped presets (docs/rules.md)", () => {
   it.each(presets.filter((p) => p.extends !== null).map((p) => [p.name]))(
     "the venue %s carries no publisher prefix — its template is said by `extends`",
     (name) => {
-      expect(publishers.filter((pub) => name.startsWith(`${pub}-`))).toEqual(
+      // The series, not the id: ACL's own conference is `acl-<year>`, a series named after its publisher.
+      const series = editionOf(name)?.series ?? name;
+      expect(publishers.filter((pub) => series.startsWith(`${pub}-`))).toEqual(
         [],
       );
     },
@@ -390,7 +422,7 @@ describe("a project's own preset: what its children replace", () => {
   it("a child kind replaces that kind wholesale; other kinds are kept", () => {
     const r = resolve("./mine.jsonc", {
       "/work/papers/p/mine.jsonc": venue({
-        extends: "paperlint:agenticdev",
+        extends: "paperlint:agenticdev-2026",
         format: { kinds: { short: { body_pages_max: 6, ref_pages_max: 2 } } },
       }),
     });
@@ -407,7 +439,7 @@ describe("a project's own preset: what its children replace", () => {
   it("rules: the leaf wins over its parent, per rule id", () => {
     const r = resolve("./mine.jsonc", {
       "/work/papers/p/mine.jsonc": venue({
-        extends: "paperlint:agenticdev",
+        extends: "paperlint:agenticdev-2026",
         rules: { "pdf/last-page-balance": "off" },
       }),
     });
@@ -417,14 +449,14 @@ describe("a project's own preset: what its children replace", () => {
   it("ruleOrigins: each rule's entry names the file of the chain that set it", () => {
     const r = resolve("./mine.jsonc", {
       "/work/papers/p/mine.jsonc": venue({
-        extends: "paperlint:agenticdev",
+        extends: "paperlint:agenticdev-2026",
         rules: { "pdf/body-size": "off" },
       }),
     });
     // Guards: an own rule is the leaf's, an inherited one names the parent that set it.
     expect(r.ok && r.value.ruleOrigins).toEqual({
-      "pdf/last-page-balance": join(VENUES, "agenticdev.jsonc"),
-      "tex/heading-case": join(VENUES, "agenticdev.jsonc"),
+      "pdf/last-page-balance": join(VENUES, "agenticdev-2026.jsonc"),
+      "tex/heading-case": join(VENUES, "agenticdev-2026.jsonc"),
       "pdf/body-size": "/work/papers/p/mine.jsonc",
     });
   });
@@ -432,7 +464,7 @@ describe("a project's own preset: what its children replace", () => {
   it("ruleOrigins: a rule the leaf sets again is the leaf's, not its parent's", () => {
     const r = resolve("./mine.jsonc", {
       "/work/papers/p/mine.jsonc": venue({
-        extends: "paperlint:agenticdev",
+        extends: "paperlint:agenticdev-2026",
         rules: { "tex/heading-case": "off" },
       }),
     });
@@ -454,7 +486,7 @@ describe("a project's own preset: its deadlines", () => {
   it("a child's deadlines replace its parent's whole; none named keeps the parent's", () => {
     const own = resolve("./mine.jsonc", {
       "/work/papers/p/mine.jsonc": venue({
-        extends: "paperlint:msr",
+        extends: "paperlint:msr-2027",
         deadlines: [reading("submission", "2026-10-21T04:00:00Z")],
       }),
     });
@@ -462,11 +494,11 @@ describe("a project's own preset: its deadlines", () => {
       reading("submission", "2026-10-21T04:00:00Z"),
     ]);
     const inherited = resolve("./mine.jsonc", {
-      "/work/papers/p/mine.jsonc": venue({ extends: "paperlint:msr" }),
+      "/work/papers/p/mine.jsonc": venue({ extends: "paperlint:msr-2027" }),
     });
     expect(inherited.ok && inherited.value.deadlines.length).toBe(2);
     const none = resolve("./mine.jsonc", {
-      "/work/papers/p/mine.jsonc": venue({ extends: "paperlint:aisec" }),
+      "/work/papers/p/mine.jsonc": venue({ extends: "paperlint:aisec-2026" }),
     });
     expect(none.ok && none.value.deadlines).toEqual([]);
   });
@@ -474,7 +506,7 @@ describe("a project's own preset: its deadlines", () => {
   it("the portal's and the call's reading of one kind may stand side by side", () => {
     const r = resolve("./mine.jsonc", {
       "/work/papers/p/mine.jsonc": venue({
-        extends: "paperlint:aisec",
+        extends: "paperlint:aisec-2026",
         deadlines: [
           reading("submission", "2026-10-20T04:00:00Z"),
           reading("submission", "2026-10-21T11:59:59Z", "call"),
@@ -519,7 +551,7 @@ describe("a project's own preset: deadlines it refuses", () => {
   ])("refuses %s, naming the file", (_what, deadlines, re) => {
     const r = resolve("./mine.jsonc", {
       "/work/papers/p/mine.jsonc": venue({
-        extends: "paperlint:aisec",
+        extends: "paperlint:aisec-2026",
         deadlines,
       }),
     });
@@ -538,12 +570,17 @@ describe("what does not resolve, and says why", () => {
       "unsupported",
       /npm presets: not yet supported/,
     ],
-    ["a bare name", "agenticdev", "unsupported", /paperlint:agenticdev/],
+    [
+      "a bare name",
+      "agenticdev-2026",
+      "unsupported",
+      /paperlint:agenticdev-2026/,
+    ],
     [
       "a shipped name with a typo",
       "paperlint:agenticdve",
       "not-found",
-      /acm-acmsmall, acm-sigconf, agent, agenticdev, agentverify, aidc, aisec, ase, ccs, fse, icse, ieee-conference, msr, nlbse, realm, sp/,
+      /acl-latex, acm-acmsmall, acm-sigconf, acsac-2026, agent-2027, agenticdev-2026, agentverify-2027, aidc-2026, aisec-2026, ase-2026, ccs-2026, emnlp-2026, fse-2027, icse-2027, icse-2028, ieee-conference, msr-2027, nlbse-2027, realm-2026, sp-2027/,
     ],
     ["the base TeX set", "paperlint:tex-base", "not-found", /agenticdev/],
     [
@@ -591,7 +628,9 @@ describe("chains that do not resolve", () => {
   it("a chain of exactly the limit resolves", () => {
     const r = resolve("./p1.jsonc", {
       "/work/papers/p/p1.jsonc": venue({ extends: "./p2.jsonc" }),
-      "/work/papers/p/p2.jsonc": venue({ extends: "paperlint:agenticdev" }),
+      "/work/papers/p/p2.jsonc": venue({
+        extends: "paperlint:agenticdev-2026",
+      }),
     });
     expect(r.ok && r.value.chain.length).toBe(MAX_PRESET_DEPTH);
   });
@@ -620,12 +659,12 @@ describe("chains that do not resolve: the files themselves", () => {
 
   it("a family that extends a venue is refused, naming both files", () => {
     const r = resolve("./fam.jsonc", {
-      "/work/papers/p/fam.jsonc": family({ extends: "paperlint:aisec" }),
+      "/work/papers/p/fam.jsonc": family({ extends: "paperlint:aisec-2026" }),
     });
     expect(r.ok).toBe(false);
     if (r.ok) return;
     expect(presetProblemText(r.error)).toBe(
-      `the preset /work/papers/p/fam.jsonc is a template family and extends ${join(VENUES, "aisec.jsonc")}, a venue — a family builds only on a family; a venue extends a family or another venue`,
+      `the preset /work/papers/p/fam.jsonc is a template family and extends ${join(VENUES, "aisec-2026.jsonc")}, a venue — a family builds only on a family; a venue extends a family or another venue`,
     );
   });
 
@@ -644,7 +683,7 @@ describe("chains that do not resolve: the files themselves", () => {
 
   it("a venue may extend a venue, and the resolved identity is the leaf's", () => {
     const r = resolve("./mine.jsonc", {
-      "/work/papers/p/mine.jsonc": venue({ extends: "paperlint:aisec" }),
+      "/work/papers/p/mine.jsonc": venue({ extends: "paperlint:aisec-2026" }),
     });
     expect(r.ok && r.value.identity).toEqual({
       type: "venue",
@@ -660,25 +699,35 @@ describe("a workshop's parent conference (`parent`)", () => {
       const r = resolve(spec);
       return r.ok ? [r.value.aliases, r.value.parentNames] : r.error;
     };
-    expect(names("paperlint:agenticdev")).toEqual([["AgenticDev"], ["ASE"]]);
-    expect(names("paperlint:aisec")).toEqual([["AISec"], ["ACM CCS"]]);
-    expect(names("paperlint:ccs")).toEqual([["ACM CCS"], []]);
+    expect(names("paperlint:agenticdev-2026")).toEqual([
+      ["AgenticDev"],
+      ["ASE"],
+    ]);
+    expect(names("paperlint:aisec-2026")).toEqual([["AISec"], ["ACM CCS"]]);
+    expect(names("paperlint:ccs-2026")).toEqual([["ACM CCS"], []]);
   });
 
   it("a parent's own parent counts too, and a child of the workshop inherits its parent", () => {
     const r = resolve("./w.jsonc", {
       "/work/papers/p/w.jsonc": venue({
         extends: "paperlint:acm-sigconf",
+        workshop: true,
         parent: "./c.jsonc",
       }),
       "/work/papers/p/c.jsonc": venue(
-        { extends: "paperlint:acm-sigconf", parent: "paperlint:ccs" },
+        {
+          extends: "paperlint:acm-sigconf",
+          workshop: true,
+          parent: "paperlint:ccs-2026",
+        },
         "Our Conference",
       ),
     });
     expect(r.ok && r.value.parentNames).toEqual(["Our Conference", "ACM CCS"]);
     const mine = resolve("./mine.jsonc", {
-      "/work/papers/p/mine.jsonc": venue({ extends: "paperlint:agenticdev" }),
+      "/work/papers/p/mine.jsonc": venue({
+        extends: "paperlint:agenticdev-2026",
+      }),
     });
     expect(mine.ok && mine.value.parentNames).toEqual(["ASE"]);
   });
@@ -691,6 +740,7 @@ const BAD_PARENTS: readonly [string, Record<string, string>, string][] = [
     {
       "/work/papers/p/w.jsonc": venue({
         extends: "paperlint:acm-sigconf",
+        workshop: true,
         parent: "paperlint:nope",
       }),
     },
@@ -701,6 +751,7 @@ const BAD_PARENTS: readonly [string, Record<string, string>, string][] = [
     {
       "/work/papers/p/w.jsonc": venue({
         extends: "paperlint:acm-sigconf",
+        workshop: true,
         parent: "paperlint:acm-sigconf",
       }),
     },
@@ -711,10 +762,12 @@ const BAD_PARENTS: readonly [string, Record<string, string>, string][] = [
     {
       "/work/papers/p/w.jsonc": venue({
         extends: "paperlint:acm-sigconf",
+        workshop: true,
         parent: "./c.jsonc",
       }),
       "/work/papers/p/c.jsonc": venue({
         extends: "paperlint:acm-sigconf",
+        workshop: true,
         parent: "./gone.jsonc",
       }),
     },
@@ -725,6 +778,7 @@ const BAD_PARENTS: readonly [string, Record<string, string>, string][] = [
     {
       "/work/papers/p/w.jsonc": venue({
         extends: "paperlint:acm-sigconf",
+        workshop: true,
         parent: "./c.jsonc",
       }),
       "/work/papers/p/c.jsonc": venue({ extends: "./gone.jsonc" }),
@@ -736,10 +790,12 @@ const BAD_PARENTS: readonly [string, Record<string, string>, string][] = [
     {
       "/work/papers/p/w.jsonc": venue({
         extends: "paperlint:acm-sigconf",
+        workshop: true,
         parent: "./c.jsonc",
       }),
       "/work/papers/p/c.jsonc": venue({
         extends: "paperlint:acm-sigconf",
+        workshop: true,
         parent: "./w.jsonc",
       }),
     },
@@ -757,7 +813,7 @@ describe("a workshop's parent conference (`parent`): what is refused", () => {
     const r = resolve("./fam.jsonc", {
       "/work/papers/p/fam.jsonc": family({
         extends: "paperlint:acm-sigconf",
-        parent: "paperlint:ccs",
+        parent: "paperlint:ccs-2026",
       }),
     });
     expect(r.ok ? "resolved" : r.error.kind).toBe("broken");
@@ -768,7 +824,7 @@ describe("a preset's template: kept as its file spells it, with that file", () =
   it("a child's template replaces its parent's, and names its own file", () => {
     const r = resolve("./own.jsonc", {
       "/work/papers/p/own.jsonc": venue({
-        extends: "paperlint:aidc",
+        extends: "paperlint:aidc-2026",
         template: "\\documentclass[conference]{IEEEtran}",
       }),
     });
@@ -793,7 +849,7 @@ describe("a preset's template: kept as its file spells it, with that file", () =
   it("forbidden options without a template of the same file are refused by the schema", () => {
     const r = resolve("./own.jsonc", {
       "/work/papers/p/own.jsonc": venue({
-        extends: "paperlint:aidc",
+        extends: "paperlint:aidc-2026",
         template_forbids: ["compsoc"],
       }),
     });
@@ -805,7 +861,7 @@ describe("a preset's template: kept as its file spells it, with that file", () =
 
 describe("labelOf — display only, never used to resolve", () => {
   it.each([
-    ["paperlint:agenticdev", "agenticdev"],
+    ["paperlint:agenticdev-2026", "agenticdev-2026"],
     ["./venues/usenix-sec.jsonc", "usenix-sec"],
     ["../shared/acl.json", "acl"],
     ["./.hidden", ".hidden"],
@@ -820,17 +876,21 @@ describe("shippedVenueNames — what each shipped venue is called", () => {
     const names = shippedVenueNames(deps());
     // A venue is labelled by its `name`, a family by its file name.
     expect(names.map((n) => n.label)).toEqual([
+      "acl-latex",
       "acm-acmsmall",
       "acm-sigconf",
-      "AGENT 2027",
+      "ACSAC",
+      "AGENT",
       "AgenticDev",
       "AGENTVERIFY",
       "AIDC",
       "AISec",
       "ASE",
       "ACM CCS",
-      "FSE 2027",
-      "ICSE 2028",
+      "EMNLP",
+      "FSE",
+      "ICSE",
+      "ICSE",
       "ieee-conference",
       "MSR",
       "NLBSE",
@@ -839,32 +899,247 @@ describe("shippedVenueNames — what each shipped venue is called", () => {
     ]);
     // AISec's parent conference is its `parent`, not an alias: ACM CCS is named by ccs alone.
     expect(names.find((n) => n.label === "AISec")?.aliases).toEqual(["AISec"]);
+    // The year is the id's: two editions of one series share a name and differ by year.
+    expect(
+      names.filter((n) => n.label === "ICSE").map((n) => [n.id, n.year]),
+    ).toEqual([
+      ["icse-2027", 2027],
+      ["icse-2028", 2028],
+    ]);
   });
 
   it("a preset that does not resolve is left out", () => {
     const files = memoryFiles(
       Object.fromEntries(
-        Object.entries(shipped).filter(([f]) => !f.endsWith("realm.jsonc")),
+        Object.entries(shipped).filter(
+          ([f]) => !f.endsWith("realm-2026.jsonc"),
+        ),
       ),
     );
     expect(
       shippedVenueNames({ files, venuesDir: VENUES }).map((n) => n.label),
     ).toEqual([
+      "acl-latex",
       "acm-acmsmall",
       "acm-sigconf",
-      "AGENT 2027",
+      "ACSAC",
+      "AGENT",
       "AgenticDev",
       "AGENTVERIFY",
       "AIDC",
       "AISec",
       "ASE",
       "ACM CCS",
-      "FSE 2027",
-      "ICSE 2028",
+      "EMNLP",
+      "FSE",
+      "ICSE",
+      "ICSE",
       "ieee-conference",
       "MSR",
       "NLBSE",
       "IEEE S&P",
     ]);
+  });
+});
+
+describe("one preset per edition: a bare series is refused, naming the editions", () => {
+  const editions =
+    "Shipped editions: paperlint:icse-2027, paperlint:icse-2028 — did you mean paperlint:icse-2028?";
+
+  it("🔴 in a paper's extends", () => {
+    const r = resolve("paperlint:icse");
+    expect(r.ok ? "resolved" : presetProblemText(r.error)).toBe(
+      `"extends": "paperlint:icse" names a series, not an edition: a venue preset is one edition, so a new edition never changes a paper's rules unasked. ${editions}`,
+    );
+  });
+
+  it("🔴 in a preset's own extends", () => {
+    const r = resolve("./mine.jsonc", {
+      "/work/papers/p/mine.jsonc": venue({ extends: "paperlint:icse" }),
+    });
+    expect(r.ok ? "resolved" : r.error.kind).toBe("bare-series");
+  });
+
+  it("🔴 in a workshop's parent", () => {
+    const r = resolve("./w.jsonc", {
+      "/work/papers/p/w.jsonc": venue({
+        extends: "paperlint:ieee-conference",
+        workshop: true,
+        parent: "paperlint:icse",
+      }),
+    });
+    expect(r.ok ? "resolved" : presetProblemText(r.error)).toBe(
+      `the preset /work/papers/p/w.jsonc names a parent conference that does not resolve to a venue: "parent": "paperlint:icse" names a series, not an edition: a venue preset is one edition, so a new edition never changes a paper's rules unasked. ${editions}`,
+    );
+  });
+
+  it("a series with one shipped edition is refused too; a name that is no series stays not-found", () => {
+    const r = resolve("paperlint:fse");
+    expect(r.ok ? "resolved" : presetProblemText(r.error)).toMatch(
+      /Shipped editions: paperlint:fse-2027 — did you mean paperlint:fse-2027\?$/,
+    );
+    const typo = resolve("paperlint:icsee");
+    expect(typo.ok ? "resolved" : typo.error.kind).toBe("not-found");
+  });
+
+  it("the edition resolves, with the year of its id", () => {
+    const r = resolve("paperlint:icse-2028");
+    expect(r.ok && [r.value.label, r.value.year]).toEqual(["ICSE", 2028]);
+  });
+});
+
+describe("a workshop's parent is the edition of its own year", () => {
+  it("🔴 a parent of another year is refused, naming both years", () => {
+    const r = resolve("./wks-2028.jsonc", {
+      "/work/papers/p/wks-2028.jsonc": venue({
+        extends: "paperlint:ieee-conference",
+        workshop: true,
+        parent: "paperlint:icse-2027",
+      }),
+    });
+    expect(r.ok ? "resolved" : presetProblemText(r.error)).toBe(
+      `the preset /work/papers/p/wks-2028.jsonc names a parent conference that does not resolve to a venue: "parent": "paperlint:icse-2027" is the 2027 edition, and this workshop is of 2028 — a workshop's parent is the edition it is held at, of the same year`,
+    );
+  });
+
+  it("the same year resolves", () => {
+    const r = resolve("./wks-2027.jsonc", {
+      "/work/papers/p/wks-2027.jsonc": venue({
+        extends: "paperlint:ieee-conference",
+        workshop: true,
+        parent: "paperlint:icse-2027",
+      }),
+    });
+    expect(r.ok && r.value.parentNames).toEqual(["ICSE"]);
+  });
+
+  it("every shipped workshop names a parent of its own year, and resolves", () => {
+    const workshops = PARSED.filter((p) => p.preset.parent !== null);
+    expect(workshops.map((w) => [w.name, w.preset.parent])).toEqual([
+      ["agent-2027", "paperlint:icse-2027"],
+      ["agenticdev-2026", "paperlint:ase-2026"],
+      ["agentverify-2027", "paperlint:icse-2027"],
+      ["aidc-2026", "paperlint:acsac-2026"],
+      ["aisec-2026", "paperlint:ccs-2026"],
+      ["nlbse-2027", "paperlint:icse-2027"],
+      ["realm-2026", "paperlint:emnlp-2026"],
+    ]);
+    expect(workshops.filter((w) => !resolve(shippedSpec(w.name)).ok)).toEqual(
+      [],
+    );
+  });
+});
+
+describe("a workshop cannot silently lack its parent (the schema)", () => {
+  it.each([
+    ["🔴 a workshop without a parent", { workshop: true }],
+    [
+      "🔴 a parent without the workshop marker",
+      { parent: "paperlint:icse-2027" },
+    ],
+    [
+      "🔴 a workshop marker that is not true",
+      { workshop: false, parent: "paperlint:icse-2027" },
+    ],
+  ])("%s is refused", (_, body) => {
+    const r = resolve("./w.jsonc", {
+      "/work/papers/p/w.jsonc": venue({
+        extends: "paperlint:ieee-conference",
+        ...body,
+      }),
+    });
+    expect(r.ok ? "resolved" : r.error.kind).toBe("broken");
+  });
+
+  it("🔴 a family cannot be a workshop", () => {
+    const r = resolve("./fam.jsonc", {
+      "/work/papers/p/fam.jsonc": family({
+        extends: "paperlint:acm-sigconf",
+        workshop: true,
+      }),
+    });
+    expect(r.ok ? "resolved" : r.error.kind).toBe("broken");
+  });
+
+  it.each([
+    ["🔴 a year in the name", { name: "ICSE 2028" }],
+    ["🔴 a year in an alias", { aliases: ["AGENT'27"] }],
+  ])("%s is refused: the year is the id's", (_, body) => {
+    const r = resolve("./v.jsonc", {
+      "/work/papers/p/v.jsonc": venue({
+        extends: "paperlint:acm-sigconf",
+        ...body,
+      }),
+    });
+    expect(r.ok ? "resolved" : r.error.kind).toBe("broken");
+  });
+});
+
+describe("the id and the year: a venue is <series>-<year>, a family ends in no year", () => {
+  it.each([
+    [
+      "icse",
+      "venue",
+      "icse: a venue preset is one edition, and its id is <series>-<year> (icse-2028)",
+    ],
+    [
+      "icse-28",
+      "venue",
+      "icse-28: a venue preset is one edition, and its id is <series>-<year> (icse-2028)",
+    ],
+    [
+      "ICSE-2028",
+      "venue",
+      "ICSE-2028: a venue preset is one edition, and its id is <series>-<year> (icse-2028)",
+    ],
+    [
+      "acm-2027",
+      "family",
+      "acm-2027: a template family is a format, not an edition, and its id ends in no year",
+    ],
+  ] as const)("🔴 planted: %s as a %s", (id, type, text) => {
+    expect(idProblem(id, type)).toBe(text);
+  });
+
+  it.each([
+    ["usenix-sec-2027", "venue"],
+    ["acm-sigconf", "family"],
+    ["tex-base", "base"],
+  ] as const)("%s as a %s fits", (id, type) => {
+    expect(idProblem(id, type)).toBeNull();
+  });
+
+  it("every shipped preset fits", () => {
+    expect(
+      PARSED.flatMap((p) => idProblem(p.name, p.preset.identity.type) ?? []),
+    ).toEqual([]);
+  });
+});
+
+describe("an edition's deadlines fall within [year − 2, year + 1]", () => {
+  it("🔴 planted: a reading of another edition", () => {
+    expect(
+      deadlineYearProblems("icse-2028", 2028, [
+        { what: "submission", at: "2025-07-02T11:59:59Z" },
+        { what: "camera-ready", at: "2030-01-01T11:59:59Z" },
+        { what: "notification", at: "2027-10-22T11:59:59Z" },
+      ]),
+    ).toEqual([
+      "icse-2028: the submission deadline 2025-07-02T11:59:59Z is outside 2026–2029, the years an edition of 2028 falls in",
+      "icse-2028: the camera-ready deadline 2030-01-01T11:59:59Z is outside 2026–2029, the years an edition of 2028 falls in",
+    ]);
+  });
+
+  it("every shipped edition's deadlines fit", () => {
+    const editions = PARSED.flatMap((p) => {
+      const e = editionOf(p.name);
+      return e === null ? [] : [{ ...p, year: e.year }];
+    });
+    expect(editions.length).toBeGreaterThan(10);
+    expect(
+      editions.flatMap((p) =>
+        deadlineYearProblems(p.name, p.year, p.preset.deadlines ?? []),
+      ),
+    ).toEqual([]);
   });
 });

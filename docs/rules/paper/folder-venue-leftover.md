@@ -7,7 +7,7 @@ presets · **Reported on:** the first line of the paper's `PIPELINE-STATUS.md`
 
 The paper's folder is named after a venue other than the one its `paperlint.json` extends. Usually
 the folder was named for the first venue the paper went to, and the paper has since been retargeted:
-`papers/aisec-2026/` holding a paper that now extends `paperlint:aidc`.
+`papers/aisec-2026/` holding a paper that now extends `paperlint:aidc-2026`.
 
 The folder name is read as words: runs of letters and runs of digits, split on everything else, case
 ignored. `aisec-2026`, `aisec_2026` and `aisec2026` all name AISec; `overrealm` and `realms` do not
@@ -31,7 +31,7 @@ the paper goes to.
 
 ## Examples
 
-Failing — a paper whose `paperlint.json` is `{ "extends": "paperlint:aidc", "kind": "regular" }`,
+Failing — a paper whose `paperlint.json` is `{ "extends": "paperlint:aidc-2026", "kind": "regular" }`,
 in `papers/aisec-2026/`:
 
 ```text
@@ -42,16 +42,16 @@ papers/aisec-2026/PIPELINE-STATUS.md
                 paper/folder-venue-leftover
 ```
 
-Named by an alias, the message says which: `papers/emnlp-agents/` under `paperlint:aidc` names
+Named by an alias, the message says which: `papers/emnlp-agents/` under `paperlint:aidc-2026` names
 `REALM («EMNLP»)`.
 
 Passing:
 
 - `papers/agent-rule-drift/` — names no venue;
-- `papers/aidc-2026/` or `papers/acsac-2026/` under `paperlint:aidc` — the paper's own venue, by its
+- `papers/aidc-2026/` or `papers/acsac-2026/` under `paperlint:aidc-2026` — the paper's own venue, by its
   label or its alias;
-- `papers/ase-agents/` under `paperlint:agenticdev` — the conference the workshop is held at
-  (`"parent": "paperlint:ase"`); under `paperlint:aidc` the same folder names ASE;
+- `papers/ase-agents/` under `paperlint:agenticdev-2026` — the conference the workshop is held at
+  (`"parent": "paperlint:ase-2026"`); under `paperlint:aidc-2026` the same folder names ASE;
 - `papers/overrealm-study/` — `realm` inside another word is that other word;
 - any folder whose `paperlint.json` has no `extends` yet, or none at all;
 - `papers/secure-acsac24/` under `paperlint:ieee-conference` — a bare template family names no venue.
@@ -63,7 +63,7 @@ No rule options. It reads each shipped preset's `name` and `aliases`, the fields
 
 ```jsonc
 "aliases": ["AISec"],
-"parent": "paperlint:ccs"
+"parent": "paperlint:ccs-2026"
 ```
 
 A name the paper's own chain also declares, or its `parent` conference's, is never reported.
@@ -96,7 +96,7 @@ in that paper's `paperlint.json`, beside the `extends` it compares with:
 
 ```json
 {
-  "extends": "paperlint:aidc",
+  "extends": "paperlint:aidc-2026",
   "kind": "regular",
   "rules": { "paper/folder-venue-leftover": "off" }
 }

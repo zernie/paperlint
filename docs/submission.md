@@ -16,7 +16,7 @@ npx paperlint submission update papers/my-paper --save    # changes the real sub
 
 | where                        | key                                                  | what it says                                                          |
 | ---------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------- |
-| the venue preset             | `"portal": { "kind": "hotcrp", "url": "https://…" }` | where the venue takes submissions (`paperlint:aidc`, `paperlint:msr`) |
+| the venue preset             | `"portal": { "kind": "hotcrp", "url": "https://…" }` | where the venue takes submissions (`paperlint:aidc-2026`, `paperlint:msr-2027`) |
 | the paper's `paperlint.json` | `"authors": [{ "name", "email", "affiliation"? }]`   | for `new`: every author, in the paper's order — never guessed         |
 | the paper's `paperlint.json` | `"submission": { "id": 7 }`                          | which submission is this paper's — `new --save` writes it             |
 | the environment              | `HOTCRP_TOKEN_<SITE>`, e.g. `HOTCRP_TOKEN_MSR2027`   | your API token for that site                                          |

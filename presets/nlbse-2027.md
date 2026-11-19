@@ -4,7 +4,7 @@ title: "NLBSE @ ICSE — venue card"
 
 # NLBSE @ ICSE
 
-The card of the venue preset `paperlint:nlbse` ([`nlbse.jsonc`](nlbse.jsonc)): what the venue asks
+The card of the venue preset `paperlint:nlbse-2027` ([`nlbse-2027.jsonc`](nlbse-2027.jsonc)): what the venue asks
 for, in prose. The numbers a machine checks live in the preset; the section at the end is generated
 from it. The `submit-paper` skill reads this card for the venue's specifics.
 
@@ -74,9 +74,9 @@ counts every page of the PDF: references that spill onto a page after a full bod
 
 <!-- paperlint:preset-rules -->
 <!-- prettier-ignore-start -->
-<!-- Generated from nlbse.jsonc by `npx eslint --fix` (rule preset/card-rules). Edit the preset, not this section. -->
+<!-- Generated from nlbse-2027.jsonc by `npx eslint --fix` (rule preset/card-rules). Edit the preset, not this section. -->
 
-**`paperlint:nlbse`** — venue preset for NLBSE · call for papers: <https://conf.researchr.org/home/icse-2027/nlbse-2027> · extends `paperlint:ieee-conference`
+**`paperlint:nlbse-2027`** — venue preset for NLBSE 2027 · call for papers: <https://conf.researchr.org/home/icse-2027/nlbse-2027> · extends `paperlint:ieee-conference`
 
 No preset of this chain sets a rule: under it, every rule keeps paperlint's default.
 

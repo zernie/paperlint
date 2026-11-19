@@ -1,5 +1,5 @@
 // ASE 2026 Research Papers (the 41st IEEE/ACM International Conference on Automated Software
-// Engineering, the main conference's research track; its AgenticDev workshop is agenticdev.jsonc)
+// Engineering, the main conference's research track; its AgenticDev workshop is agenticdev-2026.jsonc)
 // — a VENUE preset over the ACM sigconf family. Everything the acmart template decides (page size,
 // columns, fonts, font sizes, TeX packages) comes from acm-sigconf.jsonc; this file adds what ASE's
 // call for papers sets.
@@ -7,7 +7,7 @@
 // THE 2026 EDITION, WHOSE DEADLINES HAVE PASSED: on 2026-11-19 the ASE 2027 research track page
 // says «The full call for papers will be published soon.» and gives preliminary dates only
 // (https://conf.researchr.org/track/ase-2027/ase-2027-research-track; they are in the card,
-// ase.md). The 2026 call is the most recent one published.
+// ase-2026.md). The 2026 call is the most recent one published.
 //
 // Verbatim from https://conf.researchr.org/track/ase-2026/ase-2026-research-track (read 2026-11-19
 // with curl; WebFetch's summary of the same page did not reach the call, which sits after the
@@ -79,11 +79,11 @@
     },
   ],
 
-  // What the venue is called in a paper's text (tex/venue-leftover) — and only beside a year
-  // («ASE 2026», «ASE'26»): «ASE» is a three-letter acronym that sentences use for other things.
-  // agenticdev.jsonc names this preset as its `parent`, so an AgenticDev paper may say «ASE 2026».
+  // What the venue is called in a paper's text (tex/venue-leftover), which counts it in prose only
+  // beside a recent year («ASE 2026», «ASE'26»): «ASE» is a three-letter acronym that sentences use
+  // for other things. agenticdev-2026.jsonc names this preset as its `parent`, so an AgenticDev
+  // paper may say «ASE 2026».
   "aliases": ["ASE"],
-  "mentions": "with-year",
 
   // NO `template` HERE, on purpose: the call's class line is
   // `\documentclass[sigconf,review,anonymous]{acmart}`, and the camera-ready instructions of the
@@ -110,7 +110,7 @@
     // banal's default count is this limit: a page that holds any text that is not bibliography is a
     // body page — an appendix or the statement, before or after the references — and the reference
     // pages are the ones with only bibliography on them. So no `body_ends_at`, as in
-    // agenticdev.jsonc, which has the same template and the same «10 + 2 only references» shape.
+    // agenticdev-2026.jsonc, which has the same template and the same «10 + 2 only references» shape.
     //
     // Two kinds, in the call's words: «Technical Research Papers» and «Experience Papers», with the
     // same limit. «Accepted papers will be permitted an additional page of content … 11 pages
@@ -131,10 +131,10 @@
   //   «has balanced columns on the last page, if the page is not filled,»
   //   «The title should use headline-style capitalization (e.g., "The Best POPL Paper of All Time").»
   //   «All levels of headings use headline-style capitalization.»
-  // The same two rules agenticdev.jsonc sets for the same vendor, with the same options: 120 pt is
+  // The same two rules agenticdev-2026.jsonc sets for the same vendor, with the same options: 120 pt is
   // pdf/last-page-balance's measured default (docs/optional-rules.md), and chicago-headline is the
   // vendor's own definition of headline style (https://www.conference-publishing.com/Help.php,
-  // quoted in agenticdev.jsonc). A paper can turn either off in its own paperlint.json.
+  // quoted in agenticdev-2026.jsonc). A paper can turn either off in its own paperlint.json.
   "rules": {
     "pdf/last-page-balance": ["error", { "tolerancePt": 120 }],
     "tex/heading-case": [

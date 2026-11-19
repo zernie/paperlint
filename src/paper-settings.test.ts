@@ -22,11 +22,11 @@ const SHIPPED = new Set([
 describe("parsePaperSettings", () => {
   it("reads extends, kind, pdf and rules; every absent field is null", () => {
     expect(
-      parsePaperSettings({ extends: "paperlint:aisec", kind: "research" }),
+      parsePaperSettings({ extends: "paperlint:aisec-2026", kind: "research" }),
     ).toEqual({
       ok: true,
       value: {
-        extends: "paperlint:aisec",
+        extends: "paperlint:aisec-2026",
         kind: "research",
         pdf: null,
         rules: null,
@@ -86,7 +86,7 @@ describe("parsePaperSettings — optional keys", () => {
 
   it("accepts $comment, JSON Schema's comment keyword, and ignores it", () => {
     expect(
-      parsePaperSettings({ extends: "paperlint:aisec", $comment: "why" }).ok,
+      parsePaperSettings({ extends: "paperlint:aisec-2026", $comment: "why" }).ok,
     ).toBe(true);
   });
 
@@ -98,7 +98,7 @@ describe("parsePaperSettings — optional keys", () => {
     ],
     [
       "a comment key other than `$comment`",
-      { extends: "paperlint:aisec", _: "note" },
+      { extends: "paperlint:aisec-2026", _: "note" },
       /unknown key "_"/,
     ],
     [
@@ -144,10 +144,10 @@ describe("readPaperSettings", () => {
 
   it("reads paperlint.json", () => {
     const files = memoryFiles({
-      [`${PAPER}/paperlint.json`]: '{"extends":"paperlint:aisec"}',
+      [`${PAPER}/paperlint.json`]: '{"extends":"paperlint:aisec-2026"}',
     });
     const r = readPaperSettings(files, PAPER);
-    expect(r.ok && r.value?.extends).toBe("paperlint:aisec");
+    expect(r.ok && r.value?.extends).toBe("paperlint:aisec-2026");
   });
 
   it("not JSON: broken, with the parser's reason", () => {
@@ -210,10 +210,10 @@ describe("readPaperSettings — the root paperlint.json's defaults, the paper's 
     expect(
       read({
         [`${ROOT}/paperlint.json`]:
-          '{"papersDir":"papers","extends":"paperlint:agenticdev","kind":"short"}',
+          '{"papersDir":"papers","extends":"paperlint:agenticdev-2026","kind":"short"}',
       }),
     ).toEqual({
-      extends: "paperlint:agenticdev",
+      extends: "paperlint:agenticdev-2026",
       kind: "short",
       ...UNSET,
     });
@@ -221,9 +221,9 @@ describe("readPaperSettings — the root paperlint.json's defaults, the paper's 
 
   it("paper only: its own values", () => {
     expect(
-      read({ [`${PAPER}/paperlint.json`]: '{"extends":"paperlint:aisec"}' }),
+      read({ [`${PAPER}/paperlint.json`]: '{"extends":"paperlint:aisec-2026"}' }),
     ).toEqual({
-      extends: "paperlint:aisec",
+      extends: "paperlint:aisec-2026",
       kind: null,
       ...UNSET,
     });
@@ -233,12 +233,12 @@ describe("readPaperSettings — the root paperlint.json's defaults, the paper's 
     expect(
       read({
         [`${ROOT}/paperlint.json`]:
-          '{"extends":"paperlint:agenticdev","kind":"short","rules":{"pdf/profile":"off"}}',
+          '{"extends":"paperlint:agenticdev-2026","kind":"short","rules":{"pdf/profile":"off"}}',
         [`${PAPER}/paperlint.json`]:
           '{"extends":null,"kind":"research","rules":{"pdf/fonts":"off"}}',
       }),
     ).toEqual({
-      extends: "paperlint:agenticdev",
+      extends: "paperlint:agenticdev-2026",
       kind: "research",
       pdf: null,
       // The root's rules are the project's blocks (cli.ts), not this paper's.
@@ -276,7 +276,7 @@ describe("findProjectRoot — where the root paperlint.json is looked for", () =
     const files = withFiles({
       [`${PAPER}/paper.tex`]: "x",
       [`${PAPER}/paperlint.json`]: '{"kind":"research"}',
-      [`${ROOT}/paperlint.json`]: '{"extends":"paperlint:aisec"}',
+      [`${ROOT}/paperlint.json`]: '{"extends":"paperlint:aisec-2026"}',
     });
     const isFile = (p: string) => files.isFile(absolutePath(p));
     expect(findProjectRoot(PAPER, isFile)).toBe(ROOT);

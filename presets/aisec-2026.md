@@ -4,7 +4,7 @@ title: "AISec @ ACM CCS — venue card"
 
 # AISec @ ACM CCS
 
-The card of the venue preset `paperlint:aisec` ([`aisec.jsonc`](aisec.jsonc)): what the venue asks
+The card of the venue preset `paperlint:aisec-2026` ([`aisec-2026.jsonc`](aisec-2026.jsonc)): what the venue asks
 for, in prose. The numbers a machine checks live in the preset; the section at the end is generated
 from it. The `submit-paper` skill reads this card for the venue's specifics.
 
@@ -61,9 +61,9 @@ exception and reports the 13th page; a person clears that case by eye.
 - **The ACM template**, through `extends: paperlint:acm-sigconf` — AISec points to the main ACM
   CCS formatting instructions and publishes no numbers of its own ([`acm-sigconf.md`](acm-sigconf.md)).
 - **Names**: `AISec`, what `tex/venue-leftover` looks for in another venue's paper.
-- **The parent conference**, `"parent": "paperlint:ccs"`: ACM CCS's names count as an AISec paper's
+- **The parent conference**, `"parent": "paperlint:ccs-2026"`: ACM CCS's names count as an AISec paper's
   own, so «co-located with ACM CCS 2026» is no leftover here. In any other venue's paper, «ACM CCS»
-  is reported once, as ACM CCS ([`ccs.md`](ccs.md)).
+  is reported once, as ACM CCS ([`ccs-2026.md`](ccs-2026.md)).
 - **No rules of its own**: nothing says who produces the AISec proceedings or whether they require
   a balanced last page. A paper turns `pdf/last-page-balance` on in its own `paperlint.json` if the
   camera-ready instructions ask for it.
@@ -110,9 +110,9 @@ DOI, ISBN, copyright line and dates are added here when the venue publishes them
 
 <!-- paperlint:preset-rules -->
 <!-- prettier-ignore-start -->
-<!-- Generated from aisec.jsonc by `npx eslint --fix` (rule preset/card-rules). Edit the preset, not this section. -->
+<!-- Generated from aisec-2026.jsonc by `npx eslint --fix` (rule preset/card-rules). Edit the preset, not this section. -->
 
-**`paperlint:aisec`** — venue preset for AISec · call for papers: <https://aisec.cc/> · extends `paperlint:acm-sigconf`
+**`paperlint:aisec-2026`** — venue preset for AISec 2026 · call for papers: <https://aisec.cc/> · extends `paperlint:acm-sigconf`
 
 No preset of this chain sets a rule: under it, every rule keeps paperlint's default.
 

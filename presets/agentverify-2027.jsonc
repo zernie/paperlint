@@ -1,7 +1,7 @@
 // AGENTVERIFY 2027 (the International Workshop on Infrastructure for Trustworthy Software Agents, an
 // ICSE 2027 workshop) — a VENUE preset over the IEEE conference family. Everything the IEEEtran
 // template decides comes from ieee-conference.jsonc; this file adds what AGENTVERIFY's call sets.
-// Its card, in prose: `agentverify.md` beside this file.
+// Its card, in prose: `agentverify-2027.md` beside this file.
 //
 // Verbatim from https://agentverify2027.github.io/cfp.html (fetched 2026-10-26):
 //   «Full Papers: Maximum of 8 pages, including references.»
@@ -19,6 +19,14 @@
   // The call quoted above.
   "url": "https://agentverify2027.github.io/cfp.html",
   "extends": "paperlint:ieee-conference",
+
+  // A workshop (`"workshop": true`): the schema then requires its `parent`, the edition of the
+  // conference it is held at, and paperlint refuses a parent of another year.
+  "workshop": true,
+
+  // The conference it is held at: «IEEE format in line with ICSE 2027» (the call above), and its
+  // portal is icse2027-agentverify.hotcrp.com.
+  "parent": "paperlint:icse-2027",
 
   // «reviewed double-blind» (the call above), and `"blind":true` in the portal's status data
   // (https://icse2027-agentverify.hotcrp.com/deadlines, read 2026-10-26). anonymity/identity then
@@ -59,7 +67,7 @@
 
   // The portal's reading: `"sub":1794657599` = 2026-11-14T11:59:59Z = the end of 13 Nov AoE. It
   // agrees with the call and with the ICSE workshops page; the organizers' email of 2026-10-23
-  // (agentverify.md) says the same and that there is no separate abstract deadline, so there is no
+  // (agentverify-2027.md) says the same and that there is no separate abstract deadline, so there is no
   // `registration`. Notification and camera-ready are the site's, at the end of the AoE day.
   "deadlines": [
     {

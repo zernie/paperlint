@@ -1,0 +1,21 @@
+// EMNLP 2026 (Empirical Methods in Natural Language Processing) — a MINIMAL venue preset: the
+// conference REALM 2026 is held at, so the workshop can name it as its `parent`. It carries the
+// edition's names and its template family, and no page limit. Its card: `emnlp-2026.md`.
+//
+// Verbatim from https://2026.emnlp.org/calls/main_conference_papers/ (fetched 2026-11-19): «Both
+// long and short paper submissions should follow all of the ARR submission requirements»,
+// «Main Conference (dates for Workshops/Tutorials TBD) October 24 - 29, 2026». ARR's call
+// (https://aclrollingreview.org/cfp, the same day): «submissions must use the official ACL style
+// template», «Authors may not modify these style files or use template designed for other
+// conferences.»
+{
+  "type": "venue",
+  "name": "EMNLP",
+  // The call quoted above.
+  "url": "https://2026.emnlp.org/calls/main_conference_papers/",
+  "extends": "paperlint:acl-latex",
+
+  // What the conference is called in a paper's text (tex/venue-leftover). It stood in
+  // realm-2026.jsonc's aliases until REALM named this preset as its `parent`.
+  "aliases": ["EMNLP"],
+}

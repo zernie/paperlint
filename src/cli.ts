@@ -129,9 +129,10 @@ import {
   presetProblemText,
   resolvePreset,
   resolveShipped,
+  bareSeriesText,
   shippedPresets,
   shippedSpec,
-  shippedVenueNames,
+  shippedFolderNames,
   SHIPPED_PREFIX,
   type PaperPreset,
   type Preset,
@@ -185,6 +186,7 @@ export { nextSteps } from "./init.ts";
 import paperStages from "#eslint-rules/paper-stages";
 import preregCoverage from "#eslint-rules/prereg-coverage";
 import { CYCLE_RULE_LEVELS, cycleRules } from "./cycle-rules.ts";
+import { EDITION_RULE_LEVELS, editionRules } from "./edition-rule.ts";
 import { changesRules } from "./changes-rule.ts";
 import { latexDiff, withTexBin } from "./adapters/latexdiff/index.ts";
 import { runVersions } from "./versions-command.ts";
@@ -254,6 +256,7 @@ import reviewFrontmatter from "#eslint-rules/review-frontmatter";
 import siblingFrontmatter from "#eslint-rules/sibling-frontmatter";
 import pdfRules from "#eslint-rules/pdf-last-page-balance";
 import { messageOf } from "./domain/text.ts";
+import { editionsOf } from "./domain/edition.ts";
 import { isRecord } from "./domain/record.ts";
 import { ESCAPE_HATCH } from "./domain/paper-layout.ts";
 
@@ -403,7 +406,7 @@ settings — paperlint.json, at two levels, one schema. Both are optional.
 
   <papersDir>/<paper>/paperlint.json — one paper, merged over the root file:
 
-    { "extends": "paperlint:aisec", "kind": "research", "rules": { "pdf/last-page-balance": "error" } }
+    { "extends": "paperlint:aisec-2026", "kind": "research", "rules": { "pdf/last-page-balance": "error" } }
 
   "extends" names a venue preset: paperlint:<name> (shipped: ${SHIPPED_VENUES().join(", ")})
   or ./path.jsonc, relative to the paperlint.json. npm presets are not supported yet.
@@ -411,7 +414,7 @@ settings — paperlint.json, at two levels, one schema. Both are optional.
   cycles and deadlines — a paper's attempts at venues, oldest first, instead of "extends",
   "kind" and "submission" (those are then the current attempt's, and refused beside "cycles"):
 
-    { "cycles": [ { "id": "msr-2027", "venue": { "kind": "preset", "extends": "paperlint:msr" },
+    { "cycles": [ { "id": "msr-2027", "venue": { "kind": "preset", "extends": "paperlint:msr-2027" },
                     "kind": "technical", "opened": "2026-10-05",
                     "deadlines": [ { "what": "submission",
                                      "observed": [ { "at": "2026-10-23 AoE", "source": "call",
@@ -617,6 +620,11 @@ export function buildConfig(
           rules: {
             ...paperStages.rules,
             ...folderVenueRules({ files: nodeFiles, venuesDir: presetsDir() }),
+            ...editionRules({
+              files: nodeFiles,
+              venuesDir: presetsDir(),
+              now: isoNow,
+            }),
             ...folderLayoutRules(LAYOUT_RULE_DEPS),
           },
         },
@@ -631,6 +639,7 @@ export function buildConfig(
         "paper/stages": "error",
         "paper/source": "error",
         ...FOLDER_VENUE_RULE_LEVELS,
+        ...EDITION_RULE_LEVELS,
         ...FOLDER_LAYOUT_RULE_LEVELS,
         ...REPRO_RULE_LEVELS,
         ...STATUS_CYCLE_RULE_LEVELS,
@@ -1701,7 +1710,7 @@ export async function createPaperAt(
 ): Promise<number> {
   const result = newPaper(papersRoot, name, {
     venue,
-    venues: allowVenueName ? [] : shippedVenueNames(PRESET_DEPS),
+    venues: allowVenueName ? [] : shippedFolderNames(PRESET_DEPS),
   });
   const here = (p: string): string => shown(cwd, p);
   for (const line of reportNewPaper(result, here)) log(line);
@@ -1836,6 +1845,14 @@ function venueSpec(
   const name = venue.startsWith(SHIPPED_PREFIX)
     ? venue.slice(SHIPPED_PREFIX.length)
     : venue;
+  const editions = editionsOf(name, shipped);
+  if (!shipped.includes(name) && editions.length > 0)
+    return bad(
+      bareSeriesText(
+        { kind: "bare-series", spec: shippedSpec(name), editions },
+        "--venue",
+      ),
+    );
   if (!shipped.includes(name))
     return bad(
       `--venue ${venue}: no such venue preset. Shipped: ${shipped.join(", ")} — or a path to your own preset, starting with ./ or ../`,
@@ -2233,7 +2250,7 @@ async function runInit(
     paper: a.paper,
     createPaper: (papersRoot, name) =>
       createPaperAt(papersRoot, name, { log, err, cwd }),
-    venues: shippedVenueNames(PRESET_DEPS),
+    venues: shippedFolderNames(PRESET_DEPS),
     tex: initTexLive(a, { log, err, cwd }),
     resolveCliPapers: (root: string): string | null =>
       cliPapers({ ...a, config: null }, root),

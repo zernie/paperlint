@@ -31,7 +31,7 @@ Nothing else compares what the source says about the venue with what the setting
 
 ## Examples
 
-Under `"extends": "paperlint:realm"`, where the `agenticdev` preset's alias is `AgenticDev`:
+Under `"extends": "paperlint:realm-2026"`, where the `agenticdev` preset's alias is `AgenticDev`:
 
 ```latex
 \acmConference[AgenticDev '26]{Workshop on Agentic Development}  % warns: «AgenticDev»
@@ -45,7 +45,7 @@ The first line reports:
 > submission? A reviewer reads it before the abstract. Comments and citation keys are not
 > reported; a sentence that names the other venue on purpose can keep it with a disable directive
 
-The same line passes under `"extends": "paperlint:agenticdev"`: it names the paper's own venue.
+The same line passes under `"extends": "paperlint:agenticdev-2026"`: it names the paper's own venue.
 
 ## Preset fields
 
@@ -59,12 +59,12 @@ A name the paper's own chain also declares (two workshops of one parent conferen
 reported.
 
 ```jsonc
-"parent": "paperlint:ase"
+"parent": "paperlint:ase-2026"
 ```
 
 The conference a workshop is held at. Its `name` and `aliases`, and its own parent's, count as the
-paper's own: under `paperlint:agenticdev`, whose parent is `paperlint:ase`, «a workshop of ASE 2026»
-is silent; under `paperlint:aidc`, the same sentence reports «ASE» once, as ASE. A conference's names
+paper's own: under `paperlint:agenticdev-2026`, whose parent is `paperlint:ase-2026`, «a workshop of ASE 2026»
+is silent; under `paperlint:aidc-2026`, the same sentence reports «ASE» once, as ASE. A conference's names
 belong to its own preset, not to each workshop's `aliases`, so another venue's paper that names it
 is reported once, as that conference: «ACM CCS 2026» in an AIDC paper names ACM CCS, not AISec. A
 `parent` that does not resolve to a venue preset, or parents that name each other, are refused.
@@ -74,7 +74,7 @@ is reported once, as that conference: «ACM CCS 2026» in an AIDC paper names AC
 ```
 
 A venue whose name is also a common acronym counts only with a year beside the name: under
-`paperlint:msr`, «First written for MSR 2027.», «MSR'27» and «MSR~2027» are reported, and
+`paperlint:msr-2027`, «First written for MSR 2027.», «MSR'27» and «MSR~2027» are reported, and
 «Manual Speech Recognition (MSR)», «Microsoft Research (MSR)» or «MSR, in 2027» are not. Any
 whole-word use counted for MSR at first, and an accepted ACSAC paper that defines «MSR» for itself
 drew six warnings. Per preset, not hard-coded: a name that only a venue uses (`AgenticDev`) stays

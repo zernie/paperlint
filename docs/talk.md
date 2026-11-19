@@ -11,7 +11,7 @@ The paper's own `paperlint.json` says how it is presented:
 
 ```json
 {
-  "extends": "paperlint:agenticdev",
+  "extends": "paperlint:agenticdev-2026",
   "kind": "short",
   "talk": { "mode": "remote-video" }
 }

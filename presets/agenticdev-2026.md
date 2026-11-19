@@ -4,7 +4,7 @@ title: "AgenticDev @ ASE — venue card"
 
 # AgenticDev @ ASE
 
-The card of the venue preset `paperlint:agenticdev` ([`agenticdev.jsonc`](agenticdev.jsonc)): what
+The card of the venue preset `paperlint:agenticdev-2026` ([`agenticdev-2026.jsonc`](agenticdev-2026.jsonc)): what
 the venue asks for, in prose. The numbers a machine checks live in the preset; the section at the
 end is generated from it. The `submit-paper` skill reads this card for the venue's specifics.
 
@@ -57,9 +57,9 @@ still counts within them.
   capitalization» and «All levels of headings use headline-style capitalization», defined on its
   help page as Chicago Manual of Style §§8.157–8.159.
 - **Names**: `AgenticDev` is what `tex/venue-leftover` looks for in another venue's paper.
-- **The parent conference**, `"parent": "paperlint:ase"`: ASE's names count as an AgenticDev paper's
+- **The parent conference**, `"parent": "paperlint:ase-2026"`: ASE's names count as an AgenticDev paper's
   own, so «a workshop of ASE 2026» is no leftover here. In any other venue's paper, «ASE 2026» is
-  reported once, as ASE ([`ase.md`](ase.md)).
+  reported once, as ASE ([`ase-2026.md`](ase-2026.md)).
 - **The talk** (`talk`): remote presentation by video only, with the numbers below.
 
 ## Naming the venue correctly
@@ -140,9 +140,9 @@ The `talk/*` rules check the finished files against these numbers: `docs/talk.md
 
 <!-- paperlint:preset-rules -->
 <!-- prettier-ignore-start -->
-<!-- Generated from agenticdev.jsonc by `npx eslint --fix` (rule preset/card-rules). Edit the preset, not this section. -->
+<!-- Generated from agenticdev-2026.jsonc by `npx eslint --fix` (rule preset/card-rules). Edit the preset, not this section. -->
 
-**`paperlint:agenticdev`** — venue preset for AgenticDev · call for papers: <https://conf.researchr.org/home/ase-2026/agenticdev-2026> · extends `paperlint:acm-sigconf`
+**`paperlint:agenticdev-2026`** — venue preset for AgenticDev 2026 · call for papers: <https://conf.researchr.org/home/ase-2026/agenticdev-2026> · extends `paperlint:acm-sigconf`
 
 | rule | severity | options | set in |
 | --- | --- | --- | --- |

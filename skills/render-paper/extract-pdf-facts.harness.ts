@@ -89,7 +89,7 @@ try {
   cpSync(join(FIX, "t3-mixed.pdf"), join(paper, "paper.pdf"));
   writeFileSync(
     join(paper, "paperlint.json"),
-    JSON.stringify({ extends: "paperlint:agenticdev", kind: "short" }),
+    JSON.stringify({ extends: "paperlint:agenticdev-2026", kind: "short" }),
   );
   const factsFile = join(paper, "_build", "paper.facts.json");
 
@@ -122,7 +122,7 @@ try {
     "the facts are schema 3, about paper.pdf, for the venue paperlint.json declares",
     facts.schema === 3 &&
       facts.pdf === "paper.pdf" &&
-      facts.venue === "agenticdev" &&
+      facts.venue === "agenticdev-2026" &&
       facts.kind === "short",
     JSON.stringify(facts).slice(0, 200),
   );

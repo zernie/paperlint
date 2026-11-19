@@ -1,8 +1,8 @@
 // ACM CCS 2026 (the 33rd ACM Conference on Computer and Communications Security), main research
 // papers — a VENUE preset over the ACM sigconf family. Not the AISec workshop held with it: that is
-// aisec.jsonc. Everything the ACM template decides (page size, columns, fonts, font sizes, TeX
+// aisec-2026.jsonc. Everything the ACM template decides (page size, columns, fonts, font sizes, TeX
 // packages) comes from acm-sigconf.jsonc; this file adds what the CCS call for papers sets. Its card,
-// in prose: `ccs.md` beside this file.
+// in prose: `ccs-2026.md` beside this file.
 //
 // THE EDITION. CCS 2026 is the most recent edition whose call is published, and every one of its
 // submission deadlines has passed (read 2026-11-19, during the conference, 15-19 November 2026).
@@ -39,7 +39,7 @@
   // What the venue is called in a paper's text (tex/venue-leftover): «ACM CCS», as the call heads
   // its page («ACM CCS 2026»). Not the bare «CCS»: it is also the ACM Computing Classification
   // System (acmart's «CCS Concepts» block, which the call itself calls «The Computing Classification
-  // System (CCS) information»), and an AISec paper says «ACM CCS» (aisec.jsonc's own alias, so never
+  // System (CCS) information»), and an AISec paper says «ACM CCS» (aisec-2026.jsonc's own alias, so never
   // reported there) but would be reported for the bare «CCS» inside «ACM CCS 2026».
   "aliases": ["ACM CCS"],
 
@@ -79,7 +79,7 @@
   // (https://www.scomminc.com/pp/acmsig/ccs.htm, «Preparation Instructions for CCS 2026 Final
   // Submissions», read 2026-11-19) says: «Be sure to remove page numbers from the bottom of all pages
   // and balance the last page into 2 even length columns.» So every CCS paper gets the optional
-  // rule, as agenticdev.jsonc does for its producer; a paper can turn it off in its own
+  // rule, as agenticdev-2026.jsonc does for its producer; a paper can turn it off in its own
   // paperlint.json. 120 pt is the rule's default (docs/optional-rules.md).
   "rules": {
     "pdf/last-page-balance": ["error", { "tolerancePt": 120 }],

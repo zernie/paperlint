@@ -136,7 +136,7 @@ A paper says where it is submitted in a `paperlint.json` beside `paper.tex`
 ([`configuration.md`](configuration.md#a-papers-paperlintjson)):
 
 ```json
-{ "extends": "paperlint:aisec", "kind": "research" }
+{ "extends": "paperlint:aisec-2026", "kind": "research" }
 ```
 
 `extends` names a **venue preset** — the way an ESLint config extends a shareable config. `kind`
@@ -148,14 +148,14 @@ family, which holds everything the ACM template decides.
 | preset                      | extends                     | template                                          | kinds                                                    | page limit checked                     | rules it turns on                           |
 | --------------------------- | --------------------------- | ------------------------------------------------- | -------------------------------------------------------- | -------------------------------------- | ------------------------------------------- |
 | `paperlint:acm-sigconf`     | —                           | ACM `acmart` sigconf                              | none                                                     | no (no kinds)                          | —                                           |
-| `paperlint:agenticdev`      | `paperlint:acm-sigconf`     | ACM `acmart` sigconf                              | `short` (5 + 2 refs), `full` (10 + 2), `demo` (5 + 2)    | yes                                    | `pdf/last-page-balance`, `tex/heading-case` |
-| `paperlint:aisec`           | `paperlint:acm-sigconf`     | ACM `acmart` sigconf                              | `research`, `benchmark`, `position`, `sok` (10 + 2 each) | yes                                    | —                                           |
+| `paperlint:agenticdev-2026`      | `paperlint:acm-sigconf`     | ACM `acmart` sigconf                              | `short` (5 + 2 refs), `full` (10 + 2), `demo` (5 + 2)    | yes                                    | `pdf/last-page-balance`, `tex/heading-case` |
+| `paperlint:aisec-2026`           | `paperlint:acm-sigconf`     | ACM `acmart` sigconf                              | `research`, `benchmark`, `position`, `sok` (10 + 2 each) | yes                                    | —                                           |
 | `paperlint:acm-acmsmall`    | —                           | ACM `acmart` acmsmall (single-column)             | none                                                     | no (no kinds)                          | —                                           |
-| `paperlint:fse`             | `paperlint:acm-acmsmall`    | ACM `acmart` acmsmall (single-column)             | `research` (18 + 4 refs), `major-revision` (20 + 4)      | yes                                    | — (`blind`)                                 |
-| `paperlint:realm`           | —                           | ACL                                               | `long`, `short`                                          | no — see below                         | —                                           |
+| `paperlint:fse-2027`             | `paperlint:acm-acmsmall`    | ACM `acmart` acmsmall (single-column)             | `research` (18 + 4 refs), `major-revision` (20 + 4)      | yes                                    | — (`blind`)                                 |
+| `paperlint:realm-2026`           | —                           | ACL                                               | `long`, `short`                                          | no — see below                         | —                                           |
 | `paperlint:ieee-conference` | —                           | IEEE `IEEEtran` conference                        | none                                                     | no (no kinds)                          | —                                           |
-| `paperlint:aidc`            | `paperlint:ieee-conference` | IEEE `IEEEtran` conference, `compsoc`             | `regular` (12), `short` (6)                              | yes, before the references — see below | — (`blind`)                                 |
-| `paperlint:msr`             | `paperlint:ieee-conference` | IEEE `IEEEtran` `[10pt,conference]`, no `compsoc` | `technical` (10 + 2 of only references)                  | yes, appendices included — see below   | — (`blind`)                                 |
+| `paperlint:aidc-2026`            | `paperlint:ieee-conference` | IEEE `IEEEtran` conference, `compsoc`             | `regular` (12), `short` (6)                              | yes, before the references — see below | — (`blind`)                                 |
+| `paperlint:msr-2027`             | `paperlint:ieee-conference` | IEEE `IEEEtran` `[10pt,conference]`, no `compsoc` | `technical` (10 + 2 of only references)                  | yes, appendices included — see below   | — (`blind`)                                 |
 
 That is all that ships today. There is no NeurIPS, USENIX or Springer preset. A paper for an ACM or
 IEEE conference venue nobody has profiled can extend `paperlint:acm-sigconf` or
@@ -202,14 +202,14 @@ and the split into body and reference pages. They report on the paper's `paper.t
 
 The venue comes from `paperlint.json`, not from the facts, so changing it needs no rebuild: the
 measurements do not depend on it. Messages name the venue by the preset's `name`, else by the file
-name of what the paper extends (`paperlint:agenticdev` → `agenticdev`).
+name of what the paper extends (`paperlint:agenticdev-2026` → `agenticdev`).
 
 To skip a check for one paper — a finding you accept — set it to `"off"` in the paper's own
 `paperlint.json`:
 
 ```json
 {
-  "extends": "paperlint:aisec",
+  "extends": "paperlint:aisec-2026",
   "kind": "research",
   "rules": { "pdf/body-size": "off" }
 }
@@ -270,7 +270,7 @@ The numbers and packages above illustrate the shape; take yours from the venue's
 | `url`               | a venue's call for papers or author instructions (`https://`), required on a venue — the page its numbers are quoted from                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `template`          | the `\documentclass` the venue's template uses — a whole line (`\documentclass[conference,compsoc]{IEEEtran}`) or a bare class name; `tex/template` requires the paper's class and every option named here                                                                                                                                                                                                                                                                                                                                                                                      |
 | `aliases`           | other names the venue goes by in a paper's text — its acronym: `["AISec"]`. Collected along `extends`, with `name`. Read by `tex/venue-leftover` and `paper/folder-venue-leftover`                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `parent`            | the conference a workshop is held at, on a venue only: `paperlint:<name>` or a relative path to a venue preset (`"parent": "paperlint:ccs"` in AISec's). Its names, and its own parent's, count as the paper's own: `tex/venue-leftover` and `paper/folder-venue-leftover` never report them in a paper of this venue, and report them as the parent in any other venue's paper. A parent that is not a venue preset, or parents that name each other, are refused; a child's value replaces its parent's                                                                                       |
+| `parent`            | the conference a workshop is held at, on a venue only: `paperlint:<name>` or a relative path to a venue preset (`"parent": "paperlint:ccs-2026"` in AISec's). Its names, and its own parent's, count as the paper's own: `tex/venue-leftover` and `paper/folder-venue-leftover` never report them in a paper of this venue, and report them as the parent in any other venue's paper. A parent that is not a venue preset, or parents that name each other, are refused; a child's value replaces its parent's                                                                                       |
 | `portal`            | where the venue takes submissions, `{ "kind": "hotcrp", "url": "https://…" }` — read by [`paperlint submission`](submission.md); a child's value replaces its parent's                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `deadlines`         | the edition's deadlines as read: `[{ "what", "at", "source", "url", "read" }]`, `at` in UTC, one reading per kind and source. A paper whose current cycle names the preset derives them ([`docs/configuration.md`](configuration.md#deadlines)); shipped presets' portal readings are refreshed daily in paperlint's repository; a child's list replaces its parent's                                                                                                                                                                                                                           |
 | `blind`             | the venue reviews double-blind — set only where its call says so, with the quote. Turns on `anonymity/identity`; a child's value replaces its parent's                                                                                                                                                                                                                                                                                                                                                                                                                                          |

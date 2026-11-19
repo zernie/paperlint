@@ -274,7 +274,7 @@ describe.skipIf(skip)("where the body ends, on real ACSAC papers", () => {
 
   it("AIDC regular (12 body pages): a 12-page body passes, a 13-page body is reported", () => {
     const aidc = {
-      extends: "paperlint:aidc",
+      extends: "paperlint:aidc-2026",
       kind: "regular",
       identity: ["Nobody In These Papers"],
     };

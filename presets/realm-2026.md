@@ -4,7 +4,7 @@ title: "REALM @ EMNLP — venue card"
 
 # REALM @ EMNLP
 
-The card of the venue preset `paperlint:realm` ([`realm.jsonc`](realm.jsonc)): what the venue asks
+The card of the venue preset `paperlint:realm-2026` ([`realm-2026.jsonc`](realm-2026.jsonc)): what the venue asks
 for, in prose. The numbers a machine checks live in the preset; the section at the end is generated
 from it. The `submit-paper` skill reads this card for the venue's specifics.
 
@@ -156,9 +156,9 @@ A paper never submitted to ARR needs an ARR submission first, on ARR's own cycle
 
 <!-- paperlint:preset-rules -->
 <!-- prettier-ignore-start -->
-<!-- Generated from realm.jsonc by `npx eslint --fix` (rule preset/card-rules). Edit the preset, not this section. -->
+<!-- Generated from realm-2026.jsonc by `npx eslint --fix` (rule preset/card-rules). Edit the preset, not this section. -->
 
-**`paperlint:realm`** — venue preset for REALM · call for papers: <https://realm-workshop.github.io/call_for_papers>
+**`paperlint:realm-2026`** — venue preset for REALM 2026 · call for papers: <https://realm-workshop.github.io/call_for_papers> · extends `paperlint:acl-latex`
 
 No preset of this chain sets a rule: under it, every rule keeps paperlint's default.
 

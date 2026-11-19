@@ -1,6 +1,6 @@
 // AISec @ ACM CCS — a VENUE preset over the ACM sigconf family. Data for the `pdf/*` rules over
 // `_build/paper.facts.json`.
-// Prose about the venue and tracks is in its card, `aisec.md` beside this file.
+// Prose about the venue and tracks is in its card, `aisec-2026.md` beside this file.
 //
 // PAGE LIMITS — verbatim from https://aisec.cc/ (verified 2026-08-26, not from memory):
 //   «Submitted papers must be at most 10 pages long in double-column ACM format---excluding
@@ -18,7 +18,7 @@
 // GEOMETRY, FONTS AND TeX PACKAGES come from acm-sigconf.jsonc: AISec points to the "main ACM
 // CCS'26 formatting instructions" and does not publish its own numbers.
 //
-// NO `rules` HERE, on purpose: nothing in aisec.md says who produces the AISec proceedings or
+// NO `rules` HERE, on purpose: nothing in aisec-2026.md says who produces the AISec proceedings or
 // whether they require a balanced last page (Sheridan does for CCS itself — docs/optional-rules.md —
 // but that is the main conference). Turn pdf/last-page-balance on in the paper's paperlint.json if
 // the camera-ready instructions ask for it.
@@ -36,8 +36,11 @@
   // November 15th, 2026 - The Hague, Netherlands co-located with the 33rd ACM Conference on
   // Computer and Communications Security» (the call above, read with curl 2026-11-19). Its names
   // count as an AISec paper's own, so «ACM CCS 2026» is no leftover here; in any other venue's
-  // paper it is reported once, as ACM CCS (ccs.jsonc), not as AISec.
-  "parent": "paperlint:ccs",
+  // paper it is reported once, as ACM CCS (ccs-2026.jsonc), not as AISec.
+  // A workshop (`"workshop": true`): the schema then requires its `parent`, the edition of the
+  // conference it is held at, and paperlint refuses a parent of another year.
+  "workshop": true,
+  "parent": "paperlint:ccs-2026",
 
   "format": {
     // Four tracks (original research · position/open-problem · SoK · benchmark) — the limits are

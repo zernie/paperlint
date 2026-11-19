@@ -24,12 +24,12 @@
 // 🔴 TWO SUBMISSION CYCLES, TWO PORTALS. The call: «First deadline: https://cycle1.sp2027.ieee-security.org/»
 // and «Second deadline: https://cycle2.sp2027.ieee-security.org». A preset holds one portal and one
 // reading of each deadline, so it carries the SECOND cycle, the later one; the first cycle's dates,
-// with their quotes and the portal's readings, are in the card (sp.md beside this file). Both
+// with their quotes and the portal's readings, are in the card (sp-2027.md beside this file). Both
 // cycles' paper deadlines had passed on the day this was read (cycle 2: 2026-11-17 AoE); no S&P
 // 2028 call was found that day (a web search found none, and sp2028.ieee-security.org could not be
 // reached).
 //
-// Its card, in prose: `sp.md` beside this file.
+// Its card, in prose: `sp-2027.md` beside this file.
 {
   "type": "venue",
   "name": "IEEE S&P",
@@ -110,13 +110,13 @@
     },
   ],
 
-  // What the venue is called in a paper's text (tex/venue-leftover) — and only beside a year
-  // («S&P 2027», «Oakland'27»): security papers name S&P as the venue of the work they cite, and
+  // What the venue is called in a paper's text (tex/venue-leftover), which counts it in prose only
+  // beside a recent year («S&P 2027», «Oakland'27»): security papers name S&P as the venue of the
+  // work they cite, and
   // «S&P» is also the stock index, «Oakland» a city. «Oakland» is the call's own «Since 1980 in
   // Oakland». The bare «SP» (IEEE Xplore's acronym for the proceedings) is left out: as a folder
   // word (paper/folder-venue-leftover matches words, case ignored) it would take any «sp».
   "aliases": ["S&P", "Oakland"],
-  "mentions": "with-year",
 
   // The class line the call names (tex/template).
   "template": "\\documentclass[conference,compsoc]{IEEEtran}",
@@ -130,7 +130,7 @@
     // and up to 5 pages for references and appendices» and «All text and figures past page 13 must
     // be clearly marked as part of the appendix.» So format/page-limit counts the body up to where
     // the references or the appendix start, whichever comes first (`body_ends_at`), not by banal's
-    // count, which calls any page with non-bibliography text body (aidc.jsonc measures how an
+    // count, which calls any page with non-bibliography text body (aidc-2026.jsonc measures how an
     // appendix then pushes a correct paper over). Load hyperref: without it an appendix before the
     // references is counted as body (docs/rules/format/page-limit.md).
     "body_ends_at": "references",
@@ -139,13 +139,13 @@
       // «up to 13 pages of text and up to 5 pages for references and appendices, totaling no more
       // than 18 pages». Under `body_ends_at`, `ref_pages_max` is judged on banal's count of
       // reference pages (src/venue-rules.ts, judgePages: the text replaces only the body's count),
-      // as for AISec's «references and appendices» (aisec.jsonc); the total, pdf.js's page count,
+      // as for AISec's «references and appendices» (aisec-2026.jsonc); the total, pdf.js's page count,
       // is gated too. Not measured on an S&P build.
       "research": { "body_pages_max": 13, "ref_pages_max": 5, "pages_max": 18 },
       // «For SoK papers, the references do not count towards the number of pages.» So neither the
       // references nor a total is limited. The appendices' own share (5 pages, if the 18 still
       // holds without the references) is not something the call states, and the preset cannot
-      // count appendix pages apart from reference pages: not encoded (sp.md, «Not verified»).
+      // count appendix pages apart from reference pages: not encoded (sp-2027.md, «Not verified»).
       "sok": { "body_pages_max": 13, "ref_pages_max": "unlimited" },
     },
   },

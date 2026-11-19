@@ -79,7 +79,7 @@ No rule options. The band is the preset's: each anchor in `register.anchors` rec
 ```
 
 The band is the anchors' range of shares widened at each end by two Poisson standard deviations of
-the anchor standing there, as for the other band rules. For `paperlint:aidc` the anchors are the five
+the anchor standing there, as for the other band rules. For `paperlint:aidc-2026` the anchors are the five
 accepted ACSAC papers above: their shares run **5.3–17.8%**, and the band is **3.0–21.8%**.
 `src/register-bands.test.ts` re-measures every anchor that has a fixture. An anchor without the two
 fields sets no band, so a preset written before this rule leaves it silent.

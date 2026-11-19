@@ -1722,7 +1722,7 @@ describe("the register bands are in the writing set, on AIDC too", () => {
   ];
   const onAidc = (
     rules: Record<string, string> | null,
-    preset = "paperlint:aidc",
+    preset = "paperlint:aidc-2026",
   ) =>
     paper(tex(`\\section{Introduction}\n${BODY}\n${STATEMENT}`, IEEE), {
       [`${P}/paperlint.json`]: JSON.stringify({

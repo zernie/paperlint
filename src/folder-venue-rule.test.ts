@@ -69,7 +69,7 @@ function lint(
   return out;
 }
 
-const AIDC = { extends: "paperlint:aidc", kind: "regular" };
+const AIDC = { extends: "paperlint:aidc-2026", kind: "regular" };
 
 describe("paper/folder-venue-leftover — the folder names another venue", () => {
   it("a folder named after the venue the paper left is reported, naming both and the cure", () => {
@@ -78,7 +78,7 @@ describe("paper/folder-venue-leftover — the folder names another venue", () =>
         messageId: "leftover",
         line: 1,
         message:
-          "the folder name «aisec-2026» names the venue AISec, and this paper extends AIDC — the name went stale when the venue changed, and venues change on every resubmission. Name the folder after the work (what the paper shows), not the venue",
+          "the folder name «aisec-2026» names the venue AISec 2026, and this paper extends AIDC — the name went stale when the venue changed, and venues change on every resubmission. Name the folder after the work (what the paper shows), not the venue",
       },
     ]);
   });
@@ -88,7 +88,7 @@ describe("paper/folder-venue-leftover — the folder names another venue", () =>
       lint("emnlp-agents", AIDC).map(
         (r) => /names the venue (.*?), and/u.exec(r.message)?.[1],
       ),
-    ).toEqual(["REALM («EMNLP»)"]);
+    ).toEqual(["EMNLP"]);
   });
 
   it("two other venues are two findings", () => {
@@ -102,7 +102,7 @@ describe("paper/folder-venue-leftover — the folder names another venue", () =>
   it("a project's own preset is judged like a shipped one: its label and aliases are its own", () => {
     const extra = {
       [`${PAPERS}/aidc-redux/venue.jsonc`]: JSON.stringify(
-        venuePreset("AISec 2027", { extends: "paperlint:aisec" }),
+        venuePreset("AISec Redux", { extends: "paperlint:aisec-2026" }),
       ),
     };
     // Its chain is AISec's, so aisec is its own; aidc is another venue.
@@ -120,7 +120,7 @@ describe("paper/folder-venue-leftover — the folder names another venue", () =>
         {
           extra: {
             [`${PAPERS}/aisec-redux/venue.jsonc`]: JSON.stringify(
-              venuePreset("venue", { extends: "paperlint:aisec" }),
+              venuePreset("venue", { extends: "paperlint:aisec-2026" }),
             ),
           },
         },
@@ -129,7 +129,7 @@ describe("paper/folder-venue-leftover — the folder names another venue", () =>
   });
 });
 
-describe("paper/folder-venue-leftover — FSE is named by its edition", () => {
+describe("paper/folder-venue-leftover — a venue is named by its edition", () => {
   it("«fse-2027-…» is reported; a folder about FSE papers is not", () => {
     expect(
       lint("fse-2027-flaky", AIDC).map(
@@ -137,6 +137,25 @@ describe("paper/folder-venue-leftover — FSE is named by its edition", () => {
       ),
     ).toEqual(["FSE 2027"]);
     expect(lint("fse-replication", AIDC)).toEqual([]);
+  });
+
+  it("🔴 a name that is an ordinary word counts only as the edition: «agent-2027-…», not «agent-…»", () => {
+    const named = (folder: string, settings: object = AIDC) =>
+      lint(folder, settings).map(
+        (r) => /names the venue (.*?), and/u.exec(r.message)?.[1],
+      );
+    expect(named("agent-2027-study")).toEqual(["AGENT 2027"]);
+    expect(named("agent-study")).toEqual([]);
+  });
+
+  it("🔴 another edition of its own series is another venue: «icse-2027-…» under ICSE 2028", () => {
+    const ICSE = { extends: "paperlint:icse-2028", kind: "research" };
+    expect(
+      lint("icse-2027-flaky", ICSE).map(
+        (r) => /names the venue (.*?), and/u.exec(r.message)?.[1],
+      ),
+    ).toEqual(["ICSE 2027"]);
+    expect(lint("icse-2028-flaky", ICSE)).toEqual([]);
   });
 });
 
@@ -156,18 +175,19 @@ describe("paper/folder-venue-leftover — silent", () => {
     [
       "the folder names the paper's own venue",
       "agenticdev-2026",
-      { extends: "paperlint:agenticdev", kind: "short" },
+      { extends: "paperlint:agenticdev-2026", kind: "short" },
     ],
-    ["by its alias", "acsac-2026", AIDC],
+    ["by its parent conference's edition", "acsac-2026", AIDC],
+    ["by its own edition", "aidc-2026", AIDC],
     [
       "the conference the workshop is held at (`parent`)",
       "ase-agents",
-      { extends: "paperlint:agenticdev", kind: "short" },
+      { extends: "paperlint:agenticdev-2026", kind: "short" },
     ],
     [
       "the parent conference by its two words",
       "acm-ccs-agents",
-      { extends: "paperlint:aisec", kind: "research" },
+      { extends: "paperlint:aisec-2026", kind: "research" },
     ],
     ["the folder names no venue", "agent-rule-drift", AIDC],
     // Whole words only: REALM is not inside these.
@@ -197,7 +217,7 @@ describe("paper/folder-venue-leftover — silent", () => {
 
   it("a paper on a bare template family declares no venue: a venue in its folder may be its own", () => {
     // The accepted ACSAC papers in fixtures/accepted-papers/ are exactly this: `…-acsac24` folders
-    // extending ieee-conference, while `aidc` names ACSAC, its parent conference, as an alias.
+    // extending ieee-conference, while ACSAC is a shipped venue, the parent conference of AIDC.
     expect(
       lint("secure-acsac24", { extends: "paperlint:ieee-conference" }),
     ).toEqual([]);

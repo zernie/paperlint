@@ -31,18 +31,25 @@
  *   parent     the child wins: the conference a workshop is held at, a spec resolved from the
  *              file that names it
  *
+ * ── ONE PRESET PER EDITION ────────────────────────────────────────────────────────
+ * A venue preset is one edition, `paperlint:<series>-<year>` (`src/domain/edition.ts`); a family's id
+ * ends in no year. A bare series (`paperlint:icse`) is refused wherever a spec is resolved — an
+ * `extends`, a `parent`, `paperlint new --venue` — naming the shipped editions: it is never the
+ * latest edition, so no upgrade changes a paper's rules without its settings changing.
+ *
  * ── THE PARENT CONFERENCE ─────────────────────────────────────────────────────────
- * A workshop names the venue it is held at (`"parent": "paperlint:ccs"` in aisec.jsonc). The parent
- * is resolved like any spec and must be a venue; its names, and its own parent's, are
- * `parentNames`: names a paper of this venue may use as its own. A parent that does not resolve to
- * a venue, or parents that name each other, are refused naming the file that says it.
+ * A workshop names the edition it is held at (`"parent": "paperlint:ccs-2026"` in aisec-2026.jsonc).
+ * The parent is resolved like any spec and must be a venue of the workshop's own year; its names,
+ * and its own parent's, are `parentNames`: names a paper of this venue may use as its own. A parent
+ * that does not resolve to a venue, a parent of another year, or parents that name each other, are
+ * refused naming the file that says it.
  *
  * ── THE ID AND THE LABEL ──────────────────────────────────────────────────────────
  * The facts file and the build plan carry the preset's `id`: the spec's file name without its
  * extension, a stable key consumers match against preset ids. Messages say the `label`: the most
  * derived venue's `name` when the chain has a venue, else the id
- * (`paperlint:agenticdev` → `agenticdev`, `./venues/usenix-sec.jsonc` → `usenix-sec`). Display
- * only: nothing is ever resolved by it.
+ * (`paperlint:agenticdev-2026` → `AgenticDev`, `./venues/usenix-sec.jsonc` → `usenix-sec`). Display
+ * only: nothing is ever resolved by it. The edition's `year` is the id's, never the name's.
  */
 import { basename, dirname, extname, join, resolve } from "node:path";
 import {
@@ -68,6 +75,8 @@ import {
 } from "./paper-settings.ts";
 import { CONFIG_FILE } from "#lib/paper-config";
 import { messageOf } from "./domain/text.ts";
+import { editionLabel, editionOf, editionsOf } from "./domain/edition.ts";
+import type { NamedVenue } from "./domain/venue-name.ts";
 import { setMembers } from "./rule-sets.ts";
 import type { RegisterAnchor } from "./domain/register.ts";
 import type { VenueTalk } from "./domain/talk.ts";
@@ -115,6 +124,10 @@ export interface Preset {
   readonly template: PresetTemplate | null;
   /** Every `name` and `aliases` along the chain: what this venue is called in a paper's text. */
   readonly aliases: readonly string[];
+  /** The `aliases` the chain's files declare, without any `name`: what a folder name is matched against beside the edition. */
+  readonly declaredAliases: readonly string[];
+  /** The edition's year, from the id (`icse-2028` → 2028); null when the id ends in no year. */
+  readonly year: number | null;
   /**
    * Every name of the conference this venue is held at (`parent`), and of that one's parent: names a
    * paper of this venue may use as its own. Empty when no file of the chain names a parent.
@@ -122,11 +135,6 @@ export interface Preset {
   readonly parentNames: readonly string[];
   /** Whether the venue reviews double-blind (`anonymity/identity`); false when no file of the chain says. */
   readonly blind: boolean;
-  /**
-   * When the venue's names count as a mention in a paper's text (`tex/venue-leftover`): `any`
-   * whole-word use, or `with-year` beside it; `any` when no file of the chain says.
-   */
-  readonly mentions: "any" | "with-year";
   readonly requiredSections: readonly RequiredSection[];
   readonly tex: TexRequirements;
   readonly format: VenueFormat;
@@ -151,6 +159,12 @@ export interface Preset {
 /** Why a spec does not resolve. */
 export type PresetProblem =
   | { readonly kind: "unsupported"; readonly spec: string }
+  /** `paperlint:<series>` with no year, where `editions` of that series ship. */
+  | {
+      readonly kind: "bare-series";
+      readonly spec: string;
+      readonly editions: readonly string[];
+    }
   | {
       readonly kind: "not-found";
       readonly spec: string;
@@ -304,7 +318,7 @@ const namesOf = (i: PresetIdentity): readonly string[] =>
 /** What the merge carries from file to file: the preset without what only the whole chain knows. */
 type Merging = Omit<
   Preset,
-  "id" | "label" | "chain" | "identity" | "parentNames"
+  "id" | "label" | "chain" | "identity" | "parentNames" | "year"
 > & {
   readonly name: string | null;
   readonly parent: ParentLink | null;
@@ -321,8 +335,8 @@ const NOTHING_MERGED: Merging = {
   parent: null,
   template: null,
   aliases: [],
+  declaredAliases: [],
   blind: false,
-  mentions: "any",
   requiredSections: [],
   tex: NO_REQUIREMENTS,
   format: NO_FORMAT,
@@ -368,8 +382,8 @@ const mergeOne = (
       ? acc.template
       : { text: p.template, file, forbids: p.templateForbids },
   aliases: [...new Set([...acc.aliases, ...namesOf(p.identity), ...p.aliases])],
+  declaredAliases: [...new Set([...acc.declaredAliases, ...p.aliases])],
   blind: p.blind ?? acc.blind,
-  mentions: p.mentions ?? acc.mentions,
   tex: p.tex ? mergeRequirements(acc.tex, p.tex) : acc.tex,
   format: mergeFormat(acc.format, p.format),
   rules: { ...acc.rules, ...p.rules },
@@ -390,15 +404,27 @@ function merged(
   return {
     id: labelOf(spec),
     label: name ?? labelOf(spec),
+    year: editionOf(labelOf(spec))?.year ?? null,
     chain: rootFirst.map((x) => x.file),
     identity: leaf.preset.identity,
     ...rest,
   };
 }
 
-/** A problem as a caller reads it: a missing file lists the shipped presets. */
-const refusal = (p: PresetProblem, venuesDir: string): PresetProblem =>
-  p.kind === "not-found" ? { ...p, shipped: shippedPresets(venuesDir) } : p;
+/**
+ * A problem as a caller reads it: a missing file lists the shipped presets, and a shipped spec that
+ * names a series of shipped editions (`paperlint:icse`) is refused as a bare series.
+ */
+function refusal(p: PresetProblem, venuesDir: string): PresetProblem {
+  if (p.kind !== "not-found") return p;
+  const shipped = shippedPresets(venuesDir);
+  const editions = p.spec.startsWith(SHIPPED_PREFIX)
+    ? editionsOf(p.spec.slice(SHIPPED_PREFIX.length), shipped)
+    : [];
+  return editions.length > 0
+    ? { kind: "bare-series", spec: p.spec, editions }
+    : { ...p, shipped };
+}
 
 /**
  * The names `parent` brings, resolved from the file that names it: the parent venue's names and its
@@ -425,6 +451,11 @@ function parentNamesOf(
   if (up.value.identity.type !== "venue")
     return bad(
       `${named} is a ${up.value.identity.type}, and a workshop's parent is the venue it is held at`,
+    );
+  const year = editionOf(labelOf(parent.file))?.year ?? null;
+  if (year !== null && up.value.year !== null && up.value.year !== year)
+    return bad(
+      `${named} is the ${String(up.value.year)} edition, and this workshop is of ${String(year)} — a workshop's parent is the edition it is held at, of the same year`,
     );
   return ok([...new Set([...up.value.aliases, ...up.value.parentNames])]);
 }
@@ -488,18 +519,27 @@ export function resolveShipped(deps: PresetDeps): readonly Preset[] {
 /** A shipped venue as a name knows it, and the files of its chain: what tells it from a paper's own. */
 export type ShippedVenue = Pick<
   Preset,
-  "label" | "aliases" | "chain" | "mentions"
+  "id" | "label" | "aliases" | "declaredAliases" | "year" | "chain"
 >;
 
 /**
  * A resolved preset as a name knows it: its label, its aliases, its chain. Pure.
  */
 export const venueOf = ({
+  id,
   label,
   aliases,
+  declaredAliases,
+  year,
   chain,
-  mentions,
-}: Preset): ShippedVenue => ({ label, aliases, chain, mentions });
+}: Preset): ShippedVenue => ({
+  id,
+  label,
+  aliases,
+  declaredAliases,
+  year,
+  chain,
+});
 
 /**
  * THE ONE SOURCE OF VENUE NAMES: every shipped venue's label and `aliases` (with each `name` along
@@ -508,6 +548,22 @@ export const venueOf = ({
  */
 export const shippedVenueNames = (deps: PresetDeps): readonly ShippedVenue[] =>
   resolveShipped(deps).map(venueOf);
+
+/**
+ * A venue as a FOLDER name names it: its edition (`AGENT 2027`, the name and the id's year) and the
+ * `aliases` its files declare — never its bare `name`, which may be an ordinary word (`AGENT`) or
+ * the series of every edition (`ICSE`). Read by `paper/folder-venue-leftover` and `paperlint new`. Pure.
+ */
+export const folderNamesOf = (
+  v: Pick<ShippedVenue, "label" | "year" | "declaredAliases">,
+): NamedVenue => ({
+  label: editionLabel(v.label, v.year),
+  aliases: v.declaredAliases,
+});
+
+/** Every shipped venue as a folder name names it (`folderNamesOf`): what `paperlint new` refuses. */
+export const shippedFolderNames = (deps: PresetDeps): readonly NamedVenue[] =>
+  shippedVenueNames(deps).map(folderNamesOf);
 
 /** For a rule set named where a venue belongs, where the set goes instead; "" otherwise. Pure. */
 const ruleSetHint = (spec: string): string =>
@@ -524,6 +580,8 @@ export function presetProblemText(
   key: "extends" | "parent" = "extends",
 ): string {
   switch (p.kind) {
+    case "bare-series":
+      return bareSeriesText(p, key);
     case "unsupported":
       return `"${key}": "${p.spec}" — a preset is \`paperlint:<name>\` (shipped) or a path starting with ./ or ../ (your own); npm presets: not yet supported. Did you mean "${shippedSpec(p.spec)}"?`;
     case "not-found":
@@ -542,6 +600,17 @@ export function presetProblemText(
       return wrongParentText(p);
   }
 }
+
+/** The line for a bare series: the editions that ship, the latest offered. Pure. */
+export const bareSeriesText = (
+  p: Extract<PresetProblem, { readonly kind: "bare-series" }>,
+  key: "extends" | "parent" | "--venue",
+): string => {
+  const latest = p.editions.at(-1) ?? "";
+  const said =
+    key === "--venue" ? `--venue ${p.spec}` : `"${key}": "${p.spec}"`;
+  return `${said} names a series, not an edition: a venue preset is one edition, so a new edition never changes a paper's rules unasked. Shipped editions: ${p.editions.map(shippedSpec).join(", ")} — did you mean ${shippedSpec(latest)}?`;
+};
 
 /** The line for a chain whose file extends a preset of a type it may not extend. Pure. */
 const wrongParentText = (

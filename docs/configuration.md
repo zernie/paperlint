@@ -95,7 +95,7 @@ refused by name. `node_modules/`, `.git/` and `<papers>/.template/` are skipped.
 
 ```json
 {
-  "extends": "paperlint:aisec",
+  "extends": "paperlint:aisec-2026",
   "kind": "research",
   "rules": { "pdf/body-size": "off" }
 }
@@ -122,7 +122,7 @@ skills' keys), which are refused here by name, plus `talk`, `submission`, `autho
 `<papers>/.template/paperlint.json` if you keep one). With `--venue` it writes the venue into it:
 
 ```sh
-npx paperlint new my-paper --venue agenticdev --kind short        # "extends": "paperlint:agenticdev"
+npx paperlint new my-paper --venue agenticdev --kind short        # "extends": "paperlint:agenticdev-2026"
 npx paperlint new my-paper --venue ./venues/my-workshop.jsonc     # "extends": "../../venues/my-workshop.jsonc"
 ```
 

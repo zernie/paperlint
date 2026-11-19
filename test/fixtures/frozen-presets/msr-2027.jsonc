@@ -22,7 +22,7 @@
 // THE DEADLINES ARE THE PORTAL'S, as read: `deadlines` below is rewritten by the scheduled refresh
 // in paperlint's repository (.github/workflows/deadlines.yml) when the portal changes them, and a
 // paper reaches the new dates through its normal update of paperlint. The call's own wording
-// (abstract and paper days, AoE) is in the card, msr.md beside this file.
+// (abstract and paper days, AoE) is in the card, msr-2027.md beside this file.
 {
   "type": "venue",
   "name": "MSR",
@@ -69,7 +69,6 @@
   // themselves («Manual Speech Recognition (MSR)», in an accepted ACSAC paper of
   // fixtures/accepted-papers/, warned six times when any whole word counted).
   "aliases": ["MSR"],
-  "mentions": "with-year",
 
   // The class line the call names, with the two options it forbids (tex/template). The family's
   // `[conference]` text block (7.14 x 9.30 in) is the one this line builds, so no `format` override.

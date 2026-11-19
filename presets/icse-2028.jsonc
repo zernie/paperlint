@@ -1,7 +1,7 @@
 // ICSE 2028 Research Papers (the Research Track of the International Conference on Software
 // Engineering) — a VENUE preset over the ACM sigconf family. Everything the ACM template decides
 // (page size, columns, fonts, font sizes, TeX packages) comes from acm-sigconf.jsonc; this file
-// adds what ICSE's call for papers sets. Its card, in prose: `icse.md` beside this file.
+// adds what ICSE's call for papers sets. Its card, in prose: `icse-2028.md` beside this file.
 //
 // Verbatim from https://conf.researchr.org/track/icse-2028/icse-2028-papers (fetched 2026-11-19,
 // the raw HTML and a summarizing fetch, which agree):
@@ -26,11 +26,12 @@
 // ICSE 2028 asks for the ACM template. Re-read the call every year.
 {
   "type": "venue",
-  // The call's own spelling, with the year: a bare «ICSE» would flag every paper that names an
-  // ICSE paper in its prose («published at ICSE 2024») and every folder of an ICSE workshop paper
-  // (paper/folder-venue-leftover and `paperlint new` match folder names by words), so the name is
-  // the edition, as AGENT 2027's is. The call never writes «ICSE'28», so there is no alias.
-  "name": "ICSE 2028",
+  // The series, without a year: the year is the id's (icse-2028), the one source of it. A paper
+  // that names an ICSE paper in its prose («published at ICSE 2024») is not flagged:
+  // tex/venue-leftover counts the name in prose only beside a recent year, and
+  // paper/folder-venue-leftover matches the edition («ICSE 2028»), not the bare word. The call
+  // never writes «ICSE'28», so there is no alias.
+  "name": "ICSE",
   // The call quoted above.
   "url": "https://conf.researchr.org/track/icse-2028/icse-2028-papers",
   "extends": "paperlint:acm-sigconf",
@@ -83,7 +84,7 @@
     // 🔴 THE MAIN TEXT INCLUDES THE APPENDICES, AND THE REFERENCE PAGES ARE THE ONES WITH ONLY
     // REFERENCES: «10 pages for the main text, inclusive of all figures, tables, appendices, etc.
     // Two more pages containing only references are permitted.» The same words as MSR 2027's call,
-    // so the same counting (msr.jsonc): format/page-limit counts from the text (`appendix_in_body`),
+    // so the same counting (msr-2027.jsonc): format/page-limit counts from the text (`appendix_in_body`),
     // the body every page up to the references plus every page from an appendix that follows them,
     // the pages between the reference pages. An appendix after the references is found by
     // hyperref's anchor. MSR's measurement of banal's miscount was on IEEEtran builds; no acmart

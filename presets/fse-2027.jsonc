@@ -2,7 +2,7 @@
 // Engineering, Shenzhen, 12-16 July 2027) — a VENUE preset over the ACM single-column family.
 // Everything the acmart acmsmall template decides (page size, columns, fonts, font sizes, TeX
 // packages) comes from acm-acmsmall.jsonc; this file adds what FSE's call for papers sets. Its card,
-// in prose: `fse.md` beside this file.
+// in prose: `fse-2027.md` beside this file.
 //
 // Verbatim from https://conf.researchr.org/track/fse-2027/fse-2027-papers (read 2026-11-19):
 //   «At the time of submission, each paper should have no more than 18 pages for all text and
@@ -24,12 +24,11 @@
 //   one day, to Oct. 3, AoE.»
 {
   "type": "venue",
-  // «FSE» alone is what papers write when they cite an FSE paper («ESEC/FSE», «FSE 2024»), so as a
-  // name it would flag every software-engineering paper that cites one (tex/venue-leftover), and
-  // `mentions: "with-year"` would still flag «FSE 2024». The edition is the name instead, the
-  // call's own spelling: «FSE 2027». A paper written for this edition and moved elsewhere carries
-  // that; one that cites last year's FSE does not. No alias: the call spells it no other way.
-  "name": "FSE 2027",
+  // The series, without a year: the year is the id's (fse-2027), the one source of it. A paper
+  // that cites an FSE paper («ESEC/FSE», «FSE 2024») is not flagged: tex/venue-leftover counts the
+  // name in prose only beside a year no older than the paper's own edition's year minus one. No
+  // alias: the call spells it no other way.
+  "name": "FSE",
   // The call quoted above.
   "url": "https://conf.researchr.org/track/fse-2027/fse-2027-papers",
   "extends": "paperlint:acm-acmsmall",

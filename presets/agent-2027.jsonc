@@ -1,7 +1,7 @@
 // AGENT'27 (the Second International Workshop on Agentic Engineering, an ICSE 2027 workshop) — a
 // VENUE preset over the IEEE conference family. Everything the IEEEtran template decides (page
 // size, columns, fonts, body size, TeX packages) comes from ieee-conference.jsonc; this file adds
-// what AGENT's call for papers sets. Its card, in prose: `agent.md` beside this file.
+// what AGENT's call for papers sets. Its card, in prose: `agent-2027.md` beside this file.
 //
 // Verbatim from https://conf.researchr.org/home/icse-2027/agent-2027 (fetched 2026-10-26):
 //   «Full papers (research or experience): up to 8 pages, including references.»
@@ -18,16 +18,23 @@
 //   «All dates are Anywhere on Earth (AoE).» Notification and camera-ready did not move.
 {
   "type": "venue",
-  "name": "AGENT 2027",
+  // The series, without a year: the year is the id's (agent-2027), the one source of it.
+  "name": "AGENT",
   // The call quoted above.
   "url": "https://conf.researchr.org/home/icse-2027/agent-2027",
   "extends": "paperlint:ieee-conference",
 
-  // «AGENT» alone is an ordinary word: as a name it would flag every paper folder called
-  // `agent-…` (paper/folder-venue-leftover compares folder names by words, and `mentions` reaches
-  // only the text rules). So the venue is «AGENT 2027» and «AGENT'27» (the call's own spelling,
-  // with either apostrophe). ICSE is left out: papers cite ICSE papers by name.
-  "aliases": ["AGENT'27", "AGENT\u201927"],
+  // No `aliases`: «AGENT» alone is an ordinary word. tex/venue-leftover counts it in prose only
+  // beside a recent year («AGENT 2027», «AGENT'27», either apostrophe), and
+  // paper/folder-venue-leftover matches the edition, «AGENT 2027», never the bare word, so a folder
+  // called `agent-…` is not flagged.
+
+  // A workshop (`"workshop": true`): the schema then requires its `parent`, the edition of the
+  // conference it is held at, and paperlint refuses a parent of another year.
+  "workshop": true,
+
+  // The conference it is held at: the workshop's page is on the ICSE 2027 site (the url above).
+  "parent": "paperlint:icse-2027",
 
   // No `template` and no `blind`, on purpose. The call names «the IEEE conference proceedings
   // template» and no class line, so the family's `[conference]` stands (the ICSE workshops page

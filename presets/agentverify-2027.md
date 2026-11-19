@@ -4,7 +4,7 @@ title: "AGENTVERIFY @ ICSE — venue card"
 
 # AGENTVERIFY @ ICSE
 
-The card of the venue preset `paperlint:agentverify` ([`agentverify.jsonc`](agentverify.jsonc)):
+The card of the venue preset `paperlint:agentverify-2027` ([`agentverify-2027.jsonc`](agentverify-2027.jsonc)):
 what the venue asks for, in prose. The numbers a machine checks live in the preset; the section at
 the end is generated from it. The `submit-paper` skill reads this card for the venue's specifics.
 
@@ -86,9 +86,9 @@ body are a finding.
 
 <!-- paperlint:preset-rules -->
 <!-- prettier-ignore-start -->
-<!-- Generated from agentverify.jsonc by `npx eslint --fix` (rule preset/card-rules). Edit the preset, not this section. -->
+<!-- Generated from agentverify-2027.jsonc by `npx eslint --fix` (rule preset/card-rules). Edit the preset, not this section. -->
 
-**`paperlint:agentverify`** — venue preset for AGENTVERIFY · call for papers: <https://agentverify2027.github.io/cfp.html> · extends `paperlint:ieee-conference`
+**`paperlint:agentverify-2027`** — venue preset for AGENTVERIFY 2027 · call for papers: <https://agentverify2027.github.io/cfp.html> · extends `paperlint:ieee-conference`
 
 No preset of this chain sets a rule: under it, every rule keeps paperlint's default.
 

@@ -4,7 +4,7 @@ title: "AGENT @ ICSE — venue card"
 
 # AGENT @ ICSE
 
-The card of the venue preset `paperlint:agent` ([`agent.jsonc`](agent.jsonc)): what the venue asks
+The card of the venue preset `paperlint:agent-2027` ([`agent-2027.jsonc`](agent-2027.jsonc)): what the venue asks
 for, in prose. The numbers a machine checks live in the preset; the section at the end is generated
 from it. The `submit-paper` skill reads this card for the venue's specifics.
 
@@ -66,9 +66,9 @@ body that fills the pages and references that spill onto one more page is a find
 
 <!-- paperlint:preset-rules -->
 <!-- prettier-ignore-start -->
-<!-- Generated from agent.jsonc by `npx eslint --fix` (rule preset/card-rules). Edit the preset, not this section. -->
+<!-- Generated from agent-2027.jsonc by `npx eslint --fix` (rule preset/card-rules). Edit the preset, not this section. -->
 
-**`paperlint:agent`** — venue preset for AGENT 2027 · call for papers: <https://conf.researchr.org/home/icse-2027/agent-2027> · extends `paperlint:ieee-conference`
+**`paperlint:agent-2027`** — venue preset for AGENT 2027 · call for papers: <https://conf.researchr.org/home/icse-2027/agent-2027> · extends `paperlint:ieee-conference`
 
 No preset of this chain sets a rule: under it, every rule keeps paperlint's default.
 

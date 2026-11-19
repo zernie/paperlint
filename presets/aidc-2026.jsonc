@@ -22,7 +22,7 @@
 //
 // THE REVIEW IS DOUBLE-BLIND: `"blind":true` in the same portal data, and the call above.
 //
-// Its card, in prose: `aidc.md` beside this file.
+// Its card, in prose: `aidc-2026.md` beside this file.
 {
   "type": "venue",
   "name": "AIDC",
@@ -59,9 +59,17 @@
     },
   ],
 
-  // What the venue is called in a paper's text (tex/venue-leftover): the workshop, and the
-  // conference it is held at.
-  "aliases": ["AIDC", "ACSAC"],
+  // What the venue is called in a paper's text (tex/venue-leftover). The conference it is held at
+  // is its `parent`, which carries the name «ACSAC».
+  "aliases": ["AIDC"],
+
+  // A workshop (`"workshop": true`): the schema then requires its `parent`, the edition of the
+  // conference it is held at, and paperlint refuses a parent of another year.
+  "workshop": true,
+
+  // The conference it is held at: «IEEE ACSAC 2026» (the workshop page above; its portal is
+  // aidc.submit.acsac.org).
+  "parent": "paperlint:acsac-2026",
 
   "template": "\\documentclass[conference,compsoc]{IEEEtran}",
 
