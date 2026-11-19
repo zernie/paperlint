@@ -224,6 +224,51 @@ describe("shipped presets: paperlint:neurips-2026", () => {
   });
 });
 
+describe("shipped presets: paperlint:icml-2027", () => {
+  it("paperlint:icml-2027 → icml over icml-style: no template, the style's page and fonts, two kinds counted by banal, the Impact Statement, the call's deadlines", () => {
+    const r = resolve("paperlint:icml-2027");
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.value.chain.map((f) => f.split("/").pop())).toEqual([
+      "icml-style.jsonc",
+      "icml-2027.jsonc",
+    ]);
+    // The class is plain article: a template would pass any article paper, with or without the style.
+    expect(r.value.template).toBeNull();
+    expect(r.value.format.columns).toBe(2);
+    expect(r.value.format.pageWidthIn).toBe(8.5);
+    expect(r.value.format.pageHeightIn).toBe(11);
+    expect(r.value.format.bodyPt).toBe(10);
+    expect([r.value.format.refPtMin, r.value.format.refPtMax]).toEqual([
+      10, 10,
+    ]);
+    expect(r.value.format.fontsText).toBe("NimbusRomNo9L");
+    expect(r.value.format.fontsTitle).toBeNull();
+    // banal's count: ICML's appendix headings («A. …») defeat the heading `body_ends_at` looks for.
+    expect(r.value.format.bodyEndsAt).toBeNull();
+    expect([...r.value.format.kinds]).toEqual([
+      ["main", { pagesMax: null, bodyPagesMax: 8, refPagesMax: null }],
+      ["camera-ready", { pagesMax: null, bodyPagesMax: 9, refPagesMax: null }],
+    ]);
+    expect(Object.keys(r.value.tex.packages)).toEqual(
+      expect.arrayContaining(["eso-pic", "forloop", "times", "courier"]),
+    );
+    expect(r.value.blind).toBe(true);
+    expect(r.value.portal).toBeNull();
+    expect(r.value.requiredSections).toEqual([
+      { title: "Impact Statement", position: null },
+    ]);
+    expect(r.value.deadlines.map((d) => [d.what, d.source, d.at])).toEqual([
+      ["registration", "call", "2027-01-15T11:59:59Z"],
+      ["submission", "call", "2027-01-23T11:59:59Z"],
+    ]);
+    expect(r.value.label).toBe("ICML");
+    expect(r.value.aliases).toEqual(["ICML"]);
+    expect(r.value.mentions).toBe("with-year");
+    expect(r.value.rules).toEqual({});
+  });
+});
+
 describe("shipped presets: a family, and a venue that stands alone", () => {
   it("a paper may extend a family directly: format and fonts, and no kinds", () => {
     const r = resolve("paperlint:acm-sigconf");
@@ -303,6 +348,12 @@ const DECLARED = {
     name: "FSE 2027",
     url: "https://conf.researchr.org/track/fse-2027/fse-2027-papers",
   },
+  "icml-style.jsonc": { type: "family" },
+  "icml-2027.jsonc": {
+    type: "venue",
+    name: "ICML",
+    url: "https://icml.cc/Conferences/2027/CallForPapers",
+  },
   "icse.jsonc": {
     type: "venue",
     name: "ICSE 2028",
@@ -373,6 +424,7 @@ describe("the naming convention of shipped presets (docs/rules.md)", () => {
     expect(families.map((f) => f.name).sort()).toEqual([
       "acm-acmsmall",
       "acm-sigconf",
+      "icml-style",
       "ieee-conference",
       "neurips-style",
     ]);
@@ -598,7 +650,7 @@ describe("what does not resolve, and says why", () => {
       "a shipped name with a typo",
       "paperlint:agenticdve",
       "not-found",
-      /acm-acmsmall, acm-sigconf, agent, agenticdev, agentverify, aidc, aisec, ase, ccs, fse, icse, ieee-conference, msr, neurips-2026, neurips-style, nlbse, realm, sp/,
+      /acm-acmsmall, acm-sigconf, agent, agenticdev, agentverify, aidc, aisec, ase, ccs, fse, icml-2027, icml-style, icse, ieee-conference, msr, neurips-2026, neurips-style, nlbse, realm, sp/,
     ],
     ["the base TeX set", "paperlint:tex-base", "not-found", /agenticdev/],
     [
@@ -885,6 +937,8 @@ describe("shippedVenueNames — what each shipped venue is called", () => {
       "ASE",
       "ACM CCS",
       "FSE 2027",
+      "ICML",
+      "icml-style",
       "ICSE 2028",
       "ieee-conference",
       "MSR",
@@ -917,6 +971,8 @@ describe("shippedVenueNames — what each shipped venue is called", () => {
       "ASE",
       "ACM CCS",
       "FSE 2027",
+      "ICML",
+      "icml-style",
       "ICSE 2028",
       "ieee-conference",
       "MSR",

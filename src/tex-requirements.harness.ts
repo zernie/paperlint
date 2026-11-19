@@ -97,8 +97,12 @@ for (const v of acm) {
 // dictionaries diverged. Since the ACM venues extend the `acm-sigconf` family, only the family
 // declares the template's packages, so this holds by construction; the check stays for any two
 // standalone presets that name the same template.
+// A preset with no template (the NeurIPS and ICML style families, whose class is plain article)
+// shares none, so it is grouped with no other.
 const byTemplate = new Map<unknown, string[]>();
-for (const v of venues.filter((x) => presetOf(x).extends === null)) {
+for (const v of venues.filter(
+  (x) => presetOf(x).extends === null && templateOf(x) !== undefined,
+)) {
   const t = templateOf(v);
   byTemplate.set(t, [...(byTemplate.get(t) ?? []), v]);
 }
