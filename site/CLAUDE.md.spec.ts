@@ -29,7 +29,10 @@ design below was decided with the author on 2026-11-19, over three rounds of moc
       "Palette follows zernie.com: paper #faf9f5, ink #181816, the ink-blue accent #305e8b; terracotta #c15f3c only for an error. Newsreader (optical sizes, its italic for the venue name) for headings, Inter for body text and UI, JetBrains Mono for code, all through next/font, which downloads them at build time and serves them from this site. The author chose Newsreader over Source Serif 4, Literata and Instrument Serif from a side-by-side sheet on 2026-11-19; a font change is shown side by side first.",
     ),
     "the-journey": guidance(
-      "The four checks are four stops on one road, each its own section with its own real example: desk-reject checks, folder structure, measurements, prose, in that order (the default set first, the opt-in last). They are never collapsed back into one list.",
+      "The four checks are four stops on one road, each with its own real example: desk-reject checks, folder structure, measurements, prose, in that order (the default set first, the opt-in last). The road is a stepper: across the page from a tablet up, a click on a stop opens its panel; down the page on a phone, each stop opening in place. One stop is open at a time. They are never collapsed back into one plain list.",
+    ),
+    "a-short-page": guidance(
+      "The page is about four screens on a desktop: hero, the road, the venues, the questions, the footer. Everything past the first look is folded: a stop's panel, the exact terminal output, a venue's limits, each question's answer, a term's meaning (dotted underline, opens on hover or tap). The author asked for this on 2026-11-19, when the page measured 11 screens; a section that adds a screen needs a screenshot and the author's yes.",
     ),
     "campus-not-a-landmark": guidance(
       "The hero art is an invented campus in the Stanford style (sandstone arcades, red tile roofs, palms), as an ink etching with a light wash. Never a real, recognisable building such as Hoover Tower or Memorial Church: a scientist who knows it reads an affiliation paperlint does not have. An image model draws them unasked; look before using any output.",

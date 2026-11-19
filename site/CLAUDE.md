@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:5f4f0a5cb3dfd709 compiled from site/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:cbf1747b1cd1bbf8 compiled from site/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -36,7 +36,11 @@ design below was decided with the author on 2026-11-19, over three rounds of moc
 
 ### The Journey
 
-**Guidance only** — The four checks are four stops on one road, each its own section with its own real example: desk-reject checks, folder structure, measurements, prose, in that order (the default set first, the opt-in last). They are never collapsed back into one list.
+**Guidance only** — The four checks are four stops on one road, each with its own real example: desk-reject checks, folder structure, measurements, prose, in that order (the default set first, the opt-in last). The road is a stepper: across the page from a tablet up, a click on a stop opens its panel; down the page on a phone, each stop opening in place. One stop is open at a time. They are never collapsed back into one plain list.
+
+### A Short Page
+
+**Guidance only** — The page is about four screens on a desktop: hero, the road, the venues, the questions, the footer. Everything past the first look is folded: a stop's panel, the exact terminal output, a venue's limits, each question's answer, a term's meaning (dotted underline, opens on hover or tap). The author asked for this on 2026-11-19, when the page measured 11 screens; a section that adds a screen needs a screenshot and the author's yes.
 
 ### Campus Not A Landmark
 

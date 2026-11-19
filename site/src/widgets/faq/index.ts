@@ -1,1 +1,1 @@
-export { Faq } from "./ui/faq.tsx";
+export { Faq, type Step } from "./ui/faq.tsx";

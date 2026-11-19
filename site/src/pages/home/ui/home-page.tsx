@@ -14,9 +14,9 @@ import {
   readmeContent,
   headlineVenues,
 } from "@/shared/lib/readme";
+import { glossary } from "@/shared/config";
+import { Term } from "@/shared/ui/hint";
 import { Faq } from "@/widgets/faq";
-import { FirstRun } from "@/widgets/first-run";
-import { GetStarted } from "@/widgets/get-started";
 import { Hero } from "@/widgets/hero";
 import { Journey, type Stop } from "@/widgets/journey";
 import { SiteFooter } from "@/widgets/site-footer";
@@ -62,22 +62,16 @@ const Example = ({
   readonly code?: React.ReactNode;
   readonly finding: Finding;
 }) => (
-  <div className="grid grid-cols-1 gap-x-12 gap-y-8 lg:grid-cols-2">
+  <div className="flex flex-col gap-6">
     {file === undefined ? null : (
-      <div className="self-start rounded-md bg-card p-6">
+      <div className="rounded-md bg-card p-6">
         <p className="font-mono text-code text-muted-foreground">{file}</p>
         <div className="mt-2 overflow-x-auto font-mono text-code whitespace-pre text-copy">
           {code}
         </div>
       </div>
     )}
-    <div
-      className={
-        file === undefined
-          ? "border-b border-border lg:col-span-2"
-          : "border-b border-border"
-      }
-    >
+    <div className="border-b border-border">
       <Row f={finding} />
     </div>
   </div>
@@ -86,15 +80,25 @@ const Example = ({
 const stops: readonly Stop[] = [
   {
     n: "01",
+    short: "Desk reject",
     when: "Before you submit",
     title: "What gets a paper sent back",
-    text: "The page limit for your kind of paper, the venue's template, fonts, page size and columns, a required section, and your name in a double-blind PDF. Build the PDF once, and every check reads it.",
+    text: (
+      <>
+        The page limit for your kind of paper, the venue&apos;s template, fonts,
+        page size and columns, a required section, and your name in a{" "}
+        <Term means={glossary.doubleBlind}>double-blind</Term> PDF: the usual
+        reasons for a <Term means={glossary.deskReject}>desk reject</Term>.
+        Build the PDF once, and every check reads it.
+      </>
+    ),
     badge: "On by default",
     on: true,
     example: <Example finding={pageLimit} />,
   },
   {
     n: "02",
+    short: "Folder",
     when: "From the first file",
     title: "A tidy paper folder",
     text: "paperlint new makes one folder per paper, with a place for each kind of file. A file left where it does not belong is flagged, with where to move it.",
@@ -125,6 +129,7 @@ const stops: readonly Stop[] = [
   },
   {
     n: "03",
+    short: "Measurements",
     when: "While you measure",
     title: "Studies planned before they run",
     text: "Each study gets a numbered entry in repro/studies.json and a folder of its own. Once a study is running, its plan must be filled in, and a plan written after the runs must say so.",
@@ -140,6 +145,7 @@ const stops: readonly Stop[] = [
   },
   {
     n: "04",
+    short: "Prose",
     when: "When you write",
     title: "Writing limits, if you want them",
     text: "Optional limits on sentence, paragraph and caption length, and a term used before it is defined. They stay off until you switch them on for a paper or a project.",
@@ -167,11 +173,9 @@ export function HomePage() {
           preview={firstRun}
           caption="Paste into a terminal, in your project's folder."
         />
-        <FirstRun findings={firstRun} />
         <Journey stops={stops} />
         <Venues venues={readme.venues} />
-        <GetStarted install={install} perPaper={perPaper} />
-        <Faq />
+        <Faq install={install} perPaper={perPaper} />
       </main>
       <SiteFooter disclaimer={readme.disclaimer} />
     </>
