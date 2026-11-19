@@ -14,7 +14,9 @@
       "venue": "ASE 2026, Industry Showcase track"
     },
     "preset": "paperlint:acm-sigconf",
-    "kind": null
+    "kind": null,
+    "series": "ASE",
+    "year": 2026
   },
   {
     "arxiv_id": "2607.06766v2",
@@ -31,7 +33,9 @@
       "venue": "ASE 2026, Industry Showcase track"
     },
     "preset": "paperlint:acm-sigconf",
-    "kind": null
+    "kind": null,
+    "series": "ASE",
+    "year": 2026
   },
   {
     "arxiv_id": "2609.10590v1",
@@ -48,7 +52,9 @@
       "venue": "ASE 2026 (track not named)"
     },
     "preset": "paperlint:acm-sigconf",
-    "kind": null
+    "kind": null,
+    "series": "ASE",
+    "year": 2026
   },
   {
     "arxiv_id": "2609.03920v1",
@@ -65,7 +71,9 @@
       "venue": "AgenticDev 2026 (workshop at ASE 2026)"
     },
     "preset": "paperlint:agenticdev-2026",
-    "kind": "short"
+    "kind": "short",
+    "series": "AgenticDev",
+    "year": 2026
   },
   {
     "arxiv_id": "2609.17164v1",
@@ -82,7 +90,9 @@
       "venue": "AISec 2026 (workshop at ACM CCS 2026)"
     },
     "preset": "paperlint:aisec-2026",
-    "kind": "research"
+    "kind": "research",
+    "series": "AISec",
+    "year": 2026
   },
   {
     "arxiv_id": "2609.16832v1",
@@ -99,7 +109,9 @@
       "venue": "AISec 2026 (workshop at ACM CCS 2026)"
     },
     "preset": "paperlint:aisec-2026",
-    "kind": "benchmark"
+    "kind": "benchmark",
+    "series": "AISec",
+    "year": 2026
   },
   {
     "arxiv_id": "2609.14098v2",
@@ -116,7 +128,9 @@
       "venue": "ACM CCS 2026"
     },
     "preset": "paperlint:ccs-2026",
-    "kind": "research"
+    "kind": "research",
+    "series": "ACM CCS",
+    "year": 2026
   },
   {
     "arxiv_id": "2610.26174v1",
@@ -133,7 +147,9 @@
       "venue": "ACM CCS 2026"
     },
     "preset": "paperlint:ccs-2026",
-    "kind": "research"
+    "kind": "research",
+    "series": "ACM CCS",
+    "year": 2026
   },
   {
     "arxiv_id": "2611.10830v1",
@@ -150,7 +166,9 @@
       "venue": "AIDC 2026 (workshop at ACSAC 2026)"
     },
     "preset": "paperlint:aidc-2026",
-    "kind": "regular"
+    "kind": "regular",
+    "series": "AIDC",
+    "year": 2026
   },
   {
     "arxiv_id": "2610.41369v1",
@@ -167,7 +185,9 @@
       "venue": "ACSAC 2026"
     },
     "preset": "paperlint:acsac-2026",
-    "kind": null
+    "kind": null,
+    "series": "ACSAC",
+    "year": 2026
   },
   {
     "arxiv_id": "2604.19400v1",
@@ -184,7 +204,9 @@
       "venue": "FSE 2026"
     },
     "preset": "paperlint:acm-acmsmall",
-    "kind": null
+    "kind": null,
+    "series": "FSE",
+    "year": 2026
   },
   {
     "arxiv_id": "2605.17475v1",
@@ -201,7 +223,9 @@
       "venue": "FSE 2026 (track not named)"
     },
     "preset": "paperlint:acm-acmsmall",
-    "kind": null
+    "kind": null,
+    "series": "FSE",
+    "year": 2026
   },
   {
     "arxiv_id": "2610.22056v1",
