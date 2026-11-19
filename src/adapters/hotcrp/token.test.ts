@@ -4,7 +4,7 @@
  */
 import { map, unique } from "remeda";
 import { expect, test } from "vitest";
-import { sharedVariable, tokenVariable } from "./index.ts";
+import { isSiteOnlyToken, sharedVariable, tokenVariable } from "./index.ts";
 
 test("tokenVariable: on hotcrp.com the subdomain alone names the site", () => {
   expect(tokenVariable("https://msr2027.hotcrp.com")).toBe(
@@ -98,4 +98,10 @@ test("🔴 sharedVariable: a self-hosted install has none, however its host look
       sharedVariable,
     ),
   ).toStrictEqual(map(Array.from({ length: 6 }), () => null));
+});
+
+test("isSiteOnlyToken: the prefix tells — lowercase hct_ is one site's, capital hcT_ is every site's", () => {
+  expect(
+    map(["hct_fake", "hcT_fake", "fake", "", "HCT_FAKE"], isSiteOnlyToken),
+  ).toStrictEqual([true, false, false, false, false]);
 });

@@ -123,6 +123,19 @@ test("only the site-less variable set on a hosted-service site: both variables i
   ]);
 });
 
+test("a site-only token in the shared variable: what is wrong, and both ways out", () => {
+  expect(
+    tokenProblemLines(HOSTED_PORTAL, hotcrpSite(HOSTED_SITE), {
+      kind: "site-only",
+      variable: "HOTCRP_TOKEN_MSR2027",
+      shared: "HOTCRP_TOKEN_HOTCRP_COM",
+    }),
+  ).toStrictEqual([
+    'HOTCRP_TOKEN_HOTCRP_COM holds a site-only token (it starts with hct_): that works on one hotcrp.com site only, not on all of them. Create a token with Site availability "All sites" (it starts with hcT_) and set that in HOTCRP_TOKEN_HOTCRP_COM, or move this one to HOTCRP_TOKEN_MSR2027 if it was made on this site:',
+    ...HOSTED_STEPS("HOTCRP_TOKEN_HOTCRP_COM"),
+  ]);
+});
+
 test("a 401 on a hosted-service site names the variable that was used", () => {
   const f = { kind: "refused", httpStatus: 401, messages: [] } as const;
   expect(

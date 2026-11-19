@@ -120,11 +120,13 @@ export function tokenProblemLines(
 ): readonly string[] {
   const asked = p.shared ?? p.variable;
   const head =
-    p.kind === "missing"
-      ? `no ${portal.kind} token for ${portal.url}: ${asked} is not set${p.shared === null ? "" : ` (${p.variable} would override it for this site)`}`
-      : p.shared === null
-        ? `${p.siteLess} is no longer read: tokens are per ${portal.kind} site. If it was made on ${hostOf(portal.url)}, rename it to ${p.variable}; if it was made on another site, rename it to that site's variable (${site.variablePattern}) and create a token here:`
-        : `${p.siteLess} is no longer read. If it was made on a hotcrp.com site, rename it to ${p.shared} (every hotcrp.com site) or ${p.variable} (this site alone); if it was made on a self-hosted install, rename it to that install's variable (${site.variablePattern}) and create a token here:`;
+    p.kind === "site-only"
+      ? `${p.shared} holds a site-only token (it starts with hct_): that works on one hotcrp.com site only, not on all of them. Create a token with Site availability "All sites" (it starts with hcT_) and set that in ${p.shared}, or move this one to ${p.variable} if it was made on this site:`
+      : p.kind === "missing"
+        ? `no ${portal.kind} token for ${portal.url}: ${asked} is not set${p.shared === null ? "" : ` (${p.variable} would override it for this site)`}`
+        : p.shared === null
+          ? `${p.siteLess} is no longer read: tokens are per ${portal.kind} site. If it was made on ${hostOf(portal.url)}, rename it to ${p.variable}; if it was made on another site, rename it to that site's variable (${site.variablePattern}) and create a token here:`
+          : `${p.siteLess} is no longer read. If it was made on a hotcrp.com site, rename it to ${p.shared} (every hotcrp.com site) or ${p.variable} (this site alone); if it was made on a self-hosted install, rename it to that install's variable (${site.variablePattern}) and create a token here:`;
   return [head, ...tokenSteps(portal, site, asked)];
 }
 
@@ -1157,6 +1159,7 @@ export function usageProblem(a: SubmissionArgs): string | null {
 const tokenNames = (site: PortalSite) => ({
   variable: site.tokenVariable,
   shared: site.sharedVariable,
+  siteOnly: site.isSiteOnlyToken,
   siteLess: site.siteLessVariable,
 });
 

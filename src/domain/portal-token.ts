@@ -24,6 +24,8 @@ export const hostOf = (url: string): string =>
 export interface TokenNames {
   readonly variable: string;
   readonly shared: string | null;
+  /** Whether a token is valid on one site only, so cannot stand in for the shared variable. */
+  readonly siteOnly: (token: string) => boolean;
   readonly siteLess: string;
 }
 
@@ -40,6 +42,12 @@ export type TokenProblem =
       readonly kind: "missing";
       readonly variable: string;
       readonly shared: string | null;
+    }
+  /** The shared variable holds a token that works on one site only. */
+  | {
+      readonly kind: "site-only";
+      readonly variable: string;
+      readonly shared: string;
     }
   /** Neither the site's variable nor the shared one is set, but the site-less one, no longer read, is. */
   | {
@@ -59,18 +67,20 @@ const value = (
 
 /**
  * The token for a portal, read through `read` (the root reads the environment): the site's variable,
- * else the shared one. A set site-less variable never stands in for either — it is named as the
+ * else the shared one (unless that holds a token for one site only). A set site-less variable never stands in for either — it is named as the
  * problem instead.
  */
 export function lookUpToken(
-  { variable, shared, siteLess }: TokenNames,
+  { variable, shared, siteOnly, siteLess }: TokenNames,
   read: (name: string) => string | undefined,
 ): Result<FoundToken, TokenProblem> {
   const own = value(read, variable);
   if (own !== null) return ok({ variable, token: own });
   const common = shared === null ? null : value(read, shared);
   if (shared !== null && common !== null)
-    return ok({ variable: shared, token: common });
+    return siteOnly(common)
+      ? err({ kind: "site-only", variable, shared })
+      : ok({ variable: shared, token: common });
   return value(read, siteLess) === null
     ? err({ kind: "missing", variable, shared })
     : err({ kind: "site-less", variable, shared, siteLess });

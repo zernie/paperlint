@@ -6,6 +6,7 @@ import { hostOf, lookUpToken } from "./portal-token.ts";
 const NAMES = {
   variable: "HOTCRP_TOKEN_MSR2027",
   shared: null,
+  siteOnly: (t: string) => t.startsWith("hct_"),
   siteLess: "HOTCRP_TOKEN",
 };
 const HOSTED = { ...NAMES, shared: "HOTCRP_TOKEN_HOTCRP_COM" };
@@ -66,13 +67,13 @@ test("lookUpToken: neither set, or only blanks → missing, naming the site's va
 
 test("lookUpToken: a hosted site with only the shared variable set → the shared token, and its name", () => {
   const env: Record<string, string> = {
-    HOTCRP_TOKEN_HOTCRP_COM: " hct_all \n",
+    HOTCRP_TOKEN_HOTCRP_COM: " hcT_all \n",
   };
   assert.deepEqual(
     lookUpToken(HOSTED, (n) => env[n]),
     {
       ok: true,
-      value: { variable: "HOTCRP_TOKEN_HOTCRP_COM", token: "hct_all" },
+      value: { variable: "HOTCRP_TOKEN_HOTCRP_COM", token: "hcT_all" },
     },
   );
 });
@@ -80,7 +81,7 @@ test("lookUpToken: a hosted site with only the shared variable set → the share
 test("lookUpToken: a hosted site with both set → the site's own token wins", () => {
   const env: Record<string, string> = {
     HOTCRP_TOKEN_MSR2027: "hct_site",
-    HOTCRP_TOKEN_HOTCRP_COM: "hct_all",
+    HOTCRP_TOKEN_HOTCRP_COM: "hcT_all",
   };
   assert.deepEqual(
     lookUpToken(HOSTED, (n) => env[n]),
@@ -94,19 +95,19 @@ test("lookUpToken: a hosted site with both set → the site's own token wins", (
 test("lookUpToken: a hosted site with a blank own variable falls to the shared one", () => {
   const env: Record<string, string> = {
     HOTCRP_TOKEN_MSR2027: "  ",
-    HOTCRP_TOKEN_HOTCRP_COM: "hct_all",
+    HOTCRP_TOKEN_HOTCRP_COM: "hcT_all",
   };
   assert.deepEqual(
     lookUpToken(HOSTED, (n) => env[n]),
     {
       ok: true,
-      value: { variable: "HOTCRP_TOKEN_HOTCRP_COM", token: "hct_all" },
+      value: { variable: "HOTCRP_TOKEN_HOTCRP_COM", token: "hcT_all" },
     },
   );
 });
 
 test("🔴 lookUpToken: a site with no shared variable never reads it, set or not", () => {
-  const env: Record<string, string> = { HOTCRP_TOKEN_HOTCRP_COM: "hct_all" };
+  const env: Record<string, string> = { HOTCRP_TOKEN_HOTCRP_COM: "hcT_all" };
   const seen: string[] = [];
   assert.deepEqual(
     lookUpToken(NAMES, (n) => (seen.push(n), env[n])),
@@ -134,6 +135,40 @@ test("🔴 lookUpToken: a hosted site with only the site-less variable set → r
         shared: "HOTCRP_TOKEN_HOTCRP_COM",
         siteLess: "HOTCRP_TOKEN",
       },
+    },
+  );
+});
+
+test("🔴 lookUpToken: a site-only token in the shared variable → refused, naming both variables, never used", () => {
+  const env: Record<string, string> = { HOTCRP_TOKEN_HOTCRP_COM: "hct_fake" };
+  assert.deepEqual(
+    lookUpToken(HOSTED, (n) => env[n]),
+    {
+      ok: false,
+      error: {
+        kind: "site-only",
+        variable: "HOTCRP_TOKEN_MSR2027",
+        shared: "HOTCRP_TOKEN_HOTCRP_COM",
+      },
+    },
+  );
+});
+
+test("lookUpToken: the same token in the site's own variable is used; an all-sites token in the shared one is used", () => {
+  const own: Record<string, string> = { HOTCRP_TOKEN_MSR2027: "hct_fake" };
+  assert.deepEqual(
+    lookUpToken(HOSTED, (n) => own[n]),
+    {
+      ok: true,
+      value: { variable: "HOTCRP_TOKEN_MSR2027", token: "hct_fake" },
+    },
+  );
+  const all: Record<string, string> = { HOTCRP_TOKEN_HOTCRP_COM: "hcT_fake" };
+  assert.deepEqual(
+    lookUpToken(HOSTED, (n) => all[n]),
+    {
+      ok: true,
+      value: { variable: "HOTCRP_TOKEN_HOTCRP_COM", token: "hcT_fake" },
     },
   );
 });

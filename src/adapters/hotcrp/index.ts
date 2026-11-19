@@ -21,6 +21,7 @@ export { hotcrpSite } from "./site.ts";
 export {
   SITE_LESS_VARIABLE,
   VARIABLE_PATTERN,
+  isSiteOnlyToken,
   sharedVariable,
   tokenVariable,
 } from "./token.ts";
