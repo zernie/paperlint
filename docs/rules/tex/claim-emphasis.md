@@ -56,7 +56,7 @@ We introduce \textbf{GateBench}, a harness for scraped guards.     % none: a ter
 ## Options / preset fields
 
 No rule options. The band is the venue preset's `register.anchors`, exactly as for
-[`tex/contrast-frames`](contrast-frames.md), which explains how it is derived. For `paperlint:aidc` it
+[`tex/contrast-frames`](contrast-frames.md), which explains how it is derived. For `paperlint:aidc-2026` it
 is **0–17.8**.
 
 ## What it does not check

@@ -1,1 +1,1 @@
-{"extends": "paperlint:aidc", "kind": "short", "identity": ["Ada Example", "adaexample", "ada@example.org", "Example University", "exampletool"]}
+{"extends": "paperlint:aidc-2026", "kind": "short", "identity": ["Ada Example", "adaexample", "ada@example.org", "Example University", "exampletool"]}

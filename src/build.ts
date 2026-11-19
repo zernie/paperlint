@@ -135,7 +135,7 @@ export interface PaperFacts {
     readonly name: string;
     readonly options: readonly string[];
   } | null;
-  /** The id of the venue preset `paperlint.json` extends (`agenticdev`), or null. */
+  /** The id of the venue preset `paperlint.json` extends (`agenticdev-2026`), or null. */
   readonly venue: string | null;
   /** Paper-supplied build scripts found on disk — reported as ignored. */
   readonly ignoredScripts: readonly string[];

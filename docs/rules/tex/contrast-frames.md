@@ -77,7 +77,7 @@ paper with its body's `words` and its count of each measure, as these rules coun
 The band is the anchors' range widened at each end by two Poisson standard deviations of the anchor
 standing there (an anchor with no occurrence is widened as if it had one; below zero is zero), so a
 paper of that anchor's length and register falls outside it about one time in forty. For
-`paperlint:aidc`, the anchors are the five accepted ACSAC papers above — AIDC has no accepted papers of
+`paperlint:aidc-2026`, the anchors are the five accepted ACSAC papers above — AIDC has no accepted papers of
 its own yet, and uses ACSAC's template — and the band is **0–10.4**. `src/register-bands.test.ts`
 re-measures every anchor that has a fixture, so a change to a counter changes the preset with it.
 

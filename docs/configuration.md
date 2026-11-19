@@ -18,9 +18,10 @@ papers/
 venues/usenix-sec.jsonc      (optional, your own) a VENUE PRESET: format, page limits, TeX packages, rules
 ```
 
-The shipped presets (`paperlint:<name>`) live in the package, under
-`presets/`: `acm-sigconf`, `agenticdev`, `aidc`, `aisec`,
-`ieee-conference`, `msr`, `realm`. Each declares what it is — `"type": "venue"` with the venue's `name` and
+The shipped presets live in the package, under `presets/`: a venue preset is one edition,
+`paperlint:<series>-<year>` (`paperlint:aidc-2026`), and a template family has no year
+(`paperlint:acm-sigconf`); every one is listed in [`venues.md`](venues.md#what-paperlint-ships). A bare
+series (`paperlint:aidc`) is refused, naming the editions. Each declares what it is — `"type": "venue"` with the venue's `name` and
 the `url` of its call for papers, or `"type": "family"` for a publisher's template, which names no
 venue (`tex-base.jsonc`, the TeX packages every paper gets, is `"base"`).
 
@@ -95,7 +96,7 @@ refused by name. `node_modules/`, `.git/` and `<papers>/.template/` are skipped.
 
 ```json
 {
-  "extends": "paperlint:aisec",
+  "extends": "paperlint:aisec-2026",
   "kind": "research",
   "rules": { "pdf/body-size": "off" }
 }
@@ -122,7 +123,7 @@ skills' keys), which are refused here by name, plus `talk`, `submission`, `autho
 `<papers>/.template/paperlint.json` if you keep one). With `--venue` it writes the venue into it:
 
 ```sh
-npx paperlint new my-paper --venue agenticdev --kind short        # "extends": "paperlint:agenticdev"
+npx paperlint new my-paper --venue agenticdev --kind short        # "extends": "paperlint:agenticdev-2026"
 npx paperlint new my-paper --venue ./venues/my-workshop.jsonc     # "extends": "../../venues/my-workshop.jsonc"
 ```
 
@@ -358,7 +359,7 @@ reading, an override, an outcome, a venue — is an error, so an override typed 
 cannot look recorded and not be in force.
 
 **Where the readings come from.** A shipped venue preset whose venue takes submissions on HotCRP
-carries the portal's readings itself, as `deadlines` (`presets/msr.jsonc`). A cycle whose venue is that
+carries the portal's readings itself, as `deadlines` (`presets/msr-2027.jsonc`). A cycle whose venue is that
 preset **derives** them: write only what the call says and any override; a portal reading the preset
 already carries is reported by [`cycle/record`](rules/cycle/record.md) as a second copy. A scheduled
 workflow in paperlint's repository re-reads every such portal once a day and, when a value changed,

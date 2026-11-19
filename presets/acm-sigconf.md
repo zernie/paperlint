@@ -35,7 +35,7 @@ the Conference Publishing author instructions for ACM (2026-08-25).
 <!-- prettier-ignore-start -->
 <!-- Generated from acm-sigconf.jsonc by `npx eslint --fix` (rule preset/card-rules). Edit the preset, not this section. -->
 
-**`paperlint:acm-sigconf`** — template family, no venue of its own · extended by `paperlint:agenticdev`, `paperlint:aisec`, `paperlint:ase`, `paperlint:ccs`, `paperlint:icse`
+**`paperlint:acm-sigconf`** — template family, no venue of its own · extended by `paperlint:agenticdev-2026`, `paperlint:aisec-2026`, `paperlint:ase-2026`, `paperlint:ccs-2026`, `paperlint:icse-2028`
 
 No preset of this chain sets a rule: under it, every rule keeps paperlint's default.
 

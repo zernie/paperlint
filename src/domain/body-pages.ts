@@ -3,7 +3,7 @@
  * classifies its pages. A venue that limits the body «excluding references and appendices» (AIDC)
  * cannot be judged on banal's body count: banal calls any page holding non-bibliography text body,
  * so an LLM Usage Statement or an appendix placed after the bibliography is counted as body, and a
- * correct paper fails (measured, `presets/aidc.jsonc`).
+ * correct paper fails (measured, `presets/aidc-2026.jsonc`).
  *
  * ── WHERE THE BODY ENDS: AT THE REFERENCES, OR AT THE APPENDIX, WHICHEVER COMES FIRST ──────
  * «Excluding references and appendices» excludes an appendix wherever it sits, so the body ends at

@@ -218,7 +218,7 @@ test("the shipped aidc preset declares its HotCRP portal", () => {
   const fs = memoryFiles({
     "/w/package.json": "{}",
     [`${PAPER}/paperlint.json`]: JSON.stringify({
-      extends: "paperlint:aidc",
+      extends: "paperlint:aidc-2026",
       submission: { id: 7 },
     }),
   });
