@@ -110,6 +110,8 @@ export const KEY_SIGNATURES: Readonly<
   // Options for a class, given before its `\documentclass`: `tex/template` reads them as the line's.
   // The same for a package, before its `\usepackage`.
   ...signed(["PassOptionsToClass", "PassOptionsToPackage"], "m m"),
+  // A package given the options of the file that loads it: `\RequirePackageWithOptions{pkg}[date]`.
+  ...signed(["RequirePackageWithOptions"], "m o"),
 ]);
 
 /**

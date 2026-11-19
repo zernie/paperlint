@@ -187,7 +187,9 @@ export function parseTemplate(text: string): DocumentClass | null {
 
 const isPackageLine = (n: Node): n is Macro =>
   n.type === "macro" &&
-  (n.content === "usepackage" || n.content === "RequirePackage");
+  (n.content === "usepackage" ||
+    n.content === "RequirePackage" ||
+    n.content === "RequirePackageWithOptions");
 
 /** A comma list of names (`a, b`), each whitespace-collapsed, empty ones left out. */
 const namesIn = (nodes: readonly Node[] | undefined): readonly string[] =>
@@ -195,62 +197,98 @@ const namesIn = (nodes: readonly Node[] | undefined): readonly string[] =>
     .map((part) => collapse(textOf(part)))
     .filter(Boolean);
 
-/** A comma list of options as written, empty ones left out. */
-const optionsIn = (src: string, nodes: readonly Node[]): readonly string[] =>
-  splitWhere(nodes, isComma)
-    .map((part) => optionText(src, part))
-    .filter(Boolean);
+/** Options as LaTeX hands them on: each as written, and the ones built by a macro. */
+type Options = Pick<PassedOptions, "options" | "unread">;
+
+const NO_OPTIONS: Options = { options: [], unread: [] };
+
+/** Several lists of options, one after the other. */
+const joined = (lists: readonly Options[]): Options => ({
+  options: lists.flatMap((l) => l.options),
+  unread: lists.flatMap((l) => l.unread),
+});
 
 /** One `\PassOptionsToPackage{options}{packages}`: the packages it names, its options, its index. */
-interface PassedToPackage {
+interface PassedToPackage extends Options {
   readonly packages: readonly string[];
-  readonly options: readonly string[];
   readonly index: number;
 }
 
 /**
- * Every `\PassOptionsToPackage` at the top of the tree: its options count for a load of one of its
- * packages after it, as LaTeX reads them. One missing an argument passes nothing.
+ * Every `\PassOptionsToPackage` at the top of the tree: LaTeX adds its options to each package's
+ * own list (`\@pass@ptions`, latex.ltx), so they count for a load of one of its packages after it.
+ * One missing an argument passes nothing.
  */
 const passedToPackagesOf = (t: ParsedTex): readonly PassedToPackage[] =>
   t.root.content.flatMap((n, index) => {
     if (n.type !== "macro" || n.content !== "PassOptionsToPackage") return [];
     const [opts, pkgs] = mandatory(n);
     if (opts === undefined || pkgs === undefined) return [];
-    const options = optionsIn(t.src, opts.content);
-    return [{ packages: namesIn(pkgs.content), options, index }];
+    const list = optionList(t.src, opts.content);
+    return [{ ...list, packages: namesIn(pkgs.content), index }];
   });
 
-/** One package line, at `index` at the top: each package it names, with the line's options, those passed before it, and its place. */
+/**
+ * The global options in effect at `index`: those of the `\documentclass` lines before it. LaTeX
+ * keeps the class line's own options as `\@classoptionslist`, which every package's
+ * `\ProcessOptions` reads; options given with `\PassOptionsToClass` are the class's alone. Several
+ * lines behind a TeX switch: each one's, as any of them may be the one that builds.
+ */
+const globalAt = (t: ParsedTex, index: number): Options =>
+  joined(
+    classNodes(t)
+      .filter((c) => c.index < index)
+      .map((c) => optionList(t.src, optional(c.node)?.content ?? [])),
+  );
+
+/**
+ * One package line, at `index` at the top: each package it names, with the options LaTeX hands it
+ * — the global ones, then those passed to it before the line, then the line's own — and its place.
+ * `\RequirePackageWithOptions` gives the package the options of the file that loads it instead of
+ * its own list: in a paper's preamble, none, so the global ones alone.
+ */
 function packageLoads(
   src: string,
   { node, index }: AtTop,
-  passed: readonly PassedToPackage[],
+  {
+    passed,
+    global,
+  }: { readonly passed: readonly PassedToPackage[]; readonly global: Options },
 ): readonly PackageLoad[] {
   const place = macroPlace(node);
-  const own = optionsIn(src, optional(node)?.content ?? []);
-  const before = (name: string): readonly string[] =>
-    passed
-      .filter((p) => p.index < index && p.packages.includes(name))
-      .flatMap((p) => p.options);
-  return namesIn(mandatory(node)[0]?.content).map((name) => ({
-    name,
-    options: [...own, ...before(name)],
-    place,
-  }));
+  const withOptions = node.content === "RequirePackageWithOptions";
+  const own = withOptions
+    ? NO_OPTIONS
+    : optionList(src, optional(node)?.content ?? []);
+  const before = (name: string): readonly Options[] =>
+    withOptions
+      ? []
+      : passed.filter((p) => p.index < index && p.packages.includes(name));
+  // A package loaded from a folder (`sty/aaai2027`) is the package of its file's base name: LaTeX
+  // parses the path and names the package by the base (`\@onefilewithoptions`, latex.ltx).
+  return namesIn(mandatory(node)[0]?.content)
+    .map((path) => path.slice(path.lastIndexOf("/") + 1))
+    .map((name) => ({
+      name,
+      ...joined([global, ...before(name), own]),
+      place,
+    }));
 }
 
 /**
- * Every package the `\usepackage` and `\RequirePackage` lines at the top of the tree load, in source
- * order: the preamble's, as the class line is read, each with the options its line names and the
- * ones `\PassOptionsToPackage` gave it before the line. A comment is not a line; several lines behind
- * a TeX switch are each read.
+ * Every package the `\usepackage`, `\RequirePackage` and `\RequirePackageWithOptions` lines at the
+ * top of the tree load, in source order: the preamble's, as the class line is read, each with the
+ * options LaTeX hands it (`packageLoads`). A comment is not a line; several lines behind a TeX
+ * switch are each read. A package loaded twice keeps the options of its first load in LaTeX, and a
+ * second load asking for more stops the build («Option clash»), so each line is read as its own.
  */
 export function packagesOf(t: ParsedTex): readonly PackageLoad[] {
   const passed = passedToPackagesOf(t);
   return t.root.content
     .flatMap((node, index) => (isPackageLine(node) ? [{ node, index }] : []))
-    .flatMap((at) => packageLoads(t.src, at, passed));
+    .flatMap((at) =>
+      packageLoads(t.src, at, { passed, global: globalAt(t, at.index) }),
+    );
 }
 
 /**
@@ -265,7 +303,8 @@ export function parseTemplateStyle(text: string): StylePackage | null {
   const [only, ...rest] = nodes;
   if (only === undefined || rest.length > 0 || !isPackageLine(only))
     return null;
-  const loads = packageLoads(t.src, { node: only, index: 0 }, []);
+  const none = { passed: [], global: NO_OPTIONS };
+  const loads = packageLoads(t.src, { node: only, index: 0 }, none);
   const [load, ...more] = loads;
   return load === undefined || more.length > 0
     ? null

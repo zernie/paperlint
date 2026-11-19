@@ -277,6 +277,26 @@ const isOtherStyle = (
   (others.includes(name) ||
     (seriesOf(name) !== "" && seriesOf(name) === seriesOf(want)));
 
+/** Whether a load is the style with every option the template names, among the options LaTeX hands it. */
+const carries = (load: PackageLoad, want: StylePackage): boolean =>
+  load.name === want.name &&
+  want.options.every((o) => load.options.includes(o));
+
+/**
+ * Whether the paper is known to load the preset's style with its options: a load that carries them,
+ * read whole. True when the preset names no style; false for a style line the reader cannot read.
+ * Silence from `judgeStyle` is not enough: it is also silent when a macro may carry an option.
+ */
+export function isStyleLoaded(
+  packages: readonly PackageLoad[],
+  preset: Preset,
+  latex: Pick<LatexReader, "templateStyle">,
+): boolean {
+  if (preset.templateStyle === null) return true;
+  const want = latex.templateStyle(preset.templateStyle.text);
+  return want !== null && packages.some((p) => carries(p, want));
+}
+
 /**
  * The lines that load the template's style: satisfied when any carries every option the style names;
  * otherwise each option the first line lacks, at that line.
@@ -287,11 +307,9 @@ function judgeLoaded(
   data: { readonly venue: string; readonly style: string },
 ): readonly Located[] {
   const [first] = loads;
-  if (
-    first === undefined ||
-    loads.some((l) => want.options.every((o) => l.options.includes(o)))
-  )
-    return [];
+  if (first === undefined || loads.some((l) => carries(l, want))) return [];
+  // An option built by a macro may be the one wanted: what it holds is not known, so nothing is said.
+  if (loads.some((l) => l.unread.length > 0)) return [];
   return want.options
     .filter((o) => !first.options.includes(o))
     .map((option) => ({
@@ -849,8 +867,7 @@ export function judgePortDone(
   // gets no finding from tex/template, and is not the venue's for that. And the style with it: a
   // port from one article-based style to another is not done while the class line already matches.
   if (!isTemplate(line, t, r.preset.label, r.latex)) return [];
-  const style = { packages: r.latex.packages(r.src), others: [] };
-  if (judgeStyle(style, r.preset, r.latex).length > 0) return [];
+  if (!isStyleLoaded(r.latex.packages(r.src), r.preset, r.latex)) return [];
   const data = { venue: r.preset.label, template: t.text, id: cycleId };
   return [{ messageId: "done", data, at: null }];
 }

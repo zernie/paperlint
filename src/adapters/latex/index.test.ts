@@ -260,7 +260,7 @@ describe("packagesOf — options passed to a package before it is loaded (`\\Pas
         "\\documentclass{article}\n\\PassOptionsToPackage{submission, x}{other, aaai2027}\n\\usepackage[y]{aaai2027}\n\\usepackage{other}\n",
       ),
     ).toEqual([
-      ["aaai2027", ["y", "submission", "x"]],
+      ["aaai2027", ["submission", "x", "y"]],
       ["other", ["submission", "x"]],
     ]);
   });
@@ -271,6 +271,49 @@ describe("packagesOf — options passed to a package before it is loaded (`\\Pas
         "\\documentclass{article}\n\\PassOptionsToPackage{a}{other}\n\\usepackage{aaai2027}\n\\PassOptionsToPackage{submission}{aaai2027}\n\\PassOptionsToPackage{b}\n",
       ),
     ).toEqual([["aaai2027", []]]);
+  });
+});
+
+describe("packagesOf — the options LaTeX hands a package: global, passed, its own (latex.ltx)", () => {
+  const loads = (src: string) =>
+    packagesOf(parseLatex(src)).map((p) => [p.name, p.options, p.unread]);
+
+  it("🔴 the class line's options are global: every package after it gets them, before its own", () => {
+    expect(
+      loads(
+        "\\documentclass[letterpaper, submission]{article}\n\\PassOptionsToPackage{x}{aaai2027}\n\\usepackage[y]{aaai2027}\n",
+      ),
+    ).toEqual([["aaai2027", ["letterpaper", "submission", "x", "y"], []]]);
+  });
+
+  it("options passed to the class with \\PassOptionsToClass are the class's alone, not global", () => {
+    expect(
+      loads(
+        "\\PassOptionsToClass{submission}{article}\n\\documentclass[letterpaper]{article}\n\\usepackage{aaai2027}\n",
+      ),
+    ).toEqual([["aaai2027", ["letterpaper"], []]]);
+  });
+
+  it("🔴 \\RequirePackageWithOptions loads the package with the global options, and what was passed to it is replaced", () => {
+    expect(
+      loads(
+        "\\documentclass[submission]{article}\n\\PassOptionsToPackage{x}{aaai2027}\n\\RequirePackageWithOptions{aaai2027}\n",
+      ),
+    ).toEqual([["aaai2027", ["submission"], []]]);
+  });
+
+  it("🔴 an option built by a macro, on the class line, passed, or on the load, is unread", () => {
+    expect(
+      loads(
+        "\\documentclass[\\cls]{article}\n\\PassOptionsToPackage{\\pass}{aaai2027}\n\\usepackage[\\own, y]{aaai2027}\n",
+      ),
+    ).toEqual([
+      [
+        "aaai2027",
+        ["\\cls", "\\pass", "\\own", "y"],
+        ["\\cls", "\\pass", "\\own"],
+      ],
+    ]);
   });
 });
 

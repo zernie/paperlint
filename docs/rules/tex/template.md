@@ -99,11 +99,27 @@ Class options the venue's call forbids, each reported where the class line carri
 
 For a template that is a style file from the venue's author kit, loaded into a plain class
 (NeurIPS's `neurips_2026.sty` into `article`): the whole `\usepackage[…]{…}` line, one package and
-the options it requires. The paper must then load that package (`\usepackage` or
-`\RequirePackage`, in the preamble or a file it `\input`s, alone or in a list) with every option
-named, on its line or given before it by `\PassOptionsToPackage` (one given after the line is not in
-effect); options of its own are allowed, and one of several lines behind a TeX switch is enough. What
-is reported, at error:
+the options it requires. The paper must then load that package (`\usepackage`, `\RequirePackage`
+or `\RequirePackageWithOptions`, in the preamble or a file it `\input`s, alone or in a list, from
+a folder or not: `sty/aaai2027` is the package `aaai2027`) with every option named, among the
+options LaTeX hands it (latex.ltx, TeX Live 2026):
+
+- **a global option**, on the `\documentclass` line: the kernel keeps the line's options as
+  `\@classoptionslist`, and every package's `\ProcessOptions` takes the ones it declares
+  (`\@process@ptions`). `\documentclass[letterpaper,submission]{article}` then
+  `\usepackage{aaai2027}` passes. An option the class gets from `\PassOptionsToClass` is not
+  global: it goes to the class's own list (`\@pass@ptions`) and reaches no package;
+- **an option passed before the load** with `\PassOptionsToPackage`, which adds to the package's
+  own list. One passed after the load is not in effect;
+- **an option on the load's own line**. `\RequirePackageWithOptions` replaces the package's list
+  with that of the file that loads it (`\@loadwithoptions`): in a paper's preamble, none, so the
+  global options alone count for it.
+
+Options of the paper's own are allowed, and one of several lines behind a TeX switch is enough. An
+option built by a macro (`\documentclass[\opts]{article}`) may hold the one required: the rule says
+nothing then, and `cycle/port-done` does not call the port done. A package loaded twice keeps its
+first load's options, and a second load asking for more stops the build («Option clash»). What is
+reported, at error:
 
 ```latex
 \documentclass{article}                       % fails: NeurIPS requires `\usepackage{neurips_2026}`;

@@ -123,11 +123,13 @@ export interface StylePackage {
 }
 
 /**
- * One package a `\usepackage` or `\RequirePackage` of the paper loads, with the options of its line
- * as written (whitespace collapsed), and where the line stands. A line loading several packages
- * (`\usepackage{a,b}`) gives one each, with the line's options and place.
+ * One package a `\usepackage`, `\RequirePackage` or `\RequirePackageWithOptions` of the paper
+ * loads, with every option LaTeX hands it, as written (whitespace collapsed): the class line's, those
+ * passed to it before the load, the load's own. Of those, `unread` holds the ones built by a macro,
+ * whose content is not known. A line loading several packages (`\usepackage{a,b}`) gives one each.
  */
 export interface PackageLoad extends StylePackage {
+  readonly unread: readonly string[];
   readonly place: Place;
 }
 

@@ -1729,14 +1729,17 @@ describe("otherStyles — the styles of the shipped venues off a paper's chain",
   });
 });
 
-describe("tex/template under AAAI — a required style option passed with `\\PassOptionsToPackage`", () => {
-  const AAAI_MAIN = { extends: "paperlint:aaai-2027", kind: "main" };
-  const template = (preamble: string) =>
-    lint(
-      paper(`\\documentclass[letterpaper]{article}\n${preamble}`, "Text."),
-      AAAI_MAIN,
-    ).filter((f) => f.rule === "tex/template");
+const AAAI_MAIN = { extends: "paperlint:aaai-2027", kind: "main" };
+/** tex/template on a paper under aaai-2027: its class line, then `preamble`. */
+const template = (
+  preamble: string,
+  cls = "\\documentclass[letterpaper]{article}",
+) =>
+  lint(paper(`${cls}\n${preamble}`, "Text."), AAAI_MAIN).filter(
+    (f) => f.rule === "tex/template",
+  );
 
+describe("tex/template under AAAI — a required style option passed with `\\PassOptionsToPackage`", () => {
   it("🔴 passed before the load, alone or in a list of packages: the option is in effect", () => {
     expect(
       template(
@@ -1748,6 +1751,72 @@ describe("tex/template under AAAI — a required style option passed with `\\Pas
         "\\PassOptionsToPackage{submission}{times,aaai2027}\n\\usepackage{aaai2027}",
       ),
     ).toEqual([]);
+  });
+});
+
+describe("tex/template under AAAI — the options LaTeX hands the style: global ones, a macro's, not the class's alone", () => {
+  it("🔴 a global option of the class line reaches the style: aaai2027.sty declares and processes it", () => {
+    expect(
+      template(
+        "\\usepackage{aaai2027}",
+        "\\documentclass[letterpaper,submission]{article}",
+      ),
+    ).toEqual([]);
+    expect(
+      template(
+        "\\documentclass[letterpaper,submission]{article}\n\\RequirePackageWithOptions{aaai2027}",
+        "",
+      ),
+    ).toEqual([]);
+  });
+
+  it("🔴 an option built by a macro may carry it: silent, and the port is not called done", () => {
+    expect(
+      template(
+        "\\usepackage{aaai2027}",
+        "\\documentclass[letterpaper,\\opts]{article}",
+      ),
+    ).toEqual([]);
+    const porting = {
+      cycles: [
+        {
+          ...PORTING,
+          id: "aaai-2027",
+          venue: { kind: "preset", extends: "paperlint:aaai-2027" },
+          kind: "main",
+        },
+      ],
+    };
+    const portDone = (cls: string) =>
+      lint(paper(`${cls}\n\\usepackage{aaai2027}`, "Text."), porting).map(
+        (f) => `${f.rule}:${f.messageId}`,
+      );
+    expect(portDone("\\documentclass[letterpaper,\\opts]{article}")).toEqual(
+      [],
+    );
+    expect(
+      portDone("\\documentclass[letterpaper,submission]{article}"),
+    ).toEqual(["cycle/port-done:done"]);
+  });
+});
+
+describe("tex/template under AAAI — a style loaded from a folder", () => {
+  it("🔴 \\usepackage{sty/aaai2027} loads the package aaai2027: LaTeX names it by its file's base name", () => {
+    expect(template("\\usepackage[submission]{sty/aaai2027}")).toEqual([]);
+    expect(
+      template("\\usepackage{sty/aaai2026}").map((f) => f.messageId),
+    ).toEqual(["wrongStyle"]);
+  });
+});
+
+describe("tex/template under AAAI — the options that do not reach the style", () => {
+  it("🔴 passed to the class only: \\PassOptionsToClass does not make an option global", () => {
+    expect(
+      template(
+        "\\usepackage{aaai2027}",
+        "\\PassOptionsToClass{submission}{article}\n\\documentclass[letterpaper]{article}",
+      ).map((f) => f.messageId),
+    ).toEqual(["missingStyleOption"]);
   });
 
   it("🔴 passed after the load, or to another package: the option is missing", () => {
@@ -1761,24 +1830,24 @@ describe("tex/template under AAAI — a required style option passed with `\\Pas
   });
 });
 
-describe("judgeStyle — another shipped venue's style, and a required option", () => {
-  const neurips = resolvePreset(
-    "paperlint:neurips-2026",
-    `${PAPER}/paperlint.json`,
-    { files: memoryFiles(shipped), venuesDir: VENUES },
-  );
-  const at = (start: number) => ({
-    kind: "at" as const,
-    span: { start, end: start + 1 },
-  });
+const neurips = resolvePreset(
+  "paperlint:neurips-2026",
+  `${PAPER}/paperlint.json`,
+  { files: memoryFiles(shipped), venuesDir: VENUES },
+);
+const at = (start: number) => ({
+  kind: "at" as const,
+  span: { start, end: start + 1 },
+});
 
+describe("judgeStyle — another shipped venue's style, and a required option", () => {
   it("🔴 a style another shipped venue names is reported by name; an unknown package is the paper's own", () => {
     expect(neurips.ok).toBe(true);
     if (!neurips.ok) return;
     const judge = (name: string) =>
       judgeStyle(
         {
-          packages: [{ name, options: [], place: at(5) }],
+          packages: [{ name, options: [], unread: [], place: at(5) }],
           others: ["icml2027", "aaai2027"],
         },
         neurips.value,
@@ -1799,7 +1868,9 @@ describe("judgeStyle — another shipped venue's style, and a required option", 
     const judge = (options: readonly string[]) =>
       judgeStyle(
         {
-          packages: [{ name: "neurips_2026", options, place: at(5) }],
+          packages: [
+            { name: "neurips_2026", options, unread: [], place: at(5) },
+          ],
           others: [],
         },
         withOption,
@@ -1808,7 +1879,9 @@ describe("judgeStyle — another shipped venue's style, and a required option", 
     expect(judge([])).toEqual([["missingStyleOption", "main"]]);
     expect(judge(["main", "final"])).toEqual([]);
   });
+});
 
+describe("judgeStyle — a template_style the reader cannot read", () => {
   it("a template_style that is not one \\usepackage line is said, naming the file", () => {
     expect(neurips.ok).toBe(true);
     if (!neurips.ok) return;
