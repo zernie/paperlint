@@ -237,7 +237,7 @@ export async function run(
 export const STEPS = [
   `  1. create a token on this site: ${SITE}/profile?t=developer (Account settings → Developer → API tokens), with the scopes submeta:read and document:read (show), submeta:write and document:write (update, new) — tick all four to use every subcommand`,
   "  2. set it in your environment — never paste it into a chat: export HOTCRP_TOKEN_127_0_0_1_9=<the token>",
-  "  tokens are per hotcrp site: HOTCRP_TOKEN_127_0_0_1_9 is read for 127.0.0.1:9 alone, so two venues take two variables",
+  "  a self-hosted install has a variable of its own: HOTCRP_TOKEN_127_0_0_1_9 is read for 127.0.0.1:9 alone, and never HOTCRP_TOKEN_HOTCRP_COM, which serves hotcrp.com sites only",
 ];
 
 export const AUTHORS = [

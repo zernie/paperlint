@@ -21,6 +21,7 @@ export { hotcrpSite } from "./site.ts";
 export {
   SITE_LESS_VARIABLE,
   VARIABLE_PATTERN,
+  sharedVariable,
   tokenVariable,
 } from "./token.ts";
 export { parseDeadlinesPage, whatOf } from "./deadlines.ts";

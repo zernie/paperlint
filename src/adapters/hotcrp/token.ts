@@ -2,12 +2,15 @@
  * WHICH ENVIRONMENT VARIABLE HOLDS A HOTCRP SITE'S API TOKEN — HotCRP's fact, so HotCRP's adapter.
  * Pure.
  *
- * A HotCRP token works on the site it was made on and nowhere else (measured 2026-10-19: a token
- * made on one HotCRP site gets `401 Unauthorized` from `msr2027.hotcrp.com`'s `/api/whoami`). So the
- * variable is named after the site, and no two sites share one — `HOTCRP_TOKEN_<subdomain>` on the
- * hosted service, `HOTCRP_TOKEN_<host and path>` anywhere else — and an author with live submissions
- * at two venues sets two variables (#236). The site-less `HOTCRP_TOKEN` is no longer read; the policy that refuses it
- * by name is the domain's (`src/domain/portal-token.ts`).
+ * Two measurements, and what each shows. 2026-10-19: a token made on a self-hosted install gets
+ * `401 Unauthorized` from `msr2027.hotcrp.com`'s `/api/whoami` — a self-hosted install's token does
+ * not travel to the hosted service. That crossed two servers; it says nothing about two sites on the
+ * hosted service. Those share one account system (an author reports the token made on one
+ * `*.hotcrp.com` conference already listed in the profile on a second): one token serves them all (#547).
+ * So a `*.hotcrp.com` site reads `HOTCRP_TOKEN_<subdomain>` first, as an override, then the one
+ * variable of the whole service, `HOTCRP_TOKEN_HOTCRP_COM`; a self-hosted install reads
+ * `HOTCRP_TOKEN_<host and path>` only, never the service's. The site-less `HOTCRP_TOKEN` is no longer
+ * read; the policy that refuses it by name is the domain's (`src/domain/portal-token.ts`).
  */
 import { hostOf } from "../../domain/portal-token.ts";
 
@@ -20,6 +23,20 @@ export const VARIABLE_PATTERN = `${SITE_LESS_VARIABLE}_<LABEL>`;
 /** The hosted service, where each conference is a subdomain of its own. */
 const HOSTED = ".hotcrp.com";
 
+/** The one variable of the hosted service: its sites share an account system, so one token. */
+const SHARED_VARIABLE = `${SITE_LESS_VARIABLE}_HOTCRP_COM`;
+
+/** Whether `url` is a site of the hosted service. */
+const isHosted = (url: string): boolean => hostOf(url).endsWith(HOSTED);
+
+/**
+ * The variable shared by every site of the hosted service, for a site on it; null for a self-hosted
+ * install, whose token the hosted service does not accept (measured 2026-10-19: 401) and which never
+ * reads this one.
+ */
+export const sharedVariable = (url: string): string | null =>
+  isHosted(url) ? SHARED_VARIABLE : null;
+
 /**
  * What names a site, and no other: on the hosted service the subdomain alone
  * (`msr2027.hotcrp.com` → `msr2027`); anywhere else the whole host, with a port other than the
@@ -29,7 +46,7 @@ const HOSTED = ".hotcrp.com";
  */
 function siteLabel(url: string): string {
   const host = hostOf(url);
-  if (host.endsWith(HOSTED)) return host.slice(0, -HOSTED.length);
+  if (isHosted(url)) return host.slice(0, -HOSTED.length);
   const path = URL.canParse(url) ? new URL(url).pathname : "";
   return `${host}${path}`;
 }

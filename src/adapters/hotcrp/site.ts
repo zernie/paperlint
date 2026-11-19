@@ -8,12 +8,14 @@ import { hotcrpPortal } from "./portal.io.ts";
 import {
   SITE_LESS_VARIABLE,
   VARIABLE_PATTERN,
+  sharedVariable,
   tokenVariable,
 } from "./token.ts";
 
 /** The HotCRP site at `url` (no trailing slash). */
 export const hotcrpSite = (url: string): PortalSite => ({
   tokenVariable: tokenVariable(url),
+  sharedVariable: sharedVariable(url),
   siteLessVariable: SITE_LESS_VARIABLE,
   variablePattern: VARIABLE_PATTERN,
   credentials: {

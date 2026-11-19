@@ -4,7 +4,7 @@
  */
 import { map, unique } from "remeda";
 import { expect, test } from "vitest";
-import { tokenVariable } from "./index.ts";
+import { sharedVariable, tokenVariable } from "./index.ts";
 
 test("tokenVariable: on hotcrp.com the subdomain alone names the site", () => {
   expect(tokenVariable("https://msr2027.hotcrp.com")).toBe(
@@ -66,4 +66,36 @@ test("tokenVariable: a port other than the scheme's default is part of the site;
     "HOTCRP_TOKEN_REVIEW_EXAMPLE_ORG_CONF",
     "HOTCRP_TOKEN_127_0_0_1_9",
   ]);
+});
+
+test("sharedVariable: every *.hotcrp.com site has the one hosted-service variable", () => {
+  expect(
+    map(
+      [
+        "https://msr2027.hotcrp.com",
+        "https://msr2027.hotcrp.com/",
+        "https://ase-2027.hotcrp.com/paper/7",
+        "msr2027.hotcrp.com",
+      ],
+      sharedVariable,
+    ),
+  ).toStrictEqual(
+    map(Array.from({ length: 4 }), () => "HOTCRP_TOKEN_HOTCRP_COM"),
+  );
+});
+
+test("🔴 sharedVariable: a self-hosted install has none, however its host looks", () => {
+  expect(
+    map(
+      [
+        "https://aidc.submit.acsac.org",
+        "https://hotcrp.example.edu/conf2027",
+        "https://review.example.org:8443/conf",
+        "https://hotcrp.com.example.org",
+        "https://nothotcrp.com",
+        "http://127.0.0.1:9",
+      ],
+      sharedVariable,
+    ),
+  ).toStrictEqual(map(Array.from({ length: 6 }), () => null));
 });
