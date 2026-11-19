@@ -4,7 +4,7 @@ description: "Use when a paper \"feels long / bloated / overly complex / hard to
 allowed-tools: [Read, Write, Edit, Grep, Glob, Agent]
 ---
 
-<!-- vigiles:sha256:009d9fe0ecc95ded compiled from skills/tighten-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:c2336c32059ba9b7 compiled from skills/tighten-paper/SKILL.md.spec.ts -->
 
 # tighten-paper — the developmental edit
 
@@ -275,7 +275,8 @@ Rules for these verdicts:
   appendix, which is one heading with thirty-five arguments under it — and that is exactly where
   unpriced prose accumulates, because nothing there costs a page.
 - **Stale beats absent, but not by much.** A verdict whose date precedes the last substantive edit to
-  its section is stale; say so rather than trusting it.
+  its section is stale; say so rather than trusting it. After the final review is closed, an edit does
+  not make the verdict stale: name the edit instead, and an overflow is paid from the recorded plan.
 - **A verdict nobody executed is a note, not a decision.** List the blocks still carrying a
   non-KEEP verdict, each marked executed, rejected by the author (with his reason), or open. Only an
   open one is undecided; a cut the author rejected is decided, not a defect.
