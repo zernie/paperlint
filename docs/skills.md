@@ -27,7 +27,6 @@ Which skill hands work to which, drawn from each skill's own `flow`: [`pipeline.
 | a go / no-go on the idea, with the reason and the smallest result that makes a paper    | `research-ideate`       |
 | who already works on it, dated against your deadline, and what you can still claim      | `map-prior-work`        |
 | one close competitor read in full: is yours "just X?", and the sentence that answers it | `analyze-sibling-paper` |
-| candidate mechanisms from other fields, when the work needs a design, not a measurement | `sweep-design-space`    |
 
 ## 2 · Venue
 

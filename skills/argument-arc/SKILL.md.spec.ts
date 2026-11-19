@@ -7,8 +7,8 @@
 import { experimental_skill } from "vigiles/spec";
 import type { Flow } from "../../scripts/pipeline.ts";
 import buildBenchmark from "../build-benchmark/SKILL.md.spec.ts";
+import researchIdeate from "../research-ideate/SKILL.md.spec.ts";
 import rewriteUnclear from "../rewrite-unclear/SKILL.md.spec.ts";
-import sweepDesignSpace from "../sweep-design-space/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "argument-arc",
@@ -163,8 +163,8 @@ most needs help. This skill does:
 - **Before** \`tighten-paper\` (length/sag) and \`cold-read-diff\` (sentences/stalls) — both assume
   the arc holds. Their verdicts are the gate inputs \`pc-panel-review\` demands.
 - **After** any refutation pass that killed a load-bearing claim (see the paper's \`CLAIMS.md\`).
-- \`sweep-design-space\` when the outline shows the paper has no distinctive move to make — that is a
-  design problem, not an arc problem.
+- When the outline shows the paper has no distinctive move to make, stop and tell the author: that is
+  not an arc problem, and whether the idea carries a paper is \`research-ideate\`'s verdict.
 
 ## Provenance
 
@@ -179,5 +179,5 @@ export const flow = {
   stage: "draft",
   handsTo: () => [],
   calls: () => [rewriteUnclear],
-  loopsBackTo: () => [buildBenchmark, sweepDesignSpace],
+  loopsBackTo: () => [buildBenchmark, researchIdeate],
 } satisfies Flow;

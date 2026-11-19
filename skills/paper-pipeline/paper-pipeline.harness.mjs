@@ -79,10 +79,6 @@ for (const name of new Set(asserted)) {
 /** Shipped skills the conductor does NOT name, each with why. */
 const NOT_IN_MAP = new Map([
   [
-    "sweep-design-space",
-    "reached through `argument-arc`; missing only from the map",
-  ],
-  [
     "paper-status",
     "reports ON the pipeline rather than being a stage in it — the conductor has nothing to route to it",
   ],

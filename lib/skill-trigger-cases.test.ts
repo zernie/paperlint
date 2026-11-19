@@ -50,7 +50,6 @@ const FROZEN: readonly string[] = [
   "research-ideate",
   "study-accepted-papers",
   "submit-paper",
-  "sweep-design-space",
   "tighten-paper",
   "verify-citations",
 ];

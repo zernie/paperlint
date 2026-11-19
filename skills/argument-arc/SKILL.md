@@ -4,7 +4,7 @@ description: Build or repair the paper's argument architecture — the one-sente
 allowed-tools: [Read, Write, Grep, Glob, Agent]
 ---
 
-<!-- vigiles:sha256:7aacc0cb34fe3091 compiled from skills/argument-arc/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:d4b95136a7d46ba9 compiled from skills/argument-arc/SKILL.md.spec.ts -->
 
 # argument-arc — does the paper carry the reader to one conclusion
 
@@ -153,8 +153,8 @@ most needs help. This skill does:
 - **Before** `tighten-paper` (length/sag) and `cold-read-diff` (sentences/stalls) — both assume
   the arc holds. Their verdicts are the gate inputs `pc-panel-review` demands.
 - **After** any refutation pass that killed a load-bearing claim (see the paper's `CLAIMS.md`).
-- `sweep-design-space` when the outline shows the paper has no distinctive move to make — that is a
-  design problem, not an arc problem.
+- When the outline shows the paper has no distinctive move to make, stop and tell the author: that is
+  not an arc problem, and whether the idea carries a paper is `research-ideate`'s verdict.
 
 ## Provenance
 

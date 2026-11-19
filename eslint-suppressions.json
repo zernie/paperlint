@@ -571,16 +571,6 @@
       "count": 1
     }
   },
-  "skills/sweep-design-space/sweep-design-space.eval.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
-  "skills/sweep-design-space/sweep-design-space.harness.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
   "skills/tighten-paper/tighten-paper.eval.mjs": {
     "local/js-needs-reason": {
       "count": 1

@@ -1,10 +1,10 @@
 ---
 name: run-agent-grid
-description: "Run a paid or counted agent experiment grid end to end — units × arms × seeds (× agent stacks), one agent CLI run per cell in a fresh working copy, scored by an outcome oracle — without the failures that silently spoil one: an unapproved or hand-picked sample, a timeout that kills a slower model, two drivers sharing a working copy, secrets in transcripts, a classifier that mislabels outcomes, a session cap that kills the run, results lost from scratch space. Use when a study design exists and you are about to spend money or count runs: the registry and approval gate, the sandbox and secret probe, the smoke per model, the locked detached driver, the overlap audit, hand labels and the commit of finished runs. Ships grid-guard.js (lock, gate, overlap audit, env probe, key scan, pre-commit). Composes with build-benchmark (the design, upstream) and build-label-page (hand labels)"
+description: "Run a paid or counted agent experiment grid end to end — units × arms × seeds (× agent stacks), one agent CLI run per cell in a fresh working copy, scored by an outcome oracle — without the failures that silently spoil one: an unapproved or hand-picked sample, a timeout that kills a slower model, two drivers sharing a working copy, secrets in transcripts, a classifier that mislabels outcomes, a session cap that kills the run, results lost from scratch space. Use when a study design exists and you are about to spend money or count runs: the registry and approval gate, the sandbox and secret probe, the smoke per model, the locked detached driver, the overlap audit, hand labels and the commit of finished runs. Ships grid-guard.js (lock, gate, overlap audit, env probe, key scan, pre-commit). Composes with build-benchmark (the design, upstream) and build-label-page (hand labels)."
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Agent]
 ---
 
-<!-- vigiles:sha256:52b42d59892c27d9 compiled from skills/run-agent-grid/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:63242bdb86002197 compiled from skills/run-agent-grid/SKILL.md.spec.ts -->
 
 # run-agent-grid — running a counted agent grid without spoiling it
 

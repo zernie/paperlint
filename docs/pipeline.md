@@ -4,9 +4,9 @@
 
 Who hands work to whom, read from the skills themselves: each `skills/<name>/SKILL.md.spec.ts`
 exports `flow`, and `skills/jobs.ts` names the one owner of each job on a paper's text. A flow
-has three kinds of edge: **hands to** (29), the next step on the main path, drawn
+has three kinds of edge: **hands to** (27), the next step on the main path, drawn
 solid; **loops back to** (8), work sent back to an earlier skill, drawn dashed;
-**runs** (50), a skill this one runs as one of its own steps or whose output it needs,
+**runs** (49), a skill this one runs as one of its own steps or whose output it needs,
 written inside the box, never drawn. `test/pipeline.test.ts` fails on a cycle of hand-offs, a
 hand-off to an earlier stage, an edge the skill's own text never names, a job without an owner,
 and this file when it is stale. The stages are those of [`skills.md`](skills.md).
@@ -17,7 +17,7 @@ Each arrow stands for one or more edges between skills of the two stages.
 
 ```mermaid
 flowchart LR
-  stage_idea["<b>1 · Idea</b><br/>analyze-sibling-paper<br/>map-prior-work<br/>research-ideate<br/>sweep-design-space"]
+  stage_idea["<b>1 · Idea</b><br/>analyze-sibling-paper<br/>map-prior-work<br/>research-ideate"]
   stage_venue["<b>2 · Venue</b><br/>find-venue<br/>plan-paper-timeline<br/>study-accepted-papers"]
   stage_study["<b>3 · Study</b><br/>build-benchmark<br/>build-label-page<br/>label-agent-runs<br/>run-agent-grid"]
   stage_draft["<b>4 · Draft</b><br/>argument-arc<br/>cold-read-diff<br/>draft-paper<br/>rewrite-unclear<br/>tighten-paper"]
@@ -58,8 +58,6 @@ flowchart TB
   analyze_sibling_paper["<b>analyze-sibling-paper</b>"]
   map_prior_work["<b>map-prior-work</b><br/>runs: analyze-sibling-paper"]
   research_ideate["<b>research-ideate</b>"]
-  sweep_design_space["<b>sweep-design-space</b><br/>runs: pc-panel-review"]
-  sweep_design_space --> research_ideate
   to_stage_extend(["→ 8 · Extend"])
   to_stage_draft(["→ 4 · Draft"])
   to_stage_venue(["→ 2 · Venue"])
@@ -69,7 +67,6 @@ flowchart TB
   research_ideate -- "find-venue, plan-paper-timeline" --> to_stage_venue
   research_ideate -- "build-benchmark" --> to_stage_study
   research_ideate -- "draft-paper" --> to_stage_draft
-  sweep_design_space -- "build-benchmark" --> to_stage_study
 ```
 
 ## 2 · Venue
@@ -133,7 +130,7 @@ flowchart TB
   to_stage_idea(["→ 1 · Idea"])
   to_stage_review(["→ 5 · Review"])
   argument_arc -. "build-benchmark" .-> to_stage_study
-  argument_arc -. "sweep-design-space" .-> to_stage_idea
+  argument_arc -. "research-ideate" .-> to_stage_idea
   draft_paper -- "pc-panel-review" --> to_stage_review
 ```
 

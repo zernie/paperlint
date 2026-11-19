@@ -37,7 +37,6 @@
     "skills/research-ideate/research-ideate.harness.mjs",
     "skills/study-accepted-papers/study-accepted-papers.harness.mjs",
     "skills/submit-paper/submit-paper.harness.mjs",
-    "skills/sweep-design-space/sweep-design-space.harness.mjs",
     "skills/tighten-paper/tighten-paper.harness.mjs",
     "skills/verify-citations/verify-citations.harness.mjs",
     "src/build-engine.harness.mjs",
