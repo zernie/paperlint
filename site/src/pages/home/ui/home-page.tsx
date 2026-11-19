@@ -164,7 +164,7 @@ export function HomePage() {
         <Hero
           venues={venueNames}
           install={readme.install}
-          caption="Installs paperlint and sets up your project. Paste it into a terminal in your project's folder; it needs Node.js 22.13 or newer."
+          caption="Run in your project's folder. Needs Node.js 22.13 or newer."
         />
         <FirstRun findings={firstRun} />
         <Journey stops={stops} />
