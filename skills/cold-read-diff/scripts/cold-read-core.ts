@@ -211,6 +211,13 @@ class Refusal extends Error {}
 
 const KNOWN = ["base", "max", "venue", "whole"];
 
+/** Whether `--whole` was given; with `--base` beside it, a refusal. */
+const wholeOf = (flags: ReadonlyMap<string, string>): boolean => {
+  if (flags.has("whole") && flags.has("base"))
+    throw new Refusal("--whole reads the whole paper: drop --base");
+  return flags.has("whole");
+};
+
 /** The command line as options, or a refusal naming what is wrong with it. */
 export const optionsOf = (argv: readonly string[]): Options => {
   const pairs = argv
@@ -229,9 +236,7 @@ export const optionsOf = (argv: readonly string[]): Options => {
   const max = Number(flags.get("max") ?? DEFAULT_MAX);
   if (!Number.isInteger(max) || max < 1)
     throw new Refusal("--max takes a positive integer");
-  const whole = flags.has("whole");
-  if (whole && flags.has("base"))
-    throw new Refusal("--whole reads the whole paper: drop --base");
+  const whole = wholeOf(flags);
   return {
     paper,
     base: flags.get("base") || "HEAD",
