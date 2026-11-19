@@ -3,8 +3,9 @@
 fixtures/real-papers/preprints/** linguist-vendored linguist-generated
 fixtures/arxiv-manifest.json linguist-generated
 fixtures/real-papers/accepted/** linguist-vendored linguist-generated
-# Except the READMEs, which are prose a reviewer reads: back to unspecified, so they count as readable lines.
-fixtures/real-papers/accepted/**/README.md !linguist-vendored !linguist-generated
+# Except the folder's own README, which is prose a reviewer reads: back to unspecified, so it counts as
+# readable lines. Each paper's README stays generated: the collector writes it from one template.
+fixtures/real-papers/accepted/README.md !linguist-vendored !linguist-generated
 fixtures/venue-manifest.json linguist-generated
 # Written by `npm run pipeline` from the skills' `flow` exports (scripts/pipeline.ts): not hand-written lines.
 docs/pipeline.md linguist-generated
