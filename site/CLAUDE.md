@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:b3dfca4f377dfb92 compiled from site/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:c5fb580ba632309c compiled from site/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -46,6 +46,30 @@ design below was decided with the author on 2026-11-19, over three rounds of moc
 ### Only What Ships
 
 **Guidance only** — A venue, finding, count or command on the page is read from the repository at build time or quoted with a test behind it. The prose around them is written by hand, and each sentence is checked against the rule's docs page in the same pass that writes it. The headline cycles only the venues of the README's table. A claim the code does not back (for instance findings inside an editor: `paperlint lint` builds its own ESLint config, so an editor shows none) stays off the page until it is measured.
+
+### Not Scary For Non Programmers
+
+**Guidance only** — Many readers are scientists who do not program. Every command and every piece of terminal output comes after plain words: a finding is first a card that says what is wrong with the paper and what to do ('Seven pages of body; AIDC short papers allow six'), and the exact output is folded underneath; a command carries a one-line caption of what it does and a Copy button. A block of code with no plain sentence before it is a defect. The author asked for this on 2026-11-19.
+
+### Say Latex And Peer Review
+
+**Guidance only** — The page says, in so many words, that paperlint is for papers written in LaTeX and that it checks them before submission to peer review. A reader who skims the hero must not have to guess either.
+
+### Feature Sliced Design
+
+**Guidance only** — Code under `site/src/` follows Feature-Sliced Design (layers app, pages, widgets, features, entities, shared; a slice is imported only through its public index), and Steiger checks it in `npm run lint`. Next's router in `site/app/` only re-exports from `src/`.
+
+### Tokens Not Numbers
+
+**Guidance only** — A class name carries a design token, never a raw value: no `w-[13px]`, no `bg-[#fff]`, no default-palette colour such as `bg-red-500` (the theme clears it). A size, colour or font the page needs is added to the `@theme` once, with a name. eslint-plugin-tailwindcss (`no-arbitrary-value`, `no-custom-classname`) fails the lint otherwise.
+
+### No New Wheels
+
+**Guidance only** — Use the chosen libraries before writing a helper: shadcn/ui for components, usehooks-ts for hooks (clipboard, interval, media query), Remeda for collections, ts-essentials for types, motion for animation. A helper of our own needs a sentence saying which of these could not do it.
+
+### Tasteful Motion
+
+**Guidance only** — Animation is quiet and short: elements fade and rise into place as they scroll in, the venue name changes, the road draws itself. Nothing loops for attention, nothing bounces, and everything stops for a reader who asks for reduced motion.
 
 ### Static And Private
 
