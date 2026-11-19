@@ -2,15 +2,18 @@
  * THE REGISTER RULES THAT MEASURE A BODY AGAINST ITS VENUE'S ACCEPTED PAPERS — each a rate per
  * 10,000 words, judged against the band the venue preset's anchors set (`src/domain/register.ts`):
  *
- *   tex/contrast-frames   warn  «X, not Y», «rather than», «instead of» … outside the band; above it,
- *                               each frame is reported where it stands
- *   tex/claim-emphasis    warn  claims set in bold inside a sentence outside the band; above it, each
- *                               is reported where it stands
- *   tex/relation-markers  warn  words naming how a sentence relates to the one before (because,
- *                               therefore, however, for example …) outside the band
- *   tex/negated-sentences off   the share of the body's sentences that hold a negator (not, no,
- *                               never, without …) outside the band — a percent of sentences, not
- *                               a rate per words; off until a project turns it on
+ *   tex/contrast-frames   «X, not Y», «rather than», «instead of» … outside the band; above it, each
+ *                         frame is reported where it stands
+ *   tex/claim-emphasis    claims set in bold inside a sentence outside the band; above it, each is
+ *                         reported where it stands
+ *   tex/relation-markers  words naming how a sentence relates to the one before (because, therefore,
+ *                         however, for example …) outside the band
+ *   tex/negated-sentences the share of the body's sentences that hold a negator (not, no, never,
+ *                         without …) outside the band — a percent of sentences, not a rate per words
+ *
+ * All four are off by default, on any preset, the anchored AIDC included: they measure the writing,
+ * and the anchors are other papers' writing, not a number the venue states. They are in the opt-in
+ * set `paperlint:writing` (src/rule-sets.ts), which turns them on at `warn` (the author, 2026-11-19).
  *
  * ── WHY ──────────────────────────────────────────────────────────────────────────
  * Reviewers called a paper "too informal" and "a blogpost". Its text differed from the accepted
@@ -59,7 +62,7 @@ import type { VenueRuleDeps } from "./venue-rules.ts";
 /** What the three rules read: the preset store, the LaTeX reader, and the paper's files as the build recorded them. */
 export interface RegisterBandDeps extends VenueRuleDeps, ProseDeps {}
 
-/** The band rules on by default: each a rate per 10,000 words. */
+/** The band rules that judge a rate per 10,000 words. */
 export type WordBandRuleName =
   "contrast-frames" | "claim-emphasis" | "relation-markers";
 
@@ -339,16 +342,3 @@ export function registerBandRules(
     "negated-sentences": rule("negated-sentences", deps),
   };
 }
-
-/**
- * The level each rule is on at in paperlint's own config, for every `paper.tex`. `tex/negated-sentences`
- * is not here: a writing measure added after the default set was fixed to what the venue decides,
- * it ships off.
- */
-export const REGISTER_BAND_RULE_LEVELS: Readonly<
-  Record<`tex/${WordBandRuleName}`, "warn">
-> = {
-  "tex/contrast-frames": "warn",
-  "tex/claim-emphasis": "warn",
-  "tex/relation-markers": "warn",
-};

@@ -54,6 +54,7 @@ import { z } from "zod";
 import {
   compareToBaseline,
   countByRule,
+  RECORDED_OPT_IN,
   recordedFindings,
   type Counts,
 } from "../../../fixtures/accepted-papers/baseline.ts";
@@ -979,6 +980,18 @@ function stepRealPaper(c: Consumer): void {
   });
   // As a build leaves it: TeX's record of the files it read, from the snapshot beside the paper.
   layRecord(join(consumer, "papers", REAL_PAPER));
+  // The opt-in rules its baseline counts, turned on in the paper's own file as an author would —
+  // so the installed binary also reads a paper's `rules` (baseline.ts says why these).
+  const settingsFile = join(consumer, "papers", REAL_PAPER, "paperlint.json");
+  writeFileSync(
+    settingsFile,
+    JSON.stringify({
+      ...z
+        .record(z.string(), z.unknown())
+        .parse(JSON.parse(readFileSync(settingsFile, "utf8"))),
+      rules: RECORDED_OPT_IN,
+    }),
+  );
   const realLint = sh(bin, ["lint", "--json"], { cwd: consumer });
   let found: Counts | null = null;
   try {

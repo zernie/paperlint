@@ -1,6 +1,6 @@
 # tex/claim-emphasis
 
-**Level:** warn · **Reads:** `paper.tex` and the files it includes → `paperlint.json`
+**Level:** off by default; in the opt-in set [`paperlint:writing`](../../optional-rules.md#the-writing-set-paperlintwriting) · **Reads:** `paper.tex` and the files it includes → `paperlint.json`
 
 ## What it catches
 

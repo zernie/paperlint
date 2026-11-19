@@ -55,6 +55,10 @@ function project(
   dirs.push(root);
   const all: Record<string, string> = {
     "package.json": JSON.stringify({ name: "c", private: true }),
+    // The typography rules these cases read are opt-in, in the writing set: on for every paper.
+    "paperlint.json": JSON.stringify({
+      rules: { "paperlint:writing": "warn" },
+    }),
     "papers/a/PIPELINE-STATUS.md": "---\nstages: []\n---\n",
     "papers/a/paper.tex": doc(
       "{article}",
@@ -215,9 +219,66 @@ describe("a built paper whose files are clean", () => {
     });
     expect({ code, out }).toEqual({
       code: 0,
-      out: ["✓ 3 file(s) checked, no findings"],
+      // The root file that turns the writing set on is named first, as every found config is.
+      out: ["config: paperlint.json", "✓ 3 file(s) checked, no findings"],
     });
   });
+});
+
+describe("an opt-in rule turned on for a paper's body files only", () => {
+  /** `paper/leading-zero` on for `files` alone, in the root file: no writing set. */
+  const onlyFor = (files: string[]) => ({
+    "paperlint.json": JSON.stringify({
+      rules: [{ files, rules: { "paper/leading-zero": "warn" } }],
+    }),
+  });
+  const lintCode = async (root: string, args: string[] = []) => {
+    const out: string[] = [];
+    const err: string[] = [];
+    const code = await run(["lint", "--json", ...args], {
+      cwd: root,
+      log: (s: string) => out.push(s),
+      err: (s: string) => err.push(s),
+    });
+    return { code, out: out.join("\n"), err: err.join("\n") };
+  };
+
+  it("🔴 reaches the included file it runs on: the run reports there, and is not refused as a rule no paper gets", async () => {
+    const r = await lintCode(project(onlyFor(["papers/a/sections/**/*.tex"])));
+    expect(r.err).not.toMatch(/no paper\.tex of the project gets it/);
+    expect(r.code).toBe(0);
+    const intro = lintReport(r.out).find((f) =>
+      f.filePath.endsWith("papers/a/sections/intro.tex"),
+    );
+    expect(intro?.messages.map((m) => m.ruleId)).toEqual([
+      "paper/leading-zero",
+    ]);
+  });
+
+  it("🔴 with --fix too: the fix rewrites the included file, which leaves the build's record behind it, and the run is still not refused", async () => {
+    const root = project(onlyFor(["papers/a/sections/**/*.tex"]));
+    const r = await lintCode(root, ["--fix"]);
+    expect(r.err).not.toMatch(/no paper\.tex of the project gets it/);
+    expect(r.code).toBe(0);
+    expect(lintReport(r.out).length).toBeGreaterThan(0);
+    expect(
+      readFileSync(join(root, "papers/a/sections/intro.tex"), "utf8"),
+    ).toBe(INTRO.replace(".05", "0.05"));
+  });
+
+  it.each([[[]], [["--fix"]]])(
+    "a glob that reaches no file of any paper still fails the run (args %j)",
+    async (args) => {
+      const r = await lintCode(
+        project(onlyFor(["papers/a/nothing/**/*.tex"])),
+        args,
+      );
+      expect(r.code).toBe(1);
+      expect(r.err).toMatch(
+        /^paper\/leading-zero is turned on in "rules", but no paper\.tex of the project gets it/m,
+      );
+    },
+  );
 });
 
 describe("a paper whose record is missing, stale or silent about a file", () => {
