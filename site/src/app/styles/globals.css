@@ -129,17 +129,6 @@
   --radius: 0.625rem;
 }
 
-/* Named utilities for the three layouts shadcn's components wrote as arbitrary values. */
-@utility grid-cols-card-header {
-  grid-template-columns: 1fr auto;
-}
-@utility grid-rows-card-header {
-  grid-template-rows: auto auto;
-}
-@utility translate-y-tooltip-arrow {
-  translate: 0 calc(-50% - 2px);
-}
-
 /* The hero's etching melts into the paper: transparent at the top, where the headline sits, and at
    the bottom and sides, so no rectangle edge shows (src/widgets/hero/ui/hero.tsx). */
 @utility mask-campus {
