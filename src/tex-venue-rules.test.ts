@@ -326,14 +326,12 @@ describe("tex/template — the shipped ACM and ACL templates", () => {
 
   it("🔴 acmart without acmsmall — the manuscript or the sigconf format — fails the single-column family and FSE", () => {
     const FSE = { extends: "paperlint:fse", kind: "research" };
-    const withStatement = (cls: string) =>
-      paper(cls, "Text.\n\\section{Data Availability}\nNone.");
     for (const settings of [{ extends: "paperlint:acm-acmsmall" }, FSE])
       for (const cls of [
         "\\documentclass{acmart}",
         "\\documentclass[sigconf,review,anonymous]{acmart}",
       ])
-        expect(lint(withStatement(cls), settings)).toEqual([
+        expect(lint(paper(cls), settings)).toEqual([
           {
             rule: "tex/template",
             messageId: "missingOption",
@@ -346,7 +344,7 @@ describe("tex/template — the shipped ACM and ACL templates", () => {
       "\\documentclass[acmsmall,screen,review,anonymous]{acmart}",
       "\\documentclass[acmsmall]{acmart}",
     ])
-      expect(lint(withStatement(cls), FSE)).toEqual([]);
+      expect(lint(paper(cls), FSE)).toEqual([]);
   });
 
   it("an ACL paper — article at 11pt, acl.sty as a package — passes realm", () => {
@@ -716,36 +714,6 @@ describe("tex/required-section — what fails", () => {
     expect(fs[0]?.line).toBe(
       tex.split("\n").indexOf("\\section*{LLM Usage Statement}") + 1,
     );
-  });
-});
-
-describe("tex/required-section — FSE's «Data Availability»", () => {
-  const FSE = { extends: "paperlint:fse", kind: "research" };
-  const fsePaper = (body: string): string =>
-    paper("\\documentclass[acmsmall,screen,review,anonymous]{acmart}", body);
-  const DATA =
-    "\\section{Data Availability}\nThe package is at an anonymous link.\n";
-
-  it.each<[string, string]>([
-    ["after the Conclusion, as the call asks", BODY + DATA + BIB],
-    [
-      "with an unmarked closing section after it — the place is not checked",
-      BODY + DATA + "\\section*{Acknowledgments}\nx\n" + BIB,
-    ],
-  ])("passes %s", (_, body) => {
-    expect(lint(fsePaper(body), FSE)).toEqual([]);
-  });
-
-  it.each<[string, string]>([
-    ["no such section", BODY + BIB],
-    [
-      "another title for it",
-      BODY + "\\section{Data Availability Statement}\nx\n" + BIB,
-    ],
-  ])("🔴 fails with %s", (_, body) => {
-    expect(required(lint(fsePaper(body), FSE)).map((f) => f.message)).toEqual([
-      "FSE 2027 requires a section titled «Data Availability» and there is none — add `\\section*{Data Availability}` (the title exactly; a bold paragraph does not count)",
-    ]);
   });
 });
 

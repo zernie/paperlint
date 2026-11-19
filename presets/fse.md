@@ -105,9 +105,9 @@ although FSE allows it. A `% eslint-disable` comment in `paper.tex` does not sil
   not required: the call only «strongly encourage[s]» them.
 - **Double-blind review** (`blind`), so `anonymity/identity` checks the PDF against the paper's
   declared `identity`.
-- **The Data Availability section** (`required_sections`): a `\section` or `\section*` titled exactly
-  «Data Availability». Its place, «after the Conclusion section», is not checked: `position: "last"`
-  would refuse a closing section after it.
+- **Not the Data Availability section.** The call asks for a section named «Data Availability»
+  after the Conclusion, but says authors «should» provide it and names no desk reject for its
+  absence, so paperlint does not check it (no `required_sections`): add it yourself.
 - **Where submissions go** (`portal`): `paperlint submission` reads and updates a paper's
   submission through HotCRP's API on that site.
 - **Names**: `FSE 2027`, what `tex/venue-leftover` and `paper/folder-venue-leftover` look for in

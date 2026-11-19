@@ -71,11 +71,10 @@
     },
   ],
 
-  // «a section named Data Availability after the Conclusion section» (the call above). Only its
-  // presence and title are checked: «after the Conclusion» is not `position: "last"` (an
-  // acknowledgement or another closing section may follow at camera-ready), so the place is the
-  // author's to keep.
-  "required_sections": [{ "title": "Data Availability" }],
+  // No `required_sections`, on purpose. The call asks for «a section named Data Availability after
+  // the Conclusion section», but only that authors «should» provide it, and no desk reject is
+  // named for its absence; a check ships on by default only when the venue's text requires it. The
+  // card says so.
 
   "format": {
     // «no more than 18 pages for all text and figures, plus 4 pages for references» — a body limit
