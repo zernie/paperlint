@@ -10,24 +10,22 @@ export function Hero({
   caption,
 }: {
   readonly venues: readonly string[];
-  readonly install: string;
+  /** The README's install commands, one per line; Copy joins them with `&&`. */
+  readonly install: readonly string[];
   readonly caption: string;
 }) {
   return (
     <section id="top" className="relative isolate overflow-hidden">
       <div className="mx-auto max-w-page px-6 pt-hero md:px-8">
         <div className="grid grid-cols-1 gap-x-8 lg:grid-cols-12">
-          <div className="lg:col-span-10">
+          <div className="lg:col-span-12">
             <p className="text-label font-medium text-muted-foreground uppercase">
-              Free and open source · a checker for LaTeX papers
+              For LaTeX papers, before peer review
             </p>
             <h1 className="mt-6 font-display text-hero text-foreground">
               Writing a paper
               <br />
-              for{" "}
-              <span className="whitespace-nowrap">
-                <VenueCycle names={venues} />?
-              </span>
+              for <VenueCycle names={venues} />
             </h1>
           </div>
           <div className="mt-12 lg:col-span-6">
@@ -38,10 +36,13 @@ export function Hero({
             </p>
           </div>
           <div className="mt-12 lg:col-span-5 lg:col-start-8">
-            <CommandLine command={install} caption={caption} />
+            <CommandLine lines={install} caption={caption} />
+            <p className="mt-4 text-sm text-muted-foreground">
+              Free and open source · MIT licence
+            </p>
             <a
               href="#journey"
-              className="mt-4 inline-block text-sm text-muted-foreground underline decoration-border underline-offset-4 hover:text-foreground"
+              className="mt-2 inline-block text-sm text-muted-foreground underline decoration-border underline-offset-4 hover:text-foreground"
             >
               How it works, step by step
             </a>

@@ -12,7 +12,7 @@ import {
   fencedAfter,
   layoutEntries,
   readmeContent,
-  shortName,
+  headlineVenues,
 } from "@/shared/lib/readme";
 import { Faq } from "@/widgets/faq";
 import { FirstRun } from "@/widgets/first-run";
@@ -36,9 +36,7 @@ const tree = layoutEntries(readRepo("docs/layout.md"), [
   "reviews/",
   "versions/",
 ]);
-const venueNames = readme.venues
-  .map((v) => shortName(v.venue))
-  .filter((n): n is string => n !== null);
+const venueNames = headlineVenues(readme.venues);
 const firstRun = readme.lintOutput
   .filter((l) => /^\s+\d+:\d+/.test(l))
   .map(explain);
@@ -165,8 +163,8 @@ export function HomePage() {
       <main>
         <Hero
           venues={venueNames}
-          install={install[0]?.command ?? ""}
-          caption="Paste this into a terminal in your project's folder. Node.js 22.13 or newer."
+          install={readme.install}
+          caption="Installs paperlint and sets up your project. Paste it into a terminal in your project's folder; it needs Node.js 22.13 or newer."
         />
         <FirstRun findings={firstRun} />
         <Journey stops={stops} />

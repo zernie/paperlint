@@ -144,6 +144,15 @@
   mask-composite: intersect;
 }
 
+/* The headline's changing venue keeps one height while the names change: two lines on a phone,
+   where "an IEEE conference?" wraps, one line from a large screen up (src/features/cycle-venue). */
+@utility venue-lines {
+  min-height: 2lh;
+  @media (width >= 64rem) {
+    min-height: 1lh;
+  }
+}
+
 /* A section fades up as it scrolls in (src/shared/ui/reveal.tsx). Only where the browser has scroll
    timelines and the reader has not asked for less motion; everywhere else it is simply there. */
 @keyframes reveal {

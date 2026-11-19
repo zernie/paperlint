@@ -55,7 +55,7 @@ export function GetStarted({
                   {i + 1}
                 </span>
                 <div className="col-span-7">
-                  <CommandLine {...s} />
+                  <CommandLine lines={[s.command]} caption={s.caption} />
                 </div>
               </li>
             ))}
@@ -65,7 +65,11 @@ export function GetStarted({
           </p>
           <div className="mt-10 flex flex-col gap-16">
             {perPaper.map((s) => (
-              <CommandLine key={s.command} {...s} />
+              <CommandLine
+                key={s.command}
+                lines={[s.command]}
+                caption={s.caption}
+              />
             ))}
           </div>
         </div>

@@ -2,6 +2,8 @@
 // Every reader throws when the text it looks for is gone: the build fails instead of shipping a
 // page with a hole in it. Pure functions over strings; `site/app/page.tsx` does the file reading.
 
+import * as R from "remeda";
+
 /** One row of the README's "Supported venues" table. */
 export interface Venue {
   readonly preset: string;
@@ -124,9 +126,23 @@ export const readmeContent = (readme: string): ReadmeContent => {
   };
 };
 
-/** The venue's short name for the headline: "AISec @ ACM CCS" → "AISec"; null for "any … conference". */
-export const shortName = (venue: string): string | null =>
-  venue.startsWith("any ") ? null : venue.replace(/ @ .*$| \(.*$/, "").trim();
+/** The venue's name as the headline says it: "AISec @ ACM CCS" → "AISec", "any IEEE conference" → "an IEEE conference". */
+export const shortName = (venue: string): string =>
+  venue.startsWith("any ")
+    ? venue.replace(/^any /, "an ")
+    : venue.replace(/ @ .*$| \(.*$/, "").trim();
+
+/**
+ * The names the headline cycles through, the ones every reader knows first: "an IEEE conference",
+ * "an ACM conference", then each named venue in the README's order. The first is what the static
+ * page shows before any script runs.
+ */
+export const headlineVenues = (venues: readonly Venue[]): readonly string[] =>
+  R.pipe(
+    venues.map((v) => shortName(v.venue)),
+    R.sortBy((name) => (name.startsWith("an ") ? 0 : 1)),
+    R.sortBy((name) => (name.includes("IEEE") ? 0 : 1)),
+  );
 
 /** One line of the generated paper-folder tree in `docs/layout.md`: the entry and what it holds. */
 export interface TreeEntry {

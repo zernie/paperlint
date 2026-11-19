@@ -1,5 +1,6 @@
 export {
   fencedAfter,
+  headlineVenues,
   layoutEntries,
   readmeContent,
   shortName,

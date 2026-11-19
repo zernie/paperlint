@@ -9,7 +9,7 @@ const QUESTIONS = [
   },
   {
     q: "Does it change my paper?",
-    a: "Only if you ask it to fix something, and it fixes three small things: § becomes “Section”, .05 becomes 0.05, and figure references are made consistent. Building writes the PDF and its records into the paper's folder. Creating a paper never touches a paper.tex that already exists.",
+    a: "Not unless you ask. Checking only reads your paper and reports. A fix command can rewrite three small typographic slips (§ to “Section”, .05 to 0.05, one style of figure reference) and nothing else. Building writes the PDF and its records next to your paper; creating a paper never touches a paper.tex that already exists.",
   },
   {
     q: "Is my paper sent anywhere?",
