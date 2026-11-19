@@ -186,6 +186,149 @@ describe("shipped presets: paperlint:fse-2027", () => {
   });
 });
 
+describe("shipped presets: paperlint:neurips-2026", () => {
+  it("paperlint:neurips-2026 → neurips over neurips-style: article + the style file, the style's page and fonts, two kinds, the checklist, both readings of each deadline", () => {
+    const r = resolve("paperlint:neurips-2026");
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.value.chain.map((f) => f.split("/").pop())).toEqual([
+      "neurips-style.jsonc",
+      "neurips-2026.jsonc",
+    ]);
+    // The template is the class AND the style the kit loads into it, both from the family.
+    expect(r.value.template).toEqual({
+      text: "\\documentclass{article}",
+      file: join(VENUES, "neurips-style.jsonc"),
+      forbids: [],
+    });
+    expect(r.value.templateStyle).toEqual({
+      text: "\\usepackage{neurips_2026}",
+      file: join(VENUES, "neurips-style.jsonc"),
+    });
+    expect(r.value.format.columns).toBe(1);
+    expect(r.value.format.pageWidthIn).toBe(8.5);
+    expect(r.value.format.pageHeightIn).toBe(11);
+    expect(r.value.format.fontsText).toBe("NimbusRomNo9L");
+    expect(r.value.format.fontsTitle).toBeNull();
+    // banal's count: the line numbers of the submission defeat the heading `body_ends_at` looks for.
+    expect(r.value.format.bodyEndsAt).toBeNull();
+    expect([...r.value.format.kinds]).toEqual([
+      ["main", { pagesMax: null, bodyPagesMax: 9, refPagesMax: null }],
+      ["camera-ready", { pagesMax: null, bodyPagesMax: 10, refPagesMax: null }],
+    ]);
+    expect(Object.keys(r.value.tex.packages)).toEqual(
+      expect.arrayContaining(["environ", "lineno", "times", "helvetic"]),
+    );
+    expect(r.value.blind).toBe(true);
+    expect(r.value.portal).toBeNull();
+    expect(r.value.requiredSections).toEqual([
+      { title: "NeurIPS Paper Checklist", position: null },
+    ]);
+    expect(r.value.deadlines.map((d) => [d.what, d.source])).toEqual([
+      ["registration", "portal"],
+      ["registration", "call"],
+      ["submission", "portal"],
+      ["submission", "call"],
+      ["notification", "call"],
+      ["camera-ready", "call"],
+    ]);
+    expect(r.value.label).toBe("NeurIPS");
+    expect(r.value.aliases).toEqual(["NeurIPS"]);
+    expect(r.value.rules).toEqual({});
+  });
+});
+
+describe("shipped presets: paperlint:aaai-2027", () => {
+  it("paperlint:aaai-2027 → aaai-2027 over aaai-press: the kit's two lines, letter and two columns in newtxtext, 7 + 2 pages, both readings of each deadline", () => {
+    const r = resolve("paperlint:aaai-2027");
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.value.chain.map((f) => f.split("/").pop())).toEqual([
+      "aaai-press.jsonc",
+      "aaai-2027.jsonc",
+    ]);
+    expect(r.value.template?.text).toBe(
+      "\\documentclass[letterpaper]{article}",
+    );
+    expect(r.value.format.columns).toBe(2);
+    expect(r.value.format.pageWidthIn).toBe(8.5);
+    expect(r.value.format.pageHeightIn).toBe(11);
+    expect(r.value.format.bodyPt).toBe(10);
+    expect([r.value.format.refPtMin, r.value.format.refPtMax]).toEqual([9, 10]);
+    // newtxtext's Times, not the URW Times of the AAAI-26 kit (NimbusRomNo9L).
+    expect(r.value.format.fontsText).toBe("TeXGyreTermesX");
+    expect(r.value.format.fontsTitle).toBeNull();
+    expect(r.value.format.bodyEndsAt).toBeNull();
+    expect([...r.value.format.kinds]).toEqual([
+      ["main", { pagesMax: 9, bodyPagesMax: 7, refPagesMax: 2 }],
+    ]);
+    expect(Object.keys(r.value.tex.packages)).toEqual(
+      expect.arrayContaining(["newtx", "kastrup", "tex-gyre", "placeins"]),
+    );
+    expect(r.value.blind).toBe(true);
+    expect(r.value.portal).toBeNull();
+    expect(r.value.requiredSections).toEqual([]);
+    expect(r.value.deadlines.map((d) => [d.what, d.source, d.at])).toEqual([
+      ["registration", "call", "2026-07-22T11:59:00Z"],
+      ["registration", "portal", "2026-07-22T11:59:00Z"],
+      ["submission", "call", "2026-07-29T11:59:00Z"],
+      ["submission", "portal", "2026-07-29T11:59:00Z"],
+      ["camera-ready", "call", "2026-12-15T11:59:59Z"],
+    ]);
+    expect(r.value.label).toBe("AAAI");
+    expect(r.value.aliases).toEqual(["AAAI"]);
+    expect(r.value.rules).toEqual({});
+  });
+});
+
+describe("shipped presets: paperlint:icml-2027", () => {
+  it("paperlint:icml-2027 → icml over icml-style: article + the style file, the style's page and fonts, two kinds counted by banal, the Impact Statement, the call's deadlines", () => {
+    const r = resolve("paperlint:icml-2027");
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.value.chain.map((f) => f.split("/").pop())).toEqual([
+      "icml-style.jsonc",
+      "icml-2027.jsonc",
+    ]);
+    // The template is the class AND the style the kit loads into it, both from the family.
+    expect(r.value.template?.text).toBe("\\documentclass{article}");
+    expect(r.value.templateStyle).toEqual({
+      text: "\\usepackage{icml2027}",
+      file: join(VENUES, "icml-style.jsonc"),
+    });
+    expect(r.value.format.columns).toBe(2);
+    expect(r.value.format.pageWidthIn).toBe(8.5);
+    expect(r.value.format.pageHeightIn).toBe(11);
+    expect(r.value.format.bodyPt).toBe(10);
+    expect([r.value.format.refPtMin, r.value.format.refPtMax]).toEqual([
+      10, 10,
+    ]);
+    expect(r.value.format.fontsText).toBe("NimbusRomNo9L");
+    expect(r.value.format.fontsTitle).toBeNull();
+    // banal's count: ICML's appendix headings («A. …») defeat the heading `body_ends_at` looks for.
+    expect(r.value.format.bodyEndsAt).toBeNull();
+    expect([...r.value.format.kinds]).toEqual([
+      ["main", { pagesMax: null, bodyPagesMax: 8, refPagesMax: null }],
+      ["camera-ready", { pagesMax: null, bodyPagesMax: 9, refPagesMax: null }],
+    ]);
+    expect(Object.keys(r.value.tex.packages)).toEqual(
+      expect.arrayContaining(["eso-pic", "forloop", "times", "courier"]),
+    );
+    expect(r.value.blind).toBe(true);
+    expect(r.value.portal).toBeNull();
+    expect(r.value.requiredSections).toEqual([
+      { title: "Impact Statement", position: null },
+    ]);
+    expect(r.value.deadlines.map((d) => [d.what, d.source, d.at])).toEqual([
+      ["registration", "call", "2027-01-15T11:59:59Z"],
+      ["submission", "call", "2027-01-23T11:59:59Z"],
+    ]);
+    expect(r.value.label).toBe("ICML");
+    expect(r.value.aliases).toEqual(["ICML"]);
+    expect(r.value.rules).toEqual({});
+  });
+});
+
 describe("shipped presets: a family, and a venue that stands alone", () => {
   it("a paper may extend a family directly: format and fonts, and no kinds", () => {
     const r = resolve("paperlint:acm-sigconf");
@@ -229,6 +372,12 @@ const FAMILIES = PARSED.filter((p) =>
 
 // What each shipped preset declares itself to be; a new preset adds its row here.
 const DECLARED = {
+  "aaai-press.jsonc": { type: "family" },
+  "aaai-2027.jsonc": {
+    type: "venue",
+    name: "AAAI",
+    url: "https://aaai.org/conference/aaai/aaai-27/main-technical-track-call/",
+  },
   "acl-latex.jsonc": { type: "family" },
   "acm-acmsmall.jsonc": { type: "family" },
   "acm-sigconf.jsonc": { type: "family" },
@@ -282,6 +431,12 @@ const DECLARED = {
     name: "FSE",
     url: "https://conf.researchr.org/track/fse-2027/fse-2027-papers",
   },
+  "icml-style.jsonc": { type: "family" },
+  "icml-2027.jsonc": {
+    type: "venue",
+    name: "ICML",
+    url: "https://icml.cc/Conferences/2027/CallForPapers",
+  },
   "icse-2027.jsonc": {
     type: "venue",
     name: "ICSE",
@@ -297,6 +452,12 @@ const DECLARED = {
     type: "venue",
     name: "MSR",
     url: "https://2027.msrconf.org/track/msr-2027-technical-papers",
+  },
+  "neurips-style.jsonc": { type: "family" },
+  "neurips-2026.jsonc": {
+    type: "venue",
+    name: "NeurIPS",
+    url: "https://neurips.cc/Conferences/2026/CallForPapers",
   },
   "nlbse-2027.jsonc": {
     type: "venue",
@@ -349,10 +510,13 @@ describe("the naming convention of shipped presets (docs/rules.md)", () => {
 
   it("there are families to check (else the checks below see nothing)", () => {
     expect(families.map((f) => f.name).sort()).toEqual([
+      "aaai-press",
       "acl-latex",
       "acm-acmsmall",
       "acm-sigconf",
+      "icml-style",
       "ieee-conference",
+      "neurips-style",
     ]);
   });
 
@@ -580,7 +744,7 @@ describe("what does not resolve, and says why", () => {
       "a shipped name with a typo",
       "paperlint:agenticdve",
       "not-found",
-      /acl-latex, acm-acmsmall, acm-sigconf, acsac-2026, agent-2027, agenticdev-2026, agentverify-2027, aidc-2026, aisec-2026, ase-2026, ccs-2026, emnlp-2026, fse-2027, icse-2027, icse-2028, ieee-conference, msr-2027, nlbse-2027, realm-2026, sp-2027/,
+      /aaai-2027, aaai-press, acl-latex, acm-acmsmall, acm-sigconf, acsac-2026, agent-2027, agenticdev-2026, agentverify-2027, aidc-2026, aisec-2026, ase-2026, ccs-2026, emnlp-2026, fse-2027, icml-2027, icml-style, icse-2027, icse-2028, ieee-conference, msr-2027, neurips-2026, neurips-style, nlbse-2027, realm-2026, sp-2027/,
     ],
     ["the base TeX set", "paperlint:tex-base", "not-found", /agenticdev/],
     [
@@ -876,6 +1040,8 @@ describe("shippedVenueNames — what each shipped venue is called", () => {
     const names = shippedVenueNames(deps());
     // A venue is labelled by its `name`, a family by its file name.
     expect(names.map((n) => n.label)).toEqual([
+      "AAAI",
+      "aaai-press",
       "acl-latex",
       "acm-acmsmall",
       "acm-sigconf",
@@ -889,10 +1055,14 @@ describe("shippedVenueNames — what each shipped venue is called", () => {
       "ACM CCS",
       "EMNLP",
       "FSE",
+      "ICML",
+      "icml-style",
       "ICSE",
       "ICSE",
       "ieee-conference",
       "MSR",
+      "NeurIPS",
+      "neurips-style",
       "NLBSE",
       "REALM",
       "IEEE S&P",
@@ -921,6 +1091,8 @@ describe("shippedVenueNames — what does not resolve", () => {
     expect(
       shippedVenueNames({ files, venuesDir: VENUES }).map((n) => n.label),
     ).toEqual([
+      "AAAI",
+      "aaai-press",
       "acl-latex",
       "acm-acmsmall",
       "acm-sigconf",
@@ -934,10 +1106,14 @@ describe("shippedVenueNames — what does not resolve", () => {
       "ACM CCS",
       "EMNLP",
       "FSE",
+      "ICML",
+      "icml-style",
       "ICSE",
       "ICSE",
       "ieee-conference",
       "MSR",
+      "NeurIPS",
+      "neurips-style",
       "NLBSE",
       "IEEE S&P",
     ]);

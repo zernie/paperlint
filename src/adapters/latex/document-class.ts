@@ -1,21 +1,29 @@
 /** The paper's `\documentclass`, a preset's template, and setting a class in a source. */
 import {
   documentClassLine,
+  optionsInEffect,
+  readWhole,
   venueClass,
   type ClassCandidate,
   type ClassLine,
   type DocumentClass,
+  type PackageLoad,
+  type PassedOptions,
+  type StylePackage,
 } from "../../domain/tex-document.ts";
+import { documentBodyOf, includesOf } from "./includes.ts";
 import {
   collapse,
+  isNode,
   macroPlace,
   mandatory,
   optional,
   textOf,
+  visited,
   type Node,
   type Macro,
 } from "./nodes.ts";
-import { parseLatex, type ParsedTex } from "./parse.ts";
+import { liveRoot, parseLatex, type ParsedTex } from "./parse.ts";
 
 const isDocumentClass = (n: Node): n is Macro =>
   n.type === "macro" && n.content === "documentclass";
@@ -53,31 +61,110 @@ const optionText = (src: string, part: readonly Node[]): string =>
       .join(""),
   );
 
-/** Every `\documentclass` at the top of the tree, in source order. */
-const classNodes = (t: ParsedTex): readonly Macro[] =>
-  t.root.content.filter(isDocumentClass);
+/** A node at the top of the tree, with its index there: what stands before what. */
+interface AtTop {
+  readonly node: Macro;
+  readonly index: number;
+}
 
-/** A `\documentclass` node as a class line: empty, or the class with its options as read. */
-function classLine(src: string, node: Macro): ClassCandidate {
-  const place = macroPlace(node);
-  const cls = collapse(textOf(mandatory(node)[0]?.content));
-  if (cls === "") return { kind: "empty", place };
-  const options = splitWhere(optional(node)?.content ?? [], isComma)
-    .map((part) => optionText(src, part))
-    .filter(Boolean);
-  return { kind: "class", cls, options, place };
+/** Every `\documentclass` at the top of the tree, in source order. */
+const classNodes = (t: ParsedTex): readonly AtTop[] =>
+  t.root.content.flatMap((node, index) =>
+    isDocumentClass(node) ? [{ node, index }] : [],
+  );
+
+/** Whether nodes hold a macro, inside braces too: what TeX reads there is the macro's expansion. */
+const holdsMacro = (nodes: readonly Node[]): boolean =>
+  nodes.some(
+    (n) => n.type === "macro" || (n.type === "group" && holdsMacro(n.content)),
+  );
+
+/** A list of options (`a, b={c,d}`), each as written, and the ones of them built by a macro. */
+function optionList(
+  src: string,
+  nodes: readonly Node[],
+): Pick<PassedOptions, "options" | "unread"> {
+  const parts = splitWhere(nodes, isComma)
+    .map((part) => ({ text: optionText(src, part), unread: holdsMacro(part) }))
+    .filter((o) => o.text !== "");
+  return {
+    options: parts.map((o) => o.text),
+    unread: parts.filter((o) => o.unread).map((o) => o.text),
+  };
+}
+
+/** One `\PassOptionsToClass{options}{class}`: the class it names, its options, its index at the top. */
+interface Passed extends PassedOptions {
+  readonly cls: string;
+  readonly index: number;
 }
 
 /**
- * The `\documentclass` at the top of the tree: missing; empty (`\documentclass{}`); the class with
- * each of its options as written (`foo={a,b}` stays one option, braces kept), whitespace collapsed,
- * its place spanning the macro and its arguments; or, when there are several (behind a TeX switch),
- * each of them as a candidate.
+ * Every `\PassOptionsToClass` at the top of the tree: the options it gives a class count for a
+ * `\documentclass` of that class after it, as LaTeX reads them. One missing an argument passes
+ * nothing to any class.
+ */
+const passedOf = (t: ParsedTex): readonly Passed[] =>
+  t.root.content.flatMap((n, index) => {
+    if (n.type !== "macro" || n.content !== "PassOptionsToClass") return [];
+    const [opts, cls] = mandatory(n);
+    if (opts === undefined || cls === undefined) return [];
+    const list = optionList(t.src, opts.content);
+    const name = collapse(textOf(cls.content));
+    return [{ ...list, cls: name, place: macroPlace(n), index }];
+  });
+
+/**
+ * A `\documentclass` node as a class line: empty; a class built by a macro, unread; or the class
+ * with its options as read, and the options `passed` to that class before the line.
+ */
+function classLine(
+  src: string,
+  { node, index }: AtTop,
+  passed: readonly Passed[],
+): ClassCandidate {
+  const place = macroPlace(node);
+  const name = mandatory(node)[0]?.content;
+  if (name !== undefined && holdsMacro(name)) return { kind: "unread", place };
+  const cls = collapse(textOf(name));
+  if (cls === "") return { kind: "empty", place };
+  const before = passed
+    .filter((p) => p.cls === cls && p.index < index)
+    .map(({ options, unread, place: where }) => ({
+      options,
+      unread,
+      place: where,
+    }));
+  const own = optionList(src, optional(node)?.content ?? []);
+  return { kind: "class", cls, ...own, passed: before, place };
+}
+
+/** A `\documentclass` anywhere in the tree: in another macro's argument, a definition's body. */
+const classAnywhere = (t: ParsedTex): boolean =>
+  visited(t.root, () => false).some((v) => isNode(v) && isDocumentClass(v));
+
+/** An `\input` or `\include` in the preamble, left as written: a file this reader was not given. */
+function includesInPreamble(t: ParsedTex): boolean {
+  const body = documentBodyOf(t)?.start ?? Number.POSITIVE_INFINITY;
+  return includesOf(t).some((i) => i.span.start < body);
+}
+
+/**
+ * The `\documentclass` at the top of the tree: missing; unseen, when there is none at the top but
+ * one may stand where this reader does not look (`classAnywhere`, `includesInPreamble`); empty
+ * (`\documentclass{}`); unread (`\documentclass{\cls}`); the class with each of its options as
+ * written (`foo={a,b}` stays one option, braces kept), whitespace collapsed, its place spanning the
+ * macro and its arguments; or, when there are several (behind a TeX switch), each of them as a
+ * candidate.
  */
 export function documentClassOf(t: ParsedTex): ClassLine {
-  const lines = classNodes(t).map((n) => classLine(t.src, n));
+  const passed = passedOf(t);
+  const lines = classNodes(t).map((n) => classLine(t.src, n, passed));
   const [first, second, ...rest] = lines;
-  if (first === undefined) return { kind: "missing" };
+  if (first === undefined)
+    return classAnywhere(t) || includesInPreamble(t)
+      ? { kind: "unseen" }
+      : { kind: "missing" };
   return second === undefined
     ? first
     : { kind: "ambiguous", candidates: [first, second, ...rest] };
@@ -96,6 +183,188 @@ export function parseTemplate(text: string): DocumentClass | null {
   const line = documentClassOf(t);
   if (line.kind === "class") return { cls: line.cls, options: line.options };
   return only.type === "string" ? { cls: only.content, options: [] } : null;
+}
+
+const isPackageLine = (n: Node): n is Macro =>
+  n.type === "macro" &&
+  (n.content === "usepackage" ||
+    n.content === "RequirePackage" ||
+    n.content === "RequirePackageWithOptions");
+
+/** A comma list of names (`a, b`), each whitespace-collapsed, empty ones left out. */
+const namesIn = (nodes: readonly Node[] | undefined): readonly string[] =>
+  splitWhere(nodes ?? [], isComma)
+    .map((part) => collapse(textOf(part)))
+    .filter(Boolean);
+
+/** Options as LaTeX hands them on: each as written, and the ones built by a macro. */
+type Options = Pick<PassedOptions, "options" | "unread">;
+
+const NO_OPTIONS: Options = { options: [], unread: [] };
+
+/** Several lists of options, one after the other. */
+const joined = (lists: readonly Options[]): Options => ({
+  options: lists.flatMap((l) => l.options),
+  unread: lists.flatMap((l) => l.unread),
+});
+
+/** One `\PassOptionsToPackage{options}{packages}`: the packages it names, its options, its index. */
+interface PassedToPackage extends Options {
+  readonly packages: readonly string[];
+  readonly index: number;
+}
+
+/**
+ * Every `\PassOptionsToPackage` at the top of the tree, none after `\end{document}` (`liveRoot`):
+ * LaTeX adds its options to each package's own list (`\@pass@ptions`, latex.ltx), so they count for
+ * a load of one of its packages after it. One missing an argument passes nothing.
+ */
+const passedToPackagesOf = (t: ParsedTex): readonly PassedToPackage[] =>
+  liveRoot(t).content.flatMap((n, index) => {
+    if (n.type !== "macro" || n.content !== "PassOptionsToPackage") return [];
+    const [opts, pkgs] = mandatory(n);
+    if (opts === undefined || pkgs === undefined) return [];
+    const list = optionList(t.src, opts.content);
+    return [{ ...list, packages: namesIn(pkgs.content), index }];
+  });
+
+/**
+ * The global options in effect at `index`: those of the `\documentclass` lines before it. LaTeX
+ * keeps the class line's own options as `\@classoptionslist`, which every package's
+ * `\ProcessOptions` reads; options given with `\PassOptionsToClass` are the class's alone. Several
+ * lines behind a TeX switch: each one's, as any of them may be the one that builds.
+ */
+const globalAt = (t: ParsedTex, index: number): Options =>
+  joined(
+    classNodes(t)
+      .filter((c) => c.index < index)
+      .map((c) => optionList(t.src, optional(c.node)?.content ?? [])),
+  );
+
+/**
+ * One package line, at `index` at the top: each package it names, with the options LaTeX hands it
+ * — the global ones, then those passed to it before the line, then the line's own — and its place.
+ * `\RequirePackageWithOptions` gives the package the options of the file that loads it instead of
+ * its own list: in a paper's preamble, none, so the global ones alone.
+ */
+function packageLoads(
+  src: string,
+  { node, index }: AtTop,
+  {
+    passed,
+    global,
+  }: { readonly passed: readonly PassedToPackage[]; readonly global: Options },
+): readonly PackageLoad[] {
+  const place = macroPlace(node);
+  const withOptions = node.content === "RequirePackageWithOptions";
+  const own = withOptions
+    ? NO_OPTIONS
+    : optionList(src, optional(node)?.content ?? []);
+  const before = (name: string): readonly Options[] =>
+    withOptions
+      ? []
+      : passed.filter((p) => p.index < index && p.packages.includes(name));
+  // A package loaded from a folder (`sty/aaai2027`) is the package of its file's base name: LaTeX
+  // parses the path and names the package by the base (`\@onefilewithoptions`, latex.ltx).
+  return namesIn(mandatory(node)[0]?.content)
+    .map((path) => path.slice(path.lastIndexOf("/") + 1))
+    .map((name) => ({
+      name,
+      ...joined([global, ...before(name), own]),
+      place,
+    }));
+}
+
+/**
+ * Every package the `\usepackage`, `\RequirePackage` and `\RequirePackageWithOptions` lines at the
+ * top of the tree load, in source order, none after `\end{document}` (TeX stops there): the
+ * preamble's, as the class line is read, each with the options LaTeX hands it (`packageLoads`). A
+ * comment is not a line; several lines behind a TeX switch are each read. A package loaded twice keeps the options of its first load in LaTeX, and a
+ * second load asking for more stops the build («Option clash»), so each line is read as its own.
+ */
+export function packagesOf(t: ParsedTex): readonly PackageLoad[] {
+  const passed = passedToPackagesOf(t);
+  return liveRoot(t)
+    .content.flatMap((node, index) =>
+      isPackageLine(node) ? [{ node, index }] : [],
+    )
+    .flatMap((at) =>
+      packageLoads(t.src, at, { passed, global: globalAt(t, at.index) }),
+    );
+}
+
+/**
+ * Whether the preamble may load a package, or pass it options, where this reader does not see: an
+ * `\input` or `\include` there left as written (no build record yet, or a stale one), a package line
+ * or a `\PassOptionsToPackage` inside another macro's argument or a definition's body
+ * (`\newcommand{\load}{\usepackage{…}}`), one whose package name is built by a macro
+ * (`\usepackage{\style}`), or a file read through another loader (`\InputIfFileExists`, `\import`).
+ */
+export function packagesUnseen(t: ParsedTex): boolean {
+  const live = liveRoot(t);
+  const top = new Set<unknown>(live.content);
+  const hidden = visited(live, () => false).some(
+    (v) =>
+      isNode(v) &&
+      (isPackageLine(v) || isPassToPackage(v)) &&
+      (!top.has(v) || namedByMacro(v)),
+  );
+  return hidden || includesInPreamble(t) || otherLoaderInPreamble(t);
+}
+
+/** Macros that read a file this reader never opens: the `import` package's and the kernel's. */
+const OTHER_LOADERS: ReadonlySet<string> = new Set([
+  "InputIfFileExists",
+  "import",
+  "subimport",
+  "inputfrom",
+  "subinputfrom",
+]);
+
+/**
+ * Whether the preamble reads a file through a loader `includesOf` does not follow, or names a
+ * package line through `\csname` (`\csname usepackage\endcsname{…}`).
+ */
+function otherLoaderInPreamble(t: ParsedTex): boolean {
+  const body = documentBodyOf(t)?.start ?? Number.POSITIVE_INFINITY;
+  const loader = visited(t.root, () => false).some(
+    (v) =>
+      isNode(v) &&
+      v.type === "macro" &&
+      OTHER_LOADERS.has(v.content) &&
+      // A node with no place (none the parser makes) reads NaN, which is before nothing.
+      Number(v.position?.start.offset) < body,
+  );
+  return loader || CSNAME_LOAD.test(t.src.slice(0, body));
+}
+
+const CSNAME_LOAD = /\\csname\s*(?:usepackage|RequirePackage)/u;
+
+const isPassToPackage = (n: Node): n is Macro =>
+  n.type === "macro" && n.content === "PassOptionsToPackage";
+
+/** Whether the packages a line names are built by a macro: its last mandatory argument. */
+const namedByMacro = (m: Macro): boolean =>
+  holdsMacro(mandatory(m).at(isPassToPackage(m) ? 1 : 0)?.content ?? []);
+
+/**
+ * A preset's `template_style` → the package it names and the options it requires: one whole
+ * `\usepackage[…]{…}` line naming one package. Anything else is null.
+ */
+export function parseTemplateStyle(text: string): StylePackage | null {
+  const t = parseLatex(text);
+  const nodes = t.root.content.filter(
+    (n) => n.type !== "whitespace" && n.type !== "comment",
+  );
+  const [only, ...rest] = nodes;
+  if (only === undefined || rest.length > 0 || !isPackageLine(only))
+    return null;
+  const none = { passed: [], global: NO_OPTIONS };
+  const loads = packageLoads(t.src, { node: only, index: 0 }, none);
+  const [load, ...more] = loads;
+  return load === undefined || more.length > 0
+    ? null
+    : { name: load.name, options: load.options };
 }
 
 /** `src` with `text` in place of `[from, to)`. */
@@ -133,12 +402,15 @@ export function replaceDocumentClass(
   want: DocumentClass,
 ): string {
   // Several lines behind a switch: which one builds is not known, so none is rewritten.
-  const [node, ...others] = classNodes(t);
-  if (node === undefined || others.length > 0) return t.src;
-  const line = classLine(t.src, node);
+  const [top, ...others] = classNodes(t);
+  if (top === undefined || others.length > 0) return t.src;
+  const { node } = top;
+  const line = classLine(t.src, top, passedOf(t));
   if (line.kind !== "class" || line.place.kind === "unplaced") return t.src;
+  // A line with an option built by a macro: what it lacks is not known, so it is not rewritten.
+  if (!readWhole(line)) return t.src;
   const { start, end } = line.place.span;
-  const change = venueClass(line, want);
+  const change = venueClass(optionsInEffect(line), want);
   switch (change.kind) {
     case "keep":
       return t.src;

@@ -70,8 +70,8 @@ A **venue preset** holds one edition's format and page limits (`paperlint:icse-2
 | `paperlint:msr-2027`        | MSR 2027 (Technical)               | IEEE two-column, no `compsoc` | `technical` 10 pages, appendices included, + 2 pages of only references ([why](docs/rules.md#checks-against-the-venue)); double-blind                    |
 | `paperlint:sp-2027`         | IEEE S&P 2027                      | IEEE two-column, `compsoc`    | `research` 13 pages + 5 of references and appendices, 18 in all; `sok` 13 pages, references not counted; double-blind                                    |
 
-Also shipped: NLBSE, AGENT and AGENTVERIFY 2027, and more; every edition, and what is not shipped yet
-(USENIX, NeurIPS, Springer …): [`docs/venues.md`](docs/venues.md#what-paperlint-ships).
+Also shipped: NeurIPS 2026, ICML 2027, AAAI 2027, NLBSE, AGENT and AGENTVERIFY 2027, and more; every
+edition, and what is not shipped yet (USENIX, ICLR, IJCAI, Springer …): [`docs/venues.md`](docs/venues.md#what-paperlint-ships).
 [Add yours](#-add-a-venue-that-isnt-listed) in one small file.
 
 ## 🚀 Getting started

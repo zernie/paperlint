@@ -16,19 +16,35 @@ describe("isReferencesHeading", () => {
     "7 References",
     "VII. REFERENCES",
     "  References  ",
+    // lineno's line number, which pdf.js reads glued to the end of the line (a NeurIPS submission,
+    // measured 2026-11-19 on fixtures/build-e2e/neurips: «References346»).
+    "References346",
+    "7 References 12",
   ])("%j is a heading", (line) => {
     expect(isReferencesHeading(line)).toBe(true);
   });
 
-  it.each(["See the references below", "References to prior work", "Refs", ""])(
-    "%j is not",
-    (line) => {
-      expect(isReferencesHeading(line)).toBe(false);
-    },
-  );
+  it.each([
+    "See the references below",
+    "References to prior work",
+    "References to prior work 346",
+    "Refs",
+    "",
+  ])("%j is not", (line) => {
+    expect(isReferencesHeading(line)).toBe(false);
+  });
 });
 
 describe("bodyEnd", () => {
+  it("🔴 a line-numbered submission: the heading with its line number still ends the body", () => {
+    expect(
+      bodyEnd([
+        "Intro1\nbody2",
+        "end of the body345\nReferences346\n[1] A.347",
+      ]),
+    ).toEqual({ kind: "found", by: "references", page: 2, bodyPages: 2 });
+  });
+
   it("a heading below body text on its page: that page is a body page", () => {
     expect(
       bodyEnd([

@@ -1,0 +1,126 @@
+// AAAI-27 Main Technical Track (the Forty-First AAAI Conference on Artificial Intelligence,
+// Montréal, 16-23 February 2027) — a VENUE preset over the AAAI Press style family. Everything the
+// aaai2027.sty template decides (page size, columns, fonts, font sizes, TeX packages) comes from
+// aaai-press.jsonc; this file adds what AAAI-27's call for papers sets. Its card, in prose:
+// `aaai-2027.md` beside this file.
+//
+// Verbatim from the call, https://aaai.org/conference/aaai/aaai-27/main-technical-track-call/
+// (page dated May 14, 2026; read 2026-11-19):
+//   «Submissions are limited to 7 pages of main content, with a maximum total length of 9 pages.
+//    Any pages beyond page 7 are reserved exclusively for references.»
+//   «All authors must complete a reproducibility checklist to facilitate replication of the
+//    reported research.»
+//   «AAAI-27 is an in-person conference.»
+//   Its timetable: «Note: all deadlines are “anywhere on earth” (UTC-12)», «July 21, 2026 Abstracts
+//   due at 11:59 PM UTC-12», «July 28, 2026 Full papers due at 11:59 PM UTC-12», «December 14,
+//   2026 Submission of camera-ready files (Main Technical Track)».
+// Verbatim from the submission instructions,
+// https://aaai.org/conference/aaai/aaai-27/submission-instructions/ (read 2026-11-19):
+//   «Papers must be formatted in AAAI two-column, camera-ready style; see the AAAI-27 author kit for
+//    details. Papers must be in trouble-free, high-resolution PDF format, formatted for US Letter
+//    (8.5″ x 11″) paper, using Type 1 or TrueType fonts. AAAI submissions are anonymous and must
+//    conform to the instructions (detailed below) for double-blind review. The authors must remove
+//    all author and affiliation information from their submission for review, and may replace it
+//    with other information, such as paper number and keywords. The main submission PDF can have
+//    up to 9 pages, with pages 8–9 reserved exclusively for references. That is, the main paper
+//    can have up to 7 pages of non-references content. Acknowledgements should be omitted from
+//    papers submitted for review, and any ethical statements or similar considerations, if
+//    included, must be included in the 7 content pages.»
+//   «Authors must complete the reproducibility checklist provided in the AAAI-27 Author Kit and
+//    submit it at the time of paper submission. […] must be uploaded separately from the main paper
+//    in the designated field of the submission form.»
+{
+  "type": "venue",
+  // The series, without its year: the file is the edition.
+  "name": "AAAI",
+  // «AAAI» alone is what papers write whenever they mention an AAAI paper or AAAI Press, so
+  // tex/venue-leftover counts it in prose only beside a year no older than the paper's own edition's
+  // year minus one: «AAAI 2027» (what OpenReview's venue group calls the edition, its `subtitle`,
+  // https://api2.openreview.net/groups?id=AAAI.org/2027/Conference, read 2026-11-19), «AAAI'27»,
+  // «AAAI~2027». 🔴 Not the call's own spelling «AAAI-27»: a hyphen is not a year beside the name.
+  // The call quoted above.
+  "url": "https://aaai.org/conference/aaai/aaai-27/main-technical-track-call/",
+  "extends": "paperlint:aaai-press",
+
+  // No `template`: the family's two lines are the kit's («DO NOT CHANGE THIS»), and the call names
+  // no options of its own.
+
+  // «AAAI submissions are anonymous and must conform to the instructions (detailed below) for
+  // double-blind review.» (the submission instructions above). anonymity/identity then requires
+  // the paper's `identity`.
+  "blind": true,
+
+  // No `portal`: submissions go through OpenReview («Submissions will not be accepted by e-mail or
+  // any other mechanism other than OpenReview», the submission instructions), and paperlint has a
+  // portal adapter for HotCRP only.
+
+  // The deadlines have passed except the camera-ready; they are kept as the record of the edition.
+  // Two readings of each submission deadline, kept both:
+  //   the call: «11:59 PM UTC-12» on July 21 and July 28, 2026 → 2026-07-22T11:59:00Z and
+  //     2026-07-29T11:59:00Z;
+  //   OpenReview, read 2026-11-19: the Submission invitation's `duedate` 1784721540000
+  //     (2026-07-22T11:59:00Z), https://api2.openreview.net/invitations?id=AAAI.org/2027/Conference/-/Submission&expired=true;
+  //     and the venue group's `date`: «Abstract Registration: Jul 22 2026 11:59AM UTC-0, Submission
+  //     Deadline: Jul 29 2026 11:59AM UTC-0», https://api2.openreview.net/groups?id=AAAI.org/2027/Conference.
+  // They agree to the minute.
+  // The camera-ready, «December 14, 2026», with no hour: the end of that day AoE, 2026-12-15T11:59:59Z.
+  "deadlines": [
+    {
+      "what": "registration",
+      "at": "2026-07-22T11:59:00Z",
+      "source": "call",
+      "url": "https://aaai.org/conference/aaai/aaai-27/main-technical-track-call/",
+      "read": "2026-11-19",
+    },
+    {
+      "what": "registration",
+      "at": "2026-07-22T11:59:00Z",
+      "source": "portal",
+      "url": "https://api2.openreview.net/invitations?id=AAAI.org/2027/Conference/-/Submission&expired=true",
+      "read": "2026-11-19",
+    },
+    {
+      "what": "submission",
+      "at": "2026-07-29T11:59:00Z",
+      "source": "call",
+      "url": "https://aaai.org/conference/aaai/aaai-27/main-technical-track-call/",
+      "read": "2026-11-19",
+    },
+    {
+      "what": "submission",
+      "at": "2026-07-29T11:59:00Z",
+      "source": "portal",
+      "url": "https://api2.openreview.net/groups?id=AAAI.org/2027/Conference",
+      "read": "2026-11-19",
+    },
+    {
+      "what": "camera-ready",
+      "at": "2026-12-15T11:59:59Z",
+      "source": "call",
+      "url": "https://aaai.org/conference/aaai/aaai-27/main-technical-track-call/",
+      "read": "2026-11-19",
+    },
+  ],
+
+  // No `required_sections`, on purpose. The call requires a reproducibility checklist, but as a
+  // separate upload, not a section of the PDF. The kit's «Ethical Statement» is «optional,
+  // unnumbered». Acknowledgements are to be omitted at submission («should be omitted»), which no
+  // field can say.
+
+  "format": {
+    // «7 pages of main content, with a maximum total length of 9 pages. Any pages beyond page 7 are
+    // reserved exclusively for references.» A body limit, a references limit and the total.
+    // 🔴 What the count cannot say: banal types a page as bibliography by its text, and an appendix
+    // placed after the references was typed bibliography on a measured build (7 body pages, then
+    // references and a 6-paragraph appendix on pages 8-9: banal body 7, references 2) — it passes,
+    // although pages 8-9 are «reserved exclusively for references». `"body_ends_at":
+    // "references"` with `"appendix_in_body": true` passes it too (tried 2026-11-19): without
+    // hyperref the appendix is not looked for, and the style refuses hyperref. An appendix BEFORE
+    // the references counts as body, as the kit asks («Content Appendices … count towards page
+    // limits»). The same synthetic paper at 7 body pages, 40 references on pages 8-9, lints clean;
+    // at 8 body pages it is reported (body pages: 8, over the limit 7).
+    "kinds": {
+      "main": { "body_pages_max": 7, "ref_pages_max": 2, "pages_max": 9 },
+    },
+  },
+}

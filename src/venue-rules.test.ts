@@ -271,13 +271,13 @@ describe("pdf/profile — the declaration must resolve, or nothing is judged", (
       "an unknown venue (a typo would silently disable every check)",
       { extends: "paperlint:agentic-dev", kind: "short" },
       "preset",
-      /acsac-2026, agent-2027, agenticdev-2026, agentverify-2027, aidc-2026, aisec-2026, ase-2026, ccs-2026, emnlp-2026, fse-2027, icse-2027, icse-2028, ieee-conference, msr-2027, nlbse-2027, realm-2026, sp-2027/,
+      /acsac-2026, agent-2027, agenticdev-2026, agentverify-2027, aidc-2026, aisec-2026, ase-2026, ccs-2026, emnlp-2026, fse-2027, icml-2027, icml-style, icse-2027, icse-2028, ieee-conference, msr-2027, neurips-2026, neurips-style, nlbse-2027, realm-2026, sp-2027/,
     ],
     [
       "the base TeX set is not a venue",
       { extends: "paperlint:tex-base" },
       "preset",
-      /acsac-2026, agent-2027, agenticdev-2026, agentverify-2027, aidc-2026, aisec-2026, ase-2026, ccs-2026, emnlp-2026, fse-2027, icse-2027, icse-2028, ieee-conference, msr-2027, nlbse-2027, realm-2026, sp-2027/,
+      /acsac-2026, agent-2027, agenticdev-2026, agentverify-2027, aidc-2026, aisec-2026, ase-2026, ccs-2026, emnlp-2026, fse-2027, icml-2027, icml-style, icse-2027, icse-2028, ieee-conference, msr-2027, neurips-2026, neurips-style, nlbse-2027, realm-2026, sp-2027/,
     ],
     [
       "paperlint.json that is not JSON",
@@ -907,6 +907,373 @@ describe("format/page-limit on FSE: 18 body pages and 4 of references, 20 and 4 
     },
   ])("$name", ({ venue, body, refs, want }) => {
     const facts = acmsmallFacts((f) => {
+      f.body_pages = body;
+      f.ref_pages = refs;
+      f.npages = body + refs;
+    });
+    expect(ids(lint({ venue, facts }))).toEqual(want);
+  });
+});
+
+/**
+ * The facts of the e2e fixture `fixtures/build-e2e/neurips`, measured for neurips-style.jsonc
+ * (2026-11-19): the author kit's neurips_2026.sty, references in \small, an appendix and the
+ * checklist after them.
+ */
+const neuripsFacts = (patch: Patch = () => {}): Facts =>
+  withFacts((f) => {
+    f.page_w_in = 8.5;
+    f.page_h_in = 11;
+    f.columns = 1;
+    f.body_pt = 10.3;
+    f.ref_pt = 9.3;
+    f.npages = 10;
+    f.body_pages = 7;
+    f.ref_pages = 1;
+    f.fonts = type1([
+      "NimbusRomNo9L-Medi",
+      "NimbusRomNo9L-Regu",
+      "NimbusRomNo9L-ReguItal",
+      "NimbusSanL-Regu",
+      "SFTT1000",
+    ]);
+    patch(f);
+  });
+
+const NEURIPS_STYLE = { extends: "paperlint:neurips-style" };
+const NEURIPS = {
+  extends: "paperlint:neurips-2026",
+  kind: "main",
+  identity: ["Ada Example", "adaexample", "ada@example.org"],
+};
+
+describe("the NeurIPS style family and NeurIPS", () => {
+  it.each([
+    ["the family", NEURIPS_STYLE],
+    ["neurips/main", NEURIPS],
+  ])("the measured build passes %s", (_, venue) => {
+    expect(lint({ venue, facts: neuripsFacts() })).toEqual([]);
+  });
+
+  it("references at the body's size: banal gives no reference size, and nothing is judged", () => {
+    const facts = neuripsFacts((f) => (f.ref_pt = null));
+    expect(lint({ venue: NEURIPS, facts })).toEqual([]);
+  });
+
+  it("🔴 the planted build without the style fails: Computer Modern, no NimbusRomNo9L", () => {
+    const facts = neuripsFacts(
+      (f) =>
+        (f.fonts = type1([
+          "SFBX0900",
+          "SFBX1440",
+          "SFRM1000",
+          "SFRM1728",
+          "SFTI0900",
+        ])),
+    );
+    const fs = lint({ venue: NEURIPS, facts });
+    expect(ids(fs)).toEqual(["pdf/fonts:noFamily"]);
+    expect(fs[0]?.message).toMatch(/NimbusRomNo9L/);
+  });
+
+  it("🔴 an A4 page or two columns fail pdf/geometry", () => {
+    const facts = neuripsFacts((f) => {
+      f.page_w_in = 8.27;
+      f.page_h_in = 11.69;
+      f.columns = 2;
+    });
+    expect(ids(lint({ venue: NEURIPS, facts }))).toEqual([
+      "pdf/geometry:columns",
+      "pdf/geometry:dim",
+      "pdf/geometry:dim",
+    ]);
+  });
+
+  it("🔴 a bibliography in \\footnotesize, below the \\small the kit permits, fails pdf/body-size", () => {
+    const fs = lint({
+      venue: NEURIPS,
+      facts: neuripsFacts((f) => (f.ref_pt = 8.3)),
+    });
+    expect(fs.map((f) => f.message)).toEqual([
+      "the reference font size is 8.3 pt, outside 9–10 pt for NeurIPS (allowing ±0.5 pt for the measuring drift) — fix the bibliography's font size",
+    ]);
+  });
+});
+
+describe("format/page-limit on NeurIPS: 9 content pages, 10 in the camera-ready; references, appendices and the checklist not counted", () => {
+  const CAMERA = { ...NEURIPS, kind: "camera-ready" };
+  it.each([
+    { name: "main: 9 + 12 pass", venue: NEURIPS, body: 9, refs: 12, want: [] },
+    {
+      name: "🔴 main: a 10th content page fails",
+      venue: NEURIPS,
+      body: 10,
+      refs: 1,
+      want: ["format/page-limit:pages"],
+    },
+    {
+      name: "camera-ready: 10 pass",
+      venue: CAMERA,
+      body: 10,
+      refs: 1,
+      want: [],
+    },
+    {
+      name: "🔴 camera-ready: an 11th content page fails",
+      venue: CAMERA,
+      body: 11,
+      refs: 1,
+      want: ["format/page-limit:pages"],
+    },
+  ])("$name", ({ venue, body, refs, want }) => {
+    const facts = neuripsFacts((f) => {
+      f.body_pages = body;
+      f.ref_pages = refs;
+      f.npages = body + refs;
+    });
+    expect(ids(lint({ venue, facts }))).toEqual(want);
+  });
+});
+
+/**
+ * The facts of a build on the AAAI-27 kit's preamble, measured for aaai-press.jsonc (2026-11-19):
+ * aaai2027.sty, 7 body pages, references in \small on pages 8-9.
+ */
+const aaaiFacts = (patch: Patch = () => {}): Facts =>
+  withFacts((f) => {
+    f.page_w_in = 8.5;
+    f.page_h_in = 11;
+    f.columns = 2;
+    f.body_pt = 10.3;
+    f.ref_pt = 9.3;
+    f.npages = 9;
+    f.body_pages = 7;
+    f.ref_pages = 2;
+    f.fonts = type1([
+      "CMMI10",
+      "CMR10",
+      "NimbusMonL-Regu",
+      "TeXGyreTermesX-Bold",
+      "TeXGyreTermesX-Italic",
+      "TeXGyreTermesX-Regular",
+    ]);
+    patch(f);
+  });
+
+const AAAI_PRESS = { extends: "paperlint:aaai-press" };
+const AAAI = {
+  extends: "paperlint:aaai-2027",
+  kind: "main",
+  identity: ["Ada Example", "adaexample", "ada@example.org"],
+};
+
+describe("the AAAI Press style family and AAAI-27", () => {
+  it.each([
+    ["the family", AAAI_PRESS],
+    ["aaai-2027/main", AAAI],
+  ])("the measured build passes %s", (_, venue) => {
+    expect(lint({ venue, facts: aaaiFacts() })).toEqual([]);
+  });
+
+  it("references at the body's size: banal gives no reference size, and nothing is judged", () => {
+    const facts = aaaiFacts((f) => (f.ref_pt = null));
+    expect(lint({ venue: AAAI, facts })).toEqual([]);
+  });
+
+  it("🔴 the AAAI-26 kit (its paper loads times) fails pdf/fonts: NimbusRomNo9L, no TeXGyreTermesX", () => {
+    const facts = aaaiFacts(
+      (f) =>
+        (f.fonts = type1([
+          "CMMI10",
+          "CMR10",
+          "CMSY10",
+          "NimbusMonL-Regu",
+          "NimbusRomNo9L-Medi",
+          "NimbusRomNo9L-Regu",
+          "NimbusRomNo9L-ReguItal",
+        ])),
+    );
+    const fs = lint({ venue: AAAI, facts });
+    expect(ids(fs)).toEqual(["pdf/fonts:noFamily"]);
+    expect(fs[0]?.message).toMatch(/TeXGyreTermesX/);
+  });
+
+  it("🔴 `[a4paper]` for `[letterpaper]`: the measured A4 page fails pdf/geometry", () => {
+    const facts = aaaiFacts((f) => {
+      f.page_w_in = 8.264;
+      f.page_h_in = 11.694;
+    });
+    expect(ids(lint({ venue: AAAI, facts }))).toEqual([
+      "pdf/geometry:dim",
+      "pdf/geometry:dim",
+    ]);
+  });
+
+  it("🔴 one column fails pdf/geometry", () => {
+    const facts = aaaiFacts((f) => (f.columns = 1));
+    expect(ids(lint({ venue: AAAI, facts }))).toEqual(["pdf/geometry:columns"]);
+  });
+
+  it("🔴 \\tiny after \\maketitle (body 6.3) and a bibliography in \\scriptsize (7.3) fail pdf/body-size", () => {
+    expect(
+      lint({ venue: AAAI, facts: aaaiFacts((f) => (f.body_pt = 6.3)) }).map(
+        (f) => f.message,
+      ),
+    ).toEqual([
+      "the body font size measures 6.3 pt against 10 ± 0.5 pt for AAAI. The measurement is the mode of the rendered text, not the declared size — check \\documentclass and its options",
+    ]);
+    expect(
+      lint({ venue: AAAI, facts: aaaiFacts((f) => (f.ref_pt = 7.3)) }).map(
+        (f) => f.message,
+      ),
+    ).toEqual([
+      "the reference font size is 7.3 pt, outside 9–10 pt for AAAI (allowing ±0.5 pt for the measuring drift) — fix the bibliography's font size",
+    ]);
+  });
+});
+
+describe("format/page-limit on AAAI-27: 7 pages of content, 2 more only of references, 9 in all", () => {
+  it.each([
+    { name: "7 + 2 pass", body: 7, refs: 2, want: [] },
+    { name: "6 + 1 pass", body: 6, refs: 1, want: [] },
+    {
+      name: "🔴 an 8th content page fails, though the total is 9",
+      body: 8,
+      refs: 1,
+      want: ["format/page-limit:pages"],
+    },
+    {
+      name: "🔴 a third page of references fails, and so does the total",
+      body: 7,
+      refs: 3,
+      want: ["format/page-limit:pages", "format/page-limit:pages"],
+    },
+  ])("$name", ({ body, refs, want }) => {
+    const facts = aaaiFacts((f) => {
+      f.body_pages = body;
+      f.ref_pages = refs;
+      f.npages = body + refs;
+    });
+    expect(ids(lint({ venue: AAAI, facts }))).toEqual(want);
+  });
+});
+
+/**
+ * The facts of the ICML kit's example_paper.tex, measured for icml-style.jsonc (2026-11-19): the
+ * kit's icml2027.sty, references at the body's size (banal gives no reference size), an appendix
+ * after them. The kit's figure draws a non-embedded Times-Roman; left out here, it is pdf/fonts'
+ * finding on any venue.
+ */
+const icmlFacts = (patch: Patch = () => {}): Facts =>
+  withFacts((f) => {
+    f.page_w_in = 8.5;
+    f.page_h_in = 11;
+    f.columns = 2;
+    f.body_pt = 10.3;
+    f.ref_pt = null;
+    f.npages = 7;
+    f.body_pages = 5;
+    f.ref_pages = 2;
+    f.fonts = type1([
+      "NimbusRomNo9L-Regu",
+      "NimbusRomNo9L-Medi",
+      "NimbusRomNo9L-ReguItal",
+      "NimbusRomNo9L-MediItal",
+      "NimbusMonL-Regu",
+      "CMMI10",
+      "CMSY10",
+    ]);
+    patch(f);
+  });
+
+const ICML_STYLE = { extends: "paperlint:icml-style" };
+const ICML = {
+  extends: "paperlint:icml-2027",
+  kind: "main",
+  identity: ["Ada Example", "adaexample", "ada@example.org"],
+};
+
+describe("the ICML style family and ICML", () => {
+  it.each([
+    ["the family", ICML_STYLE],
+    ["icml-2027/main", ICML],
+  ])("the measured build passes %s", (_, venue) => {
+    expect(lint({ venue, facts: icmlFacts() })).toEqual([]);
+  });
+
+  it("🔴 the planted build in Computer Modern (\\rmdefault cmr) fails pdf/fonts", () => {
+    const facts = icmlFacts(
+      (f) =>
+        (f.fonts = type1(["CMBX10", "CMR10", "SFRM1000", "NimbusMonL-Regu"])),
+    );
+    const fs = lint({ venue: ICML, facts });
+    expect(ids(fs)).toEqual(["pdf/fonts:noFamily"]);
+    expect(fs[0]?.message).toMatch(/NimbusRomNo9L/);
+  });
+
+  it("🔴 another venue's one-column style (NeurIPS 2025's, measured) fails pdf/geometry", () => {
+    const fs = lint({ venue: ICML, facts: icmlFacts((f) => (f.columns = 1)) });
+    expect(fs.map((f) => f.message)).toEqual([
+      "1 column(s), ICML requires 2 — the wrong document class or class option",
+    ]);
+  });
+
+  it("🔴 an A4 page fails pdf/geometry", () => {
+    const facts = icmlFacts((f) => {
+      f.page_w_in = 8.27;
+      f.page_h_in = 11.69;
+    });
+    expect(ids(lint({ venue: ICML, facts }))).toEqual([
+      "pdf/geometry:dim",
+      "pdf/geometry:dim",
+    ]);
+  });
+
+  it("🔴 [11pt] (banal 11.3, measured) fails pdf/body-size", () => {
+    const fs = lint({
+      venue: ICML,
+      facts: icmlFacts((f) => (f.body_pt = 11.3)),
+    });
+    expect(ids(fs)).toEqual(["pdf/body-size:body"]);
+  });
+
+  it("🔴 a bibliography in \\small (banal 9.3, measured), below the body's size, fails pdf/body-size", () => {
+    const fs = lint({ venue: ICML, facts: icmlFacts((f) => (f.ref_pt = 9.3)) });
+    expect(fs.map((f) => f.message)).toEqual([
+      "the reference font size is 9.3 pt, outside 10 pt for ICML (allowing ±0.5 pt for the measuring drift) — fix the bibliography's font size",
+    ]);
+  });
+});
+
+describe("format/page-limit on ICML: 8 main-body pages, 9 in the camera-ready; references, statements and appendices not counted", () => {
+  const CAMERA = { ...ICML, kind: "camera-ready" };
+  // banal's counts on the kit's example with filler text (icml-2027.jsonc): 8 with the Impact
+  // Statement on page 9, 9 with the body run onto page 9.
+  it.each([
+    { name: "main: 8 + 4 pass", venue: ICML, body: 8, refs: 4, want: [] },
+    {
+      name: "🔴 main: a 9th body page fails",
+      venue: ICML,
+      body: 9,
+      refs: 4,
+      want: ["format/page-limit:pages"],
+    },
+    {
+      name: "camera-ready: 9 pass",
+      venue: CAMERA,
+      body: 9,
+      refs: 4,
+      want: [],
+    },
+    {
+      name: "🔴 camera-ready: a 10th body page fails",
+      venue: CAMERA,
+      body: 10,
+      refs: 4,
+      want: ["format/page-limit:pages"],
+    },
+  ])("$name", ({ venue, body, refs, want }) => {
+    const facts = icmlFacts((f) => {
       f.body_pages = body;
       f.ref_pages = refs;
       f.npages = body + refs;

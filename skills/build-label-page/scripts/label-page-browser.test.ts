@@ -99,6 +99,158 @@ const sharedBrowser = async (): Promise<Browser> =>
 afterAll(async () => {
   await launched?.close();
 });
+/**
+ * A page in a context of its own that no request leaves: the page asks Google Fonts for Roboto, and
+ * a font that arrives after the cards are drawn reflows them under a test that is measuring them. In
+ * CI it arrived between the two reads of one test (run 44507805064): the marked line read in the
+ * fallback font, its note in Roboto, the note 17.6 px up inside the line. Refused, the page is drawn
+ * once in the machine's own font. A route a test adds later answers first.
+ */
+const offlinePage = async (
+  options?: Parameters<Browser["newPage"]>[0],
+): Promise<Page> => {
+  const page = await (await sharedBrowser()).newPage(options);
+  await page.route("**/*", (r) => r.abort());
+  return page;
+};
+
+const Box = z
+  .object({
+    x: z.number(),
+    y: z.number(),
+    width: z.number(),
+    height: z.number(),
+  })
+  .nullable();
+/**
+ * The boxes of several elements, read in one frame, for a check whose requirement IS a distance (the
+ * space between two cards, a pointer's path): each `boundingBox()` is a read of its own, and a reflow
+ * between two of them (a font arriving, a render) compares boxes of two different layouts. Like
+ * `boundingBox()`, null for an element that has no box. Where and in what order things sit is
+ * asserted on the page's structure instead (`stacking`, `placeOf`), which no timing moves.
+ */
+const boxesInOneFrame = async (of: readonly Locator[]) => {
+  const [first] = of;
+  assert.ok(first !== undefined);
+  const handles = await Promise.all(of.map(async (l) => l.elementHandle()));
+  return z.array(Box).parse(
+    await first.page().evaluate(
+      (els) =>
+        els.map((e) => {
+          if (e.getClientRects().length === 0) return null;
+          const r = e.getBoundingClientRect();
+          return { x: r.x, y: r.y, width: r.width, height: r.height };
+        }),
+      handles,
+    ),
+  );
+};
+
+/**
+ * How each element after the first sits against the one before it, read in one call from the
+ * structure and the computed style, never from pixels: "stacked" when, under the nearest element
+ * holding both, the child holding it comes later, both children are blocks in the flow, and that
+ * element lays its children out one under another (a block, or a column flex box). Anything else is
+ * named, so a failure says what changed.
+ */
+const stacking = async (of: readonly Locator[]) => {
+  const [first] = of;
+  assert.ok(first !== undefined);
+  const handles = await Promise.all(of.map(async (l) => l.elementHandle()));
+  return z.array(z.string()).parse(
+    await first.page().evaluate((els) => {
+      const inFlow = (c: Element) => {
+        const st = getComputedStyle(c);
+        return (
+          !st.display.startsWith("inline") &&
+          st.float === "none" &&
+          st.position !== "absolute" &&
+          st.position !== "fixed"
+        );
+      };
+      const column = (h: Element) => {
+        const st = getComputedStyle(h);
+        return (
+          st.display === "block" ||
+          (st.display === "flex" && st.flexDirection === "column")
+        );
+      };
+      // The nearest element holding both, and the child of it that holds one of them.
+      const hostOf = (a: Element, b: Element) => {
+        let h = a.parentElement;
+        while (h !== null && !h.contains(b)) h = h.parentElement;
+        return h;
+      };
+      const childUnder = (host: Element, n: Element) => {
+        let c = n;
+        while (c.parentElement !== host && c.parentElement !== null)
+          c = c.parentElement;
+        return c;
+      };
+      const verdict = (a: Element, b: Element) => {
+        const host = hostOf(a, b);
+        if (host === null || a.contains(b) || b.contains(a))
+          return "one holds the other";
+        const [ca, cb] = [childUnder(host, a), childUnder(host, b)];
+        const order = Array.from(host.children);
+        if (order.indexOf(ca) >= order.indexOf(cb)) return "out of order";
+        if (!inFlow(ca) || !inFlow(cb)) return "not a block in the flow";
+        const hs = getComputedStyle(host);
+        return column(host)
+          ? "stacked"
+          : `not one under another (${hs.display} ${hs.flexDirection})`;
+      };
+      return els.slice(1).map((b, i) => {
+        const a = els[i];
+        return a === undefined ? "no element before it" : verdict(a, b);
+      });
+    }, handles),
+  );
+};
+/** A `data-test-meta` as the page wrote it, read back as JSON. */
+const MetaText = z
+  .string()
+  .nullable()
+  .transform((raw): unknown => JSON.parse(raw ?? "null"));
+const Placed = z.object({
+  kind: z.string().nullable(),
+  meta: MetaText,
+});
+const Place = z.object({
+  after: Placed.nullable(),
+  linesBeside: z.number(),
+  display: z.string(),
+  inFlow: z.boolean(),
+});
+/**
+ * Where an element sits in its block, read from the structure: the element right before it (its
+ * `data-test` and values), how many code lines share its parent, and whether it is a block in the
+ * flow, so it starts on a line of its own right under that element.
+ */
+const placeOf = async (l: Locator) =>
+  Place.parse(
+    await l.evaluate((e) => {
+      const prev = e.previousElementSibling;
+      const st = getComputedStyle(e);
+      return {
+        after:
+          prev === null
+            ? null
+            : {
+                kind: prev.getAttribute("data-test"),
+                meta: prev.getAttribute("data-test-meta"),
+              },
+        linesBeside: Array.from(e.parentElement?.children ?? []).filter(
+          (c) => c.getAttribute("data-test") === "code-line",
+        ).length,
+        display: st.display,
+        inFlow:
+          st.float === "none" &&
+          st.position !== "absolute" &&
+          st.position !== "fixed",
+      };
+    }),
+  );
 
 /** A browser test launches Chromium and types: far above vitest's 5 s default on a slow runner. */
 const BROWSER_TEST_MS = 60_000;
@@ -110,8 +262,7 @@ async function onApprovalPage(
   filter: "all" | "next" = "all",
 ): Promise<void> {
   const { page: html } = build(setup(name, approval()));
-  const browser = await sharedBrowser();
-  const page = await browser.newPage();
+  const page = await offlinePage();
   try {
     await page.addInitScript(STORE(PRACTICE_DONE, echoMs));
     await page.goto("about:blank");
@@ -223,8 +374,7 @@ test(
   "a Keep needs no reason and writes none: the page stays quiet",
   async () => {
     const { page: html } = build(setup("browser-keep", approval()));
-    const browser = await sharedBrowser();
-    const page = await browser.newPage();
+    const page = await offlinePage();
     try {
       await page.addInitScript(STORE(PRACTICE_DONE, 20));
       await page.goto("about:blank");
@@ -265,17 +415,15 @@ const WITNESS = {
   context: URL_LONG,
 };
 
-/** Where the line, the rule, reading A, reading B and the question sit on a card, top to bottom. */
-const blocksOf = async (card: Locator) =>
-  Promise.all(
-    [
-      ".quote",
-      ".row:has(.lbl:text-is('Rule'))",
-      ".reading.a",
-      ".reading.b",
-      ".ask",
-    ].map(async (sel) => card.locator(sel).first().boundingBox()),
-  );
+/** The line, the rule, reading A, reading B and the question of a card, in reading order. */
+const blocksOf = (card: Locator) =>
+  [
+    ".quote",
+    ".row:has(.lbl:text-is('Rule'))",
+    ".reading.a",
+    ".reading.b",
+    ".ask",
+  ].map((sel) => card.locator(sel).first());
 
 test(
   "🔴 at phone width the card reads by position: line, rule, reading A above reading B, then the question; nothing pushes the page sideways",
@@ -283,27 +431,22 @@ test(
     const { page: html } = build(
       setup("browser-layout", approval({ items: [WITNESS] })),
     );
-    const page = await (
-      await sharedBrowser()
-    ).newPage({ viewport: { width: 400, height: 900 } });
+    const page = await offlinePage({ viewport: { width: 400, height: 900 } });
     try {
       await page.addInitScript(STORE(PRACTICE_DONE, 20));
       await page.setContent(html, { waitUntil: "domcontentloaded" });
       const card = page.locator("article.item").last();
-      const boxes = await blocksOf(card);
-      const [line, rule, a, b, ask] = boxes;
-      assert.ok(line && rule && a && b && ask, "every block is on the card");
-      // Guards: each block below the one before, A and B in one column, a gap before the question.
-      assert.deepEqual(
-        boxes
-          .slice(1)
-          .map(
-            (x, i) =>
-              (x?.y ?? 0) >= (boxes[i]?.y ?? 0) + (boxes[i]?.height ?? 0),
-          ),
-        [true, true, true, true],
-      );
-      assert.equal(a.x, b.x);
+      const blocks = blocksOf(card);
+      // Guards: each block under the one before, in one column (A above B, never beside it).
+      assert.deepEqual(await stacking(blocks), [
+        "stacked",
+        "stacked",
+        "stacked",
+        "stacked",
+      ]);
+      // The space before the question is the requirement itself, so it is a distance, read in one frame.
+      const [b, ask] = await boxesInOneFrame(blocks.slice(3));
+      assert.ok(b && ask, "both drawn");
       assert.ok(ask.y - (b.y + b.height) >= 16, "space before the question");
       assert.deepEqual(
         await card
@@ -351,9 +494,7 @@ async function onWitnessPage(
     ]),
   );
   const { page: html } = build(setup(name, cfg));
-  const page = await (
-    await sharedBrowser()
-  ).newPage({ viewport: { width: 400, height: 900 } });
+  const page = await offlinePage({ viewport: { width: 400, height: 900 } });
   try {
     await page.addInitScript(STORE(practiceDone ? done : {}, 20));
     await page.goto("about:blank");
@@ -419,13 +560,22 @@ test(
       );
       assert.ok(ask.top - said.bottom < 40, JSON.stringify(box));
       assert.ok(docs.top >= ask.bottom, JSON.stringify(box));
-      const why = card.locator(".clamped", { hasText: "Why:" });
-      const folded = (await why.boundingBox())?.height ?? 0;
+      // Folded is a CSS state, not a height: clamped to three lines with text cut off, then
+      // unclamped with nothing cut off. Each state is read in one call on the one element.
+      const why = card.locator("p", { hasText: "Why:" });
+      const clamp = async () =>
+        why.evaluate((e) => [
+          getComputedStyle(e).webkitLineClamp,
+          e.scrollHeight > e.clientHeight,
+        ]);
+      const folded = await clamp();
       await card.getByRole("button", { name: "more" }).first().click();
-      const opened = await card.locator("p", { hasText: "Why:" }).boundingBox();
-      assert.ok(
-        opened && opened.height > folded,
-        `${String(folded)} → ${String(opened?.height)}`,
+      assert.deepEqual(
+        [folded, await clamp()],
+        [
+          ["3", true],
+          ["none", false],
+        ],
       );
       assert.equal(
         await page.evaluate(() => document.documentElement.scrollWidth),
@@ -506,7 +656,7 @@ test(
         { answers: p.expected, source: "page" },
       ]),
     );
-    const page = await (await sharedBrowser()).newPage();
+    const page = await offlinePage();
     try {
       await page.addInitScript(STORE(done, 20));
       await page.goto("about:blank");
@@ -558,7 +708,7 @@ test(
         { answers: p.expected, source: "page" },
       ]),
     );
-    const page = await (await sharedBrowser()).newPage();
+    const page = await offlinePage();
     try {
       await page.addInitScript(
         STORE(done, 20, {
@@ -593,7 +743,7 @@ test(
   "🔴 a stored answer to a question the page no longer asks does not stop the next answer from saving",
   async () => {
     const { page: html } = build(setup("browser-stale-question", approval()));
-    const page = await (await sharedBrowser()).newPage();
+    const page = await offlinePage();
     try {
       await page.addInitScript(
         STORE(PRACTICE_DONE, 20, {
@@ -639,7 +789,7 @@ test(
         approval({ items: ITEMS.slice(0, 2).map(approvalCard) }),
       ),
     );
-    const page = await (await sharedBrowser()).newPage();
+    const page = await offlinePage();
     try {
       await page.addInitScript(STORE(PRACTICE_DONE, 20));
       await page.goto("about:blank");
@@ -681,7 +831,7 @@ test(
     )?.[0];
     const [first] = Object.keys(key.ids).filter((n) => n !== third);
     assert.ok(third !== undefined && first !== undefined);
-    const page = await (await sharedBrowser()).newPage();
+    const page = await offlinePage();
     try {
       await page.addInitScript(
         STORE(prefixedPractice("second"), 20, {
@@ -730,7 +880,7 @@ test(
   "🔴 with answerers and no localStorage the page still works: it asks, and writes under the name picked",
   async () => {
     const { page: html } = build(setup("browser-answerers-nols", TWO_PAGE()));
-    const page = await (await sharedBrowser()).newPage();
+    const page = await offlinePage();
     try {
       await page.addInitScript(
         `Object.defineProperty(window, "localStorage", { get: function () { throw new Error("denied"); } });`,
@@ -758,9 +908,7 @@ test(
     const { page: html } = build(
       setup("browser-dwell", approval({ min_seconds: 2 })),
     );
-    const page = await (
-      await sharedBrowser()
-    ).newPage({ viewport: { width: 400, height: 700 } });
+    const page = await offlinePage({ viewport: { width: 400, height: 700 } });
     try {
       await page.addInitScript(STORE(PRACTICE_DONE, 20));
       await page.goto("about:blank");
@@ -809,9 +957,7 @@ test(
     const { page: html } = build(
       setup("browser-dwell-tall", approval({ min_seconds: 2 })),
     );
-    const page = await (
-      await sharedBrowser()
-    ).newPage({ viewport: { width: 400, height: 300 } });
+    const page = await offlinePage({ viewport: { width: 400, height: 300 } });
     try {
       await page.addInitScript(STORE(PRACTICE_DONE, 20));
       await page.goto("about:blank");
@@ -857,9 +1003,7 @@ test(
     const { page: html } = build(
       setup("browser-dwell-huge", approval({ min_seconds: 2 })),
     );
-    const page = await (
-      await sharedBrowser()
-    ).newPage({ viewport: { width: 400, height: 300 } });
+    const page = await offlinePage({ viewport: { width: 400, height: 300 } });
     try {
       await page.addInitScript(STORE(PRACTICE_DONE, 20));
       await page.goto("about:blank");
@@ -892,9 +1036,7 @@ test(
     const { page: html } = build(
       setup("browser-dwell-hidden", approval({ min_seconds: 2 })),
     );
-    const page = await (
-      await sharedBrowser()
-    ).newPage({ viewport: { width: 400, height: 700 } });
+    const page = await offlinePage({ viewport: { width: 400, height: 700 } });
     try {
       await page.addInitScript(
         `window.__vis = "hidden"; Object.defineProperty(Document.prototype, "visibilityState", { configurable: true, get: function () { return window.__vis; } });`,
@@ -1006,9 +1148,7 @@ async function onV7Page(
     setup(name, withTime ? cfg : R.omit(cfg, ["min_seconds"])),
   );
   const done = ["forbid", "allow", "elsewhere"];
-  const page = await (
-    await sharedBrowser()
-  ).newPage({ viewport: { width: 400, height: 800 } });
+  const page = await offlinePage({ viewport: { width: 400, height: 800 } });
   try {
     await page.addInitScript(
       STORE(
@@ -1056,13 +1196,28 @@ const answerOf = async (card: Locator, value: string) => {
 };
 /** The open note: whether it shows, which term, its box, and the terms marked open. */
 const Tip = z.object({ term: z.string(), open: z.boolean() });
+const TipRead = z.object({
+  meta: MetaText,
+  box: z.object({ x: z.number(), width: z.number() }).nullable(),
+});
 const tipNow = async (page: Page) => {
   const tip = page.getByTestId("tip");
   const drawn = (await tip.count()) > 0;
-  const state = drawn
-    ? Tip.parse(await metaOf(tip))
-    : { term: "", open: false };
-  const box = drawn && state.open ? await tip.boundingBox() : null;
+  // Whether it is inside the viewport is the requirement, so the box is pixels: read in one call
+  // with the state, so an open state and the box of a note already closing are never mixed.
+  const read = drawn
+    ? TipRead.parse(
+        await tip.evaluate((e) => {
+          const r = e.getBoundingClientRect();
+          return {
+            meta: e.getAttribute("data-test-meta"),
+            box: e.getClientRects().length ? { x: r.x, width: r.width } : null,
+          };
+        }),
+      )
+    : { meta: { term: "", open: false }, box: null };
+  const state = Tip.parse(read.meta);
+  const box = state.open ? read.box : null;
   const expanded = await Promise.all(
     (await allByKind(page, "term")).map(async (t) => ({
       term: Term.parse(t.meta).term,
@@ -1204,16 +1359,18 @@ test.each(PLACEMENTS)(
       await term.evaluate((b, at) => {
         b.scrollIntoView({ block: at, behavior: "instant" });
       }, block);
-      const from = await term.boundingBox();
-      assert.ok(from !== null);
+      // A pointer moves by pixels, so this test reads boxes: the term's to hover it, then the term's
+      // and the note's in one frame for the path between them.
+      const at = await term.boundingBox();
+      assert.ok(at !== null);
       // At its top left corner: a term that wraps has a box whose middle may lie over another term.
-      await page.mouse.move(from.x + 4, from.y + 4);
+      await page.mouse.move(at.x + 4, at.y + 4);
       assert.deepEqual(
         [(await tipNow(page)).term, (await tipNow(page)).open],
         [google.term, true],
       );
-      const to = await page.getByTestId("tip").boundingBox();
-      assert.ok(to !== null);
+      const [from, to] = await boxesInOneFrame([term, page.getByTestId("tip")]);
+      assert.ok(from && to, "the term and its note are drawn");
       // The other terms do not react while the pointer crosses: only the gap is under test, and
       // which term lies in it depends on how the line wraps. The arrow bridges the gap at the
       // middle of the term, so the crossing is at its right end.
@@ -1315,15 +1472,15 @@ test(
       const lines = await allByKind(depth, "code-line");
       const marked = lines.find((l) => CodeLine.parse(l.meta).marked);
       assert.ok(marked !== undefined, "the marked line is drawn");
-      const [hit, note] = [
-        await marked.loc.boundingBox(),
-        await depth.getByTestId("annotation").boundingBox(),
-      ];
-      assert.ok(hit && note, "both drawn");
-      assert.ok(
-        note.y >= hit.y + hit.height && note.y - (hit.y + hit.height) < 16,
-        JSON.stringify([hit, note]),
-      );
+      // Right under the marked line, inside the code: in the code block's own structure the note
+      // comes right after that line, among the block's lines, as a block of its own in the flow.
+      // Structure, not pixels: no font, render or margin moves it (CI run 44507805064).
+      assert.deepEqual(await placeOf(depth.getByTestId("annotation")), {
+        after: { kind: "code-line", meta: marked.meta },
+        linesBeside: lines.length,
+        display: "block",
+        inFlow: true,
+      });
       assert.deepEqual(
         await annotatedFacts(depth),
         annotatedExpected(fixtureCard("card-depth")),
@@ -1380,9 +1537,9 @@ test(
   BROWSER_TEST_MS,
 );
 
-/** Where a part of a card sits, by its `data-test`: the first one of that kind. */
-const boxOf = async (card: Locator, kind: string) =>
-  card.getByTestId(kind).first().boundingBox();
+/** The parts of a card, by their `data-test`: the first one of each kind. */
+const partsOf = (card: Locator, kinds: readonly string[]) =>
+  kinds.map((k) => card.getByTestId(k).first());
 const Panel = z.object({
   border: z.number(),
   radius: z.number(),
@@ -1396,15 +1553,13 @@ test(
       async (page, cardOf) => {
         const card = await cardOf("card-docstring");
         const parts = ["quote", "excerpt-path", "question", "answer", "wait"];
-        const boxes = await Promise.all(parts.map((k) => boxOf(card, k)));
-        // Guards: each part starts below the one before it ends, so the eye never goes back up.
-        assert.deepEqual(
-          R.zip(boxes, boxes.slice(1)).map(
-            ([a, b]) => a !== null && b !== null && b.y >= a.y + a.height,
-          ),
-          [true, true, true, true],
-          JSON.stringify(boxes),
-        );
+        // Guards: each part stacked under the one before it, so the eye never goes back up.
+        assert.deepEqual(await stacking(partsOf(card, parts)), [
+          "stacked",
+          "stacked",
+          "stacked",
+          "stacked",
+        ]);
         const status = card.getByTestId("status");
         assert.deepEqual(
           [await metaOf(status), await status.isVisible()],
@@ -1426,9 +1581,8 @@ test(
           JSON.stringify(panel),
         );
         const cards = await page.getByTestId("item").all();
-        const [first, second] = await Promise.all(
-          cards.slice(0, 2).map(async (c) => c.boundingBox()),
-        );
+        // The space between two cards is the requirement itself: a distance, read in one frame.
+        const [first, second] = await boxesInOneFrame(cards.slice(0, 2));
         assert.ok(first && second, "two cards drawn");
         assert.ok(
           second.y - (first.y + first.height) >= 32,
@@ -1562,9 +1716,7 @@ test(
     };
     const { page: html, key } = build(setup("browser-v7-lang", cfg));
     const at = "http://label.test/";
-    const page = await (
-      await sharedBrowser()
-    ).newPage({ viewport: { width: 400, height: 800 } });
+    const page = await offlinePage({ viewport: { width: 400, height: 800 } });
     try {
       // A real origin, so the page has a localStorage; every other request is refused, none leaves.
       await page.route("**/*", (r) =>
@@ -1619,9 +1771,7 @@ test(
     const htmlLang = async (cfg: Record<string, unknown>, dir: string) => {
       const { page: html } = build(setup(dir, cfg));
       const at = "http://label.test/";
-      const page = await (
-        await sharedBrowser()
-      ).newPage({ viewport: { width: 400, height: 800 } });
+      const page = await offlinePage({ viewport: { width: 400, height: 800 } });
       try {
         await page.route("**/*", (r) =>
           r.request().url() === at
@@ -1715,11 +1865,20 @@ const tagsOn = async (card: Locator) =>
       text: await t.loc.textContent(),
     })),
   );
-/** How far a tag's bottom edge is above the top of the block it tags (negative: not above). */
-const gapAbove = async (tag: Locator, block: Locator) => {
-  const [t, b] = [await tag.boundingBox(), await block.boundingBox()];
-  assert.ok(t !== null && b !== null);
-  return b.y - (t.y + t.height);
+/**
+ * Whether a tag sits right above the block it tags, from the structure: the element right after the
+ * tag is the block, or begins with it, and the two are stacked.
+ */
+const tagAbove = async (tag: Locator, block: Locator) => {
+  const next = await tag.evaluate(
+    (t, b) => {
+      let n = t.nextElementSibling;
+      while (n !== null && n !== b) n = n.firstElementChild;
+      return n === b;
+    },
+    await block.elementHandle(),
+  );
+  return [next, ...(await stacking([tag, block]))];
 };
 
 test(
@@ -1751,14 +1910,16 @@ test(
           1,
         );
         const tags = docstring.getByTestId("source-tag");
-        const gaps = [
-          await gapAbove(tags.nth(0), docstring.getByTestId("quote")),
-          await gapAbove(tags.nth(2), docstring.getByTestId("excerpt-path")),
-        ];
-        // Guards: the tag sits above its block, close to it, never beside or below.
-        assert.ok(
-          gaps.every((g) => g >= 0 && g < 16),
-          JSON.stringify(gaps),
+        // Guards: the tag sits right above its block, never beside or below it.
+        assert.deepEqual(
+          [
+            await tagAbove(tags.nth(0), docstring.getByTestId("quote")),
+            await tagAbove(tags.nth(2), docstring.getByTestId("excerpt-path")),
+          ],
+          [
+            [true, "stacked"],
+            [true, "stacked"],
+          ],
         );
         const switchTo = async (lang: string) =>
           (await allByKind(page, "lang-option"))

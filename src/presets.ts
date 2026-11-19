@@ -104,6 +104,12 @@ export interface PresetTemplate {
   readonly forbids: readonly string[];
 }
 
+/** A preset's `template_style`, as its file spells it. */
+export interface PresetStyle {
+  readonly text: string;
+  readonly file: string;
+}
+
 /** A resolved chain, merged. */
 export interface Preset {
   /**
@@ -123,6 +129,11 @@ export interface Preset {
    * through the LaTeX reader.
    */
   readonly template: PresetTemplate | null;
+  /**
+   * The style package the template loads into its class (`template_style`, a `\\usepackage` line),
+   * as the preset spells it, and the file that spells it; null when no file of the chain names one.
+   */
+  readonly templateStyle: PresetStyle | null;
   /** Every `name` and `aliases` along the chain: what this venue is called in a paper's text. */
   readonly aliases: readonly string[];
   /** The `aliases` the chain's files declare, without any `name`: what a folder name is matched against beside the edition. */
@@ -335,6 +346,7 @@ const NOTHING_MERGED: Merging = {
   name: null,
   parent: null,
   template: null,
+  templateStyle: null,
   aliases: [],
   declaredAliases: [],
   blind: false,
@@ -382,6 +394,10 @@ const mergeOne = (
     p.template === null
       ? acc.template
       : { text: p.template, file, forbids: p.templateForbids },
+  templateStyle:
+    p.templateStyle === null
+      ? acc.templateStyle
+      : { text: p.templateStyle, file },
   aliases: [...new Set([...acc.aliases, ...namesOf(p.identity), ...p.aliases])],
   declaredAliases: [...new Set([...acc.declaredAliases, ...p.aliases])],
   blind: p.blind ?? acc.blind,
@@ -527,6 +543,17 @@ export function resolveShipped(deps: PresetDeps): readonly Preset[] {
     .filter(isOk)
     .map((r) => r.value);
 }
+
+/**
+ * The `template_style` of every shipped preset that resolves and names one, with its chain: the
+ * styles a paper of another venue may have loaded instead of its own (`tex/template`).
+ */
+export const shippedStyles = (
+  deps: PresetDeps,
+): readonly (PresetStyle & Pick<Preset, "chain">)[] =>
+  resolveShipped(deps).flatMap((p) =>
+    p.templateStyle === null ? [] : [{ ...p.templateStyle, chain: p.chain }],
+  );
 
 /** A shipped venue as a name knows it, and the files of its chain: what tells it from a paper's own. */
 export type ShippedVenue = Pick<

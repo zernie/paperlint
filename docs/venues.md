@@ -23,12 +23,15 @@ here and that every `paperlint:` id below exists.
 
 ### Families
 
-| family                      | the template                             |
-| --------------------------- | ---------------------------------------- |
-| `paperlint:acm-sigconf`     | ACM `acmart`, sigconf (two columns)      |
-| `paperlint:acm-acmsmall`    | ACM `acmart`, acmsmall (one column)      |
-| `paperlint:ieee-conference` | IEEE `IEEEtran`, conference              |
-| `paperlint:acl-latex`       | ACL's style files (`article`, `acl.sty`) |
+| family                      | the template                                    |
+| --------------------------- | ----------------------------------------------- |
+| `paperlint:acm-sigconf`     | ACM `acmart`, sigconf (two columns)             |
+| `paperlint:acm-acmsmall`    | ACM `acmart`, acmsmall (one column)             |
+| `paperlint:ieee-conference` | IEEE `IEEEtran`, conference                     |
+| `paperlint:acl-latex`       | ACL's style files (`article`, `acl.sty`)        |
+| `paperlint:neurips-style`   | `article` + `\usepackage{neurips_2026}`         |
+| `paperlint:icml-style`      | `article` + `\usepackage{icml2027}`             |
+| `paperlint:aaai-press`      | `article` + `\usepackage[submission]{aaai2027}` |
 
 The TeX base set, `tex-base.jsonc`, is extended by nothing: every paper gets it.
 
@@ -67,21 +70,52 @@ MSR is held beside ICSE, but it is a conference of its own, not a workshop, so i
 | `paperlint:emnlp-2026` | —                      | `paperlint:acl-latex` | the class line and packages (minimal preset)    |
 | `paperlint:realm-2026` | `paperlint:emnlp-2026` | `paperlint:acl-latex` | the workshop's format; no page limit (its card) |
 
-**Machine learning and AI**, **human–computer interaction**: none shipped yet.
+**Machine learning and AI**
+
+| edition                  | parent | family                    | what is checked                                          |
+| ------------------------ | ------ | ------------------------- | -------------------------------------------------------- |
+| `paperlint:neurips-2026` | —      | `paperlint:neurips-style` | the main track's call and the kit's style file           |
+| `paperlint:icml-2027`    | —      | `paperlint:icml-style`    | the call and the kit's style file                        |
+| `paperlint:aaai-2027`    | —      | `paperlint:aaai-press`    | the main technical track's call and the kit's style file |
+
+The template of these three is a style file a paper loads over `article`: each family names the
+class in `template` and the style in `template_style`, and `tex/template` requires both.
+
+**Human–computer interaction**: none shipped yet.
 
 A minimal preset carries the edition's names, its call and its family, and no page limit or deadline:
 it exists so the workshops held there can name it as their parent. Its card says so.
 
 ### In progress
 
-NeurIPS, ICML, ICLR, AAAI and IJCAI have been measured and are not shipped yet. Their templates are
-not classes but style files a paper loads over `article` (`\usepackage{neurips_2026}`), and
-`tex/template` compares only the `\documentclass` line: every one of them would pass as `article`.
-They ship when the template check can see a style file.
+ICLR and IJCAI have been measured and are not shipped yet. Their templates are style files a paper
+loads over `article`, as NeurIPS's, ICML's and AAAI's are, and `template_style` can name them; what
+holds them back is the page count: statements their calls keep out of the limit stand before the
+references, where they count as body.
+
+### Seen, not added yet
+
+Venues we have come across in this repository's work and not added: each has a source to point to.
+«Notable venues not covered», below, lists well-known venues nobody here has looked at yet.
+
+| venue (series, edition)                                                                   | parent       | where we saw it                                                                    | what blocks it                                                                                                           |
+| ----------------------------------------------------------------------------------------- | ------------ | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| JAWS 2026 (workshop)                                                                      | ASE 2026     | the acceptance comment of arXiv 2611.01265v1 (#545's candidate search, 2026-11-19) | nothing: on request                                                                                                      |
+| POVC 2026 (workshop)                                                                      | ASE 2026     | arXiv 2609.05978v2 (#545)                                                          | nothing: on request                                                                                                      |
+| LLMSC 2026 (workshop)                                                                     | FSE 2026     | arXiv 2604.27789v1 (#545)                                                          | on request; its parent edition, FSE 2026, has no preset (FSE 2027 ships)                                                 |
+| FSE 2026, its tracks on sigconf (Ideas, Visions and Reflections; Industry)                | —            | arXiv 2603.28166v2, 2604.06448v2 and three more (#545)                             | the track's class is still to be confirmed from its call                                                                 |
+| ACM ASIA CCS 2026                                                                         | —            | arXiv 2601.12634v1, `acmart` sigconf (#545)                                        | nothing: on request                                                                                                      |
+| ISSTA 2026                                                                                | —            | the arXiv comment searches of 2026-11-19, not probed (#545)                        | nothing: on request                                                                                                      |
+| ICLR 2027                                                                                 | —            | measured from its call and author kit                                              | statements its call keeps out of the page limit stand before the references and count as body (`body_ends_before`, #544) |
+| IJCAI 2027                                                                                | —            | measured from its call and author kit                                              | the same as ICLR (#544)                                                                                                  |
+| NeurIPS 2026, its Evaluations & Datasets and Position Paper tracks                        | —            | the 2026 call page, beside the main track (`neurips-2026.md`)                      | their own calls, not read: on request                                                                                    |
+| NeurIPS 2026 workshops: «Who Verifies the Agents?», Interp4Discovery, TAE (Trust-AI-Eval) | NeurIPS 2026 | `fixtures/arxiv-papers/2611.08666v1`, `2611.09818v1`, `2611.09147v1`               | on request; they load NeurIPS's style file, whose kit has workshop options (`dblblindworkshop`, `sglblindworkshop`)      |
+| ICML 2027, its position paper track                                                       | —            | the ICML 2027 call (`icml-2027.md`)                                                | its call is not published                                                                                                |
+| AAAI-27, its AI Alignment track                                                           | —            | the AAAI-27 call (`aaai-2027.md`)                                                  | on request: the main track's page limit, its own dates                                                                   |
 
 ### Notable venues not covered
 
-USENIX Security and NDSS (security); ISSTA, OOPSLA and PLDI (software and programming languages);
+USENIX Security and NDSS (security); OOPSLA and PLDI (software and programming languages);
 ACL, NAACL and EACL main conferences (NLP); KDD and The Web Conference (data); CHI, CSCW and UIST
 (HCI); OSDI and SOSP (systems); Springer LNCS venues.
 
@@ -93,6 +127,11 @@ papers). A venue paperlint does not ship needs no release: a user describes it i
 own, `venues/<series>-<year>.jsonc`, that extends a family (`paperlint:ieee-conference`) or a shipped
 conference edition (`paperlint:icse-2027`), and points the paper's `"extends"` at it
 ([`rules.md`](rules.md#writing-your-own-venue-preset)).
+
+How long one workshop takes is not in the history: no past addition is one workshop alone. AGENT,
+AGENTVERIFY and NLBSE came in one commit (#305, the branch's first commit at 2026-10-26 22:32 UTC,
+merged 2026-10-27 09:35 UTC, the wait for review included), AIDC with the IEEE family and three rules
+(#130), and the work before a first commit is not recorded; the repository is squash-merged.
 
 ## The corpus of accepted papers
 

@@ -159,6 +159,57 @@ describe("paper/folder-venue-leftover — a venue is named by its edition", () =
   });
 });
 
+describe("paper/folder-venue-leftover — NeurIPS, named by its edition", () => {
+  it("🔴 «neurips-2026-…» is reported in another venue's paper; «neurips-…» without the year is not, nor under neurips-2026", () => {
+    expect(
+      lint("neurips-2026-diffusion", AIDC).map(
+        (r) => /names the venue (.*?), and/u.exec(r.message)?.[1],
+      ),
+    ).toEqual(["NeurIPS 2026"]);
+    expect(lint("neurips-diffusion", AIDC)).toEqual([]);
+    expect(
+      lint("neurips-2026-diffusion", {
+        extends: "paperlint:neurips-2026",
+        kind: "main",
+      }),
+    ).toEqual([]);
+  });
+});
+
+describe("paper/folder-venue-leftover — AAAI, named by its edition", () => {
+  it("🔴 «aaai-2027-…» is reported in another venue's paper; «aaai-…» without the year is not, nor under aaai-2027", () => {
+    expect(
+      lint("aaai-2027-planning", AIDC).map(
+        (r) => /names the venue (.*?), and/u.exec(r.message)?.[1],
+      ),
+    ).toEqual(["AAAI 2027"]);
+    expect(lint("aaai-planning", AIDC)).toEqual([]);
+    expect(
+      lint("aaai-2027-planning", {
+        extends: "paperlint:aaai-2027",
+        kind: "main",
+      }),
+    ).toEqual([]);
+  });
+});
+
+describe("paper/folder-venue-leftover — ICML, named by its edition", () => {
+  it("🔴 «icml-2027-…» is reported in another venue's paper; «icml-…» without the year is not, nor under icml-2027", () => {
+    expect(
+      lint("icml-2027-diffusion", AIDC).map(
+        (r) => /names the venue (.*?), and/u.exec(r.message)?.[1],
+      ),
+    ).toEqual(["ICML 2027"]);
+    expect(lint("icml-diffusion", AIDC)).toEqual([]);
+    expect(
+      lint("icml-2027-diffusion", {
+        extends: "paperlint:icml-2027",
+        kind: "main",
+      }),
+    ).toEqual([]);
+  });
+});
+
 describe("paper/folder-venue-leftover — a workshop's parent conference", () => {
   it("🔴 in another venue's paper it is reported once, as itself", () => {
     const named = (folder: string) =>

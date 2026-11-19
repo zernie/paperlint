@@ -15,16 +15,19 @@
  * the parser the language already uses.
  *
  * ── STATES, NOT NULL ─────────────────────────────────────────────────────────────
- * A class line is missing, empty or a class; a node the parser gave no position is `unplaced`, not
- * offset 0; a run of text is a non-empty list of contiguous segments, and a range outside it has
- * no span (`spanIn` in `src/domain/tex-document.ts`). A tree travels only with its own source
+ * A class line is missing, unseen, empty, unread or a class; a node the parser gave no position is
+ * `unplaced`, not offset 0; a run of text is a non-empty list of contiguous segments, and a range
+ * outside it has no span (`spanIn` in `src/domain/tex-document.ts`). A tree travels only with its own source
  * (`ParsedTex`, minted by `parseLatex` alone).
  */
 import type { LatexReader } from "../../ports/latex.ts";
 import { abstractSpan, abstractText } from "./abstract.ts";
 import {
   documentClassOf,
+  packagesOf,
+  packagesUnseen,
   parseTemplate,
+  parseTemplateStyle,
   replaceDocumentClass,
 } from "./document-class.ts";
 import { citeKeysOf, macroTextsOf, registeredNumbersOf } from "./facts.ts";
@@ -41,7 +44,10 @@ import { filecontentsOf } from "./filecontents.ts";
 
 export {
   documentClassOf,
+  packagesOf,
+  packagesUnseen,
   parseTemplate,
+  parseTemplateStyle,
   replaceDocumentClass,
 } from "./document-class.ts";
 export {
@@ -76,6 +82,9 @@ export const latexReader: LatexReader = {
   includes: (src) => includesOf(parseLatex(src)),
   documentBody: (src) => documentBodyOf(parseLatex(src)),
   template: parseTemplate,
+  packages: (src) => packagesOf(parseLatex(src)),
+  packagesUnseen: (src) => packagesUnseen(parseLatex(src)),
+  templateStyle: parseTemplateStyle,
   withDocumentClass: (src, want) => replaceDocumentClass(parseLatex(src), want),
   layoutOverrides: (src) => layoutOverridesOf(parseLatex(src)),
   filecontents: (src, jobname) => filecontentsOf(parseLatex(src), jobname),

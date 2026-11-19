@@ -27,7 +27,7 @@ async function lintPresets(): Promise<string[]> {
   });
   const results = await eslint.lintFiles(["presets"]);
   // Guards: the pairing rule must SEE the presets — a block that matches no .jsonc reports clean.
-  expect(results.filter((r) => r.filePath.endsWith(".jsonc"))).toHaveLength(21);
+  expect(results.filter((r) => r.filePath.endsWith(".jsonc"))).toHaveLength(27);
   return results.flatMap((r) =>
     r.messages.map(
       (m) =>
@@ -36,7 +36,14 @@ async function lintPresets(): Promise<string[]> {
   );
 }
 
-describe("every preset has a card beside it", () => {
+/**
+ * Each test lints all of presets/, every preset and its card, and that grows with each venue.
+ * Measured in CI's coverage job with 19 presets: 2.1 s and 1.6 s (run 44507805064, attempt 1),
+ * 3.1 s and 3.0 s (attempt 2); 0.8 s and 0.4 s here with 17.
+ */
+const LINTS_ALL_PRESETS = { timeout: 30_000 };
+
+describe("every preset has a card beside it", LINTS_ALL_PRESETS, () => {
   it("the shipped presets, each with its card: silent", async () => {
     expect(await lintPresets()).toEqual([]);
   });

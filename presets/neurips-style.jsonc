@@ -1,0 +1,113 @@
+// The NeurIPS style — the TEMPLATE FAMILY of the Conference on Neural Information Processing
+// Systems: everything the style file in NeurIPS's author kit decides, whatever the track. A venue
+// preset extends it ("extends": "paperlint:neurips-style") and adds what its call for papers sets:
+// the page limit of each kind of paper, and the sections it requires. The main track is neurips-2026.jsonc.
+//
+// The template is not a class. The author kit
+// (https://media.neurips.cc/Conferences/NeurIPS2026/Formatting_Instructions_For_NeurIPS_2026.zip,
+// read 2026-11-19: neurips_2026.tex, neurips_2026.sty and checklist.tex) opens with
+// `\documentclass{article}` and loads `\usepackage{neurips_2026}` from a style file the author copies
+// beside paper.tex; it is on no TeX distribution (`tlmgr search --global --file neurips` finds
+// nothing). The style sets the page and the fonts itself (`\renewcommand{\rmdefault}{ptm}`,
+// `\usepackage[verbose=true,letterpaper]{geometry}` and, at \begin{document},
+// `\newgeometry{textheight=9in, textwidth=5.5in, top=1in, …}`), and the kit's text says what it
+// sets: «The text must be confined within a rectangle 5.5 inches (33 picas) wide and 9 inches (54
+// picas) long. … Use 10 point type with a vertical spacing (leading) of 11 points. Times New Roman is
+// the preferred typeface throughout, and will be selected for you by default.»
+//
+// 🔴 THE TEMPLATE IS THE CLASS AND THE STYLE. The class alone, plain `article`, would pass any article
+// paper, with or without the style, and `cycle/port-done` would call a port from another
+// article-based style (ICLR's, ICML's) done the moment it starts. So the family names both:
+// `template` the class and `template_style` the package, and `tex/template` requires both.
+//
+// 🔴 THE NUMBERS ARE MEASURED, NOT COPIED. Built on 2026-11-19 with `paperlint build` on paperlint's
+// TeX Live 2026 (pdfTeX 1.40.29) and banal: the kit's own neurips_2026.tex with its style
+// (`\ProvidesPackage{neurips_2026}[2026-01-29 …]`, sha256 c3fc2894…a7ec4555a, the same bytes as
+// fixtures/arxiv-papers/2611.08971v1/neurips_2026.sty), and the e2e fixture
+// fixtures/build-e2e/neurips. The style's dimensions were written to the log by a `\typeout` run at
+// \begin{document}, after the style's own:
+//
+//   page (banal)          8.5 x 11 in                     \paperwidth x \paperheight 614.295pt x 794.97pt
+//   columns (banal)       1                               \if@twocolumn false
+//   \textwidth            397.48499pt = 5.5 in
+//   \textheight           650.43pt = 9.0 in
+//   body size             \f@size 10, \baselineskip 10.95pt; banal 10.3
+//   references            normalsize: banal reports no reference size; \small 9 (the log), banal 9.3;
+//                         \footnotesize 8, banal 8.3
+//   fonts (pdf.js)        NimbusRomNo9L-Regu / -Medi / -ReguItal (the text and headings, ptm),
+//                         NimbusSanL-Regu (\sfdefault phv), SFTT1000 (\ttdefault stays cmtt) —
+//                         Type 1, embedded
+//
+// The planted defects, measured on the same fixture: without `\usepackage{neurips_2026}` the text is
+// Computer Modern (SFRM1000, SFBX1440, …), and so is it with the 1990s «NIPS Macros» saved under the
+// name neurips_2026.sty (as fixtures/arxiv-papers/2611.09818v1 ships it): pdf/fonts, no
+// NimbusRomNo9L; in the source, tex/template (no `\usepackage{neurips_2026}`). A bibliography in
+// \footnotesize (banal 8.3): pdf/body-size. `\newgeometry{textwidth=6.5in,textheight=9.5in,top=0.75in}`
+// after \begin{document} built a page with the same size, column, fonts and body size, one page
+// shorter: no pdf/* rule reads the text block, so only format/layout-override, in the source, reports it.
+//
+// Its card, in prose: `neurips-style.md` beside this file.
+{
+  // A template family: it names no venue, so no `name` and no `url` (the venues that extend it do).
+  "type": "family",
+
+  // The kit's neurips_2026.tex: «\documentclass{article}» then «\usepackage{neurips_2026}», with no
+  // option at submission («At submission time, please omit the final and preprint options»). The
+  // options (final, preprint, a track) are the paper's to add: the check requires only those named
+  // here. tex/template also reports another shipped venue's style, or another year's NeurIPS style
+  // (neurips_2025), loaded instead.
+  "template": "\\documentclass{article}",
+  "template_style": "\\usepackage{neurips_2026}",
+
+  // TeX Live packages the style needs ON TOP OF tex-base.jsonc. neurips_2026.sty itself travels with
+  // the paper. Measured 2026-11-19: every file the kit's build read (pdflatex's -recorder list,
+  // paper.fls) belongs to a package of TeX Live's scheme-basic, of tex-base.jsonc, of this list, or
+  // of a dependency tlmgr installs with one of them (trimspaces with environ).
+  //   environ  — the style's `\usepackage{environ}`, for its `ack` and `hide` environments.
+  //   lineno   — the style's `\RequirePackage{lineno}`: line numbers in the anonymous submission.
+  //   psnfss · times — `\rmdefault{ptm}`: Times from the URW clone, which the PDF names NimbusRomNo9L.
+  //   helvetic — `\sfdefault{phv}`: the sans-serif, NimbusSanL.
+  //   units    — nicefrac.sty, which the kit's neurips_2026.tex loads; without it the kit's own
+  //              template stops at «File `nicefrac.sty' not found».
+  "tex": {
+    "packages": {
+      "environ": ["environ.sty"],
+      "lineno": ["lineno.sty"],
+      "psnfss": ["t1ptm.fd", "ot1ptm.fd"],
+      "times": ["ptmr8t.tfm", "utmr8a.pfb"],
+      "helvetic": ["phvr8t.tfm"],
+      "units": ["nicefrac.sty"],
+    },
+  },
+
+  "format": {
+    // «Please prepare submission files with paper size "US Letter," and not, for example, "A4."»
+    // (the kit's neurips_2026.tex); banal: 8.5 x 11 in.
+    "page_size": "letter",
+    "page_w_in": 8.5,
+    "page_h_in": 11.0,
+
+    // \textwidth and \textheight as the style sets them (the log, above): «5.5 inches (33 picas)
+    // wide and 9 inches (54 picas) long».
+    "textblock_w_in": 5.5,
+    "textblock_h_in": 9.0,
+
+    "columns": 1,
+
+    // «Use 10 point type»; banal measures the rendered mode, 10.3. The 0.5 tolerance is the other
+    // families': banal reads 0.3 pt high on every template measured.
+    "body_pt": 10,
+    "body_pt_tol": 0.5,
+
+    // «It is permissible to reduce the font size to small (9 point) when listing the references.»
+    // (the kit's neurips_2026.tex). So 9 to 10 pt; body_pt_tol widens it to 8.5-10.5, and a
+    // bibliography in \footnotesize (banal 8.3) is reported. A bibliography at the body's size is
+    // given no reference size by banal, so it is not judged.
+    "ref_pt_min": 9,
+    "ref_pt_max": 10,
+
+    // The Times clone. Headings are set in the same family (bold), so a `fonts_title` would repeat
+    // this check and report a Computer Modern build twice.
+    "fonts_text": "NimbusRomNo9L",
+  },
+}

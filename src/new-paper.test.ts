@@ -297,11 +297,11 @@ describe("paperlint new --venue msr", () => {
 
 describe("paperlint new --venue — a venue it cannot use", () => {
   it("an unknown venue exits 2, lists the shipped presets, and creates nothing", async () => {
-    const r = await newIn(["--venue", "neurips"]);
+    const r = await newIn(["--venue", "usenix"]);
     expect(r.code).toBe(2);
     // Guards: the list is read from the shipped presets, the same list lint prints.
     expect(r.err).toContain(shippedPresets(presetsDir()).join(", "));
-    expect(r.err).toMatch(/--venue neurips: no such venue preset/);
+    expect(r.err).toMatch(/--venue usenix: no such venue preset/);
     expect(existsSync(r.dir)).toBe(false);
   });
 
