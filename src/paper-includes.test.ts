@@ -225,6 +225,45 @@ describe("a built paper whose files are clean", () => {
   });
 });
 
+describe("an opt-in rule turned on for a paper's body files only", () => {
+  /** `paper/leading-zero` on for `files` alone, in the root file: no writing set. */
+  const onlyFor = (files: string[]) => ({
+    "paperlint.json": JSON.stringify({
+      rules: [{ files, rules: { "paper/leading-zero": "warn" } }],
+    }),
+  });
+  const lintCode = async (root: string) => {
+    const out: string[] = [];
+    const err: string[] = [];
+    const code = await run(["lint", "--json"], {
+      cwd: root,
+      log: (s: string) => out.push(s),
+      err: (s: string) => err.push(s),
+    });
+    return { code, out: out.join("\n"), err: err.join("\n") };
+  };
+
+  it("🔴 reaches the included file it runs on: the run reports there, and is not refused as a rule no paper gets", async () => {
+    const r = await lintCode(project(onlyFor(["papers/a/sections/**/*.tex"])));
+    expect(r.err).not.toMatch(/no paper\.tex of the project gets it/);
+    expect(r.code).toBe(0);
+    const intro = lintReport(r.out).find((f) =>
+      f.filePath.endsWith("papers/a/sections/intro.tex"),
+    );
+    expect(intro?.messages.map((m) => m.ruleId)).toEqual([
+      "paper/leading-zero",
+    ]);
+  });
+
+  it("a glob that reaches no file of any paper still fails the run", async () => {
+    const r = await lintCode(project(onlyFor(["papers/a/nothing/**/*.tex"])));
+    expect(r.code).toBe(1);
+    expect(r.err).toMatch(
+      /^paper\/leading-zero is turned on in "rules", but no paper\.tex of the project gets it/m,
+    );
+  });
+});
+
 describe("a paper whose record is missing, stale or silent about a file", () => {
   it("🔴 a paper no build has recorded is paper.tex alone: its includes are not linted, and paper/sources-fresh says so", async () => {
     const { byFile } = await lint(project({}, null));

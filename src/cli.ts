@@ -856,7 +856,16 @@ export const OPTIONAL_RULES: ReadonlySet<string> = new Set(
  * project. Judged against the run alone, `paperlint lint papers/c` failed on a block written for
  * papers a and b (#103) — a block that reaches a paper outside this run is not dead. A glob that
  * reaches no paper of the project at all still fails, from a subset as from the whole.
+ *
+ * A paper's rules reach it through its `PIPELINE-STATUS.md` too, and the typography rules through
+ * every body file its last build recorded (`bodyFiles`, src/paper-includes.ts): a block whose
+ * `files` name only `sections/*.tex` runs there, and was refused as reaching nothing until each
+ * paper's recorded body files were probed as well.
  */
+/** The body files the last build of the paper at `main` recorded: the ones the fragment block lints. */
+const recordedBodyFiles = (main: string): readonly string[] =>
+  paperBodies([dirname(main)], RECORD_DEPS).flatMap((b) => b.files);
+
 /** What `calculateConfigForFile` answers, read for its rules: undefined for a file outside ESLint's cwd or scope. */
 const ComputedConfig = z
   .object({ rules: z.record(z.string(), z.unknown()).optional() })
@@ -866,6 +875,7 @@ export async function silentOptionalRules(
   eslint: Pick<ESLint, "calculateConfigForFile">,
   files: readonly string[],
   opts: PaperlintConfig,
+  bodyFiles: (main: string) => readonly string[] = recordedBodyFiles,
 ): Promise<string[]> {
   const turnedOn = new Set(
     (opts.rules ?? []).flatMap((b) =>
@@ -875,11 +885,11 @@ export async function silentOptionalRules(
     ),
   );
   const reached = new Set<string>();
-  // A paper's rules reach it through two files: `paper.tex` and the `PIPELINE-STATUS.md` beside it,
-  // where the rules about the paper folder itself run.
+  // A paper's rules reach it through `paper.tex`, the `PIPELINE-STATUS.md` beside it, where the
+  // rules about the paper folder itself run, and the body files its last build recorded.
   const probes = [
     ...new Set(files.filter((p) => basename(p) === MAIN)),
-  ].flatMap((f) => [f, join(dirname(f), STATUS_FILE)]);
+  ].flatMap((f) => [f, join(dirname(f), STATUS_FILE), ...bodyFiles(f)]);
   for (const probe of probes) {
     // Undefined for a file outside ESLint's cwd or scope: it reaches nothing.
     const cfg = ComputedConfig.parse(
