@@ -2,12 +2,24 @@
  * WHICH ENVIRONMENT VARIABLE HOLDS A HOTCRP SITE'S API TOKEN — HotCRP's fact, so HotCRP's adapter.
  * Pure.
  *
- * A HotCRP token works on the site it was made on and nowhere else (measured 2026-10-19: a token
- * made on one HotCRP site gets `401 Unauthorized` from `msr2027.hotcrp.com`'s `/api/whoami`). So the
- * variable is named after the site, and no two sites share one — `HOTCRP_TOKEN_<subdomain>` on the
- * hosted service, `HOTCRP_TOKEN_<host and path>` anywhere else — and an author with live submissions
- * at two venues sets two variables (#236). The site-less `HOTCRP_TOKEN` is no longer read; the policy that refuses it
- * by name is the domain's (`src/domain/portal-token.ts`).
+ * What HotCRP's source says (github.com/kohler/hotcrp, read 2026-11-19; #547). A token is one of two
+ * kinds, and its prefix tells which: `hcT_` is kept in the installation's shared contact database and
+ * works on every conference of that installation — all of hotcrp.com; `hct_` is kept in one
+ * conference's own database and works there only (`src/init.php`, where a bearer token is looked up
+ * by its prefix; `test/t_authorize.php`: "Bearer tokens start with hct_ (local) or hcT_ (cdb)").
+ * An installation with a shared contact database offers "Site availability: All sites / This site
+ * only" when a token is made, "All sites" preselected (`src/userinfo/u_developer.php`), so on
+ * hotcrp.com a token is shared unless the author picks otherwise. A self-hosted install is a separate
+ * installation with its own databases and cannot know a hotcrp.com token — what was measured on
+ * 2026-10-19: a token made on a self-hosted install got `401 Unauthorized` from
+ * `msr2027.hotcrp.com`'s `/api/whoami`. That crossed two installations; it says nothing about two
+ * hosted sites.
+ *
+ * So a `*.hotcrp.com` site reads `HOTCRP_TOKEN_<subdomain>` first, as an override, then the one
+ * variable of the whole service, `HOTCRP_TOKEN_HOTCRP_COM` — refused when it holds a site-only
+ * token. A self-hosted install reads `HOTCRP_TOKEN_<host and path>` only, never the service's. The
+ * site-less `HOTCRP_TOKEN` is no longer read; the policy that refuses it by name is the domain's
+ * (`src/domain/portal-token.ts`).
  */
 import { hostOf } from "../../domain/portal-token.ts";
 
@@ -20,6 +32,27 @@ export const VARIABLE_PATTERN = `${SITE_LESS_VARIABLE}_<LABEL>`;
 /** The hosted service, where each conference is a subdomain of its own. */
 const HOSTED = ".hotcrp.com";
 
+/** The one variable of the hosted service: its sites share an account system, so one token. */
+const SHARED_VARIABLE = `${SITE_LESS_VARIABLE}_HOTCRP_COM`;
+
+/**
+ * Whether a token works on one site only: HotCRP's lowercase `hct_` prefix (an all-sites token starts
+ * `hcT_`).
+ */
+export const isSiteOnlyToken = (token: string): boolean =>
+  token.startsWith("hct_");
+
+/** Whether `url` is a site of the hosted service. */
+const isHosted = (url: string): boolean => hostOf(url).endsWith(HOSTED);
+
+/**
+ * The variable shared by every site of the hosted service, for a site on it; null for a self-hosted
+ * install, whose token the hosted service does not accept (measured 2026-10-19: 401) and which never
+ * reads this one.
+ */
+export const sharedVariable = (url: string): string | null =>
+  isHosted(url) ? SHARED_VARIABLE : null;
+
 /**
  * What names a site, and no other: on the hosted service the subdomain alone
  * (`msr2027.hotcrp.com` → `msr2027`); anywhere else the whole host, with a port other than the
@@ -29,7 +62,7 @@ const HOSTED = ".hotcrp.com";
  */
 function siteLabel(url: string): string {
   const host = hostOf(url);
-  if (host.endsWith(HOSTED)) return host.slice(0, -HOSTED.length);
+  if (isHosted(url)) return host.slice(0, -HOSTED.length);
   const path = URL.canParse(url) ? new URL(url).pathname : "";
   return `${host}${path}`;
 }

@@ -125,7 +125,7 @@ test("the portal's refusal is printed with its own message, exit 1", async () =>
   expect(r.code).toBe(1);
   expect(r.errs).toStrictEqual([
     "the portal refused (HTTP 401): Missing credentials",
-    "HOTCRP_TOKEN_127_0_0_1_9 was used; it may belong to another hotcrp site (tokens are per site), or be revoked or expired",
+    "HOTCRP_TOKEN_127_0_0_1_9 was used; it may belong to another hotcrp install (hotcrp.com sites share one token, a self-hosted install has its own), or be revoked or expired",
     ...STEPS,
   ]);
 });

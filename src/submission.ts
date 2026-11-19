@@ -102,10 +102,13 @@ export function tokenSteps(
   variable: string,
 ): readonly string[] {
   const c = site.credentials;
+  const shared = site.sharedVariable;
   return [
     `  1. create a token on this site: ${c.page} (${c.where}), with the scopes ${c.scopes}`,
     `  2. set it in your environment — never paste it into a chat: export ${variable}=<the token>`,
-    `  tokens are per ${portal.kind} site: ${variable} is read for ${hostOf(portal.url)} alone, so two venues take two variables`,
+    shared === null
+      ? `  a self-hosted install has a variable of its own: ${variable} is read for ${hostOf(portal.url)} alone, and never HOTCRP_TOKEN_HOTCRP_COM, which serves hotcrp.com sites only`
+      : `  one token serves every hotcrp.com site: ${shared} is read for all of them; ${site.tokenVariable}, when set, overrides it for ${hostOf(portal.url)} alone`,
   ];
 }
 
@@ -115,30 +118,36 @@ export function tokenProblemLines(
   site: PortalSite,
   p: TokenProblem,
 ): readonly string[] {
+  const asked = p.shared ?? p.variable;
   const head =
-    p.kind === "missing"
-      ? `no ${portal.kind} token for ${portal.url}: ${p.variable} is not set`
-      : `${p.siteLess} is no longer read: tokens are per ${portal.kind} site. If it was made on ${hostOf(portal.url)}, rename it to ${p.variable}; if it was made on another site, rename it to that site's variable (${site.variablePattern}) and create a token here:`;
-  return [head, ...tokenSteps(portal, site, p.variable)];
+    p.kind === "site-only"
+      ? `${p.shared} holds a site-only token (it starts with hct_): that works on one hotcrp.com site only, not on all of them. Create a token with Site availability "All sites" (it starts with hcT_) and set that in ${p.shared}, or move this one to ${p.variable} if it was made on this site:`
+      : p.kind === "missing"
+        ? `no ${portal.kind} token for ${portal.url}: ${asked} is not set${p.shared === null ? "" : ` (${p.variable} would override it for this site)`}`
+        : p.shared === null
+          ? `${p.siteLess} is no longer read: tokens are per ${portal.kind} site. If it was made on ${hostOf(portal.url)}, rename it to ${p.variable}; if it was made on another site, rename it to that site's variable (${site.variablePattern}) and create a token here:`
+          : `${p.siteLess} is no longer read. If it was made on a hotcrp.com site, rename it to ${p.shared} (every hotcrp.com site) or ${p.variable} (this site alone); if it was made on a self-hosted install, rename it to that install's variable (${site.variablePattern}) and create a token here:`;
+  return [head, ...tokenSteps(portal, site, asked)];
 }
 
 /**
  * What to do when the portal turned the token away: 401 is "this site does not know the token", 403
- * a token without the scope — both answered with the site's token page. Empty for anything else. Pure.
+ * a token without the scope — both answered with the site's token page, and the variable that was
+ * `used`. Empty for anything else. Pure.
  */
 export function tokenRefusedLines(
   portal: SupportedPortal,
   site: PortalSite,
   f: PortalFailure,
+  used: string,
 ): readonly string[] {
   if (f.kind !== "refused" || (f.httpStatus !== 401 && f.httpStatus !== 403))
     return [];
-  const variable = site.tokenVariable;
   const why =
     f.httpStatus === 401
-      ? `${variable} was used; it may belong to another ${portal.kind} site (tokens are per site), or be revoked or expired`
-      : `${variable} was used; the site turned the request away — the token may lack a scope this subcommand needs`;
-  return [why, ...tokenSteps(portal, site, variable)];
+      ? `${used} was used; it may belong to another ${portal.kind} install (hotcrp.com sites share one token, a self-hosted install has its own), or be revoked or expired`
+      : `${used} was used; the site turned the request away — the token may lack a scope this subcommand needs`;
+  return [why, ...tokenSteps(portal, site, used)];
 }
 
 export const SUBCOMMANDS = ["new", "show", "update", "topics"] as const;
@@ -1149,8 +1158,16 @@ export function usageProblem(a: SubmissionArgs): string | null {
 /** The variables a site's token lookup reads. */
 const tokenNames = (site: PortalSite) => ({
   variable: site.tokenVariable,
+  shared: site.sharedVariable,
+  siteOnly: site.isSiteOnlyToken,
   siteLess: site.siteLessVariable,
 });
+
+/** The lines for a refusal, naming the variable the token came from. */
+const refusedWith =
+  (portal: SupportedPortal, site: PortalSite, used: string) =>
+  (f: PortalFailure) =>
+    tokenRefusedLines(portal, site, f, used);
 
 /** No token to use: the complete instruction, exit 2 — nothing is sent. */
 function tokenMissing(
@@ -1185,7 +1202,7 @@ export async function runSubmission(
   const withToken: RunDeps = {
     ...deps,
     portalSite: site,
-    refused: (f) => tokenRefusedLines(t.value.portal, site, f),
+    refused: refusedWith(t.value.portal, site, found.value.variable),
   };
   const sending = { ...t.value, fields: ready.value.fields };
   if (a.sub === "topics") return runTopics(sending, portal, withToken);
