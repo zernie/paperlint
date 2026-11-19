@@ -18,7 +18,7 @@ const TONE: Readonly<Record<HeroFact["tone"], string>> = {
 
 /**
  * The opening, set as a magazine's first spread: the cover line, the promise in a short lead, four
- * short facts, then the campus etching as the spread's plate with its caption. No command and no
+ * short facts, then the campus etching as the spread's plate. No command and no
  * links: a reader scrolls to what it checks, and the commands wait in "How do I start?".
  */
 export function Hero({
@@ -53,20 +53,17 @@ export function Hero({
         </ul>
       </div>
 
-      {/* The spread's plate: an invented campus (site/CLAUDE.md, "Campus Not A Landmark"), wide,
-          cropped to its arcades, its edges dissolving into the paper, with its caption under it. */}
-      <figure className="mx-auto mt-16 max-w-wide px-6 md:px-8">
+      {/* The spread's plate (site/CLAUDE.md, "Campus Not A Landmark"): wide, cropped to its
+          arcades, its edges dissolving into the paper. */}
+      <div className="mx-auto mt-16 max-w-wide px-6 md:px-8">
         <Image
           src={campus}
-          alt="An ink and wash etching of an invented campus: sandstone arcades, red tile roofs and palms around a dry lawn."
+          alt="An ink-and-wash etching of a campus: sandstone arcades, red tile roofs, palms."
           priority
           sizes="(min-width: 84rem) 84rem, 100vw"
           className="aspect-plate w-full mask-plate object-cover object-bottom"
         />
-        <figcaption className="mx-auto mt-4 max-w-page text-label font-medium text-muted-foreground uppercase md:px-8">
-          Plate I — an invented campus, ink and wash
-        </figcaption>
-      </figure>
+      </div>
     </section>
   );
 }
