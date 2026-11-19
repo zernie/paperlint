@@ -71,7 +71,7 @@ Status: `pass` · `partial` · `fail` · `—` (not scored). A `fail` names an o
 
 ### CONTINUOUS
 
-Date = when it last ran. If that predates the current text, the pass is stale — the checker says so.
+Date = when it last ran. Each row fires on its own trigger, not on an edit of the text.
 
 | id         | Trigger               | Skill                   | Status | Date | Result                | Open      |
 | ---------- | --------------------- | ----------------------- | ------ | ---- | --------------------- | --------- |

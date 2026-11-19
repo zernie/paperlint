@@ -104,9 +104,9 @@ existed. Neither is expressible now. Keep new ids lowercase, one word, and say w
 - **One row per unit of work; update the row in the SAME commit as the work.** Status + ISO date +
   result + open findings + a link to the durable artifact (`siblings/`, a saved grader report).
 - **Four sections, because the four kinds fail differently** (see `paper-pipeline` → "There is no
-  stage 7"). SETUP is done-or-not. LOOP iterates. **CONTINUOUS is never done** — its date is compared
-  against the paper's own mtime, and a `☑` older than the text is a _stale pass_, which reads as
-  green and is not. GATES are blocked on named inputs.
+  stage 7"). SETUP is done-or-not. LOOP iterates. **CONTINUOUS is never done** — each row fires on its
+  own trigger (a `\cite` added or moved, a sibling surfacing), not on any edit of the text. GATES are
+  blocked on named inputs.
 - 🔴 **The `Requires` cells above are not free-form — do not thin them.** The cell was retyped by
   hand for every paper until 2026-08-08, and `compile-rules-2026` had lost four of them — including
   `arc`, which argument-arc's SKILL.md says must precede `tighten-paper`. A dropped edge is
@@ -149,6 +149,5 @@ name filled in, and a project that keeps its own richer scorecard puts one at
 - **After running anything** (here or in a subagent) → update its row before moving on; commit with the
   work.
 - **Before submit** → every non-`n/a` row is `☑`, or a consciously-accepted `◐`/`⚠` named in the verdict
-  line. **An unrun GATE is not a valid "anti-churn" skip if capacity exists: run it.** Anti-churn covers
-  re-polishing prose that already passed a gate, never skipping a gate that never ran. And a **stale
-  CONTINUOUS row is worse than an empty one** — it reads as green while being false.
+  line. A GATE that never ran is a `☐` row named in that line, not a pass. A gate the closed final
+  review already ran is not run again for a later edit (`paper-pipeline`, "The final review").

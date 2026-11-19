@@ -4,7 +4,7 @@ description: Verify every citation is a real work with correct metadata, and tha
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:cec2fc299c0bfe9c compiled from skills/verify-citations/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:25a05cd3468a3a26 compiled from skills/verify-citations/SKILL.md.spec.ts -->
 
 # verify-citations — every cite real, the delta explicit
 
@@ -20,8 +20,9 @@ your delta over the nearest prior work isn't spelled out. This skill closes both
 bibliography changes, including the edit you make on the last day. Scorecard row **`cites`** in
 `<paper-dir>/PIPELINE-STATUS.md`; see the CONTINUOUS section of `paper-pipeline`.
 
-- **A pass dated before the current text is STALE, and stale reads as green.** The date in the `cites`
-  row is compared against the paper's own mtime — because a `☑` from three days and forty edits ago is worse than a `☐`: it looks closed.
+- **The trigger is the bibliography, not the text.** A `cites` row dated before a `\cite` was added or
+  moved does not cover that cite; a prose edit that moves no `\cite` leaves the row as it is.
+  `paper/refs-checked` says when the last build's references were not checked.
 - **"We checked last cycle" does not count.** Say it plainly, because it is the exact sentence that
   ships a fabricated cite: a review round adds text, added text adds citations, and the run that
   cleared the bibliography never saw them.
@@ -211,8 +212,8 @@ rules do, and a reference they cannot check (no identifier, a partial comparison
 finding, one rule per reason, never counted as verified. Why, and what it found: `docs/design/verify-citations-history.md` in the package.
 
 ## Rules
-- **Re-run on every `\cite` added or moved.** A `cites` row older than the paper's text is a stale pass,
-  not a green one — "we checked last cycle" is not a verification.
+- **Re-run on every `\cite` added or moved.** A `cites` row older than that change does not cover
+  it — "we checked last cycle" is not a verification.
 - No cite ships unverified. Exists + correct metadata + says-what-you-claim, or it's `% VERIFY`.
 - Never fabricate to fill a gap — soften the claim instead.
 - The delta over the nearest neighbor is prose, not an implication.

@@ -4,7 +4,7 @@ description: Answer "what's the status of the paper?" in one pass — MEASURE wh
 allowed-tools: [Bash, Read, Grep, Glob]
 ---
 
-<!-- vigiles:sha256:e2b928216051effb compiled from skills/paper-status/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:2381cf88da7668a3 compiled from skills/paper-status/SKILL.md.spec.ts -->
 
 # paper-status — state, measured before it is narrated
 
@@ -75,6 +75,11 @@ gate's verdict **does not describe the current paper** — say so explicitly, an
 An accept-probability from a superseded draft is not evidence about this one; carrying it forward is
 the single most common way a status report lies.
 
+Two exceptions. Once the final review is closed (the `panel` row reads `☑ closed <date>`), its gates
+stand for the paper: list the edits made since the close, and never report its gates as due again.
+The `cites` row follows the bibliography, not the text (`verify-citations`): only a `\cite` added
+or moved since its date leaves it short.
+
 ### 3. Read the judgement rows — from BOTH checklists, they answer different questions
 
 The project already carries the checklists this skill should report against. Do not invent a new list
@@ -102,7 +107,8 @@ Short. He is asking because he wants to decide what to do next, not to read a re
 2. **Blockers, worst first, split by owner** — 🔴 his (accounts, hosting, anything needing a human or a
    login) vs 🔵 mine (text, gates, artifacts). His come first: he can start them while I work.
 3. **Gates** (`PIPELINE-STATUS.md`), each marked ✅ ran against current text · ⚠️ ran against an older
-   text (name what changed) · ☐ never run. Cross-check against the hook's canonical gate list so a
+   text (name what changed; after the close, ✅ with the edits since the close named instead) · ☐ never
+   run. Cross-check against the hook's canonical gate list so a
    gate with no row at all shows up as ☐ rather than vanishing.
 4. **Format compliance** (`SUBMIT-CHECKLIST.md`) — one line: green, or the specific item that is not.
    Page limit and blind model come from the measured build, not from the checklist's memory of them.
