@@ -69,9 +69,11 @@ applies: at AgenticDev a `short` paper gets 5 pages and a `full` one 10. You cho
 | `paperlint:aidc`            | AIDC @ IEEE ACSAC                  | IEEE two-column, `compsoc`    | `regular` 12, `short` 6, counted before the references ([why](docs/rules.md#checks-against-the-venue)); requires the «LLM Usage Statement»; double-blind |
 | `paperlint:msr`             | MSR (Technical)                    | IEEE two-column, no `compsoc` | `technical` 10 pages, appendices included, + 2 pages of only references ([why](docs/rules.md#checks-against-the-venue)); double-blind                    |
 | `paperlint:sp`              | IEEE S&P                           | IEEE two-column, `compsoc`    | `research` 13 pages + 5 of references and appendices, 18 in all; `sok` 13 pages, references not counted; double-blind                                    |
+| `paperlint:neurips-style`   | any venue on NeurIPS's style file  | NeurIPS one-column, letter    | no kinds: the format only, no page limit                                                                                                                 |
+| `paperlint:neurips-2026`    | NeurIPS (Main Track, 2026 edition) | NeurIPS one-column, letter    | `main` 9 content pages, `camera-ready` 10; references, appendices and the checklist not counted; requires the «NeurIPS Paper Checklist»; double-blind    |
 
-Not shipped yet: USENIX, NeurIPS, Springer, ACM single-column venues other than FSE, IEEE venues other
-than AIDC, MSR and S&P, and ACL venues other than REALM.
+Not shipped yet: USENIX, ICML, ICLR, AAAI, IJCAI, Springer, ACM single-column venues other than FSE,
+IEEE venues other than AIDC, MSR and S&P, and ACL venues other than REALM.
 [Add yours](#-add-a-venue-that-isnt-listed) in one small file.
 
 ## 🚀 Getting started

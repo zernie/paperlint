@@ -271,13 +271,13 @@ describe("pdf/profile — the declaration must resolve, or nothing is judged", (
       "an unknown venue (a typo would silently disable every check)",
       { extends: "paperlint:agentic-dev", kind: "short" },
       "preset",
-      /agent, agenticdev, agentverify, aidc, aisec, ase, ccs, fse, icse, ieee-conference, msr, nlbse, realm, sp/,
+      /agent, agenticdev, agentverify, aidc, aisec, ase, ccs, fse, icse, ieee-conference, msr, neurips-2026, neurips-style, nlbse, realm, sp/,
     ],
     [
       "the base TeX set is not a venue",
       { extends: "paperlint:tex-base" },
       "preset",
-      /agent, agenticdev, agentverify, aidc, aisec, ase, ccs, fse, icse, ieee-conference, msr, nlbse, realm, sp/,
+      /agent, agenticdev, agentverify, aidc, aisec, ase, ccs, fse, icse, ieee-conference, msr, neurips-2026, neurips-style, nlbse, realm, sp/,
     ],
     [
       "paperlint.json that is not JSON",
@@ -904,6 +904,126 @@ describe("format/page-limit on FSE: 18 body pages and 4 of references, 20 and 4 
     },
   ])("$name", ({ venue, body, refs, want }) => {
     const facts = acmsmallFacts((f) => {
+      f.body_pages = body;
+      f.ref_pages = refs;
+      f.npages = body + refs;
+    });
+    expect(ids(lint({ venue, facts }))).toEqual(want);
+  });
+});
+
+/**
+ * The facts of the e2e fixture `fixtures/build-e2e/neurips`, measured for neurips-style.jsonc
+ * (2026-11-19): the author kit's neurips_2026.sty, references in \small, an appendix and the
+ * checklist after them.
+ */
+const neuripsFacts = (patch: Patch = () => {}): Facts =>
+  withFacts((f) => {
+    f.page_w_in = 8.5;
+    f.page_h_in = 11;
+    f.columns = 1;
+    f.body_pt = 10.3;
+    f.ref_pt = 9.3;
+    f.npages = 10;
+    f.body_pages = 7;
+    f.ref_pages = 1;
+    f.fonts = type1([
+      "NimbusRomNo9L-Medi",
+      "NimbusRomNo9L-Regu",
+      "NimbusRomNo9L-ReguItal",
+      "NimbusSanL-Regu",
+      "SFTT1000",
+    ]);
+    patch(f);
+  });
+
+const NEURIPS_STYLE = { extends: "paperlint:neurips-style" };
+const NEURIPS = {
+  extends: "paperlint:neurips-2026",
+  kind: "main",
+  identity: ["Ada Example", "adaexample", "ada@example.org"],
+};
+
+describe("the NeurIPS style family and NeurIPS", () => {
+  it.each([
+    ["the family", NEURIPS_STYLE],
+    ["neurips/main", NEURIPS],
+  ])("the measured build passes %s", (_, venue) => {
+    expect(lint({ venue, facts: neuripsFacts() })).toEqual([]);
+  });
+
+  it("references at the body's size: banal gives no reference size, and nothing is judged", () => {
+    const facts = neuripsFacts((f) => (f.ref_pt = null));
+    expect(lint({ venue: NEURIPS, facts })).toEqual([]);
+  });
+
+  it("🔴 the planted build without the style fails: Computer Modern, no NimbusRomNo9L", () => {
+    const facts = neuripsFacts(
+      (f) =>
+        (f.fonts = type1([
+          "SFBX0900",
+          "SFBX1440",
+          "SFRM1000",
+          "SFRM1728",
+          "SFTI0900",
+        ])),
+    );
+    const fs = lint({ venue: NEURIPS, facts });
+    expect(ids(fs)).toEqual(["pdf/fonts:noFamily"]);
+    expect(fs[0]?.message).toMatch(/NimbusRomNo9L/);
+  });
+
+  it("🔴 an A4 page or two columns fail pdf/geometry", () => {
+    const facts = neuripsFacts((f) => {
+      f.page_w_in = 8.27;
+      f.page_h_in = 11.69;
+      f.columns = 2;
+    });
+    expect(ids(lint({ venue: NEURIPS, facts }))).toEqual([
+      "pdf/geometry:columns",
+      "pdf/geometry:dim",
+      "pdf/geometry:dim",
+    ]);
+  });
+
+  it("🔴 a bibliography in \\footnotesize, below the \\small the kit permits, fails pdf/body-size", () => {
+    const fs = lint({
+      venue: NEURIPS,
+      facts: neuripsFacts((f) => (f.ref_pt = 8.3)),
+    });
+    expect(fs.map((f) => f.message)).toEqual([
+      "the reference font size is 8.3 pt, outside 9–10 pt for NeurIPS (allowing ±0.5 pt for the measuring drift) — fix the bibliography's font size",
+    ]);
+  });
+});
+
+describe("format/page-limit on NeurIPS: 9 content pages, 10 in the camera-ready; references, appendices and the checklist not counted", () => {
+  const CAMERA = { ...NEURIPS, kind: "camera-ready" };
+  it.each([
+    { name: "main: 9 + 12 pass", venue: NEURIPS, body: 9, refs: 12, want: [] },
+    {
+      name: "🔴 main: a 10th content page fails",
+      venue: NEURIPS,
+      body: 10,
+      refs: 1,
+      want: ["format/page-limit:pages"],
+    },
+    {
+      name: "camera-ready: 10 pass",
+      venue: CAMERA,
+      body: 10,
+      refs: 1,
+      want: [],
+    },
+    {
+      name: "🔴 camera-ready: an 11th content page fails",
+      venue: CAMERA,
+      body: 11,
+      refs: 1,
+      want: ["format/page-limit:pages"],
+    },
+  ])("$name", ({ venue, body, refs, want }) => {
+    const facts = neuripsFacts((f) => {
       f.body_pages = body;
       f.ref_pages = refs;
       f.npages = body + refs;

@@ -302,7 +302,7 @@ describe("paperlint lint — the paper over its preset, and the project's own pr
     const r = await lint(root);
     expect(r.code).toBe(1);
     expect(r.out).toMatch(
-      /acm-acmsmall, acm-sigconf, agent, agenticdev, agentverify, aidc, aisec, ase, ccs, fse, icse, ieee-conference, msr, nlbse, realm, sp/,
+      /acm-acmsmall, acm-sigconf, agent, agenticdev, agentverify, aidc, aisec, ase, ccs, fse, icse, ieee-conference, msr, neurips-2026, neurips-style, nlbse, realm, sp/,
     );
   });
 });

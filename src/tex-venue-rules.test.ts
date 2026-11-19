@@ -1099,6 +1099,8 @@ describe("otherVenues", () => {
       "FSE 2027",
       "ICSE 2028",
       "MSR",
+      "NeurIPS",
+      "neurips-style",
       "NLBSE",
       "IEEE S&P",
     ]);
@@ -1131,6 +1133,114 @@ describe("paperlint's own config", () => {
 });
 
 /** A conforming AIDC paper with `preamble` after its class line, and `body` before its statement. */
+const NEURIPS = { extends: "paperlint:neurips-2026", kind: "main" };
+const CHECKLIST =
+  "\\section*{NeurIPS Paper Checklist}\n\\begin{enumerate}\\item x\\end{enumerate}\n";
+/** A paper in the kit's template: article, the style loaded after it. */
+const neuripsPaper = (body: string, preamble = "") =>
+  paper(
+    `\\documentclass{article}\n\\usepackage{neurips_2026}\n${preamble}`,
+    body,
+  );
+const NEURIPS_BIB =
+  "\\begin{thebibliography}{1}\\bibitem{a} A. Author. Learning.\\end{thebibliography}\n";
+
+describe("tex/required-section — NeurIPS's paper checklist", () => {
+  it.each<[string, string]>([
+    [
+      "after the references and the appendix, as the kit puts it",
+      BODY + NEURIPS_BIB + APPENDIX + CHECKLIST,
+    ],
+    ["straight after the references", BODY + NEURIPS_BIB + CHECKLIST],
+    [
+      "before the references: the order is only suggested",
+      BODY + CHECKLIST + NEURIPS_BIB,
+    ],
+  ])("passes %s", (_, body) => {
+    expect(lint(neuripsPaper(body), NEURIPS)).toEqual([]);
+  });
+
+  it("passes from the kit's own \\input{checklist.tex}, as the build recorded it", () => {
+    const tex = neuripsPaper(BODY + NEURIPS_BIB + "\\input{checklist.tex}\n");
+    const extra = builtPaper(
+      PAPER,
+      { "paper.tex": tex, "checklist.tex": CHECKLIST },
+      [
+        { path: "paper.tex", role: "body" },
+        { path: "neurips_2026.sty", role: "preamble" },
+        { path: "checklist.tex", role: "body" },
+      ],
+    );
+    expect(lint(tex, NEURIPS, { extra })).toEqual([]);
+  });
+
+  it.each<[string, string, number]>([
+    ["🔴 no checklist at all — a desk reject", BODY + NEURIPS_BIB, 12],
+    [
+      "🔴 a heading other than the kit's",
+      BODY + NEURIPS_BIB + "\\section*{Paper Checklist}\nx\n",
+      14,
+    ],
+  ])("%s", (_, body, line) => {
+    expect(required(lint(neuripsPaper(body), NEURIPS))).toEqual([
+      {
+        rule: "tex/required-section",
+        messageId: "missing",
+        message:
+          "NeurIPS requires a section titled «NeurIPS Paper Checklist» and there is none — add `\\section*{NeurIPS Paper Checklist}` (the title exactly; a bold paragraph does not count)",
+        line,
+      },
+    ]);
+  });
+});
+
+describe("NeurIPS names no template: what the source rules do not see (measured gaps, neurips-style.jsonc)", () => {
+  it("tex/template, format/layout-override and cycle/port-done are silent whatever the class and the margins", () => {
+    for (const tex of [
+      paper("\\documentclass[sigconf]{acmart}", BODY + CHECKLIST),
+      neuripsPaper(BODY + CHECKLIST, "\\usepackage[margin=0.5in]{geometry}"),
+      paper(
+        "\\documentclass{article}\n\\usepackage{neurips_2024}",
+        BODY + CHECKLIST,
+      ),
+    ])
+      expect(lint(tex, NEURIPS)).toEqual([]);
+  });
+});
+
+describe("tex/venue-leftover — NeurIPS counts only with a year beside it (`mentions`)", () => {
+  const under = (text: string) =>
+    leftovers(lint(aidcPaper(`${text}\n${BODY}${STATEMENT}`), AIDC));
+
+  it.each([
+    ["the venue named alone", "Benchmarks popular at NeurIPS are larger."],
+  ])("silent: %s", (_, text) => {
+    expect(under(text)).toEqual([]);
+  });
+
+  it.each([
+    ["First written for NeurIPS 2026."],
+    ["A version appeared as NeurIPS'26 work."],
+    ["Submitted to NeurIPS~2026."],
+    // 🔴 Any year: a citation in the text of last year's NeurIPS paper is reported too (neurips-2026.md).
+    ["As shown at NeurIPS 2023, the bound is tight."],
+  ])("🔴 reported: «%s»", (text) => {
+    expect(under(text).map((f) => f.message)).toEqual([
+      expect.stringMatching(
+        /^«NeurIPS» names NeurIPS, and this paper extends AIDC/,
+      ),
+    ]);
+  });
+
+  it("under neurips itself, its own name with a year is never a leftover", () => {
+    expect(
+      leftovers(
+        lint(neuripsPaper(`For NeurIPS 2026.\n${BODY}${CHECKLIST}`), NEURIPS),
+      ),
+    ).toEqual([]);
+  });
+});
+
 const withPreamble = (preamble: string, body = "Text.") =>
   paper(
     `\\documentclass[conference,compsoc]{IEEEtran}\n${preamble}`,

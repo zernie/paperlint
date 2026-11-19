@@ -1,0 +1,16 @@
+{
+  "$comment": "The neurips fixture with 11 content pages: format/page-limit reports it against NeurIPS's 9 for the main track, and nothing else does — the style, the page and the fonts are the neurips fixture's.",
+  "build": {
+    "outcome": "pdf",
+    "pages": 14
+  },
+  "lint": {
+    "findings": [
+      {
+        "rule": "format/page-limit",
+        "severity": 2,
+        "says": ["body pages: 11, over the limit 9 for NeurIPS/main"]
+      }
+    ]
+  }
+}

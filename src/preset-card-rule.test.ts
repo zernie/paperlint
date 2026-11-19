@@ -99,6 +99,8 @@ describe("the shipped cards", () => {
       "icse.md",
       "ieee-conference.md",
       "msr.md",
+      "neurips-2026.md",
+      "neurips-style.md",
       "nlbse.md",
       "realm.md",
       "sp.md",

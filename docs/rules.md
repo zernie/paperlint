@@ -145,19 +145,24 @@ for papers, each with the quote it came from, the TeX packages its template need
 the venue implies. A preset may itself extend another: the ACM venues extend the `acm-sigconf`
 family, which holds everything the ACM template decides.
 
-| preset                      | extends                     | template                                          | kinds                                                    | page limit checked                     | rules it turns on                           |
-| --------------------------- | --------------------------- | ------------------------------------------------- | -------------------------------------------------------- | -------------------------------------- | ------------------------------------------- |
-| `paperlint:acm-sigconf`     | —                           | ACM `acmart` sigconf                              | none                                                     | no (no kinds)                          | —                                           |
-| `paperlint:agenticdev`      | `paperlint:acm-sigconf`     | ACM `acmart` sigconf                              | `short` (5 + 2 refs), `full` (10 + 2), `demo` (5 + 2)    | yes                                    | `pdf/last-page-balance`, `tex/heading-case` |
-| `paperlint:aisec`           | `paperlint:acm-sigconf`     | ACM `acmart` sigconf                              | `research`, `benchmark`, `position`, `sok` (10 + 2 each) | yes                                    | —                                           |
-| `paperlint:acm-acmsmall`    | —                           | ACM `acmart` acmsmall (single-column)             | none                                                     | no (no kinds)                          | —                                           |
-| `paperlint:fse`             | `paperlint:acm-acmsmall`    | ACM `acmart` acmsmall (single-column)             | `research` (18 + 4 refs), `major-revision` (20 + 4)      | yes                                    | — (`blind`)                                 |
-| `paperlint:realm`           | —                           | ACL                                               | `long`, `short`                                          | no — see below                         | —                                           |
-| `paperlint:ieee-conference` | —                           | IEEE `IEEEtran` conference                        | none                                                     | no (no kinds)                          | —                                           |
-| `paperlint:aidc`            | `paperlint:ieee-conference` | IEEE `IEEEtran` conference, `compsoc`             | `regular` (12), `short` (6)                              | yes, before the references — see below | — (`blind`)                                 |
-| `paperlint:msr`             | `paperlint:ieee-conference` | IEEE `IEEEtran` `[10pt,conference]`, no `compsoc` | `technical` (10 + 2 of only references)                  | yes, appendices included — see below   | — (`blind`)                                 |
+| preset                      | extends                     | template                                                  | kinds                                                    | page limit checked                       | rules it turns on                           |
+| --------------------------- | --------------------------- | --------------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------- | ------------------------------------------- |
+| `paperlint:acm-sigconf`     | —                           | ACM `acmart` sigconf                                      | none                                                     | no (no kinds)                            | —                                           |
+| `paperlint:agenticdev`      | `paperlint:acm-sigconf`     | ACM `acmart` sigconf                                      | `short` (5 + 2 refs), `full` (10 + 2), `demo` (5 + 2)    | yes                                      | `pdf/last-page-balance`, `tex/heading-case` |
+| `paperlint:aisec`           | `paperlint:acm-sigconf`     | ACM `acmart` sigconf                                      | `research`, `benchmark`, `position`, `sok` (10 + 2 each) | yes                                      | —                                           |
+| `paperlint:acm-acmsmall`    | —                           | ACM `acmart` acmsmall (single-column)                     | none                                                     | no (no kinds)                            | —                                           |
+| `paperlint:fse`             | `paperlint:acm-acmsmall`    | ACM `acmart` acmsmall (single-column)                     | `research` (18 + 4 refs), `major-revision` (20 + 4)      | yes                                      | — (`blind`)                                 |
+| `paperlint:realm`           | —                           | ACL                                                       | `long`, `short`                                          | no — see below                           | —                                           |
+| `paperlint:ieee-conference` | —                           | IEEE `IEEEtran` conference                                | none                                                     | no (no kinds)                            | —                                           |
+| `paperlint:aidc`            | `paperlint:ieee-conference` | IEEE `IEEEtran` conference, `compsoc`                     | `regular` (12), `short` (6)                              | yes, before the references — see below   | — (`blind`)                                 |
+| `paperlint:msr`             | `paperlint:ieee-conference` | IEEE `IEEEtran` `[10pt,conference]`, no `compsoc`         | `technical` (10 + 2 of only references)                  | yes, appendices included — see below     | — (`blind`)                                 |
+| `paperlint:neurips-style`   | —                           | `article` + NeurIPS's `neurips_2026.sty` (no class check) | none                                                     | no (no kinds)                            | —                                           |
+| `paperlint:neurips-2026`    | `paperlint:neurips-style`   | `article` + NeurIPS's `neurips_2026.sty` (no class check) | `main` (9 content pages), `camera-ready` (10)            | yes, references and the rest not counted | — (`blind`)                                 |
 
-That is all that ships today. There is no NeurIPS, USENIX or Springer preset. A paper for an ACM or
+That is all that ships today. There is no ICML, ICLR, AAAI, IJCAI, USENIX or Springer preset. NeurIPS's
+template is a style file loaded into `article`, not a class, so its family names no `template`:
+`tex/template` compares only the class line, and what the style sets is checked on the build
+([`neurips-style.md`](../presets/neurips-style.md)). A paper for an ACM or
 IEEE conference venue nobody has profiled can extend `paperlint:acm-sigconf` or
 `paperlint:ieee-conference` directly: page size, columns and fonts are checked, and `pdf/profile`
 says the page limit is not. For anything else, write your own preset

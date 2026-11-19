@@ -6,8 +6,8 @@
   "findings": {
     "paper/section-word": 161,
     "tex/claim-provenance": 123,
+    "tex/venue-leftover": 6,
     "paper/allowed-files-only": 2,
-    "tex/venue-leftover": 2,
     "format/layout-override": 1,
     "pdf/measured": 1,
     "tex/template": 1

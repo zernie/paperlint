@@ -179,6 +179,51 @@ describe("shipped presets: paperlint:fse", () => {
   });
 });
 
+describe("shipped presets: paperlint:neurips-2026", () => {
+  it("paperlint:neurips-2026 → neurips over neurips-style: no template, the style's page and fonts, two kinds, the checklist, both readings of each deadline", () => {
+    const r = resolve("paperlint:neurips-2026");
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.value.chain.map((f) => f.split("/").pop())).toEqual([
+      "neurips-style.jsonc",
+      "neurips-2026.jsonc",
+    ]);
+    // The class is plain article: a template would pass any article paper, with or without the style.
+    expect(r.value.template).toBeNull();
+    expect(r.value.format.columns).toBe(1);
+    expect(r.value.format.pageWidthIn).toBe(8.5);
+    expect(r.value.format.pageHeightIn).toBe(11);
+    expect(r.value.format.fontsText).toBe("NimbusRomNo9L");
+    expect(r.value.format.fontsTitle).toBeNull();
+    // banal's count: the line numbers of the submission defeat the heading `body_ends_at` looks for.
+    expect(r.value.format.bodyEndsAt).toBeNull();
+    expect([...r.value.format.kinds]).toEqual([
+      ["main", { pagesMax: null, bodyPagesMax: 9, refPagesMax: null }],
+      ["camera-ready", { pagesMax: null, bodyPagesMax: 10, refPagesMax: null }],
+    ]);
+    expect(Object.keys(r.value.tex.packages)).toEqual(
+      expect.arrayContaining(["environ", "lineno", "times", "helvetic"]),
+    );
+    expect(r.value.blind).toBe(true);
+    expect(r.value.portal).toBeNull();
+    expect(r.value.requiredSections).toEqual([
+      { title: "NeurIPS Paper Checklist", position: null },
+    ]);
+    expect(r.value.deadlines.map((d) => [d.what, d.source])).toEqual([
+      ["registration", "portal"],
+      ["registration", "call"],
+      ["submission", "portal"],
+      ["submission", "call"],
+      ["notification", "call"],
+      ["camera-ready", "call"],
+    ]);
+    expect(r.value.label).toBe("NeurIPS");
+    expect(r.value.aliases).toEqual(["NeurIPS"]);
+    expect(r.value.mentions).toBe("with-year");
+    expect(r.value.rules).toEqual({});
+  });
+});
+
 describe("shipped presets: a family, and a venue that stands alone", () => {
   it("a paper may extend a family directly: format and fonts, and no kinds", () => {
     const r = resolve("paperlint:acm-sigconf");
@@ -269,6 +314,12 @@ const DECLARED = {
     name: "MSR",
     url: "https://2027.msrconf.org/track/msr-2027-technical-papers",
   },
+  "neurips-style.jsonc": { type: "family" },
+  "neurips-2026.jsonc": {
+    type: "venue",
+    name: "NeurIPS",
+    url: "https://neurips.cc/Conferences/2026/CallForPapers",
+  },
   "nlbse.jsonc": {
     type: "venue",
     name: "NLBSE",
@@ -323,6 +374,7 @@ describe("the naming convention of shipped presets (docs/rules.md)", () => {
       "acm-acmsmall",
       "acm-sigconf",
       "ieee-conference",
+      "neurips-style",
     ]);
   });
 
@@ -336,7 +388,10 @@ describe("the naming convention of shipped presets (docs/rules.md)", () => {
   it.each(presets.filter((p) => p.extends !== null).map((p) => [p.name]))(
     "the venue %s carries no publisher prefix — its template is said by `extends`",
     (name) => {
-      expect(publishers.filter((pub) => name.startsWith(`${pub}-`))).toEqual(
+      // The edition is not a prefix: `neurips-2026` is the series NeurIPS, whose style family is
+      // `neurips-style` — the venue publishes its own template.
+      const series = name.replace(/-\d{4}$/u, "");
+      expect(publishers.filter((pub) => series.startsWith(`${pub}-`))).toEqual(
         [],
       );
     },
@@ -543,7 +598,7 @@ describe("what does not resolve, and says why", () => {
       "a shipped name with a typo",
       "paperlint:agenticdve",
       "not-found",
-      /acm-acmsmall, acm-sigconf, agent, agenticdev, agentverify, aidc, aisec, ase, ccs, fse, icse, ieee-conference, msr, nlbse, realm, sp/,
+      /acm-acmsmall, acm-sigconf, agent, agenticdev, agentverify, aidc, aisec, ase, ccs, fse, icse, ieee-conference, msr, neurips-2026, neurips-style, nlbse, realm, sp/,
     ],
     ["the base TeX set", "paperlint:tex-base", "not-found", /agenticdev/],
     [
@@ -833,6 +888,8 @@ describe("shippedVenueNames — what each shipped venue is called", () => {
       "ICSE 2028",
       "ieee-conference",
       "MSR",
+      "NeurIPS",
+      "neurips-style",
       "NLBSE",
       "REALM",
       "IEEE S&P",
@@ -863,6 +920,8 @@ describe("shippedVenueNames — what each shipped venue is called", () => {
       "ICSE 2028",
       "ieee-conference",
       "MSR",
+      "NeurIPS",
+      "neurips-style",
       "NLBSE",
       "IEEE S&P",
     ]);

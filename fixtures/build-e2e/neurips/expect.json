@@ -1,0 +1,14 @@
+{
+  "$comment": "A paper in NeurIPS 2026's author-kit template, \\documentclass{article} with the kit's neurips_2026.sty beside it, that meets every number of paperlint:neurips over the neurips-style family: one column on a letter page, Times (NimbusRomNo9L) at 10 pt, references in \\small, 7 content pages, then the references, an appendix and the paper checklist. Its twins: neurips-over (too many content pages) and neurips-nostyle (no style file).",
+  "build": {
+    "outcome": "pdf",
+    "pages": 10
+  },
+  "fonts": {
+    "all": "^(NimbusRomNo9L|NimbusSanL|SFTT)",
+    "none": "^(CMR|CMBX|CMTI|SFRM|SFBX|LMRoman)"
+  },
+  "lint": {
+    "findings": []
+  }
+}

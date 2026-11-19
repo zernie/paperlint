@@ -1,0 +1,56 @@
+% The neurips fixture without NeurIPS's style: \documentclass{article} alone, the paper the author
+% kit's style file was never copied into or never loaded. The class is the one the style is loaded
+% into, so nothing in the class line is wrong; the build is set in Computer Modern on article's own
+% text block, and pdf/fonts must report that the NeurIPS text font is missing. It is shorter than the
+% neurips fixture so that article's narrower text block keeps it within the page limit.
+%
+% The prose is one paragraph set many times; each copy carries its own number in words on every
+% line, so no line repeats from page to page as a running header would.
+\documentclass{article}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{natbib}
+\newcount\paracount
+\newcommand{\n}{\romannumeral\paracount}
+\newcommand{\para}{\global\advance\paracount by 1
+Paragraph \n{} trains a model on a benchmark, and \n{} counts its errors by class \n{}
+and by seed \n{}, so that the measurement \n{} has a body of prose \n{} set in the one column
+\n{} of the conference style. Paragraph \n{} says nothing new, and \n{} does not need to: the
+fixture \n{} is about the style, \n{} the fonts and \n{} the page count, and \n{} not about its
+content. A reviewer of \n{} would find it dull, \n{} which is what a measurement \n{} should be.\par}
+\newcount\loopcount
+\newcommand{\paras}[1]{\loopcount=0 \loop\para\advance\loopcount by 1 \ifnum\loopcount<#1\repeat}
+\newcount\bibcount
+\newcommand{\entries}[1]{\bibcount=0 \loop\advance\bibcount by 1
+\bibitem[Author(2024)]{r\the\bibcount} A.~Author. Learning study \romannumeral\bibcount. In
+\emph{Proc.\ Workshop}, pages 1--10, 2024.\ifnum\bibcount<#1\repeat}
+\title{A Fixture Typeset in the Style the Venue Requires}
+\author{Anonymous Author}
+\begin{document}
+\maketitle
+\begin{abstract}
+The abstract exists so the build has the front matter a NeurIPS paper carries.
+\end{abstract}
+\section{Introduction}
+\paras{16}
+\section{Method}
+\paras{20}
+\section{Conclusion}
+\paras{10}
+\renewcommand{\bibfont}{\small}
+\begin{thebibliography}{99}
+\entries{40}
+\end{thebibliography}
+\appendix
+\section{Technical Appendix}
+\paras{10}
+\newpage
+\section*{NeurIPS Paper Checklist}
+\begin{enumerate}
+\item {\bf Claims}
+  \item[] Question: Do the main claims made in the abstract and introduction accurately reflect the
+  paper's contributions and scope?
+  \item[] Answer: Yes
+  \item[] Justification: The fixture claims only its own format.
+\end{enumerate}
+\end{document}
