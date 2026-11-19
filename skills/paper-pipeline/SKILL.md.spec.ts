@@ -202,19 +202,18 @@ The one place this order is written; every other skill points here.
 3. **\`pc-panel-review\`** — one panel, with the reports of steps 1–2 as its inputs.
 
 - **Each pass runs once.** "No findings" from any of them is a valid result and ends that pass.
-- **The author decides each finding once**, and the pass's report records it: \`fixed\`, \`rejected\`, or
-  \`waived by the author: <reason>\`. He decides the findings of steps 1–2 before step 3, and the panel
+- **The author decides each finding once**, and the pass's report frontmatter records it
+  (\`review/frontmatter\`): \`fixed\`, or \`wontfix\` with a \`note\` giving his reason; until then it is
+  \`open\`. He decides the findings of steps 1–2 before step 3, and the panel
   receives only those still open; he decides the panel's after step 3. The write happens once, after
   step 3: every accepted fix in one pass, a sentence through \`rewrite-unclear\`, a cut on his yes. A
   decided finding is not raised again in this review.
-- **Blockers** stop submission until \`fixed\` or \`waived by the author: <reason>\`; \`rejected\` is not
-  open to them. Two kinds: a scientific must-fix in the panel's meta-review, and a readability
-  hard-fail: a wall paragraph, a spec-sheet paragraph (numbers stacked with no reading of them), or a
-  heading in coined jargon, whether \`tighten-paper\` or a cold read (\`CANNOT PARSE\`, \`VAGUE HEADING\`)
-  found it.
+- **Blockers** are a closed list, frozen when the review closes: the panel's consensus must-fixes and
+  the cold read's \`CANNOT PARSE\` rows. Each stops submission until \`fixed\` or \`wontfix\` with
+  \`note: "waived by the author: <reason>"\`.
 - **At most one confirmation, and only when the author asks for it:** he names the pass, and it runs once
   on what changed. No pass schedules another, and none reruns because a score is low.
-- **Then the review is closed,** whatever the scores; an undecided blocker stays open into the checklist.
+- **Then the review is closed,** whatever the scores; a blocker still \`open\` stays open into the checklist.
   Mark the \`panel\` row of
   \`PIPELINE-STATUS.md\` \`☑ closed <date>\`. Ordinary edits, a re-approval (\`versions approve\`) and a
   gate older than the text do not reopen it; only the author does, by asking for a new final review.

@@ -4,7 +4,7 @@ description: "Use when asking \"is this paper actually ready to submit?\" / \"wh
 allowed-tools: [Read, Write, Grep, Glob, Bash, Skill]
 ---
 
-<!-- vigiles:sha256:ef7e0dbf629239af compiled from skills/harden-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:c41ee4dc4b129ef0 compiled from skills/harden-paper/SKILL.md.spec.ts -->
 
 # harden-paper — the submit checklist
 
@@ -24,8 +24,9 @@ the author decides what to apply. "Nothing fails" is a valid result.
    the venue sets and no rule counts (an abstract limit): count it.
 2. **The final review is closed and its blockers are decided** (`paper-pipeline`, "The final review":
    `tighten-paper` → `cold-read-diff --whole` → `pc-panel-review`). Read its reports; do not run it
-   again. No closed review fails this item. Every blocker it recorded (a scientific must-fix, a
-   readability hard-fail) is `fixed` or `waived by the author: <reason>`; an undecided one fails.
+   again, and fix nothing. No closed review fails this item. Count its blockers (the panel's consensus
+   must-fixes and the cold read's `CANNOT PARSE` rows) by `status` in the reports' frontmatter:
+   `fixed`, waived (`wontfix` with a `waived by the author` note), `open`. Any `open` one fails.
 3. **Citations and the nearest neighbour.** `verify-citations` ran on the current bibliography
    (`paper/refs-checked` warns when it did not). `map-prior-work`'s record exists
    (`siblings/README.md` and its sweep file) and names the closest match with a disposition:

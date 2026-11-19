@@ -4,7 +4,7 @@ description: "Rewrite an unclear passage of a paper — a sentence, paragraph, h
 allowed-tools: [Read, Edit, Grep, Glob, Agent]
 ---
 
-<!-- vigiles:sha256:a3f786179ee370ea compiled from skills/rewrite-unclear/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:8f38c02cf29878e1 compiled from skills/rewrite-unclear/SKILL.md.spec.ts -->
 
 # rewrite-unclear — make a passage say its claim so a stranger gets it
 
@@ -104,12 +104,12 @@ sentence, why no edit could say the claim), and the step-4 result. Apply the rew
 rewrites are a proposal the author accepts or rejects one by one.
 
 When the passage came from a report with `findings` frontmatter (`cold-read-diff`), set that finding's `status` to `fixed` once the rewrite is applied and step
-4 passed, or leave it `open` with the reason when the author kept the original.
+4 passed, or to `wontfix` with `note` giving the author's reason when he kept the original.
 
 ## Rules
 
 - **The author decides.** The reader's verdict and the restatement are evidence; the author accepts
-  or rejects each rewrite. "Leave it" is a valid outcome, recorded as `wontfix`.
+  or rejects each rewrite. "Leave it" is a valid outcome, recorded as `wontfix` with his reason.
 - **Do not argue with a reader who could not parse it.** The author's understanding of their own
   sentence is not evidence about anyone else's.
 - **Do not write the claim stronger to make it clearer.** A hedge that makes a sentence harder to read

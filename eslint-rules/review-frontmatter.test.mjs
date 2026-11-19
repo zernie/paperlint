@@ -40,11 +40,14 @@ describe("review/frontmatter — the findings record", () => {
     ).toEqual([]);
   });
 
-  it("🔴 an OPEN finding without a cause is a finding — the schema's if/then, not code", async () => {
-    const msgs = await lint(fm("findings:\n  - id: 1\n    status: open"));
-    expect(msgs).toEqual([
-      "`findings[0]` should have required property 'cause'",
-    ]);
+  it("a closed final review's record: a finding still open needs no cause, a waiver is wontfix with a note", async () => {
+    expect(
+      await lint(
+        fm(
+          'findings:\n  - id: 1\n    status: open\n  - id: 2\n    status: fixed\n  - id: 3\n    status: wontfix\n    note: "waived by the author: the term is defined in the venue\'s call"',
+        ),
+      ),
+    ).toEqual([]);
   });
 
   it("a cause or status outside the list names the allowed values", async () => {

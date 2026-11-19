@@ -166,19 +166,22 @@ ones that do not are noise, and noise is how this check gets muted.
 
 Once the findings are decided, the report opens with YAML frontmatter that lists them, one
 record per finding.
-\`paperlint lint\` validates it (\`review/frontmatter\`): an **open** finding must name the
-pipeline \`cause\` that let it through — fix that, and the text edit falls out of running the
-fixed tool.
+\`paperlint lint\` validates it (\`review/frontmatter\`). A finding the author kept is \`wontfix\` with a
+\`note\` giving his reason (\`waived by the author: <reason>\` for a \`CANNOT PARSE\`, a blocker). Name
+the pipeline \`cause\` when one let the finding through, so the tool gets fixed, not only the text.
 
 \`\`\`yaml
 ---
 findings:
   - id: 1
     status: open            # open | fixed | wontfix
-    cause: missing-skill    # skill-defect | missing-skill | hook | rule — required when open
+    cause: missing-skill    # skill-defect | missing-skill | hook | rule — optional
     title: "§3 opens on a term the reader has not met"
   - id: 2
     status: fixed
+  - id: 3
+    status: wontfix
+    note: "waived by the author: the term is the venue's own"
 ---
 \`\`\`
 
