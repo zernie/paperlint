@@ -34,7 +34,11 @@ import { texInputsDir } from "./package-dirs.ts";
 
 const root = useTempDir("cli-test-");
 
-/** `run(argv)` from `cwd`, the output as one string per stream. */
+/**
+ * `run(argv)` from `cwd`, the output as one string per stream. Its clock stands still, so `lint`'s
+ * «linted N file(s) in 0.0 s» is the same however long the run took: under a loaded
+ * `npm run test:changed` two lints of one tree printed 0.2 s and 0.0 s.
+ */
 async function cli(
   argv: string[],
   cwd: string,
@@ -46,6 +50,7 @@ async function cli(
     log: (...a: unknown[]) => out.push(a.join(" ")),
     err: (...a: unknown[]) => err.push(a.join(" ")),
     cwd,
+    now: () => 0,
     ...deps,
   });
   return { code, out: out.join("\n"), err: err.join("\n") };
