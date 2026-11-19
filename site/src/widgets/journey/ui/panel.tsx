@@ -25,18 +25,8 @@ const Badge = ({ s }: { readonly s: Stop }) => (
   </p>
 );
 
-/**
- * One stop's page: its number and when it runs, its title, what it checks, and a real finding.
- * `split` sets the words and the example side by side under the title from a laptop up; otherwise
- * the example follows the words.
- */
-export function Panel({
-  s,
-  split = false,
-}: {
-  readonly s: Stop;
-  readonly split?: boolean;
-}) {
+/** One stop's page: its number and when it runs, its title, what it checks, then a real finding. */
+export function Panel({ s }: { readonly s: Stop }) {
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -48,24 +38,8 @@ export function Panel({
       <h3 className="mt-4 font-display text-title text-foreground">
         {s.title}
       </h3>
-      <div
-        className={
-          split
-            ? "mt-6 grid grid-cols-1 gap-x-12 gap-y-8 lg:grid-cols-12"
-            : "mt-4 grid grid-cols-1 gap-y-8"
-        }
-      >
-        <p
-          className={
-            split
-              ? "max-w-prose text-body text-copy lg:col-span-4"
-              : "max-w-prose text-body text-copy"
-          }
-        >
-          {s.text}
-        </p>
-        <div className={split ? "lg:col-span-8" : ""}>{s.example}</div>
-      </div>
+      <p className="mt-4 max-w-prose text-body text-copy">{s.text}</p>
+      <div className="mt-8">{s.example}</div>
     </div>
   );
 }

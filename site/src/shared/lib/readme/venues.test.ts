@@ -60,41 +60,62 @@ const NAMES: Readonly<Record<string, string>> = {
 const nameOf = (id: string): string => NAMES[id] ?? `?${id}`;
 
 describe("venueGrid", () => {
-  it("groups the editions by field, a workshop with its parent, the README's limits first", () => {
+  it("groups the editions by field, each workshop under its conference, the README's limits first", () => {
     expect(venueGrid(DOC, README, nameOf)).toEqual({
       fields: [
         {
           field: "Software engineering",
-          editions: [
+          conferences: [
             {
               id: "icse-2027",
+              series: "ICSE",
               name: "ICSE 2027",
               format: "IEEE IEEEtran, conference",
               limits: "Checked: the format only.",
-            },
-            {
-              id: "agent-2027",
-              name: "AGENT 2027",
-              parent: "ICSE",
-              format: "IEEE two-column",
-              limits: "full 8, short 5 pages",
+              workshops: [
+                {
+                  id: "agent-2027",
+                  series: "AGENT",
+                  name: "AGENT 2027",
+                  format: "IEEE two-column",
+                  limits: "full 8, short 5 pages",
+                },
+              ],
             },
           ],
         },
         {
           field: "Machine learning and AI",
-          editions: [
+          conferences: [
             {
               id: "neurips-2026",
+              series: "NeurIPS",
               name: "NeurIPS 2026",
               format: "article + \\usepackage{neurips_2026}",
               limits: "Checked: the main track's call.",
+              workshops: [],
             },
           ],
         },
       ],
       families: ["IEEE", "ACL"],
     });
+  });
+
+  it("sets a workshop whose conference is in another field as a line of its own", () => {
+    const doc = DOC.replace(
+      "| `paperlint:neurips-2026` | — |",
+      "| `paperlint:agent-2027` | `paperlint:icse-2027` | `paperlint:neurips-style` | the workshop's call |\n| `paperlint:neurips-2026` | — |",
+    );
+    expect(
+      venueGrid(doc, [], nameOf).fields[1]?.conferences.map((c) => [
+        c.name,
+        c.workshops.length,
+      ]),
+    ).toEqual([
+      ["AGENT 2027", 0],
+      ["NeurIPS 2026", 0],
+    ]);
   });
 
   it("reads the fields up to the end of the doc when no heading follows them", () => {
@@ -141,7 +162,7 @@ describe("venueGrid", () => {
     ).toThrow("site: no ACM, IEEE or ACL family");
   });
 
-  it("reads the real docs/venues.md and presets: every field, the workshops with their parent", () => {
+  it("reads the real docs/venues.md and presets: every field, each workshop under its conference", () => {
     const readme = readmeContent(read("README.md")).venues;
     const grid = venueGrid(read("docs/venues.md"), readme, (id) =>
       presetName(read(`presets/${id}.jsonc`)),
@@ -153,18 +174,26 @@ describe("venueGrid", () => {
       "Machine learning and AI",
     ]);
     expect(grid.families).toEqual(["ACM", "IEEE", "ACL"]);
-    const se = grid.fields[0]?.editions ?? [];
-    expect(se.find((e) => e.id === "agent-2027")).toEqual({
+    const nested = grid.fields.map((f) =>
+      f.conferences.map((c) => [c.name, c.workshops.map((w) => w.series)]),
+    );
+    expect(nested[0]).toContainEqual([
+      "ICSE 2027",
+      ["NLBSE", "AGENT", "AGENTVERIFY"],
+    ]);
+    expect(nested[0]).toContainEqual(["ASE 2026", ["AgenticDev"]]);
+    expect(nested[1]).toContainEqual(["ACM CCS 2026", ["AISec"]]);
+    expect(nested[1]).toContainEqual(["ACSAC 2026", ["AIDC"]]);
+    expect(nested[2]).toEqual([["EMNLP 2026", ["REALM"]]]);
+    const agent = grid.fields[0]?.conferences
+      .flatMap((c) => c.workshops)
+      .find((w) => w.id === "agent-2027");
+    expect(agent).toEqual({
       id: "agent-2027",
+      series: "AGENT",
       name: "AGENT 2027",
-      parent: "ICSE",
       format: "IEEE IEEEtran, conference",
       limits: "Checked: the workshop's call.",
-    });
-    expect(se.find((e) => e.id === "agenticdev-2026")).toMatchObject({
-      name: "AgenticDev 2026",
-      parent: "ASE",
-      format: "ACM two-column",
     });
   });
 });

@@ -11,18 +11,26 @@ import { fail, tableAfter, type Venue } from "./content.ts";
 export interface Edition {
   /** The preset id without its prefix: `agent-2027`. */
   readonly id: string;
+  /** The series, without a year: «AGENT». */
+  readonly series: string;
   /** The series and the year: «AGENT 2027». */
   readonly name: string;
-  /** The series of the conference a workshop is held at: «ICSE»; none for a conference. */
-  readonly parent?: string;
   readonly format: string;
   readonly limits: string;
 }
 
-/** One field of docs/venues.md and its editions, in the doc's order. */
+/** A conference, with the workshops held at it that the same field ships. */
+export interface Conference extends Edition {
+  readonly workshops: readonly Edition[];
+}
+
+/**
+ * One field of docs/venues.md: its conferences in the doc's order, each with its workshops. A
+ * workshop whose conference is not in the field stands as a line of its own, with no workshops.
+ */
 export interface VenueField {
   readonly field: string;
-  readonly editions: readonly Edition[];
+  readonly conferences: readonly Conference[];
 }
 
 /** The grid: the fields, and the organisations whose template alone is a preset (ACM, IEEE, ACL). */
@@ -56,6 +64,12 @@ const sectionAt = (text: string, anchor: string): string => {
   return end === -1 ? rest : rest.slice(0, anchor.length + end);
 };
 
+/** How many editions the grid holds: each conference and each workshop held at one. */
+export const venueCount = (grid: VenueGrid): number =>
+  grid.fields
+    .flatMap((f) => f.conferences)
+    .reduce((n, c) => n + 1 + c.workshops.length, 0);
+
 /** «ACM, IEEE or ACL». */
 export const orList = (names: readonly string[]): string =>
   names.length < 2
@@ -80,22 +94,33 @@ export const venueGrid = (
     const body = section.slice(head.index, heads[i + 1]?.index);
     const field = head[0].slice(2, -2);
     const editions = tableAfter(body, head[0]).map(
-      ([edition = "", parent = "", family = "", checked = ""]): Edition => {
+      ([edition = "", parent = "", family = "", checked = ""]) => {
         const id = presetId(edition);
         const listed = readme.find((v) => v.preset === edition);
         const template =
           families.find((f) => f.id === family)?.template ??
           fail(`"${edition}" names an unknown family "${family}"`);
+        const series = nameOf(id);
         return {
           id,
-          name: `${nameOf(id)} ${yearOf(id)}`,
-          ...(parent === "—" ? {} : { parent: nameOf(presetId(parent)) }),
+          series,
+          name: `${series} ${yearOf(id)}`,
           format: listed?.format ?? template,
           limits: listed?.limits ?? `Checked: ${checked}.`,
+          parent: parent === "—" ? "" : presetId(parent),
         };
       },
     );
-    return { field, editions };
+    const ids = new Set(editions.map((e) => e.id));
+    const conferences = editions
+      .filter((e) => !ids.has(e.parent))
+      .map((e) => ({
+        ...R.omit(e, ["parent"]),
+        workshops: editions
+          .filter((w) => w.parent === e.id)
+          .map((w) => R.omit(w, ["parent"])),
+      }));
+    return { field, conferences };
   });
   const orgs = R.unique(
     families.flatMap(

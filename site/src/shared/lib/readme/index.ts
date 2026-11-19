@@ -10,8 +10,10 @@ export {
 } from "./content.ts";
 export {
   orList,
+  venueCount,
   presetName,
   venueGrid,
+  type Conference,
   type Edition,
   type VenueField,
   type VenueGrid,

@@ -27,18 +27,20 @@
   --color-ink-blue: #305e8b;
   /* Terracotta, for an error only. */
   --color-signal: #c15f3c;
-  /* The section bands, after zernie.com: each section sits on its own ground, so the page reads as
-     distinct parts. Sand for a call-out, stone (a light grey) for a quiet part, night for the
-     darkest, with light text on it. `-edge` is a hairline drawn on that ground. */
+  /* The section grounds, after zernie.com: each section sits on its own ground, so the page reads
+     as distinct parts, softly. Sand for a call-out, stone (a light warm grey) for a quiet part. No
+     dark band: the author asked for a calm page (2026-11-19). `-edge` is a hairline on sand. */
   --color-sand: #ead9b9;
   --color-sand-edge: #d6c19b;
+  /* Sand washed out, for a large calm ground: the venues. */
+  --color-sand-soft: #f3ead9;
   --color-stone: #f2f1ec;
-  --color-night: #1c1c1a;
-  --color-night-edge: #3a3934;
-  --color-on-ink: #f0eee9;
-  --color-on-ink-muted: #bab7b0;
-  /* Text on night that is present but not chosen: a checkpoint that is not open. */
-  --color-on-ink-faint: #7d7a73;
+  /* Two quiet accents for the hero's facts, beside the ink-blue and the ink: a green-grey and a
+     deep sand. Never terracotta, which is for an error. */
+  --color-sage: #56695c;
+  --color-sand-deep: #8a6a36;
+  /* Text present but not chosen: a checkpoint that is not open (3.4:1 on stone, for large type). */
+  --color-faint: #85827a;
   /* A finding's level: text on its tint. */
   --color-warn: #8a6a1c;
   --color-warn-surface: #f3ead3;
@@ -72,6 +74,11 @@
   --font-heading: var(--font-display);
 }
 
+/* The weight of the serif headlines: light, as a magazine sets them (Kinfolk, Cereal). */
+@theme {
+  --font-weight-quiet: 300;
+}
+
 /* The type scale beyond Tailwind's: the landing page's named sizes, fluid between a phone and a
    desktop, so no class needs `text-[112px]`. Headlines are Newsreader, whose optical sizes tighten
    it at display sizes; running text is Inter. */
@@ -80,8 +87,13 @@
   --text-hero: clamp(3.5rem, 8vw, 7rem);
   --text-hero--line-height: 1;
   --text-hero--letter-spacing: -0.025em;
-  /* A section's headline: 40–56px. */
-  --text-display: clamp(2.5rem, 4.5vw, 3.5rem);
+  /* The cover line, the hero's headline, at the regular weight and normal tracking, which read
+     better than light and tight at this size: 56–88px. */
+  --text-cover: clamp(3.5rem, 6.5vw, 5.5rem);
+  --text-cover--line-height: 1.05;
+  --text-cover--letter-spacing: 0;
+  /* A section's headline, set light: 40–64px. */
+  --text-display: clamp(2.5rem, 4.75vw, 4rem);
   --text-display--line-height: 1.05;
   --text-display--letter-spacing: -0.02em;
   /* A stop's title on the journey, a venue's name: 32–40px. */
@@ -104,7 +116,7 @@
   /* A label above a section, a caption under a figure. */
   --text-label: 0.75rem;
   --text-label--line-height: 1.4;
-  --text-label--letter-spacing: 0.08em;
+  --text-label--letter-spacing: 0.16em;
   /* Commands and the exact terminal output. */
   --text-code: 0.875rem;
   --text-code--line-height: 1.7;
@@ -116,13 +128,23 @@
 @theme {
   /* Above the hero, under the header: 160px. */
   --spacing-hero: 10rem;
-  /* The height of the hero's campus band: 288–640px. */
-  --spacing-campus: clamp(18rem, 44vw, 40rem);
+  /* A section's top and bottom inside its ground: 96px. */
+  --spacing-band: 6rem;
   /* Between sections: 160px. */
   --spacing-section: 10rem;
   /* The page's content width (1200px) and a paragraph's (640px). */
   --container-page: 75rem;
   --container-prose: 40rem;
+  /* A magazine's short measure, for a lead or a note: 448px. */
+  --container-measure: 28rem;
+  /* The hero's plate, wider than the text: 1344px. */
+  --container-wide: 84rem;
+  /* The cover line's width, so it breaks after "for" and the venue takes the second line: 896px. */
+  --container-cover: 56rem;
+  /* The hero's plate: the campus etching cropped to its arcades, 14 wide to 5 high. */
+  --aspect-plate: 14 / 5;
+  /* How far in from each edge the plate fades into the paper, so its lighter ground shows no box. */
+  --plate-fade: 12%;
 
   /* shadcn's radius scale; the page itself uses only small radii. */
   --radius-sm: calc(var(--radius) * 0.6);
@@ -138,18 +160,24 @@
   --radius: 0.625rem;
 }
 
-/* The hero's etching melts into the paper: transparent at the top, where the headline sits, and at
-   the bottom and sides, so no rectangle edge shows (src/widgets/hero/ui/hero.tsx). */
-@utility mask-campus {
+/* The hero's plate dissolves into the paper on every edge, by --plate-fade: the etching's ground
+   is a shade lighter than the paper, and a hard edge would read as a box (src/widgets/hero). */
+@utility mask-plate {
   mask-image:
     linear-gradient(
       to bottom,
-      transparent 30%,
-      black 62%,
-      black 82%,
+      transparent,
+      black var(--plate-fade),
+      black calc(100% - var(--plate-fade)),
       transparent
     ),
-    linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+    linear-gradient(
+      to right,
+      transparent,
+      black var(--plate-fade),
+      black calc(100% - var(--plate-fade)),
+      transparent
+    );
   mask-composite: intersect;
 }
 
@@ -161,12 +189,6 @@
   @media (width < 22.5rem) {
     min-height: 2lh;
   }
-}
-
-/* A book's spine: its title runs down it, top to bottom, as on an English spine
-   (src/widgets/journey, the shelf). */
-@utility spine-text {
-  writing-mode: vertical-rl;
 }
 
 /* A section fades up as it scrolls in (src/shared/ui/reveal.tsx). Only where the browser has scroll

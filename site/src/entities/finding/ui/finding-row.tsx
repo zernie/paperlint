@@ -31,7 +31,7 @@ export function FindingRow({
     <Collapsible
       open={open}
       onOpenChange={setOpen}
-      className="grid grid-cols-1 gap-x-8 gap-y-2 border-t border-border py-8 sm:grid-cols-4 lg:grid-cols-1"
+      className="grid grid-cols-1 gap-x-8 gap-y-2 border-t border-border py-6 sm:grid-cols-4 lg:grid-cols-1"
     >
       <p
         className={
@@ -44,8 +44,8 @@ export function FindingRow({
       </p>
       <div className="sm:col-span-3 lg:col-span-1">
         <h3 className="font-display text-subtitle text-foreground">{title}</h3>
-        <p className="mt-3 max-w-prose text-body text-copy">{plain}</p>
-        <CollapsibleTrigger className="mt-4 text-sm text-muted-foreground underline decoration-border underline-offset-4 transition-colors hover:text-foreground">
+        <p className="mt-2 max-w-prose text-body text-copy">{plain}</p>
+        <CollapsibleTrigger className="mt-3 text-sm text-muted-foreground underline decoration-border underline-offset-4 transition-colors hover:text-foreground">
           {open ? "Hide what the terminal says" : "Show what the terminal says"}
         </CollapsibleTrigger>
         <CollapsibleContent className="mt-3 overflow-x-auto rounded-md bg-card px-4 py-3 font-mono text-code text-copy">

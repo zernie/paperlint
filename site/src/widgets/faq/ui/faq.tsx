@@ -11,7 +11,7 @@ import {
 } from "@/shared/ui/accordion";
 import { Term } from "@/shared/ui/hint";
 import { Reveal } from "@/shared/ui/reveal";
-import { SectionHeading } from "@/shared/ui/section-heading";
+import { Rubric, SectionHeading } from "@/shared/ui/section-heading";
 
 export interface Step {
   readonly command: string;
@@ -108,14 +108,17 @@ export function Faq({
     },
   ];
   return (
-    <section data-test="faq" className="bg-stone py-24 md:py-32">
-      <Reveal className="mx-auto grid max-w-page grid-cols-1 gap-x-8 gap-y-10 px-6 md:px-8 lg:grid-cols-12">
-        <SectionHeading label="Get started" id="get-started">
-          Before you install.
-        </SectionHeading>
+    <section data-test="faq" className="py-band">
+      <Reveal className="mx-auto grid max-w-page grid-cols-1 gap-x-8 gap-y-12 px-6 md:px-8 lg:grid-cols-12">
+        <div className="lg:col-span-12">
+          <Rubric n="03" name="Questions" deck="Get started" />
+        </div>
+        <div className="lg:col-span-4">
+          <SectionHeading id="get-started">Before you install.</SectionHeading>
+        </div>
         <Accordion
           type="multiple"
-          className="border-b border-border lg:col-span-8"
+          className="border-b border-border lg:col-span-7 lg:col-start-6"
         >
           {questions.map(({ q, a }) => (
             <AccordionItem key={q} value={q} className="border-t border-border">

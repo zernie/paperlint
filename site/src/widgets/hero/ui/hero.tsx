@@ -1,87 +1,72 @@
 import Image from "next/image";
-import { CommandLine } from "@/features/copy-command";
 import { VenueCycle } from "@/features/cycle-venue";
-import type { Explained } from "@/entities/finding";
 import campus from "./campus.webp";
 
-/** The opening: who it is for, what it does and the first command, over the campus etching. */
+/** One short fact of the hero: a word in the serif in its own colour, over a small muted label. */
+export interface HeroFact {
+  readonly word: string;
+  readonly label: string;
+  readonly tone: "accent" | "sage" | "ink" | "sand";
+}
+
+const TONE: Readonly<Record<HeroFact["tone"], string>> = {
+  accent: "font-display text-title text-primary",
+  sage: "font-display text-title text-sage",
+  ink: "font-display text-title text-foreground",
+  sand: "font-display text-title text-sand-deep",
+};
+
+/**
+ * The opening, set as a magazine's first spread: the cover line, the promise in a short lead, four
+ * short facts, then the campus etching as the spread's plate with its caption. No command and no
+ * links: a reader scrolls to what it checks, and the commands wait in "How do I start?".
+ */
 export function Hero({
   venues,
-  install,
-  caption,
-  preview,
+  facts,
 }: {
   readonly venues: readonly string[];
-  /** The README's install commands, one per line; Copy joins them with `&&`. */
-  readonly install: readonly string[];
-  readonly caption: string;
-  /** The README's first lint output, in plain words: what a first check says. */
-  readonly preview: readonly Explained[];
+  /** Each backed by the repository (src/pages/home/model/facts.ts). */
+  readonly facts: readonly HeroFact[];
 }) {
   return (
-    <section id="top" className="relative isolate overflow-hidden">
-      <div className="mx-auto grid max-w-page grid-cols-1 gap-x-8 gap-y-16 px-6 pt-16 md:px-8 md:pt-24 lg:grid-cols-12 lg:pt-hero">
-        <div className="lg:col-span-7">
-          <h1 className="font-display text-display text-foreground">
-            Writing a paper for <VenueCycle names={venues} />
-          </h1>
-          <p className="mt-8 max-w-prose text-lead text-copy">
-            paperlint checks your LaTeX paper and its PDF against your
-            venue&apos;s rules before peer review, and tells you in plain words
-            what could get the paper sent back.
-          </p>
-          <div className="mt-10 max-w-xl">
-            <CommandLine lines={install} caption={caption} />
-            <p className="mt-4 text-sm text-muted-foreground">
-              Free and open source · MIT licence ·{" "}
-              <a
-                href="#journey"
-                className="underline decoration-border underline-offset-4 hover:text-foreground"
-              >
-                How it works
-              </a>
-            </p>
-          </div>
-        </div>
-        <aside className="self-end rounded-md border border-border bg-surface p-8 lg:col-span-5">
-          <p className="text-label font-medium text-muted-foreground uppercase">
-            What a first check says
-          </p>
-          <ul className="mt-4">
-            {preview.map((f) => (
-              <li
-                key={f.title}
-                className="border-t border-border py-4 first:border-t-0"
-              >
-                <p
-                  className={
-                    f.level === "warning"
-                      ? "text-label font-medium text-warn uppercase"
-                      : "text-label font-medium text-error uppercase"
-                  }
-                >
-                  {f.level === "warning" ? "Advice" : "Must fix"}
-                </p>
-                <p className="mt-1 font-display text-subtitle text-foreground">
-                  {f.title}
-                </p>
-                <p className="mt-1 text-sm text-copy">{f.plain}</p>
-              </li>
-            ))}
-          </ul>
-        </aside>
+    <section id="top" data-test="hero" className="pb-band">
+      <div className="mx-auto max-w-page px-6 pt-16 md:px-8 md:pt-24">
+        <h1 className="max-w-cover font-display text-cover text-foreground">
+          Writing a paper for <VenueCycle names={venues} />
+        </h1>
+        <p className="mt-8 max-w-measure text-lead text-copy">
+          paperlint checks your LaTeX paper and its PDF against your
+          venue&apos;s rules before peer review, and tells you in plain words
+          what could get the paper sent back.
+        </p>
+        <ul
+          data-test="facts"
+          className="mt-16 grid max-w-cover grid-cols-2 gap-8 md:grid-cols-4"
+        >
+          {facts.map((f) => (
+            <li key={f.word}>
+              <p className={TONE[f.tone]}>{f.word}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{f.label}</p>
+            </li>
+          ))}
+        </ul>
       </div>
-      {/* Decorative: an invented campus (site/CLAUDE.md, "Campus Not A Landmark"), a full-width band
-          under the text, faded into the paper on every edge so no rectangle shows and no text sits
-          on the drawing. */}
-      <Image
-        src={campus}
-        alt=""
-        aria-hidden
-        priority
-        sizes="100vw"
-        className="pointer-events-none -z-1 -mt-16 h-campus w-full mask-campus object-cover object-bottom"
-      />
+
+      {/* The spread's plate: an invented campus (site/CLAUDE.md, "Campus Not A Landmark"), wide,
+          cropped to its arcades, its edges dissolving into the paper, with its caption under it. */}
+      <figure className="mx-auto mt-16 max-w-wide px-6 md:px-8">
+        <Image
+          src={campus}
+          alt="An ink and wash etching of an invented campus: sandstone arcades, red tile roofs and palms around a dry lawn."
+          priority
+          sizes="(min-width: 84rem) 84rem, 100vw"
+          className="aspect-plate w-full mask-plate object-cover object-bottom"
+        />
+        <figcaption className="mx-auto mt-4 max-w-page text-label font-medium text-muted-foreground uppercase md:px-8">
+          Plate I — an invented campus, ink and wash
+        </figcaption>
+      </figure>
     </section>
   );
 }

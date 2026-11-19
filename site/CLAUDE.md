@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:57bb7d651c2f1571 compiled from site/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:debd0abac0d0cdee compiled from site/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -33,15 +33,19 @@ design below was decided with the author on 2026-11-19, over three rounds of moc
 
 ### Type And Colour
 
-**Guidance only** — Palette follows zernie.com: paper #faf9f5, ink #181816, the ink-blue accent #305e8b; terracotta #c15f3c only for an error. Each section sits on its own ground, as on zernie.com, so the page reads as distinct parts: paper, sand #ead9b9 for a call-out, stone #f2f1ec for a quiet part, night #1c1c1a with light text; a section's label follows a small square marker. The author asked for this contrast on 2026-11-19. Newsreader (optical sizes, its italic for the venue name) for headings, Inter for body text and UI, JetBrains Mono for code, all through next/font, which downloads them at build time and serves them from this site. The author chose Newsreader over Source Serif 4, Literata and Instrument Serif from a side-by-side sheet on 2026-11-19; a font change is shown side by side first.
+**Guidance only** — Palette follows zernie.com: paper #faf9f5, ink #181816, the ink-blue accent #305e8b; terracotta #c15f3c only for an error. Each section sits on its own ground, as on zernie.com, so the page reads as distinct parts: paper, sand #ead9b9 for a call-out, stone #f2f1ec for a quiet part; a section's label follows a small square marker. The author asked for this contrast on 2026-11-19, and for it to stay soft: grounds, hairlines and space, never a dark band ('terrifying'; 'I like zen'). Newsreader (optical sizes, its italic for the venue name) for headings, Inter for body text and UI, JetBrains Mono for code, all through next/font, which downloads them at build time and serves them from this site. The author chose Newsreader over Source Serif 4, Literata and Instrument Serif from a side-by-side sheet on 2026-11-19; a font change is shown side by side first.
 
 ### The Journey
 
-**Guidance only** — The four checks are four stops on one road, each with its own real example: desk-reject checks, folder structure, measurements, prose, in that order (the default set first, the opt-in last). The road is a stepper: across the page from a tablet up, a click on a stop opens its panel; down the page on a phone, each stop opening in place. One stop is open at a time. They are never collapsed back into one plain list.
+**Guidance only** — The four checks are four stops on one road, each with its own real example: desk-reject checks, folder structure, measurements, prose, in that order (the default set first, the opt-in last). From a tablet up, a table of contents of the four stops on the left (large serif numerals, the open one in ink with its numeral in the accent, the others muted) and the open stop's plate on the right, a white sheet with a hairline edge and no shadow; a click on an entry opens its plate. On a phone, each stop opens in place down the page. One stop is open at a time. They are never collapsed back into one plain list. The section is calm, 'zen' in the author's word, on the quiet stone ground: no dark band (the author chose this on 2026-11-19, over a near-black index and a shelf of book spines).
 
 ### A Short Page
 
 **Guidance only** — The page is about four screens on a desktop: hero, the road, the venues, the questions, the footer. Everything past the first look is folded: a stop's panel, the exact terminal output, a venue's limits, each question's answer, a term's meaning (dotted underline, opens on hover or tap). The author asked for this on 2026-11-19, when the page measured 11 screens; a section that adds a screen needs a screenshot and the author's yes.
+
+### Subtract First
+
+**Guidance only** — Every element earns its place: nothing is added that the reader did not need, such as a strip, an extra link or a repeated label. A change subtracts first and adds only what is missing. The author asked for this on 2026-11-19, after a masthead strip, two hero links and an install block crowded the hero and the hero repeated the first checkpoint's findings.
 
 ### Campus Not A Landmark
 
@@ -77,7 +81,7 @@ design below was decided with the author on 2026-11-19, over three rounds of moc
 
 ### Tasteful Motion
 
-**Guidance only** — Animation is quiet and short: elements fade and rise into place as they scroll in, the venue name changes, the road draws itself. Nothing loops for attention, nothing bounces, and everything stops for a reader who asks for reduced motion.
+**Guidance only** — Animation is quiet and short: elements fade and rise into place as they scroll in, the venue name changes, a checkpoint's plate fades in. Nothing loops for attention, nothing bounces, and everything stops for a reader who asks for reduced motion.
 
 ### Production From Main Previews On Request
 

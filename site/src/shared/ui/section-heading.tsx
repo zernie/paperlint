@@ -1,61 +1,51 @@
 import type { ReactNode } from "react";
 
-/**
- * A section's label, after a small square marker as on zernie.com, set uppercase. On night the
- * marker is sand and the label light; elsewhere the marker is the accent.
- */
-export function SectionLabel({
-  children,
-  night = false,
-}: {
-  readonly children: ReactNode;
-  readonly night?: boolean;
-}) {
+/** A small, letter-spaced label: a field's name, a caption, a note's title. */
+export function SectionLabel({ children }: { readonly children: ReactNode }) {
   return (
-    <p
-      className={
-        night
-          ? "flex items-center gap-3 text-label font-medium text-on-ink-muted uppercase"
-          : "flex items-center gap-3 text-label font-medium text-muted-foreground uppercase"
-      }
-    >
-      <span
-        aria-hidden
-        className={
-          night ? "size-2 shrink-0 bg-sand" : "size-2 shrink-0 bg-primary"
-        }
-      />
+    <p className="text-label font-medium text-muted-foreground uppercase">
       {children}
     </p>
   );
 }
 
-/** A section's label and headline, set in the grid's first eight columns. */
-export function SectionHeading({
-  label,
-  children,
-  id,
-  night = false,
+/**
+ * A section's rubric, as in a magazine: a thin rule across the page, the section's number and name
+ * on the left, and a short deck on the right from a tablet up.
+ */
+export function Rubric({
+  n,
+  name,
+  deck,
 }: {
-  readonly label: string;
-  readonly children: ReactNode;
-  readonly id?: string;
-  /** Set on the night band: light text, a sand marker. */
-  readonly night?: boolean;
+  readonly n: string;
+  readonly name: string;
+  readonly deck: string;
 }) {
   return (
-    <div className="lg:col-span-8">
-      <SectionLabel night={night}>{label}</SectionLabel>
-      <h2
-        id={id}
-        className={
-          night
-            ? "mt-4 scroll-mt-24 font-display text-display text-on-ink"
-            : "mt-4 scroll-mt-24 font-display text-display text-foreground"
-        }
-      >
-        {children}
-      </h2>
+    <div className="flex items-baseline justify-between gap-8 border-t border-foreground pt-4 text-label font-medium text-muted-foreground uppercase">
+      <p>
+        <span className="text-foreground">{n}</span> — {name}
+      </p>
+      <p className="hidden md:block">{deck}</p>
     </div>
+  );
+}
+
+/** A section's headline: the serif, large and light. */
+export function SectionHeading({
+  children,
+  id,
+}: {
+  readonly children: ReactNode;
+  readonly id?: string;
+}) {
+  return (
+    <h2
+      id={id}
+      className="scroll-mt-24 font-display text-display font-quiet text-foreground"
+    >
+      {children}
+    </h2>
   );
 }

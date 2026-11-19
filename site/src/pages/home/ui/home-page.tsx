@@ -6,6 +6,7 @@ import {
   prose,
   render,
   study,
+  type Explained,
   type Finding,
 } from "@/entities/finding";
 import {
@@ -14,6 +15,7 @@ import {
   readmeContent,
   headlineVenues,
   presetName,
+  venueCount,
   venueGrid,
 } from "@/shared/lib/readme";
 import { glossary } from "@/shared/config";
@@ -26,6 +28,7 @@ import { SiteHeader } from "@/widgets/site-header";
 import { Venues } from "@/widgets/venues";
 import { readRepo } from "../api/read-repo.ts";
 import { withCaption } from "../model/captions.ts";
+import { facts } from "../model/facts.ts";
 
 const README = readRepo("README.md");
 const readme = readmeContent(README);
@@ -46,26 +49,28 @@ const firstRun = readme.lintOutput
   .filter((l) => /^\s+\d+:\d+/.test(l))
   .map(explain);
 const install = readme.install.map(withCaption);
+const packageLicense = (
+  JSON.parse(readRepo("package.json")) as { readonly license: string }
+).license;
 const perPaper = fencedAfter(README, "Then check it:", "sh").map(withCaption);
 
-const Row = ({ f }: { readonly f: Finding }) => (
-  <FindingRow
-    level={f.level}
-    title={f.title}
-    plain={f.plain}
-    rule={f.rule}
-    raw={render(f)}
-  />
-);
+/** A finding of findings.ts, in the shape the README's explained lint lines have. */
+const asRow = (f: Finding): Explained => ({
+  rule: f.rule,
+  level: f.level,
+  title: f.title,
+  plain: f.plain,
+  raw: render(f),
+});
 
 const Example = ({
   file,
   code,
-  finding,
+  findings,
 }: {
   readonly file?: string;
   readonly code?: React.ReactNode;
-  readonly finding: Finding;
+  readonly findings: readonly Explained[];
 }) => (
   <div className="flex flex-col gap-6">
     {file === undefined ? null : (
@@ -77,7 +82,16 @@ const Example = ({
       </div>
     )}
     <div className="border-b border-border">
-      <Row f={finding} />
+      {findings.map((f) => (
+        <FindingRow
+          key={f.title}
+          level={f.level}
+          title={f.title}
+          plain={f.plain}
+          rule={f.rule}
+          raw={f.raw}
+        />
+      ))}
     </div>
   </div>
 );
@@ -87,19 +101,18 @@ const stops: readonly Stop[] = [
     n: "01",
     short: "Desk reject",
     when: "Before you submit",
-    title: "What gets a paper sent back",
+    title: "The venue's hard rules",
     text: (
       <>
-        The page limit for your kind of paper, the venue&apos;s template, fonts,
-        page size and columns, a required section, and your name in a{" "}
-        <Term means={glossary.doubleBlind}>double-blind</Term> PDF: the usual
-        reasons for a <Term means={glossary.deskReject}>desk reject</Term>.
-        Build the PDF once, and every check reads it.
+        The page limit for your kind of paper, the template, fonts, page size
+        and columns, a required section, and no author names in a{" "}
+        <Term means={glossary.doubleBlind}>double-blind</Term> PDF. One build,
+        and every check reads it.
       </>
     ),
     badge: "On by default",
     on: true,
-    example: <Example finding={pageLimit} />,
+    example: <Example findings={[...firstRun, asRow(pageLimit)]} />,
   },
   {
     n: "02",
@@ -128,7 +141,7 @@ const stops: readonly Stop[] = [
             </div>
           </>
         }
-        finding={folder}
+        findings={[asRow(folder)]}
       />
     ),
   },
@@ -144,7 +157,7 @@ const stops: readonly Stop[] = [
       <Example
         file="repro/studies.json"
         code={`{ "id": "P1-S01",\n  "title": "Baseline pass rate",\n  "status": "running",\n  "plan": "plan.json" }`}
-        finding={study}
+        findings={[asRow(study)]}
       />
     ),
   },
@@ -160,7 +173,7 @@ const stops: readonly Stop[] = [
       <Example
         file="paperlint.json"
         code={`{ "rules": { "paperlint:writing": "warn" } }`}
-        finding={prose}
+        findings={[asRow(prose)]}
       />
     ),
   },
@@ -174,9 +187,7 @@ export function HomePage() {
       <main>
         <Hero
           venues={venueNames}
-          install={readme.install}
-          preview={firstRun}
-          caption="Paste into a terminal, in your project's folder."
+          facts={facts(venueCount(venues), packageLicense)}
         />
         <Journey stops={stops} />
         <Venues grid={venues} />

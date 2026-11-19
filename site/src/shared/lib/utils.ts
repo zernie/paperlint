@@ -9,6 +9,7 @@ import { createCn } from "cn/config";
 export const themeTokens = {
   text: [
     "hero",
+    "cover",
     "display",
     "title",
     "numeral",
@@ -18,8 +19,8 @@ export const themeTokens = {
     "label",
     "code",
   ],
-  spacing: ["hero", "campus", "section"],
-  container: ["page", "prose"],
+  spacing: ["hero", "band", "section"],
+  container: ["page", "prose", "measure", "wide", "cover"],
 } as const;
 
 /** shadcn's class merger: later classes win over earlier ones of the same group. */
