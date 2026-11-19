@@ -249,14 +249,14 @@ rmSync(tmp, { recursive: true, force: true });
 // ── 5. the parser's tolerances: an optional block left out, and Ajv's optional fields ───
 {
   const bare = R.parsePreset(
-    '{ "type": "venue", "name": "X", "url": "https://x.org/", "extends": "paperlint:aisec" }',
+    '{ "type": "venue", "name": "X", "url": "https://x.org/", "extends": "paperlint:aisec-2026" }',
     "bare.jsonc",
     VENUES,
   );
   check(
     "a preset that only extends another: no tex block, `rules` an empty object",
     JSON.stringify([bare.extends, bare.tex, bare.rules]) ===
-      '["paperlint:aisec",null,{}]',
+      '["paperlint:aisec-2026",null,{}]',
     bare,
   );
   // Guards: `packages` is read without a fallback because the schema refuses a tex block

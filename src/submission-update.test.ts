@@ -173,7 +173,7 @@ test("update: no PDF to send, or no abstract file, is refused before the portal 
 
 /** A paper of kind `short` (6 body pages) at a venue over AIDC, not blind, built 8 body pages long. */
 const OVER = files({
-  venue: { extends: "paperlint:aidc", blind: false },
+  venue: { extends: "paperlint:aidc-2026", blind: false },
   paper: { extends: "../../venue.jsonc", kind: "short", submission: { id: 7 } },
   facts: facts({ body: 8 }),
 });

@@ -19,7 +19,7 @@ consistent history:
   date typed wrong or an AoE day miscounted.
 
 - **a portal reading the venue's preset already carries.** A cycle whose venue is a preset derives
-  the portal's readings from it (`presets/msr.jsonc` carries MSR's); the same reading typed into the
+  the portal's readings from it (`presets/msr-2027.jsonc` carries MSR's); the same reading typed into the
   paper is a second copy, and it goes stale the day paperlint updates the preset.
 
 The structural problems of the record — a bare date where an instant is needed, two open cycles, an
@@ -89,11 +89,11 @@ papers/my-paper/PIPELINE-STATUS.md
               cycle/record
 ```
 
-Failing — a cycle at `paperlint:msr` that copies the portal's reading the preset carries:
+Failing — a cycle at `paperlint:msr-2027` that copies the portal's reading the preset carries:
 
 ```text
   1:1  error  paperlint.json, cycle «msr-2027»: the "submission" deadline records a portal reading,
-              and the preset paperlint:msr carries it (2026-10-21T11:59:59Z, the portal's reading on
+              and the preset paperlint:msr-2027 carries it (2026-10-21T11:59:59Z, the portal's reading on
               2026-10-19 from https://msr2027.hotcrp.com/deadlines — venues move dates: re-check there
               before relying on it) — a second copy drifts when paperlint updates the preset: delete this
               one (the call's reading and an override stay)  cycle/record
@@ -102,7 +102,7 @@ Failing — a cycle at `paperlint:msr` that copies the portal's reading the pres
 Passing:
 
 - the first record with the registration on `2026-10-20 AoE`;
-- a cycle at `paperlint:msr` recording the call's abstract day as `registration` (`2026-10-20 AoE`)
+- a cycle at `paperlint:msr-2027` recording the call's abstract day as `registration` (`2026-10-20 AoE`)
   and its paper day as `submission` (`2026-10-23 AoE`): the preset's portal `submission`
   (`2026-10-21T11:59:59Z`, the end of the abstract day AoE) binds, and is not a contradiction;
 - a cycle with no `deadlines` at all;

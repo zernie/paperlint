@@ -21,7 +21,7 @@
 // So `compsoc` changes the text block and the headings, and nothing the `pdf/*` rules judge: page
 // size, columns, body size and fonts are identical. One family is enough; a venue that requires
 // `compsoc` names it in its own `template` (tex/template checks it) and its own text block (see
-// aidc.jsonc). The planted defects fail as they should, measured on the same compsoc paper:
+// aidc-2026.jsonc). The planted defects fail as they should, measured on the same compsoc paper:
 //   `a4paper` added to the options        → page 8.264 x 11.694 in: pdf/geometry
 //   Computer Modern (`\rmdefault{cmr}`)   → fonts CMR10, CMBX12, …: pdf/fonts, no NimbusRomNo9L
 //

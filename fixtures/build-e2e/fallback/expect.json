@@ -9,7 +9,7 @@
   },
   "lint": {
     "paperlintJson": {
-      "extends": "paperlint:agenticdev",
+      "extends": "paperlint:agenticdev-2026",
       "kind": "short"
     },
     "exit": 1,

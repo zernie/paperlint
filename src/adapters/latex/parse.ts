@@ -122,6 +122,20 @@ export const KEY_ARGUMENT: ReadonlyMap<string, number> = new Map([
 const LINK_SIGNATURES = Object.fromEntries(signed(["href"], "m m"));
 
 /**
+ * The commands that state the paper's venue, by template: acmart's `\\acmConference[short]{name}{date}{place}`
+ * and `\\acmBooktitle{…}`, the older ACM classes' `\\conferenceinfo{name}{place}`, and IEEEtran's
+ * `\\IEEEpubid{…}` (the conference's copyright line). ACL's template has none. Signed so their
+ * arguments attach to them, and `tex/venue-leftover` can tell a name inside one from prose.
+ */
+export const VENUE_LINE_SIGNATURES: Readonly<
+  Record<string, { readonly signature: string }>
+> = Object.fromEntries([
+  ...signed(["acmConference"], "o m m m"),
+  ...signed(["acmBooktitle", "IEEEpubid"], "m"),
+  ...signed(["conferenceinfo"], "m m"),
+]);
+
+/**
  * Declarations unified-latex has no signature for: signed so their arguments (sizes, not text)
  * attach to them instead of standing beside them as groups a reader would seem to see.
  */
@@ -182,6 +196,7 @@ const parser = once(() =>
     macros: {
       ...KEY_SIGNATURES,
       ...LINK_SIGNATURES,
+      ...VENUE_LINE_SIGNATURES,
       ...DECLARATION_SIGNATURES,
       ...DEF_SIGNATURES,
       ...CAPTION_SIGNATURES,

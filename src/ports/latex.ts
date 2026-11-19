@@ -12,6 +12,7 @@ import type {
   LayoutOverride,
   Outline,
   Passage,
+  Place,
   Span,
   TextRun,
   TitledHeading,
@@ -58,6 +59,11 @@ export interface LatexReader {
   readonly headings: (src: string) => readonly TitledHeading[];
   /** The text a reader sees: prose, the author block, footnotes — not comments, keys, math, code. */
   readonly renderedRuns: (src: string) => readonly TextRun[];
+  /**
+   * Where the source states its venue: each `\\acmConference`, `\\acmBooktitle`, `\\conferenceinfo`
+   * and `\\IEEEpubid` with its arguments, in source order — never one in a comment.
+   */
+  readonly venueLines: (src: string) => readonly Place[];
   /**
    * The body's prose, as passages a sentence cannot cross: from the start of the document (the
    * abstract included) to the appendix or the bibliography, without headings, captions, floats,

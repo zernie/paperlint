@@ -48,7 +48,7 @@ const CORPUS = join(ROOT, "fixtures", "accepted-papers");
 /** The AIDC preset, resolved as a paper extending it would resolve it. */
 const aidc = (() => {
   const r = resolvePreset(
-    "paperlint:aidc",
+    "paperlint:aidc-2026",
     join(ROOT, "papers", "p", "paperlint.json"),
     { files: nodeFiles, venuesDir: presetsDir() },
   );
@@ -356,7 +356,7 @@ describe("the rules, as ESLint calls them", () => {
     file = "paper.tex",
   ): string[] => {
     const dir = writeTree(useTempDir("paperlint-register-bands-"), {
-      "paperlint.json": JSON.stringify({ extends: "paperlint:aidc" }),
+      "paperlint.json": JSON.stringify({ extends: "paperlint:aidc-2026" }),
     });
     const seen: string[] = [];
     const deps = {

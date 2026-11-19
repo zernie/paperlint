@@ -9,7 +9,7 @@
       {
         "rule": "format/page-limit",
         "severity": 2,
-        "says": ["body pages: 21, over the limit 18 for FSE 2027/research"]
+        "says": ["body pages: 21, over the limit 18 for FSE/research"]
       }
     ]
   }

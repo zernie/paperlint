@@ -44,14 +44,14 @@ const decision = (kind: string, date: string) => ({
 const CYCLES = [
   {
     id: "workshop-2026",
-    venue: { kind: "preset", extends: "paperlint:agenticdev" },
+    venue: { kind: "preset", extends: "paperlint:agenticdev-2026" },
     opened: "2026-03-01",
     submission: { id: 3 },
     outcome: decision("accepted", "2026-05-01"),
   },
   {
     id: "conf-2026",
-    venue: { kind: "preset", extends: "paperlint:aisec" },
+    venue: { kind: "preset", extends: "paperlint:aisec-2026" },
     opened: "2026-06-01",
     submission: { id: 11 },
     outcome: decision("rejected", "2026-09-08"),

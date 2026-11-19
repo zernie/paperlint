@@ -87,7 +87,7 @@ rank = archival-weight × topic-fit × accept-probability × deadline-feasibilit
   (\`paperlint:acm-sigconf\`) or the project's own \`./venues/<name>.jsonc\`; the \`pdf/*\` rules then
   check the built PDF against its page limit and format.
 - the venue cards, \`presets/<venue>.md\` in the paperlint package beside each venue preset (e.g.
-  \`agenticdev.md\`, \`aisec.md\`) — the winner gets a card with its HotCRP quirks beside its preset;
+  \`agenticdev-2026.md\`, \`aisec-2026.md\`) — the winner gets a card with its HotCRP quirks beside its preset;
   for a venue with no shipped preset, the project's own \`./venues/<name>.md\` beside its
   \`./venues/<name>.jsonc\`. Plain data, not a new skill. That \`./venues/\` is not the venue's corpus
   of accepted papers, \`<papers-root>/venues/<venue>/\` (\`study-accepted-papers\`): the three places are

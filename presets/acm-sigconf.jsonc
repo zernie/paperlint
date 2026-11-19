@@ -72,7 +72,7 @@
     // «text height must not exceed 23.5 cm»
     "textblock_h_in": 9.252,
     // Last-page balance is NOT a format field: it is the optional rule pdf/last-page-balance, which
-    // a VENUE preset turns on in its `rules` when its producer asks (see agenticdev.jsonc).
+    // a VENUE preset turns on in its `rules` when its producer asks (see agenticdev-2026.jsonc).
 
     "columns": 2,
 
