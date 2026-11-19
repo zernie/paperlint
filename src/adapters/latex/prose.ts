@@ -380,10 +380,26 @@ const isBreak = (n: Node): n is NodeOf<"parbreak" | "verbatim"> =>
 const isSilent = (n: Node): n is NodeOf<"comment" | "verb" | "root"> =>
   n.type === "comment" || n.type === "verb" || n.type === "root";
 
+/** Whether a comment follows a space TeX keeps: written before a trailing `%`, or the line break before an own-line one. */
+const followsSpace = (n: NodeOf<"comment">): boolean =>
+  n.leadingWhitespace === true || n.sameline === false;
+
+/**
+ * What a node that holds no prose typesets: a verbatim span and the root nothing, a comment — which
+ * eats the rest of its line, never the space TeX keeps before it — that space. The parser folds the
+ * space written before a trailing `%` into the comment as `leadingWhitespace`, and drops the line
+ * break before an own-line comment (`sameline` is false). A comment glued to the word before it
+ * (`four.% note`) leaves none. The text inside a comment is never prose.
+ */
+const silentEvents = (
+  n: NodeOf<"comment" | "verb" | "root">,
+): readonly Event[] =>
+  n.type === "comment" && followsSpace(n) ? textAt(n, " ") : [];
+
 function nodeEvents(t: ParsedTex, n: Node): readonly Event[] {
   if (isMath(n)) return math(t, n);
   if (isBreak(n)) return [BREAK];
-  if (isSilent(n)) return [];
+  if (isSilent(n)) return silentEvents(n);
   switch (n.type) {
     case "string":
       return textAt(n, stringText(n.content));

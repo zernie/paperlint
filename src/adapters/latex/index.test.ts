@@ -511,6 +511,47 @@ describe("bodyProse — passages a sentence cannot cross, with the marks that sa
   });
 });
 
+describe("bodyProse — the space a % comment leaves, which TeX keeps", () => {
+  /** The text of the body's one passage, marks and math left out, spaces as TeX leaves them. */
+  const typeset = (src: string): string =>
+    bodyProse(parseLatex(src))
+      .flatMap((p) =>
+        p.pieces.map((x) => (x.kind === "text" ? x.segment.text : "")),
+      )
+      .join("");
+
+  it("🔴 an own-line comment between two sentences leaves the space the line break made", () => {
+    expect(typeset("First four.\n%\nSecond four.")).toBe(
+      "First four. Second four.",
+    );
+    expect(typeset("First four.\n% note\nSecond four.")).toBe(
+      "First four. Second four.",
+    );
+  });
+
+  it("🔴 a trailing comment leaves the space TeX keeps, with or without a space before the `%`", () => {
+    expect(typeset("First four. % note\nSecond four.")).toBe(
+      "First four. Second four.",
+    );
+    expect(typeset("First four.\n% note\nSecond four.")).toBe(
+      "First four. Second four.",
+    );
+  });
+
+  it("a comment glued to the word before it leaves no space: TeX sets `four.Second`", () => {
+    expect(typeset("First four.% note\nSecond four.")).toBe(
+      "First four.Second four.",
+    );
+    expect(typeset("a%\nb")).toBe("ab");
+  });
+
+  it("the text inside a comment is not prose, whichever way the comment stands", () => {
+    expect(typeset("A. % hidden words\nB.\n% more hidden\nC.")).toBe(
+      "A. B. C.",
+    );
+  });
+});
+
 describe("bodyProse — run-in headings and list items", () => {
   /** The text of each passage of `src`'s body, marks and math left out. */
   const texts = (src: string): readonly string[] =>

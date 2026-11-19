@@ -218,14 +218,14 @@ const negationStanding = (a: RegisterAnchor): string => {
 };
 
 describe("tex/negated-sentences: AIDC's band from the same five ACSAC papers", () => {
-  it("🔴 the band is the anchors' 5.3–17.8%, widened to 3.0–21.8%", () => {
+  it("🔴 the band is the anchors' 5.2–17.8%, widened to 2.9–21.8%", () => {
     const band = negationBandOf(aidc.registerAnchors);
     expect(
       band &&
         [band.anchorMin, band.anchorMax, band.min, band.max].map((x) =>
           x.toFixed(1),
         ),
-    ).toEqual(["5.3", "17.8", "3.0", "21.8"]);
+    ).toEqual(["5.2", "17.8", "2.9", "21.8"]);
   });
 
   it.each(ACSAC)(

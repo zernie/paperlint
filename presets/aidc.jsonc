@@ -89,43 +89,43 @@
   //   relation markers  anchors 39.4–112.8  band 25.4–135.0
   // and, as a percent of the body's sentences (tex/negated-sentences). All four rules are off by
   // default and judge these bands only when a paper turns on the set paperlint:writing:
-  //   negated sentences anchors 5.3–17.8%   band 3.0–21.8%
+  //   negated sentences anchors 5.2–17.8%   band 2.9–21.8%
   "register": {
     "anchors": [
       {
         "paper": "barovox-acsac24",
-        "words": 7670,
+        "words": 7672,
         "contrast_frames": 1,
         "claim_emphasis": 8,
         "relation_markers": 31,
-        "sentences": 400,
+        "sentences": 402,
         "negated_sentences": 21,
       },
       {
         "paper": "leaking-queries-acsac25",
-        "words": 9133,
+        "words": 9166,
         "contrast_frames": 5,
         "claim_emphasis": 0,
         "relation_markers": 103,
-        "sentences": 441,
-        "negated_sentences": 36,
+        "sentences": 474,
+        "negated_sentences": 38,
       },
       {
         "paper": "llm-splained-acsac25",
-        "words": 9529,
+        "words": 9538,
         "contrast_frames": 4,
         "claim_emphasis": 1,
         "relation_markers": 84,
-        "sentences": 454,
-        "negated_sentences": 81,
+        "sentences": 460,
+        "negated_sentences": 82,
       },
       {
         "paper": "rr-dataset-quality-acsac24",
-        "words": 8130,
+        "words": 8133,
         "contrast_frames": 3,
         "claim_emphasis": 0,
         "relation_markers": 32,
-        "sentences": 368,
+        "sentences": 371,
         "negated_sentences": 26,
       },
       {
