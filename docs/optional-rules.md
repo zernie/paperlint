@@ -14,24 +14,29 @@ paper's own file still has the last word for that paper.
 What is on by default is what the venue decides, what gets a paper desk-rejected or breaks its
 build, and what holds for every paper. The rules that flag the **writing** — a typography
 preference, a register or provenance proxy, a length cap — are off, and grouped in one named set,
-turned on in one line, in the root `paperlint.json` (every paper) or in a paper's own:
+turned on in one line, in the root `paperlint.json` (every paper) or in a paper's own. That
+includes the register bands on a preset with anchors (AIDC): the anchors are other papers'
+writing, not a number the venue states.
 
 ```json
 { "rules": { "paperlint:writing": "warn" } }
 ```
 
-| rule                                                              | what it flags                                                                                            |
-| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `paper/section-word`                                              | `§` instead of the word Section — `--fix` writes it                                                      |
-| `paper/leading-zero`                                              | `.05` instead of `0.05` — `--fix` inserts the zero                                                       |
-| `paper/figure-ref-style`                                          | `Fig.~\ref` and `Figure~\ref` mixed — `--fix` writes the majority                                        |
-| [`tex/claim-provenance`](rules/tex/claim-provenance.md)           | a number in the body that does not say whose it is                                                       |
-| [`tex/register`](rules/tex/register.md)                           | sentences opening with And, So, But … above the accepted papers' rate                                    |
-| [`tex/negated-sentences`](rules/tex/negated-sentences.md)         | negated sentences outside the band of the venue preset's anchors (AIDC); silent on a preset without them |
-| [`tex/max-paragraph-words`](rules/tex/max-paragraph-words.md)     | a paragraph over 150 words                                                                               |
-| [`tex/max-paragraph-numbers`](rules/tex/max-paragraph-numbers.md) | a paragraph holding more than 8 numbers                                                                  |
-| [`tex/max-sentence-words`](rules/tex/max-sentence-words.md)       | a sentence over 55 words                                                                                 |
-| [`tex/max-caption-words`](rules/tex/max-caption-words.md)         | a caption over 100 words, or a caption sentence over 40                                                  |
+| rule                                                              | what it flags                                                                                                                        |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `paper/section-word`                                              | `§` instead of the word Section — `--fix` writes it                                                                                  |
+| `paper/leading-zero`                                              | `.05` instead of `0.05` — `--fix` inserts the zero                                                                                   |
+| `paper/figure-ref-style`                                          | `Fig.~\ref` and `Figure~\ref` mixed — `--fix` writes the majority                                                                    |
+| [`tex/claim-provenance`](rules/tex/claim-provenance.md)           | a number in the body that does not say whose it is                                                                                   |
+| [`tex/register`](rules/tex/register.md)                           | sentences opening with And, So, But … above the accepted papers' rate                                                                |
+| [`tex/contrast-frames`](rules/tex/contrast-frames.md)             | contrast frames (_X, not Y_, _rather than_ …) outside the band of the venue preset's anchors (AIDC); silent on a preset without them |
+| [`tex/claim-emphasis`](rules/tex/claim-emphasis.md)               | claims set in bold inside a sentence outside that band                                                                               |
+| [`tex/relation-markers`](rules/tex/relation-markers.md)           | words naming how a sentence relates to the one before (_because_, _however_ …) outside that band                                     |
+| [`tex/negated-sentences`](rules/tex/negated-sentences.md)         | negated sentences outside that band                                                                                                  |
+| [`tex/max-paragraph-words`](rules/tex/max-paragraph-words.md)     | a paragraph over 150 words                                                                                                           |
+| [`tex/max-paragraph-numbers`](rules/tex/max-paragraph-numbers.md) | a paragraph holding more than 8 numbers                                                                                              |
+| [`tex/max-sentence-words`](rules/tex/max-sentence-words.md)       | a sentence over 55 words                                                                                                             |
+| [`tex/max-caption-words`](rules/tex/max-caption-words.md)         | a caption over 100 words, or a caption sentence over 40                                                                              |
 
 - **The set's name stands for its rules, where it is written**, each at the set's severity with its
   own default options. A later entry wins, as in ESLint:

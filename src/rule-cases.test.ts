@@ -491,6 +491,15 @@ const blind = (body: string, cls = IEEE) =>
     tex(`\\section{Introduction}\n${body}\n${STATEMENT}`, cls),
     BLIND_PAPER,
   );
+/** A BlindConf paper that turns the writing set on: the register bands are in it, off by default. */
+const blindWriting = (body: string) =>
+  paper(tex(`\\section{Introduction}\n${body}\n${STATEMENT}`, IEEE), {
+    ...BLIND_PAPER,
+    [`${P}/paperlint.json`]: JSON.stringify({
+      extends: "./blindconf.jsonc",
+      rules: { "paperlint:writing": "warn" },
+    }),
+  });
 /** A BlindConf paper that turns `tex/negated-sentences` on, which is off by default. */
 const blindNegation = (body: string) =>
   paper(tex(`\\section{Introduction}\n${body}\n${STATEMENT}`, IEEE), {
@@ -1399,31 +1408,39 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     },
     silent: paper(tex(GATE_DEFINED), TERMS_ON),
   },
-  // The three register bands judge a body against the anchor of BlindConf's preset; the body opens
-  // on line 3, right after the \\section, where the finding about the whole body stands.
+  // The three register bands judge a body against the anchor of BlindConf's preset, with the
+  // writing set on (they are off by default); the body opens on line 3, right after the \\section,
+  // where the finding about the whole body stands.
   "tex/contrast-frames": {
     reports: {
-      tree: blind(formalWith(5, "It reads the word, not the operation.")),
+      tree: blindWriting(
+        formalWith(5, "It reads the word, not the operation."),
+      ),
       file: TEX_FILE,
       severity: 1,
       line: 3,
     },
-    silent: blind(LINKED),
+    silent: blindWriting(LINKED),
   },
   "tex/claim-emphasis": {
     reports: {
-      tree: blind(
+      tree: blindWriting(
         formalWith(6, "We find that \\textbf{the rule counts 46 sentences}."),
       ),
       file: TEX_FILE,
       severity: 1,
       line: 3,
     },
-    silent: blind(LINKED),
+    silent: blindWriting(LINKED),
   },
   "tex/relation-markers": {
-    reports: { tree: blind(FORMAL), file: TEX_FILE, severity: 1, line: 3 },
-    silent: blind(LINKED),
+    reports: {
+      tree: blindWriting(FORMAL),
+      file: TEX_FILE,
+      severity: 1,
+      line: 3,
+    },
+    silent: blindWriting(LINKED),
   },
   // Off by default; on in this paper's paperlint.json. FORMAL holds no negator (0%, below 7.2%);
   // 25 negated sentences of 225 are 11.1%, inside the band.
@@ -1684,6 +1701,55 @@ describe("the writing set: off by default, one line turns it on", () => {
           rules: { "paperlint:writing": "warn" },
         }),
       }),
+    ).toEqual([]);
+  });
+});
+
+describe("the register bands are in the writing set, on AIDC too", () => {
+  /**
+   * A body against AIDC's real anchors (presets/aidc.jsonc, per 10,000 words): five contrast
+   * frames and six bold claims over about 2,900 words are above their bands (0–10.4, 0–17.8), and
+   * no relation marker is below 25.4.
+   */
+  const BODY = formalWith(
+    1,
+    `${Array.from({ length: 5 }, () => "It reads the word, not the operation.").join(" ")} ${Array.from({ length: 6 }, () => "We find that \\textbf{the rule counts 46 sentences}.").join(" ")}`,
+  );
+  const BANDS = [
+    "tex/contrast-frames",
+    "tex/claim-emphasis",
+    "tex/relation-markers",
+  ];
+  const onAidc = (
+    rules: Record<string, string> | null,
+    preset = "paperlint:aidc",
+  ) =>
+    paper(tex(`\\section{Introduction}\n${BODY}\n${STATEMENT}`, IEEE), {
+      [`${P}/paperlint.json`]: JSON.stringify({
+        extends: preset,
+        ...(rules ? { rules } : {}),
+      }),
+    });
+  const bands = async (tree: Record<string, string>) =>
+    (await lintTree(tree))
+      .map((m) => m.ruleId ?? "")
+      .filter((id) => BANDS.includes(id));
+
+  it("🔴 an AIDC paper whose preset carries the anchors gets no band finding without the set", async () => {
+    expect(await bands(onAidc(null))).toEqual([]);
+  });
+
+  it("the same paper with the set on gets all three", async () => {
+    expect(
+      new Set(await bands(onAidc({ "paperlint:writing": "warn" }))),
+    ).toEqual(new Set(BANDS));
+  });
+
+  it("with the set on, a preset that records no anchors (ieee-conference) gives them nothing to judge", async () => {
+    expect(
+      await bands(
+        onAidc({ "paperlint:writing": "warn" }, "paperlint:ieee-conference"),
+      ),
     ).toEqual([]);
   });
 });

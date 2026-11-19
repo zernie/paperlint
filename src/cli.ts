@@ -89,10 +89,7 @@ import {
 import { claimProvenanceRule } from "./claim-provenance.ts";
 import { termDefinitionRules } from "./term-definition-rules.ts";
 import { registerRule } from "./register.ts";
-import {
-  REGISTER_BAND_RULE_LEVELS,
-  registerBandRules,
-} from "./register-bands.ts";
+import { registerBandRules } from "./register-bands.ts";
 import { headingCaseRule } from "./heading-case.ts";
 import {
   maxParagraphNumbersRule,
@@ -577,9 +574,10 @@ export function buildConfig(
     ...referenceRules(RECORDED_DEPS),
     ...sourcesRules(RECORD_DEPS),
   };
-  // The typography rules (each fixes what it reports, `--fix`), `tex/claim-provenance` and
-  // `tex/register` are registered here and on for no file: they flag the writing, not what the venue
-  // decides, so they are in the opt-in set `paperlint:writing` (src/rule-sets.ts).
+  // The typography rules (each fixes what it reports, `--fix`), `tex/claim-provenance`,
+  // `tex/register` and the register bands are registered here and on for no file: they flag the
+  // writing, not what the venue decides, so they are in the opt-in set `paperlint:writing`
+  // (src/rule-sets.ts).
   const md = MARKDOWN_WITH_FRONTMATTER;
 
   const cfg: ConfigBlock[] = [
@@ -689,9 +687,6 @@ export function buildConfig(
         ...SOURCES_RULE_LEVELS,
         ...BIB_RULE_LEVELS,
         "tex/future-promise": "warn",
-        // Contrast frames, claims in bold, relation markers: each against the band the venue
-        // preset's anchors set, silent for a preset without anchors (src/register-bands.ts).
-        ...REGISTER_BAND_RULE_LEVELS,
         "tex/acm-frontmatter-override": "error",
         // Silent for a paper whose paperlint.json names no venue (src/venue-rules.ts).
         ...VENUE_RULE_LEVELS,
