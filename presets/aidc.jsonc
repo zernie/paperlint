@@ -87,7 +87,8 @@
   //   contrast frames   anchors 1.3–5.5     band 0–10.4
   //   claims in bold    anchors 0.0–10.4    band 0–17.8
   //   relation markers  anchors 39.4–112.8  band 25.4–135.0
-  // and, as a percent of the body's sentences (tex/negated-sentences, off by default):
+  // and, as a percent of the body's sentences (tex/negated-sentences). All four rules are off by
+  // default and judge these bands only when a paper turns on the set paperlint:writing:
   //   negated sentences anchors 5.3–17.8%   band 3.0–21.8%
   "register": {
     "anchors": [

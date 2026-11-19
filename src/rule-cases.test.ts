@@ -184,6 +184,17 @@ const DECLARE_SAMPLE_ON: Readonly<Record<string, string>> = {
   }),
 };
 
+/**
+ * The writing set (src/rule-sets.ts) is off by default; a paper turns it on with one line in its
+ * `paperlint.json`. The cases of its rules that were on by default before it run with it on.
+ */
+const WRITING_ON: Readonly<Record<string, string>> = {
+  [`${P}/paperlint.json`]: JSON.stringify({
+    extends: null,
+    rules: { "paperlint:writing": "warn" },
+  }),
+};
+
 /** `tex/max-paragraph-words` is off by default; a paper turns it on in its `paperlint.json`. */
 const MAX_PARAGRAPH_WORDS_ON: Readonly<Record<string, string>> = {
   [`${P}/paperlint.json`]: JSON.stringify({
@@ -480,6 +491,15 @@ const blind = (body: string, cls = IEEE) =>
     tex(`\\section{Introduction}\n${body}\n${STATEMENT}`, cls),
     BLIND_PAPER,
   );
+/** A BlindConf paper that turns the writing set on: the register bands are in it, off by default. */
+const blindWriting = (body: string) =>
+  paper(tex(`\\section{Introduction}\n${body}\n${STATEMENT}`, IEEE), {
+    ...BLIND_PAPER,
+    [`${P}/paperlint.json`]: JSON.stringify({
+      extends: "./blindconf.jsonc",
+      rules: { "paperlint:writing": "warn" },
+    }),
+  });
 /** A BlindConf paper that turns `tex/negated-sentences` on, which is off by default. */
 const blindNegation = (body: string) =>
   paper(tex(`\\section{Introduction}\n${body}\n${STATEMENT}`, IEEE), {
@@ -977,7 +997,7 @@ const CASES: Readonly<Record<string, RuleCases>> = {
   },
   "paper/section-word": {
     reports: {
-      tree: paper(tex("As in §2.")),
+      tree: paper(tex("As in §2."), WRITING_ON),
       file: TEX_FILE,
       severity: 1,
       line: 3,
@@ -988,25 +1008,26 @@ const CASES: Readonly<Record<string, RuleCases>> = {
         "As in Section~2.",
         "\\documentclass{article}\n\\usepackage{cleveref}\n\\crefname{section}{§}{§§}",
       ),
+      WRITING_ON,
     ),
   },
   "paper/leading-zero": {
     reports: {
-      tree: paper(tex("We found $p < .05$.")),
+      tree: paper(tex("We found $p < .05$."), WRITING_ON),
       file: TEX_FILE,
       severity: 1,
       line: 3,
     },
-    silent: paper(tex("We found $p < 0.05$.")),
+    silent: paper(tex("We found $p < 0.05$."), WRITING_ON),
   },
   "paper/figure-ref-style": {
     reports: {
-      tree: paper(tex("Fig.~\\ref{f1} and Figure~\\ref{f2}.")),
+      tree: paper(tex("Fig.~\\ref{f1} and Figure~\\ref{f2}."), WRITING_ON),
       file: TEX_FILE,
       severity: 1,
       line: 3,
     },
-    silent: paper(tex("Figure~\\ref{f1} and Figure~\\ref{f2}.")),
+    silent: paper(tex("Figure~\\ref{f1} and Figure~\\ref{f2}."), WRITING_ON),
   },
   "paper/author-list": {
     reports: {
@@ -1302,7 +1323,7 @@ const CASES: Readonly<Record<string, RuleCases>> = {
   },
   "tex/claim-provenance": {
     reports: {
-      tree: paper(tex("Text.\nAgents ignore 42\\% of the rules.")),
+      tree: paper(tex("Text.\nAgents ignore 42\\% of the rules."), WRITING_ON),
       file: TEX_FILE,
       severity: 1,
       line: 4,
@@ -1311,16 +1332,20 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       tex(
         "Text.\nWe measured that agents ignore 42\\% of the rules.\nThey run on Claude 3 and Python 3.12.",
       ),
+      WRITING_ON,
     ),
   },
   "tex/register": {
     reports: {
-      tree: paper(tex(`${FORMAL} But it holds. So it goes. And it ends.`)),
+      tree: paper(
+        tex(`${FORMAL} But it holds. So it goes. And it ends.`),
+        WRITING_ON,
+      ),
       file: TEX_FILE,
       severity: 1,
       line: 3,
     },
-    silent: paper(tex(FORMAL)),
+    silent: paper(tex(FORMAL), WRITING_ON),
   },
   // The paragraph ceiling is off by default (see "tex/max-paragraph-words is off by default"
   // below): its cases turn it on in the paper's paperlint.json, as study/declare-sample's do.
@@ -1383,31 +1408,39 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     },
     silent: paper(tex(GATE_DEFINED), TERMS_ON),
   },
-  // The three register bands judge a body against the anchor of BlindConf's preset; the body opens
-  // on line 3, right after the \\section, where the finding about the whole body stands.
+  // The three register bands judge a body against the anchor of BlindConf's preset, with the
+  // writing set on (they are off by default); the body opens on line 3, right after the \\section,
+  // where the finding about the whole body stands.
   "tex/contrast-frames": {
     reports: {
-      tree: blind(formalWith(5, "It reads the word, not the operation.")),
+      tree: blindWriting(
+        formalWith(5, "It reads the word, not the operation."),
+      ),
       file: TEX_FILE,
       severity: 1,
       line: 3,
     },
-    silent: blind(LINKED),
+    silent: blindWriting(LINKED),
   },
   "tex/claim-emphasis": {
     reports: {
-      tree: blind(
+      tree: blindWriting(
         formalWith(6, "We find that \\textbf{the rule counts 46 sentences}."),
       ),
       file: TEX_FILE,
       severity: 1,
       line: 3,
     },
-    silent: blind(LINKED),
+    silent: blindWriting(LINKED),
   },
   "tex/relation-markers": {
-    reports: { tree: blind(FORMAL), file: TEX_FILE, severity: 1, line: 3 },
-    silent: blind(LINKED),
+    reports: {
+      tree: blindWriting(FORMAL),
+      file: TEX_FILE,
+      severity: 1,
+      line: 3,
+    },
+    silent: blindWriting(LINKED),
   },
   // Off by default; on in this paper's paperlint.json. FORMAL holds no negator (0%, below 7.2%);
   // 25 negated sentences of 225 are 11.1%, inside the band.
@@ -1610,6 +1643,112 @@ describe("every registered rule has cases, and every case names a registered rul
     expect(
       [...Object.keys(CASES), ...Object.keys(EXEMPT)].filter(
         (id) => !registered.includes(id),
+      ),
+    ).toEqual([]);
+  });
+});
+
+describe("the writing set: off by default, one line turns it on", () => {
+  /** One body with a defect for each rule of the set that was on by default before it. */
+  const DEFECTS = tex(
+    `${FORMAL} But it holds. So it goes. And it ends.\nAs in §2, $p < .05$; Fig.~\\ref{f1} and Figure~\\ref{f2}.\nAgents ignore 42\\% of the rules.`,
+  );
+  const FIVE = [
+    "paper/section-word",
+    "paper/leading-zero",
+    "paper/figure-ref-style",
+    "tex/claim-provenance",
+    "tex/register",
+  ];
+  const fromSet = async (tree: Record<string, string>) =>
+    (await lintTree(tree))
+      .map((m) => m.ruleId ?? "")
+      .filter((id) => FIVE.includes(id));
+
+  it("🔴 a paper with all five defects and no set gets no finding from them", async () => {
+    expect(await fromSet(paper(DEFECTS))).toEqual([]);
+  });
+
+  it("the same paper with the set on in its paperlint.json gets each of them", async () => {
+    expect(new Set(await fromSet(paper(DEFECTS, WRITING_ON)))).toEqual(
+      new Set(FIVE),
+    );
+  });
+
+  it("the set in the root paperlint.json reaches every paper", async () => {
+    expect(
+      new Set(
+        await fromSet({
+          ...paper(DEFECTS),
+          "paperlint.json": JSON.stringify({
+            rules: { "paperlint:writing": "warn" },
+          }),
+        }),
+      ),
+    ).toEqual(new Set(FIVE));
+  });
+
+  it("a paper turns the root's set off for itself", async () => {
+    expect(
+      await fromSet({
+        ...paper(DEFECTS, {
+          [`${P}/paperlint.json`]: JSON.stringify({
+            extends: null,
+            rules: { "paperlint:writing": "off" },
+          }),
+        }),
+        "paperlint.json": JSON.stringify({
+          rules: { "paperlint:writing": "warn" },
+        }),
+      }),
+    ).toEqual([]);
+  });
+});
+
+describe("the register bands are in the writing set, on AIDC too", () => {
+  /**
+   * A body against AIDC's real anchors (presets/aidc.jsonc, per 10,000 words): five contrast
+   * frames and six bold claims over about 2,900 words are above their bands (0–10.4, 0–17.8), and
+   * no relation marker is below 25.4.
+   */
+  const BODY = formalWith(
+    1,
+    `${Array.from({ length: 5 }, () => "It reads the word, not the operation.").join(" ")} ${Array.from({ length: 6 }, () => "We find that \\textbf{the rule counts 46 sentences}.").join(" ")}`,
+  );
+  const BANDS = [
+    "tex/contrast-frames",
+    "tex/claim-emphasis",
+    "tex/relation-markers",
+  ];
+  const onAidc = (
+    rules: Record<string, string> | null,
+    preset = "paperlint:aidc",
+  ) =>
+    paper(tex(`\\section{Introduction}\n${BODY}\n${STATEMENT}`, IEEE), {
+      [`${P}/paperlint.json`]: JSON.stringify({
+        extends: preset,
+        ...(rules ? { rules } : {}),
+      }),
+    });
+  const bands = async (tree: Record<string, string>) =>
+    (await lintTree(tree))
+      .map((m) => m.ruleId ?? "")
+      .filter((id) => BANDS.includes(id));
+
+  it("🔴 an AIDC paper whose preset carries the anchors gets no band finding without the set", async () => {
+    expect(await bands(onAidc(null))).toEqual([]);
+  });
+
+  it("the same paper with the set on gets all three", async () => {
+    expect(
+      new Set(await bands(onAidc({ "paperlint:writing": "warn" }))),
+    ).toEqual(new Set(BANDS));
+  });
+
+  it("with the set on, a preset that records no anchors (ieee-conference) gives them nothing to judge", async () => {
+    expect(
+      await bands(
+        onAidc({ "paperlint:writing": "warn" }, "paperlint:ieee-conference"),
       ),
     ).toEqual([]);
   });

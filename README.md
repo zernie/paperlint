@@ -26,7 +26,8 @@ before you submit.** It comes in two parts:
   - 🔤 the wrong font — LaTeX silently fell back to Computer Modern because a package was missing;
   - 🔗 a bad reference — a cited work that does not exist, or lists the preprint's authors.
 
-  Smaller slips too: `§` for "Section", `.05` for `0.05` — fixed for you.
+  Writing preferences — `§` for "Section", `.05` for `0.05`, length caps — stay off until you
+  turn on the opt-in set `paperlint:writing`; `--fix` then fixes the slips for you.
 
 - 🧠 **Skills for [Claude Code](https://claude.com/claude-code)** — optional, covering the
   whole pipeline: the idea, the venue, the study, the draft, the reviews, submission.
@@ -117,7 +118,6 @@ than AIDC, MSR and S&P, and ACL venues other than REALM.
    papers/my-paper/paper.tex
      1:1   error    1 column(s), AgenticDev requires 2 — the wrong document class or class option   pdf/geometry
      1:1   error    no font starts with `LinLibertine` (body text of AgenticDev); the PDF has: CMR10, …   pdf/fonts
-     8:4   warning  `§` instead of the word «Section» — `paperlint lint --fix` writes it              paper/section-word
    ```
 
    After the findings, `lint` prints on stderr how long it took (`linted 12 file(s) in 4.3 s`) and,
@@ -197,7 +197,7 @@ Every skill, by stage: [`docs/skills.md`](docs/skills.md).
 | ------ | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | needs  | Node, TeX Live, the network                                                                  | Node                                                                                      |
 | does   | compiles `paper.tex`, measures the PDF, checks each reference online (exists, right authors) | checks the source, and judges what build recorded: page limit, fonts, references; offline |
-| writes | `paper.pdf`, `_build/`, `repro/data/references-cache.json` (commit it)                       | nothing (`--fix`: the three fixable slips)                                                |
+| writes | `paper.pdf`, `_build/`, `repro/data/references-cache.json` (commit it)                       | nothing (`--fix`: the three fixable slips of the writing set)                             |
 
 - If `paper.pdf` or the bibliography changed since the last build, lint fails and tells you to rebuild.
 - Lint also checks the pipeline's own records (`PIPELINE-STATUS.md`, reviews, notes on related
@@ -275,6 +275,8 @@ Yes. Each paper names its own venue preset in its own `paperlint.json`.
 **Does it change my paper?**
 Only `paperlint lint --fix`, and only three rules: `paper/section-word` (`§` → Section),
 `paper/leading-zero` (`.05` → `0.05`) and `paper/figure-ref-style` (one figure-reference style).
+They are opt-in, in the writing set: `"rules": { "paperlint:writing": "warn" }` in `paperlint.json`
+([`docs/optional-rules.md`](docs/optional-rules.md#the-writing-set-paperlintwriting)).
 
 ## 📚 Docs
 
@@ -287,7 +289,7 @@ Only `paperlint lint --fix`, and only three rules: `paper/section-word` (`§` �
 - [`docs/rules.md`](docs/rules.md) — every check, venue presets, recording a submitted PDF
 - [`docs/references.md`](docs/references.md) — the reference check, and the cache file to commit
 - [`docs/submission.md`](docs/submission.md) — creating, reading and updating a submission on the venue's portal (HotCRP); one token variable per site
-- [`docs/optional-rules.md`](docs/optional-rules.md) — checks only some venues need
+- [`docs/optional-rules.md`](docs/optional-rules.md) — checks only some venues need, and the opt-in writing set
 - [`docs/toolchain.md`](docs/toolchain.md) — TeX Live, and Banal (HotCRP's page-geometry checker, GPL)
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — how the package is tested and released, and adding a venue to it
 

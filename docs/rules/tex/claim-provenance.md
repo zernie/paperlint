@@ -1,6 +1,6 @@
 # tex/claim-provenance
 
-**Level:** warn · **Reads:** `paper.tex`
+**Level:** off by default; in the opt-in set [`paperlint:writing`](../../optional-rules.md#the-writing-set-paperlintwriting) · **Reads:** `paper.tex`
 
 ## What it catches
 
@@ -56,8 +56,8 @@ The first line reports:
 
 ## Options / preset fields
 
-None. It is on, as a warning, for every `paper.tex`; turn it off or up in the `rules` setting like
-any other rule.
+None. It is off by default: `"paperlint:writing": "warn"` in the `rules` setting turns it on with
+the rest of the writing set, or `"tex/claim-provenance": "warn"` alone.
 
 ## What it does not check
 
