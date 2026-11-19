@@ -2,20 +2,19 @@
 
 Grounding for `draft-paper`, `rewrite-unclear` and `tighten-paper`. Distilled from the canonical
 craft sources + an honest dissection of exemplar papers (writing craft only, not scientific impact).
-The point: grade a draft's _prose and structure_ against how the best-written papers do it, not against
+The point: hold a draft's _prose and structure_ to how the best-written papers do it, not to
 taste. Especially for the failure mode "a wall of text and jargon that doesn't drive home how crazy the
 situation is."
 
-## The three moves that make a human care (the core finding)
+## The two moves that make a human care (the core finding)
 
 The most-cited papers are NOT uniformly the best-written — _Attention Is All You Need_ is famous-but-terse
 and wins only because its audience already cared. The papers that actually **make a reader care** —
 _Reflections on Trusting Trust_, indirect-prompt-injection (Greshake), training-data-extraction (Carlini)
-— all share three moves. This trio is the direct cure for "wall of text":
+— all share two moves. They are the direct cure for "wall of text":
 
 1. **Open on a problem/assumption the reader already holds** (not background, not a topic tour).
 2. **Break it with the single most visceral concrete instance** (not an aggregate statistic).
-3. **Land one repeatable sentence** the reader will quote to a colleague.
 
 ## Canonical craft rules
 
@@ -64,53 +63,6 @@ attributed to Kent Beck — treat as widely-cited, not primary-verified.)
 
 Five famous papers read for craft, with what to imitate and what not: `docs/design/writing-exemplars.md`
 in the package.
-
-## Ten dimensions of how a paper reads (anchors 1–5), most-severe first
-
-For the "wall of jargon" failure mode, **weight #5 Prose, #6 Jargon, #7 Landing-the-point ×2**; for the
-"blog post" failure mode, **weight #10 Register ×2** as well. Score each, name the offending
-sentence/section, write the fix. Dimensions #1–#9 push toward plain and memorable; #10 is the floor
-under them — a fix that raises one of them by leaving the venue's register lowers #10, and the
-grade says so.
-
-1. **Title — value + memorability.** 1 = generic topic label, forgettable. 5 = states the finding or the
-   reader's benefit and is quotable; repeatable after one read.
-2. **Abstract — context→gap→approach→result→meaning, with ONE number.** 1 = stat-wall/method-dump, no gap,
-   no "so what." 5 = five moves in ≤5 sentences, one memorable result, a line the reader remembers.
-3. **Intro architecture — problem/why-care/contribution/evidence, fast.** 1 = background/lit-tour, point
-   arrives on page 2–3. 5 = SPJ arc in the first half-page + a bulleted, forward-referenced contributions list.
-4. **Structure & signposting (incl. visual density).** 1 = arbitrary order, paragraphs open mid-thought,
-   no signposting between claims (the reader must infer how one claim relates to the next), OR a wall — one giant unbroken paragraph the reader's eye slides off. 5 = each
-   section one job, every paragraph's first sentence is its claim, forward refs not a roadmap, AND no wall:
-   long related-work / discussion blocks are broken into scannable chunks with bold/italic run-in sub-heads
-   (see the wall-of-text check below).
-5. **Prose clarity (Gopen/Swan).** 1 = long two-idea sentences, subject/verb far apart, payload buried,
-   passive. 5 = one idea/sentence, subject next to verb, payload in the stress position, active by default.
-6. **Jargon discipline (graded for the NON-ACADEMIC target reader, not for you the expert).** 1 = undefined
-   acronyms/in-group terms stacked to sound rigorous, OR standard field-jargon (`Bonferroni`, `construct
-validity`, `null`, `coarse`, coined handles) used with no plain-words gloss — the LLM-grader trap: you know
-   them so you don't stall, but the reader does. 5 = every term earns its place and is glossed in plain language
-   at first use; analogy before term; a strong engineer who is not a researcher never hits a wall.
-7. **Landing-the-point / reader value (graded on BOTH the intro AND the conclusion).** 1 = abstractions all
-   the way down; reader finishes thinking "so what?" 5 = exposes an assumption, breaks it with the most
-   visceral concrete instance, quantifies stakes, and **the abstract and the conclusion each leave a
-   memorable, extractable line** (the quotable test). A strong intro with a weak, summary-only conclusion
-   scores LOW here — the conclusion is a graded surface, not an afterthought (see the conclusion & quotability
-   check below). **Boring is a defect here, not neutral:** a technically-correct paper the target reader
-   skims out of duty — flat, no line worth quoting, no moment that makes them sit up — scores ≤ 2, however
-   sound. "Correct but I was bored to death" is a failing Landing grade.
-8. **Figure/table economy.** 1 = many dense tables, no single figure that carries the thesis, captions not
-   self-contained. 5 = one "money figure" a skim-reader understands alone; self-contained captions; tables show the one comparison that matters.
-9. **Honesty without hedge-stacking.** 1 = overclaims OR drowns in hedges + defensive early related-work
-   wall. 5 = explicit "what we do NOT claim," one clean threats-to-validity move, related work at the end as context.
-10. **Register distance to the target venue — graded against 2–3 accepted papers of that venue (or its
-    parent conference), never against the exemplars above.** 1 = reads as another genre: aphorisms and
-    punchline closings, fragments, colloquial asides, claims with no stated owner, relations between
-    claims left for the reader to infer. 5 = a reviewer at the venue could not tell it from the
-    reference papers by register: results owned (_we measured_, a citation, a named population),
-    relations signposted (_therefore_, _in contrast_, _this section_), sentences complete. Every flag
-    quotes the reference sentence it was compared against. No reference papers → not graded, and the
-    report says so; this dimension is never scored from memory.
 
 ## The cold-read stall pass (the "wait, what does that even mean?" axis)
 
@@ -177,41 +129,21 @@ Related-work or Discussion section dumped as one 30+-line block covering a dozen
   undifferentiated block. Related work, Discussion, and Threats are the usual offenders.
 - **Watch orphaned run-in heads:** a bold head must not dangle alone at the bottom of a column/page with its
   content overleaf — keep it with its first sentence (no paragraph break immediately after a standalone head).
-- **Mechanical signal:** `tex/max-paragraph-words` counts it (opt-in, `docs/rules/tex/max-paragraph-words.md`). A wall
-  caps dimension #4 no matter how good the individual sentences are.
+- **Mechanical signal:** `tex/max-paragraph-words` counts it (opt-in, `docs/rules/tex/max-paragraph-words.md`).
 - **Session-earned:** GateBench's "Concurrent agent-safety work" block was one 38-line wall of ~11 works;
   broken into 3 run-in-headed groups (syntax-vs-intent / guard-failure / capability-scoping) it became
   scannable at zero length cost.
-
-## The conclusion & quotability check (the two surfaces authors under-invest)
-
-The **abstract** and the **conclusion** are the two most-read, most-quoted surfaces of a paper — and the
-conclusion is the one authors most often leave as a limp restatement. Grade both explicitly; this is the
-axis that catches "the conclusion isn't strong enough."
-
-- **Conclusion — does it PAY OFF, or just summarize?** A 5 conclusion (a) states the finding in the plainest
-  possible language (a non-researcher gets it), (b) names the real-world stakes / who should care, (c) points
-  _past_ the result — the uncomfortable implication or the better direction (framed as a call, not an
-  unproven claim), and (d) **gives the reader something to DO** — a concrete directive/takeaway, not "we
-  release X." A conclusion that only recaps results is a **2**. Ask: what should the reader _do differently_
-  on Monday after reading this?
-- **Quotability — is there a line that travels?** The abstract needs one extractable sentence; the conclusion
-  needs one. Test: could a reader paste it onto a talk slide or into a post and it still lands, standing
-  alone? If every sentence is a hedged composite, there is nothing to quote — flag it as a miss. (Complements `harden-paper`'s citability axis, which names the stat that gets cited.)
-- **A line written to be quoted is held to rubric #10:** an aphorism or a punchline closing scores 1 there,
-  and its literal claim comes from `rewrite-unclear` (rule 2).
 
 ## The avoid-list — words that read as slop or stall a human (flag every hit)
 
 The north star: **a paper should be readable by a smart non-specialist AND read as a paper at its venue —
 plain where plainness costs nothing, academic where the register expects it.** Two tests, both apply: would a
 strong engineer who is NOT a researcher get this sentence in 10 seconds? If not, it's too dense. Would it sit
-unremarked in one of the venue's accepted papers (dimension #10)? If not, it's too loose — a replacement that
-passes the first test by failing the second is not a fix. The jargon dimension (#6) and the
-stall pass are the judgment; the list below is the _checkable_ part (prose isn't policy — compile what's
+unremarked in one of the venue's accepted papers? If not, it's too loose — a replacement that
+passes the first test by failing the second is not a fix. The cold read is the judgment; the list below is the _checkable_ part (prose isn't policy — compile what's
 mechanical). These are **scrutinize-words, not absolute bans** (some are legit in context — "significant" for
 a real stat, "method"); on every hit, ask "does this earn its place, or is it slop / hype / a reader-stall?"
-and cut or replace. During grading, **grep for these and report hits with line numbers.**
+and cut or replace.
 
 - **Web / blog slang — never in an academic paper:** `listicle`, `clickbait`, `deep dive`, `game-changer`,
   `supercharge`, `unpack` (as metaphor), `in the weeds`, `at the end of the day`, `10x`, `roundup`, `vibe`.
@@ -256,7 +188,7 @@ number, so the paper does not have to print them all — divide the labor:
   secondary p-values — cited as "the artifact reports X (Table Y)." A number that supports only a
   _secondary_ point lives there, not inline.
 - **Test:** when `tex/max-paragraph-numbers` reports a paragraph and only one of its numbers is load-bearing, push the rest to the artifact.
-  This is the concrete fix when Abstract / Prose / Figure score low for stat-density — it is not hiding
+  This is the concrete fix for stat-density — it is not hiding
   (the artifact is public and recomputes them), it is letting the reader see the point.
   Cross-ref: `build-benchmark` (the artifact that holds the numbers) · `draft-paper` (the drafting decision).
 

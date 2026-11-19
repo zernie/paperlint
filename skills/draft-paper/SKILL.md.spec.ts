@@ -84,6 +84,8 @@ number in the body stays in the body**.
   point estimate" converts a weakness into a scoped claim. Don't hide; scope.
 - **One memorable stat or figure that travels.** Pick the single number/image that survives out of
   context (a tweet, a related-work sentence in someone else's paper). Everything else supports it.
+  It is a number or a figure in the venue's register, never an aphorism or a line written to be
+  quoted (\`rewrite-unclear\` rule 2; the cold reader's \`REGISTER\` verdict).
 - **Credit-the-humans tone.** Dunk on the *claim or the metric*, never the authors. "The field measures
   X; X is the wrong number" — not "prior work is naive." Punching down reads as insecurity and invites
   a hostile review; generous framing invites a citation.
