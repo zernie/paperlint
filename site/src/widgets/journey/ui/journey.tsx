@@ -53,32 +53,34 @@ export function Journey({ stops }: { readonly stops: readonly Stop[] }) {
           {stops.map((s) => (
             <li
               key={s.n}
-              className="relative grid grid-cols-1 gap-8 border-t border-border py-24 first:border-t-0 first:pt-0 lg:grid-cols-12 lg:border-t-0"
+              className="relative grid grid-cols-1 gap-x-8 gap-y-12 border-t border-border py-32 first:border-t-0 first:pt-0 lg:grid-cols-12 lg:border-t-0"
             >
               <div className="lg:col-span-1">
                 <span className="relative z-1 grid size-12 place-items-center rounded-full border border-border bg-background font-display text-xl text-primary">
                   {s.n}
                 </span>
               </div>
-              <Reveal className="lg:col-span-5">
+              <Reveal className="lg:col-span-7">
                 <p className="text-label font-medium text-muted-foreground uppercase">
                   {s.when}
                 </p>
-                <h3 className="mt-3 font-display text-title text-foreground">
+                <h3 className="mt-4 font-display text-title text-foreground">
                   {s.title}
                 </h3>
-                <p className="mt-4 text-body text-copy">{s.text}</p>
+                <p className="mt-6 max-w-prose text-lead text-copy">{s.text}</p>
                 <p
                   className={
                     s.on
-                      ? "mt-6 inline-block rounded-full border border-primary px-3 py-1 text-sm text-primary"
-                      : "mt-6 inline-block rounded-full border border-border px-3 py-1 text-sm text-muted-foreground"
+                      ? "mt-8 inline-block rounded-full border border-primary px-3 py-1 text-sm text-primary"
+                      : "mt-8 inline-block rounded-full border border-border px-3 py-1 text-sm text-muted-foreground"
                   }
                 >
                   {s.badge}
                 </p>
               </Reveal>
-              <Reveal className="lg:col-span-6">{s.example}</Reveal>
+              <Reveal className="lg:col-span-10 lg:col-start-2">
+                {s.example}
+              </Reveal>
             </li>
           ))}
         </ol>

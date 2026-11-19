@@ -17,7 +17,7 @@ export function CommandLine({
   return (
     <div>
       <p className="text-body text-copy">{caption}</p>
-      <div className="mt-3 flex items-center gap-4 rounded-md border border-border bg-surface py-2 pr-2 pl-4">
+      <div className="mt-4 flex items-center gap-4 rounded-md border border-border bg-surface py-3 pr-3 pl-5">
         <code className="min-w-0 flex-1 overflow-x-auto font-mono text-code whitespace-nowrap text-foreground">
           {command}
         </code>

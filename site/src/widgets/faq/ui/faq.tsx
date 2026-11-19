@@ -25,14 +25,11 @@ export function Faq() {
         <SectionHeading label="Questions">Before you install.</SectionHeading>
         <dl className="border-b border-border lg:col-span-8 lg:col-start-5">
           {QUESTIONS.map(({ q, a }) => (
-            <div
-              key={q}
-              className="grid grid-cols-1 gap-x-8 gap-y-2 border-t border-border py-8 sm:grid-cols-8"
-            >
-              <dt className="font-display text-subtitle text-foreground sm:col-span-3">
+            <div key={q} className="border-t border-border py-10">
+              <dt className="font-display text-subtitle text-foreground">
                 {q}
               </dt>
-              <dd className="text-body text-copy sm:col-span-5">{a}</dd>
+              <dd className="mt-4 max-w-prose text-body text-copy">{a}</dd>
             </div>
           ))}
         </dl>

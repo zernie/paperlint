@@ -31,7 +31,7 @@ export function FindingRow({
     <Collapsible
       open={open}
       onOpenChange={setOpen}
-      className="grid grid-cols-1 gap-x-8 gap-y-2 border-t border-border py-8 sm:grid-cols-4"
+      className="grid grid-cols-1 gap-x-8 gap-y-2 border-t border-border py-8 sm:grid-cols-4 lg:grid-cols-1"
     >
       <p
         className={
@@ -42,7 +42,7 @@ export function FindingRow({
       >
         {LEVEL[level]}
       </p>
-      <div className="sm:col-span-3">
+      <div className="sm:col-span-3 lg:col-span-1">
         <h3 className="font-display text-subtitle text-foreground">{title}</h3>
         <p className="mt-3 max-w-prose text-body text-copy">{plain}</p>
         <CollapsibleTrigger className="mt-4 text-sm text-muted-foreground underline decoration-border underline-offset-4 transition-colors hover:text-foreground">

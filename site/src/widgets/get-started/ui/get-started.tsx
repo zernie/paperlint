@@ -27,7 +27,7 @@ export function GetStarted({
             <p className="font-display text-subtitle text-foreground">
               New to the terminal?
             </p>
-            <p className="mt-2 text-body text-copy">
+            <p className="mt-4 text-body text-copy">
               paperlint runs on{" "}
               <a
                 href={NODE}
@@ -45,9 +45,12 @@ export function GetStarted({
               install TeX Live yourself.
             </p>
           </div>
-          <ol className="mt-16 flex flex-col gap-12">
+          <ol className="mt-20 flex flex-col gap-16">
             {install.map((s, i) => (
-              <li key={s.command} className="grid grid-cols-8 gap-x-8">
+              <li
+                key={s.command}
+                className="grid grid-cols-8 gap-x-8 border-t border-border pt-8"
+              >
                 <span className="col-span-1 font-display text-title text-muted-foreground">
                   {i + 1}
                 </span>
@@ -60,7 +63,7 @@ export function GetStarted({
           <p className="mt-20 text-label font-medium text-muted-foreground uppercase">
             Then, for each paper
           </p>
-          <div className="mt-8 flex flex-col gap-12">
+          <div className="mt-10 flex flex-col gap-16">
             {perPaper.map((s) => (
               <CommandLine key={s.command} {...s} />
             ))}

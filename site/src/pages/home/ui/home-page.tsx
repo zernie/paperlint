@@ -64,16 +64,22 @@ const Example = ({
   readonly code?: React.ReactNode;
   readonly finding: Finding;
 }) => (
-  <div>
+  <div className="grid grid-cols-1 gap-x-12 gap-y-8 lg:grid-cols-2">
     {file === undefined ? null : (
-      <div className="mb-8 rounded-md bg-card p-6">
+      <div className="self-start rounded-md bg-card p-6">
         <p className="font-mono text-code text-muted-foreground">{file}</p>
         <div className="mt-2 overflow-x-auto font-mono text-code whitespace-pre text-copy">
           {code}
         </div>
       </div>
     )}
-    <div className="border-b border-border">
+    <div
+      className={
+        file === undefined
+          ? "border-b border-border lg:col-span-2"
+          : "border-b border-border"
+      }
+    >
       <Row f={finding} />
     </div>
   </div>
