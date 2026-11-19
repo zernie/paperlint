@@ -4,7 +4,7 @@ description: The orchestrator for writing a research paper end-to-end, from idea
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:9f6652c6a366f456 compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:70e0e3f001da15ae compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
 
 # paper-pipeline — the conductor for the whole organism
 
@@ -181,16 +181,17 @@ The one place this order is written; every other skill points here.
 
 ## 📝 Text pass vs evidence pass — two independent axes, ask which one you want
 
-Every gate belongs to exactly one axis. **Sort by what invalidates it**, not by what it reads:
+Every gate but one belongs to one axis. **Sort by what invalidates it**, not by what it reads:
 
 | axis | invalidated by | gates |
 |---|---|---|
 | **TEXT** — does the argument land? | a change to the **prose**: any edit, cut, reorder (until the final review is closed) | `structure` tighten-paper · `coldread` cold-read-diff · `arc` argument-arc · the prose lenses of `panel` pc-panel-review |
-| **EVIDENCE** — is it true? | a change to the **data, code, or artifact** | `claims` claim-preservation · `cites` verify-citations · `artifact` the artifact-runner lens · the numeric half of `harden` harden-paper |
+| **EVIDENCE** — is it true? | a change to the **data, code, or artifact** | `cites` verify-citations · `artifact` the artifact-runner lens · the numeric half of `harden` harden-paper |
+| **BOTH** — did a rewrite change a claim? | a **prose rewrite after its recorded result**, or a data change | `claims` claim-preservation |
 
 **Why this matters more than it looks.** The two axes expire on completely different clocks. Rewriting
-a paragraph invalidates every TEXT gate and no EVIDENCE gate. Re-running an experiment does the exact
-reverse. Conflating them produces both classic wastes: re-verifying numbers nobody touched, and — worse
+a paragraph invalidates every TEXT gate and `claims`, and no EVIDENCE gate. Re-running an experiment
+invalidates the EVIDENCE gates and `claims`. Conflating them produces both classic wastes: re-verifying numbers nobody touched, and — worse
 — trusting a readability verdict on prose that has since been rewritten.
 
 **Text-only final review** (the numbers did not move since they were checked): run it with the panel's

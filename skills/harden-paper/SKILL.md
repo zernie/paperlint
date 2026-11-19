@@ -4,7 +4,7 @@ description: "Use when asking \"is this paper actually ready to submit?\" / \"wh
 allowed-tools: [Read, Write, Grep, Glob, Bash, Skill]
 ---
 
-<!-- vigiles:sha256:127a4bdb1d234943 compiled from skills/harden-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:d657998ebcef0e64 compiled from skills/harden-paper/SKILL.md.spec.ts -->
 
 # harden-paper — the submit checklist
 
@@ -34,7 +34,9 @@ the author decides what to apply. "Nothing fails" is a valid result.
    paper's own reference list refutes; a rhetorical hook that reality falsifies; a bound that narrows a
    body number but lives only in an appendix with no pointer reaching it
    (`paper-pipeline/references/body-vs-appendix.md`). Fix order:
-   `paper-pipeline/references/review-ratchet.md`.
+   `paper-pipeline/references/review-ratchet.md`. And the `claims` row of `PIPELINE-STATUS.md`
+   records a result dated after the last prose rewrite (`git log -1 --format=%cs -- <the sources>`);
+   a missing or older result fails this item. Read the row; the checklist runs no review.
 5. **Security and systems venues:** one paragraph of threat model (adversary and capability, trust
    boundary, assets, what is assumed not compromised), and an ethics line: aggregate and anonymised
    reporting of named systems, disclosure to maintainers before any de-anonymised release, a dual-use
