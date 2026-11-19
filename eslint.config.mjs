@@ -608,6 +608,11 @@ export default [
       "docs/prior-art/repro/",
       "dist/",
       "skills/*/scripts/*.js",
+      // paperlint.dev (site/CLAUDE.md) is its own project with its own install and its own lint
+      // (site/eslint.config.mjs: typed TypeScript, Tailwind tokens, Steiger), run by the `site` CI
+      // job. ESLint 10 judges a file by the config nearest to it, so a file under site/ named on
+      // this command line is judged by site's config, CLAUDE.md.spec.ts included.
+      "site/",
     ],
   },
   // 🔴 THE PACKAGE'S TYPESCRIPT, and before 2026-09-24 no block matched it — the same silent

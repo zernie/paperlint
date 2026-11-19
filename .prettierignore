@@ -31,3 +31,9 @@ src/adapters/hotcrp/cassette/*.html
 # The labelling page build-label-page generates: the generator inserts it as exact bytes, and the
 # skill's tests read its style and script as written.
 skills/build-label-page/scripts/page-template.html
+
+# paperlint.dev's build output (site/.gitignore): Prettier reads only the root .gitignore.
+site/.next/
+site/out/
+site/next-env.d.ts
+site/coverage/

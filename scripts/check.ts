@@ -188,6 +188,14 @@ export const GATES: readonly Gate[] = [
     run: ["vitest", "run", "--project", "real-papers"],
   },
   {
+    // paperlint.dev (site/): its own package.json and lock, so the npm package does not carry Next.js.
+    // The build reads README.md and docs/ and fails when what it reads is gone
+    // (site/src/shared/lib/readme/content.ts); before it, site/'s own lint, tsc and tests.
+    name: "the website builds from README.md and docs/ (site/)",
+    job: "site",
+    script: "site:build",
+  },
+  {
     name: "TeX e2e — real TeX Live: paperlint toolchain, a real pdflatex build of every fixture, the real banal",
     job: "build-e2e",
     script: "test:e2e:tex",

@@ -1,0 +1,198 @@
+import {
+  explain,
+  folder,
+  FindingRow,
+  pageLimit,
+  prose,
+  render,
+  study,
+  type Explained,
+  type Finding,
+} from "@/entities/finding";
+import {
+  layoutEntries,
+  readmeContent,
+  headlineVenues,
+  presetName,
+  venueCount,
+  venueGrid,
+} from "@/shared/lib/readme";
+import { glossary } from "@/shared/config";
+import { Term } from "@/shared/ui/hint";
+import { Faq } from "@/widgets/faq";
+import { Hero } from "@/widgets/hero";
+import { Journey, type Stop } from "@/widgets/journey";
+import { SiteFooter } from "@/widgets/site-footer";
+import { SiteHeader } from "@/widgets/site-header";
+import { Venues } from "@/widgets/venues";
+import { readRepo } from "../api/read-repo.ts";
+import { perPaperSteps, withCaption } from "../model/captions.ts";
+import { facts } from "../model/facts.ts";
+
+const README = readRepo("README.md");
+const readme = readmeContent(README);
+const tree = layoutEntries(readRepo("docs/layout.md"), [
+  "PIPELINE-STATUS.md",
+  "paper.tex",
+  "paperlint.json",
+  "figures/",
+  "repro/",
+  "reviews/",
+  "versions/",
+]);
+const venueNames = headlineVenues(readme.venues);
+const venues = venueGrid(readRepo("docs/venues.md"), readme.venues, (id) =>
+  presetName(readRepo(`presets/${id}.jsonc`)),
+);
+const firstRun = readme.lintOutput
+  .filter((l) => /^\s+\d+:\d+/.test(l))
+  .map(explain);
+const install = readme.install.map(withCaption);
+const packageLicense = (
+  JSON.parse(readRepo("package.json")) as { readonly license: string }
+).license;
+const perPaper = perPaperSteps(README);
+
+/** A finding of findings.ts, in the shape the README's explained lint lines have. */
+const asRow = (f: Finding): Explained => ({
+  rule: f.rule,
+  level: f.level,
+  title: f.title,
+  plain: f.plain,
+  raw: render(f),
+});
+
+const Example = ({
+  file,
+  code,
+  findings,
+}: {
+  readonly file?: string;
+  readonly code?: React.ReactNode;
+  readonly findings: readonly Explained[];
+}) => (
+  <div className="flex flex-col gap-6">
+    {file === undefined ? null : (
+      <div className="rounded-md bg-card p-6">
+        <p className="font-mono text-code text-muted-foreground">{file}</p>
+        <div className="mt-2 overflow-x-auto font-mono text-code whitespace-pre text-copy">
+          {code}
+        </div>
+      </div>
+    )}
+    <div className="border-b border-border">
+      {findings.map((f) => (
+        <FindingRow
+          key={f.title}
+          level={f.level}
+          title={f.title}
+          plain={f.plain}
+          rule={f.rule}
+          raw={f.raw}
+        />
+      ))}
+    </div>
+  </div>
+);
+
+const stops: readonly Stop[] = [
+  {
+    n: "01",
+    short: "Desk reject",
+    when: "Before you submit",
+    title: "The venue's hard rules",
+    text: (
+      <>
+        The page limit for your kind of paper, the template, fonts, page size
+        and columns, a required section, and no author names in a{" "}
+        <Term means={glossary.doubleBlind}>double-blind</Term> PDF. One build,
+        and every check reads it.
+      </>
+    ),
+    badge: "On by default",
+    on: true,
+    example: <Example findings={[...firstRun, asRow(pageLimit)]} />,
+  },
+  {
+    n: "02",
+    short: "Folder",
+    when: "From the first file",
+    title: "A tidy paper folder",
+    text: "paperlint new makes one folder per paper, with a place for each kind of file. A file left where it does not belong is flagged, with where to move it.",
+    badge: "On by default",
+    on: true,
+    example: (
+      <Example
+        file="papers/my-paper/"
+        code={
+          <>
+            {tree.map((e) => (
+              <div key={e.name} className="flex gap-4">
+                <span className="w-44 shrink-0">├── {e.name}</span>
+                <span className="truncate text-muted-foreground">{e.note}</span>
+              </div>
+            ))}
+            <div>
+              └──{" "}
+              <span className="text-error line-through">
+                results-final-v2.csv
+              </span>
+            </div>
+          </>
+        }
+        findings={[asRow(folder)]}
+      />
+    ),
+  },
+  {
+    n: "03",
+    short: "Measurements",
+    when: "While you measure",
+    title: "Studies planned before they run",
+    text: "Each study gets a numbered entry in repro/studies.json and a folder of its own. Once a study is running, its plan must be filled in, and a plan written after the runs must say so.",
+    badge: "Once your paper has a study",
+    on: true,
+    example: (
+      <Example
+        file="repro/studies.json"
+        code={`{ "id": "P1-S01",\n  "title": "Baseline pass rate",\n  "status": "running",\n  "plan": "plan.json" }`}
+        findings={[asRow(study)]}
+      />
+    ),
+  },
+  {
+    n: "04",
+    short: "Prose",
+    when: "When you write",
+    title: "Writing limits, if you want them",
+    text: "Limits on sentence, paragraph and caption length, and three typographic slips (§, .05, mixed figure references). They stay off until you turn on one set, paperlint:writing, for a paper or a project.",
+    badge: "Opt-in",
+    on: false,
+    example: (
+      <Example
+        file="paperlint.json"
+        code={`{ "rules": { "paperlint:writing": "warn" } }`}
+        findings={[asRow(prose)]}
+      />
+    ),
+  },
+];
+
+/** paperlint.dev: everything on it is read from the repository at build time or quoted with a test behind it. */
+export function HomePage() {
+  return (
+    <>
+      <SiteHeader />
+      <main>
+        <Hero
+          venues={venueNames}
+          facts={facts(venueCount(venues), packageLicense)}
+        />
+        <Journey stops={stops} />
+        <Venues grid={venues} />
+        <Faq install={install} perPaper={perPaper} />
+      </main>
+      <SiteFooter disclaimer={readme.disclaimer} />
+    </>
+  );
+}

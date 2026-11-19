@@ -17,7 +17,8 @@
     "as evidence for claims in the skills' prose and the prior-art notes, not code the package runs.",
     "skills/*/scripts/*.js: a skill's scripts compiled from the .ts beside them (tsconfig.skills.json); the .ts is measured.",
     "vitest.config.ts: the test runner's configuration. The pins in scripts/coverage-config.test.ts",
-    "also require every tracked source to be either included or excluded here."
+    "also require every tracked source to be either included or excluded here.",
+    "site/**: paperlint.dev, its own project with its own install, tests and 100% coverage gate (site/vitest.config.ts), run by `npm run site:build` and the `site` CI job; this run does not load it."
   ],
   "all": true,
   "src": ["."],
@@ -57,7 +58,8 @@
     "skills/**/references/**",
     "docs/prior-art/repro/**",
     "skills/*/scripts/*.js",
-    "vitest.config.ts"
+    "vitest.config.ts",
+    "site/**"
   ],
   "extension": [".js", ".mjs", ".ts"],
   "excludeAfterRemap": false,

@@ -1,0 +1,211 @@
+/* paperlint.dev's design tokens (site/CLAUDE.md, "Type and colour"). Every colour, size and space a
+   class name may use is declared here; site/eslint.config.mjs reads this file, so a class outside it
+   (`bg-red-500`, `w-[13px]`, `text-[#fff]`) fails `npm run lint`. Add a token here, never a literal in
+   a class name. */
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* The site has no dark mode. shadcn's components carry `dark:` classes; bound to a `.dark` class
+   that no element has, they never apply, instead of following the reader's OS setting. */
+@custom-variant dark (&:is(.dark *));
+
+/* Colour: Tailwind's palette is cleared, so only these exist. A name is shadcn's where shadcn has
+   one, because its components use it: `muted` is a quiet surface and the quiet text (#5f5d58) is
+   `muted-foreground`; the running text (#45433e) is `copy`, since `text-text` reads as a typo. */
+@theme {
+  --color-*: initial;
+
+  /* The palette, from zernie.com. */
+  --color-paper: #faf9f5;
+  --color-ink: #181816;
+  --color-copy: #45433e;
+  --color-border: #e4e1d8;
+  --color-surface: #ffffff;
+  --color-card: #f2efe9;
+  /* The one accent. */
+  --color-ink-blue: #305e8b;
+  /* Terracotta, for an error only. */
+  --color-signal: #c15f3c;
+  /* The section grounds, after zernie.com: each section sits on its own ground, so the page reads
+     as distinct parts, softly: soft sand for the venues, stone (a light warm grey) for the checks
+     and the footer. No dark band: the author asked for a calm page (2026-11-19). */
+  --color-sand-soft: #f3ead9;
+  /* A hairline or an underline on soft sand. */
+  --color-sand-edge: #d6c19b;
+  --color-stone: #f2f1ec;
+  /* Two quiet accents for the hero's facts, beside the ink-blue and the ink: a green-grey and a
+     deep sand. Never terracotta, which is for an error. */
+  --color-sage: #56695c;
+  --color-sand-deep: #8a6a36;
+  /* Text present but not chosen: a checkpoint that is not open (3.4:1 on stone, for large type). */
+  --color-faint: #85827a;
+  /* A finding's level: text on its tint. */
+  --color-warn: #8a6a1c;
+  --color-error: #a24a2b;
+
+  /* shadcn's semantic names, mapped onto the palette. */
+  --color-background: var(--color-paper);
+  --color-foreground: var(--color-ink);
+  --color-card-foreground: var(--color-ink);
+  --color-popover: var(--color-surface);
+  --color-popover-foreground: var(--color-ink);
+  --color-primary: var(--color-ink-blue);
+  --color-primary-foreground: var(--color-paper);
+  --color-secondary: var(--color-card);
+  --color-secondary-foreground: var(--color-ink);
+  --color-muted: var(--color-card);
+  --color-muted-foreground: #5f5d58;
+  --color-accent: var(--color-card);
+  --color-accent-foreground: var(--color-ink);
+  --color-destructive: var(--color-signal);
+  --color-input: var(--color-border);
+  --color-ring: var(--color-ink-blue);
+}
+
+/* Type. next/font sets the three families' variables on <html> (src/app/styles/fonts.ts). */
+@theme static {
+  --font-display: var(--font-newsreader), Georgia, serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, Menlo, monospace;
+  --font-heading: var(--font-display);
+}
+
+/* The weight of the serif headlines: light, as a magazine sets them (Kinfolk, Cereal). */
+@theme {
+  --font-weight-quiet: 300;
+}
+
+/* The type scale beyond Tailwind's: the landing page's named sizes, fluid between a phone and a
+   desktop, so no class needs `text-[112px]`. Headlines are Newsreader, whose optical sizes tighten
+   it at display sizes; running text is Inter. */
+@theme {
+  /* The cover line, the hero's headline, at the regular weight and normal tracking, which read
+     better than light and tight at this size: 56–88px. */
+  --text-cover: clamp(3.5rem, 6.5vw, 5.5rem);
+  --text-cover--line-height: 1.05;
+  --text-cover--letter-spacing: 0;
+  /* A section's headline, set light: 40–64px. */
+  --text-display: clamp(2.5rem, 4.75vw, 4rem);
+  --text-display--line-height: 1.05;
+  --text-display--letter-spacing: -0.02em;
+  /* A stop's title on the journey, a venue's name: 32–40px. */
+  --text-title: clamp(2rem, 3vw, 2.5rem);
+  --text-title--line-height: 1.1;
+  --text-title--letter-spacing: -0.015em;
+  /* A checkpoint's numeral in the index: 48–72px. */
+  --text-numeral: clamp(3rem, 5vw, 4.5rem);
+  --text-numeral--line-height: 1;
+  --text-numeral--letter-spacing: -0.02em;
+  /* A finding's or a question's title: 24px. */
+  --text-subtitle: 1.5rem;
+  --text-subtitle--line-height: 1.25;
+  /* The paragraph under a headline: 18–21px. */
+  --text-lead: clamp(1.125rem, 1.6vw, 1.3125rem);
+  --text-lead--line-height: 1.5;
+  /* Running text. */
+  --text-body: 1.0625rem;
+  --text-body--line-height: 1.65;
+  /* A label above a section, a caption under a figure. */
+  --text-label: 0.75rem;
+  --text-label--line-height: 1.4;
+  --text-label--letter-spacing: 0.16em;
+  /* Commands and the exact terminal output. */
+  --text-code: 0.875rem;
+  --text-code--line-height: 1.7;
+}
+
+/* Space: every gap is a multiple of 8px (Tailwind's 2, 4, 6, 8, 12, 16, 24 …); these name the
+   page's large distances and its two widths. No shadows: sections are set apart by space and
+   hairlines (site/CLAUDE.md, "Modern Not 2010"). */
+@theme {
+  /* A section's top and bottom inside its ground: 96px. */
+  --spacing-band: 6rem;
+  /* The page's content width (1200px) and a paragraph's (640px). */
+  --container-page: 75rem;
+  --container-prose: 40rem;
+  /* A magazine's short measure, for a lead or a note: 448px. */
+  --container-measure: 28rem;
+  /* The hero's plate, wider than the text: 1344px. */
+  --container-wide: 84rem;
+  /* The cover line's width, so it breaks after "for" and the venue takes the second line: 896px. */
+  --container-cover: 56rem;
+  /* The hero's plate: the campus etching cropped to its arcades, 14 wide to 5 high. */
+  --aspect-plate: 14 / 5;
+  /* How far in from each edge the plate fades into the paper, so its lighter ground shows no box. */
+  --plate-fade: 12%;
+
+  /* shadcn's radius scale; the page itself uses only small radii. */
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  --radius: 0.625rem;
+}
+
+/* The hero's plate dissolves into the paper on every edge, by --plate-fade: the etching's ground
+   is a shade lighter than the paper, and a hard edge would read as a box (src/widgets/hero). */
+@utility mask-plate {
+  mask-image:
+    linear-gradient(
+      to bottom,
+      transparent,
+      black var(--plate-fade),
+      black calc(100% - var(--plate-fade)),
+      transparent
+    ),
+    linear-gradient(
+      to right,
+      transparent,
+      black var(--plate-fade),
+      black calc(100% - var(--plate-fade)),
+      transparent
+    );
+  mask-composite: intersect;
+}
+
+/* The headline's changing venue keeps one height while the names change: one line, and two on
+   the narrowest phones, where "an IEEE conference?" wraps (measured: it wraps at 320px, not at
+   360px) (src/features/cycle-venue). */
+@utility venue-lines {
+  min-height: 1lh;
+  @media (width < 22.5rem) {
+    min-height: 2lh;
+  }
+}
+
+/* A section fades up as it scrolls in (src/shared/ui/reveal.tsx). Only where the browser has scroll
+   timelines and the reader has not asked for less motion; everywhere else it is simply there. */
+@keyframes reveal {
+  from {
+    opacity: 0;
+    translate: 0 1rem;
+  }
+}
+@utility reveal {
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      animation: reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 60%;
+    }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply scroll-smooth font-sans antialiased motion-reduce:scroll-auto;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
