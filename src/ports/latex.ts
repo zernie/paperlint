@@ -94,6 +94,11 @@ export interface LatexReader {
   /** Every package the preamble's `\usepackage` and `\RequirePackage` lines load, in source order. */
   readonly packages: (src: string) => readonly PackageLoad[];
   /**
+   * Whether the preamble may load a package `packages` does not see: an unread `\input`, a package
+   * line inside a macro, or one whose name a macro builds.
+   */
+  readonly packagesUnseen: (src: string) => boolean;
+  /**
    * A preset's `template_style` → the package it names and the options it requires: one whole
    * `\usepackage[…]{…}` line naming one package. Null for anything else.
    */

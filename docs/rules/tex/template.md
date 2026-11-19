@@ -159,6 +159,24 @@ package is the paper's own. A child preset's `template_style` replaces its paren
 
   [`cycle/port-done`](../cycle/port-done.md) does not take such a line for the venue's either.
 
+- The style where the reader cannot see it. A `template_style` finding is an error, so it is said
+  only when the whole preamble is in view; otherwise nothing is said, and `cycle/port-done` does not
+  call the port done:
+
+  | where the style may be                                                                                                          | the style check                         |
+  | ------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+  | a file the preamble `\input`s, `\include`s or `\subfile`s, not read yet (no build, or a stale record)                           | silent until `paperlint build` reads it |
+  | a file read by `\InputIfFileExists`, `\import` or `\subimport`                                                                  | silent: such files are not followed     |
+  | a package name built by a macro (`\usepackage{\style}`, `\csname usepackage\endcsname`, `\expandafter`)                         | silent                                  |
+  | a load or a `\PassOptionsToPackage` inside a definition or another macro's argument (`\makeatletter` code, `\@ifpackageloaded`) | silent                                  |
+  | an option built by a macro                                                                                                      | silent                                  |
+  | the name in another case (`NeurIPS_2026`): a case-insensitive file system loads it                                              | silent                                  |
+  | a class other than the template's, or one the reader cannot read: that class may load a style                                   | the class finding alone                 |
+  | behind `\iffalse … \fi` or in a comment                                                                                         | not a load: reported                    |
+  | behind a TeX switch (`\ifdefined … \else … \fi`)                                                                                | a load                                  |
+  | an `\input` only after `\begin{document}`                                                                                       | hides nothing: reported                 |
+  | in a folder (`sty/aaai2027`)                                                                                                    | the package of the file's base name     |
+
 ## How to fix
 
 Set the `\documentclass` line to the one the message quotes, keeping your own extra options

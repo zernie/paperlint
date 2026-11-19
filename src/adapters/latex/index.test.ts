@@ -26,6 +26,7 @@ import {
   outlineOf,
   parseLatex,
   packagesOf,
+  packagesUnseen,
   parseTemplate,
   parseTemplateStyle,
   placeOf,
@@ -314,6 +315,43 @@ describe("packagesOf — the options LaTeX hands a package: global, passed, its 
         ["\\cls", "\\pass", "\\own"],
       ],
     ]);
+  });
+});
+
+describe("packagesUnseen — a preamble that may load what the reader does not see", () => {
+  const unseen = (preamble: string, body = "Text.") =>
+    packagesUnseen(
+      parseLatex(
+        `\\documentclass{article}\n${preamble}\n\\begin{document}\n${body}\n\\end{document}\n`,
+      ),
+    );
+
+  it("🔴 an \\input in the preamble, a package line inside a macro, a name a macro builds", () => {
+    expect(unseen("\\input{preamble}")).toBe(true);
+    expect(unseen("\\newcommand{\\load}{\\usepackage{x}}\n\\load")).toBe(true);
+    expect(unseen("\\usepackage{\\style}")).toBe(true);
+  });
+
+  it("🔴 options passed where the reader does not see them: inside a macro, or to a package a macro names", () => {
+    expect(
+      unseen("\\newcommand{\\opts}{\\PassOptionsToPackage{final}{x}}\n\\opts"),
+    ).toBe(true);
+    expect(unseen("\\PassOptionsToPackage{final}{\\style}")).toBe(true);
+  });
+
+  it("🔴 a file read through a loader the include reader does not follow, or a line built by \\csname", () => {
+    expect(unseen("\\InputIfFileExists{setup.tex}{}{}")).toBe(true);
+    expect(unseen("\\import{sections/}{preamble}")).toBe(true);
+    expect(unseen("\\csname usepackage\\endcsname{x}")).toBe(true);
+    expect(unseen("\\usepackage{x}", "\\import{sections/}{intro}")).toBe(false);
+  });
+
+  it("the whole preamble in view: plain lines and an \\input in the body; a bare \\usepackage hides nothing", () => {
+    expect(unseen("\\usepackage[a]{x,y}", "\\input{intro}")).toBe(false);
+    expect(packagesUnseen(parseLatex("\\usepackage"))).toBe(false);
+    expect(unseen("\\PassOptionsToPackage{\\opt}{x}\n\\usepackage{x}")).toBe(
+      false,
+    );
   });
 });
 

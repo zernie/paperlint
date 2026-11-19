@@ -25,6 +25,7 @@ import { abstractSpan, abstractText } from "./abstract.ts";
 import {
   documentClassOf,
   packagesOf,
+  packagesUnseen,
   parseTemplate,
   parseTemplateStyle,
   replaceDocumentClass,
@@ -44,6 +45,7 @@ import { filecontentsOf } from "./filecontents.ts";
 export {
   documentClassOf,
   packagesOf,
+  packagesUnseen,
   parseTemplate,
   parseTemplateStyle,
   replaceDocumentClass,
@@ -81,6 +83,7 @@ export const latexReader: LatexReader = {
   documentBody: (src) => documentBodyOf(parseLatex(src)),
   template: parseTemplate,
   packages: (src) => packagesOf(parseLatex(src)),
+  packagesUnseen: (src) => packagesUnseen(parseLatex(src)),
   templateStyle: parseTemplateStyle,
   withDocumentClass: (src, want) => replaceDocumentClass(parseLatex(src), want),
   layoutOverrides: (src) => layoutOverridesOf(parseLatex(src)),

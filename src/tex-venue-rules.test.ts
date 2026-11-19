@@ -1700,12 +1700,12 @@ describe("tex/template — a style file the template loads (`template_style`): w
     );
   });
 
-  it("🔴 the class is still judged beside the style: both findings", () => {
+  it("🔴 another class: the class finding alone (that class may load a style of its own)", () => {
     expect(
       ids(
         template(paper("\\documentclass[sigconf]{acmart}", BODY + CHECKLIST)),
       ),
-    ).toEqual(["tex/template:missingStyle", "tex/template:wrongClass"]);
+    ).toEqual(["tex/template:wrongClass"]);
   });
 });
 
@@ -1849,6 +1849,7 @@ describe("judgeStyle — another shipped venue's style, and a required option", 
         {
           packages: [{ name, options: [], unread: [], place: at(5) }],
           others: ["icml2027", "aaai2027"],
+          unseen: false,
         },
         neurips.value,
         latexReader,
@@ -1872,12 +1873,95 @@ describe("judgeStyle — another shipped venue's style, and a required option", 
             { name: "neurips_2026", options, unread: [], place: at(5) },
           ],
           others: [],
+          unseen: false,
         },
         withOption,
         latexReader,
       ).map((f) => [f.messageId, f.data["option"] ?? ""]);
     expect(judge([])).toEqual([["missingStyleOption", "main"]]);
     expect(judge(["main", "final"])).toEqual([]);
+  });
+});
+
+/** tex/template and cycle/port-done findings on a NeurIPS paper. */
+const styleFindings = (tex: string, settings: object = NEURIPS) =>
+  lint(tex, settings)
+    .filter((f) => f.rule === "tex/template" || f.rule === "cycle/port-done")
+    .map((f) => `${f.rule}:${f.messageId}`);
+const NEURIPS_PORT = {
+  cycles: [
+    {
+      ...PORTING,
+      id: "neurips-2026",
+      venue: { kind: "preset", extends: "paperlint:neurips-2026" },
+      kind: "main",
+    },
+  ],
+};
+
+describe("the style check stays silent where the reader cannot see the style", () => {
+  it.each<[string, string]>([
+    ["🔴 an \\input preamble with no build record yet", "\\input{preamble}"],
+    ["🔴 the style's name built by a macro", "\\usepackage{\\venuestyle}"],
+    [
+      "🔴 the name expanded from a macro",
+      "\\expandafter\\usepackage\\expandafter{\\venuestyle}",
+    ],
+    [
+      "🔴 the load inside a macro the preamble calls",
+      "\\newcommand{\\loadstyle}{\\usepackage{neurips_2026}}\n\\loadstyle",
+    ],
+    [
+      "🔴 the name in another case (a case-insensitive file system loads it)",
+      "\\usepackage{NeurIPS_2026}",
+    ],
+    [
+      "🔴 another year's style beside an unread \\input that may load this one",
+      "\\usepackage{neurips_2025}\n\\input{preamble}",
+    ],
+  ])(
+    "%s: no tex/template finding, and the port is not called done",
+    (_, preamble) => {
+      const tex = paper(`\\documentclass{article}\n${preamble}`, "Text.");
+      expect(styleFindings(tex)).toEqual([]);
+      expect(styleFindings(tex, NEURIPS_PORT)).toEqual([]);
+    },
+  );
+});
+
+describe("the style check over what the reader reads but TeX may not run", () => {
+  it("🔴 the class line itself in an unread file: neither class nor style is judged", () => {
+    expect(styleFindings(paper("\\input{header}", "Text."))).toEqual([]);
+  });
+
+  it("a load behind a TeX switch counts as a load: which branch builds is not evaluated", () => {
+    const tex = paper(
+      "\\documentclass{article}\n\\ifdefined\\final\\usepackage[final]{neurips_2026}\\else\\usepackage{neurips_2026}\\fi",
+      "Text.",
+    );
+    expect(styleFindings(tex)).toEqual([]);
+  });
+});
+
+describe("the style check still speaks where the reader sees the whole preamble", () => {
+  it.each<[string, string, string]>([
+    [
+      "🔴 a load behind \\iffalse is no load",
+      "\\iffalse\n\\usepackage{neurips_2026}\n\\fi",
+      "missingStyle",
+    ],
+    ["🔴 an \\input only in the body hides nothing", "", "missingStyle"],
+    [
+      "🔴 another year's style with no include",
+      "\\usepackage{neurips_2025}",
+      "wrongStyle",
+    ],
+  ])("%s", (_, preamble, messageId) => {
+    const tex = paper(
+      `\\documentclass{article}\n${preamble}`,
+      "\\input{intro}\nText.",
+    );
+    expect(styleFindings(tex)).toEqual([`tex/template:${messageId}`]);
   });
 });
 
@@ -1890,9 +1974,11 @@ describe("judgeStyle — a template_style the reader cannot read", () => {
       templateStyle: { text: "\\usepackage{a,b}", file: "odd.jsonc" },
     };
     expect(
-      judgeStyle({ packages: [], others: [] }, odd, latexReader).map(
-        (f) => f.messageId,
-      ),
+      judgeStyle(
+        { packages: [], others: [], unseen: false },
+        odd,
+        latexReader,
+      ).map((f) => f.messageId),
     ).toEqual(["badStyle"]);
   });
 });
@@ -2088,7 +2174,7 @@ describe("the ICML style under tex/template, format/layout-override and cycle/po
   it("🔴 another class, a margin, another venue's style, another ICML edition's: each reported", () => {
     expect(
       found(paper("\\documentclass[sigconf]{acmart}", BODY + IMPACT)),
-    ).toEqual(["tex/template:wrongClass", "tex/template:missingStyle"]);
+    ).toEqual(["tex/template:wrongClass"]);
     expect(
       found(icmlPaper(BODY + IMPACT, "\\usepackage[margin=0.6in]{geometry}")),
     ).toEqual(["format/layout-override:override"]);

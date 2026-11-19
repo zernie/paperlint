@@ -292,6 +292,59 @@ export function packagesOf(t: ParsedTex): readonly PackageLoad[] {
 }
 
 /**
+ * Whether the preamble may load a package, or pass it options, where this reader does not see: an
+ * `\input` or `\include` there left as written (no build record yet, or a stale one), a package line
+ * or a `\PassOptionsToPackage` inside another macro's argument or a definition's body
+ * (`\newcommand{\load}{\usepackage{…}}`), one whose package name is built by a macro
+ * (`\usepackage{\style}`), or a file read through another loader (`\InputIfFileExists`, `\import`).
+ */
+export function packagesUnseen(t: ParsedTex): boolean {
+  const top = new Set<unknown>(t.root.content);
+  const hidden = visited(t.root, () => false).some(
+    (v) =>
+      isNode(v) &&
+      (isPackageLine(v) || isPassToPackage(v)) &&
+      (!top.has(v) || namedByMacro(v)),
+  );
+  return hidden || includesInPreamble(t) || otherLoaderInPreamble(t);
+}
+
+/** Macros that read a file this reader never opens: the `import` package's and the kernel's. */
+const OTHER_LOADERS: ReadonlySet<string> = new Set([
+  "InputIfFileExists",
+  "import",
+  "subimport",
+  "inputfrom",
+  "subinputfrom",
+]);
+
+/**
+ * Whether the preamble reads a file through a loader `includesOf` does not follow, or names a
+ * package line through `\csname` (`\csname usepackage\endcsname{…}`).
+ */
+function otherLoaderInPreamble(t: ParsedTex): boolean {
+  const body = documentBodyOf(t)?.start ?? Number.POSITIVE_INFINITY;
+  const loader = visited(t.root, () => false).some(
+    (v) =>
+      isNode(v) &&
+      v.type === "macro" &&
+      OTHER_LOADERS.has(v.content) &&
+      // A node with no place (none the parser makes) reads NaN, which is before nothing.
+      Number(v.position?.start.offset) < body,
+  );
+  return loader || CSNAME_LOAD.test(t.src.slice(0, body));
+}
+
+const CSNAME_LOAD = /\\csname\s*(?:usepackage|RequirePackage)/u;
+
+const isPassToPackage = (n: Node): n is Macro =>
+  n.type === "macro" && n.content === "PassOptionsToPackage";
+
+/** Whether the packages a line names are built by a macro: its last mandatory argument. */
+const namedByMacro = (m: Macro): boolean =>
+  holdsMacro(mandatory(m).at(isPassToPackage(m) ? 1 : 0)?.content ?? []);
+
+/**
  * A preset's `template_style` → the package it names and the options it requires: one whole
  * `\usepackage[…]{…}` line naming one package. Anything else is null.
  */

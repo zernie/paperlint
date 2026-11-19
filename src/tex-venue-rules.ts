@@ -241,20 +241,37 @@ export function judgeTemplate(
     return [{ messageId: "badTemplate", data, at: null }];
   }
   const data = { venue: preset.label, template: documentClassLine(want) };
+  // The style is judged only over the template's class: another class (or one this reader cannot
+  // read) may load a style of its own, and its finding is the class's.
   return [
     ...judgeClassLine(line, { cls: want, forbids: t.forbids }, data),
-    ...judgeStyle(style, preset, latex),
+    ...(isClass(line, want.cls) ? judgeStyle(style, preset, latex) : []),
   ];
 }
+
+/** Whether the class line is `cls` — behind a switch, whether one of its candidates is. */
+const isClass = (line: ClassLine, cls: string): boolean =>
+  line.kind === "ambiguous"
+    ? line.candidates.some((c) => c.kind === "class" && c.cls === cls)
+    : line.kind === "class" && line.cls === cls;
 
 /** What the style check reads: the packages the paper loads, and the styles of other shipped venues. */
 export interface StyleInput {
   readonly packages: readonly PackageLoad[];
   /** The package names of the `template_style` of every shipped venue off this paper's chain. */
   readonly others: readonly string[];
+  /** The preamble may load a package the reader does not see (`LatexReader.packagesUnseen`). */
+  readonly unseen: boolean;
 }
 
-const NO_STYLE_INPUT: StyleInput = { packages: [], others: [] };
+const NO_STYLE_INPUT: StyleInput = { packages: [], others: [], unseen: false };
+
+/**
+ * The same package name in another case (`NeurIPS_2026`): a case-insensitive file system loads the
+ * style under it and a case-sensitive one does not, so nothing is said either way.
+ */
+const sameNameOtherCase = (a: string, b: string): boolean =>
+  a !== b && a.toLowerCase() === b.toLowerCase();
 
 /**
  * A style's series: its name without the edition and what follows it — `neurips_2026` → `neurips`,
@@ -298,16 +315,15 @@ export function isStyleLoaded(
 }
 
 /**
- * The lines that load the template's style: satisfied when any carries every option the style names;
- * otherwise each option the first line lacks, at that line.
+ * The lines that load the template's style, none carrying every option it names (the caller
+ * checked): each option the first line lacks, at that line.
  */
 function judgeLoaded(
+  first: PackageLoad,
   loads: readonly PackageLoad[],
   want: StylePackage,
   data: { readonly venue: string; readonly style: string },
 ): readonly Located[] {
-  const [first] = loads;
-  if (first === undefined || loads.some((l) => carries(l, want))) return [];
   // An option built by a macro may be the one wanted: what it holds is not known, so nothing is said.
   if (loads.some((l) => l.unread.length > 0)) return [];
   return want.options
@@ -325,7 +341,7 @@ function judgeLoaded(
  * another year's style loaded instead; or not loaded at all.
  */
 export function judgeStyle(
-  { packages, others }: StyleInput,
+  { packages, others, unseen }: StyleInput,
   preset: Preset,
   latex: Pick<LatexReader, "templateStyle">,
 ): readonly Located[] {
@@ -338,7 +354,12 @@ export function judgeStyle(
   }
   const data = { venue: preset.label, style: usepackageLine(want) };
   const loads = packages.filter((p) => p.name === want.name);
-  if (loads.length > 0) return judgeLoaded(loads, want, data);
+  if (loads.some((l) => carries(l, want))) return [];
+  // What the reader cannot see may load the style or pass its options: an error never fires on that.
+  if (unseen || packages.some((p) => sameNameOtherCase(p.name, want.name)))
+    return [];
+  const [first] = loads;
+  if (first !== undefined) return judgeLoaded(first, loads, want, data);
   const instead = packages.find((p) => isOtherStyle(p.name, want.name, others));
   return instead === undefined
     ? [{ messageId: "missingStyle", data, at: null }]
@@ -636,6 +657,7 @@ const RULES: Readonly<
       judgeTemplate(r.latex.documentClass(r.src), r.preset, r.latex, {
         packages: r.latex.packages(r.src),
         others: r.styles(),
+        unseen: r.latex.packagesUnseen(r.src),
       }),
     meta: {
       type: "problem",
