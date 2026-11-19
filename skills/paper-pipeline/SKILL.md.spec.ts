@@ -203,8 +203,10 @@ The one place this order is written; every other skill points here.
 
 - **Each pass runs once.** "No findings" from any of them is a valid result and ends that pass.
 - **The author decides each finding once**, and the pass's report records it: \`fixed\`, \`rejected\`, or
-  \`waived by the author: <reason>\`. Fixes are applied in one write: a sentence through
-  \`rewrite-unclear\`, a cut on his yes. A decided finding is not raised again in this review.
+  \`waived by the author: <reason>\`. He decides the findings of steps 1–2 before step 3, and the panel
+  receives only those still open; he decides the panel's after step 3. The write happens once, after
+  step 3: every accepted fix in one pass, a sentence through \`rewrite-unclear\`, a cut on his yes. A
+  decided finding is not raised again in this review.
 - **Blockers** stop submission until \`fixed\` or \`waived by the author: <reason>\`; \`rejected\` is not
   open to them. Two kinds: a scientific must-fix in the panel's meta-review, and a readability
   hard-fail: a wall paragraph, a spec-sheet paragraph (numbers stacked with no reading of them), or a

@@ -4,7 +4,7 @@ description: The orchestrator for writing a research paper end-to-end, from idea
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:e8c62571f7f8dd02 compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:d9b5939e43389a44 compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
 
 # paper-pipeline — the conductor for the whole organism
 
@@ -164,8 +164,10 @@ The one place this order is written; every other skill points here.
 
 - **Each pass runs once.** "No findings" from any of them is a valid result and ends that pass.
 - **The author decides each finding once**, and the pass's report records it: `fixed`, `rejected`, or
-  `waived by the author: <reason>`. Fixes are applied in one write: a sentence through
-  `rewrite-unclear`, a cut on his yes. A decided finding is not raised again in this review.
+  `waived by the author: <reason>`. He decides the findings of steps 1–2 before step 3, and the panel
+  receives only those still open; he decides the panel's after step 3. The write happens once, after
+  step 3: every accepted fix in one pass, a sentence through `rewrite-unclear`, a cut on his yes. A
+  decided finding is not raised again in this review.
 - **Blockers** stop submission until `fixed` or `waived by the author: <reason>`; `rejected` is not
   open to them. Two kinds: a scientific must-fix in the panel's meta-review, and a readability
   hard-fail: a wall paragraph, a spec-sheet paragraph (numbers stacked with no reading of them), or a
