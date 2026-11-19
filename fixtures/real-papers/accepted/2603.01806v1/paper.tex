@@ -1,0 +1,1138 @@
+%%%% ijcai25.tex
+
+\typeout{IJCAI--25 Instructions for Authors}
+
+% These are the instructions for authors for IJCAI-25.
+
+\documentclass{article}
+\pdfpagewidth=8.5in
+\pdfpageheight=11in
+
+% The file ijcai25.sty is a copy from ijcai22.sty
+% The file ijcai22.sty is NOT the same as previous years'
+\usepackage{ijcai25}
+
+% Use the postscript times font!
+\usepackage{times}
+\usepackage{soul}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage[small]{caption}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage[switch]{lineno}
+
+\usepackage{amssymb}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{appendix}
+\usepackage{xcolor}
+\usepackage{appendix}
+
+
+% Comment out this line in the camera-ready submission
+% \linenumbers
+
+\urlstyle{same}
+
+% the following package is optional:
+%\usepackage{latexsym}
+
+% See https://www.overleaf.com/learn/latex/theorems_and_proofs
+% for a nice explanation of how to define new theorems, but keep
+% in mind that the amsthm package is already included in this
+% template and that you must *not* alter the styling.
+
+
+\newtheorem{example}{Example}
+\newtheorem{theorem}{Theorem}
+
+% Following comment is from ijcai97-submit.tex:
+% The preparation of these files was supported by Schlumberger Palo Alto
+% Research, AT\&T Bell Laboratories, and Morgan Kaufmann Publishers.
+% Shirley Jowell, of Morgan Kaufmann Publishers, and Peter F.
+% Patel-Schneider, of AT\&T Bell Laboratories collaborated on their
+% preparation.
+
+% These instructions can be modified and used in other conferences as long
+% as credit to the authors and supporting agencies is retained, this notice
+% is not changed, and further modification or reuse is not restricted.
+% Neither Shirley Jowell nor Peter F. Patel-Schneider can be listed as
+% contacts for providing assistance without their prior permission.
+
+% To use for other conferences, change references to files and the
+% conference appropriate and use other authors, contacts, publishers, and
+% organizations.
+% Also change the deadline and address for returning papers and the length and
+% page charge instructions.
+% Put where the files are available in the appropriate places.
+
+
+% PDF Info Is REQUIRED.
+
+% Please leave this \pdfinfo block untouched both for the submission and
+% Camera Ready Copy. Do not include Title and Author information in the pdfinfo section
+\pdfinfo{
+/TemplateVersion (IJCAI.2025.0)
+}
+
+% \title{GCTAM: Global and Contextual Combined Truncated Affinity Maximization Model For Self-supervised Graph Anomaly Detection}
+
+\title{GCTAM: Global and Contextual Truncated Affinity Combined Maximization Model For Unsupervised Graph Anomaly Detection}
+
+
+% Single author syntax
+% \author{
+%     Author Name
+%     \affiliations
+%     Affiliation
+%     \emails
+%     email@example.com
+% }
+
+% \author{
+%     Anonymous
+% }
+
+% Multiple author syntax (remove the single-author syntax above and the \iffalse ... \fi here)
+% \iffalse
+
+
+% \author{
+%     Anonymous
+% }
+
+\author{
+Xiong Zhang${{\dagger}}$\and
+Hong Peng${{\dagger}}$\and
+Zhenli He \and
+Cheng Xie$^*$\and
+Xin Jin \And
+Hua Jiang \\
+\affiliations
+School of Software, Yunnan University,  Kunming,  China\\
+\emails
+zhangxiong@stu.ynu.edu.cn,
+\{software\_ph, hezl, xiecheng, xinjin, huajiang\}@ynu.edu.cn,
+}
+% \fi
+
+
+
+
+
+\begin{document}
+\maketitle
+% \footnotetext[1]{{$\dagger$} Equal contribution.}
+% \footnotetext[2]{*Corresponding author.}
+\begin{abstract}
+Anomalies often occur in real-world information networks/graphs, such as malevolent users, malicious comments,  banned users, and fake news in social graphs. 
+The latest graph anomaly detection methods use a novel mechanism called truncated affinity maximization (TAM) to detect anomaly nodes without using any label information and achieve impressive results.
+TAM maximizes the affinities among the normal nodes while truncating the affinities of the anomalous nodes to identify the anomalies.
+However, existing TAM-based methods truncate suspicious nodes according to a rigid threshold that ignores the specificity and high-order affinities of different nodes.
+This inevitably causes inefficient truncations from both normal and anomalous nodes, limiting the effectiveness of anomaly detection. 
+To this end, this paper proposes a novel truncation model combining contextual and global affinity to truncate the anomalous nodes.
+The core idea of the work is to use contextual truncation to decrease the affinity of anomalous nodes, while global truncation increases the affinity of normal nodes.
+Extensive experiments on massive real-world datasets show that our method surpasses peer methods in most graph anomaly detection tasks.
+In highlights, compared with previous state-of-the-art methods, the proposed method has +15\% $\sim$ +20\% improvements in two famous real-world datasets, Amazon and YelpChi. 
+Notably, our method works well in large datasets, Amazin-all and YelpChi-all, and achieves the best results, while most previous models cannot complete the tasks.  
+\end{abstract} 
+
+
+%Moreover, the contextual and global combined affinity has rich characteristics that distinguish anomalous nodes from normal nodes. 
+
+% However, existing TAM-based methods truncate suspicious nodes only from first-order neighbors, ignoring high-order affinities.\
+
+% Anomalies often occur in real-world information networks/graphs, such as malevolent users, malicious comments,  banned users, and fake news in social graphs. 
+% The latest graph anomaly detection methods use a novel mechanism called Truncated Affinity Maximization (TAM) to detect anomaly nodes without using any label information and achieve impressive results.
+% %TAM maximizes the affinities among the normal nodes while truncating the affinities of the anomalous nodes to identify the anomalies.
+% However, existing TAM-based methods truncate suspicious nodes only from first-order neighbors, ignoring high-order affinities.
+% %However, existing TAM-based methods truncate suspicious nodes according to a static threshold that ignores the specificity and dynamics of different nodes.
+% This inevitably causes inefficient truncations from both normal and anomalous nodes, limiting the effectiveness of anomaly detection. 
+% To this end, this paper proposes a novel truncation model combining contextual and global affinity to truncate the anomalous nodes.
+% The core idea of the work is to use contextual truncation to decrease the affinity of anomalous nodes, while global truncation increases the affinity of normal nodes.
+% %Moreover, the contextual and global combined affinity has rich characteristics that distinguish anomalous nodes from normal nodes. 
+% Extensive experiments on massive real-world datasets show that our method surpasses peer methods in most graph anomaly detection tasks.
+% In highlights, compared to previous state-of-the-art methods, the proposed method has +15\% $\sim$ +20\% improvements in two famous real-world datasets, Amazon and YelpChi. 
+% Notably, our method works well in large datasets, Amazin-all and YelpChi-all, and achieves the best results, while most previous models cannot complete the tasks.  
+% The code can be found at \url{https://github.com/kgccc/GCTAM_codes}.
+
+
+
+
+%This significantly improves the effectiveness and accuracy of the truncation of anomalous nodes. Moreover, based on the homogeneity assumption, the paper proposes a global affinity truncation graph to further enhance the contextual truncation model.
+
+% The latest graph anomaly detection (GAD) methods innovatively proposed a Truncated Affinity Maximization (TAM) mechanism to detect anomaly nodes without using labeled samples and achieved impressive results in the GAD field.
+% TAM maximizes the affinities among the normal nodes while truncating the affinities of the anomalous nodes to identify the anomalies.
+% However, existing TAM methods truncate suspicious nodes according to an average Euclidean distance threshold that ignores the specificity of different nodes.
+% This inevitably causes incorrect truncations from both normal and anomalous nodes, limiting the effectiveness of anomaly detection. 
+% To this end, this paper proposes a contextual truncation model that truncates each suspicious node according to an adaptive affinity.
+% This significantly improves the effectiveness and accuracy of the truncation of anomalous nodes.
+% Moreover, based on the homogeneity assumption, the paper proposes a global affinity truncation graph to further enhance the contextual truncation model.
+% Extensive empirical results on seven real-world GAD datasets show that GTAM significantly outperforms eight competing models, including the representative TAM methods, achieving more than 10\% improvements in AUROC/AUPRC compared to the best competitors on challenging datasets.
+
+% Our code will be available at https://github.com/.
+
+
+%Node-level graph anomaly detection (GAD) plays a key role in identifying anomalous nodes from graph-structured data in various domains, such as medicine, social networks, and e-commerce.
+%Existing GAD methods usually use traditional graph autoencoders for data reconstruction or unsupervised learning by constructing multiple views, however, none of these methods can effectively capture the structural properties of anomalous nodes.
+%To solve this problem, we propose a multi-structured anomaly node detection framework MMGAD, which computes the similarity of local structures to define the anomaly scores of anomalous nodes through an unsupervised anomaly scoring method.
+%Specifically, first, we minimize the similarity between anomalous nodes and their neighbors by extracting the inherent difference information from the original data and tailoring the original structure based on the difference information.
+%Second, we generate a synthetic graph based on the original data, which maximizes the similarity between normal nodes and their neighbors by maximizing the similarity between them. Then, we embed the original, cropped, and composite graphs by an encoder with shared parameters.
+%Finally, we fuse the three views to ensure that the final output is not biased.
+%Extensive empirical results on six real-world GAD datasets show that MMGAD significantly outperforms eight competing models, achieving more than 10\% growth in AUROC/AUPRC compared to the best competitors on challenging datasets.
+%Our code will be available at https://github.com/.
+
+
+
+\section{Introduction}
+Graph anomaly detection (GAD) aims to identify patterns that significantly deviate from the majority within a graph. Depending on the detection task, it can be categorized into three levels: node-level~(Fig.\ref{fig:fig1}(a)), edge-level, and subgraph-level. With the widespread availability of information through anonymous accounts on commercial websites and telecommunications networks, these platforms have become prime targets for fraudsters and attackers seeking to spread misinformation, cause disruptions, and engage in malicious activities~\cite{pourhabibi2020fraud}. Due to its broad practical applications, node-level graph anomaly detection has garnered significant research interest~\cite{pourhabibi2020fraud,twbot22_feng2022twibot,tang2022rethinking,dae_fan2020anomalydae}, particularly in areas such as financial transaction networks and social networks. For instance, detecting anomalous accounts is crucial as they may have fraudulent transactions~\cite{tang2022rethinking}. Likewise, social networks often contain anomalous nodes, such as social bots that disseminate rumors and false information~\cite{twbot22_feng2022twibot}. Therefore, effective node-level graph anomaly detection plays a crucial role in enhancing the security and reliability of complex networks by mitigating fraudulent activities and ensuring data integrity. For convenience, all references to graph anomaly detection in the following article will specifically refer to node-level GAD.
+
+
+% The goal of graph anomaly detection is to recognize patterns that are significantly different from the majority of patterns in the graph, which can be divided into three types according to the detection task: node-level, edge-level, and subgraph-level. Since a vast array of information is easily accessible through anonymous accounts in commercial websites and telecommunications networks, these platforms are prime targets for fraudsters and attackers to spread misinformation, cause disruptions, and engage in malicious activities~\cite{pourhabibi2020fraud}. Graph anomaly detection has attracted great research interest due to its wide range of practical applications~\cite{pourhabibi2020fraud,twbot22_feng2022twibot,tang2022rethinking,dae_fan2020anomalydae}, e.g., in financial transaction networks and social networks. For example, it is crucial to identify anomalous edges between two accounts since these edges may represent fraudulent transactions~\cite{tang2022rethinking}. Similarly, social networks also contain anomalous nodes that could be social bots spreading rumors on the networks~\cite{twbot22_feng2022twibot}. 
+% Since graph data is non-Euclidean and characterized by diverse structures and node properties, it is challenging to effectively model the underlying normal patterns and detect anomalous nodes in various graphs. Consequently, anomalies can be hidden in the structure space, the attribute space, and a combination of both.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\linewidth]{figs/fig_motivation.pdf}
+    \caption{The motivation of the work. (a) original graph with an anomaly. (b) Insufficient Truncation; (c) Indistinguishable Truncation; (d) Excessive Truncation.}
+    \label{fig:fig1}
+\end{figure}
+
+
+
+Graph neural networks (GNNs) have been widely used in graph anomaly detection (GAD) by leveraging their ability to capture complex graph structures. Due to the frequent updates and changes in real-world networks, it is generally difficult to provide complete label information for GNN models. As a result, traditional supervised learning algorithms are not well-suited for graph anomaly detection tasks. Existing self-supervised GNN-based approaches for GAD can be categorized into reconstruction-based and contrastive-based self-supervised learning methods, such as DOMINANT~\cite{dominant_ding2019deep} and ComGA~\cite{ComGA_luo2022comga}, which detect anomalies by reconstructing adjacency and attribute matrices and identifying nodes with high reconstruction errors, assuming that anomalous nodes deviate significantly from normal patterns. On the other hand, self-supervised learning approaches, including Cola\cite{Cola_liu2021anomaly}, utilize contrastive and generative learning objectives to extract meaningful node representations and identify irregularities based on relational inconsistencies. While reconstruction-based methods minimize the reconstruction error, resulting in numerous cases in which non-trivial nodes are misidentified, contrastive-based learning methods randomly generate the augmented graphs, which become unstable and do not achieve optimal performance in real-world data environments.
+In recent years, the truncated affinity maximization (TAM) method~\cite{TAM_qiao2024truncated}, based on the homogeneity assumption, has achieved state-of-the-art results in anomaly detection. This approach learns node representations for anomaly identification by maximizing the truncation affinity between a node and its neighbors while truncating the affinities of the anomalous nodes to identify the anomalies.
+
+Existing TAM methods typically truncate suspicious nodes based on a rigid or predefined threshold, such as one computed using Euclidean distance. However, this approach overlooks the specificity and high-order affinities of different nodes, leading to suboptimal truncation performance. For instance, as illustrated in Fig.\ref{fig:fig1}(b), an insufficient truncation distance threshold may fail to remove all edges between normal and anomalous nodes, resulting in incomplete truncation. Moreover, as shown in Fig.\ref{fig:fig1}(c), an indistinguishable truncation threshold not only fails to effectively separate anomalous edges but may also mistakenly truncate normal edges between normal nodes, further complicating the detection process. Conversely, as depicted in Fig.~\ref{fig:fig1}(d), an excessively high truncation threshold leads to over-truncation, which removes most of the edges of nodes. This, in turn, results in the affinity of the node being calculated as zero, making it impossible to detect anomalies. In summary, the use of rigid truncation thresholds in existing methods significantly hampers the accurate calculation of node affinities, ultimately reducing the effectiveness of anomaly detection.
+
+To this end, we propose GCTAM, a global and contextual truncation affinity combined maximization model for unsupervised graph anomaly detection. Specifically, we introduce a contextual affinity truncation module that truncates the edges between normal and anomalous nodes, effectively reducing anomaly affinity while preserving the affinity of normal node relationships, which enhances the discriminative capability of our framework, thereby ensuring robust performance in downstream anomaly detection tasks.  Secondly, we design a global affinity truncation module based on the homogeneity assumption. This model constructs a global affinity truncation graph that enriches edge connectivity between normal nodes, aiming to increase the affinity of nodes. Doing so further enhances the performance of the contextual truncation affinity module. Finally, we introduce shared parameter graph convolution networks (GCNs) to integrate node representations from both the contextual and global affinity truncation graphs, and the unified representation is better equipped to distinguish the local affinities of normal nodes from those of anomalous nodes.
+Through extensive experimental comparisons on seven real-world GAD datasets, empirical results demonstrate that GCTAM outperforms eight competing models. Notably, on more challenging datasets, GCTAM achieves +15\% $\sim$ +20\% improvements in AUROC and AUPRC compared with the best-performing competitor. The code can be found at \url{https://github.com/kgccc/GCTAM}.
+
+In summary, our contributions are as follows:
+\begin{itemize}
+    \item Based on the homogeneity assumption, we introduce a contextual affinity truncation model to address the challenges of insufficient, indistinguishable, and excessive truncation.
+    
+    \item We further present a global affinity truncation model that improves node affinities within the global affinity truncation graph, facilitating the contextual affinity truncation model to learn more discriminative node representations for effective anomalous node detection.
+
+    \item We propose the model GCTAM that effectively integrates the contextual affinity truncation (CAT) and global affinity truncation (GAT) modules, enhancing the overall performance through their complementary strengths. Empirical results on seven real-world GAD datasets demonstrate that our GCTAM model significantly outperforms eight competing models.
+    % We propose shared-parameter graph convolutional networks that integrate the contextual affinity truncation (CAT) and global affinity truncation (GAT) models. 
+\end{itemize}
+
+
+
+
+
+
+
+
+
+\section{Related Work}
+In this section, we briefly introduce reconstruction-based self-supervised learning, contrastive-based self-supervised learning, and affinity-based unsupervised learning methods.  
+
+\subsection{Reconstruction-based Self-Supervised Learning}
+Reconstruction-based self-supervised methods usually use a graph auto-encoder (GAE) focusing on learning a node representation of a GAD by minimizing errors in reconstructing node attributes and graph structures. For example, DOMINANT\cite{dominant_ding2019deep} pioneered the first generative GAD method to learn node embeddings by minimizing the reconstruction error of attribute and adjacency matrices while exploiting attribute and topological features. AnomalyDAE\cite{dae_fan2020anomalydae} decouples attribute and structural encoders to efficiently model interactions. ComGA \cite{ComGA_luo2022comga} incorporates community detection. ANOMALOUS \cite{ANOMALOUS_peng2018anomalous} jointly considered CUR decomposition and residual analysis for anomaly detection in attribute networks. These methods ignore the anomaly-discriminative property of abnormal nodes in anomaly monitoring, thus limiting their anomaly detection capabilities.
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=1\linewidth]{figs/fig-framework_IJCAI_2025_new.pdf}
+    \caption{An overview of the GCTAM framework. The contextual truncation graph $G^{\circledast}$ truncates the edges between normal and anomaly nodes to 
+    decrease the affinity of anomaly nodes. Conversely, the Global Truncation Graph $G^{*}$ reinforces edges between normal nodes to increase their affinity.}
+    \label{fig: frame_work}
+\end{figure*}
+
+% \noindent\textbf{Contrastive-based Self-Supervised Learning.}
+\subsection{Contrastive-based Self-Supervised Learning}
+For contrastive learning-based methods, CoLA \cite{Cola_liu2021anomaly} addresses challenges with a contrastive learning paradigm, using a discriminator to detect inconsistencies between the target node and the neighbor subgraph embeddings. ANEMONE \cite{ANEMONE_zheng2021generative} introduces a patch-level contrastive task for multi-scale anomaly detection. GRADATE \cite{duan2023graph} improves the framework through graph augmentation and multi-view contrast. SL-GAD \cite{zheng2021generative} combines attribute reconstruction and node-subgraph contrast, while Sub-CR \cite{zhang2022reconstruction} uses a masked autoencoder and graph diffusion to fuse attributes with local and global topological information. 
+Although these methods build classification models on the relationship between nodes and context subgraphs, this group of methods is not designed for the task of anomaly detection, and their performance depends largely on the relationship between pre-tasks and anomaly detection. 
+
+
+
+\subsection{Affinity-based Unsupervised Learning}
+Apart from the two main categories, an anomaly detection method based on the homogeneity assumption, TAM \cite{TAM_qiao2024truncated}, has achieved the best results by learning the node representations for our anomaly measurements by maximizing the local affinity between a node and its neighbors. Although TAM achieves the best results, it ignores the specificity of different nodes by truncating suspicious nodes based on the rigid Euclidean distance threshold. 
+% This inevitably causes inefficient truncations from both normal and anomalous nodes, limiting the effectiveness of anomaly detection. 
+
+
+% This work is closely related to graph anomaly detection; 
+
+% In this section, we briefly introduce many anomaly detection methods: including shallow methods, supervised learning methods, and self-supervised learning methods. 
+
+% In this section, we briefly introduce many anomaly detection methods: including shallow methods and self-supervised learning methods.
+
+
+
+
+
+% \subsection{Shallow Methods}
+% Anomaly detection in attribute networks has attracted considerable research interest in past years due to the wide range of applications of attribute networks in modeling complex systems and most of the previous work based on attribute networks used shallow methods \cite{akoglu2015graph,pang2021deep}. AMEN\cite{perozzi2016scalable} detects anomalies by utilizing the self-network information of each node on the attribute network.
+% Radar \cite{li2017radar} characterizes the residuals of attribute information and their consistency with network information for anomaly detection.
+
+% MixedAD\cite{zhu2020mixedad} proposed a joint learning model to detect hybrid anomalies through core initiation and expansion.
+% Despite their success on low-dimensional attribute network data, these methods do not work well when the network has a complex structure and high-dimensional attributes due to the limitations of their shallow mechanisms.
+
+% \subsection{Supervised Learning Methods}
+% Deep learning-based graph anomaly detection (GAD) methods are better able to capture the complex relationships and structures present in attribute networks than traditional methods, resulting in more accurate and efficient anomaly detection. Some supervised graph anomaly detection has drawn increasing attention in recent years, such as the emergence of multiple supervised methods like CARE-GNN \cite{dou2020enhancing}, PCGNN \cite{liu2021pick}, Fraudre \cite{zhang2021fraudre}, BWGNN \cite{tang2022rethinking}, and GHRN \cite{gao2023addressing}. These methods propose various supervised effective methods to deal with heterophily edges in GNN aggregation.
+
+
+% Data reconstruction methods focus on learning a node representation of a GAD by minimizing errors in reconstructing node attributes and graph structures. 
+% While self-supervised comparison learning methods focus on designing agent tasks related to anomaly detection,
+
+
+% \subsection{Self-supervised Learning Methods}
+% Supervised learning requires a large number of labels, but real-world anomalies are rare and unknown. 
+
+
+% Self-supervised learning relies on designing a proxy task to solve the label dependency. They mainly fall into two categories: generative and contrastive learning.
+
+% \noindent\textbf{reconstruction-based Self-Supervised Learning.}
+
+
+
+\section{Method}
+
+% The proposed GCTAM model integrates two key modules: Contextual Affinity Truncation (CAT) and Global Affinity Truncation (GAT). As illustrated in Fig.~\ref{fig: frame_work}, CAT iteratively reduces anomalous node affinity by truncating abnormal edges, while GAT constructs a global affinity graph to boost normal node affinity, thereby reinforcing CAT.
+
+% This section introduces the proposed GCTAM, a global and contextual truncated affinity combined maximization model. As shown in Fig.~\ref{fig: frame_work}, the model mainly consists of two modules: contextual affinity truncation (\textbf{CAT}) and global affinity truncation (\textbf{GAT}). The former is designed to preserve normal edges while truncating anomaly edges iteratively to decrease the affinity of anomalous nodes; the latter is proposed to construct a global affinity truncation graph that improves affinities of normal nodes to further enhance the contextual affinity truncation module.
+
+% This section introduces the proposed GCTAM, a global and contextual truncated affinity combined maximization model. As shown in Fig.~\ref{fig: frame_work}, the model mainly consists of two modules: contextual affinity truncation (\textbf{CAT}) and global affinity truncation (\textbf{GAT}). The former is designed to preserve normal edges while truncating anomaly edges iteratively to decrease the affinity of anomalous nodes; the latter is proposed to construct a global affinity truncation graph that improves affinities of normal nodes to further enhance the contextual affinity truncation module.
+
+This section presents GCTAM, a model that integrates contextual and global truncated affinity maximization. As shown in Fig.~\ref{fig: frame_work}, it consists of two key modules: contextual affinity truncation (CAT) and global affinity truncation (GAT). CAT iteratively removes anomalous edges to reduce anomaly affinity while retaining normal ones. GAT constructs a global affinity graph to enhance normal node affinities, further reinforcing CAT’s effectiveness.
+
+%\subsection{The Proposed GCTAM}
+
+
+
+
+\subsection{Preliminaries}
+
+We tackle unsupervised anomaly detection on an attributed graph. 
+Supposing that $G=(\mathcal{V}, \mathbf{A},  \mathbf{X})$ is an attributed graph with $N$ nodes, where $ \mathcal{V} = \left\{v_1, \cdots, v_N\right\}$ denotes its node set. 
+Then, we denote the matrix $\mathbf{X} \in \mathbb{R}^{N \times d}$ as the attributes' feature of all nodes where $\mathbf{x}_i \in \mathbb{R}^d$ is the $d$-dimensional attribute vector of node $v_i$.
+And $\mathbf{A} \in\{0,1\}^{N \times N}$ is the adjacency matrix of graph $G$ with ${{\bf{A}}_{ij} = 1}$ if $v_i$ and $v_j$ are connected. The proposed model aims to learn an affinity score, $\mathcal{AS}(\cdot)$, such that $\mathcal{AS}(v) \gg \mathcal{AS}(v^{\prime})$ for any $v\in \mathcal{V}_{n}, v^{\prime} \in \mathcal{V}_{a}$, where ${{\mathcal V}_n}$ and ${\mathcal V}_{a}$ denotes the set of normal and abnormal nodes, respectively. According to the nature of GAD, it is typically assumed that $\left| {\mathcal V}_n \right| \gg \left| {\mathcal V}_{a} \right|$.  
+
+
+\subsection{CAT: Contextual Affinity Truncation}
+In this paper, we propose a module, CAT, designed to preserve edges between normal nodes while effectively truncating edges connecting normal and anomalous nodes based on contextual affinity among their neighbors. 
+By avoiding reliance on a fixed Euclidean distance, CAT reduces the risk of incorrect edge truncation. This approach keeps the affinity among normal nodes while effectively decreasing the affinity of anomalous nodes.
+In detail, it consists of two important processes: (1) selecting the normal edge to be preserved based on each node's cosine similarity with its neighbors, and (2) truncating the anomaly edges based on contextual affinity.
+
+First, we calculate the cosine similarity between the attribute features $\mathbf{X}$. 
+Then, the result is combined with the original adjacent matrix $\mathbf{A}$ through the Hadamard Product ($\odot$) to establish a similarity-based graph adjacent matrix $\mathbf{S}$.
+
+\begin{equation}
+    \mathbf{S}= \left( ( \mathbf{X} \cdot \mathbf{X}^{\mathtt{T}})\odot (|\mathbf{X}| \cdot |\mathbf{X}^{\mathtt{T}}|)^{-1} \right) \odot \mathbf{A}
+    \label{eq: sim_matrix}
+\end{equation}
+%where $\odot$ operation represents Hadamard product.
+
+%\textbf{Preserve Edge Select.} 
+
+Then, we select top-n nodes similar to each node as its contextual candidate nodes and set the edges to 1.0. Meanwhile, we set the rest of the edges in $\mathbf{S}$ to zero and create a contextual adjacent matrix $\hat{\mathbf{A}}$, as Eq.(\ref{eq: preserve_adjacent}).
+
+%Furthermore, we define a preserve adjacency matrix $\hat{\mathbf{A}}$ containing the nodes that are most similar to node $v_i$ to preserve normal edges. Specifically, we select the half of the neighbors that have the largest affinity with each node. The formulation is shown in Equation~(\ref{eq: preserve_adjacent}):
+
+\begin{equation}
+\begin{aligned}
+\hat{\mathbf{A}}_{ij}=
+    \begin{cases}
+        1,\quad{{ \mathbf{S}}}_{ij}\in\text{top-n}({ \mathbf{S}}_{i})\\0, \quad{{\mathbf{S}}}_{ij}\notin\text{top-n}({{\mathbf{S}}}_{i})
+    \end{cases}, ~ n = \frac{|\mathcal{N}(v_i)|}{2},
+\end{aligned}
+\label{eq: preserve_adjacent}
+\end{equation}
+
+
+where $\text{top-n}({ \mathbf{S}}_{i})$ refers to $\text{top-n}$ largest similarity in $ \mathbf{S}_i$ and $\mathcal{N}(v_i)$ is the neighbors of node $v_i$. Thus, it is easy to observe that the contextual adjacency matrix $\hat{\mathbf{A}}$ consists of the relation between the nodes and their contextual neighbors. 
+%\begin{equation}
+ %   \begin{aligned}
+ %       \bar{A}_i &= \left\{ j \mid j \in \mathcal{N}_i ~\&~ \; ( j \in  %\mathop{argmax\text{-}k} \limits_{j} (S_{i,j})~\&~ k= %\frac{|\mathcal{N}_i|}{2} \right\} 
+ %       \label{eq: delete_set}
+ %   \end{aligned}
+%\end{equation}
+
+After, similar to the similarity-based graph adjacent matrix $S$, we create an Euclidean Distance-based graph adjacent matrix $\mathbf{E}$,  as Eq.(\ref{eq: Distance}).
+%\textbf{Edge Truncation.} 
+%Euclidean distance is a simple yet effective metric for measuring the positional differences between nodes in the feature space. However, nodes $v_i$ and $v_j$ connected by normal edges generally exhibit a small Euclidean distance. Certain normal edges may need to be truncated to avoid deviations caused by unusually large distances. To address this problem, we propose a combined approach that integrates Euclidean distance with the affinity matrix, providing a more robust criterion for edge truncation.
+% Euclidean distance is a simple but effective measure to describe the difference of nodes' positions in the feature space. In general, the Euclidean distance between nodes $v_i$ and $v_j$ connected by normal edges is small, but to prevent deviation from the normal Euclidean distance larger normal edges are truncated. Therefore, we combine Euclidean distance and affinity matrix as a measure of edge truncation. 
+%For nodes $v_i$ and $v_j$, the Euclidean distance $d_{i,j}$ is computed by the following :
+
+%\begin{equation}
+%  d_{i,j} = \sqrt{\sum_{k=1}^{d} (x_{i,k} - x_{j,k})^2}
+%\label{eq: distance}
+%\end{equation}
+\begin{equation}
+\begin{aligned}
+\mathbf{E}=\widehat{\mathbf{E}} \odot \mathbf{A}, ~\widehat{\mathbf{E}}_{i,j} = \sqrt{\sum_{k=1}^{d} (x_{i,k} - x_{j,k})^2}
+\label{eq: Distance}
+\end{aligned}
+\end{equation}
+% \begin{equation}
+% \begin{aligned}
+% e_{i,j} &= \sqrt{\sum_{k=1}^{d} (x_{i,k} - x_{j,k})^2}\\
+% \mathbf{E}&=\begin{bmatrix}e_{1,1} & e_{1,2} & \cdots & e_{1,N}\\ e_{2,1} & e_{2,2} & \cdots & e_{2,N}\\ \vdots & \vdots & \ddots & \vdots\\ e_{N,1} & e_{N,2} & \cdots & e_{N,N}\end{bmatrix} \odot \mathbf{A}
+% \label{eq: Distance}
+% \end{aligned}
+% \end{equation}
+where $x_{i,k}$ represents the values of nodes $v_i$ in the $k$-th feature dimension, and $d$ is the dimensionality of the feature space. 
+The given formulation represents the matrix $\mathbf{E}$ is derived by the Hadamard Product of the distance matrices $\widehat{\mathbf{E}}$ and the adjacency matrix $\mathbf{A}$, and the elements of matrix $\widehat{\mathbf{E}}$ are calculated using the Euclidean distance. 
+% , $N$ is the total number of nodes, $\mathbf{E}$ is Euclidean distance matrix for all nodes.
+
+Then, we combine the distance matrix $\mathbf{E}$ with the similarity matrix $\mathbf{S}$ to compute the contextual affinity matrix $\mathbf{C}$, which is formulated as follows:
+
+\begin{equation}
+\begin{aligned}
+\mathbf{C}= (\mathbf{1}-\mathtt{Normalize}(\mathbf{E})) \odot \mathbf{S}
+    \label{eq: ca}
+\end{aligned}
+\end{equation}
+
+where $\mathtt{Normalize}(\cdot)$ is the normalization operation to transfer the value space of $\mathbf{E}$ the same as $\mathbf{S}$. 
+Next, we truncate the anomaly edges based on the contextual affinity matrix $\mathcal{\mathbf{C}}$ and remove anomaly edges more accurately by considering both Euclidean distance and Cosine similarity.
+
+\begin{equation}
+\begin{aligned}
+    \mathbf{A}_{i,j}^{\circledast} &= \sigma \left( \theta_{ij} \hat{\mathbf{A}}_{i,j}\right)\\
+    \theta_{ij} &=  \mathbf{C}_{i,j} - \frac{\sum_j \mathbf{C}_{i,j}}{|\mathcal{N}(v_i)|} 
+\end{aligned}
+\label{eq: truncation matrix}
+\end{equation}
+
+
+%both the global Euclidean distance and the contextual affinity. The contextual truncation strategy is shown as follows:
+
+% \begin{equation}
+% \begin{aligned}
+%     A^{\circledast}  =  \sigma \left( \mathcal{C} - \frac{\mathtt{degree(\mathcal{C})}}{\mathtt{degree(A)}} \right) \odot \hat{A}
+% \end{aligned}
+% \label{eq: truncation matrix}
+% \end{equation}
+% \begin{equation}
+%     \mathbf{A}_{i,j}^{\circledast} = \sigma \left( \mathbf{C}_{i,j} - \frac{\sum_j \mathbf{C}_{i,j}}{|\mathcal{N}(v_i)|} \right) \cdot \hat{\mathbf{A}}_{i,j}
+% \label{eq: truncation matrix}
+% \end{equation}
+
+% \begin{equation}
+%     A^{\circledast} = \sigma \left( \mathcal{C} - \frac{\mathtt{degree}(\mathcal{C})}{\text{degree}(A)} \right) \odot \hat{A}
+% \label{eq: truncation matrix}
+% \end{equation}
+
+Here, $ \sigma(\cdot) $ is the binary step function where $\sigma(x) = 1 $ if $ x > 0 $, and $ \sigma(x) = 0 $ if $ x \leq 0 $. Besides, $\mathcal{N}(v_i)$ denotes the neighbors of a node $v_i$. Since the term
+$\frac{\sum_j \mathbf{C}_{i,j}}{|\mathcal{N}(v_i)|} $ calculates the average affinity of node $v_i$, $\theta_{ij}$ represents the truncation when the affinity between $v_i$ and $v_j$ is lower than the average affinity. Based on the above analysis, the Eq.~(\ref{eq: truncation matrix}) represents the further truncation if an edge is not selected in the contextual adjacent matrix $\hat{\mathbf{A}}$.
+Meanwhile, the maximum truncation is limited to the ratio $\leq \beta$ of the total edges of the graph.
+Here, $\beta$ is a hyperparameter that will be discussed in the experiment.
+%The term $\frac{\text{degree}(\mathcal{\mathbf{C}})}{\text{degree}(\mathbf{\mathbf{A}})}$ adjusts the contextual affinity matrix $\mathcal{\mathbf{C}}$ by normalizing it based on the degrees of nodes in the original adjacency matrix $\mathbf{A}$. 
+The outcome, $\mathbf{A}^{\circledast}$, is a final truncated adjacency matrix that effectively filters out edges failing to meet the specified contextual affinity threshold.
+
+% At last, the proposed contextual affinity truncation mechanism, which combines contextual affinity and Euclidean distance, enables more accurate preservation of normal edges and ensures that anomaly edges are effectively truncated to decrease the affinity of anomaly nodes.  The truncated graph ${G}^{\circledast}$ can be expressed as follows:
+
+Finally, the proposed contextual affinity truncation mechanism, which integrates contextual affinity with Euclidean distance, enables more precise preservation of normal edges while effectively truncating anomalous edges to reduce the affinities of anomalous nodes. The resulting truncated graph ${G}^{\circledast}$ is defined as follows:
+
+\begin{equation}
+G^{\circledast} = \{\mathcal{V}, \mathbf{X}, \mathbf{A}^{\circledast}\}
+\label{eq: Truncated graph}
+\end{equation}
+
+
+ % This normalization helps ensure that the resulting matrix $A^{\circledast}$ does not introduce bias from nodes with higher degrees.  where edge weights are adjusted based on both the similarity between nodes and the original graph structure, 
+
+
+
+
+% \begin{equation}
+% \begin{aligned}
+% \bar{d} = \frac{1}{N(N-1)} \left( \sum_{i \neq j} D_{i,j} \right) , \\
+% \bar{S_i} = \frac{1}{|\mathcal{N}(n_i)|} \sum_{j \in \mathcal{N}(n_i)} S_{i,j}
+% \label{}  
+% \end{aligned}
+% \end{equation}
+
+% \begin{equation}
+% \hat{A}_{ij} = 
+% \begin{cases} 
+% 0 & \text{if } j \in A_i,  D_{i,j} >  \mathtt{avg}(D)  \&  S_{i,j} < \mathtt{avg}(S_i) , \\
+% 1 & \text{otherwise}.
+% \end{cases}
+% \end{equation}
+
+% \begin{equation}
+% D = \left[ d_{i,j} \right] \quad \text{for all} \; i, j \in \{1, 2, \dots, N\}
+% \label{eq: Distance}
+% \end{equation}  
+
+% \begin{equation}
+% D = \begin{bmatrix}
+% d_{1,1} & d_{1,2} & \cdots & d_{1,N} \\
+% d_{2,1} & d_{2,2} & \cdots & d_{2,N} \\
+% \vdots & \vdots & \ddots & \vdots \\
+% d_{N,1} & d_{N,2} & \cdots & d_{N,N}
+% \end{bmatrix}
+% \end{equation}
+
+    
+% \subsection{GAGS: Global Affinity Graph Synthesizer }
+
+
+\subsection{GAT: Global Affinity Truncation }
+Based on the assumption that similar nodes are more likely to have normal edge relationships, we designed the global affinity truncation graph.
+This graph further enhances the contextual truncation module by increasing the affinities of normal nodes. Two key processes are involved to synthesize this graph effectively: (1) node feature projection, which parametrically projects node features to a suitable space, and (2) global affinity adjacency matrix synthesis, which constructs adjacency matrices based on pairwise similarity.
+
+First, we applied a multilayer perceptron (MLP) to project the features of nodes with different feature distributions $\mathbf{X}$ into a unified feature space $\mathbf{Z}$, which is computed by:
+
+\begin{equation}
+{\mathbf{Z}} = \mathtt{MLP}(\mathbf{X})
+\label{eq: projection}
+\end{equation} 
+
+% \textbf{Global Affinity Truncation Graph.} 
+To construct the global affinity adjacent matrix, we then calculate the node-to-node similarity based on the unified feature space $\mathbf{Z}$. The equation~(\ref{eq: similarity}) presents the process for calculating the node similarity:
+
+\begin{equation}
+\bar{\mathbf{S}} = \mathbf{Z} \cdot \mathbf{Z}^{\mathtt{T}}
+\label{eq: similarity}
+\end{equation}
+where $\bar{\mathbf{S}}\in\mathbb{R}^{N \times N}$ is the global affinity matrix and $N$ is the total number of graph nodes.
+
+The global affinity adjacent matrix $\bar{\mathbf{S}}$ is usually dense and represents a fully connected graph, which is often not meaningful for most applications and can lead to expensive computational costs. Therefore, we apply the k-nearest neighbors (kNN)-based sparsification on $\bar{\mathbf{S}}$. Specifically, we retain the edges with the top-k connection values for each node and set the rest to zero. Let ${\mathbf{A}}^{*}$ represent the sparse global affinity matrix, which is defined as:
+
+\begin{equation}
+\begin{aligned}
+\mathbf{A}^*_{ij}&=
+\begin{cases}
+1,&\quad{\bar{\mathbf{S}}}_{ij}\in\text{top-k}({\bar{\mathbf{S}}}_{i}),\\0,&\quad{\bar{\mathbf{S}}}_{ij}\notin\text{top-k}({\bar{\mathbf{S}}}_{i}),
+\end{cases}
+\end{aligned}
+\label{eq: adjacent}
+\end{equation}
+where $\text{top-k}({{\mathbf{S}_i}})$ is the set of top-k values of row vector ${\bar{\mathbf{S}}}_{i}$. 
+
+At last, by combining the graph-independent node feature $\mathbf{Z}$ and the sparse adjacent matrix $\bar{\mathbf{A}}$, we have the global affinity truncation graph $G^{*}$ which can be expressed as follows:
+
+\begin{equation}
+G^{*} = \{\mathcal{V}, \mathbf{X}, \mathbf{A}^*\}
+\label{eq: global affinity graph}
+\end{equation}
+
+% For large-scale graphs , we perform the kNN sparsification with its locality-sensitive approximation  \cite{39_fatemi2021slaps} where the nearest neighbors are selected from a batch of nodes instead of all nodes, reducing the memory requirement.
+
+% \subsection{Maxmize Local Node Affinity}
+
+\subsection{Affinity Combined Maximization}
+So far, we have obtained the contextual truncation graph $G^{\circledast}$ and the global affinity truncation graph $G^{*}$. GCTAM is designed to learn a GNN-based affinity combined maximization model that maximizes the affinity of normal nodes while decreasing the affinity of anomaly nodes. Specifically, the projection from the graph nodes onto new representations using GNN layers. In this work, we employ graph convolution networks (GCNs) \cite{kipf2016gcn} due to their computational efficiency. The node representations are computed as follows:
+
+\begin{equation}
+\begin{aligned}
+    \mathbf{H}^{\circledast} =& \mathtt{GNN}^{\Theta}(G^{\circledast}) = \left[\begin{matrix}\mathbf{h}^{\circledast}_{1}\\\vdots\\ \mathbf{h}^{\circledast}_{N}\end{matrix}\right] \\
+    \mathbf{H}^{*} =& \mathtt{GNN}^{\Theta}(G^{*}) = \left[\begin{matrix}\mathbf{h}^{*}_{1}\\\vdots\\ \mathbf{h}^{*}_{N}\end{matrix}\right] \\
+\end{aligned}
+\label{eq: gnn}
+\end{equation}
+where $\Theta$ denotes the shared learnable parameters. Thus, we can notice that $\mathbf{H}^{\circledast}$ and $\mathbf{H}^{*}$ represent the node representations obtained from the contextual truncation graph $G^{\circledast}$ and the global affinity truncation graph $G^{*}$, respectively. 
+
+
+\textbf{Affinity Score Calculation.} We calculate the local affinity of each node to its neighbors to exploit this homophily property for unsupervised GAD. The local affinity can be defined as an averaged affinity to the neighboring nodes:
+
+\begin{equation}
+\label{eq: affinity socre}
+\begin{aligned}
+\mathcal{AS}^{\circledast}({v_i}) =& \frac{1}{{\left| {{\cal N^{\circledast}}\left( {{v_i}} \right)} \right|}} \sum\limits_{{v_j} \in {\cal N^{\circledast}}\left( {{v_i}} \right)} {\frac{{\mathbf{h}_i^{\circledast} \cdot{{{\mathbf{h}^{\circledast}}}_j}}}     { |{\mathbf{h}}^{\circledast}_i |  |{\mathbf{h}^{\circledast}_j}| }},
+\\   
+\mathcal{AS}^{*}({v_i}) =& \frac{1}{{\left| {{\cal N^{*}}\left( {{v_i}} \right)} \right|}}\sum\limits_{{v_j} \in {\cal N^{*}}\left( {{v_i}} \right)} {\frac{{\mathbf{h}_i^{*} \cdot{{{\mathbf{h}^{*}}}_j}}}     { |{\mathbf{h}}^{*}_i |  |{\mathbf{h}^{*}_j}| }}
+\end{aligned}
+\end{equation}
+% \begin{equation}
+% \label{eqn:lna}
+% \begin{aligned}
+% socre({v_i}) = \frac{1}{{\left| {{\cal N}\left( {{v_i}} \right)} \right|}}\sum\limits_{{v_j} \in {\cal N}\left( {{v_i}} \right)} {{\mathop{\rm sim}\nolimits} } \left( {{{\bf{x}}_i},{{\bf{x}}_j}} \right.),
+% % \\         
+% % f(v_i) =1 - socre(v_i) \quad or \quad f(v_i) =-socre(v_i),   
+% \end{aligned}
+% \end{equation}
+where ${\cal N^{\circledast}}({v_i})$ and ${\cal N^{*}}({v_i})$ are the neighbor sets of node $v_i$ in the contextual affinity truncation graph $G^{\circledast}$ and the global affinity truncation graph $G^{*}$, respectively. Similarly, $\mathcal{AS}^{\circledast}({v_i}) $ and $\mathcal{AS}^{*}({v_i})$ represent the affinity score of the node $v_i$ in the two types graphs. The larger the affinity, the more likely the node is normal, while a smaller affinity indicates a higher probability that the node is anomalous.
+
+\textbf{Learning Objective.} Finally, our optimization objective is maximizing the node affinities based on the contextual affinity truncation graph $G^{\circledast}$ and global affinity truncation graph $G^{*}$. Since we reduce the affinities of anomalous nodes in the contextual affinity truncation graph, we enhance the affinities of normal nodes in the global affinity truncation graph. By maximizing the node affinities, we can effectively distinguish between normal and anomalous nodes. The optimization objective function is formulated as follows:
+
+\begin{equation}
+\begin{aligned}
+    \mathcal{L} &=\min\limits_{\Theta}\left( - \sum_{i=1}^{N} \left(\mathcal{AS}^{\circledast}({v_i}) + \mathcal{AS}^{*}({v_i}) \right) \right)
+\end{aligned}
+\label{eq: objective}
+\end{equation}
+
+By optimizing the above equation, the local affinity of each node can be maximized based on the learned node representations, $\mathbf{H}^{\circledast}$ and $\mathbf{H}^{*}$, derived from the contextual affinity truncation graph $G^{\circledast}$ and the global affinity truncation graph $G^{*}$. 
+
+% The whole process of the above equations is organized as a pseudo-code algorithm, see the appendix algorithm~\ref{alg:alg1} for details.
+
+
+
+
+
+
+
+% \begin{equation}
+% \begin{aligned}
+% F(\mathbf{G}) &= \sum_{   v_i \in \mathbf{G}}  - f(v_i) \\
+% \min\limits_{\Theta}\left( F({G}) + F(\bar{G}) + f({\hat{G}})  ) \right) 
+% \end{aligned}
+% \label{eq: objective}
+% \end{equation}
+
+% \begin{equation}
+% \begin{aligned}
+% F(\mathbf{G}) = \sum_{   v_i \in \mathbf{G}}  - f(v_i)   \\
+% \min\limits_{\Theta}\left( F({G}) + F(\bar{G}) + f({\hat{G}})  ) \right) 
+% \end{aligned}
+% \label{eq: objective}
+% \end{equation}
+
+% The following introduces how we learn the mapping function $f(\cdot)$ by maximizing local node affinity.
+
+% \begin{equation}
+% \label{eq: objective}
+
+
+% \begin{array}{*{20}{c}}
+% \end{array} 
+% \end{equation}
+
+
+
+
+% \begin{equation}
+% \begin{aligned}
+%     f(v_i; \mathbf{G}) &= -\frac{1}{|N(v_i)|} \sum_{v_j \in N(v_i)} \text{sim}(\mathbf{h}_i, \mathbf{h}_j), \\
+%     F(\mathbf{G}) &= \sum_{   v_i \in \mathcal{V}}  - f(v_i).
+% \end{aligned}
+% \label{eq: affinity}
+% \end{equation}
+
+
+
+
+
+% The local node affinity may not work well in the raw node attribute space since (i) there can be many irrelevant attributes in the original data space and (ii) some abnormal nodes can also be connected to nodes of similar attributes. 
+
+
+
+% \begin{equation}
+% \begin{aligned}
+%       f(v_i;\mathbf{G})=-\frac{1}{{\left|{{N}\left({{v_i}}\right)}\right|}} \sum\limits_{{v_j}\in{N}\left({{v_i}}\right)}{{\mathop{\rm sim}\nolimits} }\left({{{\bf{h}}_{i}},{{\bf{h}}_{j}}}\right), \\
+%       F(\mathbf{G}) = \sum_{v_i \in \mathbf{G}} f(v_i; \mathbf{G}) &
+% \end{aligned}
+% \end{equation}
+
+
+
+
+
+% where $\mathbf{h}_i$ is a  node representation of $v_i$ learned by a GCN in GCTAM.
+
+% \begin{equation}
+% \label{eq:objective_1}
+% \begin{array}{*{20}{c}}
+% \min\limits_{\Theta}& {\sum\limits_{{v_i} \in \mathcal V} \left({{f_{\mathit{}}({v_i}; \Theta, \mathbf{A}, \mathbf{X})}} + \lambda \frac{1}{\left| \mathcal{V} \setminus {{\cal N}\left( {{v_i}} \right)} \right|} {\sum\limits_{{v_k \in \mathcal{V}\setminus\mathcal{N}(v_i)}}} {\mathop{\rm sim} \left( \mathbf{h}_i, \mathbf{h}_k \right ) }\right)\ },
+% \end{array} 
+% \end{equation}
+
+
+
+% \begin{equation}
+% \label{eq: objective}
+% \begin{array}{*{20}{c}}
+% \min\limits_{\Theta}{\sum\limits_{{v_i}\in\mathcal{V}}\left( f(v_i;{G}) + f(v_i;\bar{G}) + f(v_i;{\hat{G}})  ) \right) },
+% \end{array} 
+% \end{equation}
+
+
+
+
+
+
+
+% The optimization using Eq. (\ref{eq:objective_1}) can be largely biased by anomaly edges. Below we introduce the NSGT component that helps overcome this issue. 
+% where the first term is equivalent to maximizing the local affinity of each node based on the learned node representations, while the second term is a regularization term, and $\lambda$ is a regularization hyperparameter. The regularization term adds a constraint that the representation of each node should be dissimilar from that of non-adjacent nodes to enforce that the representations of non-local nodes are distinguishable while maximizing the similarity of the representations of local nodes. 
+% \subsection{Algorithm} 
+
+
+
+
+
+
+
+% \begin{table*}[htbp!]
+% \centering
+% \caption{AUROC and AUPRC results on seven real-world GAD datasets with injected/real anomalies. The best performance per row is boldfaced, with the second-best underlined.}
+% \label{tab: main_result}
+% \resizebox{\textwidth}{!}{%
+% \begin{tabular}{c|cccccccccccc}
+% \hline
+% \textbf{Metric} & \textbf{Dataset} & \textbf{iForest (2012)} & \textbf{ANOMALOUS (2018)} & \textbf{DOMINANT (2019)} & \textbf{CoLA (2021)} & \textbf{SL-GAD (2021)} & \textbf{HCM-A (2022)} & \textbf{ComGA (2022)} & \textbf{TAM (2024)} & \textbf{GTAM} \\ \hline
+% \multirow{7}{*}{AUROC} 
+% & Amazon       & 56.21±0.8 & 44.57±0.3 & 59.96±0.4 & 58.98±0.8 & 59.37±1.1 & 39.56±1.4 & 58.95±0.8 & 70.64±1.0 & \textbf{84.38±1.4} \\
+% & YelpChi      & 41.20±4.0 & 49.56±0.3 & 41.33±1.0 & 46.36±0.1 & 33.12±3.5 & 45.93±0.5 & 43.91±0.0 & 56.43±0.7 & \textbf{72.07±0.0} \\
+% & ACM          & 51.18±1.8 & 68.56±6.3 & 85.69±2.0 & 82.33±0.1 & 84.79±0.5 & 80.6±0.4  & 82.21±2.5 & 88.78±2.4 & \textbf{90.77±1.5} \\
+% & Facebook     & 53.82±1.5 & 90.21±0.5 & 56.77±0.2 & 84.34±1.1 & 79.36±0.5 & 73.87±3.2 & 60.55±0.0 & 91.44±0.8 & \textbf{92.17±0.5} \\
+% & Reddit       & 43.63±2.0 & 53.87±1.2 & 55.55±1.1 & 60.28±0.7 & 56.77±0.5 & 45.93±1.1 & 54.53±0.3 & \textbf{60.23±0.4} & \underline{59.63±0.4} \\
+% & Amazon-all   & -         & -         & -         & -         & -         & -         & -         & 84.76±0.7 & \textbf{89.48±0.5} \\
+% & Yelp-all     & -         & -         & -         & -         & -         & -         & -         & 58.18±0.5 & \textbf{59.57±0.4} \\ \hline
+% \multirow{7}{*}{AUPRC} 
+% & Amazon       & 13.71±0.2 & 5.58±0.1  & 14.24±0.2 & 6.77±0.1  & 6.34±0.5  & 5.27±1.5  & 11.53±0.5 & 26.34±0.8 & \textbf{50.69±8.1} \\
+% & YelpChi      & 4.09±0.0  & 5.19±0.2  & 3.95±2.0  & 4.48±0.2  & 3.5±0.0   & 2.87±1.2  & 4.23±0.0  & 7.78±0.9  & \textbf{10.95±0.9} \\
+% & ACM          & 3.72±0.1  & 6.35±0.6  & 44.02±3.6 & 32.35±1.7 & 37.84±1.1 & 34.13±0.4 & 28.73±1.2 & 51.24±1.8 & \textbf{52.10±0.7} \\
+% & Facebook     & 3.16±0.3  & 18.98±0.4 & 3.14±4.1  & 21.06±1.7 & 13.16±2.0 & 7.13±0.4  & 3.54±0.1  & 22.33±1.6 & \textbf{22.81±0.6} \\
+% & Reddit       & 2.69±0.1  & 3.75±0.4  & 3.56±0.2  & 4.49±0.2  & 4.06±0.4  & 2.87±0.5  & 3.74±0.1  & \textbf{4.46±0.1} & \underline{4.06±0.1} \\
+% & Amazon-all   & -         & -         & -         & -         & -         & -         & -         & 43.46±0.9 & \textbf{70.13±0.4} \\
+% & Yelp-all     & -         & -         & -         & -         & -         & -         & -         & 18.86±0.6 & \textbf{20.13±0.7} \\ \hline
+% \end{tabular}%
+% }
+% \end{table*}
+
+
+
+% \begin{table*}[htbp!]
+% \centering
+% \caption{AUROC and AUPRC results on GAD datasets}
+% \resizebox{\textwidth}{!}{%
+% \begin{tabular}{lcccccccccccccc}
+% \hline
+% \textbf{Method} & \textbf{ACM (AUPRC)} & \textbf{ACM (AUROC)} & \textbf{Amazon (AUPRC)} & \textbf{Amazon (AUROC)} & \textbf{Amazon-all (AUPRC)} & \textbf{Amazon-all (AUROC)} & \textbf{Facebook (AUPRC)} & \textbf{Facebook (AUROC)} & \textbf{Reddit (AUPRC)} & \textbf{Reddit (AUROC)} & \textbf{Yelp-all (AUPRC)} & \textbf{Yelp-all (AUROC)} & \textbf{YelpChi (AUPRC)} & \textbf{YelpChi (AUROC)} \\ \hline
+% iForest      & 3.72  & 51.18  & 13.71 & 56.21 & -     & -     & 3.16  & 53.82  & 2.69  & 43.63  & -     & -     & 4.09  & 41.20  \\
+% ANOMALOUS    & 6.35  & 68.56  & 5.58  & 44.57 & -     & -     & 18.98 & 90.21  & 3.75  & 53.87  & -     & -     & 5.19  & 49.56  \\
+% DOMINANT     & 44.02 & 85.69  & 14.24 & 59.96 & -     & -     & 3.14  & 56.77  & 3.56  & 55.55  & -     & -     & 3.95  & 41.33  \\
+% CoLA         & 32.35 & 82.33  & 6.77  & 58.98 & -     & -     & 21.06 & 84.34  & 4.49  & 60.28  & -     & -     & 4.48  & 46.36  \\
+% SL-GAD       & 37.84 & 84.79  & 6.34  & 59.37 & -     & -     & 13.16 & 79.36  & 4.06  & 56.77  & -     & -     & 3.50  & 33.12  \\
+% HCM-A        & 34.13 & 80.60  & 5.27  & 39.56 & -     & -     & 7.13  & 73.87  & 2.87  & 45.93  & -     & -     & 2.87  & 45.93  \\
+% ComGA        & 28.73 & 82.21  & 11.53 & 58.95 & -     & -     & 3.54  & 60.55  & 3.74  & 54.53  & -     & -     & 4.23  & 43.91  \\
+% TAM (2024)   & 51.24 & 88.78  & 26.34 & 70.64 & 43.46 & 84.76 & 22.33 & 91.44  & 4.46  & 60.23  & 18.86 & 58.18 & 7.78  & 56.43  \\
+% GTAM         & 52.10 & 90.77  & 50.69 & 84.38 & 70.13 & 89.48 & 22.81 & 92.17  & 4.06  & 59.63  & 20.13 & 59.57 & 10.95 & 72.07  \\ \hline
+% \end{tabular}%
+% }
+% \end{table*}
+
+
+
+
+
+\section{Experiment}
+\subsection{Experiment Settings}
+\noindent\textbf{Datasets.}
+ We conduct the experiments on seven widely used publicly available real-world GAD datasets from diverse social networks, and citation networks, including Amazon~\cite{dou2020enhancing}, YelpChi~\cite{kumar2019predicting}, ACM~\cite{tang2008arnetminer}, Facebook~\cite{xu2022contrastive}, and Reddit. The ACM dataset contains two types of injected anomalies, contextual and structural anomalies ~\cite{Cola_liu2021anomaly,dominant_ding2019deep}, that are nodes with significantly deviated graph structure and node attributes, respectively. The other six datasets contain real anomalies. The statistics of all datasets are shown in Table~\ref{tab: datasets}. 
+ % More detailed information about the datasets can be found in appendix~\ref{app: datasets}. 
+
+
+
+ 
+
+\begin{table}[ht!]
+\setlength{\tabcolsep}{0.65mm}
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcccccc}
+\toprule
+Dataset & Type &R/I & Nodes & Edges & Attributes & Anomalies(Rate)  \\
+\midrule
+Amazon   & Co-review  & R &10244 &175,608  &25 & 693(6.66\%)\\
+YelpChi  & Co-review  &R &24,741 &49,315 &32 &1,217(4.91\%)\\
+ACM &Citation Networks & I& 16,484 &71,980 &8,337 &597(3.63\%)\\
+Facebook  & Social Networks& R& 1,081 &55,104 &576 &27(2.49\%)\\
+Reddit  & Social Networks&R &10,984 &168,016 &64 &366(3.33\%)\\
+Amazon-all & Co-review &R    & 11,944 &  4,398,392&25 & 821(6.87\%)   \\   YelpChi-all  & Co-review  &R &45,941 &3,846,979 &32 &6,674(14.52\%)\\
+\bottomrule
+\end{tabular}
+}
+\caption{The statistics of seven datasets. The R/I represents the datasets with Injected/Real anomalies.}
+\label{tab: datasets}
+\end{table}
+
+
+
+\noindent\textbf{Baselines.}
+GCTAM is compared with a total of eight state-of-the-art (SOTA) methods. The three contrastive-based self-supervised methods are CoLA~\cite{Cola_liu2021anomaly}, SL-GAD~\cite{SL_GAD_zheng2021generative}, and HCM-A~\cite{huang2021hop}, while four are reconstruction-based self-supervised methods, namely DOMINANT~\cite{dominant_ding2019deep}, iForest~\cite{liu2012isolation}, ANOMALOUS~\cite{ANOMALOUS_peng2018anomalous} and ComGA~\cite{ComGA_luo2022comga}. One semi-supervised model, GGAD~\cite{semi_qiao2024generative}. Additionally, GCTAM is compared with the affinity-based SOTA method, TAM~\cite{TAM_qiao2024truncated}.
+
+% GCTAM is compared with two state-of-the-art (SOTA) shallow methods -- iForest \cite{liu2012isolation} and ANOMALOUS \cite{ANOMALOUS_peng2018anomalous} -- and six 
+% SOTA GNN-based deep methods, including three self-supervised learning methods -- CoLA \cite{Cola_liu2021anomaly}, SL-GAD \cite{SL_GAD_zheng2021generative}, and HCM-A \cite{huang2021hop}  -- and two reconstruction-based methods -- DOMINANT \cite{dominant_ding2019deep} -- ComGA\cite{ComGA_luo2022comga}. Affinity-based sota method TAM \cite{TAM_qiao2024truncated}.
+
+\begin{table*}[ht!]
+\centering
+% \renewcommand{\arraystretch}{1.1}
+\textit{Note}: * represents reproduced result, others are reported in TAM\cite{TAM_qiao2024truncated}.
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{c|c|cccccccccc}
+\hline
+\textbf{Metric} & \textbf{Method} & \textbf{Amazon} & \textbf{YelpChi} & \textbf{ACM} & \textbf{Facebook} & \textbf{Reddit} & \textbf{Amazon-all} & \textbf{YelpChi-all} \\ \hline
+\multirow{9}{*}{AUROC} 
+& iForest (2012)      & 56.21±0.8  & 41.20±4.0  & 51.18±1.8  & 53.82±1.5  & 43.63±2.0  & -          & -          \\
+& ANOMALOUS (2018)    & 44.57±0.3  & 49.56±0.3  & 68.56±6.3  & 90.21±0.5  & 53.87±1.2  & -          & -          \\
+& DOMINANT (2019)     & 59.96±0.4  & 41.33±1.0  & 85.69±2.0  & 56.77±0.2  & 55.55±1.1  & -          & -          \\
+& CoLA (2021)         & 58.98±0.8  & 46.36±0.1  & 82.33±0.1  & 84.34±1.1  & \textbf{60.28±0.7}  & 74.36±1.2          & 50.77±0.9          \\
+& SL-GAD (2021)       & 59.37±1.1  & 33.12±3.5  & 84.79±0.5  & 79.36±0.5  & 56.77±0.5  & -          & -          \\
+& HCM-A (2022)        & 39.56±1.4  & 45.93±0.5  & 80.60±0.4  & 73.87±3.2  & 45.93±1.1  & -          & -          \\
+& ComGA (2022)        & 58.95±0.8  & 43.91±0.0  & 82.21±2.5  & 60.55±0.0  & 54.53±0.3  & -          & -          \\
+& TAM (2023)          & {70.64±1.0}  & {56.43±0.7}  & \underline{88.78±2.4}  & \underline{91.44±0.8}  & \underline{60.23±0.4}  & \underline{84.76±0.7}  & \underline{58.18±0.5} \\
+
+& GGAD (2024)*          & \underline{73.12±0.8}  & \underline{62.80±0.9}  & {36.91±2.1}  & {70.66±3.6}  & {60.07±0.8}  &{82.30±1.1}      & {55.34±1.2} \\
+
+& \textbf{GCTAM(ours)}         & \textbf{84.38±1.4}  & \textbf{79.00±0.5}  & \textbf{90.77±1.5}  & \textbf{92.38±0.3}  & {59.21±0.6}  & \textbf{88.89±0.6}  & \textbf{59.57±0.4}  \\
+
+&  $\Delta$ & \textcolor{red}{$\uparrow$11.26} & \textcolor{red}{$\uparrow$16.20} & \textcolor{red}{$\uparrow$1.99} & \textcolor{red}{$\uparrow$0.94} & \textcolor{green}{↓ 1.07} & \textcolor{red}{$\uparrow$4.13} & \textcolor{red}{$\uparrow$1.39}
+
+\\ \hline
+
+\multirow{9}{*}{AUPRC} 
+& iForest (2012)      & 13.71±0.2  & 4.09±0.0   & 3.72±0.1   & 3.16±0.3   & 2.69±0.1   & -          & -          \\
+& ANOMALOUS (2018)    & 5.58±0.1   & 5.19±0.2   & 6.35±0.6   & 18.98±0.4  & 3.75±0.4   & -          & -          \\
+& DOMINANT (2019)     & 14.24±0.2  & 3.95±2.0   & 44.02±3.6  & 3.14±4.1   & 3.56±0.2   & -          & -          \\
+& CoLA (2021)         & 6.77±0.1   & 4.48±0.2   & 32.35±1.7  & 21.06±1.7  & \textbf{4.49±0.2}   & 20.12±0.4          & 8.48 ± 0.7         \\
+& SL-GAD (2021)       & 6.34±0.5   & 3.50±0.0   & 37.84±1.1  & 13.16±2.0  & 4.06±0.4   & -          & -          \\
+& HCM-A (2022)        & 5.27±1.5   & 2.87±1.2   & 34.13±0.4  & 7.13±0.4   & 2.87±0.5   & -          & -          \\
+& ComGA (2022)        & 11.53±0.5  & 4.23±0.0   & 28.73±1.2  & 3.54±0.1   & 3.74±0.1   & -          & -          \\
+& TAM (2023)          & \underline{26.34±0.8}  & {7.78±0.9}  & \underline{51.24±1.8}  & \underline{22.33±1.6}  & \underline{4.46±0.1}  & \underline{43.46±0.9}  & \underline{18.86±0.6} \\
+
+& GGAD (2024)*          & {19.10±0.8}  & \underline{12.40±1.5}  & {3.00±0.7}  & {6.47±1.1}  & {4.05±0.7}  & {42.19±0.8}  & {17.79±1.5} \\
+
+& \textbf{GCTAM(ours)} & \textbf{50.69±8.1}  & \textbf{16.04±1.0}  & \textbf{52.10±0.7}  & \textbf{22.81±0.6}  & 4.17±0.1  & \textbf{67.18±4.8}  & \textbf{20.13±0.7} \\ 
+
+& $\Delta$ & \textcolor{red}{$\uparrow$24.35} & \textcolor{red}{$\uparrow$3.64} & \textcolor{red}{$ \uparrow$0.86} & \textcolor{red}{$\uparrow$0.48} & \textcolor{green}{↓  0.32} & \textcolor{red}{$\uparrow$23.72} & \textcolor{red}{$\uparrow$1.27} \\
+\bottomrule
+\end{tabular}%
+}
+
+\caption{AUROC and AUPRC results on seven real-world GAD datasets with injected/real anomalies. The best performance per row is boldfaced, with the second-best underlined. $-$ indicates that the result is not available in the TAM. $\Delta$ represents the improvement (\textcolor{red}{$\uparrow$}) or degradation (\textcolor{green}{↓}) compared to the current best baseline method.}
+\label{tab: main_result}
+\end{table*} 
+
+
+
+% \begin{table*}[htbp!]
+% \centering
+% \caption{AUROC and AUPRC results on seven real-world GAD datasets with injected/real anomalies. The best performance per row is boldfaced, with the second-best underlined.}
+% \label{tab: main_result}
+% \resizebox{\textwidth}{!}{%
+% \begin{tabular}{c|c|cccccccccc}
+% \hline
+% \textbf{Metric} & \textbf{Method} & \textbf{Amazon} & \textbf{YelpChi} & \textbf{ACM} & \textbf{Facebook} & \textbf{Reddit} & \textbf{Amazon-all} & \textbf{YelpChi-all} \\ \hline
+% \multirow{9}{*}{AUROC} 
+% & iForest (2012)      & 56.21±0.8  & 41.20±4.0  & 51.18±1.8  & 53.82±1.5  & 43.63±2.0  & -          & -          \\
+% & ANOMALOUS (2018)    & 44.57±0.3  & 49.56±0.3  & 68.56±6.3  & 90.21±0.5  & 53.87±1.2  & -          & -          \\
+% & DOMINANT (2019)     & 59.96±0.4  & 41.33±1.0  & 85.69±2.0  & 56.77±0.2  & 55.55±1.1  & -          & -          \\
+% & CoLA (2021)         & 58.98±0.8  & 46.36±0.1  & 82.33±0.1  & 84.34±1.1  & \textbf{60.28±0.7}  & -          & -          \\
+% & SL-GAD (2021)       & 59.37±1.1  & 33.12±3.5  & 84.79±0.5  & 79.36±0.5  & 56.77±0.5  & -          & -          \\
+% & HCM-A (2022)        & 39.56±1.4  & 45.93±0.5  & 80.60±0.4  & 73.87±3.2  & 45.93±1.1  & -          & -          \\
+% & ComGA (2022)        & 58.95±0.8  & 43.91±0.0  & 82.21±2.5  & 60.55±0.0  & 54.53±0.3  & -          & -          \\
+% & TAM (2024)          & \underline{70.64±1.0}  & \underline{56.43±0.7}  & \underline{88.78±2.4}  & \underline{91.44±0.8}  & \underline{60.23±0.4}  & \underline{84.76±0.7}  & \underline{58.18±0.5} \\
+
+% & \textbf{GCTAM}         & \textbf{84.38±1.4}  & \textbf{79.00±0.5}  & \textbf{90.77±1.5}  & \textbf{92.38±0.3}  & {59.21±0.6}  & \textbf{88.89±0.6}  & \textbf{59.57±0.4}  \\
+
+% & \textbf{Improvement} & \textcolor{red}{$\uparrow$19.45\%} & \textcolor{red}{$\uparrow$40.00\%} & \textcolor{red}{$\uparrow$2.24\%} & \textcolor{red}{$\uparrow$1.03\%} & \textcolor{green}{↓1.69\%} & \textcolor{red}{$\uparrow$5.56\%} & \textcolor{red}{$\uparrow$2.39\%}
+
+% \\ \hline
+
+% \multirow{9}{*}{AUPRC} 
+% & iForest (2012)      & 13.71±0.2  & 4.09±0.0   & 3.72±0.1   & 3.16±0.3   & 2.69±0.1   & -          & -          \\
+% & ANOMALOUS (2018)    & 5.58±0.1   & 5.19±0.2   & 6.35±0.6   & 18.98±0.4  & 3.75±0.4   & -          & -          \\
+% & DOMINANT (2019)     & 14.24±0.2  & 3.95±2.0   & 44.02±3.6  & 3.14±4.1   & 3.56±0.2   & -          & -          \\
+% & CoLA (2021)         & 6.77±0.1   & 4.48±0.2   & 32.35±1.7  & 21.06±1.7  & \textbf{4.49±0.2}   & -          & -          \\
+% & SL-GAD (2021)       & 6.34±0.5   & 3.50±0.0   & 37.84±1.1  & 13.16±2.0  & 4.06±0.4   & -          & -          \\
+% & HCM-A (2022)        & 5.27±1.5   & 2.87±1.2   & 34.13±0.4  & 7.13±0.4   & 2.87±0.5   & -          & -          \\
+% & ComGA (2022)        & 11.53±0.5  & 4.23±0.0   & 28.73±1.2  & 3.54±0.1   & 3.74±0.1   & -          & -          \\
+% & TAM (2024)          & \underline{26.34±0.8}  & \underline{7.78±0.9}  & \underline{51.24±1.8}  & \underline{22.33±1.6}  & \underline{4.46±0.1}  & \underline{43.46±0.9}  & \underline{18.86±0.6} \\
+% & \textbf{GCTAM}       & \textbf{50.69±8.1}  & \textbf{16.04±1.0}  & \textbf{52.10±0.7}  & \textbf{22.81±0.6}  & 4.17±0.1  & \textbf{67.18±4.8}  & \textbf{20.13±0.7} \\ 
+
+% & \textbf{Improvement} & \textcolor{red}{$\uparrow$92.44\%} & \textcolor{red}{$\uparrow$106.17\%} & \textcolor{red}{$\uparrow$1.68\%} & \textcolor{red}{$\uparrow$2.15\%} & \textcolor{green}{↓6.50\%} & \textcolor{red}{$\uparrow$54.57\%} & \textcolor{red}{$\uparrow$6.73\%}
+% \\
+% \hline
+% \end{tabular}%
+% }
+% \end{table*}
+
+
+\noindent\textbf{Evaluation Settings.} 
+Following~\cite{TAM_qiao2024truncated,chai2022can,pang2021toward,wang2022cross,zhou2022unseen}, two popular and complementary evaluation metrics for anomaly detection, Area Under the Receiver Operating Characteristic Curve (AUROC) and Area Under the precision-recall curve (AUPRC), are used. Higher AUROC/AUPRC indicates better performance. The reported average and standard deviation of AUROC and AUPRC results are averaged over 5 runs with different random seeds. 
+
+% For node classification, following the methodology described by Lv et al. (2021), we split the labeled training set into training and validation subsets at 80\%:20\%. The testing data are fixed, with detailed numbers provided in Table \ref{tab: node split}. 
+% For each dataset, we conduct experiments on five random splits, reporting the average and standard deviation of the results. For our methods, we perform a grid search to select the best hyperparameters on the validation set, with the selected hyperparameters shown in Table \ref{tab:my-table_parameter}. The results of the node classification are reported using the averaged Macro-F1 and Micro-F1 scores.
+
+% AUROC and AUPRC results for the seven real-world GAD datasets are reported in Tab.\ref{tab: main_result}. On the remaining 6 datasets except Reddit, GCTAM significantly outperforms all 8 competing methods on both AUROC and AUPRC. Overall, GCTAM achieves an average of +9.85\% and +36.60\% improvement in AUROC and AUPRC compared with the runner-up TAM. Most notably, on the challenge dataset Amazon, GCTAM achieves a 19.45\% and 92.44\% improvement in AUROC and AUPRC, respectively, over the best-competing method, TAM. Secondly, on the Yelp dataset, GCTAM's AUROC and AUPRC improved by 40\% and 106.17\%, respectively, over the best-competing method, TAM. Notably, GCTAM is the third on the Reddit dataset 59.63\%, which is -1.69\% lower than Cola 60.28\% and performs similarly to the best-competing method, Cola. In the small and medium datasets Facebook and ACM, GCTAM performs consistently, improving by +1.77\%  compared with the previous SOTA method.
+% In the large Amazon-all dataset, GCTAM achieves 89.48\% and 70.13\% for AUROC and AUPRC respectively, which is 5.56\% and 54.57\% better than TAM, and also compared with the large dataset YelpChi-all, GCTAM achieves 2.39\% and 6.73\% better than TAM.
+
+% \subsection{Results}
+\subsection{Main Results}
+The AUROC and AUPRC results for the seven real-world GAD datasets are reported in Table \ref{tab: main_result}. For most of the datasets, GCTAM consistently outperforms all competing methods in both AUROC and AUPRC. However, it achieved weaker performance than CoLA and TAM, which may be caused by the low homophily distribution of normal nodes and anomaly nodes in the Reddit dataset.
+Moreover, we observe that the TAM model achieves the second-best performance among all compared methods, highlighting that the truncated affinity maximization approach is better suited for node-level graph anomaly detection than other methods.
+Notably, on the challenging Amazon dataset, GCTAM achieves a substantial improvement of +11.26 in AUROC and +24.35 in AUPRC over GGAD, the best-performing competitor. Similarly, on the Yelp dataset, GCTAM demonstrates a remarkable enhancement of +16.20 in AUROC and +3.64 in AUPRC over GGAD. Moreover, for the large-scale Amazon-all dataset, GCTAM outperforms TAM by +4.13 in AUROC and +23.72 in AUPRC. 
+This result indicates the superior capabilities of integrating global and contextual information of graphs, particularly on challenging and large-scale datasets, underscoring its potential as a robust solution for Affinity-based anomaly detection tasks.
+
+% Notably, on the challenging Amazon dataset, GCTAM achieves a substantial improvement of +11.26 in AUROC and +24.35 in AUPRC over TAM, the best-performing competitor. Similarly, on the Yelp dataset, GCTAM demonstrates a remarkable enhancement of +16.20 in AUROC and +3.64 in AUPRC over TAM.
+
+% Specifically, GCTAM achieves an average improvement of +9.85\% in AUROC and +36.60\% in AUPRC compared with the runner-up method, TAM. 
+
+% On the Reddit dataset, GCTAM ranks third with an AUROC of 59.63\%, just -1.69\% lower than the top-performing method, Cola 60.28\%, and performs similarly to Cola in terms of AUPRC. In the smaller datasets, Facebook and ACM, GCTAM exhibits consistent performance, with a +1.77\% improvement over the previous state-of-the-art method.
+
+% Likewise, on the large YelpChi-all dataset, GCTAM outperforms TAM by +2.39\% in AUROC and +6.73\% in AUPRC.
+
+
+
+
+% The AUROC and AUPRC results on seven real-world GAD datasets are reported in Tab. \ref{tab: main_result}. GCTAM substantially outperforms all seven competing methods on all datasets except Reddit in both metrics, having maximally 9\% AUROC and 12\% AUPRC improvement over the best-competing methods on the challenge dataset Amazon; on Reddit, it ranks second and performs similarly well to the best contender CoLA. Further, existing methods perform very unstably across different datasets. For example, DOMINANT performs well on ACM but badly on the other datasets; CoLA works well on Reddit but it fails in the other datasets. Similar observations are found in a recent comprehensive comparative study~\cite{liu2022bond}. By contrast, GCTAM can perform consistently well on these diverse datasets. This is mainly because i) the proposed one-class homophily is more pervasive than the GAD 
+% intuitions used by existing methods in different datasets, and ii) GCTAM offers an effective anomaly scoring function to utilize this anomaly-discriminative property for accurate GAD.
+
+
+% Please add the following required packages to your document preamble:
+% \usepackage{graphicx}
+
+
+
+\begin{table}[htbp!]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{cccccc}
+\toprule
+\textbf{Datasets}  & w/o $G^{\circledast} \& {G}^{*}$ & w/$G^{\circledast}$  & w/${G}^{*}$   & GCTAM    \\ 
+\midrule
+Amazon              & 83.86     & 83.90  &\underline{84.07}   & \textbf{84.38} \\ 
+\midrule
+YelpChi             & 69.73    & {73.07}  &\underline{77.43}  & \textbf{79.00} \\  \midrule
+ACM                 & 84.30    & \underline{89.06}    & 88.70  & \textbf{90.77} \\ 
+\midrule
+Facebook            & 89.03    & \underline{91.55}    & 89.67   & \textbf{92.38} \\ \midrule
+Reddit              & 57.09     & \underline{58.95}   & 57.21   & \textbf{59.21} \\ \midrule
+Amazon-all          & 87.32     & 88.14   & \underline{88.41}   & \textbf{88.89} \\ 
+\midrule
+YelpChi-all         & 58.10      & 58.42  & \underline{59.02}  &\textbf{59.57} \\ 
+\bottomrule
+\end{tabular}%
+}
+\caption{The evaluation of CAT $G^{\circledast}$ and GAT ${G}^{*}$ module over the metric AUROC.}
+\label{tab: ablation_study}
+
+\end{table}
+
+
+\subsection{Ablation Study}
+
+% In this section, we demonstrate the effectiveness of GCTAM by ablation experiments without using contextual truncation graph $G^{\circledast}$ and the global affinity truncation graph ${G}^{*}$.
+% As shown in\ref{tab: ablation_study}, GCTAM with truncation graph $G^{\circledast}$ global affinity truncation graph  ${G}^{*}$ achieves the best results on 7 datasets. Specifically, on the ACM dataset, GCTAM achieves a significant improvement of 7.67\% in AUROC using both the truncation graph $G^{\circledast}$ and the global affinity truncation graph ${G}^{*}$. 
+% Notably, on the YelpChi dataset, without the use of $G^{\circledast}$ and ${G}^{*}$, GCTAM achieves the results in AUROC achieved 69.73 \%, AUROC improved by  4.78 \% when using the truncation graph $G^{\circledast}$, 11.04\% when using the global affinity truncation graph ${G}^{*}$, and  13.29 \% when both were used together to achieve the best results.
+% On the largest dataset, Amazon-all, AUROC improves by 0.93\% when using the truncation graph $G^{\circledast}$, 1.25\% when using the global affinity truncation graph ${G}^{*}$, and 1.80\% when both are used together to achieve the best results.
+% These results indicate that the proposed contextual truncation graph $G^{\circledast}$ can greatly improve the performance of local affinity-based anomaly detection. In contrast, the proposed global affinity truncation graph ${G}^{*}$ can further enhance the performance of the contextual truncation graph model.
+
+
+In ablation experiments, we evaluate the effectiveness of GCTAM with metric AUROC by excluding the CAT and GAT modules, respectively. For clarity, the GCTAM with or without two modules, which is represented by $G^{\circledast}$ and $G^{*}$, is denoted as w and w/o. As shown in Table~\ref{tab: ablation_study}, GCTAM with two modules achieves the best performance across all datasets. It is worth mentioning that removing either the CAT or GAT module reduces the performance of the model to varying degrees. Specifically, on the ACM, Facebook, and Reddit datasets, the use of the contextual truncation graph results in a significant improvement in AUROC. This demonstrates that the proposed contextual affinity truncation effectively reduces anomaly affinity by successfully truncating anomalous edges. Meanwhile, on the Amazon and YelpChi datasets, a significant improvement in AUROC is observed after applying the global affinity truncation. The main reason is that our global affinity truncation enhances the connections between normal nodes, thereby increasing their affinity scores. In summary, these findings demonstrate that the combination of CAT and GAT modules significantly enhances the performance of affinity-based anomaly detection, further boosting the overall performance of the GCTAM.
+
+
+
+% Specifically, on the ACM, Facebook, and Reddit datasets, with using the contextual truncation graph, a large improvement in AUROC is achieved, which proves that our proposed contextual affinity truncation effectively reduces the anomaly affinity by truncating the anomaly edges. 
+
+% On the largest dataset, Amazon-all, AUROC improves by 0.93\% when using $G^{\circledast}$, 1.25\% with $G^{*}$, and 1.80\% when both graphs are used in combination, achieving the best result.
+
+
+
+
+
+% \begin{figure} [!htbp]
+%     \centering
+%     \begin{minipage} 
+%         {0.49\linewidth}
+%         \centering
+%         \includegraphics[width=1\linewidth]{figs/impact_edge_cut_ratio_amazon.pdf}
+%     \end{minipage}
+%     \begin{minipage} {0.5\linewidth}
+%         \centering
+%         \includegraphics[width=1\linewidth]{figs/impact_neighbors_k_amazon.png}
+%     \end{minipage}
+%     \caption{AUROC/AUPRC VS Edge Truncation Ratio}
+%     \label{fig:t-sne}
+% \end{figure}
+
+% \begin{figure}[!htbp]
+%     \centering
+%     \begin{minipage}{0.48\textwidth}
+%         \centering
+%         \includesvg[width=\textwidth]{figs/impact_edge_cut_ratio_amazon.pdf}
+%         \caption*{(a) AUROC/AUPRC vs Edge Truncation Ratio (Amazon)}
+%     \end{minipage}
+%     \hfill
+%     \begin{minipage}{0.48\textwidth}
+%         \centering
+%         \includegraphics[width=\textwidth]{figs/impact_neighbors_k_amazon.png}
+%         \caption*{(b) AUROC/AUPRC vs Number of Neighbors $k$ (Amazon)}
+%     \end{minipage}
+%     \caption{AUROC and AUPRC Analysis for Amazon Dataset}
+%     \label{fig:auroc_auprc_amazon}
+% \end{figure}
+
+
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=1\linewidth]{figs/impact_edge_cut_ratio_amazon.png}
+%     \caption{AUROC/AUPRC VS Edge Truncation Ratio}
+%     \label{fig:enter-label}
+% \end{figure}
+
+\subsection{Parameter Analysis}
+In this subsection, we explore the sensitivity of two important hyper-parameters in GCTAM: edge truncation ratio $\beta$ and the number of global affinity truncation graph neighbors $k$. The parameter $\beta$ determines the max number of truncated edges ratio from the original graph, and the parameter $k$ determines the number of neighbor nodes to be used in global affinity adjacent matrix $\mathbf{A}^{*}$ based on k-nearest-neighbor topk$(\cdot)$ (kNN).
+
+\begin{figure}[h]
+    \centering
+    \begin{minipage}{0.98\linewidth}
+        \centering
+        \begin{minipage}{0.49\linewidth}
+            \centering
+            \includegraphics[width=\linewidth]{figs/edge_cut_analysis_amazon.pdf}
+        \end{minipage}
+        \begin{minipage}{0.49\linewidth}
+            \centering
+            \includegraphics[width=\linewidth]{figs/edge_cut_analysis_yelp.pdf}
+        \end{minipage}
+    \end{minipage}
+    \caption{Edge Truncation Ratio VS  AUROC and AUPRC}
+    
+    \label{fig: edge_truncation_ratio}
+\end{figure}
+
+\textbf{Edge truncation ratio $\beta$ analysis.} As shown in the Fig \ref{fig: edge_truncation_ratio}, all datasets were searched for the edge truncation ratio $\beta$, in the range of 0-0.95. From the figure, we can find that different datasets have different sensitivities to the edge truncation ratio $\beta$. Specifically, for the Amazon dataset, the number of anomalous edges is high, and a larger truncation ratio $\beta$ is needed to ensure that the characterization obtained by the model from the truncated graph $G^{\circledast}$ is more conducive to distinguishing anomalous nodes. For the YelpChi dataset, the number of anomalous edges is small, and a better characterization to distinguish anomalous nodes can be obtained based on a smaller edge truncation ratio $\beta$. Therefore, choosing the appropriate edge truncation ratio $\beta$ for different datasets is crucial for affinity-based anomaly node detection. 
+
+
+
+% \begin{figure}
+%     \centering
+%     \includegraphics[width=1\linewidth]{figs/impact_neighbors_k_amazon.png}
+%     \caption{AUROC/AUPRC VS Affinity Graph Neighbor K}
+%     \label{fig:enter-label}
+% \end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.99\linewidth}
+        \centering
+        \begin{minipage}{0.49\linewidth}
+            \centering
+            \includegraphics[width=\linewidth]{figs/impact_neighbors_k_amazon.pdf}
+        \end{minipage}
+        \begin{minipage}{0.49\linewidth}
+            \centering
+            \includegraphics[width=\linewidth]{figs/impact_neighbors_k_YelpChi.pdf}
+        \end{minipage}
+    \end{minipage}
+    \caption{Number of Neighbors k VS  AUROC and AUPRC}
+    \label{fig: number_neighbors}
+\end{figure}
+
+
+\textbf{The number of neighbors k analysis.} As shown in Fig.\ref{fig: number_neighbors}, we explore the sensitivity of the hyper-parameter number of neighbors $k$ in GCTAM. The results indicate that selecting an appropriate k value can significantly enhance the AUROC and AUPRC of GCTAM across various datasets. As is demonstrated in Fig.\ref{fig: number_neighbors}, the best selection for each dataset is different, i.e., $k=20$ for Amazon and $k=50$ for YelpChi. It is commonly observed that selecting a value of $k$ that is either too large or too small can lead to suboptimal performance. We hypothesize that an excessively small $k$ may restrict the inclusion of beneficial neighbors, while an overly large $k$ might introduce redundant connections, thereby degrading the overall performance.
+
+
+
+% In this subsection,  The parameter $k$ determines the number of neighbor nodes to be used in the S high-order synthesized graph based on k-nearest neighbors (kNN). 
+% To understand its impact on our model's performance, we search the number of neighbors $k$ in the range of $\{5, 15, 25,35, 45\}$ for all datasets. Our
+% The number of neighbor nodes $k$ in the range of $\{5, 15, 25,35, 45\}$ is searched in all datasets. The results show that choosing an appropriate value of k can significantly improve the anomaly detection performance of GCTAM on different datasets.
+
+
+
+% \noindent\textbf{Affinity Truncation Analysis.} To evaluate the quality of node affinity results obtained by TAM-based and GCTAM-based methods, we propose a quantitative metric termed \textbf{Affinity Superiority Percentage} (\( S_{\text{aff}} \)). This metric calculates the proportion of all normal nodes whose affinity values are higher than those of the anomalous nodes, reflecting the model's ability to separate normal and abnormal nodes in the affinity space.
+% \[
+% S_{\text{aff}} = \frac{\sum_{i=1}^{N_n} \sum_{j=1}^{N_a} \mathbb{1}(\text{Affinity}_i > \text{Affinity}_j)}{N_n \cdot N_a} \times 100\%
+% \]
+% Here, \( N_n \) and \( N_a \) represent the total numbers of normal and abnormal nodes, respectively, \( \text{Affinity}_i \) denotes the affinity of the \( i \)-th node, and \( \mathbb{1}(\cdot) \) is an indicator function that equals 1 if the condition holds, and 0 otherwise.
+
+% As shown in Fig.\ref{fig: affinity compare}, GCTAM achieves significantly better separation of normal and abnormal nodes compared to TAM. Specifically, on the Amazon dataset, GCTAM achieves an \( S_{\text{aff}} \) of 55.52\%, which is 9\% higher than TAM's 46.52\%. On the YelpChi dataset, GCTAM demonstrates even greater superiority, achieving \( S_{\text{aff}} \) of 42.84\%, compared to TAM's 18.29\%. These results highlight the enhanced ability of GCTAM to model node affinity in a more separable manner, further validating its effectiveness in distinguishing normal from anomalous nodes.
+
+
+
+\subsection{Affinity Truncation Score Analysis}
+To quantitatively assess the quality of node affinity distributions generated by TAM and GCTAM methods, we introduce a novel evaluation metric termed affinity truncation score ($\mathcal{S}_\text{truncation}$). This metric quantifies the discriminative capability of the model by measuring the percentage of normal nodes that maintain higher affinity values compared to anomalous nodes in the learned affinity space. The affinity truncation score is formally defined as follows: 
+
+\begin{equation}
+    \mathcal{S}_{\text{truncation}}= \frac{\sum_{i=1}^{|{\mathcal V}_{n}|} \sum_{j=1}^{|{\mathcal V}_{a}|} {1} \quad if( \mathcal{AS}(v_i) > \mathcal{AS}(v_j))}   {|{\mathcal V}_{n}| \cdot |{\mathcal V}_{a}| }
+    \label{eq: affinity truncation score}
+\end{equation}
+
+where $\mathcal{AS}(\cdot)$ represent the affinity score as defined in Eq.~(\ref{eq: affinity socre}), $|{\mathcal V}_{n}|$ and $|{\mathcal V}_{a}|$ denote the total number of normal and anomalous nodes.  
+
+As illustrated in Fig.~\ref{fig: affinity compare}, we conduct a comprehensive comparison of node affinity distributions between normal and anomalous nodes in both TAM and GCTAM representation spaces. The experimental results demonstrate that GCTAM significantly outperforms TAM in achieving separable node affinity distributions between normal and abnormal nodes. Specifically, on the YelpChi dataset, GCTAM achieves a high-affinity truncation score of 42.84, which is much higher than that of TAM of 18.29. Furthermore, on the Amazon dataset, GCTAM attains an affinity truncation score of 55.52, outperforming TAM's score of 46.52 by a margin of 9 points. These findings highlight the effectiveness of GCTAM in constructing a more discriminative affinity space, particularly in scenarios with challenging anomaly detection tasks. This further demonstrates the superiority of the proposed global and contextual truncated affinity combined maximization model.
+
+% --------------
+% Specifically, On the Amazon dataset, GCTAM achieves an Affinity Truncation Score of  55.52 , significantly outperforming TAM's score of 46.52 by approximately  9 percentage points . On the  YelpChi dataset, GCTAM achieves a score of  42.84 , more than doubling TAM's score of 18.29 , demonstrating a notable improvement of over 24 percentage points.
+% These findings highlight the effectiveness of GCTAM in constructing a more discriminative affinity space, particularly in scenarios with challenging anomaly detection tasks. This further validates the superiority of the proposed Global and Contextual Truncated Affinity Maximization model.
+% -----------------
+% GCTAM provides better separable local affinity between normal and abnormal nodes. Specifically, we calculated an affinity truncation score. 
+% We counted the difference between the percentage of all normal nodes whose affinity is superior to that of the anomalous nodes. 
+
+
+\begin{figure}[]
+    \centering
+    \includegraphics[width=1 \linewidth]{Affinity_compare/Affinity-compare_1.pdf}
+    \caption{Affinity Truncation Score Compare}
+    \label{fig: affinity compare}
+\end{figure}
+
+
+
+\section{Conclusion}
+In this paper, we propose a novel framework, Global and Contextual Truncated Affinity Maximization (GCTAM), for unsupervised graph anomaly detection, leveraging the homogeneity assumption to optimize node affinity. GCTAM jointly optimizes the proposed affinity score in an end-to-end manner on both the contextual affinity truncation and the global affinity truncation modules. This approach effectively eliminates anomalous edges to reduce anomaly affinity while simultaneously enhancing normal edges to increase the affinity of normal nodes. Extensive experimental evaluations on seven real-world GAD datasets demonstrate that GCTAM outperforms eight competing models. Notably, on challenging datasets Amazon and YelpChi, GCTAM achieves AUROC and AUPRC improvements of +15\% $\sim$ +20\% compared with the previous state-of-the-art methods. The code can be found at \url{https://github.com/kgccc/GCTAM}.
+
+In the future, we will study some adaptations that will work well in some strong heterophily datasets. 
+
+
+% Extensive Experiments on seven real-world datasets show that GCTAM consistently outperforms eight baselines, with AUROC and AUPRC gains of +15\% $\sim$+20\%  on challenging datasets like Amazon and YelpChi.
+
+
+% Extensive experimental evaluations on seven real-world GAD datasets demonstrate that GCTAM outperforms eight competing models. Notably, on challenging datasets Amazon and YelpChi, GCTAM achieves AUROC and AUPRC improvements of +15\% $\sim$ +20\% compared with the previous state-of-the-art methods.
+
+% Current work is limited by the assumption of homogeneity and cannot work well on heterogeneous datasets \cite{liu2023beyond,zhu2021graph}. In the future, we will study some adaptations that will work well in some strong heterophily datasets. 
+
+\label{sec:Acknowledgments}
+\section*{Acknowledgments}
+This paper is the result of the research project funded by the National Natural Foundation of China (Grant No. 62106216 and 62162064) and the Open Foundation of Yunnan Key Laboratory of Software Engineering under Grant No.2023SE104.
+
+\label{sec: contribution}
+\section*{Contribution Statement}
+Xiong Zhang$^{{\dagger}}$ and Hong Peng$^{{\dagger}}$ contributed equally to this work. They were responsible for the conceptualization, methodology, and original draft writing of this study. Cheng Xie$^*$ contributed to the conceptualization, review, and editing of the manuscript and project supervision. The remaining authors provided writing guidance throughout the research.
+
+
+
+
+
+
+
+
+
+
+% \subsubsection{Acknowledgements}
+% Acknowledgements are optional. In the camera-ready version you may include an unnumbered acknowledgments section, including acknowledgments of help from colleagues, financial support, and permission to publish. This is not allowed in the anonymous submission. If present, acknowledgements must be in a dedicated, unnumbered section appearing after all regular sections but before references.  This section may be placed on the References pages.
+
+% Use
+% \begin{quote}
+%     {\tt \textbackslash{}section*\{Acknowledgements\}}
+% \end{quote}
+% to typeset the acknowledgements section in \LaTeX{}.
+
+% \section*{Acknowledgments}
+% The preparation of these instructions and the \LaTeX{} and Bib\TeX{}
+% files that implement them was supported by Schlumberger Palo Alto
+% Research, AT\&T Bell Laboratories, and Morgan Kaufmann Publishers.
+% Preparation of the Microsoft Word file was supported by IJCAI.  An
+% early version of this document was created by Shirley Jowell and Peter
+% F. Patel-Schneider.  It was subsequently modified by Jennifer
+% Ballentine, Thomas Dean, Bernhard Nebel, Daniel Pagenstecher,
+% Kurt Steinkraus, Toby Walsh, Carles Sierra, Marc Pujol-Gonzalez,
+% Francisco Cruz-Mencia and Edith Elkind.
+
+
+%% The file named.bst is a bibliography style file for BibTeX 0.99c
+\bibliographystyle{named}
+\bibliography{ijcai25}
+
+
+\input{appendix}
+
+
+
+\end{document}
+
+
+

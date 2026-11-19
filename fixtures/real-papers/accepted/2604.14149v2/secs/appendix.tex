@@ -1,0 +1,325 @@
+
+\section{Implementation Details}
+
+\subsection{\name Architecture}
+
+\textbf{\name} is based on VideoChat-Flash~\cite{li2024videochat} and uniquely integrates our learnable progressive compression (\textbf{\drop})(Sec.~\textcolor{iccvblue}{3.2}) and question-conditioned compression (\textbf{\segment})(Sec.~\textcolor{iccvblue}{3.3}). \name comes from fine-tuning the VideoChat-Flash-2B model~\cite{li2024videochat} with a small amount of 2.5\% data, the fine-tuning details are shown in Appendix~\ref{app: sft}.
+
+Algorithm~\ref{alg:model_forward} shows the neural network architecture of \name, which is largely consistent with VideoChat-Flash. It begins with the UMT-L visual encoder~\cite{liu2022umt}, which encodes short video clips consisting of 8 frames into visual tokens. Token merging~\cite{bolya2022token} is subsequently applied to reduce the token count to 128 tokens per clip and 16 tokens per frame. A two-layer MLP connector then maps these visual tokens from the visual encoder space into the representation space of the large language model. Finally, Qwen2-1.5B~\cite{bai2025qwen2} serves as the large language model (LLM) in our framework.
+
+During inference with QC-Comp, multiple forward passes through the model are performed. First, \name conducts a forward pass to obtain scores for the frames. Note that for videos longer than 512 frames, the video is divided into shorter segments, each processed separately to compute frame scores. These individual scores are then aggregated. Based on the aggregated scores, \name selects the top-ranked frames and passes them to the model to generate responses.
+
+
+\begin{algorithm}[b!]
+\small
+\renewcommand{\thealgocf}{A}      % <-- forces caption “Algorithm A”
+% \LinesNumbered                    % <-- print line numbers
+\DontPrintSemicolon               % optional: suppress final semicolons
+\RestyleAlgo{ruled,vlined}
+\caption{\textsc{Model\_Forward}: forward pass with LP‑Comp and the score for QC‑Comp}
+\label{alg:model_forward}
+
+\KwIn{$\mathcal{M}$ (model), $V$ (video), $Q$ (text), $\mathit{returnScore}\!\in\!\{0,1\}$}
+\KwOut{$\mathit{logits}$; $\mathit{score}$ (per‑clip) if $\mathit{returnScore}=1$}
+
+\SetKwFunction{Partition}{Partition}
+\SetKwFunction{TokenMerge}{TokenMerge}
+\SetKwFunction{LP}{LP\_Comp}
+\SetKwFunction{QC}{QC\_Comp}
+\SetKwFunction{SLA}{SegmentedLocalAttention}
+\SetKwFunction{Compute}{ComputeLogits}
+
+\textbf{/* Step 1: video encoding */}\;
+$\{\,V^{\text{clip}}_1,\dots,V^{\text{clip}}_K\}\leftarrow$\Partition{$V$, $8$}\tcp*{separate each 8 frames $\rightarrow$ 1 clip}
+\ForEach{$V^{\mathrm{clip}}_k$}{
+  $T_k \leftarrow \mathcal{M}.\mathrm{umt\_visual\_enc}(V^{\text{clip}}_k)$\;
+  $T_k \leftarrow$\TokenMerge{$T_k$, $128$}\tcp*{to $128$ tokens/clip, $16$ tokens/frame}
+  $T_k \leftarrow \mathcal{M}.\mathrm{mlp}(T_k)$\tcp*{project to LLM dim}
+}
+$V^{(0)} \leftarrow \mathrm{concat}(T_1,\dots,T_K)$\;
+$Q^{(0)} \leftarrow \mathcal{M}.\mathrm{text\_embed}(Q)$\;
+
+\textbf{/* Step 2: reasoning in LLM layers */}\;
+\For{$\ell=0$ \KwTo $\mathcal{M}.L-1$}{
+  $[\,V^{(\ell+1)},\,Q^{(\ell+1)}\,] \leftarrow
+     \mathcal{M}.\mathrm{llm\_layer}_{\ell}(V^{(\ell)},Q^{(\ell)})$\;
+  $V^{(\ell+1)} \leftarrow$\LP{$\ell$, $V^{(\ell+1)}$}\tcp*{token-level compression}
+  % $[V^{(\ell+1)},Q^{(\ell+1)}] \leftarrow$\QC{$\ell$, $V^{(\ell+1)},Q^{(\ell+1)}$}\;
+  $\mathit{score}[\ell] \leftarrow$\SLA{$\ell$, $V^{(\ell)},Q^{(\ell)}$}\tcp*{score for \QC}
+}
+$\mathit{logits} \leftarrow$\Compute{$Q^{(\mathcal{M}.L)}$}\;
+
+\lIf{$\mathit{returnScore}$}{\Return $(\mathit{logits},\mathit{score})$}
+\lElse{\Return $\mathit{logits}$}
+\end{algorithm}
+
+
+%===============================================================
+% Algorithm B — Layer‑wise Suffix‑Preserving Token Compression
+%===============================================================
+\begin{algorithm}[b!]
+\small
+\renewcommand{\thealgocf}{B}
+\DontPrintSemicolon
+\RestyleAlgo{ruled,vlined}
+\caption{\textsc{LP\_Comp}: suffix‑preserving layer‑wise video‑token compression}
+\label{alg:lp_comp}
+
+\KwIn{$\ell$ (layer index), $V^{(\ell)}$ (video tokens, shape $K\times N^{(\ell)}\!\times d$)}
+\KwOut{$V^{(\ell+1)}$ (compressed video tokens)}
+
+$N_{\text{prev}}\leftarrow\Bigl\lceil\frac{N^{(1)}-1}{2}\cos\!\bigl(\frac{\ell}{L}\pi\bigr)+\frac{N^{(1)}+1}{2}\Bigr\rfloor$\;
+$N_{\text{next}}\leftarrow\Bigl\lceil\frac{N^{(1)}-1}{2}\cos\!\bigl(\frac{\ell+1}{L}\pi\bigr)+\frac{N^{(1)}+1}{2}\Bigr\rfloor$\tcp*{Eq.(1)}
+\lIf{$N_{\mathrm{prev}} = N_{\mathrm{next}}$}{\Return $V^{(\ell)}$ \tcp*{nothing to compress}}
+\vspace{-8pt}
+\ForEach(\tcp*[f]{iterate over $K$ clips}){$T\in V^{(\ell)}$}{
+  \ForEach(\tcp*[f]{iterate over $F$ frames in the clip}){$f\leftarrow1$ \KwTo $F$}{
+    $\mathrm{idx\_keep}\leftarrow\Bigl[\,(f-1)N_{\text{prev}}+N_{\text{prev}}-N_{\text{next}}\,,\;\dots,\;fN_{\text{prev}}-1\,\Bigr]$\;
+    $T_f^{\prime}\leftarrow T[\mathrm{idx\_keep}]$\tcp*{suffix-preservation}
+  }
+  $T^{\prime}\leftarrow\mathrm{concat}(T_1^{\prime},\dots,T_F^{\prime})$\;
+}
+$V^{(\ell+1)}\leftarrow\mathrm{concat}(T^{\prime}\_\text{clip1},\dots,T^{\prime}\_\text{clipK})$\;
+\Return $V^{(\ell+1)}$
+\end{algorithm}
+
+
+% \clearpage
+%===============================================================
+% Algorithm C — Segmented Local Attention for Clip‑wise Scores
+%===============================================================
+\begin{algorithm}[b!]
+\small
+\renewcommand{\thealgocf}{C}
+\DontPrintSemicolon
+\RestyleAlgo{ruled,vlined}
+\caption{\textsc{SegmentedLocalAttention}: compute clip‑level saliency scores}
+\label{alg:sla}
+
+\KwIn{$\ell$ (layer index), $V$ (video tokens), $Q$ (text tokens)}
+\KwOut{$\mathit{score}$ (list of length $K$, one mean score per clip)}
+
+% \textbf{/* fixed hyper‑parameters */}\;
+$L_{\text{seg}}\leftarrow64$ \tcp*{frames per segment (8 clips)}
+$\mathrm{stride}\leftarrow32$          \tcp*{stride in frames (4 clips)}
+
+$\mathit{bucket}\leftarrow[\;]\_{k=1}^{K}$\;
+
+% \For(\tcp*[f]{slide local window over the video}){$\text{start}=0$ \KwTo $F{-}L_{\text{seg}}$ \text{\textbf{step}} $\mathrm{stride}$}{
+\For(\tcp*[f]{slide local window over the video}){start = 0 \KwTo $F - L_{\text{seg}}$ \textbf{step} stride}{
+  $V_{\text{seg}}\leftarrow V[\text{start}:\text{start}+L_{\text{seg}}]$\;
+  $A\leftarrow\mathcal{M}.\mathrm{llm\_layer}_{\ell}.\mathrm{attn}([V_{\text{seg}},Q])$\tcp*{full attention map}
+  \For{$i=0$ \KwTo $L_{\text{seg}}-1$}{
+    $c\leftarrow\bigl\lfloor\frac{\text{start}+i}{8}\bigr\rfloor$\tcp*{clip index}
+    $w\leftarrow\mathrm{mean}(A[i,Q\_\text{start}:Q\_\text{end}])$\;
+    $\mathit{bucket}[c].\mathrm{append}(w)$\;
+  }
+}
+
+\For{$k=1$ \KwTo $K$}{%
+  $\mathit{score}[k]\leftarrow\mathrm{mean}(\mathit{bucket}[k])$ \tcp*{final clip score}
+}
+\Return $\mathit{score}$
+\end{algorithm}
+
+
+
+
+\noindent\textbf{Details of \drop}\;\; Algorithm~\ref{alg:lp_comp} shows the details of \drop (Sec.~\textcolor{iccvblue}{3.2}). It compresses video tokens layer-by-layer in a suffix-preserving manner. Given input tokens $V^{(\ell)} \in \mathbb{R}^{K \times N^{(\ell)} \times d}$ at layer $\ell$, the algorithm computes the target token count $N_{\text{next}}$ for the next layer using a cosine-based schedule. If no reduction is needed, tokens are returned unchanged. Otherwise, for each video clip and each frame within it, only the last $N_{\text{next}}$ tokens are kept from the current $N_{\text{prev}}$, preserving the temporal suffix. The retained tokens across all frames and clips are concatenated to form the output $V^{(\ell+1)}$. This design ensures progressive compression while retaining semantically rich information.
+
+
+\noindent\textbf{Details of \segment}\;\; Algorithm~\ref{alg:sla} shows the details of Segmented Local Attention, which is the main part of \segment(Sec.~\textcolor{iccvblue}{3.3}) and computes scores from attention maps in LLM layers. For a given video $V$ and text query $Q$, the algorithm slides a local window (64 frames with a stride of 32) over the video sequence. Within each segment, it computes the full attention map from the LLM’s $\ell$-th layer. For each frame in the segment, the attention weights over the query tokens are averaged and accumulated into corresponding 8-frame clip buckets. Although Segmented Local Attention inherently produces clip-level scores, \segment assigns the same score to all frames within a clip, thereby converting clip-level scores to frame-level scores. For long videos exceeding 512 frames, the method processes multiple overlapping 512-frame chunks. The final frame-level scores are obtained by aggregating the results from these overlapping chunks. To ensure diverse frame-level scores, each frame would be included in $n_{\mathrm{repeat}}$ overlapping and shifted chunks that encourage score variation across neighboring frames. With these frame-level scores, $n\_\mathrm{selected\_frames}$ among total frames are selected. Table~\ref{tab:evalhyperparams} shows the hyperparameters.
+
+\subsection{Supervised Fine-tuning Details} \label{app: sft}
+
+\noindent\textbf{Hyperparameters}\;\; Table~\ref{tab:hyperparams} shows the hyperparameters used in fine-tuning. We follow the same training configuration as VideoChat-Flash~\cite{li2024videochat}, including the learning rate, weight decay, warmup ratio, and learning rate scheduler. The only difference lies in the frame sampling parameters: \texttt{frames\_upbound}, \texttt{frames\_lowbound}, and the default frames per second (FPS). This change is due to our use of \drop, which enables more efficient frame representation. As a result, we double the values of \texttt{frames\_lowbound} and \texttt{frames\_upbound} compared to VideoChat-Flash.
+
+
+\begin{table}[h!]
+\renewcommand{\thetable}{A}
+\caption{\textbf{The hyperparameters used in fine-tuning.}}
+\vspace{3pt}
+\label{tab:hyperparams}
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value / Description} \\
+\midrule
+\texttt{tunable\_parts} & Large Langauge Model \\
+\texttt{learning\_rate} & $1 \times 10^{-5}$ \\
+\texttt{weight\_decay} & $0.0$ \\
+\texttt{warmup\_ratio} & 0.03 \\
+\texttt{lr\_scheduler\_type} & Cosine \\
+\texttt{dataloader\_num\_workers} & 1 \\
+\texttt{frames\_upbound} & 1024 \\
+\texttt{frames\_lowbound} & 128 \\
+\texttt{local\_num\_frames} & 8 \\
+\texttt{sample\_type} & Dynamic FPS (8 fps by default) \\
+\bottomrule
+\end{tabular}
+\vspace{3pt}
+\end{table}
+
+
+\begin{table}[h!]
+\renewcommand{\thetable}{B}
+\caption{\textbf{The hyperparameters used in evaluation.}}
+\vspace{3pt}
+\label{tab:evalhyperparams}
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value / Description} \\
+\midrule
+\texttt{temperature} & 0.0 \\
+\texttt{do\_sample} & False \\
+\texttt{num\_beams} & 1 \\
+\texttt{n\_repeat} & 2 (each frame in 2 chunks) \\
+\texttt{n\_selected\_frames} & 256 (Long), 512 (MME), 1,024 (MLVU), 2,048 (LVB) \\
+\bottomrule
+\end{tabular}
+\vspace{3pt}
+\end{table}
+
+\noindent\textbf{Datasets}\;\; We used the 2.5\% supervised fine‑tuning data collected or released by VideoChat‑Flash~\cite{li2024videochat}.  
+During data curation, we disregarded a few datasets that were exceptionally large on disk or whose licenses made automatic download impractical. After this filtering, the final training set contains 71,927
+instances are drawn from publicly available datasets, listed in Table~\ref{tab: A dataset}.
+
+\begin{table}[t!]
+\renewcommand{\thetable}{C}
+\centering
+% \renewcommand{\arraystretch}{1.15}
+\caption{\textbf{Datasets used for supervised fine‑tuning (71,927 instances).}}
+\vspace{3pt}
+\label{tab: A dataset}
+\begin{tabular}{p{0.24\textwidth} p{0.64\textwidth}}
+\toprule
+\textbf{Image datasets} &
+\textbf{Video datasets} \\
+\midrule
+LLaVA‑OneVision~\cite{li2024llava}, LLaVA‑NeXT~\cite{liu2024llavanext}, M4‑Instruct~\cite{li2024llavainterleave} &
+Kinetics‑400~\cite{kay2017kinetics}, Something‑Something~\cite{goyal2017something}, TGIF‑QA~\cite{jang2017tgif}, TVQA~\cite{lei2018tvqa}, CLEVRER~\cite{yi2019clevrer}, NExT‑QA~\cite{xiao2021next}, FAVD~\cite{shen2023fine}, MovieChat‑1K~\cite{song2024moviechat}, TextVR~\cite{wu2025large}, ShareGPT‑Video~\cite{chen2024sharegpt4video}, ShareGPT‑4o~\cite{cui2024sharegpt}, Oops~\cite{epstein2019oops}, OVIS~\cite{qi2022occluded}, UVO~\cite{wang2021unidentified}, GUI‑World~\cite{chen2024gui}, Vript~\cite{yang2024vript}, HT‑Step~\cite{afouras2023ht}, Ego4D~\cite{grauman2022ego4d}, LLaVA‑Video‑178K~\cite{zhang2024videoinstructiontuningsynthetic}, VideoChat-Flash~\cite{li2024videochat} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Additional Experiments}
+
+\subsection{Ablation Study on Fine-tuning}
+
+Table~\ref{tab:sft ablation} presents an ablation study to isolate the effect of our proposed design from that of fine-tuning. Specifically, we compare \name with a baseline that applies the same fine-tuning procedure (on 2.5\% of the data as mentioned in Appendix~\ref{app: sft}) to the original VideoChat-Flash-2B model, without introducing our \drop and \segment. VideoChat-Flash-2B+FT achieves comparable performance to the original model, suggesting a limited benefit from fine-tuning. This indicates that the performance gains of \name stem from our method's enhancements, rather than from fine-tuning alone.
+
+\begin{table}[h!]
+\renewcommand{\thetable}{D}
+\centering
+\caption{\textbf{Ablation study of fine-tuning.}}
+\label{tab:sft ablation}
+\vspace{3pt}
+\small
+% \resizebox{0.95\linewidth}{!}{
+\begin{tabular}{l |c| c c c c}
+\toprule
+  & Size & LongVideoBench & MLVU & VideoMME (Long) & LVBench \\
+Average Duration &  & 473s & 651s & 2386s & 4101s \\
+\midrule
+VideoChat-Flash-2B~\cite{li2024videochat}  & 2B & 58.3 & 65.7 & 44.9 & 42.9  \\
+\rowcolor{gray!15}
+VideoChat-Flash-2B+FT  & 2B & 57.4 & 65.6 & 44.7 & 43.2  \\
+\name & 2B & \textbf{59.7} & \textbf{66.7} & \textbf{45.6} & \textbf{46.2}  \\
+\bottomrule
+\end{tabular}
+% }
+\end{table}
+
+
+
+
+
+\subsection{Efficiency Analysis}
+
+ Table~\ref{tab:efficiency} shows the efficiency comparison on a LVBench query (863 text tokens), measured over 10 runs on a single NVIDIA H200. Across 1k--4k frames, XComp reduces LLM TFLOPs by $\sim$53--58\% and latency by $\sim$45--58\%.
+
+
+
+
+\begin{table}[h]
+\renewcommand{\thetable}{E}
+\centering
+\caption{\textbf{Efficiency Comparison on LVBench Queries at Inference Stage.}}
+\label{tab:efficiency}
+\vspace{3pt}
+\begin{tabular}{r l | r l | r l}
+\toprule
+Frames & Model & \multicolumn{2}{c}{TFLOPs} & \multicolumn{2}{c}{Latency} \\
+\midrule
+1,024 & VideoChat-Flash & 43 & & 0.22 s & \\
+1,024 & Ours           & 20 & (\textbf{53\%}$\downarrow$) & 0.12 s & (\textbf{45\%}$\downarrow$) \\
+2,048 & VideoChat-Flash & 132 & & 0.54 s & \\
+2,048 & Ours           & 58 & (\textbf{56\%}$\downarrow$) & 0.25 s & (\textbf{54\%}$\downarrow$) \\
+4,096 & VideoChat-Flash & 448 & & 1.56 s & \\
+4,096 & Ours           & 187 & (\textbf{58\%}$\downarrow$) & 0.66 s & (\textbf{58\%}$\downarrow$) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{More Evaluations}
+
+While XComp primarily targets multiple-choice tasks on long videos, it is also capable of handling other fundamental video understanding tasks. We claim that the extreme compression is not harmful to the fundamental capability for short videos. In particular, we include evaluations on (1) reasoning benchmarks such as CLEVRER, which test causal and counterfactual reasoning, and (2) dense-output tasks such as video captioning (VDC benchmark), which assess the ability to generate descriptive text for videos. As shown in Table~\ref{tab: more eval}, XComp achieves results comparable to its backbone model (VideoChat-Flash-2B), demonstrating that the compression does not significantly harm performance on these tasks.
+
+We additionally evaluate on MME-VideoOCR, a benchmark designed to measure fine-grained text perception from videos. Table~\ref{tab: ocr eval} reports results on both the full benchmark and the subset of long videos ($>$30s). XComp shows a moderate performance drop compared to the original VideoChat-Flash-2B, consistent with our main paper observations that this is largely due to data differences rather than architecture changes. When compared to fine-tuned with the same backbone, the performance gap is minimal, confirming that the degradation primarily comes from training data rather than compression.
+
+
+\begin{table}[h]
+\renewcommand{\thetable}{F}
+\centering
+\caption{\textbf{CLEVRER and VDC results.}}
+\label{tab: more eval}
+\vspace{3pt}
+\resizebox{0.99\linewidth}{!}{
+\begin{tabular}{l *{6}{c} *{2}{c}}
+\toprule
+& \multicolumn{6}{c}{CLEVRER} & \multicolumn{2}{c}{VDC} \\
+\cmidrule(lr){2-7}\cmidrule(l){8-9}
+ & Expl (Opt) & Expl (Q) & Pred (Opt) & Pred (Q) & Cntrf (Opt) & Cntrf (Q) & BLEU@1 & BLEU@4 \\
+\midrule
+VideoChat-Flash-2B & 0.9463 & 0.8497 & 0.7789 & 0.5738 & 0.7775 & 0.4007 & 7.1 & 1.6 \\
+XComp              & 0.9398 & 0.8406 & 0.7697 & 0.5600 & 0.7625 & 0.3652 & 7.0 & 1.6 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+
+\begin{table}[h]
+\renewcommand{\thetable}{G}
+\centering
+\caption{\textbf{MME-VideoOCR results.}}
+\label{tab: ocr eval}
+\vspace{3pt}
+\small
+% \resizebox{0.99\linewidth}{!}{
+\begin{tabular}{l cc}
+\toprule
+Model & MME-VideoOCR (Overall) & MME-VideoOCR ($>$30s) \\
+\midrule
+VideoChat-Flash-2B & 37.1 & 49.1 \\
+VideoChat-Flash-2B + FT & 34.9 & 46.0 \\
+XComp & 35.4 & 46.4 \\
+\bottomrule
+\end{tabular}
+% }
+\end{table}
+
+\subsection{Multi-hop NIAH}
+
+Figure~\ref{fig:mhniah} shows the results of the Multi-Hop Needle-in-a-Haystack QA task~\cite{li2024videochat} which is designed to evaluate extreme long-context reasoning abilities. This benchmark embeds a reasoning path of images within long video sequences, where each image contains clues guiding the model to the next. Given a starting point, the model must trace the correct path, identify the target image (needle), and answer a related question. In this experiment, we use QC-Comp with $\texttt{n\_selected\_frames} = 1$ and $\texttt{n\_repeat} = 8$. It accurately selects the keyframe with 65\% accuracy at a sequence length of 6,144, leading to QA average accuracies of 72.6 and 72.2 over 2,000 to 10,000 total frames for VideoChat-Flash+QC-Comp and \name, respectively.
+
+\begin{figure}[t!]
+\renewcommand{\thefigure}{A}
+    \centering
+    \includegraphics[width=0.8\linewidth]{figs/niah_qa.pdf}
+    \caption{\textbf{Multi-Hop Needle-in-a-Haystack QA Performance.}}
+    \label{fig:mhniah}
+\end{figure}
+
+

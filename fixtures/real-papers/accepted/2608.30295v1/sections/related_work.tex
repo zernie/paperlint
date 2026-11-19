@@ -1,0 +1,26 @@
+\section{Related Work}
+\subsection{KV Cache Eviction Algorithm}
+% 在long-context的场景下，KV cache会随着输入长度的增加而增加，这会导致巨大的时间和空间开销。一些已有的方法通过维护一个固定大小的KV cache来保存一些关键的tokens，并驱逐剩余不重要的tokens来减少内存使用且减少计算量。
+
+To save the significant time and space overhead as the input length increases, various approaches explore evicting tokens to reduce both memory usage and computational cost. StreamingLLM~\cite{streamingllm} introduces the phenomenon of "attention sink" and supports longer sequence by retaining only the KV pairs of attention sinks and recent tokens. H2O~\cite{h2o} employs a low-cost eviction strategy to maintain a fixed-size KV cache containing heavy-hitters, based on the sum of historical attention scores. SnapKV~\cite{snapkv} uses the last tokens in the prompt during the prefilling stage to select critical tokens for generation in the decoding stage. PyramidKV~\cite{pyramidkv}, PyramidInfer~\cite{pyramidinfer}, and LazyLLM~\cite{lazyllm} leverage attention distribution across layers to dynamically adjust cache size, 
+% allocating more to lower layers and less to higher layers, thereby 
+making cache allocation more efficient. 
+Other methods like MagicPig~\cite{magicpig}, Q-Hitter~\cite{q-hitter}, ALISA~\cite{alisa} and , which combine KV cache eviction with quantization, hashing algorithms, or sparse windows, can also improve inference efficiency.
+% However, all of these methods lead to varying degrees of performance degradation, as they permanently evict certain tokens that may play a crucial role in future generation processes.
+However, these methods induce non-negligible performance degradation, as they potentially evict certain tokens that are crucial for future generation.
+
+\subsection{KV Cache Retrieval Algorithm}
+Unlike KV cache eviction algorithms, KV cache retrieval algorithms retain a complete KV cache and dynamically retrieve important KV pairs to reduce inference latency. 
+% Quest~\cite{quest} uses PageAttention~\cite{vllm}, dividing tokens into pages, and applying an approximate attention score to retrieve the most relevant pages for the current decoding steps. 
+Following PageAttention~\cite{vllm}, Quest~\cite{quest} divides tokens into pages and devises an approximate attention score to retrieve the most relevant pages for the current decoding steps.
+InfLLM~\cite{infllm} adopts a strategy similar to Quest, offloading most of the cache to the CPU to support longer prompts.
+% ShadowKV~\cite{shadowkv} enhances the storage efficiency of Quest by storing only low-rank key caches and offloading value caches, reducing memory usage and enabling inference with large batch sizes and long contexts. 
+ShadowKV~\cite{shadowkv} enhances the storage efficiency of Quest by storing only low-rank key caches and offloading value caches, allowing inference with large batch sizes and context lengths.
+Others like SparQ~\cite{sparq}, InfiniGen~\cite{infinigen}, and Loki~\cite{loki}, accelerate the selection of top-\textit{k} critical tokens by reducing the dimension. 
+KV cache retrieval methods maintain performance by preserving the entire KV cache but inevitably incur increased inference latency and storage costs.
+
+\subsection{Head-wise Attention Classification}
+% Another line of work focuses on classifying attention heads based on their characteristics, with the goal of designing more efficient algorithms to reduce inference latency. 
+Another line of work classifies attention heads into distinct sparse patterns.
+MInference~\cite{minference} divides the attention into A-shape, Vertical-Slash, and Block-Sparse patterns, achieving acceleration during the \emph{pre-filling} stage. RazorAttention~\cite{razorattention} and DuoAttention~\cite{duoattention} split heads into retrieval heads and streaming heads to determine whether to implement full attention or an attention mechanism similar to StreamingLLM~\cite{streamingllm}. Methods like AdaKV~\cite{adakv} and HeadKV~\cite{headkv} achieve more fine-grained classification by allocating different budgets to each attention head.
+These methods focus on the features within individual heads or their variations, but overlook the patterns of attention heads across the prefilling and decoding stages.

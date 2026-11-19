@@ -1,0 +1,103 @@
+\section{Challenges \& Key Idea}
+\label{sec:motivation}
+
+As modern deep learning training (DLT) workloads scale to unprecedented levels, it has become increasingly important to optimize their resource allocation, cost, and environmental impact. Runtime performance prediction systems vastly aid such optimization efforts; however, the complexity of modern DLT workloads (involving clusters with hundreds-thousands of GPUs) and the use of domain-specific optimizations makes developing such systems quite challenging.
+
+At a high level, state-of-the-art runtime modeling systems~\cite{duan2023proteus,isaev2023calculon,bang2023vtrain,lu2023distsim,zhu2020daydream,geoffrey2021habitat,moolchandani2023amped,santhanam2021distir} follow a four-phase approach to predict DLT workload performance (\Cref{fig:simanatomy}):
+
+\begin{enumerate}
+\item \textbf{Workload Specification:} Translate the DLT job into a framework-specific representation, capturing computational flow of the workload.
+\item \textbf{Kernel Decomposition:} Decompose the workload into an execution graph containing the kernels.
+\item \textbf{Kernel Runtime Prediction:} Estimate execution times for the individual kernels using analytical models or historical profiling data.
+\item \textbf{Distributed Execution Simulation:} Model the end-to-end execution, accounting for inter-device communication and synchronization.
+\end{enumerate}
+
+There is, however, an inherent flaw in this approach --- it lacks transparency. Users have to explicitly encode their workload in a custom out-of-band specification language, which then has to be decomposed into a kernel execution graph. This undermines the efficacy of such systems due to two interrelated issues: (1) the custom specification language may be insufficiently expressive or difficult to use (\sref{sub:usability-tradeoff}), and (2) the workload specification may not accurately represent the true workload (\sref{sub:semantic-gap}). Further, even if it were possible to devise a language that is both expressive and easy-to-use, lack of transparency makes such systems \textit{fragile} and \textit{inflexible}. Users are required to revisit existing specifications and devise new ones as DLT workloads evolve. Therefore, there is a clear need for a transparent, user-friendly, and accurate runtime modeling system.
+
+
+\subsection{The Generality-Usability Tradeoff}
+\label{sub:usability-tradeoff}
+
+Existing systems attempt to maintain fidelity while navigating this semantic gap through two primary approaches. On one end of the spectrum, systems like DistIR~\cite{santhanam2021distir} and Proteus~\cite{duan2023proteus} opt for highly expressive but complex representation formats. While these can capture intricate details of the workload, they require users to translate their jobs into hundreds of lines of specialized code~\cite{distirgithub, proteusgithub}. This imposes a substantial burden on users and, consequently, introduces opportunities for translation errors that can compromise prediction accuracy.
+
+On the other end, systems like VTrain~\cite{bang2023vtrain} and Calculon~\cite{isaev2023calculon} prioritize usability by providing simpler interfaces where users only need to specify configuration parameters. However, this simplicity comes at the cost of generality. These systems are tightly coupled to specific workload implementations, such as Megatron-LM~\cite{megatron}, limiting their applicability to a narrow range of use cases.
+
+As a result, there is a tension between usability and generality in current approaches. Systems that strive for broad applicability often sacrifice ease of use, while those focusing on user-friendliness sacrifice generality.
+
+\subsection{Semantic Gap in Workload Representation}
+\label{sub:semantic-gap}
+
+Existing runtime prediction frameworks require users to manually encode their workloads either using out-of-band \csl or through static configuration knobs. This approach makes it more likely for a \textit{semantic gap} to manifest between the actual workload and its abstract representation, leading to inaccurate predictions. For instance, users may inadvertently omit complex hardware-specific optimizations or subtle system interactions. Additionally, many DLT workloads exhibit complex runtime behaviors that are non-trivial to represent. This is an inherent ``garbage in, garbage out'' problem --- inaccurate workload specifications lead to inaccurate predictions.
+
+
+
+
+
+\subsection{Illustrative Example}
+
+Consider the scenario presented in \cref{fig:motiv:example}. AMPed restricts users to a fixed set of operators with carefully curated analytical models. While these analytical predictions can be composed to produce final runtime estimates, the rigid modeling language introduces significant approximation errors. In contrast, Proteus provides an expressive intermediate representation (IR) that allows users to encode diverse parallelism schemes through strategy trees. However, this flexibility comes at a cost --- users may inadvertently model features incorrectly, and verifying that the translated model accurately represents the original program is a challenging and error-prone process.
+
+These limitations are apparent when attempting to evaluate a new framework optimization. A pertinent example is DualPipe \cite{dualpiperepo}, a pipeline parallelism schedule utilized in the training of DeepSeek-R1 \cite{deepseek}. This schedule differs from the usual interleaved 1F1B schedule proposed by Megatron-LM in that it increases overlapping by running pairs of micro-batches bidirectionally. A static analysis approach would require relevant calculations for the forward and backward passes --- specifically those accounting for the pipeline bubble --- to be rewritten to reflect the increased overlap. On the other hand, expressing this schedule with Proteus would require a custom graph transformation pass on the strategy tree to introduce additional compute/communication nodes, which is a manual and cumbersome process.
+\input{figures-tex/example}
+
+
+\subsection{Solution: Transparent Device Emulation}
+
+To address the absence of transparent abstractions, we propose a novel solution that leverages the unique characteristics of DLT workloads to achieve generality and ease of use without sacrificing fidelity: \textit{transparent device emulation}. Instead of having the user specify their workload in an obtuse specification language, we intercept and emulate all application interactions with the accelerator. The system then simulates cluster behavior from these intercepted traces, yielding a performance prediction.
+
+An emulation-driven approach is viable for two key reasons. First, despite the complexity of DLT workloads, these systems interact with accelerators through narrow-waist, well-defined accelerator APIs. This allows \sysname to mimic the functionality of device management API calls such as \texttt{cudaMalloc}, \texttt{cudaSetDevice}, and \texttt{cublasSetMatrix}, creating the illusion that the user application is running on the actual device. Second, DLT applications exhibit a critical decoupling between control flow (executed on the CPU) and computation (executed on the accelerator device), with the former rarely depending on the actual computation results. This separation allows us to emulate device execution without affecting the application's control flow. We simply save metadata for each compute operation but skip their actual execution, enabling rapid and resource-efficient tracing.
+
+There are several benefits to this approach. First, by transparently intercepting accelerator interactions, \sysname is able to \textbf{accurately capture} the entire workload behavior \textbf{without requiring any changes to application code}. This on its own addresses the generality-usability trade-off and semantic gap. Users can now model DLT workloads without an intermediate workload encoding step, significantly lowering the barrier to adoption. The transparency of \sysname makes it highly adaptable and resilient to the ever-evolving landscape of DLT workloads. 
+
+
+Second, the detailed workload trace from emulation can be used to produce high-fidelity predictions (\sref{sec:eval:fidelity}). Downstream processing and simulation can accurately represent low-level behavior, making it easy to identify bottlenecks and generate reliable predictions. Further, each component of the \sysname stack --- emulation, trace processing, runtime estimation, and simulation --- \textbf{is pluggable and can be tuned separately}, enabling improved overall accuracy of runtime predictions and better flexibility, all while remaining transparent.
+
+Finally, \sysname is fundamentally \textit{not coupled} to a specific framework or model, allowing it to seamlessly integrate with existing workflows. It can also be used to build more sophisticated systems such as configuration search (\sref{sec:eval:opti}).
+
+To summarize, \sysname is a transparent, user-friendly, and accurate performance modeling system designed to predict DLT workload behavior without requiring access to accelerator hardware. The key insight behind \sysname's design is that by operating at the narrow interface between training frameworks and accelerator devices, we can eliminate the fundamental trade-offs between modeling accuracy, ease of use, and generality. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

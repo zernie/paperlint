@@ -1,0 +1,533 @@
+\appendix
+\section*{Appendix}
+% \section{Impact Statements}
+% As more graph algorithms emerge, various tasks on graphs have achieved excellent results. This paper aims to address an important yet largely overlooked task: multi-label node classification (MLNC). For example, there is a need for classifying multiple properties of proteins in protein-protein interaction networks and multiple interests of users in social or e-commerce networks.
+
+% \input{3-related}
+\section{Discussions on Influence from Propagation} \label{app:theory}
+This section aims to supplement Sec~\ref{sec:forw} regarding the pair wise influence value from propagation (\textbf{P} operation). 
+Specifically, inspired by previous work~\citep{xu2018representation,wang2020unifying}, we prove the correctness of the calculation method on influence value between nodes with different labels in propagation operation. 
+
+\begin{theorem}[Influence Value in Propagation]
+During the propagation phase in message passing, the influence value between two nodes with different labels is equivalent, in expectation, to the transition probability between them as calculated by Personalized PageRank (PPR)~\citep{gasteiger2018predict,chen2021topology}. Namely, the influence value between $v_i, v_j$ is
+\begin{eqnarray}
+    \textsc{Inf}^{P}(v_i, v_j) = \{ \alpha (I_n - (1 - \alpha)\hat{\v{A}})^{-1} s_{v_i} \}_{v_j} \propto I(i,j),
+\end{eqnarray}
+where $\v{I}_n\in\mathbb{R}^{n\times n}$ is the identity matrix, $\alpha \in (0,1]$ is the teleport (or restart) probability, $\v{s}_{v_i}$ is a one-hot indicator vector and  $\{ \cdot \}_{v_j}$ means the $v_j$-th element of $\{ \cdot \}$.
+\end{theorem}
+
+\begin{proof}
+% For an arbitrary graphon $W$, we have its Taylor expansion at the point (0, 0): 
+We use $k$ layers of GCN~\cite{kipf2017semisupervised} as backbone $\Phi_\theta$ for analysis. 
+We first prove the the influence value between $v_i, v_j$ with different labels is equivalent, in expectation, to the $k$-step random walk distribution on graph $G$ starting at node $v_i$.
+
+From the definition of influence from $v_i$ to $v_j$ in Eq.~\ref{eq:inf}, we proceed with the detailed calculations:
+\begin{eqnarray}
+\begin{aligned}
+\textstyle I(v_i, v_j) =& \frac{\partial z_j^{(k)}}{\partial z_i^{(0)}} 
+=& \frac{1}{\widetilde{\operatorname{deg}(v_i)}} \cdot \operatorname{diag}\left(1_{f_{v_i}^{(k)}>0}\right) \cdot W_k \cdot \sum_{z \in \widetilde{N}(v_i)} \frac{\partial z_j^{(k-1)}}{\partial z_i^{(0)}},
+% \\ =& 
+\end{aligned}
+\end{eqnarray}
+where $f_{v_i}^{(k)}$ is the pre-activated embedding of $z_j^{(k)}$, $W_k$ stands for the last layer weight matrix of GCN. 
+Furthermore, we use chain rule to calculate any rank $l$ of the derivative as
+\begin{eqnarray}
+\begin{aligned}
+    \frac{\partial z_j^{(l)}}{\partial z_i^{(0)}} 
+    =& \sum_{p=1}^{\lambda}\left[\frac{\partial z_j^{(l)}}{\partial z_i^{(0)}}\right]_p 
+    =& \sum_{p=1}^{\lambda} \prod_{m=l}^1 \frac{1}{\widetilde{\operatorname{deg}\left(v_p^m\right)}} \cdot \operatorname{diag}\left(1_{f_{v_p^m}^{(m)}>0}\right) \cdot W_m,
+\end{aligned}
+\end{eqnarray}
+where $\lambda$ is the total number of paths of length $l+1$ from node $v_j$ to $v_i$. For certain path $p$, $v_p^m$ is node $v_i$, $v_p^0$ is node $v_j$ and for $m = 1...(l-1)$, $v_p^(k-1) \in \widetilde{N}(v_p^m)$.
+More specifically, we can calculate an entry of the derivative as 
+\begin{eqnarray}
+\begin{aligned}
+\left[\frac{\partial z_j^{(l)}}{\partial z_i^{(0)}}\right]_p^{(a, b)}=\prod_{l=k}^1 \frac{1}{\widetilde{\operatorname{deg}}\left(v_p^m\right)} \sum_{q=1}^{\gamma} R_q \prod_{m=l}^1 w_q^{(m)},
+\end{aligned}
+\end{eqnarray}
+where $\gamma$ is the number of paths $q$ from the $a$ to $b$ in the computation directed acyclic graph (DAG) of $\left[\frac{\partial z_j^{(l)}}{\partial z_i^{(0)}}\right]_p$. For each layer $m$, $w_q^{(m)}$ is the entry of $W_m$ which is used in the $q$-th path. $R_q \in {0,1}$ denote whether the $q$-th path is active or not as the result of ReLU activation of entries of $f_{v_p^m}^{(m)}$'s on the $q$-th path.
+Since the variable $R$ follows a Bernoulli distribution, for all $q$, $Pr(R_q = 1) = \rho$, we have 
+\begin{equation}
+    \mathbb{E}\left[  \left[\frac{\partial z_j^{(l)}}{\partial z_i^{(0)}}\right]_p \right]=\rho \cdot \prod_{m=l}^1 \frac{1}{\widetilde{\operatorname{deg}\left(v_p^m\right)}} \cdot w_q^{(m)}.
+\end{equation}
+Thus, we know that
+\begin{equation}
+     \mathbb{E} \left[\frac{\partial z_j^{(l)}}{\partial z_i^{(0)}}\right] = \rho \cdot \prod_{m=l}^1 W_m \cdot \left( \sum_{p=1}^{\lambda} \prod_{m=l}^1 \frac{1}{\widetilde{\operatorname{deg}\left(v_p^m\right)}}  \right).
+\end{equation}
+On the other hand, $k$-step random walk probability at $v_i$ can be calculated by summing up the probability of all paths of length $k$ from $v_i$ to $v_j$, which is exactly $\sum_{p=1}^{\lambda} \prod_{m=l}^1 \frac{1}{\widetilde{\operatorname{deg}\left(v_p^m\right)}}$. Moreover, the random walk probability starting at $v_i$ to the other nodes sum up to 1. 
+By multiplying and normalizing, the conclusion can be immediately derived.
+
+Moreover, the distribution $\pi$ of random walk with restart is $\pi^{(t+1)}=\alpha v+(1-\alpha) A \pi^{(t)}$ in iteration.
+We can derive the solution~\citep{gasteiger2018predict} as $\pi=\alpha\left(I-(1-\alpha) A\right)^{-1} v$, which is the same as the calculation equation in Eq.~\ref{eq:InfVal}.
+% Then, we prove the $k$-step random walk distribution on graph $G$ starting at node $v_i$ can be calculated by PPR.
+\end{proof}
+
+
+
+\section{Time Complexity Comparison} \label{app:Time}
+
+\subsection{Theoretical Comparison}
+
+% \vpara{Time complexity analysis.} 
+% \syfC{需要重新计算修改}
+We now analyze the time complexity of \model based on vanilla MLNC (Sec.~\ref{sec:pipe}). The calculation of influence in Sec.~\ref{sec:forw} (\textbf{P} step) is part of data pre-processing where we can use fast personalized PageRank algorithms designed for large graphs. Thus, the additional time includes two parts: (i) the influence calculation in transformation operation which is the same as the forward calculation of GNN, namely $O(nfd+ed)$, where $f$ is feature dimension and $d$ is hidden dimension of GNNs, $n$ and $e$ are the number of nodes and edges in original graph; (ii) the important score calculation from $G_{LIP}$ costs $O(t \cdot e_{LIP})$, where $t$ is the number of iterations and $e_{LIP}$ is the number of influence edges in $\v{A}_{LIP}$.
+Thus, the overall time complexity is $O(n + e + t \cdot e_{LIP})$ since $f, d \ll n, e$. 
+% The time complexity comparison with baselines is in App.~\ref{app:Time}.
+
+We select several representative baselines and analyzed their time complexities, as shown in the Tab.~\ref{tab:timeVS} below.
+
+\begin{table*}[h!]
+    \centering
+    \caption{The comparison of time complexity between \model and other baselines.}
+% \resizebox{1.0\textwidth}{!}{
+    \begin{tabular}{c|ccc}
+    \hline
+        Method & GCN+ML-KNN & MLGW & LANC  \\ \hline
+        Complexity & $O(n \cdot \log{n} + k \cdot l + e)$ & $O(n^3+e\cdot f^2)$ & $O(n + e + n \cdot b^2\cdot f)$  \\ \hline
+        Method & VariMul & GCN+Auto & \model \\ \hline
+        Complexity & $O(n + e + l\cdot \log{l} )$ & $O(n + e)$ & $O(n + e + t \cdot e_{LIP})$ \\ \hline
+    \end{tabular}
+% }
+    \label{tab:timeVS}
+\end{table*}
+
+In the table above, $k$ represents the hyperparameter for the k-nearest neighbors algorithm, $l$ stands for the number of labels, $b$ denotes the number of sample neighbors set in LANC, and $f$ refers to the size of its hidden layer. The table shows that our method has almost the lowest time complexity, and experiments confirm that it can scale to large graph datasets effectively.
+
+\subsection{Empirical Computational Cost}
+
+We add a table below showing the average per-epoch training time and GPU memory usage of various methods on graph data from two different domains. 
+
+\begin{table}[!ht]
+    \centering
+    \caption{Computational cost of each methods, including time and space during training.}
+    \resizebox{1.0\textwidth}{!}{
+    \begin{tabular}{l|c|cccccc}
+    \toprule
+        ~ & Cost & ML-KNN & MLGW & LANC & VariMul & GCN+Auto & GCN+LIP \\ \hline
+        DBLP & Time (s/epoch) & 0.012 & 5.710 & 2.350 & 1.015 & 0.003 & 0.008 \\ 
+        BlogCat & Time (s/epoch) & 0.100 & 9.710 & 3.837 & 2.082 & 0.051 & 0.311 \\ 
+        DBLP & GPU mem (MB) & 2200 & 3530 & 2204 & 2980 & 2271 & 1595 \\ 
+        BlogCat & GPU mem (MB) & 3010 & 5036 & 2800 & 3572 & 3073 & 2369 \\ \bottomrule
+    \end{tabular}
+    }
+    \label{TimeReal}
+\end{table}
+
+
+As observed, our method aligns with the conclusions analyzed in Appendix B, demonstrating relatively shorter training times and especially lower GPU memory usage. This indicates that our method has better scalability. 
+Specifically, our training time is roughly on the same order of magnitude as a standard GCN but takes a few times bigger. However, compared to other baselines, our method typically requires one order of magnitude less time. On the other hand, since the quantification of influence correlations during the T step involves gradient calculations, our method essentially splits the gradient calculation into k smaller steps. This trades off some computation time for reduced memory usage, allowing our method to achieve even lower GPU memory consumption than a standard GCN.
+
+
+
+
+\section{Extended Related Work}
+
+
+\vpara{Multi-label correlation mining.}
+% 先讲普通多标签，还有最关键的标签关系，以及怎么用的。
+% si2023multi
+Exploring multi-label correlation in other data forms, e.g. computer vision (CV), is also a key challenge.
+These methods can be divided into three categories: first order, second order and high-order~\citep{zhang2010multi}.
+First-order methods disregard label correlations, assuming all labels are independent. Binary Relevance (BR)~\citep{Tsoumakas2010MiningMD}, transforms the problem into separate binary classification tasks. Similarly, ML-KNN~\citep{10.1016/j.patcog.2006.12.019} is based on k-nearest-neighbor classification. While these methods are highly efficient, their neglect of label correlations leads to reduced performance.
+Second-order methods emphasize pairwise label correlations. Approaches like calibrated label ranking (CLR)~\citep{furnkranz2008multilabel} transform into pairwise ranking problems. While they are generally more effective than first-order approaches at exploiting label correlations, label relationships can be highly complex in the real-world applications.
+High-order methods aim to explore higher-order label correlations. Classifier chains (CC)~\citep{10.1007/978-3-642-04174-7_17} trains a chain of binary classifiers, each predicting the current label based on the features and previously predicted labels.
+LACO~\citep{zhang2021enhancing} introduces two additional losses for label correlation prediction.
+% RAKEL~\citep{tsoumakas2010random} reformulates multi-label classification into multiple sets of multi-class classification tasks. 
+HOMI~\citep{si2023multi} argue that the label matrix is approximately full-rank and use the label correlation to regularize the prediction which is similar to PLAIN~\citep{wang2023deep}.
+% However, these methods not only fail to analyze the complex non-Euclidean nature of graphs but also do not explicitly quantify the high-order correlations between multi-labels on graphs. 
+However, these methods do not analyze the complex non-Euclidean nature of graphs. For image and text data, where data points are independent, label correlations exist within label semantics. For graph data, the topological structure between node sets with different labels makes the analysis more challenging. Moreover, as shown in Fig.~\ref{fig:intro}, we find that MLNC on graphs requires uncovering the \emph{influence correlations} rather than the proximity correlations explored in other works. In other words, there can be both positive and negative influences between labels on graphs, while previous studies could only capture positive label proximity.
+
+
+% \iclr{
+\vpara{Label Propagation Methods.}
+The Label Propagation Algorithm (LPA) is a classic method whose application extends even beyond graph-based tasks. The fundamental assumption of LPA is that labels vary smoothly over the edges of a graph. As a result, given a graph and the labels of some of its nodes, LPA can infer the labels of the remaining nodes.
+However, traditional LPA does not take advantage of node feature information. This limitation has inspired many efforts to incorporate its principles or combine its ideas with Graph Neural Networks (GNNs) to construct powerful models.
+Some work leverage the simplicity and effectiveness of the LPA to assist graph models for node classification.
+GMNN~\cite{qu2019gmnn} models the joint distribution of labels with node features using Conditional Random Fields (CRF)~\cite{lafferty2001conditional} and employs a variational EM framework~\cite{neal1998view} for efficient training. In the E-step, a GNN learns representation to approximate the posterior distribution of labels. In the M-step, another GNN models the dependencies between labels. The M-step is quite similar to LPA, except that it is learnable and nonlinear.
+C\&S~\cite{huang2020combining} proposes combining shallow models that ignore graph structure with two post-processing methods including error correction (correct) and label propagation (smooth), resulting in significant performance improvements with a simple model.
+GCN-LPA~\cite{wang2021combining} theoretically analyzes the relationship between GCN and LPA, proving that edge weights that enhance LPA can also improve GCN. Based on this insight, they proposed the GCN-LPA model, which incorporates LPA as a regularization term for GCN.
+Another line of work uses LPA to correct noisy labels.
+LPM~\cite{xia2021towards} utilize the intrinsic graph structure to propagate labels and combines meta-learning to aggregate labels.
+Furthermore, R2LP~\cite{cheng2024resurrecting} extends the use of LPA to arbitrary heterophily levels, simultaneously propagating labels to unlabeled nodes and correcting noisy labels. R2LP not only generalizes LPA to more realistic scenarios involving heterophily graphs and varying noise levels but also provides a theoretical analysis of its effectiveness on label denoising. 
+
+The differences between our Label Influence Propagation (LIP) and the LPA-related works are threefold: Propagation target: We do not propagate labels; instead, we propagate the influence between labels.
+Propagation medium: In LPA, the propagation medium is typically the graph structure that connects nodes. In contrast, the propagation medium in LIP is the label propagation graph, constructed by quantified pairwise label influences. In this graph, nodes are labels, and edges are the influence correlations between labels.
+Purpose of propagation: The purpose of propagating label influence is not to infer unknown labels or denoise existing labels, but rather to extend the computed pairwise label influences to high-order label influences. This ultimately encourages labels with positive influence and suppresses those with negative influence.
+% }
+
+% \vpara{Graph neural networks (GNNs).}
+
+
+% C&S
+% huang2020combining
+% 之后是GCN-LPA
+
+% [1] GMNN: Graph Markov Neural Networks. qu2019gmnn
+% [2] Combining Graph Convolutional Neural Networks and Label Propagation (GCN-LPA). wang2021combining
+% LPM xia2021towards
+% [3] Resurrecting Label Propagation for Graphs with Heterophily and Label Noise (R2LP). cheng2024resurrecting
+
+
+\section{Datasets} \label{app:datasets}
+To validate the proposed framework, we conduct experiments on 8 datasets, including 3 classical MLNC datasets (Delve-M~\citep{8970680}, DBLP~\citep{8970680}, BlogCat~\citep{8894391}), 1 private dataset (Abnormal), 1 large scale OGB dataset (Ogbn-proteins~\citep{hu2020open}, OGB-p in short), 3 new biological datasets (PCG, HumLoc, EukLoc~\citep{zhao2023multi}) from different domains. 
+% The datasets are from 5 different domains, 
+% including Delve-M~\citep{8970680}, DBLP~\citep{8970680}, BlogCatelog~\citep{8894391}
+% Youtube~\citep{8894391}, 
+% Flickr~\citep{8894391}
+% , Yelp~\citep{zeng2020graphsaint}
+% and Abnormal.
+The private one is a real-world anonymous graph multi-label anomaly detection dataset under the premise of ensuring data privacy. At present, the data Abnormal is not yet publicly available, but it may be released in the form of benchmarks in the future. 
+% Moreover, we conduct experiments on a real-world private industrial dataset which is in the anomaly detection domain.
+The statistics of these datasets are in following Tab.~\ref{tab:stat}.
+
+\vpara{BlogCat.} The data lacks inherent node features, so feature initialization is required.
+Although the paper~\citep{zhao2023multi} uses an identity matrix to initialize node features on BlogCat, their experimental results show that DeepWalk~\citep{Perozzi_2014} significantly outperforms other methods using identity matrix initialization.
+Thus, we use DeepWalk embedding as node feature of BlogCat in Tab.~\ref{tab:main} and Fig.~\ref{fig:analysis}.
+Moreover, we find that another frequently used feature initialization method on BlogCat is to use structure-base embedding~\citep{qiu2020gcc}. Hence we use their structure-based initialization method in Tab.~\ref{tab:normlabel} and Tab.~\ref{tab:fewlabel}.
+% For evaluation metrics, considering there is imbalance in each label, we use AP, macro AUC and macro F1. 
+% These metrics are clearly defined in ~\citep{zhang2013review}.
+
+% Note that the statistics of Ogbn-proteins~\citep{hu2020open} please refers to its official website.
+
+\begin{table*}[!ht]
+    \centering    
+    \caption{The statistics of all the MLNC graph datasets.}
+    \resizebox{1.0\textwidth}{!}{
+    \begin{tabular}{c|cccc}
+    \toprule
+        ~ & DBLP & BlogCat & OGB-p & PCG \\ \midrule
+        \# nodes & 28,702 & 10,312 & 132,534 & 3,233 \\ 
+        \# edges & 68,335 & 667,966 & 39,561,252 & 37,352 \\ 
+        \# labels & 4 & 39 & 112 & 15 \\ 
+        $r_\text{homo}$ & 0.76 & 0.10 & 0.15 & 0.17 \\ \midrule
+        Domain & Citation Network & Social Network & PPI & PPI \\ 
+        Node & Author & Blogger & Protein & Protein \\ 
+        Edge & Co-authorship & Friendship & Biological associations & Biological associations \\ 
+        Label & Research areas & Interests & Functions & Phenotypes \\ \bottomrule
+        ~ & HumLoc & EukLoc & Delve-M & Abnomal \\ \midrule
+        \# nodes & 3,106 & 7,766 & 1,229,280 & 0.1 $\sim$ 10M \\ 
+        \# edges & 18,496 & 13,818 & 4,322,275 & 10 $\sim$ 100M \\ 
+        \# labels & 14 & 22 & 20 & 11 \\ 
+        $r_\text{homo}$ & 0.42 & 0.46 & 0.65 & 0.05 $\sim$ 0.20 \\ \midrule
+        Domain & PPI & PPI & Wikipidia Network & Anomaly detection \\ 
+        Node & Protein & Protein & Paper & User \\ 
+        Edge & Biological associations & Biological associations & Citation & -- \\ 
+        Label & Subcellular locations & Subcellular locations & Topics & Anomaly \\ \bottomrule
+    \end{tabular}
+    }
+    \label{tab:stat}
+\end{table*}
+
+
+
+\section{More Experiments} \label{app:allother}
+
+\subsection{Settings and Details} \label{app:repro} \label{app:settings}
+\vpara{Reproducibility}
+Experiments are conducted using 2 NVIDIA 3090 GPUs. Each experiment is replicated five times, utilizing different seeds for each run to ensure robustness and reproducibility. 
+We reproduce the baselines by the released code or corresponding description in their paper. And we follow the hyper-parameter setting suggested in their papers to ensure the fairness of comparison.
+The implementation settings and details are uploaded in the anonymous repository: \url{https://github.com/Xtra-Computing/LIP_MLNC}. 
+
+
+\vpara{Evaluation metrics.} 
+Macro AUC and AP are commonly used non-parametric metrics in prior works. 
+Macro AUC is the area under the ROC curve, and it provides an aggregate measure of performance across all possible classification thresholds, reflecting the model's ability to distinguish between positive and negative classes. 
+AUC is the official metric provided for comparison on the OGB leaderboard~\citep{hu2020open}, and it is also used in benchmarks ~\citep{tang2023gadbench} for highly imbalanced scenarios.
+Moreover, as noted in~\citep{zhao2023multi,yang2015evaluating,sun2025handling,sun2024fine}, AUC can be misleading for highly imbalanced datasets. 
+~\citep{zhao2023multi} also reveals that OGB-p has a nearly 90\% of unlabeled nodes, indicating extreme imbalance for most labels. 
+Thus, we also report Macro F1 and AP.
+Macro F1 computes the F1 score for each class independently and then takes the average. 
+AP (Average Precision) is a performance metric that summarizes the precision-recall curve by computing the weighted mean of precisions at different thresholds. It provides an overall measure of a model’s ability to balance precision and recall, particularly useful in imbalanced datasets.
+Higher values of these metrics indicates superior performance of \model.
+
+Note that AP, F1 and AUC can show significant differences due to their focus on different aspects of classification performance. F1 is sensitive to the balance between precision and recall, making it crucial for imbalanced datasets. AUC evaluates the overall ability to discriminate between classes across all thresholds. Therefore, a model might have a high AUC but a lower F1 if it struggles with precision or recall for the positive class. 
+Moreover, AUPR (Area Under the Precision-Recall Curve) is also a well-known classification metric. However, AUPR may overestimate model performance when the number of thresholds or unique prediction values is limited. Hence we omit this metric.
+
+\vpara{Hyper-parameter settings.} For training process, we use Adam optimizer with early stopping at 100 epochs to train \model. 
+Moreover, other hyper-parameters are decided using random search strategy and the range of hyper-parameters are listed in Tab.~\ref{tab:para}. When comparing with other baselines, we set the same number of layers for the backbone if the same backbone is used.
+
+
+\vpara{Backbones.} 
+As shown in the Tab.~\ref{tab:stat}, our datasets include both homophily and heterophily datasets, so we used four different backbones to validate the effectiveness of our method.
+Among them, GCN~\citep{kipf2017semisupervised}, GAT~\citep{velivckovic2017graph}, and GraphSage~\citep{hamilton2017inductive} are commonly used backbones for homophily graphs, while H2GCN~\citep{zhu2020beyond} is a popular model for heterophily graphs.
+
+
+\begin{table*}[h!]
+\centering
+\caption{The hyperparameter setting in this paper for all datasets}
+    \resizebox{0.6\textwidth}{!}{
+\begin{tabular}{r|c} \toprule
+Hyper-parameter        & Range\/Value               \\ 
+\midrule
+     % $\lambda$  & \{5e-2 $\to$ 6\}                  \\
+     % $C$        & \{2,4,8,16,32,64,128,256,512\}    \\
+     % $K$        & \{20,50,100,150,200,400,600,800,1000\}       \\
+     Hidden size       & \{32,64,128,256,512\} \\
+     Learning Rate  & \{1e-3 $\to$ 5e-1\}  \\
+     Weight decay   & \{1e-2,5e-3,1e-4,5e-4,1e-5,5e-6,1e-7,0\}  \\
+     Dropout rate   & \{0 $\to$ 0.8\}   \\
+     % Batch size     & \{16,32,64,128\}  \\
+    \midrule
+     Optimizer  & Adam  \\
+     Epoch      & 1000 \\
+     Early stopping patience & 100 \\
+\bottomrule  
+\end{tabular}
+}
+\label{tab:para}
+\end{table*}
+
+
+
+
+
+\subsection{Evaluation under Label Split} \label{app:moreExp}
+\vpara{Two split settings.} 
+We employ two types of split settings to show the robustness of our method on MLNC task.
+The first setting is node split, where the dataset is divided into training, validation, and test sets based on nodes, meaning that every node in the training set has full label information. This corresponds to the common single-label split method. However, in real-world scenarios, labels often come from different sources. For instance, in biological PPI networks, a protein may not have all its functions or phenotypes collected, or different phenotypes might be annotated by different teams, meaning not every node in a batch has all labels. Thus, the second setting, label split, was introduced: each label is assigned to the same number of nodes. Since multi-label classification on graph data is inherently transductive—where all node features and the graph structure are known—there is no risk of data leakage. This setting better reflects real-world scenarios.
+Note that split setting is not split ratio setting which means different proportions of training samples.
+Please refer to Tab.~\ref{tab:main} for node split setting. Here in appendix, we show the performance under label split setting in Tab.~\ref{tab:normlabel} and Tab.~\ref{tab:fewlabel}.
+
+
+\vpara{Results.} In our experiments, we employed two different split ratios, specifically, $6:2:2$ and $2:2:6$. 
+Under the same split ratio, we repeat the random splitting process with different random seeds five times.
+
+% \vpara{Normal training ratio.} 
+Due to its abundance of labels, better reveals whether the model truly uncovers the rich relationships among labels. 
+From the Tab.~\ref{tab:normlabel}, we can draw several conclusions. First and foremost, our method is the most effective one most of the time, which verifies the effectiveness of our approach. 
+
+\begin{table*}[h!]
+\centering
+\caption{Performance under \emph{label split} setting with the split of 6:2:2 (mean ± std. deviation) in terms of macro F1 , macro ROC\_AUC. The top performance are bolded and second ones are underlined.}
+\resizebox{1.0\textwidth}{!}{
+\begin{tabular}{c|cc|cc|cc|cc} \toprule
+                          & \multicolumn{2}{c}{DBLP}                            & \multicolumn{2}{c}{Delve-M}                         & \multicolumn{2}{c}{BlogCat}          & \multicolumn{2}{c}{Abnomal}              \\
+Metrics                   & \multicolumn{1}{c}{Macro F1}       & Macro AUC      & \multicolumn{1}{c}{Macro F1}       & Macro AUC      & \multicolumn{1}{c}{Macro F1} & Macro AUC & \multicolumn{1}{c}{Macro F1} & Macro AUC \\ \midrule
+Node2vec+BR               & \multicolumn{1}{c}{75.92$\pm$0.34}          & 83.78$\pm$0.48          & \multicolumn{1}{c}{50.34$\pm$1.11}          & 64.03$\pm$1.49          & \multicolumn{1}{c}{52.01$\pm$1.41}          & 60.08$\pm$0.97          & \multicolumn{1}{c}{43.55$\pm$1.88}          & 76.59$\pm$1.17          \\
+Node2vec+CC               & \multicolumn{1}{c}{73.61$\pm$0.31}          & 80.34$\pm$0.32          & \multicolumn{1}{c}{50.66$\pm$1.29}          & 65.47$\pm$1.44          & \multicolumn{1}{c}{52.22$\pm$1.39}          & 60.59$\pm$1.58          & \multicolumn{1}{c}{45.12$\pm$.143}          & 79.28$\pm$1.44          \\
+GCN+ML-KNN                & \multicolumn{1}{c}{77.64$\pm$0.35}          & 86.62$\pm$0.41          & \multicolumn{1}{c}{51.98$\pm$1.24}          & 69.45$\pm$1.81          & \multicolumn{1}{c}{53.61$\pm$1.14}          & 63.56$\pm$2.62          & \multicolumn{1}{c}{47.22$\pm$3.24}          & 80.28$\pm$1.81          \\
+GCN+PLAIN                 & \multicolumn{1}{c}{82.27$\pm$0.34}          & 91.28$\pm$0.44          & \multicolumn{1}{c}{53.61$\pm$1.74}          & 78.72$\pm$1.57          & \multicolumn{1}{c}{56.30$\pm$2.29}          & 70.69$\pm$1.38          & \multicolumn{1}{c}{52.16$\pm$3.27}          & {\ul 93.23$\pm$1.89}    \\ \midrule
+MLGW                      & \multicolumn{1}{c}{79.13$\pm$0.66}          & 90.14$\pm$0.63          & \multicolumn{1}{c}{52.25$\pm$0.43}          & 74.15$\pm$0.18          & \multicolumn{1}{c}{52.97$\pm$1.20}          & 68.70$\pm$1.14          & \multicolumn{1}{c}{49.12$\pm$2.27}          & 82.14$\pm$1.92          \\
+ML-GCN                    & \multicolumn{1}{c}{78.64$\pm$0.44}          & 89.30$\pm$0.28          & \multicolumn{1}{c}{51.92$\pm$0.34}          & 83.21$\pm$0.84          & \multicolumn{1}{c}{55.29$\pm$0.22}          & 70.64$\pm$0.68          & \multicolumn{1}{c}{51.27$\pm$1.30}          & 86.61$\pm$1.21          \\
+LARN                      & \multicolumn{1}{c}{83.86$\pm$0.28}          & 92.77$\pm$0.33          & \multicolumn{1}{c}{54.31$\pm$1.29}          & 85.85$\pm$1.15          & \multicolumn{1}{c}{55.61$\pm$1.11}          & {\ul 72.44$\pm$2.12}    & \multicolumn{1}{c}{51.34$\pm$1.44}          & 88.61$\pm$1.49          \\
+LANC                      & \multicolumn{1}{c}{80.37$\pm$0.62}          & 89.58$\pm$0.49          & \multicolumn{1}{c}{55.14$\pm$0.58}          & 86.48$\pm$0.62          & \multicolumn{1}{c}{54.48$\pm$0.84}          & 70.55$\pm$1.04          & \multicolumn{1}{c}{50.23$\pm$0.66}          & 84.02$\pm$0.33          \\
+VariMul                   & \multicolumn{1}{c}{84.81$\pm$0.67}          & 93.17$\pm$0.38          & \multicolumn{1}{c}{56.81$\pm$0.23}          & 86.91$\pm$0.13          & \multicolumn{1}{c}{{\ul 57.88$\pm$1.34}}    & 71.35$\pm$0.49          & \multicolumn{1}{c}{52.32$\pm$0.50}          & 88.56$\pm$0.36          \\ \midrule
+GCN+Com                   & \multicolumn{1}{c}{{\ul 86.00$\pm$0.24}}    & \textbf{94.00$\pm$0.05} & \multicolumn{1}{c}{{\ul 56.82$\pm$0.28}}    & {\ul 88.74$\pm$0.12}    & \multicolumn{1}{c}{57.39$\pm$1.75}          & 70.29$\pm$2.38          & \multicolumn{1}{c}{50.86$\pm$0.25}          & 87.08$\pm$0.26          \\
+GCN+Auto                  & \multicolumn{1}{c}{85.43$\pm$0.10}          & 93.47$\pm$0.14          & \multicolumn{1}{c}{54.71$\pm$0.29}          & 79.08$\pm$0.17          & \multicolumn{1}{c}{53.44$\pm$1.50}          & 66.41$\pm$2.37          & \multicolumn{1}{c}{{\ul 52.35$\pm$0.23}}    & 90.31$\pm$0.31          \\
+GCN+\model & \multicolumn{1}{c}{\textbf{86.50$\pm$0.34}} & {\ul 93.91$\pm$0.19}    & \multicolumn{1}{c}{\textbf{58.87$\pm$1.26}} & \textbf{90.89$\pm$1.14} & \multicolumn{1}{c}{\textbf{59.02$\pm$0.21}} & \textbf{74.30$\pm$0.36} & \multicolumn{1}{c}{\textbf{53.98$\pm$0.34}} & \textbf{94.91$\pm$0.45} \\ \bottomrule  
+\end{tabular}
+}
+\label{tab:normlabel}
+% \vspace{-0.2cm}
+\end{table*}
+
+
+
+% \vpara{Few training ratio.} 
+Here we show the second setting of training label ratio in Tab.~\ref{tab:fewlabel}. We simulated a scenario with sparse training samples, as often seen in real-world applications. In this setting, the limited training labels make it more challenging to capture label relationships. Methods that introduce labels as new nodes and construct a new graph with label-node edges are more affected, as fewer training labels result in fewer connections between the new label nodes and the original nodes, potentially leading to poorer performance.
+
+
+\begin{table*}[h!]
+% \vspace{-0.1cm}
+\centering
+\caption{Performance under \emph{label split} setting with the split of 2:2:6 (mean ± std. deviation) in terms of macro F1, macro ROC\_AUC. The top performance are bolded and second ones are underlined.}
+\resizebox{1.0\textwidth}{!}{
+\begin{tabular}{c|cc|cc|cc|cc} \toprule
+                          & \multicolumn{2}{c}{DBLP}                            & \multicolumn{2}{c}{Delve-M}                         & \multicolumn{2}{c}{BlogCat}          & \multicolumn{2}{c}{Abnomal}              \\
+Metrics                   & \multicolumn{1}{c}{Macro F1}       & Macro AUC      & \multicolumn{1}{c}{Macro F1}       & Macro AUC      & \multicolumn{1}{c}{Macro F1} & Macro AUC & \multicolumn{1}{c}{Macro F1} & Macro AUC \\ \midrule
+Node2vec+BR               & 72.02$\pm$1.15          & 77.76$\pm$1.14          & 40.19$\pm$0.82          & 53.42$\pm$1.54                & 48.33$\pm$0.37          & 54.08$\pm$1.41          & 45.51$\pm$1.82          & 71.32$\pm$2.12          \\
+Node2vec+CC               & 71.52$\pm$2.14          & 75.59$\pm$1.59          & 42.45$\pm$1.03          & 56.56$\pm$1.44                & 49.57$\pm$1.51          & 55.84$\pm$1.00          & 45.41$\pm$2.88          & 71.33$\pm$2.32          \\  \midrule
+GCN+ML-KNN                & 74.43$\pm$2.12          & 79.59$\pm$2.18          & 45.34$\pm$1.76          & 57.49$\pm$2.29                & 51.08$\pm$1.82          & 59.24$\pm$1.22          & 45.81$\pm$1.72          & 73.39$\pm$0.33          \\ 
+GCN+PLAIN                 & 79.34$\pm$1.32          & 88.67$\pm$0.52          & 49.23$\pm$1.25          & 61.25$\pm$1.54                & 55.34$\pm$1.26          & 67.35$\pm$2.11          & 48.23$\pm$1.32          & 87.11$\pm$2.42          \\ \midrule
+MLGW                      & 78.62$\pm$2.27          & 85.95$\pm$1.19          & 47.24$\pm$2.56          & 57.83$\pm$2.13                & 51.82$\pm$0.36          & 60.48$\pm$0.24          & 45.68$\pm$1.15          & 74.35$\pm$1.29          \\
+ML-GCN                    & 78.62$\pm$1.45          & 83.63$\pm$1.21          & 49.37$\pm$1.12          & 58.00$\pm$1.18                & 53.55$\pm$1.03          & 61.77$\pm$1.29          & 47.57$\pm$1.44          & 77.24$\pm$1.18          \\
+LARN                      & 81.45$\pm$0.74          & \textbf{92.47$\pm$1.83} & {\ul 50.71$\pm$1.98}    & 62.08$\pm$1.86                & 54.11$\pm$1.66          & 63.56$\pm$1.62          & 49.35$\pm$1.22          & 80.22$\pm$1.57          \\
+LANC                      & 79.63$\pm$0.91          & 88.43$\pm$0.72          & 49.80$\pm$1.12          & 57.85$\pm$3.18                & 54.18$\pm$1.82          & 62.18$\pm$1.87          & 49.24$\pm$0.88          & 83.52$\pm$1.41          \\
+VariMul                   & 83.23$\pm$0.43          & 91.06$\pm$1.18          & 50.39$\pm$1.18          & 59.08$\pm$1.27                & {\ul 57.02$\pm$1.23}    & {\ul 69.31$\pm$1.18}    & {\ul 50.54$\pm$1.05}    & {\ul 88.51$\pm$2.15}    \\ \midrule
+% GCN+Com                   & 83.31$\pm$0.21          & 92.07$\pm$0.41          & 49.56$\pm$0.03          & {\ul {66.57$\pm$1.87}} & 56.22$\pm$1.18          & 68.44$\pm$1.27          & 48.43$\pm$1.25          & 86.71$\pm$1.43          \\
+GCN+Auto                  & {\ul 83.96$\pm$0.13}    & 91.26$\pm$0.16          & 47.17$\pm$0.32          & {\ul 64.44$\pm$2.69}                & 56.34$\pm$1.27          & 62.64$\pm$1.01          & 48.14$\pm$1.04          & 85.12$\pm$1.51          \\
+GCN+\model & \textbf{84.05$\pm$0.19} & {\ul 92.21$\pm$0.28}    & \textbf{52.56$\pm$1.21} & \textbf{69.33$\pm$1.34}       & \textbf{57.07$\pm$0.43} & \textbf{72.40$\pm$0.66} & \textbf{51.91$\pm$1.18} & \textbf{90.58$\pm$0.52}   \\ \bottomrule  
+\end{tabular}
+}
+%\vspace{-0.3cm}
+% \setlength{\belowcaptionskip}{-0.35cm}
+\label{tab:fewlabel}
+% \vspace{-0.5cm}
+\end{table*}
+
+As shown in Tab.~\ref{tab:fewlabel}, our method once again achieved the best performance, with greater improvement over the baseline compared to scenarios with richer training samples.
+
+
+
+\subsection{Changing Backbone of \model}
+
+As shown in Fig.~\ref{fig:AppendExp}(a), our model consistantly achieves improvement when applied to any backbone, demonstrating the effectiveness of our approach. The difference in performance among backbones not using our method depends entirely on the inductive bias inherent in the graph data itself. An interesting observation is that different backbone models exhibit varying degrees of sensitivity to our method. For instance, GCN show greater improvements before and after the application of our method compared to GAT. We think that this may be due to our method's relation to gradient calculation, with different models having varying sensitivities to labels. Possibly, during training, GAT's gradient changes more rapidly, leading to quicker changes in label correlation. Moreover, since our method can be flexibly applied to any backbone capable of obtaining node embeddings, it allows our approach to serve as a plug-and-play enhancement for MLNC.
+
+\begin{table}[!ht]
+    \centering
+    \caption{Changing backbones (AUC) under node split on MLNC datasets.}
+    \resizebox{0.75\textwidth}{!}{
+    \begin{tabular}{l|c c c c}
+    \toprule
+        AUC & DBLP & BlogCat & PCG & EukLoc \\ \hline
+        GCN & 92.83 $\pm$ 1.13 & 66.14 $\pm$ 1.74 & 59.54 $\pm$ 0.90 & 70.53 $\pm$ 1.97 \\ 
+        GCN+LIP & 94.38 $\pm$ 1.51 & 70.21 $\pm$ 2.02 & 65.73 $\pm$ 0.52 & 72.92 $\pm$ 1.82 \\ \hline
+        GIN & 93.00 $\pm$ 0.46 & 68.32 $\pm$ 0.67 & 63.44 $\pm$ 1.15 & 73.13 $\pm$ 1.24 \\ 
+        GIN+LIP & 94.75 $\pm$ 1.29 & 70.87 $\pm$ 0.93 & 66.10 $\pm$ 1.64 & 75.10 $\pm$ 1.29 \\ \hline
+        APPNP & 94.17 $\pm$ 0.92 & 70.33 $\pm$ 1.10 & 64.96 $\pm$ 1.33 & 74.67 $\pm$ 0.98 \\ 
+        APPNP+LIP & 95.21 $\pm$ 1.08 & 71.82 $\pm$ 1.45 & 65.51 $\pm$ 1.74 & 75.86 $\pm$ 1.02 \\ \hline
+        GPRGNN & 93.09 $\pm$ 1.12 & 68.31 $\pm$ 1.26 & 68.02 $\pm$ 1.17 & 72.91 $\pm$ 0.99 \\ 
+        GPRGNN+LIP & 95.07 $\pm$ 1.84 & 72.36 $\pm$ 0.97 & 68.74 $\pm$ 1.58 & 74.88 $\pm$ 1.06 \\ \bottomrule
+    \end{tabular}
+    }
+    \label{BackbonesApp}
+\end{table}
+
+Moreover, we further conducte a series of experiments by replacing the backbone with more advanced decoupled GNNs: APPNP~\cite{gasteiger2018predict} and GPRGNN~\cite{chien2020adaptive}. APPNP is a classical yet powerful model, while GPRGNN achieve state-of-the-art (SOTA) on both homophily and heterophily graphs. 
+% We have also added experiments with other alternative backbones in Appendix E.4 of the revised pdf.
+Here, we evaluate the effectiveness of our method, LIP, on these advanced decoupled GNNs and present a comparison of the results between the original models and the LIP-enhanced models on MLNC tasks in the Tab.~\ref{BackbonesApp}.
+
+
+From the Tab.~\ref{BackbonesApp}, we can observe that even for high-performance decoupled GNN models, LIP consistently achieves performance improvements. LIP provides enhancements across different domains and demonstrates exceptional results on certain datasets. For example, LIP improved the performance of GPRGNN by approximately 4\% on the BlogCat dataset.
+In many cases, the performance improvement brought by LIP exceeds the performance differences between different models, highlighting the value of incorporating LIP.
+This is because these backbones primarily focus on modeling the input graph structure and node features. Regardless of the type of GNNs used, our LIP can provide additional support by modeling the influence correlation between labels.
+
+
+
+\begin{figure*}[h!]
+    \centering
+    \includegraphics[width=0.85\linewidth]{figs/AppendExp.pdf}
+    % \setlength{\abovecaptionskip}{-0.15cm}
+    % \setlength{\belowcaptionskip}{-0.35cm}
+    \caption{More model analysis on different datasets.}
+    \label{fig:AppendExp}
+\end{figure*}
+
+
+
+
+\subsection{Ablation study}
+
+\vpara{Normalization.}
+As shown in Fig.~\ref{fig:AppendExp}(b), the softmax normalization we use is more effective. From our empirical analysis, Softmax offers two key advantages compared to Row normalization. First, Softmax provides stronger differentiation. In the case of the influence matrix, failing to capture differences in influence may result in similar learning weights for labels that either negatively impact or provide only minimal positive impact, potentially leading to a vicious cycle. Second, Softmax provides stable gradients, contributing to smoother model optimization. In contrast, Row normalization, being a simple normalization operation, may gradually flatten the differences in influence relationships over successive iterations.
+
+\vpara{Influence Correlations in P and T steps.}
+We supplement the ablation study across all datasets (the full version of Fig.~\ref{fig:analysis}b), which is shown in the Tab.~\ref{InfluenceDir}. 
+"None" stands for simply using the backbone model without any quantification of influence correlations between labels.
+
+
+\begin{table}[!ht]
+    \centering
+    \caption{Ablation study of label influences (GCN as backbone).}
+    \resizebox{1.0\textwidth}{!}{
+    \begin{tabular}{l|cccccc}
+    \toprule
+        AUC & DBLP & BlogCat & OGB-p & PCG & HumLoc & EukLoc \\ \hline
+        None & 92.83 $\pm$ 1.13 & 66.14 $\pm$ 1.74 & 71.26 $\pm$ 1.45 & 59.54 $\pm$ 0.90 & 66.57 $\pm$ 0.67 & 69.27 $\pm$ 1.97 \\ 
+        Only P & 92.08 $\pm$ 1.06 & 68.27 $\pm$ 1.88 & 73.72 $\pm$ 0.63 & 62.01 $\pm$ 1.21 & 70.17 $\pm$ 1.42 & 70.87 $\pm$ 1.64 \\ 
+        Only T & 93.94 $\pm$ 1.00 & 67.11 $\pm$ 1.51 & 73.58 $\pm$ 1.24 & 63.82 $\pm$ 1.04 & 69.30 $\pm$ 1.02 & 69.93 $\pm$ 1.01 \\ 
+        All & \textbf{94.38 $\pm$ 1.51} & \textbf{70.21 $\pm$ 2.02} & \textbf{74.82 $\pm$ 0.34} & \textbf{65.73 $\pm$ 0.52} & \textbf{73.22 $\pm$ 1.76} & \textbf{72.92 $\pm$ 1.82} \\ \bottomrule
+    \end{tabular}
+    }
+    \label{InfluenceDir}
+\end{table}
+
+It can be observed that in all cases, utilizing the influence correlations from both propagation (P) and transformation (T) steps (noted as All in the table) achieves the best performance than using the influence from either phase alone.
+Moreover, individually quantifying and utilizing either type of influence correlations yields better performance than not using them at all.
+This indicates that leveraging the influence relationships from both the P and T steps is crucial for the MLNC task.
+Additionally, the table reveals that using the influence correlations from either the P step or the T step alone can achieve better results on different datasets. We hypothesize that this is due to the varying demands of different datasets for the P and T processes. Some datasets may require minimizing negative influence during the P process, while others may benefit from maximizing positive influence during the T process.
+
+
+
+\subsection{Sensitivity Study}
+
+\vpara{Settings.} We examine the sensitivity of the model to hyper-parameters by varying the values of $\alpha$ and $\beta$.
+We draw inspiration from APPNP’s~\citep{gasteiger2018predict} experimental setup.
+When we vary $\alpha$, $\beta$ is fixed at 0.28; when we vary $\beta$, $\alpha$ is fixed at 0.15.
+
+\vpara{Results.} The conclusion is that our method demonstrates robustness across a range of hyper-parameter settings. Specifically, the performance remains stable within reasonable parameter ranges, indicating that the model does not heavily depend on fine-tuned hyper-parameters for achieving effective results. Moreover, we find that regardless of the dataset characteristics, the optimal range for $\alpha$ is approximately between 0.08 and 0.30, while the optimal range for $\beta$ is approximately between 0.10 and 0.56.
+
+\begin{figure*}[h!]
+    \centering
+    \includegraphics[width=0.95\linewidth]{figs/hyper1.png}
+    % \setlength{\abovecaptionskip}{-0.15cm}
+    % \setlength{\belowcaptionskip}{-0.35cm}
+    \caption{Changing hyper-parameters of $\alpha$ and $\beta$ on datasets DBLP and PCG.}
+    \label{fig:hyper}
+\end{figure*}
+
+\subsection{Evaluation under Inductive Setting}
+
+\vpara{Settings.} In this section, we perform the inductive train/val/test split (6:2:2) and conducted experiments to validate the effectiveness in such setting.
+We used GraphSage as the backbone because it is naturally suited for the inductive setting. We also excluded certain baselines that are not suitable for the setting, such as VariMul and MLGW.
+
+\vpara{Results.} The results are shown in the Tab.~\ref{inductive}. It shows that our method also achieves satisfactory performance under the inductive setting. Although the model cannot observe the complete graph in the inductive setting, the subgraph containing the nodes whose labels need to be predicted is visible. Therefore, our model’s quantification of influence correlation during the P step remains meaningful and effective. Since inductive training also involves mutual interactions between gradients of different labels, modeling the influence relationships between labels in the T step is also necessary. As a result, our method achieves performance surpassing the baselines even under the inductive setting.
+
+\begin{table}[!ht]
+    \centering
+    \caption{Performance (AUC) comparison under inductive setting.}
+    \resizebox{1.0\textwidth}{!}{
+    \begin{tabular}{l|cccccc}
+    \toprule
+        ~ & SAGE+ML-KNN & SAGE+PLAIN & LARN & LANC & SAGE+Auto & SAGE+LIP \\ \hline
+        DBLP & 72.45 $\pm$ 1.77 & 74.16 $\pm$ 0.91 & 73.87 $\pm$ 1.79 & 73.54 $\pm$ 1.95 & 77.11 $\pm$ 2.42 & \textbf{79.32 $\pm$ 1.96} \\ 
+        EukLoc & 53.31 $\pm$ 1.51 & 55.02 $\pm$ 1.73 & 63.39 $\pm$ 2.01 & 65.97 $\pm$ 1.67 & 62.82 $\pm$ 2.19 & \textbf{66.35 $\pm$ 2.36} \\ \bottomrule
+    \end{tabular}
+    }
+    \label{inductive}
+\end{table}
+
+\subsection{Changing Number of Labels}
+
+\vpara{Settings.} We used GCN as the backbone to compare and analyze the performance of our method across different label number of label categories $k$.
+
+\vpara{Results.} From the Tab.~\ref{NumLabel}, we can observe that our method consistently achieves performance boosting regardless of the number of labels. We also identified some interesting phenomena from the experiments. First, for GCN, the performance is actually the best when the number of labels is 2. This phenomenon can be understood from two perspectives:
+On one hand, statistical analysis shows that label 2 is the category with the highest number of training nodes across all training datasets. Therefore, when the total number of labels is 2, the contribution of label 2 leads to a higher average performance. On the other hand, this also indicates that, to some extent, an increase in the number of labels results in a decline in GCN’s prediction performance.
+
+Moreover, with our method, the performance generally improves as the number of labels increases. In contrast, GCN’s performance fluctuates as the number of labels increases, sometimes improving and sometimes deteriorating. This indirectly indicates that our method reduces the negative influence between labels while enhancing the positive influence. 
+
+\begin{table}[!ht]
+    \centering
+    \caption{Performance (AUC) when changing the number of label categories $k$ on HumLoc.}
+    \resizebox{1.0\textwidth}{!}{
+    \begin{tabular}{l|ccccccc}
+    \toprule
+        HumLoc (AUC) & 2 & 4 & 6 & 8 & 10 & 12 & 14 \\ \hline
+        GCN & 70.29 $\pm$ 1.74 & 64.44 $\pm$ 0.92 & 66.35 $\pm$ 1.49 & 65.14 $\pm$ 1.85 & 66.52 $\pm$ 1.22 & 66.73 $\pm$ 0.86 & 68.14 $\pm$ 1.88 \\ 
+        GCN+LIP & 72.17 $\pm$ 1.56 & 65.99 $\pm$ 1.02 & 68.41 $\pm$ 1.55 & 68.82 $\pm$ 0.97 & 72.13 $\pm$ 1.29 & 72.22 $\pm$ 1.76 & 73.22 $\pm$ 1.76 \\ \bottomrule
+    \end{tabular}
+    }
+    \label{NumLabel}
+\end{table}
+
+\subsection{Case Study}
+
+\vpara{Settings.} To better illustrate the positive and negative mutual influences between labels, we take a specific node and its surrounding neighbors as an example to demonstrate the mutual influences between labels. We aim to show how these influences contribute to either improving or impairing the prediction performance of the node. 
+We selected a node with a degree of 3 from the DBLP dataset, identified as node 197. Its adjacency structure in the original graph is shown in the Fig.~\ref{fig:case}.
+
+\vpara{Analysis.} It is worth noting that, as discussed in Sec.~\ref{sec:method} of the main text, the influence between labels is quite complex. The influence from $Y_a$ to $Y_b$ is the combined effect of a group of nodes with label $y_a$ on a group of nodes with label $y_b$ during both the P and T processes. Here, we attempt to visualize the positive and negative influences, as well as their ultimate effect on performance, using the local structure of a single node rather than a group of nodes with the same label. This provides a simplified perspective on these interactions.
+
+\begin{wrapfigure}{r}{0.47\textwidth}
+    \centering
+    \includegraphics[width=0.45\textwidth]{figs/CaseStudy.pdf}
+    % \setlength{\abovecaptionskip}{-0.15cm}
+    \setlength{\belowcaptionskip}{-0.35cm}
+    \caption{Case study on node 197 from dataset DBLP.}
+    \label{fig:case}
+\end{wrapfigure}
+
+From the local structure of node 197, we can observe its connections to nodes 0, 18566, and 22, along with their respective node indices and ground truth labels, as shown in the figure. However, when GCN predicts the labels for node 197, the resulting predicted probabilities are shown in the bar chart. Based on the observations from Fig. 1(a), we can roughly infer the reasons for this phenomenon:
+
+Positive and Negative Influences: From Fig. 1(a), it is evident that the other three labels generally provide positive support for label 0 and label 2, while they mostly exert negative influence on label 1 and label 3. This implies that the influence from other labels makes it easier for node 197 to be correctly identified as label 0 or label 2, but not necessarily for label 1 or label 3.
+
+Localized Negative Influence: Among the neighboring nodes of node 197, only node 18566 has label 1, which is different from its surroundings. Consequently, its negative influence is received by node 197 during the P process, resulting in label 1’s probability exceeding 0.5.
+
+Impact on label 3: The high predicted probability for label 3 is likely due to the influence of other labels during backpropagation, which affects the GNN parameters. This, in turn, increases the probability of label 3 during the T process.
+In conclusion, the combined effects of positive and negative influences ultimately impact the final prediction. As a result, Labels 0 and 2 are correctly predicted for node 197, while Labels 1 and 3 are incorrectly predicted.
+
+
+\section{Limitations and Future Work}
+
+From a scenario perspective, our work currently focuses on the most common case: static and homogeneous graphs. That is, the nodes, edges, and labels do not change over time, and all nodes in the dataset are of the same type, with all edges sharing the same physical meaning.
+From a goal perspective, our work is currently focused on improving the performance of MLNC tasks by analyzing and quantifying the influence correlations between labels on graph datasets, without considering potential noise in the labels or graph structure. 
+We leave these complex challenges in both aspects for future exploration.

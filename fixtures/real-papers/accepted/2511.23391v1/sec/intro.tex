@@ -1,0 +1,36 @@
+\section{Introduction}
+\label{sec:intro}
+To align large language models (LLMs) with human values and intentions, learning from human feedback is essential. \cite{ziegler2019fine,stiennon2020learning,bai2022training}. Reinforcement learning from human feedback (RLHF) has emerged as a key approach for aligning LLMs with human preferences and values \cite{christiano2017deep,ouyang2022training}. The core of this technique lies in the introduction of an explicit reward model during training to generate reward signals, and the application of reinforcement learning under a reference model that is consistent with the initial policy \cite{achiam2023gpt,touvron2023llama}. 
+
+While RLHF enhances output quality, its reliance on multiple models and iterative sampling increases training complexity \cite{zhao2023slic,yuan2023rrhf,azar2024general,hong2024orpo,casper2023open}. To address this, direct alignment approaches like Direct Preference Optimization (DPO) \cite{rafailov2023direct} and its variants \cite{zhao2023slic,yuan2023rrhf,hong2024orpo,ethayarajh2024model,park2024disentangling,xu2024contrastive,ethayarajh2024kto,tang2024generalized,meng2024simpo} directly optimize LLMs based on human preferences, bypassing the need for separate reward models. These methods adjust the model’s loss by favoring preferred responses and penalizing dispreferred ones \cite{zhao2024rainbowpo,zeng2024token,liao2024tpo,liu2024tis}. However, DPO primarily emphasizes sequence-level preferences, overlooking the varying importance of individual tokens, which limits its effectiveness \cite{lin2024rho,zeng2024token,liu2024tis,gu2025mask}.
+
+To investigate why distinguishing the importance of tokens is critical in DPO, we observe that many training pairs contain identical or semantically similar words (which we define as ambiguous contents). We hypothesize that training on ambiguous contents may lead to confusion, thereby limiting the performance of DPO. 
+% \textcolor{red}{To validate our hypothesis, we mathematically demonstrate, via XXX, that the presence of such confusion could substantially constrain the effectiveness of DPO.}
+
+Building on this insight, we propose a simple yet effective method called Ambiguity Awareness Optimization (AAO) (shown in Figure \ref{fig:pao_architecute}), which can re-weight tokens to mitigate ambiguity during training by LLM itself. Specifically, we categorize response tokens into three types based on their semantic similarity (as measured by the LLM’s own embeddings), sorted from highest to lowest similarity: ambiguous tokens, transitional tokens, and key tokens. For each token type, we design distinct weight adjustment curves according to their semantic similarity. Furthermore, we introduce an adaptive module in the latent space that automatically determines the decision thresholds for the three token groups, enabling the model to dynamically decide these thresholds during training.
+
+Extensive experiments were conducted on Llama3.1-8B \cite{grattafiori2024llama} and Mistral-7B \cite{jiang2024mixtral} models, including both base and instruction-tuned variants, utilizing widely adopted benchmark datasets such as AlpacaEval 2 \cite{li2023alpacaeval,dubois2024length}, MT-bench \cite{zheng2023judging}, and Arena-Hard \cite{li2024live}, among others. The results demonstrate that AAO consistently and significantly enhances the performance of DPO. 
+% For instance, AAO increases the AlpacaEval 2 score of Llama3.1-8B-base from 31.3\% to 40.23\%, and achieves an improvement on Arena-Hard from 26\% to 41\%.
+Additionally, we further validated that AAO can alleviate the "squeeze effect" \cite{ren2024learning} present in DPO, revealing that the "squeeze effect" arises not only from sequence-level semantically similar pairs, but also from ambiguous tokens within the pairs. It is noteworthy that AAO does not rely on external models or additional data, making it highly flexible and easy to deploy.
+
+Our work makes three key contributions:
+
+\vspace{-0.5em}
+\begin{itemize}
+\itemsep=1pt
+\item We conduct a thorough mathematical analysis of the effect of ambiguous content and perform comprehensive experiments, revealing the negative impact of ambiguous content on preference optimization.
+\itemsep=1pt
+\item We propose a simple yet effective method called AAO, which can automatically identify ambiguous content during training. Additionally, it can be seamlessly integrated with existing methods, enhancing their performance without much computational burden.
+\itemsep=1pt
+\item Extensive experiments demonstrate that applying AAO to existing methods results in significant performance improvements and achieves state-of-the-art results on four popular benchmarks of different tasks, i.e., AlpacaEval 2, Arena-Hard, MT-bench, Llama-Guard.
+\end{itemize}
+
+\begin{figure*}[t]
+  \centering
+  %\fbox{\rule[-.5cm]{0cm}{4cm} \rule[-.5cm]{4cm}{0cm}}
+  \includegraphics[trim=0 300 180 0, clip, width=1.\textwidth]{figs/method.pdf}
+  %\vspace{-1em}
+  \caption{Diagram of our proposed AAO, in which background tokens among preference answers are re-weighted when computing cross-entropy loss. Firstly, AAO tokenizes preference pairs using a language model and encoding them into corresponding embeddings. Then AAO calculates the semantic similarity of the embeddings with cosine distance and decides the background tokens with a adaptive threshold. Finally, the background tokens are re-weighted during training.}
+  \label{fig:pao_architecute}
+  \vspace{-1em}
+\end{figure*}

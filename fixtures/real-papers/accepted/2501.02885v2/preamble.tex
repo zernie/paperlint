@@ -1,0 +1,82 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                      %
+%                  Customized By sunh                  %
+%                                                      %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% customized pkg
+%\usepackage[dvipsnames,table]{xcolor}
+\usepackage[table]{xcolor}
+\usepackage{multirow}
+\usepackage{multicol}
+\usepackage{makecell}
+\usepackage{arydshln}
+\usepackage{amssymb}
+\usepackage{bbding}
+\usepackage{pifont}
+\usepackage{caption}
+\usepackage{titletoc}
+\usepackage{amsthm}
+
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e}
+
+
+
+% customized math command
+\newcommand{\mname}{\mbox{\textsc{mDP$^3$}\xspace}}
+\newcommand{\unk}{~~~-~~~}
+\newcommand{\tofix}[1]{{\color{red}[ToFix: #1]}}
+
+% customized math symbols
+
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\mL}{\mathbf{L}}
+\newcommand{\I}{\mathbf{I}}
+\newcommand{\mr}{\mathbf{r}}
+\newcommand{\mO}{\mathbf{\Omega}}
+
+\newcommand{\T}{\mathcal{T}}
+\newcommand{\R}{\mathcal{R}}
+\newcommand{\state}{\mathfrak{S}}
+\newcommand{\C}{\mathcal{C}}
+
+\newcommand{\nocheckmark}{\ding{55}}
+\newcommand{\semicheckmark}{{\ding{51}\kern-0.65em\ding{55}}}
+
+
+\newcommand{\emptyplaceholder}{~~~~~~~}
+\definecolor{green}{HTML}{34A853}
+\definecolor{red}{HTML}{EA4335}
+\newcommand{\gainfoot}[1]{\scriptsize\color{green}\textbf{#1$\uparrow$}}
+\newcommand{\lossfoot}[1]{\scriptsize\color{red}\textbf{#1$\downarrow$}}
+\newcommand{\emptyfoot}[1]{\scriptsize\textbf{\phantom{#1$\uparrow$}}}
+
+
+% for proof
+%\newtheorem{theorem}{Theorem}[section]
+%\newtheorem{lemma}[theorem]{Lemma}
+%\newtheorem{corollary}[theorem]{Corollary}
+%\newtheorem{definition}[theorem]{Definition}
+
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%
+% --- inline annotations
+%
+
+\usepackage[normalem]{ulem}
+\newcommand{\iccvadd}[1]{{\textbf{\color{blue}#1}}}
+
+\newcommand{\red}[1]{{\color{red}#1}}
+\newcommand{\todo}[1]{{\color{red}#1}}
+\newcommand{\TODO}[1]{\textbf{\color{red}[TODO: #1]}}
+% --- disable by uncommenting  
+% \renewcommand{\TODO}[1]{}
+% \renewcommand{\todo}[1]{#1}
+
+
+

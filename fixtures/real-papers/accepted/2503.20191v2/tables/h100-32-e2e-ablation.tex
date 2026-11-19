@@ -1,0 +1,18 @@
+\begin{table}[htbp]
+\vspace{1em}
+\centering
+\begin{tabular}{c c c}
+\toprule
+\textbf{Stage} & \sysname & No Optimization \\
+\midrule
+Emulation & 9m & 14m \\
+Trace Collation & 2m & 7m \\
+Runtime prediction & 1.5m & 8m \\
+Simulation & 4.5m & 55m \\
+\midrule
+Total search time & 38m & >24hrs\\
+\bottomrule
+\end{tabular}
+\caption{Runtime statistics of configuration search on the H100 32 resource/model spec with and without optimizations enabled. The per-stage times are averaged across all trials.}
+\label{tab:eval-h100-32-ablation}
+\end{table}

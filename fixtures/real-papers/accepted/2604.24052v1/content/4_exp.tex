@@ -1,0 +1,42 @@
+\input{attachments/table1}
+\input{attachments/table2}
+
+\section{Experiments}
+\label{sec:experiments}
+
+We conduct comprehensive experiments to validate the effectiveness of our proposed QEVA metric. We first introduce \textbf{MLVU(VS)-Eval}, a novel benchmark dataset for evaluating video-to-text summarization metrics (\S\ref{sec:dataset}). We then compare QEVA against existing metrics in terms of correlation with human judgments (\S\ref{sec:correlation}). Additionally, we analyze model-wise performance of QEVA (\S\ref{sec:modelwise-corr}), and demonstrate the robustness of QEVA via ablation studies (\S\ref{sec:ablation}).
+
+\subsection{MLVU(VS)-Eval: A Novel Benchmark for Evaluating Video Summarization Metrics} \label{sec:dataset}
+
+Existing evaluation datasets for video-to-text summarization lack human annotations, limiting accurate metric evaluation. To address this, we propose \textbf{MLVU(VS)-Eval}, a novel human-annotated dataset built upon the MLVU benchmark~\citep{zhou2024mlvu}.
+
+We select 200 video clips (average length $\sim$15 minutes) from the MLVU Video Summarization task. Each video has a human-written reference summary. We generate candidate summaries using four widely-used Video-LMM models: GPT-4o, InternVL3-8B, Qwen2.5-VL-7B, and Video-LLaVA-7B, resulting in 800 candidate summaries. For our evaluation, we recruited 20 annotators (comprising graduate and undergraduate students) to assess each summary based on three criteria: \textit{Coverage}, \textit{Factuality}, and \textit{Chronology}, using a 5-point Likert scale. Each summary received evaluations from two independent annotators. The inter-annotator agreement, measured using Krippendorff's $\alpha$, is 0.68, indicating substantial reliability of the annotations.
+
+\subsection{Correlation with Human Judgments} \label{sec:correlation}
+
+We compare QEVA with various existing evaluation metrics in terms of correlation with human judgments.
+
+\paragraph{Baseline Metrics.} 
+We compare QEVA with several representative categories of evaluation metrics: reference-based n-gram overlap metrics, embedding-based similarity metrics, and LLM-based evaluation approaches. For the n-gram and embedding-based metrics, we report results using widely adopted methods in each category. Additionally, we introduce two novel baselines: (1) employing a Video-LMM as a direct judge by prompting it with our human annotation guidelines, and (2) computing multimodal embedding similarity between the original video and generated summary using a state-of-the-art multimodal encoder\footnote{We use LanguageBind~\citep{zhu2023languagebind} for multimodal embedding in this paper.}.
+
+\paragraph{Results and Analysis.} Table~\ref{tab:correlation-results} presents correlations measured by Kendall's $\tau_b$, $\tau_c$, and Spearman's $\rho$. QEVA consistently achieves significantly higher correlations than all existing metrics, highlighting its superior alignment with human evaluations, especially notable given QEVA is a reference-free metric.
+
+\subsection{Model-wise Correlation Analysis} \label{sec:modelwise-corr}
+
+To further examine QEVA's consistency, we analyze correlation results separately for each Video-LMM summarization model. Table~\ref{tab:model-wise correlation} shows that QEVA consistently yields positive and stable correlations across different summarization models. In contrast, some baseline metrics even show negative or inconsistent correlations for certain models.
+
+We observe relatively lower correlations for Video-LLaVA-generated summaries. Upon qualitative analysis, we find these summaries are generally shorter and of lower quality, making it challenging for QEVA to generate meaningful questions and answers.
+
+\subsection{Ablation Studies} \label{sec:ablation}
+
+We perform ablation studies to analyze QEVA's robustness and generalizability.
+
+\paragraph{Evaluation Criteria-wise Ablation.} 
+We separately calculate correlations between human judgments and QEVA scores for each evaluation criterion (Coverage, Factuality, Chronology). As shown in Table~\ref{tab:criterion-ablation}, QEVA demonstrates strong correlations across all individual criteria, validating its capability to accurately capture different aspects of summarization quality.
+
+\input{attachments/table3}
+\input{attachments/table4}
+
+\paragraph{Robustness to Different Video-LMM and LLM Models.} 
+We further examine QEVA's internal robustness by replacing the original Video-LMM (Gemini-1.5 Pro) and LLM (GPT-4o) components with alternative models. Specifically, we test open-source Video-LMM variants (QwenVL, InternVL) and LLM variants (LLaMA, Gemma). Table~\ref{tab:component-ablation} indicates that QEVA maintains high correlations even with open-source alternatives. This demonstrates QEVA's practical applicability and cost-effectiveness by alleviating reliance on costly API-based models.
+

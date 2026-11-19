@@ -1,0 +1,112 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acl.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "content/0_abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "content/1_intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "attachments/figure1.tex",
+      "role": "body"
+    },
+    {
+      "path": "attachments/figure2.tex",
+      "role": "body"
+    },
+    {
+      "path": "content/2_related.tex",
+      "role": "body"
+    },
+    {
+      "path": "attachments/figure3.tex",
+      "role": "body"
+    },
+    {
+      "path": "content/3_method_1.tex",
+      "role": "body"
+    },
+    {
+      "path": "content/4_exp.tex",
+      "role": "body"
+    },
+    {
+      "path": "attachments/table1.tex",
+      "role": "body"
+    },
+    {
+      "path": "attachments/table2.tex",
+      "role": "body"
+    },
+    {
+      "path": "attachments/table3.tex",
+      "role": "body"
+    },
+    {
+      "path": "attachments/table4.tex",
+      "role": "body"
+    },
+    {
+      "path": "content/5_con.tex",
+      "role": "body"
+    },
+    {
+      "path": "content/6_lim.tex",
+      "role": "body"
+    },
+    {
+      "path": "content/appendix.tex",
+      "role": "body"
+    },
+    {
+      "path": "attachments/appendix/appendix-a1.tex",
+      "role": "body"
+    },
+    {
+      "path": "attachments/appendix/appendix-a2.tex",
+      "role": "body"
+    },
+    {
+      "path": "attachments/appendix/appendix-a3.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "d6d0b7d90c866164ac837b5967fd39eb868ab146181ed71b8097b52e5ffe8d8a",
+    "acl.sty": "57ec5021756530bd01dab30657a3ca88bd20b1fd5694122b7f0daa9cfaa3e3ac",
+    "content/0_abstract.tex": "83da435725311c03a22754740550637952c97bc59dea5c95bf4368f18f9797ae",
+    "content/1_intro.tex": "bbbdbc62d7d14da7984395deb8befb92a4ca35f0c60553aa448953974b0752a6",
+    "attachments/figure1.tex": "fc932785382c9bf4ee4c0e6f30c361ef7a28d63cca00af0c8788706ce341848b",
+    "attachments/figure2.tex": "81b421d20b59b4d74db8994164b2b85fc314fb06810131932e0edabf68ae0764",
+    "content/2_related.tex": "a85269e8fe5f49aea70ce156515ed740b53e8196adb242e5352c5a782220b873",
+    "attachments/figure3.tex": "abdc6e36791c866d2a034db29fdd170513c7fc4c59e3bd470f2d168bce02fe66",
+    "content/3_method_1.tex": "2f99fb6ecbfe8553e743cba29d35ee80466ca15fdd4fe6d32d75b045ba6f5ef3",
+    "content/4_exp.tex": "3d650f65534880370d7ab21aa5de5a51ff555b30ed6291814f94c52047dd20cb",
+    "attachments/table1.tex": "8242997b76305abe567d5e4337125409c321af2ee8202e4912aa02d6e026093c",
+    "attachments/table2.tex": "5b95ccc0c8972a4f14ed574d4680e379e02fb1974c3a3a65bb7b0d0e564cc788",
+    "attachments/table3.tex": "377a7ed9c84220e93d8b36cad26aa0d5256d90c6168077ed49b2a4dce7c8d471",
+    "attachments/table4.tex": "c0805cce59b607f7113eca44af5a5b9d3bbbd46dc999659072c00cc93fc14f61",
+    "content/5_con.tex": "58486803d0e0493a786ef8c71924a4ed639f2d147f007c49253a3a59dae439fc",
+    "content/6_lim.tex": "fd48c3b11a9db38ad05f6dd9c5bfcbf56a800b63f89a5ba3a6ad24c8d8403c24",
+    "content/appendix.tex": "15b132a11dabd3954c6d922521f0c1ddf80704b7f812f2fd9995c35eceba3c40",
+    "attachments/appendix/appendix-a1.tex": "0b7136e44661572d4c612221a32efa47c995cacd7607a6c7a762fd1540914da1",
+    "attachments/appendix/appendix-a2.tex": "5363288f6b5d0a25eda6f6b3d17c79a008fc3d7ec2836d2b5d835d8bc43e06f5",
+    "attachments/appendix/appendix-a3.tex": "42739b04b64b6c92532300c38c538b597c0a8ca6cc6c2b3ab0ed9dc6931061f0"
+  }
+}

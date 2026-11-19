@@ -1,0 +1,70 @@
+\section{External Benchmark: S-EO}
+\label{app:seo}
+
+The gap appears on S-EO~\cite{seo}, an external benchmark that differs from ShadowTransfer
+in sensor (WorldView-3), label source (shadows derived from a digital surface model, DSM)
+and cities.
+
+\paragraph{Protocol.} The three S-EO cities are Omaha, Jacksonville and San Diego. For each
+held-out city, the LOCO model trains on 3,500 patches from the two other cities and the
+within-city upper bound on 3,500 patches from the held-out city. We train MAMNet, OGLANet,
+DINOv3 and CrossEarth with three seeds each and evaluate on 1,637 patches from 42 areas of
+interest (AOIs) in Omaha, 2,642 from 72 in Jacksonville and 1,870 from 52 in San Diego. The
+metric is two-class boundary-tolerant mIoU at $K{=}2$ with pixels the DSM did not observe
+excluded. Intervals are AOI cluster bootstrap intervals ($B{=}10{,}000$) with seed as a
+stratum, and $p$-values come from AOI-level sign-flip permutation tests with Holm correction
+over the 12 (architecture, city) pairs. OGLANet runs at inference batch size 1, because its scores depend on
+the inference batch size in our reimplementation.
+
+\paragraph{Gap.} The upper-minus-LOCO gap is positive in all 12 (architecture, city) pairs
+(Holm $p = 0.0012$ each), from $2.10$ mIoU (OGLANet, Omaha) to $7.95$ (CrossEarth, Omaha). Pooled within architecture, the gap is $6.98$ ($95\%$ CI
+$[6.50, 7.46]$) for MAMNet, $6.93$ ($[6.44, 7.42]$) for CrossEarth, $4.28$ ($[3.97, 4.59]$)
+for DINOv3 and $3.45$ ($[3.19, 3.71]$) for OGLANet, and $5.41$ ($[5.07, 5.75]$, 664 AOI
+units) over all four. We do not pool or test the S-EO gaps against the ShadowTransfer gaps,
+because the two benchmarks differ in sensor, labels, training budget and test unit.
+
+\paragraph{Diagnostics of Section~\ref{sec:evaluation}.} We repeat three diagnostics on
+S-EO. (i) Mean predicted shadow probability on ground-truth shadow, $\bar{p}_S$, is lower
+under LOCO than under the upper bound in 10 of 12 pairs (Holm $p < 0.05$) and higher in
+none, with seed-averaged differences from $-0.1210$ (MAMNet, San Diego) to $+0.0022$
+(OGLANet, Omaha). The background control $\bar{p}_B$ also differs in 10 of 12 pairs, so on
+S-EO the confidence shift is not confined to the shadow class. The foreground change is
+smallest in Omaha, a mean absolute $\Delta\bar{p}_S$ of $0.0161$ against $0.0889$ in the
+other two cities. (ii) The foreground-minus-background AURC gap (LOCO minus upper bound;
+positive means higher selective risk under LOCO) is positive in 12 of 12 pairs and
+Holm-significant in 8, pooling to $+0.0479$ ($[+0.0422, +0.0539]$, 660 AOI units).
+(iii) The sign of the decoder-retraining recovery (Experiment~A) separates by architecture
+in the same direction as on ShadowTransfer: positive in 18 of 18 MAMNet and DINOv3 cells and
+negative in 9 of 9 OGLANet cells, under both foreground-only and two-class differencing. A cell's gap
+predicts the magnitude of its recovery ($R^2 = 0.6165$), so gap size is an alternative account
+of recovery magnitude; the sign separation holds where the DINOv3 and OGLANet gaps overlap. CrossEarth has no Experiment~A
+implementation.
+
+\paragraph{Appearance and sun geometry.} Grayscale histogram matching of target to source
+improves 0 of 36 S-EO cells. Regressing the per-patch gap on the patch's sun-elevation
+distance to the LOCO training pool, with city and architecture fixed effects, gives a
+pooled slope of $-0.189$ with $p = 0.30$ under city-clustered standard errors (3 clusters)
+and $p = 0.0013$ under ordinary least squares, which ignores the clustering. The data give no
+support to a sun-geometry account, and with three clusters the test has little power.
+
+\paragraph{Adaptation methods.} Of 27 (architecture, method) pairs, 21 score below Vanilla
+LOCO and 5 are mixed. MAMNet with MRFP+ fails to train in all nine of its cells, and no
+method cell collapses at test time.
+
+\paragraph{\sib{}.} At seed 0, \sib{}'s worst (architecture, city) cell is OGLANet/San Diego at
+$61.15$ mIoU, $1.57$ below Vanilla's worst cell, OGLANet/Omaha at $62.72$. \sib{} scores
+significantly below Vanilla in 7 of 12 cells and above it in 1 (Holm over 12).
+
+\paragraph{Decomposition of \sib{}'s S-EO deficit.} On a single-seed, two-architecture
+subset of the S-EO grid, the DINOv3 \sib{} configuration with FDA sits $1.10$ mIoU below
+Vanilla on average over the three cities, and the \sib{} core without FDA sits $0.66$ below.
+On MAMNet, adding skip attention gates (SAG) to the core changes the score by $+0.28$. These
+values suggest that part of the deficit comes with the FDA component; the grid was not
+designed as an ablation, and we did not test this.
+
+\paragraph{Caveats.} S-EO labels are generated from a DSM; both sides of every gap use the
+same labels on the same patches, so label noise affects absolute levels more than the gap.
+108 test patches (29 in Omaha, 79 in San Diego) are entirely DSM-unseen, score 0 in every
+cell of their city, and contribute a difference of exactly 0 to every gap. Five cells
+stopped at the epoch ceiling before early stopping triggered. 53 of the 72 Vanilla cells
+carry no inference-noise band, so no AURC value has a run-to-run interval.

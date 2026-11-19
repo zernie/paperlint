@@ -1,0 +1,52 @@
+\begin{table}[!htbp]
+\vspace{-2.5mm}
+\caption{
+SDG results (\%) on PACS.
+One domain is used as the source domain and the others are used as the target domain.
+}
+\renewcommand\arraystretch{0.9}
+\scalebox{0.845}{
+\centering
+\footnotesize
+\begin{tabular}{l|c|cccc|>{\columncolor{gray!30}}c}
+\hline
+\textbf{Method} &\textbf{Venue} &\textbf{P} &\textbf{A} &\textbf{C} &\textbf{S} &\textbf{Avg.}  \\
+\hline
+Augmix~\cite{hendrycks2019augmix}      
+& ICLR'20      &38.30             &66.54 &70.16             &52.48             &56.87 \\
+RSC~\cite{huang2020self}             
+& ECCV'20      &41.60             &73.40 &75.90             &56.20             &61.80 \\
+L2D~\cite{wang2021learning}
+& ICCV'21      &52.29             &76.91 &77.88             &53.66             &65.18 \\
+RSC+ASR~\cite{huang2020self}      
+& CVPR'21      &54.60             &76.70 &79.30             &61.60             &68.10 \\
+pAdaIn~\cite{nuriel2021permuted}      
+& CVPR'21      &33.66             &64.96 &65.24             &32.04             &49.98 \\
+ERM~\cite{vapnik2013nature}         
+& ICLR'21      &33.65             &65.38 &64.20             &34.15             &49.34 \\
+Mixstyle~\cite{zhou2021domain}    
+& ICLR'21      &37.44             &67.60 &70.38             &34.57             &52.50 \\
+EFDMix~\cite{zhang2022exact}      
+& CVPR'22      &42.50             &63.20 &73.90             &38.10             &54.40 \\
+DSU~\cite{li2022uncertainty}         
+& ICLR'22      &42.10             &71.54 &74.51             &47.75             &58.97 \\
+ACVC~\cite{cugu2022attention}
+& CVPRW'22     &48.05             &73.68 &77.39             &55.30             &63.61 \\
+MAD~\cite{qu2023modality}
+& CVPR'23      &52.95             &75.51 &77.25             &57.75             &65.87 \\
+P-RC~\cite{choi2023progressive}
+& CVPR'23      &57.11             &76.98 &78.54             &62.89             &68.88 \\
+Meta-Casual~\cite{chen2023meta}
+& CVPR'23      &59.60             &77.13 &\underline{80.14} &62.55             &69.86 \\
+ITTA~\cite{chen2023improved}  
+& CVPR'23      &56.50             &\underline{78.40} &79.80             &60.70             &68.80 \\
+Prompt-Driven~\cite{li2024prompt} 
+& CVPR'24      &\underline{60.09} &\textbf{78.77}    &\textbf{82.69}    &\underline{62.94}             &\underline{71.12} \\
+\hline
+\textbf{PAPT (Ours)}         
+& -            &\textbf{62.12}    &69.84 &78.57             &\textbf{80.34}    &\textbf{72.72} \\ 
+\hline
+\end{tabular}}
+\label{tab:pacs}
+\vspace{-3.5mm}
+\end{table}

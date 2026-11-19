@@ -1,0 +1,35 @@
+\begin{table*}[t]
+\centering
+\caption{Full LongBench results with Llama-3-8B-1M.}
+\label{tab:transposed-longbench}
+\begin{tabular}{l|cc|cc|cc}
+\toprule
+Metrics & Full & CateKV  & Quest  & CateKV+Quest & ShadowKV & CateKV+ShadowKV  \\ 
+\midrule
+Average & 31.27 & \textbf{31.48} & 30.90 & \textbf{31.03} & 30.77 & \textbf{30.94} \\
+\midrule
+NarrativeQA & 18.61 & \textbf{18.64} & \textbf{19.54} & 17.93 & \textbf{18.43} & 17.74 \\
+Qasper & 25.83 & \textbf{27.00} & \textbf{27.00} & 26.20 & 25.39 & \textbf{26.38} \\
+MultiFieldQA-en & 48.06 & \textbf{48.17} & \textbf{45.80} & 45.72 & 45.59 & \textbf{46.63} \\
+MultiFieldQA-zh & \textbf{33.76} & 33.68 & \textbf{34.23} & 33.37 & \textbf{34.23} & 33.65 \\
+HotpotQA & 36.35 & \textbf{36.44} & 35.79 & \textbf{36.84} & \textbf{38.00} & 37.64 \\
+2WikiMultihopQA & \textbf{25.17} & 24.61 & \textbf{25.48} & 24.07 & 24.92 & \textbf{25.98} \\
+MuSiQue & \textbf{21.08} & 20.41 & \textbf{20.18} & 19.56 & \textbf{20.70} & 20.22 \\
+DuReader & \textbf{30.98} & 28.62 & \textbf{29.23} & 27.36 & \textbf{29.82} & 27.91 \\
+GovReport & 23.38 & \textbf{23.45} & \textbf{23.96} & 23.53 & 22.35 & \textbf{22.85} \\
+QMSum & \textbf{25.45} & 24.74 & 24.59 & \textbf{24.66} & \textbf{24.67} & 24.29 \\
+MultiNews & \textbf{22.63} & 21.42 & \textbf{23.30} & 21.10 & \textbf{23.53} & 21.10 \\
+VCSUM & \textbf{14.19} & 13.90 & \textbf{14.21} & 13.93 & \textbf{13.86} & \textbf{13.86} \\
+TREC & 39.00 & \textbf{41.83} & 39.11 & \textbf{39.49} & 37.69 & \textbf{39.49} \\
+TriviaQA & 16.81 & \textbf{16.91} & 16.67 & \textbf{16.73} & \textbf{17.08} & 16.91 \\
+SAMSum & 26.46 & \textbf{26.59} & \textbf{26.66} & 25.16 & \textbf{26.02} & 25.61 \\
+LSHT & 31.58 & \textbf{32.00} & 24.75 & \textbf{33.25} & 29.68 & 29.96 \\
+PassageCount & \textbf{1.00} & \textbf{1.00} & \textbf{1.00} & \textbf{1.00} & \textbf{1.00} & \textbf{1.00} \\
+PassageRetrieval-en & \textbf{81.00} & 80.50 & 74.50 & \textbf{80.50} & 80.00 & \textbf{80.50} \\
+PassageRetrieval-zh & \textbf{43.73} & 43.61 & \textbf{42.85} & 42.50 & \textbf{39.39} & 38.98 \\
+LCC & 48.31 & \textbf{50.08} & \textbf51.30 & \textbf{51.45} & 49.06 & \textbf{50.69} \\
+RepoBench-P & 43.21 & \textbf{47.58} & \textbf{48.73} & 48.27 & 43.84 & \textbf{48.45} \\
+\bottomrule
+\end{tabular}
+\label{tab:longbench-all}
+\end{table*}

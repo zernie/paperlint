@@ -1,0 +1,367 @@
+
+
+
+
+
+
+
+
+\section{Methodology}
+
+\label{sec:method}
+
+\begin{figure*}
+\centering
+\includegraphics[width=0.8\textwidth]{fig/optimization_ext.pdf}
+ \vspace{-0.5em}
+\caption{Workflow of our prompt inversion attack. \textbf{(1)} The attacker first conducts \textit{constrained optimization} to approximately recover the  input embedding, and obtain the  embedding-distance based candidate set $S_e$. Our designed constraint improves the result quality of  embedding optimization. %Note that the optimization's search space is softly constrained in a high-dimensional rectangle by our penalty term. 
+The attacker also computes a semantic-based candidate set $S_s$, obtained by feeding previously recovered tokens into an oracle LLM. \textbf{(2)} $S_e$ and $S_s$ are then joined. \textbf{(3)} Activation calibration. \textbf{(4)}  The attacker enumerates the tokens in $S_e \bigcup S_s$ and finds the token that best matches the target activation.
+%We enumerate the tokens in the candidate sets and identify the token that, when appended to the previous tokens, minimizes the distance between the resulting sequence mapped into activation space and the ground-truth activation. 
+}
+\label{fig:pipeline}
+ \vspace{-1em}
+\end{figure*}
+
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.4\textwidth]{fig/two_distribution_noncons.pdf}
+ \vspace{-0.5em}
+\caption{Value distribution of ground-truth embedding $E(x)$ and  optimized embedding $\hat{v}$ obtained by solely optimizing based on Equation (\ref{eq:easier version}) on Llama-7B model. 
+  We can observe that $\hat{v}$ is far away from $E(x)$. } %The difference between these two distributions is significant.}
+ \vspace{-1em}
+\label{fig:value_distribution}
+\end{figure}
+
+
+
+
+\begin{figure*}
+\centering
+\vspace{-1em}
+\includegraphics[width=0.9\textwidth]{fig/text_data.png}
+\caption{Two examples of our prompt inversion attack. The first example prompt is an airline review from Skytrax dataset, while the second is from ECHR Law dataset. Tokens inverted correctly are marked in green, while the wrong ones are marked in red. } %The first example prompt is an airline review from Skytrax dataset. The second example prompt is from ECHR Law dataset. Tokens inverted correctly are marked in green, while the wrong ones are marked in red.}
+\label{fig:example}
+ \vspace{-1em}
+\end{figure*}
+
+
+
+%We formulate the prompt inversion attack problem as : we assume that the adversary has access to the   $F$ resembling the concatenation of all previous participant's assigned model layers except the input embedding layer, $E$ resembes the input embedding layer. The activation he received from the previous participant is $x$. We formulate prompt inversion as the following problem:
+%$$
+%\min _{\hat{x} \in \mathcal{X}(\mathcal{V})} \|\hat{x}-x \|_0
+%$$
+%where $\mathcal{X}(\mathcal{V})$ is the set of all possible sequences enumerated from the vocabulary $\mathcal{V}$. However it is infeasible to find a solution for this problem due to not involving information of $F(E(x))$.
+%We have gained insights about building a strong inversion attack in the previous section. 
+In this section, we elaborate on how we derive and design an effective prompt inversion attack. % with technical details.
+
+
+
+
+
+\subsection{Outline of Prompt Inversion Attack}
+In this section, inspired by discoveries in Section~\ref{sec:revisit}, we design a new optimization-based prompt inversion attack. In general, our method consists of two phases: \textit{constrained optimization} and \textit{adaptive discretization}, as shown in Figure~\ref{fig:pipeline}. The whole pipeline of our white-box PIA is elaborated in Algorithm~\ref{alg:core} in Appendix~\ref{appendix:alg}. %We hereby briefly describe their design ideas and methods. 
+
+Specifically, we formulate prompt inversion attack as the following problem: find $\hat{x}\in \mathcal{X}(\mathcal{V})$,  s.t.,
+\begin{align}
+\label{eq:first problem}
+\begin{aligned}
+     \min  \| F(E(\hat{x}))-F(E(x)) \|_2^2. \\ 
+     %\max \mathsf{Pr}(\hat{x}\sim W )\\
+\end{aligned}
+\end{align}
+where $x$ is the ground-truth token sequence, $F$ is the previous model layers, $E$ is the embedding layer, and $\mathcal{X}(\mathcal{V})$ denotes all possible sequences using vocabulary $\mathcal{V}$.  
+%This problem is a discrete optimization problem and it remains hard to solve.
+
+Considering the difficulty of discrete optimization, we relax the problem above by adding a continuous variable representing the input embedding. The problem is transformed to: find $\hat{v} \in \mathbb{R}^{|x|\times h}, \hat{x}\in \mathcal{X}(\mathcal{V})$,  s.t.,
+\begin{align}
+    & \min_{\hat{v}}  \| F(\hat{v})-F(E(x)) \|_2^2, \label{eq:easier version} \\ 
+    & \min_{\hat{x}}  \| E(\hat{x})-\hat{v} \|_2^2  .\label{eq:easier version_constraint}
+\end{align}
+To avoid gradient vanishing, our method directly optimizes on the input embedding without the softmax mechanism in \cite{song2020information}. 
+%Due to strong non-linearity of LLMs, there exists  numerous input embedding vectors corresponding to similar output activations.
+A straightforward solution for the above problem is  first leveraging Equation (\ref{eq:easier version})  to optimize $\hat{v}$ then discretizing $\hat{x}$ by Equation (\ref{eq:easier version_constraint}). 
+
+However, this solution leads to poor accuracy. 
+This is due to the strong non-linearity of LLMs:  Equation (\ref{eq:easier version}) exhibits numerous local minima, many of which are far from the ground-truth. Therefore, directly optimizing Equation (\ref{eq:easier version}) from random starting points is highly likely to converge to these  local minima distant to  ground-truth.
+%However, the problem in Equation (\ref{eq:easier version}) and Equation (\ref{eq:easier version_constraint}) is still difficult to jointly optimize because it involves both continuous and discrete variables. 
+
+To address this problem, we propose \textit{constrained optimization}. Specifically, \textit{constrained optimization} constrains the search space of $\hat{v}$ by introducing a constraint term derived from the embedding matrix. Combining the constraint in optimization filters out most local minima of Equation (\ref{eq:easier version}) that are far away from $E(x)$. Thus the constraint significantly increases the probability of the optimized embedding $\hat{v}$ to be close to ground-truth.
+%This problem results in low inversion accuracy. 
+%\textit{Adaptive discretization} is consisted of \textit{activation calibration} and \textit{semantic speculation}. 
+
+After recovering the input embedding by \textit{constrained optimization}, we aim to push our token recovery accuracy to the extreme. To achieve this, we propose \textit{adaptive discretization}. This method selects a small token candidate set based on optimized embeddings, then adaptively discretizes the optimized embedding based on ground-truth activation information.
+%Its idea is based on    perfect token recovery but intractable complexity\wenjie{same problem with intro sentence} by 
+Furthermore, to enhance the readability of recovered text, we propose 
+ \textit{semantic speculation} by integrating natural language semantic coherence prior. 
+%Our overall pipeline is shown in Figure~\ref{fig:pipeline}.
+
+
+
+%Here we consider independently solving the two problems: first we optimize  $\hat{v}$ by gradient descent, this step is named as \textit{Naive Optimization}; then we discretize $\hat{v}$ to obtain $\hat{x}$ by mapping each $\hat{v}_i$ to its nearest token in vocabulary $\mathcal{V}$, this step is named as \textit{naive discretization}. 
+
+%We empirically show in Appendix~\ref{appendix:ccs20ablation} that, our new baseline can achieve quite considerable improvement on top of  \cite{song2020information}. This result clearly shows the importance of solving gradient vanishing.
+
+%However, \textit{Naive Optimization} is still far from perfect. The drawback of it is the optimized $\hat{v}$ is far away from ground-truth embedding $E(x)$. The results in Figure~\ref{fig:value_distribution} shows that, the value distribution of $\hat{v}$ obtained by \textit{Naive Optimization} is significantly different with that of ground-truth $E(x)$.
+
+%The fundamental limitation of this  baseline is neglecting the second constraint in Equation~\ref{eq:easier version_constraint} when solving the first constraint in Equation~\ref{eq:easier version}.    This leads to limited  discretization accuracy.
+
+\subsection{Constrained Optimization}
+%In this section, we aim to further improve the \textit{Naive Optimization} procedure by enforcing $\hat{v}$ to be close to $E(x)$ while optimization.
+%by enforcing $\hat{v}$ to be close with $E(\hat{x})$. This improvement will benefit discretization and further increase inversion accuracy.
+
+
+As illustrated previously, a straightforward way to design a PIA is to solve Equation (\ref{eq:easier version}) and Equation (\ref{eq:easier version_constraint}) independently and separately. Specifically, we can first independently optimize Equation (\ref{eq:easier version}) by gradient descent to obtain $\hat{v}$ (named as \textit{naive optimization}); then solve Equation (\ref{eq:easier version_constraint}) to obtain $\hat{x}$ by finding each $\hat{v}_i$'s nearest token in embedding space, named as \textit{naive discretization}. 
+
+However, as shown in Figure~\ref{fig:value_distribution}, $\hat{v}$ obtained by naive optimization is (numerically) far away from the ground-truth embedding $E(x)$. This is rooted in the strong non-linearity of $F$, which leads to the existence of numerous local minima of $\hat{v}$ that are mostly distant from the ground-truth embedding $E(x)$.  Optimizing Equation (\ref{eq:easier version}) from random starting  points is highly likely to fall into these local minima, ultimately resulting in poor inversion accuracy. %\wenjie{why often far away} It is mostly because naive optimization neglects the target in Equation (\ref{eq:easier version_constraint}), which represents the goal of enforcing $\hat{v}$ to be close with $E(\hat{x})$. 
+
+To reduce the distance between optimized embedding $\hat{v}$ and ground-truth, a straightforward idea is to constrain this distance during optimization.  Based on this idea, we consider jointly optimizing  Equation (\ref{eq:easier version}) and  $\|\hat{v}-E(x)\|_2$.
+
+
+
+
+%A natural idea for finding a solution for  Equation (\ref{eq:easier version}) and Equation (\ref{eq:easier version_constraint}) is:  first independently optimize Equation (\ref{eq:easier version}) by gradient descent obtaining $\hat{v}$, which we name as \textit{Naive Optimization}; then discretize each $\hat{v}_i$ by finding its nearest token in embedding space, named as \textit{naive discretization}. This method sounds straight-forward but achieves limited inversion accuracy. One crucial reason we discover is that, $\hat{v}$ obtained by optimization is often far away from ground-truth embedding $E(x)$. For instance, Figure~\ref{fig:value_distribution} shows that the value distribution of $\hat{v}$ obtained by \textit{Naive Optimization} is significantly different from that of ground-truth $E(x)$. It is mostly because naive optimization neglects the target in Equation (\ref{eq:easier version_constraint}), which represents the goal of enforcing $\hat{v}$ to be close with $E(\hat{x})$. 
+
+%Due to strong non-linearity of $F$, this may result in a case that $\| F(\hat{v})-F(E(x)) \|_2^2$ is small, but $\hat{v}$ still  far away from   $E(x)$.
+
+%; then we discretize $\hat{v}$ to obtain $\hat{x}$ by mapping each $\hat{v}_i$ to its nearest token in vocabulary $\mathcal{V}$, this step is named as \textit{naive discretization}. 
+
+
+
+\noindent \textbf{Joint Optimization.} To jointly consider the two goals, we apply Lagrange multiplier method, as follows:
+\begin{align}
+\label{eq:lagrange version}
+\begin{aligned}
+    & \min_{\hat{v}}  \| F(\hat{v})-F(E(x)) \|_2^2+ \lambda \|\hat{v}-E(x)\|_2^2,
+\end{aligned}
+\end{align}
+where $\lambda$ is the Lagrange multiplier. 
+
+%Let $x'=\min_{\hat{v}\in \mathcal{X}(\mathcal{V})} \|E(\hat{x})-\hat{v}\|_2^2$ be a function of $\hat{v}$. Solving Equation (\ref{eq:lagrange version}) is equivalent to
+%\begin{align}
+%\label{eq:lagrange middle version}
+%\begin{aligned}
+%    & \min_{\hat{v}}  {\| F(\hat{v})-F(E(x)) \|_2^2+ \lambda \sum_{i=1}^{|x|} \| E(x'_i)-\hat{v}_i \|_2^2 }. 
+%\end{aligned}
+%\end{align}
+
+%\begin{align}
+%\label{eq:lagrange easier version}
+%\begin{aligned}
+%    & \min_{\hat{v}}  {\| F(\hat{v})-F(E(x)) \|_2^2+ \lambda \| E(x')-\hat{v} \|_2^2} \\
+%\end{aligned}
+%\end{align}
+%Decomposing the second term of  Equation~\ref{eq:lagrange easier version}, we have:\\
+
+%\begin{align}
+%\label{eq:xprime_i}
+%\begin{aligned}
+%    & \\
+%\end{aligned}
+%\end{align}
+
+%\noindent \textbf{Computational Complexity Analysis.} For $x'_i$, we have $ x'_i=\min_{t\in \mathcal{V}} \|E(t)-\hat{v}_i\|_2^2$. As such, computing each $x'_i$ requires $\mathcal{O}(|\mathcal{V}|)$ time. Consider using gradient descent to solve Equation (\ref{eq:lagrange middle version}), at each optimization step, computing $x'$ requires $\mathcal{O}(|x|\cdot h \cdot|\mathcal{V}|)$ time in total, which makes directly optimizing Equation~(\ref{eq:lagrange middle version})  unaffordable. Thus we have to find an alternative optimization target which can be  more efficiently computed.
+
+
+%\noindent \textbf{Optimization Practicability.} 
+Unfortunately,  Equation (\ref{eq:lagrange version}) is not directly solvable by the attacker, because he only knows $F(E(x))$ while has no access to $E(x)$. This makes computing the second term in Equation (\ref{eq:lagrange version}) infeasible. To address the problem,  we relax the second term in Equation (\ref{eq:lagrange version}) with its lower bound. Firstly, we have the following relation: 
+\begin{align}
+\label{eq:lagrange each term}
+\begin{aligned}
+%\hspace{-2.2em}
+    &  \| \hat{v}_i- E(x_i) \|_2^2\ge \min_{t \in \mathcal{V}} \|\hat{v}_i -E(t) \|_2^2.
+\end{aligned}
+\end{align}
+This relation lower bounds the distance between $\hat{v}_i$ and $E(x_i)$ by enumerating over all possible tokens $t$.
+
+Furthermore, we can lower bound the second term in Equation (\ref{eq:lagrange version}) by applying Inequality~(\ref{eq:lagrange each term}):\\
+\begin{align}
+\label{eq:lower bound}
+\begin{aligned}
+%\hspace{-2.2em}
+    &  \| \hat{v}- E(x) \|_2^2\ge \sum_{i=1}^{|x|} \min_{t \in \mathcal{V}} \|\hat{v}_i -E(t) \|_2^2.
+\end{aligned}
+\end{align}
+%The cost of each step can be reduced from $\mathcal{O}(|x|\cdot h \cdot|\mathcal{V}|)$ to $\mathcal{O}(|x|\cdot h )$.
+
+
+
+
+\noindent \textbf{Overall Optimization Objective.} Substituting by the term in Inequality (\ref{eq:lower bound}), the optimization goal in Equation (\ref{eq:lagrange version}) could be relaxed to :
+%\begin{align}
+%\label{eq:lagrange practical version}
+%\begin{aligned}
+%    & \sum_{i=1}^{|x|} \sum_{j=1}^h \min(\hat{v}_{ij}-L_j,0)^2+\min(R_j-\hat{v}_{ij},0)^2  \\
+%\end{aligned}
+%\end{align}
+%Therefore, the whole optimization goal changes to:\\
+\begin{align}
+\label{eq:whole lagrange practical version}
+\begin{aligned}
+    \min_{\hat{v}}  \| F(\hat{v})-F(E(x)) \|_2^2+ \lambda \cdot \sum_{i=1}^{|x|} \min_{t \in \mathcal{V}} \|\hat{v}_i -E(t) \|_2^2.
+\end{aligned}
+\end{align}
+
+The intuition here is that, we relax the second target from constraining $\hat{v}$ to be close to $E(x)$ (which is infeasible to solve since the attacker does not know $E(x)$), into constraining $\hat{v}$ to be close to its nearest legitimate token sequence's embedding.
+
+
+We can obtain $\hat{v}$ by optimizing Equation (\ref{eq:whole lagrange practical version}) with gradient descent. Another trick to further constrain $\hat{v}_{ij}$ is to  clip all $\hat{v}_{ij}$ with $L_j$ and $R_j$  at each optimization step, where $L_j=\min_{t \in \mathcal{V}} E(t)_j, R_j=\max_{t \in \mathcal{V}} E(t)_j$. $L,R$ are the lower bounds and upper bounds on each embedding dimension computed from the embedding matrix, respectively. We name this new optimization procedure as \textit{constrained optimization}, whose details are depicted in Algorithm~\ref{alg:optim} in Appendix~\ref{appendix:alg}.
+
+%We can also explain our \textit{Constrained Optimization} from a geometric perspective. The second term of Equation~\ref{eq:lagrange middle version} constrains each $\hat{v}_i$ to be near the $h$-dimensional area composed of embeddings of $\mathcal{V}$. We relax to optimize a lower bound of Equation~\ref{eq:lagrange middle version}, Equation~\ref{eq:whole lagrange practical version}, meaning to constrain each $\hat{v}_i$ to belong to the bounding rectangle. 
+
+
+%This relaxation achieves a significantly better computational efficiency while retaining good constraining performance. This constraint term makes the optimization aware of the next step's discretization, while in \textit{Naive Optimization}, the first optimization step does not consider the discretization step.
+
+
+
+%Compared with the optimization procedure in \cite{song2020information}, \textit{constrained optimization} does not include the softmax attention mechanism thus avoids gradient vanishing, improving the convergence efficiency. 
+Compared with naive optimization, \textit{constrained optimization} improves by adding an regularization term to enforce the constraint that $\hat{v}$ should be close to its nearest legitimate token sequence's embedding. 
+%Most local minima of $\| F(\hat{v})-F(E(x)) \|_2^2$ that are far away from ground-truth embedding $E(x)$ actually are far way from any token sequence's embedding. Thus the constraint filters out most of these local minima, thus significantly increases the likelihood of the optimized $\hat{v}$ to be close to $E(x)$. 
+%Some may suspect that the relaxation adopted by us here maybe kind of loose (switching from constraining $\hat{v}$ to be close to $E(x)$ into be close to any possible token sequence's embedding). 
+%\yuguang{this sentence is of no need} 
+The benefit of this constraint is as follows: If $\hat{v}$ is close to  a token sequence $X$'s embedding (enforces by our constraint), then with high probability $F(\hat{v})$ is close to $F(E(X))$.  The first goal of our optimization leads to $F(\hat{v})$ close to $F(E(x))$. Thus $F(E(X))$ will be close to $F(E(x))$. This is only possible when $X$ is semantically close to $x$. Therefore $\hat{v}$ is likely to be close to $E(x)$ after optimization. 
+This explains why our constrained optimization works well in practice. 
+
+%It makes the latter discretization procedure easier. 
+ %Hence, it can reach the minimal object\wenjie{what is this objective} by gradient descent with a much higher probability.
+%Due to the above reasons, the optimized result $\hat{v}$ obtained by 
+ %constrained optimization is much closer to the ground-truth embedding $E(x)$.
+
+
+
+
+
+\subsection{Adaptive Discretization}
+After $\hat{v}$ is obtained by the previous \textit{constrained optimization}, the next step is to recover discrete tokens $\hat{x}$. %we can leverage   $\hat{v}$ to derive $\hat{x}$.  
+%A direct method is to find $\hat{x}$ s.t.:\\
+%\begin{align}
+%\label{eq:discretize trivial}
+%\begin{aligned}
+%    & \arg\min_{\hat{x}} \| E(\hat{x})-\hat{v} \|_2^2 \\
+%\end{aligned}
+%\end{align}
+A simple way is to map each $\hat{v}_i$ to its nearest embedding in the vocabulary: $\hat{x_i}=\arg\min_{\hat{x_i} \in \mathcal{V}} \| E(\hat{x}_i)-\hat{v}_i \|_2^2$, named as \textit{naive discretization}.
+%\begin{align}
+%\label{eq:discretize trivial}
+%\begin{aligned}
+%    &  \\
+%\end{aligned}
+%\end{align}
+%This method achieves optimal for Equation~\ref{eq:easier version_constraint}. Its 
+
+
+This method is straightforward, however, it does not seem to obtain the optimal $\hat{x}$. %The reason is that,  \textit{naive discretization} only considers to minimize the distance between discretized tokens $\hat{x}$ and optimized embedding $\hat{v}$  ($\| E(\hat{x})-\hat{v} \|_2$), while our eventual goal is to minimize the distance in the activation space ($\|F(E(\hat{x}))-A\|_2$), where $A=F(E(x))$. 
+The reason is that \textit{naive discretization} only aims to minimize the distance between discretized tokens $\hat{x}$ and the optimized embedding $\hat{v}$ ($| E(\hat{x}) - \hat{v} |_2$). However, our eventual goal is to minimize the distance in the activation space ($| F(E(\hat{x})) - A |_2$), where $A=F(E(x))$.
+There is still some gap between these two goals, due to the non-linearity of $F$ and $F(\hat{v})\neq A$.
+
+%similar to our observation in Section~\ref{sec:revisit} about \cite{song2020information}, we observe its discretized result often has considerable distance with the optimized result when mapped to activation. Namely, there is certain gap between $F(E(\hat{x}))$ and $F(\hat{v})$. The core reason is that, \textit{naive discretization} only ensures $E(\hat{x})$ to be nearest to $\hat{v}$. However, due to non-linearity of $F$, the $\hat{x}$ that ensures  $E(\hat{x})$ is nearest to $\hat{v}$ may not minimize the distance between $F(E(\hat{x}))$ and $F(\hat{v})$.
+
+%Another problem we observe is that, though combining \emph{constrained optimization} and \emph{naive discretization} can already correctly recover considerable proportion of text, there are a lot of strange tokens and syntax error  in the recovered text, harming the readability of the text.
+
+%\textbf{(1)} It does not leverage the information from ground-truth activation. Therefore under considerable probability, the token it recovers may not be the correct token.\\
+%\textbf{(2)} It discretizes each token independently, without considering preceding recovered tokens. Nevertheless, natural language tokens are correlated with their neighbors due to semantic coherence. Neglecting this domain prior will harm the inversion accuracy and readability of the recovered text.
+
+%\textbf{(1)} Its discretization  often has large distance
+%with its optimization result in the activation space, due to
+%greedily choosing discretized tokens at each position based
+%on input space similarity.\\
+
+To achieve the goal of minimizing the distance in activation space, we construct a discretization scheme based on the idea of greedily calibrating with the ground-truth activation information at each position. The construction is as follows:
+
+
+\noindent \textbf{ Activation Calibration.}  At the $j$-th step, we choose the token from the vocabulary which best calibrates the ground-truth activation at that position. Namely, we recover token $\hat{x}_j$ by choosing the token that minimizes $\| F(E(\hat{x}_1,\hat{x}_2,\cdots,\hat{x}_{j-1},\hat{x}_j))_j-A_j) \|_2^2$.  
+
+
+%\noindent \textbf{ Provable Optimality.} 
+For this discretization procedure, we discover that it has the intriguing property of \emph{perfectly recovering the input prompt}.   To analyze this property, we firstly derive Theorem \ref{thm:accumulate}.
+
+%Unfortunately, this simple approach is suboptimal. Our final goal is to find $\hat{x}$ that minimizes Equation~\ref{eq:first problem}, namely $\arg\min_{\hat{x}\in \mathcal{X}(\mathcal{V})}  \| F(E(\hat{x}))-F(E(x)) \|_2^2 $. After optimization, $F(\hat{v})$ is indeed close to the ground-truth activation $F(E(x))$. However, this does not necessarily mean that, the token nearest to $\hat{v}_i$ in the embedding space is the "best" token that leads to minimal distance to ground-truth in the activation space. Formally, for each position $i$, $\hat{x_i}$ may not be  the token that minimizes the distance between $F(E(\hat{x}))$ and $A$.
+
+
+\begin{theorem}
+\label{thm:accumulate}
+For any position $j$, let  token $\hat{x}_j$ be computed by:
+\begin{align}
+\label{eq:sj_def}
+\hat{x}_j=\argmin_{\hat{x}_j\in \mathcal{V}}\| F(E(\hat{x}_1,\hat{x}_2,\cdots,\hat{x}_{j-1},\hat{x}_j))_j-A_j \|_2^2 .
+\end{align}
+$\forall t \in \mathcal{V}$, we have:
+\begin{align}
+    \begin{aligned}\label{eq:thm2_proof_target}
+       &  \| F(E(\hat{x}_1,\hat{x}_2,\cdots,\hat{x}_{j-1},t))-[A_1,\cdots,A_j]) \|_2^2 \\
+      \ge  &  \| F(E(\hat{x}_1,\hat{x}_2,\cdots,\hat{x}_{j-1},\hat{x}_j))-[A_1,\cdots,A_j]) \|_2^2 .\\
+\end{aligned}
+\end{align}
+
+
+\end{theorem}
+
+We provide the complete proof in Appendix~\ref{appendix:error_accumulate}. The core idea of the proof is to leverage the masked attention mechanism of LLM (\ie, $A_j$ is only determined by $[x_1,\cdots,x_j]$, and is irrelevant with subsequent tokens).
+
+From Theorem~\ref{thm:accumulate}, we can prove that $\hat{x}_j$ is the token  appended to $[\hat{x}_1,\cdots,\hat{x}_{j-1}]$ resulting in an activation nearest to the ground-truth activation $[A_1,\cdots,A_j]$.  Furthermore, at the first step of discretization, $\hat{x}_1$ will be chosen as $x_1$. Then, consecutively, $\hat{x}_2$ is chosen as $x_2$, and so on. Therefore, it can perfectly recover each token of $x$. 
+
+
+
+
+\noindent \textbf{Acceleration of Optimal Scheme.} However, the previous scheme is intractable in practice because the computation of each $\hat{x}_j$ incurs running an LLM $\mathcal{O}(|\mathcal{V}|)$ times (enumerating the vocabulary). Thus, its complexity is $\mathcal{O}(|\mathcal{V}|\cdot |x| \cdot C)$, where $C$ is the complexity of running the LLM. 
+
+To accelerate this optimal method, we need to avoid enumerating $\hat{x}_j$ over vocabulary $\mathcal{V}$. After  our \textit{constrained optimization} procedure, $\hat{v}_j$ is likely to be near $E(x)_j$. Based on this intuition, instead of thoroughly enumerating $\mathcal{V}$, we can approximate the perfect discretization by only searching $\hat{x}_j$ in the  $\hat{v}_j$'s top-$K$ nearest tokens. We denote the set of these tokens as \textit{embedding based candidate set} $S_e$. We efficiently invert $\hat{x}_j$ by searching in $S_e$:
+\begin{align}
+\label{eq:discretize_practical}
+    \hat{x}_j=\argmin_{t\in S_e}\| F(E(\hat{x}_1,\hat{x}_2,\cdots,\hat{x}_{j-1},t))_j-A_j \|_2^2 .
+\end{align}
+
+
+
+
+
+
+\noindent \textbf{Improving Readability via Semantic Speculation.} 
+Despite significant accuracy improvement, the above approach still has the drawback of including a certain number of strange tokens and syntax errors in the recovered text. This harms the readability of the recovered text.
+The above method is unable to recover $\hat{x}_j$ correctly when $\hat{x}_j$ does not belong in $S_e$, which often happens when $\hat{x}_j$'s meaning is obscure. For example, for proposition words like ``of"  or punctuation, since their semantic meanings are not strong enough, they are easily mixed with other words in embedding space, making the recovery of these tokens difficult. 
+%This drawback harms the readability of recovered text. 
+Fortunately, leveraging the semantic coherence of natural language, these semantically obscure tokens can be accurately recovered.  We integrate semantic coherence  into discretization as follows: we leverage a standalone LLM, such as Llama-7B~\cite{llama}, to predict the next token given input $[\hat{x}_1,\hat{x}_2,\cdots,\hat{x}_{j-1}]$. Then, we take the top-$Y$ tokens predicted to form the \emph{semantic-based candidate set} $S_s$. We merge $S_e$ and $S_s$ as the total candidate set and enumerate the tokens in  $S_e\bigcup S_s$ to find $\hat{x}_j$. Formally, we invert  $\hat{x}_j$ by:
+\begin{align}
+    \hat{x}_j=\argmin_{t\in S_e\bigcup S_s}\| F(E(\hat{x}_1,\hat{x}_2,\cdots,\hat{x}_{j-1},t))_j-A_j \|_2^2 .
+\end{align}
+This technique is named \textit{semantic speculation}. By this approach, when $\hat{x}_j$ fails to fall into $S_e$ but falls into $S_s$, we can still recover $\hat{x}_j$ by activation calibration.
+
+
+
+\noindent \textbf{Overall Discretization.} We name the above whole discretization procedure as \textit{adaptive discretization} since we adaptively leverage the ground-truth activation $A$'s information and the semantic coherence prior in the discretization procedure. Details of the \textit{adaptive discretization} procedure are depicted in Algorithm~\ref{alg:discrete} in Appendix~\ref{appendix:alg}. 
+%Besides, the whole pipeline of our white-box PIA is elaborated in Algorithm~\ref{alg:core} in Appendix~\ref{appendix:alg}.
+
+%Compared with \textit{naive discretization}, the advantages are two folds:\\
+%(1) Instead of  only considering $E(\hat{x})$ to be near $\hat{v}$, \textit{Activation Calibration} integrates activation information, largely improving the recover accuracy.\\
+%(2) \textit{Semantic Speculation} combines semantic prior from language domain  further strengthen recover performance and readability.\\
+
+
+
+
+
+
+
+%\yiming{will start from here soon.}
+
+\subsection{Grey-box Prompt Inversion Attack}
+In this section, we explore how to design an effective grey-box PIA. As described in our threat model in Section~\ref{sec:threat_model}, the attacker does not know the LoRA adapter weights of preceding layers and only knows the base weight.
+
+
+
+This problem can be modeled as follows: given the activation $A=G_{w_{a-1},\theta_{A_{a-1}},\theta_{B_{a-1}}}\circ G_{w_{a-2},\theta_{A_{a-2}},\theta_{B_{a-2}}} \circ \cdots \circ G_{w_1,\theta_{A_1},\theta_{B_1}} (E(x))$ and base weight $w_1,w_2,\cdots,w_{a-1}$, find $\hat{x}=\arg\max_{\hat{x}} \|\hat{x}-x\|_0$. The overall formulation can be denoted by:
+Find $\hat{x},\theta_{A_1},\theta_{B_1},\cdots,\theta_{A_{a-1}},\theta_{B_{a-1}}$, s.t.,
+\begin{small}
+    \begin{align}
+\label{eq:grey_box_problem}
+\hspace{-1em}
+    \min \|G_{w_{a-1},\theta_{A_{a-1}},\theta_{B_{a-1}}} \circ \cdots \circ G_{w_1,\theta_{A_{1}},\theta_{B_{1}}} (E(\hat{x}))-A \|_2,
+\end{align}
+\end{small}
+where the attacker simultaneously estimates the LoRA weights  $\theta$ and recovers the private input prompt $\hat{x}$.
+
+The main difficulty of grey-box PIA compared with the white-box one is that grey-box PIA involves multiple unknown vector variables, while in the white-box problem only $\hat{x}$ is unknown. 
+
+To address this challenge, we propose to optimize LoRA weights and input embedding in an alternative optimization manner. Specifically, in each iteration, we firstly fix $\theta$ and only optimize $x$; in this case, the problem is simplified as a white-box PIA, and can be solved using our previous method; then we fix $x$ and optimize $\theta$, which is done by gradient descent: the goal of optimization on $\theta$ is also minimizing activation distance. Specifically, we initialize the LoRA adapters $\theta_{A_1}^{(1)},\theta_{B_1}^{(1)},\cdots,\theta_{A_{a-1}}^{(1)},\theta_{B_{a-1}}^{(1)}$ with zeros. We firstly optimize the problem to find $\hat{x}^{(1)}$, leveraging our inversion attack algorithm while fixing the adapter weight to find $\hat{x}^{(1)}$ that minimizes Equation (\ref{eq:grey_box_problem}); then we fix $\hat{x}^{(1)}$, and only optimize on $\theta_{A_1},\theta_{B_1},\cdots,\theta_{A_{a-1}},\theta_{B_{a-1}}$ LoRA weights to find $\theta_{A_1}^{(2)},\theta_{B_1}^{(2)},\cdots,\theta_{A_{a-1}}^{(2)},\theta_{B_{a-1}}^{(2)}$ that minimizes Equation  ~(\ref{eq:grey_box_problem}). The grey-box inverted result is the last version of $\hat{x}$.  %\wenjie{extend this section}
+
+%Here we leverage the idea of alternating optimization similar to ADMM~\cite{gabay1976dual}: when optimizing a problem consisting of two variables, we optimize one and fix the other, then switch back. Here we iteratively solve this problem by: in an iteration, we first fix $\theta$ and optimize on $x$, in this case the problem changes to \yuguang{simplified as} a white-box optimization problem which could be solved by our previous proposed method; then we fix $x$ and optimize $\theta$, which could be done by gradient descent.  Specifically, we initialize the LoRA adapters $\theta_1^{(1)},\cdots,\theta_{a-1}^{(1)}$ with zeros. We first optimize the problem to find $\hat{x}^{(1)}$,  we leverage our inversion attack algorithm to find $\hat{x}^{(1)}$; then we fix $\hat{x}^{(1)}$, and optimize on $\theta_1,\cdots,\theta_{a-1}$ LoRA weights to find $\theta_1^{(2)},\cdots,\theta_{a-1}^{(2)}$ that minimizes Equation (\ref{eq:grey_box_problem}), and so on so forth. We use the last version of $\hat{x}$ as the grey-box inverted result.
+

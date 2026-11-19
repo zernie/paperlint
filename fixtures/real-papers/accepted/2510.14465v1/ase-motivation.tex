@@ -1,0 +1,72 @@
+% Part 1. 
+
+\subsection{Diversity and Governance in Software Engineering}
+
+Software engineering teams are becoming increasingly diverse across multiple dimensions.
+Recent research has highlighted the importance of diversity within software development processes~\cite{bjorn2023diversity,DBLP:journals/ese/Rodriguez-Perez21}.
+Diversity is being studied in terms of gender, race or ethnicity, but also in terms of cognitive diversity~\cite{DBLP:journals/corr/abs-2503-05470,DBLP:conf/icse/DuttaCST23}.
+Studies have shown that diverse teams tend to produce more innovative solutions~\cite{DBLP:conf/icse/CatolinoPTSF19,doi:10.1073/pnas.2200841119}, and impact positively in software productivity~\cite{DBLP:conf/chi/VasilescuPRBSDF15}.
+
+Adding to this human diversity, software projects now include a growing number of non-human participants in the form of bots and AI-powered agents~\cite{DBLP:journals/pacmhci/WesselSSWPCG18,DBLP:conf/xpu/RasheedWSKA0SA24}.
+These automated participants have traditionally performed routine tasks like continuous integration, code quality checks, and dependency management~\cite{DBLP:conf/msr/KinsmanWGT21}.
+% In the context of OSS, the use of automation mechanisms has become widespread, with GitHub Actions (GHAs) being adopted by approximately 30\% of the 5,000 most popular repositories~\cite{DBLP:journals/ese/WesselVGT23}.
+% These automated tools have begun to play more significant roles in project governance by assisting with issue triaging, code review processes, and community management tasks such as welcoming new contributors and ensuring compliance with Contributor License Agreements~\cite{DBLP:conf/icsm/DecanMMG22}, or management of codes of conduct~\cite{DBLP:conf/icse/Cobos25}.
+While these tools have traditionally handled routine tasks and basic governance functions~\cite{DBLP:journals/ese/WesselVGT23,DBLP:conf/icsm/DecanMMG22}, %, recent advances are enabling far more sophisticated capabilities.\looseness-1
+% However, with the advancement of LLMs, agents have evolved beyond simple automation tools to become participants with advanced reasoning capabilities~\cite{xi2025rise}.
+% LLM-based agents can now communicate, collaborate, and even participate in complex decision-making processes~\cite{DBLP:conf/ijcai/GuoCWCPCW024}.
+% This evolution introduces a new dimension of diversity in software teams, the human-agent collaboration paradigm, which brings both opportunities and challenges to the governance.
+the rise of LLMs is transforming these agents from mere automation tools into sophisticated collaborators capable of reasoning, communication, and participation in complex decision-making~\cite{xi2025rise, DBLP:conf/ijcai/GuoCWCPCW024}. 
+This profound shift introduces an unprecedented dimension of diversity, presenting novel and urgent conceptual challenges for governance that existing frameworks are missing.
+
+% While various proposals for AI governance have emerged from companies and countries in recent years~\cite{DBLP:journals/computer/ChestermanGHS24}, these often focus on AI systems as products rather than as participants in development processes.
+% These proposals typically emphasize principles such as fairness, accountability, transparency, ethics, safety, and privacy.
+% Existing AI governance frameworks, while valuable, predominantly address AI systems as products or services, focusing on principles like fairness, accountability, and transparency from an external or societal viewpoint~\cite{DBLP:journals/computer/ChestermanGHS24}. 
+% However, they fall short in providing concrete mechanisms for integrating these principles into practical governance policies for diverse software teams that include both human and agent participants.
+% In our proposal, we incorporate some identified indicators for AI:
+% (1) autonomy level~\cite{DBLP:journals/nature/RahwanCOBBBCCCJ19}, to represent how independent the agent can make decisions;
+% (2) explainability~\cite{DBLP:journals/inffus/ArrietaRSBTBGGM20}, usually understood for understandability, interpretability, explainability, and transparency of the AI system;
+% and (3) human oversight~\cite{DBLP:journals/ijhci/Shneiderman20}, as whether the AI system is under human control or not.
+
+
+
+
+
+% In the last few years, the number of proposals of governance policies in AI systems from companies and countries have quickly increased~\cite{DBLP:journals/computer/ChestermanGHS24}.
+% % We could move the following to background (and maybe shorten it)
+% From the analyzed documents, they identify six main principles: (1) fairness, which address biases, encompassed in three aspects: nondiscrimination, inclusiveness in impact, and inclusiveness in design; (2) accountability, seeking to minimize the risks associated with AI through the use of legal governance, risk management, and compliance mechanisms; (3) transparency and/or explainability, which focuses on facilitating human understanding of AI systems; (4) ethics/human-centricity, focuses on aligning AI with humans values by: benefiting humans, human control of technology, and human rights compliance; (5) safety/security, addresses the reliable operation of AI ensuring that AI systems operate without causing harm and by protecting from external threats; and (6) privacy, which ensures that data is properly handled, emphasizing human control over the data.
+% In the context of our work, we focus on providing a DSL to specify governance policies for the decision-making, taking into account its diversity.
+% Thus, we mainly focus on the principles of fairness, accountability, transparency and explainability. ELABORATE
+
+\subsection{Governance in practice: the case of OSS development}
+\label{sec:motivation:governance-oss}
+
+A previous study illustrated the need for explicit governance policies in OSS~\cite{DBLP:conf/icse/IzquierdoC15} but lacked the mechanisms to address the challenges introduced by participant diversity, particularly the inclusion of AI agents in decision-making processes.
+Our current proposal aims to fill this gap by incorporating diversity-aware governance mechanisms that acknowledge the different characteristics of participants and ensure equitable representation in decision-making processes.
+
+
+% 2. Explicit definition of governance policies in top25 GH
+While the landscape of participants is evolving, the explicitness and nature of governance policies in practice, particularly in OSS, remain a concern. 
+To understand this current state, we replicated the study conducted by C\'anovas Izquierdo and Cabot
+~\cite{DBLP:journals/cacm/IzquierdoC23}, which analyzed the top 25 starred software projects and found that most OSS projects do not have explicit governance policies, and those that do are often poorly defined and lack clarity.
+The governance evidence is analyzed from the explicit indications of four dimensions: 
+(1) whether there is some workflow to contribute, different from the typical pull-based development process; 
+(2) who makes the decisions to accept code, and how; 
+(3) how long it takes to review or accept a contribution; 
+and (4) how to become a contributor.\looseness-1
+
+% \begin{figure}
+%     \centering
+%     \includegraphics[width=0.8\columnwidth]{governance-top25.png}
+%     \caption{Governance evidence in the top 25 \textsc{GitHub} projects.\adem{Could we report the results in text rather than in a figure?}}
+%     \label{fig:governance}
+% \end{figure}
+
+% Figure~\ref{fig:governance} shows the results of our analysis.
+We found that 68\% of repositories reported at least one of the four dimensions, 24\% reported none, and 8\% reported all four dimensions. %\footnote{Results available at: \url{https://doi.org/10.5281/zenodo.15856633}}.
+The situation is showing slight improvements from the previous study.
+In comparison, we have seen an increase in the number of projects that partially discussed governance, from 32\% to 68\%, mainly because of the report of the contribution process.
+However, the span to review or accept a contribution is only defined in 16\% of the projects, how to become a contributor is only defined in 20\% of the projects, and who makes the decisions, and how, to accept code is only defined in 24\% of the projects.
+Only 2 projects (8\%) provided a full description of the policies governing them. % mentioned all governance dimensions. 
+Note that no project included a governance.md file but reported them in the contributing.md file or on their documentation website.
+None of the analyzed projects adopted a DSL to specify their governance policies, which could help in the definition, enforcement, and automation of the governance policies~\cite{DBLP:journals/cacm/IzquierdoC23}.
+% We can also say that we do not know whether these policies are being applied. We could use our DSL to test this in the Test Case Section.

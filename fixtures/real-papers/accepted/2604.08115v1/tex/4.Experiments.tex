@@ -1,0 +1,25 @@
+\section{Experimental Setup}
+\subsection{Models}
+
+
+
+We evaluate the effectiveness of our proposed \textsc{Revise} framework on downstream tasks by employing embedding models and LLMs. For document retrieval, we adopt four recent embedding models: bge-large-en-v1.5~\cite{bge_embedding}, intfloat/e5-large-v2~\cite{wang2022text}, jina-embeddings-v2-base-en~\cite{gunther2023jina}, and gte-base-en-v1.5~\cite{li2023gte}. These models enable us to quantify how effectively OCR-corrected documents can be matched to queries. For question answering, we utilize two large instruction-tuned language models: Gemma-2-2b-it~\cite{gemma_2024} and Llama-3.1-8B-Instruct~\cite{meta_llama_2024}. By leveraging these models, we assess the capability of our correction method to enhance structured document comprehension and reasoning performance.
+
+
+
+
+
+
+\subsection{Evaluation}
+
+
+
+The performance of the proposed framework is evaluated on document Visual Question Answering (VQA) and Visual Information Extraction (VIE) datasets, focusing on three main aspects and comparing results between original OCR-extracted text and the text post-processed by \textsc{Revise}. First, we directly assess document retrieval performance using Recall@K (k=1,3,5) on the VisualMRC~\cite{VisualMRC2021} and DUDE~\cite{vanlandeghem2023documentunderstandingdatasetevaluation} datasets. Second, for DocVQA~\cite{mathew2021docvqa}, CORD~\cite{park2019cord}, and FUNSD~\cite{jaume2019funsddatasetformunderstanding}, we evaluate the textual similarity between documents and questions via BERTScore~\cite{zhang2020bertscoreevaluatingtextgeneration}\footnote{For DocVQA, CORD, and FUNSD datasets, pure IR-based metrics alone are insufficient to accurately measure performance due to duplicate questions and similar keywords; hence, we use textual similarity measures.}. Lastly, we compare QA performance of models on original OCR text versus REVISE-enhanced texts using standard evaluation metrics commonly used for each dataset: CIDEr~\cite{vedantam2014cider} for generative answer quality on VisualMRC and F1-score for answering performance on CORD.
+
+
+
+
+
+
+
+

@@ -1,0 +1,72 @@
+
+Mechanistic interpretability aims to understand large language models (LLMs) by dissecting the functions 
+of their components. This research direction has led to new techniques for building, monitoring, and controlling language models \citep{quirkylm, roger2023benchmarks, li2023inference, feng2024monitoring, pan2024latentqa, xiao2023efficient, wu2024reft}.
+
+
+A common view in recent interpretability research is that transformer layers additively build upon each other's contributions to enrich representations in the residual stream. For example, analyses of factual recall often characterize successive layers as gradually augmenting entity representations with additional recalled information \citep{geva2023dissectingrecallfactualassociations, rome, nanda2023fact, hernandez2024linearity}. In addition, the view that transformer layers progressively build enriched features motivates recent techniques to extract and interpret such features, including linear probes \citep{alain2016understanding}, the logit lens \citep{nostalgebraist}, sparse autoencoders (SAEs) \citep{bricken2023monosemanticity}, and cross-layer transcoders (CLTs) \citep{ameisen2025circuit, dunefsky2024transcodersinterpretablellmfeature, paulo2025transcodersbeatsparseautoencoders}.
+
+% Recent interpretability work has focused on decomposing neural network activations into features via techniques like (
+% An assumption in many interpretability methods is that transformer layers progressively build upon each other's contributions to enrich representations in the residual stream. This perspective has motivated numerous techniques that extract features from transformer layer outputs, including linear probes \citep{alain2016understanding}, the logit lens \citep{nostalgebraist}, sparse autoencoders (SAEs) \citep{bricken2023monosemanticity}, and cross-layer transcoders (CLTs) \citep{ameisen2025circuit, dunefsky2024transcodersinterpretablellmfeature, paulo2025transcodersbeatsparseautoencoders}. Similarly, analyses of factual recall often characterize successive layers as gradually augmenting entity representations with additional recalled information \citep{geva2023dissectingrecallfactualassociations, rome, nanda2023fact, hernandez2024linearity}.
+
+In this work, we demonstrate the Transformer Layer Correction Mechanism (TLCM), in which adjacent transformer layers systematically reverse portions of each other's contributions. Specifically, we find that in 5 of 7 open-weight LLM families (Llama 3, OLMo, Mistral, Gemma, and Qwen2), layer $i+1$ consistently produces a contribution that partially opposes that of the prior layer, layer $i$. TLCM complicates the additive view of the residual stream: adjacent layer contribution vectors can have cosine similarity as low as $-0.4$, indicating that a nontrivial portion of a layer's output is devoted to reversing content written by the preceding layer rather than adding new content. This suggests that features extracted from a single layer's output may not persist in the residual stream---they may be corrected by the subsequent layer, or may themselves serve as corrections of prior content.
+
+To begin, we characterize TLCM through a series of observational experiments in Section \ref{big_sec:tlcm}. First, we show that TLCM is not present at initialization but emerges gradually during pretraining, suggesting that it is learned rather than architectural. Second, we find that TLCM fires most frequently on tokens with high contextual dependency, including numbers, dates, and punctuation, suggesting a role in handling such tokens. Finally, we show that TLCM is the combined effort of both attention and MLP layers.
+
+In Section \ref{big_sec:tlcm_adaptive}, we focus our experiments on TLCM's underlying mechanisms. First, we use causal interventions to show that TLCM is adaptive and directly dependent on the prior layer; in particular layer $i+1$ directly adjusts its correction strength based on the prior layer's contribution strength. Then, we use the transformer layer Jacobian to identify which subspaces are corrected, reinforced, or untouched. Applied to TLCM, we find a subspace corrected 1-for-1 and a smaller subspace reinforced, while non-TLCM interactions show neither pattern.
+
+These findings support a ``propose-and-reject'' interpretation of the forward pass: layers propose candidate features and subsequent layers selectively correct inappropriate ones. Because adjacent layers partially reverse each other's contributions, the residual stream at any given layer contains content that the next layer may partially undo. In Section \ref{sec:discussion}, we discuss how this dynamic connects to three open questions in feature-based interpretability: the low specificity of SAE feature descriptions, the extreme amplification required for model steering, and the advantage of transcoders over SAEs, particularly cross-layer architectures that span adjacent layers.
+
+
+% In Section \ref{big_sec:tlcm_adaptive}, we focus our experiments on TLCM's underlying mechanisms. First, we use causal interventions to show that TLCM is adaptive and directly dependent on the prior layer; in particular layer $i+1$ directly adjust its correct strength based on the prior layer's contribution strength. Then, we show that we can utilize the transformer layer Jacobian to determine which linear subspaces are corrected and reinforced by the layer. By employing the Jacobian technique to layer $i+1$ of a TLCM interaction, we show that a subspace is corrected 1-for-1 and a smaller subspace is reinforced by the layer. Additionally, we show that at non-TLCM interaction points, this rejection and reinforcement mechanism is absent. We synthesize our findings into the ``propose-and-reject hypothesis'', which states that models can perform enrichment though a process of proposing multiple potential features and correcting the inappropriate ones.
+
+% Our findings are helpful for understanding three persistent challenges in feature-based interpretability: (1) why extracted features descriptions often suffer from low specificity; (2) why model steering interventions require high amplification to be effective; and (3) why cross-layer transcoders outperform sparse autoencoders in recovering interpretable features. We hope our work contributes to the corpus of well-characterized phenomena and can provide the empirical constraints necessary for robust theories of language models; additionally, we hope our findings inform stronger alignment and model steering techniques.
+
+% Our contribution is as follows:
+
+% \begin{enumerate}[itemsep=0pt, topsep=-3pt]
+%     \item Discovery of TLCM, a novel phenomenon revealing unexpected layer dynamics.
+%     \item A set of characterization experiments, showing TLCM's functioning across models, its development during training, and the causal relationship between layers.
+%     \item A Jacobian eigenbasis-based interpretability technique, which we apply to TLCM to show selective subspace rejection and reinforcement.
+%     \item The propose-and-reject hypothesis, which organizes observations and provides insights into recent results: CLTs outperforming SAEs, misfires, and model steering difficulties.
+% \end{enumerate}
+
+
+% \ej{I still feel like Jiahai's "overall comments" comment from May is still unaddressed; right now we give a bunch of experiments, and then propose a theory. Normally you want to propose a theory, and then support it with experimental evidence. The propose-and-reject mechanism currently still feels disconnected and abrupt; maybe you can make propose and reject an afterthought after the challenges in feature-based interpretability?}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% Mechanistic interpretability aims to understand the function of language models in terms of the functions of their components. Such work aspires to monitor and control language models \citep{quirkylm, roger2023benchmarks, li2023inference, feng2024monitoring, pan2024latentqa}, as well as design improvements \citep{xiao2023efficient, wu2024reft}.
+
+% Many interpretability methods try to understand language models through the features that transformer layers add to the residual stream. This has motivated the plethora of supervised and unsupervised methods that extract features from transformer layer outputs such as linear probes \citep{alain2016understanding}, logit lens \citep{nostalgebraist}, sparse autoencoders \citep{bricken2023monosemanticity}, and the cross-layer transcoders \citep{ameisen2025circuit, dunefsky2024transcodersinterpretablellmfeature, paulo2025transcodersbeatsparseautoencoders}. 
+% In addition, analyses of factual recall also tend view successive layers as gradually `enriching' the representation of entities with more recalled facts \citep{geva2023dissectingrecallfactualassociations, rome, nanda2023fact, hernandez2024linearity}.
+
+% In this work, we find that this perspective is incomplete; we report evidence that transformer layers often \emph{correct preceding layers} in addition to adding new information.
+% Specifically, we find that 5 out of 7 open weight language model families exhibit layer correction: on nearly 100\% of input tokens, layer correction is exhibited more than 6 times (Sec.~\ref{sec:tlcm-exists}).
+% This mechanism---which we call the Transformer Layer Correction Mechanism (TLCM)---suggests that the role of a layer should be described in terms of the features it subtracts from (as well as adds to) in the residual stream. It also demonstrates that interpretations of output features alone may be misleading since these features can be subsequently corrected.
+
+
+% We qualitatively investigate the emergence of TLCM and the factors that contribute to its strength. 
+% We find that TLCM is not present at initialization, but emerges and is reinforced during pretraining (Sec.~\ref{sec:tlcm-develops}). 
+% We believe it remains an open question if TLCM is harmful (e.g.~a training instability) or helpful (e.g.~a part of a loss-reducing strategy).
+% TLCM also tends to be stronger on tokens with high-contextual dependency, such as numerical tokens that are part of larger numbers, dates, and punctuation (Sec.~\ref{sec:tlcm-tokens}). 
+
+
+% We additionally find that TLMC is \emph{highly-adaptive}. Using causal intervention experiments, we find that  TLCM calibrates the strength of its correction based on the scale of the output of the preceding layer (Sec.~\ref{sec:tlcm-adaptive}). Moreover, the correction direction is only partially aligned with the preceding output, suggesting that perhaps only some features in the preceding output are selectively corrected (Sec.~\ref{sec: corrects component}). We further verify this by identifying these selectively corrected components using the eigenbasis of the layer Jacobian (Sec.~\ref{sec:jacobian-selective}).
+
+
+% Our results suggest that the transformer forward pass is complex and adaptive, and that interpreting it requires capturing complex interactions between layers. 
+% We argue that any abstraction used to interpret models should capture TLCM, and hope our work helps develop such high-fidelity abstractions in the future.
+
+% \arjun{we can also relate this work cross-layer transcoder work}
+% \arjun{also maybe summarize contributions here}

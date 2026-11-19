@@ -1,0 +1,167 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "neurips_2026.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "sections/intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/tab_dataset_comparison.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/fig_teaser.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/related.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/benchmark.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/tab_loco_main.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/evaluation.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/fig_qualitative.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/fig_diagnostics.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/sib.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/fig_sib.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/tab_sib_ablations.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/app_datasheet.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/app_annotation.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/fig_annotation.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/app_data_stats.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/fig_data_stats.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/app_splits.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/app_metric.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/app_training.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/app_loco_extended.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/app_eval.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/app_alternatives.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/app_seo.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/app_sib_impl.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/app_sib_comparison.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/app_sib_ablation.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/app_sib_coverage.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "1fc71cfe96bd7b0e4ba872c0791bce440f342a7879a515fa2f1e85d1c49b28ee",
+    "neurips_2026.sty": "0c1ad36961fcd9198dcc2558cf2793e1df39973bde8264fd701f5e7970672757",
+    "sections/intro.tex": "dde462b344170dbea8856b96aec57b5aeb0e02051ce35605aca441e85137b44f",
+    "tables/tab_dataset_comparison.tex": "091bf6ea31603dcf2b8d4194e18746a871b78b34b0e9f7a776eb8f454e6015cb",
+    "figures/fig_teaser.tex": "56e49a213e813e24db797846fd7f21d805135223400d605a307ec2ad1f1d3aa3",
+    "sections/related.tex": "749de8e80fffd5d92cffc5a481be266411a55e3b034abf182310f8586e95974a",
+    "sections/benchmark.tex": "45f5a4817628bcdd878d9d4f41389753a4de038f075578893388ac932eb8b015",
+    "tables/tab_loco_main.tex": "0d60e5ae72ff994351233b21a3d8e6807b582bda307e92a561dc0d179f1a53a0",
+    "sections/evaluation.tex": "ea41c428c2410c0ccbd9a3b885f50507fe9cb9af8591dc37d61696f0a827c871",
+    "figures/fig_qualitative.tex": "b3e2eb8a860b4cfaec0b741272739fd91b06960f2b8042c7e54b4e8ea0decd1d",
+    "figures/fig_diagnostics.tex": "e49da1667cb013cf1c747806c43bc711327e4a204015c3b50c834f50a9b86252",
+    "sections/sib.tex": "10d1de80b13145803111e7de64857568a5a8fe4039eb61553cd53bafdf89c054",
+    "figures/fig_sib.tex": "df82832ec902e83ad10ef5ed32a52639a0e6a0d62c04994b92d66a1c847f907f",
+    "tables/tab_sib_ablations.tex": "43c5050877e4b793a1a75f60a8516e0cf3e3fa180619a4accccd76fb2fa67bf2",
+    "sections/conclusion.tex": "bf72113dee5c28b3157ecb8d03c3078ee3eb3e700a77622cf241913d4db9e50e",
+    "appendix/app_datasheet.tex": "5e15921b8620cb0d5054bfaaadb32a9e6bfbdbb5e9ab13398a262b80460ab2fc",
+    "appendix/app_annotation.tex": "af5e6e32ff9c6f474aca3472853199541e7c749841ae928ba68638319aa51c43",
+    "figures/fig_annotation.tex": "3cbe5096b77ed243fccfa0bac5ba21ea4cd3100cb02c6498df9ec597c059bf5c",
+    "appendix/app_data_stats.tex": "6c05a7b47dd30a43dfea5dd83d5db49a899dad5317f71043b27573490d482cc0",
+    "figures/fig_data_stats.tex": "8c412f6b4c8e785b5c1b98eca11d56ded99a4b691ca32ddad811f3a31c2850a3",
+    "appendix/app_splits.tex": "0dc4900e7b1e70209f2ac143387c6439d7701dc2d61d259eb2409f1ccd6c9ea4",
+    "appendix/app_metric.tex": "97afc67fd0b1136e467a1c8b2af8a667222300c5af7733281eeae749760cee54",
+    "appendix/app_training.tex": "636f4b463745837e61148e8d50fb0b5fca1bfe0565dbdd1e693815e0d084965a",
+    "appendix/app_loco_extended.tex": "f3b203fe045a4a7cfdb6cd8348ab5be78e44783ad758fb2be6e4519979d3019e",
+    "appendix/app_eval.tex": "c496a0f5d95b2f931b14e73b87e3dc91adb94235400b5c59479fe66d99d6d181",
+    "appendix/app_alternatives.tex": "d3d5ca9f9514314aadccbd24fc0b8105ba02c7139bbe5dbbe29f1592b5f97c91",
+    "appendix/app_seo.tex": "7c59b0803ce9957b7081d2a6163216ed83e667ef6cea5b31b10ffb9d25f3a07b",
+    "appendix/app_sib_impl.tex": "279c1d45b54b8a3869b4c30e78fb496d6c029d45c789a6790d9ec9cfc8e544b5",
+    "appendix/app_sib_comparison.tex": "da474ff74c9106a3bd178f671370befd9014925e08d06183814db528455a4cf4",
+    "appendix/app_sib_ablation.tex": "4e19c683c5e49466ceacba0ad07010f65b0ca4fc74239f0fd537a2b688e23a45",
+    "appendix/app_sib_coverage.tex": "d1ac807b3d59c979fda6b3063ce5d64b6f546696090eb15f51fcf8ef8a4a094f"
+  }
+}

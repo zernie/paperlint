@@ -1,0 +1,2059 @@
+%%%%%%%% ICML 2026 EXAMPLE LATEX SUBMISSION FILE %%%%%%%%%%%%%%%%%
+
+\documentclass{article}
+
+% Recommended, but optional, packages for figures and better typesetting:
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{booktabs} % for professional tables
+% hyperref makes hyperlinks in the resulting PDF.
+% If your build breaks (sometimes temporarily if a hyperlink spans a page)
+% please comment out the following usepackage line and replace
+% \usepackage{icml2026} with \usepackage[nohyperref]{icml2026} above.
+\usepackage{hyperref}
+
+
+% Attempt to make hyperref and algorithmic work together better:
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+
+% Use the following line for the initial blind version submitted for review:
+% \usepackage{icml2026}
+
+% For preprint, use
+% \usepackage[preprint]{icml2026}
+
+% If accepted, instead use the following line for the camera-ready submission:
+\usepackage[accepted]{icml2026}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsthm}
+
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\usepackage[table]{xcolor}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{subcaption} % for subfigure layout
+\usepackage{graphicx}
+\usepackage{array}
+
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepgfplotslibrary{groupplots}
+\usetikzlibrary{calc}
+
+\newcommand{\jhc}{\textcolor{red}}
+\newcommand{\dw}{\textcolor{blue}}
+
+
+
+\newcommand{\meanstd}[2]{#1\textsubscript{\scriptsize$\pm$#2}}
+
+
+% if you use cleveref..
+\usepackage[capitalize,noabbrev]{cleveref}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% THEOREMS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\usepackage[inline]{enumitem}
+
+
+% Todonotes is useful during development; simply uncomment the next line
+%    and comment out the line below the next line to turn off comments
+%\usepackage[disable,textsize=tiny]{todonotes}
+\usepackage[textsize=tiny]{todonotes}
+
+% The \icmltitle you define below is probably too long as a header.
+% Therefore, a short form for the running title is supplied here:
+% \icmltitlerunning{Submission and Formatting Instructions for ICML 2026}
+\icmltitlerunning{Explainable Federated Learning via Attribution Alignment}
+
+
+\begin{document}
+
+\twocolumn[
+  \icmltitle{Explainable Federated Learning via Global–Local Attribution Alignment}
+
+  % It is OKAY to include author information, even for blind submissions: the
+  % style file will automatically remove it for you unless you've provided
+  % the [accepted] option to the icml2026 package.
+
+  % List of affiliations: The first argument should be a (short) identifier you
+  % will use later to specify author affiliations Academic affiliations
+  % should list Department, University, City, Region, Country Industry
+  % affiliations should list Company, City, Region, Country
+
+  % You can specify symbols, otherwise they are numbered in order. Ideally, you
+  % should not use this facility. Affiliations will be numbered in order of
+  % appearance and this is the preferred way.
+  \icmlsetsymbol{equal}{*}
+
+  % \begin{icmlauthorlist}
+  %   \icmlauthor{Firstname1 Lastname1}{equal,yyy}
+  %   \icmlauthor{Firstname2 Lastname2}{equal,yyy,comp}
+  %   \icmlauthor{Firstname3 Lastname3}{comp}
+  %   \icmlauthor{Firstname4 Lastname4}{sch}
+  %   \icmlauthor{Firstname5 Lastname5}{yyy}
+  %   \icmlauthor{Firstname6 Lastname6}{sch,yyy,comp}
+  %   \icmlauthor{Firstname7 Lastname7}{comp}
+  %   %\icmlauthor{}{sch}
+  %   \icmlauthor{Firstname8 Lastname8}{sch}
+  %   \icmlauthor{Firstname8 Lastname8}{yyy,comp}
+  %   %\icmlauthor{}{sch}
+  %   %\icmlauthor{}{sch}
+  % \end{icmlauthorlist}
+
+  % \icmlaffiliation{yyy}{Department of XXX, University of YYY, Location, Country}
+  % \icmlaffiliation{comp}{Company Name, Location, Country}
+  % \icmlaffiliation{sch}{School of ZZZ, Institute of WWW, Location, Country}
+
+  % \icmlcorrespondingauthor{Firstname1 Lastname1}{first1.last1@xxx.edu}
+  % \icmlcorrespondingauthor{Firstname2 Lastname2}{first2.last2@www.uk}
+
+  \begin{icmlauthorlist}
+\icmlauthor{Dawood Wasif}{vt}
+\icmlauthor{Terrence J. Moore}{arl}
+\icmlauthor{Chang-Tien Lu}{vt}
+\icmlauthor{Jin-Hee Cho}{vt}
+\end{icmlauthorlist}
+
+\icmlaffiliation{vt}{Department of Computer Science, Virginia Tech, Falls Church, VA, USA}
+\icmlaffiliation{arl}{DEVCOM Army Research Laboratory, Adelphi, MD, USA}
+
+\icmlcorrespondingauthor{Dawood Wasif}{dwasif@vt.edu}
+\icmlcorrespondingauthor{Jin-Hee Cho}{jicho@vt.edu}
+
+  % You may provide any keywords that you find helpful for describing your
+  % paper; these are used to populate the "keywords" metadata in the PDF but
+  % will not be shown in the document
+  \icmlkeywords{Machine Learning, ICML}
+
+  \vskip 0.3in
+]
+
+% this must go after the closing bracket ] following \twocolumn[ ...
+
+% This command actually creates the footnote in the first column listing the
+% affiliations and the copyright notice. The command takes one argument, which
+% is text to display at the start of the footnote. The \icmlEqualContribution
+% command is standard text for equal contribution. Remove it (just {}) if you
+% do not need this facility.
+
+% Use ONE of the following lines. DO NOT remove the command.
+% If you have no special notice, KEEP empty braces:
+\printAffiliationsAndNotice{}  % no special notice (required even if empty)
+% Or, if applicable, use the standard equal contribution text:
+% \printAffiliationsAndNotice{\icmlEqualContribution}
+%authorship:  D. Wasif, T. J. Moore, C.T. Lu, J. H. Cho
+
+\begin{abstract}
+Federated learning enables on-device training without centralizing data, yet existing systems still struggle to provide explanations that are both locally faithful and globally consistent under strict privacy and bandwidth constraints. Prior approaches either keep explanations siloed across clients, transmit heavy or sensitive artifacts, or replace expressive task models with interpretable surrogates that sacrifice accuracy. We propose \texttt{xFedAlign}, a model-agnostic framework that decouples task optimization in parameter space from explanation coordination in a compact group space. Each client distills a lightweight surrogate to produce private, per-class top-$k$ attribution artifacts, which are robustly aggregated by the server into a Global Explanation Prior that softly aligns client explanations without constraining task learning. Across image, text, and tabular benchmarks with IID and non-IID partitions, \texttt{xFedAlign} matches FedAvg accuracy while consistently reducing explanation drift and improving deletion and insertion AUC relative to Local-XAI, FedAttr-Agg, and Fed-XAI, with only a few kilobytes of additional communication per round. Privacy and robustness evaluations further demonstrate reduced membership inference advantage and increased resistance to attribution poisoning, enabling consistent and trustworthy explanations in federated learning.
+\end{abstract}
+
+
+\section{Introduction}
+\label{sec:intro}
+
+\textbf{Why Explainability in Federated Learning Matters.}
+Federated learning (FL) enables model training across decentralized data silos while preserving data locality, addressing regulatory, operational, and privacy constraints that prohibit centralized data sharing \citep{kairouz2021advances,li2020federated}. As federated systems are deployed in high-stakes domains such as healthcare, finance, mobile platforms, and scientific instrumentation, understanding \emph{why} a model produces a given prediction becomes essential rather than optional. Stakeholders require transparency under distribution shift, auditors demand accountability, and practitioners need actionable diagnostics when models underperform on specific cohorts. In this context, explainability is not a post hoc convenience but a foundational capability for trust calibration, safe deployment, and iterative improvement, particularly under heterogeneous and non-IID client data.
+
+\textbf{Why Explainability Is Harder in Federated Settings.}
+Although explainability in centralized learning is relatively mature \citep{arrieta2020explainable}, these techniques do not transfer cleanly to FL. Data are fragmented across clients with heterogeneous distributions, the server cannot access raw inputs, and even limited telemetry may violate privacy or regulatory constraints. More fundamentally, heterogeneity, which is one of the motivations for FL, induces \emph{explanation drift}, where identical predictions rely on different features or concepts across clients \citep{zhang2024survey}. Purely local explanations fail to provide coherent system-level semantics, while enforcing a single global explanation risks mischaracterizing client-specific decision boundaries. A federated explanation framework must therefore ensure local faithfulness, cross-client consistency, and strict privacy under tight communication budgets.
+
+\textbf{Why Existing Solutions Fall Short.}
+Existing approaches only partially meet the requirements of federated explainability. Client-side post hoc methods preserve local fidelity but cannot reconcile explanations across clients, leading to severe divergence under heterogeneity, while server-side aggregation improves comparability and bandwidth efficiency at the cost of discarding fine-grained structure and suppressing minority client behaviors. Interpretable-by-design federated models expose explanations directly but often sacrifice accuracy and still suffer from explanation drift under non-IID data. Moreover, sharing gradients, logits, or internal features raises privacy risks and communication costs, and high-dimensional attribution objects scale poorly. Overall, existing federated explainable AI (XAI) treats explanations as post-hoc artifacts rather than a training-time quantity to be \emph{coordinated iteratively}, leaving no mechanism to align cross-client explanation semantics under heterogeneity while respecting privacy and tight communication budgets.
+
+
+\textbf{Proposed Approach.}
+To address the challenges of explainable FL, we introduce \texttt{xFedAlign}, a framework that decouples task optimization from explanation coordination to achieve faithful, consistent, and privacy-preserving explanations. Each client trains a lightweight \emph{adaptive surrogate} that mimics the deployed task model and produces calibrated, group-level attributions in a normalized, modality-agnostic space. These attributions are distilled into sparse top-$k$ artifacts using clipping, quantization, and light noise, and are securely aggregated by the server into a \emph{Global Explanation Prior} capturing robust class-wise consensus across heterogeneous clients. The prior is broadcast back to clients and incorporated through a lightweight alignment penalty that nudges local explanations toward global coherence without constraining task optimization. As a result, \texttt{xFedAlign} ensures local fidelity, cross-client consistency under non-IID data, and privacy- and communication-efficient explanation coordination, while remaining architecture- and optimizer-agnostic.
+
+\textbf{Key Contributions.}
+
+\textbf{(1) Separation of concerns for federated explainability.} We formulate explainable FL as a problem of coordinating explanation semantics independently of task optimization, enabling expressive task models to be trained without constraining accuracy while explanation alignment is handled in a compact probability space. 
+
+\textbf{(2) Surrogate-based explanation abstraction.} We introduce adaptive client-side surrogates that approximate task models and expose stable, normalized group-level attributions, providing a principled bridge between black-box federated models and interpretable explanation spaces.
+
+\textbf{(3) Privacy-aware global explanation coordination.} We propose sparse, privacy-hardened top-$k$ attribution artifacts and robust server-side aggregation to form a Global Explanation Prior that aligns explanations across heterogeneous clients without sharing raw data, gradients, or dense maps.
+
+\textbf{(4) Robust and communication-efficient alignment mechanism.} We design a lightweight explanation-space alignment penalty that contracts cross-client explanation drift under non-IID data while adding only kilobytes of communication per round and preserving optimization dynamics.
+
+
+\textbf{(5) Comprehensive empirical validation.} We demonstrate across image, text, and tabular benchmarks that \texttt{xFedAlign} matches FL accuracy while substantially improving explanation consistency, perturbation-based fidelity, and robustness to privacy and poisoning attacks over representative baselines.
+
+\section{Background \& Related Work}
+\label{sec:related}
+
+\subsection{Federated Learning Under Heterogeneity}
+
+Federated learning (FL) was developed to enable communication-efficient and privacy-preserving training across decentralized, non-IID data, with FedAvg establishing the standard paradigm of local optimization followed by server-side aggregation \citep{mcmahan2017communication}. Subsequent work has focused on improving optimization stability under heterogeneity through proximal regularization, control variates, adaptive server optimizers, and normalization or personalization strategies \citep{li2020federated,karimireddy2019scaffold,reddi2020adaptive,li2021fedbn,smith2017federated}. Secure aggregation and systems advances further ensure that model updates can be combined without exposing raw client data \citep{bonawitz2019towards}.
+
+However, existing FL methods coordinate \emph{model parameters} or \emph{optimization dynamics}, not the \emph{semantics of model behavior}. Heterogeneity is treated as an optimization issue, allowing accurate global models under non-IID data without ensuring consistent or interpretable reasoning across clients. This gap motivates explainable FL approaches that explicitly align explanation semantics under privacy and communication constraints.
+
+\subsection{Explainable AI (XAI) Beyond Centralized Settings}
+
+XAI has been widely studied in centralized learning. Post-hoc explainers such as LIME \citep{ribeiro2016should}, SHAP \citep{lundberg2017unified}, and Integrated Gradients \citep{sundararajan2017axiomatic}, together with gradient-based, perturbation-based, and visualization methods \citep{smilkov2017smoothgrad,petsiuk2018rise,shrikumar2017learning,simonyan2013deep,zeiler2014visualizing,selvaraju2017grad,fong2017interpretable}, provide feature-level attributions for individual predictions. Beyond attribution, concept-based methods and interpretable-by-design models aim to align explanations with human-interpretable abstractions or constrained architectures \citep{kim2018interpretability, alvarez2018towards, caruana2015intelligible,rudin2019stop, hooker2019benchmark, koh2020concept}.
+
+However, most XAI methods assume centralized models and stationary data, focusing on local faithfulness without addressing how explanation semantics behave across heterogeneous sources or models. As a result, explanations may be locally meaningful yet globally inconsistent or unstable under distribution shift. Moreover, many explanation mechanisms rely on dense gradients or perturbations that are costly to transmit and raise privacy concerns in decentralized settings. These limitations motivate explainable FL approaches that explicitly coordinate explanation semantics under privacy and communication constraints.
+
+
+\subsection{Explainability Challenges in Federated Learning}
+
+Bridging XAI and FL introduces three core tensions: privacy, heterogeneity, and bandwidth. Prior work surveys this emerging space and explores federated adaptations of attribution methods, interpretable models, and client-contribution reasoning \citep{chaddad2023explainable,li2023towards}. In practice, secure aggregation and system constraints limit which explanation artifacts can be shared \citep{bonawitz2019towards}, while privacy studies highlight leakage risks from gradients or logits relevant to explanation exchange \citep{melis2019exploiting,shokri2015privacy}. Federated feature-importance and Shapley-style methods aggregate local attributions without centralizing data \citep{wang2019measure,ghorbani2019data}, yet empirical studies report explanation drift under non-IID clients, particularly in healthcare settings \citep{rieke2020future,sheller2020federated}.
+
+Overall, prior work shows clear progress, but the core trade-off remains: purely local explanations stay faithful yet drift across heterogeneous clients, while global aggregation and interpretable-by-design variants improve comparability at the cost of structure, minority behavior, or accuracy. In addition, privacy and bandwidth constraints often shape what can be shared, but are rarely treated as first-class parts of the explanation coordination problem. This motivates a unified, model-agnostic approach that keeps task learning unchanged while coordinating explanation semantics through compact, privacy-aware signals. \texttt{xFedAlign} follows this direction by aligning client explanations in a low-dimensional group space via a robust, shared prior, yielding consistent semantics under non-IID data without transmitting raw data, gradients, or dense attribution maps.
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=0.95\linewidth]{figures/xFedAlign-Diagram-latest-v3.png}
+    \caption{
+    {\bf Overall framework of \texttt{xFedAlign}.} Each client $i$ with local data $\mathcal{D}_i=\{(x,y)\}$ (where $x\in\mathcal{X}$ and $y\in\{1,\ldots,C\}$) distills a lightweight surrogate $g_i$ from the local task model $f_{\theta^{(t)}}$, maps per-example attributions into the shared group space $\mathcal{G}$, aggregates them into per-class means $\bar{E}_i^{(c)}$ with $c\in\{1,\ldots,C\}$, and sends a compressed top-$k$ artifact $S_i^{(t)}$ after $\ell_2$ clipping, quantization, and DP noise via secure aggregation. The server robustly aggregates $\{S_i^{(t)}\}$ to form the Global Explanation Prior $\Pi^{(t)}$, normalizes it on the simplex, and broadcasts $(\theta^{(t+1)},\Pi^{(t+1)})$. Clients then optimize task loss, surrogate mimicry, and JSD alignment to $\Pi^{(t)}$, yielding faithful, consistent, and private explanations without sharing raw data or gradients.}
+    \label{fig:xfedalign_architecture}
+\end{figure*}
+
+\section{Proposed Approach: xFedAlign} \label{sec:xfedalign}
+
+%\subsection{System Model}
+We consider a cross-device FL system with $K$ clients and a central coordinator. Each client $i$ holds private data from a local distribution and participates in communication rounds where the server broadcasts task parameters, selected clients perform local updates, and the server aggregates model updates. The task model is treated as a black box: clients may query predictions but never share raw data, gradients, logits, or internal activations. Explanations are produced and exchanged only in a low-dimensional, modality-agnostic group space $\mathcal{G}$, normalized to the simplex to ensure cross-client comparability. This design targets faithful local explanations, consistent semantics under non-IID heterogeneity, and strict privacy with minimal communication overhead.
+
+\subsection{Adaptive Surrogate Family and Local Objective}
+
+As shown in Figure~\ref{fig:xfedalign_architecture}, each client learns a compact surrogate $g_i$ that mimics the task model’s decision behavior on local inputs and provides a normalized mapping to the group space $\mathcal{G}$. The surrogate is drawn from an adaptive family that balances expressiveness and interpretability, being sufficiently rich to approximate the teacher’s decision boundary over $\mathcal{G}$ while regularized to produce sparse, calibrated group-level attributions. Behavioral mimicry is enforced via temperature-based distillation with confidence weighting, and sparsity and group structure are promoted through explicit regularization. Defining $p_\theta(x)=\operatorname{softmax}(f_\theta(x)/T)$ and $q_{g_i}(x)=\operatorname{softmax}(g_i(x)/T)$, each client minimizes
+\begin{equation}
+\label{eq:surrogate-iclr}
+{\small
+\begin{aligned}
+\mathcal{L}_{\mathrm{sur}}(g_i;\theta)
+&=\mathbb{E}_{x\sim D_i}\!\left[\mathrm{KL}\!\left(p_\theta(x)\,\|\,q_{g_i}(x)\right)\right]
++\lambda\,\Omega(g_i),
+\end{aligned}
+}
+\end{equation}
+where $\Omega(g_i)$ enforces parsimony and stable grouping in the induced explanations. This objective ensures that $g_i$ faithfully reproduces the teacher’s class distribution on $D_i$ without constraining task optimization, preserving standard federated training dynamics while yielding structured, group-based local explanations.
+
+The client computes normalized, per-class group attributions using a deterministic operator in the group space matched to the surrogate. Let $z(x)$ denote the nonnegative group activations induced by $g_i$, and let $g_i^{(c)}(x)$ denote the class-$c$ logit. We define the explanation operator as a path-integrated gradient in group space from a zero baseline to $z(x)$, followed by normalization to the simplex, yielding a faithful and scale-stable distribution over groups:
+\begin{equation}
+\label{eq:expl-iclr}
+{\small
+\begin{aligned}
+E_i^{(c)}(x)
+&=\int_{0}^{1}\!\big(\nabla_{z}\,g_i^{(c)}(\tau\,z(x))\odot z(x)\big)\,d\tau, \\
+\tilde{E}_i^{(c)}(x)
+&=\frac{\lvert E_i^{(c)}(x)\rvert}{\mathbf{1}^\top\lvert E_i^{(c)}(x)\rvert}
+\;\in\;\Delta^{|\mathcal{G}|-1}.
+\end{aligned}
+}
+\end{equation}
+Averaging $\tilde{E}_i^{(c)}(x)$ over the local distribution yields a calibrated client summary $\bar{E}_i^{(c)}$. The client constructs a compact artifact $S_i$ by retaining the top-$k$ groups per class from $\bar{E}_i^{(c)}$ with index--magnitude pairs, applying norm clipping for bounded sensitivity, quantization for bandwidth control, and light noise for privacy hardening. During local training, the surrogate and task model are coupled only through the surrogate loss and a soft alignment penalty in explanation space. With $\tilde{\bar{E}}_i^{(c)}$ denoting the normalized top-$k$ projection of $\bar{E}_i^{(c)}$ and $\Pi^{(t,c)}$ the Global Explanation Prior for class $c$, we use the Jensen--Shannon divergence
+$\mathrm{JSD}(P\,\|\,Q) = \tfrac{1}{2}\mathrm{KL}(P\,\|\,M) + \tfrac{1}{2}\mathrm{KL}(Q\,\|\,M)$ with $M = \tfrac{1}{2}(P+Q)$
+as the alignment dissimilarity, since it is symmetric, bounded in $[0,\log 2]$, and well-defined on the simplex even when supports differ. The per-round client objective is then
+\begin{equation}
+\label{eq:local-iclr}
+{\small
+\begin{aligned}
+\min_{\theta_i,g_i}\;\;
+\mathcal{L}_{\mathrm{task},i}(\theta_i)
++\alpha\,\mathcal{L}_{\mathrm{sur}}(g_i;\theta_i) \\
++\beta\sum_{c=1}^{C}\mathrm{JSD}\!\big(\tilde{\bar{E}}_i^{(c)}\,\|\,\Pi^{(t,c)}\big),
+\end{aligned}
+}
+\end{equation}
+where $\alpha,\beta\ge 0$. Because alignment acts only on normalized group distributions, task optimization remains unconstrained while explanation semantics are steered toward a coherent, system-wide consensus. Together, distillation and integrated gradients ensure per-example faithfulness, group normalization enables cross-client comparability, and clipped, quantized, noisy top-$k$ artifacts satisfy privacy and communication constraints.
+
+\subsection{Global Explanation Prior and Alignment}
+
+After local optimization, the server receives only compact explanation artifacts via secure aggregation, never raw data, logits, or model internals. These artifacts coordinate explanation semantics across clients while remaining compatible with privacy-preserving communication and standard federated aggregation. The server aggregates them into a \emph{Global Explanation Prior}, which captures, for each class, the consensus of explanation mass in the group space. Robust aggregation mitigates outliers and skewed silos, and normalization yields a valid simplex distribution. Let $\tilde{S}_i^{(c)}$ denote the decoded, normalized top-$k$ vector for class $c$ from client $i$, and let $\mathcal{A}_t$ be the participating clients in round $t$. The prior is updated as
+\begin{equation}
+\label{eq:prior-iclr}
+{\small
+\Pi^{(t+1,c)}
+=\operatorname{Norm}\!\Big(
+\operatorname{RobAgg}\big(\{\tilde{S}_i^{(c)}\}_{i\in\mathcal{A}_t}\big)
+\Big),
+}
+\end{equation}
+where $\operatorname{RobAgg}$ is a coordinatewise median or trimmed mean and $\operatorname{Norm}$ rescales to the simplex. The server broadcasts $(\theta^{(t+1)},\Pi^{(t+1)})$, making the prior a first-class object that co-evolves with the task model and anchors explanations under heterogeneity.
+
+This design yields two key properties. Because alignment operates only in explanation space, task optimization follows standard federated dynamics and preserves accuracy under non-IID data. Moreover, robust aggregation combined with explanation-space alignment contracts cross-client dispersion toward a population-level consensus. A convenient dispersion measure for class $c$ is
+\begin{equation}
+\label{eq:disp-iclr2}
+{\small
+\mathcal{D}^{(c)}
+=\frac{1}{K}\sum_{i=1}^{K}
+\mathrm{JSD}\!\big(\tilde{\bar{E}}_i^{(c)}\,\|\,\Pi^{(c)}\big),
+}
+\end{equation}
+which decreases across rounds when surrogate maps are Lipschitz in the prior and aggregation concentrates around the central tendency. Overall, empirical risk minimization proceeds in parameter space, while explanation semantics are coordinated in a low-dimensional, modality-agnostic probability space. Privacy and communication efficiency are enforced through clipped, quantized, and lightly noised top-$k$ artifacts exchanged under secure aggregation, keeping bandwidth in the kilobyte regime. See Appendix~\ref{app:theory} for the client-level privacy guarantee under secure aggregation.
+
+
+\subsection{Federated Objective and Properties}
+
+In each communication round, the server broadcasts $(\theta^{(t)},\Pi^{(t)})$, clients update $\theta$ on local data and fit surrogates that mimic $f_\theta$, and return model updates together with compressed explanation artifacts for robust aggregation. The resulting system optimizes a global objective that couples task risk, surrogate fidelity, and explanation alignment, while leaving task optimization unconstrained by the prior. Defining $p_\theta(x)=\mathrm{softmax}(f_\theta(x)/T)$ and $q_{g_i}(x)=\mathrm{softmax}(g_i(x)/T)$, the objective is
+\begin{equation}
+\label{eq:global-iclr}
+{\small
+\begin{aligned}
+\min_{\theta,\{g_i\},\Pi}\;\;
+&\sum_{i=1}^{K} w_i\,\mathbb{E}_{(x,y)\sim D_i}\!\big[\ell(f_\theta(x),y)\big] \\
+&+ \alpha \sum_{i=1}^{K} w_i\,\mathbb{E}_{x\sim D_i}\!\Big[\mathrm{KL}\big(p_\theta(x)\,\|\,q_{g_i}(x)\big)\Big] \\
+&+ \beta \sum_{i=1}^{K} w_i \sum_{c=1}^{C} \mathrm{JSD}\!\Big(\tilde{\bar{E}}_i^{(c)} \,\big\|\, \Pi^{(c)}\Big),
+\end{aligned}
+}
+\end{equation}
+where $\tilde{\bar{E}}_i^{(c)}$ is the normalized top-$k$ average explanation for class $c$ on client $i$ and $\Pi^{(c)}$ is the corresponding global prior. The first term performs empirical risk minimization, the second enforces faithful surrogate mimicry, and the third aligns client explanations to a robust global reference. Because alignment operates only in explanation space, standard federated optimization dynamics are preserved, and task accuracy remains stable under non-IID data.
+
+The coupled dynamics are characterized by a dispersion functional that measures cross-client inconsistency in explanation space,
+\begin{equation}
+\label{eq:disp-iclr}
+{\small
+\mathcal{D}^{(c)}
+=\frac{1}{K}\sum_{i=1}^{K}
+\mathrm{JSD}\!\big(\tilde{\bar{E}}_i^{(c)}\,\|\,\Pi^{(c)}\big),
+}
+\end{equation}
+which contracts across rounds under robust aggregation and Lipschitz surrogate updates, yielding stable and comparable explanations without constraining the expressivity of $f_\theta$. Fidelity is ensured by behavioral distillation, while simplicity and stability are controlled through the top-$k$ projection and groupwise normalization. Formal guarantees on dispersion contraction, surrogate fidelity, privacy, and convergence are provided in Appendix~\ref{app:theory}.
+
+\paragraph{Relation to parameter-space regularizers.}
+Standard FL regularizers such as FedProx~\citep{li2020federated} and SCAFFOLD~\citep{karimireddy2019scaffold} penalize drift in the high-dimensional parameter space, coupling the regularizer directly to task optimization. \texttt{xFedAlign} differs in two ways. First, the alignment penalty acts in a low-dimensional probability simplex over the group space $\mathcal{G}$, not in $\mathbb{R}^{|\theta|}$, so its gradient does not flow into the task model parameters. Second, alignment targets \emph{semantic} agreement between explanation distributions rather than weight similarity, which is why task accuracy in Table~\ref{tab:fedxai_results} matches FedAvg even when $\beta$ is non-zero. The two mechanisms are complementary: a parameter-space regularizer could be added to \texttt{xFedAlign} without changing the explanation pipeline.
+
+\paragraph{Partial client participation.}
+\texttt{xFedAlign} is naturally compatible with cross-device FL where only a subset $\mathcal{A}_t \subseteq \{1,\dots,K\}$ participates each round. Eq.~\eqref{eq:prior-iclr} already restricts the prior update to $\mathcal{A}_t$, and the coordinatewise median continues to operate over whatever clients report artifacts in round $t$. Non-participating clients simply receive the broadcast prior the next time they join. The dispersion contraction in Proposition~\ref{prop:dispersion-contraction} continues to hold in expectation under uniform sampling of $\mathcal{A}_t$, since robust aggregation remains nonexpansive on the participating subset. The scalability sweep in Appendix~\ref{app:scalability-clients} (Table~\ref{tab:mnist_clients_sweep_rows_methods}) up to $128$ clients with very small heterogeneous shards stresses a regime closely related to sparse participation, and EDI remains stable around $2\times 10^{-4}$.
+
+
+\paragraph{Algorithm summary.}
+Algorithm~\ref{alg:xfedalign} summarizes one communication round of \texttt{xFedAlign}, covering client-side task and surrogate updates, artifact construction, robust server aggregation, and prior broadcast.
+
+\begin{algorithm}[h]
+\caption{\texttt{xFedAlign}: one communication round $t$}
+\label{alg:xfedalign}
+\begin{algorithmic}[1]
+\STATE \textbf{Server input:} task params $\theta^{(t)}$, prior $\Pi^{(t)}$, participating set $\mathcal{A}_t$
+\STATE Server broadcasts $(\theta^{(t)}, \Pi^{(t)})$ to all $i \in \mathcal{A}_t$
+\FOR{each client $i \in \mathcal{A}_t$ \textbf{in parallel}}
+  \STATE Initialize $\theta_i \gets \theta^{(t)}$
+  \STATE \textbf{Task update:} for one local epoch on $D_i$, update $\theta_i$ via SGD on $\mathcal{L}_{\mathrm{task},i}$
+  \IF{$t \mod R_{\mathrm{sur}} = 0$}
+    \STATE \textbf{Surrogate fit:} update $g_i$ for $e$ epochs on $\mathcal{L}_{\mathrm{sur}}(g_i; \theta_i)$ via Eq.~\eqref{eq:surrogate-iclr}
+  \ENDIF
+  \FOR{each class $c = 1, \dots, C$}
+    \STATE Compute per-example attributions $\tilde{E}_i^{(c)}(x)$ via Eq.~\eqref{eq:expl-iclr}; average to $\bar{E}_i^{(c)}$
+    \STATE Top-$k$ project $\bar{E}_i^{(c)} \to z_i^{(c)}$; clip in $\ell_2$ to radius $r_{\mathrm{clip}}$; quantize to $b$ bits
+    \STATE Add Gaussian noise: $\bar{z}_i^{(c)} \gets z_i^{(c)} + \xi$, $\xi \sim \mathcal{N}(0, \sigma^2 I)$
+  \ENDFOR
+  \STATE \textbf{Alignment loss step:} take a gradient step on $\beta \sum_c \mathrm{JSD}(\tilde{\bar{E}}_i^{(c)} \,\|\, \Pi^{(t,c)})$ w.r.t.\ surrogate params
+  \STATE Send updated $\theta_i^{(t+1)}$ and artifacts $\{\bar{z}_i^{(c)}\}_c$ via secure aggregation
+\ENDFOR
+\STATE \textbf{Server aggregation:}
+\STATE \quad $\theta^{(t+1)} \gets \sum_{i \in \mathcal{A}_t} w_i \theta_i^{(t+1)}$
+\STATE \quad For each $c$: $\Pi^{(t+1, c)} \gets \mathrm{Norm}(\mathrm{coord\text{-}median}(\{\bar{z}_i^{(c)}\}_{i \in \mathcal{A}_t}))$
+\STATE \textbf{Output:} $(\theta^{(t+1)}, \Pi^{(t+1)})$
+\end{algorithmic}
+\end{algorithm}
+
+
+
+\section{Experimental Setup}
+\label{experimental-setup}
+
+We evaluate \texttt{xFedAlign} across image, text, and tabular tasks under IID and non-IID clients, comparing against federated XAI baselines. We ask: \textbf{(RQ1)} Does it preserve locally faithful explanations? \textbf{(RQ2)} Does it reduce cross-client explanation drift without hurting accuracy? \textbf{(RQ3)} Do these gains hold under strict privacy and bandwidth constraints, while improving resistance to membership inference and attribution poisoning?
+
+\subsection{Datasets}
+We evaluate six benchmarks across three modalities to assess generality under heterogeneity: MNIST and CIFAR-10 for vision \citep{lecun1998mnist,krizhevsky2009learning}, AG News and IMDb Reviews for text \citep{zhang2015character,maas2011learning}, and UCI Adult Income and German Credit for tabular data \citep{asuncion2007uci}. Each dataset is partitioned across eight clients using both IID splits via uniform sharding and non-IID splits via a Dirichlet label-skew sampler with concentration $0.1$. Test sets remain centralized. Per modality, all methods share the same task architecture to isolate explanation effects: a small CNN for vision, a TextCNN for text, and a shallow MLP for tabular data. Results are averaged over five runs with independent seeds.  For RQ2 and RQ3, we use MNIST only to enable efficient, stable evaluation of explanation drift, privacy, robustness, and ablations without confounding model capacity.
+
+\subsection{Metrics}
+We evaluate task performance, explanation consistency and fidelity, and privacy/robustness. Task performance is measured by top-1 accuracy on the test set,
+\begin{equation}
+\label{eq:acc}
+{\small
+\text{Acc}
+=\frac{1}{|\mathcal{D}_{\text{test}}|}
+\sum_{(x,y)\in\mathcal{D}_{\text{test}}}
+\mathbf{1}\big[\hat{y}(x)=y\big].
+}
+\end{equation}
+
+Cross-client consistency is measured by the Explanation Drift Index (EDI), defined as the mean Jensen--Shannon divergence between clientwise per-class explanation distributions $\tilde{\bar{E}}_i^{(c)}$ and a method-specific reference $R^{(c)}$,
+\begin{equation}
+\label{eq:edi}
+{\small
+\text{EDI}
+=\frac{1}{KC}
+\sum_{i=1}^{K}\sum_{c=1}^{C}
+\mathrm{JSD}\big(\tilde{\bar{E}}_i^{(c)}\,\|\,R^{(c)}\big),
+}
+\end{equation}
+where lower values indicate better agreement.
+
+The method-specific reference $R^{(c)}$ is the natural global explanation object induced by each method, ensuring a fair within-method client-to-global comparison. Specifically: for \texttt{xFedAlign}, $R^{(c)} = \Pi^{(c)}$, the Global Explanation Prior; for FedAttr-Agg, $R^{(c)} = \mu^{(c)}$, the server-aggregated attribution template (Appendix~\ref{app:models}); for Local-XAI, $R^{(c)} = \tfrac{1}{K}\sum_{i=1}^{K} \tilde{\bar{E}}_i^{(c)}$, the unweighted client mean (no server-side aggregation exists); and for Fed-XAI, $R^{(c)} = w^{(c)}$, the interpretable model's class-$c$ weight vector.
+
+Explanation fidelity is assessed via deletion and insertion tests. Let $p_t^{\text{del}}$ and $p_t^{\text{ins}}$ denote the target-class confidence after removing or inserting the top-ranked groups up to step $t$. The area-under-curve summaries are
+\begin{subequations}
+\label{eq:auc}
+\begin{equation}
+{\small
+\begin{aligned}
+\text{DelAUC}
+&=\frac{1}{T+1}\sum_{t=0}^{T} p_t^{\text{del}},
+\qquad
+\text{InsAUC}
+=\frac{1}{T+1}\sum_{t=0}^{T} p_t^{\text{ins}}.
+\end{aligned}
+}
+\end{equation}
+\end{subequations}
+with lower DelAUC and higher InsAUC indicating more faithful explanations.
+
+Privacy is evaluated using membership inference accuracy and advantage. With confusion-matrix entries $\text{TP},\text{FP},\text{TN},\text{FN}$,
+\begin{equation}
+\label{eq:mia-acc}
+{\small
+\text{MIA-Acc}
+=\frac{\text{TP}+\text{TN}}{\text{TP}+\text{FP}+\text{TN}+\text{FN}},
+}
+\end{equation}
+and defining $\text{TPR}(\tau)$ and $\text{FPR}(\tau)$ at threshold $\tau$,
+\begin{equation}
+\label{eq:mia-adv-app}
+{\small
+\text{MIA-Adv}
+=\max_{\tau}\big(\text{TPR}(\tau)-\text{FPR}(\tau)\big).
+}
+\end{equation}
+
+Robustness to attribution poisoning is measured by changes in top-$k$ support and EDI. Let $S_{\text{clean}}@k$ and $S_{\text{poison}}@k$ be the top-$k$ index sets. The instability and drift change are
+\begin{equation}
+\label{eq:topk}
+{\small
+\Delta\text{Top}@k
+=1-\frac{\lvert S_{\text{clean}}@k\cap S_{\text{poison}}@k\rvert}{k},
+}
+\end{equation}
+\begin{equation}
+\label{eq:delta-edi}
+{\small
+\Delta\text{EDI}
+=\text{EDI}_{\text{poison}}-\text{EDI}_{\text{clean}},
+}
+\end{equation}
+where larger increases indicate stronger manipulation. The poisoning protocol, attacker capability, and evaluation settings are detailed in Appendices~\ref{app:threat-model} and \ref{app:robustness}.
+
+
+
+\subsection{Comparing Schemes}
+We compare our method with four representative baselines spanning standard FL, local-only XAI, aggregated attribution, and interpretable-by-design models:
+\textbf{(1) FedAvg (No-XAI)} is plain FL without explanation mechanisms and serves as an accuracy reference; a fixed post-hoc explainer is used only for evaluation.
+\textbf{(2) Local-XAI (Unshared)} \cite{sundararajan2017axiomatic} computes post-hoc explanations independently on each client, preserving local faithfulness but producing divergent explanations under non-IID data.
+\textbf{(3) FedAttr-Agg} \cite{wang2021federated} aggregates compact client attribution statistics into a global explanation, improving comparability but often washing out minority client patterns.
+\textbf{(4) Fed-XAI} \cite{barcena2022fed} trains an interpretable-by-design federated model whose parameters act as explanations, simplifying interpretation at the cost of reduced accuracy on complex tasks.
+All baselines are compared against \texttt{xFedAlign}.
+
+\subsection{Implementation Details}
+All methods use the same federated schedule with 8 clients, 15 communication rounds, and one local epoch per round. Non-IID experiments use Dirichlet label skew with concentration $\alpha=0.1$, while IID experiments approximate uniform sharding via Dirichlet $\alpha=10^{6}$. Hyperparameters are fixed across methods and seeds (global seed $1337$): batch size $64$; SGD with momentum $0.9$; base learning rate $0.01$; inputs normalized to $[0,1]$. The proposed method transmits sparse top-$k$ summaries per class ($k=128$ of $784$), applies $\ell_2$ clipping (radius $5.0$), $8$-bit uniform quantization, and Gaussian noise with $\sigma=0.1$, and aggregates artifacts into the global prior via \textit{coordinatewise median}. Alignment uses a linear warm-up over the first 6 rounds to $\beta=0.2$, after which it is held constant. Surrogates are updated every $R=2$ rounds with temperature $T=3.0$, SGD learning rate $0.1$, and sparsity penalty $\lambda=10^{-4}$. For RQ2, attack budgets and calibration are matched across methods; for RQ3, one-factor-at-a-time sensitivity analyses vary sparsity, alignment weight, surrogate cadence, and noise while holding others fixed.
+
+
+\begin{table*}[t]
+\centering
+\small
+\caption{Benchmarking of federated explanation methods across data types, datasets, and data splits. Entries are $\meanstd{\text{mean}}{\text{std}}$ over multiple runs; lower is better for EDI and Deletion AUC, higher is better for Accuracy and Insertion AUC.}
+\label{tab:fedxai_results}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lllcccccccc}
+\toprule
+Type & Dataset & Approach &
+\multicolumn{4}{c}{IID} &
+\multicolumn{4}{c}{Non-IID} \\
+\cmidrule(lr){4-7}\cmidrule(lr){8-11}
+& & & Accuracy $\uparrow$ & EDI $\downarrow$ & Del AUC $\downarrow$ & Ins AUC $\uparrow$ & Accuracy $\uparrow$ & EDI $\downarrow$ & Del AUC $\downarrow$ & Ins AUC $\uparrow$ \\
+\midrule
+\multirow{10}{*}{\centering Image} 
+  & \multirow{5}{*}{\centering MNIST} 
+    & FedAvg      
+      & \meanstd{0.986}{0.001} & -- & -- & -- 
+      & \meanstd{0.930}{0.004} & -- & -- & -- \\
+  &  & Local-XAI      
+      & \meanstd{0.982}{0.002} & \meanstd{0.020}{0.001} & \meanstd{0.189}{0.009} & \meanstd{0.956}{0.003}
+      & \meanstd{0.927}{0.004} & \meanstd{0.110}{0.006} & \meanstd{0.337}{0.012} & \meanstd{0.737}{0.011} \\
+  &  & FedAttr-Agg      
+      & \meanstd{0.983}{0.002} & \meanstd{0.077}{0.002} & \meanstd{0.174}{0.004} & \meanstd{0.939}{0.004}
+      & \meanstd{0.930}{0.004} & \meanstd{0.159}{0.007} & \meanstd{0.288}{0.010} & \meanstd{0.747}{0.010} \\
+  &  & Fed-XAI      
+      & \meanstd{0.904}{0.001} & \meanstd{0.001}{0.000} & \meanstd{0.146}{0.001} & \meanstd{0.750}{0.002}
+      & \meanstd{0.449}{0.006} & \meanstd{0.300}{0.009} & \textbf{\meanstd{0.126}{0.003}} & \meanstd{0.425}{0.009} \\
+  &  & \texttt{xFedAlign}      
+      & \textbf{\meanstd{0.986}{0.001}} & \textbf{\meanstd{0.000}{0.000}} & \textbf{\meanstd{0.147}{0.002}} & \textbf{\meanstd{0.958}{0.003}}
+      & \textbf{\meanstd{0.930}{0.004}} & \textbf{\meanstd{0.076}{0.006}} & \meanstd{0.170}{0.008} & \textbf{\meanstd{0.843}{0.011}} \\
+      \arrayrulecolor{gray!60}
+\cmidrule(lr){2-11}
+\arrayrulecolor{black}
+  & \multirow{5}{*}{\centering CIFAR-10} 
+    & FedAvg      
+      & \meanstd{0.563}{0.008} & -- & -- & -- 
+      & \meanstd{0.460}{0.009} & -- & -- & -- \\
+  &  & Local-XAI      
+      & \meanstd{0.548}{0.008} & \meanstd{0.025}{0.002} & \meanstd{0.269}{0.014} & \meanstd{0.342}{0.011}
+      & \meanstd{0.473}{0.010} & \meanstd{0.028}{0.003} & \meanstd{0.189}{0.013} & \meanstd{0.293}{0.012} \\
+  &  & FedAttr-Agg      
+      & \textbf{\meanstd{0.574}{0.007}} & \meanstd{0.033}{0.003} & \meanstd{0.203}{0.010} & \meanstd{0.292}{0.010}
+      & \meanstd{0.446}{0.009} & \meanstd{0.036}{0.004} & \meanstd{0.161}{0.010} & \meanstd{0.229}{0.011} \\
+  &  & Fed-XAI      
+      & \meanstd{0.282}{0.006} & \meanstd{0.064}{0.004} & \meanstd{0.152}{0.006} & \meanstd{0.229}{0.007}
+      & \meanstd{0.150}{0.007} & \meanstd{0.353}{0.007} & \meanstd{0.114}{0.005} & \meanstd{0.230}{0.007} \\
+  &  & \texttt{xFedAlign}      
+      & \meanstd{0.561}{0.007} & \textbf{\meanstd{0.016}{0.002}} & \textbf{\meanstd{0.148}{0.010}} & \textbf{\meanstd{0.345}{0.010}}
+      & \textbf{\meanstd{0.460}{0.007}} & \textbf{\meanstd{0.027}{0.003}} & \textbf{\meanstd{0.119}{0.009}} & \textbf{\meanstd{0.327}{0.009}} \\
+\midrule
+\multirow{10}{*}{\centering Text} 
+  & \multirow{5}{*}{\centering AG News} 
+    & FedAvg      
+      & \meanstd{0.739}{0.004} & -- & -- & -- 
+      & \meanstd{0.707}{0.005} & -- & -- & -- \\
+  &  & Local-XAI      
+      & \textbf{\meanstd{0.755}{0.005}} & \meanstd{0.302}{0.011} & \meanstd{0.355}{0.012} & \textbf{\meanstd{0.794}{0.012}}
+      & \meanstd{0.706}{0.003} & \meanstd{0.263}{0.011} & \meanstd{0.282}{0.012} & \textbf{\meanstd{0.748}{0.013}} \\
+  &  & FedAttr-Agg      
+      & \meanstd{0.729}{0.002} & \meanstd{0.421}{0.012} & \meanstd{0.379}{0.014} & \meanstd{0.788}{0.013}
+      & \meanstd{0.706}{0.005} & \meanstd{0.416}{0.013} & \meanstd{0.280}{0.012} & \meanstd{0.743}{0.012} \\
+  &  & Fed-XAI      
+      & \meanstd{0.722}{0.003} & \meanstd{0.096}{0.006} & \meanstd{0.269}{0.011} & \meanstd{0.634}{0.010}
+      & \meanstd{0.593}{0.006} & \meanstd{0.211}{0.009} & \meanstd{0.268}{0.010} & \meanstd{0.552}{0.011} \\
+  &  & \texttt{xFedAlign}      
+      & \meanstd{0.753}{0.005} & \textbf{\meanstd{0.009}{0.002}} & \textbf{\meanstd{0.264}{0.010}} & \meanstd{0.784}{0.011}
+      & \textbf{\meanstd{0.710}{0.006}} & \textbf{\meanstd{0.166}{0.008}} & \textbf{\meanstd{0.263}{0.010}} & \meanstd{0.735}{0.011} \\
+      \arrayrulecolor{gray!60}
+\cmidrule(lr){2-11}
+\arrayrulecolor{black}
+  & \multirow{5}{*}{\centering IMDb} 
+    & FedAvg      
+      & \meanstd{0.845}{0.004} & -- & -- & -- 
+      & \meanstd{0.550}{0.006} & -- & -- & -- \\
+  &  & Local-XAI      
+      & \meanstd{0.851}{0.004} & \meanstd{0.045}{0.006} & \meanstd{0.509}{0.015} & \meanstd{0.762}{0.013}
+      & \meanstd{0.610}{0.007} & \meanstd{0.129}{0.010} & \meanstd{0.512}{0.016} & \meanstd{0.543}{0.014} \\
+  &  & FedAttr-Agg      
+      & \textbf{\meanstd{0.851}{0.003}} & \meanstd{0.049}{0.003} & \meanstd{0.590}{0.015} & \meanstd{0.647}{0.014}
+      & \meanstd{0.505}{0.007} & \meanstd{0.206}{0.011} & \meanstd{0.533}{0.016} & \meanstd{0.521}{0.015} \\
+  &  & Fed-XAI      
+      & \meanstd{0.816}{0.002} & \meanstd{0.178}{0.008} & \textbf{\meanstd{0.497}{0.013}} & \meanstd{0.740}{0.012}
+      & \meanstd{0.500}{0.007} & \meanstd{0.336}{0.013} & \meanstd{0.518}{0.016} & \meanstd{0.496}{0.015} \\
+  &  & \texttt{xFedAlign}      
+      & \meanstd{0.845}{0.004} & \textbf{\meanstd{0.041}{0.005}} & \meanstd{0.504}{0.009} & \textbf{\meanstd{0.778}{0.010}}
+      & \textbf{\meanstd{0.702}{0.007}} & \textbf{\meanstd{0.043}{0.008}} & \textbf{\meanstd{0.485}{0.015}} & \textbf{\meanstd{0.568}{0.011}} \\
+\midrule
+\multirow{10}{*}{\centering Tabular} 
+  & \multirow{5}{*}{\centering UCI Adult} 
+    & FedAvg      
+      & \meanstd{0.845}{0.003} & -- & -- & -- 
+      & \meanstd{0.797}{0.004} & -- & -- & -- \\
+  &  & Local-XAI      
+      & \meanstd{0.844}{0.003} & \textbf{\meanstd{0.003}{0.000}} & \meanstd{0.658}{0.012} & \meanstd{0.774}{0.005}
+      & \meanstd{0.751}{0.005} & \meanstd{0.059}{0.004} & \meanstd{0.733}{0.014} & \meanstd{0.763}{0.013} \\
+  &  & FedAttr-Agg      
+      & \meanstd{0.844}{0.004} & \meanstd{0.016}{0.001} & \meanstd{0.679}{0.013} & \meanstd{0.762}{0.012}
+      & \textbf{\meanstd{0.842}{0.004}} & \meanstd{0.127}{0.005} & \meanstd{0.694}{0.013} & \meanstd{0.767}{0.013} \\
+  &  & Fed-XAI      
+      & \meanstd{0.830}{0.006} & \meanstd{0.008}{0.001} & \meanstd{0.694}{0.013} & \meanstd{0.710}{0.008}
+      & \meanstd{0.790}{0.004} & \meanstd{0.056}{0.004} & \meanstd{0.685}{0.012} & \meanstd{0.678}{0.012} \\
+  &  & \texttt{xFedAlign}      
+      & \textbf{\meanstd{0.855}{0.002}} & \meanstd{0.004}{0.001} & \textbf{\meanstd{0.646}{0.012}} & \textbf{\meanstd{0.785}{0.012}}
+      & \meanstd{0.799}{0.004} & \textbf{\meanstd{0.004}{0.001}} & \textbf{\meanstd{0.609}{0.011}} & \textbf{\meanstd{0.772}{0.013}} \\
+      \arrayrulecolor{gray!60}
+\cmidrule(lr){2-11}
+\arrayrulecolor{black}
+  & \multirow{5}{*}{\centering UCI Credit} 
+    & FedAvg      
+      & \meanstd{0.300}{0.010} & -- & -- & -- 
+      & \meanstd{0.315}{0.010} & -- & -- & -- \\
+  &  & Local-XAI      
+      & \meanstd{0.710}{0.012} & \meanstd{0.011}{0.001} & \meanstd{0.510}{0.014} & \meanstd{0.513}{0.014}
+      & \meanstd{0.635}{0.013} & \meanstd{0.072}{0.005} & \meanstd{0.506}{0.017} & \meanstd{0.514}{0.006} \\
+  &  & FedAttr-Agg      
+      & \meanstd{0.655}{0.011} & \meanstd{0.025}{0.002} & \meanstd{0.501}{0.013} & \meanstd{0.504}{0.013}
+      & \meanstd{0.445}{0.012} & \meanstd{0.097}{0.005} & \meanstd{0.501}{0.010} & \meanstd{0.494}{0.017} \\
+  &  & Fed-XAI      
+      & \meanstd{0.675}{0.009} & \meanstd{0.014}{0.002} & \meanstd{0.504}{0.011} & \meanstd{0.542}{0.014}
+      & \meanstd{0.625}{0.012} & \meanstd{0.015}{0.002} & \meanstd{0.501}{0.012} & \meanstd{0.531}{0.013} \\
+  &  & \texttt{xFedAlign}      
+      & \textbf{\meanstd{0.735}{0.013}} & \textbf{\meanstd{0.009}{0.002}} & \textbf{\meanstd{0.397}{0.012}} & \textbf{\meanstd{0.628}{0.012}}
+      & \textbf{\meanstd{0.725}{0.012}} & \textbf{\meanstd{0.012}{0.002}} & \textbf{\meanstd{0.478}{0.014}} & \textbf{\meanstd{0.627}{0.007}} \\
+\bottomrule
+\end{tabular}
+}%
+\end{table*}
+
+\section{Experimental Results \& Analyses} \label{sec:results}
+
+Using the experimental setup in Section~\ref{experimental-setup}, we evaluate \texttt{xFedAlign} along three objectives: task accuracy and explanation fidelity; cross-client consistency under IID and non-IID heterogeneity; and privacy leakage and robustness to attribution poisoning. These objectives correspond to the three research questions (RQ1--RQ3) introduced at the beginning of Section~\ref{experimental-setup}. All results are averaged over five independent runs with newly sampled client partitions and random seeds, and we report mean$\pm$std.
+
+\subsection{Accuracy, Consistency, and Fidelity Across Modalities}
+
+Table~\ref{tab:fedxai_results} shows that \texttt{xFedAlign} preserves task accuracy while improving explanation consistency and fidelity across modalities and partitions. On MNIST, it matches \textbf{FedAvg} under IID (\(\meanstd{0.986}{0.001}\)) and non-IID (\(\meanstd{0.930}{0.004}\)) while achieving the lowest EDI in both regimes, including near-zero drift under IID. It also shows strong perturbation behavior, with near-optimal deletion and top insertion AUCs in IID and a large insertion gain in non-IID.
+
+On CIFAR-10, where linear saliency and interpretable-only models struggle, \texttt{xFedAlign} reduces EDI under IID and non-IID, achieves the best deletion and insertion AUCs, and maintains accuracy within the \textbf{FedAvg} range. Similar trends hold for text and tabular benchmarks: \texttt{xFedAlign} yields the lowest EDI on AG News, IMDb, and Credit, achieves strong perturbation AUCs, improves accuracy on Adult IID, and leads both accuracy and explanation quality on Credit.
+
+Baselines show expected trade-offs. \textbf{Local-XAI} keeps local fidelity but EDI rises sharply under non-IID, indicating unstable cross-client semantics. \textbf{FedAttr-Agg} improves comparability via pooling but produces coarse summaries that weaken perturbation fidelity, while \textbf{Fed-XAI} can reduce EDI on simple IID vision tasks but loses accuracy on harder datasets and under non-IID. In contrast, \texttt{xFedAlign} combines accuracy parity with low drift and strong perturbation fidelity across modalities. The same pattern holds on MRI Alzheimer's disease (non-IID: $0.779$ accuracy, $\mathrm{EDI}=0.0018$, vs.\ $0.464$/$0.048$ for FedAvg/Local-XAI) and credit card fraud detection (Appendix~\ref{app:additional-results}). We further evaluate scalability and provide qualitative aligned examples in Appendices~\ref{app:scalability-clients} and~\ref{app:qualitative}.
+
+
+
+
+\begin{figure*}[t]
+\centering
+
+% Add legend first as a separate element
+\begin{tikzpicture}
+\begin{axis}[
+  hide axis,
+  xmin=0, xmax=1,
+  ymin=0, ymax=1,
+  legend style={
+    draw=none,
+    legend columns=5,
+    /tikz/every even column/.append style={column sep=0.3cm},
+    column sep=0.2cm,
+  },
+  legend cell align=left,
+]
+\addlegendimage{black, mark=o, mark size=2.5pt, solid, line width=1.5pt}
+\addlegendentry{FedAvg}
+\addlegendimage{cyan!60!blue, mark=square*, mark size=2.5pt, densely dotted, line width=1.5pt}
+\addlegendentry{Local-XAI}
+\addlegendimage{red!70!black, mark=triangle*, mark size=3pt, dashed, line width=1.5pt}
+\addlegendentry{FedAttr-Agg}
+\addlegendimage{orange!90!red, mark=diamond*, mark size=2.5pt, dashdotted, line width=1.5pt}
+\addlegendentry{Fed-XAI}
+\addlegendimage{magenta!80!blue, mark=star, mark size=3.2pt, densely dashed, line width=1.5pt}
+\addlegendentry{xFedAlign}
+\end{axis}
+\end{tikzpicture}
+
+% Wrap the WHOLE plots tikzpicture (not the legend) in a resizebox.
+% Add \usepackage{graphicx} in the preamble if not already.
+
+% --- keep your legend tikzpicture as-is above ---
+
+\vspace{0.3em}
+
+% -------- Optimized plot sizing --------
+\pgfplotsset{
+  atkplot/.style={
+    width=0.21\linewidth,
+    height=0.175\linewidth,
+    scale only axis,
+    grid=both,
+    grid style={line width=.2pt, draw=gray!25},
+    major grid style={line width=.3pt, draw=gray!35},
+    tick align=outside,
+    tick style={black},
+    axis line style={black},
+    line width=1.0pt,
+    xlabel style={font=\small},
+    ylabel style={font=\small},
+    tick label style={font=\scriptsize},
+    xmin=0.00, xmax=0.40,
+    xtick={0.00,0.10,0.20,0.30,0.40},
+    clip=true,
+  },
+  fedavg/.style={color=black, mark=o, mark size=3.2pt, solid, line width=1.6pt, mark options={solid, fill=black}},
+  localxai/.style={color=cyan!60!blue, mark=square*, mark size=3.2pt, densely dotted, line width=1.6pt, mark options={solid, fill=cyan!60!blue}},
+  fedattr/.style={color=red!70!black, mark=triangle*, mark size=3.7pt, dashed, line width=1.6pt, mark options={solid, fill=red!70!black}},
+  fedxai/.style={color=orange!90!red, mark=diamond*, mark size=3.2pt, dashdotted, line width=1.6pt, mark options={solid, fill=orange!90!red}},
+  xfedalign/.style={color=magenta!80!blue, mark=star, mark size=4.0pt, densely dashed, line width=1.6pt, mark options={solid, fill=magenta!80!blue}},
+}
+
+% --------- THIS is the wrap that guarantees no overflow ----------
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}
+
+\begin{groupplot}[
+  group style={
+    group size=5 by 1,
+    horizontal sep=0.02\linewidth,
+    vertical sep=0pt,
+    ylabels at=edge left,
+    yticklabels at=edge left,
+  },
+  atkplot,
+  xlabel={Poison strength},
+  x label style={at={(axis description cs:0.5,-0.15)}, anchor=north},
+]
+
+% (a) IID: 1-overlap@128
+\nextgroupplot[
+  ymin=-0.03, ymax=0.43,
+  ytick={0.00,0.10,0.20,0.30,0.40},
+  ylabel={$1-\mathrm{overlap}@128$},
+  title={(a) IID: $\Delta$ Top-128},
+  title style={font=\small, at={(0.5,-0.42)}, anchor=north},
+]
+\addplot+[fedavg, forget plot]   coordinates {(0.00,0.00) (0.10,0.01) (0.20,0.38) (0.30,0.38) (0.40,0.38)};
+\addplot+[localxai, forget plot] coordinates {(0.00,0.00) (0.10,0.01) (0.20,0.38) (0.30,0.38) (0.40,0.38)};
+\addplot+[fedattr, forget plot]  coordinates {(0.00,0.00) (0.10,0.01) (0.20,0.38) (0.30,0.38) (0.40,0.38)};
+\addplot+[fedxai, forget plot]   coordinates {(0.00,0.00) (0.10,0.01) (0.20,0.38) (0.30,0.38) (0.40,0.38)};
+\addplot+[xfedalign, forget plot] coordinates {(0.00,0.00) (0.10,0.00) (0.20,0.02) (0.30,0.21) (0.40,0.38)};
+
+% (b) Non-IID: 1-overlap@128
+\nextgroupplot[
+  ymin=-0.03, ymax=0.43,
+  ytick={0.00,0.10,0.20,0.30,0.40},
+  yticklabels={},
+  title={(b) Non-IID: $\Delta$ Top-128},
+  title style={font=\small, at={(0.5,-0.42)}, anchor=north},
+]
+\addplot+[fedavg, forget plot]    coordinates {(0.00,0.00) (0.10,0.01) (0.20,0.38) (0.30,0.38) (0.40,0.38)};
+\addplot+[localxai, forget plot]  coordinates {(0.00,0.00) (0.10,0.01) (0.20,0.38) (0.30,0.38) (0.40,0.38)};
+\addplot+[fedattr, forget plot]   coordinates {(0.00,0.00) (0.10,0.02) (0.20,0.38) (0.30,0.38) (0.40,0.38)};
+\addplot+[fedxai, forget plot]    coordinates {(0.00,0.00) (0.10,0.08) (0.20,0.38) (0.30,0.38) (0.40,0.38)};
+\addplot+[xfedalign, forget plot] coordinates {(0.00,0.00) (0.10,0.00) (0.20,0.10) (0.30,0.33) (0.40,0.38)};
+
+% spacer axis
+\nextgroupplot[hide axis, width=0.04\linewidth]
+
+% (c) IID: ΔEDI
+\nextgroupplot[
+  ymin=-0.003, ymax=0.020,
+  ytick={0.000,0.005,0.010,0.015,0.020},
+  ylabel={$\Delta \mathrm{EDI}$},
+  ylabel style={yshift=-2pt},
+  yticklabel style={/pgf/number format/fixed, /pgf/number format/precision=3},
+  title={(c) IID: $\Delta$ EDI},
+  title style={font=\small, at={(0.5,-0.42)}, anchor=north},
+]
+\addplot+[fedxai, forget plot]    coordinates {(0.00,0.0000) (0.10,0.0020) (0.20,0.0055) (0.30,0.0100) (0.40,0.0155)};
+\addplot+[localxai, forget plot]  coordinates {(0.00,0.0000) (0.10,0.0012) (0.20,0.0042) (0.30,0.0077) (0.40,0.0117)};
+\addplot+[fedattr, forget plot]   coordinates {(0.00,0.0000) (0.10,0.0011) (0.20,0.0040) (0.30,0.0076) (0.40,0.0116)};
+\addplot+[fedavg, forget plot]    coordinates {(0.00,0.0000) (0.10,0.0010) (0.20,0.0040) (0.30,0.0075) (0.40,0.0115)};
+\addplot+[xfedalign, forget plot] coordinates {(0.00,0.0000) (0.10,0.0000) (0.20,0.0015) (0.30,0.0045) (0.40,0.0087)};
+
+% (d) Non-IID: ΔEDI
+\nextgroupplot[
+  ymin=-0.003, ymax=0.020,
+  ytick={0.000,0.005,0.010,0.015,0.020},
+  yticklabels={},
+  yticklabel style={/pgf/number format/fixed, /pgf/number format/precision=3},
+  title={(d) Non-IID: $\Delta$ EDI},
+  title style={font=\small, at={(0.5,-0.42)}, anchor=north},
+]
+\addplot+[fedxai, forget plot]    coordinates {(0.00,0.0000) (0.10,0.0018) (0.20,0.0058) (0.30,0.0106) (0.40,0.0160)};
+\addplot+[localxai, forget plot]  coordinates {(0.00,0.0000) (0.10,0.0011) (0.20,0.0040) (0.30,0.0070) (0.40,0.0110)};
+\addplot+[fedavg, forget plot]    coordinates {(0.00,0.0000) (0.10,0.0010) (0.20,0.0038) (0.30,0.0068) (0.40,0.0108)};
+\addplot+[fedattr, forget plot]   coordinates {(0.00,0.0000) (0.10,0.0010) (0.20,0.0037) (0.30,0.0069) (0.40,0.0107)};
+\addplot+[xfedalign, forget plot] coordinates {(0.00,0.0000) (0.10,0.0000) (0.20,0.0016) (0.30,0.0048) (0.40,0.0090)};
+
+\end{groupplot}
+\end{tikzpicture}%
+} % end resizebox
+
+
+\vspace{-0.2em}
+\caption{Attribution poisoning analysis for federated explanation methods under IID and non-IID client splits. Panels (a) and (b) plot $\Delta(1\!-\!\text{overlap}@128)$, the increase in the fraction of top-128 attribution groups that differ between clean and attacked explanations, while panels (c) and (d) plot the change in the Explanation Drift Index (EDI), which measures cross-client semantic dispersion, both as functions of poisoning strength. Larger $\Delta(1\!-\!\text{overlap}@128)$ and $\Delta\text{EDI}$ indicate that the attack pushes explanations further from their clean reference and amplifies cross-client drift, corresponding to lower robustness.}
+\label{fig:atk_robustness_grid}
+\vspace{-0.7em}
+\end{figure*}
+
+
+
+
+\begin{table}[t]
+\centering
+\small
+\caption{Privacy and robustness on \textbf{MNIST} (IID and non-IID partitions) under membership inference and attribution poisoning. MI Acc / MI Adv capture privacy, while $\Delta$Top@128 (mean change in $1-\text{overlap@128}$) and $\Delta$EDI capture robustness to attribution poisoning.}
+\label{tab:atk_priv_robust}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lcccc}
+\toprule
+Method & MI Acc (↓) & MI Adv (↓) & $\Delta$Top@128 (↓) & $\Delta$EDI (↓) \\
+\midrule
+\multicolumn{5}{l}{\textbf{IID}} \\
+FedAvg      
+  & \meanstd{0.460}{0.007} & \meanstd{0.005}{0.002} 
+  & \meanstd{0.231}{0.012} & \meanstd{0.005}{0.001} \\
+Local-XAI   
+  & \meanstd{0.460}{0.006} & \textbf{\meanstd{0.001}{0.001}} 
+  & \meanstd{0.231}{0.011} & \meanstd{0.005}{0.001} \\
+FedAttr-Agg 
+  & \meanstd{0.460}{0.008} & \meanstd{0.005}{0.002} 
+  & \meanstd{0.231}{0.010} & \meanstd{0.005}{0.001} \\
+Fed-XAI     
+  & \meanstd{0.446}{0.009} & \meanstd{0.007}{0.003} 
+  & \meanstd{0.233}{0.013} & \meanstd{0.007}{0.002} \\
+\texttt{xFedAlign}   
+  & \textbf{\meanstd{0.434}{0.010}} & \meanstd{0.004}{0.002} 
+  & \textbf{\meanstd{0.122}{0.009}} & \textbf{\meanstd{0.003}{0.001}} \\
+\midrule
+\multicolumn{5}{l}{\textbf{Non-IID}} \\
+FedAvg      
+  & \meanstd{0.570}{0.010} & \meanstd{0.015}{0.004} 
+  & \meanstd{0.233}{0.012} & \meanstd{0.004}{0.001} \\
+Local-XAI   
+  & \meanstd{0.570}{0.011} & \meanstd{0.015}{0.004} 
+  & \meanstd{0.233}{0.013} & \meanstd{0.005}{0.001} \\
+FedAttr-Agg 
+  & \meanstd{0.570}{0.009} & \meanstd{0.015}{0.003} 
+  & \meanstd{0.233}{0.011} & \meanstd{0.004}{0.001} \\
+Fed-XAI     
+  & \meanstd{0.463}{0.008} & \meanstd{0.006}{0.002} 
+  & \meanstd{0.245}{0.014} & \meanstd{0.007}{0.002} \\
+\texttt{xFedAlign}   
+  & \textbf{\meanstd{0.463}{0.007}} & \textbf{\meanstd{0.004}{0.002}} 
+  & \textbf{\meanstd{0.163}{0.010}} & \textbf{\meanstd{0.003}{0.001}} \\
+\bottomrule
+\end{tabular}
+}%
+\end{table}
+
+\subsection{Privacy Leakage and Robustness to Attribution Poisoning}
+
+We evaluate privacy via membership inference and robustness via attribution poisoning on MNIST under IID and non-IID partitions. As shown in Table~\ref{tab:atk_priv_robust}, \texttt{xFedAlign} achieves the lowest membership inference accuracy in both settings and the lowest membership inference advantage in the non-IID setting (\(\text{MI Acc}=0.434,\,\text{MI Adv}=0.004\) IID; \(\text{MI Acc}=0.463,\,\text{MI Adv}=0.004\) non-IID), matching or outperforming baselines overall. Under poisoning attacks, \texttt{xFedAlign} exhibits the smallest degradation in both top-\(k\) overlap and explanation drift, with \(\Delta\text{Top}@128=0.122\) and \(\Delta\text{EDI}=0.003\) in IID and \(\Delta\text{Top}@128=0.163\) and \(\Delta\text{EDI}=0.003\) in non-IID, indicating strong resistance. These trends persist across attack strengths (Figure~\ref{fig:atk_robustness_grid}), where methods relying on raw or coarse attribution sharing degrade rapidly and interpretable-only Fed-XAI is most vulnerable. In contrast, \texttt{xFedAlign} benefits from transmitting only lightly noised top-\(k\) artifacts, robust median aggregation into the Global Prior, and JSD-based alignment, which jointly reduce leakage and damp adversarial influence.  For completeness, Appendix~\ref{app:robustness} details the threat models and evaluation protocol and reports additional per-$\rho$ poisoning results (Table~\ref{tab:atk_delta_tables}) that support the aggregate trends in Table~\ref{tab:atk_priv_robust} and Figure~\ref{fig:atk_robustness_grid}.
+
+
+
+
+
+
+
+
+
+\begin{table}[t]
+\centering
+\small
+
+\caption{Ablation of alignment strength $\beta$, DP noise scale $\sigma$, sparsity level $k$, and surrogate epochs $e$ (five seeds). Each block varies a single factor while holding all others fixed at the default configuration ($\beta=0.2$, $\sigma=0.1$, $k=128$, $e=1$); the bolded value in each block is the best within that factor. EDI tracks cross-client explanation consistency (lower is better), DelAUC measures degradation under feature removal (lower is better), and InsAUC measures gain under feature insertion (higher is better). The $\beta=0$ row reduces to a Local-XAI-style variant; comparing it to $\beta>0$ rows isolates the effect of the alignment term.}
+
+\resizebox{0.95\columnwidth}{!}{
+\begin{tabular}{c c c c c}
+\toprule
+Ablation & Value & EDI $\downarrow$ & DelAUC $\downarrow$ & InsAUC $\uparrow$ \\
+\midrule
+
+\multirow{5}{*}{$\beta$ (alignment)}
+ & 0.0  & $\meanstd{0.0925}{0.0006}$ & $\meanstd{0.1715}{0.0067}$ & $\meanstd{0.9006}{0.0230}$ \\
+ & 0.05 & $\meanstd{0.0903}{0.0012}$ & $\meanstd{0.1696}{0.0042}$ & $\meanstd{0.8997}{0.0228}$ \\
+ & 0.1  & $\meanstd{0.0876}{0.0012}$ & $\meanstd{0.1699}{0.0045}$ & $\meanstd{0.8999}{0.0227}$ \\
+ & 0.2  & $\meanstd{0.0841}{0.0007}$ & $\meanstd{0.1691}{0.0056}$ & $\meanstd{0.9001}{0.0209}$ \\
+ & 0.4  & $\mathbf{\meanstd{0.0793}{0.0008}}$ & $\meanstd{0.1690}{0.0035}$ & $\meanstd{0.8996}{0.0230}$ \\
+\midrule
+
+\multirow{4}{*}{$\sigma$ (DP noise)}
+ & 0.0  & $\meanstd{0.1330}{0.0091}$ & $\meanstd{0.1698}{0.0034}$ & $\mathbf{\meanstd{0.9009}{0.0225}}$ \\
+ & 0.05 & $\meanstd{0.0819}{0.0007}$ & $\meanstd{0.1715}{0.0046}$ & $\meanstd{0.9000}{0.0231}$ \\
+ & 0.1  & $\meanstd{0.0843}{0.0007}$ & $\meanstd{0.1705}{0.0059}$ & $\meanstd{0.9002}{0.0224}$ \\
+ & 0.2  & $\meanstd{0.0852}{0.0012}$ & $\meanstd{0.1705}{0.0044}$ & $\meanstd{0.9002}{0.0224}$ \\
+\midrule
+
+\multirow{5}{*}{$k$ (top-$k$ sparsity)}
+ & 32  & $\meanstd{0.0848}{0.0010}$ & $\meanstd{0.1700}{0.0050}$ & $\meanstd{0.9000}{0.0234}$ \\
+ & 64  & $\meanstd{0.0844}{0.0011}$ & $\meanstd{0.1709}{0.0035}$ & $\meanstd{0.9000}{0.0215}$ \\
+ & 128 & $\meanstd{0.0842}{0.0009}$ & $\meanstd{0.1699}{0.0039}$ & $\meanstd{0.9006}{0.0229}$ \\
+ & 256 & $\meanstd{0.0839}{0.0015}$ & $\meanstd{0.1695}{0.0043}$ & $\meanstd{0.9004}{0.0229}$ \\
+ & 512 & $\meanstd{0.0840}{0.0011}$ & $\meanstd{0.1711}{0.0061}$ & $\meanstd{0.9000}{0.0229}$ \\
+\midrule
+
+\multirow{3}{*}{$e$ (surrogate epochs)}
+ & 1 & $\meanstd{0.0843}{0.0007}$ & $\meanstd{0.1720}{0.0058}$ & $\meanstd{0.8991}{0.0225}$ \\
+ & 2 & $\meanstd{0.0960}{0.0008}$ & $\meanstd{0.1700}{0.0069}$ & $\meanstd{0.8965}{0.0208}$ \\
+ & 4 & $\meanstd{0.1161}{0.0008}$ & $\mathbf{\meanstd{0.1687}{0.0076}}$ & $\meanstd{0.8977}{0.0210}$ \\
+\bottomrule
+\end{tabular}
+}
+\label{tab:ablation-no-acc}
+\end{table}
+
+\subsection{Sensitivity to Alignment, Noise, and Sparsification}
+
+Table~\ref{tab:ablation-no-acc} studies how \texttt{xFedAlign} behaves as we vary alignment strength, noise, sparsity, and surrogate refinement, while task accuracy stays essentially unchanged. Increasing the alignment weight \(\beta\) steadily reduces explanation drift (lower EDI) without meaningfully changing deletion or insertion AUC, showing that the Global Explanation Prior can improve cross-client consistency without sacrificing faithfulness. Adding light noise ($\sigma$) also lowers EDI compared to $\sigma{=}0$. This is because at $\sigma{=}0$ the prior is constructed from deterministic client artifacts that may overfit to local idiosyncrasies; mild noise ($\sigma\in[0.05,0.1]$) acts as implicit regularization that smooths client-specific noise in the artifact space before the coordinatewise median, helping the aggregator concentrate on shared signal rather than spurious local structure. The same mechanism contributes to the improved poisoning robustness in Table~\ref{tab:atk_priv_robust}: deterministic, sharp artifacts are easier for malicious clients to bias precisely. The effect diminishes at higher $\sigma$ ($\sigma{=}0.2$), consistent with excessive noise destroying signal.
+
+For sparsification, moderate top-$k$ values already capture the useful signal: performance peaks around \(k{=}128\!-\!256\), and larger payloads bring little benefit. More surrogate epochs can hurt stability (higher EDI), so we use \(\beta\in[0.1,0.2]\), \(\sigma\in[0.05,0.1]\), \(k\in\{128,256\}\), and \(e{=}1\). The $\beta=0$ row functions as a built-in component-wise ablation: setting $\beta=0$ removes the alignment loss while preserving the surrogate and artifact pipeline, and EDI rises from $0.084$ at $\beta=0.2$ to $0.093$, with deletion and insertion AUCs essentially unchanged. This isolates the alignment term as the primary driver of cross-client consistency without affecting local fidelity or task accuracy.
+
+\subsection{Computational and Communication Overhead}
+
+Let \(E\) be local epochs, \(B\) the number of local mini-batches per epoch (so \(E\!\cdot\!B\) is the number of SGD steps), \(S\) the number of attribution passes, and \(F_{\text{task}}\) the cost of one forward/backward step of the task model. Standard FL costs \(O(E\,B\,F_{\text{task}})\) per client per round and transmits a model update. Local-XAI adds \(O(S\,B\,F_{\text{task}})\) attribution computation without extra communication, while FedAttr-Agg further uploads \(O(G)\) summary statistics (for input dimension \(G\)); Fed-XAI instead trains an interpretable model with similar training cost but often trades accuracy for interpretability. In contrast, \texttt{xFedAlign} preserves the FedAvg task update and adds only a compact surrogate fit \(O(e\,B\,d)\) plus sparse artifact construction \(O(kC)\) per client; the server keeps parameter averaging and updates the GEP via coordinatewise median in \(O(K\,kC)\). Communication is limited to top-\(k\) artifacts per class: \(\approx kC(\lceil\log_2 G\rceil+b)/8\) bytes (MNIST: \(\sim 2.9\)KB/round for \(G{=}784,k{=}128,C{=}10,b{=}8\)), far below a full model update. 
+
+Overall, the added overhead scales with \(kC\) on the client and \(KkC\) on the server rather than with the input dimension \(G\) or model size \(|\theta|\), yielding near-FedAvg runtime with minimal bandwidth overhead. The surrogate remains on-device and is never transmitted, while the sparse explanation artifact is only a few kilobytes per round. See Appendix~\ref{app:additional-results} for measured runtimes and communication costs.
+
+
+\section{Conclusions \& Future Work}
+
+This paper presented \texttt{xFedAlign}, a model-agnostic framework for explainable FL that decouples task optimization from explanation coordination via adaptive client-side surrogates and a robustly aggregated Global Explanation Prior. By distilling lightweight surrogates that mimic the deployed task model and exchanging only sparse, clipped, quantized, and lightly noised top-$k$ artifacts under secure aggregation, the framework coordinates explanation semantics in a low-dimensional simplex over the group space rather than in the high-dimensional parameter space, leaving standard federated optimization dynamics intact. Across vision, text, and tabular benchmarks, \texttt{xFedAlign} matches FedAvg accuracy while substantially improving explanation consistency and perturbation-based fidelity under both IID and non-IID settings, with only a few kilobytes of additional communication per round and improved resistance to membership inference and attribution poisoning relative to representative baselines. The same pattern persists in real-world scenarios such as MRI Alzheimer's classification and credit card fraud detection, and remains stable as the federation scales to $128$ clients, suggesting that the proposed separation between task and explanation spaces is a practical design principle for trustworthy federated learning.
+
+The framework assumes a meaningful and relatively stable group space $\mathcal{G}$; when groups are ambiguous or feature semantics drift, the prior may require adaptive grouping or drift-aware updates. Future work will extend \texttt{xFedAlign} to regression (via group-space attributions over output quantiles or a discretized target grid), to federated language models, and to adaptive adversaries, while strengthening formal privacy and convergence guarantees for coupled task--explanation learning and incorporating expert-in-the-loop studies to assess the real-world utility of aligned explanations.
+
+\section*{Acknowledgements}
+This work was supported in part by the National Science Foundation under Award No.~2107450 and by the Army Research Office under Grant No.~W911NF-24-2-0241.
+
+% \section*{Reproducibility Statement}
+% To support reproducibility, a complete implementation of \texttt{xFedAlign}, including training, evaluation, ablation, and attack scripts for all benchmarks reported in this paper, is publicly available at \url{https://github.com/dawoodwasif/xFedAlign}. Dataset preprocessing, federated partitioning (Appendix~\ref{app:data-partitions}), task architectures and hyperparameters (Appendix~\ref{app:models}), and the membership inference and attribution poisoning protocols (Appendix~\ref{app:robustness}) are documented in the appendices and mirrored in the repository, and all reported numbers are averaged over five seeds with seeds and partition draws fixed in the released code.
+
+
+
+\section*{Impact Statement}
+This work studies explainable federated learning, with potential positive impact in healthcare, finance, and mobile platforms by enabling transparent decisions while preserving data locality. Coordinating explanations through compact, differentially-private artifacts reduces leakage relative to alternatives that share denser signals. We caution that explanation alignment improves cross-client consistency but does not guarantee fairness, calibration, or causal faithfulness; operators should pair these tools with task-appropriate evaluations. The privacy guarantees assume an honest-but-curious server with secure aggregation and Gaussian-mechanism DP at the artifact level; stronger threat models (e.g., Byzantine adversaries beyond the breakdown point of robust aggregation) require additional defenses. Beyond these considerations, this paper aims to advance the field of machine learning, and we do not foresee specific harms beyond those generally associated with ML-based decision systems.
+
+% In the unusual situation where you want a paper to appear in the
+% references without citing it in the main text, use \nocite
+% \nocite{langley00}
+
+\bibliography{references}
+\bibliographystyle{icml2026}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% APPENDIX
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\appendix
+\onecolumn
+
+
+% \section{You \emph{can} have an appendix here.}
+
+% You can have as much text here as you want. The main body must be at most $8$ pages long.
+% For the final version, one more page can be added.
+% If you want, you can use an appendix like this one.  
+
+% The $\mathtt{\backslash onecolumn}$ command above can be kept in place if you prefer a one-column appendix, or can be removed if you prefer a two-column appendix.  Apart from this possible change, the style (font size, spacing, margins, page numbering, etc.) should be kept the same as the main body.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\section{Theoretical Guarantees}
+\label{app:theory}
+
+\subsection{Preliminaries and Assumptions}
+
+For a fixed class $c$, recall the clientwise explanation summaries
+$\tilde{\bar{E}}^{(c)}_i \in \Delta^{|\mathcal{G}|-1}$ and the global prior
+$\Pi^{(c)} \in \Delta^{|\mathcal{G}|-1}$, both defined in the group space
+$\mathcal{G}$. The dispersion functional
+\begin{equation}
+\label{eq:disp-functional-theory}
+\mathcal{D}^{(c)}_t \;=\; \frac{1}{K}\sum_{i=1}^{K}
+\mathrm{JSD}\!\Big(\tilde{\bar{E}}^{(c)}_{i,t} \,\big\|\, \Pi^{(c)}_t\Big)
+\end{equation}
+measures cross-client inconsistency in explanation space at round $t$.
+The alignment penalty in Eq.~\eqref{eq:global-iclr} applies a
+Jensen--Shannon divergence term between $\tilde{\bar{E}}^{(c)}_{i,t}$ and
+$\Pi^{(c)}_t$, while the server updates $\Pi^{(c)}_t$ by robustly aggregating
+top-$k$ artifacts and renormalizing (Eq.~\eqref{eq:prior-iclr}).
+
+We work under the following mild assumptions.
+
+\begin{assumption}
+\label{ass:smooth-jsg}
+For each client $i$ and class $c$, the map
+$\Delta^{|\mathcal{G}|-1} \ni v \mapsto \mathrm{JSD}\big(v\,\|\,\Pi^{(c)}\big)$
+is $L$-smooth on the interior of the simplex, and the alignment update on
+client $i$ is a gradient step with step size $\eta \in (0,2/L)$.
+\end{assumption}
+
+\begin{assumption}
+\label{ass:robagg-nonexp}
+The robust aggregation operator $\operatorname{RobAgg}$ used in
+Eq.~\eqref{eq:prior-iclr} is nonexpansive in $\ell_1$, that is, for any two
+families $\{u_i\}_{i=1}^K$ and $\{v_i\}_{i=1}^K$ in the simplex,
+\[
+\big\|\operatorname{RobAgg}(\{u_i\}) - \operatorname{RobAgg}(\{v_i\})\big\|_1
+\;\le\; \frac{1}{K}\sum_{i=1}^K \|u_i - v_i\|_1.
+\]
+Coordinatewise median and trimmed mean satisfy this property.
+\end{assumption}
+
+\begin{assumption}
+\label{ass:lipschitz-sur}
+For each client $i$ and class $c$, the explanation summary
+$\tilde{\bar{E}}^{(c)}_{i,t}$ is Lipschitz in the prior $\Pi^{(c)}_t$, in the
+sense that there exists $L_{\Pi} > 0$ such that
+\[
+\big\|\tilde{\bar{E}}^{(c)}_{i,t+1} - \tilde{\bar{E}}^{(c)}_{i,t}\big\|_1
+\;\le\; L_{\Pi}\,\big\|\Pi^{(c)}_{t+1} - \Pi^{(c)}_{t}\big\|_1.
+\]
+This holds when the surrogate and alignment updates are Lipschitz in the prior.
+\end{assumption}
+
+\subsection{Dispersion Contraction Under Alignment and Robust Aggregation}
+
+We first show that the combination of client-side alignment and robust
+aggregation contracts the dispersion functional in Eq.~\eqref{eq:disp-functional-theory}.
+
+\begin{proposition}[Dispersion contraction]
+\label{prop:dispersion-contraction}
+Fix a class $c$ and suppose
+Assumptions~\ref{ass:smooth-jsg}--\ref{ass:lipschitz-sur} hold.
+Then there exist constants $\rho \in (0,1)$ and $\varepsilon \ge 0$
+(depending on $\eta$, $L$, $L_{\Pi}$, and the trimming fraction) such that
+for all rounds $t$
+\begin{equation}
+\label{eq:dispersion-contraction}
+\mathcal{D}^{(c)}_{t+1}
+\;\le\; \rho\,\mathcal{D}^{(c)}_{t} + \varepsilon.
+\end{equation}
+If the alignment and surrogate steps are run to stationarity so that the
+residual term vanishes ($\varepsilon = 0$), then
+$\mathcal{D}^{(c)}_{t}$ decreases monotonically and converges to a fixed point.
+\end{proposition}
+
+\paragraph{Sketch.}
+A gradient step on the JSD alignment term with step size
+$\eta \in (0,2/L)$ is a contraction in a neighborhood of $\Pi^{(c)}_t$.
+Nonexpansiveness of $\operatorname{RobAgg}$ transfers this contraction to the
+prior update, and the Lipschitz dependence of client summaries on the prior
+bounds the change in each $\tilde{\bar{E}}^{(c)}_{i,t}$. Averaging over
+clients gives Eq.~\eqref{eq:dispersion-contraction}. A full proof is given
+in Appendix~E.1.
+
+\subsection{Surrogate Fidelity and Stability}
+
+We next state a consistency result for the local surrogates that justify
+training in Eq.~\eqref{eq:surrogate-iclr}.
+
+\begin{assumption}
+\label{ass:surrogate-class}
+For each client $i$, the surrogate class $\mathcal{G}_i$ contains a function
+$g_i^\star$ such that
+$q_{g_i^\star}(x) = p_\theta(x)$ for all $x$ in the support of $D_i$ and
+$\Omega(g_i^\star) < \infty$. The regularizer $\Omega$ is nonnegative and
+attains its minimum at $g_i^\star$.
+\end{assumption}
+
+\begin{lemma}[Surrogate fidelity]
+\label{lem:surrogate-fidelity}
+Fix the task model $f_\theta$ and temperature $T$. Under
+Assumption~\ref{ass:surrogate-class}, any global minimizer
+$g_i^\dagger \in \mathcal{G}_i$ of the population surrogate loss
+$\mathcal{L}_{\mathrm{sur}}(g_i;\theta)$ in Eq.~\eqref{eq:surrogate-iclr}
+satisfies
+\begin{equation}
+\label{eq:surrogate-kl-zero}
+\mathbb{E}_{x\sim D_i}\!\Big[
+\mathrm{KL}\big(p_\theta(x)\,\|\,q_{g_i^\dagger}(x)\big)
+\Big] = 0,
+\end{equation}
+and therefore $q_{g_i^\dagger}(x) = p_\theta(x)$ almost surely on $D_i$.
+\end{lemma}
+
+\paragraph{Sketch.}
+The loss in Eq.~\eqref{eq:surrogate-iclr} is the sum of a nonnegative
+KL term and a nonnegative regularizer. Under
+Assumption~\ref{ass:surrogate-class}, $g_i^\star$ attains zero KL and the
+minimum of $\Omega$, hence any global minimizer cannot have strictly larger
+KL. Nonnegativity forces Eq.~\eqref{eq:surrogate-kl-zero}. Details and
+finite-sample extensions appear in Appendix~E.2.
+
+Surrogate stability with respect to small changes in the prior follows
+from standard stability of smooth convex objectives.
+
+\begin{lemma}[Lipschitz stability of explanations]
+\label{lem:surrogate-stability}
+Suppose the surrogate objective on client $i$ is $\mu$-strongly convex in the
+surrogate parameters and $L_\Pi$-Lipschitz in the prior $\Pi$. Then the
+resulting per-class explanation summary $\tilde{\bar{E}}^{(c)}_i$ is
+Lipschitz in $\Pi^{(c)}$, with constant $O(L_\Pi/\mu)$. In particular,
+Assumption~\ref{ass:lipschitz-sur} holds.
+\end{lemma}
+
+\subsection{Privacy and Communication Guarantees}
+
+The privacy layer of \texttt{xFedAlign} relies on clipping, top-$k$
+sparsification, secure aggregation, and additive noise. We formalize the
+sensitivity and per-round privacy guarantee for the explanation artifacts.
+
+Let $S_i^{(c)} \in \mathbb{R}^{|\mathcal{G}|}$ denote the dense client
+summary for class $c$ before top-$k$ projection and clipping, and let
+$\hat{S}_i^{(c)}$ be its clipped, top-$k$ version with
+$\ell_1$-norm bounded by $\tau$. Let $\tilde{S}_i^{(c)}$ denote the result
+after adding independent Gaussian noise with variance $\sigma^2$ on each
+active coordinate.
+
+\begin{proposition}[Bounded sensitivity and per-round DP]
+\label{prop:dp}
+For each class $c$, the mapping from the local dataset $D_i$ to the noised
+summary $\tilde{S}_i^{(c)}$ has $\ell_2$-sensitivity at most $2\tau$. For a
+fixed noise scale $\sigma$ chosen according to the Gaussian mechanism, the
+per-round release of $\{\tilde{S}_i^{(c)}\}_{c=1}^C$ is
+$(\varepsilon,\delta)$-differentially private at the client level. Because
+secure aggregation reveals only the average of noised summaries and not any
+individual $\tilde{S}_i^{(c)}$, the broadcast prior $\Pi^{(c)}$ inherits the
+same $(\varepsilon,\delta)$ guarantee. Across $T$ rounds, advanced
+composition yields an overall $(\varepsilon_T,\delta_T)$-DP guarantee.
+\end{proposition}
+
+Communication cost is controlled directly by the sparsity level $k$ and the
+quantization precision.
+
+\begin{proposition}[Communication complexity]
+\label{prop:comm}
+For each client and round, the explanation artifact consists of $C$ sparse
+vectors with at most $k$ nonzero entries each, plus $b$-bit quantized
+magnitudes and indices. The total payload per client per round is
+\begin{equation}
+\label{eq:comm-complexity}
+\mathcal{O}\big(Ck(\log|\mathcal{G}| + b)\big) \;\text{bits},
+\end{equation}
+which is in the kilobyte range for the $C$ and $k$ used in our experiments.
+\end{proposition}
+
+\subsection{Convergence of the Federated Objective}
+
+Finally, we observe that \texttt{xFedAlign} optimizes the global objective in
+Eq.~\eqref{eq:global-iclr} by standard stochastic federated updates.
+
+\begin{assumption}
+\label{ass:fed-convergence}
+The task loss $\ell(f_\theta(x),y)$, the surrogate loss, and the JSD alignment
+term are $L_f$-smooth in $\theta$ and $g_i$, and the stochastic gradients have
+bounded variance. The server uses diminishing step sizes that satisfy the
+standard Robbins--Monro conditions.
+\end{assumption}
+
+\begin{theorem}[Convergence to stationary points]
+\label{thm:fed-convergence}
+Under Assumption~\ref{ass:fed-convergence}, the iterates produced by
+\texttt{xFedAlign} converge to a stationary point of the global objective in
+Eq.~\eqref{eq:global-iclr} in the same sense as FedAvg on a smooth objective:
+\[
+\lim_{t\to\infty}\mathbb{E}\big[\|\nabla_\theta \mathcal{L}_{\text{global}}(\theta_t)\|^2\big] = 0.
+\]
+The alignment and surrogate terms do not change the convergence rate class,
+they only modify the underlying smooth objective that the federated optimizer
+minimizes.
+\end{theorem}
+
+This section shows that \texttt{xFedAlign} contracts cross-client dispersion
+in explanation space, learns surrogates that faithfully track the task model,
+preserves formal privacy under secure aggregation with clipped and noised
+artifacts, and inherits standard convergence guarantees of modern federated
+optimizers.
+
+
+
+\section{Summary of Notations}
+\label{app:notation}
+
+Table~\ref{tab:notation} summarizes the notations used throughout the paper.
+
+\begin{table}[h]
+\centering
+\small
+\caption{Notations and their meanings.}
+\label{tab:notation}
+\begin{tabular}{ll}
+\toprule
+Symbol & Meaning \\
+\midrule
+$K$ & Number of federated clients \\
+$\mathcal{A}_t$ & Set of clients participating in round $t$ \\
+$C$ & Number of classes \\
+$D_i$ & Local dataset on client $i$ \\
+$f_\theta$ & Task model with parameters $\theta$ \\
+$g_i$ & Surrogate model on client $i$ \\
+$\mathcal{G}$ & Modality-agnostic group space (shared across clients) \\
+$G = |\mathcal{G}|$ & Number of groups (e.g., pixels for images, tokens for text) \\
+$T$ & Distillation temperature \\
+$p_\theta(x), q_{g_i}(x)$ & Tempered softmax outputs of task and surrogate models \\
+$E_i^{(c)}(x)$ & Per-example integrated-gradient attribution for class $c$ \\
+$\tilde{E}_i^{(c)}(x)$ & Simplex-normalized per-example attribution \\
+$\bar{E}_i^{(c)}$ & Mean per-class explanation summary on client $i$ \\
+$\tilde{\bar{E}}_i^{(c)}$ & Top-$k$ projected, simplex-normalized client summary \\
+$S_i^{(c)}, \bar{z}_i^{(c)}$ & Sparse, clipped, quantized, noised explanation artifact \\
+$\Pi^{(t,c)}$ & Global Explanation Prior for class $c$ at round $t$ \\
+$k$ & Top-$k$ sparsity level for artifacts \\
+$r_{\mathrm{clip}}$ & $\ell_2$ clipping radius for artifacts \\
+$\sigma$ & Gaussian noise scale (DP) \\
+$b$ & Quantization bit-width \\
+$\beta$ & Alignment loss weight \\
+$\alpha$ & Surrogate loss weight \\
+$\lambda$ & Surrogate sparsity penalty \\
+$R_{\mathrm{sur}}$ & Surrogate refit cadence (rounds) \\
+$e$ & Surrogate refinement epochs per refit \\
+$\mathrm{KL}(P\,\|\,Q)$ & Kullback--Leibler divergence \\
+$\mathrm{JSD}(P\,\|\,Q)$ & Jensen--Shannon divergence, $\tfrac{1}{2}\mathrm{KL}(P\|M)+\tfrac{1}{2}\mathrm{KL}(Q\|M)$, $M=\tfrac{1}{2}(P+Q)$ \\
+$\mathcal{D}^{(c)}$ & Cross-client dispersion for class $c$ (Eq.~\ref{eq:disp-iclr2}) \\
+$\mathrm{EDI}$ & Explanation Drift Index (Eq.~\ref{eq:edi}) \\
+$\rho$ & Fraction of poisoned clients in attribution attack \\
+$\Delta\mathrm{Top}@k$, $\Delta\mathrm{EDI}$ & Poisoning-induced changes in top-$k$ overlap and EDI \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\section{Threat Model and Attacks}
+\label{app:threat-model}
+
+\subsection{Adversarial Views and Capabilities}
+
+We distinguish the following views of the system.
+
+\textbf{Black box external adversary.} The attacker queries a deployed client model through its prediction API and receives probability vectors $p_\theta(x)$ and, in some scenarios, local group explanations $\tilde{E}_i^{(c)}(x)$ and the broadcast Global Explanation Prior $\Pi^{(c)}$. The attacker never sees raw data, model parameters, or individual unaggregated artifacts $S_i$.
+
+\textbf{Semi honest server adversary.} The server is honest but curious. It observes the aggregated model update and the aggregated noised artifacts after secure aggregation, from which it reconstructs $\Pi^{(c)}$. It does not observe any individual $S_i$.
+
+\textbf{Malicious client adversary.} One or several clients can deviate from the protocol and submit manipulated model updates and explanation artifacts $S_i$ for the purpose of attribution poisoning. A malicious client observes its own local data, its local surrogate $g_i$, and the broadcast prior $\Pi^{(c)}$, but does not see other clients' artifacts.
+
+Unless stated otherwise, we assume that surrogates $g_i$ and dense local summaries $\bar{E}_i^{(c)}$ remain on device and are not exposed directly. Attack channels always go through the observable outputs above.
+
+\subsection{Membership Inference Attacks}
+\label{sec:threat-mia}
+
+The membership inference adversary receives a sample $(x,y)$, the model output $p_\theta(x)$, and optionally a vector of explanation summaries for that input, for example the per class group attributions $\{\tilde{E}_i^{(c)}(x)\}_{c=1}^{C}$ and the current prior $\Pi^{(c)}$. The attacker outputs a binary guess $h(x) \in \{0,1\}$ for whether $x$ was in the training data of the attacked client.
+
+We model $m \in \{0,1\}$ as the true membership indicator and let $h$ be any measurable decision rule built from scores such as loss or confidence. A common score is the negative cross entropy
+\begin{equation}
+\label{eq:mia-score}
+s(x,y;\theta) \;=\; -\ell(f_\theta(x),y),
+\end{equation}
+possibly augmented with an explanation term such as the alignment cost for the example,
+\begin{equation}
+\label{eq:mia-score-expl}
+s_{\text{joint}}(x,y;\theta,\Pi) \;=\; -\ell(f_\theta(x),y) 
+- \gamma \sum_{c=1}^{C} \mathrm{JSD}\!\big(\tilde{E}_i^{(c)}(x)\,\big\|\,\Pi^{(c)}\big),
+\end{equation}
+where $\gamma \ge 0$ controls the weight on explanation information. The attacker predicts $h(x)=1$ if the score exceeds a threshold $\tau$, otherwise $h(x)=0$.
+
+We report membership inference accuracy and advantage. Writing
+\begin{align}
+\mathrm{TPR} &= \Pr[h(x)=1 \mid m=1], \\
+\mathrm{FPR} &= \Pr[h(x)=1 \mid m=0], 
+\end{align}
+the membership inference accuracy is
+\begin{equation}
+\label{eq:mia-acc-app}
+\mathrm{Acc}_{\mathrm{MIA}} \;=\; \tfrac{1}{2}\big(\mathrm{TPR} + (1 - \mathrm{FPR})\big),
+\end{equation}
+and the membership advantage is
+\begin{equation}
+\label{eq:mia-adv}
+\mathrm{Adv}_{\mathrm{MIA}} \;=\; \mathrm{TPR} - \mathrm{FPR}.
+\end{equation}
+Values near random guessing correspond to $\mathrm{Acc}_{\mathrm{MIA}}\approx 0.5$ and $\mathrm{Adv}_{\mathrm{MIA}}\approx 0$.
+
+In our experiments the attacker is black box: it sees predictions and the broadcast prior, and in the strongest variant also sees local explanations for the queried inputs, but never sees unnoised individual artifacts $S_i$.
+
+\subsection{Attribution Poisoning Attacks}
+\label{sec:threat-poison}
+
+Attribution poisoning aims to manipulate global explanations while leaving task performance largely intact. We consider malicious clients that submit crafted artifacts $S_i^{\text{poison}}$ in place of honest summaries. Their goal is to distort the Global Explanation Prior $\Pi^{(c)}$ and clientwise explanations, yet stay within acceptable loss and accuracy bounds so that simple defenses do not filter them.
+
+Let $\tilde{\bar{E}}^{(c),\text{clean}}_i$ denote the client explanations in the clean setting and $\tilde{\bar{E}}^{(c),\text{poison}}_i$ the explanations under poisoning. For a fixed $k$ and class $c$, define the top-$k$ overlap
+\begin{equation}
+\label{eq:topk-overlap}
+\mathrm{overlap}@k\big(\tilde{\bar{E}}^{(c),\text{clean}}_i,\tilde{\bar{E}}^{(c),\text{poison}}_i\big)
+\;=\;
+\frac{1}{k}\big|\mathrm{Top}_k\big(\tilde{\bar{E}}^{(c),\text{clean}}_i\big)
+\cap \mathrm{Top}_k\big(\tilde{\bar{E}}^{(c),\text{poison}}_i\big)\big|,
+\end{equation}
+where $\mathrm{Top}_k(v)$ returns the indices of the $k$ largest entries of $v$. We summarize the change in explanations by
+\begin{equation}
+\label{eq:delta-topk}
+\Delta\text{Top}@k
+\;=\;
+\frac{1}{KC}\sum_{i=1}^K \sum_{c=1}^{C}
+\Big(1 - \mathrm{overlap}@k\big(\tilde{\bar{E}}^{(c),\text{clean}}_i,
+\tilde{\bar{E}}^{(c),\text{poison}}_i\big)\Big),
+\end{equation}
+and the change in Explanation Drift Index
+\begin{equation}
+\label{eq:delta-edi-appendix}
+\Delta\mathrm{EDI}
+\;=\;
+\mathrm{EDI}_{\text{poison}} - \mathrm{EDI}_{\text{clean}},
+\end{equation}
+where $\mathrm{EDI}$ is defined as in Eq.~\eqref{eq:disp-iclr}. Larger $\Delta\text{Top}@k$ and $\Delta\mathrm{EDI}$ indicate a stronger shift in explanation semantics.
+
+An attribution poisoning adversary controls a fraction $\alpha \in [0,1]$ of the clients and optimizes an objective of the form
+\begin{equation}
+\label{eq:poison-objective}
+\max_{\{S_i^{\text{poison}}\}} \;
+\lambda_1\,\Delta\text{Top}@k
++\lambda_2\,\Delta\mathrm{EDI}
+\quad
+\text{s.t.}\quad
+\Delta\mathrm{Acc} \le \delta_{\text{acc}},
+\end{equation}
+where $\Delta\mathrm{Acc}$ is the drop in test accuracy and $\lambda_1,\lambda_2,\delta_{\text{acc}}$ control the trade off between explanation manipulation and utility preservation. In our experiments we instantiate this by forcing malicious clients to report artifacts that overweight a fixed target group index regardless of data, while keeping their local task loss within a tolerance.
+
+In this setting the adversary is a malicious client that has white box access to its own surrogate and local explanations but only black box access to the aggregated prior and the global model.
+
+
+\subsection{Leakage from Sparse Artifacts and Limitations}
+\label{sec:threat-limitations}
+
+The sparse explanation artifacts in \texttt{xFedAlign} are clipped, top $k$, quantized, noised, and aggregated securely, which reduces their sensitivity and supports the differential privacy guarantees in Proposition~\ref{prop:dp}. However, they remain informative objects and can still leak structured information.
+
+First, even after clipping and quantization, the pattern of top $k$ groups per class can reveal which concepts are frequent or rare in a client population. Repeated participation over many rounds may allow a semi honest server or a colluding set of clients to track changes in the prior $\Pi^{(c)}$ and correlate them with external events, which can leak coarse statistics about client cohorts.
+
+Second, our privacy analysis focuses on client level differential privacy under honest secure aggregation. If secure aggregation is partially broken, or if a powerful attacker can isolate individual client contributions, the effective privacy budget is weaker than what the theory suggests. In particular, sparse artifacts can be susceptible to reconstruction attacks that exploit the structure of the group space.
+
+Third, the current paper evaluates membership inference and attribution poisoning in controlled FL settings with standard attribution tools and moderate noise levels. More complex environments, such as large scale cross device deployments or richer explanation interfaces, may introduce additional leakage channels that are not covered here.
+
+These limitations highlight that \texttt{xFedAlign} is privacy aware but not privacy complete. Stronger formal guarantees would require tighter composition accounting, more aggressive noise or randomized group encodings, and an exploration of alternative artifact designs that further reduce the mutual information between local data and shared explanations.
+
+
+
+\section{Datasets and Client Partitions}
+\label{app:data-partitions}
+
+We evaluate on six standard benchmarks with three modalities: two image datasets (MNIST, CIFAR-10), two text datasets (AG News, IMDb Reviews), and two tabular datasets (UCI Adult Income, UCI German Credit). For each dataset, we use the conventional training-test split and reserve $10\%$ of training examples as a validation set for early stopping and model selection. Only the training portion is distributed across clients; validation and test data remain centralized on the server.
+
+Table~\ref{tab:dataset-stats} summarizes the basic statistics of all benchmarks. The ``Train'' column reports the examples used for local client updates after holding out validation, while ``Val'' and ``Test'' are global sets used only for evaluation and tuning. All methods share the same splits.
+
+\begin{table}[h]
+\centering
+\small
+\caption{Dataset statistics. Train and Val are derived from the standard training split by reserving $10\%$ of training examples for validation.}
+\label{tab:dataset-stats}
+\resizebox{0.8\columnwidth}{!}{%
+\begin{tabular}{llcccc}
+\toprule
+Modality & Dataset & Input type & Classes & Train & Val / Test \\
+\midrule
+\multirow{2}{*}{Image} &
+MNIST &
+$28{\times}28$ grayscale &
+10 &
+54{,}000 &
+6{,}000 / 10{,}000 \\
+&
+CIFAR-10 &
+$32{\times}32$ RGB &
+10 &
+45{,}000 &
+5{,}000 / 10{,}000 \\
+\midrule
+\multirow{2}{*}{Text} &
+AG News &
+Token sequences &
+4 &
+108{,}000 &
+12{,}000 / 7{,}600 \\
+&
+IMDb Reviews &
+Token sequences &
+2 &
+22{,}500 &
+2{,}500 / 25{,}000 \\
+\midrule
+\multirow{2}{*}{Tabular} &
+UCI Adult Income &
+Continuous + categorical &
+2 &
+29{,}305 &
+3{,}256 / 16{,}281 \\
+&
+UCI German Credit &
+Continuous + categorical &
+2 &
+630 &
+70 / 300 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+
+\paragraph{Client configuration.}
+For every dataset we construct a federated setting with $K{=}8$ clients. Only the training set in Table~\ref{tab:dataset-stats} is partitioned across clients; validation and test examples are never seen by clients during optimization. On average, each client receives roughly $\text{Train} / K$ examples, with the exact counts determined by the partitioning scheme described below.
+
+\paragraph{IID partitions.}
+The IID configuration approximates uniform splitting of the training data across the $K$ clients. Concretely, for each dataset we first compute the empirical label distribution on the full training set. We then sample client-level proportions from a symmetric Dirichlet distribution with a very large concentration parameter ($\alpha = 10^{6}$), which yields nearly identical class proportions for all clients. Conditioned on these proportions, individual training examples are assigned to clients at random. This produces:
+\begin{itemize}
+  \item similar class balances across all clients,
+  \item similar numbers of examples per client, and
+  \item no intentional clustering of related examples on specific clients.
+\end{itemize}
+In practice, the resulting client datasets are extremely close to simple stratified random splits of the training set.
+
+\paragraph{Non-IID partitions.}
+The non-IID configuration induces heterogeneous label distributions and concept skew across clients. For each dataset we again start from the global training set and apply a label-based Dirichlet sampler with a small concentration parameter $\alpha = 0.1$:
+\begin{enumerate}
+  \item For each class $c$, we draw a vector of nonnegative proportions over the $K$ clients from a symmetric Dirichlet distribution with parameter $\alpha = 0.1$.
+  \item Training examples of class $c$ are then allocated to clients according to these proportions.
+\end{enumerate}
+A small $\alpha$ yields spiky proportion vectors, so many clients become dominated by a subset of classes, while others see only a few examples of those classes. This construction produces:
+\begin{itemize}
+  \item strong class imbalance across clients,
+  \item different mixtures of classes on different clients, and
+  \item client-specific ``local concepts'' that stress both task performance and explanation alignment.
+\end{itemize}
+The expected total number of examples per client remains close to $\text{Train} / K$, but the label composition and local decision boundaries differ markedly between clients.
+
+\paragraph{Use across research questions.}
+All six datasets and both partitions (IID and non-IID) are used in the main benchmarking experiment (RQ1) to compare methods across modalities and heterogeneity levels (see Section~\ref{sec:intro}). For the privacy, robustness, and ablation studies (RQ2 and RQ3) we focus on MNIST only, using the same IID and non-IID partitioning procedures described above. For experiments that report mean $\pm$ standard deviation, client partitions are resampled independently for each run using the same Dirichlet parameters, so the reported variability reflects both stochastic optimization and randomness in the federated splits.
+
+
+\section{Models and Hyperparameters}
+\label{app:models}
+
+All experiments were run on a Windows workstation equipped with an NVIDIA RTX 3090 GPU (24 GB VRAM) and an AMD Ryzen 9 5950X CPU (16 cores). All methods share the same task architecture and optimization scheme for a given dataset so that differences in performance arise from the explanation mechanism rather than model capacity. Let $f_{\theta}$ denote the task network with parameters $\theta$ and input $x$. For each dataset we fix an architecture $f_{\theta}^{(d)}$ and use identical training hyperparameters across all explanation schemes.
+
+
+Qualitative examples of per-class explanations and alignment behavior on these same splits are provided in Appendix~\ref{app:qualitative}.
+
+
+\subsection{Task Architectures}
+
+Table~\ref{tab:model-arch} summarizes the architectures used for the six benchmarks. For images, $x\in\mathbb{R}^{H\times W\times C}$ is processed by a small convolutional network with batch normalization and ReLU activations. For text, a TextCNN encoder maps a token sequence $x=(w_1,\dots,w_T)$ to a pooled representation $h\in\mathbb{R}^{m}$ through temporal convolutions with kernel widths $k\in\{3,4,5\}$ and global max pooling. For tabular data, preprocessed features $x\in\mathbb{R}^{d}$ are fed into a shallow multilayer perceptron with two hidden layers.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Task architectures and approximate parameter counts. The same architectures are used for all methods on a given dataset.}
+\label{tab:model-arch}
+\resizebox{0.8\columnwidth}{!}{%
+\begin{tabular}{llp{6.5cm}c}
+\toprule
+Modality & Dataset & Architecture $f_{\theta}^{(d)}$ & Parameters \\
+\midrule
+Image & MNIST &
+Input $x\in\mathbb{R}^{28\times 28\times 1}$;  
+$\mathrm{Conv}(1\!\to\!32,3\!\times\!3)$ + BN + ReLU;  
+$\mathrm{Conv}(32\!\to\!64,3\!\times\!3)$ + BN + ReLU;  
+$2{\times}2$ max pool;  
+dropout $p{=}0.25$;  
+FC $64\cdot7\cdot7 \to 128$ + ReLU;  
+dropout $p{=}0.5$;  
+FC $128 \to 10$ &
+$\approx 1.2$M \\
+\midrule
+Image & CIFAR\textendash10 &
+Input $x\in\mathbb{R}^{32\times 32\times 3}$;  
+$\mathrm{Conv}(3\!\to\!64,3\!\times\!3)$ + BN + ReLU;  
+$\mathrm{Conv}(64\!\to\!64,3\!\times\!3)$ + BN + ReLU;  
+$2{\times}2$ max pool;  
+$\mathrm{Conv}(64\!\to\!128,3\!\times\!3)$ + BN + ReLU;  
+$\mathrm{Conv}(128\!\to\!128,3\!\times\!3)$ + BN + ReLU;  
+$2{\times}2$ max pool;  
+dropout $p{=}0.5$;  
+FC $128\cdot8\cdot8 \to 256$ + ReLU;  
+FC $256 \to 10$ &
+$\approx 1.4$M \\
+\midrule
+Text & AG News &
+Tokenized sequence $x=(w_t)$;  
+embedding $E:\mathcal{V}\to\mathbb{R}^{128}$ with $|\mathcal{V}|\approx 5\cdot 10^4$;  
+1D convs with kernel widths $k\in\{3,4,5\}$, $100$ filters per $k$;  
+global max pool over time for each $k$;  
+concatenation $h\in\mathbb{R}^{300}$;  
+dropout $p{=}0.5$;  
+FC $300 \to 4$ &
+$\approx 1.0$M \\
+\midrule
+Text & IMDb Reviews &
+Same encoder family as AG News with $128$ filters per kernel,  
+$h\in\mathbb{R}^{384}$;  
+dropout $p{=}0.5$;  
+FC $384 \to 2$ &
+$\approx 1.2$M \\
+\midrule
+Tabular & UCI Adult Income &
+Preprocessed input $x\in\mathbb{R}^{d_{\text{Adult}}}$ with standardized continuous features and one-hot categorical features ($d_{\text{Adult}}\approx 104$);  
+FC $d_{\text{Adult}}\to 128$ + ReLU;  
+dropout $p{=}0.2$;  
+FC $128\to 64$ + ReLU;  
+FC $64\to 2$ &
+$\approx 2.0{\times}10^4$ \\
+\midrule
+Tabular & UCI German Credit &
+Preprocessed input $x\in\mathbb{R}^{d_{\text{Credit}}}$ with $d_{\text{Credit}}\approx 41$;  
+FC $d_{\text{Credit}}\to 64$ + ReLU;  
+dropout $p{=}0.2$;  
+FC $64\to 32$ + ReLU;  
+FC $32\to 2$ &
+$\approx 7{\times}10^3$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\subsection{Optimization and Global Hyperparameters}
+
+Federated optimization follows the same schedule for all methods. Let $K{=}8$ be the number of clients and $R{=}15$ the number of communication rounds. In each round $r\in\{1,\dots,R\}$, every client $i\in\{1,\dots,K\}$ receives the current global parameters $\theta^{(r)}$, performs $E{=}1$ local epoch of stochastic gradient descent on its local dataset with mini-batch size $B{=}64$, and returns an updated parameter vector $\theta_i^{(r+1)}$. The server forms the next global iterate by weighted averaging
+\[
+\theta^{(r+1)} \;=\; \sum_{i=1}^{K} \frac{|\mathcal{D}_i|}{\sum_{j=1}^{K} |\mathcal{D}_j|} \,\theta_i^{(r+1)} ,
+\]
+where $\mathcal{D}_i$ is the local dataset at client $i$.
+
+Local updates use stochastic gradient descent with momentum $m{=}0.9$. If $\theta_{i,t}$ denotes the parameters at local step $t$ on client $i$, the update is
+\[
+v_{i,t+1} \;=\; m\,v_{i,t} \;+\; \nabla_{\theta} \ell\big(f_{\theta_{i,t}}(x_{i,t}), y_{i,t}\big),\qquad
+\theta_{i,t+1} \;=\; \theta_{i,t} \;-\; \eta \big( v_{i,t+1} + \lambda_{\ell_2}\,\theta_{i,t} \big),
+\]
+with learning rate $\eta$ and $\ell_2$ weight decay $\lambda_{\ell_2}$. For each dataset $d$ we perform a small grid search on a centralized version of the task to select $(\eta,\lambda_{\ell_2},p_{\text{drop}})$. The grid uses
+\[
+\eta \in \{10^{-3}, 10^{-2}, 5\cdot10^{-2}\}, \qquad
+\lambda_{\ell_2} \in \{0,10^{-4}\}, \qquad
+p_{\text{drop}} \in \{0.0, 0.3, 0.5\},
+\]
+where $p_{\text{drop}}$ is the dropout probability on the penultimate layer (or the main hidden layer for tabular models). For each $(\eta,\lambda_{\ell_2},p_{\text{drop}})$ we train $f_{\theta}^{(d)}$ on the union of all client training data and select the configuration with the highest validation accuracy. The chosen $(\eta^\star_d,\lambda^\star_{\ell_2,d},p^\star_{\text{drop},d})$ are then fixed and reused for all federated runs on dataset $d$ and for all explanation schemes. In practice this grid returns $\eta^\star_d = 0.01$ and $\lambda^\star_{\ell_2,d} = 10^{-4}$ for all six datasets, with $p^\star_{\text{drop},d}$ matching the values in Table~\ref{tab:model-arch}.
+
+No learning rate decay is applied over rounds; the same $\eta^\star_d$ is used throughout training. All experiments use the same data normalization to $[0,1]$ for images and standardization of continuous tabular features as described in Appendix~\ref{app:data-partitions}. 
+
+\subsection{Explanation Mechanisms and Method-specific Hyperparameters}
+
+Let $g_{\phi}$ denote the explanation mechanism with parameters $\phi$ when applicable and $a(x,y)\in\mathbb{R}^{G}$ the attribution vector over $G$ input groups (pixels, tokens, or feature groups). All methods share $f_{\theta}^{(d)}$ and the optimization scheme above; they differ only in how $a(x,y)$ is computed and aggregated.
+
+For post-hoc methods (FedAvg evaluation, Local-XAI, FedAttr-Agg) we use integrated gradients. Given a baseline $\tilde{x}$ and interpolation steps $M$, the integrated gradient for feature $g$ is
+\[
+\mathrm{IG}_g(x,\tilde{x}) \;=\; (x_g - \tilde{x}_g)\,
+\frac{1}{M}\sum_{m=1}^{M} 
+\frac{\partial f_{\theta}( \tilde{x} + \tfrac{m}{M} (x-\tilde{x}) )}{\partial x_g},
+\]
+with $M{=}20$. For images we choose $\tilde{x}$ as the all-zero image; for text we use embeddings of the padding token. To reduce variance we average over $N_{\text{noise}}{=}4$ noisy baselines $\tilde{x}^{(j)}$.
+
+FedAttr-Agg forms per-class attribution templates by averaging normalized attributions. If $\mathcal{D}_i^c$ denotes the set of local examples of class $c$ on client $i$ and $\hat{a}(x,y) = a(x,y)/\|a(x,y)\|_1$, the local template is
+\[
+\mu_{i}^{(c)} \;=\; \frac{1}{|\mathcal{D}_i^c|} \sum_{(x,y)\in \mathcal{D}_i^c} \hat{a}(x,y), 
+\]
+and the server forms a global template by
+\[
+\mu^{(c)} \;=\; \frac{1}{K}\sum_{i=1}^{K} \mu_{i}^{(c)}.
+\]
+
+Fed-XAI constrains the last layer of $f_{\theta}^{(d)}$ to be linear in a small number of interpretable units so that its weights $w^{(c)}$ act directly as a global attribution pattern for class $c$. No separate explainer $g_{\phi}$ is used; attributions are obtained from $w^{(c)}$.
+
+\texttt{xFedAlign} constructs sparse, privacy-hardened artifacts and a global prior. For a class $c$ on client $i$, the client computes a dense attribution vector $\tilde{a}_i^{(c)}\in\mathbb{R}^{G}$ in a normalized group space, selects the indices of the $k$ largest absolute values,
+\[
+S_i^{(c)} \;=\; \mathrm{TopK}\big(|\tilde{a}_i^{(c)}|, k\big),
+\]
+and forms a sparse artifact $z_i^{(c)}\in\mathbb{R}^{G}$ with
+\[
+z_{i,g}^{(c)} \;=\;
+\begin{cases}
+\tilde{a}_{i,g}^{(c)} & \text{if } g\in S_i^{(c)}, \\
+0 & \text{otherwise}.
+\end{cases}
+\]
+The artifact is clipped in $\ell_2$ norm with radius $r_{\text{clip}}{=}5.0$, quantized to $8$ bits, and perturbed with Gaussian noise:
+\[
+\bar{z}_i^{(c)} \;=\; \mathcal{Q}_{8}\!\left(
+\frac{r_{\text{clip}}}{\max(\|z_i^{(c)}\|_2,\,r_{\text{clip}})}\,z_i^{(c)} 
+\right) \;+\; \xi, 
+\qquad \xi \sim \mathcal{N}(0,\sigma^2 I),
+\]
+where $\mathcal{Q}_{8}$ denotes uniform 8-bit quantization and $\sigma{=}0.1$ in the main experiments. The sparsity level is $k{=}128$ for MNIST (with ablations over $k\in\{32,64,128,256,512\}$). The server aggregates artifacts into a Global Explanation Prior via coordinatewise median,
+\[
+\pi^{(c)} \;=\; \mathrm{median}\big\{ \bar{z}_i^{(c)} : i=1,\dots,K \big\},
+\]
+and each client receives $\pi^{(c)}$ for all classes. The alignment term adds a Jensen–Shannon divergence penalty between client surrogates and the prior; if $p_i^{(c)}$ and $q^{(c)}$ denote the normalized per-group distributions implied by $\bar{z}_i^{(c)}$ and $\pi^{(c)}$, respectively, the alignment loss is
+\[
+\mathcal{L}_{\text{align}} \;=\; 
+\beta\, \frac{1}{C}\sum_{c=1}^{C} \mathrm{JSD}\big(p_i^{(c)} \,\|\, q^{(c)}\big),
+\]
+with alignment weight $\beta$ linearly warmed from $0$ to $\beta_{\text{final}}{=}0.2$ over the first $6$ rounds and then held constant. The sparsity penalty on surrogates uses $\lambda = 10^{-4}$, and the surrogate is refit every $R_{\text{sur}}{=}2$ rounds with a learning rate $0.1$ and one refinement epoch in the main configuration, with $e\in\{1,2,4\}$ explored in the ablation study.
+
+In all experiments, hyperparameters are fixed in advance based on the centralized grid search and a small pilot sweep on MNIST for explanation-specific settings. No parameters are tuned per method or per seed, so differences in performance directly reflect the behavior of the explanation mechanisms under matched training conditions.
+
+
+
+
+\begin{figure*}[t]
+  \centering
+  \small
+
+  % % ===== Digit 0 =====
+  % \begin{subfigure}{\linewidth}
+  %   \centering
+  %   \setlength{\tabcolsep}{4pt}
+  %   \renewcommand{\arraystretch}{1.0}
+  %   \begin{tabular}{
+  %     >{\centering\arraybackslash}m{1.4cm}
+  %     >{\centering\arraybackslash}m{0.17\linewidth}
+  %     >{\centering\arraybackslash}m{0.17\linewidth}
+  %     >{\centering\arraybackslash}m{0.17\linewidth}
+  %     >{\centering\arraybackslash}m{0.17\linewidth}
+  %   }
+  %     \textbf{Heatmap} &
+  %     \includegraphics[width=\linewidth]{figures/BL-B_heat-0.png} &
+  %     \includegraphics[width=\linewidth]{figures/BL-C_heat-0.png} &
+  %     \includegraphics[width=\linewidth]{figures/BL-D_heat-0.png} &
+  %     \includegraphics[width=\linewidth]{figures/xFL_heat-0.png} \\
+  %     \textbf{Overlay} &
+  %     \includegraphics[width=\linewidth]{figures/BL-B_overlay-0.png} &
+  %     \includegraphics[width=\linewidth]{figures/BL-C_overlay-0.png} &
+  %     \includegraphics[width=\linewidth]{figures/BL-D_overlay-0.png} &
+  %     \includegraphics[width=\linewidth]{figures/xFL_overlay-0.png} \\
+  %     & \footnotesize (a) Local-XAI
+  %     & \footnotesize (b) FedAttr-Agg
+  %     & \footnotesize (c) Fed-XAI
+  %     & \footnotesize (d) xFedAlign \\
+  %   \end{tabular}
+  %   \caption{MNIST digit 0.}
+  %   \label{fig:qual-mnist-0}
+  % \end{subfigure}
+
+  % \vspace{0.7em}
+
+  % ===== Digit 4 =====
+  \begin{subfigure}{\linewidth}
+    \centering
+    \setlength{\tabcolsep}{4pt}
+    \renewcommand{\arraystretch}{1.0}
+    \begin{tabular}{
+      >{\centering\arraybackslash}m{1.4cm}
+      >{\centering\arraybackslash}m{0.17\linewidth}
+      >{\centering\arraybackslash}m{0.17\linewidth}
+      >{\centering\arraybackslash}m{0.17\linewidth}
+      >{\centering\arraybackslash}m{0.17\linewidth}
+    }
+      \textbf{Heatmap} &
+      \includegraphics[width=\linewidth]{figures/BL-B_heat-4.png} &
+      \includegraphics[width=\linewidth]{figures/BL-C_heat-4.png} &
+      \includegraphics[width=\linewidth]{figures/BL-D_heat-4.png} &
+      \includegraphics[width=\linewidth]{figures/xFL_heat-4.png} \\
+      \textbf{Overlay} &
+      \includegraphics[width=\linewidth]{figures/BL-B_overlay-4.png} &
+      \includegraphics[width=\linewidth]{figures/BL-C_overlay-4.png} &
+      \includegraphics[width=\linewidth]{figures/BL-D_overlay-4.png} &
+      \includegraphics[width=\linewidth]{figures/xFL_overlay-4.png} \\
+      & \footnotesize (a) Local-XAI
+      & \footnotesize (b) FedAttr-Agg
+      & \footnotesize (c) Fed-XAI
+      & \footnotesize (d) \texttt{xFedAlign} \\
+    \end{tabular}
+    \caption{MNIST digit 4.}
+    \label{fig:qual-mnist-4}
+  \end{subfigure}
+
+  \vspace{0.7em}
+
+  % ===== Digit 7 =====
+  \begin{subfigure}{\linewidth}
+    \centering
+    \setlength{\tabcolsep}{4pt}
+    \renewcommand{\arraystretch}{1.0}
+    \begin{tabular}{
+      >{\centering\arraybackslash}m{1.4cm}
+      >{\centering\arraybackslash}m{0.17\linewidth}
+      >{\centering\arraybackslash}m{0.17\linewidth}
+      >{\centering\arraybackslash}m{0.17\linewidth}
+      >{\centering\arraybackslash}m{0.17\linewidth}
+    }
+      \textbf{Heatmap} &
+      \includegraphics[width=\linewidth]{figures/BL-B_heat-7.png} &
+      \includegraphics[width=\linewidth]{figures/BL-C_heat-7.png} &
+      \includegraphics[width=\linewidth]{figures/BL-D_heat-7.png} &
+      \includegraphics[width=\linewidth]{figures/xFL_heat-7.png} \\
+      \textbf{Overlay} &
+      \includegraphics[width=\linewidth]{figures/BL-B_overlay-7.png} &
+      \includegraphics[width=\linewidth]{figures/BL-C_overlay-7.png} &
+      \includegraphics[width=\linewidth]{figures/BL-D_overlay-7.png} &
+      \includegraphics[width=\linewidth]{figures/xFL_overlay-7.png} \\
+      & \footnotesize (a) Local-XAI
+      & \footnotesize (b) FedAttr-Agg
+      & \footnotesize (c) Fed-XAI
+      & \footnotesize (d) \texttt{xFedAlign} \\
+    \end{tabular}
+    \caption{MNIST digit 7.}
+    \label{fig:qual-mnist-7}
+  \end{subfigure}
+
+  \caption{
+  Qualitative comparison of attributions for MNIST digits 4, and 7 across Local-XAI, FedAttr-Agg, Fed-XAI, and our proposed approach: \texttt{xFedAlign}. For each digit, the first row shows heatmaps and the second row shows heatmaps overlaid on the input; column labels (a)–(d) denote the corresponding methods.
+  }
+  \label{fig:qual-mnist}
+\end{figure*}
+
+
+
+\begin{figure}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.0}
+
+  \begin{tabular}{cc}
+    \includegraphics[width=0.48\linewidth]{figures/uci_adult_bl-b_12.png} &
+    \includegraphics[width=0.48\linewidth]{figures/uci_adult_bl-c_12.png} \\
+    \footnotesize (a) Local-XAI &
+    \footnotesize (b) FedAttr-Agg \\[2.4em]
+    \includegraphics[width=0.48\linewidth]{figures/uci_adult_bl-d_12.png} &
+    \includegraphics[width=0.48\linewidth]{figures/uci_adult_xfl_12.png} \\
+    \footnotesize (c) Fed-XAI &
+    \footnotesize (d) \texttt{xFedAlign} \\
+  \end{tabular}
+
+  \caption{
+    Top 10 non sensitive features for a representative UCI Adult test sample
+    (index $i{=}12$) under four attribution methods. Each panel shows the
+    consolidated importance of base features after grouping one hot variants. Bars reflect the
+    relative contribution of each remaining feature to the predicted label.
+  }
+  \label{fig:uci-adult-top10}
+\end{figure}
+
+\section{Qualitative Results}
+\label{app:qualitative}
+
+Figure~\ref{fig:qual-mnist} illustrates qualitative differences between attribution schemes on MNIST digits $4$ and $7$. For Local-XAI, the heatmaps for both digits tend to be noisy and fragmented, with several scattered high intensity regions that spill outside the true stroke support, especially in the upper half of the images. FedAttr-Agg partially smooths these artifacts by averaging statistics across clients, yet the resulting maps often become overly diffuse and concentrate on broad blobs that do not precisely follow the character skeleton. Fed-XAI exhibits highly structured but sometimes unstable patterns: for digit $4$ the explanation over-activates interior pixels and produces halo effects, while for digit $7$ it lights up swirl-like artifacts that do not correspond to any visible pen stroke. In contrast, \texttt{xFedAlign} produces sparse and well localized saliency that traces the actual digit contour, with strong weight on the main diagonal and crossbar of $4$ and the vertical plus top horizontal strokes of $7$, both in the standalone heatmaps and in the overlays. These qualitative observations are consistent with the quantitative trends in Table~\ref{tab:fedxai_results}, where \texttt{xFedAlign} attains both low EDI and strong deletion/insertion AUCs on MNIST.
+
+Figure~\ref{fig:uci-adult-top10} focuses on a representative UCI Adult test point and compares the top ten non sensitive features. Local-XAI assigns substantial mass to several loosely related attributes such as occupation, sex, and country, alongside economically meaningful variables like capital gain, which indicates faithful but highly local behavior that may rely on unstable shortcuts. FedAttr-Agg smooths these attributions across clients and shifts importance toward education-num and capital gain, yet still spreads weight over many features and retains moderate influence from sensitive or proxy variables. Fed-XAI produces an almost flat profile over occupation, race, education, and country and underweights capital signals, which suggests that its interpretable decision surface captures coarse global correlations rather than the key drivers of this specific prediction. \texttt{xFedAlign} instead concentrates importance on a compact set of socio economic indicators, with capital gain and education-num clearly dominant, followed by hours per week, occupation, and age, while sex and country lie near the tail. This aligns with domain knowledge for income prediction and mirrors the improved consistency and fidelity scores that \texttt{xFedAlign} achieves on tabular datasets in Table~\ref{tab:fedxai_results}.
+
+
+
+
+\section{Robustness experiments}
+\label{app:robustness}
+
+This section formalizes the threat models used for privacy and robustness experiments and provides additional quantitative results for attribution poisoning. These experiments complement the empirical findings in Section~\ref{sec:results}, in particular the privacy and robustness analysis summarized in Table~\ref{tab:atk_priv_robust} and Figure~\ref{fig:atk_robustness_grid}.
+
+\subsection{Membership inference threat model}
+
+Let $\mathcal{D} = \bigcup_{i=1}^{K} \mathcal{D}_i$ denote the union of all client datasets and let $f_{\theta}$ be the global model trained by the federated protocol. The membership inference attacker is modeled as a probabilistic adversary $\mathcal{A}$ that, given black-box query access to $f_{\theta}$, attempts to infer whether a particular example $z=(x,y)$ was used in training. The attack is evaluated under the following assumptions.
+
+\paragraph{Adversary knowledge.}
+The attacker knows the training algorithm $\mathsf{Alg}$, the hyperparameters, the architecture of $f_{\theta}$, and the fact that training followed a federated schedule with $K$ clients, but does not know which client held $z$ or how data were partitioned. The adversary is granted oracle access to $f_{\theta}$ and observes prediction scores $f_{\theta}(x)\in\Delta^{C-1}$ for arbitrary inputs $x$.
+
+\paragraph{Adversary goal and experiment.}
+The goal is to infer a binary membership variable $b\in\{0,1\}$ indicating whether $z$ belongs to the training set. We follow the standard experiment. Construct a membership set $\mathcal{M}$ and a non-membership set $\mathcal{N}$ such that $\mathcal{M}\subset\mathcal{D}$ and $\mathcal{N}$ consists of examples drawn from the same data distribution but held out from training. Pairs $(z,b)$ are sampled with equal probability from $\mathcal{M}\times\{1\}$ and $\mathcal{N}\times\{0\}$. The adversary outputs a guess $\hat{b} = \mathcal{A}(f_{\theta}(x), y)$ and its performance is measured by
+\[
+\text{MI Acc} \;=\; \Pr[\hat{b} = b],\qquad
+\text{MI Adv} \;=\; \Pr[\hat{b}=1\mid b=1] - \Pr[\hat{b}=1\mid b=0].
+\]
+Random guessing yields $\text{MI Acc} = 0.5$ and $\text{MI Adv} = 0$. A method with smaller $(\text{MI Acc},\text{MI Adv})$ is therefore more privacy preserving.
+
+\paragraph{Attack construction.}
+The attack is instantiated as a calibrated confidence-based classifier. For each method and partition (IID or non-IID) we train a shadow model on an independent sample from the same data distribution and record statistics (maximum softmax confidence, loss value, entropy) on members and non-members. A logistic regression classifier is then trained on these statistics to approximate the optimal likelihood ratio test. This shadow attack is finally applied to the global model $f_{\theta}$ produced by the federated run. The resulting MI Acc and MI Adv values are reported in Table~\ref{tab:atk_priv_robust}.
+
+\subsection{Attribution poisoning threat model}
+
+The attribution poisoning experiments study adversarial manipulation of explanation artifacts while keeping task labels mostly intact. Let $a(x,y)\in\mathbb{R}^{G}$ denote the attribution vector over $G$ groups (pixels, tokens, or grouped features) and let $S_k(a)$ denote the set of indices of the $k$ largest absolute entries in $a$. For a given federated method, the adversary controls a fraction $\rho\in[0,1]$ of clients and modifies their local data or their reported attributions in order to steer global explanations.
+
+\paragraph{Adversary capabilities.}
+Malicious clients are assumed to know the explanation mechanism (post-hoc or by design) and the server aggregation rule. On these clients, the adversary may: \begin{enumerate*}[label=(\roman*)]
+\item inject examples with perturbed input features designed to inflate attributions on a target group set $T\subseteq \{1,\dots,G\}$ while preserving labels, or
+\item directly corrupt attribution artifacts before transmission (for methods that share summaries).
+\end{enumerate*}
+For \texttt{xFedAlign}, the attacker perturbs the locally computed dense attribution $\tilde{a}_i^{(c)}$ prior to sparsification so that the induced sparse artifact $z_i^{(c)}$ over-represents coordinates in $T$.
+
+\paragraph{Evaluation metrics.}
+Let $a_{\text{clean}}(x,y)$ and $a_{\text{poison}}(x,y)$ denote attributions for the same example under clean training and attribution-poisoned training, respectively. The metric $1 - \text{overlap@}k$ for a single example is
+\[
+1 - \text{overlap@}k(x,y)
+\;=\;
+1 - \frac{|S_k(a_{\text{clean}}(x,y)) \cap S_k(a_{\text{poison}}(x,y))|}{k}.
+\]
+Values close to $0$ indicate stable top-$k$ attribution sets. The summary statistic used in the main text is the mean change in $1 - \text{overlap@}k$ as a function of the poisoning ratio $\rho$,
+\[
+\Delta(1 - \text{overlap@}k)(\rho)
+\;=\;
+\mathbb{E}_{(x,y)}\!
+\left[
+(1 - \text{overlap@}k)_{\text{poison}} 
+- (1 - \text{overlap@}k)_{\text{clean}}
+\right],
+\]
+where the expectation is over a shared evaluation batch. A larger value indicates stronger manipulation of attribution support.
+
+Drift in cross-client explanations is captured by the Explanation Drift Index (EDI). For each class $c$ and client $i$ we consider the normalized attribution distribution $p_i^{(c)}$ and a reference distribution $q^{(c)}$ and define
+\[
+\mathrm{EDI}(\rho) \;=\; \frac{1}{KC}\sum_{i=1}^{K}\sum_{c=1}^{C}
+\mathrm{JSD}\big(p_i^{(c)}(\rho) \,\|\, q^{(c)}(\rho)\big),
+\]
+where $\mathrm{JSD}$ is the Jensen--Shannon divergence. We use $\mathrm{EDI}_{\text{clean}}$ for clean training ($\rho=0$) and $\mathrm{EDI}_{\text{poison}}(\rho)$ for attribution-poisoned training at ratio $\rho$, and report the shift
+\[
+\Delta\mathrm{EDI}(\rho) \;=\; \mathrm{EDI}_{\text{poison}}(\rho) - \mathrm{EDI}_{\text{clean}}.
+\]
+Larger $\Delta\mathrm{EDI}$ signals more severe global inconsistency.
+
+Figure~\ref{fig:atk_robustness_grid} in the main text plots $\Delta(1-\text{overlap@}128)$ and $\Delta\mathrm{EDI}$ as functions of $\rho$. Discrete values for $\rho\in\{0.0,0.1,0.2,0.3,0.4\}$, averaged over five seeds and pooled across IID and non-IID splits, are reported in Table~\ref{tab:atk_delta_tables}.
+
+
+\begin{table}[t]
+\centering
+\small
+\caption{Attribution poisoning robustness on MNIST: change in $1 - \text{overlap@}128$ and EDI under increasing fraction of poisoned clients $\rho$. Entries are \meanstd{$\mu$}{$\sigma$} over five seeds. Lower values indicate more stable explanations.}
+\label{tab:atk_delta_tables}
+\resizebox{0.8\columnwidth}{!}{%
+\begin{tabular}{ccccccc}
+\toprule
+Metric & $\rho$ & FedAvg & Local-XAI & FedAttr-Agg & Fed-XAI & \texttt{xFedAlign} \\
+\midrule
+\multirow{5}{*}{$\Delta(1-\text{overlap@}128)$}
+ & 0.00 & $\meanstd{0.0000}{0.0000}$ & $\meanstd{0.0000}{0.0000}$ & $\meanstd{0.0000}{0.0000}$ & $\meanstd{0.0000}{0.0000}$ & $\meanstd{0.0000}{0.0000}$ \\
+ & 0.10 & $\meanstd{0.0078}{0.0005}$ & $\meanstd{0.0078}{0.0005}$ & $\meanstd{0.0078}{0.0005}$ & $\meanstd{0.0156}{0.0007}$ & $\meanstd{0.0000}{0.0000}$ \\
+ & 0.20 & $\meanstd{0.3828}{0.0041}$ & $\meanstd{0.3828}{0.0040}$ & $\meanstd{0.3828}{0.0042}$ & $\meanstd{0.3828}{0.0043}$ & $\meanstd{0.0156}{0.0008}$ \\
+ & 0.30 & $\meanstd{0.3828}{0.0043}$ & $\meanstd{0.3828}{0.0042}$ & $\meanstd{0.3828}{0.0041}$ & $\meanstd{0.3828}{0.0044}$ & $\meanstd{0.2109}{0.0035}$ \\
+ & 0.40 & $\meanstd{0.3828}{0.0040}$ & $\meanstd{0.3828}{0.0040}$ & $\meanstd{0.3828}{0.0042}$ & $\meanstd{0.3828}{0.0041}$ & $\meanstd{0.3828}{0.0042}$ \\
+\midrule
+\multirow{5}{*}{$\Delta\mathrm{EDI}$}
+ & 0.00 & $\meanstd{0.0000}{0.0000}$ & $\meanstd{0.0000}{0.0000}$ & $\meanstd{0.0000}{0.0000}$ & $\meanstd{0.0000}{0.0000}$ & $\meanstd{0.0000}{0.0000}$ \\
+ & 0.10 & $\meanstd{0.0010}{0.0001}$ & $\meanstd{0.0011}{0.0001}$ & $\meanstd{0.0010}{0.0001}$ & $\meanstd{0.0019}{0.0002}$ & $\meanstd{0.0000}{0.0000}$ \\
+ & 0.20 & $\meanstd{0.0039}{0.0003}$ & $\meanstd{0.0041}{0.0003}$ & $\meanstd{0.0039}{0.0003}$ & $\meanstd{0.0057}{0.0004}$ & $\meanstd{0.0016}{0.0002}$ \\
+ & 0.30 & $\meanstd{0.0074}{0.0004}$ & $\meanstd{0.0075}{0.0004}$ & $\meanstd{0.0074}{0.0003}$ & $\meanstd{0.0103}{0.0005}$ & $\meanstd{0.0049}{0.0003}$ \\
+ & 0.40 & $\meanstd{0.0113}{0.0005}$ & $\meanstd{0.0115}{0.0005}$ & $\meanstd{0.0113}{0.0004}$ & $\meanstd{0.0155}{0.0006}$ & $\meanstd{0.0087}{0.0004}$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+The table confirms the trend observed in Figure~\ref{fig:atk_robustness_grid}. For small poisoning levels ($\rho=0.1$), all methods exhibit negligible change, with \texttt{xFedAlign} essentially unchanged. When $\rho$ increases beyond $0.2$, methods that share raw or coarse attributions (FedAvg with post-hoc evaluation, Local-XAI, FedAttr-Agg) rapidly jump to a regime where $\Delta(1-\text{overlap@}128)\approx 0.38$ and $\Delta\mathrm{EDI}$ exceeds $10^{-2}$, whereas \texttt{xFedAlign} transitions more gradually and remains strictly more robust at intermediate attack strengths ($\rho=0.2,0.3$). This behavior is consistent with the use of clipped, quantized, sparsified artifacts and median aggregation, which limit adversarial influence on the Global Explanation Prior.
+\medskip
+
+
+
+\begin{table*}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{5pt}
+  \renewcommand{\arraystretch}{1.15}
+  \begin{tabular}{clcccc}
+    \toprule
+    $n_{\text{clients}}$ & Method
+    & Acc $\uparrow$
+    & EDI $\downarrow$
+    & Del.\ AUC $\downarrow$
+    & Ins.\ AUC $\uparrow$ \\
+    \midrule
+
+    \multirow{5}{*}{8}
+      & FedAvg        & $0.9838 \pm 0.0013$ & --                      & --                      & --                      \\
+      & Local-XAI   & $0.9824 \pm 0.0022$ & $0.0198 \pm 0.0008$       & $0.1898 \pm 0.0094$       & $0.9541 \pm 0.0035$       \\
+      & FedAttr-Agg & $0.9817 \pm 0.0015$ & $0.0740 \pm 0.0023$       & $0.1740 \pm 0.0041$       & $0.9361 \pm 0.0031$       \\
+      & Fed-XAI     & $0.9033 \pm 0.0007$ & $0.0013 \pm 0.0000$       & $0.1478 \pm 0.0009$       & $0.7478 \pm 0.0015$       \\
+      & \texttt{xFedAlign}      & $\mathbf{0.9849} \pm 0.0012$ & $\mathbf{0.0002} \pm 0.0000$ & $\mathbf{0.1434} \pm 0.0024$ & $\mathbf{0.9613} \pm 0.0027$ \\
+    \midrule
+
+    \multirow{5}{*}{16}
+      & FedAvg        & $0.9695 \pm 0.0038$ & --                      & --                      & --                      \\
+      & Local-XAI   & $0.9692 \pm 0.0019$ & $0.0216 \pm 0.0006$       & $0.1527 \pm 0.0052$       & $0.9408 \pm 0.0037$       \\
+      & FedAttr-Agg & $0.9683 \pm 0.0021$ & $0.0785 \pm 0.0009$       & $0.1660 \pm 0.0089$       & $0.9152 \pm 0.0087$       \\
+      & Fed-XAI     & $0.8956 \pm 0.0004$ & $0.0013 \pm 0.0000$       & $0.1433 \pm 0.0014$       & $0.7148 \pm 0.0009$       \\
+      & \texttt{xFedAlign}      & $\mathbf{0.9714} \pm 0.0036$ & $\mathbf{0.0002} \pm 0.0000$ & $\mathbf{0.1365} \pm 0.0045$ & $\mathbf{0.9490} \pm 0.0026$ \\
+    \midrule
+
+    \multirow{5}{*}{32}
+      & FedAvg        & $0.9515 \pm 0.0023$ & --                      & --                      & --                      \\
+      & Local-XAI   & $0.9506 \pm 0.0011$ & $0.0228 \pm 0.0006$       & $0.1499 \pm 0.0064$       & $0.9068 \pm 0.0055$       \\
+      & FedAttr-Agg & $0.9520 \pm 0.0020$ & $0.0794 \pm 0.0010$       & $0.1548 \pm 0.0019$       & $0.8779 \pm 0.0045$       \\
+      & Fed-XAI     & $0.8858 \pm 0.0007$ & $0.0008 \pm 0.0000$       & $0.1401 \pm 0.0017$       & $0.6635 \pm 0.0022$       \\
+      & \texttt{xFedAlign}      & $\mathbf{0.9547} \pm 0.0020$ & $\mathbf{0.0002} \pm 0.0000$ & $\mathbf{0.1365} \pm 0.0036$ & $\mathbf{0.9172} \pm 0.0058$ \\
+    \midrule
+
+    \multirow{5}{*}{64}
+      & FedAvg        & $0.9238 \pm 0.0030$ & --                      & --                      & --                      \\
+      & Local-XAI   & $0.9256 \pm 0.0017$ & $0.0225 \pm 0.0006$       & $0.1433 \pm 0.0053$       & $0.8582 \pm 0.0044$       \\
+      & FedAttr-Agg & $0.9238 \pm 0.0009$ & $0.0794 \pm 0.0011$       & $0.1503 \pm 0.0040$       & $0.8224 \pm 0.0030$       \\
+      & Fed-XAI     & $0.8725 \pm 0.0012$ & $0.0005 \pm 0.0000$       & $0.1379 \pm 0.0008$       & $0.5865 \pm 0.0025$       \\
+      & \texttt{xFedAlign}      & $\mathbf{0.9269} \pm 0.0030$ & $\mathbf{0.0002} \pm 0.0000$ & $\mathbf{0.1373} \pm 0.0025$ & $\mathbf{0.8590} \pm 0.0067$ \\
+    \midrule
+
+    \multirow{5}{*}{128}
+      & FedAvg        & $0.8854 \pm 0.0187$ & --                      & --                      & --                      \\
+      & Local-XAI   & $0.8749 \pm 0.0203$ & $0.0238 \pm 0.0004$       & $0.1452 \pm 0.0065$       & $0.7111 \pm 0.0597$       \\
+      & FedAttr-Agg & $0.8889 \pm 0.0083$ & $0.0815 \pm 0.0009$       & $0.1512 \pm 0.0029$       & $0.7200 \pm 0.0255$       \\
+      & Fed-XAI     & $0.8541 \pm 0.0013$ & $0.0005 \pm 0.0000$       & $\mathbf{0.1352} \pm 0.0012$ & $0.4914 \pm 0.0018$       \\
+      & \texttt{xFedAlign}      & $\mathbf{0.8926} \pm 0.0143$ & $\mathbf{0.0002} \pm 0.0000$ & $0.1353 \pm 0.0042$       & $\mathbf{0.7526} \pm 0.0578$ \\
+    \bottomrule
+  \end{tabular}
+  \caption{
+     Classification and explanation metrics as the number of federated clients increases.
+    Each block fixes $n_{\text{clients}}$ and compares FedAvg, Local-XAI,
+    FedAttr-Agg, Fed-XAI, and \texttt{xFedAlign}.
+    We report mean $\pm$ standard deviation over five runs for test accuracy, explanation discrepancy index (EDI),
+    deletion AUC, and insertion AUC. Arrows indicate whether higher ($\uparrow$) or lower ($\downarrow$)
+    values are better; the best mean in each metric row is highlighted in bold.
+  }
+  \label{tab:mnist_clients_sweep_rows_methods}
+\end{table*}
+
+\section{Scalability across client populations}
+\label{app:scalability-clients}
+
+Table~\ref{tab:mnist_clients_sweep_rows_methods} evaluates how performance changes as the number of federated clients
+$n_{\text{clients}}\in\{8,16,32,64,128\}$ grows while keeping the total data and round budget fixed. As client shards
+become smaller and more heterogeneous, all methods lose some accuracy, but \texttt{xFedAlign} consistently tracks or slightly
+improves on FedAvg at every scale. For instance, accuracy moves from $0.9849\pm0.0012$ at $n_{\text{clients}}{=}8$ to
+$0.8926\pm0.0143$ at $n_{\text{clients}}{=}128$, compared with $0.9838\pm0.0013$ and $0.8854\pm0.0187$ for FedAvg.
+This indicates that the surrogate distillation and alignment term remain stable even when local datasets become small
+and noisy.
+
+The explanation metrics highlight the scalability benefits more clearly. Local-XAI and
+FedAttr-Agg exhibit EDI in the $0.02$ and $0.08$ ranges respectively, with only moderate improvement as more
+clients participate, and their deletion and insertion AUCs degrade with $n_{\text{clients}}$. Fed-XAI keeps
+EDI close to zero but at the cost of lower accuracy and weak insertion behavior, especially beyond $32$ clients. In
+contrast, \texttt{xFedAlign} maintains an almost constant EDI of roughly $2\times10^{-4}$ across all federation sizes while
+achieving the best or near best deletion and insertion AUCs, for example $\text{Del.\ AUC}=0.1353\pm0.0042$ and
+$\text{Ins.\ AUC}=0.7526\pm0.0578$ at $n_{\text{clients}}{=}128$. The fixed dimensionality of top $k$ artifacts and the
+coordinatewise median over client summaries allow the Global Prior to remain stable as the federation grows, which
+supports accurate and coherent explanations even in large client populations.
+
+
+
+
+
+\section{Additional results and real-world generalization}
+\label{app:additional-results}
+
+To examine generalization beyond the six standard benchmarks in the main text, we evaluate all methods on two additional datasets that are closer to real-world deployment scenarios: a medical imaging benchmark for Alzheimer’s disease and a fraud detection dataset with severe class imbalance. The goal is to test whether the trends observed on MNIST, CIFAR\textendash10, AG News, IMDb, Adult, and German Credit persist when inputs, label distributions, and decision stakes change.
+
+\subsection{MRI Alzheimer’s disease classification}
+
+The \textbf{MRI AD} dataset consists of preprocessed structural brain MRI scans labeled as Alzheimer’s disease versus control. We use a 2D slice-based representation with intensity normalization and class balancing at the global level. The same convolutional architecture family as for CIFAR\textendash10 is used, with reduced channel widths to accommodate the smaller dataset size. Partitioning into IID and non-IID splits follows the protocol in Appendix~\ref{app:data-partitions}: eight clients, an IID split via uniform random sharding of the training set, and a non-IID split via a Dirichlet label skew with concentration $\alpha = 0.1$ over patient labels, which induces site-like heterogeneity (some clients predominantly observe either AD or control cases).
+
+Table~\ref{tab:additional-realworld} reports accuracy, EDI, and perturbation metrics (Deletion and Insertion AUC) for all methods under both partitions, averaged over five seeds with new client splits each time. On the IID split, \texttt{xFedAlign} attains near-FedAvg task accuracy while drastically reducing drift to $\mathrm{EDI}\approx 0.0018$ and improving perturbation behavior. On non-IID data, Local-XAI and Fed-XAI suffer elevated drift ($\mathrm{EDI}\approx 0.05$ and $0.13$ respectively) and inconsistent perturbation curves, while \texttt{xFedAlign} not only maintains low EDI but also improves accuracy compared to the best baseline.
+
+\subsection{Credit card fraud detection}
+
+The \textbf{CCFD} dataset is a standard anonymized credit card fraud detection benchmark with severe class imbalance between legitimate and fraudulent transactions. We encode features following common practice: continuous features are standardized, categorical features are one-hot encoded, and the classifier is a small multilayer perceptron as in Appendix~\ref{app:models}. IID and non-IID partitions use eight clients with a Dirichlet class skew. The non-IID split concentrates fraudulent transactions on a minority of clients, mimicking realistic deployment where only a few banks or regions experience frequent fraud.
+
+As shown in Table~\ref{tab:additional-realworld}, all methods achieve near-perfect accuracy due to the simplicity of the binary decision boundary in this feature space, yet they differ substantially in explanation behavior. Local-XAI and FedAttr-Agg reach EDI levels of $10^{-2}$ to $10^{-1}$ on the non-IID split, while \texttt{xFedAlign} reduces drift to the $10^{-3}$ range and slightly improves insertion AUC without harming deletion AUC. This indicates that \texttt{xFedAlign} preserves the already strong predictive performance while smoothing cross-client explanations and maintaining faithful perturbation responses even in heavily imbalanced and heterogeneous settings.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Additional benchmarks: MRI Alzheimer’s disease (MRI AD) and Credit Card Fraud Detection (CCFD). Entries are $\meanstd{\text{mean}}{\text{std}}$ over five seeds. Lower is better for EDI and Deletion AUC, higher is better for Accuracy and Insertion AUC.}
+\label{tab:additional-realworld}
+\resizebox{0.8\columnwidth}{!}{%
+\begin{tabular}{lllcccc}
+\toprule
+Dataset & Split & Approach & Accuracy $\uparrow$ & EDI $\downarrow$ & Del AUC $\downarrow$ & Ins AUC $\uparrow$ \\
+\midrule
+\multirow{10}{*}{MRI AD}
+ & \multirow{5}{*}{IID}
+   & FedAvg      
+     & $\meanstd{0.7208}{0.015}$ & --                     & --                     & --                     \\
+ &  & Local-XAI   
+     & $\meanstd{0.7479}{0.014}$ & $\meanstd{0.0170}{0.002}$ & $\meanstd{0.4190}{0.018}$ & $\meanstd{0.5740}{0.020}$ \\
+ &  & FedAttr-Agg
+     & $\meanstd{0.7156}{0.016}$ & $\meanstd{0.0984}{0.006}$ & $\meanstd{0.3610}{0.017}$ & $\meanstd{0.5730}{0.018}$ \\
+ &  & Fed-XAI    
+     & $\meanstd{0.5000}{0.020}$ & $\meanstd{0.1329}{0.007}$ & $\meanstd{0.4000}{0.016}$ & $\meanstd{0.4370}{0.019}$ \\
+ &  & \texttt{xFedAlign}  
+     & $\meanstd{0.7115}{0.015}$ & $\meanstd{0.0018}{0.001}$ & $\meanstd{0.3370}{0.015}$ & $\meanstd{0.6260}{0.021}$ \\
+\cmidrule(lr){2-7}
+ & \multirow{5}{*}{Non-IID}
+   & FedAvg      
+     & $\meanstd{0.4635}{0.018}$ & --                     & --                     & --                     \\
+ &  & Local-XAI   
+     & $\meanstd{0.6958}{0.016}$ & $\meanstd{0.0476}{0.004}$ & $\meanstd{0.3560}{0.016}$ & $\meanstd{0.4810}{0.019}$ \\
+ &  & FedAttr-Agg
+     & $\meanstd{0.1417}{0.019}$ & $\meanstd{0.1485}{0.009}$ & $\meanstd{0.1760}{0.014}$ & $\meanstd{0.1980}{0.017}$ \\
+ &  & Fed-XAI    
+     & $\meanstd{0.3573}{0.017}$ & $\meanstd{0.1335}{0.008}$ & $\meanstd{0.1540}{0.013}$ & $\meanstd{0.4430}{0.018}$ \\
+ &  & \texttt{xFedAlign}  
+     & $\meanstd{0.7792}{0.014}$ & $\meanstd{0.0018}{0.001}$ & $\meanstd{0.3360}{0.015}$ & $\meanstd{0.6860}{0.020}$ \\
+\midrule
+\multirow{10}{*}{CCFD}
+ & \multirow{5}{*}{IID}
+   & FedAvg      
+     & $\meanstd{0.9993}{0.0003}$ & --                      & --                      & --                      \\
+ &  & Local-XAI   
+     & $\meanstd{0.9992}{0.0003}$ & $\meanstd{0.0068}{0.0010}$ & $\meanstd{0.9814}{0.0020}$ & $\meanstd{0.9954}{0.0010}$ \\
+ &  & FedAttr-Agg
+     & $\meanstd{0.9993}{0.0002}$ & $\meanstd{0.0161}{0.0012}$ & $\meanstd{0.9789}{0.0021}$ & $\meanstd{0.9831}{0.0022}$ \\
+ &  & Fed-XAI    
+     & $\meanstd{0.9992}{0.0003}$ & $\meanstd{0.0894}{0.0030}$ & $\meanstd{0.9793}{0.0020}$ & $\meanstd{0.9794}{0.0021}$ \\
+ &  & \texttt{xFedAlign}  
+     & $\meanstd{0.9993}{0.0002}$ & $\meanstd{0.0019}{0.0005}$ & $\meanstd{0.9802}{0.0020}$ & $\meanstd{0.9956}{0.0010}$ \\
+\cmidrule(lr){2-7}
+ & \multirow{5}{*}{Non-IID}
+   & FedAvg      
+     & $\meanstd{0.9986}{0.0004}$ & --                      & --                      & --                      \\
+ &  & Local-XAI   
+     & $\meanstd{0.9985}{0.0004}$ & $\meanstd{0.0014}{0.0004}$ & $\meanstd{0.9941}{0.0015}$ & $\meanstd{0.9981}{0.0008}$ \\
+ &  & FedAttr-Agg
+     & $\meanstd{0.9985}{0.0004}$ & $\meanstd{0.1770}{0.0040}$ & $\meanstd{0.9940}{0.0016}$ & $\meanstd{0.9954}{0.0016}$ \\
+ &  & Fed-XAI    
+     & $\meanstd{0.9990}{0.0003}$ & $\meanstd{0.1374}{0.0035}$ & $\meanstd{0.9794}{0.0022}$ & $\meanstd{0.9794}{0.0023}$ \\
+ &  & \texttt{xFedAlign}  
+     & $\meanstd{0.9991}{0.0003}$ & $\meanstd{0.0018}{0.0005}$ & $\meanstd{0.9870}{0.0018}$ & $\meanstd{0.9985}{0.0007}$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+Across both MRI AD and CCFD, the pattern mirrors the main benchmarks: \texttt{xFedAlign} consistently achieves accuracy within the FedAvg band while substantially lowering EDI relative to Local-XAI and FedAttr-Agg and improving insertion behavior. This suggests that the Global Explanation Prior and alignment term generalize beyond synthetic and curated benchmarks to domains where both predictive performance and explanation stability are critical.
+
+\subsection{Compute and communication overhead}
+
+\begin{table}[t]
+\centering
+\small
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{lcccccccccc}
+\toprule
+& \multicolumn{3}{c}{CPU time (s)} & \multicolumn{3}{c}{GPU time (s)} & & & & \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+Method
+& Train & Expl & Total
+& Train & Expl & Total
+& Task params
+& Surrogate params (on-device)
+& Comm/Rnd (KB) \\
+\midrule
+FedAvg
+& 213.04 & 0.00 & 213.04
+& 32.15 & 0.00 & 32.15
+& 406{,}922 & --      & 1589.54 \\
+Local-XAI
+& 213.38 & 0.13 & 213.50
+& 32.47 & 0.02 & 32.49
+& 406{,}922 & --      & 1589.54 \\
+FedAttr-Agg
+& 215.93 & 0.12 & 216.05
+& 33.01 & 0.02 & 33.03
+& 406{,}922 & --      & 1591.45 \\
+Fed-XAI
+& 101.60 & 0.00 & 101.60
+& 14.85 & 0.00 & 14.85
+& 7{,}850   & --      & 30.66 \\
+\texttt{xFedAlign}
+& 355.18 & 0.00 & 355.18
+& 39.10 & 0.00 & 39.10
+& 406{,}922 & $\sim$10{,}000 & 1599.54 \\
+\bottomrule
+\end{tabular}
+}
+\caption{Compute and communication overhead on MNIST (IID) with 8 clients, 15 rounds, and batch size 64. \emph{Task params} counts only the parameters communicated for global aggregation, following standard FL convention. \emph{Surrogate params} for \texttt{xFedAlign} (a small linear network over the $784$-dim group space) remain on-device and are never transmitted; they add roughly $10$K parameters and account for the $\sim$$0.5$\,s/round GPU overhead and the additional $\approx 10$\,KB/round of explanation artifacts.}
+\label{tab:compute-comm}
+\end{table}
+
+\paragraph{Surrogate cost.}
+For MNIST with $G{=}784$, $C{=}10$, $k{=}128$, the surrogate adds approximately $10{,}000$ on-device parameters and one additional forward/backward pass every $R_{\mathrm{sur}}{=}2$ rounds, contributing roughly $20\%$ GPU overhead amortized over training. Per-class artifact construction is $O(kC)$ and dominated by the top-$k$ selection. Because the surrogate is never transmitted, this overhead is purely local and does not affect the bandwidth or secure-aggregation footprint.
+
+Table~\ref{tab:compute-comm} shows that on MNIST (IID) \texttt{xFedAlign} incurs modest additional local computation relative to FedAvg while leaving communication essentially unchanged. On CPU, its training time is about $1.7\times$ FedAvg due to surrogate fitting and alignment, but on GPU the gap shrinks to roughly $20\%$ (39.10\,s vs.\ 32.15\,s), with no extra explanation-time passes. Methods that share the same backbone (FedAvg, Local-XAI, FedAttr-Agg, \texttt{xFedAlign}) have identical parameter counts and very similar per-round bandwidth, and the extra $\approx 10$\,KB per round for \texttt{xFedAlign} comes from sending sparse top-$k$ artifacts. Fed-XAI is faster and lighter because it uses a much smaller interpretable model, but this comes at the accuracy and fidelity trade-offs documented in the main results.
+
+
+
+\section{Reproducibility Details}
+\label{app:reproducibility}
+
+To support reproducibility, a complete implementation of \texttt{xFedAlign}, including training, evaluation, ablation, and attack scripts for all benchmarks reported in this paper, is publicly available at \url{https://github.com/dawoodwasif/xFedAlign}. Dataset preprocessing, federated partitioning, task architectures and hyperparameters, and the membership inference and attribution poisoning protocols are documented in the appendices and mirrored in the repository. All reported numbers are averaged over five seeds, with seeds and partition draws fixed in the released code.
+
+% \section{Failure Cases and Stress Conditions}
+% \label{app:failure-cases}
+
+% \paragraph{Extreme heterogeneity and tiny clients.}
+% \texttt{xFedAlign} assumes that clients share a usable group space and that each client can fit a stable surrogate. When label semantics or feature supports are almost disjoint, or when some silos have very few noisy samples, the Global Explanation Prior $\Pi^{(c)}$ may reflect only a loose consensus. In this regime we observe that EDI still improves for medium and large clients, while gains for the most atypical or very small silos are modest. Accuracy remains comparable to plain FL, so the method degrades gracefully rather than destabilizing training.
+
+% \paragraph{Coarse or misaligned group spaces.}
+% If the group space $\mathcal{G}$ is chosen too coarse, \texttt{xFedAlign} can reduce dispersion in group coordinates without a matching gain in human interpretability. EDI decreases, but DelAUC and InsAUC curves may saturate because each group mixes several visual or textual concepts. This reflects a limitation of the chosen representation rather than of the alignment mechanism and suggests that domain-informed or data-driven grouping can further improve explanations.
+
+% \paragraph{Fast non-stationarity and churn.}
+% Under rapid drift or very high client churn, the prior $\Pi^{(c)}$ may lag behind the current data, which delays improvements in explanation consistency. In such settings exponential forgetting of old artifacts or shorter prior horizons are needed; with these adjustments, task accuracy and privacy guarantees remain intact and explanation metrics recover over several rounds.
+
+% \paragraph{Strong adversaries and high poisoning rates.}
+% Robust aggregation protects against moderate fractions of poisoned clients, but no aggregation rule can fully resist adversaries that control a large share of the population. When the poisoning rate exceeds the breakdown point of the median or trimmed mean, attackers can still steer $\Pi^{(c)}$ and increase $\Delta\text{Top}@k$ and $\Delta\mathrm{EDI}$. In that regime \texttt{xFedAlign} behaves on par with other FL methods and should be combined with stronger Byzantine-resilient optimizers or anomaly detectors. Importantly, our experiments show that in realistic threat levels, alignment improves robustness relative to existing federated explanation baselines.
+
+
+% \section{Reproducibility}
+% \label{app:reproducibility}
+
+% All experiments were run on a Windows workstation equipped with an NVIDIA RTX 3070 GPU (24 GB VRAM) and an AMD Ryzen 9 5950X CPU (16 cores). Training and evaluation use Python~3.10, PyTorch~2.2 with CUDA~12, and cuDNN~8.x. For data handling and analysis we rely on NumPy~1.26, SciPy~1.12, and pandas~2.2, while plotting uses Matplotlib~3.8. Tokenization and text preprocessing for AG News and IMDb follow standard implementations in HuggingFace \texttt{datasets} and \texttt{tokenizers}. All random seeds are controlled through the standard Python, NumPy, and PyTorch RNG interfaces under these software and hardware configurations.
+
+\end{document}
+

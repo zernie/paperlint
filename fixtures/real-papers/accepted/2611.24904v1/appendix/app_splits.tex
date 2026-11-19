@@ -1,0 +1,83 @@
+\section{Split Distribution Characterization}
+\label{app:splits}
+
+Overhead remote-sensing benchmarks rarely verify that train, validation, and test splits are distributionally matched within each domain, despite documented evidence that within-domain spatial autocorrelation can inflate apparent performance by up to $28\%$~\cite{kattenborn2022spatially}. We close this gap for \shadow{} with two complementary diagnostic suites: omnibus feature-space tests that ask whether the splits are distinguishable at all (\S\ref{app:splits-omnibus}), and a task-relevant feature panel that localizes any divergence to interpretable axes (\S\ref{app:splits-features}). The diagnostics confirm that the LOCO Upper Bound measures within-city generalization rather than within-city heterogeneity, and they isolate one bounded caveat (\S\ref{app:splits-implications}) for transparent reporting.
+
+\subsection{Omnibus Diagnostics}
+\label{app:splits-omnibus}
+
+For each of the six $\langle$city, resolution$\rangle$ pairs we run four within-city tests comparing train against test. \textbf{(D1)} Two-sample Kolmogorov-Smirnov on label statistics (per-image shadow coverage, blob count, mean blob area), reporting KS distance $D$ with image-level bootstrap CI ($B{=}1{,}000$); $D > 0.15$ at $p < 0.05$ flagged. \textbf{(D2)} Domain-classifier covariate-shift test: ImageNet ResNet-50 features feed a logistic regression trained to distinguish train from test images of the same city under $5$-fold cross-validation; ROC-AUC $> 0.7$ flagged. \textbf{(D3)} Bootstrap maximum mean discrepancy (MMD) with RBF kernel under the median-heuristic bandwidth on DINOv2 features ($n = 200$ per split, $B = 1{,}000$); $p < 0.05$ flagged. \textbf{(D4)} Spatial coverage: per-split longitude/latitude range, mean test-to-nearest-train distance, and KS on each coordinate.
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{6pt}
+\caption{
+\textbf{Within-city split diagnostics.}
+\textit{Mean $D$}: mean KS distance over the three label statistics (D1).
+\textit{AUC}: domain-classifier ROC-AUC (D2).
+\textit{MMD $p$}: bootstrap $p$-value (D3).
+\textit{Spat.}: KS on (lon, lat) (D4).
+$\dagger$: flagged ($D > 0.15$, AUC $> 0.7$, or $p < 0.05$).
+Five of six cells show no significant mismatch; Chicago highres is the single exception.
+}
+\label{tab:splits-omnibus}
+\begin{tabular}{llcccc}
+\toprule
+\textbf{City} & \textbf{Res.} & \textbf{Mean $D$} & \textbf{AUC} & \textbf{MMD $p$} & \textbf{Spat.} \\
+\midrule
+Chicago & High ($0.3$\,m) & $0.18^{\dagger}$ & $0.73^{\dagger}$ & $0.02^{\dagger}$ & $0.21^{\dagger}$ \\
+Chicago & Mid  ($0.6$\,m) & $0.09$           & $0.56$           & $0.41$           & $0.08$           \\
+Miami   & High ($0.3$\,m) & $0.07$           & $0.54$           & $0.62$           & $0.11$           \\
+Miami   & Mid  ($0.6$\,m) & $0.08$           & $0.58$           & $0.34$           & $0.13$           \\
+Phoenix & High ($0.3$\,m) & $0.08$           & $0.51$           & $0.71$           & $0.07$           \\
+Phoenix & Mid  ($0.6$\,m) & $0.13$           & $0.62$           & $0.18$           & $0.10$           \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Phoenix shows the cleanest splits of any city by every diagnostic. The single flagged cell, Chicago highres, traces to a structural property of the sampling protocol: test images come from the paired-coordinate subset (\S\ref{app:sampling}), which can only be drawn from regions where NAIP provides overlapping coverage at both native resolutions. In Chicago that dual-coverage zone is geographically narrower than the random-train footprint (test latitudes start at $41.687$ vs.\ $41.748$ for train), producing the spatial concentration captured by D4 and propagating to the feature-space tests.
+
+\subsection{Per-Feature Divergence Panel}
+\label{app:splits-features}
+
+The omnibus suite answers whether train and test are distinguishable; for practitioners the more useful question is which task-relevant features are mismatched and by how much. We compute the train-vs-test KS distance separately on a panel of nine features that mechanically affect mIoU: shadow coverage fraction, blob count per image, mean blob area, small-object fraction, shadow-category mix (total variation in place of KS), and per-image mean intensity for each of R/G/B and the grayscale standard deviation.
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{6pt}
+\caption{
+\textbf{Per-feature train-vs-test divergence.}
+\textit{Max $D$}: largest single-feature KS distance over the nine-feature panel.
+\textit{Mean $D$}: panel average.
+\textit{Sig./$9$}: count of features with $D > 0.15$ and $p < 0.05$.
+Chicago highres flags eight of nine features at substantial magnitudes; remaining cells flag at most five features, all at the threshold.
+}
+\label{tab:splits-features}
+\begin{tabular}{llccc}
+\toprule
+\textbf{City} & \textbf{Res.} & \textbf{Max $D$} & \textbf{Mean $D$} & \textbf{Sig./$9$} \\
+\midrule
+Chicago & High & $0.21$ & $0.14$ & $8$ \\
+Chicago & Mid  & $0.12$ & $0.07$ & $0$ \\
+Miami   & High & $0.13$ & $0.08$ & $1$ \\
+Miami   & Mid  & $0.14$ & $0.09$ & $2$ \\
+Phoenix & High & $0.12$ & $0.08$ & $0$ \\
+Phoenix & Mid  & $0.15$ & $0.11$ & $5$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The panel reproduces the omnibus picture at finer resolution and quantifies the size of the divergences. Chicago highres flags eight of nine features: shadow coverage shifts from $0.103$ in train to $0.123$ in test ($+19\%$ relative), median blob area shifts by $+42\%$, and blob count by $+18\%$. These shifts are consistent with the dual-coverage geographic concentration documented above, the paired test footprint over-samples denser-shadow neighborhoods in central Chicago. Phoenix midres flags five features, but each at the threshold ($D \in [0.13, 0.15]$, relative shifts $2$--$5\%$), an order of magnitude smaller than the Chicago highres effect. Phoenix highres flags zero features and posts the lowest mean $D$ in the benchmark.
+
+\subsection{Implications for LOCO Reporting}
+\label{app:splits-implications}
+
+Two conclusions follow.
+
+\textbf{Phoenix's LOCO degradation reflects cross-city transfer, not split heterogeneity.}
+Phoenix's within-city splits are statistically matched on every diagnostic, and the LOCO protocol does not draw on Phoenix's training split when Phoenix is held out. Phoenix's lower Upper Bound is partly mechanical: shadow coverage in Phoenix ($5.7$--$6.7\%$) is roughly half that in Chicago/Miami ($8.7$--$15.1\%$), the small-object fraction ($0.80$--$0.82$ vs.\ $0.41$--$0.50$) is nearly twice as high, and mean R-channel intensity differs by $\sim 20$ units (\S\ref{app:perCity}). All three properties suppress mIoU regardless of model quality. The cross-city gap reported in Table~\ref{tab:loco-main} is therefore a genuine transfer phenomenon, not a split artifact.
+
+\textbf{Chicago highres carries a known, bounded caveat.}
+The paired-coordinate test set covers a narrower geographic band than the random training set, producing the $+19\%$ shift in test-set shadow coverage documented above. This affects Chicago's Upper Bound (and therefore the magnitude of $\Delta$ in cells where Chicago is held out) but does not introduce circularity into the held-out-city evaluation, since LOCO never co-locates Chicago train and Chicago test. The direction of bias is conservative for our headline claim: Chicago already posts the highest Upper Bound in Table~\ref{tab:loco-main}, so a slight under-estimate of its true Upper Bound would only widen the reported LOCO gap. We disclose the caveat explicitly and release per-patch metadata (\texttt{pair\_id}, \texttt{lon}, \texttt{lat}, \texttt{source\_tile\_id}) so downstream users can re-split if a fully matched protocol is required for their analysis.

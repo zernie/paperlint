@@ -1,0 +1,13 @@
+The following meta-review was prepared by the program committee for the 2025 IEEE Symposium on Security and Privacy (S\&P) as part of the review process as detailed in the call for papers.
+
+\subsection{Summary} This paper presents a novel method to verify computations performed using Fully Homomorphic Encryption (FHE), named DataSeal. DataSeal integrates Algorithm-Based Fault Tolerance (ABFT) into FHE to ensure the integrity of computations with low overhead. The method is designed for matrix operations and neural network inference tasks, leveraging secret client-specific checksums for verification. The proposed system is benchmarked against existing solutions like MAC, ZKP, and TEE, showing superior efficiency as the problem size increases.
+
+\subsection{Scientific Contributions} \begin{itemize} \item Creates a New Tool to Enable Future Science \item Provides a Valuable Step Forward in an Established Field \end{itemize}
+
+\subsection{Reasons for Acceptance} \begin{enumerate} \item The verifiability of computations in FHE has been a significant challenge. DataSeal offers an effective solution that addresses this gap with minimal overhead.
+
+\item DataSeal opens new opportunities for researchers working with FHE and matrix operations. Its lightweight design makes it a valuable tool for future applications in secure computing.
+
+\item The work builds on existing methods (ABFT and FHE) but provides significant advancements by integrating these techniques in a new way to enable verifiable encrypted computations. \end{enumerate}
+
+\subsection {Noteworthy Concerns} The authors need to expand their evaluation to other computational workloads and real-world attack scenarios to strengthen the generalizability and robustness of DataSeal.

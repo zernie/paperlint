@@ -1,0 +1,305 @@
+\section{Experiments} \label{4:experiments}
+
+
+\textbf{Datasets.}
+Standard anomaly detection benchmarks such as ADBench~\citep{han2022adbench} and the ODDS library~\citep{rayana2016odds} are dominated by purely numerical features. Following AnoLLM~\citep{tsai2025anollm}, that include textual, numerical, or categorical features, drawn from the ODDS library~\citep{rayana2016odds}, a fraud detection benchmark~\citep{grover2022fraudbench}, and Kaggle. To further validate the robustness of DiSPaT, we additionally evaluate on 30 numerical datasets from ODDS library. Dataset statistics for all datasets are summarized in Appendix~\ref{sec:app:dataset_information}, and detailed ODDS results are reported in Appendix~\ref{sec:app:oods_result}.
+
+\begin{table*}[t]
+\centering
+\caption{Detailed AUC-ROC scores (\%) comparing DiSPaT against baselines on the six-dataset benchmark. Best and second-best results per dataset are highlighted in \textbf{bold} and \underline{underlined}, respectively. Values marked with $\uparrow$ and $\downarrow$ indicate where DiSPaT improves or degrades compared to AnoLLM with the same model size. All baseline results are reported directly from~\citep{tsai2025anollm}.}
+\label{tab:auc_roc_scores_mixed_type_6}
+
+\small
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.0}
+
+\newcommand{\myheader}[1]{\begin{tabular}[c]{@{}c@{}}#1\end{tabular}}
+
+% Define improvement marker: DiSPaT > AnoLLM (same model size)
+\newcommand{\improve}[1]{#1$^{\uparrow}$}
+
+\begin{tabular}{l c c c c c c c}
+\toprule
+\textbf{Methods$\backslash$Datasets} &
+\textbf{\myheader{Fakejob}} &
+\textbf{Lymphography} &
+\textbf{Seismic} &
+\textbf{\myheader{Vehicle}} &
+\textbf{\myheader{20 Newsgroups}} &
+\textbf{Ecoli} &
+\textbf{Average} \\
+
+\midrule
+\multicolumn{8}{c}{\textit{Classical methods}} \\
+\midrule
+Iforest & 75.5\% & 67.3\% & 69.2\% & 49.6\% & 62.3\% & 85.6\% & 68.3\% \\
+PCA    & 72.4\% & 82.6\% & 69.2\% & 50.9\% & 62.3\% & 85.6\% & 70.5\% \\
+KNN    & 63.6\% & 86.0\% & 73.8\% & 52.4\% & 60.5\% & 87.7\% & 70.7\% \\
+ECOD   & 51.2\% & 83.0\% & 69.2\% & 50.9\% & 62.0\% & 77.6\% & 65.7\% \\
+
+\midrule
+\multicolumn{8}{c}{\textit{Deep Learning based methods}} \\
+\midrule
+DeepSVDD & 56.1\% & 89.9\% & 71.3\% & 50.5\% & 59.7\% & 88.7\% & 69.4\% \\
+RCA      & 62.9\% & 91.9\% & 72.7\% & 53.1\% & 54.6\% & 88.3\% & 70.6\% \\
+SLAD     & 60.3\% & 96.4\% & 71.4\% & 55.6\% & 64.0\% & 88.2\% & 72.7\% \\
+GOAD     & 56.6\% & 81.7\% & 71.7\% & 51.2\% & 63.0\% & 88.1\% & 68.7\% \\
+NeuTral  & 54.8\% & 84.7\% & 68.1\% & 50.7\% & 65.8\% & 86.0\% & 68.4\% \\
+ICL      & 69.9\% & 82.7\% & 71.9\% & 50.1\% & 67.1\% & 88.7\% & 71.7\% \\
+DTE      & 54.8\% & 90.9\% & 71.4\% & 51.2\% & 60.0\% & 82.1\% & 68.4\% \\
+REPEN    & 65.3\% & 80.8\% & 72.4\% & 51.3\% & 57.4\% & 87.0\% & 69.0\% \\
+
+\midrule
+\multicolumn{8}{c}{\textit{LLM-based methods}} \\
+\midrule
+AnoLLM (SmolLM-135M) & 80.0\% & 96.8\% & 71.2\% & 56.9\% & 76.6\% & 77.7\% & 76.5\% \\
+DiSPaT               & 84.2\%$^{\uparrow}$ & \textbf{100.0\%}$^{\uparrow}$ & 73.2\%$^{\uparrow}$ & \underline{63.8\%}$^{\uparrow}$ & \textbf{91.9\%}$^{\uparrow}$ & 94.9\%$^{\uparrow}$ & \underline{84.6\%}$^{\uparrow}$ \\
+\cmidrule{1-8}
+AnoLLM (SmolLM-360M) & 81.4\% & 99.5\% & \underline{74.6\%} & 55.5\% & 75.2\% & 80.4\% & 77.8\% \\
+DiSPaT               & \textbf{88.3\%}$^{\uparrow}$ & \textbf{100.0\%}$^{\uparrow}$ & \textbf{75.7\%}$^{\uparrow}$ & \textbf{64.2\%}$^{\uparrow}$ & \underline{87.6\%}$^{\uparrow}$ & \textbf{96.8\%}$^{\uparrow}$ & \textbf{85.4\%}$^{\uparrow}$ \\
+\cmidrule{1-8}
+AnoLLM (SmolLM-1.7B) & 80.2\% & 99.5\% & 74.0\% & 56.0\% & 77.4\% & 79.1\% & 77.7\% \\
+DiSPaT               & \underline{85.2\%}$^{\uparrow}$ & \underline{99.8\%}$^{\uparrow}$ & \underline{74.6\%}$^{\uparrow}$ & 59.0\%$^{\uparrow}$ & 87.1\%$^{\uparrow}$ & \underline{95.1\%}$^{\uparrow}$ & 83.5\%$^{\uparrow}$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+
+\begin{table*}[t]
+\centering
+\caption{Detailed F1 scores (\%) comparing DiSPaT against baselines on six-dataset benchmark. Best and second-best per dataset are highlighted in \textbf{bold} and \underline{underlined}; $\uparrow$ and $\downarrow$ indicate where DiSPaT improves or degrades compared to AnoLLM with same model size. Baselines from~\citep{tsai2025anollm}, except AnoLLM (SmolLM-1.7B) obtained via official implementation (not reported in original paper).}
+\label{tab:f1_scores_mixed_type_6}
+
+\small
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.0}
+
+\providecommand{\myheader}[1]{\begin{tabular}[c]{@{}c@{}}#1\end{tabular}}
+
+\begin{tabular}{l c c c c c c c}
+\toprule
+\textbf{Methods$\backslash$Datasets} & 
+\textbf{\myheader{Fakejob}} & 
+\textbf{Lymphography} & 
+\textbf{Seismic} & 
+\textbf{\myheader{Vehicle}} & 
+\textbf{\myheader{20 Newsgroups}} & 
+\textbf{Ecoli } &
+\textbf{Average} \\
+
+\midrule
+\multicolumn{8}{c}{\textit{Classical methods}} \\
+\midrule
+Iforest & 27.4\% & 23.3\% & 25.1\% & 11.0\% & 13.7\% & \underline{75.6}\% & 29.4\% \\
+PCA     & 25.6\% & 56.7\% & 26.6\% & 12.4\% & 13.3\% & \textbf{77.8\%} & 35.4\% \\
+KNN     & 16.3\% & 66.7\% & 29.1\% & 13.5\% & 15.6\% & \textbf{77.8\%}  & 36.5\% \\
+ECOD    & 16.5\% & 40.0\% & 28.2\% & 11.2\% & 13.2\% & 31.1\% & 23.4\% \\
+
+\midrule
+\multicolumn{8}{c}{\textit{Deep Learning based methods}} \\
+\midrule
+DeepSVDD & 13.6\% & 56.7\% & 25.8\% & 11.5\% & 15.2\% & 53.3\% & 29.4\% \\
+RCA      & 13.7\% & 66.7\% & 32.0\% & 13.5\% & 12.9\% & \textbf{77.8\%} & 36.1\% \\
+SLAD     & 17.5\% & 66.7\% & 28.5\% & 15.5\% & 15.9\% & \textbf{77.8\%} & 37.0\% \\
+GOAD     & 12.9\% & 66.7\% & 29.5\% & 11.9\% & 13.6\% & \textbf{77.8\%} & 35.4\% \\
+NeuTral  & 11.5\% & 63.3\% & 19.5\% & 12.0\% & 19.5\% & 51.1\% & 29.5\% \\
+ICL      & 24.5\% & 66.7\% & 29.8\% & 10.8\% & 19.0\% & 71.1\% & 37.0\% \\
+DTE      & 10.7\% & 66.7\% & 23.9\% & 12.1\% & 18.5\% & 66.0\% & 33.0\% \\
+REPEN    & 16.4\% & 66.7\% & 30.6\% & 12.6\% & 12.4\% & \underline{75.6}\% & 35.7\% \\
+
+\midrule
+\multicolumn{8}{c}{\textit{LLM-based methods}} \\
+\midrule
+AnoLLM (SmolLM-135M) & 32.5\% & 76.7\% & 27.9\% & 16.2\% & 24.1\% & 33.3\%  & 35.1\% \\
+DiSPaT               & 34.9\%$^{\uparrow}$ & \textbf{100.0\%}$^{\uparrow}$ & 33.5\%$^{\uparrow}$ & \textbf{20.2\%}$^{\uparrow}$ & \textbf{49.8\%}$^{\uparrow}$ & 55.6\%$^{\uparrow}$ & \underline{49.0\%}$^{\uparrow}$ \\
+\cmidrule{1-8}
+AnoLLM (SmolLM-360M) & 34.3\% & 80.0\% & 33.6\% & 17.4\% & 22.0\% & 33.3\%  & 36.8\% \\
+DiSPaT               & \textbf{40.8\%}$^{\uparrow}$ & \textbf{100.0\%}$^{\uparrow}$ & \textbf{35.9\%}$^{\uparrow}$ & \underline{19.6}\%$^{\downarrow}$ & \underline{40.1\%}$^{\uparrow}$ & \textbf{77.8\%}$^{\uparrow}$ & \textbf{52.4\%}$^{\uparrow}$ \\
+\cmidrule{1-8}
+AnoLLM (SmolLM-1.7B) & 34.4\% & \underline{83.3\%} & \underline{34.1\%} & 16.5\% & 28.1\% & 44.4\%  & 40.1\% \\
+DiSPaT               & \underline{\textbf{37.2\%}}$^{\uparrow}$ & \underline{83.3\%} & 32.4\%$^{\downarrow}$ & 18.4\%$^{\uparrow}$ & 39.2\%$^{\uparrow}$ & \textbf{77.8\%}$^{\uparrow}$ & 48.0\%$^{\uparrow}$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+
+
+\begin{table*}[t]
+\centering
+\caption{Detailed AUC-PR scores (\%) comparing DiSPaT against baselines on six-dataset benchmark. Best and second-best per dataset are highlighted in \textbf{bold} and \underline{underlined}; $\uparrow$ and $\downarrow$ indicate where DiSPaT improves or degrades compared to AnoLLM with same model size. Baselines from~\citep{tsai2025anollm}, except AnoLLM (SmolLM-1.7B) obtained via official implementation (not reported in original paper).}
+
+\label{tab:aucpr_scores_mixed_type_6}
+
+\small
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.0}
+
+\providecommand{\myheader}[1]{\begin{tabular}[c]{@{}c@{}}#1\end{tabular}}
+
+\begin{tabular}{l c c c c c c c}
+\toprule
+\textbf{Methods$\backslash$Datasets} & 
+\textbf{\myheader{Fakejob}} & 
+\textbf{Lymphography} & 
+\textbf{Seismic} & 
+\textbf{\myheader{Vehicle}} & 
+\textbf{\myheader{20 Newsgroups}} & 
+\textbf{Ecoli} &
+\textbf{Average} \\
+
+\midrule
+\multicolumn{8}{c}{\textit{Classical methods}} \\
+\midrule
+Iforest & 22.7\% & 23.2\% & 23.5\% & 11.2\% & 14.6\% & 8.6\% & 17.3\% \\
+PCA     & 19.4\% & 62.4\% & 21.6\% & 11.7\% & 14.3\% & 16.0\% & 24.2\% \\
+KNN     & 13.8\% & 72.0\% & 25.6\% & 12.3\% & 14.8\% & 73.9\%  & 35.4\% \\
+ECOD    & 13.0\% & 36.5\% & 24.4\% & 11.6\% & 14.1\% & 18.9\% & 19.8\% \\
+
+\midrule
+\multicolumn{8}{c}{\textit{Deep Learning based methods}} \\
+\midrule
+DeepSVDD & 12.0\% & 68.0\% & 22.6\% & 11.4\% & 13.5\% & 2.4\% & 21.7\% \\
+RCA      & 13.4\% & 78.3\% & 25.0\% & 12.4\% & 13.6\% & 17.6\%  & 26.7\% \\
+SLAD     & 15.0\% & 79.5\% & 24.1\% & 14.0\% & 15.9\% & 11.0\% & 26.6\% \\
+GOAD     & 11.7\% & 69.7\% & 23.9\% & 11.6\% & 14.4\% & 1.2\% & 22.1\% \\
+NeuTral  & 10.8\% & 68.1\% & 19.3\% & 11.7\% & 17.6\% & 43.0\% & 28.4\% \\
+ICL      & 19.3\% & 71.8\% & 25.1\% & 11.5\% & 17.5\% & 66.4\% & 35.3\% \\
+DTE      & 10.6\% & 74.7\% & 22.4\% & 11.6\% & 15.7\% & \textbf{77.7\%} & 35.5\% \\
+REPEN    & 14.6\% & 69.7\% & 24.9\% & 11.8\% & 12.6\% & 9.3\% & 23.8\% \\
+
+\midrule
+\multicolumn{8}{c}{\textit{LLM-based methods}} \\
+\midrule
+AnoLLM (SmolLM-135M) & 28.6\% & 85.6\% & 23.6\% & 14.1\% & 22.3\% & 20.6\% & 32.5\% \\
+DiSPaT               & 30.9\%$^{\uparrow}$ & \textbf{100.0\%}$^{\uparrow}$ & 26.9\%$^{\uparrow}$ & \textbf{17.5\%}$^{\uparrow}$ & \textbf{49.4\%}$^{\uparrow}$ & 53.6\%$^{\uparrow}$ & 46.4\%$^{\uparrow}$ \\
+\cmidrule{1-8}
+AnoLLM (SmolLM-360M) & 30.4\% & 93.8\% & 28.1\% & 14.3\% & 21.4\% & 12.7\%  & 33.5\% \\
+DiSPaT               & \textbf{36.3\%}$^{\uparrow}$ & \textbf{100.0\%}$^{\uparrow}$ & \textbf{29.1\%}$^{\uparrow}$ & \underline{16.9\%}$^{\uparrow}$ & \underline{37.6\%}$^{\uparrow}$ & 65.4\%$^{\uparrow}$ & \textbf{47.6\%}$^{\uparrow}$ \\
+\cmidrule{1-8}
+AnoLLM (SmolLM-1.7B) & \underline{31.2\%} & \underline{97.6\%} & 27.9\% & 14.3\% & 26.5\% & 39.4\%  & 39.5\% \\
+DiSPaT               & 30.0\%$^{\downarrow}$ & \underline{97.6\%} & \underline{28.3\%}$^{\uparrow}$ & 15.1\%$^{\uparrow}$ & 36.1\%$^{\uparrow}$ & \underline{77.3\%}$^{\uparrow}$ & \underline{47.4\%}$^{\uparrow}$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+
+\textbf{Baselines.}
+We compare DiSPaT against 12 established tabular anomaly detection methods. Classical approaches rely on techniques such as tree-based isolation, linear projection, nearest-neighbor distances, and statistical distribution modeling; these include IForest~\citep{liu2008iforest}, PCA~\citep{shyu2003pca}, $k$NN~\citep{ramaswamy2000knn}, and ECOD~\citep{li2022ecod}. Deep learning methods leverage neural architectures, reconstruction-based learning, self-supervised objectives with data augmentation or contrastive learning, and generative diffusion processes; these include DeepSVDD~\citep{ruff2018deepsvdd}, RCA~\citep{liu2021rca}, SLAD~\citep{xu2023fascinating}, GOAD~\citep{bergman2020goad}, NeuTral~\citep{qiu2021neutral}, ICL~\citep{shenkar2022anomaly}, DTE~\citep{livernoche2024dte}, and REPEN~\citep{pang2018repen}. 
+We also include the LLM-based method AnoLLM~\citep{tsai2025anollm} as a baseline. 
+
+\textbf{Implementation and Evaluation.}
+We employ SmolLM-135M, SmolLM-360M, and SmolLM-1.7B as backbone LLMs, which are among the strongest publicly available open-weight small-scale models. Following AnoLLM~\citep{tsai2025anollm}, we fine-tune all models for 2000 steps (20000 steps for the Fakejob dataset) and select learning rates from $\{1\times10^{-3},\,5\times10^{-5}\}$ per dataset. We tune coefficient $\beta$ and clamping threshold $\epsilon$ for each dataset via grid search. For evaluation, we follow established benchmarks~\cite{shenkar2022anomaly, xu2023fascinating}: 50\% of normal data for training, with the remaining normal instances and all anomalies forming the test set. We report AUC-ROC, F1-score, and AUC-PR. Anomaly scores are computed as negative log-likelihood of serialized token sequences, averaged over $r=21$ random column permutations~\cite{tsai2025anollm}. Detailed hyperparameter settings and implementation specifics are provided in Appendix~\ref{sec:app:implementation}, and a detailed analysis of training and inference cost is given in Appendix~\ref{sec:app:computational}. 
+
+\subsection{Main Results}
+
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{Figures/iteration_result.pdf}
+\caption{AUC-ROC scores (\%) of DiSPaT across self-play iterations on four datasets 
+using SmolLM-135M. SFT indicates initial model, and iter-$k$ refers to model after $k$ iterations of training.}
+\label{fig:iteration_ablation}
+\end{figure}
+
+In all experiments, we adopt KL divergence with $f^*(v) = e^v - 1$, as it yields the best overall performance among the $f$-divergence variants; detailed comparisons are provided in Section~\ref{sec:ablation}. Tables~\ref{tab:auc_roc_scores_mixed_type_6}, \ref{tab:f1_scores_mixed_type_6} and \ref{tab:aucpr_scores_mixed_type_6} present the performance comparison on the six-dataset benchmark. \textbf{DiSPaT} consistently delivers the best results across all datasets and model scales. Specifically, DiSPaT improves over AnoLLM by \textbf{8.1\%}, \textbf{7.6\%}, and \textbf{5.8\%} in average AUC-ROC for the 135M, 360M, and 1.7B backbones, respectively. Similar improvements are observed on AUC-PR and F1 metrics: DiSPaT achieves \textbf{13.9\%}, \textbf{14.1\%}, and \textbf{7.9\%} improvements in AUC-PR, and \textbf{13.9\%}, \textbf{15.6\%}, and \textbf{7.9\%} improvements in F1 for three model sizes. Compared to classical and deep learning baselines, DiSPaT substantially outperforms the best-performing baseline across all metrics: at least \textbf{12.7\%} higher in AUC-ROC, \textbf{12.1\%} in AUC-PR, and \textbf{15.4\%} in F1. Additional comparisons with recent tabular anomaly detection baselines are reported in Appendix~\ref{sec:app:recent_baselines}. This highlights the advantage of LLM-based approaches for tabular data that may include textual, numerical, or categorical attributes, where traditional methods require extensive feature engineering to jointly model different attribute types.
+
+Figure~\ref{fig:iteration_ablation} illustrates the effect of iterative self-play training. Starting from the SFT-initialized model, performance generally improves as iterations increase, with most datasets showing gains by iteration 3. While some datasets exhibit minor fluctuations at intermediate iterations, the overall trend demonstrates that self-play progressively refines the model's understanding of normality. These gains validate our theoretical motivation: by iteratively contrasting real normal samples with model-generated pseudo-anomalies, DiSPaT learns a tighter description of normality that one-shot fine-tuning cannot achieve. The self-play mechanism provides the discriminative signal necessary to refine the decision boundary, enabling the model to better separate abnormal, near-normal anomalies from genuine normal instances. Additional iteration 
+analyses for F1 and AUC-PR metrics are provided in Appendix~\ref{sec:app:iteration_epsilon}.
+
+
+\subsection{Ablation Study} \label{sec:ablation}
+
+\textbf{Effect of $f$-Divergence Choice.} A key feature the proposed DiSPaT framework is its inherent flexibility in choosing different $f$-divergences through Fenchel conjugate $f^*$. As discussed in Section~\ref{3:methodology}, we consider functions $f$ whose conjugate $f^*$ is non-decreasing. To investigate the impact of this design choice, we evaluate four representative variants:
+\begin{itemize}
+    \setlength\itemsep{0em}
+    \item \textbf{Identity:} $f^*(v) = v$
+    \item \textbf{KL divergence:} $f^*(v) = e^v - 1$
+    \item \textbf{Reverse KL divergence:} $f^*(v) = -\log(1 - v)$
+    \item \textbf{Squared Hellinger distance:} $f^*(v) = \dfrac{v}{1-v}$
+\end{itemize}
+Reverse KL and Squared Hellinger require $v < 1$ for well-defined conjugates, which is satisfied by applying a clamping threshold $\epsilon$ to the log-ratio before computing $f^*$. Table~\ref{tab:f_divergence_ablation} reports results. When $f^*(v) = v$, the objective reduces to original SPIN formulation~\citep{chen2024self}. While Identity improves over SFT baseline, all three $f$-divergence variants achieve higher performance, with $f^*(v) = e^v - 1$ attaining the best average scores across all metrics. These results validate our motivation for generalizing self-play to a broader family of $f$-divergences: selecting an appropriate divergence measure improves learning for anomaly detection, enabling a tighter description of normality than the Identity baseline. Derivations of $f^*$ forms and full ablation over all six datasets are provided in Appendix~\ref{sec:app:derive f-divergence} and~\ref{sec:app:full_f_divergence}.
+
+
+
+\textbf{Effect of Clamping threshold.}
+Figure~\ref{fig:epsilon_ablation} shows AUC-ROC on SmolLM-360M as the clamping threshold $\epsilon$ varies. Clamping prevents over-penalization of synthetic samples with probability ratio close to 1; $\epsilon=0$ applies no clamping and can over-penalize ``good'' synthetic samples, while large $\epsilon$ reduces the effective contrast between normal and synthetic samples. Moderate positive values of $\epsilon$ yield the best performance. The results support using a moderate clamping threshold and indicate robustness to the exact value within that range. Additional analysis including F1 and AUC-PR metrics is provided in Appendix~\ref{sec:app:iteration_epsilon}.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=1\linewidth]{Figures/epsilon_roc.pdf}
+    \caption{Effect of clamping threshold $\epsilon$ on AUC-ROC scores (\%) on two datasets: Ecoli and Vehicle, using SmolLM-360M.}
+    \label{fig:epsilon_ablation}
+\end{figure}
+
+
+
+\begin{table}[t]
+\centering
+\caption{Performance comparison for different $f$-divergence choices on four datasets using SmolLM-135M.}
+\label{tab:f_divergence_ablation}
+
+% Resizebox sẽ tự động co giãn bảng cho vừa khít chiều rộng cột (columnwidth)
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{l l c c c c c}
+\toprule
+\textbf{$f^*$} & \textbf{Metric} & \textbf{Fakejob} & \textbf{Lymph.} & \textbf{Vehicle} & \textbf{Ecoli} & \textbf{Avg.} \\
+\midrule
+
+% 1. Identity
+\multirow{3}{*}{$v$} 
+    & ROC & 84.2\% & 99.3\% & 59.0\% & 92.3\% & 83.7\%  \\
+    & F1  & 34.9\% & 83.3\% & 16.9\% & 44.4\% & 44.9\%  \\
+    & PR  & 30.9\% & 94.4\% & 15.4\% & 37.9\% & 44.6\% \\
+\midrule
+
+% 2. KL Divergence
+\multirow{3}{*}{$e^v - 1$} 
+    & ROC & 83.9\% & 100.0\% & 63.8\% & 94.9\% & 85.7\% \\
+    & F1  & 35.1\% & 100.0\% & 20.2\% & 55.6\% & 52.7\% \\
+    & PR  & 30.7\% & 100.0\% & 17.5\% & 55.6\% & 50.5\% \\
+\midrule
+
+% 3. Reverse KL Divergence
+\multirow{3}{*}{$-\log(1-v)$} 
+    & ROC & 84.0\% & 100.0\% & 60.5\% & 93.1\% & 84.4\% \\
+    & F1  & 34.6\% & 100.0\% & 16.8\% & 55.6\% & 51.8\% \\
+    & PR  & 30.9\% & 100.0\% & 15.6\% & 51.1\% & 49.4\% \\
+\midrule
+
+% 4. Squared Hellinger
+\multirow{3}{*}{$\dfrac{v}{1-v}$} 
+    & ROC & 83.8\% & 97.7\% & 62.8\% & 94.9\% & 84.8\% \\
+    & F1  & 34.4\% & 83.3\% & 23.2\% & 55.6\% & 49.1\% \\
+    & PR  & 30.6\% & 89.6\% & 23.2\% & 46.3\% & 47.4\% \\
+\bottomrule
+\end{tabular}%
+} % Kết thúc resizebox
+\end{table}
+
+\subsection{Generalization Beyond Anomaly Detection}
+\label{sec:spin_generalization}
+
+Although DiSPaT is motivated by anomaly detection, its core design is a general self-play refinement procedure. To test whether the improvement over SPIN is specific to anomaly detection or reflects a broader advantage of the objective, we additionally evaluate DiSPaT in the standard SPIN alignment setting. Following the SPIN protocol, we fine-tune Qwen1.5-1.8B on 50{,}000 prompts randomly sampled from UltraChat200k and evaluate on the HuggingFace Open LLM Leaderboard benchmarks.
+
+Table~\ref{tab:spin_alignment} shows that DiSPaT consistently improves over SPIN on all six benchmarks, increasing the average score from 42.26 to 43.80. These results suggest that replacing the single fixed SPIN objective with the broader $f$-divergence family, together with the clamping mechanism, yields gains beyond the anomaly-detection setting. More broadly, they indicate that the self-play formulation of DiSPaT may be useful in problems where informative negative or contrastive data are limited.
+
+\begin{table}[t]
+\centering
+\caption{Comparison with SPIN in the standard alignment setting. We fine-tune Qwen1.5-1.8B on 50{,}000 UltraChat200k prompts and evaluate on HuggingFace Open LLM Leaderboard benchmarks. Results are reported as mean $\pm$ standard deviation.}
+\label{tab:spin_alignment}
+\footnotesize
+\renewcommand{\arraystretch}{1.08}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcc@{}}
+\toprule
+\textbf{Benchmark} & \textbf{SPIN} & \textbf{DiSPaT} \\
+\midrule
+ARC & $34.90 \pm 1.39$ & $\mathbf{36.52 \pm 1.41}$ \\
+TruthfulQA & $39.59 \pm 1.45$ & $\mathbf{39.71 \pm 1.46}$ \\
+Winogrande & $61.09 \pm 1.37$ & $\mathbf{62.33 \pm 1.37}$ \\
+GSM8K & $29.57 \pm 1.26$ & $\mathbf{33.89 \pm 1.30}$ \\
+HellaSwag & $43.66 \pm 0.49$ & $\mathbf{45.11 \pm 0.50}$ \\
+MMLU & $44.75 \pm 10.05$ & $\mathbf{45.23 \pm 9.83}$ \\
+Avg. & $42.26$ & $\mathbf{43.80}$ \\
+\bottomrule
+\end{tabular*}
+\end{table}

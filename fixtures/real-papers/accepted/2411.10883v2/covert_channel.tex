@@ -1,0 +1,138 @@
+\section{Covert Channel Attack}
+\label{sec:covert_channel}
+In this section, we exploit the findings from Section~\ref{sec:reverse_engineering} to build a fast and resilient covert channel. In Section~\ref{subsec:covert_design}, we describe the design of the covert channel and synchronization mechanisms. We evaluate and show results in Section~\ref{subsec:covert_evaluation}.
+
+\subsection{Covert Channel Design}
+\label{subsec:covert_design}
+In this section, we outline the design of the covert channel. We assume the receiver (spy) and sender (trojan) processes operate on the same file system, sharing the same permission level as other normal processes. 
+
+\textbf{{Covert channel synchronization.}} A key component is the synchronization between the sender and receiver, as it significantly enhances bandwidth and reduces the error rate. We follow the synchronization method proposed in prior work~\cite{rauscher2024idleleak}. As illustrated in Figure~\ref{fig:covert_channel_synchronization}, we utilize the TSC (Time Stamp Counter) to synchronize the sender and receiver. Since TSC is a register timer accessible to any process, the current TSC value is shared between the sender and receiver. The sender and receiver both compute a start time by adding a predefined constant to the current TSC value. They wait until the computed start time, after which the sender begins transmitting the message with a starter code. Once the receiver detects the starter code, the covert channel is established.
+
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.4\textwidth]{figures/covert_sync.png}
+    % \vspace{-2.0em}
+    \caption{The \textit{syncfs} covert channel uses TSC for synchronization on ext4 before transmission.}
+    \label{fig:covert_channel_synchronization}
+\end{figure}
+
+\textbf{{Design.}} In the Section~\ref{sec:reverse_engineering}, we have observed that multiple I/O system calls can cause delay in \textit{syncfs}. The communication channel based on \textit{syncfs} leverages the write + flush mechanism in I/O buffers. The sender controls a file and writes data or metadata to it, marking dirty pages in the I/O buffers. To minimize overhead, the sender uses direct I/O (write(O\_SYNC)), which requires only the journal cache to be flushed. The receiver observes a higher \textit{syncfs} delay when flushing the dirty pages. Conversely, when the sender is inactive, the receiver experiences the base \textit{syncfs} delay, which occurs without any I/O operations. 
+
+% \cheng{do we need to mention that the receiver also needs to control a file? } \yicheng{it should be fine. Just make this file is not shared with sender}
+
+
+The algorithms for the receiver and sender are visualized in Algorithm~\ref{alg:receiver} and \ref{alg:sender}, respectively. Once synchronization via TSC is completed, the receiver begins measuring the delay of \textit{syncfs}. It decodes the observed delay patterns into bit representations, stopping when it detects the ending code, a specific pattern indicating the end of the message. 
+
+We define bit '0' and bit '1' using distinct delay patterns, as shown in Algorithm~\ref{alg:receiver}. A higher delay caused by flushing I/O buffers represents bit '1', while a base delay without I/O represents bit '0'. In our covert channel, the sender adjusts the delay pattern by either writing 64 bytes to a file using direct I/O or executing an NOP loop for a defined number of iterations.
+
+
+
+
+
+\subsection{Covert Channel Evaluation}
+\label{subsec:covert_evaluation}
+
+
+\begin{algorithm}[t]
+\caption{Receiver for Covert Channel} \label{alg:receiver}
+\begin{algorithmic}[1]
+% \small
+\State // curr\_TSC is the current TSC value  
+\State // $Pattern_{\text{receiver}}[N]$ is an array of N samples to record the delay pattern
+\State // $Message_{\text{receiver}}$ is a vector to store the parsed bits
+\State // $fd$ is a file controlled by the receiver
+\State // $T$ is the threshold to differentiate bits '1' and '0'
+
+
+\State Synchronization(curr\_TSC);
+\For{$i \gets 0$ \textbf{to} $N-1$}
+    \State $start \gets clock();$
+    \State $syncfs(fd);$
+    \State $end \gets clock();$
+    \State // Check for the ending code
+\EndFor
+
+
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[t]
+\caption{Sender for Covert Channel} \label{alg:sender}
+\begin{algorithmic}[1]
+% \small
+\State // $Message_{\text{sender}}[N]$ is an array of $N$ bits used to send a message
+\State // $fd$ is a file controlled by the sender
+\State // $R$ is the number of iterations to wait for flushing
+\State // $K$ is the number of iterations of no operation
+
+\State Synchronization()
+
+\For{$i \gets 0$ \textbf{to} $N-1$}
+    \If{$D_{\text{sender}}[i] == 1$}
+            \State write(fd,string,size);
+            \For{$j \gets 0$ \textbf{to} $R-1$}
+                \State NOP;
+        \EndFor
+    \Else
+        \For{$j \gets 0$ \textbf{to} $K-1$}
+                \State NOP;
+        \EndFor
+    \EndIf
+\EndFor
+
+\end{algorithmic}
+\end{algorithm}
+
+
+% \label{subsec:covert_evaluation}
+
+
+
+
+
+We evaluate the \textit{syncfs} covert channel attack with two metrics: bandwidth and error rate. The bandwidth is measured in Kb per second, and the error rate is measured with Levenshtein edit distance~\cite{miller2009levenshtein}.
+
+
+
+\textbf{Covert channel demonstration.} Figure~\ref{fig:covert_channel_demo} illustrates our covert channel on the ext4 file system, where the distinct latency pattern of \textit{syncfs} encodes data: higher latency represents bit "1," while lower latency represents bit "0."
+
+
+ \begin{figure}[tb]
+    \centering
+    \includegraphics[width=0.49\textwidth]{figures/covert_example.png}
+    % \vspace{-2.0em}
+    \caption{The \textit{syncfs} covert channel transmission has a clear difference between bit '0' and '1' on ext4.}
+    \label{fig:covert_channel_demo}
+\end{figure}
+
+
+\textbf{Linux file system.} We implement the covert channel on multiple file systems, including ext4, ext2, and xfs, and evaluate it based on bandwidth and error rate, as summarized in Table~\ref{tb:covert_results}. Due to the higher average latency of \textit{syncfs}, we achieve the lowest bandwidth of 0.94 Kbps with an error rate of 0.01\% on ext4. On ext2, the bandwidth reaches 3.28 Kbps, but with a higher error rate of 1.6\%, attributed to increased background noise. On XFS, we achieve the highest bandwidth of 4.98 Kbps with a moderate error rate of 0.15\%.
+
+
+
+\textbf{Windows file system.} We also explore the scenario of running Linux on a Windows machine, such as using WSL, which provides a lightweight Linux environment~\cite{barnes2021pro}. In this setup, the Linux system operates on the NTFS file system via the NTFS3 driver. Implementing the syncfs covert channel on NTFS achieves the highest bandwidth of 7.61 Kbps with a 1.9\% error rate. The increased bandwidth compared to Linux native file systems is due to the significantly lower \textit{syncfs} delay for direct I/O operations. 
+
+
+
+\begin{table}[tb]
+\caption{Covert channel results: Bandwidth (Kbps), and Error rate (\%).}
+% \normalsize
+% \small
+\centering
+\begin{tabular}{|l|c|c|} 
+\cline{2-3}
+%\multicolumn{1}{c|}{\textbf{}} & \textbf{F1}   & \textbf{Prec} & \textbf{Rec}  \\ \hline \hline
+\multicolumn{1}{c|}{\textbf{}} & \textbf{Bandwidth} & \textbf{Error rate} \\ \hline  \hline
+ext4 &0.94  & 0.01 \\ \hline  
+ext2  &3.28  &1.6   \\ \hline  
+xfs &4.98 &0.15  \\ \hline 
+ntfs &\textbf{7.61}   &1.9  \\ \hline 
+\end{tabular}
+\label{tb:covert_results}
+\end{table}
+
+% \noindent \textbf{Parallel covert channels.} One way to enhance covert channel performance is to run multiple covert channels in parallel when several file systems are mounted on the same machine. Since \textit{syncfs} operates independently at the file system level, flushing multiple file systems concurrently does not introduce additional noise. 
+
+
+

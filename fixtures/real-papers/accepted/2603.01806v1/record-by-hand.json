@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "ijcai25.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "appendix.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "a9370012ff3b57f4dbb562470eda227e4a147ed4a64fd532d274fc870399f84b",
+    "ijcai25.sty": "cdf7ca9a28c6b1ba60cde0f42019ccea3722838242b69471db572d21f879d3b2",
+    "appendix.tex": "b854973702572068c4752fb785b2c8d29d3c87e073383ad3c562154eab9872ff"
+  }
+}

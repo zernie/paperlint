@@ -1,0 +1,15 @@
+\subsection{Discussion of Bug Detection Capability}
+\label{sec:discussion_fault}
+Evaluating the bug detection capability of generated test cases is essential for understanding their practical effectiveness in real-world development. This section evaluates the ability of generated test cases to detect bugs within a program.
+To do this, we select several representative models and run their generated test cases on both buggy and fixed versions of five projects aforementioned. Following the previous works~\cite{dinella_toga_2022, hossain_togll_2024, liu_more_2023a, hossain_neuralbased_2023a}, the generated tests can be divided into four groups based on the execution results: True Positive (TP), True Negative (TN), False Positive (FP), and False Negative (FN). Here, Positive indicates that a test case fails on the buggy program, while Negative means it passes on the buggy version. True or False further specifies whether the test case correctly or incorrectly passes/fails on the fixed version.
+A test is considered as a bug-finding test if it fails on the buggy program but passes on the fixed version.
+We assess each model’s effectiveness and usability by calculating both the number of bugs found and the precision of the test cases. Precision is defined as $\#TP/(\#FP + \#TP)$, representing the proportion of generated test cases that successfully identify bugs among all failing test cases. A higher precision indicates fewer irrelevant test cases, reducing the validation effort required from developers.
+
+\input{table/Bug-Detection}
+
+Table~\ref{tab:bug-detection} presents the bug detection performance of generated test cases on Defects4J. Overall, most models perform poorly, typically identifying zero or only one bug. Precision rates are similarly low, ranging from 0.00\% to 0.74\%, indicating that most LLM-generated test cases fail to detect bugs. The best-performing model, DeepSeek-Coder-6b, identifies 8 out of 163 bugs across five projects, achieving a precision of 0.74\%. This means that, even in the best case, a developer must review approximately 135 failing tests to find a single bug.
+Further analysis of FP samples reveals that build errors account for 69.24\% to 92.94\% of all failing test cases, which is the primary reason for these failures. These findings suggest that simply generating test cases through fine-tuning alone is insufficient for effective bug detection. Improving the bug detection capability of generated test cases remains a critical challenge for future work.
+
+\summary{
+LLM-generated test cases exhibit limited bug detection effectiveness, with low precision and high rates of build errors among failing tests, highlighting the need for improved methodologies to enhance bug detection capabilities.
+}

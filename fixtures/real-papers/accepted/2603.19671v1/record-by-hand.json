@@ -1,0 +1,132 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "relatedwork.tex",
+      "role": "body"
+    },
+    {
+      "path": "preliminaries.tex",
+      "role": "body"
+    },
+    {
+      "path": "strawman.tex",
+      "role": "body"
+    },
+    {
+      "path": "method/intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "method/linepath.tex",
+      "role": "body"
+    },
+    {
+      "path": "method/acylic.tex",
+      "role": "body"
+    },
+    {
+      "path": "exp/experiment.tex",
+      "role": "body"
+    },
+    {
+      "path": "exp/setup.tex",
+      "role": "body"
+    },
+    {
+      "path": "exp/first3tasks.tex",
+      "role": "body"
+    },
+    {
+      "path": "exp/startable.tex",
+      "role": "body"
+    },
+    {
+      "path": "exp/first_result.tex",
+      "role": "body"
+    },
+    {
+      "path": "exp/samplevsDP.tex",
+      "role": "body"
+    },
+    {
+      "path": "futurework.tex",
+      "role": "body"
+    },
+    {
+      "path": "ack.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/appendix.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/redundant_count.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/experiment.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/proof_wk.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/proof_path.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/proof_pattern.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/proof_strawman.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "423edf578d4b5af116313eee2ea4faab119ad6303ceb48ded215618959d1eaea",
+    "abstract.tex": "21f609b6d9d0bffd065be46516834b770b575bf26ae800b376b6d398dce4cae5",
+    "intro.tex": "a349d4aaf470638bfc294ea9dce4a534421d34b8acb6a2d5466e8bbfdb5cad0f",
+    "relatedwork.tex": "59398e32869f0d459751aa1745e1f6f0e19a5db562770ca0193f0142ee62b21e",
+    "preliminaries.tex": "60c264aa661ecb6443675571319fcaaa643157d49b686d72f72696e8cd69a05b",
+    "strawman.tex": "b4b8909ea95b7b030363a5175825b208dcf275b67404febd06dd7ba2884617b1",
+    "method/intro.tex": "33577851e2b936e257c39a2714106a2577d7718ca6feae330537b4d289740884",
+    "method/linepath.tex": "1847851a4df2548d8605abb30394a4754ca6b2091e1e1765dcf575d1dabc6ea1",
+    "method/acylic.tex": "c5b3691ae1eaaf02169ea2e7ed1daf9f52fea9300ed59f8adde0707feebd3bc1",
+    "exp/experiment.tex": "689265ad22370b078a204d184018f785d47cdf0a02237c9f0e9a1c581168ed40",
+    "exp/setup.tex": "1071efa04eebbf33d59d2346c03efad4659dff08200a3bd879c6f188f930b9c6",
+    "exp/first3tasks.tex": "3fdbff8c388fc5bdc82193c84b811b09b044d704711e3f7db5a6210fb88456c1",
+    "exp/startable.tex": "32a206d1dcd257711533579a8522c46d6db495f1f11c4757d6f7ca94d16d3749",
+    "exp/first_result.tex": "ca9531b5c86856bcdcd4fefed86cbd7df1ffc28a742247b14f8101a979ef663b",
+    "exp/samplevsDP.tex": "10a78a22ca560ea2eabb030b1d206b7766b26fb6ff526d6149537a0db6f65125",
+    "futurework.tex": "13a1c0593f3451c8dc858d3f47c0d6bf31f5849e984df8f4a886b28951e53b0a",
+    "ack.tex": "ef4250531bbf839851c35a9e11854e0b62dac7c7bcf7298cbb0a111cb3db80e3",
+    "appendix/appendix.tex": "ee77de6378dae3a503c7a2ed5b53c90f8068fd1237db550356804826cb6b3432",
+    "appendix/redundant_count.tex": "3f055c4592bd133fc0d463c93ce9cdc2020ac742d0769b5a98bc266b28ae59a0",
+    "appendix/experiment.tex": "902643132047e9ef5035da21604fa76f5edf6a27bae321fff3f9d812b457e0ed",
+    "appendix/proof_wk.tex": "ae6e4ae38de67fff8cfdd6fb269c2bc62af09e2f03f88ffa9861e74ab0cb1dd6",
+    "appendix/proof_path.tex": "8aaa2d3dc2d24e9d107e7ac6264b324e6c668585fc8a9dddcc017c7279b8e82e",
+    "appendix/proof_pattern.tex": "1090aa41dfc2520bb08b494fcbbda590008cdb6ebb59963ebb0b81b3684acfa1",
+    "appendix/proof_strawman.tex": "ebe7f961c2bc25ef8f15ef1cd46c3f934b84fe1a24fa21e93e98898822ea58e7"
+  }
+}

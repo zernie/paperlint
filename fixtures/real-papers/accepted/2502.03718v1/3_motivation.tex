@@ -1,0 +1,67 @@
+\section{Motivation}
+\label{sec:acb}
+
+In this section, we first demonstrate what a price manipulation attack contract looks like. Then, we summarize the challenges in identifying these contracts on the contract bytecode level and illustrate our solution in a high-level manner.
+
+
+\subsection{Motivating Example}
+\label{sec:moti_eg}
+\textit{ULME} project has been attacked in a DPM way on Oct. 25th, 2022, suffering from \$50K financial losses~\cite{ulme}. Listing~\ref{lst:motivating} illustrates an attacker-defined private function, which is invoked by the callback function once the attacker takes out a flashloan. The function is shown in a simplified and decompiled way.
+As we can see, the attacker first extracts the addresses of BUSDT and ULME token from \textit{Storage}, stores them into a newly initialized array, and then calls the token swap function in the liquidity pool (L3 -- L7).\footnote{L3 refers to the 3rd line, we adopt this notation in the following.}
+In this example, the attacker exchanges BUSDT for ULME token. Subsequently, the attacker iterates \texttt{array\_9} (L8), consisting of pre-identified users who have approved the BUSDT contract, to filter out those with non-zero balances by calling \texttt{allowance()} and \texttt{balance()} (L9 -- L13).
+Unlike IPM, where the victim indirectly relies on the liquidity pool as the oracle to calculate the price of ULME, the attacker invokes \texttt{buyMiner()} of the ULME contract. This step \textit{directly} uses the victim's BUSDT to swap out ULME from the liquidity pool, sharply reducing its ULME supply and further destabilizing the pool's state.
+The attacker then exchanges ULME back for BUSDT token (L17 -- L21). Such a swap obtains a large amount of BUSDT at an unfair price, profiting from the imbalance in the pool.
+
+
+\begin{lstlisting}[caption={Attack contract against \textit{ULME}.}, label=lst:motivating]
+function 0x9e1() private {
+    if (stor_a) {
+        v2 = new address[](2);
+        v2[0] = stor_2; v2[1] = stor_5;
+        v4 = new address[](v2.length);
+    // Step_1: exchange BUSDT for ULME
+        v11 = stor_4.swapExactTokensForXXX(stor_a, 0, v4, address(this), block.timestamp + 1000, v12, stor_2).gas(msg.gas);}
+    while (v13 < array_9.length){
+        v15, v16 = stor_2.allowance(address(array_9[v13]), stor_5).gas(msg.gas);
+        if (v16) {
+            v17, v18 = stor_2.balanceOf(address(array_9[v13])).gas(msg.gas);
+            v19 = v20 = v18 > 0;
+            if (v19) {
+                require(bool(stor_5.code.size));
+    // Step_2: manipulate users into swapping out their ULME
+                v22 = stor_5.buyMiner(address(array_9[v13]), v18 * 100/110 + ~0).gas(msg.gas);}}}
+    v26 = new address[](2);
+    v26[0] = stor_5; v26[1] = stor_2;
+    v28 = new address[](v26.length);
+    // Step_3: exchange ULME for BUSDT at an unfair price
+    v35 = stor_4.swapExactTokensForXXX(v25, 0, v28, address(this), block.timestamp + 1000, v12, stor_5).gas(msg.gas);
+}
+\end{lstlisting}
+
+
+\subsection{Challenges \& Solution}
+Through this example, we can find that attackers will leave traces in their contracts, including token manipulation, the use of Flashloan services, and interactions with liquidity pools. Due to the transparency of the blockchain, these features can be obtained at the time of contract deployment, allowing us to promptly raise alarms for suspicious attack contracts.
+However, two key challenges need to be addressed.
+
+\noindent
+\textbf{Challenge 1: Unclear semantics.}
+Attack contracts are typically close-sourced to conceal their malicious intent, limiting analysis to the bytecode level. To recover semantics, existing bytecode-based tools either elevate the bytecode to an intermediate representation (IR)~\cite{grech2019gigahorse} or adopt static analysis methods, like symbolic execution~\cite{mythril}.
+However, on the one hand, the obtained IR is limited to the contract itself and does not provide cross-contract semantics. On the other hand, the complexity of cross-contract calls and state dependencies between contracts can lead to path explosion during symbolic execution.
+As shown in Listing~\ref{lst:motivating}, recovering and identifying semantics at both intra- and inter-contract function calls is crucial for accurately determining the contract's behavior.
+
+
+
+\noindent
+\textbf{Challenge 2: Scalability issue.}
+Detecting price manipulation attack contracts requires exploring the paths corresponding to conducting attacks. In Listing~\ref{lst:motivating}, we only illustrate the function that performs attacks and omits other auxiliary functions, which could introduce complexity through loops, conditional branches, and even inter-contract calls.
+Thus, we have to thoroughly analyze all defined functions within the contract and effectively identify the attack path among numerous paths.
+Furthermore, as timeliness is crucial for avoiding under-reporting, we must efficiently explore paths and minimize interference from irrelevant ones.
+
+
+
+\noindent
+\textbf{Our Solution:}
+Against \textbf{Challenge 1}, we first extract both callee addresses and invoked functions from intra- and inter-contract function calls, where we propose a fine-grained argument recovery algorithm to retrieve concrete values of their arguments.
+Furthermore, we take advantage of the function signature database and heuristic rules to capture the operational semantics of all function calls.
+As for \textbf{Challenge 2}, rather than relying on machine learning or heuristic rule based methods, we adopt a formal approach to model price manipulation attack behaviors. To improve efficiency, we filter out all suspicious sensitive paths based on characteristics of DeFi attacks and limit the scope of cross-contract analysis.
+

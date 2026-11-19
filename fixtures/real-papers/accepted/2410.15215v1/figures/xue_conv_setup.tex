@@ -1,0 +1,40 @@
+\begin{tikzpicture}
+\begin{axis}[
+    width=6cm, % Set the width of the plot to the text width of the subfigure
+    height=6cm, % You can adjust the height as needed
+    xlabel={$n$ (squared-matrix size)},
+    ylabel={Overhead in \%},
+    legend pos=north east,
+    grid=both,
+    % xmin=1, xmax=40,
+    % ymin=0, ymax=20
+]
+
+\addplot table {
+n   FHE-DataSeal
+2	0.014515
+4	0.011396
+6	0.014175
+8	0.01682
+16	0.022661
+24	0.045816
+32	0.061677
+64  0.112113
+};
+\addlegendentry{FHE-DataSeal}
+\addplot table {
+n vFHE
+2	1.153369
+4	1.5056748
+6	2.3209333
+8	1.9731383
+16	4.8674451
+24	7.5161072
+32	8.0493289
+64	15.0915303
+};
+\addlegendentry{FHE-MAC}
+
+
+\end{axis}
+\end{tikzpicture}

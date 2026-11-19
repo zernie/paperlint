@@ -1,0 +1,216 @@
+\section{Compiler-centric Performance Tool} \label{sec:compiler_centric}
+
+While it benefits compiler and kernel developers, the current compiler design lacks support for performance tooling. Existing MLIR dialects focus primarily on static, compile-time transformations and optimization passes, with little consideration for capturing dynamic traces or profiling semantics. This gap leaves developers without a native framework to analyze runtime behavior or fine-tune kernel performance within the compiler ecosystem.
+
+\OURR{Designing performance tooling infrastructure as MLIR dialects is a non-trivial task. For example, in Triton, such dialects must bridge the abstraction gap between the high-level tensor IR and the low-level target-specific IR while remaining clean abstraction to be consistent and compatible with existing multi-level program IR semantics. The ideal infrastructure should be able to handle diverse profiling demands with great extensibility for ever-evolving GPU architectures.}
+Addressing this complexity, we introduce the \thiswork{} dialect, the first of its kind, to integrate instrumentation passes directly into the compiler IR as a performance tooling infrastructure. 
+The system is implemented upon the mainstream AI compiler Triton\cite{tillet2019triton}, which adopts MLIR as its compiler infrastructure.
+We demonstrate the multi-level IR design and runtime convention of the \thiswork{} infrastructure as shown in \Fig{\ref{fig:implementation}}.
+We further discuss several representative use cases with \thiswork{}.
+
+
+\subsection{IR Design}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{fig/ir_implementation.pdf}
+    \vspace{-0.8cm}
+    \caption{\R{IR design and conversion passes}}
+    \vspace{-0.5cm}
+    \label{fig:implementation}
+\end{figure}
+
+\R{
+Within Triton's multiple-level IR structure, TTIR and TTGIR are the major program representations that developers interact with.
+We implement the \thiswork{} as multi-layered MLIR dialects interacting with Triton's IR structure and link high-level MLIR operations to LLVM-IR level analysis.
+As shown in \Fig{\ref{fig:implementation}}, we insert the record operations in MLIR dialects and lower them to architecture-specific TritonGPU operations. 
+We also lower and instrument some scaffolding functions, such as data copy from local buffer to host memory, at the LLVM IR level. 
+This architecture links the programming language constructs to hardware-related features for analysis. 
+Specifically, we define novel operations at different levels to instrument profiling semantics and collect measurement data.
+The rewritten Triton program is then lowered into LLVM IRs for further analysis and code generation.
+This design balances programmability and complexity by higher-level IR design and lower-level code generation.
+}
+
+Instrumentation can be done at either the MLIR or LLVM IR level as a trade-off between flexibility and generality. 
+MLIR level instrumentation can access high-level constructs, such as loops and data objects (e.g., tensors, matrices, etc.). 
+However, the higher in the compiler pass pipeline instrumentation instructions are inserted, the more  accuracy and reliability are influenced by the compiler backend's instruction scheduling and reordering. 
+In contrast, LLVM IRs are closer to the low-level assembly code and provide more information about GPU devices. 
+Nevertheless, instrumentation at the LLVM IR level may lose connection to high-level program semantics.
+
+\OURR{
+As such, we design the compiler-centric performance tool by linking the high-level MLIR dialects to LLVM IR level analysis as shown in \Tbl{\ref{tbl:ir_design}}.
+We provide the profiling instrumentation interface at both the TTIR and TTGIR levels since they are general representations that hide low-level vendor-specific details and capture key optimizations such as software pipelining, code motion, loop fusion, and warp specialization. 
+\thiswork{} is our highest abstraction level, which includes the key \code{RecordOp} operator, representing a general program marker, whose semantic interpretation solely depends on the KPerfIR to KPerfGPUIR lowering pass configurations.
+\code{RecordOp}'s inputs include \code{name} and \code{isStart}, specifying the annotation location and identifier in the program. An example of using \code{RecordOp} in the program is as follows.
+}
+
+
+\begin{table}[]
+    % \renewcommand{\arraystretch}{1.2}
+    \caption{\OURR{Main operations of \thiswork{}}}
+    \vspace{0.5em}
+    \label{tbl:ir_design}
+    \resizebox{\linewidth}{!}{
+    \begin{tabular}{llll}
+    \Xhline{3.5\arrayrulewidth}
+    Operation              & Inputs/Outputs                                                              & Attributes & Explanation                                      \\ \hline
+    \rowcolor[HTML]{EFEFEF} 
+    \multicolumn{4}{c}{\textbf{KPerfIR}} \\ 
+    RecordOp               & \textbf{In:} name, isStart                                                       & -          & Main profiling IR.       \\ \hline
+    \rowcolor[HTML]{EFEFEF} 
+    \multicolumn{4}{c}{\textbf{KPerfGPUIR}} \\ 
+    InitOp                 & \textbf{Out:} index\_ptr                                                   & \makecell[l]{BufferType,\\BufferStrategy}          & Initialize and allocate memory.                  \\
+    \rowcolor[HTML]{EFEFEF} 
+    FinalizeOp             &  \begin{tabular}[c]{@{}l@{}}\textbf{In:} index\_ptr,\\ \hspace{0.5cm}global\_ptr, data\end{tabular} & -          & \makecell[l]{Write back profiling to global memory\\ and add metadata.}       \\
+    ReadCounterOp          &   \makecell[l]{\textbf{Out:} counter\_ptr}    & \makecell[l]{MetricType,\\Granularity}        & \makecell[l]{Read a GPU metric counter\\into a scalar register.}                    \\ 
+    \rowcolor[HTML]{EFEFEF} 
+    StoreCounterOp         &   \makecell[l]{\textbf{In:} counter\_ptr, index\_ptr}                      & isStart          & \makecell[l]{Store a metric counter into a buffer.}                    \\ \hline
+    \multicolumn{4}{c}{\textbf{LLVM}} \\
+    \rowcolor[HTML]{EFEFEF} 
+    startInstrumentationOp & \begin{tabular}[c]{@{}l@{}}\textbf{In:} instrumentation pass,\\ \hspace{0.5cm}index\_ptr, buffer\_size\end{tabular} & -          & Trigger low-level instrumentation. \\
+    stopInstrumentationOp  &  \textbf{In:} instrumentation pass                                         & -          & Stop low-level instrumentation.                  \\\Xhline{3.5\arrayrulewidth}
+    \end{tabular}
+    }
+\end{table}
+
+
+\vspace{-0.3cm}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.6\linewidth]{fig/ir_example.pdf}
+    \vspace{-0.3cm}
+    \caption{\OURR{An example of high-level record operations} }
+    \label{fig:ir_example}
+\end{figure}
+\vspace{-0.3cm}
+
+
+
+\OURR{
+The \code{RecordOp} at KPerfIR level abstracts away the hardware detail and is lowered to GPU-specific KPerfGPUIR operations.
+On the KPerfGPUIR level, we get vendor-independent but GPU-specific hardware features (e.g., shared memory abstraction).
+When lowering to KPerfGPUIR, various MLIR pass options are given to determine the conversion, such as the \code{MetricType} (specifying the performance counter) and the \code{Granularity} (e.g., warp-group, warp, thread, etc). 
+For example, when profiling GPU cycles, each \code{RecordOp} is lowered to a \code{ReadCounterOp} and a \code{StoreCounterOp}, which can be scheduled separately by the compiler for the proper program location. \code{ReadCounterOp} collects the exact GPU cycle register values. \code{StoreCounterOp} stores the counter value into the profiling buffer with an offset. 
+The corresponding buffer and bookkeeping resources are determined and allocated during the lowering pass given configurable constraints.
+}
+
+\OURR{\Tbl{\ref{tbl:ir_design}} outlines key operators with inputs, outputs, and attributes presented in KPerfIR and KPerfGPUIR.
+The concrete operations instrumented are controlled by various MLIR pass options in the lowering/conversion passes, including \code{BufferType}, \code{BufferStrategy}, \code{MetricType}, \code{Granularity} and resource constraints (e.g., buffer size). 
+Given these controlling knobs, the compiler generates specific KPerfGPUIR operations for performance tools whose profiling locations are specified by the \code{RecordOp} markers.
+For instance, specifying the \code{BufferStrategy} as circular, \code{MetricType} as clock, and \code{Granularity} as warp-group results in an intra-kernel profiler using a circular buffer to store the clock cycles of each warp-group (see \Sec{\ref{sec:tool}} for a detailed discussion of the profiler). In this case, the \code{StoreCounterOp} operation is converted to a \code{CircularStoreOp} to handle circular buffer event recording.
+}
+
+\OURR{
+Besides, the compiler also generates scaffolding operations in KPerfGPUIR to setup and clean-up the environment of the profiling phase.
+\code{InitOp} initializes the profiling states (e.g., buffer index). We use stack allocation to enable the LLVM toolchain to apply register promotion for the buffer index, which sits in the critical path of clock measuring. This operation returns the address of the allocated index and the memory load/store operations will be optimized away by keeping the index value in the register with LLVM backend's optimization. \code{FinalizeOp} performs the clean-up and writes back the profiled records. Similarly, the exact buffer memory allocation operations (\code{LocalAllocOp}, \code{GlobalScratchAllocOp}, and \code{StackAllocOp}) are determined by the configurations during the lowering from KPerfIR to KPerfGPUIR as well\footnote{Please refer to the documentation for more details at \url{https://triton-lang.org/main/dialects/ProtonOps.html}.}.
+}
+
+Lastly, we have the LLVM level markers \code{startInstrumentationOp} and \code{stopInstrumentationOp} to control the low-level library-based instrumentation.
+The \code{startInstrumentationOp} tells the LLVM level to insert starting memory analysis/timestamp (including warp ID, SM ID).
+And the \code{stopInstrumentationOp} inserts ending memory analysis/timestamp and flushes data from the local buffer to the scratch buffer/host pinned memory. This allows instrumentation at lower IR levels to be linked to upper-level data objects and flow structures (e.g., inserting timestamps at the LLVM IR level around data objects and flow structures that only exist at higher IR levels). 
+%This multi-level IR design facilitates reusable performance tools at the MLIR level.
+
+
+Wrapping all instrumentation at the MLIR level makes the derived tools inextensible to ML frameworks due to their divergence on the supported operation set.
+In contrast, inserting instructions at the LLVM IR level allows for flexible and reusable tools. 
+Analysis code can be written in any language, compiled to LLVM bytecode, and inserted into MLIR framework code. 
+This feature is particularly attractive in MLIR frameworks that are not linked to Clang or its libraries but include C++ instrumentation functions.
+In other words, analysis functions can be written in HIP/CUDA and used in MLIR frameworks without C++ code (e.g., Triton, PyTorch).
+
+\subsection{Compiler Passes}
+
+We then leverage compiler passes to instrument the \code{RecordOp} to the target program and lower it to the underlying IRs.
+There are two main levels of compiler passes handling their insertion and conversion, including lowering KPerfIR into KPerfGPUIR and lowering KPerfGPUIR into LLVM.
+
+\OURR{
+The KPerfIR to KPerfGPUIR lowering pass converts the \code{RecordOp} to \code{ReadCounterOp} and \code{StoreCounterOp}, and inserts operations for resource allocation (e.g., \code{LocalAlloc}), and setup/clean-up operations (e.g., \code{InitOp} and \code{FinalizeOp}). At the entrance of the kernel function, we allocate the profiling buffer, global scratch memory, and bookkeeping resources. We defer the discussion of memory management in \Sec{\ref{sec:profiler:memory}} and focus on the lowering pass explanation here. The allocated profiling buffer is associated with each \code{ReadCounterOp} to collect hardware performance counters (e.g., GPU cycle). The gathered raw data is written back to the GPU global memory by \code{FinalizeOp} in a pre-defined memory layout, which is inserted at the end of the kernel function. \code{FinalizeOp} has inputs including the number of the profiling records, base address of the profiling buffer, and base address of the profiler’s global memory.
+}
+
+\OURR{
+Triton lowers TTGIR into the LLVM backend to generate vendor-specific code (e.g., ptx and amdgcn) and perform low-level optimizations, such as redundant code elimination~\cite{10.1145/582153.582167} and register promotion~\cite{10.1145/258916.258943}. We develop a set of LLVM conversion patterns to handle the code generation of the instrumented profiling operations. Specifically, the \code{InitOp} is lowered to a stack allocation (\code{llvm.alloca}) of the buffer index. The \code{ReadCounterOp} is lowered to a read of a performance counter (e.g., \%clock) to the register, and the \code{StoreCounterOp} is lowered to a register value store with tag creation and buffer index management. For the \code{FinalizeOp}, we compute the global memory offset for the current thread block and assign the first thread as a worker to write the entire profiling buffer back to the global memory.
+}
+
+We provide principal support regarding backends to reduce the interference of the high-level instrumentation in optimizations such as instruction re-ordering.
+For Nvidia GPUs, the impact is negligible since the hardware is responsible for instruction scheduling with the PTX mostly following the instrumented program with \thiswork{}'s operators associated.
+Instruction will not be scheduled around critical instruction like WGMMA.
+AMD GPUs expose instruction scheduling to software, even for instruction SMEM load and MFMA in amdgcm, making the instrumented operator a key factor.
+As such, we provide three levels of configurations adjustable by users: 1. manual adjusting with \thiswork{} hints; 2. direct instrumentation on amdgcn, and 3. specifying instruction scheduling window with barrier mask explicitly.
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=\linewidth]{fig/compiler_centric_examples.pdf}
+    \vspace{-0.7cm}
+    \caption{Novel use cases facilitated by \thiswork{}'s compiler-centric approach}
+    \label{fig:compiler_centric_example}
+\end{figure*}
+
+\subsection{Working with Third-Party Tools} \label{sec:third_party}
+
+We then demonstrate the interfaces for users to develop their third-party tools shown on the right side in \Fig{\ref{fig:implementation}}, including the instrumentation APIs handling rewriting and the necessary memory management to decode the profiled raw data. 
+
+\paragraph{Instrumentation APIs.}
+To build a customized performance tool with the \thiswork{} dialect, the user must explicitly modify the kernel signature and update the IR with instrumentation passes.
+We provide two APIs for the user to interact with the \thiswork{}, the command-line API and the Python API.
+With the command-line API, all Triton functions encountered at runtime with the command-line API are instrumented with the specified analysis passes.
+This allows for handy manipulation of the target workload but lacks flexibility since users cannot skip kernels they are not interested in.
+
+\R{
+The Python API lets the user specify the instrumentation entry and the target function to be instrumented.
+The instrumentation entry here refers to the insertion position in the compilation process (i.e., before/after which pass).
+On the other hand, the instrumentation point specified by the \code{RecordOp} refers to the position in the IR.
+It encompasses the core API as \code{KPerfIR.patch(instrumentation\_obj, fn)}, where \code{instrumentation\_obj} identifies the compiler pass to be instrumented (either before or after) and \code{fn} is optional to select the instrumented kernel.
+If the \code{instrumentation\_obj} specifies MLIR instrumentation, we adopt MLIR's pass infrastructure \code{PassManagement}.
+We will instrument LLVM at the end of the compilation passes.
+Additionally, we provide a \code{KPerfIR.unpatch()} API to restore all existing instrumentation.
+This involves maintaining the kernel's original and instrumented version within the \thiswork{} runtime.
+}
+
+\paragraph{Runtime Memory Management.}
+Another important part of the third-party tool involves the management of buffer storage and profiling results.
+At the top level, we rewrite the kernel signature with an extra last argument as a pointer to the device buffer and modify the calling convention.
+The accumulated profiling data is then returned to the host buffer managed by the \thiswork{} runtime.
+Here, we adopt a discarding-based circular buffer design, which will be elaborated with an actual tool design in \Sec{\ref{sec:profiler:memory}}.
+We have two ways to manage GPU device buffer and host buffer communication, following prior studies~\cite{9355258,zhou2022valueexpert}
+The first approach is to use CUDA-managed allocation so that the device buffer is allocated in a memory space visible to both the GPU and the CPU. 
+The second approach is to allocate a priority stream with a higher priority than the one used by PyTorch's runtime and use that stream to copy the data back to the CPU.
+
+Once the data is copied back to the CPU, it is decoded into a similar format to the CUPTI Activity API as a C/C++ struct. 
+Third-party tools will register a callback to process this data when the runtime is initialized. 
+Callbacks are triggered once the host buffer is decoded to allow these tools to process the data, like CUPTI activities. 
+As such, the tools can post-process the data to compatible formats with their own front-end visualizers, such as Chrome Trace\cite{chrome_trace} or Hatchet\cite{bhatele2019hatchet}.
+
+\subsection{Use Cases} \label{sec:usecase}
+
+We then showcase several novel performance tools facilitated by \thiswork{} infrastructure as shown in \Fig{\ref{fig:compiler_centric_example}}.
+
+\paragraph{Iteration-based Timing.} 
+Understanding the synchronous behavior of warp groups across iteration boundaries is crucial for analyzing SWP. 
+For instance, observing overlapping at specific iteration steps requires associating the loop induction variable \code{i} with a version argument in the timing records. However, traditional profiling tools lack access to the loop semantics necessary to determine iteration positions, making it challenging to comprehend the precise overlapping behavior of resources across iterations. 
+By incorporating profiling passes into the compiler, we can instrument the IR to collect clock ticks alongside loop iteration index semantics, enabling post-processing to construct fine-grained timelines, as shown in \Fig{\ref{fig:compiler_centric_example}}-(a).
+While tools like MLIR’s Python bindings can implement this functionality, they are ad-hoc and restricted to simple loop structures, underscoring the need for deeper integration of compiler semantics into profiling workflows.
+
+\begin{figure*}
+    \centering
+    \includegraphics[width=\linewidth]{fig/workflow.pdf}
+    \vspace{-0.7cm}
+    % \caption{Workflow of the region-based timing tool.}
+    \caption{Workflow of the region-based timing tool}
+    \vspace{-0.3cm}
+    \label{fig:workflow}
+\end{figure*}
+
+\paragraph{Critical-path Analysis.}
+Runtime feedback is invaluable for compiler passes, particularly for identifying execution critical paths in scenarios involving WS. 
+For example, in the FA3 kernel, producer warp groups load input tensors, while consumer warp groups execute multiple GEMM operations and a softmax computation. 
+The critical path—determined by factors like data movement and computation latency—varies with program tiling and access patterns, making static analysis insufficient for arrangement.
+For the FA3 case, there are three common critical paths dominated by different operations, as shown in \Fig{\ref{fig:compiler_centric_example}}-(b).
+By embedding profiling passes into the compiler, we can instrument timing records to capture runtime stage latencies and dynamically identify the critical path. 
+This enables the compiler to strategically insert asynchronous barriers, reducing waiting bubble times and improving resource utilization. 
+Such optimization passes highlight the value of integrating performance tooling with compiler passes.
+
+
+\paragraph{Program Correlated Memory Analysis.}
+Fine-grained memory profiling benefits significantly from a compiler-centric design, allowing developers to correlate memory performance metrics, such as access patterns, heat maps, and bank conflicts, with high-level program objects. 
+Taking \Fig{\ref{fig:compiler_centric_example}}-(c) as an example, analyzing the memory access pattern of a specific data object, such as a tensor, requires parsing the program IR to insert profiling intrinsics that map high-level constructs to low-level hardware registers. This approach is particularly critical for optimizing L2-level scheduling, such as with AMD’s chiplet designs\cite{cnda_whitepaper}. 
+Profiling warp-level memory access patterns and correlating them with program objects enables the design of optimized swizzling strategies for L2 access. 
+Such capabilities, achievable only through compiler-centric profiling, demonstrate the necessity of integrating memory profiling tools into the compiler infrastructure.

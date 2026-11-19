@@ -1,0 +1,85 @@
+
+
+\begin{definition}[FHE]
+A FHE (FHE) scheme is a tuple (KeyGen, Encrypt, Eval, Decrypt) of PPT algorithms:
+\begin{itemize}
+    \item $KeyGen(1^\lambda,f) \rightarrow (pk,sk, ek)$
+    \item $Encrypt_{\text{key}}(x, \tau_x) \rightarrow (c_x)$ where key is either $pk$ or $sk$
+    \item $Eval_{pk}(c_x) \rightarrow (c_y)$ where $y = f(x)$
+    \item $Decrypt_{key}(c_y) \rightarrow y$
+    \item $Decode(y) \rightarrow \tau_y$
+\end{itemize}
+\end{definition}
+
+\begin{definition}[Dataseal Verification]
+A dataseal verifiable FHE (vFHE) scheme is a tuple (KeyGen, Encode Decode, Verify) of PPT algorithms:
+\begin{itemize}
+    \item $KeyGen(1^\lambda,f) \rightarrow (pk,sk, ek)$
+    \item $Encode_{\text{key}}(x) \rightarrow (\tau_x)$ where the key is a secret encoding key (ek)
+    \item $Decode(y) \rightarrow \tau_y$
+    \item $Verify_{ek}(y, \tau_y) \rightarrow b$, the client accepts if $b = 1$ and rejects otherwise.
+\end{itemize}
+\end{definition}
+
+\begin{definition}[Correctness]
+The scheme is correct if honest computation yields correct decrypted results.
+\begin{equation}
+    \Pr\left[
+    Dec_{sk}(c_y) = f(x)
+    \;\middle|\;
+    \begin{aligned}
+        &(pk, sk) \leftarrow KGen(1^\lambda,f), \\
+        &(c_x, \tau_x) \leftarrow Enc_{\text{key}}(x), \\
+        &(c_y, \tau_y) \leftarrow Eval_{\text{key}}(c_x)
+    \end{aligned}
+    \right] = 1
+\end{equation}
+\end{definition}
+
+\begin{definition}[Completeness]
+The scheme is complete if the verify computation always accept an honest computation result.
+\begin{equation}
+    \Pr\left[
+    \text{Verify}_{sk}(c_y, \tau_x, \tau_y) = 1
+    \;\middle|\;
+    \begin{aligned}
+        &(pk, sk) \leftarrow \text{KGen}(1^\lambda,f), \\
+        &(c_x, \tau_x) \leftarrow \text{Enc}_{\text{key}}(x), \\
+        &(c_y, \tau_y) \leftarrow \text{Eval}_{\text{key}}(c_x)
+    \end{aligned}
+    \right] = 1
+\end{equation}
+\end{definition}
+
+\begin{definition} [Soundness]
+The scheme is sound if adversary cannot make the Verifier accept an incorrect or altered computation.
+\begin{equation}
+\Pr\left[
+\begin{array}{c}
+    \text{Verify}_{sk}(c_y, \tau_x, \tau_y) = 1 \\
+    \land \\
+    \text{Dec}_{sk}(c_y) \neq f(x)
+\end{array}
+\;\middle|\;
+\begin{aligned}
+    &(pk, sk) \leftarrow \text{KGen}(1^\lambda,f), \\
+    &x \leftarrow A^{\text{OEnc},\text{ODec}}(pk), \\
+    &(c_x, \tau_x) \leftarrow \text{Enc}_{\text{key}}(x), \\
+    &(c_y, \tau_y) \leftarrow A^{\text{OEnc},\text{ODec}}(c_x, \tau_x)
+\end{aligned}
+\right] 
+\end{equation}
+\end{definition}
+
+\begin{definition}[Security]
+Formally, a scheme is secure if for any Probabilistic Polynomial Time (PPT) adversary $\mathcal{A}$ and any function $f$, the advantage $\text{Adv}^{\text{IND-CCA1}}_{\mathcal{A}}(\lambda) = 2\Pr[b = \hat{b}] - 1$ of the attacker in the following game is negligible in the security parameter $\lambda$:
+\begin{center}
+\textbf{IND-CCA1 for vFHE}
+\end{center}
+\begin{enumerate}
+    \item $(pk, sk) \leftarrow \text{KGen}(1^\lambda, f)$
+    \item $(m_0, m_1) \leftarrow \mathcal A^{{O}_{\text{Enc},\text{Dec}}}(1^\lambda, f, pk)$
+    \item $(c^*, \tau^*) \leftarrow \text{Enc}_{pk}(m_b)$
+    \item $\hat{b} \leftarrow \mathcal A^{{O}_{\text{Enc}}}(c^*)$
+\end{enumerate}
+\end{definition}

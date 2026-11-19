@@ -1,0 +1,181 @@
+\section{Leakage Vectors through \textit{syncfs}}
+\label{sec:reverse_engineering}
+
+In this section, we introduce a \textit{new} attack vector on the Linux file system via \textit{syncfs}. We demonstrate how \textit{syncfs} can be leveraged to profile the footprints of other Linux I/O system calls. Additionally, we focus on the \textit{write} system call and show that the written file size can be inferred using \textit{syncfs} leakages. 
+
+
+
+
+\subsection{Measuring I/O System Call Footprint via \textit{syncfs}}
+
+The \textit{syncfs} system call operates at the file system level rather than on individual files. It ensures that all dirty data and metadata in the file system are flushed to the storage device. In ext4, \textit{syncfs} flushes \textbf{dirty inodes, dirty pages, and the journal}. We observed that the execution time of \textit{syncfs} increases when the file system has pending changes in these I/O buffers caused by other operations (\eg \textit{write} and \textit{ftruncate}). 
+
+\textbf{Experiment 1: I/O operations delay \textit{syncfs} execution.} Our first experiment tests the delay impact on \textit{syncfs} caused by different I/O operations. We selected four operations that introduce delays in \textit{syncfs}: \textit{write}, \textit{ftruncate}, \textit{write(O\_SYNC)}, and \textit{rename}. These operations affect different I/O buffers, as summarized in Table~\ref{tb:latency_measurement}:
+\begin{itemize}
+    \item Operation \textit{write} appends or updates data asynchronously to a file, affecting the page cache, journal cache, and inode cache.
+    \item Operation \textit{write(O\_SYNC)} writes data synchronously, affecting only journal cache.
+    \item Operation \textit{ftruncate} adjusts the file size (truncate or extend), impacting the inode cache and journal cache.
+    \item Operation \textit{rename} changes a file’s name, modifying the journal cache and inode cache.
+
+\end{itemize}
+
+\textbf{{Experiment platform.}} We use an NVIDIA Jetson AGX Orin machine with the ext4 file system set to default and a kernel version of 5.15.136-tegra. To measure timing, we use the ARM Generic Timer counter register, CNTVCT\_EL0~\cite{arm_ctr}. We execute each I/O operation followed by a \textit{syncfs} call to measure its impact on delay. For \textit{write}, we write a full data block (4 KB) to a file, adding dirty pages and inodes to I/O buffers. The \textit{syncfs} delay includes the extra time to flush the page cache, inode cache, and journal log. 
+To test \textit{ftruncate} and \textit{rename}, we shrink a file size to 0 and rename a file, respectively. These two operations modify only metadata, adding dirty inodes to the buffer. The \textit{syncfs} delay reflects flushing the inode cache and journal log.  For \textit{write(O\_SYNC)}, we set the \texttt{O\_SYNC} flag and write a full data block (4 KB) synchronously. Since data and metadata are directly written, \textit{syncfs} only needs to flush the journal log. Additionally, we measure the base delay of \textit{syncfs} as the baseline, representing its execution time without any I/O processes. 
+
+\textbf{Results.} We measure the latency of each operation 1,000 times and calculate the average and standard deviation. Table~\ref{tb:latency_measurement} summarizes the results. Compared to the baseline, all four operations increase the \textit{syncfs} latency by at least 16 times. Among them, \textit{write} introduces the highest latency, averaging 121,091 clock cycles, as it affects three buffers: the page cache, journal, and inode cache. 
+
+In contrast, \textit{write(O\_SYNC)}, which only updates the journal log, incurs the lowest latency, averaging 41,406 clock cycles. Operations \textit{ftruncate} and \textit{rename} both modify the journal and inode cache, resulting in average latencies of 61,315 and 66,774 clock cycles, respectively.
+
+
+
+
+\begin{table}[tb]
+\caption{\textit{syncfs} leakages for different I/O operations.}
+% \small
+\begin{tabular}{|L{2.2cm}|C{2.0cm}|C{1.2cm}|C{1.5cm}|}
+
+\hline
+\textbf{I/O operation}         & \textbf{Affected buffers}              & \textbf{Average latency (cycles)} & \textbf{Standard deviation} \\ \hline \hline
+baseline  & N/A                                    & 2509                           & 491                      \\ \hline
+write                          & Page cache, journal and inode   & 121092                        & 11436                    \\ \hline
+write(O\_SYNC)                 & journal                          & 41406                          & 4670                      \\ \hline
+ftruncate                      & journal and inode              & 61315                          & 6916                     \\ \hline
+rename                         & journal and inode           & 66774                          & 8134                     \\ \hline
+\end{tabular}
+\label{tb:latency_measurement}
+
+\end{table}
+
+
+
+\begin{tcolorbox}[colback=gray!10,colframe=black,boxrule=0.5pt,arc=2mm,outer arc=2mm,]
+\textit{\textbf{Observation 1}: I/O operations delay \textbf{syncfs} execution time, with different operations causing varying impacts on \textbf{syncfs} latency.
+}
+\end{tcolorbox}
+
+
+\textbf{Experiment 2: impact of concurrent I/O operations on \textit{syncfs} latency.} Our first experiment analyzed the impact of a single I/O operation on \textit{syncfs} latency. However, in real-world scenarios, multiple I/O operations are more likely to be executed concurrently to handle multiple files. 
+% \cheng{I think it is better to mention it is hard to flush only one file as our motivation for this.} \yicheng{how about this?}
+%\cheng{looks good}
+For example, several files might be renamed, truncated, or written simultaneously. Thus, our second experiment measures the latency impact on \textit{syncfs} caused by concurrent I/O operations.
+
+
+\textbf{Experiment platform.} This experiment is conducted on a Linux PC with an Intel Xeon E5-2698v4 CPU running Ubuntu 20.04. We use the unprivileged \textit{rdtsc} timer to measure latency on the ext4 file system. The tested I/O operations in this experiment include: \textit{write(64B)}, \textit{write(O\_SYNC)(64B)}, and \textit{ftruncate(0)}, as detailed below:
+
+\begin{itemize}
+    \item Operation \textit{write(64B)}: Writes 64 bytes of data to a file using the standard \textit{write()} system call.
+    \item Operation \textit{write(O\_SYNC)(64B)}: Writes 64 bytes of data directly to the disk, bypassing the OS's page cache.
+    \item Operation \textit{ftruncate(0)}: Truncate a file of 64 bytes to 0 bytes. 
+\end{itemize} 
+
+
+\begin{figure}[tb]
+    \centering
+    \includegraphics[width=0.45\textwidth]{figures/concurrent_IO.png}
+    % \vspace{-2.0em}
+    \caption{\textit{syncfs} delay of concurrent I/O system calls on ext4}
+    \label{fig:re_concrrent_IO}
+\end{figure}
+
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=\textwidth]{figures/syncfs_reverse_write.png}
+    % \vspace{-1pt}
+    \caption{\textit{syncfs} latency with different \textit{write} size: (a) Below page size (4KB), (b) Above page size (4KB).} 
+    % \vspace{-1pt}
+    \label{fig:write_size}
+\end{figure*}
+
+In this experiment, we measure the \textit{syncfs} delay caused by flushing extra dirty buffers generated by three I/O system calls while increasing the number of files to process. Figure~\ref{fig:re_concrrent_IO} shows the delay patterns for \textit{write(64B)}, \textit{write(O\_SYNC)(64B)}, and \textit{ftruncate}. We observe that the \textit{syncfs} delay for all three I/O system calls increases as the file count grows, but with varying slopes. The calculated slopes of the delay patterns are 6,163 (\textit{write(O\_SYNC}), 9,626 (\textit{ftruncate}), and 48,612 (\textit{write}), reflecting the differences in overhead caused by each operation.
+
+For direct I/O (\textit{write(O\_SYNC)(64B)}), the \textit{syncfs} latency increases slightly, even with multiple concurrent operations, as this call primarily affects the journal cache. Similarly, the latency of \textit{syncfs} shows a modest increase for concurrent \textit{ftruncate} operations, which generate additional dirty journal and inode entries for flushing. In contrast, the \textit{write} operation, which affects the journal, inode, and page cache, causes a steep linear increase in \textit{syncfs} latency as the number of processed files increases. Additionally, extra inode entries, journal updates, or dirty pages cannot be merged by the I/O scheduler. As the scheduler serializes the write-back requests, the resulting overhead leads to progressively longer delays for \textit{syncfs}.
+% \cheng{I want to mention some details about the overhead that causes increasing delay. Additional inode entries, journal, or dirty pages can not be merged by the I/O scheduler. As the scheduler serialize the write-back requests, the overhead causes the increasing delay. }
+
+\begin{tcolorbox}[colback=gray!10,colframe=black,boxrule=0.5pt,arc=2mm,outer arc=2mm,]
+\textit{\textbf{Observation 2}: An increasing number of I/O operations also increases \textbf{syncfs} delay. Different operations have varying degrees of impact on the growth of \textbf{syncfs} latency.}
+\end{tcolorbox}
+
+
+
+% \noindent \textbf{Scheduling Overhead.} We also observe that the \textit{syncfs} delay of all three I/O system calls increases as the file count increases. We believe the increase in \textit{syncfs} delay is related to overhead in the I/O scheduler. Each file has its own data structures, such as Inode and journal. Modifying different files marks dirty pages that are not contiguous, which means the scheduler must serialize them when flushing. For instance, \textit{ftruncate} modifies multiple files and marks non-contiguous dirty pages in both the Inode and journal cache. Therefore, the I/O scheduler must decide the order of flushing Inodes and journals in these caches. 
+
+% By computing the slope of the delay pattern of these I/O system calls, we get 6163 (direct I/O), 9626 (ftruncate), and 48612 (write). The slops reflect the difference between the overhead in each I/O system call. For instance, flushing \textit{direct I/O} only involves the journal cache, and its slop is less than \textit{ftruncate} which includes flushing both the inode cache and the journal cache. We also conclude that there is more scheduling overhead in the page cache than the other I/O caches since the slope of \textit{write} is much higher. 
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%\noindent \textbf{{Experiment platform.}}  Android and Linux
+\subsection{Inferring \textit{write} Size via \textit{syncfs}}
+\label{sec:re_2}
+
+\textbf{Motivation.} Among these I/O system calls, \textit{write} is most frequently used in both application and system-level programs. It is essential for writing various outputs. The size parameter in \textit{write} directly specifies the number of bytes to be written from a buffer to a file. It can always reflect the actual size of the object being written to a file.  Therefore, in this experiment, we explore whether \textit{syncfs} can leak the write size of a \textit{write} system call. 
+
+
+ 
+
+
+
+
+
+% \yicheng{Highlight why we focus write? 1. Most frequently use 2. Write size control the total size of dirty pages.}
+ \textbf{Experiment 3: infer write size via \textit{syncfs}.} We have two steps for this experiment: within page size (4KB), and above page cache size. Within the page size, we set the initial write size as 64 bytes. It keeps increasing with a stride of 64 bytes and ends at 4 KB. Above page size, we set the initial write size as 4 KB. It keeps increasing with a stride of 4 KB and ends at 64 KB. The experiment was conducted on an NVIDIA Jetson AGX Orin machine with the ext4 file system and running kernel version 5.15.136-tegra.
+
+
+
+
+
+
+
+
+
+ \textbf{Results when below the page size.} Figure~\ref{fig:write_size} (a) shows the zoomed-in \textit{syncfs} latency for write sizes ranging from 64 bytes to 4,096 bytes. The baseline latency, when no write occurs, is approximately 2,000 cycles. However, at a write size of 64 bytes, there is a significant jump in latency to around 62,000 cycles. 
+
+
+As the write size increases within the page size limit (4 KB), the \textit{syncfs} latency grows linearly. This is because larger write sizes generate more dirty page cache entries, journal updates, and inode changes, leading to longer flushing times for \textit{syncfs}. Specifically, \textit{syncfs} performs I/O in two stages: \texttt{sync\_blockdev\_nowait()}, which initiates a write-back request, and \texttt{sync\_blockdev()}, which loops until the write-back completes. As the write size grows, \textit{sync\_blockdev()} takes longer to exit the loop. Within this loop, periodic I/O throttling forces the process to sleep for a fixed duration, further increasing delays. These cumulative delays result in the observed linear relationship between write size and \textit{syncfs} latency.
+
+\textbf{Results when above the page size.} However, when the write size exceeds 4 KB, the increase in \textit{syncfs} latency slows down significantly, as shown in Figure~\ref{fig:write_size} (b). This slowdown is due to parallelism in the I/O process. When the write size exceeds 4 KB, dirty pages are merged and processed by multiple flusher threads~\cite{linux_flusher}. 
+
+We also observe more fluctuations in the latency pattern for write sizes above 4 KB. This is primarily caused by the kernel’s dynamic adjustment of flusher threads, which are responsible for writing dirty pages back to the physical disk~\cite{mario2017low}. The Linux kernel adjusts the number of flusher threads based on factors such as system load and memory pressure. As a result, \textit{syncfs} delay does not consistently increase with larger write sizes above 4 KB. While the fluctuations make the pattern noisy, it is still possible to infer the approximate range of write sizes beyond 4 KB. 
+% \yicheng{any reference to dynamic adjustment.}
+
+
+
+
+
+
+
+
+
+% \yicheng{flush thread api? add link to this flusher thread? https://github.com/firmianay/Life-long-Learner/blob/master/linux-kernel-development/chapter-16.md} Focus on dynamic allocate flusher threads.
+
+\begin{tcolorbox}[colback=gray!10,colframe=black,boxrule=0.5pt,arc=2mm,outer arc=2mm,]
+\textit{\textbf{Observation 3}:  For write sizes below 4 KB, \textit{\textbf{syncfs}} latency grows linearly. For write sizes above 4 KB, \textit{\textbf{syncfs}} latency slows due to I/O parallelism, with fluctuations from dynamic flusher thread adjustments. }
+\end{tcolorbox}
+
+
+
+
+% \subsection{Inferring Concurrent I/O System Calls }
+% \yicheng{Need to define concurrent I/O system call here.}
+
+% \noindent \textbf{{Motivation.}} Move to subsection of 3.1
+
+
+ \subsection{Robustness of Side Channel against Noise}
+In real-world settings, background applications may run concurrently with an attacker, introducing noise that can interfere with the side-channel. To assess the impact of such interference, we use the signal-to-noise ratio (SNR), a standard metric to evaluate side-channel leakage{~\cite{mangard2004hardware}}. Specifically, we apply the following SNR equation: $SNR = \frac{Var(Signal)}{Var(Noise)}$.
+In particular, an SNR value greater than 1 is exploitable as recent work highlighted{~\cite{zhang2023s}}, with higher values indicating a higher quality channel.  We collect the \textit{syncfs} signals of browsing a website while introducing background noise in two ways: (1) opening additional browser tabs and (2) running I/O noise microbenchmarks. The I/O noise microbenchmarks launch multiple threads to continuously generate dirty pages at a rate of 81 MB/s.  We computed the SNR by averaging the results over 10 traces. We observe that the SNR drops from 15.77 (without noise) to 15.54 and 12.78 when one and five browser tabs are opened, respectively. In a different experiment, when one and five I/O noise workloads are introduced to run concurrently with our spy and victim, the SNR decreases to 7.66 and 4.75, respectively. 
+
+% \yicheng{@Cheng, could you add the reference to this microbenchmarks?}

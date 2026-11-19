@@ -1,0 +1,322 @@
+\begin{thebibliography}{37}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[{Akyurek et~al.(2022)Akyurek, Bolukbasi, Liu, Xiong, Tenney, Andreas,
+  and Guu}]{akyurek2022}
+Ekin Akyurek, Tolga Bolukbasi, Frederick Liu, Binbin Xiong, Ian Tenney, Jacob
+  Andreas, and Kelvin Guu. 2022.
+\newblock \href {https://doi.org/10.18653/v1/2022.findings-emnlp.180} {Towards
+  tracing knowledge in language models back to the training data}.
+\newblock In \emph{Findings of the Association for Computational Linguistics:
+  EMNLP 2022}, pages 2429--2446, Abu Dhabi, United Arab Emirates. Association
+  for Computational Linguistics.
+
+\bibitem[{Anderson and Bower(1972)}]{anderson1972recognition}
+John~R. Anderson and Gordon~H. Bower. 1972.
+\newblock \href {https://doi.org/10.1037/h0033773} {Recognition and retrieval
+  processes in free recall}.
+\newblock \emph{Psychological Review}, 79(2):97--123.
+
+\bibitem[{Brown et~al.(2020)Brown, Mann, Ryder, Subbiah, Kaplan, Dhariwal,
+  Neelakantan, Shyam, Sastry, Askell, Agarwal, Herbert-Voss, Krueger, Henighan,
+  Child, Ramesh, Ziegler, Wu, Winter, Hesse, Chen, Sigler, Litwin, Gray, Chess,
+  Clark, Berner, McCandlish, Radford, Sutskever, and Amodei}]{brown2020gpt3}
+Tom~B. Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared Kaplan,
+  Prafulla Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda
+  Askell, Sandhini Agarwal, Ariel Herbert-Voss, Gretchen Krueger, Tom Henighan,
+  Rewon Child, Aditya Ramesh, Daniel~M. Ziegler, Jeffrey Wu, Clemens Winter,
+  and 12 others. 2020.
+\newblock \href {https://arxiv.org/abs/2005.14165} {Language models are
+  few-shot learners}.
+\newblock \emph{Preprint}, arXiv:2005.14165.
+
+\bibitem[{Carlini et~al.(2023)Carlini, Ippolito, Jagielski, Lee, Tramer, and
+  Zhang}]{carlini2022quantifying}
+Nicholas Carlini, Daphne Ippolito, Matthew Jagielski, Katherine Lee, Florian
+  Tramer, and Chiyuan Zhang. 2023.
+\newblock \href {https://arxiv.org/abs/2202.07646} {Quantifying memorization
+  across neural language models}.
+\newblock \emph{Preprint}, arXiv:2202.07646.
+
+\bibitem[{Chelli et~al.(2024)Chelli, Descamps, Lavoué, Trojani, Azar, Deckert,
+  Raynier, Clowez, Boileau, and Ruetsch-Chelli}]{Chelli2024}
+Mikaël Chelli, Jules Descamps, Vincent Lavoué, Christophe Trojani, Michel
+  Azar, Marcel Deckert, Jean-Luc Raynier, Gilles Clowez, Pascal Boileau, and
+  Caroline Ruetsch-Chelli. 2024.
+\newblock \href {https://doi.org/10.2196/53164} {Hallucination rates and
+  reference accuracy of {ChatGPT} and {Bard} for systematic reviews:
+  Comparative analysis}.
+\newblock \emph{Journal of Medical Internet Research}, 26.
+
+\bibitem[{Chowdhery et~al.(2022)Chowdhery, Narang, Devlin, Bosma, Mishra,
+  Roberts, Barham, Chung, Sutton, Gehrmann, Schuh, Shi, Tsvyashchenko, Maynez,
+  Rao, Barnes, Tay, Shazeer, Prabhakaran, Reif, Du, Hutchinson, Pope, Bradbury,
+  Austin, Isard, Gur-Ari, Yin, Duke, Levskaya, Ghemawat, Dev, Michalewski,
+  Garcia, Misra, Robinson, Fedus, Zhou, Ippolito, Luan, Lim, Zoph, Spiridonov,
+  Sepassi, Dohan, Agrawal, Omernick, Dai, Pillai, Pellat, Lewkowycz, Moreira,
+  Child, Polozov, Lee, Zhou, Wang, Saeta, Diaz, Firat, Catasta, Wei,
+  Meier-Hellstern, Eck, Dean, Petrov, and Fiedel}]{chowdhery2022palm}
+Aakanksha Chowdhery, Sharan Narang, Jacob Devlin, Maarten Bosma, Gaurav Mishra,
+  Adam Roberts, Paul Barham, Hyung~Won Chung, Charles Sutton, Sebastian
+  Gehrmann, Parker Schuh, Kensen Shi, Sasha Tsvyashchenko, Joshua Maynez,
+  Abhishek Rao, Parker Barnes, Yi~Tay, Noam Shazeer, Vinodkumar Prabhakaran,
+  and 48 others. 2022.
+\newblock \href {https://arxiv.org/abs/2204.02311} {{PaLM}: Scaling language
+  modeling with pathways}.
+\newblock \emph{Preprint}, arXiv:2204.02311.
+
+\bibitem[{{Common Crawl}(2026)}]{commoncrawl}
+{Common Crawl}. 2026.
+\newblock {Common Crawl} corpus.
+\newblock \url{https://commoncrawl.org}.
+\newblock Accessed 2026.
+
+\bibitem[{Dziri et~al.(2022)Dziri, Milton, Yu, Zaiane, and Reddy}]{dziri2022}
+Nouha Dziri, Sivan Milton, Mo~Yu, Osmar Zaiane, and Siva Reddy. 2022.
+\newblock \href {https://doi.org/10.18653/v1/2022.naacl-main.387} {On the
+  origin of hallucinations in conversational models: Is it the datasets or the
+  models?}
+\newblock In \emph{Proceedings of the 2022 Conference of the North American
+  Chapter of the Association for Computational Linguistics: Human Language
+  Technologies}, pages 5271--5285, Seattle, United States. Association for
+  Computational Linguistics.
+
+\bibitem[{Farquhar et~al.(2024)Farquhar, Kossen, Kuhn, and Gal}]{farquhar2024}
+Sebastian Farquhar, Jannik Kossen, Lorenz Kuhn, and Yarin Gal. 2024.
+\newblock \href {https://doi.org/10.1038/s41586-024-07421-0} {Detecting
+  hallucinations in large language models using semantic entropy}.
+\newblock \emph{Nature}, 630:625--630.
+
+\bibitem[{Hewitt and Manning(2019)}]{hewitt2019structural}
+John Hewitt and Christopher~D. Manning. 2019.
+\newblock \href {https://doi.org/10.18653/v1/N19-1419} {{A} structural probe
+  for finding syntax in word representations}.
+\newblock In \emph{Proceedings of the 2019 Conference of the North {A}merican
+  Chapter of the Association for Computational Linguistics: Human Language
+  Technologies, Volume 1 (Long and Short Papers)}, pages 4129--4138,
+  Minneapolis, Minnesota. Association for Computational Linguistics.
+
+\bibitem[{Huang et~al.(2025)Huang, Yu, Ma, Zhong, Feng, Wang, Chen, Peng, Feng,
+  Qin, and Liu}]{Huang_2025_hallucination_survey}
+Lei Huang, Weijiang Yu, Weitao Ma, Weihong Zhong, Zhangyin Feng, Haotian Wang,
+  Qianglong Chen, Weihua Peng, Xiaocheng Feng, Bing Qin, and Ting Liu. 2025.
+\newblock \href {https://doi.org/10.1145/3703155} {A survey on hallucination in
+  large language models: Principles, taxonomy, challenges, and open questions}.
+\newblock \emph{ACM Trans. Inf. Syst.}, 43(2).
+
+\bibitem[{Imai et~al.(2010)Imai, Keele, and Tingley}]{imai2010general}
+Kosuke Imai, Luke Keele, and Dustin Tingley. 2010.
+\newblock \href {https://doi.org/10.1037/a0020761} {A general approach to
+  causal mediation analysis}.
+\newblock \emph{Psychological Methods}, 15(4):309--334.
+
+\bibitem[{Kadavath et~al.(2022)Kadavath, Conerly, Askell, Henighan, Drain,
+  Perez, Schiefer, Hatfield-Dodds, DasSarma, Tran-Johnson, Johnston, El-Showk,
+  Jones, Elhage, Hume, Chen, Bai, Bowman, Fort, Ganguli, Hernandez, Jacobson,
+  Kernion, Kravec, Lovitt, Ndousse, Olsson, Ringer, Amodei, Brown, Clark,
+  Joseph, Mann, McCandlish, Olah, and Kaplan}]{Kadavath2022}
+Saurav Kadavath, Tom Conerly, Amanda Askell, Tom Henighan, Dawn Drain, Ethan
+  Perez, Nicholas Schiefer, Zac Hatfield-Dodds, Nova DasSarma, Eli
+  Tran-Johnson, Scott Johnston, Sheer El-Showk, Andy Jones, Nelson Elhage,
+  Tristan Hume, Anna Chen, Yuntao Bai, Sam Bowman, Stanislav Fort, and 17
+  others. 2022.
+\newblock \href {https://arxiv.org/abs/2207.05221} {Language models (mostly)
+  know what they know}.
+\newblock \emph{Preprint}, arXiv:2207.05221.
+
+\bibitem[{Kandpal et~al.(2023)Kandpal, Deng, Roberts, Wallace, and
+  Raffel}]{Kandpal2022_LLMStruggleLongTail}
+Nikhil Kandpal, Haikang Deng, Adam Roberts, Eric Wallace, and Colin Raffel.
+  2023.
+\newblock \href {https://arxiv.org/abs/2211.08411} {Large language models
+  struggle to learn long-tail knowledge}.
+\newblock \emph{Preprint}, arXiv:2211.08411.
+
+\bibitem[{Li et~al.(2024)Li, Patel, Viégas, Pfister, and
+  Wattenberg}]{li2023inference}
+Kenneth Li, Oam Patel, Fernanda Viégas, Hanspeter Pfister, and Martin
+  Wattenberg. 2024.
+\newblock \href {https://arxiv.org/abs/2306.03341} {Inference-time
+  intervention: Eliciting truthful answers from a language model}.
+\newblock \emph{Preprint}, arXiv:2306.03341.
+
+\bibitem[{Li et~al.(2022)Li, Li, Shang, Dong, Sun, Liu, Ji, Jiang, and
+  Liu}]{li2022}
+Shaobo Li, Xiaoguang Li, Lifeng Shang, Zhenhua Dong, Chengjie Sun, Bingquan
+  Liu, Zhenzhou Ji, Xin Jiang, and Qun Liu. 2022.
+\newblock \href {https://doi.org/10.18653/v1/2022.findings-acl.136} {How
+  pre-trained language models capture factual knowledge? {A} causal-inspired
+  analysis}.
+\newblock In \emph{Findings of the Association for Computational Linguistics:
+  ACL 2022}, pages 1720--1732, Dublin, Ireland. Association for Computational
+  Linguistics.
+
+\bibitem[{Liu et~al.(2025)Liu, Min, Zettlemoyer, Choi, and
+  Hajishirzi}]{Liu2024InfiniGram}
+Jiacheng Liu, Sewon Min, Luke Zettlemoyer, Yejin Choi, and Hannaneh Hajishirzi.
+  2025.
+\newblock \href {https://arxiv.org/abs/2401.17377} {Infini-gram: Scaling
+  unbounded n-gram language models to a trillion tokens}.
+\newblock \emph{Preprint}, arXiv:2401.17377.
+
+\bibitem[{Lu et~al.(2022)Lu, Bartolo, Moore, Riedel, and
+  Stenetorp}]{lu2022fantastically}
+Yao Lu, Max Bartolo, Alastair Moore, Sebastian Riedel, and Pontus Stenetorp.
+  2022.
+\newblock \href {https://doi.org/10.18653/v1/2022.acl-long.556} {Fantastically
+  ordered prompts and where to find them: Overcoming few-shot prompt order
+  sensitivity}.
+\newblock In \emph{Proceedings of the 60th Annual Meeting of the Association
+  for Computational Linguistics (Volume 1: Long Papers)}, pages 8086--8098,
+  Dublin, Ireland. Association for Computational Linguistics.
+
+\bibitem[{Mallen et~al.(2023)Mallen, Asai, Zhong, Das, Khashabi, and
+  Hajishirzi}]{mallen2023_whenNotToTrustLMs}
+Alex Mallen, Akari Asai, Victor Zhong, Rajarshi Das, Daniel Khashabi, and
+  Hannaneh Hajishirzi. 2023.
+\newblock \href {https://arxiv.org/abs/2212.10511} {When not to trust language
+  models: Investigating effectiveness of parametric and non-parametric
+  memories}.
+\newblock \emph{Preprint}, arXiv:2212.10511.
+
+\bibitem[{Manakul et~al.(2023)Manakul, Liusie, and Gales}]{Manakul2023}
+Potsawee Manakul, Adian Liusie, and Mark J.~F. Gales. 2023.
+\newblock \href {https://arxiv.org/abs/2303.08896} {{SelfCheckGPT}:
+  Zero-resource black-box hallucination detection for generative large language
+  models}.
+\newblock \emph{Preprint}, arXiv:2303.08896.
+
+\bibitem[{McKenna et~al.(2023)McKenna, Li, Cheng, Hosseini, Johnson, and
+  Steedman}]{mckenna2023sourceshallucinationlargelanguage}
+Nick McKenna, Tianyi Li, Liang Cheng, Mohammad~Javad Hosseini, Mark Johnson,
+  and Mark Steedman. 2023.
+\newblock \href {https://arxiv.org/abs/2305.14552} {Sources of hallucination by
+  large language models on inference tasks}.
+\newblock \emph{Preprint}, arXiv:2305.14552.
+
+\bibitem[{{Microsoft Research} and {AMiner}(2019)}]{OAGv2}
+{Microsoft Research} and {AMiner}. 2019.
+\newblock Open {A}cademic {G}raph ({OAG} v2).
+\newblock
+  \url{https://www.microsoft.com/en-us/research/project/open-academic-graph/}.
+\newblock Snapshot combining Microsoft Academic Graph (MAG) Nov 2018 and AMiner
+  Jan 2019.
+
+\bibitem[{Naddaf and Quill(2026)}]{naddaf2026hallucinated}
+Miryam Naddaf and Elizabeth Quill. 2026.
+\newblock \href {https://doi.org/10.1038/d41586-026-00969-z} {Hallucinated
+  citations are polluting the scientific literature. {W}hat can be done?}
+\newblock \emph{Nature}, 652(8108):26--29.
+
+\bibitem[{Onoe et~al.(2022)Onoe, Zhang, Choi, and
+  Durrett}]{onoe-etal-2022-entity}
+Yasumasa Onoe, Michael Zhang, Eunsol Choi, and Greg Durrett. 2022.
+\newblock \href {https://doi.org/10.18653/v1/2022.findings-naacl.52} {Entity
+  cloze by date: What {LM}s know about unseen entities}.
+\newblock In \emph{Findings of the Association for Computational Linguistics:
+  NAACL 2022}, pages 693--702, Seattle, United States. Association for
+  Computational Linguistics.
+
+\bibitem[{Phillips et~al.(2025)Phillips, Wu, Molaei, Belgrave, Thakur, and
+  Clifton}]{phillips2025geometricuncertaintydetectingcorrecting}
+Edward Phillips, Sean Wu, Soheila Molaei, Danielle Belgrave, Anshul Thakur, and
+  David Clifton. 2025.
+\newblock \href {https://arxiv.org/abs/2509.13813} {Geometric uncertainty for
+  detecting and correcting hallucinations in {LLM}s}.
+\newblock \emph{Preprint}, arXiv:2509.13813.
+
+\bibitem[{Rao et~al.(2026)Rao, Wong, and Callison-Burch}]{rao2026reference}
+Delip Rao, Eric Wong, and Chris Callison-Burch. 2026.
+\newblock \href {https://arxiv.org/abs/2604.03173} {Detecting and correcting
+  reference hallucinations in commercial {LLM}s and deep research agents}.
+\newblock \emph{Preprint}, arXiv:2604.03173.
+
+\bibitem[{Razeghi et~al.(2022)Razeghi, IV, Gardner, and
+  Singh}]{razeghi2022_pretrainingTermFreqFewShot}
+Yasaman Razeghi, Robert L.~Logan IV, Matt Gardner, and Sameer Singh. 2022.
+\newblock \href {https://arxiv.org/abs/2202.07206} {Impact of pretraining term
+  frequencies on few-shot reasoning}.
+\newblock \emph{Preprint}, arXiv:2202.07206.
+
+\bibitem[{Rimsky et~al.(2024)Rimsky, Gabrieli, Schulz, Tong, Hubinger, and
+  Turner}]{rimsky-etal-2024-steering}
+Nina Rimsky, Nick Gabrieli, Julian Schulz, Meg Tong, Evan Hubinger, and
+  Alexander Turner. 2024.
+\newblock \href {https://doi.org/10.18653/v1/2024.acl-long.828} {Steering
+  {L}lama 2 via contrastive activation addition}.
+\newblock In \emph{Proceedings of the 62nd Annual Meeting of the Association
+  for Computational Linguistics (Volume 1: Long Papers)}, pages 15504--15522,
+  Bangkok, Thailand. Association for Computational Linguistics.
+
+\bibitem[{Sun et~al.(2024)Sun, Xu, Zha, Liu, and Dong}]{sun2024headtotail}
+Kai Sun, Yifan~Ethan Xu, Hanwen Zha, Yue Liu, and Xin~Luna Dong. 2024.
+\newblock \href {https://arxiv.org/abs/2308.10168} {Head-to-tail: How
+  knowledgeable are large language models ({LLM}s)? {A.K.A.} will {LLM}s
+  replace knowledge graphs?}
+\newblock \emph{Preprint}, arXiv:2308.10168.
+
+\bibitem[{Tenney et~al.(2019)Tenney, Das, and Pavlick}]{tenney2019bert}
+Ian Tenney, Dipanjan Das, and Ellie Pavlick. 2019.
+\newblock \href {https://arxiv.org/abs/1905.05950} {{BERT} rediscovers the
+  classical {NLP} pipeline}.
+\newblock \emph{Preprint}, arXiv:1905.05950.
+
+\bibitem[{Tingley et~al.(2014)Tingley, Yamamoto, Hirose, Keele, and
+  Imai}]{tingley2014mediation}
+Dustin Tingley, Teppei Yamamoto, Kentaro Hirose, Luke Keele, and Kosuke Imai.
+  2014.
+\newblock \href {https://doi.org/10.18637/jss.v059.i05} {mediation: {R} package
+  for causal mediation analysis}.
+\newblock \emph{Journal of Statistical Software}, 59(5):1--38.
+
+\bibitem[{Wei et~al.(2024)Wei, Karina, Chung, Jiao, Papay, Glaese, Schulman,
+  and Fedus}]{Wei2024}
+Jason Wei, Nguyen Karina, Hyung~Won Chung, Yunxin~Joy Jiao, Spencer Papay,
+  Amelia Glaese, John Schulman, and William Fedus. 2024.
+\newblock \href {https://arxiv.org/abs/2411.04368} {Measuring short-form
+  factuality in large language models}.
+\newblock \emph{Preprint}, arXiv:2411.04368.
+
+\bibitem[{Wei et~al.(2023)Wei, Wang, Schuurmans, Bosma, Ichter, Xia, Chi, Le,
+  and Zhou}]{wei2022chain}
+Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Brian Ichter, Fei Xia,
+  Ed~Chi, Quoc Le, and Denny Zhou. 2023.
+\newblock \href {https://arxiv.org/abs/2201.11903} {Chain-of-thought prompting
+  elicits reasoning in large language models}.
+\newblock \emph{Preprint}, arXiv:2201.11903.
+
+\bibitem[{Zhang et~al.(2025)Zhang, Li, Cui, Cai, Liu, Fu, Huang, Zhao, Zhang,
+  Chen, Wang, Luu, Bi, Shi, and Shi}]{zhang2025sirenssongaiocean}
+Yue Zhang, Yafu Li, Leyang Cui, Deng Cai, Lemao Liu, Tingchen Fu, Xinting
+  Huang, Enbo Zhao, Yu~Zhang, Yulong Chen, Longyue Wang, Anh~Tuan Luu, Wei Bi,
+  Freda Shi, and Shuming Shi. 2025.
+\newblock \href {https://doi.org/10.1162/coli.a.16} {{S}iren{'}s song in the
+  {AI} ocean: A survey on hallucination in large language models}.
+\newblock \emph{Computational Linguistics}, 51(4):1373--1418.
+
+\bibitem[{Zhao et~al.(2021)Zhao, Wallace, Feng, Klein, and
+  Singh}]{zhao2021calibrate}
+Tony~Z. Zhao, Eric Wallace, Shi Feng, Dan Klein, and Sameer Singh. 2021.
+\newblock \href {https://arxiv.org/abs/2102.09690} {Calibrate before use:
+  Improving few-shot performance of language models}.
+\newblock \emph{Preprint}, arXiv:2102.09690.
+
+\bibitem[{Zheng et~al.(2023)Zheng, Huang, and
+  Chang}]{zheng2023doeschatgptfallshort}
+Shen Zheng, Jie Huang, and Kevin Chen-Chuan Chang. 2023.
+\newblock \href {https://arxiv.org/abs/2304.10513} {Why does {ChatGPT} fall
+  short in providing truthful answers?}
+\newblock \emph{Preprint}, arXiv:2304.10513.
+
+\bibitem[{Zou et~al.(2025)Zou, Phan, Chen, Campbell, Guo, Ren, Pan, Yin,
+  Mazeika, Dombrowski, Goel, Li, Byun, Wang, Mallen, Basart, Koyejo, Song,
+  Fredrikson, Kolter, and Hendrycks}]{zou2023representation}
+Andy Zou, Long Phan, Sarah Chen, James Campbell, Phillip Guo, Richard Ren,
+  Alexander Pan, Xuwang Yin, Mantas Mazeika, Ann-Kathrin Dombrowski, Shashwat
+  Goel, Nathaniel Li, Michael~J. Byun, Zifan Wang, Alex Mallen, Steven Basart,
+  Sanmi Koyejo, Dawn Song, Matt Fredrikson, and 2 others. 2025.
+\newblock \href {https://arxiv.org/abs/2310.01405} {Representation engineering:
+  A top-down approach to {AI} transparency}.
+\newblock \emph{Preprint}, arXiv:2310.01405.
+
+\end{thebibliography}

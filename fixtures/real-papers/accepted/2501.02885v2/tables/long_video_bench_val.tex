@@ -1,0 +1,31 @@
+
+\setlength\tabcolsep{3.5pt}
+\begin{tabular}{lcccccc}
+    \toprule
+		\multirow{2}{*}{\textbf{Model}} & 
+		\multicolumn{5}{c}{\textbf{LongVideoBench$_{val}$}} \\
+
+		\cmidrule(lr){2-6}
+		\quad\ \textit{Video Duration} & 
+			Overall  & 
+			(8s, 15s] & 
+			(15s, 1m] & 
+			(3m, 10m] & 
+			(15m, 60m] \\ 
+  	\toprule
+	VILA-V1.5       & 47.1\emptyfoot{+3.7} & 56.1\emptyfoot{+1.6} & 60.5\emptyfoot{+5.8} & 43.4\emptyfoot{+4.9} & 42.7\emptyfoot{+2.9} \\
+	\rowcolor{gray!30}
+	\rule{0pt}{2ex} \textbf{+\mname}
+	                & 50.8\gainfoot{+3.7} & 57.7\gainfoot{+1.6} & 66.3\gainfoot{+5.8} & 48.3\gainfoot{+4.9} & 45.6\gainfoot{+2.9} \\
+	\hdashline
+	MiniCPM-V2.6    & 51.2\emptyfoot{+5.9} & 67.7\emptyfoot{-0.5} & 66.9\emptyfoot{+4.0} & 46.8\emptyfoot{+9.3} & 44.1\emptyfoot{+6.3} \\
+	\rowcolor{gray!30}
+	\rule{0pt}{2ex} \textbf{+\mname} 
+	                & 57.1\gainfoot{+5.9} & 67.2\lossfoot{-0.5} & 70.9\gainfoot{+4.0} & 56.1\gainfoot{+9.3} & 50.4\gainfoot{+6.3} \\
+	\hdashline
+	LLaVA-OneVision & 54.2\emptyfoot{+4.8} & 68.3\emptyfoot{+2.1} & 66.9\emptyfoot{+6.4} & 52.4\emptyfoot{+5.4} & 46.8\emptyfoot{+5.0} \\
+	\rowcolor{gray!30}
+	\rule{0pt}{2ex} \textbf{+\mname}
+	                & 59.0\gainfoot{+4.8} & 70.4\gainfoot{+2.1} & 73.3\gainfoot{+6.4} & 57.8\gainfoot{+5.4} & 51.8\gainfoot{+5.0} \\
+	\bottomrule
+	\end{tabular}

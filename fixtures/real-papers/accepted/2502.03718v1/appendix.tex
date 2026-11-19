@@ -1,0 +1,101 @@
+
+\appendix
+\section*{APPENDIX}
+\label{sec:appendix}
+
+\section{Detailed Detection Results}
+
+
+\begin{table}[htbp]
+\centering
+\caption{The attack incidents that are in the released datasets of FlashSyn and DeFiRanger but are not selected.}
+\label{tab:not_selected}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{cccl}
+\toprule
+\textbf{Dataset}      & \textbf{Chain} & \textbf{App}        & \textbf{Reason} \\ 
+\midrule
+\multirow{5}{*}{FlashSyn}  
+                     & ETH           & Eminence            & Design Flaw             \\ 
+                     & ETH           & Yearn               & Design Flaw             \\ 
+                     & ETH           & bearFi              & Design Flaw             \\ 
+                     & BSC           & AutoShark           & Non-Contract             \\ 
+                     & BSC           & ElevenFi            & Design Flaw             \\ 
+\midrule
+\multirow{2}{*}{DeFiRanger} 
+                     & ETH           & Dracula             & Undisclosed             \\ 
+                     & BSC           & Belt Finance        & Non-Contract              \\ 
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+Table~\ref{tab:not_selected} lists seven attack events that are included in the released datasets of FlashSyn and DeFiRanger but are not selected by this study. We summarize the following three reasons:
+\begin{itemize}
+ \item\textbf{Design Flaw}:
+ % \hny{clearly state they are different, which is exclusively focused by FlashSyn}the incident arises from flawed logic in one or more functions of the victim contracts, leading to highly specific vulnerabilities. These design issues are often exploited directly by flashloans to trigger attacks, without involving token swaps or other token-related operations, as highlighted in FlashSyn.
+the incident, which is exclusively the focus of FlashSyn, differs from price manipulation. It arises from flawed logic in one or more functions of the victim contracts, leading to highly specific vulnerabilities.
+ \item\textbf{Non-Contract}: the incident is initiated by an EOA instead of a smart contract, which is out of our scope.
+ \item\textbf{Undisclosed}: the incident is not reported on any blockchain security platforms/forums or other social media, which cannot 100\% guarantee its existence.
+\end{itemize}
+
+\begin{table*}[t]
+\caption{Detecting results for different tools on $\mathcal{D}_{G1}$, where \checkmark indicates the corresponding attack/vulnerable contract can be detected. DR, FS, DT, and SC refer to DeFiRanger, FlashSyn, DeFiTainter, and {\tool}, respectively. }
+\scriptsize
+\centering
+\rowcolors{1}{gray!20}{white} 
+\label{tab:detailed_results}
+\begin{tabularx}{\textwidth}{p{0.1cm}p{1.22cm}p{1.29cm}rp{0.45cm}p{0.3cm}p{0.3cm}p{0.3cm}p{0.3cm}p{0.1cm}p{1.22cm}p{1.29cm}rp{0.45cm}p{0.3cm}p{0.3cm}p{0.3cm}p{0.3cm}}
+\toprule
+\rowcolor{white}
+\textbf{\#} & \textbf{Victim App} & \textbf{Attack Time} & \textbf{Loss} & \textbf{Chain} & \textbf{DR}$^{*} $ & \textbf{FS}$^{*}$ & \textbf{DT}  & \textbf{SC} & \textbf{\#} & \textbf{Victim App} & \textbf{Attack Time} & \textbf{Loss} & \textbf{Chain} & \textbf{DR}$^{*}$ & \textbf{FS}$^{*}$ & \textbf{DT}  & \textbf{SC} \\ 
+\midrule
+1 & bZx & 2020/02/18 & \multicolumn{1}{r}{350.0K} & ETH & \checkmark  & \checkmark &   &  & 43 & MCC & 2023/05/09 & 19.0K & BSC &  &  &  & \checkmark \\
+2 & Balancer & 2020/06/28 & 447.0K & ETH & \checkmark  &  &   &\checkmark & 44 & HODLCapital & 2023/05/09 & 4.3K & ETH &  &  &  & \checkmark \\
+3 & Loopring & 2020/09/30 & 29.0K & ETH & \checkmark  &  &    &\checkmark & 45 & SellToken & 2023/05/11 & 95.0K & BSC &  &  &  & \checkmark \\
+4 & Harvest & 2020/10/26 & 21.5M & ETH & \checkmark & \checkmark & \checkmark &\checkmark & 46 & LW & 2023/05/12 & 50.0K & BSC &  &  &    & \checkmark \\
+5 & PloutoFinance & 2020/10/29 & 650.0K & ETH & \checkmark &  &  &  \checkmark & 47 & CS & 2023/05/23 & 714.0K & BSC &  &  &  & \checkmark \\
+6 & CheeseBank & 2020/11/06 & 3.3M & ETH & \checkmark & \checkmark & \checkmark &\checkmark & 48 & EBPools & 2023/05/31 & 111.0K & ETH &  &  &   &   \\
+7 & ValueDefi & 2020/11/24 & 6.0M & ETH & \checkmark &  & \checkmark &  \checkmark & 49 & Cellframe & 2023/06/01 &  \multicolumn{1}{r}{76.0K} & BSC &  &  & \checkmark  & \checkmark \\
+8 & SealFinance & 2020/11/15 & 4.3K & ETH & \checkmark &  &  &  \checkmark & 50 & VINU & 2023/06/06 & 6.0K & ETH &  &  & & \checkmark \\
+9 & WarpFinance & 2020/12/17 & 7.8M & ETH & \checkmark & \checkmark & \checkmark & \checkmark & 51 & UN & 2023/06/06 & 26.0K & BSC &  &  &   &\\
+10 & ApeRocket & 2021/07/14 & 1.3M & BSC &  & \checkmark & \checkmark  & \checkmark  & 52 & SellToken & 2023/06/11 & 106.0K & BSC &  &  &  & \checkmark \\
+11 & ArrayFinance & 2021/07/18 & 516.0K & ETH & \checkmark &  &  &  \checkmark & 53 & CFC & 2023/06/15 & 16.0K & BSC &  &  &  & \checkmark \\
+12 & Zenon & 2021/11/20 & 1.0M & BSC & \checkmark &  &  &   \checkmark & 54 & IPO & 2023/06/20 & 483.0K & BSC &  &  &  & \checkmark \\
+13 & CollectCoin & 2021/12/01 & 1.0M & BSC & \checkmark &  &  &  \checkmark & 55 & SHIDO & 2023/06/23 & 230.0K & BSC &  &  & & \checkmark \\
+14 & IVM & 2021/12/17 & 1.0M & BSC & \checkmark &  &  & \checkmark & 56 & LUSD & 2023/07/07 & 16.0K & BSC &  &  &  & \checkmark  \\
+15 & MIGE & 2022/02/09 & 42 & BSC & \checkmark &  &  & \checkmark & 57 & WGPT & 2023/07/12 &  80.0K & BSC &  &  &  &  \checkmark  \\
+16 & OneRing & 2022/03/21 & 1.5M & FTM &  & \checkmark &  & 
+ \checkmark & 58 & ApeDAO & 2023/07/18 & 7.0K & BSC&  &  &   & \checkmark  \\
+17 & WienerDOGE & 2022/04/25 & 30.0K & BSC &  & \checkmark & \checkmark & \checkmark & 59 & ConicFinance & 2023/07/23 & 934.0K & ETH &  &  &  & \checkmark  \\
+18 & bDollar & 2022/05/21 & 2.3K & BSC & \checkmark &  &  &    & 60 & Uwerx & 2023/08/02 & 324.0K & ETH&  &  &  & \checkmark  \\
+19 & Novo & 2022/05/29 & 89.6K & BSC & \checkmark & \checkmark &  &   & 61 & Zunami & 2023/08/14 & 2.0M & ETH&  &  &  & \checkmark  \\
+20 & Fswap & 2022/06/13 & 432K & BSC & \checkmark &  &  &   \checkmark & 62 & BTC20 & 2023/08/19 & 30.0K & ETH &  &  &  & \checkmark  \\
+21 & InverseFi & 2022/06/16 & 1.3M & ETH & \checkmark & \checkmark & \checkmark  &   \checkmark & 63 & EHIVE & 2023/08/21 & 15.0K & BSC &  &  &  &  \checkmark \\
+22 & SpaceGodzilla & 2022/07/13 & 25.0K & BSC & \checkmark  &  &  & \checkmark & 64 & GSS & 2023/08/24 & 24.8K & BSC&  &  &  & \checkmark \\
+23 & EGDFinance & 2022/08/07 & 36.0K & BSC &  &  & \checkmark &   & 65 & EAC & 2023/08/29 & 6.3K & BSC &  &  &  & \checkmark  \\
+24 & ZFinance & 2022/09/05 & 61.0K & BSC &  &  &  &  \checkmark  & 66 & JumpFarm & 2023/09/05 & 4.0K & ETH &  &  &  &  \checkmark  \\
+25 & NewFreeDAO & 2022/09/08 & 1.9M & BSC &  &  & \checkmark & \checkmark & 67 & HCT & 2023/09/07 & 6.5K & BSC&  &  &  & \checkmark  \\
+26 & BXH & 2022/09/28 & 40.0K & BSC &  &  & \checkmark &  \checkmark  & 68 & UniclyNFT & 2023/09/16 & 6.0K & ETH &  &  &  &\checkmark  \\
+27 & TempleDao & 2022/10/11 & 2.3M & ETH &  &  & &  \checkmark & 69  & KubSplit & 2023/09/24 & 78.0K & BSC &  &  &  &   \checkmark \\
+28 & ATK & 2022/10/12 & 127.0K & BSC &  &  &  &    & 70 & BH & 2023/10/11 & 1.3M & BSC &  &  &  &  \checkmark  \\
+29 & MToken & 2022/10/16 & 1.0M & BSC &  &  & \checkmark  &  \checkmark & 71 & MicDao & 2023/10/18 & 13.0K & BSC &  &  &  &  \checkmark  \\
+30 & PlantWorld & 2022/10/17 & 24.5K & BSC &  &  &  & \checkmark & 72 & UniverseToken & 2023/10/27 & 1.5M & BSC &  &  &  &  \checkmark  \\
+31 & HEALTH & 2022/10/20 & 8.8K & BSC & \checkmark &  &  & \checkmark & 73 & OnyxProtocol & 2023/11/01 & 2.0M & ETH &  &  &  &  \checkmark   \\
+32 & Market & 2022/10/24 & 65.0K & POL &  &  &  &  \checkmark & 74 & 3913Token & 2023/11/02 & 31.3K & BSC &  &  &  &  \checkmark  \\
+33 & n00dleswap & 2022/10/25 & 31.0K & ETH &  & & \checkmark  &  \checkmark  & 75 & Grok & 2023/11/10 & 56.0K & ETH &  &  &  & \checkmark  \\
+34 & ULME & 2022/10/25 & 50.0K & BSC & \checkmark &  &  & \checkmark & 76 & Token8633 & 2023/11/17 & 52.0K & BSC &  &  &  & \checkmark  \\
+35 & VTFToken & 2022/10/27 & 111.0K & BSC &  &  &  & \checkmark  & 77 & ElephantStatus & 2023/12/06 & 165.0K & BSC&  &  &  & \checkmark  \\
+36 & UPSToken & 2023/01/18 & 405.0K & ETH &  &  & \checkmark & \checkmark & 78 & BurnsDefi & 2024/02/05 & 67.0K & BSC &  &  &  & \checkmark \\
+37 & BscAnt3 & 2023/01/19 & 426K & BSC & \checkmark  &  &  &  \checkmark & 79 & GAIN & 2024/02/21 & 18.0K & ETH &  &  &  &  \checkmark  \\
+38 & SHEEP & 2023/02/10 & 3.0K & BSC & &  & & \checkmark  & 80 & WSM & 2024/04/04 & 18.0K & BSC&  &  &  & \checkmark  \\
+39 & DYNA & 2023/02/22 & 23.0K & BSC &  &  &  & \checkmark  & 81 & UPS & 2024/04/09 & 28.0K & BSC&  &  &  & \checkmark  \\
+40 & AToken & 2023/03/21 & 28.4K & BSC &  &  &  &\checkmark & 82 & MARS & 2024/04/16 & 100.0K & BSC &  &  &  & \checkmark  \\
+41 & BIGFI & 2023/03/22 & 30.0K & BSC &  &  &  & \checkmark & 83 & SATX & 2024/04/16 & 27.6K & BSC &  &  &  & \checkmark  \\
+42 & SFM & 2023/03/28 & 8.0M & BSC & \checkmark  & &  &  \checkmark  & 84 & Z123 & 2024/04/22 & 135.0K & BSC&  &  &  & \checkmark  \\
+\bottomrule
+\end{tabularx}
+\makebox[\linewidth][l]{\hspace{2em}\scriptsize{$^{*}$ Due to their closed-source nature, DeFiRanger and FlashSyn cannot be tested on incidents occurring after 2023/3/28 and 2022/6/16, respectively.}}
+\end{table*}
+
+

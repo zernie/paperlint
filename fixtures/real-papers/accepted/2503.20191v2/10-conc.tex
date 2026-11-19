@@ -1,0 +1,5 @@
+\section{Conclusion}
+\label{sec:conclusion}
+Training large foundation models at scale has made the optimization of training recipes for hardware utilization a critical challenge, with costs reaching hundreds of millions of dollars. We introduce, \sysname, a runtime modeling system, addresses this challenge through a fundamental insight: by operating at the narrow interface between training frameworks and accelerator devices, we can eliminate the semantic gap that forces existing systems to trade off between accuracy, usability, and generality. Through transparent device emulation and precise runtime simulation, \sysname achieves prediction accuracy within \evalpe\% error and identifies configurations within \evalcg\% of optimal cost across diverse scenarios, from small V100 clusters to large-scale H100 deployments. As distributed training continues to push the boundaries of scale and complexity, \sysname's transparent runtime modeling approach is a crucial step toward sustainable and efficient deployment of large-scale AI systems.
+
+

@@ -1,0 +1,321 @@
+\section{LDP Path Counting}
+\label{sec:k-lp}
+
+ 
+Now, we extend our LDP solution for walk counting to support path counting.  
+As discussed in Section~\ref{subsec:prelim_pattern_counting}, path counting imposes an additional constraint compared with walk counting: each node must appear at most once along the path. 
+Even in the non-private, centralized setting, this constraint introduces significant challenges.
+As shown in the prior work~\cite{jokic2022number}, in theory, walk counting can be solved asymptotically more efficiently than path counting.
+Moving towards the LDP setting, the problem becomes even more challenging, as enforcing the uniqueness constraint for a path would inherently require information sharing across multiple nodes, which is fundamentally difficult to achieve under the LDP model.
+
+
+To address this issue, in this section, we introduce a protocol named random marking, which 
+can be seamlessly integrated into our walk counting mechanisms to enable private $k$-line path counts estimation under LDP. 
+The resulting mechanism achieves a utility bound of $\tilde{O}(\sqrt{N}d(G)^{k})$, representing only a multiplicative overhead of $\tilde{O}(d(G))$ compared to the corresponding $k$-line walk counting utility of $\tilde{O}(\sqrt{N}d(G)^{k-1})$.
+
+
+
+\subsection{Random Marking: Transforming Path Counting into Walk Counting 
+}
+\label{subsec:k-lp_randommarking}
+
+
+% \red{As mentioned, detecting node repetition in a path under the LDP setting is inherently difficult due to the lack of global visibility. To address this challenge, we adopt a different strategy: instead of detecting repetitions after the fact, we proactively prevent node repetition from the outset. Our solution is to impose a stricter constraint. Specifically, for each node, we not only require that it appear at most once in a walk, but also that it must be in a predefined position within the walk. }
+
+
+As highlighted above, detecting node repetition in a path under the LDP setting is inherently difficult due to limited global visibility. 
+To address this challenge, {we draw inspiration from color-coding~\cite{alon1995color}, which colors nodes and searches for patterns with distinct node colors}, and adopt a different strategy: rather than detecting repetitions retrospectively, we proactively prevent them by imposing a stricter constraint from the outset.
+Specifically, for each node, we require that it not only appear at most once in a walk, but also occupy a predefined position within it. 
+{Interestingly, this idea was originally introduced to improve runtime for non-private path and cycle detection, whereas we leverage it here to address the challenges in the LDP setting, where only local views are available.}
+
+
+
+
+To illustrate the high-level idea, we first consider the non-private setting and defer the DP-relevant operations to the next subsection.
+We begin with an extra marking round, in which each node $v_i$ samples a random mark $r_i$ uniformly from $\{0, 1, \dots, k\}$ and sends it to its neighbors. 
+This mark enforces that the node may appear only as the $(r_i + 1)$-th node in any $k$-line path being counted. 
+For example, if a node $v_j$ draws $r_j = 0$, it can only serve as the starting node of a valid $k$-line path. 
+We then apply the $(k-1)$-round walk counting mechanism $\mathcal{M}_{\mathrm{k\text{-}wk}}$, with an added constraint: each node $v_i$ participates only in the $r_i$-th round of computation.
+At all other rounds $\ell \ne r_i$, the node simply outputs $0$.
+More precisely, in each round $\ell \in \{1, \dots, k-1\}$, nodes $v_i \in V$ with $r_i = \ell$ compute the number of $\ell$-line walks ending at themselves with node marks $(0, 1, \dots, r_i)$.
+This is achieved by aggregating counts from active neighbors that participated in the previous round.
+Additionally, nodes with mark $k - 1$ complete the last line by multiplying their count by the number of their neighbors marked with $k$. 
+Notably, since $\mathcal{M}_{\mathrm{k\text{-}wk}}$ runs for only $k-1$ rounds, nodes marked with $0$ or $k$ do not participate in subsequent computation. 
+To distinguish this from the DP mechanism, we denote the resulting non-private algorithm as $\widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}$, where each local client executes the function $\widehat{\mathcal{R}}^{(\ell)}_i$ at round $\ell$. 
+The detailed algorithm is provided in Algorithm~\ref{alg:k-lp_nondp}.
+Here, we use $\widehat{\mathcal{X}}_i^{(\ell)}$ to denote the non-private output of node $v_i$ in round $\ell$, in distinction from the DP-compliant result ${\mathcal{X}}_i^{(\ell)}$.
+
+
+
+
+\begin{algorithm}
+\small
+\caption{Local client function $\widehat{\mathcal{R}}^{(\ell)}$ of $\widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}$}
+\label{alg:k-lp_nondp}
+\SetKwFunction{rnew}{$\widehat{\mathcal{R}}^{(\ell)}$}
+\SetNoFillComment
+
+\ForEach{$i \in \{1, \dots, N\}$}{
+    $\widehat{\mathcal{X}}^{(0)}_i \leftarrow 1$
+}
+
+
+\SetKwProg{Fn}{Function}{:}{}
+\Fn{\rnew{$G_i$}}{
+
+
+\If{$\ell = \text{mark}$}{
+    \tcc{Randomly sample a mark}
+    $r_i \gets \textsf{Unif}(0,k)$
+
+     \textbf{Send out} $r_i$ to $\mathcal{N}(i)$
+   
+    }
+
+\If{$\ell = r_i$}{
+
+Received $\widehat{\mathcal{X}}^{(\ell-1)}_j$ for each $j \in \mathcal{N}(i)$
+
+
+  
+        $\widehat{\mathcal{X}}^{(\ell)}_i 
+        \leftarrow 
+        \sum_{j \in \mathcal{N}(i)} 
+        \widehat{\mathcal{X}}^{(\ell-1)}_j \, \mathbf{1}\{r_j = {\ell -1}\}$\\
+    % }
+
+    \If{$\ell = k-1$}{
+        $\widehat{\mathcal{X}}^{(\ell)}_i 
+        \leftarrow 
+        \widehat{\mathcal{X}}^{(\ell)}_i \cdot \sum_{j \in \mathcal{N}(i)} \mathbf{1}\{r_j = k\}$\\
+    }
+
+}
+\Else{
+     $\widehat{\mathcal{X}}^{(\ell)}_i \leftarrow 0$
+}
+
+
+ \textbf{Send out} $\widehat{\mathcal{X}}^{(\ell)}_i$ to $\mathcal{N}(i)$ and $\mathcal{A}$
+}
+\end{algorithm}
+
+
+
+With this design, it is straightforward to ensure that each node $v_i \in V$ appears at most once in a walk, since its contribution is limited to being the $(r_i+1)$-th node in any walk. 
+% This enforces the non-repetition requirement for path counting. 
+This enforces the requirement that nodes do not repeat in a path.
+However, it also introduces the problem of underestimation. 
+Specifically, a $k$-line path in the graph is counted only if all nodes along the path receive marks exactly from $0$ to $k$. 
+Since node marks are sampled independently, the probability that a $k$-line path is sampled is $(k+1)^{-(k+1)}$. 
+Consequently, at the analyzer $\mathcal{A}$, the result is rescaled by $(k+1)^{(k+1)}$:
+\begin{equation*}
+     \widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}(G) = (k+1)^{k+1} \, 
+     \sum_{i=1}^N \widehat{\mathcal{X}}^{(k-1)}_i.
+\end{equation*}
+{Random marking introduces variance in  $\widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}(G)$ relative to the true $k$-line path count $P_k$. 
+For utility analysis, we capture this effect as an additive sampling error, which we bound tightly below. 
+Importantly, this sampling error is accounted for in the overall error of our LDP mechanism introduced in Section~\ref{subsec:k-lp_dp}.
+}
+
+
+
+
+
+\begin{lemma}
+\label{lem:k-lp_sampling_bound}
+For any graph $G$, path length $k$, and parameter $\beta$, 
+the $k$-round non-private algorithm $\widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}$ satisfies $
+    \mathbb{E}[\widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}(G)] = P_k $,
+and with probability at least $1 - \beta$,
+\begin{equation*}
+    |\widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}(G)-P_k| \leq
+    (k+1) \sqrt{N\beta^{-1}}(d(G)+k+1)^k
+    = O(\sqrt{N} d(G)^k).
+\end{equation*}
+\end{lemma}
+
+
+
+
+% \red{With this design, it becomes trivial to guarantee that each node appears at most once in a walk, as it is only permitted to appear in a predefined position. This positional constraint inherently enforces the non-repetition property required for path counting. However, it will also cause the underestimation of ... More precisely, each line path will only have a probability... Therefore, in the side of analyzer..., rescle the result by ... This will lead to an sampling error. Fortunately, below, we will show the sampling error can be well-bounded. }
+
+
+
+
+
+
+\subsection{Integrating DP and Efficiency Optimization}
+\label{subsec:k-lp_dp}
+
+
+% With algorithm..., we successfully reduce ... into a problem of ... Then, we can utilize the idea of LDP algorithm of ... to privatize ... Here, before round ..., the analyzer will ..., and then, 
+% after computing ..., the node v will add the Laplace noise to ..., But a difference here is that, since we use the random mark, one edge will at most appear in one round of computation. As a result, we do not need to divide the privacy budget ... With above idea, we have the ....
+
+
+
+With Algorithm~\ref{alg:k-lp_nondp}, we successfully reduce the problem of $k$-line path counting to that of $k$-line walk counting. 
+We can then utilize the idea of the edge-LDP mechanism $\mathcal{M}_{\mathrm{k\text{-}wk}}$ to privatize node outputs from Algorithm~\ref{alg:k-lp_nondp}.
+To begin with, publishing node marks incurs no privacy loss, as the marks are independent of any sensitive data.
+Before each round $\ell$, the analyzer collects the outputs from active nodes, computes the global maximum $\|\mathcal{X}^{(\ell-1)}\|_\infty$, and broadcasts it to all nodes.
+Then in round $\ell$, after aggregating the result from its neighbors in round $\ell-1$, each active node adds Laplace noise scaled to $\|\mathcal{X}^{(\ell-1)}\|_\infty$.
+A key distinction from walk counting is that, under random marking, each edge affects at most one node’s computation in a single round. 
+Hence, by parallel composition (Lemma~\ref{lem:pp}), the privacy budget $\varepsilon$ does not need to be divided across nodes or rounds. 
+
+
+
+\begin{figure*}[htbp!]
+  \centering
+  \includegraphics[width=0.96\linewidth]{figures/3-lp.pdf} % file myfig.svg in figs/
+  \caption{Illustration of the $3$-line path counting mechanism $\mathcal{M}_{\mathrm{3\text{-}pt}}$ applied to graph $G$ with privacy budget $\varepsilon =1$.
+For simplicity, $\sum$ denotes $\sum_{j \in \mathcal{N}(i)}$.
+The initialization step occurs before random marking, but is shown afterward for clarity. 
+}
+\label{fig:3-lp}
+\end{figure*}
+
+
+
+With the above idea, we establish the $k$-round edge-LDP mechanism $\mathcal{M}_{\mathrm{k\text{-}pt}}$ for $k$-line path counting. 
+Compared with the non-private local client $\widehat{\mathcal{R}}^{(\ell)}$ in Algorithm~\ref{alg:k-lp_nondp}, here the local randomizer $\mathcal{R}^{(\ell)}$ adds noise $\mathrm{Lap}(\|\mathcal{X}^{(\ell-1)}\|_\infty/\varepsilon)$ in Line~9 and noise $\mathrm{Lap}(1/\varepsilon)$ to the multiplicative factor 
+$\sum_{j \in \mathcal{N}(i)} \mathbf{1}\{r_j = k\}$ in Line~11. 
+{When evaluating the privacy of $\mathcal{M}_{\mathrm{k\text{-}pt}}$, astute readers may consider privacy amplification, whereby privacy guarantees can be strengthened when the DP result is derived from an unknown subsample of the input dataset.
+However, privacy amplification does not apply here. 
+In $\mathcal{M}_{\mathrm{k\text{-}pt}}$, node markings are publicly revealed, making it deterministically known whether an edge will be sampled and thus violating the sampling uncertainty required for privacy amplification.
+Moreover, privatizing node markings to enable privacy amplification introduces new challenges, as each mark must be revealed to neighboring nodes during communication.
+As a result, we establish the following privacy guarantee:
+}
+\begin{theorem}
+\label{the:k-lp_privacy}
+    For any graph $G$, path length $k$, and privacy budget $\varepsilon$, the mechanism $\mathcal{M}_{\mathrm{k\text{-}pt}}$ satisfies $\varepsilon$-edge-LDP.
+\end{theorem}
+For utility analysis, the total error $|\mathcal{M}_{\mathrm{k\text{-}pt}}(G, \varepsilon)- P_k|$ consists of two parts.
+The first is the sampling error incurred by random marking, as shown in Lemma~\ref{lem:k-lp_sampling_bound}.
+For the second part, the {DP noise} introduced by the Laplace mechanism, we show that it slightly differs from that of $k$-line walk counting but admits the same asymptotic upper bound.
+\begin{lemma}
+    \label{lem:k-lp_additive_bound}
+    For any graph $G$, path length $k$, parameters $\varepsilon$ and $\beta$, 
+$\mathcal{M}_{\mathrm{k\text{-}pt}}$ satisfies
+$
+    \mathbb{E}[\mathcal{M}_{\mathrm{k\text{-}pt}}(G, \varepsilon)]
+    =  
+    \widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}(G)$
+under the same node marking $(r_1, \dots, r_N)$, 
+and with probability at least $1 - \beta$,
+\begin{align*}
+    |\mathcal{M}_{\mathrm{k\text{-}pt}}(G, \varepsilon) - 
+    \widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}(G)| 
+    &\leq 
+    {k(k+1)} \,
+    \gamma
+    \sqrt{N}
+    (\hat{d}(G) + \gamma \sqrt{\hat{d}(G)} + \gamma)^{k-1} 
+    \\
+    &=  \tilde{O}(\sqrt{N} d(G)^{k-1}),
+\end{align*}
+where $\gamma = (k+1)\sqrt{8\log(6N/\beta)}/\varepsilon = \tilde{O}(1) $ and $\hat{d}(G) = \max(d(G), \lceil\gamma^2\rceil)$.
+\end{lemma}
+% \orange{Accounting for both the sampling error from random marking and the DP noise, we obtain the following utility bound:}
+Combining both parts of the error, we establish the utility bound:
+\begin{theorem}
+\label{the:k-lp_bound}
+    For any graph $G$, path length $k$, parameters $\varepsilon$ and $\beta$, the $k$-round mechanism $\mathcal{M}_{\mathrm{k\text{-}pt}}$ satisfies $
+    \mathbb{E}[\mathcal{M}_{\mathrm{k\text{-}pt}}(G, \varepsilon)] =  
+    P_k$,
+and with probability at least $1 - \beta$,
+\begin{align*}
+    |\mathcal{M}_{\mathrm{k\text{-}pt}}(G, \varepsilon) - 
+    P_k|  \leq  (k+1) \sqrt{2N\beta^{-1}}(d(G)+k+1)^k + \\ 
+          {k(k+1)} \, 
+        \gamma
+        \sqrt{N}
+        (\hat{d}(G) + \gamma \sqrt{\hat{d}(G)} + \gamma)^{k-1} 
+          =  \tilde{O}(\sqrt{N} d(G)^{k}),
+\end{align*}
+where $\gamma = (k+1)\sqrt{8\log(12N/\beta)}/\varepsilon = \tilde{O}(1) $ and $\hat{d}(G) = \max(d(G), \lceil\gamma^2\rceil)$.
+\end{theorem}
+
+
+
+In summary, $\mathcal{M}_{\mathrm{k\text{-}pt}}$ still produces an unbiased estimator of the number of $k$-line paths $P_k$, while incurring a $\tilde{O}(d(G))$ amplification in error upper bound compared to the $k$-line walk counting solution.
+Specifically, the overall error is asymptotically dominated by the sampling error, while the {DP noise} matches that of walk counting. 
+
+
+
+
+\paragraph{{Remark}}
+{
+Notably, unbiased estimators are common in LDP settings, especially for RR-based mechanisms, where the final result can be regarded as a sum of independent random variables, and unbiasedness follows directly.
+However, our mechanism induces correlations among different noise sources, which significantly complicates proving unbiasedness.}
+
+{
+Besides, in our mechanism, the sampling error also arises from the privacy aspect, even though it is independent of the privacy budget $\varepsilon$. 
+This is because random marking is not specific to path counting; instead, it addresses an LDP-specific challenge, i.e., eliminating duplicate nodes when each node observes only limited local information.
+While our theoretical analysis suggests that the sampling error asymptotically dominates the DP noise by a factor of $\tilde{O}(d(G))$, our experiments show that, in practice, the gap is much smaller. 
+{
+This observation indicates that applying random marking offers a near ``free lunch'' in our mechanism. 
+}
+Moreover, we can optimize the overall error by mitigating this gap.
+Since both mechanisms $\widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}$ and ${\mathcal{M}}_{\mathrm{k\text{-}pt}}$ produce unbiased estimators, we run the LDP mechanism
+$n_{\text{rep}}$ times with per run privacy budget $\varepsilon/n_{\text{rep}}$ and average the outputs.
+This reduces the sampling error, and while allocating a smaller per-run privacy budget increases the DP noise, averaging across runs mitigates its impact. 
+We demonstrate the effectiveness of this optimization strategy in
+Section~\ref{subsec:sample_dp}.
+}
+
+
+
+
+% \paragraph{\red{Remark}}
+% \marginnote{\red{R1.O1}}
+% \red{
+% Importantly, the sampling error should be regarded as a component of the LDP error despite its independence from the privacy budget $\varepsilon$.
+% More precisely, this is because the random marking technique is not designed specifically for the path counting; rather, it is used to address a unique challenge in the LDP setting, i.e., eliminating duplicate nodes in the collected paths when each node has access only to limited local information. 
+% Although the sampling error appears to asymptotically dominate the DP noise with a theoretical gap of $O(d(G))$, empirical evaluation results in our experiment show that these two parts are much smaller than $d(G)$.
+% Furthermore, we can optimize the overall error by mitigating this gap: 
+% Since both mechanisms $\widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}$ and ${\mathcal{M}}_{\mathrm{k\text{-}pt}}$ produce unbiased estimators, we running the LDP mechanism $n_{\text{rep}}$ times, each with a privacy budget of $\varepsilon / n_{\text{rep}}$, and averaging the $n_{\text{rep}}$ outputs to obtain the final estimate.
+% Since the sampling error is independent of $\varepsilon$, this strategy effectively reduces it through repeated execution. 
+% Although allocating a smaller privacy budget to each run increases the DP error, averaging the outputs across multiple runs helps mitigate this increase.
+% We will show the effectiveness of this strategy in the experiment in Section~\ref{subsec:sample_dp}. 
+% }
+
+
+
+
+
+
+
+\paragraph{Optimization in efficiency}
+
+Earlier in this section, we required that nodes in rounds inconsistent with their marks report $0$. 
+In fact, this step can be omitted, since the computation results depend only on non-zero values. 
+As a result, we instead require that nodes remain silent in such rounds.
+Moreover, since only nodes with mark $\ell$ are active in round $\ell$, communication can be optimized by having the analyzer $\mathcal{A}$ send $\|\mathcal{X}^{(\ell-1)}\|_\infty$ exclusively to those nodes; their outputs are then forwarded only to neighbors whose mark is $\ell+1$.
+This requires the analyzer to know each node’s mark, which can be achieved by modifying Line~6 of Algorithm~\ref{alg:k-lp_nondp} so that nodes also send their marks to $\mathcal{A}$. 
+% Both optimizations jointly achieve a constant-factor reduction in communication between nodes and with the analyzer. 
+
+
+
+Figure~\ref{fig:3-lp} shows an example of executing the optimized 3-round mechanism $\mathcal{M}_{\mathrm{3\text{-}pt}}$ on graph $G$ with $\varepsilon = 1$, showing only the active nodes at each step.
+The mechanism first initializes the number of $0$-line paths ending at each node to $1$.
+After that, each node samples its mark and becomes active only in the corresponding round. 
+Since initialization corresponds to round $0$,  
+only outputs of nodes with mark $0$ are used; outputs from all other nodes are unused and shown in gray.
+% from all other nodes are never used and are shown grayed out.
+In the final round, the analyzer aggregates the outputs of all active nodes and rescales the sum to produce the final result $19.2$.
+
+
+
+
+
+
+\paragraph{Communication and computation analysis}  
+The total communication cost of $\mathcal{M}_{\mathrm{k\text{-}pt}}$ is $O(M+N)$. Communication between nodes contributes $O(M)$, as each node sends its mark and noisy result once to all its neighbors. 
+The communication between nodes and the analyzer adds an additional $O(N)$, as each node sends its mark and participates in at most one round of receiving and sending values with the analyzer.
+In terms of computational cost, the analyzer runs in $O(N)$ time across $k-2$ rounds of computing the round maximum and one round of aggregating the final result. 
+On the node side, the runtime is $O(d(G))$, as each node participates in one round of aggregating $O(d(G))$ values from its neighbors.
+
+
+
+
+

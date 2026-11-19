@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "fancyhdr.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "iclr2025_conference.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "natbib.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "math_commands.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix_edit.tex",
+      "role": "body"
+    },
+    {
+      "path": "additional_results.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "7635dfab5263b348045212ee304b9d46d66e5383178f814ba6d8ab4377171fab",
+    "fancyhdr.sty": "b56ec4434b9f4607529a4b23dc68ad8d4b94f1f631c8cddaf7da78140d53a5ea",
+    "iclr2025_conference.sty": "9e280a9ff99be84ad190f5cafe047a1a32c2eeb9ca14232ddceae42d8489c697",
+    "natbib.sty": "88bc70c0e48461934cab5b2accef06b74a8b3ac45ad03ccd3f2a6b7e0d6d530d",
+    "math_commands.tex": "9bac2b07d0e7e071e95022bd495351fb54a0451de4c27d4530b748216dec410d",
+    "appendix_edit.tex": "16e0f4a56839e53fc682cb3bc599eb44035a246c03aa5d01f17ca093557f4562",
+    "additional_results.tex": "3a3a6aaae4a48ed149dc21a0963c7c9a5aaed0a1dd716bb4db309ee9c30784ce"
+  }
+}

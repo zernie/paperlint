@@ -1,0 +1,63 @@
+
+
+\section{Overview}% and Example}
+
+
+
+
+\begin{table}[t]
+%\vspace{-10pt}
+    \caption{\footnotesize The transformation passes and their description.}
+    \label{tab:table-passes}
+    \centering
+    \scriptsize
+    \vspace{-5pt}
+\begin{tabular}{ccc}
+\toprule
+\textbf{}                     & \textbf{Name}    & \multicolumn{1}{c}{\textbf{Decription}}                                                                          \\ \hline
+\multirow{7}{*}{\textbf{(1)}} & Loop Recovery    & Convert parallel variables to sequential for loops                                                               \\
+                              & Loop Bind        & Assign a sequential loop to parallel variables                                                                   \\
+                              & Loop Split       & Divide a loop into several sub-loops                                                                             \\
+                              & Loop Fuse        & Merge several loops into a hyper-loop                                                                            \\
+                              & Loop Reorder     & Change the execution orders of loops                                                                             \\
+                              & Loop Expansion   & Split a loop body into several loop bodies                                                                       \\
+                              & Loop Contraction & Merge the producer in the loop body of consumer                                                                  \\ \hline
+\multirow{2}{*}{\textbf{(2)}} & Cache            & \begin{tabular}[c]{@{}l@{}}Adapt to the memory hierarchy for efficient\\ ~~~~~~~~~~~~~~~~~~~ load/store inputs/outputs\end{tabular} \\
+                              & Pipeline         & Pipeline of data load/store and computation                                                                      \\ \hline
+\multirow{2}{*}{\textbf{(3)}} & Tensorize        & \begin{tabular}[c]{@{}l@{}}Replace a specific loop body to leverage \\ ~~~~~~~~~~~~~~~~~~special intrinsics\end{tabular}           \\
+                              & Detensorize      & Restore a specific loop body from special intrinsics                                                             \\ \bottomrule
+\end{tabular}
+%\vspace{-20pt}   
+\end{table}
+
+
+
+To automatically translate tensor programs across DLS with a correctness guarantee, as shown in Figure~\ref{fig:overview}, \name{} 
+consists of two parts, i.e., \textit{Neural-Symbolic Program Synthesis} and \textit{Hierarchical Performance Auto-Tuning}.
+
+
+
+\textbf{Neural-Symbolic Program Synthesis}. 
+\name{} first decomposes the entire transcompilation process into a series of LLM-assisted transformation passes.
+Among these, the 11 passes as listed in Table~\ref{tab:table-passes} can be categorized into 3 classes, i.e., (1)\emph{sequentialization/parallelization}, (2)\emph{memory conversion}, and (3)\emph{(de)tensorization}. 
+Specifically, the sequentialization/parallelization passes directly convert a parallel program into its sequential counterpart (e.g., from CUDA C to C) or vice versa, by appropriately mapping built-in parallel variables (e.g., \texttt{threadIdx.x} in CUDA C) to indexing variables. The memory conversion passes bridge the semantic gap between the memory hierarchies of different systems by employing suitable strategies for data movement and access patterns. The (de)tensorization passes either convert sequential code into its parallel equivalent by invoking corresponding tensor intrinsics, automatically retrieved from the target system’s programming manuals, or restore the original sequential code from the tensor intrinsics.
+Overall, these passes, each addressing a key characteristic of different DLS—such as parallelism, memory hierarchy, and specialized instructions—are sufficient to perform tensor program transcompilation across various DLS. 
+
+
+To achieve both flexibility and correctness, in each program transformation pass, \name{} adopts a neural-symbolic approach, i.e., utilizing LLM to transform code and repair incorrect transformation through symbolic synthesis with limited scales.
+In each transformation pass, the LLM first generates transformed code, and this transformed code is then validated by unit tests; if it fails, it is repaired using small-scale SMT-based symbolic synthesis. We will detail this in Section~\ref{sec:transformation}.
+
+
+
+
+\textbf{Hierarchical Performance Auto-Tuning}. To achieve automatic transcompilation and maximize the performance of transformed programs, \name{} employs a hierarchical auto-tuning approach
+to systemically explore both the parameters (intra-pass auto-tuning) and sequences (inter-pass auto-tuning)
+of transformation passes.
+Specifically, the intra-pass auto-tuning utilizes brute-force search to identify the optimal parameters (e.g., tiling sizes) for program transformation. 
+The inter-pass auto-tuning, on the other hand, leverages MCTS to automatically discover both functionally correct and optimal sequences of transformation passes for translating tensor programs across different DLS.
+Concretely, the MCTS in the inter-pass auto-tuning consists of four components: tensor programs, transformation pass, backpropagation, and reward. 
+At each step \( t-1 \), the MCTS selects a candidate node (i.e., tensor program \( P_{t-1} \)) based on its score and expands the node by transforming it with an available transformation pass, resulting in tensor program \( P_{t} \).
+Then, by executing \( P_{t} \), a reward related to execution time is obtained. 
+This reward is backpropagated to all ancestor nodes along the expansion path, updating their scores for the selection in the next step \( t \).
+We will detail this in Section~\ref{sec:auto-tuning}.
+

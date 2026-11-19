@@ -1,0 +1,20 @@
+\section{Introduction}
+\label{sec:intro}
+
+Overhead aerial imagery feeds segmentation pipelines that are deployed across geographic regions. Shadow masks are a core input to several of these pipelines: solar irradiance estimation uses them to separate shaded from sunlit surfaces \cite{batchu2024satellite}, urban heat mapping uses them to correct surface temperature readings \cite{dashadebench, ukkusuri2024heatwaves}, and building footprint extraction uses them to resolve occlusion boundaries \cite{seo}. These pipelines are routinely trained on data from one region and deployed in another~\cite{mittal2025overcoming, verma2025spatial}.
+
+Geographic shift is a known failure mode in segmentation models across domains. Medical imaging models underperform across hospitals due to scanner and protocol differences~\cite{ogier2022flamby}, and aerial land-cover models show similar drops on unseen regions~\cite{wang2021loveda, gong2025crossearth}. For overhead shadow detection, no comparable evaluation infrastructure exists. AISD, the largest human-verified overhead shadow dataset, contains 514 images and defines no train-test split across cities~\cite{aisd}. S-EO scales further but relies on automatically generated masks with documented alignment artifacts, and again reports no geographic holdout~\cite{seo}. Other widely used shadow benchmarks (SBU, ISTD) target ground-level imagery and do not match overhead geometry~\cite{sbu, istd}. Table~\ref{tab:dataset_comparison} summarizes the landscape. Without a benchmark that pairs human-verified labels with a defined geographic protocol, transfer failure in overhead shadow detection cannot be measured, diagnosed, or addressed.
+
+\input{tables/tab_dataset_comparison}
+\input{figures/fig_teaser}
+
+To bridge this gap, we introduce \shadow, a benchmark for measuring geographic transfer in overhead shadow detection. It contains 4{,}500 human-verified shadow masks across three U.S. cities (Chicago, Miami, Phoenix) at two native sensor resolutions (0.3 m and 0.6 m), with a leave-one-city-out (LOCO) protocol that trains on two cities and tests on the third. 
+
+Figure~\ref{fig:teaser} shows the size of the gap this protocol exposes: under vanilla training on the high-resolution cells, holding out the test city costs between $3.5$ mIoU (CrossEarth) and $7.8$ mIoU (OGLANet), and existing domain-adaptation methods help on some architecture-city pairs and fail catastrophically on others. The major \textbf{contributions} of this work are threefold:
+
+\begin{enumerate}
+    \item We release \shadow{}\footnote{Data: \url{https://huggingface.co/datasets/shagunmittal/ShadowTransfer} (DOI \href{https://doi.org/10.57967/hf/11483}{10.57967/hf/11483}); code: \url{https://github.com/shagun8/shadowtransfer}; project page: \url{https://shagun8.github.io/shadowtransfer/}; full datasheet in App.~\ref{app:datasheet}.} with its LOCO benchmarking and statistical reporting. 
+    \item We provide a three-probe evaluation framework that characterizes \emph{how} models fail under geographic transfer: \textit{where} in the pipeline the shift acts, \textit{how} the prediction distribution distorts, and \textit{which} architectural components carry the failure
+    \item We present \sib, a case-study module designed from the framework's findings, with the smallest mean gap to the within-city upper bound of the ten methods we evaluate, level with FDA. Together, the benchmark and framework give practitioners a way to measure geographic transfer risk before deployment and to diagnose where in a model that risk concentrates.
+\end{enumerate}
+

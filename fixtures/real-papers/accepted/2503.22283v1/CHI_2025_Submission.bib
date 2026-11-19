@@ -1,0 +1,584 @@
+
+% Journals
+
+% First the Full Name is given, then the abbreviation used in the AMS Math
+% Reviews, with an indication if it could not be found there.
+% Note the 2nd overwrites the 1st, so swap them if you want the full name.
+
+ %{AMS}
+ @String{AMSTrans = "American Mathematical Society Translations" }
+ @String{AMSTrans = "Amer. Math. Soc. Transl." }
+ @String{BullAMS = "Bulletin of the American Mathematical Society" }
+ @String{BullAMS = "Bull. Amer. Math. Soc." }
+ @String{ProcAMS = "Proceedings of the American Mathematical Society" }
+ @String{ProcAMS = "Proc. Amer. Math. Soc." }
+ @String{TransAMS = "Transactions of the American Mathematical Society" }
+ @String{TransAMS = "Trans. Amer. Math. Soc." }
+
+ %ACM
+ @String{CACM = "Communications of the {ACM}" }
+ @String{CACM = "Commun. {ACM}" }
+ @String{CompServ = "Comput. Surveys" }
+ @String{JACM = "J. ACM" }
+ @String{ACMMathSoft = "{ACM} Transactions on Mathematical Software" }
+ @String{ACMMathSoft = "{ACM} Trans. Math. Software" }
+ @String{SIGNUM = "{ACM} {SIGNUM} Newsletter" }
+ @String{SIGNUM = "{ACM} {SIGNUM} Newslett." }
+
+ @String{AmerSocio = "American Journal of Sociology" }
+ @String{AmerStatAssoc = "Journal of the American Statistical Association" }
+ @String{AmerStatAssoc = "J. Amer. Statist. Assoc." }
+ @String{ApplMathComp = "Applied Mathematics and Computation" }
+ @String{ApplMathComp = "Appl. Math. Comput." }
+ @String{AmerMathMonthly = "American Mathematical Monthly" }
+ @String{AmerMathMonthly = "Amer. Math. Monthly" }
+ @String{BIT = "{BIT}" }
+ @String{BritStatPsych = "British Journal of Mathematical and Statistical
+          Psychology" }
+ @String{BritStatPsych = "Brit. J. Math. Statist. Psych." }
+ @String{CanMathBull = "Canadian Mathematical Bulletin" }
+ @String{CanMathBull = "Canad. Math. Bull." }
+ @String{CompApplMath = "Journal of Computational and Applied Mathematics" }
+ @String{CompApplMath = "J. Comput. Appl. Math." }
+ @String{CompPhys = "Journal of Computational Physics" }
+ @String{CompPhys = "J. Comput. Phys." }
+ @String{CompStruct = "Computers and Structures" }
+ @String{CompStruct = "Comput. \& Structures" }
+ @String{CompJour = "The Computer Journal" }
+ @String{CompJour = "Comput. J." }
+ @String{CompSysSci = "Journal of Computer and System Sciences" }
+ @String{CompSysSci = "J. Comput. System Sci." }
+ @String{Computing = "Computing" }
+ @String{ContempMath = "Contemporary Mathematics" }
+ @String{ContempMath = "Contemp. Math." }
+ @String{Crelle = "Crelle's Journal" }
+ @String{GiornaleMath = "Giornale di Mathematiche" }
+ @String{GiornaleMath = "Giorn. Mat." } % didn't find in AMS MR., ibid.
+
+ %IEEE
+ @String{Computer = "{IEEE} Computer" }
+ @String{IEEETransComp = "{IEEE} Transactions on Computers" }
+ @String{IEEETransComp = "{IEEE} Trans. Comput." }
+ @String{IEEETransAC = "{IEEE} Transactions on Automatic Control" }
+ @String{IEEETransAC = "{IEEE} Trans. Automat. Control" }
+ @String{IEEESpec = "{IEEE} Spectrum" } % didn't find in AMS MR
+ @String{ProcIEEE = "Proceedings of the {IEEE}" }
+ @String{ProcIEEE = "Proc. {IEEE}" } % didn't find in AMS MR
+ @String{IEEETransAeroElec = "{IEEE} Transactions on Aerospace and Electronic
+     Systems" }
+ @String{IEEETransAeroElec = "{IEEE} Trans. Aerospace Electron. Systems" }
+
+ @String{IMANumerAna = "{IMA} Journal of Numerical Analysis" }
+ @String{IMANumerAna = "{IMA} J. Numer. Anal." }
+ @String{InfProcLet = "Information Processing Letters" }
+ @String{InfProcLet = "Inform. Process. Lett." }
+ @String{InstMathApp = "Journal of the Institute of Mathematics and
+     its Applications" }
+ @String{InstMathApp = "J. Inst. Math. Appl." }
+ @String{IntControl = "International Journal of Control" }
+ @String{IntControl = "Internat. J. Control" }
+ @String{IntNumerEng = "International Journal for Numerical Methods in
+     Engineering" }
+ @String{IntNumerEng = "Internat. J. Numer. Methods Engrg." }
+ @String{IntSuper = "International Journal of Supercomputing Applications" }
+ @String{IntSuper = "Internat. J. Supercomputing Applic." } % didn't find
+%% in AMS MR
+ @String{Kibernetika = "Kibernetika" }
+ @String{JResNatBurStand = "Journal of Research of the National Bureau
+     of Standards" }
+ @String{JResNatBurStand = "J. Res. Nat. Bur. Standards" }
+ @String{LinAlgApp = "Linear Algebra and its Applications" }
+ @String{LinAlgApp = "Linear Algebra Appl." }
+ @String{MathAnaAppl = "Journal of Mathematical Analysis and Applications" }
+ @String{MathAnaAppl = "J. Math. Anal. Appl." }
+ @String{MathAnnalen = "Mathematische Annalen" }
+ @String{MathAnnalen = "Math. Ann." }
+ @String{MathPhys = "Journal of Mathematical Physics" }
+ @String{MathPhys = "J. Math. Phys." }
+ @String{MathComp = "Mathematics of Computation" }
+ @String{MathComp = "Math. Comp." }
+ @String{MathScand = "Mathematica Scandinavica" }
+ @String{MathScand = "Math. Scand." }
+ @String{TablesAidsComp = "Mathematical Tables and Other Aids to Computation" }
+ @String{TablesAidsComp = "Math. Tables Aids Comput." }
+ @String{NumerMath = "Numerische Mathematik" }
+ @String{NumerMath = "Numer. Math." }
+ @String{PacificMath = "Pacific Journal of Mathematics" }
+ @String{PacificMath = "Pacific J. Math." }
+ @String{ParDistComp = "Journal of Parallel and Distributed Computing" }
+ @String{ParDistComp = "J. Parallel and Distrib. Comput." } % didn't find
+%% in AMS MR
+ @String{ParComputing = "Parallel Computing" }
+ @String{ParComputing = "Parallel Comput." }
+ @String{PhilMag = "Philosophical Magazine" }
+ @String{PhilMag = "Philos. Mag." }
+ @String{ProcNAS = "Proceedings of the National Academy of Sciences
+                    of the USA" }
+ @String{ProcNAS = "Proc. Nat. Acad. Sci. U. S. A." }
+ @String{Psychometrika = "Psychometrika" }
+ @String{QuartMath = "Quarterly Journal of Mathematics, Oxford, Series (2)" }
+ @String{QuartMath = "Quart. J. Math. Oxford Ser. (2)" }
+ @String{QuartApplMath = "Quarterly of Applied Mathematics" }
+ @String{QuartApplMath = "Quart. Appl. Math." }
+ @String{RevueInstStat = "Review of the International Statisical Institute" }
+ @String{RevueInstStat = "Rev. Inst. Internat. Statist." }
+
+ %SIAM
+ @String{JSIAM = "Journal of the Society for Industrial and Applied
+     Mathematics" }
+ @String{JSIAM = "J. Soc. Indust. Appl. Math." }
+ @String{JSIAMB = "Journal of the Society for Industrial and Applied
+     Mathematics, Series B, Numerical Analysis" }
+ @String{JSIAMB = "J. Soc. Indust. Appl. Math. Ser. B Numer. Anal." }
+ @String{SIAMAlgMeth = "{SIAM} Journal on Algebraic and Discrete Methods" }
+ @String{SIAMAlgMeth = "{SIAM} J. Algebraic Discrete Methods" }
+ @String{SIAMAppMath = "{SIAM} Journal on Applied Mathematics" }
+ @String{SIAMAppMath = "{SIAM} J. Appl. Math." }
+ @String{SIAMComp = "{SIAM} Journal on Computing" }
+ @String{SIAMComp = "{SIAM} J. Comput." }
+ @String{SIAMMatrix = "{SIAM} Journal on Matrix Analysis and Applications" }
+ @String{SIAMMatrix = "{SIAM} J. Matrix Anal. Appl." }
+ @String{SIAMNumAnal = "{SIAM} Journal on Numerical Analysis" }
+ @String{SIAMNumAnal = "{SIAM} J. Numer. Anal." }
+ @String{SIAMReview = "{SIAM} Review" }
+ @String{SIAMReview = "{SIAM} Rev." }
+ @String{SIAMSciStat = "{SIAM} Journal on Scientific and Statistical
+     Computing" }
+ @String{SIAMSciStat = "{SIAM} J. Sci. Statist. Comput." }
+
+ @String{SoftPracExp = "Software Practice and Experience" }
+ @String{SoftPracExp = "Software Prac. Experience" } % didn't find in AMS MR
+ @String{StatScience = "Statistical Science" }
+ @String{StatScience = "Statist. Sci." }
+ @String{Techno = "Technometrics" }
+ @String{USSRCompMathPhys = "{USSR} Computational Mathematics and Mathematical
+     Physics" }
+ @String{USSRCompMathPhys = "{U. S. S. R.} Comput. Math. and Math. Phys." }
+ @String{VLSICompSys = "Journal of {VLSI} and Computer Systems" }
+ @String{VLSICompSys = "J. {VLSI} Comput. Syst." }
+ @String{ZAngewMathMech = "Zeitschrift fur Angewandte Mathematik und
+     Mechanik" }
+ @String{ZAngewMathMech = "Z. Angew. Math. Mech." }
+ @String{ZAngewMathPhys = "Zeitschrift fur Angewandte Mathematik und Physik" }
+ @String{ZAngewMathPhys = "Z. Angew. Math. Phys." }
+
+% Publishers % ================================================= |
+
+ @String{Academic = "Academic Press" }
+ @String{ACMPress = "{ACM} Press" }
+ @String{AdamHilger = "Adam Hilger" }
+ @String{AddisonWesley = "Addison-Wesley" }
+ @String{AllynBacon = "Allyn and Bacon" }
+ @String{AMS = "American Mathematical Society" }
+ @String{Birkhauser = "Birkha{\"u}ser" }
+ @String{CambridgePress = "Cambridge University Press" }
+ @String{Chelsea = "Chelsea" }
+ @String{ClaredonPress = "Claredon Press" }
+ @String{DoverPub = "Dover Publications" }
+ @String{Eyolles = "Eyolles" }
+ @String{HoltRinehartWinston = "Holt, Rinehart and Winston" }
+ @String{Interscience = "Interscience" }
+ @String{JohnsHopkinsPress = "The Johns Hopkins University Press" }
+ @String{JohnWileySons = "John Wiley and Sons" }
+ @String{Macmillan = "Macmillan" }
+ @String{MathWorks = "The Math Works Inc." }
+ @String{McGrawHill = "McGraw-Hill" }
+ @String{NatBurStd = "National Bureau of Standards" }
+ @String{NorthHolland = "North-Holland" }
+ @String{OxfordPress = "Oxford University Press" }  %address Oxford or London?
+ @String{PergamonPress = "Pergamon Press" }
+ @String{PlenumPress = "Plenum Press" }
+ @String{PrenticeHall = "Prentice-Hall" }
+ @String{SIAMPub = "{SIAM} Publications" }
+ @String{Springer = "Springer-Verlag" }
+ @String{TexasPress = "University of Texas Press" }
+ @String{VanNostrand = "Van Nostrand" }
+ @String{WHFreeman = "W. H. Freeman and Co." }
+
+
+%Entries
+
+@article{shi2023hci,
+  title={An HCI-Centric Survey and Taxonomy of Human-Generative-AI Interactions},
+  author={Shi, Jingyu and Jain, Rahul and Doh, Hyungjun and Suzuki, Ryo and Ramani, Karthik},
+  journal={arXiv preprint arXiv:2310.07127},
+  year={2023},
+  note={Retrieved from https://arxiv.org/abs/2310.07127}
+}
+
+@inproceedings{lee2022coauthor,
+  title={Coauthor: Designing a human-ai collaborative writing dataset for exploring language model capabilities},
+  author={Lee, Mina and Liang, Percy and Yang, Qian},
+  booktitle={Proceedings of the 2022 CHI conference on human factors in computing systems},
+  pages={1--19},
+  year={2022}
+}
+
+@inproceedings{rapp2023collaborating,
+  title={Collaborating with a text-based chatbot: An exploration of real-world collaboration strategies enacted during human-chatbot interactions},
+  author={Rapp, Amon and Boldi, Arianna and Curti, Lorenzo and Perrucci, Alessandro and Simeoni, Rossana},
+  booktitle={Proceedings of the 2023 CHI Conference on Human Factors in Computing Systems},
+  pages={1--17},
+  year={2023}
+}
+
+@inproceedings{woodruff2024knowledge,
+  title={How knowledge workers think generative ai will (not) transform their industries},
+  author={Woodruff, Allison and Shelby, Renee and Kelley, Patrick Gage and Rousso-Schindler, Steven and Smith-Loud, Jamila and Wilcox, Lauren},
+  booktitle={Proceedings of the CHI Conference on Human Factors in Computing Systems},
+  pages={1--26},
+  year={2024}
+}
+
+@inproceedings{leiser2024hill,
+  title={Hill: A hallucination identifier for large language models},
+  author={Leiser, Florian and Eckhardt, Sven and Leuthe, Valentin and Knaeble, Merlin and Maedche, Alexander and Schwabe, Gerhard and Sunyaev, Ali},
+  booktitle={Proceedings of the CHI Conference on Human Factors in Computing Systems},
+  pages={1--13},
+  year={2024}
+}
+
+@inproceedings{choi2023toward,
+  title={Toward a Multilingual Conversational Agent: Challenges and Expectations of Code-mixing Multilingual Users},
+  author={Choi, Yunjae J and Lee, Minha and Lee, Sangsu},
+  booktitle={Proceedings of the 2023 CHI Conference on Human Factors in Computing Systems},
+  pages={1--17},
+  year={2023}
+}
+
+@article{chen2008bicultural,
+  title={Bicultural Identity, bilingualism, and psychological adjustment in multicultural societies: immigration-based and globalization-based acculturation},
+  author={Chen, Sylvia Xiaohua and Benet-Mart{\'\i}nez, Ver{\'o}nica and Harris Bond, Michael},
+  journal={Journal of personality},
+  volume={76},
+  number={4},
+  pages={803--838},
+  year={2008},
+  publisher={Wiley Online Library}
+}
+
+@article{mitra2023mixed,
+  title={Mixed language processing increases cross-language phonetic transfer in Bengali--English bilinguals},
+  author={Mitra, Auromita and Dutta, Indranil},
+  journal={Bilingualism: Language and Cognition},
+  volume={26},
+  number={5},
+  pages={896--909},
+  year={2023},
+  publisher={Cambridge University Press}
+}
+
+@article{gargesh2019south,
+  title={South Asian Englishes},
+  author={Gargesh, Ravinder},
+  journal={The handbook of world Englishes},
+  pages={105--134},
+  year={2019},
+  publisher={Wiley Online Library}
+}
+
+@misc{enwiki:1268353351,
+  title = {Bengalis --- {Wikipedia}{,} The Free Encyclopedia},
+  author = {Wikipedia contributors},
+  year = {2025},
+  note = {Retrieved January 18, 2025 from https://en.wikipedia.org/w/index.php?title=Bengalis\&oldid=1268353351}
+}
+
+@misc{worldfactbook,
+  author = {Central Intelligence Agency (CIA)},
+  title = {Field Listing - Ethnic groups},
+  year = {2025},
+  note = {Retrieved January 18, 2025 from https://www.cia.gov/the-world-factbook/field/ethnic-groups/}
+}
+
+@article{mostafa2012english,
+  title={From English to Banglish: Loanwords as opportunities and barriers?: Is English swamping the Bangla language?},
+  author={Mostafa, Massrura and Jamila, Marium},
+  journal={English Today},
+  volume={28},
+  number={2},
+  pages={26--31},
+  year={2012},
+  publisher={Cambridge University Press}
+}
+
+@article{kurzon2010romanisation,
+  title={Romanisation of Bengali and other Indian scripts},
+  author={Kurzon, Dennis},
+  journal={Journal of the Royal Asiatic Society},
+  volume={20},
+  number={1},
+  pages={61--74},
+  year={2010},
+  publisher={Cambridge University Press}
+}
+
+@inproceedings{alexandris2024genai,
+  title={GenAI and Socially Responsible AI in Natural Language Processing Applications: A Linguistic Perspective},
+  author={Alexandris, Christina},
+  booktitle={Proceedings of the AAAI Symposium Series},
+  volume={3},
+  number={1},
+  pages={330--337},
+  year={2024}
+}
+
+@article{zeng2024english,
+  title={English language hegemony: retrospect and prospect},
+  author={Zeng, Jie and Yang, Jianbu},
+  journal={Humanities and Social Sciences Communications},
+  volume={11},
+  number={1},
+  pages={1--9},
+  year={2024},
+  publisher={Palgrave}
+}
+
+@techreport{brynjolfsson2023generative,
+  title={Generative AI at work},
+  author={Brynjolfsson, Erik and Li, Danielle and Raymond, Lindsey R},
+  year={2023},
+  institution={National Bureau of Economic Research}
+}
+
+@misc{singla2024,
+  title={The state of ai in early 2024: Gen ai adoption spikes and starts to generate value},
+  url={https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai},
+  publisher={McKinsey & Company},
+  author={Singla, Alex and Sukharevsky, Alexander and Yee, Lareina and Chui, Michael},
+  year={2024},
+  month={May}
+} 
+
+@article{donaldson1995customer,
+  title={Customer service as a competitive strategy},
+  author={Donaldson, Bill},
+  journal={Journal of Strategic Marketing},
+  volume={3},
+  number={2},
+  pages={113--126},
+  year={1995},
+  publisher={Taylor \& Francis}
+}
+
+@article{vaswani2017attention,
+  title={Attention is all you need},
+  author={Vaswani, A},
+  journal={Advances in Neural Information Processing Systems},
+  year={2017}
+}
+
+@article{radford2019language,
+  title={Language models are unsupervised multitask learners},
+  author={Radford, Alec and Wu, Jeffrey and Child, Rewon and Luan, David and Amodei, Dario and Sutskever, Ilya and others},
+  journal={OpenAI blog},
+  volume={1},
+  number={8},
+  pages={9},
+  year={2019}
+}
+
+@article{nicolescu2022human,
+  title={Human-computer interaction in customer service: the experience with AI chatbots—a systematic literature review},
+  author={Nicolescu, Luminița and Tudorache, Monica Teodora},
+  journal={Electronics},
+  volume={11},
+  number={10},
+  pages={1579},
+  year={2022},
+  publisher={MDPI}
+}
+
+@article{ferraro2024paradoxes,
+  title={The paradoxes of generative AI-enabled customer service: A guide for managers},
+  author={Ferraro, Carla and Demsar, Vlad and Sands, Sean and Restrepo, Mariluz and Campbell, Colin},
+  journal={Business Horizons},
+  year={2024},
+  publisher={Elsevier}
+}
+
+@inproceedings{winata2021multilingual,
+  title={Are multilingual models effective in code-switching?},
+  author={Winata, Genta Indra and Cahyawijaya, Samuel and Liu, Zihan and Lin, Zhaojiang and Madotto, Andrea and Fung, Pascale},
+  booktitle={Proceedings of the Fifth Workshop on Computational Approaches to Linguistic Code-Switching},
+  pages = {142--153},
+  year={2021}
+}
+
+@inproceedings{zhang2023multilingual,
+  title={Multilingual large language models are not (yet) code-switchers},
+  author={Zhang, Ruochen and Cahyawijaya, Samuel and Cruz, Jan Christian Blaise and Winata, Genta Indra and Aji, Alham Fikri},
+  booktitle={Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing},
+  pages={12567--12582},
+  year={2023}
+}
+
+@misc{sheviakova2024,
+  title={Most spoken languages in the world},
+  url={https://www.icls.edu/blog/most-spoken-languages-in-the-world},
+  publisher={International Center for Language Studies, Inc.},
+  author={Sheviakova, Katya},
+  year={2024},
+  month={Oct}
+} 
+
+@inproceedings{holt2024perceptions,
+  title={Perceptions of Language Technology Failures from South Asian English Speakers},
+  author={Holt, Faye and Held, William and Yang, Diyi},
+  booktitle={Findings of the Association for Computational Linguistics ACL 2024},
+  pages={4067--4081},
+  year={2024}
+}
+
+@article{doddapaneni2021primer,
+  title={A primer on pretrained multilingual language models},
+  author={Doddapaneni, Sumanth and Ramesh, Gowtham and Khapra, Mitesh M and Kunchukuttan, Anoop and Kumar, Pratyush},
+  journal={arXiv preprint arXiv:2107.00676},
+  year={2021},
+  note={Retrieved from https://arxiv.org/abs/2107.00676}
+}
+
+@inproceedings{winata2021language,
+  title={Language models are few-shot multilingual learners},
+  author={Winata, Genta Indra and Madotto, Andrea and Lin, Zhaojiang and Liu, Rosanne and Yosinski, Jason and Fung, Pascale},
+  booktitle={Proceedings of the 1st Workshop on Multilingual Representation Learning},
+  pages={1--15},
+  year={2021}
+}
+
+@article{trad2024prompt,
+  title={Prompt engineering or fine-tuning? a case study on phishing detection with large language models},
+  author={Trad, Fouad and Chehab, Ali},
+  journal={Machine Learning and Knowledge Extraction},
+  volume={6},
+  number={1},
+  pages={367--384},
+  year={2024},
+  publisher={MDPI}
+}
+
+@article{chen2023unleashing,
+  title={Unleashing the potential of prompt engineering in Large Language Models: a comprehensive review},
+  author={Chen, Banghao and Zhang, Zhaofeng and Langren{\'e}, Nicolas and Zhu, Shengxin},
+  journal={arXiv preprint arXiv:2310.14735},
+  year={2023},
+  note={Retrieved from https://arxiv.org/abs/2310.14735}
+}
+
+@article{sahoo2024systematic,
+  title={A systematic survey of prompt engineering in large language models: Techniques and applications},
+  author={Sahoo, Pranab and Singh, Ayush Kumar and Saha, Sriparna and Jain, Vinija and Mondal, Samrat and Chadha, Aman},
+  journal={arXiv preprint arXiv:2402.07927},
+  year={2024},
+  note={Retrieved from https://arxiv.org/abs/2402.07927}
+}
+
+@article{wei2022chain,
+  title={Chain-of-thought prompting elicits reasoning in large language models},
+  author={Wei, Jason and Wang, Xuezhi and Schuurmans, Dale and Bosma, Maarten and Xia, Fei and Chi, Ed and Le, Quoc V and Zhou, Denny and others},
+  journal={Advances in neural information processing systems},
+  volume={35},
+  pages={24824--24837},
+  year={2022}
+}
+
+@inproceedings{kong2023better,
+  title={Better zero-shot reasoning with role-play prompting},
+  author={Kong, Aobo and Zhao, Shiwan and Chen, Hao and Li, Qicheng and Qin, Yong and Sun, Ruiqi and Zhou, Xin and Wang, Enzhi and Dong, Xiaohang},
+  booktitle={Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers)},
+  pages={4099--4113},
+  year={2024}
+}
+
+@article{lewis2020retrieval,
+  title={Retrieval-augmented generation for knowledge-intensive nlp tasks},
+  author={Lewis, Patrick and Perez, Ethan and Piktus, Aleksandra and Petroni, Fabio and Karpukhin, Vladimir and Goyal, Naman and K{\"u}ttler, Heinrich and Lewis, Mike and Yih, Wen-tau and Rockt{\"a}schel, Tim and others},
+  journal={Advances in Neural Information Processing Systems},
+  volume={33},
+  pages={9459--9474},
+  year={2020}
+}
+
+@article{ziegler2019fine,
+  title={Fine-tuning language models from human preferences},
+  author={Ziegler, Daniel M and Stiennon, Nisan and Wu, Jeffrey and Brown, Tom B and Radford, Alec and Amodei, Dario and Christiano, Paul and Irving, Geoffrey},
+  journal={arXiv preprint arXiv:1909.08593},
+  year={2019},
+  note={Retrieved from https://arxiv.org/abs/1909.08593}
+}
+
+@article{herath2024design,
+  title={Design principles for artificial intelligence-augmented decision making: An action design research study},
+  author={Herath Pathirannehelage, Savindu and Shrestha, Yash Raj and von Krogh, Georg},
+  journal={European Journal of Information Systems},
+  pages={1--23},
+  year={2024},
+  publisher={Taylor \& Francis}
+}
+
+@inproceedings{vieira2024much,
+  title={How Much Data is Enough Data? Fine-Tuning Large Language Models for In-House Translation: Performance Evaluation Across Multiple Dataset Sizes},
+  author={Vieira, Inacio and Allred, Will and Lankford, S{\'e}amus and Castilho, Sheila and Way, Andy},
+  booktitle={Proceedings of the 16th Conference of the Association for Machine Translation in the Americas (Volume 1: Research Track)},
+  pages={236--249},
+  year={2024}
+}
+
+@misc{gpt4o,
+  author = {OpenAI},
+  title = {GPT-4o},
+  year = {2025},
+  note = {Retrieved January 20, 2025 from https://platform.openai.com/docs/models\#gpt-4o}
+}
+
+@misc{streamlit,
+  author = {Snowflake Inc.},
+  title = {Streamlit - A faster way to build and share data apps},
+  year = {2025},
+  note = {Retrieved January 20, 2025 from https://streamlit.io/}
+}
+
+@misc{openaiembed,
+  author = {OpenAI},
+  title = {Embeddings},
+  year = {2025},
+  note = {Retrieved January 20, 2025 from https://platform.openai.com/docs/models\#embeddings}
+}
+
+@misc{bgebaai,
+  author = {Beijing Academy of Artificial Intelligence},
+  title = {BAAI/bge-reranker-v2-m3},
+  year = {2025},
+  note = {Retrieved January 20, 2025 from https://huggingface.co/BAAI/bge-reranker-v2-m3}
+}
+
+@inproceedings{seaborn2023m,
+  title={“I'm” Lost in Translation: Pronoun Missteps in Crowdsourced Data Sets},
+  author={Seaborn, Katie and Kim, Yeongdae},
+  booktitle={Extended Abstracts of the 2023 CHI Conference on Human Factors in Computing Systems},
+  pages={1--6},
+  year={2023}
+}
+
+@inproceedings{weidinger2022taxonomy,
+  title={Taxonomy of risks posed by language models},
+  author={Weidinger, Laura and Uesato, Jonathan and Rauh, Maribeth and Griffin, Conor and Huang, Po-Sen and Mellor, John and Glaese, Amelia and Cheng, Myra and Balle, Borja and Kasirzadeh, Atoosa and others},
+  booktitle={Proceedings of the 2022 ACM conference on fairness, accountability, and transparency},
+  pages={214--229},
+  year={2022}
+}
+
+@inproceedings{muller2024genaichi,
+  title={GenAICHI 2024: Generative AI and HCI at CHI 2024},
+  author={Muller, Michael and Kantosalo, Anna and Maher, Mary Lou and Martin, Charles Patrick and Walsh, Greg},
+  booktitle={Extended Abstracts of the CHI Conference on Human Factors in Computing Systems},
+  pages={1--7},
+  year={2024}
+}
+
+@misc{openaipricing,
+  author = {OpenAI},
+  title = {Pricing},
+  year = {2025},
+  note = {Retrieved January 18, 2025 from https://openai.com/api/pricing/}
+}

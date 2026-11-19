@@ -1,0 +1,10 @@
+\section{Conclusion}\label{sec:conclusion}
+In this paper, we introduced the Progress Reward Model for Reinforcement Learning (PRM4RL), a novel framework that integrates high-level planning and low-level reward shaping to address the challenges of long-term planning and sparse rewards in reinforcement learning.
+At the high level, we decompose a complex task into manageable subtasks with subtask prior.
+At the low level, we design a Progress Reward Model with optimality and convergence guarantee.
+The experimental results demonstrate the effectiveness and efficiency of our method, significantly improving both convergence speed and the ability to solve complex, multi-stage tasks.
+
+\textbf{Limitations.}\label{sec:limitations}
+Similar to T2R\cite{xie2024text2reward} and other methods\cite{du2023guiding, brohan2023can, dalal2024plan} that depend on LLMs for planning or coding, our approach could be affected by LLM hallucinations during reasoning\cite{liu2024exploring}.
+Besides, while our method demonstrates strong performance across various tasks, its applicability to domains outside of robotics remains unexplored.
+We anticipate that further optimization and adaptation of the framework will be necessary to address diverse environments and tasks.

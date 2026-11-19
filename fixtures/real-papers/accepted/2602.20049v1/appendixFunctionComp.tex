@@ -1,0 +1,77 @@
+
+\section{\NDICE Compilation Rules for Function Calls}\label{app:function_comp}
+
+In this section we will briefly present the \NDICE compilation rules for function definitions, function calls and \NDICE programs.
+Notably, the rules are very similar to the compilation rules for \DICE by \citet{holtzen2020scaling}.
+
+%
+\begin{figure}
+	\begin{center}
+		\begin{adjustbox}{max width=\textwidth}
+			\renewcommand{\arraystretch}{4.0}
+			\begin{tabular}{c c}
+				%Function compilation, no program 
+				\inference[\ifthenelse{\boolean{showRuleNames}}{\texttt{(C-Fun)}}{}]
+				{\Gamma\cup\{x_1 \colon \tau_1\}, \Phi \vdash e \colon \tau_2 \leadsto (\dot{\varphi}, \gamma, t)}
+				{ \Gamma, \Phi \vdash \FUNC{\FUNCNAME (x_1 \colon \tau_1) \colon \tau_2}{e} \leadsto (\dot{\varphi}, \gamma, t)} 
+				
+				& 
+				%program compilation, expression
+				\inference[\ifthenelse{\boolean{showRuleNames}}{\texttt{(C-Prog1)}}{}]
+				{\Gamma, \Phi \vdash e \colon \tau \leadsto (\dot{\varphi}, \gamma, t)}
+				{ \Gamma, \Phi \vdash \bullet\, e \colon \tau\leadsto (\dot{\varphi}, \gamma, t)}
+				
+				\\
+				%program compilation, function definition
+				\multicolumn{2}{c}{
+					\inference[\ifthenelse{\boolean{showRuleNames}}{\texttt{(C-Prog2)}}{}]
+					{\Gamma, \Phi \vdash \FUNC{\FUNCNAME (x_1 \colon \tau_1) \colon \tau_2}{e} \leadsto (\dot{\varphi}_\FUNCNAME, \gamma_\FUNCNAME, t_\FUNCNAME)\\
+						\Gamma \cup \{\FUNCNAME \mapsto \tau_1 \rightarrow \tau_2\}, \Phi \cup \{\FUNCNAME \mapsto (x_1, \dot{\varphi}_\FUNCNAME, \gamma_\FUNCNAME, t_\FUNCNAME)\} \vdash p \colon \tau\leadsto (\dot{\varphi}, \gamma, t)
+					}
+					{\Gamma, \Phi \vdash  \FUNC{\FUNCNAME (x_1 \colon \tau_1) \colon \tau_2}{e}\; p \colon \tau\leadsto (\dot{\varphi}, \gamma, t)}
+				}\\
+				
+				
+				%function call
+				\multicolumn{2}{c}{
+					\inference[\ifthenelse{\boolean{showRuleNames}}{\texttt{(C-Call)}}{}]
+					{\Gamma(x_1) = \tau_1 \qquad \Gamma(\FUNCNAME) = \tau_1\rightarrow \tau_2\\
+						\Phi(\FUNCNAME) = (x_{arg}, \dot{\varphi}, \gamma, t) \qquad (\dot{\varphi}', \gamma', t') = \texttt{RefreshFlips}(x_{arg}, \dot{\varphi}, \gamma, t)
+					}
+					{\Gamma, \Phi \vdash  \FUNCNAME(x_1) \colon \tau_2 \leadsto (\dot{\varphi}'[x_{arg}\mapsto x_1], \gamma'[x_{arg}\mapsto x_1], t')}
+				}
+			\end{tabular}
+		\end{adjustbox}
+	\end{center}
+	\caption{
+		\NDICE Compilation rules for functions and programs. We assume without loss of generality but for simplicity that function calls are only ever given identifiers as arguments.}
+	\label{nDice Function Compilation} 
+\end{figure}
+%
+Compiling programs with function definitions and calls requires extending our compilation judgment with an additional context piece $\Phi$, called the \textit{compiled function table}.
+$\Phi$ maps function identifiers to tuples $(x_{arg}, \dot{\varphi}, \gamma, t)$, where $x_{arg}$ is the formal name of the function's argument, and the other elements are the function body's model formula, accepting formula and annotated trace of flips.
+Thus, compilation judgments for expressions now have the form $\Gamma, \Phi \vdash e \leadsto (\dot{\varphi}, \gamma, t)$.
+\Cref{nDice Function Compilation} presents the new compilation rules for programs and function calls, all other rules are exactly as in \Cref{nDice Compilation} with the added context $\Phi$.
+Once again, the rules are very similar to the compilation rules for \DICE~\cite{holtzen2020scaling}.
+
+
+The judgment $\Gamma, \Phi \vdash p  \colon \tau \leadsto (\dot{\varphi}, \gamma, t)$ compiles programs inductively:
+First, \texttt{C-Prog2} uses \texttt{C-Fun} to compile function definitions and accumulates the compiled function table.
+Here, \texttt{C-Fun} compiles function definitions into the usual triples $(\dot{\varphi}, \gamma, t)$ by compiling the function's body in the appropriate type environment, and later \texttt{C-Prog2} adds the function to the compiled function table.
+After all function definitions have been processed we consider the main expression $\bullet e$, which is compiled as an expression with the accumulated type environment and compiled function table using the rule \texttt{C-Prog1}.
+For function calls, \texttt{C-Call} retrieves the compilation result for the called function from $\Phi$ and instantiates the function's formal argument $x_{arg}$ with the real argument $x_1$.
+Additionally, $\texttt{RefreshFlips}$ renames all variables aside from $x_{arg}$ in the formulas and trace of flips to ensure that flips remain independent between different calls of the same function.
+
+
+The added compilation rules are the only difference between inference for expressions and full programs, and both determining the reduced ADD and lifting it to an MDP are done as described in the Cref{sec:inference}.
+We now present the Soundness Theorem for \NDICE programs:
+\begin{theorem}[Inference Soundness]\label{ProgramSoundnessApp}
+	Let $p$ be a \NDICE program  
+	%with free variables $x_1,\dots,x_n$ 
+	and let $\{\}, \{\} \vdash p \colon \tau \leadsto (\dot{\varphi}, \gamma, t)$. 
+	Then the reduced ADD for $(\dot{\varphi}, \gamma, t)$ can be lifted to an unnormalized MDP $\mathcal{M}_p$ so that:
+	$$ Pr^{max}_{M_p} (\lozenge v \,|\, \lozenge A) = \max \left\{d(v) \,|\, d \in \llbracket p\rrbracket^{\{\}}_D\right\}$$
+\end{theorem}
+\begin{proof}
+	See \Cref{ProgramAppendix}, where the theorem is restated as \Cref{app:ProgramSoundness}.
+\end{proof}

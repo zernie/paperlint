@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "cvpr.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "preamble.tex",
+      "role": "body"
+    },
+    {
+      "path": "sec/0_abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "sec/1_intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "sec/2_formatting.tex",
+      "role": "body"
+    },
+    {
+      "path": "sec/3_finalcopy.tex",
+      "role": "body"
+    },
+    {
+      "path": "Table/pacs_main.tex",
+      "role": "body"
+    },
+    {
+      "path": "Table/vlcs_main.tex",
+      "role": "body"
+    },
+    {
+      "path": "Table/officehome.tex",
+      "role": "body"
+    },
+    {
+      "path": "Table/multi-DomainBed.tex",
+      "role": "body"
+    },
+    {
+      "path": "Table/ablation_study.tex",
+      "role": "body"
+    },
+    {
+      "path": "Table/ablation_study_vlcs.tex",
+      "role": "body"
+    },
+    {
+      "path": "Table/initilialize.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "47e0245f2edb6982bef4c119492172ac5712875b95b02ed3c0ade16ca4d8b4a1",
+    "cvpr.sty": "2fc9a2d7f2beb8ac988b43a4d802ec75470de67092ae02f15ed8b322677b7cc6",
+    "preamble.tex": "75415cdda3738200750a9f348b3dc99f5afd7ebaa96e92e11cd6a55c3db1cf70",
+    "sec/0_abstract.tex": "f287a89805a1fc25a0029008f6dc8172055fc290338a4210df3837e232e404ca",
+    "sec/1_intro.tex": "b608af941274e41cedae8da5e98fc4256217e341be1d809775b4de8cd83e1f7c",
+    "sec/2_formatting.tex": "e11bca2b01f00021a59271f1f6ab53b39788d217c625e3412c90bf2d1524317f",
+    "sec/3_finalcopy.tex": "e7f6bf6e1f68978584158bbbfc6e732c0b895b765a9125cfdbdf740176dd7013",
+    "Table/pacs_main.tex": "8ae0e1e0064766b4719b1fed46563087298cfb29ec9164712e1a4fd16599336d",
+    "Table/vlcs_main.tex": "a3a5f96a910c3ad3dd74da7d368d575b0eace1e459a9bc90ccbb25654f90e366",
+    "Table/officehome.tex": "1c26174129d7817e0d34297cd11661d6e0a64ec655e0b332a04c4e5b1adae58f",
+    "Table/multi-DomainBed.tex": "6de416492cfbfad40c15cbf101e59111ad1f84d1c7c24ca58f9e6744d4cd1d81",
+    "Table/ablation_study.tex": "2387930feb17f44de6d0f23a2298b4e7c6b9507913a4842da0f708cb17bcabee",
+    "Table/ablation_study_vlcs.tex": "d686b0f3916072d03d60809aedfa111cdfa6abe3d8fa8537e4172f32224682e9",
+    "Table/initilialize.tex": "988d35068fe4ac2111c63d4b3b83055023aa63c077db1828da7248f880fff64d"
+  }
+}

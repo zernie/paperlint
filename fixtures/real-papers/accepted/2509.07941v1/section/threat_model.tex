@@ -1,0 +1,31 @@
+\section{Threat Model and Assumptions}\label{sec:threat_model}
+
+\textbf{Target Model.} In this study, we have two types of target models: a retrieval model for searching relevant documents and an LLM for code generation. The target model is securely trained without poisoning or any other form of malicious tampering. For the retrieval model, we select commonly used and popular retrieval models employed in real-world RAG systems (such as LangGraph and LLamaIndex) to closely mimic actual RAG scenarios. Additionally, the retrieval model should have a context length of at least 1024 tokens. This is because when creating the RAG Database, we split the documents into segments of length 1024 to ensure the integrity of the code as much as possible. Regarding the LLM, we require it to possess sufficient code-generation capabilities. In this way, both novice coding enthusiasts and experienced programmers will be inclined to use the suggestions provided by these LLMs during programming. 
+
+\textbf{Attacker Goal and Motivation.} The attacker's goal is to make the target LLM generate custom library or package names in response to general code-generation prompts. Refer to Figure 1 for the specific attack chain.
+In one of the attack scenarios we present, the attacker maliciously inserts a large number of strings containing malicious package names, as well as elements for retrieval and generation attacks, into websites or databases that are likely to be crawled by the RAG system and added to the RAG Database. These malicious documents can be retrieved by the retrieval model in the RAG system with a higher ranking and included in the RAG context as part of the LLM prompt. Subsequently, the LLM will trust the “suggestions” in these contexts and then recommend programmers to install and use the “suggested” third-party packages.
+It should be noted that the attacker does not need to upload the malicious package first and then poison the RAG Database. In fact, the attacker can even poison the database first and then upload the corresponding malicious package to the third-party package management repository based on the poisoning effect, as this is not difficult to achieve. Therefore, in practice, the attacker can alternate between poisoning documents and uploading malicious packages, which makes it more challenging to defend against such attacks. 
+
+
+\textbf{Assumptions.} In our proposed malicious package attack scenario, we make the following assumptions, which are both realistic and reasonable, and the attack threat we describe is genuine and highly likely to occur among the broad user base that relies on LLM-based code generation.
+
+\textbf{For attackers:}
+\begin{itemize}
+    \item They do not require direct white-box access to target models (both retrieval models and LLMs).
+    \item They can upload packages containing hijacked code to third-party package management platforms (e.g., PyPi)~\citep{malicious_package_collection}.
+    \item They have no knowledge of the exact queries used by victims, but can access large volumes of existing query distributions.
+    \item They cannot delete or modify existing documents in the RAG database and can only inject new poisoned documents.
+\end{itemize}
+
+\textbf{For victims:}
+\begin{itemize}
+    \item They use LLMs for code generation and follow LLM-suggested code recommendations, and are unfamiliar with the official names of packages they might use. Since developers(including junior engineers and even experienced programmers) are increasingly seeking code suggestions from LLMs~\citep{code_gen_survey}. For example, the number of monthly questions posted on Stack Overflow has dropped to levels seen in 2009~\citep{stackoverflow}.
+    \item They typically do not manually inspect all retrieved documents, focusing solely on the LLM-generated output, given that most web-based LLM chat interfaces (e.g., ChatGPT, Claude and DeepSeek) do not display detailed document sources by default. This greatly reduces the likelihood of users discovering poisoned documents.
+    \item They tend to directly copy and paste the code suggestions provided by LLMs, attempt to run them, and debug as necessary. Since many programming languages offer clear error messages for missing packages and dependencies (for example, Python raises a \texttt{'No module named xx'} error), developers can conveniently install the required packages using commands like \texttt{pip install xx}. This allows them to inadvertently complete the final step of the attack chain~\citep{python_malicious_package}.
+    \item After installing packages, they execute code immediately without verifying whether the packages contain unknown malicious code. Malicious packages can be disguised as legitimate dependencies, exploit vulnerabilities in the development workflow, and conceal malicious logic, thereby causing victims to unknowingly use them~\citep{software_supply_chain_sec_1,software_supply_chain_sec_2,software_supply_chain_sec_3}.
+\end{itemize}
+
+
+
+
+

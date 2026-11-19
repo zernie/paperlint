@@ -1,0 +1,54 @@
+\begin{figure*}[ht]
+\centering
+    \centering
+    \includegraphics[width=0.9\linewidth]{figures/res_2_2_new.pdf}
+    \captionsetup{skip=2pt}
+       %\vspace{0.1in}
+    \caption{Overhead comparison of various schemes on neural network micro-benchmark. The y-axis represents the running overhead, calculated by subtracting the FHE-only running time from each scheme's running time and then dividing this by the FHE-only running time. In the case of (a) convolution, FHE-ZKP was not included in the comparison due to its significantly slower performance compared to other methods.}
+    \label{fig:dnn-overhead-all}
+    %\vspace{-0.1in}
+\end{figure*}
+
+\subsection{Matrix Operations}
+
+\noindent\textbf{Matrix Multiplication.}
+Figure \ref{fig:matrix-overhead-all} (a) shows the overheads of DataSeal, FHE-TEE, FHE-ZKP, and FHE-MAC compared to FHE-only performance. DataSeal's constant overhead from two vector-matrix multiplications diminishes relatively as data size increases. In contrast, FHE-MAC's overhead grows with data size due to data replication. FHE-TEE has constant overhead during encoding and verification but incurs significant overhead in computation due to double encryption.
+
+In cloud computation, FHE-TEE's double encryption design doubles the computation time compared to FHE-only. FHE-MAC's and FHE-ZKP's overheads increase with data size due to data replication. DataSeal's overhead decreases with data size, resulting in only a 2.99\% overhead compared to FHE-only at the end of the experiment. This efficiency and scalability make DataSeal suitable for large-scale data tasks.
+
+\noindent\textbf{Matrix Addition.}
+Figure \ref{fig:matrix-overhead-all} (b) compares overheads for matrix addition. DataSeal maintains constant overhead with diminishing relative impact as data size grows, while FHE-ZKP and FHE-MAC have increasing overheads due to data replication. FHE-TEE remains constant during encoding and verification but incurs significant overhead in computation.
+
+In cloud computation, FHE-TEE's overhead is consistently high due to double encryption, resulting in a 59.18\% overhead. DataSeal, however, shows a decreasing relative overhead, ending with a 1.85\% overhead compared to FHE-only. This consistent efficiency across both matrix operations positions DataSeal as an effective solution for large-scale data tasks.
+
+
+\begin{figure*}[ht!]
+\centering
+    \centering
+    \includegraphics[width=0.7\linewidth]{figures/exp.pdf}
+    \captionsetup{skip=1pt}
+    \vspace{0.1in}
+    \caption{Overhead comparison among DataSeal, FHE-TEE, and FHE-MAC on neural network inference. The y-axis represents the running overhead, calculated by subtracting the FHE-only running time from each scheme's running time and then dividing this by the FHE-only running time.}
+    \label{fig:overhead1}
+\end{figure*}
+
+\subsection{Neural Network Micro-benchmark}
+
+\noindent\textbf{Convolution.}
+In CNNs, convolution extracts features from input data by sliding a filter across the input and computing the dot product with overlapping regions. This operation, which captures spatial hierarchies in images, can be transformed into a matrix multiplication using the \textit{im2col} method, leveraging optimized routines for faster processing.
+
+Figure \ref{fig:dnn-overhead-all} (a) compares convolution overheads for DataSeal, FHE-TEE, FHE-ZKP, and FHE-MAC. FHE-MAC and FHE-ZKP overheads increase with data size due to data replication. FHE-TEE maintains constant overhead but is significantly higher due to double encryption. DataSeal's setup overhead increases with data size due to converting convolutions into matrix multiplications, yet it achieves almost zero overhead (0.23\%) in cloud environments due to efficient use of FHE slots during conversion.
+
+\noindent\textbf{Polynomial Activation.}
+DNNs use activation functions like ReLU, sigmoid, and tanh to introduce non-linearity. In FHE, only addition and multiplication are supported, so polynomial activations, such as squaring, are used.
+
+Figure \ref{fig:dnn-overhead-all} (b) shows the overhead for square activations in FHE. FHE-MAC and FHE-ZKP have increasing overhead with data size due to data replication. FHE-TEE maintains constant but high overhead due to double encryption. DataSeal shows decreasing relative overhead as data size increases, with only 61\% overhead on a $64\times64$ matrix, demonstrating its scalability and efficiency for large data sets in FHE.
+
+
+\subsection{End-to-End Neural Networks}
+
+Figure \ref{fig:overhead1} compares the computational overhead in Deep Neural Network (DNN) applications among DataSeal, FHE-TEE, and FHE-MAC. The figure shows that DataSeal demonstrates a significantly lower overhead than FHE-TEE and FHE-MAC. FHE-MAC, which uses the slots available in Fully Homomorphic Encryption (FHE) for integrity protection, can mask its latency effectively. This utilization of slots is a strategic approach that takes advantage of the inherent capabilities of FHE, allowing for a certain degree of efficiency in basic operations.
+
+However, as the complexity of the computations increases, the limitations of FHE-MAC become more evident. In complex computational tasks, such as matrix multiplication and convolution operations within DNNs, the FHE-MAC framework is not optimized, leading to a significant increase in computational overhead, e.g., $8.51\times$ slower than FHE-only for a single inference on AlexNet for CIFAR-10. DataSeal, with its unique design and architecture, is more adaptable to these complex computational requirements. It is specifically tailored for matrix operations and offers substantial optimizations in these areas, resulting in a much reduced overhead compared to FHE-MAC. Specifically, DataSeal only has $0.05\times$ and $0.01\times$ computation overheads on LeNet-5 and AlexNet, respectively. 
+
+It is important to note that FHE-TEE maintains a constant overhead throughout different operations, as seen in the previous sections. This consistency in overhead, regardless of the complexity of the operation, distinguishes FHE-TEE from the other frameworks. However, it may not be as efficient as DataSeal in handling complex matrix computations in DNN applications. For instance, FHE-TEE has $1.12\times$ and $1.25\times$ overhead on MNIST-LeNet5 and CIFAR10-AlexNet, respectively.

@@ -1,0 +1,119 @@
+% Recurrent Tensors
+
+%\mathrm{fib}[t<2]=1,\quad\mathrm{fib}[t]=\mathrm{fib}[t-1]+\mathrm{fib}[t-2] \label{eq:fib}
+
+\section{Recurrent Tensors}
+\label{sec:rts}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth, trim={1.6 1 1 2}, clip]{cr_figures/rt_intuition}
+  \caption{How a RT \boldmath{$x$} with domain \boldmath{$(t,)$} can be used in \sys{}}
+  \label{fig:rts}
+\end{figure}
+
+While writing dynamic algorithms is challenging in current DL systems (see~\S\ref{sec:dataflow}), we observe that they are naturally expressible as \emph{recurrence equations}~\cite{karp1967organization}. This makes recurrence equations ubiquitous in algorithmic pseudocode, \eg when defining optimizers~\cite{kingma2014adam}, learning rate schedules~\cite{darken1990note}, models~\cite{werbos1990backpropagation, bengio2021flow, ho2020denoising}, layers~\cite{vaswani2017attention,zaheer2020big}, and loss functions~\cite{schulman2015high, schulman2017proximal}.
+
+%
+%\begin{equation}
+%y[\psi(t)]=f(x_1[\phi_1(t),\ldots,x_n[\phi_n(t)]]) \label{eq:rec_eq}
+%\end{equation}
+%
+
+To exploit this expressiveness, \sys{} introduces \emph{recurrent tensors~(RTs)}. In addition to the spatial dimensions for its shape, an RT has \emph{temporal dimensions}, such as iterations or timesteps, which define its \emph{domain}~(see~\F\ref{fig:rts}). 
+Each temporal dimension has an associated pair of symbols---a \emph{current step}~(\eg~$t$,~$i$) and an \emph{upper bound}~(\eg~$T$,~$I$).
+If an RT $x$ has $t$ in its domain, it is defined by a recurrence equation for every point $0 \leq t < T$, and its value (and shape) may vary with $t$.
+%RTs with an empty domain are constants. 
+%RTs are declarative, and can refer to past or even future values of other tensors by indexing them with \emph{symbolic expressions}.
+RTs enable declarative programming, as their defining equations can refer to past or future values of other RTs by indexing them with \emph{symbolic expressions}.
+
+
+%This is achieved by defining recurrence equations of the form
+%where $x$ and $y$ are RTs, $f$ is a tensor operation, $\phi$ is called the \emph{dependence} $y$ has on $x$, and $\psi$ is an optional \emph{condition} that must be satisfied for $y$ to be computed. 
+%are constructed from these symbols using overloaded operators. They
+
+\myparr{Symbolic expressions} are constructed from symbols using overloaded operators, such as arithmetic (\eg $+$, $/$), boolean comparison (\eg $\leq$, $=$) and logic (\eg $\&$, $|$), as well as $\text{min}$ and $\text{max}$. Accessing a range of temporal values is done using a \emph{slice expression} ({$\mathrm{start}\!:\!\mathrm{stop}\!:\!\mathrm{step}$}), and to express multiple dimensions at once, \emph{sequence expressions} $([\cdot,\cdot])$ are used.
+
+Symbolic expressions are versatile and can be used to~(as shown by the labels in \F\ref{fig:rts}):~(i)~index the temporal dimensions of RTs expressing dynamic dependencies;~(ii)~express dynamic shapes;~(iii)~parameterize tensor operations which receive index or shape arguments (\eg a dynamic expand or spatial index select);~and~(iv)~naturally express conditional computation using boolean expressions. 
+%\sys{} propagates dynamic shapes transparently through RT computations using per-operator rules for shape propagation.
+Indexing an RT’s temporal dimension with a slice expression creates a (possibly dynamic) leading spatial dimension in the output RT.
+
+
+\begin{algorithm}[t]
+  \caption{REINFORCE using RTs. \textnormal{(Line 13 is discussed later.)}}
+  \label{alg:experimentation}
+\begin{lstlisting}[style=diffpython, linewidth=\columnwidth]
+  import tempo as tpo
+  ctx = tpo.Context(num_dims=3)
+  with ctx as (b, B), (i, I), (t, T):
+    env = tpo.rl.env.make("gym.CartPole-v1")
+    dnn = tpo.DNNBuilder(domain=(i,))
+      .from_env(env, hidden=[32, 32]).build()
+
+    o = tpo.like(env.obs_space, domain=(b, i, t))
+    o[b, i, 0] = env.reset(domain=(b, i))
+    a = dnn(obs) # Acting
+    o[b, i, t+1], r, d = env.step(a)
+
+    # Different access pattern -> different schedule
+(*@\diffdel{     g = r[b, i, t:T].discounted_sum(0.95)          }@*)
+(*@\diffadd{     g = r[b, i, t:min(t+5, T)].discounted_sum(0.95)}@*)
+    l = -dnn.log_prob(a) * g # Learning 
+    l[0:B, i, 0:T].mean().backward() 
+    lr = 1e-3 * (0.99 ** i) # Decaying learning rate
+    tpo.optim.Adam(dnn.params, lr=lr).step()
+
+    dnn[(i+1) % 5 == 0].checkpoint(save_path)
+    ctx.run({B: 64, I: 20, T: 200})
+\end{lstlisting}
+\end{algorithm}
+
+\mypar{REINFORCE with RTs} \A\ref{alg:experimentation} shows an example of the REINFORCE RL algorithm~\cite{williams1992simple} written in \sys. Users begin by setting up a context~(line~2) with a chosen number of temporal dimensions\footnote{With zero temporal dimensions, \sys behaves like a typical DL system with only spatial tensor dimensions.}, associating each dimension with a semantic meaning~(line~3): batch sample~$b$, iteration~$i$, and timestep~$t$. An RL environment is created~(line~4), and a DNN is defined~(line~5). Similar to PyTorch~\cite{paszke2019pytorch}, DNNs are defined by composing modules, but the domain over which parameters vary (iterations) must be explicit~(line~5). 
+%Here, the DNN should vary only with learning iterations~$i$.
+
+The observations tensor is defined as a \emph{branching} RT: the first timestep is given by the environment reset~(line~8) and subsequent timesteps are computed by stepping the environment with the DNN's action~(line~10). 
+The \emph{returns}~$g$ of each timestep~$t$ are computed from the rewards~$r$ indexed by~\mbox{$[t\!:\!T]$}~(line~12), yielding an RT with \emph{dynamic shape}~\mbox{$(T\!-\!t,)$}. \sys{} propagates dynamic shapes transparently.%, which is summed to obtain a static shape.
+
+
+The loss is then backpropagated~(lines~14--15), and the gradients are used by the Adam optimizer~\cite{kingma2014adam} (line~17), also defined using RTs, to update the DNN. 
+Expressing conditional computation, such as checkpointing~(line~18), is done by indexing with boolean expressions, which only execute when the boolean evaluates to true.
+Finally, the program is compiled and run, with the user providing bounds for each temporal dimension (line~19). 
+
+Note how, with RTs, there is no need to decouple acting and learning. The original forward pass can simply be used within the loss definition. Furthermore, there is no need to use replay buffers~\cite{cassirer2021reverb} to store prior timesteps of experience\footnote{A replay buffer is still needed for asynchronous~\cite{mnih2016asynchronous} or offline RL~\cite{levine2020offline}.}, because \sys{} manages the storage of each RT based on the dynamic dependencies. 
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.975\columnwidth, trim={0 34 0 0}, clip]{cr_figures/domain_unioning}
+  \caption{Domain unioning \textnormal{(Similar to shape broadcasting and datatype promotion, domains are unioned when tensors interact.)}}
+  \label{fig:domain_unioning}
+\end{figure}
+
+\mypar{Automatic domain inference} Annotating domains is often unnecessary, as \sys{} infers them. For example, temporally indexing an RT with a constant (\eg $5$ or $0\!:\!T$) on dimension~$t$ removes $t$ from the resulting RT's domain.
+Spatially indexing an RT with $t$ adds $t$ to the resulting RT's domain.
+If an RT is not explicitly temporally indexed ($g$ in line~14), it is treated as if indexed by the identity~(\ie~$g[b, i, t]$). 
+
+
+
+When two RTs interact, their domains are \emph{unioned}, as shown in \F\ref{fig:domain_unioning}. 
+In this example, 
+the left RT varies with timesteps $t$, while the right RT varies with iterations $i$. Their interaction produces an RT that varies with both (\ie has a domain of $(i,t)$). 
+Domain inference allows, \eg for learning rate schedules, to be easily expressed as RTs (line~16), and be integrated with the optimizer without code changes. 
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.95\columnwidth, trim={16 1 1 0}, clip]{cr_figures/autodiff}
+  \caption{Symbolic automatic differentiation \textnormal{($y[1]$ depends on $x[1\!:\!4]$ and thus $\nabla y[1]$ contributes to $\nabla x[1\!:\!4]$.)}}
+  \label{fig:autodiff}
+\end{figure}
+\mypar{Symbolic automatic differentiation} When \texttt{backward()} is called on an RT, automatic differentiation~\cite{baydin2018automatic} is used to compute the input gradients for an operator based on its output gradients. \sys, however, must also accumulate gradients through temporal dimensions. Consider the RT $y[t] = f(x[\phi(t)])$, where $\phi$ is called the \emph{dependence expression} $y$ has on $x$. A single timestep of $x$ may contribute to several timesteps of $y$.
+Thus, the gradient of~$x$, $\nabla x$, is an RT with the same shape, datatype, and temporal domain as $x$, which sums the gradient contributions from all timesteps of $\nabla y$ to which $x[t]$ contributed to:
+%
+$$\nabla x[t] = \sum\nolimits_{t' \in \phi^{-1}(t)} f'(\nabla y[t'])$$
+%
+\noindent
+where $f'$ is the derivative of~$f$, and $\phi^{-1}$ is the \emph{inverse} of the dependence expression. 
+Inverting a dependence can be thought of as converting ``which source timesteps does the sink depend on at timestep $t$?'' to ``which sink timesteps depend on the source's timestep~$t$?''. For example, $[t\!+\!3]$ inverts into $[t\!-\!3]$, $[\mathrm{max}(0,t\!-\!3)\!:\!t\!+\!1]$ into $[t\!:\!\mathrm{min}(t\!+\!4, T)]$, and $[t\!:\!T]$ into $[0\!:\!t\!+\!1]$. This last example is depicted in \F\ref{fig:autodiff}.
+If $y$ indexes $x$ with a constant expression~(\eg $y = f(x[0\!:\!T])$, $y$ does not vary with $t$. To recover $\nabla x$'s domain, \sys{} must select the corresponding spatial dimension of $y$ using $t$ as an index, \ie $\nabla x[t]\!=\!f'(\nabla y[]).\mathrm{index}(t)$. This process generalizes to multiple temporal dimensions by concatenation. 
+
+
+% End

@@ -1,0 +1,105 @@
+\section{Background and Threat Model}
+\label{sec:background}
+
+This section overviews the Linux file system as well as the key system calls relevant to I/O operations. Finally, it presents the threat model assumed in the paper.
+
+
+
+
+\subsection{Linux File System}
+
+
+The Linux file system is a hierarchical framework that organizes, stores and retrieves data on physical storage devices. It acts as a bridge between user applications and the physical device, enabling efficient and reliable data management across Linux systems~\cite{arpaci2018operating}. 
+
+Figure~\ref{fig:file_system_overview} shows the structure of the Linux file system, highlighting the flow of I/O system calls from the application layer to the physical device.  The architecture has multiple layers, each with distinct responsibilities. At the top is the \textbf{application layer}, where user applications interact with the file system through libraries like the GNU C Library. These interactions result in system calls, such as \textit{read}, \textit{write}, \textit{rename}, and synchronization calls like \textit{syncfs} or \textit{fsync}. These system calls are the foundation of file operations.
+
+Beneath the application layer, the \textbf{Virtual File System (VFS)} serves as an abstraction layer in the kernel. It standardizes file access, allowing applications to work with files without knowing the details of the underlying file system. This design enables efficient support for multiple file systems, including ext4, XFS, and btrfs, each optimized for different use cases. The VFS bridges the gap between user operations and the specific implementation of individual file systems.
+
+Among these file systems, ext4 is the general-purpose choice and is often set as the default for most Linux installations due to its stability and versatility~\cite{cao2007ext4}. Ext4 provides efficient storage management, large file support, and backward compatibility with earlier file systems like ext2 and ext3. Additionally, its journaling feature enhances reliability by tracking changes before committing them to disk, protecting data in the event of a system crash. For specialized needs, alternative file systems are available. XFS focuses on high-performance workloads with efficient parallel I/O operations, making it ideal for servers and data-intensive applications~\cite{sweeney1996scalability}. Btrfs emphasizes enhanced data integrity with built-in redundancy and snapshots, which are particularly valuable for environments requiring robust data protection~\cite{rodeh2013btrfs}. Finally, NFS supports networked file sharing, enabling seamless access to files across distributed systems~\cite{hitz1994file}. Each of these file systems provides distinct features tailored to specific requirements.
+
+The next layer consists of the actual file systems and their caching mechanisms. These include the \textbf{inode cache}, which stores file metadata, the \textbf{page cache}, which buffers file data, and the \textbf{journal cache}, which tracks transactional logs to ensure data integrity. These caches improve performance by minimizing device access, as we elaborate below.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.48\textwidth]{figures/file_system.png}
+    % \vspace{-2.0em}
+    \caption{Overview of Linux file system and I/O system calls between the application layer and the physical device.}
+    \label{fig:file_system_overview}
+\end{figure}
+
+%\subsection{Linux I/O Buffers} 
+% \yicheng{Rewrite it to I/O Buffer, Cheng will rewrite it.}
+
+% Linux I/O buffers include three key caches: \textbf{Inode cache},  \textbf{Page cache.} and \textbf{Journal cache.}.
+
+\textbf{Inode cache.} The inode cache is a memory-resident structure in the main memory that stores recently accessed inodes, which are data structures containing metadata about files and directories. Its purpose is to bypass device reads and writes, improving I/O performance. This caching mechanism plays a critical role in optimizing file system performance.
+ 
+\textbf{Page cache.} The page cache in Linux is an in-memory structure that stores filesystem data to accelerate access. Acting as a buffer, it holds copies of data to enhance system responsiveness and overall performance. When modified, a cached page becomes a "dirty page," requiring eventual write-back to the physical device. The page cache can utilize all available memory, but it dynamically releases memory when needed by other processes. A background process handles the write-back mechanism for dirty pages. Additionally, user applications can trigger write-backs using I/O system calls such as \textit{fsync}, \textit{sync}, \textit{syncfs}.
+
+
+% The Page cache in the Linux system is an in-memory cache that stores data from the filesystem to speed up data access. It acts as a buffer that holds copies of data and improves the overall system performance and responsiveness. When a page is modified, it becomes a dirty page that needs to be written back to the physical disk. The page cache can use all available memory to cache data. However, if other processes need more memory, a background process would trigger the write-back mechanism that returns dirty pages to the disk. Besides that, user applications can use I/O system calls such as \textit{fsync}, \textit{sync}, \textit{syncfs} to trigger the write-back.    
+
+\textbf{Journal cache.} The journal cache is a dedicated memory area used by journaling file systems to temporarily store updates to the file system's journal before committing them to disk. This mechanism enhances reliability and performance by capturing file system changes in memory. During file operations, the file system logs transaction metadata in the journal cache. Journaling typically follows one of two approaches: metadata journaling, which logs only file system metadata, and full journaling, which records both data and metadata.
+
+% The journal cache is a memory area used by filesystems to store updates to filesystem's journal before committing to the physical disk. Journaling filesystems utilize this cache to improve reliability and performance by temporarily holding filesystem changes. When a file operation happens, the filesystem records metadata about that transaction to the journal cache. Filesystems usually have two types of journaling: metadata journaling that only writes filesystem metadata to journal cache, and full journaling that writes both data and metadata to journal cache.
+
+
+Finally, at the bottom of the stack, \textbf{device drivers} handle communication with the physical device. They execute the low-level commands needed to complete read and write requests. 
+
+
+
+
+\subsection{System Call for I/O}
+
+\label{subsec:System_call}
+\textbf{File management system calls.} System calls for I/O are essential functions that allow user programs to interact with the kernel to perform I/O operations. Common I/O system calls include \textit{open}, \textit{read}, and \textit{write} to transfer data between the disk and the program memories. Applications commonly use these I/O system calls due to its functionality and low overhead.
+
+\textbf{File synchronization system calls.} Synchronization system calls allow manual synchronization of pending changes in I/O buffers. Commonly used calls include \textit{fsync} and \textit{fdatasync}, which flush dirty pages from I/O buffers associated with individual files. In this paper, we focus on the Linux system call \textit{syncfs}. Unlike other synchronization calls, \textit{syncfs} operates at the file system level. It flushes all dirty pages related to the file's superblock, synchronizing every file within the disk partition to the physical device.
+
+\textbf{\textit{syncfs} workflow.} \textit{syncfs} consists of three main components: synchronizing inodes, synchronizing data, and performing file system-specific operations. Each component uses a lightweight function to initiate the write-back process, followed by a blocking function that ensures the operations are complete. 
+
+
+
+For inode synchronization, the function \texttt{writeback\_inode\_sb()} marks inodes as dirty and initiates write-back without waiting, while \texttt{sync\_inode\_sb()} ensures all dirty inodes are flushed to disk. This approach extends to data synchronization as well.
+
+The function \texttt{sync\_blockdev\_nowait()} sends write-back requests and returns immediately. At the end of \textit{syncfs}, \texttt{sync\_blockdev()} is called in a loop to flush all dirty pages, incorporating an I/O throttling mechanism to periodically put the process to sleep. This throttling prevents the physical device from becoming overwhelmed and avoids saturating the I/O bandwidth. 
+
+File system-specific operations depend on the implementation of each file system. File system-specific operations vary based on the implementation of each file system. A representative example is \texttt{sb->s\_op->sync\_fs()}, which handles synchronization tasks unique to the file system's design. In ext4, this operation records metadata to the journal to maintain data consistency. Finally, \texttt{blkdev\_issue\_flush()} flushes the physical device's internal cache, guaranteeing that the journal log is physically written to the disk.
+
+
+
+% \textit{syncfs} contains three main parts, synchronizing inodes, synchronizing data, and file system specific operations. Within each part, a lightweight function is called to initiate the write-back process followed by the same function but waits for the operations to end. When synchronizing inodes, \textit{writeback\_inode\_sb()} marks the inodes dirty for write-back and returns without waiting, and \textit{sync\_inode\_sb()} ensures all dity inodes are flushed back to the disk. This idea is also applied to synchronize data. \textit{sync\_blockdev\_nowait()} sends the write-back request and returns without waiting. \textit{sync\_blockdev()} is called at the end of \textit{sybcfs} and does write-back in a loop to flush all the dirty pages. Inside that loop, an I/O throttling mechanism is called to put the process in sleep periodically. This I/O throtting mechanism prevents overwhelming the physical disk and saturating the I/O bandwidth. File system specific operations(\textit{sb->s\_op->sync\_fs()}) may vary based on different implementations in each file system. In ext4, this operation records only the metadata to the journal to ensures data consistency. Then, \textit{blkdev\_issue\_flush()} is called to flush the physical disk's internal cache. The journal log is now guaranteed to be physically written to the disk.
+
+
+
+
+\subsection{Threat Model}
+\label{sec:threatmodel}
+
+
+% \yicheng{Needs a figure for threat model. Highlight the shared file system.}
+
+Our threat model assumes that a \textit{spy} application and a \textit{victim} application execute on the same shared file system. In Linux or Windows, it is common for all applications to operate within the same file system, especially in standard desktop and server installations. We do not assume the spy has superuser privileges or access to specialized hardware. The spy operates as a regular user and periodically invokes the \textit{syncfs} system call, which requires no root permissions. The only requirement is a Linux kernel version 2.6.39 or higher, or an Android OS version 9 or later, both of which support the \textit{syncfs} system call.
+% \cheng{Android requirement added}
+%\cheng{do we also add the requirement for android?} \yicheng{Yes, please add it as well.}
+
+
+The spy initiates the attack by repeatedly calling \textit{syncfs} in a loop to clear the page cache as preparation. It continuously calls \textit{syncfs} in the background while recording the system call's time delay. When the victim process runs, any I/O system calls it performs that modify data or metadata increase the delay observed by the spy. The spy analyzes this delay pattern to infer the victim's file system activities. 
+
+
+Our attacks generalize to most file systems, including both native and non-native file systems on Linux and Android. Variations in the implementation of file system-specific operations within \textit{syncfs} may cause its performance to differ across file systems.
+In the covert channel attack, the sender performs distinct file system operations to encode bits "0" and "1". The receiver continuously invokes \textit{syncfs} in the background to detect these signals. By measuring the differences in \textit{syncfs} delays, the receiver decodes the transmitted message.
+In the side-channel attack, the attacker flushes the page cache at the file system level to monitor the victim's I/O operations. For fingerprinting attacks, the attacker captures the victim's write patterns and leverages them to classify user activities. Specifically, in the Android application fingerprinting attack, the attacker records the I/O activities of applications during boot-up to identify them.
+
+
+% Our attacks can also be generalized to all file systems including both native and non-native file systems on Linux and Android. Different implementations in the file system specific operation in \textit{syncfs} may casue the performance of \textit{syncfs} vary. In our covert channel attack, the sender conducts different file system operations to represent 0 and 1. The receiver keeps calling \textit{syncfs} in the background to capture these signals. Based on the difference in delays of these \textit{syncfs}, the receiver can recover the message. In the side channel attack, the attacker keeps flushing the page cache in the file system scale to detect the victim's I/O operations. In our fingerprinting attacks, the write patterns of the victim processes are captured by the attacker and used to classify the user activities. In the Android application fingerprinting attack, the I/O activities of applications during boot up are captured by the attacker. 
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,38 @@
+% 日本語の実験結果については修正反映済み
+\setlength{\tabcolsep}{3pt} % 数値を小さくすると空白が狭くなる
+
+\begin{table*}[ht]
+% \begin{table}[ht]
+    \footnotesize
+    % \tiny
+    \centering
+    \begin{tabular}{p{1.3cm}l|ccccc|ccccc|ccccc|ccccc|ccccc}
+        \toprule
+        \multicolumn{2}{c|}{\multirow{3}{*}{\bf{Agent Pattern}}} & \multicolumn{25}{c}{\bf{Donation Intention (Top Row: Initial One, Second Row: Final One)}} \\
+        & & \bf{1} & & & & & \bf{2} & & & & & \bf{3} & & & & & \bf{4} & & & & & \bf{5} & & & & \\
+        % \cmidrule{1-15}
+        % Model & Success Rate & Average Turn & Success Average Turn & Average Diff \\
+        & & \bf{1} & \bf{2} & \bf{3} & \bf{4} & \bf{5} & \bf{1} & \bf{2} & \bf{3} & \bf{4} & \bf{5} & \bf{1} & \bf{2} & \bf{3} & \bf{4} & \bf{5} & \bf{1} & \bf{2} & \bf{3} & \bf{4} & \bf{5} & \bf{1} & \bf{2} & \bf{3} & \bf{4} & \bf{5} \\
+        \midrule
+        \multirow{5}{0.5cm}{Japanese} & Simple & \bf{70} & 3 & 0 & 0 & 0 & \bf{53} & 3 & 0 & 0 & 0 & \bf{25} & 12 & 19 & 0 & 0 & 13 & 4 & 8 & \bf{27} & 1 & 5 & 3 & 1 & 0 & \bf{53} \\
+        & ProCoT-p4g & \bf{72} & 1 & 0 & 0 & 0 & \bf{56} & 0 & 0 & 0 & 0 & \bf{45} & 3 & 8 & 0 & 0 & \bf{34} & 1 & 7 & 11 & 0 & 21 & 1 & 8 & 0 & \bf{32} \\
+        & ProCoT-p4g-desc & \bf{73} & 0 & 0 & 0 & 0 & \bf{53} & 3 & 0 & 0 & 0 & \bf{46} & 5 & 5 & 0 & 0 & \bf{25} & 4 & 7 & 17 & 0 & 15 & 1 & 1 & 3 & \bf{42} \\
+        % \cmidrule{1-15}
+        & ProCoT-rich & \bf{73} & 0 & 0 & 0 & 0 & \bf{56} & 0 & 0 & 0 & 0 & \bf{50} & 1 & 5 & 0 & 0 & \bf{41} & 2 & 1 & 9 & 0 & 29 & 1 & 1 & 0 & \bf{31} \\
+        & ProCoT-rich-desc & \bf{73} & 0 & 0 & 0 & 0 & \bf{53} & 3 & 0 & 0 & 0 & \bf{50} & 2 & 4 & 0 & 0 & \bf{43} & 3 & 5 & 2 & 0 & \bf{31} & 0 & 5 & 1 & 25 \\
+        \midrule
+        \multirow{5}{0.5cm}{English} & simple & \bf{71} & 2 & 0 & 0 & 0 & \bf{45} & 11 & 0 & 0 & 0 & 12 & 13 & \bf{31} & 0 & 0 & 3 & 2 & 13 & \bf{35} & 0 & 0 & 0 & 0 & 0 & \bf{62} \\
+        & ProCoT & \bf{70} & 3 & 0 & 0 & 0 & \bf{51} & 5 & 0 & 0 & 0 & 14 & 4 & \bf{38} & 0 & 0 & 13 & 7 & 7 & \bf{26} & 0 & 6 & 0 & 3 & 0 & \bf{53} \\
+        & ProCoT-desc & \bf{70} & 3 & 0 & 0 & 0 & \bf{43} & 13 & 0 & 0 & 0 & 11 & 13 & \bf{32} & 0 & 0 & 4 & 7 & 17 & \bf{25} & 0 & 3 & 1 & 4 & 0 & \bf{54} \\
+        % \cmidrule{2-16}
+        & ProCoT-rich & \bf{71} & 1 & 1 & 0 & 0 & \bf{46} & 10 & 0 & 0 & 0 & 18 & 8 & \bf{30} & 0 & 0 & 12 & 4 & 9 & \bf{28} & 0 & 6 & 1 & 3 & 0 & \bf{52} \\
+        & ProCoT-rich-desc & \bf{73} & 0 & 0 & 0 & 0 & \bf{53} & 3 & 0 & 0 & 0 & 20 & 4 & \bf{32} & 0 & 0 & \bf{21} & 1 & 10 & \bf{21} & 0 & 14 & 0 & 3 & 0 & \bf{45} \\
+        \bottomrule
+    \end{tabular}
+    % \caption{説得エージェントの性能比較}
+    \caption{Detailed distributions of shifting in donation intention.}
+    \label{tab:intention-shifts}
+\end{table*}
+% \end{table}
+
+\setlength{\tabcolsep}{6pt} % 数値を小さくすると空白が狭くなる

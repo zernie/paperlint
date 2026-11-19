@@ -1,0 +1,95 @@
+\subsection{Sampling Error vs.\ DP {Noise}}
+\label{subsec:sample_dp}
+
+
+
+% We empirically validate this by separately evaluating the sampling and DP errors on the \textbf{Epinions2} dataset. 
+% As shown in Table~\ref{tab:epi2_decomp}, sampling error dominates across all queries, matching our theoretical findings.
+
+
+In Sections~\ref{sec:k-lp} and~\ref{sec:pattern}, our theoretical analysis demonstrates that, for both $k$-line path and $k$-edge acyclic pattern counting tasks, the sampling error asymptotically dominates the overall error. 
+This conclusion is empirically supported by the error decomposition results on all six datasets, presented in Table~6 {in Appendix~{A.2} of the full version~\cite{full_version}.}
+{Notably, although our theoretical results imply an asymptotic gap of $\tilde{O}(d(G))$ between the sampling error and the DP noise, this gap is much smaller than $d(G)$ in practice.
+}
+
+{Additionally, we empirically evaluate the LDP error optimization strategy in Section~\ref{subsec:k-lp_dp}} on the \textbf{Epinions2} dataset using queries $Q_{\mathrm{4\text{-}pt}}$, $Q_{\mathrm{5\text{-}pt}}$, $Q_{\pi_1}$, and $Q_{\pi_2}$, varying $n_{\text{rep}}$ from $1$ to $10$.
+Figure~\ref{fig:soc-epinions-nrep} shows the relative sampling error, DP error, and total error for $Q_{\pi_1}$.
+{Results for all four queries are provided in Figure~7 in Appendix~A.2 of the full version~\cite{full_version}.}
+As illustrated in Figure~\ref{fig:soc-epinions-nrep}, sampling error decreases while DP error increases with larger $n_{\text{rep}}$, with total error minimized when the two are roughly balanced.  
+This strategy yields $2.8\times$, $1.8\times$, $4.6\times$, and $2.0\times$ improvements in total error at the optimal $n_{\text{rep}}$ values for queries $Q_{\mathrm{4\text{-}pt}}$, $Q_{\mathrm{5\text{-}pt}}$, $Q_{\pi_1}$, and $Q_{\pi_2}$, respectively, on this dataset.
+
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.62\textwidth]{figures/nrep1.png}
+    \caption{
+        Relative error decomposition for $Q_{\pi_1}$ on the \textbf{Epinions2} dataset
+        under varying numbers of repetitions ($n_{\text{rep}}$).
+    }
+    \label{fig:soc-epinions-nrep}
+\end{figure}
+
+
+
+
+
+
+
+
+
+
+
+
+% move to the appendix
+
+
+
+
+
+
+
+% \blue{The results across all datasets show that sampling error dominates the overall error in pattern counting, whereas line-path counting exhibits a more balanced distribution between sampling and estimation errors under the same $k$. 
+% Moreover, patterns with a higher maximum degree generally exhibit greater relative sampling error.
+% }
+
+
+
+
+% \red{
+% This inconsistency between the theoretical and experimental results is primarily due to the skewed degree distribution characteristic of real-world graphs. 
+% Although we use $\deg(G)$ to subsume all node degrees in utility analysis, only a very small fraction of nodes in graph datasets have degrees on the same order as $\deg(G)$.
+% Compared with path counting, the non-DP results for pattern counting, especially for patterns with higher maximum degrees, fluctuate more on the marks assigned to such high-degree nodes.
+% Consider pattern $3$ as an example. 
+% If the node with maximum degree $\deg(G)$ is assigned a mark of $5$, then in expectation, it can contribute to at least $\Omega(\deg(G)^4)$ instances of the pattern.
+% This is because we expect approximately $\deg(G)/(k+1)$ neighbors to have each of the marks from $1$ to $4$. 
+% In contrast, the contribution from edges connecting mark-$1$ nodes to mark-$0$ is usually much smaller.
+% If the same node instead receives an intermediate mark in a $k$-line path, its contribution is approximately $\Omega({\deg(G)^2})$, and the remaining contributions are typically not as significant.
+% Therefore, the sampling error tends to be more significant in pattern counting cases.
+% }
+
+
+% \blue{
+% % To reduce the overall error, we leverage a key theoretical property that both our non-private algorithm and the LDP mechanism yield unbiased estimators.
+% % This enables a straightforward technique: run the mechanism $n_{\text{rep}}$ times, each with a privacy budget of $\varepsilon / n_{\text{rep}}$, and return the average of the $n_{\text{rep}}$ outputs as the final estimate.
+% % Since the sampling process is independent of $\varepsilon$, this approach reduces sampling variance, at the cost of increased computational overhead and potentially higher DP error.
+% We evaluate this approach on dataset \texttt{xxx} with query $Q_{\pi_3}$, using $n_{\text{rep}} \in \{1, 2, \dots, 10\}$. The corresponding per-run privacy budget is set to $\varepsilon = 1/n_{\text{rep}}$. 
+% The experimental results are shown in Figure~\ref{fig:...}.
+% } 
+
+
+
+
+
+
+
+
+% The results of all datasets shows that the sampling error dominates the overall error in pattern counting, while line path counting has more balanced both errors with the same $k$.
+% Moreover, pattern with higher maximum degree generally shows higher relative sampling error.
+% Intuitively, this is because of the skewed degree distribution nature of graphs. while we use $D$ when considering degrees in utilty analysis, only a very limited proportion of nodes in the real-world datasets has a degree of the same order of the maximum degree.  
+% Moreover, 
+% the sampling result for patterns with a higher maximum degree is highly sensitive to the mark of nodes with very high degrees. 
+% For instance, using pattern $?$ as an example, if the node with the maximum degree $D$ get the mark exactly $0$, the expected number of patterns it can at least contribute to is of $\Omega(D^{4}/(k+1)^4)$.
+% In comparison, the same node get a intermediate mark in a $k$-line path contribute to $\Omega(D^{2}/(k+1)^2)$ in a local range, with the rest parts general not this large. 
+
+ 

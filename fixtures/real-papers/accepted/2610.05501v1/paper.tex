@@ -1,0 +1,1283 @@
+
+\documentclass{article} %
+\usepackage{iclr2025_conference,times}
+
+%
+\input{math_commands.tex}
+
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{booktabs,enumitem}
+\usepackage{subfig}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{titlesec}
+\titlespacing*{\section}
+{0pt}{1ex plus 1ex minus .2ex}{0.5ex plus .2ex}
+\titlespacing*{\subsection}
+{0pt}{1ex plus 1ex minus .2ex}{0.5ex plus .2ex}
+\titlespacing*{\subsubsection}
+{0pt}{1ex plus 1ex minus .2ex}{0.5ex plus .2ex}
+\setlist[enumerate]{itemsep=0ex,topsep=0ex}
+\setlist[itemize]{itemsep=0ex,topsep=0ex}
+
+\setlength{\abovedisplayskip}{1pt}
+\setlength{\abovedisplayshortskip}{0pt}
+\setlength{\belowdisplayskip}{1pt}
+
+\usepackage{titlesec}
+\titlespacing*{\section}
+{0pt}{1ex plus 1ex minus .2ex}{0.5ex plus .2ex}
+\titlespacing*{\subsection}
+{0pt}{1ex plus 1ex minus .2ex}{0.5ex plus .2ex}
+\titlespacing*{\subsubsection}
+{0pt}{1ex plus 1ex minus .2ex}{0.5ex plus .2ex}
+\setlist[enumerate]{itemsep=0ex,topsep=0ex}
+\setlist[itemize]{itemsep=0ex,topsep=0ex}
+
+\setlength{\abovedisplayskip}{1pt}
+\setlength{\abovedisplayshortskip}{0pt}
+\setlength{\belowdisplayskip}{1pt}
+%
+%
+\setlength{\floatsep}{1.5ex}
+\setlength{\textfloatsep}{1.5ex}
+%
+%
+%
+\setlength{\parskip}{0.5ex}
+
+\title{Logic-Logit: A Logic-Based Approach to Choice Modeling}
+
+%
+%
+%
+
+\author{Shuhan Zhang, Wendi Ren \& Shuang Li \thanks{Corresponding author} \\
+CUHK-Shenzhen\\
+\texttt{\{shuhanzhang,wendiren\}@link.cuhk.edu.cn,lishuang@cuhk.edu.cn} \\
+}
+
+%
+%
+%
+%
+%
+%
+%
+
+
+%
+\iclrfinalcopy
+\begin{document}
+
+%
+%
+\setlength{\floatsep}{1.5ex}
+\setlength{\textfloatsep}{1.5ex}
+%
+%
+%
+\setlength{\parskip}{0.5ex}
+\maketitle
+
+\begin{abstract}
+In this study, we propose a novel rule-based interpretable choice model, {\bf Logic-Logit}, designed to effectively learn and explain human choices. Choice models have been widely applied across various domains—such as commercial demand forecasting, recommendation systems, and consumer behavior analysis—typically categorized as parametric, nonparametric, or deep network-based. While recent innovations have favored neural network approaches for their computational power, these flexible models often involve large parameter sets and lack interpretability, limiting their effectiveness in contexts where transparency is essential. 
+
+Previous empirical evidence shows that individuals usually use {\it heuristic decision rules} to form their consideration sets, from which they then choose. These rules are often represented as {\it disjunctions of conjunctions} (i.e., OR-of-ANDs). These rules-driven, {\it consider-then-choose} decision processes enable people to quickly screen numerous alternatives while reducing cognitive and search costs. Motivated by this insight, our approach leverages logic rules to elucidate human choices, providing a fresh perspective on preference modeling. We introduce a unique combination of column generation techniques and the Frank-Wolfe algorithm to facilitate efficient rule extraction for preference modeling—a process recognized as NP-hard. Our empirical evaluation, conducted on both synthetic datasets and real-world data from commercial and healthcare domains, demonstrates that Logic-Logit significantly outperforms baseline models in terms of interpretability and accuracy.
+
+%
+\end{abstract}
+
+\section{Introduction}
+In today's complex decision-making environment, individuals usually encounter an overwhelming array of options to choose from. In high-stakes areas like healthcare, patients face critical decisions such as selecting healthcare providers, hospitals, and insurance plans—choices that directly influence their health outcomes and financial well-being. Similarly, doctors must navigate a multitude of medications and treatment plans to determine the best course of action for their patients. In the realm of consumer behavior, homebuyers are tasked with evaluating properties based on various factors, such as location, price, and amenities, all of which contribute to their decision-making processes. 
+This abundance of choices not only highlights the daily challenges individuals face but also underscores the need for models that can effectively capture the heterogeneous and intricate patterns inherent in their decision-making.
+
+Empirical research reveals that individuals often simplify decision-making through a {\it consider-then-choose} process \citep{hauser2014consideration}. In this cognitive framework, people first establish a consideration set using heuristic rules—{\it logical} guidelines that filter options before selecting from this reduced set. These rules, often informed by past experiences and contextual knowledge, are typically represented as {\it disjunctions of conjunctions} (OR-of-ANDs). This logical structure enables individuals to efficiently screen alternatives, manage the complexity of decision-making, and reduce cognitive effort and search costs. Understanding and modeling this structured decision-making process is critical for developing systems that can predict and explain human choices.
+
+Inspired by these insights, we propose the {\bf Logic-Logit model}, a novel rule-based choice model designed to capture and explain heterogeneous human choice patterns through OR-of-ANDs logic rules. Our approach addresses two fundamental challenges: {\it 1)  representing diverse human decision rationales using OR-of-ANDs logic rules}, and {\it 2)  efficiently extracting compact rule sets from preference datasets despite the inherent combinatorial complexity}.
+
+In our framework, human preferences are modeled through a {\it rule-based utility function}, capturing decision-making via disjunctions of conjunctions (OR-of-ANDs) logic rules. These logic-informed features, grounded in data, provide a structured and interpretable representation of how individuals evaluate and prioritize options. The utility of each option is modeled as a linear combination of these logic-based features, ensuring that the model remains interpretable while capturing the complexity and heterogeneity of human preferences, where different preference types may utilize various rules with distinct weights. To estimate human preference types and their associated rule sets, we employ a two-tiered optimization framework:
+
+In the {\bf outer loop}, we utilize the Frank-Wolfe algorithm (conditional gradient) to systematically search for new preference types and estimate their proportions. This algorithm is well-suited for constrained convex optimization, enabling efficient exploration of the model space by iteratively updating preference types based on their respective logic rules \citep{jagabathula2020conditional}. Continuous refinement through the Frank-Wolfe algorithm ensures the model captures diverse decision-making behaviors while optimizing overall structure.
+
+In the {\bf inner loop}, the column generation algorithm effectively addresses the combinatorial nature of rule search by iteratively refining the rule set \citep{wei2019generalized}. This approach alternates between two essential tasks: solving a master problem to update the weights of the existing rules and tackling a subproblem to identify new rules that can enhance model performance. We begin with a small, manageable rule set and progressively introduce new rules as the algorithm iterates. The subproblem employs a risk-seeking search strategy, focusing on rules with the greatest potential for performance gains, which encourages a more exploratory approach. This ensures that the rule set remains diverse and prevents premature convergence to suboptimal solutions.
+
+Our contributions can be summarized as follows:
+
+1) We introduce the Logic-Logit model, which effectively combines interpretability with computational efficiency, providing a structured framework for capturing human choice patterns.
+
+2) By utilizing OR-of-ANDs logic rules and integrating the Frank-Wolfe algorithm with column generation, we address the complexities involved in understanding human decision-making logic and rule extraction.
+
+3) Our empirical evaluation, conducted on synthetic datasets and real-world data from commercial and healthcare domains, demonstrates that the Logic-Logit model significantly outperforms baseline models in interpretability and accuracy, effectively bridging the gap between identifying heterogeneity and clarifying underlying decision-making logic.
+\section{Related Works}
+\label{gen_inst}
+\subsection{Choice Model and Preference Learning}
+\paragraph{Choice models} provide structured frameworks for examining how individuals assess various alternatives during the decision-making process. This constitutes a pivotal element in preference learning. Guided by the Random Utility Theory (RUT) proposed by \citet{mcfadden1981econometric}, the primary objective of choice modeling is to establish a mapping function that translates option features into a utility value, which is a real number.
+
+The Multinomial Logit (MNL) Model, as introduced by \citet{hausman1984specification}, serves as the cornerstone for nearly all extant models and has been diversified into numerous extensions to accommodate various scenarios. For instance, the Nested Logit Model, developed by \citet{wen2001generalized} and \citet{hensher2002specification}, addresses issues of independence among options. The Mixture MNL, as explored by \citet{jagabathula2020conditional}, \citet{bhat1997endogenous}, and \citet{greene2003latent}, is designed to handle complex distributions within the mapping function. Both our model and the model proposed by \citet{jagabathula2020conditional} are grounded in the Frank-Wolfe framework; however, the utility value of options in his model is computed using a linear approach.
+
+More recently, Neural Network-based MNL models, such as those presented by \citet{aouad2022representing} and \citet{wang2020deep}, have been introduced to capture intricate and non-linear relationships between utility values and option features. These models leverage the power of neural networks to enhance the predictive accuracy and flexibility of traditional MNL models, addressing the limitations of linear assumptions and enabling more sophisticated modeling of choice behaviors.
+
+In the above work, all alternatives are evaluated simultaneously. In contrast, Consider-then-Choose models adopt a two-stage decision process: first, consumers form a consideration set using screening rules or heuristics; second, they select the option that maximizes utility within the consideration set. \citet{liu2011efficient} highlight the conjunctive screening rule, where a product is considered only if all its features meet specific criteria. \citet{aouad2021assortment} develop a dynamic programming framework to analyze the computational aspects of assortment optimization under this paradigm. \citet{akchen2023consider} emphasize the importance of consideration sets, defining a nonparametric choice model characterized solely by a distribution over these sets.
+
+\subsection{Linear Rule Learning}
+\paragraph{Logic Rule} Rule learning has long been an important technique in supervised learning, particularly in fields that demand model interpretability. As indicated by \citet{rivest1987learning} and \citet{wei2019generalized}, Logic Rules are conceptualized as the process of thresholding original option features into binary features. These rules can take the form of conjunctions represented by the logical operator $\wedge$. 
+
+%
+
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+\paragraph{Rule Learning}
+The number of potential rules that can be derived from thresholding and conjunctions is virtually infinite, making the identification of appropriate rule sets and their corresponding weights in influencing choice behavior an NP-hard problem. Various methods have been proposed to tackle this challenge. \citet{ruczinski2003logic} employed multiple logic trees fitted to the data, utilizing regression on the weights of these trees; however, the adjustment of logic trees proved to be time-consuming.
+
+To address the inefficiencies associated with traditional approaches, \citet{wei2019generalized} introduced Generalized Linear Rule Models and implemented a column generation algorithm—an advanced technique for optimizing problems afflicted by dimensionality issues \citep{desaulniers2006column}. This approach involves an iterative process of searching for and evaluating potential rules, thereby enabling the refinement of the rule set through reweighting. \citet{chen2022decision} proposed a decision tree-based choice model that incorporates column generation to capture the mutual effects among options. However, the applicability of this model is limited by its inability to leverage option-specific features and the interpretability deficit inherent in random forests, whereas rules can be readily understood and explicated.
+%
+%
+%
+%
+%
+
+
+%
+%
+%
+%
+%
+%
+
+
+\section{Background: Discrete Choice Model}
+\label{sec:background}
+
+%
+
+Discrete choice models describe individuals' preferences among a set of alternatives. Let $S$ be a set of alternatives, each characterized by a feature vector $\boldsymbol{x}_s$, $s \in S$. Let $\boldsymbol{x}=[\boldsymbol{x}_s]_{s\in S}$. Given a choice set, it predicts the probability that an individual select one of the alternatives. The choice probability of an alternative $s$ is based on its utility, which is a function of the feature vector. For example, one can consider a linear utility function, $f(\boldsymbol{x}_s)=\boldsymbol{w}^\top \boldsymbol{x}_s$, where $\boldsymbol{w}$ is the taste vector to be estimated. 
+
+
+%
+%
+%
+
+%
+%
+%
+%
+%
+
+%
+
+\paragraph{Multinomial Logit} This is the most classic choice model traced back to \cite{plackett1975analysis,luce1959individual}.
+%
+%
+%
+%
+%
+With a linear utility, it models the choice probability as a softmax function
+$$
+%
+\frac{\exp \left(\boldsymbol{w}^T \boldsymbol{x}_{s}\right)}{\sum_{s' \in S} \exp \left(\boldsymbol{w}^T \boldsymbol{x}_{s'}\right)},\quad s \in S.
+$$
+This model can be explained through Random Utility Maximization theory \citep{mcfadden1981econometric}. In this framework, the utility of item $s$ is random, expressed as $U_s = \boldsymbol{w}^T \boldsymbol{x}_s+\epsilon_s$, where $\epsilon_s$ is the Gumbel noise. 
+When the decision maker chooses the item that maximizes the random utility, i.e., $\arg \max _{s \in S} U_s$, the resulting choice probability is given by the softmax expression above.
+%
+
+%
+
+\paragraph{Mixed Logit} 
+
+To account for heterogeneity in the taste vector $\boldsymbol{w}$, the mixed logit model assumes that $\boldsymbol{w}$ is drawn from a latent distribution $\rho$, referred to as the mixture distribution. Each user behaves according to a multinomial logit, but their specific taste vector is unobservable and treated as a random sample from the population distribution $\rho$. Consequently, the choice probability is
+
+
+$$
+%
+\E_{\boldsymbol{w}}\sim\rho\left[\frac{\exp \left(\boldsymbol{w}^T \boldsymbol{x}_{s}\right)}{\sum_{s' \in S} \exp \left(\boldsymbol{w}^T \boldsymbol{x}_{s'}\right)}\right],\quad s \in S.
+$$
+
+%
+%
+%
+%
+%
+
+
+
+\section{Our Proposed Model: Logic-Logit} 
+
+\subsection{Motivating Example}
+%
+
+%
+%
+%
+
+%
+
+Let's take house-buyers as an example. Different buyer types have unique house-purchasing preferences, represented by human-readable OR-of-ANDs logic rules for filtering unsuitable options. Middle-class families with children prioritize homes meeting criteria like \(A\) (price below $\$ 500,000$), \(B\) (within 5 miles of a good school), or \(C\) (within 10 miles of work). Their choice rule is \((A \wedge B) \vee(A \wedge C)\), preferring affordable homes near a good school or work. Single professionals focus on criteria such as \(D\) (modern amenities), \(E\) (within 3 miles of entertainment), or \(F\) (within 5 miles of work). Their rule is \((D \wedge E) \vee (D \wedge F)\), favoring homes with modern features and close to entertainment or work. Wealthy buyers look for \(G\) (luxury features), \(H\) (exclusive neighborhood), or \(I\) (large lot size). Their choice logic is \((G \wedge H) \vee (G \wedge I) \vee (H \wedge I)\), preferring luxury properties in an exclusive area or with a large lot.
+
+These logic - based preferences provide a structured way to capture diverse customer needs. In our model, each customer type has its own set of rules. 
+
+
+\subsection{Logic-informed Utility and Logic-Logit}\label{sec: logic-logit}
+
+For each customer type, e.g., middle-class families with children or single professionals, each has its own distinct OR-of-ANDs logic rule to determine their preferences.
+We define a set of predicates $\mathcal{P}=\left\{p_m\right\}_{m=1}^M$, where each predicate $p_m: \mathcal{X} \rightarrow\{0,1\}$ maps feature vectors, $\boldsymbol{x} \in \mathcal{X}$ to Boolean values $\mathcal{X}$ refers to the set of all choice features. A predicate evaluates to 1 if the condition it specifies is satisfied and 0 otherwise. These mappings, from real-valued features to predicates, are predefined and fixed. A possible way of predefining the $p_m$ and $\mathcal{P}$ is shown in Appendix \ref{appendix:implementation}, which is also used in our real data experiments.
+
+Given these predicates, an OR-of-ANDs logic rule can be expressed as
+$$
+R=\bigvee_{u=1}^{U}\Big(\bigwedge_{p_m \in \mathcal{A}_u} p_m\Big)
+\label{eq:rule}
+$$
+where $R$ represents the disjunction of $U$ conjunction rules specific to a customer type. This is a general form that can express any logic rules.
+Each conjunction consists of predicates in the set $\mathcal{A}_u$, corresponding to the $u$-th conjunction for that particular type. Given $M$ predicates, there are $2^{M}-1$ possible different conjunctions, each of which corresponds to a non-empty subset of $\mathcal{P}$, the set of all predicates. The evaluation of the rule $R$ for an instance $\boldsymbol{x}$ is 
+$
+R\left(\boldsymbol{x}\right)=\bigvee_{u=1}^{U}\left(\bigwedge_{p_m \in \mathcal{A}_u} p_m\left(\boldsymbol{x}\right)\right)
+$.
+For our proposed Logic-Logit model, the utility function for the customer is modeled as a weighted combination of these conjunctions, with each conjunction acting as a Boolean feature:
+$$
+\sum_{u=1}^{U} w_u \cdot\Big(\bigwedge_{p_m \in \mathcal{A}_u} p_m\left(\boldsymbol{x}\right)\Big),
+$$
+where $w_u$ is the weight associated with the $u$-th conjunction. Under the multinomial logit model, the probability of selecting item \(s\) from the offer set \(S\) can then be expressed as
+
+\begin{align}\label{eq:model_logic}
+P_{\boldsymbol{w}}\left(s \mid S, \boldsymbol{x}\right) = \frac{\exp\left(\sum_{u=1}^{U} w_u \cdot\big(\bigwedge_{p_m \in \mathcal{A}_u} p_m(\boldsymbol{x}_{s})\big)\right)}{\sum_{s' \in S} \exp\left(\sum_{u=1}^{U} w_u \cdot\big(\bigwedge_{p_m \in \mathcal{A}_u} p_m(\boldsymbol{x}_{s'})\big)\right)},\quad s \in S.
+\end{align}
+
+We remark that the dimension of $\boldsymbol{w}$ is $2^{M}-1$, which corresponds to the number of all possible Boolean features generated from conjunction rules derived from the predicate set $\mathcal{P}$. On the other hand, it is a sparse vector with only $U$ nonzero elements $\{w_u\}_{u\in[U]}$.
+
+\subsection{Mixed Logic-Logit Model}\label{sec: mixed logic-logit}
+To account for the diversity in user preferences, we extend the above-introduced Logic-Logit model to a Mixed Logic-Logit model. In this case, the rule weight vector \(\boldsymbol{w}\) is modeled as a sample drawn from a latent mixture distribution $\rho(\boldsymbol{w})$.  
+%
+The choice probability of selecting item \(j\) from the offer set \(S,\boldsymbol{x}\) under this mixture distribution is 
+\begin{equation}
+P_\rho(s\mid S,\boldsymbol{x}) = \E_{\boldsymbol{w}\sim\rho}\left[P_{\boldsymbol{w}}\left(s \mid S,\boldsymbol{x}\right) \right],
+\end{equation}
+where $P_{\boldsymbol{w}}\left(s\mid S,\boldsymbol{x}\right)$ is computed in Eq.~(\ref{eq:model_logic}). 
+%
+We denote the mixed logit choice probability vector from a mixture distribution $\rho$ as
+$$
+  P_\rho(S,\boldsymbol{x}) = [P_\rho\left(s \mid S, \boldsymbol{x}\right)]_{s\in S}.
+$$
+
+
+\section{Learning Algorithm}
+
+%
+%
+%
+%
+%
+%
+%
+
+Let $\mathcal{D}$ be the data distribution, with each data point $(S, \boldsymbol{x}, y)$ records the choice set $S$, their feature vectors $\boldsymbol{x}$, and the corresponding choice frequency $y$, which is either a probability vector or a one-hot vector. To learn the mixture distribution $\rho$, consider minimizing the negative log-likelihood
+\begin{align}
+\min_{\rho \in \mathcal{P}} \ \ L(\rho) := -\E_{(S,\boldsymbol{x},y)\sim\mathcal{D}}\left[ y^\top \log P_\rho(S,\boldsymbol{x}) \right].
+\label{eq:NLL}
+\end{align}
+This problem is an infinite-dimensional functional optimization problem over the mixture distribution $\rho$. In addition, from the discussion in Section \ref{sec: mixed logic-logit}, the taste vector $\boldsymbol{w}$ is potentially of high dimensions due to exponentially many potential rules. On the other hand, in many practical situations, only a small number of simple rules serve as the main driving force of a decision-making process. To facilitate an interpretable way to generate sparse mixture distributions, we adopt a functional conditional gradient algorithm to solve (\ref{eq:NLL}). The algorithm's road map is illustrated in Fig.~\ref{fig:Algorithm Visualization}.
+%
+%
+
+
+
+%
+
+%
+
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+
+%
+%
+%
+
+%
+
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+
+
+\subsection{Functional Conditional Gradient Algorithm for Estimating the Mixing Distribution}
+
+We perform a functional conditional gradient (a.k.a.~Frank-Wolfe) algorithm \citep{bach2017breaking} to solve the problem Eq.~(\ref{eq:NLL}). To this end, we first compute the functional gradient of $L$ at $\rho$, which is itself a function, as 
+\begin{equation}\label{eq: functional gradient}
+  L'(\rho)(\boldsymbol{w}) = -\E_{(S,\boldsymbol{x},y)\sim\mathcal{D}}\left[ \sum_{s\in S} \frac{y_s}{P_\rho(s\mid S,\boldsymbol{x})} \cdot P_{\boldsymbol{w}}(s\mid S,\boldsymbol{x}) \right].
+\end{equation}
+
+The core of the conditional gradient descent algorithm is the Frank-Wolfe step. At each iteration $k$, given a feasible solution $\rho_k$, this step computes the optimal solution $\bar{\rho}_k$ by solving the following optimization problem based on the gradient $L'(\rho_k)$:
+$$
+  \bar{\rho}_k \in \argmin_{\rho\in\mathcal{P}}\ \langle L'(\rho_k), \rho \rangle,
+$$
+where the inner product is between a function and a distribution, i.e., $\langle L'(\rho_k), \rho \rangle = \E_{\rho}[L'(\rho_k)]$. 
+Using the functional gradient (\ref{eq: functional gradient}), the above minimization problem can be rewritten as
+$$
+  \min_{\rho \in \mathcal{P}}\ -\E_{(S,\boldsymbol{x},y)\sim\mathcal{D}}\left[ \sum_{s\in S} \frac{y_s}{P_{\rho_k}(s\mid S,\boldsymbol{x})} \cdot \E_{\rho}\big[P_{\boldsymbol{w}}(s\mid S,\boldsymbol{x})\big] \right].   
+$$
+Thanks to the linearity of the objective in $\rho$, it suffices to restrict to Dirac measures, i.e., $\rho = \delta_{\boldsymbol{w}}$ for some taste vector $\boldsymbol{w}$. This leads to the following equivalent form of the Frank-Wolfe step:
+\begin{align}\label{eq:FW}
+  \min_{\boldsymbol{w}}\ -\E_{(S,\boldsymbol{x},y)\sim\mathcal{D}}\left[ \sum_{s\in S} \frac{y_s}{P_{\rho_k}(s\mid S,\boldsymbol{x})} \cdot P_{\boldsymbol{w}}(s\mid S,\boldsymbol{x}) \right].
+  \tag{\texttt{FW}}
+\end{align}
+Therefore, the Frank-Wolfe step finds a new customer type, denoted as $\boldsymbol{w}_{k}$. Given $\delta_{\boldsymbol{w}_{k}}$, the next iteration $\rho_{k+1}$ is defined as
+\[
+  \rho_{k+1} \gets (1-\eta_k) \rho_k + \eta_k \delta_{\boldsymbol{w}_{k}},
+\]
+where $\eta_k$ is a suitable step size parameter, often chosen as $\rho_k = \frac{2}{k+1}$ to achieve a sublinear convergence rate $O(1/K)$, or determined by line search.
+
+Practically, one can start with a single customer type $\rho_0 = \delta_{\boldsymbol{w}_0}$, where $\boldsymbol{w}_0$ is an initial parameter vector, such as the best multinomial logit weights. The algorithm then iteratively adds new customer types to the mixture distribution by solving the Frank-Wolfe step (\ref{eq:FW}). To achieve better empirical performance, one can also perform a fully corrective step, which updates the mixture distribution by re-optimizing the weights on all customer types:
+\[
+  \rho_{k+1} \gets \argmin_{\rho} \Big\{ L(\rho): \ \rho = \sum_{j=0}^k \alpha_j \delta_{\boldsymbol{w}_j}, \alpha \in \Delta^K \Big\}.
+\]
+This is a convex optimization problem over $\alpha$ and can be solved efficiently.
+
+On a high level, this algorithm shares similar aspects as the finite-dimensional conditional gradient algorithms in \cite{jagabathula2020conditional,hu2022learning}, which estimate mixed logit model by re-parameterizing it as a constrained convex optimization over choice probability vectors. Different from theirs, we develop our algorithm using the functional conditional gradient. Moreover, it is important to note that in our logic-rule-based problem, the Frank-Wolfe step (\ref{eq:FW}) has a different computational challenge than they have, as ours involves searching over a space with a combinatorial dimension $2^M-1$. We devote the next section to discussing how to solve this problem efficiently.
+
+%
+
+
+%
+
+
+
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+\begin{figure}[h!]
+    \centering
+\includegraphics[width=0.8\linewidth]{figure-01.pdf}
+    \caption{The framework of our Algorithm.}
+    \label{fig:Algorithm Visualization}
+\end{figure}
+\subsection{Solving Frank-Wolfe Step using Column Generation}
+
+Plugging in our logic-logit model (\ref{eq:model_logic}) to the Frank-Wolfe step (\ref{eq:FW}) yields the following objective
+\begin{align}\label{eq: phi}
+  &\phi(\boldsymbol{w} \mid \{\mathcal{A}_u\}_{u=1}^U ) :=\\
+  &\quad -\E_{(S,\boldsymbol{x},y)\sim\mathcal{D}}\left[ \sum_{s\in S} \frac{y_s}{P_{\rho_k}(s\mid S,\boldsymbol{x})} \cdot \frac{\exp\left(\sum_{u=1}^{U} w_u \cdot\left(\bigwedge_{p_m \in \mathcal{A}_u} p_m\left(\boldsymbol{x}_{s}\right)\right)\right)}{\sum_{s \in S} \exp\left(\sum_{u=1}^{U} w_u \cdot\left(\bigwedge_{p_m \in \mathcal{A}_u} p_m\left(\boldsymbol{x}_{s'}\right)\right)\right)} \right].
+\end{align}
+
+%
+%
+%
+%
+When the number of predicates $M$ is large, it results in an exponentially large number of possible conjunctions.
+%
+To address this challenge, we devise a column generation algorithm. This approach begins with a smaller, more manageable problem using a limited search space, and then gradually expands the space by adding new rules iteratively.
+%
+%
+We start with an empty rule set: \( R^{(0)} = \{\} \), and initialize rule weights \( \boldsymbol{w}^{(0)} = []\).
+We will repeat the following procedures until the convergence or the stopping criterion is met.
+
+\paragraph{Master Problem: Update Rule Weights} Suppose this current rule set is \( R^{(U)} = \{\mathcal{A}_u\}_{u=1}^U \), the master problem optimizes the weights by minimizing the Frank-Wolfe objective
+   \[
+   \boldsymbol{w}^{(U)} \gets \arg \min_{\boldsymbol{w}} \phi\left( \boldsymbol{w} \mid \{\mathcal{A}_u\}_{u=1}^U  \right).
+   \]
+ This step adjusts the weights for the current set of rules to best fit the data by minimizing the Frank-Wolfe objective \( \phi \). Note that this optimization is on the $U$-dimensional space and thus is more tractable.
+
+\paragraph{Subproblem: Search for a New Rule} 
+With the rule weights \( \boldsymbol{w}^{(U)} \) fixed, the subproblem focuses on identifying a new rule \( \mathcal{A}_{U+1} \)  that can further enhance the objective. Specifically, if the gradient vector $\nabla \phi(\boldsymbol{w}^{(U)}) \in \R^{2^M-1}$ is not a zero vector, then there exists a descent direction that reduces the objective (\ref{eq: phi}). To identify a non-zero component of this high-dimensional gradient vector, we conduct a rule search as follows.
+
+The conjunction rule is identified as a path in a tree, where each node represents a predicate. We employ two search strategies: Breadth-First Search (BFS) and Depth-First Search (DFS). BFS first examines all rules with the same length and then gradually increases rule length; whereas DFS focuses on generating new rules by performing conjunctions on the rules that have already been identified. To streamline the process, we impose a limit on rule length to ensure that we focus on rules that are both computationally feasible and manageable. 
+Moreover, we take a risk-seeking approach by prioritizing the maximization of potential gains over average outcomes. Namely, when comparing the performance of different rules, we focus on specific quantiles of the performance distribution rather than the average. This allows us to identify rules that could yield higher rewards or provide valuable insights. Such an exploratory strategy is especially useful empirically, where certain rules might produce substantial gains in specific scenarios but could be overlooked when considering only average performance.
+Once the new rule \( \mathcal{A}_{U+1} \) is found, we add it to the rule set $R^{U+1} \gets R^{(u)} \cup \{ \mathcal{A}_{U+1} \}$.
+  %
+  %
+  %
+  %
+  %
+  %
+  %
+  %
+  %
+  %
+  %
+  %
+  %
+  
+The algorithm stops until no new rule can significantly improve the objective or after a predefined number of iterations. The algorithm outputs the final rule set along with their weights.
+After solving the master problem, we may choose to eliminate rules with weights below a specified threshold, ensuring that only the most impactful rules remain in the set, thereby improving the algorithm's efficiency and effectiveness. The pseudo-code and additional details are provided in Appendix \ref{appendix:implementation}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.6\linewidth]{figure-02.pdf}
+    \caption{\textit{DFS Visualization} In the figure, each node corresponds to a predicate. When the search rule conjunction length increases from \( n \) to \( n + 1 \), the depth-first search (DFS) algorithm initiates from the previously detected \( n \)-conjunction rules and exhaustively searches through all extensions with other predicates in order to discover a potential augmentation of the existing \( n \)-conjunction.}
+    \label{fig:Rule Branching Tree}
+\end{figure}
+\section{Experiment}
+\label{sec:experiments}
+
+To validate the effectiveness of our proposed method, this experimental section begins with evaluations of synthetic datasets with clearly defined predicates, ground truth consumer types, and decision rules. We then assess distribution learning and event prediction accuracy using two complex real-world datasets. The detailed ways we predefine the predicates for the real dataset is shown in appendix \ref{appendix:implementation}. Our method is systematically compared against several baseline approaches to provide a comprehensive performance evaluation.
+
+\subsection{Experimental Setup}
+
+\paragraph{Baselines} We employ MNL and Mix-MNL \citep{jagabathula2020conditional} as representatives of the classic models, while 
+Vanilla NN,
+TasteNet~\citep{han2020neural}, DeepMNL~\citep{wang2020deep, sifringer2020enhancing}, 
+Mix-DeepMNL~\citep{jagabathula2020conditional},
+and RUMNet~\citep{aouad2022representing} 
+%
+serve as neural network-based alternatives. A comprehensive description and comparison of models on utility value calculation, complexity, and interpretability is provided in Table \ref{tab:Model Comparison} on Appendix \ref{appendix:baselines}.
+
+%
+%
+%
+%
+
+
+\paragraph{Metric} 
+We report the training and testing losses as negative log-likelihoods (Equation \ref{eq:NLL}) and the top-1 accuracy for both datasets, where top-1 accuracy is the proportion of instances where the most selected product is predicted to have the highest choice probability. All results are reported as the average over 10 runs.
+
+%
+%
+
+
+\subsection{Synthetic Data}
+\paragraph{Generation of Offersets and Choice Data} 
+%
+
+
+A total of 5,000 offer sets are generated, each comprising 20 products. Each product is characterized by 50 synthetic binary features sampled from a Bernoulli distribution, representing the grounded features of 50 product predicates. The complete set of predicates associated with products can be denoted as \(\mathcal{P}^{c}=\left\{p_m^{c}\right\}_{m=1}^{50}\). Additionally, each offer set is associated with 15 binary features induced by offerset predicates, denoted as \(\mathcal{P}^{o}=\left\{p_m^{o}\right\}_{m=1}^{20}\). These types of predicates are frequently encountered in practical scenarios and universal for all choice in offerset, such as search criteria in a query or the age of a patient requiring medication. The total sales volume \(N_t\) for each offer set is fixed as 100 units. Three distinct preference types are predefined. Each type follows three decision rules, i.e. conjunctions of predicates. Only the first 10 product predicates and 2 offer set predicates are utilized within these preference types, adhering to the sparsity of effective predicates and demonstrating the model's selectivity when faced with redundant predicates. The choice result is computed as $100 \cdot mixed\ choice\ probability$.
+
+
+%
+%
+%
+%
+%
+
+
+\paragraph{Rule Comparison Metric} To facilitate the comparison of rules, we use \textbf{Jaccard index} between the rules' predicate sets, defined as follows.
+\begin{equation}
+    J(A, B) = \frac{|A \cap B|}{|A \cup B|}
+\end{equation}
+$|\cdot|$ refers to the set size, $A$ and $B$ refer to the predicate sets of the two rules. For example, the Jaccard index of the following two rules $p_1 \wedge p_2 \wedge p_3$ and $p_4 \wedge p_2 \wedge p_3$ is 0.5, with $A \cap B = \{p_2, p_3\}\ |A \cap B| = 2$ and $A \cup B = \{p_1, p_2, p_3, p_4\}\ |A \cup B| = 4$. This metric directly shows the difference between the rule contents.
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figure-03.pdf}
+    \caption{\textit{Rule Comparison}. The figure shows the Jaccard index between the ground truth (GT) rules (Y-axis) and the rules learned by our risk seeking model (X-axis), denoted by the color intensity.}
+    \label{fig:rule-coverage}
+\end{figure}
+
+
+\begin{table}[ht]
+\small  %
+\setlength{\tabcolsep}{4pt}  %
+\centering
+\begin{tabular}{c|c|c|c}
+            \toprule
+            \begin{tabular}[c]{@{}c@{}}Ground Truth \\Type\end{tabular} & \begin{tabular}[c]{@{}c@{}}Ground Truth \\Rules\end{tabular} & \begin{tabular}[c]{@{}c@{}}Learned \\Rules\end{tabular} & \begin{tabular}[c]{@{}c@{}}Jaccard \\Index\end{tabular} \\
+            \hline
+            \hline
+            \multirow{3}{*}{Type 1} & \textcolor{black}{$p_1^c$} & \textcolor{black}{/} & \textcolor{black}{0} \\
+            \cline{2-4}
+            & \textcolor{black}{$p_2^{c} \wedge p_3^{c}$} & \textcolor{black}{$p_2^{c} \wedge p_3^{c}$} & \textcolor{black}{1} \\
+            \cline{2-4}
+            & \textcolor{black}{$p_4^{c} \wedge p_5^{c} \wedge p_6^{c}$} & \textcolor{black}{$p_4^{c} \wedge p_5^{c} \wedge p_6^{c}$} & \textcolor{black}{1} \\
+            \hline
+            \multirow{3}{*}{Type 2} & \textcolor{black}{$p_{7}^{c}$} & \textcolor{black}{$p_{7}^{c}$} & \textcolor{black}{1}  \\
+            \cline{2-4}
+            & \textcolor{black}{$p_8^{c} \wedge p_9^{c} \wedge p_{10}^{c}$} & \textcolor{black}{$p_8^{c} \wedge p_9^{c} \wedge p_{10}^{c}$} & \textcolor{black}{1} \\
+            \cline{2-4}
+            & \textcolor{black}{$p_{11}^{c} \wedge p_1^{o}$} & \textcolor{black}{$p_{11}^{c} \wedge p_1^{o}$} & \textcolor{black}{1} \\
+            \hline
+            \multirow{3}{*}{Type 3} & \textcolor{black}{$p_{12}^{c}$} & \textcolor{black}{$p_{12}^{c}$} & \textcolor{black}{1} \\
+            \cline{2-4}
+            & \textcolor{black}{$p_{13}^{c} \wedge p_{14}^{c}$} & \textcolor{black}{$p_{13}^{c} \wedge p_{14}^{c}$} & \textcolor{black}{1}\\
+            \cline{2-4}
+            & \textcolor{black}{$p_{15}^{c} \wedge p_{2}^{o}$} & \textcolor{black}{$p_{15}^{c} \wedge p_{2}^{o}$} & \textcolor{black}{1}\\
+            \bottomrule
+            \end{tabular}
+    \caption{\textit{Ground truth rules and closest learned rules on the synthetic dataset.}}
+    \label{tab:rule-details}
+\end{table}
+
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+
+\paragraph{Results and Discussion} 
+\textcolor{black}{Figure \ref{fig:rule-coverage} illustrates the comparison of learned rules with respect to the ground truth rules. Rule sets associated with the top-3 preference types, regarding their proportions, are considered as learned rules. A comprehensive comparative analysis between the ground truth rules and the identified rules is provided in Table \ref{tab:rule-details}. Remarkably, eight out of nine ground truth rules are perfectly learned. The results demonstrate that Logic-Logit effectively and selectively captures the majority of the rules without being encumbered by other irrelevant predicates included within the data. Fig\ref{fig:rulecover} provides a more intuitive result visualization.}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.75\linewidth]{figure-04.pdf}
+    \caption{Rule Coverage}
+    \label{fig:rulecover}
+\end{figure}
+ 
+
+\subsection{Expedia Hotel Dataset Experiment}
+\paragraph{Dataset Introduction} 
+The Expedia Hotel Dataset\footnote{\url{https://www.kaggle.com/datasets/vijeetnigam26/expedia-hotel}} is released in 2013 on a Kaggle competition for improving the recommendation system of Expedia. The dataset is characterized by a structured format comprising both hotel search queries and corresponding search outcomes. Each search instance in the dataset consists primarily of two key components: the search criteria and the characteristics of the retrieved hotel results. The set of hotels retrieved through a search can be conceptualized as an ‘offerset’, wherein each hotel represents an option. The hotel that the customer ultimately books can be considered as the selected choice within this set. The detailed feature of each instance and experiment setting is shown in Appendix\ref{appendix:Expedia Hotel Data}.
+%
+
+%
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{figure-05.pdf}
+    \caption{Preference Type Analysis of Expedia Hotel Dataset}
+    \label{fig:Hotel Rule Report}
+\end{figure}
+\paragraph{Results and Discussions} Figure \ref{fig:Hotel Rule Report} illustrates the two primary preference types identified in the Expedia Hotel Dataset: the \textit{PageRank Preference Type} (85\%) and the \textit{Value-for-Money Preference Type} (15\%). It is important to note that this does not imply that 85\% of customers strictly follow PageRank when selecting hotels; rather, individuals typically exhibit characteristics of both types, with PageRank serving as a significant factor influencing choice behavior.
+
+The ability of Mix-MNL and Logic-Logit to capture the PageRank effect is shown by comparing the aggregated choice probabilities of options at different ranking positions with actual sales data. Logic-Logit fits rules to model sales increases from lower to higher ranks. For example, the rule \( \text{Rank} < 3^{\text{rd}} \) is derived from the substantial sales difference between hotels ranked \( 1^{\text{st}} \) and \( 2^{\text{nd}} \) versus those ranked \( 3^{\text{rd}} \) to \( 10^{\text{th}} \). In scenarios where sales remain consistent across ranks, such as between \( 4^{\text{th}} \) to \( 6^{\text{th}} \) and \( 7^{\text{th}} \) to \( 9^{\text{th}} \), no rules are detected. Overall, Logic-Logit segments the PageRank into distinct stages with defined rules and models the non-linear effect by assigning varying weights to these rules, whereas Mix-MNL primarily captures a linear effect.
+
+Furthermore, the analysis of the Value-for-Money preference type indicates that customers associate price with multiple factors, including PageRank, star rating, location score, and historical price, through conjunction rules. Unlike neural network-based approaches that encode features into complex latent layers, Logic-Logit explicitly captures the correlations between features in an interpretable manner. A comprehensive performance comparison between Logic-Logit and baseline methods using the Expedia hotel dataset is included in Appendix \ref{appendix:additional_syn}.
+
+%
+
+%
+%
+%
+%
+%
+%
+
+
+
+
+
+
+
+\subsection{MIMIC-IV Dataset Experiments}
+MIMIC-IV\footnote{\url{https://mimic.mit.edu/}} is an electronic health record dataset of patients admitted to the intensive care unit (ICU)~\citep{johnson2023mimic}. We considered patients diagnosed with sepsis \citep{saria2018individualized}, one of the major causes of mortality in ICU due to septic shock. Septic shocks are medical emergencies and early recognition and treatment would improve survival. We aim to uncover the treatment choice behavior of doctors.
+
+\paragraph{Treatments and Vital Signs} Suggested by \citep{komorowski2018artificial}, we extracted 14 treatments categorized as vasopressors, antibiotics, and auxiliary treatments associated with sepsis. We then select 16 vital signs that are highly related to sepsis. A detailed introduction to extraction and data processing can be found in Appendix \ref{appendix:mimic_iv_data}.
+\begin{table}[h!]
+\small  %
+\setlength{\tabcolsep}{4pt}  %
+    \centering
+    \begin{tabular}{p{4cm}|p{8cm}}
+    \toprule
+        Drug Name & Detected Rules\\
+        \hline
+        \hline
+Norepinephrine& $PT > 12.6 \wedge ABPd \leq 59.0$ \newline $PTT > 31.6 \wedge age \leq 76.0 \wedge ABPd <= 54.0$ \\
+        \hline
+        Vasopressin   & $PCO2 (Arterial) > 41.0$\newline  $INR > 1.1 \wedge anchor_age \leq 66.0$\\
+        \hline
+        Packed Red Blood Cells & $ABPd \leq 57.0 \wedge ABPm \leq 56.0$\newline $PT > 12.6 \wedge INR > 1.4 \wedge RR \leq 32.0$\newline$Platelet Count \leq 95.0 \wedge PTT > 31.6$ \\
+    \bottomrule
+    \end{tabular}
+    \caption{\textit{MIMIC Drug Preference Rules Examples}.}
+    \label{tab:mimic-drug-rules-main}
+\end{table}
+\paragraph{Results and Discussion} In the context of drug prediction tasks, the feature set of the data is predominantly centered on patient characteristics rather than the attributes of the drugs being considered. Consequently, classical linear models such as Multinomial Logit (MNL) and Mixed Multinomial Logit (Mix-MNL) are ill-equipped to address this task effectively. Table \ref{tab:MIMIC_results} shows NN-based models also perform badly due to the lack of product features. Furthermore, the medical domain necessitates decision-making that is interpretable and traceable. Our model is capable of extracting the underlying logical rules and their associated weights that govern physicians’ medication selection processes.
+
+Table \ref{tab:MIMIC Drug Preference Rules Examples} presents exemplar rules that support drug preference learning, consistent with established medical knowledge. Taking packed red blood cells as an illustrative example, the rule \( ABPd \leq 57.0 \, \text{mmHg} \wedge ABPm \leq 56.0 \, \text{mmHg} \) indicates that the patient's blood pressure is below the normal threshold. Additionally, elevated levels of PTT, PT, and INR, along with a deficiency in platelet count, suggest that the patient is unable to achieve hemostasis. These rules collectively indicate that the patient is severely injured and experiencing significant blood loss, which provides interpretable evidence for the doctor's preference for packed red blood cells.
+\begin{table}[h!]
+\small  %
+\setlength{\tabcolsep}{4pt}  %
+\centering
+\begin{tabular}{c|c|c|c|c|c} 
+\toprule
+Category&Method&Train loss&Test loss&\begin{tabular}[c]{@{}c@{}}Train accu\\(Top1)\end{tabular}&\begin{tabular}[c]{@{}c@{}}Test accu\\(Top1)\end{tabular}\\ 
+\hline
+\hline
+\multirow{5}{*}{DeepNN}  & NN & 2.5118\textcolor{black}{($\pm0.137$)} & 2.5215\textcolor{black}{($\pm0.033$)} & 0.1261\textcolor{black}{($\pm0.043$)} & 0.0727\textcolor{black}{($\pm0.031$)}\\
+\cline{2-6}
+ ~  & TasteNet & 2.4223\textcolor{black}{($\pm0.000$)} & 2.4323\textcolor{black}{($\pm0.000$)} & 0.1079\textcolor{black}{($\pm0.008$)} & 0.0727\textcolor{black}{($\pm0.064$)} \\
+\cline{2-6}
+ ~  & DeepMNL & 2.3696\textcolor{black}{($\pm0.000$)} & 2.4331\textcolor{black}{($\pm0.000$)} & 0.1102\textcolor{black}{($\pm0.008$)} & 0.0818\textcolor{black}{($\pm0.065)$}\\
+\cline{2-6}
+ ~  & mixDeepMNL & 2.3394\textcolor{black}{($\pm0.000$)} & 2.4672\textcolor{black}{($\pm0.000$)} & 0.1060\textcolor{black}{($\pm0.008$)} & 0.0848\textcolor{black}{($\pm0.065$)}\\
+\cline{2-6}
+ ~  & RUMNet & 2.3530\textcolor{black}{($\pm0.000$)} & 2.4426\textcolor{black}{($\pm0.000$)} & 0.1008\textcolor{black}{($\pm0.002$)} & 0.1000\textcolor{black}{($\pm0.064$)}\\
+\cline{1-6}
+\multirow{2}{*}{\textcolor{black}{Ours*}}  & Ours-NM-50 & \textcolor{black}{$2.098(\pm0.0165)$} & \textcolor{black}{$2.2047(\pm0.020)$} & \textcolor{black}{$0.2961(\pm0.010)$} & \textcolor{black}{$0.264(\pm0.029)$}\\
+\cline{2-6}
+ ~  & Ours-RS-50 & \textcolor{black}{$2.0791(\pm0.011)$} & \textcolor{black}{$2.1713(\pm0.025)$} & \textcolor{black}{$0.3269(\pm0.003)$} & \textcolor{black}{$0.26(\pm0.016)$} \\
+\bottomrule
+\end{tabular}
+\caption{\textit{Treatment choice prediction on MIMIC-IV dataset.} We report Negative log likelihood (NLL) loss and Top-1 choice prediction accuracy of the training and testing set. NM refers to the normal mode of our model, while RS indicates the risk-seeking mode. We extract 50 rules for both types. Our Logit-Logit model performs much better than all the baselines. }
+\label{tab:MIMIC_results}
+\end{table}
+%
+\section{Conclusion}
+In this study, we have proposed the Logic-Logit model, which incorporates logic rules into choice modeling as a pivotal strategy for enhancing both interpretability and accuracy. Our approach utilizes column generation for effective rule learning and leverages the Frank-Wolfe algorithm to facilitate the learning of mixture distributions for preference types. The empirical results obtained from real-world datasets demonstrate that our model significantly outperforms traditional neural network models in terms of both interpretability and predictive accuracy. This finding underscores the potential of integrating logical reasoning into choice models to produce more transparent and reliable decision-making tools.
+
+\section*{Acknowledgment}
+Shuang Li's research was in part supported by the NSFC under grant No. 62206236, Shenzhen Stability Science Program 2023, Shenzhen Science and Technology Program ZDSYS20230626091302006, Longgang District Key Laboratory of Intelligent Digital Economy Security, and SRIBD Innovation Fund SIF20240010.
+
+
+
+
+
+\bibliography{iclr2025_conference}
+\bibliographystyle{iclr2025_conference}
+
+\clearpage
+\newpage
+\appendix
+\section*{Appendix Overview}
+In the following, we will provide supplementary materials to better illustrate our methods and experiments.
+
+\begin{itemize}
+    \item Section~\ref{appendix:implementation} presents more details of our model and implementation.
+    \item Section~\ref{appendix:baselines} introduces the baseline methods we considered in our paper.
+    \item Section~\ref{appendix:additional_syn} provides more additional experiment results about synthetic datasets.
+    \item Section~\ref{appendix:Expedia Hotel Data} provides more additional experiment results about Expedia Hotel datasets.
+    \item Section~\ref{appendix:mimic_iv_data} provides more details about MIMIC-IV dataset experiments.
+\end{itemize}
+
+\section{Implementation Details}
+\label{appendix:implementation}
+\subsection{Predefining the Predicates}
+\textcolor{black}{
+The specification of predicates can be quite flexible. Any method generate binary label from the original choice feature can be used as predicates, such as traditional classification model. Here we introduce the most direct way to achieve this, which is also used in the two real dataset experiments.
+\paragraph{Discrete Features}
+Discrete features inherently possess finite conditions due to the limited set of possible values that the feature can assume, such as $if\ number\ of\ rooms = 3$ in a house. If house containing one to ten rooms appear in the dataset, then there will naturally be ten predicates indicating how many rooms are in a house.
+\paragraph{Continuous Features}
+The possible value of a continuous feature is infinite, thus we cannot use the equivalence condition like discrete feature. We have continued with the approach of \citet{wei2019generalized} to get predicates by thresholding the feature with the percentiles within the dataset, such as $if\ house\ price\ ranks\ in\ top\ 20\%$ and $if\ house\ area\ fail\ to\ rank\ in\ top\ 60\%$. The number of these percentile thresholds can be determined as a hyperparameter. Dense thresholds bring about accuracy for the rule content, but also lead to larger searching space and difficulty for the rule searching step. This methodology is based on the distribution of the feature, and can eliminate the influence of outlier features and feature scales, which may cause trouble in linear models.
+}
+
+\subsection{Subproblem Solving: Rule Searching with Column Generation}
+\textcolor{black}{
+The pseudo-code of the rule searching step is shown below:}
+\begin{algorithm}
+\caption{\textcolor{black}{Solving Frank-Wolfe Step using Column Generation}}
+\begin{algorithmic}[1]
+\State \textcolor{black}{\textbf{Input:}} \textcolor{black}{$max\ conjuntion\ length\ K$}
+\State \textcolor{black}{\textbf{Initialize:}} \textcolor{black}{$k = 1, ruleset\ R=\{\}, rule\ weight\ \boldsymbol{w}=[]$}
+\While{\textcolor{black}{$stopping\ condition\ 1\ not\ met$}}
+    \While{\textcolor{black}{$k \leq K$}}  \Comment{\textcolor{black}{BFS}}
+    \State \textcolor{black}{$q \leftarrow 0$}
+        \While{\textcolor{black}{$stopping\ condition\ 2\ not\ met$}}
+            \State \textcolor{black}{$\Delta R= Generate\ Candidate\ Rules(R, k, q)$}
+            \State \textcolor{black}{Compute $\nabla \phi(\boldsymbol{w}_{new})$ for each new rule in $\Delta R$}
+            \State \textcolor{black}{$\Delta R^*\leftarrow$Select Top-N potential Rules from $\Delta R$ with $\nabla \phi(\boldsymbol{w}_{new})$ information}
+            \State \textcolor{black}{$R \leftarrow R \cup \Delta R^*$}
+            \State \textcolor{black}{$\boldsymbol{w} \gets \arg \min_{\boldsymbol{w}} \phi\left( \boldsymbol{w} \mid R  \right)$}
+            \State \textcolor{black}{$q \leftarrow q + 1$}
+        \EndWhile
+        \State \textcolor{black}{$k \leftarrow k + 1$}
+    \EndWhile
+\EndWhile    
+\State \textcolor{black}{\textbf{return}  $ruleset\ R, rule\ weight\ \boldsymbol{w}$}
+\end{algorithmic}
+\end{algorithm}
+
+
+
+\textcolor{black}{The algorithm 1 shows the entire road map of Solving Frank-Wolfe Step using Column Generation, including the rule searching and potential evaluation with gradient. The stopping condition 1 controls the number of total preference types to be found. It can be set as a predefined number or depends on the convergence of NLL loss. The stopping condition 2 controls how many rules with searching length will be searched in a preference type. It can also be set as a predefined number or depends on the convergence of Frank-Wolfe step loss (as show in Eq.~\ref{eq: phi}). Suppose the current rule set is $R^{(U)}$, the detailed formulation for computation of the $\nabla \phi(\boldsymbol{w}_{new})$ is shown below:
+\[
+   \nabla \phi(\boldsymbol{w}_{new}) = -\frac{1}{N} \sum_{t=1}^T \sum_{j \in S_t} \left( \frac{N_{jt}}{g_{jt}^{(k-1)}} \right) \cdot \left( \mathbb{I}_{new}(\boldsymbol{x}_{jt}) - \sum_{\ell \in S_t} \frac{\exp\left( z_{\ell t} \right)}{\sum_{\ell' \in S_t} \exp\left( z_{\ell' t} \right)} \cdot \mathbb{I}_{new}(\boldsymbol{x}_{\ell t}) \right)
+   \]
+      where \( z_{\ell t} = \sum_{u=1}^U w_u \cdot \left( \bigwedge_{p_m \in \mathcal{A}_u} p_m\left( \boldsymbol{x}_{\ell t} \right) \right) \), and $g_{jt}^{(k-1)}$ refers to the choice probability of product j in offer set $S_t$ mixed by the previous found $k-1$ preference types.
+   With weights of rules that have already been in rule set fixed, we initialize the candidate rules weights $\boldsymbol{w}_{new}$ to be zeros, and calculate the gradient of loss upon this weights. In other words, we use the gradient to determine if changing the weight of the candidate rule from zero can bring about improvement in Frank-Wolfe step solving. The absolute value of the gradient directly implies the potential of a candidate rule. Therefore we can select top-n most potential rules and put them in $R$. 
+}
+
+
+
+\begin{algorithm}
+\caption{\textcolor{black}{Generate Candidate Rules}}\label{euclid}
+\begin{algorithmic}[1]
+\State \textcolor{black}{\textbf{Input:}} \textcolor{black}{$R, k, q$}
+\State \textcolor{black}{\textbf{Initialize:}} \textcolor{black}{$\Delta R=\{\}$}
+\If{\textcolor{black}{$q = 0$}}
+    \For {\textcolor{black}{$rule \in R$}}
+        \If{\textcolor{black}{$rule\ conjunction\ length = k-1$}}
+            \State \textcolor{black}{Extend rule conjunction with each predicate respectively} \Comment{\textcolor{black}{DFS}}
+            \State \textcolor{black}{Put all extended rules in $\Delta R$}
+        \EndIf
+    \EndFor
+\Else
+    \State \textcolor{black}{Randomly Sample} \textcolor{black}{$k$} \textcolor{black}{predicates and form conjunction}
+    \State \textcolor{black}{Repeat line 11 for multiple times and put generated rules in $\Delta R$}
+\EndIf
+\State \textcolor{black}{\textbf{return}} \textcolor{black}{$\Delta R$}
+\end{algorithmic}
+\end{algorithm}
+
+
+\textcolor{black}{
+From Algorithm 1 and Algorithm 2, we can find out that the our model searches rules following the order of rule conjunction length, i.e. BFS. Each time the model finishes length-k rule searching then start length-k+1 rule searching. Moreover, to improve the rule searching efficiency, we also introduce DFS when the searching change from length-k to length-k+1. For example, when we start to search for length-2 rule we first go through all the length-1 rule in the current rule set and form conjunctions with other predicates to get length-2 rules induced by length-1 rules in current rule set. This comes from the simple intuition that choices satisfy condition $A \wedge B$ must satisfy condition $A$ and condition $B$ simultaneously. Although single predicate $A$ doesn't depict the $A \wedge B$ perfectly, increasing the weight of predicate $A$ can still increase the utility of choices satisfy $A \wedge B$ and bring about improvement. 
+}
+
+\subsection{Option Feature and Offer Set Feature}
+Our model distinguishes between option-specific features and offerset-specific features, treating them differently. The offerset features are exclusively considered within the context of conjunction rule searching. Any rule composed solely of offerset features is skipped during the rule searching process due to the inherent structure of the logit. Irrespective of the weights assigned to these rules, they are inevitably discarded during the softmax process since offerset features are common across all options within the same offerset. Consequently, rules involving offerset features are only functional when they are conjunct with option-specific features. The rules pertaining to option features elucidate the attractiveness of individual options, whereas the rules associated with offerset features delineate the scenarios (or offersets) in which various option-specific rules should be applied. This nuanced approach enables Logic-Logit to successfully incorporate offerset features into choice modeling, thereby enhancing its explanatory power and predictive accuracy.
+
+\subsection{Rule Set Expansion, Re-weighting, and Pruning}
+The rule space to be explored is extensive, necessitating careful control of the rule set size for efficient subproblem resolution. An overly large rule set can lead to time-consuming optimization and compromise interpretability.
+
+\paragraph{Rule Set Expansion}
+During a single subproblem iteration, a substantial number of rules are identified, many of which exhibit promise. However, only the top-k most promising rules are incorporated into the rule set. This strategy curbs the expansion rate of the rule set, maintaining its sparsity and interpretability.
+
+\paragraph{Rule Set Pruning}
+Our algorithm employs two phases of pruning. The first occurs during subproblem resolution, while the second is executed post-resolution.
+
+During subproblem resolution, to ensure the problem remains tractable, we impose a maximum rule set size, typically set generously. When the size exceeds this threshold, rules with low weights are discarded. Post-discard, the remaining rules undergo re-weighting.
+
+Following subproblem resolution, to uphold interpretability and sparsity, an ultimate maximum size limit is enforced, significantly smaller than during the subproblem phase. Similarly, rules are pruned, and the retained rules are re-weighted.
+
+\paragraph{Re-weighting}
+For each preference type, the number of rules must be manageable to preserve interpretability. Selecting the most significant rules is critical during the re-weighting process. We apply a relatively high $l1$ penalty when optimizing rule weights to ensure sparsity. Notably, this penalty is not applied post the second pruning phase, as the rule set size is already constrained by the ultimate maximum limit.
+
+
+\subsection{Computing Infrastructure}
+Our experiments are applicable to both CPU and GPU. For this paper, we use GPU NVIDIA GeForce RTX 3090.
+
+\subsection{Optimizer}
+We choose the Adam optimizer to do stochastic gradient descent in both rule weights learning and preference type proportion update.
+
+\section{Baselines} 
+\label{appendix:baselines}
+\begin{itemize}
+    \item \textbf{Classic Choice Models}
+    \begin{itemize}
+        \item MNL~\citep{mcfadden1981econometric}  Multinomial logit model 
+        \item Mix-MNL~\citep{jagabathula2020conditional} MNL with feature weights belonging to finite discrete support learned with Frank-Wolfe algorithm framework.
+    \end{itemize}
+    \item \textbf{Deep Learning-Driven Choice Models}
+    \begin{itemize}
+       \item Vanilla NN is a simple and standard feed-forward neural network that takes a concatenated vector of all product and customer attributes as input, and outputs the utility of each choice alternative. These utility values are then passed through a softmax layer to calculate the choice probabilities for each alternative.
+       \item TasteNet~\citep{han2020neural} uses deep learning to model individual tastes/preferences directly in a choice modeling context.
+        \item DeepMNL~\citep{wang2020deep} combines the traditional MNL model with deep learning architectures to capture more complex choice behavior.
+        \item MixDeepMNL~\citep{jagabathula2020conditional} is a mixture of DeepMNL models that allow for heterogeneity in preferences across individuals.
+        \item RUMNet~\citep{aouad2022representing} is a deep learning-based model that combines random utility theory with neural networks. It provides an efficient approximation of random utility maximization (RUM) discrete choice models.
+    \end{itemize}
+\end{itemize}
+
+\paragraph{\textcolor{black}{Hyperparameters setting of Deep learning driven choice models}} 
+\textcolor{black}{We apply similar hyper-parameters for all neural network-based models followed the setting in RUMNet~\citep{aouad2022representing}. We select the standard ADAM optimizer with a learning rate of 0.001 and batch sizes of 32. We set label smoothing as 0.0001, a norm-based regularization method on the neural network’s outputs. We tune the neural network structure and report the best one in all tables. In particular, for each model, we vary the parameters $(l, w) \in {(3, 10), (5, 20), (10, 30)}$, where $l$ denotes the depth of the network and $w$ denotes its width.}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{c|c|c|c} 
+\toprule
+Model & Utility Value  & \# Parameters & Grounds for Interpretability \\ 
+\hline
+\textbf{Logic-Logit (Ours)}  & Rule-Based & $\mathcal{O}(Nn)$ & Rules Content $\And$ Weights \\
+\hline
+MNL   & \multirow{2}{*}{Linear} & $\mathcal{O}(d)$ & \multirow{2}{*}{Feature Weights} \\
+\cline{1-1} \cline{3-3}
+Mix-MNL &  & $\mathcal{O}(Nd)$ & \\
+\hline
+Vanilla NN & \multirow{6}{*}{NN-Based} & \multirow{6}{*}{$\mathcal{O}(d d_v+L d_v^2)$} & \multirow{6}{*}{/} \\ 
+\cline{1-1}
+TasteNet & && \\
+\cline{1-1}
+Deep-MNL & && \\ 
+\cline{1-1}
+%
+%
+Mix-DeepMNL & && \\ 
+\cline{1-1}
+RUMNet & && \\ 
+\bottomrule
+\end{tabular}
+\caption{\textit{Model Comparison}, In the \# parameter column, \( N \) represents the consumer type number, \( n \) denotes the maximum rule number, and \( d \) indicates the dimensionality of the product feature vector. For NN-based models, $d_v$ are dimensions of latent features and $L$ is the number of layers. As the inherent complexity of NN-based models, their interpretability is often considered negligible.}
+\label{tab:Model Comparison}
+\end{table}
+
+
+\section{Detailed Experiments Results}
+\label{appendix:additional_syn}
+In this section, we present the detailed experimental results by comparing our model with several baseline approaches. In ours, NM refers to the normal mode of our model, while RS indicates the risk-seeking mode. The number at the end denotes the count of rules for each preference type.
+
+
+
+\begin{table}[ht]
+\small  %
+\setlength{\tabcolsep}{4pt}  %
+\centering
+\begin{tabular}{c|c|c|c|c|c} 
+\toprule
+Category & Method & Train loss & Test loss &\begin{tabular}[c]{@{}c@{}}Train accu\\(Top1)\end{tabular} &\begin{tabular}[c]{@{}c@{}}Test accu\\(Top1)\end{tabular}\\ 
+\hline
+\hline
+\multirow{2}{*}{Classic} 
+ ~  & MNL & \textcolor{black}{$2.7503(\pm0.003)$}
+ & \textcolor{black}{$2.7751(\pm0.005)$} &\textcolor{black}{$0.16(\pm0.002)$} & \textcolor{black}{$0.1312(\pm0.007)$} \\
+\cline{2-6}
+ ~  & Mix-MNL (Frank-Wolfe) &\textcolor{black}{$2.7472(\pm0.003)$}
+ &\textcolor{black}{$2.7679(\pm0.004)$}   &  \textcolor{black}{$0.1631(\pm0.002)$} & \textcolor{black}{$0.1382(\pm0.011)$} \\
+ \hline
+ \multirow{5}{*}{\textcolor{black}{DeepNN}} & \textcolor{black}{NN} & \textcolor{black}{$2.9671(\pm0.016)$} &\textcolor{black}{$3.0075(\pm0.007)$} & \textcolor{black}{$0.0739(\pm0.008)$} & \textcolor{black}{$0.0553(\pm0.014)$} \\
+ \cline{2-6}
+ ~  & \textcolor{black}{TasteNet} &\textcolor{black}{$2.7178(\pm0.022)$} & \textcolor{black}{$2.7511(\pm0.054)$} & \textcolor{black}{$0.1759(\pm0.012)$}&\textcolor{black}{$0.1620(\pm0.027)$} \\
+ \cline{2-6}
+~ & \textcolor{black}{DeepMNL}&\textcolor{black}{$2.4603(\pm0.024)$}& \textcolor{black}{$2.6001(\pm0.040)$}& \textcolor{black}{$0.2564(\pm0.004)$} & \textcolor{black}{$0.2099(\pm0.006)$} \\
+\cline{2-6}
+  ~  & \textcolor{black}{mixDeepMNL} & \textcolor{black}{$2.4538(\pm0.021)$} & \textcolor{black}{$2.5798(\pm0.057)$} & \textcolor{black}{$0.2404(\pm0.004)$} & \textcolor{black}{$0.2253(\pm0.019)$} \\
+ \cline{2-6}
+ ~  & \textcolor{black}{RUMNet} &\textcolor{black}{$2.4444(\pm0.050)$} &\textcolor{black}{$2.5749(\pm0.071)$} &\textcolor{black}{$0.2442(\pm0.012)$}&\textcolor{black}{$0.2186(\pm0.048)$} \\
+ \cline{1-6}
+
+\multirow{4}{*}{\textcolor{black}{Ours*}}  & \textcolor{black}{Ours-NM-5} & \textcolor{black}{$2.6032(\pm0.017)$}
+ & \textcolor{black}{$2.6397(\pm0.023)$} & \textcolor{black}{$0.2151(\pm0.010)$} & \textcolor{black}{$0.2048(\pm0.011)$} \\
+ \cline{2-6}
+ 
+ ~  & \textcolor{black}{Ours-NM-20}  & \textcolor{black}{$2.5242(\pm0.0069)$}
+ & \textcolor{black}{$2.5871(\pm0.0098)$}& \textcolor{black}{$0.2204(\pm0.0034)$}  & \textcolor{black}{$0.1876(\pm0.007)$} \\
+\cline{2-6}
+
+ ~  & \textcolor{black}{Ours-RS-5}  & \textcolor{black}{$2.5926(\pm0.008)$}
+ & \textcolor{black}{$2.6305(\pm0.014)$}& \textcolor{black}{$0.2208(\pm0.005)$}  & \textcolor{black}{$0.2058(\pm0.011)$} \\
+ \cline{2-6}
+ 
+ ~  & \textcolor{black}{Ours-RS-20}  & \textcolor{black}{$2.5215(\pm0.0047)$}
+ & \textcolor{black}{$2.5836(\pm0.0041)$}& \textcolor{black}{$0.2231(\pm0.0019)$}  & \textcolor{black}{$0.1908(\pm0.0064)$} \\
+\bottomrule
+\end{tabular}
+\caption{Choice prediction results on the synthetic dataset. We report Negative log likelihood (NLL) loss and Top-1 choice prediction accuracy of the training and testing set. NM refers to the normal mode of our model, while RS indicates the risk-seeking mode. We extract 5 / 20 rules for both types.}
+\label{tab:syn_results}
+\end{table}
+
+
+
+
+
+The synthetic data is generated with \textcolor{black}{single} sales, implying that within every offerset, \textcolor{black}{only} one option is selected. The Logic-Logit model demonstrates comparable performance in terms of both Negative Log-Likelihood (NLL) Loss and Top1 accuracy. Notably, the risk-seeking mode model yields improved outcomes compared to the normal mode, as it aids the model in fitting to uncovered samples, maintaining an equilibrium between exploration and exploitation.
+
+
+\begin{table}[ht]
+\small  %
+\setlength{\tabcolsep}{4pt}  %
+\centering
+\begin{tabular}{c|c|c|c|c|c} 
+\toprule
+Category & Method & Train loss & Test loss &\begin{tabular}[c]{@{}c@{}}Train accu\\(Top1)\end{tabular} &\begin{tabular}[c]{@{}c@{}}Test accu\\(Top1)\end{tabular}\\ 
+\hline
+\hline
+\multirow{2}{*}{Classic} 
+ ~  & MNL & \textcolor{black}{$3.1482(\pm0.029)$}
+ & \textcolor{black}{$3.1423(\pm0.032)$} & \textcolor{black}{$0.177(\pm0.020)$} & \textcolor{black}{$0.1595(\pm0.005)$} \\
+\cline{2-6}
+ ~  & Mix-MNL (Frank-Wolfe) & \textcolor{black}{$2.9654(\pm0.023)$}
+ & \textcolor{black}{$2.9576(\pm0.025)$} & \textcolor{black}{$0.1807(\pm0.008)$} & \textcolor{black}{$0.1657(\pm0.006)$} \\
+ \hline
+ \multirow{5}{*}{DeepNN}
+~ & NN & $3.0991$\textcolor{black}{($\pm0.028$)} & $3.1669$\textcolor{black}{($\pm0.023$)} & $0.2168$\textcolor{black}{($\pm0.001$)} & $0.2120$\textcolor{black}{($\pm0.011$)} \\
+\cline{2-6}
+~ & TasteNet & $3.0909$\textcolor{black}{($\pm0.017$)} & $3.0863$\textcolor{black}{($\pm0.015$)} & $0.1503$\textcolor{black}{($\pm0.007$)} & $0.1431$\textcolor{black}{($\pm0.013$)} \\
+\cline{2-6}
+~ & DeepMNL & $3.0494$\textcolor{black}{($\pm0.011$)} & $3.0696$\textcolor{black}{($\pm0.022$)} & $0.1566$\textcolor{black}{($\pm0.002$)} & $0.1586$\textcolor{black}{($\pm0.007$)} \\
+\cline{2-6}
+~ & mixDeepMNL & $3.0283$\textcolor{black}{($\pm0.020$)} & $3.0755$\textcolor{black}{($\pm0.025$)} & $0.1620$\textcolor{black}{($\pm0.010$)} & $0.1507$\textcolor{black}{($\pm0.010$)} \\
+\cline{2-6}
+~ & RUMNet & $3.0182$\textcolor{black}{($\pm0.002$)} & $3.0736$\textcolor{black}{($\pm0.020$)} & $0.1631$\textcolor{black}{($\pm0.004$)} & $0.1489$\textcolor{black}{($\pm0.008$)} \\
+\cline{1-6}
+%
+%
+\multirow{2}{*}{Ours*}  
+ ~  & \textcolor{black}{Ours-NM-30}  & \textcolor{black}{$2.9505(\pm0.019)$}
+ & \textcolor{black}{$2.9754(\pm0.013)$} & \textcolor{black}{$0.1901(\pm0.004)$} & \textcolor{black}{$0.1698(\pm0.009)$} \\
+\cline{2-6}
+ ~  & \textcolor{black}{Ours-RS-30}  & \textcolor{black}{$2.9473(\pm0.017)$}
+ & \textcolor{black}{$2.9675(\pm0.016)$} & \textcolor{black}{$0.1909(\pm0.002)$} & \textcolor{black}{$0.1738(\pm0.005)$} \\
+\bottomrule
+\end{tabular}
+
+\caption{Choice prediction on the Expedia Hotel dataset. We report Negative log likelihood (NLL) loss and Top-1 choice prediction accuracy of the training and testing set. Our Logit-Logit model performs best. NM refers to the normal mode of our model, while RS indicates the risk-seeking mode. We extract 30 rules for both types.}
+\label{tab:expedia_results}
+\end{table}
+
+
+
+
+%
+
+In both the Expedia Hotel Dataset and the MIMIC Dataset, our model demonstrates superior performance over neural network-based models and classic models in terms of loss and accuracy. 
+
+Within the hotel dataset, it is evident that increasing the \textcolor{black}{maximum rule number} enhances the expressiveness of the Logic-Logit model and improves its fit to the training data, although this may lead to over-fitting. Notably, the risk-seeking heuristic proves ineffective in this context due to the dominance of preference-type sales and the PageRank effect. Enhancing rule diversity does not yield significant performance benefits.
+
+The MIMIC dataset predominantly comprises patient features, specifically offerset-specific features shared among all drug options. Consequently, we primarily focused on models capable of learning both drug and patient features. Classic linear models and Vanilla Neural Networks are not suitable to this scenario.
+
+
+
+
+\section{Additional Expedia Hotel Experiments} 
+\label{appendix:Expedia Hotel Data}
+\paragraph{Feature Introduction}
+The Expedia Hotel Dataset\footnote{\url{https://www.kaggle.com/datasets/vijeetnigam26/expedia-hotel}} is a publicly available dataset released on Kaggle in 2013. It records customers' search-and-booking interaction with Expedia platform. The features listed in table~\ref{tab:Expedia Dataset Feature} are used in the experiment.
+
+\begin{table}[h!]
+\small  %
+\setlength{\tabcolsep}{4pt}  %
+    \centering
+    \begin{tabular}{c|c|c|c}
+    \toprule
+        Feature Type&Feature Name&  Variable Type& Description\\
+        \hline
+        \multirow{8}{*}{Hotel Feature} &PageRank & Discrete  & The recommendation position of the hotel\\
+        \cline{2-4}
+        &Star Rating&  Continuous& The historical star rating\\
+        \cline{2-4}
+        &Location Score&  Continuous& The desirability of a hotel’s location\\
+                \cline{2-4}
+        &Historical Price& Continuous &  Mean price of the hotel over the last period\\
+                \cline{2-4}
+        &Branded&  Binary& If the hotel is part of a major hotel chain\\
+                \cline{2-4}
+        &Promotion&  Binary& If the hotel had a sale price promotion\\
+                \cline{2-4}
+        &Price&  Continuous& Displayed price of the hotel \\
+                \cline{2-4}
+        &Booking &  Binary& If customer book the hotel\\
+        \hline
+        \multirow{7}{*}{Search Criterion} &Booking Window& Discrete & Number of days in the future from search date\\
+                \cline{2-4}
+        &Length of Stay&  Discrete&Number of nights stay \\
+                \cline{2-4}
+        &Adults Count&  Discrete& The number of adults\\
+                \cline{2-4}
+        &Children Count&  Discrete& The number of children\\
+                \cline{2-4}
+        &Room Count&  Discrete& The number of rooms\\
+                \cline{2-4}
+        &Saturday Night&  Binary& If the stay includes a Saturday night\\
+                \cline{2-4}
+        &Random&  Binary& If the displayed sort is random\\
+        \bottomrule
+    \end{tabular}
+    \caption{Descrption of feature description on the Expedia Hotel dataset.}
+    \label{tab:Expedia Dataset Feature}
+\end{table}
+\paragraph{Experiment Setting}
+To prepare our dataset, we divided it into training and testing subsets using a 3:1 ratio based on search timestamps. We selected offersets with 28 to 32 search results, whose results is not randomly displayed, i.e. sorted by Expedia Recommendation System. Searches with no bookings, hotels priced over \$1000, or booking windows longer than one year were excluded. Finally, we randomly sampled 10,000 instances for the training set and 1,000 instances for the test set. 
+
+\textcolor{black}{
+\paragraph{Model Setting}
+The hyper parameters of our model is set as below. This setting is shared for Expedia Hotel experiments in both Appendix \ref{appendix:Large-Scale} and Appendix \ref{appendix:additional_syn}.
+\begin{itemize}
+    \item Overall Convergence Criterion: The NLL loss decreases less than 0.001 after a new preference type is found and proportion is updated. 
+    \item The ultimate output rule number for each preference type is set to be 30 for Table \ref{tab:expedia_results}, 30 and 100 for Table \ref{tab:expedia_results_large_scale}.
+    \item The maximum rule number of the rule set (Rule Prune Threshold) $R$ during column generation is set to be 100.
+    \item The candidate rule set size generated during the column generation iteration is set to be 100 * searching rule length.
+    \item The number of percentile thresholds we put on the continuous features to get predicates is set to be 30, i.e. a threshold per 3.3\%.
+    \item We search rules up to 3 conjunctions. For each length-1 to length-3 conjunctions we search for 10, 50, 100 iterations.
+\end{itemize}
+}
+
+
+\paragraph{\textcolor{black}{Additional Large-Scale Expedia Hotel Dataset Experiments}} 
+\label{appendix:Large-Scale}
+\textcolor{black}{Moreover, in order to show our model's scalability on bigger dataset, we also evaluate our model with 50,000 training instances and 5000 testing instances, containing 15-32 search results}
+\begin{table}[ht]
+\small  %
+\setlength{\tabcolsep}{4pt}  %
+\centering
+\begin{tabular}{c|c|c|c|c|c} 
+\toprule
+\textcolor{black}{Category}&\textcolor{black}{Method}&\textcolor{black}{Train loss}&\textcolor{black}{Test loss}&\begin{tabular}[c]{@{}c@{}}\textcolor{black}{Train accu}\\\textcolor{black}{(Top1)}\end{tabular}&\begin{tabular}[c]{@{}c@{}}\textcolor{black}{Test accu}\\\textcolor{black}{(Top1)}\end{tabular}\\ 
+\hline
+\hline
+\multirow{3}{*}{\textcolor{black}{Classic}} 
+ ~  & \textcolor{black}{MNL} & \textcolor{black}{$2.9525(\pm0.134)$}
+ & \textcolor{black}{$2.9578(\pm0.131)$} & \textcolor{black}{$0.1633(\pm0.042)$} & \textcolor{black}{$0.1607(\pm0.042)$}\\
+\cline{2-6}
+ ~  & \textcolor{black}{Mix-MNL (Frank-Wolfe)} & \textcolor{black}{$2.8267(\pm0.029)$}
+ & \textcolor{black}{$2.8341(\pm0.028)$}& \textcolor{black}{$0.1883(\pm0.014)$}& \textcolor{black}{$0.1875(\pm0.013)$}  \\
+ \hline
+ 
+ \multirow{6}{*}{\textcolor{black}{DeepNN}} &  \textcolor{black}{NN} & \textcolor{black}{$3.1317(\pm0.015)$} & \textcolor{black}{$3.2699(\pm0.011)$}& \textcolor{black}{$0.1138(\pm0.003)$}& \textcolor{black}{$0.0863(\pm0.003)$}  \\
+ \cline{2-6}
+ ~  & \textcolor{black}{TasteNet} &\textcolor{black}{$2.8278(\pm0.032)$} &\textcolor{black}{$2.8384(\pm0.025)$} & \textcolor{black}{$0.1877(\pm0.007)$}& \textcolor{black}{$0.1885(\pm0.009)$}\\
+ \cline{2-6}
+ ~  & \textcolor{black}{DeepMNL} & \textcolor{black}{$2.7722(\pm0.022)$}& \textcolor{black}{$2.7833(\pm0.030)$}& \textcolor{black}{$0.1999(\pm0.006)$}& \textcolor{black}{$0.2020(\pm0.007)$}\\
+ \cline{2-6}
+ ~  & \textcolor{black}{mixDeepMNL} & \textcolor{black}{$2.7453(\pm0.025)$} & \textcolor{black}{$2.7717(\pm0.015)$} & \textcolor{black}{$0.2036(\pm0.004)$} & \textcolor{black}{$0.2035(\pm0.008)$}\\
+ \cline{2-6}
+ ~  & \textcolor{black}{RUMNet} & \textcolor{black}{$2.7244(\pm0.009)$} & \textcolor{black}{$2.7532(\pm0.016)$} & \textcolor{black}{$0.2105(\pm 0.003)$}& \textcolor{black}{$0.2072(\pm0.002)$} \\
+ \cline{1-6}
+%
+%
+
+\multirow{4}{*}{\textcolor{black}{Ours*}}  
+ ~  & \textcolor{black}{Ours-NM-30}  & \textcolor{black}{$2.8258(\pm0.001)$} & \textcolor{black}{$2.8310(\pm0.002)$}  & \textcolor{black}{$0.2015(\pm0.000)$} & \textcolor{black}{$0.1958(\pm0.001)$}  \\
+\cline{2-6}
+& \textcolor{black}{Ours-NM-100} & \textcolor{black}{$2.8014(\pm0.008)$}
+ & \textcolor{black}{$2.8166(\pm0.005)$} &\textcolor{black}{$0.2058(\pm0.002)$} & \textcolor{black}{$0.1997(\pm0.001)$} \\
+\cline{2-6}
+
+  ~  & \textcolor{black}{Ours-RS-30}  & \textcolor{black}{$2.8281(\pm0.003)$}
+ & \textcolor{black}{$2.8328(\pm0.003)$} & \textcolor{black}{$0.2013(\pm0.000)$}  & \textcolor{black}{$0.1952(\pm0.001)$}\\ 
+\cline{2-6}
+   ~  & \textcolor{black}{Ours-RS-100}  & \textcolor{black}{$2.7983(\pm0.002)$}
+ & \textcolor{black}{$2.8165(\pm0.003)$}& \textcolor{black}{$0.2067(\pm0.000)$} & \textcolor{black}{$0.1992(\pm0.002)$}  \\
+ 
+\bottomrule
+\end{tabular}
+
+\caption{\textcolor{black}{Choice prediction on larger scale Expedia Hotel dataset. We report Negative log likelihood (NLL) loss and Top-1 choice prediction accuracy of the training and testing set. We extract 50/100 rules for both types.}}
+\label{tab:expedia_results_large_scale}
+\end{table}
+
+\textcolor{black}{In large-scale datasets, our model performs comparably to NN-based models, excelling in-sample accuracy over the majority of NN-based models. Logic-Logit, with significantly fewer parameters compared to neural network models, simultaneously demonstrates superior performance and rule-based interpretability.}
+
+
+
+\section{Additional MIMIC-IV Experiments} 
+\label{appendix:mimic_iv_data}
+
+MIMIC-IV\footnote{\url{https://mimic.mit.edu/}} is a publicly available database sourced from the electronic health record of the Beth Israel Deaconess Medical Center~\citep{johnson2023mimic}. Available information includes patient measurements, orders, diagnoses, procedures, treatments, and deidentified free-text clinical notes. Sepsis is a leading cause of mortality in the ICU, particularly when it progresses to septic shock. Septic shocks are critical medical emergencies, and timely recognition and treatment are crucial for improving survival rates. In the real-world healthcare data experiments on the MIMIC-IV dataset, we aim to understand how doctors choose the treatments to diagnose.
+
+\paragraph{Patients} We select 3000 patients that satisfied the following criteria from the dataset: (1) The patients are diagnosed with sepsis~\citep{saria2018individualized}. (2) Patients, if diagnosed with sepsis, the timestamps of any clinical testing and timestamps of medication administration and corresponding dosage were not missing.
+
+\paragraph{Vital signs} Referred to \citep{komorowski2018artificial}, we collected 16 vital signs that are highly related to sepsis from chart events recorded in the ICU. Table \ref{appendix:tab_mimic_iv_vital} shows these vitals with names and descriptions. 
+
+\paragraph{Treatment} Suggested by \citep{komorowski2018artificial}, we extracted 21 treatments associated with sepsis which are consistent with expert consensus. Based on the distinct clinical characteristics of these treatments, they can be categorized into the following three groups, which are shown in Table ~\ref{appendix:tab_mimic_iv_description}. Vasopressor therapy is a fundamental treatment of septic-shock-induced hypotension as it aims at correcting the vascular tone depression and then improving organ perfusion pressure; Antibiotics also should be given within a few hours of the diagnosis of sepsis; Some auxiliary treatments such as packed red blood cells and invasive ventilation are also necessary in ICU.
+
+\paragraph{Data Preprocessing} 
+For each patient, we extract the treatments belonging to the above three categories, as well as the corresponding treatment start and end times. Then, we select the patient's vital features during the treatment. We only record the first vital value. During this period, some vital values will be lost, so we only keep the most complete records as the processed dataset. Another problem is label imbalance, so we only keep 14 treatment types with enough records, and if the number of some treatment types is too large, we will delete some records. Finally, we randomly selected 3000 records as the training set and 300 records as the test set.
+
+\textcolor{black}{
+\paragraph{Experiment Settings}
+The hyper parameters of our model is set as below:
+\begin{itemize}
+    \item Overall Convergence Criterion: The NLL loss decreases less than 0.005 after a new preference type is found and proportion is updated. 
+    \item The ultimate output rule number for each preference type is set to be 50.
+    \item The maximum rule number of the rule set (Rule Prune Threshold) $R$ during column generation is set to be 100.
+    \item The candidate rule set size generated during the column generation iteration is set to be 100 * searching rule length.
+    \item The number of percentile thresholds we put on the continuous features to get predicates is set to be 20, i.e. a threshold per 5\%.
+    \item We search rules up to 5 conjunctions. For each length-2 to length-5 conjunctions we search for 50, 100, 150, 200 iterations.
+\end{itemize}
+}
+\textcolor{black}{
+\paragraph{Sensitive analysis}
+We conduct sensitive analysis for three significant hyper-parameters, \textbf{ultimate rule number} for each preference type, the \textbf{maximum conjunction length} and \textbf{rule prune threshold} we search up to in the rule searching with MIMIC dataset.}
+
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figure-06.pdf}
+    \caption{\textit{Max Rule Number}}
+    \label{fig:MRN}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figure-07.pdf}
+    \caption{\textit{Max Rule Length}}
+    \label{fig:MRL}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figure-08.pdf}
+    \caption{\textit{Rule Prune Threshold}}
+    \label{fig:MRP}
+\end{figure}
+
+\textcolor{black}{Fig \ref{fig:MRN} and Fig \ref{fig:MRL} shows that the model performance improves significantly with the max rule number and max rule length. Both of these two hyperparameters increase the complexity of each preference type's rule set. For algorithmic point of view, increasing the maximum complexity of the ruleset will enlarger feasible space $P$ for the functional Frank-Wolfe step solving and bring about improvement for the whole model. Meanwhile increasing the rule set complexity will also bring about additional computational cost, a trade-off should be made when tuning these hyperparameters. Setting the ultimate rule number to be 50, Fig\ref{fig:MRP} shows the relationship between the rule prune threshold and model performance. Setting a larger rule prune threshold than the maximum rule number allows for a wider tolerance range for newly searched rules, making it easier for promising rules to be learned. However, if this value is set too high, excessive deletion of redundant rules during the final pruning phase can result in significant changes in the ruleset, leading to a decline in model performance. Therefore, it is generally recommended to set the rule prune threshold to 1.5-2 times the maximum rule number.
+}
+
+\begin{table*}[h!]
+\centering
+\begin{tabular}{c|l}
+\hline
+\multicolumn{1}{c|}{\textbf{Category}} & \multicolumn{1}{c}{\textbf{Treatment}}  \\
+\hline
+\multirow{7}{*}{\textbf{Vasoconstrictor}} & Epinephrine \\
+\cline{2-2}
+~  & Phenylephrine  \\
+\cline{2-2}
+~  & Norepinephrine \\
+\cline{2-2}
+~  & Dobutamine  \\
+\cline{2-2}
+~ & Dopamine  \\
+\cline{2-2}
+~  & Vasopressin  \\
+\cline{2-2}
+~  & Angiotensin II (Giapreza)  \\
+
+\hline
+\multirow{8}{*}{\textbf{Antibiotic}} & Vancomycin   \\
+\cline{2-2}
+~ &  Caspofungin  \\
+\cline{2-2}
+~ & Cefepime   \\
+\cline{2-2}
+~ & Ceftriaxone   \\
+\cline{2-2}
+~ & Gentamicin   \\
+\cline{2-2}
+~ & Micafungin  \\
+\cline{2-2}
+~ & Tobramycin  \\
+\cline{2-2}
+~ & Piperacillin/Tazobactam   \\
+
+\hline
+\multirow{6}{*}{\textbf{Auxiliary Treatment}} & Furosemide (Lasix)   \\
+\cline{2-2}
+~ & Heparin Sodium   \\
+\cline{2-2}
+~ & Invasive Ventilation  \\
+\cline{2-2}
+~ & Packed Red Blood Cells  \\
+\cline{2-2}
+~ & IV Immune Globulin (IVIG)  \\
+\cline{2-2}
+~ &  Acetaminophen-IV  \\
+
+\hline
+\end{tabular}
+\caption{Description of the treatment extracted from MIMIC-IV dataset.}
+\label{appendix:tab_mimic_iv_description}
+\end{table*}
+
+
+%
+%
+%
+\begin{table}[h!]
+\small  %
+\setlength{\tabcolsep}{4pt}  %
+\centering
+\begin{tabular}{l|l|l|l}
+\toprule
+\textbf{Item id} & \textbf{Abbreviation}    & \textbf{Description} & \textbf{Normal Range}                               \\ \midrule
+220546           & WBC                      & White blood count  &  $4,000 - 10,000 cells/mm^{3}$                               \\ \hline
+225690           & Total Bilirubin          &  Total Bilirubin   &   0.1 - 1.2 mg/dL                                              \\ \hline
+220235           & PCO2 (Arterial)          &  Partial pressure of carbon dioxide (Arterial)    &   35 - 45 mmHg               \\ \hline
+226063           & PO2 (Venous)             &  Partial pressure of oxygen (Venous)    &   30 - 40 mmHg                              \\ \hline
+229761           & Creatinine (whole blood) &   Creatinine (whole blood)     &    0.5 - 1.2 mg/dL                                         \\ \hline
+226253           & SpO2 Desat Limit         & Oxygen saturation (SpO2)    &      95\% - 100\%                                          \\ \hline
+220210           & RR                       & Respiratory rate              &  12 - 20 breaths per minute                    \\ \hline
+220052           & ABPm                     & Arterial Blood Pressure mean  &70 - 100 mmHg \\ \hline
+220051           & ABPd                     & Arterial Blood Pressure diastolic  &  60 - 80 mmHg               \\ \hline
+223762           & Temperature C            & Temperature Celsius                 &   36.1 - 37.2                              \\ \hline
+220045           & HR                       & Heart rate                           &  60 - 100 beats per minute             \\ \hline
+220050           & ABPs                     & Arterial Blood Pressure systolic      &  90 - 120 mmHg            \\ \hline
+227465           & PT                       & Prothrombin time                      & 11 - 13.5 seconds             \\ \hline
+227467           & INR                      & International normalized ratio        &  0.8 - 1.2             \\ \hline
+227466           & PTT                      & Partial thromboplastin time           &  25 - 35 seconds            \\ \hline
+227457           & Platelet Count           & Platelet Count                        & 150 - 450 $\times 10^{9}$ platelets/L                           \\ \bottomrule
+
+
+
+\end{tabular}
+\caption{Description of the vital signs extracted from MIMIC-IV dataset. Item id is the ID extracted from MIMIC-IV tables.}
+\label{appendix:tab_mimic_iv_vital}
+\end{table}
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{p{4cm}|p{8cm}}
+    \toprule
+        Drug Name & Detected Rules\\
+        \hline
+        \hline
+        Norepinephrine& $PT > 12.6 \wedge ABPd \leq 59.0$ \newline $PTT > 31.6 \wedge age \leq 76.0 \wedge ABPd <= 54.0$ \\
+        \hline
+        Vasopressin   & $PCO2 (Arterial) > 41.0$\newline  $INR > 1.1 \wedge anchor_age \leq 66.0$\\
+        \hline
+        Epinephrine & $RR > 20.0 \wedge WBC <= 6.8 \wedge INR <= 3.4$ \newline $ABPs \leq 77.0$ \\
+        \hline
+        Furosemide (Lasix) & $ABPs > 93.0 \wedge WBC \leq 14.55$ \newline $ABPs > 107.0$ \\
+        \hline
+        Dobutamine & $INR <= 1.4 \wedge PCO2 (Arterial) \leq 36.0$ \newline $PCO2 (Arterial) <= 51.0 \wedge ABPs <= 89.0$ \\
+        \hline
+        Dopamine &$PTT > 65$\newline $Platelet Count <= 287.0 \wedge PTT > 48.8$\\
+        \hline
+        Packed Red Blood Cells & $ABPd \leq 57.0 \wedge ABPm \leq 56.0$\newline $PT > 12.6 \wedge INR > 1.4 \wedge RR \leq 32.0$\newline$Platelet Count \leq 95.0 \wedge PTT > 31.6$ \\
+        \hline
+        Antibiotic  & $age \leq 66.0 \wedge RR \leq 30.0 \wedge WBC \leq 20.6$ \newline $PCO2 (Arterial) <= 42.0$\\
+    \bottomrule
+    \end{tabular}
+    \caption{\textit{MIMIC Drug Preference Rules Examples}}
+    \label{tab:MIMIC Drug Preference Rules Examples}
+\end{table}
+%
+
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+
+
+
+\end{document}

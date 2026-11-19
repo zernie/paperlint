@@ -1,0 +1,39 @@
+\clearpage
+\appendix
+\setcounter{page}{1}
+\maketitlesupplementary
+
+\section*{Appendix Contents}
+
+\startcontents[appendices]
+\printcontents[appendices]{}{1}{}
+
+
+\newpage
+\input{appendix/proof.tex}
+
+\newpage
+\input{appendix/experiments_details.tex}
+
+\newpage
+\section{Limitations of \mname{} and Future Directions}
+\mname{} is a training-free, model-agnostic method that, for the first time, fully addresses query relevance, list-wise diversity, and sequentiality.
+Theoretically, \mname{} offers a \((1 - 1/e)\)-approximate solution to the NP-hard list-wise frame selection problem, achieving pseudo-polynomial time complexity and demonstrating its efficiency.
+Empirically, \mname{} outperforms existing methods significantly, confirming its effectiveness and robustness.
+
+However, \mname{} still has certain limitations that merit further exploration in future research.
+\begin{enumerate}
+    \item 
+    	\textbf{Limitation:} The use of pretrained VLMs to develop a training-free, model-agnostic method is a double-edged sword. 
+    	While \mname{} can be seamlessly integrated into existing Video-LLMs, pretrained VLMs often have limitations in understanding complex instructions.
+    	\textbf{Future Directions:} Fortunately, \mname{} is highly adaptable for future extensions. 
+    	Fine-tuning the VLMs within \mname{} with more complex instructions could significantly improve frame selection.
+    	Specifically, although the selection process is discrete and not directly optimizable, paired selection data can be gathered, and contrastive learning methods (such as DPO) can be applied for fine-tuning.
+    	The selection order could be supervised using existing LLMs, with the list-wise score finetuned to align with this supervision.
+    \item 
+    	\textbf{Limitation:} The selection size $k$ is fixed in \mname{}, and as shown in the case study, \mname{} may occasionally select some useless frames.
+    	This issue can be mitigated by adjusting the trade-off between relevance and diversity, but such strategies are not feasible to apply on each sample.
+		\textbf{Future Directions:} Therefore, exploring how to set an adaptive selection size $k$ is a promising area for future research. In \mname{}, during dynamic programming, the optimal selection for any size $i < k$ has been captured in the trace matrix $\mathcal{T}_{T,i}$. This provides a convenient framework for determining the optimal $k$, but the challenge of identifying the best $i < k$ still remains and warrants further investigation.
+\end{enumerate}
+
+

@@ -1,0 +1,58 @@
+\subsection{Redundant Count Removal}
+\label{app:redundant-orientation}
+
+% \marginnote{\blue{R2.O1}} 
+% \paragraph{\blue{}}
+
+
+% \paragraph{Strawman solution for $k$-line walk counting}
+
+% To remove redundant counts due to orientation, the analyzer $\mathcal{A}$ can retain only one representative from each symmetric pair of node sequences in the enumeration process. 
+% It can be shown that the resulting output remains an unbiased estimator of the true count of unoriented $k$-line walks, with asymptotically the same variance.
+
+
+\paragraph{$k$-line walk counting}
+
+A natural approach to removing redundant counts is to divide the output of $\mathcal{M}_{\mathrm{k\text{-}wk}}$ by $2$. 
+This applies when $k$ is odd, as each $k$-line walk is counted exactly twice by the mechanism. 
+However, when $k$ is even, symmetric walks (e.g., $(v_1, v_2, v_1)$) exist and are counted only once, so dividing by $2$ would undercount.
+Let $S_k$ denote the true number of symmetric $k$-line walks, and let $U_k$ denote the desired count of $k$-line walks without redundancy.
+Then $U_k = (S_k + W_k)/2$. 
+Since $\mathcal{M}_{\mathrm{k\text{-}wk}}$ produces an unbiased estimator of $W_k$, the task of estimating $U_k$ reduces to estimating $S_k$.
+Intuitively, a symmetric $k$-line walk is fully determined by its first $k/2 {+}1$ nodes. 
+Hence, $S_k = W_{k/2}$, which further reduces the problem to estimating $W_{k/2}$. 
+As a result, we can modify $\mathcal{M}_{\mathrm{k\text{-}wk}}$ by introducing an additional step at round $k/2$, where the analyzer aggregates node values to obtain an unbiased estimator $\hat{S}_k$ of $S_k$. 
+Using the example in Figure~\ref{fig:2-wk}, the analyzer aggregates the round $1$ outputs and obtains $\widehat{S}_k = 1.5$.
+Finally, the analyzer outputs $(\mathcal{M}_\mathrm{k\text{-}wk}(G, \varepsilon) + \hat{S}_k)/2$, yielding an unbiased estimator of $U_k$.
+
+
+
+Since the additional step only post-processes privatized results, this mechanism still satisfies $\varepsilon$-edge-LDP.
+In terms of utility, the overall error is bounded by the sum of the individual errors for $\mathcal{M}_{\mathrm{k\text{-}wk}}(G, \varepsilon)$ and $\hat{S}_k$. 
+Since the error of $\mathcal{M}_{\mathrm{k\text{-}wk}}(G, \varepsilon)$ asymptotically dominates, the overall utility bound remains $\tilde{O}(\sqrt{N}d(G)^{k-1})$.
+
+
+
+
+\paragraph{$k$-line path counting}  
+Unlike walks, paths do not allow repeated nodes, so symmetric paths do not exist.  
+As a result, each $k$-line path is counted exactly twice in our mechanism, once for each orientation. 
+To eliminate the count redundancy due to orientation, we divide $\mathcal{M}_{\mathrm{k\text{-}pt}}(G, \varepsilon)$ by $2$, 
+yielding an unbiased estimator for the number of unoriented $k$-line paths while preserving the same privacy and utility guarantees.
+
+
+
+
+\paragraph{$k$-edge acyclic pattern counting}
+
+For a subgraph $H \subseteq G$ that matches the input pattern, multiple node mark assignments may lead to $H$ being counted. 
+Consider a $k$-star pattern, where the pre-processed tree $\mathcal{T}$ consists of a root and $k$ leaves.
+Any instance $H$ will be counted whenever its center is marked $k$ and its $k$ leaves receive distinct marks from $0$ to $k-1$, regardless of the specific ordering.
+The sampling probability of $H$ is therefore $k!/(k+1)^{k+1}$, where $k!$ is the number of valid permutations of node marks in $H$. 
+More generally, for an arbitrary acyclic pattern, the number of valid permutations equals the number of automorphisms~\cite{godsil2013algebraic}, denoted by $\sigma$.
+% \tocomplete{needs change, mentioned in the main paper.}
+Importantly, $\sigma$ depends only on the pattern and is independent of the particular tree formulation or vertex ordering.
+To correct for this count redundancy, we adjust the rescaling factor to $(k+1)^{k+1}/\sigma$, yielding an unbiased estimator of the number of distinct acyclic pattern instances in $G$ while preserving the utility guarantees of Theorem~\ref{the:pattern_bound}.
+Notably, this also applies to our one-round mechanism for $k$-star counting. 
+
+

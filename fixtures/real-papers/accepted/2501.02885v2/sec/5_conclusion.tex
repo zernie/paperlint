@@ -1,0 +1,9 @@
+\section{Conclusion}\label{sec:conclusion}
+
+This paper emphasizes that good frame selection should consider query relevance, list-wise diversity, and sequentiality.
+We propose \mname{}, a training-free and model-agnostic method that fully addresses these principles for the first time.
+Experiments on three long video benchmarks show that integrating \mname{} with existing Video-LLMs significantly improves performance, demonstrating its effectiveness and robustness.
+\mname{} also provides a $(1-1/e)$-approximation for the NP-hard list-wise frame selection and selection size allocation problem in sequential video segments.
+This method has a practical time complexity of \(\mathcal{O}(nk^4)\), reducible to \(\mathcal{O}(nk^2)\) through lazy and parallel updates.
+%Future work could use training-free \mname{} to refine the quality of training data, improving data efficiency.
+Future work could leverage training-free \mname{} to perform test-time computation scaling up, generating self-distilled data for iterative Video-LMMs refinement.

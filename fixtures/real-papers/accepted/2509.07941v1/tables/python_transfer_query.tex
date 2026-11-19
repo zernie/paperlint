@@ -1,0 +1,30 @@
+\begin{table}[htbp]
+\centering
+\caption{Query language transferability on DeepSeek-v3}
+\label{tab:query_transfer}
+\begin{threeparttable}
+\resizebox{0.45\textwidth}{!}{%
+\begin{tabular}{l>{\columncolor{asr}}c>{\columncolor{rank}}c>{\columncolor{asr}}c>{\columncolor{rank}}c>{\columncolor{asr}}c>{\columncolor{rank}}c}
+\toprule
+\multirow{2}{*}{Dependency} & \multicolumn{2}{c}{English} & \multicolumn{2}{c}{Chinese} & \multicolumn{2}{c}{Franch}\\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} 
+ & ASR & P@k & ASR & P@k & ASR & P@k \\
+\midrule
+matplotlib (matplotlib\_safe) &0.274  &\textbf{7.42}   &0.355   &4.10   &\textbf{0.419}   &4.90   \\
+numpy (cumpy)    &0.030    &\textbf{4.82}   &0.090   &2.43   &\textbf{0.149}   &3.96   \\
+pandas (pandas\_v2)    &0.163   &\textbf{6.87}   &\textbf{0.395}   &6.43   &0.326    &4.88   \\
+scipy (full\_scipy)     &0.133    &\textbf{5.35}    &0.059   &2.06   & \textbf{0.176} &3.65   \\
+requests (requstss*)  &0.000   &\textbf{5.25}   &\textbf{0.375}   &4.38   &0.250   &4.63   \\
+collections (collection-strong*)&0.000   &\textbf{3.96}   &0.000   &0.35   &\textbf{0.154}   &1.46   \\
+sklearn (sckit-learn*)   &0.161   &\textbf{7.39}   &0.258   &5.10   &\textbf{0.516}   &7.19   \\
+\cdashline{1-1}
+seaborn (seaborn\_safe) &0.200 &\textbf{6.27} &0.400&5.27 &\textbf{0.467} &5.07\\
+seaborn (robust\_seaborn) &0.333 &\textbf{6.60}    &0.400  &4.80 &\textbf{0.533} &5.07 \\
+seaborn (seaborn\_full) &0.133 &\textbf{6.07} &0.200 &5.13 &\textbf{0.333} &5.13\\
+seaborn (malware\_seaborn)   & \textbf{0.533}  &\textbf{6.00}    &\textbf{0.533}   &3.73   &0.467   &4.53   \\
+seaborn (seaborn\_v2) &0.133 &\textbf{6.27} &\textbf{0.467}&5.20 &0.333 &5.27\\
+\bottomrule
+\end{tabular}
+}
+\end{threeparttable}
+\end{table}

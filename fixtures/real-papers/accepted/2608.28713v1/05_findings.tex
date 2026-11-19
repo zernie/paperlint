@@ -1,0 +1,423 @@
+In this section, we discuss findings from the collected soundness issues by
+answering the following research questions:
+%
+\begin{itemize}[leftmargin=*]
+  %
+  \item {\bf RQ1. Symptoms and Consequences:} What are the symptoms and
+    consequences of soundness issues?
+  %
+  \item {\bf RQ2. Triggering Features:} Which language features trigger
+    soundness issues?
+  %
+  \item {\bf RQ3. Bug Consensus:} For which soundness issues is there consensus
+    that they are bugs?
+  %
+  \item {\bf RQ4. Issue Lifecycles:} How long does it take to discover and fix
+    soundness issues?
+  %
+\end{itemize}
+
+\subsection{RQ1. Symptoms and Consequences}
+
+\cref{tab:symptoms-consequences} shows the number of soundness issues per
+symptom and affected feature (the two rightmost columns), while also displaying
+how often each symptom leads to each consequence (the four middle columns).
+%
+Lifetimes are the most frequently affected feature (15 issues), followed by
+traits (7 issues) and type inference (6 issues).
+%
+In terms of the symptoms, missing lifetime checks are the most common (14
+issues), followed by overlapping \C{impl}s (4 issues) and arbitrary hidden type
+selection (4 issues).
+%
+The issues mainly lead to inconsistencies (17 issues) and memory bugs (11
+issues).
+
+{\bf Finding 1. The Rust compiler has soundness issues that lead to memory bugs,
+caused by missing lifetime checks or overlapping \C{impl}s.}
+%
+Although not all soundness issues result in memory bugs, 11 of them do.
+%
+Among these, 8 are caused by missing lifetime checks, which is expected as
+lifetimes are key to enforcing the valid use of pointers.
+%
+On the other hand, 2 are caused by overlapping \C{impl}s, and 1 is caused by
+missing dyn-compatibility checks.
+%
+The primary role of traits is to enable polymorphism, which is not directly
+relevant to pointer usage.
+%
+However, overlapping \C{impl}s and missing dyn-compatibility checks may allow a
+single type to be interpreted as different types, and such type confusion can
+result in memory bugs.
+%
+This shows that the research community should recognize the importance of the
+trait system in ensuring memory safety, whereas previous
+studies~\cite{jung2017rustbelt, wagner2025linearity} have mainly focused on
+formalizing the ownership and borrowing system, including lifetimes.
+
+{\bf Finding 2. Rust programmers often believe that the compiler should ensure
+consistency by rejecting even programs that do not incur memory bugs.}
+%
+For example, type inference choosing an arbitrary type cannot cause memory bugs.
+%
+Nevertheless, many developers expect the compiler to reject such cases,
+following the consistent rule that inference should succeed only when a unique
+valid type exists.
+%
+Similarly, in Issue 144045, although empty arrays cannot carry any pointers,
+which is a valid reason for lifetime checks to be exempted, developers may
+expect them to be treated in a way consistent with non-empty arrays.
+
+\subsection{RQ2. Triggering Features}
+
+\newcommand{\zero}{{\color{lightgray}0}}
+\begin{table}[t]
+\caption{Symptoms and consequences of soundness issues}
+  \label{tab:symptoms-consequences}
+\vspace{-1.1em}
+  \renewcommand{\arraystretch}{0.99}
+{\scriptsize
+\begin{tabular}{l|l|l|r|r|r|r|r|r}
+  \multicolumn{3}{c|}{} & \multicolumn{4}{c|}{\bf Consequence} &
+  \multicolumn{2}{c}{\multirow{2}{*}{\bf Total}} \\
+  \cline{4-7}
+  \multicolumn{3}{c|}{} & Memory & Breaking & Inconsistency & Misleading & \multicolumn{2}{c}{} \\
+  \hline
+  \multirow{9}{*}{\bf Symptom}
+  &\multirow{2}{*}{Lifetimes}
+  & Missing lifetime checks & 8 & \zero & 6 & \zero & \bf 14 & \multirow{2}{*}{\bf 15} \\
+  && Anonymous lifetimes & \zero & \zero & 1 & \zero & \bf 1 \\
+  \cline{2-3} \cline{8-9}
+  &\multirow{4}{*}{Traits}
+  & Overlapping {\tt impl}s & 2 & \zero & 2 & \zero & \bf 4 & \multirow{4}{*}{\bf 7} \\
+  && Missing dyn-cmpt checks & 1 & \zero & \zero & \zero & \bf 1 \\
+  && Orphan {\tt impl}s & \zero & 1 & \zero & \zero & \bf 1 \\
+  && Incorrect trait solving & \zero & \zero & 1 & \zero & \bf 1 \\
+  \cline{2-3} \cline{8-9}
+  &\multirow{2}{*}{Inference}
+  & Type argument & \zero & \zero & 2 & \zero & \bf 2 & \multirow{2}{*}{\bf 6} \\
+  && Hidden type & \zero & \zero & 4 & \zero & \bf 4 \\
+  \cline{2-3} \cline{8-9}
+  &\multirow{1}{*}{Wf-ness}
+  & Missing wf-ness checks & \zero & \zero & 1 & \zero & \bf 1 & \multirow{1}{*}{\bf 1} \\
+  \cline{2-3} \cline{8-9}
+  &\multirow{1}{*}{Cast}
+  & Incorrect cast & \zero & \zero & \zero & 1 & \bf 1 & \multirow{1}{*}{\bf 1} \\
+  \hline
+  \multicolumn{3}{c|}{\bf Total} & \bf 11 & \bf 1 & \bf 17 & \bf 1 & \multicolumn{2}{c}{\bf 30} \\
+\end{tabular}
+}
+\vspace{-0.6em}
+\end{table}
+
+\begin{table}[t]
+\caption{Triggering features of soundness issues}
+\label{tab:triggers}
+\vspace{-1.1em}
+  \renewcommand{\arraystretch}{0.99}
+{\scriptsize
+\begin{tabular}{l|l|@{}r@{\,}|@{\,}r@{\,}|@{\,}r@{\,}|@{\,}r@{\,}|@{\,}r@{\,}|@{\,}r@{\,}|@{\,}r@{\,}|@{\,}r@{\,}|@{\,}r@{\,}|@{\,}r@{\,}|@{\,}r@{\,}|@{\,}r@{\,}|@{\,}r@{\,}|@{\,}r@{\,}|r}
+  \multicolumn{2}{c|@{}}{} & \multicolumn{14}{c|}{\bf Triggering Feature} &
+  \multirow{2}{*}{\bf Total} \\
+  \cline{3-16}
+  \multicolumn{2}{c|@{}}{} & \,implied & assoc & IT & RPIT & tr obj & HR & const & fn ptr & clo & rec & async & try & arr & enum & \\
+  \hline
+  \multirow{5}{*}{\bf Affected}
+  & Lifetimes & 7 & 6 & 1 & 2 & 3 & 3 & 1 & 1 & 3 & \zero & 1 & \zero & 1 & \zero & \bf 15 \\
+  & Traits & \zero & 7 & \zero & \zero & 3 & 2 & \zero & \zero & \zero & \zero & \zero & \zero & \zero & \zero & \bf 7 \\
+  & Inference & \zero & 2 & \zero & 4 & \zero & \zero & \zero & 1 & \zero & 2 & \zero & 1 & \zero & \zero & \bf 6 \\
+  & Wf-ness & \zero & \zero & \zero & 1 & \zero & \zero & \zero & \zero & \zero & \zero & \zero & \zero & \zero & \zero & \bf 1 \\
+  & Cast & \zero & \zero & \zero & \zero & \zero & \zero & \zero & \zero & \zero & \zero & \zero & \zero & \zero & 1 & \bf 1 \\
+  \hline
+  \multirow{4}{*}{\bf Consequence}
+  & Memory & 7 & 6 & \zero & 1 & 6 & 3 & \zero & 1 & 2 & \zero & \zero & \zero & \zero & \zero & \bf 11 \\
+  & Breaking & \zero & 1 & \zero & \zero & \zero & \zero & \zero & \zero & \zero & \zero & \zero & \zero & \zero & \zero & \bf 1 \\
+  & Inconsistency & \zero & 8 & 1 & 6 & \zero & 2 & 1 & 1 & 1 & 2 & 1 & 1 & 1 & \zero & \bf 17 \\
+  & Misleading & \zero & \zero & \zero & \zero & \zero & \zero & \zero & \zero & \zero & \zero & \zero & \zero & \zero & 1 & \bf 1 \\
+  \hline
+  \multicolumn{2}{c|@{}}{\bf Total} & \bf 7 & \bf 15 & \bf 1 & \bf 7 & \bf 6 & \bf 5 & \bf 1 & \bf 2 & \bf 3 & \bf 2 & \bf 1 & \bf 1 & \bf 1 & \bf 1 & \bf 30 \\
+\end{tabular}
+}
+\vspace{-0.6em}
+\end{table}
+
+\begin{table}[t]
+\caption{Status of soundness issues}
+\label{tab:status}
+\vspace{-1.1em}
+  \renewcommand{\arraystretch}{0.99}
+{\scriptsize
+\begin{tabular}{l|l|r|r|r|r|r}
+  \multicolumn{2}{c|}{} & \multicolumn{4}{c|}{\bf Status} & \multirow{2}{*}{\bf Total} \\
+  \cline{3-6}
+  \multicolumn{2}{c|}{} & Fixed & Confirmed & Reported & Non-bug & \\
+  \hline
+  \multirow{4}{*}{\bf Consequence}
+  & Memory & 7 & 3 & 1 & \zero & \bf 11 \\
+  & Breaking & 1 & \zero & \zero & \zero & \bf 1 \\
+  & Inconsistency & 10 & 1 & 6 & \zero & \bf 17 \\
+  & Misleading & \zero & \zero & 1 & \zero & \bf 1 \\
+  \hline
+  \multicolumn{2}{c|}{\bf Total} & \bf 18 & \bf 4 & \bf 8 & \bf 0 & \bf 30 \\
+\end{tabular}
+}
+\vspace{-0.6em}
+\end{table}
+
+\cref{tab:triggers} shows the number of issues that require each feature as a
+trigger, grouped by affected features (the upper five rows) and consequences
+(the lower four rows).
+%
+Note that the rightmost column does not show the sum of the numbers in the
+middle columns;
+%
+it shows the number of issues in each row, which is identical to the totals in
+\cref{tab:symptoms-consequences}.
+%
+Associated types are the most frequently involved feature (15 issues), followed
+by implied bounds (7 issues), RPITs (7 issues), and higher-rank polymorphism (5
+issues).
+
+{\bf Finding 3. Compiler developers should carefully handle associated types
+wherever they can occur.}
+%
+Half of the issues require associated types as a trigger.
+%
+However, it is relatively rare that associated types alone cause soundness
+issues;
+%
+rather, they often become a way to exploit edge cases when using other features.
+%
+For example, in Issue 99554, using an associated type instead of the type itself
+causes the compiler to fail to detect an orphan \C{impl}.
+%
+Therefore, developers should consider the possibility of using associated types
+with caution.
+
+{\bf Finding 4. The interaction between orthogonal features, especially
+lifetimes and traits, makes it difficult for type checking to be sound.}
+%
+Most issues that affect lifetimes require trait-related features as triggers:
+%
+associated types in 6 issues, \C{impl} traits in 1 issue, and RPITs in 2 issues.
+%
+This shows that correctly implementing lifetime checks becomes especially
+challenging when traits are involved.
+%
+Therefore, future work is encouraged to study lifetimes and traits in a unified
+manner, instead of treating them separately.
+
+{\bf Finding 5. Correct treatment of implied bounds and trait objects is
+extremely important in ensuring memory safety.}
+%
+Implied bounds are involved in 7 issues, all of which lead to memory bugs.
+%
+Implied bounds are automatically introduced by the compiler;
+%
+to retain memory safety, \rustc{} developers should carefully validate that all
+the implied bounds introduced at the definition site are also checked at the use
+site.
+%
+As existing formalizations of the borrowing system~\cite{jung2017rustbelt,
+wagner2025linearity} do not include implied bounds, this result suggests that
+they should be considered in future research.
+%
+Similarly, trait objects trigger 6 issues, all of which lead to memory bugs.
+%
+As trait objects automatically introduce built-in \C{impl}s, they make the
+detection of overlapping \C{impl}s even more challenging.
+%
+Although Milewski~\cite{milewski2015traits}'s formalization of the trait system
+includes coherence rules, the rules do not cover trait objects, necessitating
+future work to address this gap.
+
+Note that we do not claim that soundness issues involving specific features are
+necessarily disproportionate.
+%
+Lifetimes and traits are pervasively used in real-world Rust programs, which may
+be one reason why they are prevalently involved in soundness issues.
+%
+We believe this does not undermine, but rather emphasizes, the importance of our
+findings;
+%
+if they are frequently used, related soundness issues are especially critical
+and require more attention.
+
+These findings are mostly specific to Rust, rather than applicable to
+programming languages in general, due to Rust's unique features.
+%
+Notably, lifetimes have no equivalents in other mainstream languages, and traits
+resemble type classes in Haskell but have no exact equivalents in
+object-oriented languages.
+%
+For example, bug categories from a study on compiler bugs in JVM-targeting
+languages~\cite{chaliasos2021jvm} include incorrect inference and incorrect
+coercion, but nothing corresponding to lifetimes or traits.
+
+\subsection{RQ3. Bug Consensus}
+
+\cref{tab:status} shows the number of issues with a certain status per
+consequence.
+%
+Overall, 18 have been fixed, 4 have been confirmed, 8 have been reported, and
+none are non-bugs.
+%
+Among 12 issues that lead to memory bugs or breaking changes, 11 have been fixed
+or confirmed, indicating that they are real bugs.
+%
+This is not surprising because memory safety is the main goal of Rust, and
+breaking changes are caused by a clear violation of orphan rules.
+
+{\bf Finding 6. The \rustc{} developers are inclusive in discussing soundness
+issues even when they do not lead to memory bugs.}
+%
+Among 18 issues that lead to inconsistencies and misleading behavior, only 11
+have been fixed or confirmed.
+%
+Nevertheless, none of the remaining issues have been classified as non-bugs.
+%
+This may reveal the community's inclusive nature in judging soundness bugs.
+%
+A notable example is Issue 136508, where an enum constructor can be cast to an
+integer.
+%
+Even though the Rust Reference explicitly describes this behavior and one
+developer clarified this point in the discussion, the issue remains open, and
+another developer even added the T-lang, T-compiler, and A-coercions labels.
+
+\subsection{RQ4. Issue Lifecycles}
+
+\begin{table}[t]
+\caption{Statistics regarding the lifecycles of the soundness issues (in days)}
+\label{tab:duration}
+\vspace{-1.0em}
+  \renewcommand{\arraystretch}{0.99}
+  {\scriptsize
+\begin{tabular}{l|rr|r}
+              & \multicolumn{2}{c|}{\textbf{All}} & \multicolumn{1}{c}{\textbf{Fixed}}
+\\
+ \cline{2-4}
+\topspace
+\textbf{}     & Testable-Introduced           & Introduced-Discovery          & Discovery-Fixed       \\
+\hline
+Minimum           & 0                        & 1                       & 2                  \\
+Maximum           & 2,813                     & 3,552                    & 855                \\
+Median        & 855                        & 1,079                    & 345                \\
+Average       & 866                    & 1,291                  & 324             %Average       & 777.2                    & 1355.2                  & 294.3              \\
+\end{tabular}
+  }
+\vspace{-1.0em}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.99\textwidth]{figures/figure-lifecycle.pdf}
+\vspace{-1.0em}
+\caption{Lifecycles of the soundness issues. Each row shows one issue: gray dashed lines indicate the period before introduction, solid black lines indicate the period from introduction to fix or study end, red markers indicate discovery dates, and the vertical dashed line marks the start of issue collection.}
+\vspace{-1.0em}
+\label{fig:timing}
+\end{figure}
+
+We analyze the lifecycle of each issue by identifying stable releases of
+\rustc{} where it is testable, introduced, or fixed.
+%
+The earliest testable version is the one where the immediately preceding version
+rejects the code with a message that a feature is unstable;
+%
+the introduction version is the earliest stable release in which the issue can
+be triggered.
+%
+We tested each version of \rustc{} against each code snippet to find these
+versions.
+%
+In addition, we determine the discovery date as the issue's creation date.
+%
+A few exceptions to these criteria are:
+%
+(1) Issues 96460 and 105251 are not reproducible in stable releases, so we identify the
+nightly versions where the issue occurs;
+%
+(2) Issues 99158 and 114389 are duplicates of 25860 and 57893, respectively, so
+we refer to the earlier ones to avoid considering their discovery dates absurdly
+late.
+
+% We address RQ4 by analyzing the temporal characteristics of soundness issues.
+%
+% We identify the introduction and fix versions by testing stable releases of
+% rustc against each issue code.
+%
+% For instance, issue 96927 is testable only after 1.13.0 when the try
+% propagation operator was stabilized.
+%
+% While we apply the methodology described above to the majority of the issues,
+% we make exceptions for certain issues.
+
+\cref{tab:duration} summarizes the statistics regarding the lifecycles of the
+soundness issues.
+%
+The two middle columns present the statistics of the durations (in days) from
+the earliest testable version to introduction and from introduction to discovery
+for all 30 issues.
+%
+The rightmost column reports the statistics for the durations from discovery to
+fix for the 18 fixed issues.
+
+\cref{fig:timing} visualizes the lifecycles of the soundness issues.
+%
+The x-axis represents time, starting from the release of \rustc{} 1.0.0,
+%
+with the vertical dashed line at 2022 marking the beginning of our issue
+collection period.
+%
+For each issue arranged along the y-axis, gray dashed lines span the duration
+from the earliest testable version to the introduction,
+%
+and solid black lines span the duration from the introduction to the fix or the
+end of the collection period.
+%
+Finally, red vertical markers denote the discovery dates.
+
+{\bf Finding 7. Soundness issues are typically discovered long after they are
+introduced, persisting across multiple releases.}
+%
+The discovery of these issues took an average of 1,291 days, with a maximum of
+3,552 days.
+%
+Soundness issues are particularly difficult to identify because they often
+require peculiar combinations of multiple language features that developers
+rarely exercise in practice, and allow compilation to succeed silently, not
+necessarily accompanied by immediately observable problems.
+%
+These results indicate a critical need for systematic testing techniques to
+detect soundness issues in \rustc{}.
+
+% In contrast, fixing them takes an average of 294 days.
+%
+% This suggests that discovering soundness issues is more difficult than fixing
+% them.
+
+{\bf Finding 8. New features are often stabilized before undergoing sufficient
+testing.}
+%
+Seven issues (96927, 98543, 100051, 106040, 107268, 108468, and 110925) were
+introduced simultaneously with the stabilization of the features required to
+trigger them.
+%
+Before stabilizing new features, compiler developers must ensure the soundness
+of the type checker, specifically by investigating potential interactions
+between the new feature and existing language constructs.
+
+We believe Findings 7 and 8 are general phenomena across different programming
+languages, and our contribution is to empirically confirm that they also apply
+to Rust.
+%
+These findings are especially meaningful given Rust's emphasis on type
+soundness.
+
+% For example, issue 96927 is reproducible from 1.13.0 when the try propagation
+% operator is stablized, and issue 107268 is reproducible from 1.65.0 when the
+% generic associated type is stabilized.
+%
+% The data suggests that new features are under-tested prior to stabilization,
+% allowing soundness issues to be introduced to the stable releases.

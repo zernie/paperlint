@@ -1,0 +1,165 @@
+\section{Experiments}\label{sec:exp}
+
+We integrate \mname{} as a plug-and-play process during inference with 7B SOTA Video-LLMs.
+Following the setup in~\citet{yu2024frame}, we uniformly sample 128 candidate frames and apply \mname{} to select 8 frames as input to the Video-LLMs.
+We conduct experiments using LMMs-Eval~\cite{lmms_eval2024} and VLMEvalKit~\cite{duan2024vlmevalkit} on three long video benchmarks.
+Due to space limitations, additional experimental details and results are provided in the Appendix.
+Code in \url{https://github.com/sunh-23/MDP3}.
+
+\begin{figure*}[!t]
+    \centering
+    \begin{minipage}{0.64\textwidth}
+     	\input{tables/long_video_bench_val}
+     	\captionof{table}{
+		    Performance of \mname{} and its absence on LongVideoBench$_{val}$ for varying video durations across different baseline Video-LLMs.
+		}
+		\label{tab:lvbv}
+    \end{minipage}\hfill
+    \begin{minipage}{0.34\textwidth}
+    	\centering
+	   	\includegraphics[width=1.0\linewidth]{figures/lvbv_gain.pdf}
+		\captionof{figure}{
+    		Performance of baselines and the improvement of \mname{} on LongVideoBench$_{val}$ for different video durations.
+    		}
+	\label{fig:lvbv}
+    \end{minipage}
+\end{figure*}
+
+
+\subsection{Experiments Protocol}
+\textbf{Backbone Models \& Primary Baselines:}
+Based on the Video-MME leaderboard~\cite{fu2024video}, 
+we choose the 7B SOTA Video-LLMs LLaVA-OneVision-7B~\cite{li2024llava}, MiniCPM-V2.6-7B~\cite{yao2024minicpm} and Ovis2-8B~\cite{ovis2} as our primary baselines.
+To compare with the recent frame selection approach~\cite{yu2024frame}, tailor-made for VILA~\cite{lin2024vila}, we also include VILA-V1.5-7B as the primary baseline.
+We integrate \mname{} with these baselines and evaluate it against other recent Video-LLMs.
+
+\textbf{Benchmarks:}
+We evaluate \mname{} on three long video benchmarks:
+1)~\textbf{Video-MME}~\cite{fu2024video}, comprising 2700 human-annotated question-answer pairs, with an average video duration of 17 minutes. 
+2)~\textbf{MLVU}~\cite{MLVU}, a comprehensive benchmark for multi-task long video understanding, consisting of 2593 tasks from 9 categories, with an average video duration of 12 minutes.
+3)~\textbf{LongVideoBench}~\cite{wu2024longvideobench}, for which we use the validation set without subtitles, denoted as LVB$_{val}$, which contains 1337 question-answer pairs and has an average video length of 12 minutes.
+
+
+
+\subsection{Results and Analysis}
+
+
+\subsubsection{Comparison with SOTA Methods} 
+
+\cref{tab:main_results} presents a comparison of \mname{} while applied to VILA-V1.5~\cite{lin2024vila},
+MiniCPM-V2.6~\cite{yao2024minicpm}, LLaVA-OneVision~\cite{li2024llava} and Ovis2~\cite{ovis2}.
+%We compare \mname{} to recent Video-LLMs, including 
+We compare \mname{} to recent Video-LLMs:
+Video-LLaVA~\cite{lin2023video}, Qwen-VL-Chat~\cite{bai2023qwen}, VideoChat2~\cite{li2023videochat}, Chat-UniVi-V1.5~\cite{jin2024chat}, VideoLLaMA2~\cite{cheng2024videollama2}, LLaVA-NEXT-QW2~\cite{liu2024llavanext}, LongVILA~\cite{xue2024longvila}, LongVA~\cite{zhang2024longva}, and Video-XL~\cite{shu2024video}. 
+%
+The number of input frames for the LLMs is shown in \cref{tab:main_results}. 
+Specifically, Video-XL processes 128 frames for Video-MME and 256 frames for MLVU, while LLaVA-OneVision$^*$ reports the official results using a well-tuned frame count.	
+%
+% 
+Compared to the baselines, \mname{} substantially improves the SOTA performance across all three evaluated benchmarks.
+The main results presented in \cref{tab:main_results} highlight several key observations:
+\begin{enumerate}
+	\item Our frame selection method, \mname{}, empowers Ovis2 to achieve the highest overall performance across various benchmarks, confirming the effectiveness of \mname{}.
+	\item When \mname{} is applied to the various primary Video-LLMs,
+		it consistently outperforms uniform frame sampling.
+		This validates that \mname{} is effective in frame selection and generalizes well across various Video-LLMs.
+	\item Notably, LLaVA-OneVision with \mname{} selecting 8 frames outperforms LLaVA-OneVision$^*$, which uses a well-tuned frame count.
+		This demonstrates that selecting key frames is more effective and efficient than simply increasing the number of frames, a finding supported by comparisons with LongVA, LongVILA, and Video-XL.
+	\item Compared to \textsc{Frame-Voyager}, a custom-built method for VILA-V1.5 trained on extensive data, \mname{} shows superior performance. 
+	This result validates that even a training-free, model-agnostic method can effectively achieve frame selection by reusing pretrained VLMs.
+\end{enumerate}
+
+
+\subsubsection{Results across Various Selection Sizes}\label{sssec:ravss}
+
+\cref{fig:gain_on_videomme} presents the results of LLaVA-OneVision on Video-MME (without subtitles), comparing performance with and without applying \mname{} for key frame selection. 
+There are four noteworthy insights:
+\begin{enumerate}
+	\item Regardless of whether \mname{} is applied, the law of diminishing marginal utility is evident as the number of frames fed into Video-LLMs increases.
+		This shows that as the frame count rises, the visual understanding capacity of Video-LLMs quickly reaches its inherent upper bound, emphasizing the necessity for effective frame selection within limited capacity.
+	\item When \mname{} is applied, the performance of LLaVA-OneVision consistently improves across various selection sizes, demonstrating the stability and generalizability of \mname{} under different selection size settings.
+	\item The improvement of \mname{} is more pronounced when selecting fewer frames rather than more. 
+		Notably, selecting 8 frames outperforms the best baseline of uniformly sampling 32 frames.
+		Selecting just 2 frames (1/16 of the best baseline) achieves 90.8\% of the top performance, while 4 frames (1/8) reach 96.3\%.
+		This shows that \mname{} effectively reduces the number of frames required for input, thereby enhancing inference efficiency.
+	\item Notably, performance with 64 frames is lower than with 32 frames, whether or not \mname{} is used.
+	This may be because LLaVA-OneVision was only trained on 32 frames, leading to potential performance drops when more frames are input.
+	This indicates that current Video-LLMs often struggle to generalize beyond their training frame counts.
+	Thus, effective frame selection methods like \mname{} are crucial for improving performance by focusing on frame selection during inference and avoiding the high costs of increasing frame counts during training.
+\end{enumerate}
+
+
+\subsubsection{Results across Various Video Durations}
+
+
+We present the performance of baseline Video-LLMs and the improvements by \mname{} on LongVideoBench$_{val}$ for various video durations, as shown in \cref{tab:lvbv} and \cref{fig:lvbv}.
+The results show that \mname{} substantially improves baseline performance for most video durations. 
+However, for videos lasting 8 to 15 seconds, the improvements are smaller, and MiniCPM-V2.6 even shows a slight decline.
+This is because uniformly sampling 8 frames in this range results in about 1 fps, making frame selection less impactful for very short videos.
+This highlights that frame selection is more crucial for long videos than short ones. 
+Indeed, for effectiveness and efficiency in video understanding, focusing on long videos provides a higher return on investment~(ROI).
+
+
+
+\subsubsection{Ablation Study}
+
+\input{tables/ablation_study.tex}
+\begin{figure}[t]
+	\centering
+	\includegraphics[width=0.8\linewidth]{figures/frame_sel_comparison.pdf}
+	\caption{
+	    Accuracies (\%) of various ablation variants of \mname{} applied with MiniCPM-V2.6 on Video-MME (without subtitles).
+	}
+   \label{fig:abl}
+\end{figure}
+
+
+We conducted an ablation study of \mname{}, with the results shown in \cref{tab:abl} and \cref{fig:abl}.
+The study considered variations such as 
+directly using SigLIP to select the top-$k$ similar frames based on the query, 
+using standard DPP with CMGK while disregarding sequentiality,
+and applying \mname{} with similarity matrix modifications such as MGK and cosine similarity.
+%
+We also compared \mname{} with traditional rule-based shot boundary detection methods,
+such as RGB Histogram~\cite{sheena2015key}, Edges Change Ratio~\cite{nasreen2013key}, and Optical Flow~\cite{wolf1996key}, which select frames based on significant transitions between adjacent frames. 
+%
+These methods do not account for the current query or the list-wise relationship among selected frames.
+The cluster-based method Katna~\cite{keplerlab_katna} only considers pair-wise diversity, overlooking query relevance, list-wise diversity, and sequentiality. 
+%
+\textsc{Frame-Voyager}~~\cite{yu2024frame} and \textsc{SeViLA}~~\cite{yu2023self} are recent end-to-end frame-selection methods designed for a specific model.
+The \semicheckmark{} symbol indicates that some factors, while not explicitly addressed, may be implicitly captured.
+Training on VILA's hidden states with a list-based loss enables \textsc{Frame-Voyager} to potentially capture list-wise information, while position embeddings may address sequentiality.
+
+
+\cref{tab:abl} shows that the key principles of query relevance, list-wise diversity, and sequentiality are crucial for frame selection.
+The complete \mname{} is the first to incorporate all these principles and achieves the best performance in the ablation study.
+%
+A comparison of the ablation variants of \mname{} further confirms that 
+all components are effective and indispensable, including high-dimensional similarity in RKHS, list-wise diversity with DPP, and sequentiality with MDP.
+%
+\cref{fig:abl} further illustrates the ablation results across various video durations. 
+While \mname{} outperforms other methods overall, it performs slightly worse than DPP for short videos.
+Standard DPP accounts for list-wise diversity but lacks sequentiality.
+However, the performance of standard DPP deteriorates significantly with longer videos.
+%
+These observations reveal two conclusions:
+\begin{enumerate}
+    \item Sequentiality is more critical for long videos than for short ones, and it should be prioritized when selecting frames from longer videos.
+    \item Standard DPP cannot handle sequentiality, which becomes a drawback as video length increases.  Therefore, sequentiality is essential for frame selection and \mname{}.
+\end{enumerate}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

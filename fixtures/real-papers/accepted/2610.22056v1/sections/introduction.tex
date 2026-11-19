@@ -1,0 +1,36 @@
+\section{Introduction}
+Reinforcement learning (RL) has shown exceptional potential in solving sequential decision-making problems.
+However, in real-world scenarios involving complex, long-term tasks with sparse rewards, agents face significant challenges in planning and decision-making due to insufficient feedback signals\cite{sutton1998reinforcement, dulac2021challenges}.
+Traditional RL frameworks address these challenges primarily by focusing on two strategies: task decomposition and reward shaping.
+Hierarchical RL\cite{nachum2018data, pateria2021hierarchical} simplifies decision-making by autonomously decomposing complex tasks into hierarchical subtasks, while reward shaping techniques provide dense training signals through the reconstruction of reward functions, such as inverse RL\cite{arora2021survey, ziebart2008maximum, finn2016guided} and intrinsic reward mechanisms\cite{wan2023deir}.
+Despite their advantages, both approaches heavily rely on expert data for priors\cite{penzkofer2024int} or supervision\cite{pan2018human}, and the large-scale acquisition of such data is often challenging, limiting the scalability and applicability of these methods.
+
+Recent advancements in large language model (LLM) research have made significant progress in areas such as dialogue\cite{yi2024survey, brooks2023large}, sequential decision-making\cite{zhao2024expel, zhai2025enhancing}, and coding\cite{roziere2023code, yan2023codescope, yang2024qwen2}.
+By leveraging the extensive and diverse human knowledge acquired during the pre-training phase, LLMs possess a broad range of world knowledge and emergent reasoning abilities\cite{yao2023react, guo2025deepseek}.
+Consequently, LLM-Augmented RL has emerged as a promising approach to overcome the challenges faced by traditional RL methods\cite{cao2024surveylargelanguagemodelenhanced}.
+To tackle the issues of long-term planning and sparse rewards, previous LLM-based approaches have evolved into two main paradigms: LLM as a planner\cite{brohan2023can, dalal2024plan, du2023guiding} and LLM as a rewarder\cite{xie2024text2reward, ma2023eureka, hazra2024revolve}, as illustrated in Figure \ref{fig:overview}.
+As a planner, LLM decomposes complex, long-term tasks into a series of short-term, goal-oriented subtasks, incorporating subtask priors into the decision-making process.
+As a rewarder, LLM constructs a dense reward function for sparse-reward tasks, providing guidance to the underlying policy based on the meaningful priors encoded within the LLM.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\textwidth]{figures/overview.png}
+  \caption{Quick view. (a), (b) and (c) shows the structual similarities and differences between LLM-Augmented methods. (d) is the average evaluation results on Metaworld\cite{yu2019meta} and Maniskill\cite{taomaniskill3}.}
+  \label{fig:overview}
+\end{figure}
+
+However, LLM as a planner primarily focuses on high-level planning.
+In the absence of LLM-augmented dense reward guidance, task decomposition alone—relying solely on natural-language task priors—is insufficient to support the effective learning of subtasks\cite{prasad2023adapt, dalal2024plan}.
+Previous approaches have alleviated this limitation by constructing pre-trained policy libraries\cite{brohan2023can} or incorporating traditional motion planning to link subtasks\cite{dalal2024plan}, yet these methods lack flexibility and efficiency due to their non-end-to-end nature.
+On the other hand, LLM as a rewarder provides low-level guidance.
+However, without subtask decomposition, constructing a reward function for an entire long-term, complex task remains a significant challenge for LLMs\cite{sarukkai2024automatedrewardsllmgeneratedprogress, cao2024drlc}.
+Previous methods have enhanced the quality of LLM-generated reward functions by incorporating human feedback\cite{xie2024text2reward} or evolutionary search algorithms\cite{ma2023eureka, hazra2024revolve}, but these approaches still require extensive search and significant human expert assistance.
+As shown in Figures \ref{fig:overview}a and \ref{fig:overview}b, both of these approaches focus on a single aspect of RL, neglecting the importance of integrating both high-level planning and low-level reward shaping.
+
+To address the challenges of long-term planning and sparse rewards in reinforcement learning more efficiently, we propose a novel framework, Progress Reward Model for Reinforcement Learning (PRM4RL), which integrates both high-level long-term planning and low-level dense rewards to provide a comprehensive solution, as illustrated in Figure \ref{fig:overview}c.
+In high-level planning, the task is decomposed into subtasks, each with termination conditions and fine-grained progress evaluations.
+For low-level reward generation, we utilize the progress to construct an efficient dense reward signal with theoretically grounded optimality and convergence guarantees.
+In practice, our pipeline decomposes a complex task into a series of manageable, goal-oriented subtasks, each associated with a natural language subtask prior.
+For each subtask, we build a fine-grained progress function that dynamically tracks the execution of the task.
+Inspired by the potential field theorem, we regard the progress function as a potential function and design a Progress Reward Model with optimality and convergence guarantees.
+The evaluation results in Metaworld\cite{yu2019meta} and Maniskill\cite{taomaniskill3} as shown in Figure \ref{fig:overview}d demonstrate the effectiveness of our proposed framework, with significant improvements in success rate and reduced LLM calls, outperforming existing methods in both performance and efficiency.

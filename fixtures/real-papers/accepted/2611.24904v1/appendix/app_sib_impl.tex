@@ -1,0 +1,59 @@
+\section{SIB Implementation Details}
+\label{app:sib-impl}
+
+\sib{} sits between the encoder and the decoder of any backbone. Encoder features $F \in \mathbb{R}^{C \times H \times W}$ are decomposed via a single-level 2D Haar wavelet into four subbands $\{F_{LL}, F_{LH}, F_{HL}, F_{HH}\}$, each in $\mathbb{R}^{C \times H/2 \times W/2}$. The Haar transform uses no learned parameters and is perfectly invertible; gradients propagate cleanly through the forward and inverse operations. Compressed subbands are recombined by inverse Haar before being passed to the decoder.
+
+\paragraph{Content VIB on $F_{LL}$.} The content subband carries surface appearance and city-specific texture. We compress it through a per-pixel variational information bottleneck. Two $1{\times}1$ convolutional MLPs map $F_{LL}$ to per-pixel mean $\mu_{LL}$ and log-variance $\log\sigma_{LL}^2$. At training time we sample $Z_{LL} = \mu_{LL} + \epsilon \cdot \sigma_{LL}$ with $\epsilon \sim \mathcal{N}(0,I)$; at inference we use the mean only. The KL penalty against the standard Gaussian prior $p(Z_{LL})=\mathcal{N}(0,I)$ is weighted by an intensity-conditioned coefficient
+\begin{equation}
+\beta_{\text{content}}(x) = \beta_{\text{base}} + \beta_{\text{scale}} \cdot \sigma\!\left(\text{MLP}(I_{\text{local}}(x))\right),
+\end{equation}
+where $I_{\text{local}}(x)$ is the mean pixel intensity in a local window around spatial location $x$, computed from the original RGB input and downsampled to the bottleneck resolution. The intensity MLP is a small $1 \to 16 \to 1$ stack with ReLU.
+
+\paragraph{Edge VIB on $F_{LH}$ and $F_{HL}$.} The horizontal and vertical boundary subbands carry shadow geometry. They share a single Edge VIB module with reduced channel width ($C/4$ hidden) and a small fixed weight $\beta_{\text{edge}} = 10^{-4}$ ($10^{-5}$ on MAMNet). The diagonal subband $F_{HH}$ passes through unmodified.
+
+\paragraph{Skip Attention Gates.} For U-Net architectures (MAMNet, OGLANet), each skip connection passes through a channel-wise sigmoid gate computed by global average pooling followed by a $C \to C$ linear layer. Gate biases initialize at $+2.0$ so that sigmoid output starts near $0.88$, making the gate a near-identity at initialization. The model learns to suppress city-specific channels routed around the bottleneck. SAG is not applied for DINOv3.
+
+\paragraph{CNN-only preprocessing.} For CNN architectures, we apply Fourier Domain Adaptation as input-level preprocessing with attenuated spectral radius $\beta_{\text{FDA}} = 0.005$, and append a contrast channel as a fourth input channel computed as the local intensity range over a $3{\times}3$ window. ViT inputs receive neither addition.
+
+\paragraph{Coverage thresholding at deployment.} For each cell, we fit $c^*_{val}$ on the source-city validation split as the largest coverage $c$ at which selective shadow error satisfies $\overline{\text{err}}_{val}(c) \leq (1-\tau) \cdot \overline{\text{err}}_{val}(1.0)$, with $\tau = 0.5$ globally. The fitted $c^*_{val}$ is then applied at inference on the held-out city. The coverage grid is $c \in \{0.10, 0.15, \ldots, 1.00\}$. No held-out labels enter the procedure.
+
+\paragraph{Training loss.} The full training objective combines the boundary-tolerant segmentation loss with the two band-specific KL terms:
+\begin{equation}
+\mathcal{L}_{\sib} = \mathcal{L}_{\text{seg}} + \mathbb{E}_x\!\left[\beta_{\text{content}}(x) \cdot \text{KL}\!\left(q(Z_{LL}|F_{LL}) \,\|\, p(Z_{LL})\right)\right] + \beta_{\text{edge}} \cdot \text{KL}\!\left(q(Z_{\text{edge}}|F_{\text{edge}}) \,\|\, p(Z_{\text{edge}})\right).
+\end{equation}
+The KL terms ramp from $0$ to their target weight linearly over the first $10\%$ of training iterations to let the encoder-decoder pair settle before compression activates.
+
+\paragraph{Hyperparameters.} Table~\ref{tab:sib-hparams} lists all hyperparameters. The CNN-specific row is applied for MAMNet and OGLANet only; the ViT row applies to DINOv3. The reported \sib{} runs switch off the intensity adaptation of $\beta_{\text{content}}$ and the content augmentation; Appendix~\ref{app:sib-ablations} tests both against a reference that enables them.
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{6pt}
+\caption{\textbf{\sib{} hyperparameters of the reported runs.} Values are fixed across all $9$ evaluation cells; per-architecture values are given where they differ.}
+\label{tab:sib-hparams}
+\begin{tabular}{lll}
+\toprule
+\textbf{Group} & \textbf{Parameter} & \textbf{Value} \\
+\midrule
+Content VIB    & $\beta_{\text{content}}$ (constant) & $10^{-3}$ (MAMNet, OGLANet); $10^{-2}$ (DINOv3) \\
+               & VIB hidden width             & $C/2$ \\
+Edge VIB       & $\beta_{\text{edge}}$        & $10^{-4}$ ($10^{-5}$ on MAMNet) \\
+               & VIB hidden width             & $C/4$ \\
+SAG (U-Net)    & gate bias init               & $+2.0$ \\
+CNN preproc    & FDA spectral radius          & $0.005$ \\
+               & contrast window              & $3{\times}3$ \\
+Deployment     & $\tau$ (coverage criterion)  & $0.5$ \\
+               & coverage grid step           & $0.05$ \\
+KL warmup      & fraction of total iters      & $0.10$ \\
+\midrule
+Optimizer      & AdamW, weight decay          & $0.01$ (OGLANet: Adamax, $10^{-4}$) \\
+LR             & MAMNet                       & $1\!\times\!10^{-4}$ \\
+               & OGLANet                      & $3\!\times\!10^{-4}$ \\
+               & DINOv3                       & $5\!\times\!10^{-5}$ \\
+Schedule       & cosine, warmup epochs        & $5$ (OGLANet: reduce on plateau) \\
+Batch size     & per GPU                      & $8$ \\
+Epochs         & max (early stop on val mIoU) & $100$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+

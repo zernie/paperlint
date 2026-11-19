@@ -1,0 +1,52 @@
+\section{Artifact Appendix}
+
+\subsection*{Abstract}
+
+
+The \thiswork{}  is a performance tool infrastructure for the Triton~\cite{tillet2019triton} compiler and  the results for the OSDI'25 submission are derived from some feature branches.
+While the core concept is stable, the implementation is still evolving and subject to change.
+A formal documentation can be found at \url{https://triton-lang.org/main/dialects/ProtonOps.html}.
+
+\subsection*{Scope}
+
+
+We showcase the usability of the performance tool and the improvement results discussed in the paper by reproducing \Fig{\ref{fig:fa3_trace}} and \Fig{\ref{fig:fa3_benchmark}}.
+Specifically, profiling the FA3 kernel with the region-based performance tool demonstrate the usage of the compiler-centric design.
+A comparison of the profile trace from the vanilla and improved FA3 kernels shows the methodology of intra-kernel region profiling.
+And the evaluation results shows the actual performance improvement.
+
+
+\subsection*{Contents}
+
+
+We provide a Docker image that contains the Triton compiler and evaluation scripts for the artifact evaluation.
+Please follow the installation instructions in the following section to set up the environment.
+Within the Docker image, the contents are organized as follows:
+
+\vspace{1em}
+workspace/
+
+\quad{}----- triton               \hspace{5em} \textcolor{ForestGreen}{\% Triton compiler source code}
+
+\quad{}----- tritonbench          \hspace{2.6em} \textcolor{ForestGreen}{\% Triton FA3 benchmark suite}
+
+\quad{}----- kperfir\_artifact    \hspace{1.2em} \textcolor{ForestGreen}{\% Other scripts and files}
+% \vspace{1em}
+
+
+
+
+
+\subsection*{Hosting}
+
+
+This artifact is open sourced at \url{https://github.com/ChandlerGuan/kperfir_artifact} with the main branch and commit version \texttt{e45891d}.
+
+
+\subsection*{Requirements}
+
+
+The Docker environment requires a Linux-based system with NVIDIA Container Toolkit installed.
+While the \thiswork{} project is designed to be cross-platform, the artifact evaluation for the FA3 kernel requires a Nvidia H100 GPU.
+
+

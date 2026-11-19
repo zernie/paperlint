@@ -1,0 +1,31 @@
+\begin{table*}[htbp]
+% \centering
+\caption{Our evaluation dataset sources.}
+\label{tab:source}
+\begin{threeparttable}
+\resizebox{0.8\textwidth}{!}{%
+\begin{tabular}{@{} 
+  l 
+  >{\RaggedRight\arraybackslash}m{7cm} 
+  l
+  >{\RaggedRight\arraybackslash}m{7cm}  
+  l
+@{}}
+\toprule
+\textbf{Language} & \textbf{RAG Database Source}  & \textbf{Query Dataset Source} \\
+\midrule
+Python & BigCodeBench~\citep{zhuo2024bigcodebench}, DS-1000~\citep{ds1000}, ClassEval~\citep{classeval}, HumanEval-Python~\citep{codex}, HumanEval-X~\citep{humaneval-x}, MBPP~\citep{mbpp}, APPS~\citep{apps} &  BigCodeBench \\\midrule
+Rust & HumanEval-Rust~\citep{codex}, jelber2/RustBioGPT$^1$, ysr/rust\_instruction\_dataset$^2$, Neloy262/rust\_instruction\_dataset$^3$ & Neloy262/rust\_instruction\_dataset \\ \midrule
+JavaScript & Genesys~\citep{gensys}, Evol-Instruct~\citep{evol_instruct}, SecAlign~\citep{secalign}, supergoose/buzz\_sources\_042\_javascript$^5$) &Alex-xu/secalign-dbg-haiku-javascript-all$^6$  \\
+\bottomrule
+\end{tabular}
+}
+\begin{tablenotes}
+\item[$1$]  \small{\url{https://huggingface.co/datasets/jelber2/RustBioGPT}}
+\item[$2$]  \small{\url{https://huggingface.co/datasets/ysr/rust_instruction_dataset/tree/main}}
+\item[$3$]  \small{\url{https://huggingface.co/datasets/Neloy262/rust_instruction_dataset}}
+\item[$5$]  \small{\url{https://huggingface.co/datasets/supergoose/buzz_sources_042_javascript}}
+\item[$6$]  \small{\url{https://huggingface.co/datasets/Alex-xu/secalign-dbg-haiku-javascript-all}}
+\end{tablenotes}
+\end{threeparttable}
+\end{table*}

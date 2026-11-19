@@ -1,0 +1,85 @@
+\subsection{Additional Experiment Results}
+\label{app:exp}
+
+
+This section presents the complete experimental results for Section~\ref{subsec:sample_dp}.
+Table~\ref{tab:six_decomp} reports the decomposition of the total relative error into sampling error and DP noise for four selected queries, $Q_{\mathrm{4\text{-}pt}}$, $Q_{\mathrm{5\text{-}pt}}$, $Q_{\pi_1}$, and $Q_{\pi_2}$, across all six datasets.
+Both error components are averaged over the same six runs used in the utility evaluation.
+As shown in the table, the sampling error generally dominates the overall error, although its advantage over the DP noise is notably smaller than $d(G)$.
+Figure~\ref{fig:full_nrep} presents the relative error decomposition on the \textbf{Epinions2} dataset for the same four queries under the LDP error optimization strategy, with $n_{\text{rep}}$ varying from $1$ to $10$.
+For each query, the minimum total relative error over all values of $n_{\text{rep}}$ is highlighted in bold.
+The results show that the optimization strategy is effective for all tested queries, yielding improvements of $2.8\times$, $1.8\times$, $4.6\times$, and $2.0\times$ in total LDP error at the optimal $n_{\text{rep}}$ values for $Q_{\mathrm{4\text{-}pt}}$, $Q_{\mathrm{5\text{-}pt}}$, $Q_{\pi_1}$, and $Q_{\pi_2}$, respectively, on this dataset.
+
+% This section presents the full results for the experiments in Section~\ref{subsec:sample_dp}. 
+% Table~\ref{tab:six_decomp} reports the decomposition of the total relative error into the sampling error and the DP noise on four selected queries, $Q_{\mathrm{4\text{-}pt}}$, $Q_{\mathrm{5\text{-}pt}}$, $Q_{\pi_1}$, and $Q_{\pi_2}$ across all six datasets. 
+% Both error components are computed as the average over the same $6$ runs used in our utility evaluation.
+% As shown in the table, the sampling error generally dominates the overall error, but the gap between it and the DP noise shows a clear smaller ratio compared with $\tilde{O}(d(G))$.
+% Figure~\ref{fig:full_nrep} presents the relative error decomposition on the \textbf{Epinions2} dataset for the same four queries with the LDP error optimization strategy, with $n_{\text{rep}}$ varies from $1$ to $10$. 
+% For each query, the minimum total relative error across all values of $n_{\text{rep}}$ is highlighted in bold.
+% Results show that the optimization strategy works effectively on all tested queries, yielding $2.8\times$, $1.8\times$, $4.6\times$, and $2.0\times$ improvements in total error at the optimal $n_{\text{rep}}$ values for queries $Q_{\mathrm{4\text{-}pt}}$, $Q_{\mathrm{5\text{-}pt}}$, $Q_{\pi_1}$, and $Q_{\pi_2}$, respectively, on this dataset.
+
+
+
+
+\begin{table}[hbtp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+% \renewcommand{\arraystretch}{1.1}
+\resizebox{0.6\columnwidth}{!}{
+\begin{tabular}{ccccc}
+\toprule
+\textbf{Dataset} & \textbf{Method} & \textbf{Rel. err (\%)} & \textbf{Sampling (\%)} & \textbf{DP (\%)} \\
+\midrule
+\multirow{4}{*}{\textbf{AstroPh}} 
+ & $Q_{4\text{-pt}}$ & 5.67 & \cellcolor{gray!35}3.19 & 2.89 \\
+ & $Q_{5\text{-pt}}$ & 11.77 & \cellcolor{gray!35}9.98 & 3.10 \\
+ & $Q_{\pi_1}$       & 12.10   & \cellcolor{gray!35}14.97   & 3.26   \\
+ & $Q_{\pi_2}$       & 11.53   & \cellcolor{gray!35}10.81   & 4.62   \\
+\midrule
+\multirow{4}{*}{\textbf{Enron} }
+ & $Q_{4\text{-pt}}$ & 11.47 & \cellcolor{gray!35}10.42 & 2.09 \\
+ & $Q_{5\text{-pt}}$ & 5.95  & \cellcolor{gray!35}6.35  & 4.78 \\
+ & $Q_{\pi_1}$       & 21.90    & \cellcolor{gray!35}20.89    & 1.76   \\
+ & $Q_{\pi_2}$       & 23.27   & \cellcolor{gray!35}20.24    & 13.16   \\
+\midrule
+\multirow{4}{*}{\textbf{Epinions1}} 
+ & $Q_{4\text{-pt}}$ & 5.95 & \cellcolor{gray!35}6.48 & 0.68 \\
+ & $Q_{5\text{-pt}}$ & 11.55 & \cellcolor{gray!35}10.52 & 2.16 \\
+ & $Q_{\pi_1}$       & 11.71    & \cellcolor{gray!35}10.78    & 1.52   \\
+ & $Q_{\pi_2}$       & 37.30    & \cellcolor{gray!35}36.79    & 4.26   \\
+\midrule
+\multirow{4}{*}{\textbf{Slashdot}} 
+ & $Q_{4\text{-pt}}$ & 14.02 & \cellcolor{gray!35}13.40 & 2.35 \\
+ & $Q_{5\text{-pt}}$ & 10.23  & \cellcolor{gray!35}8.07  & 3.78 \\
+ & $Q_{\pi_1}$       & 27.54    & \cellcolor{gray!35}23.25    & 5.57   \\
+ & $Q_{\pi_2}$       & 48.14    & \cellcolor{gray!35}28.47    & 23.64   \\
+\midrule
+\multirow{4}{*}{\textbf{Twitter}} 
+ & $Q_{4\text{-pt}}$ & 8.91 & \cellcolor{gray!35}9.34 & 1.07 \\
+ & $Q_{5\text{-pt}}$ & 4.13 & \cellcolor{gray!35}5.01 & 1.37 \\
+ & $Q_{\pi_1}$       & 15.16   & \cellcolor{gray!35}14.16   & 1.54   \\
+ & $Q_{\pi_2}$       & 18.64   & \cellcolor{gray!35}21.02   & 18.04   \\
+\midrule
+\multirow{4}{*}{\textbf{Epinions2}} 
+ & $Q_{4\text{-pt}}$ & 8.79  & \cellcolor{gray!35}8.86  & 0.59 \\
+ & $Q_{5\text{-pt}}$ & 9.55  & \cellcolor{gray!35}9.94  & 1.25 \\
+ & $Q_{\pi_1}$       & 17.38 & \cellcolor{gray!35}17.21 & 0.58 \\
+ & $Q_{\pi_2}$       & 17.24 & \cellcolor{gray!35}19.54 & 3.21 \\
+\bottomrule
+\end{tabular}
+}
+\caption{Relative error decomposition for four queries across six datasets.}
+\label{tab:six_decomp}
+\end{table}
+
+\begin{figure}[!htbp]
+    \centering
+\includegraphics[width=0.62\linewidth]{figures/total_sample_dp_errors.png}
+    % \Description{Bar plots showing sampling error, DP error, and total error versus number of repetitions for four queries: Q4-pt, Q5-pt, Q_{$\pi_1$}, and Q_{$\pi_2$}.}
+    \caption{
+    Relative error decomposition for four queries on the \textbf{Epinions2} dataset
+        under varying number of repetitions ($n_{\text{rep}}$).
+    }
+    \label{fig:full_nrep}
+\end{figure}

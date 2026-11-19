@@ -1,0 +1,62 @@
+% \begin{table*}[t]
+% \centering
+% \caption{Efficiency comparison between CateKV and Full Attention on a single A100 GPU. In the single-sample inference task, we utilized texts of lengths 500K, 180K, and 650K as inputs for the following three models. For the batch-sample inference task, the sample length was set at 40K, and the maximum feasible batch size was used for each method evaluated.}
+% \vspace{-0.2cm}
+% \resizebox{0.95\textwidth}{!}{
+% \begin{tabular}{l|cc|P{2.2cm}P{2.2cm}|P{2.2cm}P{2.2cm}}
+% \toprule
+%  & \multicolumn{2}{c|}{Accuracy (Avg)} & \multicolumn{2}{c|}{Single-sample inference} & \multicolumn{2}{c}{Batch-sample inference}\\
+% \midrule
+%  Model & RULER-128K & Longbench &Memory & Latency & Batchsize  & Throughout \\ 
+% \midrule
+% \textit{Llama-3-8B-1M} (8 KV heads)  & 84.10 (0.00) & 31.27 (0.00) & 77.72 ($1.00\times$) & 54.28 ($1.00\times$) & 12 ($1.00\times$) & 229.37 ($1.00\times$)\\
+% CateKV ($r=0.4,\eta=1.0$)  & 84.61 (+0.51) & 31.48 (+0.21) & 41.02 ($1.89\times$) & 32.75 ($1.66\times$) & 28 ($2.33\times$) & 511.46 ($2.23\times$) \\
+% CateKV ($r=0.3,\eta=0.7$) & 83.85 (-0.25) & 31.21 (-0.06) & 28.59 ($2.72\times$)& 24.86 ($2.18\times$)& & \\
+% \midrule
+% \textit{Phi-3-Mini-128K} (32 KV heads) & 72.06 (0.00)& 34.00 (0.00)& 75.11 ($1.00\times$) & 55.51 ($1.00\times$) & 4 ($1.00\times$) & 76.73 ($1.00\times$)\\
+% CateKV ($r=0.4,\eta=1.0$) & 71.69 (-0.37)& 33.73 (-0.27) & 35.58 ($2.11\times$) & 31.06 ($1.79\times$) & & \\
+
+% CateKV ($r=0.3,\eta=1.0$)  & 71.48 (-0.58) & 33.66 (-0.33) & 29.02 ($2.59\times$)& 27.81 ($2.00\times$) & & \\
+
+% \midrule
+% \textit{Yi-9B-200K} (4 KV heads) & 64.52 (0.00)& 33.02 (0.00)& 77.65 ($1.00\times$) & 56.30 ($1.00\times$) & 4 ($1.00\times$) & 76.73 ($1.00\times$)\\
+% CateKV ($r=0.4,\eta=1.0$)  & 65.76 (+1.24) & 32.83 (-0.19) & 41.62 ($1.87\times$)& 36.05 ($1.56\times$)& & \\
+% CateKV ($r=0.25,\eta=0.8$) & & & & & & \\
+
+	
+% \bottomrule
+% \end{tabular}}
+% \label{tab:efficiency}
+% \vspace{-0.3cm}
+% \end{table*}
+
+\begin{table*}[t]
+\centering
+\caption{Efficiency comparison between CateKV and Full Attention on a single A100 GPU. In the single-sample inference task, we utilized texts of lengths 500K, 180K, and 650K as inputs for the following three models. For the batch-sample inference task, the sample length was set at 40K, and the maximum feasible batch size was used for each method evaluated.}
+\resizebox{0.95\textwidth}{!}{
+\begin{tabular}{l|cc|P{2.2cm}P{2.2cm}|P{2.2cm}P{2.2cm}}
+\toprule
+ & \multicolumn{2}{c|}{Accuracy (Avg)} & \multicolumn{2}{c|}{Single-sample inference} & \multicolumn{2}{c}{Batch-sample inference}\\
+\midrule
+ Model & RULER-128K & Longbench &Memory & Latency & Batchsize  & Throughput \\ 
+\midrule
+\textit{Llama-3-8B-1M} (8 KV heads)  & 84.10 \color{gray}{(0.00)} & 31.27 \color{gray}{(0.00)} & 77.72 \color{gray}{($1.00\times$)} & 54.28 \color{gray}{($1.00\times$)} & 12 \color{gray}{($1.00\times$)} & 229.37 \color{gray}{($1.00\times$)}\\
+CateKV ($r=0.4,\eta=1.0$)  & 84.61 \color{gray}{(+0.51)} & 31.48 \color{gray}{(+0.21)} & 41.02 \color{gray}{($1.89\times$)} & 32.75 \color{gray}{($1.66\times$)} & 28 \color{gray}{($2.33\times$)} & 511.46 \color{gray}{($2.23\times$)} \\
+CateKV ($r=0.3,\eta=0.7$) & 83.85 \color{gray}{(-0.25)} & 31.21 \color{gray}{(-0.06)} & 28.59 \color{gray}{($2.72\times$)}& 24.86 \color{gray}{($2.18\times$)}& 52 \color{gray}{($4.33\times$)}& 909.69
+\color{gray}{($3.96\times$)} \\
+\midrule
+\textit{Phi-3-Mini-128K} (32 KV heads) & 72.06 \color{gray}{(0.00)}& 34.00 \color{gray}{(0.00)}& 75.11 \color{gray}{($1.00\times$)} & 55.51 \color{gray}{($1.00\times$)} & 4 \color{gray}{($1.00\times$)} & 78.53 \color{gray}{($1.00\times$)}\\
+CateKV ($r=0.4,\eta=1.0$) & 71.69 \color{gray}{(-0.37)}& 33.73 \color{gray}{(-0.27)} & 35.58 \color{gray}{($2.11\times$)} & 31.06 \color{gray}{($1.79\times$)} & 10 \color{gray}{($2.50\times$)} & 167.11 \color{gray}{($2.13\times$)} \\
+
+CateKV ($r=0.3,\eta=1.0$)  & 71.48 \color{gray}{(-0.58)} & 33.66 \color{gray}{(-0.33)} & 29.02 \color{gray}{($2.59\times$)}& 27.81 \color{gray}{($2.00\times$)} & 14 \color{gray}{($3.50\times$)} & 221.29 \color{gray}{($2.82\times$)} \\
+
+\midrule
+\textit{Yi-9B-200K} (4 KV heads) & 64.52 \color{gray}{(0.00)}& 33.02 \color{gray}{(0.00)}& 77.65 \color{gray}{($1.00\times$)} & 56.30 \color{gray}{($1.00\times$)} & 16 \color{gray}{($1.00\times$)} & 292.55 \color{gray}{($1.00\times$)}\\
+CateKV ($r=0.4,\eta=1.0$)  & 65.76 \color{gray}{(+1.24)} & 32.83 \color{gray}{(-0.19)} & 41.62 \color{gray}{($1.87\times$)}& 36.05 \color{gray}{($1.56\times$)}& 38 \color{gray}{($2.38\times$)} & 659.02 \color{gray}{($2.25\times$)}\\
+CateKV ($r=0.3,\eta=0.8$) & 65.75 \color{gray}{(+1.23)} & 32.78 \color{gray}{(-0.24)} & 31.58 \color{gray}{($2.46\times$)}& 29.96 \color{gray}{($1.88\times$)}& 60 \color{gray}{($3.75\times$)} & 980.86 \color{gray}{($3.35\times$)}\\
+
+\bottomrule
+\end{tabular}}
+\label{tab:efficiency}
+\vspace{-0.3cm}
+\end{table*}

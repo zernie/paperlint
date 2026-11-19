@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acmart.cls",
+      "role": "preamble"
+    },
+    {
+      "path": "01-introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "02-background.tex",
+      "role": "body"
+    },
+    {
+      "path": "04-rts.tex",
+      "role": "body"
+    },
+    {
+      "path": "05-pdg-transformations.tex",
+      "role": "body"
+    },
+    {
+      "path": "06-scheduling.tex",
+      "role": "body"
+    },
+    {
+      "path": "07-runtime.tex",
+      "role": "body"
+    },
+    {
+      "path": "08-evaluation.tex",
+      "role": "body"
+    },
+    {
+      "path": "09-discussion-limitations.tex",
+      "role": "body"
+    },
+    {
+      "path": "10-related-work.tex",
+      "role": "body"
+    },
+    {
+      "path": "11-conclusion.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "65ab38e4628f2fdfc281decf9cb6c683d0ad44d4f1668ae36c416f9a1d423f55",
+    "acmart.cls": "f5e24d4b29d24ab1cbdef46002febe7c2521f69b41c03d20bc92d8eef8fb5038",
+    "01-introduction.tex": "dd16025061c5e1b520f8ffd9cad1095c70f26bc49bd974fe5f64d16f111cfedb",
+    "02-background.tex": "2cce6838b76567ae318f3caf64bd520b28d72b0e6b36075932b08489a249a6e3",
+    "04-rts.tex": "a06c3546c6983cd85116af60913b4418322d38371025e4564861ae770ecf3b4a",
+    "05-pdg-transformations.tex": "684380ee24adea49c102c8d8285c1802456be2eb377aac30c54cd04cba10593c",
+    "06-scheduling.tex": "f0c41bf0ea3bd464519f0ae07cc88eeb69eda770cc8f62ecbdc662283780405a",
+    "07-runtime.tex": "16ae4fd2ae1462a3f3f66395aedb0bed0acb9fc982a899e3f1f2b2a18336a7ff",
+    "08-evaluation.tex": "684778a492350b3607e0d84c78140fc9801d9a3fe23479fdbd31df8b129b1868",
+    "09-discussion-limitations.tex": "8790c29ce01317629b94ea855f6b4893fdeff9ba4bb6d4d299e9ede34b8e5ac8",
+    "10-related-work.tex": "427ad8f9088eb9f0d11adc3cabcbe27a791ffc864014c4b6efdbdac532aec482",
+    "11-conclusion.tex": "83410067bfecc5976ba82d311676c13036045b7831ca0c448fa58fd7678d8ba3"
+  }
+}

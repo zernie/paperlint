@@ -1,0 +1,166 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Template for USENIX papers.
+%
+% History:
+%
+% - TEMPLATE for Usenix papers, specifically to meet requirements of
+%   USENIX '05. originally a template for producing IEEE-format
+%   articles using LaTeX. written by Matthew Ward, CS Department,
+%   Worcester Polytechnic Institute. adapted by David Beazley for his
+%   excellent SWIG paper in Proceedings, Tcl 96. turned into a
+%   smartass generic template by De Clarke, with thanks to both the
+%   above pioneers. Use at your own risk. Complaints to /dev/null.
+%   Make it two column with no page numbering, default is 10 point.
+%
+% - Munged by Fred Douglis <douglis@research.att.com> 10/97 to
+%   separate the .sty file from the LaTeX source template, so that
+%   people can more easily include the .sty file into an existing
+%   document. Also changed to more closely follow the style guidelines
+%   as represented by the Word sample file.
+%
+% - Note that since 2010, USENIX does not require endnotes. If you
+%   want foot of page notes, don't include the endnotes package in the
+%   usepackage command, below.
+% - This version uses the latex2e styles, not the very ancient 2.09
+%   stuff.
+%
+% - Updated July 2018: Text block size changed from 6.5" to 7"
+%
+% - Updated Dec 2018 for ATC'19:
+%
+%   * Revised text to pass HotCRP's auto-formatting check, with
+%     hotcrp.settings.submission_form.body_font_size=10pt, and
+%     hotcrp.settings.submission_form.line_height=12pt
+%
+%   * Switched from \endnote-s to \footnote-s to match Usenix's policy.
+%
+%   * \section* => \begin{abstract} ... \end{abstract}
+%
+%   * Make template self-contained in terms of bibtex entires, to allow
+%     this file to be compiled. (And changing refs style to 'plain'.)
+%
+%   * Make template self-contained in terms of figures, to
+%     allow this file to be compiled. 
+%
+%   * Added packages for hyperref, embedding fonts, and improving
+%     appearance.
+%   
+%   * Removed outdated text.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[letterpaper,twocolumn,10pt]{article}
+\usepackage{usenix-2020-09}
+
+% to be able to draw some self-contained figs
+\usepackage{tikz}
+\usepackage{amsmath}
+
+% inlined bib file
+\usepackage{filecontents}
+\usepackage{microtype}
+\usepackage[affil-it]{authblk}
+\input{package}
+
+\thispagestyle{empty}
+\pagestyle{empty}
+
+%-------------------------------------------------------------------------------
+\begin{document}
+%-------------------------------------------------------------------------------
+
+%don't want date printed
+\date{}
+
+% make title bold and 14 pt font (Latex default is non-bold, 16 pt)
+\title{I Can Tell Your Secrets: Inferring Privacy Attributes from Mini-app Interaction History in Super-apps}
+
+
+\author[1]{Yifeng Cai}
+\author[2]{Ziqi Zhang}
+\author[1]{Mengyu Yao}
+\author[1]{Junlin Liu}
+\author[3]{Xiaoke Zhao}
+\author[3]{Xinyi Fu}
+\author[3]{Ruoyu Li}
+\author[3]{Zhe Li}
+\author[1]{\\Xiangqun Chen}
+\author[1]{Yao Guo}
+\author[1]{Ding Li}
+
+\affil[1]{MOE Key Lab of HCST (PKU), School of Computer Science, Peking University}
+\affil[2]{Department of Computer Science, University of Illinois Urbana-Champaign}
+\affil[3]{Ant Group}
+
+\maketitle
+
+%-------------------------------------------------------------------------------
+\begin{abstract}
+%-------------------------------------------------------------------------------
+Super-apps have emerged as comprehensive platforms integrating various mini-apps to provide diverse services. While super-apps offer convenience and enriched functionality, they can introduce new privacy risks. This paper reveals a new privacy leakage source in super-apps: mini-app interaction history, including mini-app usage history (Mini-H) and operation history (Op-H). Mini-H refers to the history of mini-apps accessed by users, such as their frequency and categories. Op-H captures user interactions within mini-apps, including button clicks, bar drags, and image views.  Super-apps can naturally collect these data without instrumentation due to the web-based feature of mini-apps. We identify these data types as novel and unexplored privacy risks through a literature review of 30 papers and an empirical analysis of 31 super-apps. We design a mini-app interaction history-oriented inference attack (THEFT), to exploit this new vulnerability. Using THEFT, the insider threats within the low-privilege business department of the super-app vendor acting as the adversary can achieve more than 95.5\% accuracy in inferring privacy attributes of over 16.1\% of users. THEFT only requires a small training dataset of 200 users from public breached databases on the Internet. We also engage with super-app vendors and a standards association to increase industry awareness and commitment to protect this data. Our contributions are significant in identifying overlooked privacy risks, demonstrating the effectiveness of a new attack, and influencing industry practices toward better privacy protection in the super-app ecosystem.
+\end{abstract}
+
+
+\input{tex-introduction}
+\input{tex-background}
+\input{tex-evaluation}
+\input{tex-lessons}
+\input{tex-related}
+\input{tex-conclusion}
+
+
+
+\section*{Acknowledgments}
+We would like to thank the anonymous reviewers for
+their valuable feedback. 
+Ding Li is the corresponding author. 
+This work was partly supported by the National Science and Technology Major Project of China (2022ZD0119103) and the CCF-Ant Research Fund (RF20220006). 
+
+
+
+\section*{Ethics Considerations}
+\label{sec:ethics_star}
+\revised{We carefully reviewed the conference’s ethical guidelines, submission instructions, and ethics documents. Our research was conducted ethically and responsibly, with IRB approval from \alipay obtained before starting the study.}
+
+\revised{We conducted our study transparently, assessing and mitigating risks for all stakeholders. For volunteer participants, we secured informed consent, anonymized their data, and ensured secure handling to prevent unauthorized access. A dedicated team of internal engineers, under strict confidentiality agreements, managed data extraction and anonymization, providing researchers only with anonymized, non-identifiable datasets.}
+
+\revised{For \alipay as a company and its employees, there was a potential risk of reputational damage or exploitation of identified vulnerabilities by insiders. We proactively engaged with relevant departments to address these vulnerabilities and provided recommendations for improved security practices, aiming to minimize any negative impact on the company.}
+
+\revised{Considering the broader super-app user base, we recognized that our findings might reveal vulnerabilities that could be exploited if not properly addressed. To mitigate this risk, we disclosed our findings to \alipay's security team and other major super-app vendors. We received positive responses, and several vendors have committed to addressing these issues, thereby enhancing the security of all users.}
+
+\noindent \revised{\textbf{\alipay's IRB Overview.} \alipay, an international company with over a billion users, has an IRB that complies with ethical standards like the Common Rule and ISO 27701 for privacy management. This independent committee includes legal experts, ethicists, and external professionals unaffiliated with the company, ensuring unbiased and thorough reviews. The IRB evaluates all research involving human subjects to uphold the highest standards of informed consent, confidentiality, and data protection.}
+
+
+\noindent \revised{\textbf{Participant Data Protection within \alipay. }We protected participant data both externally and within \alipay by restricting access to a dedicated team of internal engineers bound by strict confidentiality agreements. This team handled data extraction and anonymization, with all activities logged and monitored. Engineers were prohibited from using the data for any purposes beyond this study. Researchers received only anonymized datasets with pseudonyms replacing unique identifiers, ensuring no access to personally identifiable information. Additionally, the engineers did not participate in research analysis, maintaining a clear separation of roles and further safeguarding participant privacy.}
+
+\noindent \revised{\textbf{User Consent and Data Collection.} Since our evaluation involves the collection of privacy attributes, we obtained IRB approval from \alipay before collecting any data. The IRB requires us to obtain volunteers' consent prior to data collection, and all procedures were conducted by internal engineers at \alipay under IRB supervision.}
+
+\revised{For volunteer selection, internal engineers sent invitations to active users using automated systems that only checked login timestamps, ensuring no sensitive information was accessed. This procedure was approved by the IRB as low-risk and compliant with data protection policies. Once volunteers were selected, the engineers assisted us with the following steps:}
+
+\revised{$\bullet$ Informed Consent: We informed the volunteers about the data we would collect, its intended use, and the measures taken to protect it. We assured them that the data would not be used for commercial purposes or shared with third parties.}
+
+\revised{$\bullet$ Consent Acquisition: We obtained consent from users to access their mini-app interaction history and privacy attributes. For adult users, we obtained their consent directly. For minors, who typically use authorized accounts, we obtained consent from both the users and their parents.}
+
+\revised{$\bullet$ Attributes Verification: During data verification, internal engineers matched participants' provided attributes with internal databases(e.g., databases from the loan and insurance departments) in a secure and controlled environment. The matching process was automated to minimize human exposure to sensitive data.}
+
+\revised{$\bullet$ Data Collection: We used \alipay-dev to notify volunteers of their participation, after which internal engineers extracted their mini-app interaction history from \alipay's servers}
+
+\revised{Note that the internal engineers anonymized all unique user identifiers before being provided to us. The data was securely stored in an encrypted database and was carefully deleted under IRB supervision after the evaluation.}
+
+\noindent \revised{\textbf{Data Access.} All code and anonymized data were accessible only to the authors. The NDA approval process involved submitting a data access request to \alipay's IRB, which reviewed the request for compliance with data protection policies. An agreement was then signed by the authors and authorized personnel, and upon NDA approval, data access permissions were granted. Overall, all data access and handling complied with \alipay's data protection policies and relevant laws, ensuring participant privacy and data security throughout the research.}
+
+
+\section*{Open Science}
+\revised{
+We recognize the importance of open science and are committed to supporting the research community. However, due to \alipay's IRB and business regulations, and strict user privacy concerns, all code and data are processed on supervised servers. Therefore, we cannot publicly release certain artifacts, including code and comprehensive datasets. Meanwhile, we have provided detailed descriptions of our work, including design, methods, input formats, configurations, etc. In addition, we are committed to helping colleagues who wish to replicate or fully understand our work. We encourage contacting us to discuss potential collaborations or access materials under an NDA and with approval from \alipay.}
+%\clearpage
+%-------------------------------------------------------------------------------
+\bibliographystyle{plain}
+\bibliography{bibs}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%  LocalWords:  endnotes includegraphics fread ptr nobj noindent
+%%  LocalWords:  pdflatex acks

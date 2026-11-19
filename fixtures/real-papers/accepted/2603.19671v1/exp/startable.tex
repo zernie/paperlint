@@ -1,0 +1,69 @@
+
+
+
+\begin{table}[hbtp!]
+\centering
+% \small
+% \setlength{\tabcolsep}{6pt}
+% \renewcommand{\arraystretch}{0.9}
+\resizebox{0.90\columnwidth}{!}{%
+\begin{tabular}{clccccccc}
+\toprule
+\textbf{Query} & \textbf{Method} & \textbf{Metric} & \textbf{AstroPh} & \textbf{Enron} & \textbf{Epinions1} & \textbf{Slashdot} & \textbf{Twitter} & \textbf{Epinions2} \\
+\midrule
+
+
+\multirow[c]{4}{*}{$Q_{3\star}$}
+& \multirow{2}{*}{$\mathcal{M}_{3\star}$} 
+& Rel. err (\%) 
+& \cellcolor{gray!35} 0.17 
+& \cellcolor{gray!35} 0.09 
+& \cellcolor{gray!35} 0.05 
+& \cellcolor{gray!35} 0.06
+& \cellcolor{gray!35} 0.04 
+& \cellcolor{gray!35} 0.04 \\
+& & Comm.$^{\dagger}$ 
+& \cellcolor{gray!12} 0.14~MB 
+& \cellcolor{gray!12} 0.28~MB 
+& \cellcolor{gray!12} 0.58~MB
+& \cellcolor{gray!12} 0.59~MB 
+& \cellcolor{gray!12} 0.62~MB 
+& \cellcolor{gray!12} 1.00~MB \\
+\cmidrule(lr){2-9}
+
+
+& \multirow{2}{*}{$\mathrm{LocalLap}_{3\star}$} & Rel. err (\%) & 6.79 & 8.16 & 19.52 & 16.47 & 5.64 & 10.62 \\
+& & Comm.$^{\dagger}$ & 0.43~MB & 0.84~MB & 1.74~MB & 1.77~MB & 1.86~MB & 3.01~MB 
+
+
+\\
+\midrule
+
+\multirow{2}{*}{$Q_{4\star}$}
+& $\mathcal{M}_{4\star}$ & Rel. err (\%) & 
+\cellcolor{gray!35}0.49 & 
+\cellcolor{gray!35}0.19 & 
+\cellcolor{gray!35}0.15 & 
+\cellcolor{gray!35}0.06 & 
+\cellcolor{gray!35}0.09 & 
+\cellcolor{gray!35}0.09 \\
+\cmidrule(lr){2-9}
+& $\mathrm{LocalLap}_{4\star}$ & Rel. err (\%) & 
+33.88 & 16.69 & 43.04 & 42.78 & 16.55 & 35.67 \\
+
+\midrule
+
+\multirow{2}{*}{{$Q_{5\star}$}}
+& {$\mathcal{M}_{5\star}$} & {Rel. err (\%)} & \cellcolor{gray!35}
+{0.50} & \cellcolor{gray!35}{0.22} & \cellcolor{gray!35}{0.18} & \cellcolor{gray!35}{0.14} & \cellcolor{gray!35}{0.11} & \cellcolor{gray!35}{0.09} \\
+\cmidrule(lr){2-9}
+& {$\mathrm{LocalLap}_{5\star}$} & {Rel. err (\%)} & 
+{38.58} & {24.81} & {82.03} & {53.66} & {26.92} & {37.21} \\
+
+
+\bottomrule
+\end{tabular}
+}
+\caption{Relative error (\%) and communication cost (MB) for $k$-star queries on six datasets. $^{\dagger}$Communication cost of both methods remains constant across star counting queries.}
+\label{tab:star}
+\end{table}

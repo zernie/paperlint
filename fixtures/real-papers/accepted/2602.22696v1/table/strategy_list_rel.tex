@@ -1,0 +1,72 @@
+\newlength{\defaultaboverulesep}
+\newlength{\defaultbelowrulesep}
+
+\setlength{\defaultaboverulesep}{\aboverulesep}
+\setlength{\defaultbelowrulesep}{\belowrulesep}
+
+\setlength{\aboverulesep}{0.1ex}
+\setlength{\belowrulesep}{0.1ex}
+
+\begin{table*}[ht]
+\centering
+\tabcolsep 2pt
+%\tiny
+\footnotesize
+\begin{tabular}{p{2cm}p{3cm}>{\centering\arraybackslash}p{1cm}p{9.3cm}}
+    \toprule
+    % \midrule
+    % \textbf{カテゴリ} & \textbf{説得戦略名} & \textbf{P4G} & \textbf{説明} \\
+    \textbf{Categories} & \textbf{Persuasive Strategy Labels} & \textbf{P4G} & \textbf{Strategy Descriptions} \\
+    \midrule
+    \multirow{3}{1.9cm}{a. Gather Information via Inquiry} & a-1 Source-related inquiry & \checkmark & Check if the person is aware of the organization or brand. Clarify misconceptions and tailor explanations based on their familiarity. \\
+    & a-2 Task-related inquiry & \checkmark & Ask about the person's opinion or expectations toward the action (donation, investment, etc.). Identify interests or concerns. \\
+    & a-3 Personal-related inquiry & \checkmark & Explore past experiences, motivations, or barriers to understand individual needs or constraints. \\
+    \midrule
+    \multirow{3}{1.9cm}{b-(C). Select a Persuasion Route (Central)} & b-1 Logical appeal & \checkmark & Use data, facts, and clear evidence. Highlight tangible benefits and real-world impact. \\ 
+    & b-2 Message strength & (\checkmark) & Reinforce arguments with strong evidence, examples, or case studies. \\ 
+    & b-3 Detailed information & \checkmark & Provide clear step-by-step guidance, manage cognitive load, and ensure transparency in procedures or processes. \\
+    \midrule
+    \multirow{4}{1.9cm}{b-(P). Select a Persuasion Route (Peripheral)} & b-4 Emotional appeal & \checkmark & Elicit empathy, hope, anger, or guilt through stories or visuals that resonate emotionally. \\ 
+    & b-5 Heuristic cues & & Leverage authority figures, social proof, or popularity indicators to increase credibility quickly. \\ 
+% & b-6 Self-modeling & Demonstrate that the persuader also engages in the behavior. Encourage imitation and reduce perceived risk. \\ 
+    & b-6 Personal Demonstration & \checkmark & Demonstrate that the persuader also engages in the behavior. Encourage imitation and reduce perceived risk. \\ 
+    & b-7 Metacognitive approach & & Have the person reflect on their thought process, increasing self-awareness and ownership of the decision. \\
+    \midrule
+    \multirow{4}{1.9cm}{c. Build Trust and Credibility} & c-1 Credibility appeal & \checkmark & Use objective data, track records, or transparency measures to gain trust. \\ 
+    & c-2 Authority & (\checkmark) & Emphasize recognized expertise, awards, or credentials to establish legitimacy. \\ 
+    & c-3 Social proof & (\checkmark) & Show that many others have already participated or benefited, reducing perceived risk. \\ 
+    & c-4 Consistency & & Frame the request as consistent with the person's past choices or stated values. \\
+    \midrule
+    \multirow{5}{1.9cm}{d. Facilitate Concrete Actions} & d-1 Foot in the door & \checkmark & Start with a small, easy request and progressively increase to a larger commitment. \\ 
+    & d-2 Door in the face & & Begin with a large request likely to be refused, then present a more moderate (target) request, making it seem more reasonable. \\ 
+    & d-3 Reciprocity & & Offer something first (e.g., free trial, sample) to invoke a sense of obligation or goodwill. \\ 
+    % & d-4 Mutual concession / Shassing & Acknowledge the person's concerns and adapt the proposal. Show willingness to compromise. \\ 
+    & d-4 Mutual concession & & Acknowledge the person's concerns and adapt the proposal. Show willingness to compromise. \\ 
+    % & d-5 Self-modeling & Reinforce that the persuader also participates, guiding the persuadee to follow suit. \\ \midrule
+    & d-5 Shared Engagement & & Reinforce that the persuader also participates, guiding the persuadee to follow suit. \\
+    \midrule
+    \multirow{6}{1.9cm}{e. Refine Information Presentation} & e-1 Framing & & Adjust how outcomes are presented (emphasizing benefits vs. avoiding losses). \\ 
+    & e-2 Contrast effect & & Compare options to highlight a more favorable choice or cost-benefit ratio. \\
+    
+    & e-3 Manage cognitive load & & Organize information clearly, use visuals or summaries so it's easier to digest. \\ 
+    & e-4 Repetition / summary & & Reiterate the main benefits and key steps to ensure they remain top of mind. \\ 
+    & e-5 Scarcity & & Emphasize limited availability or time to reduce procrastination. \\ 
+    & e-6 Time pressure & & Set deadlines to encourage quicker decision-making. \\
+    \midrule
+    \multirow{3}{1.9cm}{f. Personalization and Relevance} & f-1 Personal story & \checkmark & Use relatable narratives that resonate with the person's own experiences or emotions. \\ 
+    & f-2 Personal relevance emphasis & & Highlight how the action aligns with the individual's personal goals, values, or future plans. \\ 
+    & f-3 Ability support & & Provide guidance or tools that boost the person's confidence in taking the action. \\
+    \midrule
+    %\multirow{3}{1.9cm}{G. Follow-up and Relationship Maintenance} & g-1 Feedback and thanks & & Show appreciation and communicate the impact of the person's contribution or action. \\
+    \multirow{3}{1.9cm}{g. Follow-up and Relationship Maintenance} & g-1 Feedback and thanks & (\textasteriskcentered) & Show appreciation and communicate the impact of the person's contribution or action. \\
+    & g-2 Ongoing trust building & & Offer further guidance, additional resources, or performance updates over time. \\
+    & g-3 Continuous communication & & Keep contact with newsletters, invitations, or updates to sustain engagement. \\
+    \bottomrule
+\end{tabular}
+% \caption{提案手法の説得エージェント (Persuader) が用いる拡張版説得戦略一覧}
+\caption{List of extended persuasive strategies used by agents.}
+\label{tab:strategy_list}
+\end{table*}
+
+\setlength{\aboverulesep}{\defaultaboverulesep}
+\setlength{\belowrulesep}{\defaultbelowrulesep}

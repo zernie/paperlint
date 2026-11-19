@@ -1,0 +1,64 @@
+\section{Introduction}
+In the era of artificial intelligence (AI)\cite{lecun2015deep}, the popularity of AI compilers has increased dramatically~\cite{chen2018tvm, ansel2024pytorch}.
+Modern AI compilers, such as Triton\cite{tillet2019triton}, have become popular in bridging the gap between high-level machine learning framework operators (e.g. general matrix multiplications (GEMMs)\cite{nvidia2023cublas}, softmax\cite{rumelhart1986learning}, etc.) and the low-level, target-specific machine code\cite{NVIDIAPTX}. 
+The diversity of workloads and the rapid evolution of hardware architectures, particularly in GPUs, pose significant challenges in developing frameworks that are both modular in development and performant ``out of the box'' for users.
+Addressing these demands requires a flexible compiler infrastructure, like LLVM\cite{lattner2004llvm}'s Multi-Level Intermediate Representation (MLIR)\cite{lattner2021mlir} with a modular design, and Triton for its customizable high-performance AI operators for 
+diverse workloads and backends.
+
+\begin{figure*}
+    \centering
+    \includegraphics[width=\linewidth]{fig/concept.pdf}
+    \vspace{-0.7cm}
+    \caption{\R{Concept of the \thiswork{} infrastructure and ecosystem for compiler-centric performance tool. (Left) Overview and comparison of \thiswork{}'s compiler-centric design and prior profiler designs. (Right) Demonstrative examples of novel performance tools facilitated by the compiler-centric design of \thiswork{}.}}
+    \vspace{-0.3cm}
+    \label{fig:concept}
+\end{figure*}
+
+Despite significant advancements, existing compilers often struggle to outperform hand-tuned implementations like cuBLAS\cite{nvidia2023cublas}, rocBLAS\cite{amd2023rocblas}, and CUTLASS\cite{Thakkar_CUTLASS_2023}.
+This limitation stems from GPU architectures' rapid evolution and the continuous emergence of novel operator variants. 
+For instance, Nvidia’s Hopper architecture incorporates advanced acceleration units such as $5^{\text{th}}$ generation Tensor Cores (TC)\cite{nvidia2018turing} and Tensor Memory Accelerators (TMA)\cite{choquette2023nvidia}, which require sophisticated compiler passes to fully leverage their potential with a dataflow-oriented programming paradigm\cite{choquette2023nvidia}. 
+Meanwhile, the latest Flash-Attention-3\cite{shahflashattention} (FA3) kernel, crucial for large language models (LLMs)\cite{brown2020language, llm_for_finance, llm_for_medical}, employs complex tiling and pipelining techniques that traditional compilers cannot effectively handle.
+
+To enhance the compilers with novel compute paradigms and hardware features, profiling tools are critical in developing high-performance AI kernels and optimization passes. 
+They are essential for identifying performance bottlenecks, analyzing execution flow, and understanding memory access patterns.
+Developers depend on these tools to pinpoint instruction stalls, optimize kernel performance, and refine compiler passes. 
+Even for feedback-guided auto-optimization compilers\cite{zheng2020ansor}, the design space consists of manually articulated transformation primitives and requires precise performance insights to guide effective optimization. 
+Without effective profiling tools, achieving peak performance on modern GPU platforms becomes a daunting challenge.
+
+However, existing profilers are poorly aligned with the advancements of compiler infrastructure to assist in the development of themselves and AI kernels.
+\textbf{Our key observation is that prior profiler designs are isolated from the compiler system and lack key connections to the upper-level framework operations.}
+Profiling tools are usually developed as external tools, detached from the intricacies of the compilation process, and fail to provide framework operation-informed, actionable insights tailored to the unique challenges of AI compilers. 
+This disconnection severely hinders the ability of operator and AI compiler developers to enhance the performance of ML workloads.
+
+
+To address this, we propose a novel compiler-centric infrastructure, \thiswork{}, to facilitate the development of customizable and reusable performance tools\footnote{\OURR{The source code is open sourced at \url{https://github.com/triton-lang/triton/tree/main/third_party/proton/dialect}}.}, as illustrated in \Fig{\ref{fig:concept}}.
+Our approach establishes a seamless interplay between the compiler and profiler, enabling the exchange of program semantics and profiling metrics. 
+\OURR{
+Central to our methodology is incorporating multi-level compiler IR instrumentation into the profiling workflow. 
+This allows performance tools to be composed as compiler passes with compiler-integrated profiling operations.
+This design fundamentally enhances performance tooling in three key ways.
+}
+
+\textbf{\ballnumber{1} Programmable tools with IR semantics.} Existing profilers have limited information on the program, restricting their ability to capture performance details tied to program semantics. For example, traditional tools cannot track how software pipelining\cite{huang_alcop_2023} overlaps and evolves across pipeline stages due to missing loop-level information. By integrating IR-level instrumentation, \thiswork{} enables profiling tools to capture these nuanced behaviors effectively.
+
+\textbf{\ballnumber{2} Profile-driven design of compiler passes.} Many optimization techniques, such as autotuning\cite{tunner1, tunner-autotvm}, rely on performance feedback to guide their tuning processes\cite{zheng2020ansor}. Traditional approaches treat compilers and profilers as isolated sub-modules, requiring standalone systems to coordinate optimization and evaluation. With \thiswork{}, profiling passes can directly interact with compiler optimization passes, streamlining the feedback loop and enabling more optimizations.
+
+\textbf{\ballnumber{3} Reusable and extendable performance tools.} By implementing tools native to the compiler IR, \thiswork{} ensures their reusability and portability across frameworks and backends. Profiling tools can operate on shared upper-level representations used by AI frameworks and seamlessly lower to diverse backends, including Nvidia and AMD GPU platforms. Building on the MLIR philosophy of a shared set of infrastructure, we provide not only a powerful set of analysis tools but also a common set of building blocks and infrastructure for a community-driven ecosystem.
+
+To showcase the capabilities of the \thiswork{} infrastructure, we present the first region-based timing tool for GPUs to provide insights into intra-kernel behaviors. 
+By leveraging the program's IR semantics, the tool efficiently updates the profiled regional timestamps to recover the inaccuracy caused by instrumentation, ensuring accurate profiling results while minimizing memory overhead. 
+This level of precision was previously difficult to achieve because traditional profilers lack access to compiler-generated semantic information, such as loop structures and regional boundaries, making it challenging to attribute execution metrics accurately to high-level behaviors. 
+This timing tool plays a crucial role in optimizing modern GPU kernels by enabling precise analysis of fine-grained overlapping and presenting an intuitive timeline visualization to guide performance optimizations.
+
+We conducted an in-depth case study on the FA3 kernel. 
+Leveraging the tool's fine-grained profiling results, we identified idle bubble regions in the baseline implementation and extracted key optimization insights. 
+Based on these findings, we implemented novel compiler passes to enhance the kernel with an improved overlapping strategy, effectively reducing performance bottlenecks.
+In addition, we introduced performance modeling based on the profiling results to evaluate the efficiency of the optimized overlapping design.
+
+This work makes the following key contributions:
+\begin{itemize}
+    \itemsep0em 
+    \item We propose \thiswork{}, a compiler-centric infrastructure enabling customizable performance tools. Integrated into the Triton compiler, it supports AMD and Nvidia platforms, providing essential support for developers optimizing AI compilers and operators (\Sec{\ref{sec:compiler_centric}}).
+    \item As a demonstration of the proposed infrastructure, we develop a novel region-based timing tool. This tool exemplifies the compiler-centric approach and offers fine-grained GPU profiling capabilities (\Sec{\ref{sec:tool}}).
+    \item We perform an in-depth case study using the proposed timing tool to analyze GPU overlapping. The study reveals valuable insights into intra-kernel overlapping techniques, such as warp specialization (\Sec{\ref{sec:evaluation}}).
+\end{itemize}

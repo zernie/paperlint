@@ -1,0 +1,21 @@
+\vspace{-1mm}
+\section{Conclusion}
+\label{sec:conclusion}
+\vspace{-1mm}
+
+
+We presented \texttt{HELIOS}, a novel table-text retrieval method that harmonizes the strengths of both early and late fusion techniques while incorporating LLM reasoning. 
+It addresses the limitations of competitors by introducing a multi-granular retrieval system that optimally balances granularity across retrieval stages. 
+% By employing edge-based bipartite subgraph retrieval, query-relevant node expansion, and star-based LLM refinement, \texttt{HELIOS} provides more accurate retrieval by dynamically constructing query-relevant graphs.
+Experiments on OTT-QA show that it surpasses SOTA models, achieving a 42.6\% AR@2 improvement and a 39.9\% nDCG@50 gain.
+
+
+
+
+
+
+
+% \paragraph{Reproducibility Statement}
+% We provide prompt examples for operations performed in star-based LLM refinement, including aggregation query classification in Appendix~\ref{sec:aggregation_query_detection_prompt}, column-wise aggregation in Appendix~\ref{sec:table_wise_aggregation_prompt}, and passage verification in Appendix~\ref{sec:passage_wise_selection_prompt}. 
+% Additionally, OTTeR and DoTTeR were reproduced using the official code available at \href{https://github.com/Jun-jie-Huang/OTTeR}{\texttt{OTTeR}} and \href{https://github.com/deokhk/DoTTeR}{\texttt{DoTTeR}}, respectively. COS and CORE were reproduced using the official code from \href{https://github.com/Mayer123/UDT-QA}{\texttt{UDT-QA}}. 
+% The source code, data, and other artifacts for \texttt{HELIOS} have been made available at \href{https://anonymous.4open.science/r/HELIOS-248C}{\texttt{anonymous.4open.science}}.

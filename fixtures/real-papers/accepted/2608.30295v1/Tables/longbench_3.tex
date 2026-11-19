@@ -1,0 +1,27 @@
+\begin{table}[t]
+\centering
+\caption{Performance (\%) of different models and various methods on LongBench. We present the average score of all 21 tasks. The ``Budget'' refers to the computational budget.
+% \shortname outperforms other methods with 42\% KV Cache size.
+Please refer to the Appendix~\ref{appendix-longbench} for detailed data.}
+
+\setlength{\tabcolsep}{3.0pt} % 调整列间距
+\small
+\resizebox{0.48\textwidth}{!}{
+\begin{tabular}{l|cc|c|c|c|c|c}
+\toprule
+\multicolumn{3}{c|}{Model}& \multicolumn{1}{c|}{LLama-3} & \multicolumn{1}{c|}{Phi-3} & \multicolumn{1}{c|}{Llama-3.1} &  \multicolumn{1}{c|}{Yi} &\multicolumn{1}{c}{Qwen2.5} \\
+\midrule
+Methods & Cache & Budget & \multicolumn{5}{c}{Average Performance}\\
+\midrule
+Full & 100\% & 100\% & 31.27 & 34.00& 33.68 & 33.02& 30.03\\
+\quad +CateKV & 42\% & 42\% & 31.48 & 33.73 & 33.70 & 32.83 & 29.92\\
+Quest & 100\% & 3\% & 30.90 & 33.11 & 33.20 & 32.82 & 29.30\\
+\quad +CateKV & 42\% & 3\% & 31.03 & 33.29 & 33.38 & 32.79 & 29.33\\
+ShadowKV & 100\% & 3\% & 30.77 & 32.53 & 33.03 & 32.41 & 28.57\\
+\quad +CateKV & 42\% & 3\% & 30.94 & 32.45 & 32.96 & 32.21 & 28.51\\
+
+\bottomrule
+\end{tabular}}
+\label{tab:longbench_2}
+\vspace{-0.3cm}
+\end{table}

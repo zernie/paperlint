@@ -1,0 +1,177 @@
+\label{sec:clientkeys}
+
+\subsection{Longitudinal Analysis of SSH Client Keys}
+\label{subsec:longitudinal}
+
+\newcommand{\countstyle}{\small\color{gray}}
+\newcommand{\totalstyle}{}
+\begin{table*}
+    \centering
+    \caption{Distribution of asymmetric key algorithms among the SSH client keys on popular source repository platforms.}
+    \label{tab:longitudinal}
+    \begin{tabular}{lrrrrrrrrr}
+        \toprule
+        & 2015~\cite{cox2015} & \multicolumn{4}{c}{Our Scan from June 2023} & \multicolumn{4}{c}{Our Scan from January 2025} \\
+        \cmidrule(lr){2-2}\cmidrule(lr){3-6}\cmidrule(lr){7-10}
+        Algorithm & GitHub & GitHub & GitLab & Launchpad & Unique & GitHub & GitLab & Launchpad & Unique \\
+        \midrule
+        RSA & 97.67\% & 61.53\% & 79.44\% & 92.22\% & 68.40\% & 50.82\% & 75.79\% & 90.40\% & 60.80\% \\
+         & \countstyle{1,205,330} & \countstyle{5,660,641} & \countstyle{4,595,059} & \countstyle{132,215} & \countstyle{9,959,924} & \countstyle{5,338,842} & \countstyle{5,272,676} & \countstyle{136,743} & \countstyle{10,372,614} \\
+        Ed25519 & 0.02\% & 37.46\% & 20.08\% & 1.41\% & 30.74\% & 48.24\% & 23.70\% & 3.41\% & 38.39\% \\
+         & \countstyle{210} & \countstyle{3,446,461} & \countstyle{1,161,821} & \countstyle{2,026} & \countstyle{4,476,970} & \countstyle{5,066,902} & \countstyle{1,649,163} & \countstyle{5,163} & \countstyle{6,548,889} \\
+        ECDSA & 0.07\% & 1.01\% & 0.40\% & 0.60\% & 0.77\% & 0.94\% & 0.44\% & 0.71\% & 0.74\% \\
+         & \countstyle{859} & \countstyle{92,903} & \countstyle{23,052} & \countstyle{860} & \countstyle{112,566} & \countstyle{98,350} & \countstyle{30,774} & \countstyle{1,076} & \countstyle{125,593} \\
+        DSA & 2.24\% & 0.00\% & 0.08\% & 5.77\% & 0.09\% & 0.00\% & 0.07\% & 5.48\% & 0.07\% \\
+         & \countstyle{27,683} & \countstyle{0} & \countstyle{4,757} & \countstyle{8,273} & \countstyle{12,924} & \countstyle{0} & \countstyle{4,676} & \countstyle{8,282} & \countstyle{12,858} \\
+        \midrule
+        Total & \totalstyle{1,234,082} & \totalstyle{9,200,005} & \totalstyle{5,784,689} & \totalstyle{143,374} & \totalstyle{14,562,384} & \totalstyle{10,504,094} & \totalstyle{6,957,289} & \totalstyle{151,264} & \totalstyle{17,059,954} \\
+        \bottomrule
+    \end{tabular}
+\end{table*}
+
+We collected over 30M SSH client keys from GitHub, GitLab, and Launchpad in two scans in June 2023 and January 2025 (\autoref{tab:longitudinal}). We found that the distribution of algorithms differs considerably among the platforms, with Launchpad users predominantly using RSA keys (92.22\% / 90.40\%) and DSA keys (5.77\% / 5.48\%). In contrast, GitHub and GitLab users also use Ed25519 (37.46\% / 48.24\% and 20.08\% / 23.70\%). Most notably, the percentage and absolute number of Ed25519 keys on GitHub are rising sharply by over 10\% for our datasets, leading to an almost even split between RSA and Ed25519 keys in January 2025. A similar trend can also be observed for GitLab and Launchpad; however, it is less pronounced and far from being split evenly. At the same time, the absolute number of RSA keys on GitHub is receding. 
+
+Compared to earlier reports, we see an increased adoption of elliptic curve algorithms, particularly Ed25519. In 2015, Cartwright-Cox~\cite{cox2015} published data on 1.38M GitHub user keys, of which 1.35M (97.67 \%) are RSA keys, and the remaining 2\% DSA, with only 859 ECDSA and 210 Ed25519 keys. A 2018 study by Romailler et al.~\cite{amiet2018} collected 4.7M GitHub and 1.2M GitLab user keys as part of a much larger dataset of 346M keys. Of that larger dataset, 94.48\% are RSA keys, and less than 1\% are DSA keys. In contrast, we see a strong adoption of Ed25519 paired with a deprecation of DSA on GitHub and GitLab.
+
+\paragraph{Two-Factor Authentication}
+
+Our analysis is based on the cryptographic primitive underlying the SSH key and does not distinguish between regular keys and those stored on U2F devices, as described in~\cite{protocolopensshu2f}. From the SSH algorithm name, we observe sporadic use of Ed25519 and ECDSA NIST~\ptwofivesix U2F keys on GitHub and GitLab only, accounting for approximately 3.5\% of ECDSA NIST~\ptwofivesix keys and less than 1\% of Ed25519 keys.
+
+\paragraph{RSA}
+
+\autoref{fig:rsa-mod-dist} shows that on GitHub in January 2025, 99.62\% of all RSA keys have a modulus of length at least 2048 bits; this number only amounts to 93.64\% on Launchpad, leaving GitLab in between at 99.08\% in the same time range. A trend towards more secure RSA modulus bit lengths can be observed on all platforms, although it is more noticeable on GitHub and GitLab.
+
+As for the public exponent, $e = 2^{16} + 1$ is the most common choice by a significant margin, accounting for 96.55\% of all exponents in both datasets. Other common choices are $e = 37$ (2.12\%), used by \putty up to version 0.75, and $e = 35$ (1.32\%), used by OpenSSH up to version 5.4. Other values are rarely used for more than one key. The longest RSA public exponent observed has 96 bits alongside a 2158-bit modulus and was found on GitLab.
+
+\paragraph{ECDSA}
+
+Among all ECDSA keys in our datasets, the most commonly used curves are NIST~\ptwofivesix and NIST~\pfivetwoone, as seen in \autoref{fig:ecdsa-curve-dist}. The only other curve in our dataset is NIST~\pthreeeightfour, with a minor share, thus reflecting the three common choices for ECDSA curves in SSH. Interestingly, we observe a shift from NIST~\pfivetwoone towards less secure NIST~\ptwofivesix keys on all platforms. 
+
+\paragraph{DSA}
+
+We observed only a few thousand DSA public keys available for authentication, none of them on GitHub (cf.~\autoref{subsec:upload-restrictions}). Between our scraping runs, the number of keys on GitLab decreased, while the number on Launchpad stagnated. 88.57\% of all DSA keys use a 1024-bit modulus with a 160-bit subgroup, in line with the specification. However, 10.02\% of keys use moduli of larger bit lengths, most commonly 2048 bits, albeit maintaining the 160-bit subgroup. Using larger moduli sizes is not standard-compliant but is often supported by SSH implementations as long as the subgroup bit length remains unchanged. Due to generic discrete log algorithms (e.g., Pollard's kangaroo~\cite{pollard1978monte} algorithm), increasing the modulus size without increasing the subgroup size does not raise the effective security level.
+
+
+\begin{figure}
+    \centering
+    \begin{subfigure}{\columnwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/02-summary-rsa-modulus-dist-jun23.png}
+        \subcaption{Our Scan from June 2023}
+    \end{subfigure}
+    \begin{subfigure}[b]{\columnwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/02-summary-rsa-modulus-dist-jan25.png}
+        \subcaption{Our Scan from January 2025}
+    \end{subfigure}
+    \caption{The relative distribution of RSA modulus bit lengths $n$ in user keys across each platform shows that GitHub users, by percentage, use the strongest keys. The percentage of longer bit lengths increased measurably between our scans.}
+    \Description{Two horizontal bar diagrams comparing the relative distribution of RSA modulus bit lengths found in user keys across all platforms in June 2023 and January 2025. In comparison, GitHub users tend to use longer RSA modulus bit lengths, while a significant portion of users on Launchpad still have keys with n < 2048. Overall, a trend toward more secure bit lengths can be observed, which is more notable on GitHub and GitLab.}
+    \label{fig:rsa-mod-dist}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \begin{subfigure}{\columnwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/02-summary-ecdsa-curve-dist-jun23.png}
+        \subcaption{Our Scan from June 2023}
+    \end{subfigure}
+    \begin{subfigure}[b]{\columnwidth}
+        \centering
+        \includegraphics[width=\columnwidth]{img/02-summary-ecdsa-curve-dist-jan25.png}
+        \subcaption{Our Scan from January 2025}
+    \end{subfigure}
+    \caption{The relative distribution of curves used with ECDSA algorithms per platform shows that Launchpad users, by percentage, use more secure ECDSA keys. We observe a shift from NIST~\pfivetwoone towards NIST~\ptwofivesix between our two scans.}
+    \label{fig:ecdsa-curve-dist}
+    \Description{Two horizontal bar diagrams comparing the relative distribution of curves used with ECDSA algorithms per platform in June 2023 and January 2025. Most users prefer NIST~\ptwofivesix over \pthreeeightfour or \pfivetwoone curves, with the second most common option being \pfivetwoone keys. The amount of \pthreeeightfour keys is significantly less compared to \ptwofivesix and \pfivetwoone. A shift from \pfivetwoone to \ptwofivesix can be observed between the first scan in June 2023 and the second in January 2025.}
+\end{figure}
+
+\subsection{Security of SSH Client Keys}
+\label{subsec:security2}
+
+\paragraph{Short RSA keys}
+
+In the June 2023 dataset, we found 77,411 keys with modulus bit lengths shorter than 2048 bits. Of those, 93 keys are shorter than 830 bits, putting them at risk of being factored by computing resources available today. A single key on GitLab was only 8 bits long ($N = 13^2$); probably a test key to probe upload filters on GitLab. As for byte boundary bit lengths, we observe 20,240 keys with a bit length that is not a multiple of 8, potentially causing compatibility issues. About half of these keys are of length $n = 1023$ or $n = 2047$, possibly resulting from a bug in \putty (fixed in version 0.72) that caused some generated RSA keys to be one bit shorter than intended.
+
+We observed similar numbers in January 2025, indicating that the number of short RSA keys has not increased significantly and that users nowadays primarily upload long keys. We found 77,438 keys shorter than 2048 bits, of which 98 are shorter than 830 bits, and 20,692 keys where the modulus bit length is not a multiple of 8. When comparing the two datasets, we found 60,493 shared keys to be shorter than 2048 bits and 90 of those to be shorter than 830 bits. Similarly, 15,777 keys with a bit length not divisible by 8 appear in both datasets.
+
+\paragraph{RSA Public Exponents}
+
+In January 2025, we found four keys with even exponents, three of which have $e = 2^{16} + 2$, and the fourth has a 96-bit exponent, resulting from a corrupt RSA public key; no even exponents were observed in our June 2023 dataset, and thus no such key is shared between the two datasets. In both datasets, all odd exponents had at most 64~bits.\footnote{This is also the limit of public exponent bits for large key sizes in OpenSSL; see \url{https://github.com/openssl/openssl/blob/master/include/openssl/rsa.h\#L56}, accessed: 2025-04-14} We conclude that there is no significant probability for keys with small $d$.
+
+\paragraph{RSA Batch GCD and Small Prime Factors}
+
+In the June 2023 dataset, we identified 305 keys with a GCD greater than one. Among these, 56 were correctly generated keys that reused one of their primes, compromising their security. The remaining 249 keys exhibited small factors, with the largest GCD being 1,842,374,275. Many of the GCDs were smaller, and a substantial portion were composite. Looking only at the first one million prime numbers, we found 306 keys that contained at least one such small prime as a factor. Counting all keys with a GCD greater than one or having a small prime factor, we get a total number of 362 (0.004\%) such keys.
+
+In the January 2025 set, we found 128 keys with a GCD greater than one. Unlike the first set, none of these were correctly generated RSA keys with only two large prime factors. Instead, all keys in this set exhibited small factors, with the largest GCD being 1,300,062,075. Similar to the first set, most GCDs were smaller and predominantly non-prime. Furthermore, 149 keys contained one or more of the first one million prime factors in their modulus. These keys include all 128~keys found with batch GCD, so the total number of keys with a GCD greater than one or having a small prime factor remains 149 (0.001\%).
+Of those, 19 keys were found in both datasets.
+
+A potential reason for keys with one or multiple small prime factors can be an accidental change to the Base64 encoding of the public key during upload (e.g., a single Base64 character being altered), rendering those keys unusable \emph{for the legitimate user}. However, we suppose that these keys can still be used for authentication \emph{by an attacker} if the attacker computes a signature using a secret exponent $d$ calculated with the correct value for $\varphi(N)$. From these keys, we selected all keys with a prime factor in the first ten thousand primes, yielding 396 unique keys, 281 keys from June 2023, and 132 keys from January 2025, with 17 keys shared between both datasets. We attempted ECM factorization up to 25-decimal-digit factors on those 396 keys. These attempts returned complete factorizations for 29 keys. Where only partial factorization was successful, the modulus was reduced by 99.53 bits on average.
+
+\paragraph{Debian, ROCA, and Fermat Vulnerabilities}
+
+Our June 2023 dataset contained 93 keys affected by the ROCA vulnerability, compromising their security. All affected keys were found on GitLab or Launchpad. In our January 2025 dataset, this number dropped significantly for GitLab while increasing by one for Launchpad to 25 vulnerable keys across both platforms, 17 of which were already included in our June 2023 dataset. The significant decrease in vulnerable keys on GitLab is likely a response to our first disclosure.
+
+Fermat factorization yielded a single result in our June 2023 dataset, where $N = 13\cdot 13$. Apart from this, the Fermat test with 100 rounds did not return factorizations for any of the other RSA moduli, confirming the negative findings by Böck~\cite{EPRINT:Bock23}.
+
+Additionally, we checked every RSA public key against each \emph{blocklist} defined by the badkeys tool. These blocklists include Debian weak keys for several applications and key sizes, keys vulnerable to CVE-2021-41117, keys leaked in Git repositories and websites, and test keys from RFCs and software tests.
+In our June 2023 dataset, we found 176 keys on at least one blocklist. Of these, 73.30\% were blocked as Debian weak keys. Of all keys on Launchpad, 0.08\% are Debian weak keys. This percentage is several orders of magnitude larger than that on the other platforms. The number of keys in a blocklist slightly decreased to 133 RSA keys in our January 2025 dataset, 84.96\% being Debian weak keys. 123 keys are contained in both datasets, of which 106 keys are found on Launchpad, indicating a reduction in blocklisted keys on GitHub and GitLab.
+
+
+\paragraph{(EC)DSA}
+
+For DSA, we found the same six keys with a bit length of $p$ less than 795 bits on Launchpad in each of the two datasets, which puts them at risk of a discrete logarithm attack with the computing resources available today. Our January 2025 dataset contains one 1024-bit DSA key from Launchpad where $p$ is not prime and $g$ and $y$ do not have order $q$, indicating a corrupt public key. In the same dataset, three unique keys have a subgroup size of 256 bits rather than 160 bits, two of which were already present in our June 2023 dataset. The different subgroup size renders the keys unusable in practice due to the lack of length fields in the DSA signature blob in SSH~\cite[Section 6.6]{rfc4253}. As for Debian weak keys, we found a total of 35 compromised DSA keys across both datasets; none of these keys are shared by different users. However, 29 of these keys appear in both datasets.
+
+For ECDSA, all keys from both datasets passed our validity checks, and the badkeys tool does not find any key on any badkeys blocklist, including Debian weak keys.
+
+\definecolor{RestrictionTableRed}{RGB}{220,0,0}
+\definecolor{RestrictionTableGreen}{RGB}{0,150,0}
+\newcommand{\RblockedSymbol}{\color{RestrictionTableGreen}\ding{55}}
+\newcommand{\Rblocked}{\fitover{\RblockedSymbol}{.}}
+\newcommand{\RallowedSymbol}{\color{RestrictionTableRed}\ding{51}}
+\newcommand{\Rallowed}{\fitover{\RallowedSymbol}{.}}
+\newcommand{\RvalidAllowed}{\fitover{\ding{51}}{.}}
+\newcommand{\RvalidBlocked}{\fitover{\ding{55}}{.}}
+\begin{table}
+    \centering
+    \caption{Public key upload restrictions on the Git-based repository hosting services GitHub (\faGithub), GitLab (\faGitlab), and Launchpad (\protect\faLaunchpad) in January 2025. A cross ({\RblockedSymbol}) indicates that the platform prevents the key upload, while a check mark ({\RallowedSymbol}) indicates that the upload is possible. For DSA, $p$ is the prime, $q$ is the order of the subgroup, $g$ is the generator, and $y$ is the public key. For RSA, $N = pq$ is the modulus of bit length $n$, and $e$ is the exponent. For ECDSA, the public key is $(x, y)$.}
+    \label{tab:upload-restrictions}
+    \small
+    \begin{tabular}{p{0em}lcccp{0em}lccc}
+        \toprule
+         & Test Key & \fitover{\faGithub}{x} & \fitover{\faGitlab}{x} & \fitover{\faLaunchpad}{x} &
+         & Test Key & \fitover{\faGithub}{x} & \fitover{\faGitlab}{x} & \fitover{\faLaunchpad}{x}
+         \\ \midrule
+         \multirow{15}{*}{\rotatebox{90}{RSA}} & Valid & \RvalidAllowed & \RvalidAllowed & \RvalidAllowed & \multirow{10}{*}{\rotatebox{90}{DSA}} & Valid & \RvalidBlocked & \RvalidBlocked & \RvalidAllowed \\
+         & $n = 1024$ & \Rallowed & \Rallowed & \Rallowed & & 2048-bit $p$ & \Rblocked & \Rblocked & \Rallowed \\
+         & $n = 1023$ & \Rallowed & \Rallowed & \Rallowed & & 256-bit $q$ & \Rblocked & \Rblocked & \Rallowed \\
+         & $n = 1022$ & \Rblocked & \Rallowed & \Rallowed & & $p$ not prime & \Rblocked & \Rblocked & \Rallowed \\
+         & $n = 512$ & \Rblocked & \Rallowed & \Rallowed & & $q$ not prime & \Rblocked & \Rblocked & \Rallowed \\
+         & $8 \nmid n$ & \Rallowed & \Rallowed & \Rallowed & & $g \geq p$ & \Rblocked & \Rblocked & \Rblocked \\
+         & Even Modulus & \Rblocked & \Rallowed & \Rallowed & & $y \geq p$ & \Rblocked & \Rblocked & \Rallowed \\
+         & Even Exponent & \Rallowed & \Rallowed & \Rblocked & & $ord(g) \neq q$ & \Rblocked & \Rblocked & \Rallowed \\
+         & $e < 2^{16} + 1$ & \Rallowed & \Rallowed & \Rallowed & & $ord(y) \neq q$ & \Rblocked & \Rblocked & \Rallowed \\
+         & $N = p^2$ & \Rallowed & \Rallowed & \Rallowed & & Debian Weak Key & \Rblocked & \Rblocked & \Rallowed \\
+         & Small Factor & \Rblocked & \Rallowed & \Rallowed \\
+         & Debian Weak Key & \Rallowed & \Rallowed & \Rallowed \\
+         & CVE-2021-41117 & \Rblocked & \Rblocked & \Rallowed & \multirow{7}{*}{\rotatebox{90}{ECDSA}} & Valid & \RvalidAllowed & \RvalidAllowed & \RvalidAllowed \\
+         & ROCA & \Rblocked & \Rallowed & \Rallowed & & Invalid Encoding & \Rblocked & \Rblocked & \Rblocked \\ 
+         & Fermat & \Rallowed & \Rallowed & \Rallowed & & Point at Infinity & \Rallowed & \Rblocked & \Rblocked \\
+         & & & & & & $x \geq p$ & \Rblocked & \Rblocked & \Rblocked  \\
+         \multirow{3}{*}{\rotatebox{90}{Ed25519}} & Valid & \RvalidAllowed & \RvalidAllowed & \RvalidAllowed & & $y \geq p$ & \Rblocked & \Rblocked & \Rblocked \\
+         & Invalid Encoding & \Rallowed & \Rallowed & \Rallowed & & Not on Curve & \Rblocked & \Rblocked & \Rblocked  \\
+         & Point Order $\neq q$ & \Rallowed & \Rallowed & \Rallowed & & Debian Weak Key & \Rallowed & \Rallowed & \Rallowed \\
+         \bottomrule
+    \end{tabular}
+\end{table}
+
+
+\paragraph{EdDSA}
+
+For EdDSA, we found 327 keys in our June 2023 dataset with an invalid encoding and 315 with a higher-than-expected point order. These numbers increased to 759 invalid encodings and 641 higher point orders in January 2025, where 82 invalid encodings and 80 higher point orders from the June 2023 dataset were also included in the January 2025 dataset. The significant increase in invalid Ed25519 keys is likely caused by the increase in overall Ed25519 keys. Similar to RSA keys, both results may be related to accidental modifications of the Base64-encoded public key during upload. No key with a lower-than-expected point order was observed. Six distinct keys are listed on at least one badkeys blocklist; only one of which is present in both datasets.
+
+
+\subsection{Public Key Upload Restrictions}
+\label{subsec:upload-restrictions}
+
+Our generated test key dataset contains 41 test vectors, including one valid public key per algorithm family. Our results indicate that GitHub does not allow uploading DSA keys, and while some user accounts on GitLab still have DSA keys configured, uploading new DSA keys to GitLab is also no longer possible. For RSA, GitHub prevents uploading short RSA keys with fewer than 1023 bits, keys vulnerable to ROCA, and keys with small factors. Most test vectors for ECDSA were rejected by all platforms, including those with invalid encoding, invalid coordinate bounds, and an invalid point returned invalid key errors. The point at infinity was accepted by GitHub as a public key but rejected by the other two platforms. Only Launchpad returned additional invalid key errors on an out-of-bounds generator for DSA and an even RSA exponent. No upload restrictions were detected for Ed25519 keys on all platforms. The detailed results for all keys can be found in \autoref{tab:upload-restrictions}.

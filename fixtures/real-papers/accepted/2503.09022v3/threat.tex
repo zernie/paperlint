@@ -1,0 +1,59 @@
+
+\section{Threat Model and Problem Formulation}
+In this section, we illustrate the threat model of our prompt inversion attack (PIA) against LLM collaborative inference systems and delve into formulations of PIA.
+
+
+
+
+
+
+
+\subsection{Threat Model}
+\label{sec:threat_model}
+This paper focuses on the privacy of clients' prompts because they often carry sensitive information. Without loss of generality, we focus on the case of one malicious participant. The attack is easier to conduct if multiple participants are compromised by a single attacker due to the acquisition of more information. Hence, we consider this to be the most challenging case.  We omit the case that the first participant is malicious because the first participant is allocated to be the client himself. This eliminates the need for the client to send the prompt to the first participant, thereby preventing direct prompt leakage.  Following the concept in secure multi-party computation (MPC)~\cite{yao1986generate,beerliova2008perfectly}, we model the attacker as honest-but-curious, \ie, he faithfully computes his layers and sends the correct activation to the next participant, as explained in Figure~\ref{fig:concept}.
+
+
+\revise{Since proprietary LLMs are unsuitable for collaborative inference, which requires parties to hold parts of the model weights, in our paper, we mainly focus on the setting of collaborative inference of a publicly known model (\emph{white-box setting}).  Arguably, white-box setting dominates the real-world applications of collaborative inference because open-source LLMs like LlaMA-3 and DeepSeek~\cite{deepseek} are becoming increasingly powerful, achieving performance comparable to proprietary LLMs.}
+Besides, we also explore the attack of models fine-tuned with parameter-efficient fine-tuning (PEFT) techniques (\emph{grey-box setting}). Without loss of generality, we take the most prevalent PEFT technique LoRA~\cite{lora} as an example in our paper.
+
+LoRA~\cite{lora} hypothesizes that during fine-tuning, updates to the weights of the base model exhibit a low ``intrinsic rank".   For a pre-trained weight matrix $W_i \in \mathbb{R}^{d \times k}$ at the $i$-th transformer layer, the weight update is constrained by a low-rank decomposition  $W_i+\Delta W_i=W_i+\theta_{B_i} \theta_{A_i}$, where $\theta_{B_i} \in \mathbb{R}^{d \times r}, \theta_{A_i} \in \mathbb{R}^{r \times k}$, and the rank $r \ll \min (d, k)$. During fine-tuning, $W_i$ remains frozen without receiving gradient updates, while $\theta_{A_i}$ and $\theta_{B_i}$ contain trainable parameters. In the collaborative inference for LoRA fine-tuned LLMs, each participant  receives their respective  $\theta_{A_i}, \theta_{B_i}$ from the client and computes their updated weight matrix $W_i+\theta_{B_i} \theta_{A_i}$. 
+%Note both $W_0$ and $\Delta W=B A$ are multiplied with the same input, and their respective output vectors are summed coordinate-wise. For $h=W_0 x$, our modified forward pass yields:
+%$$
+%h=W_0 x+\Delta W x=W_0 x+B A x
+%$$. 
+
+
+For the white-box setting, the attacker knows the whole model's weights. 
+For the grey-box setting, all participants know the base model's weights and  their own LoRA weight, but have no information about the LoRA weights of others.
+
+
+We assume the attacker records the received activation during collaborative inference silently. After recording, the attacker conducts the inversion. Note that the inversion can be done completely offline and has no urgent timeliness requirements. Thus we assume  the attacker has enough computational power to perform the inversion. Performing the attack can be profitable due to two reasons: (1) Input prompts
+often contain sensitive information such as personal names and
+contact information. (2) High quality LLM prompts themselves
+ have commercial value and can be traded on markets~\cite{promptbase,promptmarket}.
+%\wenjie{commercial , maybe add to intro, also may seem a bit weak, maybe can say sell on the market}
+
+% \yongji{Do we need citations here?}
+
+
+
+
+\subsection{Problem Formulation} 
+Assume the attacker is the $i$-th participant. Under the \emph{white-box setting}, the attack problem can be formulated as follows. The attacker receives the previous activation $A$ and he knows the model layer parameters of all preceding  participants'  $F_1, F_2, \ldots, F_{i-1}$.  The relationship between $A$ and $x$ is:
+\begin{align}
+    A= F_{i-1}\circ F_{i-2} \circ \cdots \circ F_{1} (E(x)).
+\end{align}
+where $E(\cdot)$ is the embedding layer. The attacker's objective can be formulated as: for each input prompt $x$, given $A, F_1, F_2, \ldots, F_{i-1}$, find $x'$, such that $x'\approx x$.
+
+
+Under the \emph{grey-box setting}, the attack problem can be formulated as follows. We define $G(\cdot , \cdot)$ as a model layer fine-tuned with LoRA, which includes the layer's base weights $w_i$ and its LoRA adapter $\theta_{A_i},\theta_{B_i}$. The attacker receives the previous activation $A$ and he has access to all previous participants' model base weights $w_1, w_2, \ldots, w_{i-1}$. His goal is to recover the input prompt $x$. The relationship between $A$ and $x$ is:
+\begin{footnotesize}
+        \begin{align}
+    A= G_{w_{i-1},\theta_{A_{i-1}},\theta_{B_{i-1}}}\circ \cdots \circ G_{w_1,\theta_{A_1},\theta_{B_1}} (E(x)).
+\end{align}
+\end{footnotesize}
+
+
+The attacker's objective can be formulated as: for each input prompt $x$, given $A, G, w_1, w_2, \ldots, w_{i-1}$, find $x'$, such that $x'\approx x$.
+% \yuguang{where $G_{w_{i}}$ stands for the $i$-th layer of the model and $\theta_i$ stands for the $i$-th LoRA weight.}
+% \jiaheng{Where do we define G and theta?}

@@ -1,0 +1,166 @@
+\subsection{Studying Compiler Bugs}
+
+Previous work has investigated bugs in Rust compilers, analyzing a wide range of
+issues; in contrast, this work focuses specifically on soundness bugs.
+%
+Xia et al.~\cite{xia2023rustcompilers} analyzed historical bugs in two Rust
+compilers, \rustc{} and \C{rust-gcc}~\cite{rust-gcc}.
+%
+They identified type checking as the most bug-prone component in both compilers,
+along with method resolution and IR processing.
+%
+Yu and Wang~\cite{yu2024empiricalrustpl} examined bug reports and their
+corresponding revisions in the \rustc{} GitHub repository.
+%
+They found that traits and ownership are the primary Rust-specific features
+involved in compiler bugs.
+%
+Their analysis of bug symptoms revealed that internal compiler errors (ICEs) are
+the most prevalent, with soundness issues ranking as the second most frequent
+occurrence.
+%
+Liu et al.~\cite{liu2025empiricala} investigated \rustc{} bugs across various
+compiler components.
+%
+Their study identified type system errors as the leading cause of bugs, with
+errors related to trait bounds and opaque types representing the largest share.
+%
+Furthermore, they found that a significant portion of bugs are correctness
+issues, including completeness and soundness issues, which constitute the most
+frequent symptom after crashes.
+
+Researchers have also studied compiler bugs in domains other than Rust.
+%
+Notably, they have covered GCC and LLVM~\cite{sun2016gccllvm},
+WebAssembly~\cite{romano2021wasm}, JVM-targeting languages, including Java,
+Scala, Kotlin, and Groovy~\cite{chaliasos2021jvm},
+Solidity~\cite{li2025solidity}, and deep learning compilers~\cite{du2021dl,
+shen2021dlcompilerbugs}.
+
+A notable previous study discovered new compiler bugs instead of analyzing bugs
+from programmers.
+%
+Amin and Tate~\cite{amin2016java} presented soundness bugs in Java and Scala,
+where they utilized null pointers with existential types to enable casting
+between arbitrary types without relying on built-in downcasting.
+%
+They noted that the identified unsoundness results from the interaction of
+different language features, aligning with our findings.
+
+% We identified four previous empirical studies specifically regarding Rust compiler bugs.
+% This section sumarizes their findings and compares them to our study results.
+
+% However, their work only broadly associates Rust compiler bugs with the type system.
+% In contrast, we identify the precise type system features that lead to soundness issues
+% and analyze their consequences.
+
+% While they provide coarse relationship between language features and bug symptoms,
+% we investigate finer-grained relationship between individual type system features
+% and the specific consequences arising from soundness issues.
+% While both works broadly associates Rust compiler bugs with the type system,
+% we provide finer-grained analysis on individual type system features
+% and the specific symptoms and consequences of the soundness issues.
+
+% Finally, the study examines the effectiveness of existing testing techniques in detecting the bugs.
+% The findings suggest that current techniques remain ineffective against non-crash bugs,
+% particularly soundness bugs.
+% Consistent with these findings, our work establish findings specific to soundness issues of \rustc{} type checker,
+% and analyze relationship between the bugs symptoms and individual type system features.
+
+%While most studies study compiler bugs from the perspective of preventing them,
+%Hassnain and Stanford~\cite{hassnain2024counterexample} focus on exploiting
+%them.
+%%
+%They investigated code patterns in Safe Rust that can induce memory bugs, and
+%one pattern involves exploiting soundness bugs in \rustc{}.
+
+% while writing exclusively in Safe Rust;
+%
+% Their paper specifically provides a code snippet that exploits the bug in Issue
+% 112417, which is included in our dataset.
+
+% \subsection{Soundness Bugs in Real-World Languages}
+
+\subsection{Formalizing the Rust Type System}
+
+While this work investigates existing documents, including the Reference, the
+FLS, and RFCs, researchers have formalized the type system for various subsets
+of Rust, which may aid the construction of a mechanized specification in the
+future.
+%
+Jung et al.~\cite{jung2017rustbelt} proposed RustBelt, formalizing Rust's
+ownership and borrowing type system by defining the core language
+$\lambda_{Rust}$ and proved its type soundness.
+%
+Wagner et al.~\cite{wagner2025linearity} proposed Borrow Calculus, which
+incorporates linearity and borrowing, and proved its soundness.
+%
+Additionally, Milewski~\cite{milewski2015traits} formalized the Rust trait
+system by defining subsets of the language that include associated types, trait
+objects, and coherence rules, and proved type soundness.
+%
+However, none of these formalizations can represent any of the soundness issues
+studied in this work.
+%
+RustBelt and Borrow Calculus provide variants of lambda calculus that express
+lifetimes but lack many high-level features, including implied bounds and
+traits;
+%
+Milewski's languages focus only on traits, omitting lifetimes, and define
+coherence rules only for limited language features, without encompassing
+associated types or trait objects.
+%
+While formalizing all language features would not be feasible, we suggest that
+covering implied bounds and treating lifetimes and traits simultaneously should
+have the highest priority.
+
+% While the paper formalizes and proves soundness of a significant subset of the trait system,
+% it does not formalize important features of Rust type system such as lifetimes or closures,
+% thus it cannot fully reason about real-world soundness bugs.
+
+% The soundness is proven by defining semantic interpretation of $\lambda_{Rust}$ types
+% and proving that syntactically well-typed programs are also semantically well-typed and does not go to a stuck state.
+
+% The study provides an theoretical basis for Rust's ownership-based type system.
+% However, the $\lambda_{Rust}$ language cannot account for real-world soundness bugs
+% because it does not incorporate trait system features.
+
+% Neither of the previous works provide a holistic formalization
+% that includes ownership system, trait system and type inference.
+% We argue that disparate formalizations must be unified into a single framework
+% in order to effectively reason about real-world soundness bugs,
+% because the bugs typcially emerge from interactions of type system features.
+
+% \subsection{Existing Tools to Detect the Soundness Bugs}
+
+% In testing literature, previous studies have developed test generation techniques to fing Rust compiler bugs.
+% An important challenge in Rust compiler testing is to generate valid programs that pass type checking.
+% This is essential to test compiler middle- and back-end components behind the type checker.
+% Previous studies have tackled this challenge via different approaches.
+
+% Two previous works utilize a subset of Rust typing rules to directly generate well-typed programs.
+% Dewey et al.\cite{dewey2015clp} translate Rust's typing rules into constraint logic programming (CLP),
+% then queries CLP engines to search well-typed programs.
+% They have found 18 bugs including three confirmed soundness bugs.
+% Sharma et al.\cite{sharma2023rustsmith} extends Csmith\cite{yang2011csmith} into RustSmith, a fuzzer specific to Rust compiler.
+% RustSmith tracks validity information of references with symbol tables,
+% to enforce borrowing and lifetime rules when generating reference expressions.
+% RustSmith discovered five bugs in older versions of rustc, and two unknown bugs in mrustc\cite{gh-mrustc}.
+
+% Three previous works leverage LLM's capability to generate valid Rust programs.
+% Yang et al.\cite{yang2024rusttwins} propose Rust-twins, a mutation-based fuzzer for Rust compiler.
+% Rust-twins utilizes 18 LLM-driven mutators, which prompt LLMs to mutate Rust programs while perserving their validity.
+% Together with macro-based differential testing, Rust-twins revealed 8 confirmed rustc bugs.
+% Gao et al.\cite{gao2025clozemaster} propose ClozeMaster, a fuzzer for Rust compiler that leverages LLM's code completion capabilities.
+% They first collect seed codes from the rustc bug reports.
+% The fuzzer randommly selects a code and mask a segment of code wrapped with brackets.
+% Then LLM is prompted to complete the masked portion of the code to generate a new test case.
+% Using ClozeMaster fuzzer, they found 27 confirmed bugs from rustc and mrustc, manifesting as ICEs and compiler hangs.
+% Wang et al.\cite{wang2025mut4all} proposes Mut4All, an LLM-based framework producing valid mutators for Rust and C++.
+% They employ three LLM agents to analyze the bug reports, invent code mutators and validate them.
+% For Rust, Mut4All have generated 319 valid mutators from 500 trials and discovered 33 confirmed bugs in rustc and 5 in rust-gcc.
+
+% Wang and Jung\cite{wang2024rustlantis} propose a different approach to test deep components of Rust compiler.
+% They propose Rustlantis, a fuzzer that generates MIR programs.
+% By directly generating valid MIR programs, Rustlantis directly tests backend components behind the type checker.
+% They have found 24 confirmed bugs, consisting of compiler crashes and miscomplation bugs.

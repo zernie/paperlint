@@ -1,0 +1,325 @@
+\begin{thebibliography}{36}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[{Adelani et~al.(2023)Adelani, Masiak, Azime, Alabi, Tonja, Mwase,
+  Ogundepo, Dossou, Oladipo, Nixdorf, Emezue, Al-azzawi, Sibanda, David,
+  Ndolela, Mukiibi, Ajayi, Moteu, Odhiambo, Owodunni, Obiefuna, Mohamed,
+  Muhammad, Ababu, Salahudeen, Yigezu, Gwadabe, Abdulmumin, Taye, Awoyomi,
+  Shode, Adelani, Abdulganiyu, Omotayo, Adeeko, Afolabi, Aremu, Samuel, Siro,
+  Kimotho, Ogbu, Mbonu, Chukwuneke, Fanijo, Ojo, Awosan, Kebede, Sakayo,
+  Nyatsine, Sidume, Yousuf, Oduwole, Tshinu, Kimanuka, Diko, Nxakama, Nigusse,
+  Johar, Mohamed, Hassan, Mehamed, Ngabire, Jules, Ssenkungu, and
+  Stenetorp}]{toxic}
+David~Ifeoluwa Adelani, Marek Masiak, Israel~Abebe Azime, Jesujoba Alabi,
+  Atnafu~Lambebo Tonja, Christine Mwase, Odunayo Ogundepo, Bonaventure F.~P.
+  Dossou, Akintunde Oladipo, Doreen Nixdorf, Chris~Chinenye Emezue, Sana
+  Al-azzawi, Blessing Sibanda, Davis David, Lolwethu Ndolela, Jonathan Mukiibi,
+  Tunde Ajayi, Tatiana Moteu, Brian Odhiambo, and 46 others. 2023.
+\newblock \href {https://doi.org/10.18653/v1/2023.ijcnlp-main.10}
+  {{M}asakha{NEWS}: News topic classification for {A}frican languages}.
+\newblock In \emph{Proceedings of the 13th International Joint Conference on
+  Natural Language Processing and the 3rd Conference of the Asia-Pacific
+  Chapter of the Association for Computational Linguistics (Volume 1: Long
+  Papers)}, pages 144--159, Nusa Dua, Bali.
+
+\bibitem[{Agirre et~al.(2012)Agirre, Cer, Diab, and Gonzalez{-}Agirre}]{sts12}
+Eneko Agirre, Daniel~M. Cer, Mona~T. Diab, and Aitor Gonzalez{-}Agirre. 2012.
+\newblock Semeval-2012 task 6: {A} pilot on semantic textual similarity.
+\newblock In \emph{Proceedings of the 6th International Workshop on Semantic
+  Evaluation, SemEval@NAACL-HLT 2012}, pages 385--393.
+
+\bibitem[{Agirre et~al.(2013)Agirre, Cer, Diab, Gonzalez{-}Agirre, and
+  Guo}]{sts13}
+Eneko Agirre, Daniel~M. Cer, Mona~T. Diab, Aitor Gonzalez{-}Agirre, and Weiwei
+  Guo. 2013.
+\newblock *sem 2013 shared task: Semantic textual similarity.
+\newblock In \emph{Proceedings of the Second Joint Conference on Lexical and
+  Computational Semantics, *SEM 2013}, pages 32--43.
+
+\bibitem[{BehnamGhader et~al.(2024)BehnamGhader, Adlakha, Mosbach, Bahdanau,
+  Chapados, and Reddy}]{behnamghader2024llm2vec}
+Parishad BehnamGhader, Vaibhav Adlakha, Marius Mosbach, Dzmitry Bahdanau,
+  Nicolas Chapados, and Siva Reddy. 2024.
+\newblock Llm2vec: Large language models are secretly powerful text encoders.
+\newblock \emph{arXiv preprint arXiv:2404.05961}.
+
+\bibitem[{Cheng et~al.()Cheng, Gan, Jiang, Wang, Yin, Luo, Fu, and
+  Gu}]{chengsteering}
+Zifeng Cheng, Jinwei Gan, Zhiwei Jiang, Cong Wang, Yafeng Yin, Xiang Luo,
+  Yuchen Fu, and Qing Gu.
+\newblock Steering when necessary: Flexible steering large language models with
+  backtracking.
+\newblock In \emph{The Thirty-ninth Annual Conference on Neural Information
+  Processing Systems}.
+
+\bibitem[{Cheng et~al.(2025)Cheng, Wang, Fu, Jiang, Yin, Wang, and
+  Gu}]{DBLP:conf/acl/ChengWFJ00025}
+Zifeng Cheng, Zhonghui Wang, Yuchen Fu, Zhiwei Jiang, Yafeng Yin, Cong Wang,
+  and Qing Gu. 2025.
+\newblock \href {https://aclanthology.org/2025.acl-long.174/} {Contrastive
+  prompting enhances sentence embeddings in llms through inference-time
+  steering}.
+\newblock In \emph{Proceedings of the 63rd Annual Meeting of the Association
+  for Computational Linguistics (Volume 1: Long Papers), {ACL} 2025}, pages
+  3475--3487.
+
+\bibitem[{Deshpande et~al.(2023)Deshpande, Jimenez, Chen, Murahari, Graf,
+  Rajpurohit, Kalyan, Chen, and Narasimhan}]{csts}
+Ameet Deshpande, Carlos~E. Jimenez, Howard Chen, Vishvak Murahari, Victoria
+  Graf, Tanmay Rajpurohit, Ashwin Kalyan, Danqi Chen, and Karthik Narasimhan.
+  2023.
+\newblock {C-STS:} conditional semantic textual similarity.
+\newblock In \emph{Proceedings of the 2023 Conference on Empirical Methods in
+  Natural Language Processing, {EMNLP} 2023}, pages 5669--5690.
+
+\bibitem[{Dubey et~al.(2024)Dubey, Jauhri, Pandey, Kadian, Al{-}Dahle, Letman,
+  Mathur, Schelten, Yang, Fan, Goyal, Hartshorn, Yang, Mitra, Sravankumar,
+  Korenev, Hinsvark, Rao, Zhang, Rodriguez, Gregerson, Spataru, Rozi{\`{e}}re,
+  Biron, Tang, Chern, Caucheteux, Nayak, Bi, Marra, McConnell, Keller, Touret,
+  Wu, Wong, Ferrer, Nikolaidis, Allonsius, Song, Pintz, Livshits, Esiobu,
+  Choudhary, Mahajan, Garcia{-}Olano, Perino, Hupkes, Lakomkin, AlBadawy,
+  Lobanova, Dinan, Smith, Radenovic, Zhang, Synnaeve, Lee, Anderson, Nail,
+  Mialon, Pang, Cucurell, Nguyen, Korevaar, Xu, Touvron, Zarov, Ibarra,
+  Kloumann, Misra, Evtimov, Copet, Lee, Geffert, Vranes, Park, Mahadeokar,
+  Shah, van~der Linde, Billock, Hong, Lee, Fu, Chi, Huang, Liu, Wang, Yu,
+  Bitton, Spisak, Park, Rocca, Johnstun, Saxe, Jia, Alwala, Upasani, Plawiak,
+  Li, Heafield, Stone, and et~al.}]{dubey2024llama}
+Abhimanyu Dubey, Abhinav Jauhri, Abhinav Pandey, Abhishek Kadian, Ahmad
+  Al{-}Dahle, Aiesha Letman, Akhil Mathur, Alan Schelten, Amy Yang, Angela Fan,
+  Anirudh Goyal, Anthony Hartshorn, Aobo Yang, Archi Mitra, Archie Sravankumar,
+  Artem Korenev, Arthur Hinsvark, Arun Rao, Aston Zhang, and 82 others. 2024.
+\newblock \href {https://doi.org/10.48550/arXiv.2407.21783} {The llama 3 herd
+  of models}.
+\newblock \emph{CoRR}, abs/2407.21783.
+
+\bibitem[{Fu et~al.(2025)Fu, Cheng, Jiang, Wang, Yin, Li, and
+  Gu}]{DBLP:conf/acl/FuCJW0L025}
+Yuchen Fu, Zifeng Cheng, Zhiwei Jiang, Zhonghui Wang, Yafeng Yin, Zhengliang
+  Li, and Qing Gu. 2025.
+\newblock \href {https://aclanthology.org/2025.acl-long.159/} {Token
+  prepending: {A} training-free approach for eliciting better sentence
+  embeddings from llms}.
+\newblock In \emph{Proceedings of the 63rd Annual Meeting of the Association
+  for Computational Linguistics (Volume 1: Long Papers), {ACL} 2025}, pages
+  3168--3181.
+
+\bibitem[{Gao et~al.(2021)Gao, Yao, and Chen}]{gao2021simcse}
+Tianyu Gao, Xingcheng Yao, and Danqi Chen. 2021.
+\newblock Simcse: Simple contrastive learning of sentence embeddings.
+\newblock In \emph{Proceedings of the 2021 Conference on Empirical Methods in
+  Natural Language Processing}, pages 6894--6910.
+
+\bibitem[{Jiang et~al.(2024)Jiang, Huang, Luan, Wang, and Zhuang}]{prompteol}
+Ting Jiang, Shaohan Huang, Zhongzhi Luan, Deqing Wang, and Fuzhen Zhuang. 2024.
+\newblock Scaling sentence embeddings with large language models.
+\newblock In \emph{Findings of the Association for Computational Linguistics:
+  {EMNLP} 2024}, pages 3182--3196.
+
+\bibitem[{Jiang et~al.(2022)Jiang, Jiao, Huang, Zhang, Wang, Zhuang, Wei,
+  Huang, Deng, and Zhang}]{DBLP:conf/emnlp/JiangJHZWZWHDZ22}
+Ting Jiang, Jian Jiao, Shaohan Huang, Zihan Zhang, Deqing Wang, Fuzhen Zhuang,
+  Furu Wei, Haizhen Huang, Denvy Deng, and Qi~Zhang. 2022.
+\newblock Promptbert: Improving {BERT} sentence embeddings with prompts.
+\newblock In \emph{Proceedings of the 2022 Conference on Empirical Methods in
+  Natural Language Processing, {EMNLP} 2022}, pages 8826--8837.
+
+\bibitem[{Lei et~al.(2024)Lei, Wu, Zhou, Shen, Cao, Tao, and
+  Yates}]{lei2024meta}
+Yibin Lei, Di~Wu, Tianyi Zhou, Tao Shen, Yu~Cao, Chongyang Tao, and Andrew
+  Yates. 2024.
+\newblock \href {https://doi.org/10.18653/v1/2024.acl-long.546} {Meta-task
+  prompting elicits embeddings from large language models}.
+\newblock In \emph{Proceedings of the 62nd Annual Meeting of the Association
+  for Computational Linguistics (Volume 1: Long Papers), {ACL} 2024}, pages
+  10141--10157.
+
+\bibitem[{Leong et~al.(2023)Leong, Cheng, Wang, Wang, and
+  Li}]{DBLP:conf/emnlp/LeongCWWL23}
+Chak~Tou Leong, Yi~Cheng, Jiashuo Wang, Jian Wang, and Wenjie Li. 2023.
+\newblock Self-detoxifying language models via toxification reversal.
+\newblock In \emph{Proceedings of the 2023 Conference on Empirical Methods in
+  Natural Language Processing, {EMNLP} 2023}, pages 4433--4449.
+
+\bibitem[{Li et~al.(2023{\natexlab{a}})Li, Patel, Vi{\'{e}}gas, Pfister, and
+  Wattenberg}]{DBLP:conf/nips/0002PVPW23}
+Kenneth Li, Oam Patel, Fernanda~B. Vi{\'{e}}gas, Hanspeter Pfister, and Martin
+  Wattenberg. 2023{\natexlab{a}}.
+\newblock Inference-time intervention: Eliciting truthful answers from a
+  language model.
+\newblock In \emph{Annual Conference on Neural Information Processing Systems
+  2023, NeurIPS 2023}.
+
+\bibitem[{Li and Li(2024)}]{li2024bellm}
+Xianming Li and Jing Li. 2024.
+\newblock Bellm: Backward dependency enhanced large language model for sentence
+  embeddings.
+\newblock In \emph{Proceedings of the 2024 Conference of the North American
+  Chapter of the Association for Computational Linguistics: Human Language
+  Technologies (Volume 1: Long Papers)}, pages 792--804.
+
+\bibitem[{Li et~al.(2023{\natexlab{b}})Li, Zhang, Zhang, Long, Xie, and
+  Zhang}]{GTE}
+Zehan Li, Xin Zhang, Yanzhao Zhang, Dingkun Long, Pengjun Xie, and Meishan
+  Zhang. 2023{\natexlab{b}}.
+\newblock \href {https://doi.org/10.48550/ARXIV.2308.03281} {Towards general
+  text embeddings with multi-stage contrastive learning}.
+\newblock \emph{CoRR}, abs/2308.03281.
+
+\bibitem[{Lu et~al.(2022)Lu, Bartolo, Moore, Riedel, and
+  Stenetorp}]{DBLP:conf/acl/LuBM0S22}
+Yao Lu, Max Bartolo, Alastair Moore, Sebastian Riedel, and Pontus Stenetorp.
+  2022.
+\newblock \href {https://doi.org/10.18653/v1/2022.acl-long.556} {Fantastically
+  ordered prompts and where to find them: Overcoming few-shot prompt order
+  sensitivity}.
+\newblock In \emph{Proceedings of the 60th Annual Meeting of the Association
+  for Computational Linguistics (Volume 1: Long Papers), {ACL} 2022}, pages
+  8086--8098.
+
+\bibitem[{Mohammad and Bravo-Marquez(2017)}]{TweetEmo}
+Saif~M Mohammad and Felipe Bravo-Marquez. 2017.
+\newblock Wassa-2017 shared task on emotion intensity.
+\newblock \emph{arXiv preprint arXiv:1708.03700}.
+
+\bibitem[{Ni et~al.(2022)Ni, {\'{A}}brego, Constant, Ma, Hall, Cer, and
+  Yang}]{DBLP:conf/acl/NiACMHCY22}
+Jianmo Ni, Gustavo~Hern{\'{a}}ndez {\'{A}}brego, Noah Constant, Ji~Ma, Keith~B.
+  Hall, Daniel Cer, and Yinfei Yang. 2022.
+\newblock Sentence-t5: Scalable sentence encoders from pre-trained text-to-text
+  models.
+\newblock In \emph{Findings of the Association for Computational Linguistics:
+  {ACL} 2022}, pages 1864--1874.
+
+\bibitem[{Peng et~al.(2024)Peng, Zhang, Wang, Srinivasa, Liu, Wang, and
+  Shang}]{InBedder}
+Letian Peng, Yuwei Zhang, Zilong Wang, Jayanth Srinivasa, Gaowen Liu, Zihan
+  Wang, and Jingbo Shang. 2024.
+\newblock Answer is all you need: Instruction-following text embedding via
+  answering the question.
+\newblock In \emph{Proceedings of the 62nd Annual Meeting of the Association
+  for Computational Linguistics (Volume 1: Long Papers), {ACL} 2024}, pages
+  459--477.
+
+\bibitem[{Postmus and Abreu(2024)}]{postmus}
+Joris Postmus and Steven Abreu. 2024.
+\newblock Steering large language models using conceptors: Improving
+  addition-based activation engineering.
+\newblock \emph{CoRR}, abs/2410.16314.
+
+\bibitem[{Rimsky et~al.(2024)Rimsky, Gabrieli, Schulz, Tong, Hubinger, and
+  Turner}]{DBLP:conf/acl/RimskyGSTHT24}
+Nina Rimsky, Nick Gabrieli, Julian Schulz, Meg Tong, Evan Hubinger, and
+  Alexander~Matt Turner. 2024.
+\newblock Steering llama 2 via contrastive activation addition.
+\newblock In \emph{Proceedings of the 62nd Annual Meeting of the Association
+  for Computational Linguistics (Volume 1: Long Papers), {ACL} 2024}, pages
+  15504--15522.
+
+\bibitem[{Rosenberg and Hirschberg(2007)}]{V-Measure}
+Andrew Rosenberg and Julia Hirschberg. 2007.
+\newblock V-measure: {A} conditional entropy-based external cluster evaluation
+  measure.
+\newblock In \emph{Proceedings of the 2007 Joint Conference on Empirical
+  Methods in Natural Language Processing and Computational Natural Language
+  Learning, EMNLP-CoNLL 2007}, pages 410--420.
+
+\bibitem[{Shi et~al.(2024)Shi, Wei, Xu, and Liang}]{DBLP:conf/icml/ShiWXL24}
+Zhenmei Shi, Junyi Wei, Zhuoyan Xu, and Yingyu Liang. 2024.
+\newblock \href {https://openreview.net/forum?id=WOa96EG26M} {Why larger
+  language models do in-context learning differently?}
+\newblock In \emph{Forty-first International Conference on Machine Learning,
+  {ICML} 2024}.
+
+\bibitem[{Springer et~al.(2025)Springer, Kotha, Fried, Neubig, and
+  Raghunathan}]{DBLP:conf/iclr/SpringerKFNR25}
+Jacob~Mitchell Springer, Suhas Kotha, Daniel Fried, Graham Neubig, and Aditi
+  Raghunathan. 2025.
+\newblock \href {https://openreview.net/forum?id=Ahlrf2HGJR} {Repetition
+  improves language model embeddings}.
+\newblock In \emph{The Thirteenth International Conference on Learning
+  Representations, {ICLR} 2025}.
+
+\bibitem[{Su et~al.(2023)Su, Shi, Kasai, Wang, Hu, Ostendorf, Yih, Smith,
+  Zettlemoyer, and Yu}]{DBLP:conf/acl/SuSKWHOYSZ023}
+Hongjin Su, Weijia Shi, Jungo Kasai, Yizhong Wang, Yushi Hu, Mari Ostendorf,
+  Wen{-}tau Yih, Noah~A. Smith, Luke Zettlemoyer, and Tao Yu. 2023.
+\newblock One embedder, any task: Instruction-finetuned text embeddings.
+\newblock In \emph{Findings of the Association for Computational Linguistics:
+  {ACL} 2023}, pages 1102--1121.
+
+\bibitem[{Su et~al.(2024)Su, Ahmed, Lu, Pan, Bo, and Liu}]{rope}
+Jianlin Su, Murtadha H.~M. Ahmed, Yu~Lu, Shengfeng Pan, Wen Bo, and Yunfeng
+  Liu. 2024.
+\newblock \href {https://doi.org/10.1016/j.neucom.2023.127063} {Roformer:
+  Enhanced transformer with rotary position embedding}.
+\newblock \emph{Neurocomputing}, 568:127063.
+
+\bibitem[{Wang et~al.(2022)Wang, Yang, Huang, Jiao, Yang, Jiang, Majumder, and
+  Wei}]{E5}
+Liang Wang, Nan Yang, Xiaolong Huang, Binxing Jiao, Linjun Yang, Daxin Jiang,
+  Rangan Majumder, and Furu Wei. 2022.
+\newblock \href {https://doi.org/10.48550/ARXIV.2212.03533} {Text embeddings by
+  weakly-supervised contrastive pre-training}.
+\newblock \emph{CoRR}, abs/2212.03533.
+
+\bibitem[{Wang et~al.(2023)Wang, Shang, and Zhong}]{DBLP:conf/emnlp/WangSZ23}
+Zihan Wang, Jingbo Shang, and Ruiqi Zhong. 2023.
+\newblock Goal-driven explainable clustering via language descriptions.
+\newblock In \emph{Proceedings of the 2023 Conference on Empirical Methods in
+  Natural Language Processing, {EMNLP} 2023}, pages 10626--10649.
+
+\bibitem[{Yamada and Zhang(2025)}]{ponte}
+Kosuke Yamada and Peinan Zhang. 2025.
+\newblock \href {https://doi.org/10.48550/ARXIV.2504.16411} {Out-of-the-box
+  conditional text embeddings from large language models}.
+\newblock \emph{CoRR}, abs/2504.16411.
+
+\bibitem[{Yang et~al.(2024)Yang, Yang, Zhang, Hui, Zheng, Yu, Li, Liu, Huang,
+  Wei, Lin, Yang, Tu, Zhang, Yang, Yang, Zhou, Lin, Dang, Lu, Bao, Yang, Yu,
+  Li, Xue, Zhang, Zhu, Men, Lin, Li, Xia, Ren, Ren, Fan, Su, Zhang, Wan, Liu,
+  Cui, Zhang, and Qiu}]{qwen2.5}
+An~Yang, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo~Zheng, Bowen Yu,
+  Chengyuan Li, Dayiheng Liu, Fei Huang, Haoran Wei, Huan Lin, Jian Yang,
+  Jianhong Tu, Jianwei Zhang, Jianxin Yang, Jiaxi Yang, Jingren Zhou, Junyang
+  Lin, Kai Dang, and 22 others. 2024.
+\newblock \href {https://doi.org/10.48550/arXiv.2412.15115} {Qwen2.5 technical
+  report}.
+\newblock \emph{CoRR}, abs/2412.15115.
+
+\bibitem[{Yang et~al.(2026)Yang, Cheng, Jiang, Yin, Wang, Ge, Fu, and
+  Gu}]{DBLP:conf/aaai/YangCJYWGFG26}
+Shufan Yang, Zifeng Cheng, Zhiwei Jiang, Yafeng Yin, Cong Wang, Shiping Ge,
+  Yuchen Fu, and Qing Gu. 2026.
+\newblock \href {https://doi.org/10.1609/aaai.v40i40.40728} {Regionmarker: {A}
+  region-triggered semantic watermarking framework for embedding-as-a-service
+  copyright protection}.
+\newblock In \emph{Fortieth {AAAI} Conference on Artificial Intelligence,
+  {AAAI} 2026}, pages 34313--34321.
+
+\bibitem[{Yoo et~al.(2024)Yoo, Cha, Kim, and Kim}]{DBLP:conf/acl/YooCKK24}
+Young~Hyun Yoo, Jii Cha, Changhyeon Kim, and Taeuk Kim. 2024.
+\newblock Hyper-cl: Conditioning sentence representations with hypernetworks.
+\newblock In \emph{Proceedings of the 62nd Annual Meeting of the Association
+  for Computational Linguistics (Volume 1: Long Papers), {ACL} 2024}, pages
+  700--711.
+
+\bibitem[{Zhang et~al.(2015)Zhang, Zhao, and LeCun}]{AGNews}
+Xiang Zhang, Junbo~Jake Zhao, and Yann LeCun. 2015.
+\newblock \href
+  {https://proceedings.neurips.cc/paper/2015/hash/250cf8b51c773f3f8dc8b4be867a9a02-Abstract.html}
+  {Character-level convolutional networks for text classification}.
+\newblock In \emph{Advances in Neural Information Processing Systems 28: Annual
+  Conference on Neural Information Processing Systems 2015}, pages 649--657.
+
+\bibitem[{Zou et~al.(2023)Zou, Phan, Chen, Campbell, Guo, Ren, Pan, Yin,
+  Mazeika, Dombrowski, Goel, Li, Byun, Wang, Mallen, Basart, Koyejo, Song,
+  Fredrikson, Kolter, and Hendrycks}]{RE}
+Andy Zou, Long Phan, Sarah Chen, James Campbell, Phillip Guo, Richard Ren,
+  Alexander Pan, Xuwang Yin, Mantas Mazeika, Ann{-}Kathrin Dombrowski, Shashwat
+  Goel, Nathaniel Li, Michael~J. Byun, Zifan Wang, Alex Mallen, Steven Basart,
+  Sanmi Koyejo, Dawn Song, Matt Fredrikson, and 2 others. 2023.
+\newblock Representation engineering: {A} top-down approach to {AI}
+  transparency.
+\newblock \emph{CoRR}, abs/2310.01405.
+
+\end{thebibliography}

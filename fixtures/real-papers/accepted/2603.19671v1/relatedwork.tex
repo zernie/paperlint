@@ -1,0 +1,48 @@
+\section{Related Work}
+
+% non-private acyclic pattern counting 
+
+{
+In the literature of graph pattern counting, acyclic patterns play a central role due to their wide applicability and favorable computational properties. 
+They are commonly used in motif analysis~\cite{milo2002network, itzkovitz2005subgraphs}, where counting subtrees helps characterize branching or hierarchical structures in networks. 
+Moreover, counts of short paths serve as important features in diffusion modeling and link prediction~\cite{katz1953new, liben2003link}. 
+From a complexity standpoint, there is a natural gap between cyclic and acyclic pattern counting queries in the relational database setting~\cite{ngo2018worst,abo2016faq}. 
+As a result, many works focus specifically on acyclic queries, where specialized algorithms offer stronger theoretical runtime guarantees~\cite{yannakakis1981algorithms, gottlob2001complexity}. 
+Our work follows this line of reasoning by focusing exclusively on acyclic patterns.
+}
+
+
+
+Moving towards the privacy-preserving setting, graph pattern counting has been extensively explored under various DP models, with the central-DP model receiving the most attention. 
+Under edge-DP, \citet{nissim2007smooth} and \citet{karwa2011private} leveraged \emph{sensitivity-based mechanisms}; the former focuses on triangle counting, while the latter extends the approach to $k$-star and $k$-triangle counting. \citet{zhang2015private} proposed the \emph{ladder function}, which supports triangle counting, $k$-star counting, $k$-triangle counting, and $k$-clique counting. 
+\citet{johnson2018towards} introduced \emph{elastic sensitivity}, enabling, for the first time, the counting of arbitrary graph patterns under edge-DP. \citet{dong21:residual} later proposed \emph{residual sensitivity}, which also handles arbitrary graph pattern counting and achieves provably near-optimal error~\cite{dong2021nearly}.
+Additionally, \citet{fichtenberger2021differentially} and \citet{dong2024continual} addressed edge-DP graph pattern counting in dynamic graph settings.
+In the context of node-DP, \citet{kasiviswanathan2013analyzing} and \citet{blocki2013differentially} addressed arbitrary pattern counting but under assumptions on node degrees. 
+\citet{chen2013recursive} introduced the \emph{recursive mechanism}, which significantly improves utility but suffers from high computational cost.
+More recently, \citet{dong2022r2t,dong2024instance} achieved advances in both utility and efficiency for general pattern counting queries.
+\citet{fang2022shifted} proposed a user-DP framework for monotonic functions that subsumes the node-DP pattern counting problem.
+\citet{hu2025n2e} extended arbitrary edge-DP pattern counting mechanisms to node-DP with a multiplicative $\tilde{O}(d(G))$ error overhead.
+
+
+
+% local-DP 
+
+In contrast to work under the central-DP model, which studies both edge-DP and node-DP, research under the LDP model has primarily focused on edge-LDP.
+\citet{sun2019analyzing} studied multi-round counting of triangles, $3$-line paths, and $k$-cliques under an extended local view of nodes. 
+\citet{ye2020towards,ye2020lf} addressed triangle counting performed in a single round. 
+\citet{Imola2021} proposed an order-optimal method for $k$-star counting and a higher-utility solution for triangle counting with single- and two-round variants. 
+Building on this, \citet{Imola2022} further reduced the communication cost for triangle counting in the two-round setting. 
+\citet{eden2023triangle} established lower bounds for triangle counting in both single- and multi-round settings.
+Recently, \citet{he2024butterfly} presented the first multi-round LDP solution for butterfly counting on bipartite graphs, and \citet{he2025robust} improved the utility and efficiency of triangle counting using a multi-round scheme.
+
+
+{Beyond the above works, \citet{betzer2024publishing} proposed the first multi-round solution for walk counting, a fundamental problem also addressed in our work as a step toward general acyclic pattern counting. 
+While their approach shares our strategy of walk-based decomposition, it relies on a clipping threshold, which results in a biased estimator. 
+They also briefly mention an idea similar to our non-clipping approach, but without providing any theoretical utility guarantees.}
+{\citet{suppakitpaisarn2025counting} proposed a one-round RR-based solution for general pattern counting queries, but both the error and runtime scale exponentially with respect to $N$, making the approach impractical for large real-world graphs.
+}
+
+
+
+
+Another DP model in the decentralized setting is the shuffle model, where only a few works have investigated graph pattern counting. \citet{imola2022differentially} proposed the first one-round edge-DP solutions under the shuffle model for triangle and 4-cycle counting.

@@ -1,0 +1,196 @@
+
+\section{The Region-based Timing Tool} \label{sec:tool}
+In this section, we dive into a powerful third-party performance tool built upon the \thiswork{} infrastructure that conducts region-based intra-kernel timing to assist in comprehending and optimizing the overlapping GPU hardware resources. 
+To build a customized tool with \thiswork{}, the users must implement the instrumentation passes, the profile data management, and the post-processing process as introduced in \Sec{\ref{sec:third_party}}.
+These are elaborated with the region-based timing tools as its workflow for instrumentation (\Sec{\ref{sec:profiler:workflow}}), its memory system (\Sec{\ref{sec:profiler:memory}}), and a trace replay post-processing (\Sec{\ref{sec:replay}}).
+
+
+\subsection{Workflow} \label{sec:profiler:workflow}
+
+
+
+We first introduce the workflow of the timing tool with two kinds of interfaces, the user interface and the compiler interface, as shown in \Fig{\ref{fig:workflow}}.
+Depending on how the target program is parsed and the profiling regions are specified, different interfaces are invoked to instrument the profiling records.
+\thiswork{} will then compile and execute the instrumented program to collect the raw performance counters.
+At last, we replay the trace with the raw metadata and produce the final timeline trace.
+This trace is output and feedback to different interfaces for visualization or profiler-guided compiler passes.
+
+
+\paragraph{User interface} is the basic usage for developers to profile interested regions of a target GPU program.
+We provide PythonDSL bindings in Triton kernels and also allow manual rewriting and overriding the dumped middle-level IR for the concerned regions.
+It is straightforward as the developer manually rewrites the dumped middle-level IR for the concerned regions.
+This is extremely useful when developing high-performance kernels and debugging efficiency problems.
+The \thiswork{} will instrument the original program with rewritten program IR and produce the output trace.
+Developers can utilize visualization tools, such as Chrome Tracer\cite{chrome_trace}, to get an intuitive view of the program timeline.
+
+\paragraph{Compiler interface} is how the compiler interacts with the profiler.
+Compared to the user interface, the compiler passes are responsible for parsing the middle-level IR and insert profiling record at concerned regions.
+Similarly, the instrumented program is compiled and executed, and the profiled traces are feedback to the compiler passes within the compiler.
+
+\subsection{Profile Data Management} \label{sec:profiler:memory}
+We then introduce the specific management and decoding techniques of the tool.
+The system accommodating the storage at each memory hierarchy is shown in \Fig{\ref{fig:design}}.
+We demonstrate the data structure and layout bottom-up in the following.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{fig/design.pdf}
+    \vspace{-0.4cm}
+    \caption{Memory management of the region-based tool}
+    \label{fig:design}
+\end{figure}
+
+\paragraph{Warp-level Region Data Structure.}
+For each fine-grained profiling region, there are two profiling records inserted, the region start record and region end record.
+Each record has 8 bytes, containing a 4-byte tag and a 4-byte payload, as shown in \Fig{\ref{fig:buffer}}.
+The tag contains 1 flag bit as \emph{START} or \emph{END}, and 31-bit control bits that are dependent on the backend will be explained later. 
+The payload contains a 32-bit time stamp metric captured from the hardware counter (cycle for \%clock in Nvidia and the LSB 32 bits of \code{S\_MEMTIME} instruction in AMD). 
+This design achieves a good trade-off between space capacity and write speed. 
+Because the storage consumption is low and the store takes a vectorized store instruction.
+
+\R{
+We use a 32-bit clock to capture the cycle tick of the current record, which may cause value overflow.
+We address this in the post-processing procedure, where we detect and throw exceptions on overflows.
+The trace replay can compensate for the clock wrap-around overflow as long as each iteration runs less than 4 billion cycles (4 seconds under 1GHz). 
+Since most of the execution is spent on loops, the restriction is relaxed to the loop iteration level, which is less than 1 millisecond for most cases, making 32-bit cycle data a safe choice.
+If necessary, \thiswork{} could easily extend to a 64-bit clock by adding dedicated operators and attributes in the IR.
+}
+
+
+
+\paragraph{SM-level Data Layout.}
+The record is then copied to the data buffer in shared memory from the local register file with a store instruction.
+The data buffer is split into profiling spaces by warp groups with non-overlapping record slots, as shown in \Fig{\ref{fig:design}}. 
+As such, the record index at compile time determines the store location offset in shared memory.
+For example, if we allocate 64 slots (0.5KB) and each thread block contains 2 warp groups (8 warps, 256 threads), then each warp group has 32 slots. 
+During compile time, we pre-compute the base address of each profiling space and generate code to manage the indexes for each warp group.
+
+The memory layout of each warp group buffer is shown in \Fig{\ref{fig:buffer}}. 
+Start and end records are interleaved in shared memory to support nested regions and multiple iterations. 
+The lower part of the figure illustrates three profiling patterns: common, nested, and multi-iteration. 
+Records are stored without pairing and aligned during trace replay to ensure correctness based on the profiling patterns.
+
+\paragraph{Shared Memory Circular Buffer.}
+Because shared memory has limited capacity, it may not be able to accommodate all profile data, especially with a long multi-iteration record pattern.
+For example, with 2 warp groups, 4 profiled regions, and a loop with 512 iterations, it takes up to  4096 record slots, translating to a 16KB shared memory storage. 
+For the production-level kernels, we usually get the available shared memory capacity left ranging from 1KB to 4KB for intra-kernel profiling's data buffer, only up to 1.75\% of a total of 228KB on H100 device\cite{choquette2023nvidia}. 
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{fig/buffer.pdf}
+    \vspace{-0.6cm}
+    \caption{Circular buffer and record buffer}
+    \label{fig:buffer}
+\end{figure}
+
+
+
+We propose a \emph{circular buffer} structure for each warp group's data buffer as a solution balancing accuracy and usability.
+The circular buffer keeps only the trace's tail record cyclically when reaching the shared memory limit.
+We overwrite the oldest results cyclically instead of flushing them to the lower-level memory.
+The insight is that visualizing a few recent iterations is sufficient to identify the bottleneck.
+We wrap around the index with a pre-calculated buffer capacity to implement the circular buffer.
+If the captured events are overflowing the buffer, it is redirected to an occupied slot. 
+This causes extra instructions for index management, which is addressed during compile-time.
+We only need lightweight modular instructions to round the index at runtime.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{fig/trace_replay.pdf}
+    \vspace{-0.8cm}
+    \caption{Trace replay}
+    \vspace{-0.5cm}
+    \label{fig:trace_replay}
+\end{figure}
+
+\R{
+Besides, this \emph{circular buffer} is the default memory management behavior in the runtime.
+The user can switch to the naive flush strategy, where the captured events are instantly written back to the global memory when the buffer is fully occupied.
+This strategy can keep all the profile events with the overhead of many more frequent memory write instructions. 
+In the \thiswork{}'s infrastructure, we provide a comprehensive operation to support the memory allocation at each hierarchy, including \code{Stack}, \code{Shared}, \code{Global}, and management strategies, including \code{Circular} and \code{Flush}.
+Users can make use of these abstractions to develop their tool, combining the use of the buffers and management strategies.
+}
+
+
+\begin{figure*}
+    \centering
+    \includegraphics[width=\linewidth]{fig/trace_analysis.pdf}
+    \vspace{-0.8cm}
+    \caption{\OURR{Region-based timing results for FA3 kernels and overlapping improvements guided by profiling}}
+    \vspace{-0.3cm}
+    \label{fig:fa3_trace}
+\end{figure*}
+
+Specifically, we implement a collaborative store strategy for the AMD backend to minimize profiling overhead. 
+Since only one timestamp record is profiled per warp or warp group, AMD GPUs utilize branching with thread masks to issue instructions with predication. 
+However, this thread divergence can lead to unexpected instruction cache misses, causing overheads up to 600 cycles. 
+To mitigate this, we enforce all threads to write to the same shared memory location, retaining only the last result. 
+To align the records, we include an additional 12-bit signature derived from the least significant bits (LSB) of the \code{HARDWARE\_ID REG}, as shown in \Fig{\ref{fig:buffer}}. 
+This signature encodes the \code{wave\_slot\_id}, \code{SIMD\_id}, and \code{pipe\_id} to annotate the profiled thread. 
+At the warp group level, we ensure all four warps write to the same shared memory location.
+
+
+
+
+\paragraph{Global Program Trace.}
+Lastly, we gather the profiling data from all SMs back to the GPU global memory before returning from the kernel function. 
+We keep the temporary profile data in the shared memory and copy the entire data buffer at once by the end of the kernel. 
+Several extra metadata are attached for reconstructing the trace as shown in \Fig{\ref{fig:design}}, including thread block index, warp-level indices, and a number of recorded slots in each warp group. 
+The Triton frontend automatically patches the kernel function with an extra argument (\code{profile\_mem}), allocating the GPU scratch memory for such profile data.
+
+
+\subsection{Trace Replay} \label{sec:replay}
+
+
+
+The major challenge in the region-based timing scenario of intra-kernel profiling is the perturbations caused by the profiling instructions.
+Post-processing techniques, such as periodic sampling\cite{sample_based_profiling}, are usually used to mitigate the inaccuracies by sampling the performance metrics periodically and summarizing the results afterward to reduce the overhead associated with data collection.
+\R{
+In the region-based timing tool, we propose a similar post-processing method \emph{trace replay} to rescale the profiled regions according to the program semantics owing to the \thiswork{}'s design.
+We can get accurate visualized results using this trace replay mechanism by offsetting a constant to account for the clock measuring overhead.
+}
+
+
+
+
+
+For regions with only synchronous instructions, we can easily rebuild the region by subtracting the overhead of the record operation.
+For asynchronous instructions, we have two kinds of common inaccuracies as shown in \Fig{\ref{fig:trace_replay}}.
+In the vanilla execution timeline example, we have a sequence of successive instructions executed after issuing an asynchronous MMA operation on the Tensor Core.
+After the program reaches the barrier in the instruction stream, there is a period of waiting time before the functional unit can produce results.
+To understand the asynchronous behavior here, users can insert profiling records in the successive execution to better align the operations.
+However, the introduction of such records causes inaccurate wait time measurements.
+In the \emph{reduced bubble} case, the wait time is underestimated due to the extra overhead caused by profiling.
+Things are even worse in the \emph{unexpected idle} case, where the functional unit's execution time cannot cover the profiling overhead.
+An unexpected idle time will be observed, and the optimization will be misleading.
+
+
+\begin{table}[]
+  \caption{Profiled regions of the FA3 kernel}
+  \label{tbl:fa3}
+  % \footnotesize
+  \centering 
+  \resizebox{\linewidth}{!}{
+  \begin{tabular}{llll}
+  \Xhline{3\arrayrulewidth}
+  \multirow{2}{*}{Tag} & \multirow{2}{*}{Function}     & \multicolumn{2}{c}{Region ID} \\ \cline{3-4} 
+                       &                               & Vanilla       & Improved      \\ \hline
+  \rowcolor[HTML]{EFEFEF} 
+  Load K               & Load the K tensor.            & 3      & 3       \\
+  Load V               & Load the V tensor.            & 6      & 6       \\
+  \rowcolor[HTML]{EFEFEF} 
+  GEMM0                & Compute QK on TC.             & 12,22         & 12,22         \\
+  GEMM1                & Compute PV on TC.             & 14,24         & 15,25         \\
+  \rowcolor[HTML]{EFEFEF} 
+  Softmax              & Compute softmax on CUDA core. & 13,23         & 17,27         \\ \Xhline{3\arrayrulewidth}
+  \end{tabular}}
+  \vspace{-0.5cm}
+  \end{table}
+
+To address this, we propose deducting the accurate wait time after profiling in the trace replay procedure as shown in \Fig{\ref{fig:trace_replay}}-(b).
+Instead of placing one \code{END} record after the asynchronous instructions, we insert two \code{START} records before the asynchronous launch and after the wait barrier and one \code{END} record right before the barrier.
+This guarantees an accurate wait time $T_{wait}$ measurement as $T_{wait} = (CLK_2-T_a) - (CLK_1-T_a)=CLK_2-CLK_1$, where $T_a$ and $T_b$ are the elapsed time in the record region before and after the clock read instruction respectively.
+The profiling overhead is canceled out in the post-processing with the two carefully placed records.
+We can derive the $T_{exe}$ time similarly.
+This method requires the $T_{MMA}-T_{exe}>T_a+T_b$.
+Since the profiling overhead is less than 25 cycles for most cases, as shown in \Sec{\ref{sec:evaluation:cycle}}, the execution time of the functional unit can cover only the record inserted here, which is usually about 1000 cycles.

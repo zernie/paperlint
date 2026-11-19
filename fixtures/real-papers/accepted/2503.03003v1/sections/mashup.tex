@@ -1,0 +1,45 @@
+%-------------------------------------------------------------------------------
+\section{\mashup}
+\label{sec:mashup}
+%-------------------------------------------------------------------------------
+
+\begin{figure}[t]
+     \centering
+     \begin{subfigure}[b]{0.49\textwidth}
+         \centering
+         \includegraphics[width=0.58\textwidth]{figures/multibittrie_cram}
+         \caption{\cram model representation of multibit trie (16-4-4-8)}
+         \label{fig:multibit}
+     \end{subfigure}
+     \begin{subfigure}[b]{0.49\textwidth}
+         \centering
+         \includegraphics[width=0.68\textwidth]{figures/mashup_cram}
+         \caption{\cram model representation of \mashup (16-4-4-8)}
+         \label{fig:mashup}
+     \end{subfigure}
+    \caption{Multibit trie vs \mashup for IPv4 prefixes in AS65000}
+    \label{fig:multibitvsmashup}
+    \vspace{-\baselineskip}
+\end{figure}
+
+By applying the optimization idioms to multibit tries~\cite{prefix_expansion}, we create a new \cram lookup algorithm called \mashup, capable of supporting both IPv4 and IPv6. Refer to ~\cref{fig:multibittomashup} for the intuition to which we now add details.
+
+{\bf Multibit Trie Review:} Multibit tries are search tries that examine multiple bits per lookup, known as a stride. Reducing the number of strides decreases the number of worst-case memory accesses, but increases prefix expansion and memory usage. We assume each tree level has exactly one stride.
+
+\subsection{Applying the Optimization Idioms} \label{subsec:designing_mashup}
+
+We show the \cram derivation of \mashup using the IPv4 AS65000 BGP routing table (Sep 2023). Start with the \cram model representation of a multibit trie in \cref{fig:multibit}. We find strides 16-4-4-8 yield the best IPv4 results (\cref{subsec:parameters}). To obtain \mashup in \cref{fig:mashup}, use the idioms as follows:
+
+{\bf 1.} For each trie node, we consider both compressing with TCAM ({\em I1}) and expanding to SRAM ({\em I2}). If the increase in memory due to prefix expansion~\cite{prefix_expansion} is less than 3X, we use SRAM. Otherwise, we use TCAM. This results in a hybrid trie with both TCAM and SRAM nodes, as seen in \cref{fig:mashup}.
+
+{\bf 2.} Once the trie is hybridized, apply table coalescing ({\em I5}) by merging partially filled nodes\footnote{For \mashup in \cref{subsec:before_implementation}, we greedily fill the largest tables with the smallest ones. This approach is easy to implement, but possibly suboptimal.} of the same memory type into super-tables, compactly mapping them onto contiguous TCAM blocks or SRAM pages with minimal fragmentation. This requires prepending entries with a tag~\cite{tag_bits} to distinguish between logical tables. A tag of width $x$ can coalesce $2^x$ logical tables into one super-table. The combination of node hybridization and table coalescing reduces SRAM usage from 12.04 MB to 5.92 MB at the cost of 0.31 MB of TCAM (\cref{fig:multibitvsmashup}).
+
+{\bf 3.} The set of strides is a parameter that serves as a strategic cut ({\em I4}). For a given set of strides, the trie's memory overhead is directly proportional to the number of internal pointers. A simple method for choosing strides, explained in \cref{subsec:parameters}, is to analyze the database's prefix length distribution.
+
+We omit standard algorithms for building the \mashup trie, as the process is identical to constructing a multibit trie, which has been extensively studied in prior work~\cite{prefix_expansion, network_algorithmics}.
+
+\subsection{Performing Lookups} \label{subsec:mashup_lookups}
+
+Let $S_i$ represent the $i$-th stride. Start in the root node by performing a lookup with the first $S_0$ bits of the destination address. If the current node is TCAM, perform a longest prefix match. Otherwise, perform an exact match. If a miss occurs, terminate the search. If a hit occurs, three values may be returned: a next hop, a pointer to the next node, and a unique tag. If a next hop is returned, save it. Form the lookup key for level $i$ by extracting the next $S_i$ bits of the destination address and prepending the current tag. Repeat the lookup process until either a leaf node is reached or a miss occurs. Upon termination, return the saved next hop.
+
+\cref{alg:mashup_lookup} in \cref{subsec:pseudocode} contains pseudocode for \mashup lookups. \cref{subsubsec:mashupupdates} describes incremental updates, deletions, and insertions in \mashup.

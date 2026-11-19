@@ -1,0 +1,1996 @@
+%%%%%%%% ICML 2025 EXAMPLE LATEX SUBMISSION FILE %%%%%%%%%%%%%%%%%
+
+\documentclass{article}
+
+% Recommended, but optional, packages for figures and better typesetting:
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{booktabs} % for professional tables
+\usepackage{float} 
+\usepackage{multirow}%% user define
+% hyperref makes hyperlinks in the resulting PDF.
+% If your build breaks (sometimes temporarily if a hyperlink spans a page)
+% please comment out the following usepackage line and replace
+% \usepackage{icml2025} with \usepackage[nohyperref]{icml2025} above.
+\usepackage{hyperref}
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstdefinestyle{mypython}{
+    language=Python,
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\bfseries\color{blue},
+    commentstyle=\itshape\color{green!60!black},
+    stringstyle=\color{red},
+    showstringspaces=false,
+    tabsize=4,
+    breaklines=true,
+    breakatwhitespace=true,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    frame=single,
+    rulecolor=\color{black},
+}
+
+\lstset{style=mypython}
+% Attempt to make hyperref and algorithmic work together better:
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+
+% Use the following line for the initial blind version submitted for review:
+% \usepackage{icml2025}
+
+% If accepted, instead use the following line for the camera-ready submission:
+\usepackage[accepted]{icml2025}
+
+% For theorems and such
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsthm}
+
+% if you use cleveref..
+\usepackage[capitalize,noabbrev]{cleveref}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% THEOREMS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% Todonotes is useful during development; simply uncomment the next line
+%    and comment out the line below the next line to turn off comments
+%\usepackage[disable,textsize=tiny]{todonotes}
+\usepackage[textsize=tiny]{todonotes}
+
+
+% The \icmltitle you define below is probably too long as a header.
+% Therefore, a short form for the running title is supplied here:
+\icmltitlerunning{One-Step Generalization Ratio Guided Optimization for Domain Generalization}
+
+\begin{document}
+
+\twocolumn[
+\icmltitle{One-Step Generalization Ratio Guided Optimization for Domain Generalization}
+
+% It is OKAY to include author information, even for blind
+% submissions: the style file will automatically remove it for you
+% unless you've provided the [accepted] option to the icml2025
+% package.
+
+% List of affiliations: The first argument should be a (short)
+% identifier you will use later to specify author affiliations
+% Academic affiliations should list Department, University, City, Region, Country
+% Industry affiliations should list Company, City, Region, Country
+
+% You can specify symbols, otherwise they are numbered in order.
+% Ideally, you should not use this facility. Affiliations will be numbered
+% in order of appearance and this is the preferred way.
+\icmlsetsymbol{equal}{*}
+
+\begin{icmlauthorlist}
+\icmlauthor{Sumin Cho}{equal,skku}
+\icmlauthor{Dongwon Kim}{equal,skku}
+\icmlauthor{Kwangsu Kim}{skku}
+\end{icmlauthorlist}
+
+\icmlaffiliation{skku}{Department of Computer Science and Engineering, University of Sungkyunkwan, Suwon, Korea}
+
+\icmlcorrespondingauthor{Sumin Cho}{jsm0707@skku.edu}
+\icmlcorrespondingauthor{Dongwon Kim}{kdwaha@skku.edu}
+\icmlcorrespondingauthor{Kwangsu Kim}{kim.kwangsu@skku.edu}
+% \icmlcorrespondingauthor{Firstname2 Lastname2}{first2.last2@www.uk}
+
+% You may provide any keywords that you
+% find helpful for describing your paper; these are used to populate
+% the "keywords" metadata in the PDF but will not be shown in the document
+\icmlkeywords{Machine Learning, ICML}
+
+\vskip 0.3in
+]
+
+% this must go after the closing bracket ] following \twocolumn[ ...
+
+% This command actually creates the footnote in the first column
+% listing the affiliations and the copyright notice.
+% The command takes one argument, which is text to display at the start of the footnote.
+% The \icmlEqualContribution command is standard text for equal contribution.
+% Remove it (just {}) if you do not need this facility.
+
+%\printAffiliationsAndNotice{}  % leave blank if no need to mention equal contribution
+%\printAffiliationsAndNotice % otherwise use the standard text.
+\printAffiliationsAndNotice{\icmlEqualContribution} % otherwise use the standard text.
+
+\begin{abstract}
+Domain Generalization (DG) aims to train models that generalize to unseen target domains but often overfit to domain-specific features, known as undesired correlations. Gradient-based DG methods typically guide gradients in a dominant direction but often inadvertently reinforce spurious correlations. Recent work has employed dropout to regularize overconfident parameters, but has not explicitly adjusted gradient alignment or ensured balanced parameter updates. We propose GENIE (Generalization-ENhancing Iterative Equalizer), a novel optimizer that leverages the One-Step Generalization Ratio (OSGR) to quantify each parameter's contribution to loss reduction and assess gradient alignment. By dynamically equalizing OSGR via a preconditioning factor, GENIE prevents a small subset of parameters from dominating optimization, thereby promoting domain-invariant feature learning. Theoretically, GENIE balances convergence contribution and gradient alignment among parameters, achieving higher OSGR while retaining SGD's convergence rate. Empirically, it outperforms existing optimizers and enhances performance when integrated with various DG and single-DG methods.
+\end{abstract}
+
+\section{Introduction}
+\begin{figure}[ht]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=\columnwidth]{fig/fig1_heatmap.png}}
+\caption{Heatmaps visualizing normalized parameter update magnitudes by parameter ID for different optimizers throughout training on the VLCS dataset in the DG. Previous optimizers (SGD, Adam, SAM) exhibit an imbalanced parameter update distribution, where a subset of parameters dominates the optimization process. In contrast, GENIE uniformly adjusts parameter-wise OSGR, mitigating overfitting to specific parameters and promoting a more balanced optimization across the entire parameter space.}
+\label{fig:heatmap}
+\end{center}
+\vskip -0.2in
+\end{figure}
+Deep neural networks (DNNs) achieve high accuracy when training and test data share a similar distribution. However, in real-world applications, data distributions often shift, causing performance degradation\cite{Dg2013}. Domain Generalization (DG) addresses this issue by training models to generalize to out-of-distribution data from unseen domains. The main challenge is to prevent overfitting to domain-specific features—known as spurious correlations—while learning invariant features and causal relationships that generalize across diverse domains\cite{fish, hessian_align, simple_bias, spurious_survey}.
+
+Several DG methods have attempted to guide the gradient toward a dominant direction during training \cite{and-mask, sand-mask, fish, fishr}. However, this dominant direction often itself driven by spurious features, inadvertently reinforcing undesired correlations. This suggests that aligning gradients toward a single dominant direction is insufficient to fully solve the problem, highlighting the need for other perspectives. 
+
+A recent approach \cite{dg_dropout} introduced a parameter-wise dropout mechanism based on Gradient Signal-to-Noise Ratios (GSNR) to suppress overly predictive parameters and reduce their influence on optimization. While this strategy mitigates parameter updates driven by spurious correlations, it does not adjust the magnitudes of updates based on their individual contributions to generalization. This raises the open question of how to design optimizers that explicitly balance parameter updates according to their principled contributions to generalization, thereby mitigating the influence of spurious correlations.
+
+Motivated by this perspective, we propose \textit{Generalization-ENhancing Iterative Equalizer (GENIE)}, a novel optimizer for addressing parameter imbalance. Recent work \cite{gsnr} introduced the One-Step Generalization Ratio (OSGR) that measures how effectively a single gradient update reduces test loss compared to training loss, providing insight into a model’s generalization potential. OSGR reflects the contributions of individual parameters to generalization, based on their convergence speed and degree of gradient alignment. To leverage this insight, GENIE integrates a preconditioning factor that dynamically balances parameter-wise OSGR throughout training. This prevents a small subset of parameters from dominating the optimization, thereby promoting more robust and domain-invariant feature learning.
+
+ Our theoretical analysis shows that existing optimizers typically focus on either convergence speed or gradient alignment, often resulting in suboptimal generalization. In contrast, GENIE explicitly balances both, achieving a higher OSGR while maintaining the convergence rate of SGD\cite{sgd} in non-convex settings. We empirically validated GENIE on five standard DG datasets\cite{pacs,vlcs, officehome,terra,domainnet} where it consistently outperformed established optimizers, even with extended iterations. Furthermore, using our optimizer in existing DG and Single-DG (SDG) algorithms enhances their performance.
+We summarize our contributions as follows:
+\begin{itemize}
+    \item  We propose GENIE, a novel optimizer that addresses the overlooked issue of parameter imbalance in DG. It suppresses over-predictive parameters while promoting balanced parameter updates. 
+    \item  We incorporate OSGR, previously used as a generalization metric, into the optimizer’s core principle. This provides an efficient and novel perspective on generalization for addressing DG.
+    \item GENIE is a domain-agnostic optimizer. It is validated across multiple DG benchmarks and SDG tasks, demonstrating its broad applicability and scalability. 
+\end{itemize}
+\section{Related Work}
+\subsection{Domain Generalization}
+Existing DG methods address domain shift through two main strategies: (1) Feature Alignment, which aims to align features across domains to ensure consistent optimization, including methods such as domain-invariant feature learning \cite{coral,irm, vrex}, data augmentation \cite{i-mixup_1, i-mixup_2, i-mixup_3}, and feature disentanglement \cite{sagnet, matchdg}. (2) Gradient Alignment, which focuses on aligning gradients across domains to ensure stable learning dynamics. Representative approaches include minimizing gradient differences \cite{iga}, increasing gradient inner products \cite{fish}, updating weights only when gradient directions align \cite{and-mask, sand-mask}, and reducing inter-domain gradient variance \cite{fishr}. Recently, Sharpness Aware Minima (SAM)\cite{sam} has improved in-distribution generalization, inspiring the development of optimizers specifically designed for OOD tasks \cite{domain-inspired,dg_sam}. However, most DG studies overlook imbalanced parameter updates caused by differences in convergence speed or generalization capacity during optimization.
+
+\subsection{Preconditioning}
+Preconditioning improves the efficiency of optimization algorithms by incorporating curvature information of the loss function or adjusting the magnitude and direction of parameter updates. It accelerates convergence and enhances stability during training and can be categorized into three main types \cite{precondition_3, Preconditioning_generalization} (1) Hessian Based Preconditioning: utilizes the inverse or approximations of the Hessian matrix to capture curvature information. \cite{Newton_method,Quasi-Newton_Method} (2) Adaptive Learning Rate Based Preconditioning: dynamically adjusts learning rates based on gradient magnitudes, as seen in optimizers like AdaGrad \cite{adagrad}, RMSProp \cite{rmsprop}, and Adam \cite{adam}. (3) Normalization-Based Preconditioning: normalizes inputs and activations, as exemplified by Batch Normalization\cite{Batch_Normalization}, to improve the Hessian’s condition number and enhance training stability. Previous preconditioning methods aim to optimize speed and stability. The application of preconditioning to improve model generalization remains underexplored.
+
+\section{Method}
+\subsection{Preliminary}
+To address the challenge of generalization in unseen target domains, a recent study\cite{gsnr} introduced the concept of OSGR \(R(Z, n)\). OSGR quantifies how well model updates contribute to generalization by measuring the ratio of loss reduction between test \(D'\) and training data \(D\) after a single optimization step:
+\begin{equation}
+R(Z,n) = \frac{\mathbb{E}_{D,D' \sim \mathcal{Z}^n} \Delta L_{D'}}{\mathbb{E}_{D \sim \mathcal{Z}^n} \Delta L_D},
+\end{equation}
+where $\Delta L_{D^\prime}$ and $\Delta L_D$ represent the loss changes on test and training data, respectively.
+OSGR is influenced by two key factors: (1) the contribution of each parameter to loss reduction, characterized by the gradient magnitude, and (2) the alignment of parameter gradients across the data distribution. Higher OSGR indicates better generalization, reflecting consistent and balanced parameter updates.
+
+To better understand these dynamics, the following theorem links OSGR to parameter-wise statistics:
+\begin{theorem}[From Paper\cite{gsnr}]\label{thm:th1}
+The relationship between gradient updates and generalization can be expressed as follows:
+\begin{equation}
+R(Z,n) = 1-\frac{1}{n}\sum_{j\in J }\frac{\mathbb{E}_{D\sim\mathcal{Z}^n}[g_j^2]}{\sum_{j' \in J }\mathbb{E}_{D\sim\mathcal{Z}^n}[g_{j'}^2]} \cdot \frac{1}{ r_j + \frac{1}{n}},
+\end{equation}
+where \(J\) denotes the set of parameter index, \(g_j^2\) is the squared gradient magnitude, \(\rho_j^2\) is the noise variance, and \(n\) is the number of samples. Parameters with higher Gradient Signal-to-Noise Ratios (GSNR), defined as \(r_j = \frac{g_j^2}{\rho_j^2}\), yield higher OSGR, contributing more significantly to generalization.
+\end{theorem}
+
+A recent study \cite{dg_dropout} leveraged GSNR to suppress overly predictive parameters during training, aiming to prioritize robust features and reduce noisy updates. However, this approach overlooks parameter-wise imbalances in  OSGR, which limits overall generalization performance.
+
+In this context, we propose a preconditioning-based approach that dynamically balances OSGR across parameters. By incorporating parameter-specific preconditioning factors, our method ensures that updates are aligned with both gradient magnitude and noise characteristics, preventing overfitting to noisy or well-learned features. This strategy not only enhances generalization but also ensures stable convergence in diverse DG settings.
+
+\subsection{Proposed Method}
+Based on \cref{thm:th1}, ~\citet{dg_dropout} introduced a gradient-masking approach that prioritizes updates for parameters with low GSNR, aiming to enhance their contribution to generalization. They argue that boosting updates to low-GSNR parameters can increase the overall GSNR and thus improve the optimization signal-to-gradient ratio (OSGR). Inspired by this perspective, we hypothesize the following relationship:
+
+\textbf{Conjecture}
+\textit{Uniformly distributed OSGR across parameters indicate better generalization performance.}
+
+This conjecture guides the design of our method. Rather than modifying the dropout ratio across parameters, we introduce a preconditioning term that more accurately adjusts the OSGR. Next, we inject noise into all parameters to encourage exploration toward better optima. Finally, we apply random dropout to stabilize parameter updates and reduce overfitting.
+
+\subsubsection{Preconditioning}
+\label{method:Preconditioning}
+We propose a preconditioning factor $p_j$  to ensure balanced contributions of each parameter to the OSGR, thus enhancing generalization. The key idea is to maintain equitable parameter influence on the overall generalization performance throughout the optimization process. We propose the following corollary for this purpose. 
+\begin{corollary}[Preconditioning and OSGR]\label{cor:osgr}
+If each parameter $j$ applies a preconditioner $p_j$, the OSGR can be expressed as:
+\begin{equation}
+R'(Z,n) = \sum_{j\in J}\frac{ p_j \mathbb{E}_{D\sim\mathcal{Z}^n}[g_j^2]}{\sum_{j'\in J} p_{j'} \mathbb{E}_{D\sim\mathcal{Z}^n}[g_{j'}^2]} \cdot \frac{1}{\frac{1}{n \cdot r_j} + 1},
+\end{equation}
+or equivalently:
+\begin{equation}
+R'(Z,n) = 1 - \frac{1}{n}\sum_{jinJ} \frac{p_j \mathbb{E}_{D\sim\mathcal{Z}^n}[g_j^2]}{\sum_{j' \in J} p_{j'} \mathbb{E}_{D\sim\mathcal{Z}^n}[g_{j'}^2]} \cdot \frac{1}{ r_j + \frac{1}{n}}.
+\end{equation}
+\end{corollary}
+
+From \cref{cor:osgr}, to maintain a balanced influence of parameter $j$ on the overall OSGR, we propose:
+\begin{equation}
+p_j = \frac{1}{\mathbb{E}_{D\sim\mathcal{Z}^n}\left[g_j^2\right]} \left( r_j + \frac{1}{n} \right).
+\end{equation}
+
+This leads to the OSGR:
+\begin{equation}
+%\mathcal{R}\left(\mathcal{Z},n\right)
+R'(Z,n)= 1 - \frac{1}{n}\sum_{j \in J} \frac{1}{\sum_{j^\prime \in J} \left(r_{j^\prime}+\frac{1}{n}\right)} = 1 - \frac{1}{n\mathbb{E}_{j \in J} \left(r_{j}+\frac{1}{n}\right)},
+\end{equation}
+where $\mathbb{E}_{j \in J}\left(r_{j}+\frac{1}{n}\right)$ represents the average GSNR contribution across parameters.Without preconditioning, parameters with large $g_j^2$  but low GSNR may receive higher weights in the OSGR expression, inflating the subtraction term. Our preconditioning alleviates this issue and improves the OSGR. 
+This dynamic adjustment with preconditioning mitigates parameter-wise imbalances, ensuring that well-generalized features are not overwhelmed by noisy or overly dominant parameters.
+
+In implementation, we ignore the $\frac{1}{n}$ term as $n$ is sufficiently large, and clipping variance by $tanh(\frac{1}{\sigma^2})$ for stability. More detailed analysis on influence of variance is described in \cref{method: Convergence Analysis}. This preconditioner $p_j$ is straightforward to compute and requires only the gradient statistics $m_t$ and variance $\sigma_t$, which can be estimated during training. This efficiency makes it suitable for a wide range of DG tasks.
+
+\subsubsection{Noise injection}
+To enhance exploration during optimization, we introduce \textit{noise injection}, where a noise term scaled by the variance is added to the gradient. Specifically, the noise scale is determined by \(1 - \tanh(\frac{1}{\sigma^2})\), reducing noise for high variance parameters while increasing it for low variance parameters. Motivated by \cite{gradsurg}, this injection boosts updates to parameters with low preconditioning value. 
+
+\subsubsection{Random Mask}
+To further stabilize updates and mitigate overfitting, we apply a \textit{random dropout mask}. This mask, sampled from a Bernoulli distribution, selectively zeroes out gradient components. By applying random masking after the preconditioning step, all parameters are equally considered to ensure robust updates.
+
+\begin{algorithm}[ht]
+    \caption{Algorithm for GENIE}
+    \label{alg:GENIE}
+\begin{algorithmic}
+\STATE {\bfseries Input:} Mini-batches $\{\mathcal{B}_t\}_{t=1}^T$, Learning Rate $\alpha$, Total Steps $T$.
+\STATE {\bfseries Hyperparameters:} $\beta \in [0,1]$, Dropout Probability $p$
+\STATE {\bfseries Initialize:} Parameters $\theta_0$, $m_0 \gets 0$, $v_0 \gets 0$.
+\FOR{$t = 1$ to $T$}
+    \STATE {\bfseries Compute Gradient: } \[
+    g_t = \nabla \mathcal{L}(\theta_t; \mathcal{B}_t)
+    \]
+    
+    \STATE {\bfseries Update Moving Averages:} \[
+    m_t \gets \beta m_{t-1} + (1-\beta) g_t, \quad 
+    v_t \gets \beta v_{t-1} + (1-\beta) g_t^2
+    \]
+    
+    \STATE {\bfseries Calculate GSNR and Preconditioning:}\[
+    \sigma_t^2= v_t - m_t^2, \quad 
+    r_j = \tanh(\frac{1}{\sigma_t^2})m_t^2
+    \]
+    \[\hat{g}_t \gets \frac{m_t}{1-\beta^t} \cdot \frac{1}{v_t} \cdot r_t
+    \]
+    
+    \STATE {\bfseries Noise Injection:}
+    \[
+    Noise_t \gets \xi_t \bigl[1 - \tanh(\frac{1}{\sigma_t^2})\bigr], \quad 
+    \xi_t \sim \mathcal{N}(0, \sigma^2)
+    \]
+    
+    \STATE {\bfseries Random Mask:}
+    \[ 
+    M_j \sim Bernoulli(p)
+    \]
+    \[
+    \hat{g}_t \gets (\hat{g}_t + Noise_t) \odot M
+    \]
+    \STATE {\bfseries Update Parameters:}
+    \[
+    \theta_{t+1} \gets \theta_t - \alpha \tilde{g}_t
+    \]
+\ENDFOR
+\STATE {\bfseries Output:} Final parameters $\theta_{T+1}$.
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Analysis}
+We provide a comprehensive theoretical analysis of our method from three perspectives. First, we examine generalization through the OSGR, which highlights how our effectively balances OSGR value across parameters. Second, we formalize our approach under the PAC-Bayes framework, showing that our method explicitly minimizes a tighter generalization bound. Finally, we establish that our optimizer retains the convergence rate of standard SGD while enabling more robust generalization. Proofs are provided in \cref{ap: Proof of Theorems}.
+
+\subsubsection{Generalization analysis with OSGR}
+\label{method: Generalization analysis}
+\begin{table*}[t]
+\caption{Comparison of optimizers with preconditioning split into Convergence and Alignment, and OSGR as a separate column. }
+%$\mathbb{E}_W$ means weighted averaging with weight $\sum_{j}{W_j}=1$
+\label{tab:analysis_opt_updated}
+\vskip 0.15in
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Opt.} & \multicolumn{2}{c}{\textbf{Preconditioning}} & \textbf{OSGR} & \textbf{Weight}\\
+\cmidrule(lr){2-3}& Convergence & Alignment & \\
+\midrule
+SGD 
+&--&--&\(\displaystyle 1 - \frac{1}{n}\sum_{j \in J}\!W_{j}\cdot\frac{1}{ r_j + \frac{1}{n}}\)&\(\displaystyle W_{j} = \frac{\mathbb{E}_{D\sim\mathcal{Z}^n}[g_j^2]}{\sum_{j' }\mathbb{E}_{D\sim\mathcal{Z}^n}[g_{j'}^2]}\)\\
+\addlinespace[1.5ex]
+Adam 
+& \(\displaystyle \frac{1}{\bigl|\mathbb{E}_{D \sim \mathcal{Z}^n}(g_j)\bigr|}\)&\(\displaystyle \sqrt{\frac{1}{\tfrac{1}{n \cdot r_j} + 1}}\)&\(\displaystyle \sum_{j \in J}\!W_{j}\cdot \frac{1}{\tfrac{1}{n \cdot r_j} + 1}\)&\(\displaystyle W_{j} = \frac{\sqrt{\mathbb{E}_{D\sim\mathcal{Z}^n}[g_j^2]}}{\sum_{j' }\sqrt{\mathbb{E}_{D\sim\mathcal{Z}^n}[g_{j'}^2]}}\)\\
+\addlinespace[1.5ex]
+\textbf{GENIE}&\(\displaystyle \frac{1}{\mathbb{E}_{D \sim \mathcal{Z}^n}(g_j^2)}\)&\(\displaystyle r_j + \frac{1}{n}\)&\(\displaystyle 1 - \frac{1}{n}\sum_{j \in J}\! W_{j}\cdot \frac{1}{\mathbb{E}_{j \in J}\!\bigl( r_j + \frac{1}{n}\bigr)}\) &\(\displaystyle W_{j} = \frac{1}{|J|}\)\\
+\bottomrule
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table*}
+We obtain the following corollary regarding the OSGR of these optimizers:
+\begin{corollary}[OSGR of Optimizers]\label{cor:osgrcmp}
+The OSGR of our proposed optimizer is:
+\begin{equation}
+\mathcal{R}_{\text{Ours}}=1 - \frac{1}{n \mathbb{E}_{j \in J} \left( r_{j}+ \frac{1}{n}\right)},
+\end{equation}
+Comparing the resulting OSGR across different optimizers,
+we have: \begin{equation}
+\mathcal{R}_{\text{Ours}} \geq \mathcal{R}_{\text{SGD}}  \approx \mathcal{R}_{\text{Adam}}.
+\end{equation}
+\end{corollary}
+
+This corollary demonstrates that our proposed preconditioning achieves better generalization by attaining a higher overall OSGR. The following remarks provide further context and analysis:
+
+\begin{remark}[Conceptual Components of Optimizers]
+The preconditioning applied by common optimizers can be viewed as the element-wise product of two conceptual components:
+\begin{itemize}
+    \item \textbf{Convergence Term:} controls the effective step size, thus contributing to faster convergence. It includes terms such as $\mathbb{E}_{D \sim \mathcal{Z}^n}[g_j^2]$ or $\mathbb{E}_{D \sim \mathcal{Z}^n}[g_j]$.
+    \item \textbf{Alignment Term:} adjusts gradients toward stable directions. It includes the GSNR term $r_j$.
+\end{itemize}
+\cref{tab:analysis_opt_updated} summarizes the convergence term, alignment term and their resulting OSGR, including SGD, Adam, and our method.
+\end{remark}
+
+\begin{remark}[Optimizer-Specific Analysis]
+SGD maintains a baseline OSGR value with no explicit adjustment. Adam introduces a convergence component combined with a partial alignment factor. In contrast, our method effectively integrates both aspects in a balanced manner.
+\end{remark}
+
+Overall, this analysis highlights how each optimizer’s design affects generalization through gradient alignment and convergence speed.Incorporating both perspectives, Our method leads to a higher OSGR and thus improves generalization performance. Furthermore, we demonstrate that the alignment term in our preconditioning achieves a higher OSGR value than those of existing preconditioning methods. Detailed justifications are provided in the \cref{ap: Proof of Theorems}.
+
+
+\subsubsection{Generalization Analysis with PAC-Bayes Bound}
+\label{method: PAC-Bayes}
+While the previous analysis is based on alignment and convergence dynamics using OSGR, we now adopt a complementary perspective grounded in the PAC-Bayes framework. We formulate the generalization analysis under a one-step update setting, where the KL divergence between successive parameter distributions reveals the connection between our preconditioning and a tighter generalization bound.
+
+\begin{theorem}[PAC-Bayes Interpretation of Preconditioning]
+\label{thm:pac-precondition}
+%Let \( \mathcal{D} \sim \mathcal{Z}^n \) be a dataset sampled i.i.d. from a data distribution \( \mathcal{Z} \). For any \( \lambda > 0 \), and any data-dependent distribution \( \tilde{p} \) over parameters \( \theta \), the following PAC-Bayes bound holds:
+
+%\[
+%\mathbb{E}_{\mathcal{D}} \mathbb{E}_{\theta \sim \tilde{p}}[R(\theta)] \le \mathbb{E}_{\mathcal{D}} \mathbb{E}_{\theta \sim \tilde{p}} \left[
+%\underbrace{L(\theta)}_{T_1} + \frac{\lambda C^2}{8n} + \underbrace{\frac{\mathrm{KL}(\tilde{p} \| \pi)}{\lambda}}_{T_2}
+%\right].
+%\]
+%Let \( \mathcal{D} \sim \mathcal{Z}^n \) be a dataset sampled i.i.d. from a data distribution \( \mathcal{Z} \).
+\(R(\theta)\) is the population risk and \(L(\theta)\) is empirical risk. Assume that the loss function \( L(\theta) \) is bounded in \([0, C]\). For any \( \lambda > 0 \), with probability at least \( 1 - \delta \) over the draw of \( \mathcal{D} \),  and for any data-dependent distribution \( \tilde{p} \) over parameters \( \theta \), the following PAC-Bayes bound holds:
+\[
+\mathbb{E}_{\theta \sim \tilde{p}}[R(\theta)]
+\le
+\underbrace{\mathbb{E}_{\theta \sim \tilde{p}}[L(\theta)]}_{T_1}
++ \frac{\lambda C^2}{8n}
++ \underbrace{\frac{\mathrm{KL}(\tilde{p} \| \pi) + \log \tfrac{1}{\delta}}{\lambda}}_{T_2}.
+\]
+\vskip -0.in
+Assume that \( \tilde{p} = \mathcal{N}(\theta_{t+1}, \Sigma_{\tilde{p}}) \) and \( \pi = \mathcal{N}(\theta_t, \Sigma_\pi) \), where \( \Sigma_{\tilde{p}} = \mathrm{diag}(q_j^2 \cdot \rho_j^2) \) and \( \Sigma_\pi = \mathrm{diag}(\rho_j^2) \). Let \( q_j = \frac{\mathbb{E}[g]^2}{\mathbb{E}[g_j^2]} \) be a variance adaptation factor from SVAG optimizer\cite{dissecting} that minimizes the variance to reduce \( \max{ T_1} \) term. ($\theta_{t+1}=\theta_t-q \odot g$)
+
+Then, minimizing the $T_2$ term via gradient descent yields an update direction:
+\[
+\nabla_{\theta_t} \mathrm{KL}(\tilde{p} \| \pi) = \underbrace{ \frac{1}{\mathbb{E}[g_j^2]} \cdot \frac{\mathbb{E}[g_j]^2}{\rho_j^2} }_{\text{GENIE}} \cdot g_{j,t},
+\]
+which matches the preconditioning rule of our optimizer.
+\end{theorem}
+
+\begin{remark}[Sharpness and Generalization via KL]
+This result shows that our method not only improves sharpness—as done in SAM—but also directly enhances generalization by minimizing both terms in the PAC-Bayes bound. Specifically, the variance adaptation factor \( q_j \) reduces the variability of scaled gradients, thereby tightening the empirical loss term \( T_1 \) through more stable updates. Simultaneously, the $\frac{1}{\rho^2}$ term  minimizes the KL divergence term \( T_2 \). This result shows our the generalization property of GENIE comes from correlation with Pac-Bayes theory.%balances gradient magnitude and variance, offering a theoretically grounded preconditioning rule that leads to tighter and more stable generalization guarantees. 
+\end{remark}
+
+
+\subsubsection{Convergence Analysis}
+\label{method: Convergence Analysis}
+This section analyzes the convergence properties of GENIE under non-convex settings. Specifically, we adopt three widely used assumptions in the optimization literature:
+
+\begin{assumption}
+\label{ass:Bounded Gradient}
+(Bounded Gradient) There exists a constant \( G > 0 \) such that
+\begin{equation}
+\|\nabla \mathcal{L}(\theta_t)\| \leq G \quad \text{for all } t.
+\end{equation}
+\end{assumption}
+
+\begin{assumption}
+\label{ass:L-smooth}
+(L-smooth) The loss function \(\mathcal{L}\) is \(L\)-smooth, meaning there exists a constant \( L > 0 \) such that for all \(\theta_1, \theta_2\):
+\begin{equation}
+\|\nabla \mathcal{L}(\theta_1) - \nabla \mathcal{L}(\theta_2)\|
+\leq L \|\theta_1 - \theta_2\|.
+\end{equation}
+\end{assumption}
+\begin{assumption}
+\label{ass:Bounded Variance}
+(Lower bounded variance) The variance of the stochastic gradients have lower bound by a constant $1/S_u$:
+\begin{equation}
+\mathbb{E}[\|g_t - \nabla \mathcal{L}(\theta_t)\|^2] \geq 1/S_u, \quad \forall t.
+\end{equation}
+\end{assumption}
+Under these assumptions, we establish the following result regarding the convergence rate:
+
+\begin{theorem}\label{thm:th2}
+Under \cref{ass:Bounded Gradient} \cref{ass:L-smooth}, and \cref{ass:Bounded Variance} the average gradient norm over \(T\) iterations can be expressed as:
+
+\begin{equation}
+      \mathbb{E}[\|\nabla \mathcal{L}(\theta)\|^2]
+    \leq O\left( \frac{1}{P_l}\left(1 + \frac{G \cdot S_u^2}{2}\right) \frac{1}{\sqrt{\hat{T}}}\right)
+    .\quad 
+\end{equation}
+where $P_l$ is lower bound of preconditioning value.
+\end{theorem}
+
+\begin{remark}[Convergence Rate and Intuition]
+\label{rem:conv-rate}
+\cref{thm:th2} shows that the average gradient norm converges at \(O(T^{-1/2})\), the standard rate for stochastic gradient methods in non-convex optimization. This implies that GENIE retains the fundamental convergence properties of SGD. 
+\end{remark}
+
+\begin{remark}[Influence of \(\,G \cdot S_u\) and \(\,S_u\)]
+
+The term $G\cdot S_u^{2}$ represents a trade-off associated with the GSNR. A higher GSNR upper bound(\(\,G \cdot S_u\)) indicates a stronger gradient signal, which enhances generalization performance. However, it also acts as a multiplicative factor in the gradient norm, potentially slowing down convergence and thereby creating a trade-off. Furthermore, the variance term($S_u$)  has a significant impact on the bound, further influencing the overall convergence behavior. To address this issue, we regulate the variance term using the 
+$tanh$ function, which effectively balances the interplay between generalization and convergence dynamics. 
+\end{remark}
+
+\section{Experiment}
+\textbf{Dataset.} We followed the standardized protocols of DomainBed \cite{domainbed}, which include dataset splits, hyperparameter searches, and model selection using validation sets. Our approach was evaluated on five DG benchmark datasets: PACS \cite{pacs}, VLCS \cite{vlcs}, OfficeHome \cite{officehome}, TerraIncognita \cite{terra}, and DomainNet \cite{domainnet}.
+
+\textbf{Evaluation.} In accordance with DomainBed protocols, models were trained for 15,000 iterations on DomainNet and 5,000 iterations on the other datasets. For all DG and SDG experiments, we employed the Training-domain Validation Set approach, partitioning the source domain into training and validation subsets. The optimal model was selected based on validation performance. We followed previous DG methods by constructing 20 train-validation splits, with each split repeated 3 times. 
+
+\textbf{Implementation Details.} We used ResNet-50 \cite{resnet} pre-trained on ImageNet \cite{imagenet} as backbone architectures. Detailed implementation details are presented in \cref{ap: Implementation Details}. The detailed results and corresponding confidence intervals of all experiments are provided in \cref{ap: Experimental Details and Results}.
+
+\subsection{Comparison of Optimizers on DG}
+\label{Sec-4:Comparison of Optimizers on DG}
+\textbf{Experiment Setup.} We examined the impact of various optimization methods on generalization performance under domain shifts using Baseline ERM \cite{erm}. The evaluated methods included: Standard optimizers (SGD \cite{sgd}), Adaptive optimizers (Adam \cite{adam}, AdamW \cite{adamw}, AdaBelief \cite{adabelief}, AdaHessian \cite{adahessian},  YOGI \cite{yogi}), Sharpness-aware optimizers (SAM \cite{sam}, GAM \cite{gam}, FAD \cite{dg_opt}) and our proposed GENIE. 
+
+\textbf{Results.} As shown in \cref{tab:comparison_of_opt}, our optimizer achieved superior performance across most datasets, surpassing existing methods. 
+GENIE outperformed Adam, the default optimizer in most DG algorithms\cite{dg_opt}, by 5.69\%. Additionally, it achieved improvements of 6.36\% over SGD and 4.37\% over SAM. In particular, it achieved remarkable performance on VLCS, which is prone to early convergence and overfitting\cite{vlcs_fast_conv}, and on TerraIncognita, a wildlife image dataset with significant challenges such as lighting variations, motion blur, occlusions, and severe class imbalance\cite{terra}. These results suggest that GENIE effectively prevents overfitting and enhances the learning of causal relationships by balancing parameter contributions during training. Optimizers designed for generalization, such as SAM, GAM and FAD, outperform standard optimizers, underscoring the significant role of optimization in generalization. These results emphasize the need for developing optimizers specifically tailored for DG. 
+
+\begin{table}[ht]
+\caption{Comparison of optimizers on DG datasets. Results denoted by * are reproduced from \cite{dg_opt} using the same protocol as our paper. The best results for each dataset are highlighted in bold.}
+\label{tab:comparison_of_opt}
+\vskip 0.1in
+\begin{center}
+\begin{small}
+\begin{sc}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lccccc|c}
+\toprule
+\textbf{Opt.}& PACS & VLCS & Office& Terra& Domain& \textbf{Avg.} \\
+ & & & Home& Inc& Net&\\ 
+\midrule
+Adam*       & 84.2 & 77.3 & 67.6 & 44.4 & 43.0 & 63.3 \\
+AdamW*      & 83.6 & 77.4 & 68.8 & 45.2 & 43.4 & 63.7 \\
+SGD*        & 79.9 & 78.1 & 68.5 & 44.9 & 43.2 & 62.9 \\
+YOGI*       & 81.2 & 77.6 & 68.3 & 45.4 & 43.5 & 63.2 \\
+AdaBelief*  & 84.6 & 78.4 & 68.0 & 45.2 & 43.5 & 63.9 \\
+AdaHessian* & 84.5 & 78.6 & 68.4 & 44.4 & \textbf{44.4} & 64.1 \\
+SAM*        & 85.3 & 78.2 & 68.0 & 45.7 & 43.4 & 64.1 \\
+GAM*        & 86.1 & 78.5 & 68.2 & 45.2 & 43.8 & 64.4 \\
+FAD*        & \textbf{88.2} & 78.9 & 69.2 & 45.7 & \textbf{44.4} & 65.3 \\ 
+\midrule
+\textbf{GENIE}         & 87.8& \textbf{80.7}& \textbf{69.7}& \textbf{52.0}& 44.1& \textbf{66.9}\\ 
+\bottomrule
+\end{tabular}
+}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+\textbf{Experiment Setup.} The computational overhead of an optimizer is a critical factor in its practical applicability. To evaluate this, we trained models on the PACS and VLCS datasets for 5,000, 10,000, and 15,000 iterations, measuring average performance and training time per iteration.
+
+\textbf{Results.} As reported in \cref{tab:iteration_opt}, GENIE consistently outperformed other optimizers, even at 5,000 iterations, while incurring lower computational overhead than SGD and Adam. Additionally, GENIE achieved an average of 1.3× faster training compared to SAM, as SAM’s update rule requires two sequential (non-parallelizable) gradient computations per step, which doubles the training time. These results experimentally validate the theoretical convergence analysis in \cref{method: Convergence Analysis}, confirming GENIE’s ability in computational efficiency and convergence speed.
+
+\vskip -0.2in
+\begin{table}[ht]
+\vskip 0.1in
+\caption{Training time (sec) and average accuracy at different iteration levels. }
+\label{tab:iteration_opt}
+
+\begin{center}
+\begin{scriptsize}
+\begin{sc}
+\begin{tabular}{lc|c|ccc}
+\toprule
+\textbf{Opt.}& \textbf{Iter.}& \textbf{Training} & \multicolumn{3}{c}{\textbf{Avg.}}\\
+\cmidrule(lr){4-6}& & \textbf{Time} & PACS & VLCS & Office\\ 
+& & (/s) && & Home\\ 
+\midrule
+SGD     & 5000     & 5,273 & 69.8& 76.7& 51.3\\
+        & 10000    & 10,546& 73.9& 77& 62.5\\
+        & 15000    & 15,783& 75.8& 77.7& 63.9\\ 
+\midrule
+Adam    & 5000     & 5,443& 84.2& 77&  63.6\\
+        & 10000    & 10,934& 86.1& 77& 65.2\\
+        & 15000    & 16,531& 84.5& 77& 65.2\\ 
+\midrule
+SAM     & 5000     & 5,775& 82.4& 79.4& 69.4\\
+        & 10000    & 11,500& 83.5& 80.3& 69.6\\
+        & 15000    & 17,191& 84.1& 80.4& \textbf{70}\\ 
+\midrule
+\textbf{GENIE}   & 5000     & 4,292& \textbf{88.4}& \textbf{81.3}& \textbf{70}\\
+        (ours)& 10000    & 8,582& 87.1& \textbf{81.3}& 69.2\\
+        & 15000    & 12,876& 86.9& \textbf{81.3}& 69.1\\ 
+\bottomrule
+\end{tabular}
+\end{sc}
+\end{scriptsize}
+\end{center}
+\vskip -0.2in
+\end{table}
+\subsection{Integration with Current DG Algorithms}
+\label{Sec-4: Integration with Current DG Algorithms}
+\textbf{Experiment Setup.} GENIE is a versatile optimizer that integrates seamlessly with various DG algorithms without requiring changes to the training procedure or model architecture. To validate its compatibility, we combined GENIE with several well-performing DG algorithms—CORAL\cite{coral} and RSC\cite{rsc} using ResNet-50 as the backbone—and compared its performance against other optimization techniques.
+
+\textbf{Results.} The performance evaluation results for DG are summarized in \cref{tab:dg}. GENIE consistently outperforms existing optimization methods, demonstrating its robustness and broad applicability. These results validate GENIE's scalability and compatibility with various DG algorithms. Unlike other DG methods, which often require multiple source domains or architecture modifications, GENIE seamlessly integrates with existing training pipelines, providing consistent performance gains without additional complexity. This establishes GENIE as an algorithm-agnostic and highly adaptable optimization framework for DG tasks.
+\subsection{Single Domain Generalization}
+\label{Sec-4: Single Domain generalization}
+\textbf{Experiment Setup.} We evaluated performance in Single Domain Generalization (SDG), which is more constrained but better reflects real-world applications. The flexibility to operate in SDG without structural modifications is an advantage of our method over certain existing methods that are limited to multi-source settings. In SDG, the model is trained and validated on a single domain and tested on the others, with results averaged across all source domains. We compared GENIE with Adam, SGD, and SAM, and applied it to existing DG methods. 
+
+\textbf{Results.} The SDG performance results are presented in \cref{tab:sdg}. As in previous DG settings, our optimizer outperformed existing optimizers. When applied to DG methods, conventional optimizers reduced performance, whereas GENIE achieved the highest performance as a standalone model and also improved DG methods when used as an optimizer. These results show that our method enhances DG performance without requiring architectural modifications or multiple source domains, and performs well even as a standalone method.
+
+\begin{table}[ht]
+\caption{Experimental results of GENIE under the SDG setting.}
+\label{tab:sdg}
+\vskip 0.1in
+\begin{center}
+\begin{scriptsize}
+\begin{sc}
+% \renewcommand{\arraystretch}{1.2}
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{lcccc|c}
+\toprule
+\textbf{Algorithm} & PACS & VLCS & Office & Terra & \textbf{Avg.} \\ 
+& & & Home& Inc&  \\ 
+\midrule
+Adam & 64.3& 56.2& 50.7& 33.5& 51.2\\ 
+SGD  & 49.5& 60.4& 45.9& 22.8& 44.7\\ 
+SAM  & 57.7& 66.7& \textbf{59.2}& 26.8& 52.6\\ 
+\textbf{GENIE (ours)}  & \textbf{69.5}& \textbf{69.9}& 58.6& \textbf{36.0}& \textbf{58.5}\\ 
+\midrule
+\midrule
+RSC+Adam & 56.8& 51.6& 2.1& 31.6& 35.5\\ 
+RSC+SGD & 22.2& 39.8& 1.7& 17.6& 20.3\\ 
+\textbf{RSC+GENIE(ours)}    & \textbf{68.2}& \textbf{68.7}& \textbf{54.4}& \textbf{33.2}& \textbf{56.1}\\ 
+\midrule
+CORAL+Adam    & 64.3& 56.2& 50.7& 33.5& 51.2\\ 
+CORAL+SGD     & 49.5& 60.4& 45.9& 22.8& 44.7\\ 
+\textbf{CORAL+GENIE(ours)}   & \textbf{70.9}& \textbf{69.2}& \textbf{56.4}& \textbf{36.7}& \textbf{58.3}\\
+\bottomrule
+\end{tabular}
+}
+\end{sc}
+\end{scriptsize}
+\end{center}
+\vskip -0.1in
+\end{table}
+\begin{table*}[!t]
+\centering
+\caption{Integration with DG methods. Results obtained from the original literature and DomainBed \cite{domainbed} are denoted with †, while results taken from \cite{dg_opt} are denoted with *.}
+\label{tab:dg}
+\vskip 0.15in
+\renewcommand{\arraystretch}{1.1}
+\begin{small}
+\begin{sc}
+\begin{tabular}{lcccc|c}
+\toprule
+\textbf{Algorithm} & PACS & VLCS & OfficeHome & TerraInc & \textbf{Avg.} \\ 
+\midrule
+ERM†\cite{erm}           & 85.5 & 77.5 & 66.5 & 46.1 & 68.9\\ 
+IRM†\cite{irm}           & 83.5 & 78.6 & 64.3 & 47.6 & 68.5\\ 
+GroupDRO†\cite{groupdro}      & 84.4 & 76.7 & 66.0 & 43.2 & 67.6\\ 
+I-Mixup†\cite{i-mixup_1}       & 84.6 & 77.4 & 68.1 & 47.9 & 69.5\\ 
+MLDG†\cite{mldg}          & 84.9 & 77.2 & 66.8 & 47.8 & 69.2\\
+ MMD†\cite{mmd}           & 84.7 & 77.5 & 66.4 & 42.2 &67.7\\ 
+DANN†\cite{dann}          & 83.7 & 78.6 & 65.9 & 46.7 & 68.7\\ 
+CDANN†\cite{cdann}& 82.6& 77.5& 65.7& 45.8& 67.9
+\\ 
+MTL†\cite{mtl}           & 84.6& 77.2 & 66.4 & 45.6 & 68.5\\ 
+SagNet†\cite{sagnet}        & 86.3 & 77.8 & 68.1 & 48.6 & 70.2\\ 
+ARM†\cite{arm}           & 85.1 & 77.6 & 64.8 & 45.5 & 68.3\\ 
+VREx†\cite{vrex}          & 84.9 & 78.3 & 66.4 & 46.4 & 69\\
+Mixstyle*\cite{mixstyle}& 85.2& 77.9& 60.4& 44&66.9\\
+ MIRO*\cite{miro}& 85.4& 78.9& 69.5& 45.4&69.8\\
+\textbf{GENIE (ours)}& \textbf{87.8}& \textbf{80.7}& \textbf{69.7}& \textbf{52.0}&\textbf{72.6}\\
+\midrule
+\midrule
+RSC\cite{rsc}+Adam*& 84.5& 77.9& 65.7& 44.5&68.2\\
+RSC+AdamW*& 83.4& 77.5& 66.3& 45.1&68.1\\
+RSC+SGD*& 82.6& 78.1& 67& 43.9&67.9\\ 
+\textbf{RSC+GENIE(ours)}& \textbf{87.3}& \textbf{80.6}& \textbf{68.1}& \textbf{49.5}& \textbf{71.4}\\ 
+\midrule
+CORAL\cite{coral} + Adam*& 86& 78.9 & 68.7 & 43.7 & 69.3\\ 
+CORAL+AdamW*& 86.4 & 79.5 & 69.8 & 45.0 & 70.2\\ 
+CORAL+SGD*& 85.6 & 78.2 & 69.5 & 45.8 & 69.8\\ 
+\textbf{CORAL+GENIE(ours)}& \textbf{87.9}& \textbf{80.7}& \textbf{70.6}& \textbf{48.4}& \textbf{71.9}\\
+\bottomrule
+\end{tabular}
+\end{sc}
+\end{small}
+\vskip -0.1in
+\end{table*}
+
+\subsection{Model Analysis}
+\label{Sec-4:Model Analysis}
+
+\textbf{Ablation.} We conducted an ablation study using the PACS dataset in a DG setting to evaluate the effects of Preconditioning, Noise Injection, and Random Mask (\cref{tab:ablation}). The version without all three components corresponds to ERM trained with Adam, while the version incorporating all three represents our proposed GENIE optimizer. Experimental results show that GENIE achieved the highest performance, improving accuracy by 4.9\% compared to ERM. Even when using only Preconditioning, performance improved by 3.8\%, indicating that a simple preconditioning technique can enhance generalization. Additionally, in the Cartoon and Sketch domains, where objects are placed on a white background, models trained with Noise Injection and Random Mask performed better. Here, we conclude that preconditioning alone is enough for DG, but you can optionally utilize Noise Injection and Random Mask for additional robustness.
+\begin{table}[ht]
+\caption{Ablation study on the PACS dataset. Results are reported for evaluations on four domains: Art, Cartoon, Photo, and Sketch.}
+\label{tab:ablation}
+\vskip 0.15in
+\begin{center}
+\begin{small}
+\begin{sc}
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{ccc|cccc|c}
+\toprule
+\textbf{Pre}& \textbf{Noise}& \textbf{Mask}& \multicolumn{4}{c|}{PACS} & \textbf{Avg.}\\
+ \cmidrule(lr){4-7} 
+ \textbf{condition}& & & A& C& P& S &\\ 
+\midrule
+  x & x& x&  88.0&79.7& 96.7& 72.7 &84.2\\
+  o & x& x& \textbf{89.5}&82.3& 98.4& 79.4 &87.4\\
+  o & o& x&  85.4&77.4& 98.6& 78.7 &85.0\\
+  o & x& o&  84.6&79.9& 98.3& 77.4 &85.1\\ 
+\midrule
+  o & o& o&  89.3& \textbf{84.1}& \textbf{98.7}& \textbf{81.6} &\textbf{88.4}\\ 
+\bottomrule
+\end{tabular}}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+\begin{figure}[ht]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=1\columnwidth]{fig/hp.png}}
+\caption{Performance sensitivity of GENIE to dropout probability \(P\) and coefficient \(B\).}
+\label{fig:hp}
+\end{center}
+\vskip -0.2in
+\end{figure}
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=\linewidth]{fig/feature_vis.png}
+    \caption{UMAP visualization of learned features on the PACS dataset with Sketch as the unseen target domain. (A) Before training. (B)–(D) After training with SGD, Adam, and GENIE.}
+    \label{fig:feature_vis}
+\end{figure*}
+
+\begin{figure}[ht]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=\columnwidth]{fig/osgr.png}}
+\caption{OSGR measurements over training iterations for different optimizers on the VLCS dataset. The OSGR values were calculated for all iterations and averaged every 200 iterations for clarity and ease of comparison.}
+\label{fig:osgr_vlcs}
+\end{center}
+\vskip -0.3in
+\end{figure}
+
+\begin{figure}[ht]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=0.7\columnwidth]{fig/fig1.png}}
+\caption{Optimization trajectories on a simulated loss landscape.}
+\label{fig:losslandscape}
+\end{center}
+\vskip -0.3in
+\end{figure}
+
+\textbf{Sensitivity Analysis.} GENIE employs two key hyperparameters: the dropout probability  \(P\)  and the coefficient  \(B\) , which is used to compute the moving average and variance of gradients. To analyze the sensitivity of these hyperparameters, we conducted a grid search while keeping all other training settings fixed. As shown in \cref{{fig:hp}}, GENIE consistently outperformed SGD, Adam, and SAM across a wide range of  \(P\)and \(B\) values, demonstrating strong robustness to hyperparameter variation. Notably, while this experiment involved hyperparameter tuning via grid search, all other experiments followed the DomainBed protocol, using validation performance for hyperparameter selection. 
+
+\textbf{OSGR of Network Parameters Over Time.} To assess whether our approach enhances the overall OSGR of network parameters during training, we tracked the average OSGR of all parameters throughout the training process. As shown in \cref{fig:osgr_vlcs}, the OSGR measurements on the VLCS dataset show that GENIE achieves an OSGR closer to 1 than prior optimizers. This means superior generalization performance. These findings align with the theoretical Generalization analysis in \cref{method: Generalization analysis} , confirming that GENIE ensures more stable and balanced parameter updates during training, which ultimately leads to improved generalization. Interestingly, while SAM is designed for better generalization performance, it exhibits inferior OSGR values. This suggests that the sharpness-aware regime alone is insufficient for generalization, and that the OSGR regime should also be considered when addressing generalization in DG tasks. This observation is consistent with our PAC-Bayesian analysis in \cref{method: PAC-Bayes}, which reveals that inducing balanced OSGR values leads to tighter generalization bounds, reinforcing the role of OSGR as a necessary complement to sharpness-aware optimization.
+
+\textbf{Loss Landscape.}
+We analyzed the convergence paths of SGD, Adam, and GENIE in the loss landscape using the FashionMNIST dataset\cite{Fashion_MNIST}. As shown in \cref{fig:losslandscape}, each corner represents the local minima of a specific source domain. All optimizers started at (-1,3) and were updated for 30 steps under the same conditions. SGD and Adam follow steep direction and converge quickly. However, fast convergence often causes overfitting to specific source domains in OOD scenarios. Generalizable features are learned later in training\cite{spurious_early,spurious_early_1,spurious_early_2}, so rapid convergence can prevent the model from acquiring them sufficiently. In contrast, as demonstrated in the theoretical analysis in \cref{method: PAC-Bayes}, GENIE leads optimization toward flatter minima by effectively reducing sharpness, thereby improving generalization\cite{sam}.
+
+\textbf{Feature Visualization.}
+To examine how the GENIE optimizer operates at the feature level, we performed UMAP visualizations\cite{umap} on the PACS dataset, with the Sketch domain held out as the unseen target. Each color represents a different class. The results \cref{fig:feature_vis} show that GENIE leads to clear class separation across domains, suggesting effective domain-invariant feature learning.
+
+\section{Conclusion}
+We introduce GENIE, an optimizer that leverages OSGR to guide gradients in effective directions, preventing overly predictive parameters from dominating while ensuring all parameters contribute equitably to learning. GENIE achieves a higher OSGR with improved generalization and ensures fast convergence rate comparable to SGD. Empirically, it outperforms state-of-the-art optimizers across five DG benchmarks, demonstrating robust performance under significant domain shifts and limited data. Seamlessly integrating with existing DG and SDG methods, GENIE consistently achieves performance improvements. This work highlights the potential of OSGR as a guiding principle, paving the way for its use in few-shot learning, meta-learning, and other tasks requiring solutions to source-domain overfitting. 
+
+\section*{Acknowledgements}
+This work was supported by Korea Internet \&\ Security Agency(KISA) grant funded by the Korea government(PIPC) (No.RS-2023-00231200, Development of personal video information privacy protection technology capable of AI learning in an autonomous driving environment) 
+%We would also like to thank Professor Jae-Hong Lee from Hankuk University of Foreign Studies for insightful comments 
+%on the role of the KL divergence term in PAC-Bayes analysis, which helped us gain a deeper understanding of the 
+%generalization aspects of our method.
+
+\section*{Impact Statement}
+Our work proposes GENIE, an optimization method that enhances domain generalization by ensuring stable and balanced updates. GENIE mitigates overfitting, promotes flatter minima, and improves OOD performance, contributing to more robust and generalizable models.
+
+% references without citing it in the main text, use \nocite
+% \nocite{langley00}
+\bibliography{example_paper}
+\bibliographystyle{icml2025}
+% In the unusual situation where you want a paper to appear in the
+% references without citing it in the main text, use \nocite
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% APPENDIX
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\appendix
+\onecolumn
+\section{Notation}
+\label{ap: notation}
+\begin{table}[ht]
+\caption{Final Revised Notation Table}
+\label{tab:final_notation}
+\vskip 0.15in
+\begin{center}
+\begin{small}
+\renewcommand{\arraystretch}{1.3} % 행 간격 조정
+\begin{tabular}{ll}
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule
+$f$ & neural network \\
+$L(\theta)$ & loss function \\
+$\mathcal{Z}$ & data distribution defined over $\mathcal{X} \times \mathcal{Y}$ \\
+$n$ & number of data samples \\
+$D, D'$ & training/test dataset drawn from $\mathcal{Z}$ \\
+$\theta, \theta_j$ & model parameters, parameter $j$ \\
+$\theta_{t,j}$ & parameter of index $j$ at optimization step $t$ \\
+$g_{D,j}(\theta)$ & gradient of parameter $j$ averaged over training set $D$ \\
+$g_t$ & gradient at step $t$ \\
+$g_j^2$ & squared gradient for parameter $j$ \\
+%$m_t, v_t$ & first and second momentum of gradients \\
+$\rho_j^2$ & variance of parameter $j$'s gradient \\
+$\sigma_j^2$ & variance of gradient averaged over training set \\
+$r_j$ & gradient signal-to-noise ratio (GSNR), $r_j = \frac{g_j^2}{\rho_j^2}$ \\
+$p_j$ & proposed preconditioning factor for parameter $j$ \\
+$R(Z,n)$ & one-step generalization ratio (OSGR) \\
+$\xi_t \sim \mathcal{N}(0,\sigma^2)$ & Gaussian noise for noise injection \\
+%$M_j \sim \text{Bernoulli}(p)$ & random dropout mask \\
+%$\alpha$ & learning rate \\
+%$\beta_1, \beta_2$ & hyperparameters for moving averages \\
+%$\epsilon$ & small constant for numerical stability\\
+$J$ & set of parameter index \\
+$G$ & bound of gradient $l_2$ norm\\
+$1/S_u$ & lower bound of gradient variance \\
+$L$ & Lipschitz constant \\
+$P_l$ & lower bound of preconditioning value \\
+$W_j$ & weighting factor showing up in optimizers, $\frac{\mathbb{E}_{D \sim \mathcal{Z}^n}(g_{D,j}^2)}{\sum_{j'} \mathbb{E}_{D \sim \mathcal{Z}^n}(g_{D',j}^2)} $ in SGD \\
+$\tilde{p}, \pi$ & probability measure of posterior and prior\\
+%$\lambda$ & hyperparameter in PAC-Bayes bound \\
+%의미론적으로 하이퍼 파라미터라는 거지, 사실 이거 어떤 람다값에 대해도 참인 수학 statement여서 설명 불필요함. 
+$\mathbf{\Sigma}_{\tilde{p}}, \mathbf{\Sigma}_{\pi}$ & covariance matrix of Gaussian distribution \\
+$\epsilon, \epsilon'$ & random error terms in gradients \\
+$KL(\tilde{p}\|\pi)$ & KL divergence between distributions \\
+\bottomrule
+\end{tabular}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+% \begin{table}[ht]
+% \caption{Notation used in the paper.}
+% \label{tab:notation}
+% \vskip 0.15in
+% \begin{center}
+% \begin{small}
+% \renewcommand{\arraystretch}{1.3} % 행 간격 조정
+% % \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}ll}
+% \begin{tabular}{ll}
+% \toprule
+% \textbf{Symbol} & \textbf{Description} \\
+% \midrule
+% $\mathbit{f}$ & neural network \\
+% $\mathbf{L}$ & loss function \\
+% $\mathbf{Z}$ & data distribution defined over $\mathcal{X} \times \mathcal{Y}$ \\
+% $\mathbit{s}$ or $(\mathbit{x}, \mathbit{y})$ & a single data sample \\
+% $\mathbit{D}$ & training set with $n$ samples drawn from $\mathcal{Z}$ \\
+% $\mathbit{D}^\prime$ & test set with $n^\prime$ samples drawn from $\mathcal{Z}$ \\
+% $\mathbit{\theta}$ & model parameters, where each parameter is denoted by $\theta_j$ \\
+% $\mathbit{\theta}_{\mathbit{t},\mathbit{j}}$ & parameter $\theta_j$ at step $t$ (iteration) \\
+% $\mathbit{g}_\mathbit{s}\left(\mathbit{\theta}\right)$ or $\mathbit{g}_\mathbit{i}\left(\mathbit{\theta}\right)$ & gradient of parameters w.r.t. a single data sample $s$ or $(x_i, y_i)$ \\
+% $\mathbit{g}_\mathbit{D}\left(\mathbit{\theta}\right)$ & average gradient over the training set \\
+% $\mathbit{g}_{\mathbit{D},\mathbit{j}}$ & same as $g_D\left(\theta_j\right)$ \\
+% $\mathbit{g}_{\mathbit{D}^\prime}\left(\mathbit{\theta}\right)$ & average gradient over the test set \\
+% $\widetilde{\mathbit{g}}\left(\mathbit{\theta}\right)$ & mean of gradients over the total data distribution \\
+% ${\widetilde{\mathbit{g}}}_\mathbit{j}^\mathbf{2}$ & same as ${E^2}_{D\sim\mathcal{Z}^\mathcal{n}}\left(g_{D,j}\right)$ \\
+% $\mathbit{\rho}^\mathbf{2}\left(\mathbit{\theta}\right)$ & variance of gradients of a single sample \\
+% $\mathbit{\rho}_\mathbit{j}^\mathbf{2}\left(\mathbit{\theta}\right)$ & same as $\rho^2\left(\theta_j\right)$ \\
+% $\mathbit{\sigma}^\mathbf{2}\left(\mathbit{\theta}\right)$ & variance of average gradients over a training set of size $n$ \\
+% $\mathbit{\sigma}_\mathbit{j}^\mathbf{2}$ & same as $\sigma^2\left(\theta_j\right)$ \\
+% $\mathbit{r}\left(\mathbit{\theta}_\mathbit{j}\right)$ or $\mathbit{r}_\mathbit{j}$ & gradient signal-to-noise ratio (GSNR) of $\theta_j$ \\
+% $\mathbit{L}\left[\mathbit{D}\right]$ & empirical training loss on the dataset $D$ \\
+% $\mathbit{L}\left[\mathbit{D}^\prime\right]$ & empirical test loss on the dataset $D^\prime$ \\
+% $\mathbit{\Delta L}\left[\mathbit{D}\right]$ & one-step decrease in training loss \\
+% $\mathbit{\Delta L}\left[\mathbit{D}^\prime\right]$ & one-step decrease in test loss \\
+% $\mathbit{\Delta}\mathbit{L}_\mathbit{j}\left[\mathbit{D}\right]$ & one-step training loss decrease due to updating $\theta_j$ \\
+% $\mathbf{R}(\mathbf{Z}, \mathbit{n})$ & one-step generalization ratio (OSGR) for training and test sets of size $n$ \\
+% $\mathbf{P}$ & preconditioning matrix or vector \\
+% $\mathbf{P}_\mathbit{j}$ or $\mathbf{P}_{\mathbit{j}^\prime}$ & proposed preconditioning method for $\theta_j$ \\
+% $\mathbf{R}^\prime\left(\mathbf{Z},\mathbit{n}\right)$ & rewritten OSGR with preconditioning applied \\
+% \bottomrule
+% \end{tabular}
+% \end{small}
+% \end{center}
+% \vskip -0.1in
+% \end{table}
+\section{Details of \cref{tab:analysis_opt_updated}}
+We start out from a reinterpretation of the widely-used \textsc{Adam} optimizer, which maintains moving averages of stochastic gradients and their element-wise square,
+
+\begin{equation}
+    \tilde{m}_t = \beta_1 \tilde{m}_{t-1} + (1 - \beta_1) g_t, \quad
+    \hat{m}_t = \frac{\tilde{m}_t}{1 - \beta_1^{t+1}},
+\end{equation}
+
+\begin{equation}
+    \tilde{v}_t = \beta_2 \tilde{v}_{t-1} + (1 - \beta_2) g_t^2, \quad
+    \hat{v}_t = \frac{\tilde{v}_t}{1 - \beta_2^{t+1}},
+\end{equation}
+
+with \(\beta_1, \beta_2 \in (0,1)\) and updates with learning rate $\alpha$,
+
+\begin{equation}
+    \theta_{t+1} = \theta_t - \alpha \frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \varepsilon}
+\end{equation}
+
+with a small constant \(\varepsilon > 0\) preventing division by zero. Ignoring \(\varepsilon\) and assuming \(|m_{t,i}| > 0\) for the moment, we can rewrite the update direction as
+
+\begin{equation}
+    \frac{m_t}{\sqrt{v_t}} = \operatorname{sign}(m_t) \sqrt{\frac{v_t}{m_t^2}}
+    = \underbrace{\frac{1}{\sqrt{1 + \frac{v_t - m_t^2}{m_t^2}}}}_{T_1} \circ \underbrace{\operatorname{sign}(m_t)}_{T_2}.
+\end{equation}
+Here, we divide the preconditioning into two terms. The convergnece term $T_2$ which modulates update size is :
+\begin{equation}
+\operatorname{sign}(m_t)=
+    \frac{\mathbb{E}_{D \sim \mathcal{Z}^n} \left( g_j \right)}{\left| \mathbb{E}_{D \sim \mathcal{Z}^n} \left( g_j \right) \right|}
+\end{equation}
+The alignment term $T_1$ which includes GSNR is :
+\begin{equation}
+\frac{1}{\sqrt{1 + \frac{v_t - m_t^2}{m_t^2}}}=
+    \sqrt{\frac{1}{\frac{1}{n \cdot r_j} + 1}}
+    \label{eq:hhh}
+\end{equation}
+
+The \cref{eq:hhh} can be justified by definition of GSNR using \cref{eq:hhhh} and \cref{eq:hhhhh}. The variance of gradient average is:
+\begin{equation}
+    v_t - m_t^2=\frac{\rho_j^2}{n}
+\label{eq:hhhh}
+\end{equation}
+and 
+\begin{equation}
+    m_t^2=\widetilde{g_j}^2
+    \label{eq:hhhhh}
+\end{equation}
+
+\section{Proof of Theorems}
+\label{ap: Proof of Theorems}
+\subsection{Convergence Analysis}
+%\paragraph{Convergence Analysis}
+We provide the detailed derivation and proof for \cref{thm:th2}.
+\noindent
+From \cref{ass:L-smooth}, we start with:
+\begin{equation}
+    L(\theta_{t+1}) \leq L(\theta_t) + \underbrace{\langle \nabla L(\theta_t), \theta_{t+1} - \theta_t \rangle}_{T_1} + \underbrace{\frac{L}{2} \|\theta_{t+1} - \theta_t\|^2}_{T2},
+\end{equation}
+where the first term, $T_1$, is given by:
+\begin{equation}
+    T_1 = \langle \nabla L(\theta_t), \theta_{t+1} - \theta_t \rangle.
+\end{equation}
+
+\noindent
+Using our preconditioning, which we defined as:
+\begin{equation}
+    p = \frac{1}{\widetilde{g}^2 + \frac{\rho^2}{n}} \cdot \frac{ \widetilde{g }^2}{\rho^2}= \frac{n}{n + \frac{\rho^2}{\widetilde{g}^2}} \cdot \frac{1}{\rho^2},
+\end{equation}
+which satysifies, given  \cref{ass:Bounded Variance}:
+\begin{equation}
+    \frac{n}{n + \frac{\rho^2}{\widetilde{g}^2}} \leq 1, \frac{1}{\rho^2}  \leq S_u
+\end{equation}
+
+%which, under the assumption $\frac{1}{p^2} \leq S$, simplifies the bound as follows:
+%\begin{equation}
+%    \|g_t\| \leq G.
+%\end{equation}
+
+\noindent
+For $T_2$, we have:
+\begin{equation}
+    T_2 = \frac{L}{2} \lambda^2 \|p \odot g_t\|^2 \leq \frac{L}{2} \lambda^2 \|S_u  \cdot g_t\|^2,
+\end{equation}
+and its expectation satisfies, using  \cref{ass:Bounded Gradient}:
+\begin{equation}
+    \mathbb{E}[T_2] \leq \frac{L}{2} \lambda^2 S_u^2 G^2.
+\end{equation}
+
+\noindent
+For $T_1$, we decompose:
+\begin{equation}
+    T_1 = \langle \nabla L(\theta_t), \theta_{t+1} - \theta_t \rangle = -\lambda_t \langle \nabla L(\theta_t), p \odot g_t \rangle,
+\end{equation}
+%and further bound:
+\begin{equation}
+    T_1 \leq \underbrace{-\lambda_t P_l \langle\nabla L(\theta_t) \cdot g_{t}\rangle}_{T3}+\underbrace{\lambda_t\sum_j|[\nabla L(\theta_{t})]_j| \cdot \frac{|g_{t,j}|}{\rho_{t,j}^2} \cdot  1(\text{sign}[[\nabla L(\theta_t)]_j] \neq \text{sign}[g_{t,j}])}_{T_4}.
+\end{equation}
+
+\noindent
+Now, considering $T_3$, we evaluate its expectation:
+\begin{equation}
+    \mathbb{E}[T_3] = -\lambda_t P_l \mathbb{E}[\langle \nabla L(\theta_t), g_t \rangle],
+\end{equation}
+$P_l$ is lower bound of our preconditioning value.
+Considering $T_4$:
+\begin{equation}
+    \mathbb{E}[T_4] = \lambda_t \sum_j\mathbb{E}\left[|[\nabla L(\theta_{t})]_j| \cdot \frac{|g_{t,j}|}{\rho_{t,j}^2}  \cdot 1(\text{sign}[[\nabla L(\theta_t)]]_j \neq \text{sign}[g_{t,j}])\right].
+\end{equation}
+
+\noindent
+Thus, we obtain:
+\begin{equation}
+    \mathbb{E}[T_4] = \lambda_t \sum_j\mathbb{E}\left[|[\nabla L(\theta_{t})]_j| \cdot \frac{|g_{t,j}|}{\rho_{t,j}^2} \mid P(\text{sign}[[\nabla L(\theta_t)]_j] \neq \text{sign}[g_{t,j}])\right].
+\end{equation}
+Next, we analyze the probability term:
+\begin{equation}
+    P(\text{sign}[\nabla L(\theta_t)]_j] \neq \text{sign}[g_{t,j}])
+\end{equation}
+and bound it as follows:
+\begin{equation}
+    P(\text{sign}[\nabla L(\theta_t)]_j \neq \text{sign}[g_{t,j}])
+    \leq P(|[\nabla L(\theta_t)]_j - g_{t,j}| \geq |[\nabla L(\theta_t)]_j|).
+\end{equation}
+
+\noindent
+%Using Markov's inequality:
+%\begin{equation}
+%    P(|\nabla L(\theta_t)^i - g_t^i| \geq |\nabla L(\theta_t)^i|)
+%    \leq \frac{\mathbb{E}[|\nabla L(\theta_t)^i - g_t^i|]}{|\nabla L(\theta_t)^i|}.
+%\end{equation}
+Using Chebyshev's inequality:
+\begin{equation}
+    P\bigl(\,\bigl|[\nabla L(\theta_t)]_j - g_{t,j}\bigr| 
+             \;\ge\; \bigl|[\nabla L(\theta_t)]_j\bigr|\bigr)
+    \;\;\le\;\;
+    \frac{\mathrm{Var}\!\bigl([\nabla L(\theta_t)]_j - g_{t,j}\bigr)}
+         {\bigl|[\nabla L(\theta_t)]_j\bigr|^2}
+    \;\;\ = \;\;
+    \frac{\sigma^2}{\bigl|[\nabla L(\theta_t)]_j\bigr|^2} = \;\;
+    \frac{\rho_t^2/n}{\bigl|[\nabla L(\theta_t)]_j\bigr|^2}.
+\end{equation}
+$n$ is the number of gradient samples.
+\noindent
+%Furthermore, applying Jensen's inequality:
+%\begin{equation}
+%    \mathbb{E}[|\nabla L(\theta_t)^i - g_t^i|]
+%    \leq \sqrt{\mathbb{E}[|\nabla L(\theta_t)^i - g_t^i|^2]},
+%\end{equation}
+%leading to:
+%\begin{equation}
+%    P(\text{sign}[\nabla L(\theta_t)^i] \neq \text{sign}[g_t^i])
+%    \leq \frac{\rho_i}{|\nabla L(\theta_t)^i|}.
+%\end{equation}
+
+\noindent
+Replacing the $n$ to step T, we bound the expectation:
+\begin{equation}
+    \mathbb{E}[T_4] \leq \lambda_t\sum_j \mathbb{E}\left[|[\nabla L(\theta_t)]_j| \cdot \frac{|g_{t,j}|}{\rho_{t,j}^2} \cdot
+    \frac{\rho_{t,j}^2/T}{\bigl|[\nabla L(\theta_t)]_j\bigr|^2}\right] \leq \lambda_t \frac{|J|}{T}
+    %\leq \lambda_t \cdot  \|\nabla L(\theta^t)\|^2 \cdot S_u^{1/2}.
+\end{equation}
+$|J|$ is the number of parameters indicated by the size of parameter index set.
+\noindent
+Now, summing the inequalities until step $T$:
+\begin{equation}
+    \mathbb{E}[L(\theta_{t+1})]
+    \leq \mathbb{E}[L(\theta_t)] - \lambda_t P_l \|\nabla L(\theta_t)\|^2 +\lambda_t \cdot \frac{|J|}{T}  + \frac{L}{2} \lambda_t^2 S_u^2 G^2.
+\end{equation}
+
+\noindent
+Rearranging:
+\begin{equation}
+    \mathbb{E}[L(\theta_{t+1})]
+    \leq L(\theta_0) - \lambda_t P_l \sum_{t=1}^T \|\nabla L(\theta_t)\|^2 + T \cdot \lambda_t  \left(\frac{|J|}{T} + \frac{L}{2} \lambda_t S_u^2 G^2\right).
+\end{equation}
+
+\noindent
+This results in:
+\begin{equation}
+    \frac{1}{T} \sum_{t=1}^T \|\nabla L(\theta_t)\|^2
+    \leq \frac{L(\theta_0) - \mathbb{E}[L(\theta_{t+1})]}{\lambda_t P_l \cdot T} + \frac{1}{P_l} \left(\frac{|J|}{T} + \frac{L}{2} \lambda_t S_u^{2} G^2\right).
+\end{equation}
+\begin{equation}
+    \frac{1}{T} \sum_{t=1}^T\|\nabla L(\theta_t)\|^2
+    \leq \frac{L(\theta_0) - \mathbb{E}[L(\theta_{*})]}{\lambda_t P_l \cdot T} +\frac{1}{P_l} \left(\frac{|J|}{T} + \frac{L}{2} \lambda_t S_u^{2} G^2\right).
+\end{equation}
+
+\noindent
+Taking $T \to \infty$, the convergence rate is:
+\begin{equation}
+    \mathbb{E}[ \|\nabla L(\theta_t)\|^2]
+    \leq \frac{L(\theta_0) - L(\theta_*)}{\lambda_t P_l \cdot T} + \frac{\frac{|J|}{T} + \frac{L}{2} \lambda_t S_u^{2} G^2}{P_l}.
+\end{equation}
+
+From the final steps of our derivation, we analyze the convergence rate of the algorithm.
+
+Taking $\lambda_T$ as:
+\begin{equation}
+    \lambda_T = \sqrt{\frac{L(\theta_0) - L(\theta_*)}{T \cdot \ell}},
+\end{equation}
+we have:
+\begin{equation}
+    \mathbb{E}[\|\nabla L(\theta)\|] \leq \frac{1}{P_l} \cdot \sqrt{\ell\frac{L(\theta_0) - L(\theta_*)}{T}} + \frac{G \cdot S_u^{2} }{2\cdot P_l}\sqrt{\ell\frac{L(\theta_0) - L(\theta_*)}{T}} + \frac{|J|}{P_l \cdot T}.
+\end{equation}
+
+\noindent
+Denoting $\frac{1}{\sqrt{\hat{T}}}$ as:
+\begin{equation}
+    \frac{1}{\sqrt{\hat{T}}} = \sqrt{\frac{L(\theta_0) - L(\theta_*) \cdot \ell}{T}},
+\end{equation}
+Finally, we rewrite the bound, concluding that:
+\begin{equation}
+    \mathbb{E}[\|\nabla L(\theta)\|^2]
+    \leq O\left(\frac{1}{P_l} \left(1 + \frac{G \cdot S_u^2}{2}\right) \frac{1}{\sqrt{\hat{T}}}\right) \quad\blacksquare
+\end{equation}
+% + \frac{1}{P_l \cdot T}
+
+
+%If we analyze only preconditioned gradient in same way, we gain: 
+%\begin{equation}
+%    \mathbb{E}[\| p \odot \nabla  L(\theta)\|^2]
+%    \leq O\left( \left(1 + \frac{G \cdot S_u^2}{2}\right) \frac{1}{\sqrt{\hat{T}}}\right)
+    %+ {G\cdot S_u^{1/2}}.\quad \blacksquare
+%\end{equation}
+
+
+\subsection{Proof of \cref{cor:osgr}} We utilized \cite{gsnr} for proving \cref{cor:osgr}. 
+In one gradient descent step, the model parameter is updated by 
+\(\Delta \theta = \theta_{t+1} - \theta_t = -\lambda p \odot g_D(\theta)\), 
+where \(\lambda\) is the learning rate and $p$ is preconditioning. If \(\lambda\) is small enough, the one-step training and test loss decrease can be approximated by:
+\begin{equation}
+    \Delta L[D] \approx -\Delta \theta \cdot \frac{\partial L[D]}{\partial \theta} + O(\lambda^2) 
+    = \lambda p \odot g_D(\theta) \cdot g_D(\theta) + O(\lambda^2),
+\end{equation}
+\begin{equation}
+    \Delta L[D'] \approx -\Delta \theta \cdot \frac{\partial L[D']}{\partial \theta} + O(\lambda^2) 
+    = \lambda p \odot g_D(\theta) \cdot g_{D'}(\theta) + O(\lambda^2).
+\end{equation}
+
+Usually, there are some differences between the directions of \(g_D(\theta)\) and \(g_{D'}(\theta)\), so statistically \(\Delta L[D]\) tends to be larger than \(\Delta L[D']\), and the generalization gap would increase during training. When \(\lambda \to 0\), in one single training step, the empirical generalization gap increases by \(\Delta L[D] - \Delta L[D']\). For simplicity, we denote this quantity as:
+\begin{equation}
+\nabla := \Delta L[D] - \Delta L[D'] 
+\approx \lambda g_D(\theta) \cdot g_D(\theta) - \lambda g_D(\theta) \cdot g_{D'}(\theta),
+\end{equation}
+which can be further simplified as:
+\begin{equation}
+    \nabla = \lambda (p \odot\tilde{g}(\theta) + p \odot\epsilon) (\tilde{g}(\theta) + \epsilon') - \lambda (p \odot\tilde{g}(\theta) + p \odot\epsilon) (\tilde{g}(\theta) + \epsilon'),
+\end{equation}
+\begin{equation}
+    \nabla = \lambda (\tilde{g}(\theta) + \epsilon) (\epsilon - \epsilon').
+\end{equation}
+
+Here, we replaced the random variables by \(g_D(\theta) = \tilde{g}(\theta) + \epsilon\) and \(g_{D'}(\theta) = \tilde{g}(\theta) + \epsilon'\), where \(\epsilon\) and \(\epsilon'\) are random variables with zero mean and variance \(\sigma^2(\theta)\). Since \(\mathbb{E}[\epsilon'] = \mathbb{E}[\epsilon] = 0\), \(\epsilon\) and \(\epsilon'\) are independent. The expectation of \(\nabla\) is:
+\begin{equation}
+\mathbb{E}_{D, D' \sim \mathcal{Z}^n}(\nabla) = \mathbb{E}(\lambda p \odot \epsilon \cdot \epsilon') + O(\lambda^2) = \lambda \sum_j p_j \cdot \sigma^2(\theta_j) + O(\lambda^2),
+\end{equation}
+where \(\sigma^2(\theta_j)\) is the variance of the average gradient of the parameter \(\theta_j\). For simplicity, when it involves a single model parameter \(\theta_j\), we will use only a subscript \(j\) instead of the full notation. For example, we use \(\sigma_j^2\), \(r_j\), and \(g_{D,j}\) to denote \(\sigma^2(\theta_j)\), \(r(\theta_j)\), and \(g_D(\theta_j)\), respectively.
+
+\subsection*{Expectation Analysis}
+
+Consider the expectation of \(\Delta L[D]\) and \(\Delta L[D']\) when \(\lambda \to 0\):
+\begin{equation}
+\mathbb{E}_{D \sim \mathcal{Z}^n}(\Delta L[D]) \approx \lambda \mathbb{E}_{D \sim \mathcal{Z}^n}(p \odot g_D(\theta) \cdot g_D(\theta)) = \lambda \sum_j p_j\mathbb{E}_{D \sim \mathcal{Z}^n}(g_{D,j}^2).
+\label{eq:15}
+\end{equation}
+
+\begin{equation}
+\mathbb{E}_{D, D' \sim \mathcal{Z}^n}(\Delta L[D']) = \mathbb{E}_{D, D' \sim \mathcal{Z}^n}(\Delta L[D] - \nabla) 
+\approx \lambda \sum_j p_j(\mathbb{E}_{D \sim \mathcal{Z}^n}(g_{D,j}^2) - \sigma_j^2),
+\end{equation}
+which simplifies further as:
+\begin{equation}
+\mathbb{E}_{D, D' \sim \mathcal{Z}^n}(\Delta L[D']) 
+\approx \lambda \sum_j p_j(\mathbb{E}_{D \sim \mathcal{Z}^n}(g_{D,j}^2) - \rho_j^2 / n).
+\label{eq:16}
+\end{equation}
+
+\subsection*{Simplification of \(R(\mathcal{Z}, n)\)}
+
+Substituting \cref{eq:16} and \cref{eq:15} into \(R(\mathcal{Z}, n)\), we have:
+\begin{equation}
+R(\mathcal{Z}, n) = 1 - \frac{\sum_jp_j \rho_j^2}{n \sum_j p_j\mathbb{E}_{D \sim \mathcal{Z}^n}(g_{D,j}^2)}.
+\label{eq:19}
+\end{equation}
+
+
+When $r_j = \frac{ \mathbb{E}_{D \sim \mathcal{Z}^n}(g_{D,j})^2 }{\rho^2}$ We can rewrite \cref{eq:16} as:
+\begin{equation}
+R(\mathcal{Z}, n) = 1 -  \frac{1}{n}\sum_j \frac{p_j\mathbb{E}_{D \sim \mathcal{Z}^n}(g_{D,j}^2)}{\sum_{j'} p_j\mathbb{E}_{D \sim \mathcal{Z}^n}(g_{D',j}^2)} \cdot \frac{1}{ r_j + \frac{1}{n}},
+\end{equation}
+or equivalently:
+\begin{equation}
+R(\mathcal{Z}, n) =  \sum_j \frac{p_j\mathbb{E}_{D \sim \mathcal{Z}^n}(g_{D,j}^2)}{\sum_{j'} p_j\mathbb{E}_{D \sim \mathcal{Z}^n}(g_{D',j}^2)} \cdot \frac{1}{\left(1 + \frac{1}{n\cdot r_j}\right)}.\quad\blacksquare
+\end{equation}
+
+\subsection{Generalization Analysis}
+\subsubsection{PAC Bayes Bound and Preconditioning}
+\label{ap: Proof of pacbayes}
+
+\begin{theorem}[PAC-Bayes bound]
+  %For any $\lambda > 0$ and any data-dependent probability measure $\tilde{p}$,
+  %\[
+  %  \mathbb{E}_S \mathbb{E}_{\theta \sim \tilde{p}}[R(\theta)]
+  %  \;\le\;
+  %  \mathbb{E}_S \mathbb{E}_{\theta \sim \tilde{p}}\!\Biggl[
+  %    \underbrace{L(\theta)}_{T_1}
+   %   \;+\;
+   %   \frac{\lambda C^2}{8n}
+    %  \;+\;
+    %  \underbrace{\frac{ \, \mathrm{KL}\!\bigl(\tilde{p}\,\|\,\pi\bigr)}{\lambda}}_{T_2}
+  %  \Biggr].
+  %\]
+  Let \( \mathcal{D} \sim \mathcal{Z}^n \) be a dataset sampled i.i.d. from a data distribution \( \mathcal{Z} \).\(R(\theta)\) is the population risk and \(L(\theta)\) is empirical risk. Assume that the loss function \( L(\theta) \) is bounded in \([0, C]\) for some constant \( C > 0 \).  
+For any \( \lambda > 0 \), with probability at least \( 1 - \delta \) over the draw of \( \mathcal{D} \),  
+and for any data-dependent distribution \( \tilde{p} \) over parameters \( \theta \), the following PAC-Bayes bound holds:
+\[
+\mathbb{E}_{\theta \sim \tilde{p}}[R(\theta)]
+\le
+\underbrace{\mathbb{E}_{\theta \sim \tilde{p}}[L(\theta)]}_{T_1}
++ \frac{\lambda C^2}{8n}
++ \underbrace{\frac{\mathrm{KL}(\tilde{p} \| \pi) + \log \tfrac{1}{\delta}}{\lambda}}_{T_2}.
+\]
+  \label{thm:pacb}
+\end{theorem}
+
+Here, \( R(\theta) \) denotes the expected loss over the true data distribution. The SAM algorithm primarily focuses on minimizing the \( T_1 \) term in \cref{thm:pacb}, following the inequality:
+\begin{equation}
+  L_{\mathcal{D}}(\theta)
+  \;\le\;
+  \mathbb{E}_{\epsilon \sim \mathcal{N}(0,\rho)}\bigl[
+    L_{\mathcal{D}}(\theta + \epsilon)
+  \bigr]
+  \;\le\;
+  \max_{\|\epsilon\|_2 \le \rho}\bigl[
+    L_{\mathcal{D}}(\theta + \epsilon)
+  \bigr].
+\end{equation}
+
+In contrast, our method simultaneously minimizes both the \( T_1 \) and \( T_2 \) terms.  
+First, we determine a preconditioning vector \( q \) to reduce \( \mathbb{E}_S \mathbb{E}_{\theta \sim \tilde{p}}[L(\theta)] \). To minimize variance-induced error, we adopt the variance adaptation factor introduced in the SVAG optimizer\cite{dissecting}, and solve:
+\begin{equation}
+\mathbb{E}\bigl[\|q \odot g - \mathbb{E}[g]\|_2^2 \bigr]
+= \sum_{j} q_j^2 \mathbb{E}[ g_j^2] - 2q_j\mathbb{E}[g]^2 + \mathbb{E}[g]^2.
+\label{eq:svag}
+\end{equation}
+Minimizing this expression yields the optimal preconditioning:
+\[
+q_j = \frac{\mathbb{E}[g]^2}{\mathbb{E}[g_j^2]}.
+\]
+
+Next, assume \( \tilde{p} = \mathcal{N}(\theta_{t+1}, \mathbf{\Sigma}_{\tilde{p}}) \) and \( \pi = \mathcal{N}(\theta_t, \mathbf{\Sigma}_{\pi}) \), with both covariances defined as:
+\[
+\mathbf{\Sigma}_{\tilde{p}} = \text{diag}(q_1^2\cdot\rho_{1}^2, q_2^2\cdot\rho_{2}^2, \dots, q_{|J|}^2\cdot\rho_{|J|}^2), \quad 
+\mathbf{\Sigma}_{\pi} = \text{diag}(\rho_{1}^2, \rho_{2}^2, \dots, \rho_{|J|}^2),
+\]
+Here, the prior $\pi$ can be treated as a data-driven prior which is approximated with stochastic gradient descent using all data excluding the current mini-batch. Assuming the variances do not significantly change between steps. Then the KL divergence can be written as follows:
+
+\begin{equation}
+KL(\tilde{p}  \| \mathcal{\pi}) = \frac{1}{2} \left[ 
+\sum_{i \in J} \frac{q_i^2\cdot \rho_{i}^2}{\rho_{i}^2} 
++ \sum_{i \in J} \frac{(\theta_{t+1,i} - \theta_{t,i})^2}{ \rho_{i}^2} 
+- |J| + \sum_{i \in J} \log \left( \frac{ \rho_{i}^2}{q_i^2\cdot \rho_{i}^2} \right) 
+\right] 
+\end{equation}
+
+% = \frac{1}{2}\sum_{j \in J}\frac{(\theta_{t+1,j}-\theta_{t,j})^2}{q_j \cdot \rho_j^2}
+%없어도 되는식 주석처리.
+
+
+The gradient of this KL term with respect to \(  \theta_t \) is:
+\begin{equation}
+[\nabla_{\theta_t} KL(\tilde{p} \| \pi)]_j 
+= -\frac{(\theta_{t+1,j} - \theta_{t,j})}{\rho_j^2}
+= \frac{\mathbb{E}[g_j]^2}{\mathbb{E}[g_j^2]} \cdot \frac{g_{j,t}}{\rho_j^2}
+= \underbrace{\frac{1}{\mathbb{E}[g_j^2]} \cdot \frac{\mathbb{E}[g_{j,t}]^2}{\rho_j^2}}_{\text{GENIE}} \cdot g_{j,t}.
+\end{equation}
+
+
+This shows that minimizing the KL divergence in the PAC-Bayes bound via gradient descent naturally leads to the same preconditioning structure. Therefore, our method considers both sharpness (through variance adaptation) and generalization (via KL divergence minimization), whereas SAM focuses solely on sharpness.
+
+It is important to note that our gradient computation is taken with respect to the prior mean $\theta_t$, rather than the posterior mean $\theta_{t+1}$. 
+Due to the asymmetric nature of the forward KL divergence $\mathrm{KL}(\tilde{p} \| \pi)$, this choice induces a \textit{mode-covering} behavior rather than mode-seeking. 
+As optimization proceeds, the prior distribution $\pi$ is iteratively adapted to cover a broader region of the risk landscape, effectively reducing over-concentration around a single mode. 
+This mechanism aligns with the argument in \emph{Risk Extrapolation}~\cite{vrex}, where covering a wider set of hypotheses can improve out-of-distribution generalization. 
+Consequently, although the PAC-Bayes bound is originally derived under an i.i.d.\ assumption, this mode-covering property enables the prior to capture more diverse risk regions, thereby enhancing robustness under distribution shift.
+\subsubsection{OSGR based analysis}
+From \cref{method:Preconditioning}, the OSGR of our method is given by:
+\begin{equation}
+R_{\text{ours}} = 1 - \frac{1}{n} \sum_{j} \frac{1}{\sum_{j^\prime} \left(r_{j^\prime}+\frac{1}{n}\right)}
+= 1 - \frac{1}{n\mathbb{E}_{j \sim J} \left(r_{j}+\frac{1}{n}\right)}.
+\end{equation}
+
+Similarly, from \cref{thm:th1}, the OSGR of SGD is given by:
+\begin{equation}
+R_{\text{sgd}} = 1 - \frac{1}{n} \sum_{j} \frac{\mathbb{E}_{D\sim\mathcal{Z}^n}[g_j^2]}{\sum_{j'}\mathbb{E}_{D\sim\mathcal{Z}^n}[g_{j'}^2]} \cdot \frac{1}{r_j+ \frac{1}{n}}.
+\end{equation}
+
+Replacing the term $\sum_{j} \frac{\mathbb{E}_{D\sim\mathcal{Z}^n}[g_j^2]}{\sum_{j'}\mathbb{E}_{D\sim\mathcal{Z}^n}[g_{j'}^2]}$ to $\sum W_j = 1$ which represents a weighted average, we rewrite it as:
+\begin{equation}
+R_{\text{sgd}} = 1 - \frac{1}{n} \sum_{j \in J} W_j \left(\frac{1}{r_j+ \frac{1}{n}}\right).
+\end{equation}
+
+If we assume uniform weight $W_j= \frac{1}{|J|}$, by Jensen's inequality:
+\begin{equation}
+0 \leq 1 - \frac{1}{n} \sum_{j \in J} W_j \left(\frac{1}{r_j+ \frac{1}{n}}\right) 
+\leq 1 - \frac{1}{n\mathbb{E}_{j \in J} \left(r_j+\frac{1}{n}\right)} \leq 1.
+\end{equation}
+
+Thus, we conclude:
+\begin{equation}
+0 \leq R_{\text{sgd}} \leq R_{\text{ours}} \leq 1.\quad\blacksquare
+\end{equation}
+
+In the same way, with any preconditioning, 
+\begin{equation}
+R(\mathcal{Z}, n) = 1 -  \frac{1}{n}\sum_j \frac{p_j\mathbb{E}_{D \sim \mathcal{Z}^n}(g_{D,j}^2)}{\sum_{j'} p_j\mathbb{E}_{D \sim \mathcal{Z}^n}(g_{D',j}^2)} \cdot \frac{1}{ r_j + \frac{1}{n}},
+\end{equation}
+
+Replacing the term $\sum_j \frac{p_j\mathbb{E}_{D \sim \mathcal{Z}^n}(g_{D,j}^2)}{\sum_{j'} p_j\mathbb{E}_{D \sim \mathcal{Z}^n}(g_{D',j}^2)}$ to $\sum W_j = 1$ with $W_j= \frac{1}{|J|}$, which represents a average, we rewrite it as:
+\begin{equation}
+R_{precondition} = 1 - \frac{1}{n} \sum_{j \in J} W_j \left(\frac{1}{r_j+ \frac{1}{n}}\right).
+\end{equation}
+
+Also by Jensen's inequality, we obtain:
+\begin{equation}
+0 \leq R_{\text{precondition}} \leq R_{\text{ours}} \leq 1.\quad\blacksquare
+\end{equation}
+Consequently, this result establishes that our method achieves the highest OSGR value among preconditioning methods such as Adam, RMSprop, and SVAG\cite{dissecting}.
+
+However, the assumption of uniform weights \( W_j = \frac{1}{|J|} \) can be overly restrictive. In practice, preconditioning methods aim to balance the contribution of parameter updates, which becomes especially important when there exists a strong imbalance in the GSNR distribution. We consider the case where a dominant coordinate exists, denoted as \( j_{\text{max}} = \arg\max_{j \in J} r_j \), and define the remaining coordinates as \( J' = J \setminus \{j_{\text{max}}\} \), with \( j'_{\text{max}} = \arg\max_{j \in J'} r_j \), such that \( r_{j'_{\text{max}}} \ll r_{j_{\text{max}}} \).
+
+To demonstrate that our method still yields a higher OSGR under such imbalance, we consider the difference:
+\begin{equation}
+n(R_{\text{ours}} - R_{\text{precondition}}) = \sum_{j \in J} W_j \left(\frac{1}{r_j + \frac{1}{n}}\right) - \frac{1}{\mathbb{E}_{j \in J} \left(r_j + \frac{1}{n} \right)}.
+\end{equation}
+For sufficiently large \( n \), the \( \frac{1}{n} \) terms can be neglected:
+\begin{equation}
+n(R_{\text{ours}} - R_{\text{precondition}}) \approx \sum_{j \in J} W_j \left(\frac{1}{r_j}\right) - \frac{1}{\mathbb{E}_{j \in J}(r_j)}.
+\end{equation}
+Separating the contribution of the dominant coordinate \( j_{\text{max}} \), we have:
+\begin{equation}
+n(R_{\text{ours}} - R_{\text{precondition}}) = \sum_{j \in J'} W_j \left(\frac{1}{r_j}\right) + W_{j_{\text{max}}} \left(\frac{1}{r_{j_{\text{max}}}}\right) - \frac{1}{\mathbb{E}_{j \in J}(r_j)}.
+\end{equation}
+
+Since \( \mathbb{E}_{j \in J}(r_j) \ge \frac{r_{j_{\text{max}}}}{|J|} \), this difference is lower-bounded by:
+\begin{equation}
+n(R_{\text{ours}} - R_{\text{precondition}}) \ge \sum_{j \in J'} W_j \left(\frac{1}{r_j}\right) + W_{j_{\text{max}}} \left(\frac{1}{r_{j_{\text{max}}}}\right) - \frac{|J|}{r_{j_{\text{max}}}}.
+\end{equation}
+Further bounding the terms using \( r_j \le r_{j'_{\text{max}}} \) for all \( j \in J' \), we obtain:
+\begin{equation}
+ \sum_{j \in J'} W_j \left(\frac{1}{r_j}\right) + W_{j_{\text{max}}} \left(\frac{1}{r_{j_{\text{max}}}}\right) - \frac{|J|}{r_{j_{\text{max}}}}\ge \left(1 - W_{j_{\text{max}}}\right) \left(\frac{1}{r_{j'_{\text{max}}}}\right) + W_{j_{\text{max}}} \left(\frac{1}{r_{j_{\text{max}}}}\right) - \frac{|J|}{r_{j_{\text{max}}}}.
+\end{equation}
+
+Therefore, if the following condition holds:
+\begin{equation}
+(1 - W_{j_{\text{max}}}) r_{j_{\text{max}}} \ge |J| r_{j'_{\text{max}}},
+\end{equation}
+then \( R_{\text{ours}} \ge R_{\text{precondition}} \), and our method guarantees superior OSGR performance compared to other preconditioning strategies. This result highlights the robustness of our formulation, particularly under skewed GSNR distributions.
+
+
+\section{Implementation Details}
+\label{ap: Implementation Details}
+\subsection{Training details}
+As introduced in the experimental section, we follow the standard training, hyperparameter search methods, and evaluation protocol proposed by DomainBed \cite{domainbed} to ensure a fair comparison. For each dataset, the models were trained for 15,000 iterations on DomainNet and 5,000 iterations on the other datasets. The search space of hyperparameters is provided in \cref{tab:hp-search-space}. All experiments were conducted on an NVIDIA GeForce RTX 4090 under the environment of Python 3.8.10, PyTorch 1.13.1, Torchvision 0.14.1, and CUDA 11.7.
+\begin{table}[ht]
+\caption{The search space of hyperparameters.}
+\label{tab:hp-search-space}
+\vskip 0.15in
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{lcc}
+\toprule
+Parameter & Default value & Search Distribution \\
+\midrule
+Batch size      & 32    & $2^{\text{Uniform}(3, 5.5)}$ \\
+Learning rate   & 0.015 & $10^{\text{Uniform}(-3, -1)}$\\
+Resnet dropout  & 0.0   & [0.0, 0.1, 0.5] \\
+Weight decay    & 0.0   & $10^{\text{Uniform}(-6, -2)}$ \\
+\bottomrule
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+\clearpage
+\subsection{Pseudo code}
+\label{pseudo code}
+\begin{algorithm}[H]
+   \caption{Unified Algorithm for RMSProp, Adam, and GENIE}
+   \label{alg:unified}
+\begin{algorithmic}
+   \STATE {\bfseries Input:} Mini-batches $\{\mathcal{B}_t\}_{t=1}^T$, learning rate $\alpha$, total steps $T$
+   \STATE {\bfseries Preconditioning Parameters:} $\beta, \beta_1, \beta_2 \in [0,1]$, noise scale $\sigma$, $m_0 \gets 0$, $v_0 \gets 0$
+   \STATE {\bfseries Initialize:} Parameters $\theta_0$
+   \FOR{$t = 1$ {\bfseries to} $T$}
+      \STATE \(\triangleright\) {\bfseries Compute Gradient:} Sample mini-batch $\mathcal{B}_t$ and compute
+    \[
+    g_t = \nabla \mathcal{L}(\theta_t; \mathcal{B}_t).
+    \]
+      \STATE \(\triangleright\) {\bfseries Compute Preconditioned Gradient:}
+      \STATE \textbf{RMSProp:}
+      \[
+         v_t \gets \beta v_{t-1} + (1-\beta) g_t^2, \quad \tilde{g}_t \gets \frac{g_t}{\sqrt{v_t} + \epsilon}.
+      \]
+      \STATE \textbf{Adam:}
+      \[
+         m_t \gets \beta_1 m_{t-1} + (1-\beta_1) g_t, \quad 
+         v_t \gets \beta_2 v_{t-1} + (1-\beta_2) g_t^2,
+      \]
+      \[
+         \hat{m}_t \gets \frac{m_t}{1-\beta_1^t}, \quad \hat{v}_t \gets \frac{v_t}{1-\beta_2^t}, \quad 
+         \tilde{g}_t \gets \frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon}.
+      \]
+      \STATE \textbf{GENIE:}
+      \[
+         m_t \gets \beta m_{t-1} + (1-\beta) g_t, \quad 
+         v_t \gets \beta v_{t-1} + (1-\beta) g_t^2,
+      \]
+      
+      \[
+    \sigma_t^2= v_t - m_t^2, \quad 
+    \text{r}_t = \tanh(\frac{1}{\sigma_t^2})m_t^2
+    \]
+    
+    \[\hat{g}_t \gets \frac{m_t}{1-\beta^t} \cdot \frac{1}{v_t} \cdot \text{r}_t,\]
+    
+      \[
+         \text{Noise}_t \gets \xi_t \bigl[1 - \tanh(\frac{1}{\sigma_t^2})\bigr], \quad \xi_t \sim \mathcal{N}(0, \sigma^2),
+      \]
+      \[
+         \tilde{g}_t \gets \hat{g}_t + \text{Noise}_t.
+      \]
+      \[ 
+    \tilde{g}_t \gets \tilde{g}_t \odot M, \, M_j \sim \text{Bernoulli}(p)
+    \]
+      \STATE \(\triangleright\) {\bfseries Update Parameters:}
+      \[
+      \theta_{t+1} \gets \theta_t - \alpha \tilde{g}_t.
+      \]
+   \ENDFOR
+   \STATE {\bfseries Output:} Final parameters $\theta_{T+1}$ for RMSProp, Adam, and GENIE.
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Code}
+\begin{lstlisting}
+[caption={Python implementation of preconditioning updates.}, label={lst:preconditioning}]
+def _initialize_preconditioning(self, current_state):
+    self.prev_state = current_state
+    self.gmean = {k: torch.zeros_like(param) for k, param in self.network.named_parameters()}
+    self.ge2 = {k: torch.zeros_like(param) for k, param in self.network.named_parameters()}
+    self.scale = 0.0
+
+def _update_preconditioning(self, lr, moving_avg):
+    grad_sgd = {}
+    pgrad = {}
+    pGsnr = {}
+
+    # Update scale factors
+    self.scale = (moving_avg * self.scale + 1.0)
+    scale1 = (1 - moving_avg) * self.scale
+    scale2 = 2.0 - scale1
+    rho = (1.0 - moving_avg) * scale2 / ((1.0 + moving_avg) * scale1)
+
+    with torch.no_grad():
+        # Update gradients and variance
+        for k, param in self.network.named_parameters():
+            delta = param.grad.data.detach()
+            self.gmean[k] = self.gmean[k] * moving_avg + delta * (1.0 - moving_avg)
+            self.ge2[k] = self.ge2[k] * moving_avg + (delta ** 2) * (1.0 - moving_avg)
+
+            gm = self.gmean[k] / scale1
+            ge2 = self.ge2[k] / scale1
+            var = ge2 - gm.square()
+            var /= (1.0 - rho)
+            var = torch.where(var > 0.0, var, torch.zeros_like(var) + 1e-8)
+
+            invvar = torch.clamp(1 / var, min=0.0, max=10.0)
+            mvar = rho * var
+            mvar = torch.where(mvar > 0.0, mvar, torch.zeros_like(mvar) + 1e-8)
+
+            # Preconditioned gradient scaling
+            tanh_invvar = torch.tanh(invvar)
+            pGsnr[k] = (1.0 / (1.0 + mvar / (gm.square() + 1e-8))) * tanh_invvar
+
+            # Add noise for stochastic gradient adjustment
+            noise_scale = torch.sum(tanh_invvar * torch.abs(gm) * 
+                                     (1.0 / (1.0 + mvar / (gm.square() + 1e-8)))) / torch.sum(tanh_invvar)
+            noise = torch.normal(torch.zeros_like(delta), torch.ones_like(delta)) * noise_scale
+            grad_sgd[k] = (1 - tanh_invvar) * noise
+
+        # Compute preconditioned gradients
+        for k, param in self.network.named_parameters():
+            pgrad[k] = self.gmean[k] / scale1 * pGsnr[k].view_as(param)
+
+        # Apply gradients with dropout-based masking
+        for k, param in self.network.named_parameters():
+            mask = (torch.rand_like(param) > self.hparams['p']).float() / (1 - self.hparams['p'])
+            self.prev_state[k] -= (pgrad[k] + grad_sgd[k]) * mask * lr
+\end{lstlisting}
+
+
+\section{Experimental Details and Results}
+\label{ap: Experimental Details and Results}
+\subsection{Dataset}
+This section introduces five representative DG datasets utilized in this paper.
+\begin{itemize}
+    \item PACS \cite{pacs}: This dataset includes 4 different domain styles—Photo, Art Painting, Cartoon, and Sketch. Each domain contains 7 categories and consists of 9,991 images. It is well-suited for evaluating generalization performance across style variations.
+    \item OfficeHome \cite{officehome}: This dataset consists of 4 different domain styles—Art, Clipart, Product, and Real-world. Each domain includes 65 categories, with a total of 15,588 samples.
+    \item VLCS \cite{vlcs}: Derived from four distinct datasets—Caltech101, LabelMe, VOC2007, and SUN09—this dataset includes 5 shared classes across domains, containing a total of 10,729 images. It is ideal for evaluating distributional differences between datasets.
+    \item Terra Incognita \cite{terra}: Comprising photographs of wildlife, this dataset is collected from 4 different locations—L100, L38, L43, and L46. It includes 10 categories and 24,788 samples and is commonly used to measure model generalization performance in real-world scenarios.
+    \item DomainNet \cite{domainnet}: This large-scale dataset includes 6 domains—Clipart, Infograph, Painting, Quickdraw, Real, and Sketch. It comprises 345 categories and a total of 586,575 samples.
+\end{itemize}
+
+\subsection{Detailed Results: Comparison with Existing Optimizers}
+We compare the performance of existing optimizers with our proposed GENIE optimizer on five datasets from the same DG benchmark. The dataset-specific experimental results are presented in \cref{tab:pacs-comparison},\cref{tab:vlcs-comparison}, \cref{tab:officehome-comparison}, \cref{tab:terraincognita-comparison}, and \cref{tab:domainnet-comparison}. Additionally, we analyze the performance and training time as the number of iterations increases, as shown in \cref{tab:pacs_iter}, \cref{tab:vlcs_iter}, \cref{tab:officehome_iter}.
+
+\begin{table}[H]
+\caption{Comparison Results on the PACS Dataset.}
+\label{tab:pacs-comparison}
+\vskip 0.15in
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{lcccc|c}
+\toprule
+\textbf{Optimizer}& Art & Cartoon & Photo & Sketch & \textbf{Avg.}\\
+\midrule
+Adam*       & 88.0\text{\scriptsize{±1.2}} & 79.7\text{\scriptsize{±0.5}} & 96.7\text{\scriptsize{±0.4}} & 72.7\text{\scriptsize{±0.9}} & 84.3 \\
+AdamW*      & 84.1\text{\scriptsize{±1.5}} & 80.7\text{\scriptsize{±1.2}} & 96.9\text{\scriptsize{±0.4}} & 72.8\text{\scriptsize{±0.6}} & 83.6 \\
+SGD*        & 85.1\text{\scriptsize{±0.4}} & 76.0\text{\scriptsize{±0.3}} & 98.3\text{\scriptsize{±0.4}} & 60.3\text{\scriptsize{±6.1}} & 79.9 \\
+YOGI*       & 84.4\text{\scriptsize{±1.7}} & 79.7\text{\scriptsize{±0.6}} & 95.8\text{\scriptsize{±0.3}} & 65.1\text{\scriptsize{±1.5}} & 81.2 \\
+AdaBelief*  & 85.4\text{\scriptsize{±2.2}} & 80.4\text{\scriptsize{±1.1}} & 97.4\text{\scriptsize{±0.7}} & 75.1\text{\scriptsize{±1.4}} & 84.6 \\
+AdaHessian* & 88.4\text{\scriptsize{±0.6}} & 80.0\text{\scriptsize{±0.9}} & 97.7\text{\scriptsize{±0.4}} & 71.7\text{\scriptsize{±4.1}} & 84.5 \\
+SAM*        & 85.7\text{\scriptsize{±1.2}} & 81.0\text{\scriptsize{±1.4}} & 97.1\text{\scriptsize{±0.2}} & 77.4\text{\scriptsize{±1.8}} & 85.3 \\
+GAM*        & 85.9\text{\scriptsize{±0.9}} & 81.3\text{\scriptsize{±1.6}} & 98.2\text{\scriptsize{±0.4}} & 79.0\text{\scriptsize{±2.1}} & 86.1 \\
+FAD*        & 88.5\text{\scriptsize{±0.5}} & \textbf{83.0\text{\scriptsize{±0.8}}} & 98.4\text{\scriptsize{±0.2}} & \textbf{82.8\text{\scriptsize{±0.9}}}& \textbf{88.2} \\
+\midrule
+GENIE (ours)  & \textbf{88.7\text{\scriptsize{±0.7}}} & 82.8\text{\scriptsize{±1.3}} & \textbf{98.5\text{\scriptsize{±0.1}}} & 81.3\text{\scriptsize{±0.4}} & 87.8
+\\
+\bottomrule
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+\begin{table}[H]
+\caption{Comparison Results on the VLCS Dataset.}
+\label{tab:vlcs-comparison}
+\vskip 0.15in
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{lcccc|c}
+\toprule
+\textbf{Optimizer}& Caltech & LabelMe & SUN   & VOC   & \textbf{Avg.}\\
+\midrule
+Adam*       & 98.9\text{\scriptsize{±0.4}} & 65.9\text{\scriptsize{±1.5}} & 71.0\text{\scriptsize{±1.6}} & 74.5\text{\scriptsize{±2.0}} & 77.3 \\
+AdamW*      & 98.3\text{\scriptsize{±0.1}} & 65.1\text{\scriptsize{±1.7}} & 70.9\text{\scriptsize{±1.3}} & 75.2\text{\scriptsize{±1.5}} & 77.4 \\
+SGD*        & 98.4\text{\scriptsize{±0.2}} & 64.7\text{\scriptsize{±0.7}} & 72.5\text{\scriptsize{±0.8}} & 76.6\text{\scriptsize{±0.8}} & 78.1 \\
+YOGI*       & 98.1\text{\scriptsize{±0.7}} & 63.9\text{\scriptsize{±1.2}} & 72.5\text{\scriptsize{±1.6}} & 75.7\text{\scriptsize{±1.2}} & 77.6 \\
+AdaBelief*  & 98.0\text{\scriptsize{±0.1}} & 63.9\text{\scriptsize{±0.4}} & 73.4\text{\scriptsize{±1.0}} & 78.2\text{\scriptsize{±1.8}} & 78.4 \\
+AdaHessian* & 99.1\text{\scriptsize{±0.3}} & 65.0\text{\scriptsize{±1.7}} & 72.7\text{\scriptsize{±1.3}} & 77.7\text{\scriptsize{±1.0}} & 78.6 \\
+SAM*        & 98.5\text{\scriptsize{±1.0}} & 66.2\text{\scriptsize{±1.6}} & 72.0\text{\scriptsize{±1.0}} & 76.1\text{\scriptsize{±1.0}} & 78.2 \\
+GAM*        & 98.8\text{\scriptsize{±0.6}} & 65.1\text{\scriptsize{±1.2}} & 72.9\text{\scriptsize{±1.0}} & 77.2\text{\scriptsize{±1.9}} & 78.5 \\
+FAD*        & 99.1\text{\scriptsize{±0.5}} & 66.8\text{\scriptsize{±0.9}} & 73.6\text{\scriptsize{±1.0}} & 76.1\text{\scriptsize{±1.3}} & 78.9 \\
+\midrule
+GENIE (ours) & \textbf{99.3\text{\scriptsize{±0.3}}} & \textbf{67.2\text{\scriptsize{±1.5}}} & \textbf{76.6\text{\scriptsize{±0.3}}} & \textbf{79.7\text{\scriptsize{±0.8}}} & \textbf{80.7}
+\\
+\bottomrule
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+\begin{table}[H]
+\caption{Comparison Results on the OfficeHome Dataset.}
+\label{tab:officehome-comparison}
+\vskip 0.15in
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{lcccc|c}
+\toprule
+\textbf{Optimizer}& Art & Clipart & Product & Real-World & \textbf{Avg.} \\
+\midrule
+Adam*       & 63.9\text{\scriptsize{±0.8}} & 48.1\text{\scriptsize{±0.6}} & 77.0\text{\scriptsize{±0.9}} & 81.8\text{\scriptsize{±1.6}} & 67.6 \\
+AdamW*      & 66.1\text{\scriptsize{±0.7}} & 48.7\text{\scriptsize{±0.6}} & 76.6\text{\scriptsize{±0.8}} & 83.6\text{\scriptsize{±0.4}} & 68.8 \\
+SGD*        & 65.3\text{\scriptsize{±0.8}} & 48.8\text{\scriptsize{±1.4}} & 76.7\text{\scriptsize{±0.3}} & 83.0\text{\scriptsize{±0.7}} & 68.5 \\
+YOGI*       & 63.5\text{\scriptsize{±1.0}} & 49.2\text{\scriptsize{±1.2}} & 76.2\text{\scriptsize{±0.5}} & 84.5\text{\scriptsize{±0.6}} & 68.3 \\
+AdaBelief*  & 65.6\text{\scriptsize{±2.0}} & 48.1\text{\scriptsize{±0.9}} & 74.8\text{\scriptsize{±0.8}} & 83.6\text{\scriptsize{±0.9}} & 68 \\
+AdaHessian* & 63.0\text{\scriptsize{±2.9}} & 50.0\text{\scriptsize{±1.4}} & 77.7\text{\scriptsize{±0.8}} & 83.0\text{\scriptsize{±0.5}} & 68.4 \\
+SAM*        & 63.5\text{\scriptsize{±1.2}} & 48.6\text{\scriptsize{±0.9}} & 77.0\text{\scriptsize{±0.8}} & 82.9\text{\scriptsize{±1.3}} & 68 \\
+GAM*        & 63.0\text{\scriptsize{±1.2}} & 49.8\text{\scriptsize{±0.5}} & 77.6\text{\scriptsize{±0.6}} & 82.4\text{\scriptsize{±1.0}} & 68.2 \\
+FAD*        & 63.5\text{\scriptsize{±1.0}} & 50.3\text{\scriptsize{±0.8}} & \textbf{78.0\text{\scriptsize{±0.4}}} & \textbf{85.0}\text{\scriptsize{±0.6}} & 69.2 \\
+\midrule
+GENIE (ours) & \textbf{66.2\text{\scriptsize{±0.5}}} & \textbf{55.0\text{\scriptsize{±0.4}}} & 77.5\text{\scriptsize{±0.4}} & 80.0\text{\scriptsize{±0.5}} & \textbf{69.7}
+\\
+\bottomrule
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+\begin{table}[H]
+\caption{Comparison Results on the TerraIncognita Dataset.}
+\label{tab:terraincognita-comparison}
+\vskip 0.15in
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{lcccc|c}
+\toprule
+\textbf{Optimizer}& L100  & L38   & L43   & L46   & \textbf{Avg.} \\
+\midrule
+Adam*       & 42.2\text{\scriptsize{±3.4}} & 40.7\text{\scriptsize{±1.2}} & 59.9\text{\scriptsize{±0.2}} & 35.0\text{\scriptsize{±2.8}} & 44.4 \\
+AdamW*      & 44.2\text{\scriptsize{±6.8}} & 39.8\text{\scriptsize{±1.9}} & 60.3\text{\scriptsize{±2.0}} & 36.6\text{\scriptsize{±1.8}} & 45.2 \\
+SGD*        & 41.8\text{\scriptsize{±5.8}} & 39.8\text{\scriptsize{±3.9}} & 60.5\text{\scriptsize{±2.2}} & 37.5\text{\scriptsize{±1.1}} & 44.9 \\
+YOGI*       & 43.9\text{\scriptsize{±2.2}} & 42.5\text{\scriptsize{±2.6}} & 60.5\text{\scriptsize{±1.1}} & 34.8\text{\scriptsize{±1.6}} & 45.4 \\
+AdaBelief*  & 42.6\text{\scriptsize{±6.7}} & 43.0\text{\scriptsize{±2.0}} & 60.2\text{\scriptsize{±1.3}} & 35.1\text{\scriptsize{±0.3}} & 45.2 \\
+AdaHessian* & 42.5\text{\scriptsize{±4.8}} & 39.5\text{\scriptsize{±1.0}} & 58.4\text{\scriptsize{±2.6}} & 37.3\text{\scriptsize{±0.8}} & 44.4 \\
+SAM*        & 42.9\text{\scriptsize{±3.5}} & 43.0\text{\scriptsize{±2.2}} & 60.5\text{\scriptsize{±1.6}} & 36.4\text{\scriptsize{±1.2}} & 45.7 \\
+GAM*        & 42.2\text{\scriptsize{±2.6}} & 42.9\text{\scriptsize{±1.7}} & 60.2\text{\scriptsize{±1.8}} & 35.5\text{\scriptsize{±0.7}} & 45.2 \\
+FAD*        & 44.3\text{\scriptsize{±2.2}} & 43.5\text{\scriptsize{±1.7}} & \textbf{60.9\text{\scriptsize{±2.0}}} & 34.1\text{\scriptsize{±0.5}} & 45.7 \\
+\midrule
+GENIE (ours)    & \textbf{55.2 \text{\scriptsize{± 4.8}}}& \textbf{47.5\text{\scriptsize{± 2.1}}}& 59.2\text{\scriptsize{± 0.4}}& \textbf{45.9\text{\scriptsize{± 1.0}}}
+& \textbf{52.0}
+\\
+\bottomrule
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+\begin{table}[H]
+\caption{Comparison Results on the DomainNet Dataset.}
+\label{tab:domainnet-comparison}
+\vskip 0.15in
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{lcccccc|c}
+\toprule
+\textbf{Optimizer}& Clip & Info & Paint & Quick & Real & Sketch & \textbf{Avg.} \\
+\midrule
+Adam*       & 63.0\text{\scriptsize{±0.3}} & 20.2\text{\scriptsize{±0.4}} & 49.1\text{\scriptsize{±0.1}} & 13.0\text{\scriptsize{±0.3}} & 62.0\text{\scriptsize{±0.4}} & 50.7\text{\scriptsize{±0.1}} & 43.0 \\
+AdamW*      & 63.0\text{\scriptsize{±0.6}} & 20.6\text{\scriptsize{±0.2}} & 49.6\text{\scriptsize{±0.0}} & 13.0\text{\scriptsize{±0.2}} & 63.6\text{\scriptsize{±0.2}} & 50.4\text{\scriptsize{±0.1}} & 43.4 \\
+SGD*        & 61.3\text{\scriptsize{±0.2}} & 20.4\text{\scriptsize{±0.2}} & 49.4\text{\scriptsize{±0.2}} & 12.6\text{\scriptsize{±0.1}} & \textbf{65.7\text{\scriptsize{±0.0}}} & 49.6\text{\scriptsize{±0.2}} & 43.2 \\
+YOGI*       & 63.3\text{\scriptsize{±0.1}} & 20.6\text{\scriptsize{±0.1}} & 50.1\text{\scriptsize{±0.3}} & 13.2\text{\scriptsize{±0.3}} & 62.8\text{\scriptsize{±0.1}} & 51.0\text{\scriptsize{±0.2}} & 43.5\\
+AdaBelief*  & 63.5\text{\scriptsize{±0.2}} & 20.5\text{\scriptsize{±0.1}} & 50.0\text{\scriptsize{±0.3}} & 13.2\text{\scriptsize{±0.3}} & 63.1\text{\scriptsize{±0.1}} & 50.7\text{\scriptsize{±0.1}} & 43.5 \\
+AdaHessian* & 63.3\text{\scriptsize{±0.2}} & 21.4\text{\scriptsize{±0.1}} & 50.8\text{\scriptsize{±0.3}} & 13.6\text{\scriptsize{±0.1}} & \textbf{65.7\text{\scriptsize{±0.1}}} & 51.4\text{\scriptsize{±0.2}} & 44.4 \\
+SAM*        & 63.3\text{\scriptsize{±0.1}} & 20.3\text{\scriptsize{±0.3}} & 50.0\text{\scriptsize{±0.3}} & 13.6\text{\scriptsize{±0.2}} & 63.6\text{\scriptsize{±0.3}} & 49.6\text{\scriptsize{±0.4}} & 43.4 \\
+GAM*        & 63.0\text{\scriptsize{±0.5}} & 20.2\text{\scriptsize{±0.2}} & 50.3\text{\scriptsize{±0.1}} & 13.2\text{\scriptsize{±0.3}} & 64.5\text{\scriptsize{±0.2}} & 51.6\text{\scriptsize{±0.5}} & 43.8 \\
+FAD*        & \textbf{64.1\text{\scriptsize{±0.3}}} & \textbf{21.9\text{\scriptsize{±0.2}}} & \textbf{50.6\text{\scriptsize{±0.3}}} & \textbf{14.2\text{\scriptsize{±0.4}}} & 63.6\text{\scriptsize{±0.1}} & 52.2\text{\scriptsize{±0.2}}& \textbf{44.4} \\
+\midrule
+GENIE (ours)    & 62.5\scriptsize{±0.5}& 21.3\scriptsize{±0.4}& 50.0\scriptsize{±0.4}& 14.0\scriptsize{±0.4}& 64.0\scriptsize{±0.7}& \textbf{52.6\scriptsize{±0.8}}& 44.1\\
+\bottomrule
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Comparison of Optimizers on PACS Dataset Across Iterations.}
+\label{tab:pacs_iter}
+\vskip 0.15in
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{l|c|cccc|cccc|c|c}
+\toprule
+\textbf{Optimizer}& \textbf{Iteration} & \multicolumn{4}{c}{Training Time (/s)} & \multicolumn{4}{c}{Accuracy} & \multicolumn{2}{c}{\textbf{Avg.}}\\
+\cmidrule(lr){3-10}
+ & & [0] & [1] & [2] & [3] & [0] & [1] & [2] & [3] & Time & ACC\\ 
+\midrule
+SGD & 5000 & 1785 & 1819 & 1823 & 1848 & 73.4 & 61.2 & 96 & 48.4 & 1819 & 69.8\\
+    & 10000 & 3570 & 3643 & 3646 & 3749 & 76.8 & 65.1 & 97.4 & 56.1 & 3652 & 73.9\\
+    & 150000 & 5371 & 5478 & 5465 & 5609 & 77.6 & 67.1 & 97.8 & 60.9 & 5481 & 75.9\\
+\midrule
+Adam & 5000 & 1672 & 1668 & 1707 & 1714 & 86.2 & 78.2 & 95.7 & 76.6 & 1690 & 84.2\\
+     & 10000 & 3321 & 3348 & 3392 & 3408 & 86.2 & 81.7 & 95.7 & 80.8 & 3367 & 86.1\\
+     & 150000 & 4989 & 5030 & 5067 & 5092 & 80.2 & 81.7 & 95.5 & 80.8 & 5045 & 84.6\\
+\midrule
+SAM & 5000 & 2661 & 2717 & 2729 & 2689 & 84.9 & 74 & 98.2 & 72.6 & 2699 & 82.4\\
+    & 10000 & 5378 & 5425 & 5479 & 5392 & 87.1 & 75.7 & 98.1 & 73.2 & 5419 & 83.5\\
+    & 150000 & 8113 & 8125 & 8228 & 8073 & 87.2 & 77.1 & 98.4 & 73.8 & 8135 & 84.1\\
+\midrule
+GENIE(ours)& 5000 & 1862 & 2017 & 1532 & 1419 & 89.3 & 84.1 & 98.7 & 81.6 & 1708 & \textbf{88.4}\\
+      & 10000 & 3732 & 4054 & 3065 & 2836 & 87.6 & 80.9 & 98.4 & 81.6 & 3422 & 87.1\\
+      & 150000 & 5607 & 6077 & 4586 & 4256 & 88.2 & 80.1 & 98.4 & 80.9 & 5132 & 86.9\\
+\bottomrule
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Comparison of Optimizers on VLCS Dataset Across Iterations.}
+\label{tab:vlcs_iter}
+\vskip 0.15in
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{l|c|cccc|cccc|c|c}
+\toprule
+\textbf{Optimizer}& \textbf{Iteration} & \multicolumn{4}{c}{Training Time (/s)} & \multicolumn{4}{c}{Accuracy} & \multicolumn{2}{c}{\textbf{Avg.}}\\
+\cmidrule(lr){3-10}
+ & & [0] & [1] & [2] & [3] & [0] & [1] & [2] & [3] & Time & ACC\\ 
+\midrule
+SGD & 5000 & 9154 & 4947 & 9315 & 9119 & 97 & 61.9 & 73.3 & 74.6 & 8134 & 76.7\\
+    & 10000 & 18311 & 10054 & 18641 & 18312 & 97.6 & 60.3 & 72.7 & 77.2 & 16330 & 77\\
+    & 150000 & 27732 & 14956 & 27918 & 27419 & 98.1 & 62.4 & 72.6 & 77.8 & 24506 & 77.7\\
+\midrule
+Adam & 5000 & 9087 & 4900 & 9154 & 9210 & 98.1 & 63 & 73 & 73.8 & 8088 & 77\\
+     & 10000 & 18148 & 10024 & 18404 & 18312 & 98.1 & 63 & 73 & 73.8 & 16222 & 77\\
+     & 150000 & 27532 & 14963 & 27615 & 27387 & 98.1 & 63 & 73 & 73.8 & 24374 & 77\\
+\midrule
+SAM & 5000 & 9544 & 5611 & 9523 & 9555 & 99 & 63.5 & 74.6 & 80.5 & 8558 & 79.4\\
+    & 10000 & 19068 & 11203 & 18984 & 18749 & 98.9 & 64.1 & 76.1 & 81.9 & 17001 & 80.3\\
+    & 150000 & 28510 & 16817 & 28772 & 27860 & 99 & 64.6 & 75.3 & 82.6 & 25490 & 80.4\\
+\midrule
+GENIE(ours) & 5000 & 8726 & 4631 & 7118 & 5485 & 99.5 & 68.6 & 76.9 & 80.4 & 6490 & \textbf{81.4}\\
+      & 10000 & 17452 & 9273 & 14235 & 10885 & 99.5 & 68.6 & 76.9 & 80.4 & 12961 & \textbf{81.4}\\
+      & 150000 & 26164 & 13917 & 21396 & 16314 & 99.5 & 68.6 & 76.9 & 80.4 & 19448 & \textbf{81.4}\\
+\bottomrule
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Comparison of Optimizers on OfficeHome Dataset Across Iterations.}
+\label{tab:officehome_iter}
+\vskip 0.15in
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{l|c|cccc|cccc|c|c}
+\toprule
+\textbf{Optimizer}& \textbf{Iteration} & \multicolumn{4}{c}{Training Time (/s)} & \multicolumn{4}{c}{Accuracy} & \multicolumn{2}{c}{\textbf{Avg.}}\\
+\cmidrule(lr){3-10}
+ & & [0] & [1] & [2] & [3] & [0] & [1] & [2] & [3] & Time & ACC\\ 
+\midrule
+SGD & 5000 & 6,634& 6,436& 5,842& 4,554& 46.2& 40.1& 56.8& 61.9& 5,867& 51.3\\
+    & 10000 & 13,334& 12,665& 11,722& 8,899& 56.8& 46.4& 70.6& 76.2& 11,655& 62.5\\
+    & 150000 & 20,031& 18,565& 17,676& 13,175& 58.5& 47.1& 73.4& 76.6& 17,362& 63.9\\
+\midrule
+Adam & 5000 & 8,000& 8,147& 5,799& 4,255& 57.8& 49.4& 73.8& 73.4& 6,550& 63.6\\
+     & 10000 & 16,260& 16,602& 11,605& 8,379& 59.8& 52.2& 73.8& 74.8& 13,212& 65.2\\
+     & 150000 & 24,776& 25,466& 17,387& 13,062& 59.8& 52.2& 73.8& 74.8& 20,173& 65.2\\
+\midrule
+SAM & 5000 & 6,639& 6,598& 5,884& 5,151& 65.4& 54.2& 77.1& 81.1& 6,068& 69.4\\
+    & 10000 & 13,359& 12,964& 11,813& 10,189& 65.1& 54.5& 77.9& 80.9& 12,081& 69.6\\
+    & 150000 & 20,140& 18,983& 17,722& 14,946& 65.5& 55.1& 78.6& 80.9& 17,948& \textbf{70}\\
+\midrule
+GENIE(ours) & 5000 & 4,777& 5,846& 4,025& 4,061& 66.5& 55.4& 77.8& 80.3& 4,677& \textbf{70}\\
+      & 10000 & 9,553& 11,624& 8,062& 8,211& 65.8& 53.3& 77.8& 79.9& 9,363& 69.2\\
+      & 150000 & 14,261& 17,333& 12,229& 12,369& 65.8& 53.3& 77.1& 80.3& 14,048& 69.1\\
+\bottomrule
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+\subsection{Integration with DG methods}
+The detailed performance of previous DG methods employed with our optimizer is presented in \cref{tab:integ_DG_PACE}, \cref{tab:integ_DG_VLCS}, \cref{tab:integ_DG_office}, \cref{tab:integ_DG_Terra}.
+
+\begin{table}[H]
+\centering
+\caption{Integration with existing DG algorithms on the PACS dataset.}
+\label{tab:integ_DG_PACE}
+\vskip 0.15in
+\renewcommand{\arraystretch}{1.1}
+\begin{small}
+\begin{sc}
+\begin{tabular}{lcccc|c}
+\toprule
+\textbf{Algorithm} & Art & Cartoon & Photo & Sketch & \textbf{Avg.} \\ 
+\midrule
+ERM†\cite{erm}           & 84.7\text{\scriptsize{±0.4}} & 80.8\text{\scriptsize{±0.6}} & 97.2\text{\scriptsize{±0.3}} & 79.3\text{\scriptsize{±1.0}} & 85.5 \\
+IRM†\cite{irm}           & 84.8\text{\scriptsize{±1.3}} & 76.4\text{\scriptsize{±1.1}} & 96.7\text{\scriptsize{±0.6}} & 76.1\text{\scriptsize{±1.0}} & 83.5 \\
+GroupDRO†\cite{groupdro} & 83.5\text{\scriptsize{±0.9}} & 79.1\text{\scriptsize{±0.6}} & 96.7\text{\scriptsize{±0.3}} & 78.3\text{\scriptsize{±2.0}} & 84.4 \\
+I-Mixup†\cite{i-mixup_1} & 86.1\text{\scriptsize{±0.5}} & 78.9\text{\scriptsize{±0.8}} & 97.6\text{\scriptsize{±0.1}} & 75.8\text{\scriptsize{±1.8}} & 84.6 \\
+MLDG†\cite{mldg}         & 85.5\text{\scriptsize{±1.4}} & 80.1\text{\scriptsize{±1.7}} & 97.4\text{\scriptsize{±0.3}} & 76.6\text{\scriptsize{±1.1}} & 84.9 \\
+MMD†\cite{mmd}           & 86.1\text{\scriptsize{±1.4}} & 79.4\text{\scriptsize{±0.9}} & 96.6\text{\scriptsize{±0.2}} & 76.5\text{\scriptsize{±0.5}} & 84.7 \\
+DANN†\cite{dann}         & 86.4\text{\scriptsize{±0.8}} & 77.4\text{\scriptsize{±0.8}} & 97.3\text{\scriptsize{±0.4}} & 73.5\text{\scriptsize{±2.3}} & 83.7 \\
+CDANN†\cite{cdann}       & 84.6\text{\scriptsize{±1.8}} & 75.5\text{\scriptsize{±0.9}} & 96.8\text{\scriptsize{±0.3}} & 73.5\text{\scriptsize{±0.6}} & 82.6 \\
+MTL†\cite{mtl}           & 87.5\text{\scriptsize{±0.8}} & 77.1\text{\scriptsize{±0.5}} & 96.4\text{\scriptsize{±0.8}} & 77.3\text{\scriptsize{±1.8}} & 84.6 \\
+SagNet†\cite{sagnet}     & 87.4\text{\scriptsize{±1.0}} & 80.7\text{\scriptsize{±0.6}} & 97.1\text{\scriptsize{±0.1}} & 80.0\text{\scriptsize{±0.4}} & 86.3 \\
+ARM†\cite{arm}           & 86.8\text{\scriptsize{±0.6}} & 76.8\text{\scriptsize{±0.5}} & 97.4\text{\scriptsize{±0.3}} & 79.3\text{\scriptsize{±1.2}} & 85.1 \\
+VREx†\cite{vrex}         & 86.0\text{\scriptsize{±1.6}} & 79.1\text{\scriptsize{±0.6}} & 96.9\text{\scriptsize{±0.5}} & 77.7\text{\scriptsize{±1.7}} & 84.9 \\
+Mixstyle\cite{mixstyle}  & 86.8\text{\scriptsize{±0.5}} & 79.0\text{\scriptsize{±1.4}} & 96.6\text{\scriptsize{±0.1}} & 78.5\text{\scriptsize{±2.3}} & 85.2 \\
+\midrule
+\midrule
+RSC+GENIE(ours)       & 87.8\text{\scriptsize{±0.6}} & 82.4\text{\scriptsize{±0.8}} & 97.4\text{\scriptsize{±0.9}} & 81.4\text{\scriptsize{±2.0}} & 87.3\\
+CORAL+GENIE(ours)   & \textbf{88.8\text{\scriptsize{±0.2}}} & \textbf{82.5\text{\scriptsize{±0.5}}} & \textbf{98.2\text{\scriptsize{±0.1}}} &\textbf{ 82.2\text{\scriptsize{±0.2}}} & \textbf{87.9}\\
+\bottomrule
+\end{tabular}
+\end{sc}
+\end{small}
+\vskip -0.1in
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Integration with existing DG algorithms on the VLCS dataset.}
+\label{tab:integ_DG_VLCS}
+\vskip 0.15in
+\renewcommand{\arraystretch}{1.1}
+\begin{small}
+\begin{sc}
+\begin{tabular}{lcccc|c}
+\toprule
+\textbf{Algorithm} & Caltech & LabelMe & SUN   & VOC   & \textbf{Avg.} \\ 
+\midrule
+ERM†\cite{erm}           & 98.0\text{\scriptsize{±0.3}} & 64.7\text{\scriptsize{±1.2}} & 71.4\text{\scriptsize{±1.2}} & 75.2\text{\scriptsize{±1.6}} & 77.3 \\
+IRM†\cite{irm}           & 98.6\text{\scriptsize{±0.1}} & 64.9\text{\scriptsize{±0.9}} & 73.4\text{\scriptsize{±0.6}} & 77.3\text{\scriptsize{±0.9}} & 78.6 \\
+GroupDRO†\cite{groupdro} & 97.3\text{\scriptsize{±0.3}} & 63.4\text{\scriptsize{±0.9}} & 69.5\text{\scriptsize{±0.8}} & 76.7\text{\scriptsize{±0.7}} & 76.7 \\
+I-Mixup†\cite{i-mixup_1} & 98.3\text{\scriptsize{±0.6}} & 64.8\text{\scriptsize{±1.0}} & 72.1\text{\scriptsize{±0.5}} & 74.3\text{\scriptsize{±0.8}} & 77.4 \\
+MLDG†\cite{mldg}         & 97.4\text{\scriptsize{±0.2}} & 65.2\text{\scriptsize{±0.7}} & 71.0\text{\scriptsize{±1.4}} & 75.3\text{\scriptsize{±1.0}} & 77.2 \\
+MMD†\cite{mmd}           & 97.7\text{\scriptsize{±0.1}} & 64.0\text{\scriptsize{±1.1}} & 72.8\text{\scriptsize{±0.2}} & 75.3\text{\scriptsize{±3.3}} & 77.5 \\
+DANN†\cite{dann}         & 99.0\text{\scriptsize{±0.3}} & 65.1\text{\scriptsize{±1.4}} & 73.1\text{\scriptsize{±0.3}} & 77.2\text{\scriptsize{±0.6}} & 78.6 \\
+CDANN†\cite{cdann}       & 97.1\text{\scriptsize{±0.3}} & 65.1\text{\scriptsize{±1.2}} & 70.7\text{\scriptsize{±0.8}} & 77.1\text{\scriptsize{±1.5}} & 77.5 \\
+MTL†\cite{mtl}           & 97.8\text{\scriptsize{±0.4}} & 64.3\text{\scriptsize{±0.3}} & 71.5\text{\scriptsize{±0.7}} & 75.3\text{\scriptsize{±1.7}} & 77.2 \\
+SagNet†\cite{sagnet}     & 97.9\text{\scriptsize{±0.4}} & 64.5\text{\scriptsize{±0.5}} & 71.4\text{\scriptsize{±1.3}} & 77.5\text{\scriptsize{±0.5}} & 77.8 \\
+ARM†\cite{arm}           & 98.7\text{\scriptsize{±0.2}} & 63.6\text{\scriptsize{±0.7}} & 71.3\text{\scriptsize{±1.2}} & 76.7\text{\scriptsize{±0.6}} & 77.6 \\
+VREx†\cite{vrex}         & 98.4\text{\scriptsize{±0.3}} & 64.4\text{\scriptsize{±1.4}} & 74.1\text{\scriptsize{±0.4}} & 76.2\text{\scriptsize{±1.3}} & 78.3 \\
+Mixstyle\cite{mixstyle}  & 98.6\text{\scriptsize{±0.3}} & 64.5\text{\scriptsize{±1.1}} & 72.6\text{\scriptsize{±0.5}} & 75.7\text{\scriptsize{±1.7}} & 77.9 \\
+\midrule
+\midrule
+RSC+GENIE(ours)       & \textbf{99.1\text{\scriptsize{±0.3}}} & \textbf{68.3\text{\scriptsize{±1.3}} }& 76.0\text{\scriptsize{±0.4}} & \textbf{79.1\text{\scriptsize{±0.6}}} & 80.6\\
+CORAL+GENIE(ours)   & \textbf{99.0\text{\scriptsize{±0.3}}} & \textbf{68.3\text{\scriptsize{±1.0}} }& \textbf{76.6\text{\scriptsize{±1.3}}} & 78.9\text{\scriptsize{±0.9}} & \textbf{80.7}\\
+\bottomrule
+\end{tabular}
+\end{sc}
+\end{small}
+\vskip -0.1in
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Integration with existing DG algorithms on the OfficeHome dataset.}
+\label{tab:integ_DG_office}
+\vskip 0.15in
+\renewcommand{\arraystretch}{1.1}
+\begin{small}
+\begin{sc}
+\begin{tabular}{lcccc|c}
+\toprule
+\textbf{Algorithm} & Art & Clipart & Product & Real-World & \textbf{Avg.} \\ 
+\midrule
+ERM†\cite{erm}           & 61.3\text{\scriptsize{±0.7}} & 52.4\text{\scriptsize{±0.3}} & 75.8\text{\scriptsize{±0.1}} & 76.6\text{\scriptsize{±0.3}} & 66.5 \\
+IRM†\cite{irm}           & 58.9\text{\scriptsize{±2.3}} & 52.2\text{\scriptsize{±1.6}} & 72.1\text{\scriptsize{±2.9}} & 74.0\text{\scriptsize{±2.5}} & 64.3 \\
+GroupDRO†\cite{groupdro} & 60.4\text{\scriptsize{±0.7}} & 52.7\text{\scriptsize{±1.0}} & 75.0\text{\scriptsize{±0.7}} & 76.0\text{\scriptsize{±0.7}} & 66 \\
+I-Mixup†\cite{i-mixup_1} & 62.4\text{\scriptsize{±0.8}} & 54.8\text{\scriptsize{±0.6}} & 76.9\text{\scriptsize{±0.3}} & 78.3\text{\scriptsize{±0.2}} & 68.1 \\
+MLDG†\cite{mldg}         & 61.5\text{\scriptsize{±0.9}} & 53.2\text{\scriptsize{±0.6}} & 75.0\text{\scriptsize{±1.2}} & 77.5\text{\scriptsize{±0.4}} & 66.8 \\
+MMD†\cite{mmd}           & 60.4\text{\scriptsize{±0.2}} & 53.3\text{\scriptsize{±0.3}} & 74.3\text{\scriptsize{±0.1}} & 77.4\text{\scriptsize{±0.6}} & 66.4 \\
+DANN†\cite{dann}         & 59.9\text{\scriptsize{±1.3}} & 53.0\text{\scriptsize{±0.3}} & 73.6\text{\scriptsize{±0.7}} & 76.9\text{\scriptsize{±0.5}} & 65.9 \\
+CDANN†\cite{cdann}       & 61.5\text{\scriptsize{±1.4}} & 50.4\text{\scriptsize{±2.4}} & 74.4\text{\scriptsize{±0.9}} & 76.6\text{\scriptsize{±0.8}} & 65.7 \\
+MTL†\cite{mtl}           & 61.5\text{\scriptsize{±0.7}} & 52.4\text{\scriptsize{±0.6}} & 74.9\text{\scriptsize{±0.4}} & 76.8\text{\scriptsize{±0.4}} & 66.4 \\
+SagNet†\cite{sagnet}     & 63.4\text{\scriptsize{±0.2}} & 54.8\text{\scriptsize{±0.4}} & 75.8\text{\scriptsize{±0.4}} & 78.3\text{\scriptsize{±0.3}} & 68.1 \\
+ARM†\cite{arm}           & 58.9\text{\scriptsize{±0.8}} & 51.0\text{\scriptsize{±0.5}} & 74.1\text{\scriptsize{±0.1}} & 75.2\text{\scriptsize{±0.3}} & 64.8 \\
+VREx†\cite{vrex}         & 60.7\text{\scriptsize{±0.9}} & 53.0\text{\scriptsize{±0.9}} & 75.3\text{\scriptsize{±0.1}} & 76.6\text{\scriptsize{±0.5}} & 66.4 \\
+Mixstyle\cite{mixstyle}  & 51.1\text{\scriptsize{±0.3}} & 53.2\text{\scriptsize{±0.4}} & 68.2\text{\scriptsize{±0.7}} & 69.2\text{\scriptsize{±0.6}} & 60.4 \\
+\midrule
+\midrule
+RSC+GENIE(ours)       & 63.2\text{\scriptsize{±2.5}} & 54.8\text{\scriptsize{±0.3}} & 76.0\text{\scriptsize{±0.7}} & 78.3\text{\scriptsize{±1.9}} & 68.1\\
+CORAL+GENIE(ours)   & \textbf{66.5}\text{\scriptsize{±0.2}} & \textbf{56.7\text{\scriptsize{±0.3}}} & \textbf{78.8\text{\scriptsize{±0.1}}} & \textbf{80.4\text{\scriptsize{±0.6}}} & \textbf{70.6}\\
+\bottomrule
+\end{tabular}
+\end{sc}
+\end{small}
+\vskip -0.1in
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Integration with existing DG algorithms on the TerraIncognita dataset.}
+\label{tab:integ_DG_Terra}
+\vskip 0.15in
+\renewcommand{\arraystretch}{1.1}
+\begin{small}
+\begin{sc}
+\begin{tabular}{lcccc|c}
+\toprule
+\textbf{Algorithm} & L100  & L38   & L43   & L46   & \textbf{Avg.} \\ 
+\midrule
+ERM†\cite{erm}           & 54.3\text{\scriptsize{±0.4}} & 42.5\text{\scriptsize{±0.7}} & 55.6\text{\scriptsize{±0.3}} & 38.8\text{\scriptsize{±2.5}} & 47.8 \\
+IRM†\cite{irm}           & 54.6\text{\scriptsize{±1.3}} & 39.8\text{\scriptsize{±1.9}} & 56.2\text{\scriptsize{±1.8}} & 39.6\text{\scriptsize{±0.8}} & 47.6 \\
+GroupDRO†\cite{groupdro} & 41.2\text{\scriptsize{±0.7}} & 38.6\text{\scriptsize{±2.1}} & 56.7\text{\scriptsize{±0.9}} & 36.4\text{\scriptsize{±2.1}} & 43.2 \\
+I-Mixup†\cite{i-mixup_1} & \textbf{59.6}\text{\scriptsize{±2.0}} & 42.2\text{\scriptsize{±1.4}} & 55.9\text{\scriptsize{±0.8}} & 33.9\text{\scriptsize{±1.4}} & 47.9 \\
+MLDG†\cite{mldg}         & 54.2\text{\scriptsize{±3.0}} & 44.3\text{\scriptsize{±1.1}} & 55.6\text{\scriptsize{±0.3}} & 36.9\text{\scriptsize{±2.2}} & 47.8 \\
+MMD†\cite{mmd}           & 41.9\text{\scriptsize{±3.0}} & 34.8\text{\scriptsize{±1.0}} & 57.0\text{\scriptsize{±1.9}} & 35.2\text{\scriptsize{±1.8}} & 42.2 \\
+DANN†\cite{dann}         & 51.1\text{\scriptsize{±3.5}} & 40.6\text{\scriptsize{±0.6}} & 57.4\text{\scriptsize{±0.5}} & 37.7\text{\scriptsize{±1.8}} & 46.7 \\
+CDANN†\cite{cdann}       & 47.0\text{\scriptsize{±1.9}} & 41.3\text{\scriptsize{±4.8}} & 54.9\text{\scriptsize{±1.7}} & 39.8\text{\scriptsize{±2.3}} & 45.8 \\
+MTL†\cite{mtl}           & 49.3\text{\scriptsize{±1.2}} & 39.6\text{\scriptsize{±6.3}} & 55.6\text{\scriptsize{±1.1}} & 37.8\text{\scriptsize{±0.8}} & 45.6 \\
+SagNet†\cite{sagnet}     & 53.0\text{\scriptsize{±2.9}} & 43.0\text{\scriptsize{±2.5}} & \textbf{57.9\text{\scriptsize{±0.6}}} & 40.4\text{\scriptsize{±1.3}} & 48.6 \\
+ARM†\cite{arm}           & 49.3\text{\scriptsize{±0.7}} & 38.3\text{\scriptsize{±2.4}} & 55.8\text{\scriptsize{±0.8}} & 38.7\text{\scriptsize{±1.3}} & 45.5 \\
+VREx†\cite{vrex}         & 48.2\text{\scriptsize{±4.3}} & 41.7\text{\scriptsize{±1.3}} & 56.8\text{\scriptsize{±0.8}} & 38.7\text{\scriptsize{±3.1}} & 46.4 \\
+Mixstyle\cite{mixstyle}  & 54.3\text{\scriptsize{±1.1}} & 34.1\text{\scriptsize{±1.1}} & 55.9\text{\scriptsize{±1.1}} & 31.7\text{\scriptsize{±2.1}} & 44 \\
+\midrule
+\midrule
+RSC+GENIE(ours)       & 56.5\text{\scriptsize{±3.2}} & \textbf{44.5\text{\scriptsize{±3.7}}} & 55.9\text{\scriptsize{±1.0}} & \textbf{40.9\text{\scriptsize{±0.3}}} & \textbf{49.5}\\
+CORAL+GENIE(ours)   & 57.0\text{\scriptsize{±1.2}} & 42.9\text{\scriptsize{±0.7}} & 54.1\text{\scriptsize{±0.8}} & 39.4\text{\scriptsize{±1.3}} & 48.4\\
+\bottomrule
+\end{tabular}
+\end{sc}
+\end{small}
+\vskip -0.1in
+\end{table}
+
+\subsection{Detailed SDG performance.}
+This section reports a detailed comparison of our optimizer with existing optimizers across four datasets in the SDG setting. It also provides the performance of previous methods when employed with our optimizer. \cref{tab:sgd-pacs}, \cref{tab:sgd-vlcs}
+\cref{tab:sgd-officehome}, \cref{tab:sgd-terra}
+
+\begin{table}[ht]
+\caption{Detailed performance on the PACS dataset in the SDG setting.}
+\label{tab:sgd-pacs}
+\vskip 0.15in
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{l|cccc|c}
+\toprule
+ Algorithm & Art         & Cartoon     & Photo       & Sketch      & AVG.\\
+\midrule
+  ERM+Adam& 77.5& 72.1& \textbf{54.4}& 53.3&64.3\\
+  ERM+SGD& 64.0& 66.0& 40.8& 27.1&49.5\\
+  ERM+SAM& 70.1& 75.6& 42.5& 42.7&57.7\\
+  ERM+GENIE(ours)& \textbf{78.6\scriptsize{±0.6}}& \textbf{81.9\scriptsize{±0.9}}& 53.8\scriptsize{±2.2}& \textbf{63.5\scriptsize{±5.2}}&\textbf{69.5}\\
+\midrule
+\midrule
+RSC+GENIE(ours)& 79.8\scriptsize{±2.0}& 81.0\scriptsize{±1.2}& 56.7\scriptsize{±3.3}& 65.9\scriptsize{±4.6}& 70.9\\
+CORAL+GENIE(ours)& 78.9\scriptsize{±0.6}& 78.6\scriptsize{±2.2}& 53.9\scriptsize{±1.2}& 61.3\scriptsize{±3.4}&68.2\\
+\bottomrule
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+\begin{table}[ht]
+\caption{Detailed performance on the VLCS dataset in the SDG setting.}
+\label{tab:sgd-vlcs}
+\vskip 0.15in
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{l|cccc|c}
+\toprule
+ Algorithm & Caltech& LabelMe& SUN& VOC& AVG.\\
+\midrule
+  ERM+Adam& 33.7& 53.5& 62.3& 75.4&56.2\\
+  ERM+SGD& 46.3& 52.4& 65.6& 77.3&60.4\\
+  ERM+SAM& 54.4& 68.1& 65.8& 78.7&66.7\\
+  ERM+GENIE(ours)& \textbf{56.6\scriptsize{±4.3}}& \textbf{75.4\scriptsize{±1.1}}& \textbf{67.2\scriptsize{±1.4}}& \textbf{80.5\scriptsize{±0.3}}&\textbf{69.9}\\
+\midrule
+\midrule
+RSC+GENIE(ours)& 56.3\scriptsize{±2.5}& 72.0\scriptsize{±1.5}& 68.8\scriptsize{±1.7}& 79.6\scriptsize{±1.1}& 69.2\\
+CORAL+GENIE(ours)& 55.9\scriptsize{±1.3}& 71.7\scriptsize{±1.8}& 67.2\scriptsize{±1.8}& 79.9\scriptsize{±1.4}&68.7\\
+\bottomrule
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+\begin{table}[ht]
+\caption{Detailed performance on the OfficeHome dataset in the SDG setting.}
+\label{tab:sgd-officehome}
+\vskip 0.15in
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{l|cccc|c}
+\toprule
+ Algorithm & Art& Clipart& Product& Real-World& AVG.\\
+\midrule
+  ERM+Adam& 52.6& 46.5& 45.6& 58&50.7\\
+  ERM+SGD& 47.7& 41.4& 43.2& 51.5&45.9\\
+  ERM+SAM& \textbf{60.1}& 57.8& \textbf{55.8}& \textbf{63.1}&\textbf{59.2}\\
+  ERM+GENIE(ours)& 59.4 \scriptsize{± 0.7}& \textbf{58.7 \scriptsize{± 0.9}}& 54.1 \scriptsize{± 0.5}& 62.0 \scriptsize{± 0.3}&58.6\\
+\midrule
+\midrule
+ RSC+GENIE(ours)& 55.8 \scriptsize{± 2.6}& 52.5 \scriptsize{± 2.0}& 49.7 \scriptsize{± 3.0}& 59.7 \scriptsize{± 2.0}& 54.4\\
+  CORAL+GENIE(ours)& 58.0 \scriptsize{± 0.9}& 54.8 \scriptsize{± 1.5}& 51.3 \scriptsize{± 0.3}& 61.4 \scriptsize{± 0.7}
+&56.4\\
+\bottomrule
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+\begin{table}[ht]
+\caption{Detailed performance on the TerraIncognita dataset in the SDG setting.}
+\label{tab:sgd-terra}
+\vskip 0.15in
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{l|cccc|c}
+\toprule
+ Algorithm & L100& L38& L43& L46& AVG.\\
+\midrule
+  ERM+Adam& 27.0& 25.5&\textbf{42.9}& 38.6&33.5\\
+  ERM+SGD& 22.1& 17.9& 22.3& 29&22.8\\
+  ERM+SAM& 21.1& 21.6& 30.3& 34.2&26.8\\
+  ERM+GENIE(ours)& \textbf{28.5 \scriptsize{± 0.5}}&\textbf{ 29.4 \scriptsize{± 1.5}}& 41.7 \scriptsize{± 1.8}& \textbf{44.5 \scriptsize{± 1.3}}&\textbf{36.0}\\
+\midrule
+\midrule
+ RSC+GENIE(ours)& 27.1 \scriptsize{± 1.5}& 22.6 \scriptsize{± 1.7}& 39.7 \scriptsize{± 3.0}& 43.3 \scriptsize{± 1.1}& 33.2\\
+  CORAL+GENIE(ours)& 29.3 \scriptsize{± 1.0}& 29.8 \scriptsize{± 1.8}& 43.9 \scriptsize{± 1.3}& 43.6 \scriptsize{± 1.6}&36.7\\
+\bottomrule
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+\subsection{Model Analysis}
+\cref{fig:losslandscape_detail}. visualizes the behavior of SGD, Adam, and GENIE on various loss landscapes, with the number of iterations fixed at 30 for consistency. The results show that GENIE does not directly converge to the minima of the training data, whereas Adam and SGD quickly converge to the minima. While this behavior might be advantageous in IID scenarios, it can lead to overfitting to the source domain in OOD settings.\cref{fig:heatmap_detail} provides a more detailed analysis of the experiment. It further elaborates on the parameter update patterns observed across optimizer.
+\begin{figure}[ht]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=\columnwidth]{fig/losslandscape.png}}
+\caption{Optimization trajectories on a simulated loss landscape.}
+\label{fig:losslandscape_detail}
+\end{center}
+\vskip -0.2in
+\end{figure}
+
+\begin{figure}[ht]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=\columnwidth]{fig/heatmap.png}}
+\caption{Heatmaps visualizing normalized parameter update magnitudes by parameter ID for different optimizers throughout training on the VLCS dataset in the DG.}
+\label{fig:heatmap_detail}
+\end{center}
+\vskip -0.2in
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}
+
+
+% This document was modified from the file originally made available by
+% Pat Langley and Andrea Danyluk for ICML-2K. This version was created
+% by Iain Murray in 2018, and modified by Alexandre Bouchard in
+% 2019 and 2021 and by Csaba Szepesvari, Gang Niu and Sivan Sabato in 2022.
+% Modified again in 2023 and 2024 by Sivan Sabato and Jonathan Scarlett.
+% Previous contributors include Dan Roy, Lise Getoor and Tobias
+% Scheffer, which was slightly modified from the 2010 version by
+% Thorsten Joachims & Johannes Fuernkranz, slightly modified from the
+% 2009 version by Kiri Wagstaff and Sam Roweis's 2008 version, which is
+% slightly modified from Prasad Tadepalli's 2007 version which is a
+% lightly changed version of the previous year's version by Andrew
+% Moore, which was in turn edited from those of Kristian Kersting and
+% Codrina Lauth. Alex Smola contributed to the algorithmic style files.

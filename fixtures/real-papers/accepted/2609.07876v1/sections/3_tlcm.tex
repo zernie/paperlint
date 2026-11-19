@@ -1,0 +1,145 @@
+\label{big_sec:tlcm}
+
+% \ej{I would rework the first two paragraphs of this section --- I'd have some scaffolding in the front that says something like "In this section, we'll define and exhibit TLCM. We'll first define TLCM (Section 4.1), Show that it develops during training (Section 4.2), [rest of the sections]. Right now it's not really clear what this section is trying to do when you start it}
+
+% \jh{I agree with EJ that signposting is needed. I do think that it's okay to have a small subsection here that argues why TLCM is surprising, which is what these two paragraphs are trying to do. Just make it explicit that that's what you're doing. i.e. your first paragraph here should be "In this section, we .... We first describe intuitions for why TLCM is be surprising"}
+
+
+% \ej{These two paragraphs could show up in a discussion after you define and show the effect? Some of the points are nice, but there's not enough context to appreciate it becaus eyou haven't defined TLCM yet}
+
+
+In this section, we introduce the Transformer Layer Correction Mechanism and conduct observational studies to characterize its functioning. We first define it (Section \ref{sec:tlcm-exists}), show that it develops during training (Section \ref{sec:tlcm-develops}), demonstrate how it varies across token types (Section \ref{sec:tlcm-tokens}), and finally demonstrate it occurs via collaboration of both attention and MLP sublayers (Section \ref{sec:tlcm-mlp-attn}).
+
+\subsection{Uncovering the Traces}
+\label{sec:tlcm-exists}
+
+If layers progressively enrich the residual stream, a view suggested by prior work, then layer contributions should primarily contribute new content or reinforce existing information. Mechanistically, this might be characterized by the vector layer contributions having roughly zero or positive cosine similarity, corresponding to disjoint contributions and reinforcement, respectively. Negative cosine similarity would indicate something different: one layer \textit{reverses} or \textit{corrects} the other's contribution. Thus, we might expect that over a corpus of in-distribution text, cosine similarity between layer pairs should be predominantly non-negative. Recent work on ViTs supports this, finding positive cosine similarity between layer contributions \cite{jiang2025tracingrepresentationprogressionanalyzing}.
+
+\textbf{Setup.} We test this hypothesis across several open-weight language models. For a given token $t$, we define the similarity matrix $\mathbf{M}_t$, where $\mathbf{c}_{i,t}$ represents the contribution of the $i$-th transformer layer (as defined in equation \ref{eq:contribution}):
+
+$$\mathbf{M}_t[i,j] := \operatorname{cossim}(\mathbf{c}_{i,t}, \mathbf{c}_{j,t}) \text{ for } i \neq j$$
+We then average these matrices element-wise across approximately 100,000 tokens, across random documents in WikiText \cite{merity2016pointer} using HuggingFace Transformers \cite{wolf-etal-2020-transformers}: $\mathbf{M} = \frac{1}{n} \sum_t \mathbf{M}_t$. These documents include a variety of languages and code.
+
+\textbf{Results.} Plotted in Figure \ref{fig:existence_proof}, $\mathbf{M}$ reveals a reversing effect, captured by the following observations:
+\begin{itemize}
+    \item Across this large corpus, adjacent layers (layer $i$ and $i+1$) on average have opposing contributions, evidenced by their negative cosine similarity which averages $\approx -0.2$.
+    \item Non-adjacent layers (layer $i$ and $i+j$, $j>1$) \textbf{do not} on average have opposing contributions; their contributions are predominately orthogonal or positively correlated, consistent with the hypothesis above.
+\end{itemize}
+
+We term this phenomenon---the systematic partial reversal of layer $i$ by layer $i+1$---the Transformer Layer Correction Mechanism (TLCM). We observe TLCM in 5 of the 7 model families we study, with adjacent-layer cosine similarities typically ranging from $-0.3$ to $-0.15$ and as low as $-0.4$ (Figure \ref{fig:existence_proof}, Appendix \ref{appendix:extended-details-on-tlcm-existence}). TLCM persists across different text types, model scales, and model categories (instruction-tuned and conversational). The correction mechanism is most pronounced in the first two-thirds of each model's layers. TLCM is absent in GPT-2 and the Microsoft Phi models, as shown in Figure \ref{fig:existence_proof}. This absence may stem from their architectures; Phi-3, while based on Llama 2, incorporates dropout blocks after MLP and attention sublayers, similar to GPT-2's design.
+
+A natural question is whether the negative cosine similarities we observe form a distinct cluster or are simply the tail of a single distribution. We plot the distribution of $\operatorname{cossim}(\mathbf{c}_{i,t}, \mathbf{c}_{i+1,t})$ across tokens $t$ and layers $i$ in Figure \ref{fig:avg_tlcm_activations_and_cutoff} (right). The distribution is bimodal, with a dominant mode near $-0.2$ (consistent with the average adjacent-layer cosine similarity reported above) and a smaller secondary mode near $+0.1$, separated by a valley around $-0.1$. The presence of a distinct negative mode indicates that these interactions are not rare outliers but a recurring pattern across (token, layer) pairs. Due to the valley between modes at around $-0.1$ cosine similarity, we define any interaction with $-0.1$ or lower cosine similarity to be a TLCM activation.
+
+\textbf{Discussion.} Strong anticorrelation between vectors in a 4096-dimensional space is itself notable. We calibrate the magnitude of these cosine similarities by comparing against two simple null models that assume independence between adjacent layers.
+
+First, suppose both layer outputs are drawn independently from a standard $d$-dimensional normal distribution. Then cosine similarity has expected value 0 and variance $1/d$ (Appendix \ref{appendix:random_normal_iid_vectors}), so at $d = 4096$, a cosine similarity below $-0.1$ corresponds to a 6-sigma event.
+
+Second, suppose both outputs are drawn independently from the empirical distribution of their respective layers, accounting for the possibility that output spaces are low-rank or directionally biased (Appendix \ref{appendix:empirical_mean_and_variance}). Under this null, a typical TLCM instance corresponds to roughly a 3-sigma event.
+
+Both nulls assume independence between adjacent layers, but the architecture explicitly violates this assumption, since layer $i+1$ reads a residual stream that includes layer $i$'s contribution. These comparisons illustrate that the observed cosine similarities are far from what unstructured baselines would predict, but do not establish causality. We provide stronger evidence in Section \ref{sec:tlcm-develops}, where we show TLCM is absent at initialization and emerges during training, and in Section \ref{sec:tlcm-adaptive}, where causal interventions show that layer $i+1$ directly adjusts its output in response to layer $i$.
+
+Beyond the magnitude of the effect, TLCM is puzzling from an efficiency standpoint. Transformer layers may erase information because it is only transiently useful or because deletion frees capacity for new representations. Under either explanation, information written by layer $i$ could be erased by any later layer $j > i$, after multiple downstream layers have had the opportunity to use it. TLCM is more constrained: reversal occurs predominantly in the directly subsequent layer, so written information can only be exploited by a single downstream layer before erasure.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.8\linewidth]{figures/avg_tlcm_activations_and_cutoff.pdf}
+    \caption{\textbf{Left:} the average number of TLCM activations per token increases with position in the context window. \textbf{Right:} the distribution of adjacent transformer layer similarities is bimodal, with the dotted red line marking the TLCM activation cutoff at $\operatorname{cossim} = -0.1$.}
+    \label{fig:avg_tlcm_activations_and_cutoff}
+    \vspace{-8pt}
+\end{figure}
+
+\subsection{TLCM Develops During Training} \label{sec:tlcm-develops}
+We next investigate how TLCM emerges over training. In particular, TLCM could be: 
+\begin{itemize}
+    \item An inherent characteristic of transformer architectures, emerging from their fundamental design rather than through learning.
+    \item A transient phenomenon that arises due to, for example, unstable training dynamics.
+    \item A mechanism developed during post-training, either by RL or SFT.
+\end{itemize}
+
+
+\textbf{Setup.} To address these possibilities, we study how TLCM develops throughout training. We examine seven checkpoints from each of three fully open-source models: OLMo 7B, OLMo 2 1B, and OLMo 2 7B. For each checkpoint, we compute $\mathbf{M} = \frac{1}{n}\sum_t \mathbf{M}_t$ using a fixed block of text.
+
+\textbf{Results.} Figure \ref{fig:olmo_checkpoints} shows $\mathbf{M}$ computed at four OLMo 7B checkpoints. At step 33,000 (5\% of training), the matrix shows no consistent negative structure on the super-diagonal. By step 135,500 (21\% of training, approximately 0.5 trillion tokens), negative cosine similarities begin to appear between adjacent layers in the middle of the network. This pattern strengthens and extends to more layers through the remainder of training. Appendix Figures \ref{fig:olmo2_1B_checkpoints} and \ref{fig:olmo2_7B_checkpoints} show the same progression in OLMo 2 1B and OLMo 2 7B. These observations indicate that TLCM is
+\begin{itemize}
+    \item \textit{Learning-induced}: TLCM does not appear in untrained models.
+    \item \textit{Stable once learned}: Despite weight decay, TLCM strengthens over training rather than being regularized away.
+    \item \textit{Pretraining-derived}: TLCM emerges during pretraining, not SFT or RL.
+\end{itemize}
+
+% \arjun{Maybe new subsection - developing and testing the propose-and-reject hypothesis}
+
+\subsection{TLCM Varies by Token}\label{sec:tlcm-tokens}
+We next study how TLCM activations vary across different token classes.
+
+\textbf{Setup.} We curate 100 realistic queries requesting long-form content about science, technology, philosophy, government, history, and other topics. We then generate responses to these queries using Llama 3.1 8B. For each token $t$ in the response, we count the number of corrections for $t$ as: $|\{i \mid \operatorname{cossim}(\mathbf{c}_{i,t}, \mathbf{c}_{i+1,t}) < -0.1\}|$. This corpus contains 79k tokens. To ensure we identify only systematic patterns, we filter out tokens appearing fewer than 20 times and compute the mean number of TLCM activations for each unique token. 
+
+\textbf{Results.} Correction frequencies vary across tokens on Llama 3.1 8B: the lowest-correction tokens average fewer than 8 TLCM activations per token, while the highest average more than 11. Some qualitative examples of low-correction tokens ($<8$ corrections per token on average) include:
+\begin{examplebox}
+By,  workshops,  indigenous,  vinyl,  implications,  cognitive, -being,  innovative,  innovation,  regulatory,  greenhouse,  mindfulness,  platforms,  trends,  therapy,  example,  learning, iving,  planning,  inclusive,  cloud,  classical,  proposal, -friendly,  sustainability,  biodiversity, ting,  blog,  memo, system, \texttt{<|begin\_of\_text|>}
+\end{examplebox}
+
+And some examples of high-correction tokens ($>11$ corrections per token on average):
+\begin{examplebox}
+202,  Jul, 26, ]$\backslash$n, ,$\backslash$n$\backslash$n, Today, $\backslash$n$\backslash$n,  \$,  Name,  State, [, 201, assistant,  Address, $\backslash$t, 4, $\backslash$n, user,  at, ]$\backslash$n$\backslash$n,  Date,    ,  Title, ], -, Your,  over, Date, \%,  high, ],, )$\backslash$n,  reach,  up,  share, )**,  well,  one,  D,  time, ):,  take,  forward,  from, 1, :,  access,  you, 12,  not,  [, I, City,  need,  low, Thank,  (,  make, 10,  look,  your, 0,  such,  *
+\end{examplebox}
+
+We list token-level TLCM activation statistics (mean and standard error of the mean) in Table \ref{table:token_correction_counts_llama_top} and \ref{table:token_correction_counts_llama_bottom}. We also compute results for Gemma 2 2B Instruct across the same 79K tokens, listing full results in Table \ref{table:token_correction_counts_gemma_top} and \ref{table:token_correction_counts_gemma_bottom}.
+
+We find statistically significant differences in the frequency of TLCM activations using two-sided Welch's $t$-tests on per-occurrence TLCM activation counts. For example, on Llama 3.1 8B, the token \texttt{\textbackslash n} averages 12.41 ($\pm 0.10$ SEM, standard error of the mean) TLCM activations, compared with 7.63 ($\pm 0.23$ SEM) for \texttt{sustainability}, a difference of 4.78 activations. Numbers, punctuation, dates, and brackets appear among the tokens with the highest mean activation counts, while English word tokens such as \texttt{community}, \texttt{training}, and \texttt{understanding} have lower mean activation counts. Llama's \texttt{<|begin\_of\_text|>} token and Gemma's \texttt{<bos>} token exhibit the fewest average TLCM activations across the entire corpus.
+
+\textbf{Discussion.} Qualitatively, we observe that low-correction tokens tend to be common English words (e.g., \texttt{sustainability}, \texttt{cognitive}, \texttt{innovation}), while high-correction tokens include numbers, dates, punctuation, and structural tokens (e.g., \texttt{\textbackslash n}, \texttt{[}, \texttt{\$}). One pattern that may account for this split is \textit{contextual dependency}: high-correction tokens tend to be those whose interpretation depends on surrounding context. This includes: 1) Numbers that form larger parts of numbers, where grasping the complete value of the number requires consolidating information \textit{across} tokens 2) Date-related tokens which require surrounding context for complete temporal reference 3) Punctuation marks (e.g., `:') whose semantic role varies with usage context.
+
+Recent work also support the contextual dependency explanation. \citet{lindsey2025biology} showed that newline tokens can be used for planning upcoming tokens, a task that requires contextual processing, while we find that newline tokens and similar (\texttt{\textbackslash n \textbackslash n}, \texttt{:\textbackslash n}, etc.) have high rates of TLCM activation. Intuitively, models may aggregate information into concluding punctuation marks because the causal attention mask prevents them from aggregating information in earlier tokens.
+
+Under the contextual dependency explanation, Llama's \texttt{<|begin\_of\_text|>} (0 activations) and Gemma's \texttt{<bos>} (1 activation) are extreme cases: as the first token in the context window during training, the optimal prediction is simply the unigram distribution from document starts, which obviates contextual processing.
+
+To test this conjecture---that TLCM activations relate to contextual processing---we perform a simple check: we plot the average number of TLCM activations per token at different points in the LLM context window; Intuitively, the 1000th token can attend to 999 preceding tokens while the 5th token can only attend to 4, suggesting we should observe higher TLCM activation rates at later positions. Indeed, across 2000 long WikiText documents, we find that every 1000 tokens of additional context corresponds to approximately 1 additional TLCM activation, as demonstrated in Figure \ref{fig:avg_tlcm_activations_and_cutoff}.
+
+
+% \textbf{Discussion.} We find statistically significant differences in the frequency of TLCM activation across token classes. For example, the token \texttt{\textbackslash n} occurs averages 12.02 TLCM activations ($\pm 0.76$ 99\% CI \arjun{update this num}) while \texttt{sustainability} averages 7.38 ($\pm 0.76$ 99\% CI \arjun{update this num}). Additionally, we find similar classes of tokens activate TLCM in Gemma more frequently as well (see \arjun{appendix}).
+
+% We make two observations about the token classes. First, tokens exhibiting low TLCM correction rates typically possess unambiguous, context-independent semantic meaning. These tokens generally maintain consistent interpretation regardless of their surrounding context.
+% \arjun{add a few more numbers. i.e. all puncutation tokens have this average vs the normal average}
+
+% In contrast, high-correction tokens seem to demonstrate greater average contextual dependency. This category includes: 1) Numerical tokens that may form parts of larger numbers, where grasping the complete value (or even order of magnitude) of the number requires consolidating and cross-checking information across tokens 2) Date-related tokens requiring additional context for complete temporal reference 3) Punctuation marks (e.g., `:') whose semantic role varies with usage context
+
+% Recent work shows \citep{lindsey2025biology} that newline tokens can be used for planning upcoming tokens, a task that requires contextual processing---both newlines punctuation and their siblings (\texttt{\textbackslash n \textbackslash n}, \texttt{:\textbackslash n}, etc.) tokens have high rates of TLCM activation. Intuitively, models may aggregate and enrich concluding punctuation marks because the attention mask limits them from aggregating information in earlier tokens.
+
+% In the limit, \texttt{<|begin\_of\_text|>} is a key exemplar; it is the only token that \textit{never} has a TLCM correction. This token is \textit{always} first in the Llama 3 prompt during training. This position would make correction unnecessary; to minimize the cross-entropy loss, the optimal next-token prediction with no context is the empirical 1-gram distribution from the starts of training documents, which we suspect obviates the need for complex contextual processing.
+
+% \arjun{In Gemma models, the BOS token activates the least by far...}
+
+
+\subsection{Attention and MLPs Alone Do Not Explain TLCM}
+\label{sec:tlcm-mlp-attn}
+
+\begin{figure}[t]
+    \centering
+    \begin{subfigure}[t]{0.57\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/m_attn_mlp_v2.pdf}
+        \caption{Correlations between attention sublayers, plotted as $\operatorname{clip}(\mathbf{M}_\text{attn}, -0.3, 0.3)$ on the left. Traces of TLCM are seen in the plot of $\operatorname{clip}(\mathbf{M}_\text{MLP}, -0.3, 0.3)$ on the right.}
+        \label{fig:m_attn_mlp}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/adaptable_correction_v2.pdf}
+        \caption{TLCM correction strength varies approximately linearly with the prior layer's contribution, shown for 5 randomly sampled tokens. For negative $\alpha$ values, layers demonstrate compensatory behavior, evidenced by positive cosine similarity.}
+        \label{fig:adaptable_correction}
+    \end{subfigure}
+    \caption{Sublayer-level similarity matrices (a) and TLCM's adaptive correction strength (b).}
+    \vspace{-8pt}
+\end{figure}
+
+We next investigate the role of MLP and attention sublayers in TLCM. For instance, TLCM could arise purely from MLP-to-MLP interactions, or MLPs could selectively reverse only attention sublayer contributions. To address these questions, we conduct an analysis similar to Section \ref{sec:tlcm-exists}, but at the sublayer level.
+
+%\ej{Can you flesh this out more? From this I don't really know what the different options are.}
+
+\textbf{Setup.} We compute a similarity matrix, instead using the attention contribution $\mathbf{M}_{\text{attn}, t}[i, j] = \operatorname{cossim}(\operatorname{Attn}_i(\mathbf{x}_{i, t}), \operatorname{Attn}_j(\mathbf{x}_{j, t}))$ and plot the average matrix $\mathbf{M}_\text{attn} = \frac{1}{n}\sum_t \mathbf{M}_{\text{attn}, t}$. We also plot the average MLP matrix: $\mathbf{M}_\text{MLP} = \frac{1}{n}\sum_t \mathbf{M}_{\text{MLP}, t}$, with $\mathbf{M}_{\text{MLP}, t}[i, j] = \operatorname{cossim}(\operatorname{MLP}_i(\mathbf{x}_{i, t}'), \operatorname{MLP}_j(\mathbf{x}_{j, t}'))$.
+
+\textbf{Results.} We identify three findings. First, attention sublayers produce positively correlated contributions with other attention sublayers (Figure \ref{fig:m_attn_mlp}). Second, MLP sublayers produce anti-correlated contributions with the subsequent layer's MLP, exhibiting a similar pattern to TLCM. Third, MLP contributions are also anti-correlated with the preceding attention sublayer (Appendix \ref{appendix:extended-details-on-tlcm-existence}). In summary, MLPs produce contributions that are anti-correlated with both the preceding MLP and attention sublayers, suggesting that MLPs are primarily responsible for \textit{executing} corrections.
+
+Since MLPs partially reverse contributions from both the preceding attention and MLP sublayers, the correction mechanism appears to be a transformer layer-level phenomenon. Additionally, our prior experiments suggest contextual dependency plays a role in TLCM's functioning, something only possible if TLCM operates partially through the attention sublayer. For these reasons, we focus our study of TLCM at the transformer layer level.
+
+

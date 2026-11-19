@@ -1,0 +1,10 @@
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{attachments/figure3-img.pdf}
+\caption{Detailed prompts used by QEVA for multimodal question-answer generation across three distinct evaluation dimensions: (a) Coverage, (b) Factuality, and (c) Chronology.
+(a) Coverage QA prompts instruct a Video-LMM to generate high-level, inference-driven questions that assess whether the summary comprehensively captures essential content, themes, and events from the source video.
+(b) Factuality QA prompts guide an LLM to first extract critical factual elements explicitly mentioned in the summary (such as entities, actions, attributes), and subsequently generate targeted questions designed to verify factual accuracy.
+(c) Chronology QA prompts outline a structured workflow for event segmentation from the source video, sampling adjacent and distant pairs of events, and generating questions to evaluate whether the summary preserves the correct chronological order of these events.
+\textbf{Takeaway:} QEVA employs carefully structured prompts tailored to each evaluation dimension, enabling a systematic and comprehensive assessment of video summary quality along the axes of Coverage, Factuality, and Chronology.}
+\label{fig:qa_prompts}
+\end{figure*}

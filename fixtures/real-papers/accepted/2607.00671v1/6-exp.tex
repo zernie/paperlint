@@ -1,0 +1,182 @@
+\section{Experiments}  
+In this section, we evaluate \model and aim to answer the following research questions:
+% \vspace{-0.1cm}
+\begin{itemize}[leftmargin=*]
+% \begin{compactitem}
+\item \textbf{RQ1.} How does \model perform on MLNC task with different settings and label ratios?
+\item \textbf{RQ2.} Can \model serve as a plug-and-play booster to be equipped with any backbone?
+\item \textbf{RQ3.} How reliable are the label influence relationships we proposed to capture?
+% \item \textbf{RQ3.} Can \model serve as a plug-and-play booster to be equipped with any backbone?
+\end{itemize}
+
+% \end{compactitem}
+% \syfC{有空需要加一组可视化实验说明4.1和4.2中得到的关系是有意义的}
+% \syfC{考虑加一下验证构建的传播图的好处，实验对比我们计算的，和“实际上”的差别；如果没有标准的传播图，那就用一个可学习的图？关键是验证传播图的作用。}
+% \textbf{RQ4.} 
+% We 
+
+
+\subsection{Experimental Settings}
+To comprehensively validate our framework, we conduct experiments on 2 classical MLNC datasets (DBLP~\citep{8970680}, BlogCat~\citep{8894391}), 1 large scale OGB dataset (Ogbn-proteins~\citep{hu2020open}, OGB-p in short), and 3 new biological datasets (PCG, HumLoc, EukLoc~\citep{zhao2023multi}) from different domains. The statistics of datasets are in App.~\ref{app:datasets}.
+% Youtube~\citep{8894391}, 
+% Flickr~\citep{8894391}
+% , Yelp~\citep{zeng2020graphsaint}
+% and Abnormal . 
+We use three types of baselines for comparison.
+% First and second group is backbone-irrelevant methods like our method. 
+First, we combine unsupervised embedding and multi-label classifier. We adopt the frequently used unsupervised graph embedding methods Node2Vec~\citep{grover2016node2vec}, the classic multi-label classifiers binary relevance (BR)~\citep{Tsoumakas2010MiningMD} and classifier chain (CC)~\citep{10.1007/978-3-642-04174-7_17}.
+Second, we combine semi-supervised backbone with SOTA multi-label methods.
+We adopt the same backbone for baselines and our own for fairness. 
+We choose GCN~\citep{kipf2017semisupervised} as main backbone, ML-KNN~\citep{10.1016/j.patcog.2006.12.019} and latest work PLAIN~\citep{wang2023deep} as multi-label methods.
+% , GAT~\citep{2017Graph}, GraphSAGE~\citep{hamilton2017inductive}
+% The last one is specially designed for imbalanced node classification.
+% Moreover, we choose a .
+% They are both proposed to model the label correlations.
+The third group is backbone-relevant methods which specifically designed for MLNC on graphs. 
+% Hence, they are not so flexible. 
+We choose MLGW~\citep{8970680}, ML-GCN~\citep{gao2019semisupervised}, LARN~\citep{XIAO2022235}, LANC~\citep{ZHOU2021115063} and the latest work VariMul~\citep{10.1145/3459637.3482391}.
+Furthermore, 
+% ``backbone+Com'' where the losses of different labels are just summed up, and 
+``backbone+Auto'' means the coefficients of losses of different labels are learned automatically.
+More details are in App.~\ref{app:settings}.
+
+
+% Please add the following required packages to your document preamble:
+% \usepackage[normalem]{ulem}
+% \useunder{\uline}{\ul}{}
+
+\begin{table*}[!ht]
+    \centering
+    \caption{Performance (mean ± std. deviation) under node split at 6:2:2 in terms of Macro AUC, AP.}
+    \resizebox{0.92\textwidth}{!}{
+    \begin{tabular}{c|cc|cc|cc} \toprule
+        & \multicolumn{2}{c}{DBLP}        & \multicolumn{2}{c}{BlogCat}        & \multicolumn{2}{c}{OGB-p}          \\
+        Metrics & \multicolumn{1}{c}{Macro AUC} & AP & \multicolumn{1}{c}{Macro AUC} & AP & \multicolumn{1}{c}{Macro AUC} & AP  \\ \midrule
+        Node2vec+BR & 71.22 $\pm$ 0.31 & 57.41 $\pm$ 1.29 & 53.76 $\pm$ 1.08 & 6.56 $\pm$ 0.75 & 50.22 $\pm$ 3.01 & 1.92 $\pm$ 0.73 \\ 
+        Node2vec+CC & 72.57 $\pm$ 0.24 & 57.13 $\pm$ 1.88 & 57.97 $\pm$ 1.31 & 8.93 $\pm$ 0.82 & 51.39 $\pm$ 2.14 & 2.07 $\pm$ 0.31 \\ \midrule
+        GCN+ML-KNN & 90.11 $\pm$ 1.02 & 80.01 $\pm$ 0.77 & 60.18 $\pm$ 2.33 & 9.16 $\pm$ 0.60 & 55.07 $\pm$ 2.73 & 2.02 $\pm$ 0.33 \\ 
+        GCN+PLAIN & 80.55 $\pm$ 1.23 & 73.44 $\pm$ 1.12 & 63.95 $\pm$ 1.85 & 10.21 $\pm$ 0.56 & 66.29 $\pm$ 3.45 & 3.26 $\pm$ 0.67 \\ \midrule
+        MLGW & 73.32 $\pm$ 1.44 & 56.03 $\pm$ 0.47 & 60.02 $\pm$ 2.19 & 9.81 $\pm$ 0.46 & 50.70 $\pm$ 2.54 & 1.78 $\pm$ 0.73 \\ 
+        ML-GCN & 72.66 $\pm$ 2.73 & 56.71 $\pm$ 2.59 & 60.97 $\pm$ 2.21 & 9.68 $\pm$ 0.39 & 60.11 $\pm$ 2.65 & 2.19 $\pm$ 0.54 \\ 
+        LARN & 74.29 $\pm$ 2.53 & 58.11 $\pm$ 1.25 & 63.18 $\pm$ 1.84 & 9.77 $\pm$ 0.63 & 68.18 $\pm$ 1.33 & 3.08 $\pm$ 0.16 \\ 
+        LANC & 91.68 $\pm$ 0.42 & 83.50 $\pm$ 0.83 & 67.94 $\pm$ 3.30 & 10.35 $\pm$ 0.82 & 68.75 $\pm$ 0.51 & {\ul 4.11 $\pm$ 0.23} \\ 
+        VariMul & {\ul 92.14 $\pm$ 1.23} & 85.30 $\pm$ 0.92 & {\ul 68.71 $\pm$ 2.97} & \textbf{13.74 $\pm$ 0.83} & 70.73 $\pm$ 1.67 & 2.31 $\pm$ 0.44 \\ \midrule
+        GCN+Auto & 92.13 $\pm$ 1.57 & {\ul 85.48 $\pm$ 1.32} & 66.05 $\pm$ 1.25 & 12.53 $\pm$ 0.51 & {\ul 71.39 $\pm$ 1.34 }& 2.11 $\pm$ 0.22 \\ 
+        GCN+\model & \textbf{94.38 $\pm$ 1.51} & \textbf{87.45 $\pm$ 1.28} & \textbf{70.21 $\pm$ 2.02} & {\ul 12.33 $\pm$ 0.91} & \textbf{74.82 $\pm$ 0.34} & \textbf{5.72 $\pm$ 0.28} \\  \bottomrule
+        & \multicolumn{2}{c}{PCG}        & \multicolumn{2}{c}{HumLoc}        & \multicolumn{2}{c}{EukLoc}          \\
+        Metrics & \multicolumn{1}{c}{Macro AUC} & AP & \multicolumn{1}{c}{Macro AUC} & AP & \multicolumn{1}{c}{Macro AUC} & AP  \\ \midrule
+        Node2vec+BR & 52.66 $\pm$ 1.73 & 15.13 $\pm$ 0.25 & 54.17 $\pm$ 1.58 & 10.67 $\pm$ 0.42 & 51.29 $\pm$ 1.60 & 6.00 $\pm$ 0.72 \\ 
+        Node2vec+CC & 52.92 $\pm$ 0.62 & 14.54 $\pm$ 0.51 & 54.81 $\pm$ 1.29 & 11.53 $\pm$ 0.36 & 52.18 $\pm$ 1.16 & 6.55 $\pm$ 0.59 \\ \midrule
+        GCN+ML-KNN & 56.11 $\pm$ 0.50 & 18.60 $\pm$ 0.82 & 57.99 $\pm$ 0.35 & 11.76 $\pm$ 0.77 & 63.95 $\pm$ 1.15 & 9.34 $\pm$ 0.77 \\ 
+        GCN+PLAIN & 59.75 $\pm$ 1.70 & 20.16 $\pm$ 1.00 & 60.15 $\pm$ 1.28 & 14.71 $\pm$ 1.51 & 68.02 $\pm$ 1.10 & 11.72 $\pm$ 0.69 \\ \midrule
+        MLGW & 55.86 $\pm$ 3.92 & 15.59 $\pm$ 1.33 & 56.92 $\pm$ 1.03 & 10.54 $\pm$ 0.43 & 51.77 $\pm$ 1.41 & 6.02 $\pm$ 0.55 \\ 
+        ML-GCN & 57.24 $\pm$ 2.44 & 19.45 $\pm$ 1.13 & 60.79 $\pm$ 1.38 & 14.55 $\pm$ 0.46 & 54.17 $\pm$ 1.88 & 6.92 $\pm$ 0.49 \\ 
+        LARN & 57.79 $\pm$ 0.61 & 19.09 $\pm$ 0.38 & 61.48 $\pm$ 1.22 & 17.89 $\pm$ 0.62 & 57.79 $\pm$ 1.28 & 7.41 $\pm$ 0.80 \\ 
+        LANC & 56.58 $\pm$ 0.63 & 19.51 $\pm$ 0.93 & 59.63 $\pm$ 1.21 & 13.26 $\pm$ 0.98 & 51.25 $\pm$ 0.63  & 6.11 $\pm$ 0.89 \\ 
+        VariMul & {\ul 62.77 $\pm$ 0.34} & {\ul 21.93 $\pm$ 0.52} & {\ul 67.42 $\pm$ 2.44 } & {\ul 23.34 $\pm$ 0.88}  & {\ul 71.44 $\pm$ 1.66 } & {\ul 13.74 $\pm$ 0.76}\\ \midrule
+        GCN+Auto & 58.53 $\pm$ 0.47 & 19.11 $\pm$ 0.83 & 66.07 $\pm$ 1.17 & 21.58 $\pm$ 1.09  & 70.25 $\pm$ 1.25 & 13.05 $\pm$ 0.46 \\ 
+        GCN+\model & \textbf{65.73 $\pm$ 0.52} & \textbf{22.97 $\pm$ 1.69} & \textbf{73.22 $\pm$ 1.76} & \textbf{25.18 $\pm$ 1.16} & \textbf{72.92 $\pm$ 1.82} & \textbf{15.26 $\pm$ 0.56} \\ \bottomrule
+    \end{tabular}
+    }
+    \label{tab:main}
+% \vspace{-0.5cm}
+\end{table*}
+
+ 
+\subsection{Comparison with Baselines}
+% multi metrics with baselines
+% \syf{Add OGB large benchmark}
+% \syfC{有空的话可能需要统计一下别的方法的backbone是啥，然后讲一下我们是统一的}
+To answer \textbf{RQ1}, we evaluate \model against various kinds of baselines on classic and latest benchmark datasets, ranging from multi-label techniques used on any data form to methods tailored for MLNC on graphs.
+To fully evaluate the effectiveness against baselines, we adopt 2 split settings: node split and label split. 
+Refer to App.~\ref{app:settings} to see the details and differences between them.
+We also evaluate under different training ratio (App.~\ref{app:moreExp}).
+% The second setting is show in ~\ref{app:moreExp}
+
+From Tab.~\ref{tab:main}, we can draw several conclusions. 
+First and foremost, \model is the most effective one most of the time, which verifies the effectiveness of our approach. 
+Our method outperforms other baselines by 3.06\% on AUC and 2.54\% on AUC on average.
+Note that our methods can boost the performance based on the backbones. 
+% When we change the backbone to GIPA~\cite{li2023gipa}, our AUC performance on OGB-p is \textbf{88.43 $\pm$ 0.34} while the original GIPA is {87.00 $\pm$ 0.10}. 
+% More comparison on OGB-p see the App.~\ref{app:moreExp}.
+Second, we find that while other methods including VariMul, LARN, and PLAIN achieve good results, methods tailored for MLNC on graph data always outperform those designed for all data form. 
+The reason is that integrating multi-label processing into the encoding of graph structure and node features makes the node embeddings more informative, while methods that separate node encoding from multi-label correlation mining struggle to achieve optimal results. 
+Third, the methods using unsupervised node embedding perform even worse since there is no label information when representing the nodes. 
+Although methods like ``backbone+Auto'', which automatically learn loss coefficients, appear more flexible, setting these coefficients solely based on the loss is like searching for a needle in a haystack, making it difficult to amplify the loss of beneficial labels during the learning process.
+On one hand, our method better explores the relevant impact of the nodes contained by labels from the perspectives of both message passing and gradient update; on the other hand, during the training process, our method is also constantly related to the current state of the model. This enables our approach to dynamically mine the relationships of nodes with different labels in the process of forward and backward information transmission, thereby making the model more effective.
+
+% \vpara{Comparison on large-scale benchmark.} 
+% We also validated the model's effectiveness on large-scale benchmarks in Fig.~\ref{fig:ogb}.
+% Surprisingly, there is no existing MLNC paper that using OGB-p as one of the datasets. Our attempting to reproduce their methods on it revealed that they either have a runtime exceeding 24h or perform worse compared to the vanilla MLNC backbone. Due to \model's ability to be plug-and-play with any backbone and its acceptable time complexity, we can directly demonstrate the performance comparison with the backbone on the OGB-p dataset.
+
+
+% \vspace{-1.2cm}
+
+
+\subsection{Comparison with Different Backbones}
+% change backbone
+One of the advantages of \model is the ability of being plugged into any node embedding methods. 
+Thus, to answer \textbf{RQ2}, we propose to change the backbone to others with different inductive bias. Here we compare our method with the ``Com'', which directly sums the multi-label loss to train the model. We also change backbones on more datasets in App.~\ref{app:moreExp}. Since some of the datasets are heterophily graphs (see Tab.~\ref{tab:stat}), we use backbones designed for homophily and heterophily graphs.
+
+\vpara{Results.} 
+We change backbones on BlogCat dataset in Fig.~\ref{fig:analysis}(a).
+We can see that \model constantly achieves large improvement when applied to any backbone, demonstrating the effectiveness of our approach. 
+Although BlogCat is a heterophily graph, H2GCN does not perform well comparing to others. Similar results can be found in~\citep{zhao2023multi}. However, H2GCN perform best on Abnormal as a heterophily graph in App.~\ref{app:moreExp}.
+We believe there are two reasons for this. First, BlogCat has no node features, so we used Node2Vec as feature for all methods, making the input of backbone actually a homogeneous graph from a feature perspective. However, H2GCN’s strategy of aggregating more neighbor features makes it harder for nodes to learn the labels. 
+Second, the heterophily here is calculated from multi-label, but H2GCN is designed for single-label, so it may not perform better.
+% The difference in performance among backbones not using our method depends entirely on the inductive bias inherent in the graph data itself. 
+An interesting observation is that different backbone models exhibit varying degrees of sensitivity to our method. For instance, GCN show greater improvements before and after the application of our method compared to GAT. We think that this may be due to our method's relation to gradient calculation, with different models having varying sensitivities to labels. 
+% Possibly, during training, GAT's gradient changes more rapidly, leading to quicker changes in label correlation. 
+% Moreover, since our method can be flexibly applied to any backbone capable of obtaining node embeddings, it allows our approach to serve as a plug-and-play enhancement for MLNC.
+% \vspace{-0.2cm}
+
+\begin{figure*}
+    \centering
+    \includegraphics[width=1.0\linewidth]{figs/Exp_all_new.pdf}
+    \setlength{\abovecaptionskip}{-0.05cm}
+    \setlength{\belowcaptionskip}{-0.45cm}
+    \caption{Model Analysis showing the effectiveness of \model.}
+    \label{fig:analysis}
+    % \vspace{-0.3cm}
+\end{figure*}
+
+\subsection{Discussion on Label Correlations}
+% correlation compare (weekly meeting) + ablation on corre
+To answer the \textbf{RQ3}, we evaluate the label influence correlation mined by \model. 
+First, we decompose the proposed two parts of influence correlations to evaluate effectiveness of each correlation separately. Then, we compare our method with other commonly used approaches for explicitly computing correlations to see which more accurately reflects the influence correlations between labels.
+
+\vpara{Ablation study on correlations.} 
+The ``Only P'', ``Only T'' and ``All'' means using $\textsc{Inf}^{P}$, $\textsc{Inf}^{T}$ and $\textsc{InfMat}$ respectively, where GCN is the backbone.
+As shown in Fig.~\ref{fig:analysis}(b), the performance using the whole $\textsc{InfMat}$ is the best, which prove the utility of the combination of the influence during both forward and backward propagation. 
+Moreover, we find that $\textsc{Inf}^{P}$ perform better than $\textsc{Inf}^{T}$ on EukLoc while the other way around on DBLP.
+We believe the reason is that EukLoc is more heterophilic, making it more dependent on global graph structure. Our $\textsc{Inf}^{P}$ focuses on uncovering influence during the propagation process, which emphasizes the structural aspects more during training compared to $\textsc{Inf}^{T}$.
+More ablation study on normalization is in App.~\ref{app:moreExp}.
+% the effectiveness of the influence during backward propagation is stronger than that during forward propagation.
+
+% It indicates that the influence from the gradient is usually more powerful than the static correlation of message passing between nodes with different labels.
+
+
+% The goal is to see whether the correlation we quantified is consistent with the ground truth correlation concealed in the training process.
+\vpara{Compare with other label correlations.} 
+% \syfC{下面这句话需要重新组织，讲一下标准的关系是啥}
+% In fact, we propose that there is no ground truth for correlation between multi-label on graphs. 
+Here, we can verify if our captured label correlation align with expectations.
+Specifically, we aim to capture the pairwise label correlations similar as shown in Fig.~\ref{fig:intro}, which contain positive and negative correlations. 
+Note that we cannot use this performance differences as the label correlations in the model, as retraining the performance to calculate them are not possible.
+Therefore, we compare which method can obtain the relationship matrix that most closely matches the influence relationships inferred from the results.
+Here we collect all methods used for explicitly calculating multi-label correlations: co-occurrence from~\citep{wang2023deep} and cosine similarity of label embeddings from~\citep{xu2018semi}.
+% Since we consider the relationships between labels to be dynamic throughout the process, we will demonstrate 
+We calculate the \textit{l2}-norm difference between the three methods we compare and the influence correlations as epochs increase (with GCN backbone on DBLP).
+As shown in Fig.~\ref{fig:analysis}(c), although $\textsc{InfMat}$ changes over epochs, the difference between $\textsc{InfMat}$ and ground truth correlation is the closest. 
+Moreover, it can be observed that the label co-occurrence measurement is closer compared to the cosine similarity of labels.
+% This suggests that on graphs, label co-occurrence to some extent ensures the interaction of information. 
+Additionally, for a significant portion of epochs, the distance relative to ground truth does not change much, not because the influence we measure is static, but because the influence between different pairs of labels waxes and wanes, yet always remains close to the ground truth. 
+Due to space limit, we place the results of other experiments in the App.~\ref{app:allother}.
+
+% app:allother
+% The sudden increase in distance at certain points may be because our algorithm is in the process of identifying the current label influence correlation. This shows that our analysis is more capable of uncovering accurate label correlation.
+
+
+
+
+

@@ -1,0 +1,18 @@
+\section{Discussions and Future Work}
+In this work, we proposed a novel neural representation technique for capturing precise displacement discontinuities in reduced-order models, with a focus on cuts in thin-walled deformable structures. Our method leverages a generalized winding number field to encode discontinuities, offering significant improvements over traditional mesh-based approaches and other neural field techniques.
+
+\paragraph{Collision} One critical area for improvement is collision handling. While our method successfully represents displacement discontinuities, real-world applications often involve interacting objects where (self-)collision detection and response are critical \cite{zesch2023neural}.
+
+\paragraph{Complex cuts} The cut representation in this paper is limited to piecewise linear curves. Future work could explore extending this approach to incorporate higher-order parametric representations, such as Bézier curves \cite{Spainhour2024_arxiv}.
+
+\paragraph{Out-of-Distribution Challenges} Thanks to the discretization-agnostic approach, our method demonstrates robust generalization capabilities not seen before in subspace physics simulations. However, generalization remains a challenging aspect, particularly for significant, out-of-distribution scenarios. As shown in Figure \ref{fig:failurecase2}, our method's performance decreases when tested on winding number distributions significantly different from the training data. Future research could explore adaptive training strategies or augmentation techniques that ensure the winding number distribution covers a broader range of scenarios \cite{grangier2023adaptive}. Another avenue would be to exploit the volumetric nature of the neural field: it would be interesting to explore whether the field may be trained on multiple alternative cut positions, i.e., supervised by its restriction onto more than one winding graph.
+
+% Future work (?)
+% \begin{itemize}
+% \item discontinuities on gradients for crease and Heterogeneous material
+% \item cut on surface, Winding Numbers on
+% Discrete Surfaces $\rightarrow$ Winding Numbers on
+% Continuous Surfaces
+% \item maybe full cut
+% \end{itemize}
+

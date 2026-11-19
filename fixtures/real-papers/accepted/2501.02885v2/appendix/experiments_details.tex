@@ -1,0 +1,404 @@
+\section{Experiments Details and More Discussions}
+
+\subsection{Experiments Compute Resoureces}
+We integrate \mname{} as a plug-and-play process during inference with 7B SOTA Video-LLMs.
+We conduct experiments using LMMs-Eval~\cite{lmms_eval2024} and VLMEvalKit~\cite{duan2024vlmevalkit} on three long video benchmarks. 
+All experiments are run on NVIDIA A100-PCIE-40GB or NVIDIA A100-PCIE-80GB GPUs, using 256 AMD EPYC 7H12 64-Core @ 2.600GHz CPUs, with Ubuntu 20.04.6 as the operating system, adhering to a rigorous experimental protocol to ensure fair comparisons among compared methods.
+
+\subsection{Dataset Details}
+
+\paragraph{Video-MME~\cite{fu2024video}:}  
+Video Multi-Modal Evaluation~(Video-MME) is a dataset designed to enhance video understanding for Multimodal Large Language Models (MLLMs). It consists of 900 videos spanning 6 visual domains, with durations ranging from 11 seconds to 1 hour, capturing a variety of contextual dynamics.
+All videos are manually annotated by experts, generating 2700 question-answer pairs, ensuring high-quality and reliable data for model evaluation.
+Experiments on Video-MME will be conducted both with and without subtitles to assess the impact of multi-modal inputs.
+
+
+\paragraph{MLVU~\cite{MLVU}:}
+Multi-task Long Video Understanding Benchmark~(MLVU) is a new dataset designed to evaluate Long Video Understanding (LVU) performance.
+It addresses the limitations of existing benchmarks by offering longer video durations, diverse video genres (such as movies, surveillance footage, and cartoons), and a range of evaluation tasks. 
+The benchmark includes 2593 tasks across 9 categories, with an average video duration of 12 minutes, providing a comprehensive assessment of MLLMs' capabilities in understanding long videos.
+This allows for a more comprehensive assessment of MLLMs' capabilities in understanding long videos.
+
+
+\paragraph{LongVideoBench~\cite{wu2024longvideobench}:}  
+It is a recent benchmark designed to evaluate long-term video-language understanding for MLLMs.
+It consists of 3763 web-collected videos of varying lengths, up to one hour, with subtitles, covering a wide range of themes.
+The dataset is tailored to assess models' ability to process and reason over detailed multimodal information from long video inputs.
+It includes 6678 human-annotated multiple-choice questions across 17 fine-grained categories, making it one of the most comprehensive benchmarks for long-form video understanding.
+In this paper, we focus on the validation set without subtitles, denoted as LVB$_{val}$, which contains 1337 question-answer pairs and has an average video length of 12 minutes.
+
+
+
+\subsection{Implementation Details}
+
+\paragraph{Visual Encoder:}
+The primary baselines, LLaVA-OneVision-7B~\cite{li2024llava} and MiniCPM-V2.6-7B~\cite{yao2024minicpm}, both use SigLIP~\cite{zhai2023sigmoid} as the visual encoder,
+which we also adopt as the VLM in~\cref{eq:emb} to avoid including excessive additional parameters. 
+Additionally, since the context length of the text encoder in SigLIP is 64, potentially insufficient for the entire question, 
+we split the text sequence into multiple sequences of equal length, each no longer than 64 tokens.
+We then extract multiple text embeddings and aggregate them into a final text embedding using pooling.
+
+
+
+\paragraph{Multi-kernel:}
+\cref{eq:k_family} presents a principled approach for selecting the optimal kernel.
+Factors exist to combine positive semi-definite (PSD) kernels.
+For implementation, we use the Gaussian kernel as the base PSD kernel, defined by 
+\(k(x,y) = \exp\left(-\frac{\| (x-y)/h \|^2}{2\sigma^2}\right)\). 
+Consequently, the base kernel with a combination factor can be expressed as:
+\begin{equation}
+    \beta_u \cdot k_u(x,y) = \beta_u \cdot \exp\left(-\frac{\| x-y \|^2}{2(h_u\sigma_u)^2}\right) \,.
+\end{equation}
+We denote $\alpha_u = (h_u\sigma_u)^2$ as a single hyperparameter.
+Following the multi-kernel maximum mean discrepancy~(MK-MMD) framework~\cite{long2015learning}, the optimal $\beta_u$ can be optimized using a quadratic program~(QP).
+However, optimizing $\beta_u$ is orthogonal of this work.
+In the recent official implementation of \citet{long2015learning}, average weights $\beta_u=1/U$ were employed, yielding good performance. 
+%
+Hence, we adopt average weights for $\beta_u$ and concentrate on configuring $\alpha_u$. 
+Consistent with \citet{long2015learning,sun2023enhancing}, for both $g,k \in \mathcal{K}$, we set $\alpha_u$ to $2^i$ where $i \in \{-3, -2, 0, 1, 2\}$ and use an averaged ensemble of multiple Gaussian kernels. 
+Besides, the difference between $g$ and $k$ is modulated by $\lambda$.
+
+
+\paragraph{Hyper-parameters:}
+We set the trade-off hyperparameter $\lambda = 0.2$ and the segment size $m = 32$ for all tasks and benchmarks in \mname{}, determined through cross-validation on a subset of the LLaVA-OneVision-mid~\cite{li2024llava} training set.
+
+
+
+\subsection{Hyperparameter Sensitivity Analysis}
+\begin{figure}[t]
+	\centering
+	\includegraphics[width=0.8\linewidth]{appendix/figures/vila_vs_lambda.pdf}
+	\caption{\label{fig:hyper_sen_lambda}
+ 	   Hyper-parameter sensitivity with trade-off $\lambda$.
+	} 
+\end{figure}
+
+\begin{figure}[t]
+	\centering
+	\includegraphics[width=0.8\linewidth]{appendix/figures/vila_vs_m.pdf}
+	\caption{\label{fig:hyper_sen_m}
+		Hyper-parameter sensitivity with segment size $m$.
+	}
+\end{figure}
+
+To evaluate the robustness of \mname{}, we perform a sensitivity analysis of the score-trade-off parameter $\lambda$ and the segment size $m$ using the VideoMME benchmark (without subtitles). The results are shown in \cref{fig:hyper_sen_lambda,fig:hyper_sen_m}.
+
+\paragraph{Score-trade-off ($\boldsymbol{\lambda}$).}
+\Cref{fig:hyper_sen_lambda} varies $\lambda$ logarithmically from 0.0125 to 12.8. Accuracy stays within a narrow range of 51–53 \%, peaking at 53.3 \% when $\lambda = 0.2$; every value surpasses the baseline of 49.2 \%.
+
+\paragraph{Segment size ($\boldsymbol{m}$).}
+\Cref{fig:hyper_sen_m} evaluates segment sizes ranging from 8 to 128 frames. All configurations exceed the baseline. The best accuracy, 53.3 \%, is achieved at $m = 32$; accuracy stays above 52 \% for $m \le 64$ and remains competitive (51.8 \%) even at $m = 128$. These findings indicate that \mname{} is insensitive to the choice of $m$.
+
+Across all examined values of $\lambda$ and $m$, \mname{} consistently outperforms uniform sampling, confirming its robustness and practical ease of tuning.
+
+
+
+\subsection{Additional Parameters Analysis}
+
+\begin{table*}[!t]
+	\centering
+%	\setlength\tabcolsep{2.0pt}
+	\begin{tabular}{lccccc}
+		\toprule
+			MLLM & Used LLM & Used VLM & MLLM Params & Additional Params & Increase \\
+		\midrule
+			VILA-V1.5-8B       & LLama3-8B & SigLIP-400M & 8.494B & 0.450B & 5.298\% \\
+			MiniCPM-V2.6-7B    & Qwen2-7B  & SigLIP-400M & 8.099B & 0.450B & 5.556\% \\
+			LLaVA-OneVision-7B & Qwen2-7B  & SigLIP-400M & 8.027B & 0.450B & 5.606\% \\
+		\bottomrule
+	\end{tabular}
+	\caption{
+    	Parameter scales for VILA-V1.5-8B, MiniCPM-V2.6-7B, and LLaVA-OneVision-7B, along with the increase due to the additional parameters introduced by \mname{}.
+	    Here, ``MLLM Params'' refers to the parameter scale of the baseline, including the LLM, the visual encoder in the VLMs, and the projector between them.
+	    ``Additional Params'' comes from the text encoder of the pretrained SigLIP, introduced by \mname{}.
+	}
+	\label{tab:add_param}
+\end{table*}
+
+
+\mname{} is a training-free, model-agnostic method that leverages pretrained VLMs.
+The primary baselines,
+VILA-V1.5-8B~\cite{lin2024vila}, MiniCPM-V2.6-7B~\cite{yao2024minicpm}, and LLaVA-OneVision-7B~\cite{li2024llava},
+all integrate the vision encoder from SigLIP~\cite{zhai2023sigmoid}, so \mname{} only needs to introduce the additional parameter from the text encoder in SigLIP.
+The parameter scales of them are reported in \cref{tab:add_param}.
+The results indicate that the additional parameters from the text encoder amount to no more than 6\% of the original MLLM scale, which is negligible.
+More importantly, these parameters are pretrained in VLMs and do not require tuning with the specific MLLMs.
+
+
+
+\subsection{Latency Comparison}
+ 
+\begin{figure}[t]
+	\centering
+	\includegraphics[width=\linewidth]{figures/latency.pdf}
+	\caption{  
+ 	   Latency during inference with MiniCPM-V2.6 on Video-MME (without subtitles). 
+ 	   Where \mname{}-P refers o the \mname{} with parallel computation in dynamic programming~(\ie line 9 in \cref{alg}).
+	   For direct comparison and better visualiztion, we omit the latency of identical processes across all compared models, including image loading and processing in the visual processor and encoder.  
+	}
+   \label{fig:latency}
+\end{figure}
+
+Our method, \mname{}, is training-free, which eliminates any additional latency during the training phase.
+Accordingly, we report the average latency of various processes during inference with MiniCPM-V2.6 on Video-MME~(without subtitles), as illustrated in \cref{fig:latency}.
+The baseline refers to MiniCPM-V2.6 processing all 128 candidate frames without applying frame selection.
+%
+%\iccvadd{
+Compared to the baseline, \mname{} selects only 8 essential frames as input to the MLLMs, achieving a significant speedup during inference.  
+It reduces MLLM inference time by 11.47s (90\% of the baseline) while requiring only an additional 1.94s (15\% of the baseline) for frame selection.
+%
+\mname{}-P accelerates frame selection using parallel computation in dynamic programming~(\ie line 9 in \cref{alg}), requiring only an additional 1.30s for frame selection while reducing MLLM inference time by 11.47s (90\% of the baseline).
+%
+Furthermore, \mname{}-P has a latency comparable to the basic DPP method, which accounts only for list-wise diversity.  
+This accords to our theoretical analysis, as both \mname{}-P and DPP share the same time complexity of $\mathcal{O}(nk^2)$.
+
+
+\subsection{Additional Experiments about Ablation Study}
+
+We conduct detailed ablation experiments on three Video-LLMs~(VILA-V1.5, MiniCPM-V2.6, LLaVA-OneVision) and three benchmarks~(Video-MME, MLVU, LVB$_{val}$), demonstrating the consistent superiority of \textsc{mDP}$^3$ over alternative strategies. 
+
+\textsc{mDP}$^3$ attains peak scores across all configurations: 53.3/58.6/50.8 for VILA-V1.5, 58.0/66.6/57.1 for MiniCPM-V2.6, and 59.6/69.8/59.0 for LLaVA-OneVision.
+The most significant improvements are observed on MLVU, with gains of +4.8 to +6.2 over the baselines, underscoring its effectiveness in complex video understanding tasks.
+
+Baseline uniform sampling underperforms by 3.0 to 9.5 points across all models, highlighting the importance of frame selection.
+Furthermore, intermediate variants exhibit limited gains due to partial adherence to our proposed principles; neglecting query relevance, list-wise diversity, or sequentiality fundamentally restricts selection quality. 
+%
+Moreover, the ablation results further validate the design choices of \mname{}. For example, although the cosine similarity variant outperforms uniform sampling by 2.1 to 4.8 points, it still lags behind \textsc{mDP}$^3$ by the same margin. This difference underscores the advantage of our multi-kernel similarity in the reproducing kernel Hilbert space~(RKHS), which better captures high-dimensional feature relationships.
+
+
+\begin{table}[t]
+	\small
+    \centering
+    \begin{tabular}{c|lccc}
+    \toprule
+	 	 & \multicolumn{2}{r}{Video-MME} & MLVU & LVB$_{val}$ \\
+    \midrule
+    \multirow{6}{*}{\rotatebox{90}{VILA-V1.5}}
+	     &\ + uniform & 47.5 & 46.3 & 47.1 \\
+      	 &\ + SigLIP  & 50.6 & 53.9 & 46.4 \\
+      	 &\ + \mname{} w. MGK       & 48.9 & 48.6 & 53.5 \\
+      	 &\ + DPP w. CMGK           & 51.8 & 56.8 & 47.1 \\
+         &\ + \mname{} w. cos. sim. & 50.2 & 54.4 & 48.8 \\
+		 & \cellcolor{gray!30}\textbf{\textsc{mDP}$^3$} & \cellcolor{gray!30}\textbf{53.3} & \cellcolor{gray!30}\textbf{58.6} & \cellcolor{gray!30}\textbf{50.8} \\
+	\midrule
+	\multirow{6}{*}{\rotatebox{90}{MiniCPM-V2.6}}
+	     &\ + uniform & 52.6 & 55.4 & 51.2 \\
+      	 &\ + SigLIP  & 56.3 & 60.3 & 51.4 \\
+      	 &\ + \mname{} w. MGK       & 52.6 & 62.0 & 52.6 \\
+         &\ + \mname{} w. cos. sim. & 53.1 & 63.0 & 54.1 \\
+         &\ + DPP w. CMGK           & 55.2 & 64.7 & 52.1 \\
+		 & \cellcolor{gray!30}\textbf{\textsc{mDP}$^3$} & \cellcolor{gray!30}\textbf{58.0} & \cellcolor{gray!30}\textbf{66.6} & \cellcolor{gray!30}\textbf{57.1} \\
+    \midrule
+	\multirow{6}{*}{\rotatebox{90}{LLaVA-OV}}
+	     &\ + uniform & 53.6 & 59.3 & 54.2 \\
+      	 &\ + SigLIP  & 57.0 & 62.7 & 51.6 \\
+      	 &\ + \mname{} w. MGK       & 54.9 & 63.3 & 52.7 \\
+         &\ + DPP w. CMGK           & 56.4 & 68.6 & 52.8 \\
+         &\ + \mname{} w. cos. sim. & 55.9 & 65.2 & 54.6 \\ 
+		 & \cellcolor{gray!30}\textbf{\textsc{mDP}$^3$} & \cellcolor{gray!30}\textbf{59.6} & \cellcolor{gray!30}\textbf{69.8} & \cellcolor{gray!30}\textbf{59.0} \\
+	\bottomrule
+    \end{tabular}
+%    \caption{
+%    	Additional ablation study across different Video-LLMs and benchmarks.
+%	}
+	\caption{
+    	Ablation study of \textsc{mDP}$^3$ across three Video-LLMs~(VILA-8B, MiniCPM-V2.6, LLaVA-OneVision) and benchmarks~(Video-MME, MLVU, LVB$_{val}$).
+    	}
+	\label{tab:additional_ablation}
+\end{table}
+
+
+\subsection{More Experiments with Various Selection Size}
+
+\begin{figure*}[t]
+	\centering
+	\includegraphics[width=\linewidth]{figures/detailed_vila_video_mme.pdf}
+	\caption{
+	    Detailed accuracy (\%) on Video-MME (without subtitles) for VILA-V1.5 grouped by various durations, 
+	    comparing uniform sampling with \mname{} selection from 128 candidate frames.
+	}
+   \label{fig:detailed_vila_var_frm}
+\end{figure*}
+
+\begin{figure*}[t]
+	\centering
+	\includegraphics[width=\linewidth]{figures/detailed_llava_ov_video_mme.pdf}
+	\caption{
+	    Detailed accuracy (\%) on Video-MME (without subtitles) for LLaVA-OneVision grouped by various durations, 
+	    comparing uniform sampling with \mname{} selection from 128 candidate frames.
+	}
+   \label{fig:detailed_llava_ov_var_frm}
+\end{figure*}
+
+
+
+We have reported the results for various selection sizes \(k\) in \cref{sssec:ravss} and \cref{fig:gain_on_videomme}. 
+In this section, we provide additional results and more detailed discussions. 
+%
+In \cref{fig:detailed_llava_ov_var_frm,fig:detailed_vila_var_frm}, we present the performance of VILA-V1.5 and LLaVA-OneVision on Video-MME~(without subtitles) across various durations by varying the selection size \(k\).
+% 
+The results show that, regardless of duration, VILA-V1.5’s performance improves with more input frames when \(k \leq 16\), while LLaVA-OneVision’s performance improves with additional frames when \(k \leq 32\). 
+They employ the distinct context lengths and numbers of frames used during training. 
+When the number of input frames exceeds the training stage, the input becomes out-of-distribution (OOD), leading to a performance drop. 
+Specifically, when VILA-V1.5 receives more than 16 input frames, it experiences a catastrophic decline, whereas LLaVA-OneVision maintains some generalization ability when presented with more than 32 frames.
+Although some Video-LLMs are trained with more frames to enhance long-video understanding, this approach is costly and the number of input frames cannot be increased indefinitely. 
+Therefore, designing an effective frame selection algorithm is crucial.
+
+
+There should be a meaningful discussion about the question: 
+\textbf{``Are more input frames better for video understanding?''}
+In \cref{tab:main_results}, we select 8 frames following the state-of-the-art frame selection approach, Frame-Voyage, settings to ensure a fair comparison. 
+However, 8 frames may not be optimal for all Video-LLMs, benchmarks, and durations. 
+Our answer to the question \textbf{``Are more input frames better for video understanding?''} is \textbf{No!}
+We provide the following reasons:
+\begin{enumerate}
+	\item \textbf{Training Constraints:} Video-LLMs are typically trained on a limited number of frames. 
+	When the number of input frames exceeds the training configuration, the model encounters OOD data, leading to degraded performance. 
+	Although training with more frames can mitigate this issue, it is computationally expensive and unsustainable in the long run~(\ie, the number of input frames cannot be increased indefinitely.).
+	
+	\item \textbf{Inference Constraints:} Edge-deployed LLMs have limited resources, and proprietary models charge based on token usage. Consequently, processing excessive frames during inference stage is both resource-intensive and expensive.
+	
+	\item \textbf{Diminishing Returns:} 
+	The marginal gain from adding frames diminishes exponentially (as indicated by the theoretical bound $\mathcal{O}((1/k)^k)$ in \cref{eq:detailed_bound} and supported by experiments in \cref{fig:gain_on_videomme,fig:detailed_llava_ov_var_frm,fig:detailed_vila_var_frm}), while the Transformer’s computational cost increases quadratically ($\mathcal{O}(n^2)$). Consequently, adding more frames is not cost-efficient.
+	
+	\item \textbf{Redundancy and Noise:} Incorporating additional frames may introduce redundant or irrelevant information, which can dilute salient features and add noise.
+
+    \item \textbf{Latency and Real-Time Constraints:} In applications requiring real-time processing, increasing the number of frames can lead to higher latency, which may be unacceptable in time-sensitive scenarios~(as shown in \cref{fig:latency}).
+\end{enumerate}
+%
+These considerations underscore the importance of developing an effective frame selection algorithm that balances performance improvements with computational efficiency and resource limitations. 
+Instead of merely increasing the number of input frames, a well-designed selection strategy can extract the most informative frames, ensuring that the model focuses on quality over quantity and optimizes both accuracy and cost.
+
+Additionally, the above discussion is supported across various durations, encompassing short, medium, and long video understanding scenarios.
+
+
+
+\subsection{Qualitative Analysis}
+We sample six representative cases from Video-MME~\cite{fu2024video}, illustrated in 
+\cref{fig:case_study1,fig:case_study2,fig:case_study3,fig:case_study4,fig:case_study5,fig:case_study6}, 
+to compare different frame selection methods, including
+uniform sampling~(marked by~\includegraphics[height=0.8em]{./appendix/figures/t.png} in the top right corner of frame)
+and top-$k$ query-frame matching with SigLIP~\cite{zhai2023sigmoid}~(marked by~\includegraphics[height=0.8em]{./appendix/figures/d.png}). 
+The selection by \mname{} is marked by~\includegraphics[height=0.8em]{./appendix/figures/r.png}.
+Besides, the ground-truth of option is colored by green.
+
+
+We categorize the issues observed in the baseline frame selection process.
+Especially, the point-wise top-$k$ query-frame matching with SigLIP, which is the best-performing baseline frame selection method in \cref{tab:abl}, but still falls significantly short compared to \mname{}. 
+The observed issues are as follows:
+\begin{enumerate}
+    \item \textbf{Over-matching Specific Text} (\cref{fig:case_study1}):
+    	As shown in \cref{fig:case_study1}, when asked, ``How many people are wearing ties in the video?'', the query-frame matching over-focuses on the keyword ``tie'', 
+    	resulting in the selection of numerous duplicate frames featuring an individual with a prominent, visible tie.
+    	This leads to the omission of frames where multiple people are wearing ties that are smaller or less noticeable.
+    	%
+    	In contrast, the selection by \mname{} demonstrates better balance between query relevance and frames diversity, effectively addressing this over-matching issue.
+	\item \textbf{Failure of Counting Across Frames} (\cref{fig:case_study2,fig:case_study3}): 
+		As shown in \cref{fig:case_study2,fig:case_study3}, when posed with questions such as, ``What is the total number of bird species visible in the video?'' or ``How many different kinds of animal faces appear in this video?'', these counting questions differ from the example in \cref{fig:case_study1}.
+		Unlike the case in \cref{fig:case_study1}, the counted items are distributed across different frames and do not appear in a single frame.
+		To answer accurately, it is necessary to select frames that include various relevant counted items.
+		However, the baseline method of uniform sampling fails to identify specific counted items, while the query-frame matching approach struggles to avoid duplication, often focusing repeatedly on frames with the same item.
+		In contrast, the frame selection by \mname{} demonstrates greater diversity, allowing for the inclusion of different frames with various items, thereby aiding MLLMs in accurately counting across frames.
+	\item \textbf{Failure of Summarization} (\cref{fig:case_study4}):
+		In this case, when the question is a summarization-type query such as ``What is the genre of this video,'' the frame selection requires a comprehensive representation of the entire video rather than focusing on specific event clips.
+		Since there is no specific key text to match frames, the query-matching fails, performing even worse than uniform sampling.
+		In contrast, the frame selection by \mname{} demonstrates a global understanding of the entire video, exhibiting good diversity and assisting MLLMs in summarizing the content effectively.	
+	\item \textbf{Failure of Reverse Question Answering} (\cref{fig:case_study5}):
+		This case is particularly interesting as it focuses on identifying events or items that do \emph{NOT} appear in the video, such as ``Which of the following elements does not appear in the video?'' 
+		This type of reverse QA poses a significant challenge for query-frame matching since there is no key text for matching.
+		However, \mname{} demonstrates strong performance, ensuring diversity in the selected frames and providing a more comprehensive representation of the video.
+	\item \textbf{Failure of Transition Awareness} (\cref{fig:case_study6}):
+		As shown in \cref{fig:case_study6}, when asked, ``How many times does the interviewed girl appear in the video?'', this question represents a special type of counting task: it not only requires counting across frames but also identifying the distinct \emph{number of times} the interviewed girl appears.
+		While the concept of the ``interviewed girl'' is singular, the actual item to be counted is the ``number of appearances'', making temporality and sequentiality crucial.
+		As shown in \cref{fig:case_study6}, the query-frame matching fails to recognize the transitions between appearances of the interviewed girl.
+		This oversight leads to missing frames between appearances, resulting in multiple occurrences being merged into a single one.
+		Consequently, MLLMs cannot accurately count the number of appearances with such a selection. 
+		In contrast, \mname{} effectively captures the sequential nature of the video and recognizes transitions between appearances, enabling accurate counting.
+\end{enumerate}
+
+Additionally, this case study not only provides a qualitative analysis of various frame selection methods,
+but also reveals the limitations of baseline frame selection and highlights the strengths of \mname{}. 
+%
+Besides, it raises several challenges in VidQA, and serves as a guide for constructing a more comprehensive benchmark to evaluate the video understanding capabilities of MLLMs.
+This study is highly valuable to the technology community focused on MLLMs.
+
+
+
+\begin{figure*}[t]
+	\centering
+  	\includegraphics[width=0.85\linewidth]{./appendix/figures/case6.pdf}
+	\caption{
+		\includegraphics[height=0.8em]{./appendix/figures/t.png}: uniform sampling;
+		\includegraphics[height=0.8em]{./appendix/figures/d.png}: top-$k$ query-frame matching with SigLIP;
+		\includegraphics[height=0.8em]{./appendix/figures/r.png}: \mname{}.
+		Over-matching of the keyword ``tie'' leads to duplicate frames being selected, omitting frames where multiple people wear ties. \mname{} addresses this issue by balancing query relevance with frame diversity.	}
+	\label{fig:case_study1}
+\end{figure*}
+
+
+\begin{figure*}[t]
+	\centering
+  	\includegraphics[width=0.85\linewidth]{./appendix/figures/case3.pdf}
+	\caption{
+		\includegraphics[height=0.8em]{./appendix/figures/t.png}: uniform sampling;
+		\includegraphics[height=0.8em]{./appendix/figures/d.png}: top-$k$ query-frame matching with SigLIP;
+		\includegraphics[height=0.8em]{./appendix/figures/r.png}: \mname{}.
+		In counting tasks across frames, such as ``How many bird species or animal faces are in the video?'', uniform sampling and query-frame matching struggle with item duplication. 
+		\mname{} improves diversity, aiding in accurate counting across frames.
+	}
+	\label{fig:case_study2}
+\end{figure*}\begin{figure*}[t]
+	\centering
+  	\includegraphics[width=0.85\linewidth]{./appendix/figures/case7.pdf}
+	\caption{
+		\includegraphics[height=0.8em]{./appendix/figures/t.png}: uniform sampling;
+		\includegraphics[height=0.8em]{./appendix/figures/d.png}: top-$k$ query-frame matching with SigLIP;
+		\includegraphics[height=0.8em]{./appendix/figures/r.png}: \mname{}.
+		In counting tasks across frames, such as ``How many different kinds of animal faces are made in this video?'', uniform sampling and query-frame matching struggle with item duplication. 
+		\mname{} improves diversity, aiding in accurate counting across frames.
+		}
+	\label{fig:case_study3}
+\end{figure*}
+
+
+\begin{figure*}[t]
+	\centering
+  	\includegraphics[width=0.85\linewidth]{./appendix/figures/case5.pdf}
+	\caption{
+		\includegraphics[height=0.8em]{./appendix/figures/t.png}: uniform sampling;
+		\includegraphics[height=0.8em]{./appendix/figures/d.png}: top-$k$ query-frame matching with SigLIP;
+		\includegraphics[height=0.8em]{./appendix/figures/r.png}: \mname{}.
+		For summarization queries like ``What is the genre of this video?'', query-frame matching fails to represent the entire video. \mname{} shows a global understanding of the video, enhancing diversity and assisting in summarization.
+		}
+	\label{fig:case_study4}
+\end{figure*}
+
+
+\begin{figure*}[t]
+	\centering
+  	\includegraphics[width=0.85\linewidth]{./appendix/figures/case8.pdf}
+	\caption{
+		\includegraphics[height=0.8em]{./appendix/figures/t.png}: uniform sampling;
+		\includegraphics[height=0.8em]{./appendix/figures/d.png}: top-$k$ query-frame matching with SigLIP;
+		\includegraphics[height=0.8em]{./appendix/figures/r.png}: \mname{}.
+		Reverse QA, such as ``Which elements \emph{DO NOT} appear in the video?'', presents a challenge due to the lack of a specific key text for matching.
+		\mname{} excels by ensuring diversity in selected frames and providing a comprehensive video representation.
+	}
+	\label{fig:case_study5}
+\end{figure*}
+
+
+\begin{figure*}[t]
+	\centering
+  	\includegraphics[width=0.85\linewidth]{./appendix/figures/case1.pdf}
+	\caption{
+		\includegraphics[height=0.8em]{./appendix/figures/t.png}: uniform sampling;
+		\includegraphics[height=0.8em]{./appendix/figures/d.png}: top-$k$ query-frame matching with SigLIP;
+		\includegraphics[height=0.8em]{./appendix/figures/r.png}: \mname{}.
+		For questions like ``How many times does the interviewed girl appear?'', query-frame matching fails to capture the transitions between appearances. \mname{} accurately counts the number of appearances by considering sequentiality.
+	}
+	\label{fig:case_study6}
+\end{figure*}
+
+
+

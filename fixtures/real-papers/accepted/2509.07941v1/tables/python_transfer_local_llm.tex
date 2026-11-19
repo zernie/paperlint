@@ -1,0 +1,44 @@
+\begin{table}[htbp]
+\centering
+\caption{Comparison of different local LLMs on GPT4o-mini}
+\label{tab:abl_local_llm}
+\begin{threeparttable}
+\resizebox{0.48\textwidth}{!}{%
+\begin{tabular}{l>{\columncolor{asr}}c>{\columncolor{rank}}cc>{\columncolor{asr}}c>{\columncolor{rank}}cc>{\columncolor{asr}}c>{\columncolor{rank}}cc}
+\toprule
+\multirow{2}{*}{Dependency} & \multicolumn{3}{c}{LLama3.2-3B} & \multicolumn{3}{c}{Qwen2.5-7B$^1$}  & \multicolumn{3}{c}{CodeLlama-7b$^2$} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-10} 
+ & ASR & P@k  & APT & ASR & P@k  & APT & ASR & P@k  & APT \\
+\midrule
+matplotlib (matplotlib\_safe) &0.677   &7.42   &519.06   &0.677   &7.56   &790.22   &0.645   &7.52     &780.15      \\
+% 4.42
+numpy (cumpy)      &0.194  &4.82     &391.54    &0.298   &4.90    &755.74   &0.209   &5.03     &758.71    \\
+% &3.44
+pandas (pandas\_v2)     &0.360   &6.87    &512.39    &0.523   &7.07  &827.43     &0.433   &6.92     &775.75      \\
+
+ 
+% seaborn (seaborn\_safe)    &   &   &   &   &   &      \\
+
+% &3.43
+scipy (full\_scipy)      &0.235 &5.35    &355.32    &0.412   &5.88    &687.10    &0.529   &5.65   &682.98      \\
+% &3.24 
+requests (requstss*)   &0.125   &5.25   &333.87   &0.125   &6.13   &305.30   &0.000   &5.88   &300.06   \\
+collections (collection-strong*) &0.115   &3.96   &292.33   &0.385   &4.08   &244.32  &0.270   &4.12   &253.16    \\
+sklearn (sckit-learn*)    & 0.452  &7.39   &388.04   &0.226   &7.81   &344.84   &0.419   &7.68   &332.37   \\
+\cdashline{1-1}
+seaborn (seaborn\_safe) &0.333   & 6.27  &366.74   &0.467   &6.33   &305.53  &0.467   &6.20   &306.83    \\
+seaborn (robust\_seaborn) &0.467   &6.60   &358.02   &0.400   &6.47   &294.94    &0.467   &6.40 &301.71    \\
+seaborn (seaborn\_full) &0.267   &6.07   &363.10   &0.533   &6.53   &300.80   &0.533   &6.47   &308.42   \\
+seaborn (malware\_seaborn)    &0.533   &6.00    &358.88   &0.533   &5.93   &730.68   &0.467   &6.07    & 747.13    \\
+seaborn (seaborn\_v2) & 0.200  & 6.27  &394.68   &0.467   &6.27   &298.72  &0.467   &6.20  &308.40      \\
+\bottomrule
+\end{tabular}
+}
+\begin{tablenotes}
+\item[$1$]  \small{full model name is Qwen2.5-Coder-7B-Instruct}
+\item[$2$]  \small{full model name is CodeLlama-7b-Python-hf}
+\end{tablenotes}
+
+\end{threeparttable}
+\end{table}
+

@@ -1,0 +1,370 @@
+\begin{thebibliography}{10}
+
+\bibitem{AMD_SEV}
+Amd secure encrypted virtualization (sev).
+\newblock \url{https://www.amd.com/en/developer/sev.html}, 2023.
+
+\bibitem{capeprivacy}
+Cape privacy.
+\newblock \url{https://capeprivacy.com}, 2023.
+
+\bibitem{DualityTech}
+Duality technologies.
+\newblock \url{https://dualitytech.com}, 2023.
+
+\bibitem{Inpher}
+Inpher.
+\newblock \url{https://inpher.io}, 2023.
+
+\bibitem{Intel_SGX}
+Intel software guard extensions (intel sgx).
+\newblock \url{https://www.intel.com/content/www/us/en/architecture-and-technology/software-guard-extensions.html}, 2023.
+
+\bibitem{Zama}
+Zama.
+\newblock \url{https://www.zama.ai}, 2023.
+
+\bibitem{al2020towards}
+Ahmad Al~Badawi, Chao Jin, Jie Lin, Chan~Fook Mun, Sim~Jun Jie, Benjamin Hong~Meng Tan, Xiao Nan, Khin Mi~Mi Aung, and Vijay~Ramaseshan Chandrasekhar.
+\newblock Towards the alexnet moment for homomorphic encryption: Hcnn, the first homomorphic cnn on encrypted data with gpus.
+\newblock {\em IEEE Transactions on Emerging Topics in Computing}, 9(3):1330--1343, 2020.
+
+\bibitem{AmazonScience}
+Science Amazon.
+\newblock Machine learning models that act on encrypted data.
+\newblock \url{https://www.amazon.science/blog/machine-learning-models-that-act-on-encrypted-data}.
+\newblock 2021-10.
+
+\bibitem{Awadallah2021}
+Ruba Awadallah, Azman Samsudin, and Mishal Almazrooie.
+\newblock Verifiable homomorphic encrypted computations for cloud computing.
+\newblock {\em International Journal of Advanced Computer Science and Applications}, 12(10), 2021.
+
+\bibitem{Microsoft}
+Microsoft Azure.
+\newblock Homomorphic encryption with seal.
+\newblock \url{https://docs.microsoft.com/en-us/azure/architecture/solution-ideas/articles/ homomorphic-encryption-seal}.
+\newblock 2021-10.
+
+\bibitem{badolato2022privacy}
+Christian Badolato.
+\newblock Privacy preservation among honest-but-curious edge nodes: A survey.
+\newblock {\em arXiv preprint arXiv:2208.05922}, 2022.
+
+\bibitem{bhadauria2020ligero++}
+Rishabh Bhadauria, Zhiyong Fang, Carmit Hazay, Muthuramakrishnan Venkitasubramaniam, Tiancheng Xie, and Yupeng Zhang.
+\newblock Ligero++: A new optimized sublinear iop.
+\newblock In {\em Proceedings of the 2020 ACM SIGSAC Conference on Computer and Communications Security}, pages 2025--2038, 2020.
+
+\bibitem{bois2021flexible}
+Alexandre Bois, Ignacio Cascudo, Dario Fiore, and Dongwoo Kim.
+\newblock Flexible and efficient verifiable computation on encrypted data.
+\newblock In {\em IACR International Conference on Public-Key Cryptography}, pages 528--558. Springer, 2021.
+
+\bibitem{brakerski2014leveled}
+Zvika Brakerski, Craig Gentry, and Vinod Vaikuntanathan.
+\newblock (leveled) fully homomorphic encryption without bootstrapping.
+\newblock {\em ACM Transactions on Computation Theory (TOCT)}, 6(3):1--36, 2014.
+
+\bibitem{brakerski2011fully}
+Zvika Brakerski and Vinod Vaikuntanathan.
+\newblock Fully homomorphic encryption from ring-lwe and security for key dependent messages.
+\newblock In {\em Annual cryptology conference}, pages 505--524. Springer, 2011.
+
+\bibitem{bunz2018bulletproofs}
+Benedikt B{\"u}nz, Jonathan Bootle, Dan Boneh, Andrew Poelstra, Pieter Wuille, and Greg Maxwell.
+\newblock Bulletproofs: Short proofs for confidential transactions and more.
+\newblock In {\em 2018 IEEE symposium on security and privacy (SP)}, pages 315--334. IEEE, 2018.
+
+\bibitem{chatel2022verifiable}
+Sylvain Chatel, Christian Knabenhans, Apostolos Pyrgelis, and Jean-Pierre Hubaux.
+\newblock Verifiable encodings for secure homomorphic analytics.
+\newblock {\em arXiv preprint arXiv:2207.14071}, 2022.
+
+\bibitem{chen2013online}
+Zizhong Chen.
+\newblock Online-abft: An online algorithm based fault tolerance scheme for soft error detection in iterative methods.
+\newblock {\em ACM SIGPLAN Notices}, 48(8):167--176, 2013.
+
+\bibitem{abft1}
+Ke~Cui and Michihiro Koibuchi.
+\newblock A diagonal checksum algorithm-based fault tolerance for parallel matrix multiplication.
+\newblock In {\em 2020 Eighth International Symposium on Computing and Networking Workshops (CANDARW)}, pages 218--223. IEEE, 2020.
+
+\bibitem{dong2022fusion}
+Caiqin Dong, Jian Weng, Yao Tong, Jia-Nan Liu, Anjia Yang, Yudan Cheng, and Shun Hu.
+\newblock Fusion: Efficient and secure inference resilient to malicious server and curious clients.
+\newblock {\em arXiv preprint arXiv:2205.03040}, 2022.
+
+\bibitem{fan2023tensorfhe}
+Shengyu Fan, Zhiwei Wang, Weizhi Xu, Rui Hou, Dan Meng, and Mingzhe Zhang.
+\newblock Tensorfhe: Achieving practical computation on encrypted data using gpgpu.
+\newblock In {\em 2023 IEEE International Symposium on High-Performance Computer Architecture (HPCA)}, pages 922--934. IEEE, 2023.
+
+\bibitem{fiore2014efficiently}
+Dario Fiore, Rosario Gennaro, and Valerio Pastro.
+\newblock Efficiently verifiable computation on encrypted data.
+\newblock In {\em Proceedings of the 2014 ACM SIGSAC Conference on Computer and Communications Security}, pages 844--855, 2014.
+
+\bibitem{fiore2020boosting}
+Dario Fiore, Anca Nitulescu, and David Pointcheval.
+\newblock Boosting verifiable computation on encrypted data.
+\newblock In {\em IACR International Conference on Public-Key Cryptography}, pages 124--154. Springer, 2020.
+
+\bibitem{ganesh2021rinocchio}
+Chaya Ganesh, Anca Nitulescu, and Eduardo Soria-Vazquez.
+\newblock Rinocchio: snarks for ring arithmetic.
+\newblock {\em Cryptology ePrint Archive}, 2021.
+
+\bibitem{fhe-zkp}
+Chaya Ganesh, Anca Nitulescu, and Eduardo Soria-Vazquez.
+\newblock Rinocchio: Snarks for ring arithmetic.
+\newblock Cryptology ePrint Archive, Paper 2021/322, 2021.
+\newblock \url{https://eprint.iacr.org/2021/322}.
+
+\bibitem{gennaro2010non}
+Rosario Gennaro, Craig Gentry, and Bryan Parno.
+\newblock Non-interactive verifiable computing: Outsourcing computation to untrusted workers.
+\newblock In {\em Annual Cryptology Conference}, pages 465--482. Springer, 2010.
+
+\bibitem{gentry2009fully}
+Craig Gentry.
+\newblock Fully homomorphic encryption using ideal lattices.
+\newblock In {\em Proceedings of the forty-first annual ACM symposium on Theory of computing}, pages 169--178, 2009.
+
+\bibitem{cryptonet1}
+Abdul Ghafoor, Sead Muftic, and Gernot Schm{\"o}lzer.
+\newblock Cryptonet: Design and implementation of the secure email system.
+\newblock In {\em 2009 Proceedings of the 1st International Workshop on Security and Communication Networks}, pages 1--6. IEEE, 2009.
+
+\bibitem{cryptonet3}
+Ran Gilad-Bachrach, Nathan Dowlin, Kim Laine, Kristin Lauter, Michael Naehrig, and John Wernsing.
+\newblock Cryptonets: Applying neural networks to encrypted data with high throughput and accuracy.
+\newblock In {\em International conference on machine learning}, pages 201--210. PMLR, 2016.
+
+\bibitem{CryptoNets:ICML2016}
+Ran Gilad-Bachrach, Nathan Dowlin, Kim Laine, Kristin Lauter, Michael Naehrig, and John Wernsing.
+\newblock Cryptonets: Applying neural networks to encrypted data with high throughput and accuracy.
+\newblock In {\em International conference on machine learning}, pages 201--210. PMLR, 2016.
+
+\bibitem{goldwasser2015delegating}
+Shafi Goldwasser, Yael~Tauman Kalai, and Guy~N Rothblum.
+\newblock Delegating computation: interactive proofs for muggles.
+\newblock {\em Journal of the ACM (JACM)}, 62(4):1--64, 2015.
+
+\bibitem{Google}
+Google.
+\newblock Google cloud encrypted big-query client.
+\newblock \url{https://github.com/google/encrypted-bigquery-client}.
+\newblock 2018-02.
+
+\bibitem{GoogleCloud}
+Cloud Google.
+\newblock Encryption at rest in google cloud.
+\newblock \url{https://cloud.google.com/security/encryption/default-encryption}.
+\newblock 2020-06.
+
+\bibitem{groth2016sgroth16}
+Jens Groth.
+\newblock On the size of pairing-based non-interactive arguments.
+\newblock In {\em Advances in Cryptology--EUROCRYPT 2016: 35th Annual International Conference on the Theory and Applications of Cryptographic Techniques, Vienna, Austria, May 8-12, 2016, Proceedings, Part II 35}, pages 305--326. Springer, 2016.
+
+\bibitem{halevi2019BFVimproved}
+Shai Halevi, Yuriy Polyakov, and Victor Shoup.
+\newblock An improved rns variant of the bfv homomorphic encryption scheme.
+\newblock In {\em Cryptographers’ Track at the RSA Conference}, pages 83--105. Springer, 2019.
+
+\bibitem{CryptoDL:arxiv17}
+Ehsan Hesamifard, Hassan Takabi, and Mehdi Ghasemi.
+\newblock Cryptodl: Deep neural networks over encrypted data.
+\newblock {\em ArXiv}, abs/1711.05189, 2017.
+
+\bibitem{ABFT-1984-checksum}
+Kuang-Hua Huang and Jacob~A. Abraham.
+\newblock Algorithm-based fault tolerance for matrix operations.
+\newblock {\em IEEE Transactions on Computers}, C-33(6):518--528, 1984.
+
+\bibitem{IBMSecurity}
+IBM.
+\newblock Ibm security homomorphic encryption services.
+\newblock \url{ https://www.ibm.com/security/services/homomorphic-encryption}.
+\newblock 2021-10.
+
+\bibitem{intel2021sgx}
+Intel.
+\newblock Intel® software guard extensions (sgx) support.
+\newblock Retrieved November 29, 2023, from \url{https://www.intel.com/content/www/us/en/support/articles/000059614/software/intel-security-products.html}, July 2021.
+\newblock Accessed: 2023-11-29.
+
+\bibitem{GAZELLE:USENIX18}
+Chiraag Juvekar, Vinod Vaikuntanathan, and Anantha Chandrakasan.
+\newblock Gazelle: A low latency framework for secure neural network inference.
+\newblock In {\em Proceedings of the 27th USENIX Conference on Security Symposium}, SEC'18, page 1651–1668, USA, 2018. USENIX Association.
+
+\bibitem{cryptoeprint:2023/231}
+Mostefa Kara, Abdelkader Laouid, Omer~Al dabbas, Mohammad Hammoudeh, and Ahcène Bounceur.
+\newblock One digit checksum for data integrity verification of cloud-executed homomorphic encryption operations.
+\newblock Cryptology ePrint Archive, Paper 2023/231, 2023.
+\newblock \url{https://eprint.iacr.org/2023/231}.
+
+\bibitem{keller2010platform}
+Eric Keller and Jennifer Rexford.
+\newblock The" platform as a service" model for networking.
+\newblock {\em INM/WREN}, 10:95--108, 2010.
+
+\bibitem{kim2022approximate}
+Andrey Kim, Antonis Papadimitriou, and Yuriy Polyakov.
+\newblock Approximate homomorphic encryption with reduced approximation error.
+\newblock In {\em Cryptographers’ Track at the RSA Conference}, pages 120--144. Springer, 2022.
+
+\bibitem{kim2022ark}
+Jongmin Kim, Gwangho Lee, Sangpyo Kim, Gina Sohn, Minsoo Rhu, John Kim, and Jung~Ho Ahn.
+\newblock Ark: Fully homomorphic encryption accelerator with runtime data generation and inter-operation key reuse.
+\newblock In {\em 2022 55th IEEE/ACM International Symposium on Microarchitecture (MICRO)}, pages 1237--1254. IEEE, 2022.
+
+\bibitem{krizhevsky2017imagenet}
+Alex Krizhevsky, Ilya Sutskever, and Geoffrey~E Hinton.
+\newblock Imagenet classification with deep convolutional neural networks.
+\newblock {\em Communications of the ACM}, 60(6):84--90, 2017.
+
+\bibitem{le2023privacy}
+Junqing Le, Di~Zhang, Xinyu Lei, Long Jiao, Kai Zeng, and Xiaofeng Liao.
+\newblock Privacy-preserving federated learning with malicious clients and honest-but-curious servers.
+\newblock {\em IEEE Transactions on Information Forensics and Security}, 2023.
+
+\bibitem{lecun1998gradient}
+Yann LeCun, L{\'e}on Bottou, Yoshua Bengio, and Patrick Haffner.
+\newblock Gradient-based learning applied to document recognition.
+\newblock {\em Proceedings of the IEEE}, 86(11):2278--2324, 1998.
+
+\bibitem{abft2}
+Mengyun Liu, Lixue Xia, Yu~Wang, and Krishnendu Chakrabarty.
+\newblock Algorithmic fault detection for rram-based matrix operations.
+\newblock {\em ACM Transactions on Design Automation of Electronic Systems (TODAES)}, 25(3):1--31, 2020.
+
+\bibitem{long2001trends}
+Neil Long and Rob Thomas.
+\newblock Trends in denial of service attack technology.
+\newblock {\em CERT Coordination Center}, 648(651):569, 2001.
+
+\bibitem{lou2020autoprivacy}
+Qian Lou, Song Bian, and Lei Jiang.
+\newblock Autoprivacy: Automated layer-wise parameter selection for secure neural network inference.
+\newblock {\em Advances in Neural Information Processing Systems}, 33:8638--8647, 2020.
+
+\bibitem{lut}
+Qian Lou, Bo~Feng, Geoffrey Charles~Fox, and Lei Jiang.
+\newblock Glyph: Fast and accurately training deep neural networks on encrypted data.
+\newblock {\em Advances in neural information processing systems}, 33:9193--9202, 2020.
+
+\bibitem{Lou2020AutoQ}
+Qian Lou, Feng Guo, Minje Kim, Lantao Liu, and Lei Jiang.
+\newblock Autoq: Automated kernel-wise neural network quantization.
+\newblock In {\em International Conference on Learning Representations}, 2020.
+
+\bibitem{lou2019she}
+Qian Lou and Lei Jiang.
+\newblock She: A fast and accurate deep neural network for encrypted data.
+\newblock In {\em Advances in Neural Information Processing Systems}, volume~32. Curran Associates, Inc., 2019.
+
+\bibitem{lou2021hemet}
+Qian Lou and Lei Jiang.
+\newblock Hemet: A homomorphic-encryption-friendly privacy-preserving mobile neural network architecture.
+\newblock In {\em International conference on machine learning}, pages 7102--7110. PMLR, 2021.
+
+\bibitem{lou2020falcon}
+Qian Lou, Wen-jie Lu, Cheng Hong, and Lei Jiang.
+\newblock Falcon: fast spectral inference on encrypted data.
+\newblock {\em Advances in Neural Information Processing Systems}, 33:2364--2374, 2020.
+
+\bibitem{mo2009secure}
+Yilin Mo and Bruno Sinopoli.
+\newblock Secure control against replay attacks.
+\newblock In {\em 2009 47th annual Allerton conference on communication, control, and computing (Allerton)}, pages 911--918. IEEE, 2009.
+
+\bibitem{natarajan2021chex}
+Deepika Natarajan, Andrew Loveless, Wei Dai, and Ronald Dreslinski.
+\newblock Chex-mix: Combining homomorphic encryption with trusted execution environments for two-party oblivious inference in the cloud.
+\newblock {\em Cryptology ePrint Archive}, 2021.
+
+\bibitem{parno2016pinocchio}
+Bryan Parno, Jon Howell, Craig Gentry, and Mariana Raykova.
+\newblock Pinocchio: Nearly practical verifiable computation.
+\newblock {\em Communications of the ACM}, 59(2):103--112, 2016.
+
+\bibitem{cryptonet2}
+Leonardo Ranaldi, Marco Gerardi, and Francesca Fallucchi.
+\newblock Crypto net: using auto-regressive multi-layer artificial neural networks to predict financial time series.
+\newblock {\em Information}, 13(11):524, 2022.
+
+\bibitem{ranaldi2022crypto}
+Leonardo Ranaldi, Marco Gerardi, and Francesca Fallucchi.
+\newblock Crypto net: using auto-regressive multi-layer artificial neural networks to predict financial time series.
+\newblock {\em Information}, 13(11):524, 2022.
+
+\bibitem{reagen2021cheetah}
+Brandon Reagen, Woo-Seok Choi, Yeongil Ko, Vincent~T Lee, Hsien-Hsin~S Lee, Gu-Yeon Wei, and David Brooks.
+\newblock Cheetah: Optimizing and accelerating homomorphic encryption for private inference.
+\newblock In {\em 2021 IEEE International Symposium on High-Performance Computer Architecture (HPCA)}, pages 26--39. IEEE, 2021.
+
+\bibitem{ribeiro2015mlaas}
+Mauro Ribeiro, Katarina Grolinger, and Miriam~AM Capretz.
+\newblock Mlaas: Machine learning as a service.
+\newblock In {\em 2015 IEEE 14th international conference on machine learning and applications (ICMLA)}, pages 896--902. IEEE, 2015.
+
+\bibitem{samardzic2022craterlake}
+Nikola Samardzic, Axel Feldmann, Aleksandar Krastev, Nathan Manohar, Nicholas Genise, Srinivas Devadas, Karim Eldefrawy, Chris Peikert, and Daniel Sanchez.
+\newblock Craterlake: a hardware accelerator for efficient unbounded computation on encrypted data.
+\newblock In {\em Proceedings of the 49th Annual International Symposium on Computer Architecture}, pages 173--187, 2022.
+
+\bibitem{sealcrypto}
+{M}icrosoft {SEAL} (release 3.2).
+\newblock \url{https://github.com/Microsoft/SEAL}, February 2019.
+\newblock Microsoft Research, Redmond, WA.
+
+\bibitem{serrano2015infrastructure}
+Nicolas Serrano, Gorka Gallardo, and Josune Hernantes.
+\newblock Infrastructure as a service and cloud technologies.
+\newblock {\em IEEE Software}, 32(2):30--36, 2015.
+
+\bibitem{sev2020strengthening}
+AMD Sev-Snp.
+\newblock Strengthening vm isolation with integrity protection and more.
+\newblock {\em White Paper, January}, 53:1450--1465, 2020.
+
+\bibitem{viand2023verifiable}
+Alexander Viand, Christian Knabenhans, and Anwar Hithnawi.
+\newblock Verifiable fully homomorphic encryption.
+\newblock {\em arXiv preprint arXiv:2301.07041}, 2023.
+
+\bibitem{wang1994algorithm}
+Sying-Jyan Wang and Niraj~K. Jha.
+\newblock Algorithm-based fault tolerance for fft networks.
+\newblock {\em IEEE Transactions on Computers}, 43(7):849--854, 1994.
+
+\bibitem{weng2021wolverine}
+Chenkai Weng, Kang Yang, Jonathan Katz, and Xiao Wang.
+\newblock Wolverine: fast, scalable, and communication-efficient zero-knowledge proofs for boolean and arithmetic circuits.
+\newblock In {\em 2021 IEEE Symposium on Security and Privacy (SP)}, pages 1074--1091. IEEE, 2021.
+
+\bibitem{xue2022audit}
+Jiaqi Xue, Lei Xu, Lin Chen, Weidong Shi, Kaidi Xu, and Qian Lou.
+\newblock Audit and improve robustness of private neural networks on encrypted data.
+\newblock {\em arXiv preprint arXiv:2209.09996}, 2022.
+
+\bibitem{xue2024cryptotrain}
+Jiaqi Xue, Yancheng Zhang, Yanshan Wang, Xueqiang Wang, Hao Zheng, and Qian Lou.
+\newblock Cryptotrain: Fast secure training on encrypted datase.
+\newblock {\em arXiv preprint arXiv:2409.16675}, 2024.
+
+\bibitem{abft}
+Kai Zhao, Sheng Di, Sihuan Li, Xin Liang, Yujia Zhai, Jieyang Chen, Kaiming Ouyang, Franck Cappello, and Zizhong Chen.
+\newblock Ft-cnn: Algorithm-based fault tolerance for convolutional neural networks.
+\newblock {\em IEEE Transactions on Parallel and Distributed Systems}, 32(7):1677--1689, 2020.
+
+\bibitem{zhao2020ft}
+Kai Zhao, Sheng Di, Sihuan Li, Xin Liang, Yujia Zhai, Jieyang Chen, Kaiming Ouyang, Franck Cappello, and Zizhong Chen.
+\newblock Ft-cnn: Algorithm-based fault tolerance for convolutional neural networks.
+\newblock {\em IEEE Transactions on Parallel and Distributed Systems}, 32(7):1677--1689, 2020.
+
+\end{thebibliography}

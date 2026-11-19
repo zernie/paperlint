@@ -1,0 +1,37 @@
+\section{Discussion}\label{sec:discussion}
+
+
+
+\subsection{Threats in RAG-LLM}\label{subsec:threats_rag}
+Through empirical demonstration of poisoning attacks in RACG, we systematically reveal their risks and security implications in LLM-based code generation and software supply chain ecosystems. 
+% risks in other tasks
+However, we contend that the attack surface extends far beyond these initial findings. LLM sub-tasks that rely on contextual knowledge provided by RAG systems can be vulnerable to such attacks. To a large extent, the effectiveness of such attacks depends on how much the LLM trusts the additional RAG-provided documents, as well as the choices it makes when there is a conflict between this external knowledge and its internal knowledge~\citep{wan2024evidence}.
+%
+LLMs exhibit notable susceptibility to manipulative contextual cues when resolving conflicts between their internal knowledge and document-level misinformation~\citep{evidence_manipulation}. This vulnerability is further exacerbated by limitations in existing safety alignment techniques, which frequently fall short in code generation scenarios where malicious patterns can be obfuscated more effectively than in natural language contexts.
+
+
+\subsection{Real-world Implications and Practicality}\label{subsec:real_world_implication}
+Here we consider the real-world implications.
+
+\textbf{Poisoning Ratio.} Although our evaluation includes as many datasets to form the RAG database, it remains far from real-world RAG systems, and approximating their scale is impractical. Even if we poison 100\% of relevant documents, their proportion in the real RAG database would still be negligible. However, this does not mean that the attack effectiveness scales proportionally with database size. 
+% 
+Previous works do not discuss the practicality related to poisoning rates. The lowest poisoning rate mentioned in \citep{poisonedrag} is 10\% (with a default of 50\% in most of their experiments) in order to manipulate the LLM outputs. In contrast, our \method can successfully conduct attacks under more challenging generation control requirements and at much lower poisoning rates. We argue that, rather than the poisoning rate itself, a more important factor is improving Precision@k under the realistic scenario where queries are unknown, thereby enabling more poisoned documents to be retrieved by the RAG system. This aspect has not been considered in prior research and is a key focus of our experimental evaluation.
+
+\textbf{Reranking Mechanisms.} Real RAG systems incorporate complex retrieval enhancements like reranking, complicating efforts to simulate real-world scenarios using local proxy models. These sophisticated mechanisms may degrade the transferability of adversarial perturbations optimized on simplified proxies.
+
+\textbf{Code Comments.} We observe that some LLM-generated code containing malicious libraries includes comments such as “According to suggestions, we use xx library” or “Using xx library is safer”. While these annotations could alert users to attack intent or further deceive them, controlling their presence in code outputs remains challenging. Importantly, this does not undermine the attack efficiency of our framework. As LLMs improve their code and annotation generation capabilities, high-quality annotations may become both beneficial and vulnerable to poisoning. This intriguing duality warrants future exploration.
+
+\textbf{Real-world Coding Agents.} Our method successfully attacks real-world coding agents (e.g., Cursor, Copilot), as shown in the Appendix~\autoref{app:vscode}. However, large-scale testing on such agents is challenging, so we do not report quantitative metrics. Most coding agents generate code suggestions by incorporating code files from local repositories (often allowing users to specify particular files as code manuals). When some of these local files contain poisoned code, such attacks become feasible, as developers rarely check every file after cloning a repository. Furthermore, the latest coding agents leverage real-time internet search to retrieve relevant documents for code generation and repair suggestions. This further increases the risk of attack, since our code poisoning can more easily occur in popular, open code sources like GitHub and Stack Overflow, where anyone can upload or edit content.
+
+\textbf{Internal RAG Databases and LLMs within Companies.} Regarding the practicality of our method against internal RAG databases and proprietary LLMs within companies, we believe that while the risk may be somewhat reduced, it still remains widespread. First, most companies (capable of building their own RAG databases and training internal LLMs) typically source their databases from web-crawled data and online documents. Although internal review mechanisms may filter out some poisoned documents, the stealthiness of our poisoning techniques means that both manual and LLM-assisted screening are likely to allow some poisoned documents to enter the internal database. Second, SOTA RAG-LLMs proactively search for documents from the Internet rather than relying solely on internal databases. This shifts the attacker’s focus from compromising isolated databases to enhancing document retrieval poisoning strategies.
+
+\textbf{Potential Poisoning Corpora.} Our observations show that code-generation queries often semantically align with developer forums like StackOverflow, Github and CSDN, making poisoned content on such platforms more likely to be retrieved by RAG systems. 
+%
+As LLMs' search capabilities continue to improve, the search space expands accordingly, meaning that any content on the internet could potentially be crawled by LLMs as a "Code Manual" to guide code generation.
+
+\subsection{Programming Languages of Supply Chain}\label{subsec:language_select}
+Notwithstanding, we choose three kinds of programming languages for evaluation, but there are still other programming languages at risk. The attack success rate and ease of attack depend on both the related materials in the training dataset and the size of documents from RAG systems. Typically, a smaller training dataset and more related RAG documents mean that LLM would prefer to trust the documents more than the internal knowledge inside the model weights, resulting in a better attack success rate.
+
+
+\subsection{Ethics}
+First we emphasize that our research and the development of \method have not been leveraged for any unethical activities or financial gain. We are acutely aware of the ethical implications of our work. We then discuss potential ethical issues raised in the study, specifically, the disclosure of the proposed attack. Although we demonstrate the potential for such attacks in SOTA LLM tools, including web-based chat interfaces, API calls, and coding assistants, \textbf{we have not yet observed any real-world (in-the-wild) attack cases in RACG to the best of our knowledge}. However, this does not mean that such threats can be ignored. Since many LLM vendors are not yet aware of this type of attack, it still poses a significant risk of exploitation. We have responsibly notified all relevant companies via email about the potential attacks and threats we have disclosed.

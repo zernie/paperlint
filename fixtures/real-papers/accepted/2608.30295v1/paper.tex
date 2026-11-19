@@ -1,0 +1,138 @@
+%%%%%%%% ICML 2025 EXAMPLE LATEX SUBMISSION FILE %%%%%%%%%%%%%%%%%
+
+\documentclass{article}
+
+% Recommended, but optional, packages for figures and better typesetting:
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{booktabs} % for professional tables
+% The ICML style loads xcolor itself. Pass the table option before loading the
+% style to avoid an option clash while retaining colored table support.
+\PassOptionsToPackage{table}{xcolor}
+
+% hyperref makes hyperlinks in the resulting PDF.
+% If your build breaks (sometimes temporarily if a hyperlink spans a page)
+% please comment out the following usepackage line and replace
+% \usepackage{icml2025} with \usepackage[nohyperref]{icml2025} above.
+\usepackage{hyperref}
+
+
+% Attempt to make hyperref and algorithmic work together better:
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+
+% Use the following line for the initial blind version submitted for review:
+% \usepackage{icml2025}
+
+% If accepted, instead use the following line for the camera-ready submission:
+\usepackage[accepted]{icml2025}
+% \usepackage{icml2025}
+
+% For theorems and such
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsthm}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{wrapfig}
+\usepackage{tabularx} 
+\newcolumntype{P}[1]{>{\centering\arraybackslash}p{#1}}
+
+% if you use cleveref..
+\usepackage[capitalize,noabbrev]{cleveref}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% THEOREMS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% Todonotes is useful during development; simply uncomment the next line
+%    and comment out the line below the next line to turn off comments
+%\usepackage[disable,textsize=tiny]{todonotes}
+\usepackage[textsize=tiny]{todonotes}
+
+\newcommand{\jhy}[1]{\textcolor{red}{#1}}
+\newcommand{\lhl}[1]{\textcolor{blue}{#1}}
+\newcommand{\shortname}{CateKV }
+\newcommand{\jc}[1]{\textcolor{teal}{#1}}
+
+\definecolor{comment_color_2}{RGB}{64,128,128}
+\newcommand{\LineComment}[1]{\vspace*{0.5em}\small\textcolor{comment_color_2}{\textit{\# #1}}}
+
+% The \icmltitle you define below is probably too long as a header.
+% Therefore, a short form for the running title is supplied here:
+\icmltitlerunning{CateKV: On Sequential Consistency for Long-Context LLM Inference Acceleration}
+
+\begin{document}
+
+\twocolumn[
+\icmltitle{CateKV: On Sequential Consistency for Long-Context LLM Inference Acceleration}
+
+
+\icmlsetsymbol{equal}{*}
+
+\begin{icmlauthorlist}
+\icmlauthor{Haoyun Jiang}{sjtu,ali}
+\icmlauthor{Haolin Li}{fdu}
+\icmlauthor{Jianwei Zhang}{ali}
+\icmlauthor{Fei Huang}{ali}
+\icmlauthor{Qiang Hu}{sjtu}
+\icmlauthor{Minmin Sun}{ali}
+\icmlauthor{Shuai Xiao}{ali}
+\icmlauthor{Yong Li}{ali}
+\icmlauthor{Junyang Lin}{ali}
+\icmlauthor{Jiangchao Yao}{sjtu}
+\end{icmlauthorlist}
+
+\icmlaffiliation{sjtu}{CMIC, Shanghai Jiao Tong University}
+\icmlaffiliation{ali}{Alibaba Group}
+\icmlaffiliation{fdu}{Fudan University}
+
+\icmlcorrespondingauthor{Jiangchao Yao}{sunarker@sjtu.edu.cn}
+\icmlcorrespondingauthor{Shuai Xiao}{shuai.xsh@gmail.com}
+
+\icmlkeywords{Machine Learning, ICML}
+
+\vskip 0.3in
+]
+
+% this must go after the closing bracket ] following \twocolumn[ ...
+
+% This command actually creates the footnote in the first column
+% listing the affiliations and the copyright notice.
+% The command takes one argument, which is text to display at the start of the footnote.
+% The \icmlEqualContribution command is standard text for equal contribution.
+% Remove it (just {}) if you do not need this facility.
+
+\printAffiliationsAndNotice{}  % leave blank if no need to mention equal contribution
+% \printAffiliationsAndNotice{\icmlEqualContribution} % otherwise use the standard text.
+
+\input{sections/abstract}
+\input{sections/introduction}
+\input{sections/related_work}
+\input{sections/method}
+\input{sections/experiments}
+\input{sections/conclusion}
+
+\input{sections/ackownledgement}
+\input{sections/impact_statement}
+
+\bibliography{ref}
+\bibliographystyle{icml2025}
+
+
+% APPENDIX
+
+\input{sections/appendix}
+
+\end{document}

@@ -1,0 +1,27 @@
+\subsection{RQ3: Comparison between the Fine-tuning and Prompt Engineering Approaches}
+\label{sec:rq3}
+
+\textbf{Motivation.}
+Recently, with the development of LLMs such as ChatGPT, there is a growing trend towards using prompt engineering as an alternative approach to handling downstream tasks~\cite{wang_software_2024}. Unlike fine-tuning LLMs with specific downstream datasets, prompt engineering focuses on designing advanced prompts that incorporate task-specific information, aiming to leverage the existing knowledge within the LLM to solve the problem. 
+
+\textbf{Design.}
+In this RQ, we aim to evaluate and compare the effectiveness of fine-tuning and prompt engineering approaches across three unit testing tasks. We examine six widely used instruction-based LLMs (open and closed-sourced), including GPT-3.5-Turbo, Llama3.1-8b, Llama3.1-70b, Llama3-8b, Qwen2-7b, and Qwen2-72b. For open-source models, we select the instruction-tuned versions to support prompt-based testing. 
+Additionally, We apply the same input data across models and adopt a zero-shot learning setup for prompt construction\footnote{Detailed prompt template is presented in our repository due to page limit.}.
+Considering that instruction-based LLMs are not explicitly trained for specific downstream tasks, their generated outputs may deviate in format from the ground truth. To address this, we implement two strategies. First, we design structured prompts to guide the model toward desired output formats. Second, we apply post-processing steps to further refine the output.
+For tasks like assertion generation and test evolution, which are evaluated using text-based metrics, we extract the code output from the model’s response as the predicted output. Then, we use a BERT tokenizer to tokenize both the predicted output and the ground truth, followed by detokenization to standardize formatting. This process unifies delimiters such as whitespace and line breaks and removes special code structures, allowing us to focus purely on semantic content.
+For test generation tasks, which are evaluated using runtime-based metrics, we also extract the code output from the model response but limit it to the first unit test case. Since the fine-tuning approach generates one test case per focal method, this selective extraction ensures a fair comparison by aligning the number of generated test cases between the two approaches.
+
+\input{table/rq3-All}
+
+\textbf{Result.}
+Table~\ref{tab:rq3-result} presents a performance comparison between fine-tuned models and instruction-based models. For clarity, we focus on three representative fine-tuned models: CodeT5p-220m, CodeLlama-7b, and DeepSeek-Coder-6b.
+In the test generation task, GPT-3.5 achieves a correct rate of 49.16\% and a passing rate of 51.03\%, surpassing the best-fine-tuned model, DeepSeek-Coder-6b, which achieves 45.96\% and 41.67\%, respectively. This suggests promising potential for instruction-based LLMs in test generation tasks.
+In the assertion generation task, however, instruction-based models underperform, with an EM score of only 4.89\%, significantly lower than that of fine-tuned models. BLEU and CodeBLEU scores also lag; even the best-performing instruction model, GPT-3.5, reaches only 32.41\% on BLEU and 25.73\% on CodeBLEU. We manually analyze the predicted outputs from instruction-based models and observe a tendency to omit fully qualified names, likely because the model assumes that all necessary imports are included.  For instance, the prediction might generate \texttt{`assertNull(test)'}, while the ground truth specifies \texttt{`org.junit.Assert.assertNull(test)'}, contributing to lower performance scores.
+In the test evolution task, instruction-based models show a wide performance range, with EM scores spanning 0.19\% to 15.96\%, BLEU from 42.70\% to 86.20\%, and CodeBLEU from 51.07\% to 83.61\%. Although instruction-based models perform poorly on EM compared to fine-tuned models, they demonstrate promising BLEU and CodeBLEU scores. Notably, GPT-3.5 achieves the highest BLEU score at 86.20\% and ranks top in CodeBLEU at 83.61\%.
+
+Additionally, all the instruction-based models perform a low syntax error rate range from 0.54\% to 3.2\%, showing a promising understanding of code structure. And GPT-3.5 consistently achieves the best overall results, ranking first in seven metrics among the six models. 
+The results of the prompt engineering approach demonstrate its potential in unit test-related tasks. Notably, this study employs only zero-shot learning to construct prompts and generate model responses. Recently, however, advanced in-context learning techniques, such as few-shot learning, Chain of Thought (CoT), and Retrieval Augmented Generation (RAG), have emerged, enhancing LLMs’ capacity to produce accurate responses. Leveraging these advanced techniques could enable the prompt engineering approach to perform even better in common unit testing tasks.
+
+\finding{7}{
+In summary, the prompt engineering approach shows promising results compared to the fine-tuning approach, particularly in test generation and test evolution tasks, highlighting its potential in unit test-related tasks. Leveraging advanced in-context learning methods, like few-shot learning, CoT, and RAG, could further enhance its performance.
+}

@@ -1,0 +1,453 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{55}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{} and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showURL}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showURL #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[Abo~Khamis et~al\mbox{.}(2016)]%
+        {abo2016faq}
+\bibfield{author}{\bibinfo{person}{Mahmoud Abo~Khamis}, \bibinfo{person}{Hung~Q Ngo}, {and} \bibinfo{person}{Atri Rudra}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{FAQ: questions asked frequently}. In \bibinfo{booktitle}{\emph{Proceedings of the 35th ACM SIGMOD-SIGACT-SIGAI Symposium on Principles of Database Systems}}. \bibinfo{pages}{13--28}.
+\newblock
+
+
+\bibitem[Akoglu and Faloutsos(2013)]%
+        {akoglu2013anomaly}
+\bibfield{author}{\bibinfo{person}{Leman Akoglu} {and} \bibinfo{person}{Christos Faloutsos}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{Anomaly, event, and fraud detection in large network datasets}. In \bibinfo{booktitle}{\emph{Proceedings of the sixth ACM international conference on Web search and data mining}}. \bibinfo{pages}{773--774}.
+\newblock
+
+
+\bibitem[Alon et~al\mbox{.}(1995)]%
+        {alon1995color}
+\bibfield{author}{\bibinfo{person}{Noga Alon}, \bibinfo{person}{Raphael Yuster}, {and} \bibinfo{person}{Uri Zwick}.} \bibinfo{year}{1995}\natexlab{}.
+\newblock \showarticletitle{Color-coding}.
+\newblock \bibinfo{journal}{\emph{Journal of the ACM (JACM)}} \bibinfo{volume}{42}, \bibinfo{number}{4} (\bibinfo{year}{1995}), \bibinfo{pages}{844--856}.
+\newblock
+
+
+\bibitem[Betzer et~al\mbox{.}(2024)]%
+        {betzer2024publishing}
+\bibfield{author}{\bibinfo{person}{Louis Betzer}, \bibinfo{person}{Vorapong Suppakitpaisarn}, {and} \bibinfo{person}{Quentin Hillebrand}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Publishing number of walks and katz centrality under local differential privacy}. In \bibinfo{booktitle}{\emph{The 40th Conference on Uncertainty in Artificial Intelligence}}.
+\newblock
+
+
+\bibitem[Blocki et~al\mbox{.}(2013)]%
+        {blocki2013differentially}
+\bibfield{author}{\bibinfo{person}{Jeremiah Blocki}, \bibinfo{person}{Avrim Blum}, \bibinfo{person}{Anupam Datta}, {and} \bibinfo{person}{Or Sheffet}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{Differentially private data analysis of social networks via restricted sensitivity}. In \bibinfo{booktitle}{\emph{Proceedings of the 4th conference on Innovations in Theoretical Computer Science}}. \bibinfo{pages}{87--96}.
+\newblock
+
+
+\bibitem[Bonawitz et~al\mbox{.}(2017)]%
+        {bonawitz2017practical}
+\bibfield{author}{\bibinfo{person}{Keith Bonawitz}, \bibinfo{person}{Vladimir Ivanov}, \bibinfo{person}{Ben Kreuter}, \bibinfo{person}{Antonio Marcedone}, \bibinfo{person}{H~Brendan McMahan}, \bibinfo{person}{Sarvar Patel}, \bibinfo{person}{Daniel Ramage}, \bibinfo{person}{Aaron Segal}, {and} \bibinfo{person}{Karn Seth}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Practical secure aggregation for privacy-preserving machine learning}. In \bibinfo{booktitle}{\emph{proceedings of the 2017 ACM SIGSAC Conference on Computer and Communications Security}}. \bibinfo{pages}{1175--1191}.
+\newblock
+
+
+\bibitem[Chan et~al\mbox{.}(2011)]%
+        {chan11continual}
+\bibfield{author}{\bibinfo{person}{T.-H.~Hubert Chan}, \bibinfo{person}{Elaine Shi}, {and} \bibinfo{person}{Dawn Song}.} \bibinfo{year}{2011}\natexlab{}.
+\newblock \showarticletitle{Private and Continual Release of Statistics}.
+\newblock \bibinfo{journal}{\emph{ACM Transactions on Information and System Security}} (\bibinfo{year}{2011}).
+\newblock
+
+
+\bibitem[Chebyshev(1867)]%
+        {chebyshev1867valeurs}
+\bibfield{author}{\bibinfo{person}{Pafnutii~Lvovich Chebyshev}.} \bibinfo{year}{1867}\natexlab{}.
+\newblock \showarticletitle{Des valeurs moyennes}.
+\newblock \bibinfo{journal}{\emph{J. Math. Pures Appl}} \bibinfo{volume}{12}, \bibinfo{number}{2} (\bibinfo{year}{1867}), \bibinfo{pages}{177--184}.
+\newblock
+
+
+\bibitem[Chen and Zhou(2013)]%
+        {chen2013recursive}
+\bibfield{author}{\bibinfo{person}{Shixi Chen} {and} \bibinfo{person}{Shuigeng Zhou}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{Recursive mechanism: towards node differential privacy and unrestricted joins}. In \bibinfo{booktitle}{\emph{Proceedings of the 2013 ACM SIGMOD International Conference on Management of Data}}. \bibinfo{pages}{653--664}.
+\newblock
+
+
+\bibitem[Cormode et~al\mbox{.}(2018)]%
+        {cormode2018privacy}
+\bibfield{author}{\bibinfo{person}{Graham Cormode}, \bibinfo{person}{Somesh Jha}, \bibinfo{person}{Tejas Kulkarni}, \bibinfo{person}{Ninghui Li}, \bibinfo{person}{Divesh Srivastava}, {and} \bibinfo{person}{Tianhao Wang}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Privacy at scale: Local differential privacy in practice}. In \bibinfo{booktitle}{\emph{Proceedings of the 2018 international conference on management of data}}. \bibinfo{pages}{1655--1658}.
+\newblock
+
+
+\bibitem[Doerr(2019)]%
+        {doerr2019probabilistic}
+\bibfield{author}{\bibinfo{person}{Benjamin Doerr}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Probabilistic tools for the analysis of randomized optimization heuristics}.
+\newblock In \bibinfo{booktitle}{\emph{Theory of evolutionary computation: Recent developments in discrete optimization}}. \bibinfo{publisher}{Springer}, \bibinfo{pages}{1--87}.
+\newblock
+
+
+\bibitem[Dong et~al\mbox{.}(2024a)]%
+        {dong2024continual}
+\bibfield{author}{\bibinfo{person}{Wei Dong}, \bibinfo{person}{Zijun Chen}, \bibinfo{person}{Qiyao Luo}, \bibinfo{person}{Elaine Shi}, {and} \bibinfo{person}{Ke Yi}.} \bibinfo{year}{2024}\natexlab{a}.
+\newblock \showarticletitle{Continual observation of joins under differential privacy}.
+\newblock \bibinfo{journal}{\emph{Proceedings of the ACM on Management of Data}} \bibinfo{volume}{2}, \bibinfo{number}{3} (\bibinfo{year}{2024}), \bibinfo{pages}{1--27}.
+\newblock
+
+
+\bibitem[Dong et~al\mbox{.}(2022)]%
+        {dong2022r2t}
+\bibfield{author}{\bibinfo{person}{Wei Dong}, \bibinfo{person}{Juanru Fang}, \bibinfo{person}{Ke Yi}, \bibinfo{person}{Yuchao Tao}, {and} \bibinfo{person}{Ashwin Machanavajjhala}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{R2T: Instance-optimal Truncation for Differentially Private Query Evaluation with Foreign Keys}. In \bibinfo{booktitle}{\emph{Proc. ACM SIGMOD International Conference on Management of Data}}.
+\newblock
+
+
+\bibitem[Dong et~al\mbox{.}(2024b)]%
+        {dong2024instance}
+\bibfield{author}{\bibinfo{person}{Wei Dong}, \bibinfo{person}{Juanru Fang}, \bibinfo{person}{Ke Yi}, \bibinfo{person}{Yuchao Tao}, {and} \bibinfo{person}{Ashwin Machanavajjhala}.} \bibinfo{year}{2024}\natexlab{b}.
+\newblock \showarticletitle{Instance-optimal Truncation for Differentially Private Query Evaluation with Foreign Keys}.
+\newblock \bibinfo{journal}{\emph{ACM Transactions on Database Systems}} \bibinfo{volume}{49}, \bibinfo{number}{4} (\bibinfo{year}{2024}), \bibinfo{pages}{1--40}.
+\newblock
+
+
+\bibitem[Dong et~al\mbox{.}(2023)]%
+        {dong2023continual}
+\bibfield{author}{\bibinfo{person}{Wei Dong}, \bibinfo{person}{Qiyao Luo}, {and} \bibinfo{person}{Ke Yi}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Continual Observation under User-level Differential Privacy}. In \bibinfo{booktitle}{\emph{2023 IEEE Symposium on Security and Privacy (SP)}}. IEEE Computer Society, \bibinfo{pages}{2190--2207}.
+\newblock
+
+
+\bibitem[Dong and Yi(2021)]%
+        {dong21:residual}
+\bibfield{author}{\bibinfo{person}{Wei Dong} {and} \bibinfo{person}{Ke Yi}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Residual Sensitivity for Differentially Private Multi-Way Joins}. In \bibinfo{booktitle}{\emph{Proc. ACM SIGMOD International Conference on Management of Data}}.
+\newblock
+
+
+\bibitem[Dong and Yi(2022)]%
+        {dong2021nearly}
+\bibfield{author}{\bibinfo{person}{Wei Dong} {and} \bibinfo{person}{Ke Yi}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{A Nearly Instance-optimal Differentially Private Mechanism for Conjunctive Queries}. In \bibinfo{booktitle}{\emph{Proc. ACM Symposium on Principles of Database Systems}}.
+\newblock
+
+
+\bibitem[Dwork et~al\mbox{.}(2006)]%
+        {dwork2006calibrating}
+\bibfield{author}{\bibinfo{person}{Cynthia Dwork}, \bibinfo{person}{Frank McSherry}, \bibinfo{person}{Kobbi Nissim}, {and} \bibinfo{person}{Adam Smith}.} \bibinfo{year}{2006}\natexlab{}.
+\newblock \showarticletitle{Calibrating noise to sensitivity in private data analysis}. In \bibinfo{booktitle}{\emph{Theory of cryptography conference}}. Springer, \bibinfo{pages}{265--284}.
+\newblock
+
+
+\bibitem[Eden et~al\mbox{.}(2023)]%
+        {eden2023triangle}
+\bibfield{author}{\bibinfo{person}{Talya Eden}, \bibinfo{person}{Quanquan~C Liu}, \bibinfo{person}{Sofya Raskhodnikova}, {and} \bibinfo{person}{Adam Smith}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Triangle Counting with Local Edge Differential Privacy}. In \bibinfo{booktitle}{\emph{50th International Colloquium on Automata, Languages, and Programming (ICALP 2023)}}. Schloss Dagstuhl--Leibniz-Zentrum f{\"u}r Informatik, \bibinfo{pages}{52--1}.
+\newblock
+
+
+\bibitem[Fang et~al\mbox{.}(2022)]%
+        {fang2022shifted}
+\bibfield{author}{\bibinfo{person}{Juanru Fang}, \bibinfo{person}{Wei Dong}, {and} \bibinfo{person}{Ke Yi}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Shifted Inverse: A General Mechanism for Monotonic Functions under User Differential Privacy}.
+\newblock  (\bibinfo{year}{2022}).
+\newblock
+
+
+\bibitem[Fichtenberger et~al\mbox{.}(2021)]%
+        {fichtenberger2021differentially}
+\bibfield{author}{\bibinfo{person}{Hendrik Fichtenberger}, \bibinfo{person}{Monika Henzinger}, {and} \bibinfo{person}{Wolfgang Ost}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Differentially Private Algorithms for Graphs Under Continual Observation}. In \bibinfo{booktitle}{\emph{29th Annual European Symposium on Algorithms (ESA 2021)}}. Schloss Dagstuhl-Leibniz-Zentrum f{\"u}r Informatik.
+\newblock
+
+
+\bibitem[Flum and Grohe(2004)]%
+        {flum2004parameterized}
+\bibfield{author}{\bibinfo{person}{J{\"o}rg Flum} {and} \bibinfo{person}{Martin Grohe}.} \bibinfo{year}{2004}\natexlab{}.
+\newblock \showarticletitle{The parameterized complexity of counting problems}.
+\newblock \bibinfo{journal}{\emph{SIAM J. Comput.}} \bibinfo{volume}{33}, \bibinfo{number}{4} (\bibinfo{year}{2004}), \bibinfo{pages}{892--922}.
+\newblock
+
+
+\bibitem[Godsil and Royle(2013)]%
+        {godsil2013algebraic}
+\bibfield{author}{\bibinfo{person}{Chris Godsil} {and} \bibinfo{person}{Gordon~F Royle}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Algebraic graph theory}}. Vol.~\bibinfo{volume}{207}.
+\newblock \bibinfo{publisher}{Springer Science \& Business Media}.
+\newblock
+
+
+\bibitem[Gottlob et~al\mbox{.}(2001)]%
+        {gottlob2001complexity}
+\bibfield{author}{\bibinfo{person}{Georg Gottlob}, \bibinfo{person}{Nicola Leone}, {and} \bibinfo{person}{Francesco Scarcello}.} \bibinfo{year}{2001}\natexlab{}.
+\newblock \showarticletitle{The complexity of acyclic conjunctive queries}.
+\newblock \bibinfo{journal}{\emph{Journal of the ACM (JACM)}} \bibinfo{volume}{48}, \bibinfo{number}{3} (\bibinfo{year}{2001}), \bibinfo{pages}{431--498}.
+\newblock
+
+
+\bibitem[Hay et~al\mbox{.}(2009)]%
+        {hay2009accurate}
+\bibfield{author}{\bibinfo{person}{Michael Hay}, \bibinfo{person}{Chao Li}, \bibinfo{person}{Gerome Miklau}, {and} \bibinfo{person}{David Jensen}.} \bibinfo{year}{2009}\natexlab{}.
+\newblock \showarticletitle{Accurate estimation of the degree distribution of private networks}. In \bibinfo{booktitle}{\emph{2009 Ninth IEEE International Conference on Data Mining}}. IEEE, \bibinfo{pages}{169--178}.
+\newblock
+
+
+\bibitem[He et~al\mbox{.}(2024)]%
+        {he2024butterfly}
+\bibfield{author}{\bibinfo{person}{Yizhang He}, \bibinfo{person}{Kai Wang}, \bibinfo{person}{Wenjie Zhang}, \bibinfo{person}{Xuemin Lin}, \bibinfo{person}{Wei Ni}, {and} \bibinfo{person}{Ying Zhang}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Butterfly Counting over Bipartite Graphs with Local Differential Privacy}. In \bibinfo{booktitle}{\emph{2024 IEEE 40th International Conference on Data Engineering (ICDE)}}. IEEE, \bibinfo{pages}{2351--2364}.
+\newblock
+
+
+\bibitem[He et~al\mbox{.}(2025)]%
+        {he2025robust}
+\bibfield{author}{\bibinfo{person}{Yizhang He}, \bibinfo{person}{Kai Wang}, \bibinfo{person}{Wenjie Zhang}, \bibinfo{person}{Xuemin Lin}, \bibinfo{person}{Ying Zhang}, {and} \bibinfo{person}{Wei Ni}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{Robust Privacy-Preserving Triangle Counting under Edge Local Differential Privacy}.
+\newblock \bibinfo{journal}{\emph{Proceedings of the ACM on Management of Data}} \bibinfo{volume}{3}, \bibinfo{number}{3} (\bibinfo{year}{2025}), \bibinfo{pages}{1--26}.
+\newblock
+
+
+\bibitem[Hu et~al\mbox{.}(2025)]%
+        {hu2025n2e}
+\bibfield{author}{\bibinfo{person}{Yihua Hu}, \bibinfo{person}{Hao Ding}, {and} \bibinfo{person}{Wei Dong}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{N2E: A General Framework to Reduce Node-Differential Privacy to Edge-Differential Privacy for Graph Analytics}.
+\newblock \bibinfo{journal}{\emph{Proceedings of the ACM on Management of Data}} \bibinfo{volume}{3}, \bibinfo{number}{6} (\bibinfo{year}{2025}), \bibinfo{pages}{1--26}.
+\newblock
+
+
+\bibitem[Hu et~al\mbox{.}(2026)]%
+        {full_version}
+\bibfield{author}{\bibinfo{person}{Yihua Hu}, \bibinfo{person}{Kuncan Wang}, {and} \bibinfo{person}{Wei Dong}.} \bibinfo{year}{2026}\natexlab{}.
+\newblock \showarticletitle{Acyclic Graph Pattern Counting under Local Differential Privacy [Full Version]}.
+\newblock  (\bibinfo{year}{2026}).
+\newblock
+\urldef\tempurl%
+\url{https://drive.google.com/drive/folders/1L_4OA9tuXksSGel6iqcZxpzarLNc4-k8?usp=sharing}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Imola et~al\mbox{.}(2021)]%
+        {Imola2021}
+\bibfield{author}{\bibinfo{person}{Jacob Imola}, \bibinfo{person}{Takao Murakami}, {and} \bibinfo{person}{Kamalika Chaudhuri}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Locally Differentially Private Analysis of Graph Statistics}. In \bibinfo{booktitle}{\emph{30th USENIX Security Symposium (USENIX Security 21)}}. \bibinfo{publisher}{USENIX Association}, \bibinfo{pages}{983--1000}.
+\newblock
+
+
+\bibitem[Imola et~al\mbox{.}(2022a)]%
+        {Imola2022}
+\bibfield{author}{\bibinfo{person}{Jacob Imola}, \bibinfo{person}{Takao Murakami}, {and} \bibinfo{person}{Kamalika Chaudhuri}.} \bibinfo{year}{2022}\natexlab{a}.
+\newblock \showarticletitle{Communication-Efficient Triangle Counting under Local Differential Privacy}. In \bibinfo{booktitle}{\emph{31st USENIX Security Symposium (USENIX Security 22)}}. \bibinfo{publisher}{USENIX Association}, \bibinfo{address}{Boston, MA}, \bibinfo{pages}{537--554}.
+\newblock
+
+
+\bibitem[Imola et~al\mbox{.}(2022b)]%
+        {imola2022differentially}
+\bibfield{author}{\bibinfo{person}{Jacob Imola}, \bibinfo{person}{Takao Murakami}, {and} \bibinfo{person}{Kamalika Chaudhuri}.} \bibinfo{year}{2022}\natexlab{b}.
+\newblock \showarticletitle{Differentially private triangle and 4-cycle counting in the shuffle model}. In \bibinfo{booktitle}{\emph{Proceedings of the 2022 ACM SIGSAC Conference on Computer and Communications Security}}. \bibinfo{pages}{1505--1519}.
+\newblock
+
+
+\bibitem[Itzkovitz and Alon(2005)]%
+        {itzkovitz2005subgraphs}
+\bibfield{author}{\bibinfo{person}{Shalev Itzkovitz} {and} \bibinfo{person}{Uri Alon}.} \bibinfo{year}{2005}\natexlab{}.
+\newblock \showarticletitle{Subgraphs and network motifs in geometric networks}.
+\newblock \bibinfo{journal}{\emph{Physical Review E—Statistical, Nonlinear, and Soft Matter Physics}} \bibinfo{volume}{71}, \bibinfo{number}{2} (\bibinfo{year}{2005}), \bibinfo{pages}{026117}.
+\newblock
+
+
+\bibitem[Johnson et~al\mbox{.}(2018)]%
+        {johnson2018towards}
+\bibfield{author}{\bibinfo{person}{Noah Johnson}, \bibinfo{person}{Joseph~P Near}, {and} \bibinfo{person}{Dawn Song}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Towards practical differential privacy for SQL queries}.
+\newblock \bibinfo{journal}{\emph{Proceedings of the VLDB Endowment}} \bibinfo{volume}{11}, \bibinfo{number}{5} (\bibinfo{year}{2018}), \bibinfo{pages}{526--539}.
+\newblock
+
+
+\bibitem[Joki{\'c} and Van~Mieghem(2022)]%
+        {jokic2022number}
+\bibfield{author}{\bibinfo{person}{Ivan Joki{\'c}} {and} \bibinfo{person}{Piet Van~Mieghem}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Number of paths in a graph}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2209.08840}} (\bibinfo{year}{2022}).
+\newblock
+
+
+\bibitem[Karwa et~al\mbox{.}(2011)]%
+        {karwa2011private}
+\bibfield{author}{\bibinfo{person}{Vishesh Karwa}, \bibinfo{person}{Sofya Raskhodnikova}, \bibinfo{person}{Adam Smith}, {and} \bibinfo{person}{Grigory Yaroslavtsev}.} \bibinfo{year}{2011}\natexlab{}.
+\newblock \showarticletitle{Private analysis of graph structure}.
+\newblock \bibinfo{journal}{\emph{Proceedings of the VLDB Endowment}} \bibinfo{volume}{4}, \bibinfo{number}{11} (\bibinfo{year}{2011}), \bibinfo{pages}{1146--1157}.
+\newblock
+
+
+\bibitem[Kasiviswanathan et~al\mbox{.}(2011)]%
+        {kasiviswanathan2011can}
+\bibfield{author}{\bibinfo{person}{Shiva~Prasad Kasiviswanathan}, \bibinfo{person}{Homin~K Lee}, \bibinfo{person}{Kobbi Nissim}, \bibinfo{person}{Sofya Raskhodnikova}, {and} \bibinfo{person}{Adam Smith}.} \bibinfo{year}{2011}\natexlab{}.
+\newblock \showarticletitle{What can we learn privately?}
+\newblock \bibinfo{journal}{\emph{SIAM J. Comput.}} \bibinfo{volume}{40}, \bibinfo{number}{3} (\bibinfo{year}{2011}), \bibinfo{pages}{793--826}.
+\newblock
+
+
+\bibitem[Kasiviswanathan et~al\mbox{.}(2013)]%
+        {kasiviswanathan2013analyzing}
+\bibfield{author}{\bibinfo{person}{Shiva~Prasad Kasiviswanathan}, \bibinfo{person}{Kobbi Nissim}, \bibinfo{person}{Sofya Raskhodnikova}, {and} \bibinfo{person}{Adam Smith}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{Analyzing graphs with node differential privacy}. In \bibinfo{booktitle}{\emph{Theory of Cryptography Conference}}. Springer, \bibinfo{pages}{457--476}.
+\newblock
+
+
+\bibitem[Katz(1953)]%
+        {katz1953new}
+\bibfield{author}{\bibinfo{person}{Leo Katz}.} \bibinfo{year}{1953}\natexlab{}.
+\newblock \showarticletitle{A new status index derived from sociometric analysis}.
+\newblock \bibinfo{journal}{\emph{Psychometrika}} \bibinfo{volume}{18}, \bibinfo{number}{1} (\bibinfo{year}{1953}), \bibinfo{pages}{39--43}.
+\newblock
+
+
+\bibitem[Leskovec and Krevl(2014)]%
+        {leskovec2014snap}
+\bibfield{author}{\bibinfo{person}{Jure Leskovec} {and} \bibinfo{person}{Andrej Krevl}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \bibinfo{title}{SNAP: Stanford network analysis project}.
+\newblock
+
+
+\bibitem[Liben-Nowell and Kleinberg(2003)]%
+        {liben2003link}
+\bibfield{author}{\bibinfo{person}{David Liben-Nowell} {and} \bibinfo{person}{Jon Kleinberg}.} \bibinfo{year}{2003}\natexlab{}.
+\newblock \showarticletitle{The link prediction problem for social networks}. In \bibinfo{booktitle}{\emph{Proceedings of the twelfth international conference on Information and knowledge management}}. \bibinfo{pages}{556--559}.
+\newblock
+
+
+\bibitem[Milo et~al\mbox{.}(2002)]%
+        {milo2002network}
+\bibfield{author}{\bibinfo{person}{Ron Milo}, \bibinfo{person}{Shai Shen-Orr}, \bibinfo{person}{Shalev Itzkovitz}, \bibinfo{person}{Nadav Kashtan}, \bibinfo{person}{Dmitri Chklovskii}, {and} \bibinfo{person}{Uri Alon}.} \bibinfo{year}{2002}\natexlab{}.
+\newblock \showarticletitle{Network motifs: simple building blocks of complex networks}.
+\newblock \bibinfo{journal}{\emph{Science}} \bibinfo{volume}{298}, \bibinfo{number}{5594} (\bibinfo{year}{2002}), \bibinfo{pages}{824--827}.
+\newblock
+
+
+\bibitem[Narayanan and Shmatikov(2009)]%
+        {narayanan2009anonymizing}
+\bibfield{author}{\bibinfo{person}{Arvind Narayanan} {and} \bibinfo{person}{Vitaly Shmatikov}.} \bibinfo{year}{2009}\natexlab{}.
+\newblock \showarticletitle{De-anonymizing social networks}. In \bibinfo{booktitle}{\emph{2009 30th IEEE symposium on security and privacy}}. IEEE, \bibinfo{pages}{173--187}.
+\newblock
+
+
+\bibitem[Ngo et~al\mbox{.}(2018)]%
+        {ngo2018worst}
+\bibfield{author}{\bibinfo{person}{Hung~Q Ngo}, \bibinfo{person}{Ely Porat}, \bibinfo{person}{Christopher R{\'e}}, {and} \bibinfo{person}{Atri Rudra}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Worst-case optimal join algorithms}.
+\newblock \bibinfo{journal}{\emph{Journal of the ACM (JACM)}} \bibinfo{volume}{65}, \bibinfo{number}{3} (\bibinfo{year}{2018}), \bibinfo{pages}{1--40}.
+\newblock
+
+
+\bibitem[Nissim et~al\mbox{.}(2007)]%
+        {nissim2007smooth}
+\bibfield{author}{\bibinfo{person}{Kobbi Nissim}, \bibinfo{person}{Sofya Raskhodnikova}, {and} \bibinfo{person}{Adam Smith}.} \bibinfo{year}{2007}\natexlab{}.
+\newblock \showarticletitle{Smooth sensitivity and sampling in private data analysis}. In \bibinfo{booktitle}{\emph{Proceedings of the thirty-ninth annual ACM symposium on Theory of computing}}. \bibinfo{pages}{75--84}.
+\newblock
+
+
+\bibitem[Palla et~al\mbox{.}(2005)]%
+        {palla2005uncovering}
+\bibfield{author}{\bibinfo{person}{Gergely Palla}, \bibinfo{person}{Imre Der{\'e}nyi}, \bibinfo{person}{Ill{\'e}s Farkas}, {and} \bibinfo{person}{Tam{\'a}s Vicsek}.} \bibinfo{year}{2005}\natexlab{}.
+\newblock \showarticletitle{Uncovering the overlapping community structure of complex networks in nature and society}.
+\newblock \bibinfo{journal}{\emph{nature}} \bibinfo{volume}{435}, \bibinfo{number}{7043} (\bibinfo{year}{2005}), \bibinfo{pages}{814--818}.
+\newblock
+
+
+\bibitem[Sun et~al\mbox{.}(2019)]%
+        {sun2019analyzing}
+\bibfield{author}{\bibinfo{person}{Haipei Sun}, \bibinfo{person}{Xiaokui Xiao}, \bibinfo{person}{Issa Khalil}, \bibinfo{person}{Yin Yang}, \bibinfo{person}{Zhan Qin}, \bibinfo{person}{Hui Wang}, {and} \bibinfo{person}{Ting Yu}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Analyzing subgraph statistics from extended local views with decentralized differential privacy}. In \bibinfo{booktitle}{\emph{Proceedings of the 2019 ACM SIGSAC conference on computer and communications security}}. \bibinfo{pages}{703--717}.
+\newblock
+
+
+\bibitem[Suppakitpaisarn et~al\mbox{.}(2025)]%
+        {suppakitpaisarn2025counting}
+\bibfield{author}{\bibinfo{person}{Vorapong Suppakitpaisarn}, \bibinfo{person}{Donlapark Ponnoprat}, \bibinfo{person}{Nicha Hirankarn}, {and} \bibinfo{person}{Quentin Hillebrand}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{Counting Graphlets of Size $ k $ under Local Differential Privacy}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2505.12954}} (\bibinfo{year}{2025}).
+\newblock
+
+
+\bibitem[Warner(1965)]%
+        {warner1965randomized}
+\bibfield{author}{\bibinfo{person}{Stanley~L Warner}.} \bibinfo{year}{1965}\natexlab{}.
+\newblock \showarticletitle{Randomized response: A survey technique for eliminating evasive answer bias}.
+\newblock \bibinfo{journal}{\emph{Journal of the American statistical association}} \bibinfo{volume}{60}, \bibinfo{number}{309} (\bibinfo{year}{1965}), \bibinfo{pages}{63--69}.
+\newblock
+
+
+\bibitem[Wu et~al\mbox{.}(2021)]%
+        {wu2021adapting}
+\bibfield{author}{\bibinfo{person}{Bang Wu}, \bibinfo{person}{Xiangwen Yang}, \bibinfo{person}{Shirui Pan}, {and} \bibinfo{person}{Xingliang Yuan}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Adapting membership inference attacks to GNN for graph classification: Approaches and implications}. In \bibinfo{booktitle}{\emph{2021 IEEE International Conference on Data Mining (ICDM)}}. IEEE, \bibinfo{pages}{1421--1426}.
+\newblock
+
+
+\bibitem[Yannakakis(1981)]%
+        {yannakakis1981algorithms}
+\bibfield{author}{\bibinfo{person}{Mihalis Yannakakis}.} \bibinfo{year}{1981}\natexlab{}.
+\newblock \showarticletitle{Algorithms for acyclic database schemes}. In \bibinfo{booktitle}{\emph{VLDB}}, Vol.~\bibinfo{volume}{81}. \bibinfo{pages}{82--94}.
+\newblock
+
+
+\bibitem[Ye et~al\mbox{.}(2020a)]%
+        {ye2020lf}
+\bibfield{author}{\bibinfo{person}{Qingqing Ye}, \bibinfo{person}{Haibo Hu}, \bibinfo{person}{Man~Ho Au}, \bibinfo{person}{Xiaofeng Meng}, {and} \bibinfo{person}{Xiaokui Xiao}.} \bibinfo{year}{2020}\natexlab{a}.
+\newblock \showarticletitle{LF-GDPR: A framework for estimating graph metrics with local differential privacy}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Knowledge and Data Engineering}} \bibinfo{volume}{34}, \bibinfo{number}{10} (\bibinfo{year}{2020}), \bibinfo{pages}{4905--4920}.
+\newblock
+
+
+\bibitem[Ye et~al\mbox{.}(2020b)]%
+        {ye2020towards}
+\bibfield{author}{\bibinfo{person}{Qingqing Ye}, \bibinfo{person}{Haibo Hu}, \bibinfo{person}{Man~Ho Au}, \bibinfo{person}{Xiaofeng Meng}, {and} \bibinfo{person}{Xiaokui Xiao}.} \bibinfo{year}{2020}\natexlab{b}.
+\newblock \showarticletitle{Towards locally differentially private generic graph metric estimation}. In \bibinfo{booktitle}{\emph{2020 IEEE 36th International Conference on Data Engineering (ICDE)}}. IEEE, \bibinfo{pages}{1922--1925}.
+\newblock
+
+
+\bibitem[Zhang et~al\mbox{.}(2015)]%
+        {zhang2015private}
+\bibfield{author}{\bibinfo{person}{Jun Zhang}, \bibinfo{person}{Graham Cormode}, \bibinfo{person}{Cecilia~M Procopiuc}, \bibinfo{person}{Divesh Srivastava}, {and} \bibinfo{person}{Xiaokui Xiao}.} \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{Private release of graph statistics using ladder functions}. In \bibinfo{booktitle}{\emph{Proceedings of the 2015 ACM SIGMOD international conference on management of data}}. \bibinfo{pages}{731--745}.
+\newblock
+
+
+\bibitem[Zhang et~al\mbox{.}(2022)]%
+        {zhang2022inference}
+\bibfield{author}{\bibinfo{person}{Zhikun Zhang}, \bibinfo{person}{Min Chen}, \bibinfo{person}{Michael Backes}, \bibinfo{person}{Yun Shen}, {and} \bibinfo{person}{Yang Zhang}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Inference attacks against graph neural networks}. In \bibinfo{booktitle}{\emph{31st USENIX Security Symposium (USENIX Security 22)}}. \bibinfo{pages}{4543--4560}.
+\newblock
+
+
+\end{thebibliography}

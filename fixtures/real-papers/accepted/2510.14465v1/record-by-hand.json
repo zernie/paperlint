@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "ase-introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "ase-motivation.tex",
+      "role": "body"
+    },
+    {
+      "path": "ase-our-dsl.tex",
+      "role": "body"
+    },
+    {
+      "path": "ase-engine-short.tex",
+      "role": "body"
+    },
+    {
+      "path": "ase-proof-of-concept.tex",
+      "role": "body"
+    },
+    {
+      "path": "ase-discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "ase-conclusion.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "ceb40aa6010a06ec6acff24257dcbbdddab572571f8aacfdc15dd39f5e21a760",
+    "ase-introduction.tex": "a998e2a2c2c316ccfa511c10d9aa20fa00ab79cc5767374e3aae52560d4532c0",
+    "ase-motivation.tex": "903cf5f3459d35c2ecf2b0ffc2a26fe830ff2f4d515b3d11752325924ff1d36d",
+    "ase-our-dsl.tex": "a989df11fd86ee003bdf0fe7e76e227e10ee53ad25b2d3d2bac8f32c04680481",
+    "ase-engine-short.tex": "79cee58988824999b00919b833691155c479f8835e7eb276b64c22f31c897f5a",
+    "ase-proof-of-concept.tex": "7933869aedcb9a1508f18a087cb47d4e1b7e6d00c26efbb8954bae0bb363d28e",
+    "ase-discussion.tex": "bfd305b141c4d0642499d65abe23097983651ba3d2a431ec90169b41da6387bf",
+    "ase-conclusion.tex": "a2e493fd7bbd22b4628d789e1319b66ba517169e8976e369c1750fb2f0d3e36a"
+  }
+}

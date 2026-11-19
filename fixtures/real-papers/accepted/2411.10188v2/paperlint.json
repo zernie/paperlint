@@ -1,0 +1,17 @@
+{
+  "cycles": [
+    {
+      "id": "popl-2025",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:acm-acmsmall"
+      },
+      "opened": "2024-11-20",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2024-11-20",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

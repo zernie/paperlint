@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "setup/packages.tex",
+      "role": "body"
+    },
+    {
+      "path": "setup/macro.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/prereq.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/formal-model.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/translate-to-lcs.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/reduction-to-reachability.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/evaluation.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/related-work.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/acknowledgements.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "56b23337332ff8f4bcc3c1e4e9f85d63ce15b2a393fd78fe989fc65f1d42b8f2",
+    "setup/packages.tex": "7662484a7523d70499e580cf34c70d415c1b220eafd9ccaea79896ca9126c852",
+    "setup/macro.tex": "7ad4c63280c06ce99a338388b95fe7b9bda037d7160a8c1ef465dee235ab480c",
+    "sections/abstract.tex": "e9e9831d6f77477535621dbef6e531697320233aea69fe1616bad1aa1321cea9",
+    "sections/introduction.tex": "a2131df45e74ddf22cdcb8fe66e498a997b1662b346cf1ac308d3a0f88c2754a",
+    "sections/prereq.tex": "c923d7adf59e2a61688fd05f472fc3b77e7922fdaf38ba214837389c47ceabf5",
+    "sections/formal-model.tex": "11c4414a961ecb3836e565f201ec29621138362703660f7add05d666348d67a5",
+    "sections/translate-to-lcs.tex": "683aced789538f0be5380b46b9652dad299ee427b49a60a4a4e1bbaf979e6179",
+    "sections/reduction-to-reachability.tex": "8140d652060582cc789b5a77ce6a70165b93c66b18217261906e5ded85a563f9",
+    "sections/evaluation.tex": "97a875dd1c792ad3c6ebe0ff10ce4948bc15006f68a4be0ff0e3aa32914975dc",
+    "sections/related-work.tex": "ad8f19661baeb21dc2da18f5773525990ddde2d1a1781bb984b7fae6c6d5d52a",
+    "sections/conclusion.tex": "b7670027df6892c924aa334d87a6a4f80fa4ff2eb5f148307bcaf3e7c6b6b097",
+    "sections/acknowledgements.tex": "00e41dcb9415c5ac6c32fa0ea74fad4e51c84e98fc2f6e7c6f8a0703ad82d3be"
+  }
+}

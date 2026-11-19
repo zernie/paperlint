@@ -1,0 +1,191 @@
+% \documentclass[manuscript,screen,anonymous]{acmart}
+\documentclass[sigconf]{acmart}
+
+\AtBeginDocument{%
+  \providecommand\BibTeX{{%
+    \normalfont B\kern-0.5em{\scshape i\kern-0.25em b}\kern-0.8em\TeX}}}
+
+%% Rights Management / Conference Info
+\copyrightyear{2025}
+\acmYear{2025}
+\setcopyright{cc}
+\setcctype{by}
+\acmConference[CHI '25]{CHI Conference on Human Factors in Computing Systems}{April 26-May 1, 2025}{Yokohama, Japan}
+\acmBooktitle{CHI Conference on Human Factors in Computing Systems (CHI '25), April 26-May 1, 2025, Yokohama, Japan}\acmDOI{10.1145/3706598.3714270}
+\acmISBN{979-8-4007-1394-1/25/04}
+
+% Load Packages
+\usepackage{graphicx}
+\usepackage{mathtools}
+% \usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{subcaption}
+% \usepackage{comment}
+% \usepackage[false]{anonymous-acm}
+\usepackage{colortbl}
+\usepackage{xcolor}
+
+% Comment this to overwrite the hl command
+% Uncomment this to see the highlights
+%\usepackage{soul}
+
+%Comment this to see the highlights
+% Uncomment this to have all the text in black
+%\newcommand{\hl}[1]{\textcolor{black}{#1}}
+
+
+% Set Document Margins
+% \setlength{\floatsep}{5pt plus 2pt minus 2pt}
+% \setlength{\textfloatsep}{5pt plus 2pt minus 2pt}
+% \setlength{\intextsep}{5pt plus 2pt minus 2pt}
+% \setlength{\abovecaptionskip}{5pt plus 2pt minus 5pt}
+
+\newcommand{\rr}[1]{\textcolor{blue}{#1}}
+\newcommand{\hl}[1]{\textcolor{black}{#1}}
+
+\begin{document}
+
+% Title
+\title[Effects of Increasing Task Complexity on the Effectiveness of Data Storytelling]{"Piecing Data Connections Together Like a Puzzle": Effects of Increasing Task Complexity on the Effectiveness of Data Storytelling Enhanced Visualisations}
+
+% Authors
+\author{Mikaela Elizabeth Milesi}
+\authornote{Both authors contributed equally to this research.}
+    \orcid{0009-0002-0910-9822}
+    \affiliation{%
+        \institution{Monash University}
+        \city{Melbourne}
+        \state{Victoria}
+        \country{Australia}
+    }
+    \email{mikaela.milesi@monash.edu}
+    
+\author{Paola Mejia-Domenzain}
+\authornotemark[1]
+    \orcid{0000-0003-1242-3134}
+    \affiliation{%
+        \institution{EPFL}
+        \city{Lausanne}
+        \country{Switzerland}
+    }
+    \email{paola.mejia@epfl.ch}
+
+\author{Laura Brandl}
+    \orcid{0000-0001-7974-7892}
+    \affiliation{%
+        \institution{Department of Psychology, Ludwig-Maximilians-Universität München}
+        \city{Munich}
+        \country{Germany}
+    }
+    \email{L.Brandl@psy.lmu.de}
+
+\author{Vanessa Echeverria}
+    \orcid{0000-0002-2022-9588}
+    \affiliation{%
+        \institution{Monash University}
+        \city{Melbourne}
+        \country{Australia}
+    }
+    \affiliation{%
+        \institution{Escuela Superior Politécnica del Litoral}
+        \city{Guayaquil}
+        \country{Ecuador}
+    }
+    \email{vanessa.echeverria@monash.edu}
+
+\author{Yueqiao Jin}
+    \orcid{0009-0003-7309-4984}
+    \affiliation{%
+        \institution{Monash University}
+        \city{Melbourne}
+        \state{Victoria}
+        \country{Australia}
+    }
+    \email{ariel.jin@monash.edu}
+
+\author{Dragan Gašević}
+    \orcid{0000-0001-9265-1908}
+    \affiliation{%
+        \institution{Monash University}
+        \city{Melbourne}
+        \state{Victoria}
+        \country{Australia}
+    }
+    \email{dragan.gasevic@monash.edu}
+
+\author{Yi-Shan Tsai}
+    \orcid{0000-0001-8967-5327}
+    \affiliation{%
+        \institution{Monash University}
+        \city{Melbourne}
+        \state{Victoria}
+        \country{Australia}
+    }
+    \email{yi-shan.tsai@monash.edu}
+
+\author{Tanja Käser}
+    \orcid{0000-0003-0672-0415}
+    \affiliation{%
+        \institution{EPFL}
+        \city{Lausanne}
+        \country{Switzerland}
+    }
+    \email{tanja.kaeser@epfl.ch}
+
+\author{Roberto Martinez-Maldonado}
+    \orcid{0000-0002-8375-1816}
+    \affiliation{%
+        \institution{Monash University}
+        \city{Melbourne}
+        \state{Victoria}
+        \country{Australia}
+    }
+    \email{roberto.martinezmaldonado@monash.edu}
+
+%Uncomment this when making the paper de-anonymised
+% co-first authorship is carried by \authornote on the two authors above
+
+\renewcommand{\shortauthors}{Milesi et al.}
+
+% Abstract
+\input{section/0_abstract}
+
+% ACM Classification (http://dl.acm.org/ccs.cfm)
+\begin{CCSXML}
+    <ccs2012>
+       <concept>
+           <concept_id>10003120.10003145.10011770</concept_id>
+           <concept_desc>Human-centered computing~Visualization design and evaluation methods</concept_desc>
+           <concept_significance>500</concept_significance>
+           </concept>
+     </ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Human-centered computing~Visualization design and evaluation methods}
+
+% Keywords
+\keywords{data storytelling, information visualisation, annotated visualisations, bloom's taxonomy}
+
+% Sections
+\maketitle
+    \begingroup
+        \renewcommand{\thefootnote}{}
+        \footnotetext{* These two authors contributed equally to this work.}
+        \addtocounter{footnote}{0}
+    \endgroup
+
+    \input{section/1_introduction}
+    \input{section/2_background}
+    \input{section/3_method}
+    \input{section/4_results}
+    \input{section/5_discussion}
+    \input{section/6_conclusion}
+
+% Bibliography
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{reference.bib}
+
+    \input{section/7_appendix}
+
+\end{document}

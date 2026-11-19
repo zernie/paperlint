@@ -1,0 +1,134 @@
+\section{Method}
+Our framework, as illustrated in Figure \ref{fig:framework}, bridges the gap between high-level planning and low-level training.
+We begin by decomposing a complex long-term task into a series of short-term subtasks, with a determination function $\Psi$ to classify the current subtask (Section \ref{sec:subtask-decomposition}).
+Next, we construct a potential-based Progress Reward Model (PRM) derived from the progress function $\Phi$, which generates effective reward signals that are proved to have convergence and optimality guarantees (Section \ref{sec:progress-reward}).
+Finally, the policy is augmented using both the PRM reward and the subtask priors (Section \ref{sec:rl-augmentation}).
+
+\textbf{LLM usage pattern.}\label{sec:llm-usage}
+In our framework, we prompt an LLM to decompose the tasks and generate the determination function $\Psi$ and progress function $\Phi$.
+Considering that the intermediate inference steps and the required final response are primarily represented as Python code (as shown later in Section \ref{sec:subtask-decomposition}, \ref{sec:progress-reward}), inspired from PAL\cite{gao2023pal}, we require the LLM to generate programs as intermediate steps, as shown in Figure \ref{fig:framework}a.
+Specifically, we instruct the LLM to generate natural language reasoning steps using comment syntax (e.g., `\#' in Python), while the code itself is generated normally.
+Through this program-aided Chain-of-Thought reasoning, the LLM can generate both the plan and progress function in a single interaction.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/framework.jpg}
+  \caption{An overview of our framework. (a) We prompt the LLM using a Chain-of-Thought approach in Python code format. The reasoning process is provided as comments (e.g., using \#), while the intermediate steps and final response are represented as executable Python statements. (b) Our framework augments RL in two ways: subtask prior and the PRM rewards.}
+  \label{fig:framework}
+\end{figure}
+
+\subsection{Subtask Decomposition}\label{sec:subtask-decomposition}
+Decomposing a long-term task into a series of short-term, manageable tasks provides the policy with subtask priors and alleviates the complexity of constructing the progress function.
+Existing methods\cite{brohan2023can, dalal2024plan} have demonstrated that, given sufficient environment-related information, LLMs are capable of task decomposition.
+In our framework, we leverage an LLM to break down the task into a series of subtasks, each contributing to the success of the overall task.
+We construct a Pythonic representation prompt that includes semantically rich contextual information such as state space, environmental descriptions, and task descriptions (detailed in Appendix \ref{app:prompts}), providing a high-dimensional abstraction of environment-specific information.
+
+While decomposing the subtasks, the LLM is also required to generate a natural language form \textit{subtask prior}, which is a description of the corresponding subtask.
+To ensure consistency and generalization across the robotics control domain, we designed a fixed pattern for the subtask priors.
+Specifically, we instruct the LLM to output each subtask prior in a "verb + noun" format (e.g., `Move to object' or `Grasp object'), significantly enhancing the generalization ability of the trained policy.
+The expected output from the LLM is a Python list, called \textit{plan\_list}, as shown in Figure \ref{fig:framework}a(II), where each element corresponds to a subtask prior.
+
+However, guiding the policy with subtask priors presents another challenge: real-time tracking of which subtask the policy is currently executing.
+Previous approaches require calling the LLM at each timestep, either to regenerate a real-time plan\cite{du2023guiding} or to check the completion of ongoing subtasks\cite{dalal2024plan}, leading to significant time and computational overhead.
+
+Our key insight is that, with a thorough understanding of the state space, we can determine which subtask the policy is in based solely on current state.
+For the previously generated \textit{plan\_list}, we instruct the LLM to identify the completion condition for each subtask and locate the relevant features in the state space.
+We then construct a subtask determination function $\Psi(s)$, where given state $s$, it will return the index of current subtask in \textit{plan\_list}.
+As shown in Figure \ref{fig:framework}a(II), the LLM ultimately generates an efficient, low-cost logical chain that ensures rigorous subtask determination.
+
+\begin{algorithm}[t]
+      \caption{PRM4RL}
+      \begin{algorithmic}
+      \State \textbf{Require:} pythonic LLM prompt $prompt$, sentence encoder $\mathbf{E}$, policy $\pi_\theta $, MDP \( \mathcal{M} = \langle \mathcal{S}, \mathcal{A}, \mathcal{T}, R, \gamma, \rho_0 \rangle \), RL optimization algorithm $Optimize\_Algo$
+        \State \textcolor{teal}{// Request LLM}
+        \State $plan\_list, \Psi(s), \Phi(s) = LLM(prompt)$
+
+        \State \textcolor{teal}{// Augment State Space}
+        \State $\mathcal{P}: prior = \mathbf{E}(plan\_list[\Psi(s)])$
+
+        \State \textcolor{teal}{// Augment Reward Function}
+        \State $R^{PRM} = \gamma \cdot \Phi(s_{t+1}) - \Phi(s_{t}) + \mathbb{I}(s_{t+1})\cdot r_{bonus}$
+
+        \State \textcolor{teal}{// Optimizing policy under augmented MDP}
+        \State $\mathcal{M'} = \langle \mathcal{S}+\mathcal{P}, \mathcal{A}, \mathcal{T}, R^{PRM}, \gamma, \rho_0 \rangle$
+        \State $\theta^* = Optimize\_Algo(M')$
+      \end{algorithmic}
+\end{algorithm}
+
+\subsection{Potential-Based Progress Reward Model}\label{sec:progress-reward}
+Our framework aims to construct a dense and efficient reward signal to guide the training of low-level policies.
+While previous approaches\cite{xie2024text2reward, ma2023eureka, hazra2024revolve} directly design a reward function, we choose to model the progress of task execution instead. This approach is more task-relevant and provides stronger theoretical guarantees on optimality and convergence as proved later.
+
+With the decomposition of subtasks, the focus of our progress function shifts from a long-term, complex task to short-term, simpler subtasks.
+This transformation simplifies task comprehension and the design of usable metrics.
+Based on the established subtask determination logic $\Psi$, we instruct the LLM to further define a progress function for each subtask, and then integrating these fine-grained sub-progress indicators into an overall evaluation of the task progress $\Phi(s)$, as shown in Figure \ref{fig:framework}a(III).
+The progress function offers a precise and efficient method for monitoring overall task execution.
+
+Inspired by potential-based framework, we treat the progress function $\Phi(s)$ as a form of potential and construct the Progress Reward Model (PRM) using the temporal difference form:
+\begin{equation}
+    R_t^{PRM} = \gamma \cdot \Phi(s_{t+1}) - \Phi(s_{t}) + \mathbb{I}(s_{t+1})\cdot r_{bonus}
+\end{equation}
+where $R_t^{PRM}$ is the dense reward given by PRM at timestep $t$, $\gamma$ is the discount factor, and the indicator function $\mathbb{I}$ equals 1 when $s_{t+1}$ meets the success conditions and 0 otherwise. $\Phi(s_{t+1})$ and $\Phi(s_{t})$ represent the progress at timesteps $t+1$ and $t$, respectively.
+The PRM reward can be regarded as consisting of two parts: a sparse success reward and a potential-based reward shaping term. Following \cite{ng1999policy}, we present the following theorem:
+
+\begin{theorem}[Policy Invariance]\label{thm:policy-invariance}
+Define an MDP \( M = \langle \mathcal{S}, \mathcal{A}, \mathcal{T}, R, \gamma, \rho_0 \rangle \), where $R_t = \mathbb{I}(s_{t+1})\cdot r_{bonus}$ represents the sparse reward when the task is considered successful.
+Giving a potential-based reward shaping function as follows:
+\begin{equation*}
+    F =  \gamma \cdot \Phi(s_{t+1}) - \Phi(s_{t})
+\end{equation*}
+Let another MDP \( M' = \langle \mathcal{S}, \mathcal{A}, \mathcal{T}, R+F, \gamma, \rho_0 \rangle \), then every optimal policy in $M'$ will also be an optimal policy in $M$ and vice versa.
+\end{theorem}
+
+The proof of Theorem \ref{thm:policy-invariance} is provided in Appendix \ref{thm:policy-invariance-proof}. Theorem \ref{thm:policy-invariance} indicates that $R^{PRM}$  does not distort the learning of the policy by introducing "deceptive" or "short-sighted" behaviors due to reward shaping.
+The optimal policy in $M'$ remains focused on maximizing the original task objective, i.e. maximize success rate.
+Based on Theorem \ref{thm:policy-invariance}, we have the following corollary:
+
+\begin{corollary}[Convergence Guarantee]
+The introduction of potential-based reward shaping will not affect the convergence of reinforcement learning algorithms.
+\end{corollary}
+
+Since the PRM reward has a theoretical convergence guarantee, we proceed to demonstrate its efficiency in convergence, following the work of \cite{Wiewiora_2003} (Detailed proof provided in  Appendix \ref{thm:convergence-efficiency-proof}).
+
+\begin{theorem}[Convergence Efficiency]\label{thm:convergence-efficiency}
+Consider two MDPs: \( M = \langle \mathcal{S}, \mathcal{A}, \mathcal{T}, R+F, \gamma, \rho_0 \rangle \) with $Q$-function $Q$ and \( M' = \langle \mathcal{S}, \mathcal{A}, \mathcal{T}, R, \gamma, \rho_0 \rangle \). If we initialize the $Q$-function in $M'$ as follows:
+\begin{equation*}
+    Q'_0(s, a) = Q_0(s, a) + \Phi(s)
+\end{equation*}
+Then for all timesteps $t \geq 0$ and $(s,a) \in \mathcal{S} \times \mathcal{A}$:
+\begin{equation*}
+    Q'_t(s,a) = Q_t(s,a) + \Phi(s)
+\end{equation*}
+where $Q_t$ and $Q'_t$ are the Q-functions of MDP $M$ and $M'$ respectively.
+\end{theorem}
+The mathematical equivalence between PRM and $Q$-value initialization, as established in Theorem \ref{thm:convergence-efficiency}, provides two fundamental insights into why PRM accelerates convergence.
+First, it demonstrates that PRM effectively provides prior knowledge-based initialization for value functions, directly reducing the initial approximation error $| Q_0 - Q^* |$.
+Second, the proof formally justifies that any well-designed potential function $\Phi(s)$ serves as an actionable curriculum, where the shaping term $\gamma \Phi(s') - \Phi(s)$ progressively guides exploration toward high-value regions without altering optimal policies.
+
+These theoretical results establish PRM not only as a heuristic reward design but also as a mathematically grounded approach to guide the policy with optimality and convergence.
+
+\subsection{Reinforcement Learning Augmentation}\label{sec:rl-augmentation}
+Giving an MDP  \( M = \langle \mathcal{S}, \mathcal{A}, \mathcal{T}, R, \gamma, \rho_0 \rangle \), our framework augment it through both high-level planning and low-level reward shaping.
+
+At the high level, the policy cannot directly process the natural language form of the \textit{plan\_list}.
+To address this, we employ SimCSE\cite{gao2022simcsesimplecontrastivelearning}, a sentence encoder $\mathbf{E}$, to embed the subtask prior.
+Specifically, the subtask prior is expressed as:
+\begin{equation*}
+    \mathcal{P}: prior = \mathbf{E}(plan\_list[\Psi(s)])
+\end{equation*}
+where subtask prior is the embedding of current subtask corresponding to state $s$.
+The state space is then augmented to $\mathcal{S}+\mathcal{P}$.
+At the low level, we use the reward $R^{PRM}$ from Section \ref{sec:progress-reward} to efficiently guide the learning of policy.
+Finally, the augmented MDP is expressed as:
+\begin{equation*}
+    \mathcal{M'} = \langle \mathcal{S}+\mathcal{P}, \mathcal{A}, \mathcal{T}, R^{PRM}, \gamma, \rho_0 \rangle
+\end{equation*}
+This formulation integrates both high-level planning through the subtask prior and low-level control via the PRM reward to guide policy learning.
+Consequently, we can utilize existing RL optimization algorithms to optimize the policy under the augmented MDP $M'$. In this paper, we use Soft Actor-Critic (SAC)\cite{haarnoja2018softactorcriticoffpolicymaximum} and Proximal Policy Optimization (PPO)\cite{schulman2017proximal}.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/learning-curves.jpg}
+  \caption{The learning curves of comparison methods on Metaworld and Maniskill measured by success rate. All experiments are conducted with 5 random seeds.}
+  \label{fig:learning-curves}
+\end{figure}

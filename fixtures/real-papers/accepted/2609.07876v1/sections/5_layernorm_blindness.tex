@@ -1,0 +1,23 @@
+% \subsection{RMSNorm could induce TLCM}
+One natural cause of TLCM is RMSNorm. RMSNorm normalizes the input to the attention and MLP sublayers in nearly all of the open-source models analyzed.  
+%It operates by normalizing the residual stream to a fixed norm of $\sqrt{d_\text{m}}$, followed by scaling each component of the resulting vector with a learnable parameter. 
+Formally, for an input $\mathbf{x} \in \mathbb{R}^{d_\text{m}}$ to an attention or MLP sublayers and a learnable parameter vector $\mathbf{g}$, RMSNorm is defined as:
+$$\overline{\mathbf{x}} = \frac{\mathbf{x}}{\operatorname{RMS}(\mathbf{x})} \odot \mathbf{g} \qquad \qquad \operatorname{RMS}(\mathbf{x}) = \frac{1}{\sqrt{d_\text{m}}} \|\mathbf{x}\|_2,$$
+where $d_\text{m}$ is the dimension of the residual stream. 
+
+Crucially, the use of RMSNorm implies that both the attention and MLP sublayers have \emph{layernorm blindness}; they are blind to the norm of the residual stream. This blindness is significant because these sublayers predict contributions to the residual stream (i.e. $\mathbf{x}_i + \operatorname{Sublayer}(\mathbf{x}_i)$), whose relative impacts depend on the the residual streams current magnitude. 
+%To maintain proportionality in their contributions when the residual stream norm is larger than expected, the contributions themselves must scale accordingly. 
+Without visibility into the residual stream norm, attention and MLP sublayers risk under-contributing when the norm is high, which potentially leads to their contributions being overshadowed. This could encourage over-contribution behaviors followed by correction, which is consistent with TLCM. 
+%This insight may interest practitioners focusing on training dynamics or model architecture, as addressing this inefficiency could provide opportunities for optimization.
+
+
+However, we find that \emph{LayerNorm blindness alone does not fully explain the  TLCM}. This is because as discussed in Sec. \ref{sec:jacobian-selective}, the correction mechanism does not entirely reverse $\mathbf{a}_t$, contrary to what would be expected if RMSNorm were the primary cause. But perhaps more critically, models trained with alternative RMSNorm implementations continue to exhibit the mechanism:
+
+\textbf{Gemma.} The sublayers in Gemma 1 were trained using pre-LayerNorm as described above. In contrast, Gemma 2 utilized a hybrid approach, employing both pre-LayerNorm and post-LayerNorm:
+$$\mathbf{x}_{i+1} = \mathbf{x}_i + \operatorname{LayerNorm}(\operatorname{Sublayer}(\operatorname{LayerNorm}(\mathbf{x}_i))).$$
+The addition of post-LayerNorm should, in principle, make the residual stream norm more predictable. However, empirical results show that the correction mechanism remains robust in Gemma 2. Refer to Figure \ref{fig:rmsnorm} for a comparison.
+
+\textbf{OLMo.} The original OLMo models employed pre-LayerNorm exclusively. In the OLMo 2 series, pre-LayerNorm was replaced with post-LayerNorm and QK norm. Despite this architectural change, the correction mechanism persists strongly in OLMo 2, as shown in Figure \ref{fig:rmsnorm}.
+
+% There are a variety of possible explanations for this phenomenon. For example, we would observe this phenomena if transformer blocks were communicating with each other: layer $i$ could write to some subspace while layer $i+1$ reads and deletes the same subspace.
+

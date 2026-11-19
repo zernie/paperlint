@@ -1,0 +1,249 @@
+%% For double-blind review submission, w/o CCS and ACM Reference (max submission space)
+%\documentclass[acmsmall,screen,review,svgnames,x11names]{acmart}
+%\settopmatter{printfolios=true,printccs=false,printacmref=false}
+%% For double-blind review submission, w/ CCS and ACM Reference
+%\documentclass[acmsmall,review,anonymous]{acmart}\settopmatter{printfolios=true}
+%% For single-blind review submission, w/o CCS and ACM Reference (max submission space)
+%\documentclass[acmsmall,review]{acmart}\settopmatter{printfolios=true,printccs=false,printacmref=false}
+%% For single-blind review submission, w/ CCS and ACM Reference
+%\documentclass[acmsmall,review]{acmart}\settopmatter{printfolios=true}
+%% For final camera-ready submission, w/ required CCS and ACM Reference
+%%\documentclass[acmsmall, nonacm]{acmart}\settopmatter{}
+
+
+% This is what I think we will need
+\documentclass[acmsmall, nonacm, screen,svgnames,x11names]{acmart}\settopmatter{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%Start of stuff copied from the file `sample-acmsmall-conf.tex', %%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%
+%% \BibTeX command to typeset BibTeX logo in the docs
+\AtBeginDocument{%
+	\providecommand\BibTeX{{%
+			Bib\TeX}}}
+
+%%% The following is specific to  and the paper
+%%% 'noDice: Inference for Discrete Probabilistic Programs with Nondeterminism and Conditioning'
+%%% by Tobias Gürtler and Benjamin Lucien Kaminski.
+%%%
+\setcopyright{rightsretained}
+\acmDOI{10.1145/3798215}
+\acmYear{2026}
+\acmJournal{PACMPL}
+\acmVolume{10}
+\acmNumber{OOPSLA1}
+\acmArticle{107}
+\acmMonth{4}
+\received{2025-10-06}
+\received[accepted]{2026-02-17}
+
+
+\citestyle{acmauthoryear}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%End of stuff copied from the file `sample-acmsmall-conf.tex', %%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usepackage{csquotes}
+\usepackage[disable]{todonotes}
+\usepackage{xcolor}
+\usepackage{tabu}
+\usepackage{adjustbox}
+\usepackage{mathtools}
+\usepackage{xspace}
+\usepackage{proof} 
+\usepackage{semantic}
+\usepackage{listings}
+\usepackage{stmaryrd}
+\usepackage{wrapfig}
+\usepackage{tikz}
+\usepackage[nameinlink, noabbrev]{cleveref}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{array}
+%\usepackage{pdfMsym}
+\usepackage[utf8]{inputenc}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+	%backgroundcolor=\color{backcolour},   
+	commentstyle=\color{codegreen},
+	keywordstyle=\color{magenta},
+	numberstyle=\tiny\color{codegray},
+	stringstyle=\color{codepurple},
+	basicstyle=\ttfamily\footnotesize,
+	breakatwhitespace=false,         
+	breaklines=true,                 
+	captionpos=b,                    
+	keepspaces=true,                 
+	numbers=left,                    
+	numbersep=5pt,                  
+	showspaces=false,                
+	showstringspaces=false,
+	showtabs=false,                  
+	tabsize=2
+}
+\lstset{style=mystyle}
+
+
+\input{macros}
+
+
+
+\theoremstyle{acmdefinition}
+\newtheorem{remark}{Remark}
+
+
+\newboolean{showRuleNames}
+\setboolean{showRuleNames}{true}
+
+
+% boolean to switch to extended version
+\newboolean{isExtended}
+\setboolean{isExtended}{true}
+
+\ifthenelse
+{\boolean{isExtended}}
+{
+	\newcommand{\ext}[2]{#1}
+}{
+	\newcommand{\ext}[2]{#2}
+}
+
+\newcommand{\citeExtended}{\cite{extended}}
+
+\newcommand{\citeBisection}{{\cite{quatmann2025bisection}}}
+\newcommand{\citetBisection}{{\citet{quatmann2025bisection}}}
+
+
+\begin{document}
+	
+	\title
+	[noDice: Inference for Discrete Probabilistic Programs with Nondeterminism and Conditioning]
+	{noDice: Inference for Discrete Probabilistic Programs with Nondeterminism and Conditioning}
+	
+	\author{Tobias Gürtler}
+	\orcid{0009-0000-7131-0936}
+	\affiliation{%
+		\institution{Saarland University}
+		\city{}
+		\country{Germany}
+	}
+	\affiliation{%
+		\institution{Saarland Informatics Campus}
+		\city{}
+		\country{Germany}
+	}
+	\email{guertler@cs.uni-saarland.de}
+	
+	\author{Benjamin Lucien Kaminski}
+	\orcid{0000-0001-5185-2324}
+	\affiliation{%
+		\institution{Saarland University}
+		\city{}
+		\country{Germany}
+	}
+	\affiliation{%
+		\institution{University College London}
+		\city{}
+		\country{United Kingdom}
+	}
+	\email{kaminski@cs.uni-saarland.de}
+	
+	
+	%% Abstract
+	%% Note: \begin{abstract}...\end{abstract} environment must come
+	%% before \maketitle command
+	\input{abstract}
+	
+	
+	%% 2012 ACM Computing Classification System (CSS) concepts
+	%% Generate at 'http://dl.acm.org/ccs/ccs.cfm'.
+\begin{CCSXML}
+	<ccs2012>
+	<concept>
+	<concept_id>10002950.10003648.10003662</concept_id>
+	<concept_desc>Mathematics of computing~Probabilistic inference problems</concept_desc>
+	<concept_significance>500</concept_significance>
+	</concept>
+	</ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Mathematics of computing~Probabilistic inference problems}
+	%% End of generated code
+	
+	
+	%% Keywords
+	%% comma separated list
+	\keywords{probabilistic programming, nondeterminism, model checking}  %% \keywords are mandatory in final camera-ready submission
+	
+	\received{20 February 2007}
+	\received[revised]{12 March 2009}
+	\received[accepted]{5 June 2009}
+	
+	%% \maketitle
+	%% Note: \maketitle command must come after title commands, author
+	%% commands, abstract environment, Computing Classification System
+	%% environment and commands, and keywords command.
+	\maketitle
+	
+	% (includes abstract)
+	\input{introduction}
+	
+
+	\input{overview}
+	
+
+	\input{semantics}
+	
+	
+	\input{background}
+
+
+	\input{inference}
+	
+
+	\input{implementation}
+	
+
+	\input{relatedWork}
+	
+	
+	
+	\newpage
+	
+	
+	\section*{Data-Availability Statement}
+	The prototype implementation from \Cref{sec:implementation} is available along with the benchmark programs used in the empirical evaluation \cite{nodice_artefact}.
+
+	
+	
+	%% Bibliography
+	\bibliographystyle{ACM-Reference-Format}
+	\bibliography{bibliography}
+	
+
+	
+	\ifthenelse{\boolean{isExtended}}{
+		
+	\newpage
+	%% Appendix
+	\appendix
+		
+	\input{appendixFunctionComp}
+	
+	\input{soundnessProof}
+	
+	\input{implementationDetails}
+	}{}
+
+	 
+\end{document}
+
+\typeout{get arXiv to do 4 passes: Label(s) may have changed. Rerun}

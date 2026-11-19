@@ -1,0 +1,77 @@
+\subsection{RQ2: Impact of Various Factors on LLMs' Performance}
+\label{sec:rq2}
+
+\textbf{Motivation.}
+In addition to evaluating specific LLMs, we are also interested in identifying the key factors of high-performing LLMs. 
+Our analysis is based on three factors: model series, model architecture, and model size. 
+In this RQ, we aim to determine how each of these factors influences the performance of LLMs.
+The model series groups models within the same series into one category, as shown in Section~\ref{sec:selected_models}. For instance, the CodeT5 series includes CodeT5-small, CodeT5-base, and CodeT5-large. Model architecture refers to three types: encoder-only, encoder-decoder, and decoder-only. Model size pertains to the number of parameters in each model, which in our study ranges from 60 million to 16 billion.
+
+
+
+
+\subsubsection{The Impact of Model Series}
+
+\textbf{Design.}
+In this section, we explore the performance of different model series by analyzing 17 different representative model series across three unit testing tasks.
+
+\input{table/MI4All}
+
+\textbf{Result.}
+Table~\ref{tab:rq2-all_result} demonstrates the performance of different series of LLMs across three unit testing tasks. We calculate the average score of a LLM series to represent the performance of this LLM series. According to Table~\ref{tab:rq2-all_result}, CodeLlama leads in performance, achieving the highest EM scores in both the assertion generation (71.42\%) and test evolution (34.62\%) tasks, as well as the highest correct test and passing rates in the test generation task, 29.50\% and 32.14\%, respectively. DeepSeek-Coder and StarCodeBase also perform well: DeepSeek-Coder ranks second in EM for assertion generation (68.10\%) and tops the test evolution task in EM and CodeBLEU scores (34.62\%). StarCodeBase achieves strong results in test generation, with the second-highest correct test rate at 27.82\% and the passing rate at 31.02\%, as well as a high EM score at 28.56\% in test evolution. CodeT5p and CodeT5 series models excel in BLEU and CodeBLEU scores in assertion generation.
+
+On the other hand, CodeBERT performs the worst across tasks, with the lowest correct test rate at 5.56\%, the passing rate at 8.41\%, and the highest build error rate at 78.90\% in the test generation task. It also has the lowest EM, BLEU, and CodeBLEU scores in the test evolution task, 6.15\%, 37.72\%, and 46.42\%, respectively. Similarly, CodeGPT has the lowest EM, BLEU, and CodeBLEU scores for assertion generation, 51.30\%, 61.28\%, and 69.12\%, respectively, and the highest syntax error rate in the test generation task.
+
+\finding{4}{
+CodeLlama outperforms other models across all tasks, with the highest EM, correct test rate, and passing rate. DeepSeekCoder and StarCodeBase also show strong performance, particularly in assertion generation and test generation tasks. In contrast, CodeBERT and CodeGPT consistently perform the worst, with low EM and high error rates.
+}
+
+\subsubsection{The Impact of Model Architecture}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/rq2_1-all.pdf}
+    \caption{Performance of LLMs with different architectures across three tasks.}
+    \label{fig:rq2_1_all_tasks}
+\end{figure}
+
+\textbf{Design.}
+In this section, we examine how model architecture influences performance. To provide a clearer comparison across architectures, we calculate the average metrics for each architecture.
+
+
+
+
+\textbf{Result.}
+Fig.~\ref{fig:rq2_1_all_tasks} shows the performance of LLMs with different architectures across three tasks. 
+In the assertion generation task, decoder-only models achieve the highest average EM score at 62.43\%, followed by encoder-decoder models at 58.11\% and encoder-only models at 56.03\%. However, when considering BLEU and CodeBLEU scores, encoder-decoder models outperform others with an average BLEU of 84.03\% and CodeBLEU of 86.48\%. Decoder-only models perform less well, with BLEU at 72.64\% and CodeBLEU at 74.35\%.
+In the test evolution task, the EM scores follow a similar pattern as assertion generation, with decoder-only models leading at 27.96\%. Unlike assertion generation, decoder-only models also outperform BLEU and CodeBLEU, with averages of 82.23\% and 83.83\%, respectively. Encoder-decoder models lag behind with lower EM (15.05\%), BLEU (77.71\%), and CodeBLEU (78.32\%), while encoder-only models perform the worst across all metrics.
+In the test generation task, decoder-only models achieve the highest correct test rate (20.28\%) and passing rate (23.43\%), alongside the lowest build error rate (39.93\%). This suggests that decoder-only models generate more correct test cases than the other architectures. Encoder-decoder models perform moderately, while encoder-only models perform the worst. However, when it comes to syntax error rates, decoder-only models exhibit the highest error rate at 23.34\%, significantly higher than the other two architectures. We speculate that this is due to the auto-regressive objective of decoder-only models analyzed in Section~\ref{sec:rq1-test_generation}, which may lead them to complete truncated input sequences rather than focus on generating the test case, resulting in higher syntax errors.
+
+\finding{5}{
+Decoder-only models generally perform best across all three tasks, particularly in EM and correctness metrics, but they exhibit higher syntax error rates than the other two architecture models. Encoder-decoder models excel in BLEU and CodeBLEU scores on the assertion generation task, while encoder-only models consistently underperform across all tasks.
+}
+
+
+\subsubsection{The Impact of Model Size}
+
+\textbf{Design.}
+In this section, we explore how model size influences performance across three tasks. We collect the parameter sizes of LLMs and list them on the scatter plot for further analysis.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/rq2_3-all.pdf}
+    \caption{Performance of LLMs with different sizes across three tasks.}
+    \label{fig:rq2_3_all_tasks}
+\end{figure}
+
+\textbf{Result.}
+Fig.~\ref{fig:rq2_3_all_tasks} presents scatter plots of model performance in relation to parameter size, with trend lines added for clarity. In the assertion generation task, the EM score increases as the model size grows, following a pattern of rapid improvement initially, followed by slower gains. BLEU and CodeBLEU scores show a different pattern, first decreasing and then increasing as the size grows, influenced by the strong performance of CodeT5 and CodeT5p models.
+In the test evolution task, all three metrics—EM, BLEU, and CodeBLEU—improve with increasing model size, again showing rapid early improvement that slows as size increases, indicating a clear positive correlation between size and performance.
+In the test generation task, the correct test rate increases with model size while the build error rate decreases, suggesting that larger models tend to produce more accurate test cases with fewer build errors. However, the failing rate does not significantly decrease, indicating that even with larger models, many generated test cases still fail to pass.
+
+
+\finding{6}{
+Large-scale models generally perform better across all tasks, with improved metrics like EM, correct test rate, and reduced build error rates. However, even as model size increases, the failing rate remains high, suggesting that test cases often fail regardless of model size.
+}

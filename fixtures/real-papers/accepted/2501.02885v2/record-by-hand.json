@@ -1,0 +1,92 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "iccv.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "preamble.tex",
+      "role": "body"
+    },
+    {
+      "path": "sec/0_abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "sec/1_intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "sec/2_related_work.tex",
+      "role": "body"
+    },
+    {
+      "path": "sec/3_method.tex",
+      "role": "body"
+    },
+    {
+      "path": "sec/X_algorithm.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/main_results.tex",
+      "role": "body"
+    },
+    {
+      "path": "sec/4_experiment.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/long_video_bench_val.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/ablation_study.tex",
+      "role": "body"
+    },
+    {
+      "path": "sec/5_conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sec/X_suppl.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/proof.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/experiments_details.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "ced4b83ee0829e61edcc38d840210ada33f3bfe0923fc1d048f58da41cf48749",
+    "iccv.sty": "d4b522c1b3ecc0029d23f3d057383fd3bc8145c9aebf47f1b7058e91a35e3eff",
+    "preamble.tex": "a9b8cad9609a0414670b7e8dbe49ca183e37b920ebaee39dfa57272e6137198d",
+    "sec/0_abstract.tex": "99aae8e5450a1787b92e1783821b0c8c028b84bafa402af2f22e7a5e2d29f0d1",
+    "sec/1_intro.tex": "01abd50f68d5abacede3b15b4763ba85a8e8854073af3fc3934681a324617185",
+    "sec/2_related_work.tex": "7893889421a4700ad8d36344904ebd071a7bea5d1021b0e3aea2372d832aa7d4",
+    "sec/3_method.tex": "1927687f9e881d8e14a08d34d2533acb010ea1d2345be97694e571563b967a9a",
+    "sec/X_algorithm.tex": "f4d3a224a746db7c5291c44cff24573cf76a60ad9dbb3a8bd7ede8b0689bd57c",
+    "tables/main_results.tex": "af2ca1fa802d8b25a20ece298c361f36c70d6adf3cebf31d7ffba3ad85424e02",
+    "sec/4_experiment.tex": "d099eb30fc4346b72152a1bc201586e98bbdb91047875793076c48492b5d9ed1",
+    "tables/long_video_bench_val.tex": "6961f2eb4250fdc81dc76138f54120ed7de08d114be4d64b0fb46751459afc99",
+    "tables/ablation_study.tex": "7823078dfbce4df57527ff672b7cc7d462c98721b4fb525671f64aa76e31448f",
+    "sec/5_conclusion.tex": "cc45db9c6bd7f82bbd9b16b2f692dc758103cb7b31676b7d98f7f90c1a9cc2af",
+    "sec/X_suppl.tex": "0f9fd3ebb75a2ad1111194c34480d3073080adff4ae258d1782faac84991973f",
+    "appendix/proof.tex": "c6f8cbcf6656d4ba04c7b86ddd45992d37b640067bb34dd65616e81a6cfa6df4",
+    "appendix/experiments_details.tex": "9b025d52b6ea68cde5fa0629b8f5b5fc9533e2020abd76a5af1eca5bead67455"
+  }
+}

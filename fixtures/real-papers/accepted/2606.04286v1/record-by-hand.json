@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acl.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "attention_word_syn.tex",
+      "role": "body"
+    },
+    {
+      "path": "IG_word_real.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "08de375074cbb6d7fe41f4536c6cf8921374f18110f7466b99b35b8197a7a3ca",
+    "acl.sty": "f2168b57b2f445aac55af82662c8aa9dbad771f6393da5a154fa163abec2e76a",
+    "attention_word_syn.tex": "57e301345fb4526c2a7fa02dee36aaaa126b915533f2b02239e0f0f980fc18be",
+    "IG_word_real.tex": "ac81d43c6abd266e6fad8b0e0d66df750593a7f544acd8aa2145b63ef6052447"
+  }
+}

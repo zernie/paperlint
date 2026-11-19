@@ -1,0 +1,280 @@
+
+\section{Technical Background of the Inference Process}\label{sec:background}
+ This section presents the necessary background information and prior work which is needed for the technical aspects of the \NDICE inference algorithm.
+ In particular, we will recap the \DICE-style compilation procedure from \citet{holtzen2020scaling} in \Cref{sec:prelims_Dice}, and we will introduce Decision Diagrams and Markov Decision Processes in \Cref{sec:prelims_ADD} and \Cref{sec:prelims_MDP}.
+
+
+\subsection{\DICE-style Compilation}\label{sec:prelims_Dice}
+
+We will now summarize \DICE's compilation procedure from \citet{holtzen2020scaling} by recapping how \DICE expressions are compiled to Boolean formulas.
+For our purposes, \DICE expressions will be defined as \NDICE expressions \textit{without} the statement $\NFLIP$.
+
+A \emph{compilation judgment} for a \DICE expression $e$ has the form $\Gamma \vdash e \colon \tau \leadsto (\dot{\varphi},\, \gamma,\, w)$. 
+We say that, given the type environment $\Gamma$, the expression $e$ of type $\tau$ compiles to the triple $(\dot{\varphi},\, \gamma,\, w)$.
+The type environment $\Gamma$ maps variables $x$ to their respective type $\tau_x$, where $\tau_x$ is needed to correctly encode program variables in the compilation result.
+We call $\dot{\varphi}$ the \textit{model formula}, as it models the the output value of $e$ given some assignment to flips and free variables, while ignoring all observations.
+The added dot in $\dot{\varphi}$ denotes a (possibly nested) \emph{tuple} of Boolean formulas, as opposed to a \emph{single} formula~$\varphi$.
+The \textit{accepting formula} $\gamma$ is a single Boolean formula, which is satisfied if and only if all observations in $e$ would succeed for a given assignment to flips and variables.
+Each Boolean variable in $\dot{\varphi}$ and $\gamma$ represents a free variable of the compiled expression or a flip operation. 
+Hence, we need to remember how the corresponding flip for each variable behaved.
+\DICE thus compiles a set of weights $w$, which (for our purposes) is a set of pairs $f_i\colon p_i$, where $f_i$ is the Boolean variable which represents a flip and the label $p_i$ denotes the flip's probability to return $\TRUE$.
+
+Rules for compilation of well-typed \DICE expressions without function calls from \citet{holtzen2020scaling} are shown in  \Cref{fig:dice_Comp}.
+We will now briefly go over these rules.
+For examples and more explanations we refer to the original work by \citet{holtzen2020scaling}.
+
+
+\begin{figure}
+	\begin{center}
+		\begin{adjustbox}{max width=\textwidth}
+			\renewcommand{\arraystretch}{3.2}
+			\begin{tabular}{c c}
+				
+				\multicolumn{2}{c}{
+				%value 
+				\inference[\ifthenelse{\boolean{showRuleNames}}{\texttt{(C-Val)}}{}]
+				{}{  \Gamma \vdash v \colon \tau \leadsto (v, \TRUE, \{\})}
+%				&
+				$\quad$
+				
+				%Variable
+				\inference[\ifthenelse{\boolean{showRuleNames}}{\texttt{(C-Ident)}}{}]
+				{\Gamma(x) = \tau}{  \Gamma \vdash x \colon \tau \leadsto (F_\tau(x), \TRUE, \{\})}
+%				\\
+				
+				$\quad$
+				
+				%flip
+				\inference[\ifthenelse{\boolean{showRuleNames}}{\texttt{(C-Flip)}}{}]
+				{\text{variable $f$ fresh}}{  \Gamma \vdash \FLIP{\theta} \colon \BOOL \leadsto (f, \TRUE, \{f\colon \theta\})}
+			}
+%				&
+				
+%				%nflip
+%				\inference[\ifthenelse{\boolean{showRuleNames}}{\texttt{(C-NFlip)}}{}]
+%				{\text{variable $f$ fresh}}{  \Gamma \vdash \NFLIP \colon \BOOL \leadsto (f, \TRUE, [f\colon n])}
+				\\
+				
+				%tuple construction
+				\inference[\ifthenelse{\boolean{showRuleNames}}{\texttt{(C-Tup)}}{}]
+				{\Gamma(x_1) = \tau_1 \qquad \Gamma(x_2) = \tau_2}{  \Gamma \vdash (x_1, x_2) \colon \tau_1 \times \tau_2 \leadsto ((F_{\tau_1}(x_1), F_{\tau_2}(x_2)) , \TRUE, \{\})}
+				&
+				
+				%observe
+				\inference[\ifthenelse{\boolean{showRuleNames}}{\texttt{(C-Obs)}}{}]
+				{\Gamma \vdash \AEXP \colon \BOOL \leadsto (\varphi, \TRUE, [])}
+				{  \Gamma \vdash \OBSERVE{\AEXP} \colon \BOOL \leadsto (\TRUE, \varphi, \{\})}
+				\\
+				
+				%first
+				\inference[\ifthenelse{\boolean{showRuleNames}}{\texttt{(C-Fst)}}{}]
+				{\Gamma(x) = \tau_1 \times \tau_2}
+				{ \Gamma \vdash \FST x \colon \tau_1 \leadsto (F_{\tau_1}(x_l), \TRUE, \{\})}
+				&
+				
+				%second
+				\inference[\ifthenelse{\boolean{showRuleNames}}{\texttt{(C-Snd)}}{}]
+				{\Gamma(x) = \tau_1 \times \tau_2}
+				{ \Gamma \vdash \SND x \colon \tau_1 \leadsto (F_{\tau_2}(x_r), \TRUE, \{\})}
+				\\
+				
+				\multicolumn{2}{c}{
+					%if
+					\inference[\ifthenelse{\boolean{showRuleNames}}{\texttt{(C-ITE)}}{}]
+					{\Gamma \vdash \AEXP \colon \BOOL \leadsto (\varphi_g, \TRUE, \{\}) 
+						\qquad \Gamma \vdash e_T \colon \tau \leadsto (\dot{\varphi}_T, \gamma_T, w_T) 
+						\qquad \Gamma \vdash e_F \colon \tau \leadsto (\dot{\varphi}_F, \gamma_F, w_F)}
+					{  \Gamma \vdash \ITE{\AEXP}{e_T}{e_F} \colon \tau \leadsto \left( 
+						(\varphi_g \overset{\tau}{\land} \dot{\varphi}_T) \overset{\tau}{\lor} (\overline{\varphi}_g \overset{\tau}{\land} \dot{\varphi}_F), \;
+						(\varphi_g \land \gamma_T) \lor (\overline{\varphi}_g \land \gamma_F) ,\;
+						w_T \,\cup\, w_F \right)}
+				}\\
+				
+				\multicolumn{2}{c}{
+					%let
+					\inference[\ifthenelse{\boolean{showRuleNames}}{\texttt{(C-Let)}}{}]
+					{\Gamma \vdash e_1 \colon \tau_1 \leadsto (\dot{\varphi}_1, \gamma_1, w_1) \qquad 
+						\Gamma \cup \{x \mapsto \tau_1 \} \vdash e_2 \colon \tau_2 \leadsto (\dot{\varphi}_2, \gamma_2, w_2)}
+					{  \Gamma \vdash\LET{x = e_1}{e_2} \colon \tau_2 \leadsto \left(
+						\dot{\varphi}_2[x\overset{\tau_1}{\mapsto} \dot{\varphi}_1], \;
+						\gamma_1 \land \gamma_2[x\overset{\tau_1}{\mapsto} \dot{\varphi}_1],\;
+						w_1 \,\cup\, w_2 \right)}
+				}
+				
+			\end{tabular}
+		\end{adjustbox}
+	\end{center}
+	\caption{
+		\DICE-Compilation rules for expressions. These assume, without loss of generality but for simplicity, that fst, snd, and tuple construction are only ever performed with identifiers as arguments.}
+	\label{fig:dice_Comp} 
+\end{figure}%
+
+
+\paragraph{Values}
+The rule \texttt{(C-Val)} compiles constant values.
+Since the output of $v$ is the value~$v$ itself, $v$ is the model formula for $v$.
+Furthermore, a value contains neither observations nor flips, thus the accepting formula is simply $\TRUE$ and the set of weights is the empty set.
+
+
+\paragraph{Free Variables and Tuples}
+For variables, the structure of the model formula has to match the structure of the variable's type; thus we need to unfold the variable into its components.
+Hence, the rule \texttt{C-Ident} uses the \textit{form function} $F_\tau$, which given the variable $x$ of type $\tau_x$ builds a \enquote{template} for~$x$ by introducing a free variable for each boolean component of $x$.
+$F_\tau$ is defined inductively as $F_\BOOL (x) \triangleq x$ and $ F_{\tau_1 \times \tau_2}(x) \triangleq (F_{\tau_1}(x_l), F_{\tau_2}(x_r))$, where we use the subscripts $x_l$ and $x_r$ to distinguish the left and right elements of $x$.
+The rules for tuples also make use of $F_\tau$, and \texttt{C-Fst} and \texttt{C-Snd} build representations of $x_l$ and $x_r$ to refer to the correct component of $x$.
+
+
+\paragraph{Flips}
+The rule \texttt{C-Flip} introduces a fresh variable $f$ to represent the flip and uses $f$ as the model formula.
+Afterwards, \texttt{C-Flip} pairs $f$ with the flip's likelihood to return $\TRUE$, and defines the set of weights as a singleton set with this pair as its only element.
+
+
+\paragraph{Observations}
+The input to an observe statement is a Boolean atomic expression, and thus either a variable identifier or a value.
+\texttt{C-Obs} hence uses the model formula of the input as the accepting formula of the observe statement, as the observation succeeds if the input evaluates to $\TRUE$. 
+The model formula is always $\TRUE$ in accordance with the semantics from \Cref{fig:semantics}.
+
+
+\paragraph{If Statements}
+The if statement $\ITE{g}{e_T}{e_F}$ behaves like $e_T$ whenever the guard $g$ is $\TRUE$, and otherwise like $e_F$.
+The compiled formulas mirror this idea of switching between $e_T$ and $e_F$ based on the behavior of the guard $g$, as exemplified by the accepting formula $(\varphi_g \land \gamma_T) \lor (\overline\varphi_g \land \gamma_F)$:
+Whenever the guard returns $\TRUE$, i.e.\ $\varphi_g$, holds, then we use the accepting behavior of $e_T$ as encoded in $\gamma_T$, otherwise we consider the accepting behavior of $e_F$ as encoded in $\gamma_F$.
+The model formula of the if-statement is constructed from the model formulas of $e_T$ and $e_F$ in a similar way, where we once again use $\varphi_g$ to choose between $e_T$ and $e_F$. 
+However, $\dot{\varphi}_T$ and $\dot{\varphi}_F$ could be tuples of formulas, and thus we define how the Boolean function $\varphi_g$ interacts with tuples of formulas via broadcast conjunction $\varphi_a \overset{\tau}{\land} \dot{\varphi}_b$ and point-wise disjunction $\dot{\varphi}_a \overset{\tau}{\lor} \dot{\varphi}_b$:
+\begin{align*}
+	%broadcast conjunction, Boolean case
+	\varphi_a \overset{\BOOL}{\land} \varphi_b &\coloneq \varphi_a \land \varphi_b
+	&
+	%tuple case
+	\varphi \overset{\tau_1 \times \tau_2}{\land} (\dot{\varphi}_l,\, \dot{\varphi_r}) &\coloneq( \varphi \overset{\tau_1}{\land} \dot{\varphi}_l, \varphi \overset{\tau_2}{\land} \dot{\varphi}_r) \\
+	%pointwise disjunction, Boolean case
+	\varphi_a \overset{\BOOL}{\lor} \varphi_b &\coloneq \varphi_a \lor \varphi_b
+	&
+	%tuple case
+	(\dot{\varphi}_{a,l},\, \dot{\varphi}_{a,r}) \overset{\tau_1 \times \tau_2}{\lor} (\dot{\varphi}_{b,l},\, \dot{\varphi}_{b,r}) &\coloneq(  \dot{\varphi}_{a,l} \overset{\tau_1}{\lor} \dot{\varphi}_{b,l},\; \dot{\varphi}_{a,r} \overset{\tau_2}{\lor} \dot{\varphi}_{b,r})
+\end{align*}
+The sets of weights are combined by simply taking the (disjoint) union.
+
+
+\paragraph{Let Statement}
+The let-statements sequentially executes $e_1$ and $e_2$, where $e_1$ decides the value of~$x$ which is used in $e_2$ to determine the output of the let-statement as a whole.
+\texttt{C-Let} mimics this in the model formula with substitutions $\varphi_2[x\mapsto \varphi_1]$ to describe that $x$ behaves according to the model formula of $e_1$ within the model formula of $e_2$.
+These substitutions replace all occurrences of~$x$ in $\varphi_2$ with the term $\varphi_1$, and we define typed substitutions with or into tuples as follows:
+$$
+%boolean substitution
+\varphi_2 [x \overset{\BOOL}{\mapsto} \varphi_1] \morespace{\coloneqq} \varphi_2 [x \mapsto \varphi_1]
+\qquad \qquad
+%tuple subsitution
+\varphi_2 [x \overset{\tau_1 \times \tau_2}{\mapsto} (\dot{\varphi}_{l},\, \dot{\varphi}_{r})] \morespace{\coloneqq} \varphi_2 [x_l \overset{\tau_1}{\mapsto} \dot{\varphi}_{l}][x_r \overset{\tau_2}{\mapsto} \dot{\varphi}_{r}]$$ 
+%substitution into tuples
+$$(\dot{\varphi}_a,\, \dot{\varphi}_b)[x\overset{\tau}{\mapsto}\dot{\varphi}] \morespace{\coloneqq} (\dot{\varphi}_a[x\overset{\tau}{\mapsto}\dot{\varphi}],\, \dot{\varphi}_b[x\overset{\tau}{\mapsto}\dot{\varphi}])$$
+The accepting formula follows the same principle, but we add $\gamma_1$ to ensure that all observations in $e_1$ succeed.
+Once again, the sets of weights are combined by taking the (disjoint) union.
+
+
+\paragraph{Functions and Programs}
+We have only discussed how \DICE \textit{expressions} are compiled, but the \DICE language also includes function calls and function definitions which can be used to form programs.
+In \citet{holtzen2020scaling}, such \DICE programs are addressed with additional compilation rules, but the result of the compilation is still a triple of the form $(\dot{\varphi},\, \gamma,\, w)$.
+Hence, all subsequent inference steps are identical between expressions and programs, and thus we will not cover the compilation of \DICE programs here.
+We refer to \citet{holtzen2020scaling} for more details.
+
+
+
+
+\subsection{Algebraic Decision Diagrams}\label{sec:prelims_ADD}
+Decision Diagrams are a key component in the inference process, and we will briefly introduce the necessary background on both Algebraic Decision Diagrams (ADDs) and Binary Decision Diagrams (BDDs).
+We refer to \citet{husung2024oxidd,andersen1996introduction} for a more extensive introduction.
+An ADD (or Multi-Terminal BDD \cite{fujita1997multi}) encodes a function $f \colon \BOOL^k \rightarrow S$ with boolean input variables $x_1,\dots, x_k$ and a set of output values $S$, and is defined as follows:%
+%
+\begin{definition}[Algebraic Decision Diagrams]
+	An ADD $\mathcal{A} = (V,\, T,\, r,\, E)$ is a directed acyclic graph~(DAG) with root node $r$, a set of inner nodes $V$, a set of terminal nodes $T$, and a set of labeled edges $E$.
+	All inner nodes $u \in V$ contain a variable $\mathit{var}(u)$, and $u$ has exactly two outgoing edges: 
+	One labeled $\mathit{then}$ and one labeled $\mathit{else}$.  
+	All terminal nodes $u \in T$ contain a value $\mathit{val}(u) \in S$.
+	\hfill$\triangleleft$
+\end{definition}%
+%
+\noindent%
+%
+%
+For each node $u$, we refer to the node reached by taking the edge labeled $\mathit{then}$ as $\mathit{then}(u)$, and analogously $\mathit{else}(u)$.
+Binary Decision Diagrams \cite{bahar1993ADDs} are ADDs with $S = \BOOL$.
+We only consider \textit{ordered} ADDs, i.e.\ there exists some order on the input variables $x_i$ so that the variables along any path from the root to some terminal node are in that order.
+The semantics of an ADD node are defined recursively as follows:
+A terminal node $u$ represents the constant function $f_u = \mathit{val}(u) \in S$.
+An inner node $v$ encodes the following function:
+$$f_v = \begin{cases}
+	f_{\mathit{then}(v)}, & \text{if } \mathit{var}(v) = \TRUE \\
+	f_{\mathit{else}(v)}, & \text{if } \mathit{var}(v) = \FALSE
+\end{cases}$$%
+%
+However, we are less interested in the semantics of ADDs, than in their ability to compactly encode any Boolean function as a DAG.
+In fact, ADDs can represent \emph{any} function of type $f \colon \BOOL^k \rightarrow S$, and generic algorithms can be used to construct the ADD for any given function \cite{fujita1997multi}.
+The compactness of the resulting ADD stems from the following restrictions:
+\begin{itemize}
+	\item \textit{No redundant tests:} For any inner node $u$ we have $\mathit{then}(u) \neq \mathit{else}(u)$.
+	\item \textit{No duplicate tests:} For any two distinct inner nodes $u$ and $v$ we have either $\mathit{var}(u) \neq \mathit{var}(v)$, $\mathit{then}(u) \neq \mathit{then}(v)$, or $\mathit{else}(u) \neq \mathit{else}(v)$. \label{DD:no_dups}
+	\item \textit{No duplicate outputs:} For any two distinct terminal nodes $u$ and $v$ we have $\mathit{val}(u) \neq \mathit{val}(v)$.
+\end{itemize}
+An ADD adhering to these restrictions is called \textit{reduced}.
+For a fixed variable ordering, the reduced ADD of a function is unique and often quite small, making ADDs a suitable representation for many functions.
+%
+However, the chosen variable ordering can heavily impact how compactly a given function can be represented \cite{bryant1986bdd}.
+In extreme cases, the reduced ADD of some functions may be linear in size to the number of variables for some variable orderings, but exponentially large with other orderings.
+Finding the optimal ordering is NP-hard \cite{bollig1996improving}, and there are also functions where the ADD always is exponentially large \cite{bryant1986bdd}.
+
+
+\subsection{Markov Decision Processes and Conditional Reachability}\label{sec:prelims_MDP}
+We will briefly introduce Markov Decision Processes (MDPs) and conditional reachability properties, we refer to \citet{baier2014computing,puterman2014markov} for more details.
+We first define MDPs:%
+%
+\begin{definition}[Markov Decision Process]
+	A Markov Decision Process (MDP) is a six-tuple $(S,\, s_{init},\, \mathit{Act},\, P,\, AP,\, L)$, where $S$ is a set of states, $s_{init} \in S$ is the initial state, $AP$ is a set of atomic propositions, $L\colon S \rightarrow\mathcal{P}(AP)$ is a labeling function, $\mathit{Act}$ is a set of actions and $P\colon S\times \mathit{Act} \times S \rightarrow [0,1]$ is a transition function, so that for all $s\in S$ and $\alpha \in \mathit{Act}$ we have:%
+	\begin{align*}
+		\sum_{s' \in S} P(s, \alpha, s') \in \{0,1\}
+		\tag*{$\triangleleft$}
+	\end{align*}
+\end{definition}%
+%
+\noindent%
+%
+%
+An action $\alpha$ is called enabled in $s$ if there is some $s'$ with $P(s, \alpha, s') > 0$.
+We write $\smash{s \xrightarrow{\alpha, p} s'}$ for $P(s, \alpha, s') = p$. 
+For any state $s$, $L(s)$ is the set of atomic propositions which hold in that state, we also use labels $a \in AP$ to refer to the set $\{s \in S \,|\, a \in L(s)\}$.
+We define a path $\pi \in \mathit{Paths}(s_0)$ with starting state $s_0 \in S$ in the MDP as a (finite) sequence of states, written as $\pi = s_0\, s_1 \dots s_n$.
+Reasoning about the probability of a path in the MDP requires us to resolve the nondeterministic choice between the different enabled actions in a state.
+This is done by a scheduler $\Theta\colon S \rightarrow \mathcal{D}(\mathit{Act})$, sometimes also called a policy or adversary, which associates each state in the MDP with a distribution over (enabled) actions.
+We only consider memoryless schedulers as they are sufficient for unbounded reachability properties \cite{forejt2011automated}. 
+Given a scheduler $\Theta$, we determine the probability of a path $\pi = s_0\, s_1 \dots s_n$ as the product of all transition probabilities along the path:
+%
+$$ Pr^\Theta(\pi) \coloneqq \prod_{0\leq i < n} \; \sum\limits_{\alpha \in \mathit{Act}} \Theta(s_i)(\alpha) \cdot P(s_i,\, \alpha,\, s_{i + 1})$$
+%
+We also define the probability to reach a set of states $F \subseteq S$ starting from the initial state $s_{init}$ in $\mathcal{M}$ under a scheduler $\Theta$.
+To do so, we consider the set $\lozenge F \subseteq \mathit{Paths}(s_{init})$, which contains all (finite) paths which start in $s_{init}$ and traverse states which are not in $F$ until a state in $F$ is reached. 
+Formally, $\lozenge F$ is defined as $\lozenge F \coloneqq \{ s_0\, s_1 \dots s_n \,|\, \forall i < n\colon s_i \notin F \land s_n \in F \}$.
+We then define the probability to eventually reach $F$ in the MDP $\mathcal{M}$ under the scheduler $\Theta$, as well as the maximal probability to reach $F$ in $\mathcal{M}$ as follows:%
+%
+\begin{align*}
+	Pr^\Theta_\mathcal{M}(\lozenge F) \coloneqq \sum_{\pi \in \lozenge F} Pr^\Theta(\pi) 
+	\qquad \qquad 
+	Pr^{\mathit{max}}_\mathcal{M}(\lozenge F) \coloneqq \max\limits_{\Theta} Pr^\Theta_\mathcal{M}(\lozenge F) 
+\end{align*}
+%
+Furthermore, we define the conditional reachability probability to reach a set of states $F$ in an MDP $\mathcal{M}$, under the condition of reaching a set of states $G$ for a given scheduler $\Theta$, as follows:
+%
+$$ Pr^{\Theta}_\mathcal{M} (\lozenge F \;|\; \lozenge G) \coloneqq \frac{Pr^{\Theta}_\mathcal{M} (\lozenge F \land \lozenge G)}{Pr^{\Theta}_\mathcal{M} (\lozenge G)} 
+%\qquad\qquad 
+%Pr^{max}_\mathcal{M} (\lozenge F \;|\; \lozenge G) \coloneqq \max\limits_{\Theta} \; Pr^{\Theta}_\mathcal{M} (\lozenge F \;|\; \lozenge G)
+$$
+%
+We define the fraction to be $0$ in the case of $Pr^{\Theta}_\mathcal{M} (\lozenge G) = 0$.
+%
+There are two generic algorithms to compute conditional reachability probabilities on MDPs.
+For one, \citet{baier2014computing} showed that any MDP $\mathcal{M}$ can be transformed into an MDP $\mathcal{M}'$ so that the conditional reachability probabilities on $\mathcal{M}$ align with the unconditional reachability probabilities on $\mathcal{M}'$.
+Such ordinary reachability properties have been studied extensively, and a variety of algorithms to compute them have been developed \cite{hartmanns2023practitioner}.
+
+Alternatively, the Storm Model Checker recently implemented  a bisection based algorithm to calculate conditional reachability probabilities \citeBisection. 
+This algorithm is centered around a binary search for the correct conditional probability, which continues until sufficiently small error bounds on the results can be guaranteed.
+To facilitate the binary search, an (unconditional) expected reward has to be calculated to decide whether the true conditional probability is in the upper or lower half of the current search space.
+This expected reward can be calculated very efficiently on acyclic MDPs, which makes this approach highly suited for our eventual use-case.
+

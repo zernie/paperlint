@@ -1,0 +1,172 @@
+
+
+\section{Experiment}\label{sec:exp}
+
+\subsection{Setup}
+Our pipeline follows \textbf{Baseline $\rightarrow$ SFT $\rightarrow$ \Ours}, and we report (i) Pass@1 accuracy, (ii) average generated tokens, and (iii) the fraction routed to \textsc{Long} (Think\%) in \Autoref{tab:main_math_progress}.
+We report results on diverse models with different families and sizes: \textbf{Qwen3-1.7B}, \textbf{Qwen3-8B}, \textbf{Qwen3-32B} \cite{yang2025qwen3}, \textbf{Exaone4-1.2B} \cite{research2025exaone} and \textbf{R1-1.5B} \cite{guo2025deepseek}.
+All models use a \texttt{<think>} style template and share the same two-mode gating mechanism implemented via the first newline token(s) after \texttt{<think>}.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.88\linewidth]{ACL2026/figures/fig_e1_grpo_calibration_acc_vs_think_by_dataset_ablation.pdf}
+  \caption{Think\% versus Pass@1 on Qwen3-8B with \Ours.
+  Each point indicates an intermediate checkpoint.
+  }
+  \label{fig:calib-scatter}
+  \vspace{-10pt}
+\end{figure}
+
+\subsection{Datasets and evaluation}
+\paragraph{Math benchmarks}
+We evaluate on three standard math reasoning sets: MATH500 \cite{hendrycks2021measuring}, {AIME24} \cite{maa_aime_2024}, and {AIME25} \cite{maa_aime_2025}, scientific reasoning dataset as GPQA \cite{rein2024gpqa}, and coding task with LiveCodeBench\footnote{LiveCodeBench is sliced from March 25 2025 to April 15 2025}.
+Following prior work, correctness is determined by exact match on the final answer parsed by \texttt{boxed\{\}}. At inference time, we match the original technical reports including temperature and sampling settings.
+
+\paragraph{SFT data for mode selection}
+We use mathematical queries from OpenR1-Math data \cite{openr1_openr1_math_220k_2025} and self-generate candidate trajectories with the given model under each mode template.
+We filter candidates by correctness and basic template validity, producing two pools of correct demonstrations for \textsc{Short} and \textsc{Long}.
+We then sample 20K instances per mode (40K total) for SFT, without requiring overlap between the two pools.
+
+\paragraph{Implementation details}
+We implement SFT and \Ours~in \textbf{OpenRLHF} \cite{hu2024openrlhf}, with a customized lightweight \emph{asynchronous} rollout engine that overlaps generation and post-processing.
+Unless noted, we use max context \textbf{16K}, batch size \textbf{128}, and learning rate \textbf{$10^{-6}$}.
+For \Ours, we sample \textbf{16} rollouts per prompt (8/8 \textsc{Short}/\textsc{Long}) and apply gradients only to the root gating token.
+We run $<\textbf{60}$ update steps for all model sizes.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.12}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lll|ll|ll}
+\toprule
+Method
+& \multicolumn{2}{c}{MATH500}
+& \multicolumn{2}{c}{AIME24}
+& \multicolumn{2}{c}{Avg}\\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+ & P@1 & Think\% & P@1 & Think\% & P@1 & RAR$\downarrow$ \\
+\midrule
+\multicolumn{7}{l}{\textit{Prior hybrid-reasoning baselines (reported in their tables)}} \\
+Original (\textsc{Long})  & 83.2 & 100.0 & 29.4 & 100.0 & 56.3 & 1.78 \\
+Original (\textsc{Short}) & 67.2 & 0.0 & 14.0 & 0.0 & 40.6 & 0.00 \\
+Rejection Finetuning $^{\dagger}$ \cite{Zhang2025AdaptThink} & 72.4 & 66.6 & 25.2 & 79.0 & 48.8 & 1.49 \\
+\cellcolor{gray!20}AdaptThink$^{\dagger}$ \cite{Zhang2025AdaptThink}  & \cellcolor{gray!20}82.0 & \cellcolor{gray!20}23.2 & \cellcolor{gray!20}31.0 & \cellcolor{gray!20}59.6 & \cellcolor{gray!20}56.5 & \cellcolor{gray!20}0.74 \\
+Thinkless$^{\dagger}$ \cite{Bao2025Thinkless} & 81.9 & 51.6 & 27.3 & 100.0 & 54.6 & 1.39 \\
+\midrule
+\multicolumn{7}{l}{\textit{Ours (same backbone family; evaluated with our protocol)}} \\
++ SFT & 75.1 & 37.8 & 20.8 & 68.5 & 48.0 & 1.11 \\
+\cellcolor{gray!20}+ \Ours & \cellcolor{gray!20}77.6 & \cellcolor{gray!20}20.5 & \cellcolor{gray!20}25.0 & \cellcolor{gray!20}77.7 & \cellcolor{gray!20}51.3 & \cellcolor{gray!20}0.96 \\
+\bottomrule
+\end{tabular}%
+}
+\caption{Comparison with accuracy and Think\% over R1-1.5B model. $\dagger$ presents the performance from the original paper. 
+}\vspace{-10pt}
+\label{tab:cherry_math500_aime24_acc_think}
+\end{table}
+
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.12}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Method 
+& SFT spec
+& GRPO spec
+& Forward PFLOPs
+& Backward PFLOPs
+& Total PFLOPs
+& Rel.\ Total (vs.\ AdaptThink) \\
+\midrule
+AdaptThink \cite{Zhang2025AdaptThink}
+& 40K @ 16K
+& 40K @ 16K, $K{=}16$, $T_{\text{upd}}{\approx}16$K
+& 174{,}080
+& 348{,}160
+& 522{,}240
+& 1.00$\times$ \\
+\midrule
+ThinkLess \cite{Bao2025Thinkless}
+& 334K @ 24K
+& 1K @ 24K, $K{=}8$, $T_{\text{upd}}{\approx}24$K
+& 131{,}328
+& 262{,}656
+& 393{,}984
+& 0.75$\times$ \\\midrule
+\Ours~(Ours)
+& 8K @ 16K
+& 1K @ 16K, $K{=}16$, $T_{\text{upd}}{=}1$
+& 6{,}144
+& 4{,}097
+& 10{,}241
+& 0.02$\times$ \\
+\bottomrule
+\end{tabular}%
+}
+\caption{PFLOPs accounting for an 8B dense Transformer (full-length sequences at the stated context). We assume $2P$ FLOPs/token for forward and $4P$ for backward. For AdaptThink, the number of dataset is set to 40K as reported.}
+\label{tab:pflops_adaptive_reasoning_8b}
+\vspace{-10pt}
+\end{table*}
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{3.5pt}
+\renewcommand{\arraystretch}{1.1}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llrrrrrr|rrrr}
+\toprule
+Model & Stage
+& \multicolumn{3}{c}{LiveCodeBench}
+& \multicolumn{3}{c}{GPQA-Diamond}
+& \multicolumn{4}{c}{Avg} \\
+\cmidrule(lr){3-5}\cmidrule(lr){6-8}\cmidrule(lr){9-12}
+ &  & P@1 & \#Tok & Think\% & P@1 & \#Tok & Think\%
+ & P@1 & \#Tok & Think\% & RAR$\downarrow$ \\
+\midrule
+Exaone4-1.2B
+& Baseline   & 42.2 & 12,159 & 100.0 & 50.8 &  7,145 & 100.0 & 46.5 &  9,652 & 100.0 & 2.15 \\
+& + SFT      & 34.6 &  9,281 &  90.1 & 46.2 &  5,037 &  70.1 & 40.4 &  7,159 &  80.1 & 1.98 \\
+& \cellcolor{gray!20} + \Ours    & \cellcolor{gray!20} 36.7 &  \cellcolor{gray!20} 6,692 &  \cellcolor{gray!20} 61.7 & \cellcolor{gray!20} 41.7 &  \cellcolor{gray!20} 2,881 &  \cellcolor{gray!20} 35.0 & \cellcolor{gray!20} 39.2 & \cellcolor{gray!20} 4,787 & \cellcolor{gray!20} 48.4 & \cellcolor{gray!20} 1.26 \\
+\midrule
+Qwen3-8B
+& Baseline   & 49.5 & 14,878 & 100.0 & 58.8 &  7,355 & 100.0 & 54.2 & 11,117 & 100.0 & 1.85 \\
+& + SFT      & 30.2 & 10,410 &  63.0 & 31.1 &  5,227 &  50.1 & 30.7 &  7,819 &  56.6 & 1.85 \\
+& \cellcolor{gray!20} + \Ours    & \cellcolor{gray!20} 35.4 & \cellcolor{gray!20} 11,532 &  \cellcolor{gray!20} 54.7 & \cellcolor{gray!20} 55.4 & \cellcolor{gray!20} 6,910 & \cellcolor{gray!20} 67.2 & \cellcolor{gray!20} 45.4 & \cellcolor{gray!20} 9,221 & \cellcolor{gray!20} 61.0 & \cellcolor{gray!20} 1.34 \\
+\midrule
+Qwen3-32B $\dagger$  &
+Baseline         &  59.1 & 13,498 & 100.0 & 66.2 &  5,108 & 100.0 & 62.7 & 9,303 & 100.0 & 1.60 \\
+ & \cellcolor{gray!20} + SFT & \cellcolor{gray!20} 58.3 & \cellcolor{gray!20} 11,457 &  \cellcolor{gray!20} 90.6 & \cellcolor{gray!20} 66.3 & \cellcolor{gray!20} 4,822 & \cellcolor{gray!20} 98.5 & \cellcolor{gray!20} 62.3 & \cellcolor{gray!20} 8,140 & \cellcolor{gray!20} 94.6 & \cellcolor{gray!20} 1.52 \\
+ & + \Ours       &  54.4 & 10,623 &  87.2 & 65.0 &  4,768 &  97.6 & 59.7 & 7,696 & 92.4 &  1.55 \\
+\bottomrule
+\end{tabular}%
+}
+\caption{LiveCodeBench/GPQA-Diamond results. Models without $\dagger$ are trained with full-parameter SFT; $\dagger$ indicates a LoRA-tuned model. 
+}
+\vspace{-10pt}
+\label{tab:non_math_tasks}
+\end{table}
+
+\subsection{Main results}
+\autoref{tab:main_math_progress} reports math performance across stages (\textbf{Baseline $\rightarrow$ SFT $\rightarrow$ \Ours}).
+To summarize \emph{reasoning efficiency} in one number, we use \textbf{RAR} (\(\downarrow\)), the reasoning-per-accuracy ratio:
+$\mathrm{RAR}_{\text{avg}}=\frac{t_{\text{avg}}}{a_{\text{avg}}+\varepsilon}$,
+where \(a_{\text{avg}}\) is Avg Pass@1 and \(t_{\text{avg}}\) is Avg Think\% (both as fractions). %
+
+\paragraph{\Ours~improves the accuracy routing trade-off}
+On the larger and mid-scale backbones, \Ours~reduces Think\% with modest accuracy changes, yielding the best (lowest) RAR.
+For example, on Qwen3-8B, Avg Think\% decreases from 57.3\% to 44.8\% while Avg Pass@1 stays close (63.8\%$\rightarrow$62.0\%), improving RAR from 0.90 to 0.72; on Exaone4-1.2B, Think\% drops from 43.4\% to 23.6\% and RAR improves from 0.85 to 0.49. 
+On Qwen3-1.7B, the post-SFT operating point is already conservative on the LONG side (Think\%${=}72.8$, RAR${=}1.45$); \Ours~yields a comparable operating point (Think\%${=}74.0$, RAR${=}1.43$) that recovers accuracy via routing refinement rather than via further Think\% compression. 
+
+\paragraph{SFT already enables routing; \Ours~refines it.}
+SFT alone yields a strong reduction in Think\% (and tokens), showing that mode-following is largely learned at the template level.
+\Ours~then fine-tunes the \emph{root} decision to better match query difficulty. 
+The direction of this refinement is configuration-dependent: on Qwen3-1.7B and R1-1.5B (\Autoref{tab:cherry_math500_aime24_acc_think}), \Ours~recovers accuracy on top of SFT by reallocating LONG toward the harder subset; on Qwen3-8B and Exaone4-1.2B, \Ours~instead trades a small accuracy reduction for further Think\% compression.
+
+\paragraph{Comparison with other GRPO-based methods}
+\Autoref{tab:cherry_math500_aime24_acc_think} compares \Ours~with recent hybrid reasoning baselines on the same R1 1.5B model. \Ours~lowers the fraction routed to \textsc{Long} to 20.5\% and reaches a two-task average accuracy of 51.3 with RAR${=}0.96$. AdaptThink achieves a stronger absolute operating point (Avg P@1${=}56.5$, RAR${=}0.74$) but at a far larger training budget (\Autoref{tab:pflops_adaptive_reasoning_8b}); the comparison should therefore be read as two distinct points on a budget-accuracy frontier rather than a head-to-head ranking.
+Additionally, \Autoref{tab:pflops_adaptive_reasoning_8b} highlights the compute-efficiency gap. Trajectory level GRPO is compute heavy because gradients traverse the full chain of thought. With matched accounting on an 8B reference model as an example, \Ours~reduces total training compute to about 0.02$\times$ AdaptThink.

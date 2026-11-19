@@ -1,0 +1,8 @@
+%-------------------------------------------------------------------------------
+\section{Conclusion}
+\label{sec:conclusion}
+%-------------------------------------------------------------------------------
+
+Our paper introduces new algorithms for IP lookup made possible by strategically leveraging {\em both} CAM and RAM. These algorithms address the scaling challenges of global routing tables and are well-suited to the architectures of modern network processors. For these processors, the \cram lens provided a fresh perspective on algorithm design. Much like the RAM~\cite{ram} and PRAM~\cite{pram} models, \cram offers metrics for quickly evaluating algorithm feasibility {\em before} implementation. Using the \cram model, we developed three new IP lookup algorithms: \resail, \bsic, and \mashup. \resail and \bsic scale to much larger databases than the best existing IPv4 and IPv6 lookup schemes, respectively, while \mashup excels in stage-constrained hardware environments.
+
+We aim to establish \cram's generality by applying it to other hardware architectures~(\cref{subsec:other_architectures}) and network applications~(\cref{subsec:other_applications})---helping to ``cram'' more packet processing power into each unit of chip area. Ultimately, our findings underscore a simple insight for networking chip vendors: \textit{a little TCAM goes a long way. Adding small amounts of TCAM to supplement SRAM can significantly improve scalability.}

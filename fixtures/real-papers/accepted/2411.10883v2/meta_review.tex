@@ -1,0 +1,32 @@
+\newpage % The Meta-Review should at least start on a new column
+
+% Use \appendices and not \appendix due to IEEEtran.cls quirks
+\appendices % if not used earlier
+
+\section{Meta-Review}
+
+\subsection{Summary}
+This paper introduces a new class of side-channel attacks exploiting shared file system code. It identifies the syncfs system call as a new source of leakage that enables an attacker to infer activities of other processes on the system.
+
+
+\subsection{Scientific Contributions}
+
+\begin{itemize}
+\item Identifies an Impactful Vulnerability
+\item Provides a Valuable Step Forward in an Established Field
+\end{itemize}
+
+\subsection{Reasons for Acceptance}
+\begin{enumerate}
+\item This paper identifies an impactful vulnerability in file system code that is present in virtually all existing Linux systems. It demonstrates how to carefully control and leverage syncfs delays to instantiate covert channels and infer behaviors of victim processes.
+\item The paper provides a valuable step forward in an established field. Secure file and storage systems have been well-studied, but recent security research has shown that side-channel attacks are present at virtually all layers of the software stack. This paper highlights that even core system software is vulnerable to side-channel attacks and provides some insights on potential mitigations.
+\end{enumerate}
+
+\subsection{Noteworthy Concerns} % Exclude if your meta-review does not have noteworthy concerns
+\begin{enumerate} % Enumerate environment is not necessary if there is only one
+\item  The attacks rely on high sampling rates (150K calls per second). Attacks therefore have anomalous behavior that might be easily detected by simple (or state of the art) anomaly detection techniques. The takeaways could be stronger if the paper evaluated the detectability of the attack to some extent.
+\end{enumerate}
+
+\section{Response to the Meta-Review} % Optional
+
+We thank the reviewers and the shepherd for their insightful comments. Current defenses do not detect the attack.  We acknowledge that anomaly detection mechanisms might be configured to flag high \texttt{syncfs()} rates. However, it is not clear whether a low detection threshold is feasible without introducing false positives or whether the attacker can adjust the sampling rate to remain below the detection threshold while still exploiting the side channel. 

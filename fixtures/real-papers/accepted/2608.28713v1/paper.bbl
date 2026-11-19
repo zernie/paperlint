@@ -1,0 +1,1112 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{75}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{} and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showURL}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showURL #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[net(2021)]%
+        {netstack3}
+ \bibinfo{year}{2021}\natexlab{}.
+\newblock \bibinfo{title}{Netstack3 - A Fuchsia Owned Rust Based Netstack}.
+\newblock
+\shownote{Accessed: 2026-01-23}.
+\newblock
+\urldef\tempurl%
+\url{https://fuchsia.dev/fuchsia-src/contribute/roadmap/2021/netstack3}
+\showURL{%
+\tempurl}
+
+
+\bibitem[are(2025)]%
+        {are-we-spec-yet}
+ \bibinfo{year}{2025}\natexlab{}.
+\newblock \bibinfo{title}{Are We Spec Yet? No, Sadly}.
+\newblock
+\shownote{Accessed: 2026-01-23}.
+\newblock
+\urldef\tempurl%
+\url{https://arewespecyet.rs/}
+\showURL{%
+\tempurl}
+
+
+\bibitem[rus(2025)]%
+        {rust-coreutils}
+ \bibinfo{year}{2025}\natexlab{}.
+\newblock \bibinfo{title}{Ubuntu 25.10 Replaces GNU Coreutils with Rust
+  Uutils}.
+\newblock
+\shownote{Accessed: 2026-01-23}.
+\newblock
+\urldef\tempurl%
+\url{https://www.altusintel.com/public-yych08}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Amin and Tate(2016)]%
+        {amin2016java}
+\bibfield{author}{\bibinfo{person}{Nada Amin} {and} \bibinfo{person}{Ross
+  Tate}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{Java and Scala's Type Systems are Unsound: The
+  Existential Crisis of Null Pointers}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 2016 ACM SIGPLAN International
+  Conference on Object-Oriented Programming, Systems, Languages, and
+  Applications}} (Amsterdam, Netherlands) \emph{(\bibinfo{series}{OOPSLA
+  2016})}. \bibinfo{publisher}{Association for Computing Machinery},
+  \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{838–848}.
+\newblock
+\showISBNx{9781450344449}
+\href{https://doi.org/10.1145/2983990.2984004}{doi:\nolinkurl{10.1145/2983990.2984004}}
+
+
+\bibitem[Anderson et~al\mbox{.}(2016)]%
+        {anderson2016engineering}
+\bibfield{author}{\bibinfo{person}{Brian Anderson}, \bibinfo{person}{Lars
+  Bergstrom}, \bibinfo{person}{Manish Goregaokar}, \bibinfo{person}{Josh
+  Matthews}, \bibinfo{person}{Keegan McAllister}, \bibinfo{person}{Jack
+  Moffitt}, {and} \bibinfo{person}{Simon Sapin}.}
+  \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{Engineering the Servo Web Browser Engine Using
+  Rust}. In \bibinfo{booktitle}{\emph{Proceedings of the 38th International
+  Conference on Software Engineering Companion}} (Austin, Texas)
+  \emph{(\bibinfo{series}{ICSE '16})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, USA},
+  \bibinfo{pages}{81–89}.
+\newblock
+\showISBNx{9781450342056}
+\href{https://doi.org/10.1145/2889160.2889229}{doi:\nolinkurl{10.1145/2889160.2889229}}
+
+
+\bibitem[Barrett(2026)]%
+        {tree-splicer}
+\bibfield{author}{\bibinfo{person}{Langston Barrett}.}
+  \bibinfo{year}{2026}\natexlab{}.
+\newblock \bibinfo{title}{tree-splicer}.
+\newblock
+\shownote{Accessed: 2026-01-23}.
+\newblock
+\urldef\tempurl%
+\url{https://github.com/langston-barrett/tree-splicer}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Boos et~al\mbox{.}(2020)]%
+        {boos2020theseus}
+\bibfield{author}{\bibinfo{person}{Kevin Boos}, \bibinfo{person}{Namitha
+  Liyanage}, \bibinfo{person}{Ramla Ijaz}, {and} \bibinfo{person}{Lin Zhong}.}
+  \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Theseus: An Experiment in Operating System
+  Structure and State Management}. In \bibinfo{booktitle}{\emph{Proceedings of
+  the 14th USENIX Conference on Operating Systems Design and Implementation}}
+  \emph{(\bibinfo{series}{OSDI'20})}. \bibinfo{publisher}{USENIX Association},
+  \bibinfo{address}{USA}.
+\newblock
+\showISBNx{978-1-939133-19-9}
+
+
+\bibitem[Cai et~al\mbox{.}(2026)]%
+        {cai2026rustmap}
+\bibfield{author}{\bibinfo{person}{Xuemeng Cai}, \bibinfo{person}{Jiakun Liu},
+  \bibinfo{person}{Xiping Huang}, \bibinfo{person}{Yijun Yu},
+  \bibinfo{person}{Haitao Wu}, \bibinfo{person}{Chunmiao Li},
+  \bibinfo{person}{Bo Wang}, \bibinfo{person}{Imam Nur~Bani Yusuf}, {and}
+  \bibinfo{person}{Lingxiao Jiang}.} \bibinfo{year}{2026}\natexlab{}.
+\newblock \showarticletitle{RustMap: Towards Project-Scale C-to-Rust Migration
+  via Program Analysis and LLM}. In \bibinfo{booktitle}{\emph{Engineering of
+  Complex Computer Systems}}, \bibfield{editor}{\bibinfo{person}{Yuan Zhou},
+  \bibinfo{person}{Sin~G. Teo}, \bibinfo{person}{Xiaofei Xie},
+  \bibinfo{person}{Zuohua Ding}, {and} \bibinfo{person}{Yang Liu}} (Eds.).
+  \bibinfo{publisher}{Springer Nature Switzerland}, \bibinfo{address}{Cham},
+  \bibinfo{pages}{283--302}.
+\newblock
+\showISBNx{978-3-032-00828-2}
+\href{https://doi.org/10.1007/978-3-032-00828-2_16}{doi:\nolinkurl{10.1007/978-3-032-00828-2_16}}
+
+
+\bibitem[Chaliasos et~al\mbox{.}(2021)]%
+        {chaliasos2021jvm}
+\bibfield{author}{\bibinfo{person}{Stefanos Chaliasos},
+  \bibinfo{person}{Thodoris Sotiropoulos}, \bibinfo{person}{Georgios-Petros
+  Drosos}, \bibinfo{person}{Charalambos Mitropoulos}, \bibinfo{person}{Dimitris
+  Mitropoulos}, {and} \bibinfo{person}{Diomidis Spinellis}.}
+  \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Well-typed programs can go wrong: a study of
+  typing-related bugs in JVM compilers}.
+\newblock \bibinfo{journal}{\emph{Proc. ACM Program. Lang.}}
+  \bibinfo{volume}{5}, \bibinfo{number}{OOPSLA}, Article
+  \bibinfo{articleno}{123} (\bibinfo{date}{Oct.} \bibinfo{year}{2021}),
+  \bibinfo{numpages}{30}~pages.
+\newblock
+\href{https://doi.org/10.1145/3485500}{doi:\nolinkurl{10.1145/3485500}}
+
+
+\bibitem[Chen et~al\mbox{.}(2025)]%
+        {chen2025atmosphere}
+\bibfield{author}{\bibinfo{person}{Xiangdong Chen}, \bibinfo{person}{Zhaofeng
+  Li}, \bibinfo{person}{Jerry Zhang}, \bibinfo{person}{Vikram Narayanan}, {and}
+  \bibinfo{person}{Anton Burtsev}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{Atmosphere: Practical Verified Kernels with Rust
+  and Verus}. In \bibinfo{booktitle}{\emph{Proceedings of the ACM SIGOPS 31st
+  Symposium on Operating Systems Principles}} (Lotte Hotel World, Seoul,
+  Republic of Korea) \emph{(\bibinfo{series}{SOSP '25})}.
+  \bibinfo{publisher}{Association for Computing Machinery},
+  \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{752–767}.
+\newblock
+\showISBNx{9798400718700}
+\href{https://doi.org/10.1145/3731569.3764821}{doi:\nolinkurl{10.1145/3731569.3764821}}
+
+
+\bibitem[Chiang et~al\mbox{.}(2024)]%
+        {chiang2024securing}
+\bibfield{author}{\bibinfo{person}{Yu-Hsun Chiang}, \bibinfo{person}{Wei-Lin
+  Chang}, \bibinfo{person}{Shih-Wei Li}, {and} \bibinfo{person}{Jan-Ting Tu}.}
+  \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Securing a Multiprocessor KVM Hypervisor with
+  Rust}. In \bibinfo{booktitle}{\emph{Proceedings of the 2024 ACM Symposium on
+  Cloud Computing}} (Redmond, WA, USA) \emph{(\bibinfo{series}{SoCC '24})}.
+  \bibinfo{publisher}{Association for Computing Machinery},
+  \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{650–667}.
+\newblock
+\showISBNx{9798400712869}
+\href{https://doi.org/10.1145/3698038.3698562}{doi:\nolinkurl{10.1145/3698038.3698562}}
+
+
+\bibitem[Cross(2025)]%
+        {adopting-fls}
+\bibfield{author}{\bibinfo{person}{Travis Cross}.}
+  \bibinfo{year}{2025}\natexlab{}.
+\newblock \bibinfo{title}{Adopting the FLS}.
+\newblock
+\shownote{Accessed: 2026-01-23}.
+\newblock
+\urldef\tempurl%
+\url{https://blog.rust-lang.org/2025/03/26/adopting-the-fls}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Dai et~al\mbox{.}(2024)]%
+        {dai2024verifying}
+\bibfield{author}{\bibinfo{person}{Zhenyang Dai}, \bibinfo{person}{Shuang Liu},
+  \bibinfo{person}{Vilhelm Sjoberg}, \bibinfo{person}{Xupeng Li},
+  \bibinfo{person}{Yu Chen}, \bibinfo{person}{Wenhao Wang},
+  \bibinfo{person}{Yuekai Jia}, \bibinfo{person}{Sean~Noble Anderson},
+  \bibinfo{person}{Laila Elbeheiry}, \bibinfo{person}{Shubham Sondhi},
+  \bibinfo{person}{Yu Zhang}, \bibinfo{person}{Zhaozhong Ni},
+  \bibinfo{person}{Shoumeng Yan}, \bibinfo{person}{Ronghui Gu}, {and}
+  \bibinfo{person}{Zhengyu He}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Verifying Rust Implementation of Page Tables in a
+  Software Enclave Hypervisor}. In \bibinfo{booktitle}{\emph{Proceedings of the
+  29th ACM International Conference on Architectural Support for Programming
+  Languages and Operating Systems, Volume 2}} (La Jolla, CA, USA)
+  \emph{(\bibinfo{series}{ASPLOS '24})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, USA},
+  \bibinfo{pages}{1218–1232}.
+\newblock
+\showISBNx{9798400703850}
+\href{https://doi.org/10.1145/3620665.3640398}{doi:\nolinkurl{10.1145/3620665.3640398}}
+
+
+\bibitem[Dewey et~al\mbox{.}(2015)]%
+        {dewey2015clp}
+\bibfield{author}{\bibinfo{person}{Kyle Dewey}, \bibinfo{person}{Jared Roesch},
+  {and} \bibinfo{person}{Ben Hardekopf}.} \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{Fuzzing the Rust Typechecker Using CLP (T)}. In
+  \bibinfo{booktitle}{\emph{2015 30th IEEE/ACM International Conference on
+  Automated Software Engineering (ASE)}}. \bibinfo{pages}{482--493}.
+\newblock
+\href{https://doi.org/10.1109/ASE.2015.65}{doi:\nolinkurl{10.1109/ASE.2015.65}}
+
+
+\bibitem[Du et~al\mbox{.}(2021)]%
+        {du2021dl}
+\bibfield{author}{\bibinfo{person}{Xiaoting Du}, \bibinfo{person}{Zheng Zheng},
+  \bibinfo{person}{Lei Ma}, {and} \bibinfo{person}{Jianjun Zhao}.}
+  \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{An Empirical Study on Common Bugs in Deep Learning
+  Compilers}. In \bibinfo{booktitle}{\emph{2021 IEEE 32nd International
+  Symposium on Software Reliability Engineering (ISSRE)}}.
+  \bibinfo{pages}{184--195}.
+\newblock
+\href{https://doi.org/10.1109/ISSRE52982.2021.00030}{doi:\nolinkurl{10.1109/ISSRE52982.2021.00030}}
+
+
+\bibitem[Emre et~al\mbox{.}(2023)]%
+        {emre2023aliasing}
+\bibfield{author}{\bibinfo{person}{Mehmet Emre}, \bibinfo{person}{Peter
+  Boyland}, \bibinfo{person}{Aesha Parekh}, \bibinfo{person}{Ryan Schroeder},
+  \bibinfo{person}{Kyle Dewey}, {and} \bibinfo{person}{Ben Hardekopf}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Aliasing Limits on Translating C to Safe Rust}.
+\newblock \bibinfo{journal}{\emph{Proc. ACM Program. Lang.}}
+  \bibinfo{volume}{7}, \bibinfo{number}{OOPSLA1} (\bibinfo{date}{apr}
+  \bibinfo{year}{2023}).
+\newblock
+\href{https://doi.org/10.1145/3586046}{doi:\nolinkurl{10.1145/3586046}}
+
+
+\bibitem[Emre et~al\mbox{.}(2021)]%
+        {emre2021translating}
+\bibfield{author}{\bibinfo{person}{Mehmet Emre}, \bibinfo{person}{Ryan
+  Schroeder}, \bibinfo{person}{Kyle Dewey}, {and} \bibinfo{person}{Ben
+  Hardekopf}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Translating C to Safer Rust}.
+\newblock \bibinfo{journal}{\emph{Proc. ACM Program. Lang.}}
+  \bibinfo{volume}{5}, \bibinfo{number}{OOPSLA} (\bibinfo{date}{oct}
+  \bibinfo{year}{2021}).
+\newblock
+\href{https://doi.org/10.1145/3485498}{doi:\nolinkurl{10.1145/3485498}}
+
+
+\bibitem[Hong and Ryu(2023)]%
+        {hong2023concrat}
+\bibfield{author}{\bibinfo{person}{Jaemin Hong} {and} \bibinfo{person}{Sukyoung
+  Ryu}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Concrat: An Automatic C-to-Rust Lock API Translator
+  for Concurrent Programs}. In \bibinfo{booktitle}{\emph{Proceedings of the
+  45th International Conference on Software Engineering}}
+  \emph{(\bibinfo{series}{ICSE '23})}. \bibinfo{publisher}{IEEE Press},
+  \bibinfo{address}{Melbourne, Victoria, Australia},
+  \bibinfo{pages}{716–728}.
+\newblock
+\showISBNx{9781665457019}
+\href{https://doi.org/10.1109/ICSE48619.2023.00069}{doi:\nolinkurl{10.1109/ICSE48619.2023.00069}}
+
+
+\bibitem[Hong and Ryu(2024a)]%
+        {hong2024dont}
+\bibfield{author}{\bibinfo{person}{Jaemin Hong} {and} \bibinfo{person}{Sukyoung
+  Ryu}.} \bibinfo{year}{2024}\natexlab{a}.
+\newblock \showarticletitle{Don't Write, but Return: Replacing Output
+  Parameters with Algebraic Data Types in C-to-Rust Translation}.
+\newblock \bibinfo{journal}{\emph{Proc. ACM Program. Lang.}}
+  \bibinfo{volume}{8}, \bibinfo{number}{PLDI} (\bibinfo{date}{jun}
+  \bibinfo{year}{2024}).
+\newblock
+\href{https://doi.org/10.1145/3656406}{doi:\nolinkurl{10.1145/3656406}}
+
+
+\bibitem[Hong and Ryu(2024b)]%
+        {hong2024tag}
+\bibfield{author}{\bibinfo{person}{Jaemin Hong} {and} \bibinfo{person}{Sukyoung
+  Ryu}.} \bibinfo{year}{2024}\natexlab{b}.
+\newblock \showarticletitle{To Tag, or Not to Tag: Translating C's Unions to
+  Rust's Tagged Unions}. In \bibinfo{booktitle}{\emph{Proceedings of the 39th
+  IEEE/ACM International Conference on Automated Software Engineering}}
+  (Sacramento, CA, USA) \emph{(\bibinfo{series}{ASE '24})}.
+  \bibinfo{publisher}{Association for Computing Machinery},
+  \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{40–52}.
+\newblock
+\showISBNx{9798400712487}
+\href{https://doi.org/10.1145/3691620.3694985}{doi:\nolinkurl{10.1145/3691620.3694985}}
+
+
+\bibitem[Hong and Ryu(2024c)]%
+        {hong2024type}
+\bibfield{author}{\bibinfo{person}{Jaemin Hong} {and} \bibinfo{person}{Sukyoung
+  Ryu}.} \bibinfo{year}{2024}\natexlab{c}.
+\newblock \showarticletitle{Type-migrating C-to-Rust Translation using a Large
+  Language Model}.
+\newblock \bibinfo{journal}{\emph{Empirical Software Engineering}}
+  \bibinfo{volume}{30}, \bibinfo{number}{1} (\bibinfo{date}{Oct.}
+  \bibinfo{year}{2024}).
+\newblock
+\showISSN{1573-7616}
+\href{https://doi.org/10.1007/s10664-024-10573-2}{doi:\nolinkurl{10.1007/s10664-024-10573-2}}
+
+
+\bibitem[Hong and Ryu(2025a)]%
+        {hong2025automatically}
+\bibfield{author}{\bibinfo{person}{Jaemin Hong} {and} \bibinfo{person}{Sukyoung
+  Ryu}.} \bibinfo{year}{2025}\natexlab{a}.
+\newblock \showarticletitle{Automatically Translating C to Rust}.
+\newblock \bibinfo{journal}{\emph{Commun. ACM}} \bibinfo{volume}{68},
+  \bibinfo{number}{11} (\bibinfo{date}{Oct.} \bibinfo{year}{2025}),
+  \bibinfo{pages}{58–65}.
+\newblock
+\showISSN{0001-0782}
+\href{https://doi.org/10.1145/3737696}{doi:\nolinkurl{10.1145/3737696}}
+
+
+\bibitem[Hong and Ryu(2025b)]%
+        {hong2025forcrat}
+\bibfield{author}{\bibinfo{person}{Jaemin Hong} {and} \bibinfo{person}{Sukyoung
+  Ryu}.} \bibinfo{year}{2025}\natexlab{b}.
+\newblock \showarticletitle{Forcrat: Automatic I/O API Translation from C to
+  Rust via Origin and Capability Analysis}. In \bibinfo{booktitle}{\emph{2025
+  40th IEEE/ACM International Conference on Automated Software Engineering
+  (ASE)}}. \bibinfo{pages}{1541--1552}.
+\newblock
+\href{https://doi.org/10.1109/ASE63991.2025.00130}{doi:\nolinkurl{10.1109/ASE63991.2025.00130}}
+
+
+\bibitem[Hong et~al\mbox{.}(2024)]%
+        {hong2024taming}
+\bibfield{author}{\bibinfo{person}{Jaemin Hong}, \bibinfo{person}{Sunghwan
+  Shim}, \bibinfo{person}{Sanguk Park}, \bibinfo{person}{Tae~Woo Kim},
+  \bibinfo{person}{Jungwoo Kim}, \bibinfo{person}{Junsoo Lee},
+  \bibinfo{person}{Sukyoung Ryu}, {and} \bibinfo{person}{Jeehoon Kang}.}
+  \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Taming Shared Mutable States of Operating Systems
+  in Rust}.
+\newblock \bibinfo{journal}{\emph{Science of Computer Programming}}
+  \bibinfo{volume}{238} (\bibinfo{year}{2024}), \bibinfo{pages}{103152}.
+\newblock
+\showISSN{0167-6423}
+\href{https://doi.org/10.1016/j.scico.2024.103152}{doi:\nolinkurl{10.1016/j.scico.2024.103152}}
+
+
+\bibitem[Hu et~al\mbox{.}(2024)]%
+        {hu2024unishyper}
+\bibfield{author}{\bibinfo{person}{Keyang Hu}, \bibinfo{person}{Wang Huang},
+  \bibinfo{person}{Lei Wang}, \bibinfo{person}{Ce Mo},
+  \bibinfo{person}{Runxiang Wang}, \bibinfo{person}{Yu Chen},
+  \bibinfo{person}{Ju Ren}, {and} \bibinfo{person}{Bo Jiang}.}
+  \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Unishyper: A Rust-based Unikernel Enhancing
+  Reliability and Efficiency of Embedded Systems}.
+\newblock \bibinfo{journal}{\emph{Journal of Systems Architecture}}
+  (\bibinfo{year}{2024}), \bibinfo{pages}{103199}.
+\newblock
+\showISSN{1383-7621}
+\href{https://doi.org/10.1016/j.sysarc.2024.103199}{doi:\nolinkurl{10.1016/j.sysarc.2024.103199}}
+
+
+\bibitem[Jayakar(2020)]%
+        {rust-dropbox}
+\bibfield{author}{\bibinfo{person}{Sujay Jayakar}.}
+  \bibinfo{year}{2020}\natexlab{}.
+\newblock \bibinfo{title}{Rewriting the Heart of Our Sync Engine}.
+\newblock
+\shownote{Accessed: 2026-01-23}.
+\newblock
+\urldef\tempurl%
+\url{https://dropbox.tech/infrastructure/rewriting-the-heart-of-our-sync-engine}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Jung et~al\mbox{.}(2017)]%
+        {jung2017rustbelt}
+\bibfield{author}{\bibinfo{person}{Ralf Jung}, \bibinfo{person}{Jacques-Henri
+  Jourdan}, \bibinfo{person}{Robbert Krebbers}, {and} \bibinfo{person}{Derek
+  Dreyer}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{RustBelt: Securing the Foundations of the Rust
+  Programming Language}.
+\newblock \bibinfo{journal}{\emph{Proc. ACM Program. Lang.}}
+  \bibinfo{volume}{2}, \bibinfo{number}{POPL} (\bibinfo{date}{dec}
+  \bibinfo{year}{2017}).
+\newblock
+\href{https://doi.org/10.1145/3158154}{doi:\nolinkurl{10.1145/3158154}}
+
+
+\bibitem[Jung et~al\mbox{.}(2026)]%
+        {jung2026miri}
+\bibfield{author}{\bibinfo{person}{Ralf Jung}, \bibinfo{person}{Benjamin
+  Kimock}, \bibinfo{person}{Christian Poveda},
+  \bibinfo{person}{Eduardo~S\'{a}nchez Mu\~{n}oz}, \bibinfo{person}{Oli
+  Scherer}, {and} \bibinfo{person}{Qian Wang}.}
+  \bibinfo{year}{2026}\natexlab{}.
+\newblock \showarticletitle{Miri: Practical Undefined Behavior Detection for
+  Rust}.
+\newblock \bibinfo{journal}{\emph{Proc. ACM Program. Lang.}}
+  \bibinfo{volume}{10}, \bibinfo{number}{POPL}, Article \bibinfo{articleno}{48}
+  (\bibinfo{date}{Jan.} \bibinfo{year}{2026}), \bibinfo{numpages}{29}~pages.
+\newblock
+\href{https://doi.org/10.1145/3776690}{doi:\nolinkurl{10.1145/3776690}}
+
+
+\bibitem[Kr\"{u}ge(2024)]%
+        {icemaker}
+\bibfield{author}{\bibinfo{person}{Matthias Kr\"{u}ge}.}
+  \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{title}{icemaker}.
+\newblock
+\shownote{Accessed: 2026-01-23}.
+\newblock
+\urldef\tempurl%
+\url{https://github.com/matthiaskrgr/icemaker}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Lankes et~al\mbox{.}(2020)]%
+        {lankes2020rustyhermit}
+\bibfield{author}{\bibinfo{person}{Stefan Lankes}, \bibinfo{person}{Jonathan
+  Klimt}, \bibinfo{person}{Jens Breitbart}, {and} \bibinfo{person}{Simon
+  Pickartz}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{RustyHermit: A Scalable, Rust-Based Virtual
+  Execution Environment}. In \bibinfo{booktitle}{\emph{High Performance
+  Computing: ISC High Performance 2020 International Workshops, Frankfurt,
+  Germany, June 21–25, 2020, Revised Selected Papers}} (Frankfurt am Main,
+  Germany). \bibinfo{publisher}{Springer-Verlag}, \bibinfo{address}{Berlin,
+  Heidelberg}, \bibinfo{pages}{331–342}.
+\newblock
+\showISBNx{978-3-030-59850-1}
+\href{https://doi.org/10.1007/978-3-030-59851-8_22}{doi:\nolinkurl{10.1007/978-3-030-59851-8_22}}
+
+
+\bibitem[Lee et~al\mbox{.}(2026)]%
+        {lee2026failing}
+\bibfield{author}{\bibinfo{person}{Jaehyun Lee}, \bibinfo{person}{Seokhun
+  Jeong}, {and} \bibinfo{person}{Sukyoung Ryu}.}
+  \bibinfo{year}{2026}\natexlab{}.
+\newblock \showarticletitle{Failing with Purpose: Dangling Coverage-Guided
+  Negative Test Generation from a Mechanized P4 Type System}.
+\newblock \bibinfo{journal}{\emph{Proc. ACM Softw. Eng.}} \bibinfo{volume}{3},
+  \bibinfo{number}{FSE}, Article \bibinfo{articleno}{FSE081}
+  (\bibinfo{date}{June} \bibinfo{year}{2026}), \bibinfo{numpages}{21}~pages.
+\newblock
+\href{https://doi.org/10.1145/3797109}{doi:\nolinkurl{10.1145/3797109}}
+
+
+\bibitem[Levy et~al\mbox{.}(2017)]%
+        {levy2017multiprogramming}
+\bibfield{author}{\bibinfo{person}{Amit Levy}, \bibinfo{person}{Bradford
+  Campbell}, \bibinfo{person}{Branden Ghena}, \bibinfo{person}{Daniel~B.
+  Giffin}, \bibinfo{person}{Pat Pannuto}, \bibinfo{person}{Prabal Dutta}, {and}
+  \bibinfo{person}{Philip Levis}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Multiprogramming a 64kB Computer Safely and
+  Efficiently}. In \bibinfo{booktitle}{\emph{Proceedings of the 26th Symposium
+  on Operating Systems Principles}} (Shanghai, China)
+  \emph{(\bibinfo{series}{SOSP '17})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, USA},
+  \bibinfo{pages}{234–251}.
+\newblock
+\showISBNx{9781450350853}
+\href{https://doi.org/10.1145/3132747.3132786}{doi:\nolinkurl{10.1145/3132747.3132786}}
+
+
+\bibitem[Li et~al\mbox{.}(2025)]%
+        {li2025solidity}
+\bibfield{author}{\bibinfo{person}{Lantian Li}, \bibinfo{person}{Yue Pan},
+  \bibinfo{person}{Dan Wang}, \bibinfo{person}{Jingwen Wu}, {and}
+  \bibinfo{person}{Zhongxing Yu}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \bibinfo{title}{Understanding Typing-Related Bugs in Solidity
+  Compiler}.
+\newblock
+\showeprint[arxiv]{2512.18182}~[cs.SE]
+\urldef\tempurl%
+\url{https://arxiv.org/abs/2512.18182}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Li et~al\mbox{.}(2024)]%
+        {li2024rust}
+\bibfield{author}{\bibinfo{person}{Zhaofeng Li}, \bibinfo{person}{Vikram
+  Narayanan}, \bibinfo{person}{Xiangdong Chen}, \bibinfo{person}{Jerry Zhang},
+  {and} \bibinfo{person}{Anton Burtsev}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Rust for Linux: Understanding the Security Impact
+  of Rust in the Linux Kernel}. In \bibinfo{booktitle}{\emph{2024 Annual
+  Computer Security Applications Conference (ACSAC)}}.
+  \bibinfo{pages}{548--562}.
+\newblock
+\href{https://doi.org/10.1109/ACSAC63791.2024.00054}{doi:\nolinkurl{10.1109/ACSAC63791.2024.00054}}
+
+
+\bibitem[Liu et~al\mbox{.}(2025)]%
+        {liu2025empiricala}
+\bibfield{author}{\bibinfo{person}{Zixi Liu}, \bibinfo{person}{Yang Feng},
+  \bibinfo{person}{Yunbo Ni}, \bibinfo{person}{Shaohua Li},
+  \bibinfo{person}{Xizhe Yin}, \bibinfo{person}{Qingkai Shi},
+  \bibinfo{person}{Baowen Xu}, {and} \bibinfo{person}{Zhendong Su}.}
+  \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{An Empirical Study of Bugs in the rustc Compiler}.
+\newblock \bibinfo{journal}{\emph{Proc. ACM Program. Lang}}
+  \bibinfo{volume}{9}, \bibinfo{number}{OOPSLA2} (\bibinfo{date}{Oct.}
+  \bibinfo{year}{2025}).
+\newblock
+\href{https://doi.org/10.1145/3763800}{doi:\nolinkurl{10.1145/3763800}}
+
+
+\bibitem[Matsakis and Klock(2014)]%
+        {matsakis2014rust}
+\bibfield{author}{\bibinfo{person}{Nicholas~D. Matsakis} {and}
+  \bibinfo{person}{Felix~S. Klock}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{The Rust Language}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 2014 ACM SIGAda Annual
+  Conference on High Integrity Language Technology}} (Portland, Oregon, USA)
+  \emph{(\bibinfo{series}{HILT '14})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, USA},
+  \bibinfo{pages}{103–104}.
+\newblock
+\showISBNx{9781450332170}
+\href{https://doi.org/10.1145/2663171.2663188}{doi:\nolinkurl{10.1145/2663171.2663188}}
+
+
+\bibitem[Milewski(2015)]%
+        {milewski2015traits}
+\bibfield{author}{\bibinfo{person}{Jonatan Milewski}.}
+  \bibinfo{year}{2015}\natexlab{}.
+\newblock \emph{\bibinfo{title}{Formalizing Rust traits}}.
+\newblock \bibinfo{thesistype}{Master's\ thesis}. \bibinfo{school}{University
+  of British Columbia}.
+\newblock
+\href{https://doi.org/10.14288/1.0220521}{doi:\nolinkurl{10.14288/1.0220521}}
+
+
+\bibitem[Narayanan et~al\mbox{.}(2020)]%
+        {narayanan2020redleaf}
+\bibfield{author}{\bibinfo{person}{Vikram Narayanan}, \bibinfo{person}{Tianjiao
+  Huang}, \bibinfo{person}{David Detweiler}, \bibinfo{person}{Dan Appel},
+  \bibinfo{person}{Zhaofeng Li}, \bibinfo{person}{Gerd Zellweger}, {and}
+  \bibinfo{person}{Anton Burtsev}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{RedLeaf: Isolation and Communication in a Safe
+  Operating System}. In \bibinfo{booktitle}{\emph{Proceedings of the 14th
+  USENIX Conference on Operating Systems Design and Implementation}}
+  \emph{(\bibinfo{series}{OSDI'20})}. \bibinfo{publisher}{USENIX Association},
+  \bibinfo{address}{USA}.
+\newblock
+\showISBNx{978-1-939133-19-9}
+
+
+\bibitem[Park et~al\mbox{.}(2021a)]%
+        {park2021jest}
+\bibfield{author}{\bibinfo{person}{Jihyeok Park}, \bibinfo{person}{Seungmin
+  An}, \bibinfo{person}{Dongjun Youn}, \bibinfo{person}{Gyeongwon Kim}, {and}
+  \bibinfo{person}{Sukyoung Ryu}.} \bibinfo{year}{2021}\natexlab{a}.
+\newblock \showarticletitle{JEST: N+1-Version Differential Testing of Both
+  JavaScript Engines and Specification}. In \bibinfo{booktitle}{\emph{2021
+  IEEE/ACM 43rd International Conference on Software Engineering (ICSE)}}.
+  \bibinfo{publisher}{IEEE}, \bibinfo{pages}{13--24}.
+\newblock
+\href{https://doi.org/10.1109/icse43902.2021.00015}{doi:\nolinkurl{10.1109/icse43902.2021.00015}}
+
+
+\bibitem[Park et~al\mbox{.}(2021b)]%
+        {park2021jiset}
+\bibfield{author}{\bibinfo{person}{Jihyeok Park}, \bibinfo{person}{Jihee Park},
+  \bibinfo{person}{Seungmin An}, {and} \bibinfo{person}{Sukyoung Ryu}.}
+  \bibinfo{year}{2021}\natexlab{b}.
+\newblock \showarticletitle{JISET: JavaScript IR-based Semantics Extraction
+  Toolchain}. In \bibinfo{booktitle}{\emph{Proceedings of the 35th IEEE/ACM
+  International Conference on Automated Software Engineering}} (Virtual Event,
+  Australia) \emph{(\bibinfo{series}{ASE '20})}.
+  \bibinfo{publisher}{Association for Computing Machinery},
+  \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{647–658}.
+\newblock
+\showISBNx{9781450367684}
+\href{https://doi.org/10.1145/3324884.3416632}{doi:\nolinkurl{10.1145/3324884.3416632}}
+
+
+\bibitem[Park et~al\mbox{.}(2023)]%
+        {park2023feature}
+\bibfield{author}{\bibinfo{person}{Jihyeok Park}, \bibinfo{person}{Dongjun
+  Youn}, \bibinfo{person}{Kanguk Lee}, {and} \bibinfo{person}{Sukyoung Ryu}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Feature-Sensitive Coverage for Conformance Testing
+  of Programming Language Implementations}.
+\newblock \bibinfo{journal}{\emph{Proc. ACM Program. Lang.}}
+  \bibinfo{volume}{7}, \bibinfo{number}{PLDI} (\bibinfo{date}{June}
+  \bibinfo{year}{2023}).
+\newblock
+\href{https://doi.org/10.1145/3591240}{doi:\nolinkurl{10.1145/3591240}}
+
+
+\bibitem[Peng et~al\mbox{.}(2024)]%
+        {peng2024framekernel}
+\bibfield{author}{\bibinfo{person}{Yuke Peng}, \bibinfo{person}{Hongliang
+  Tian}, \bibinfo{person}{Jinyi Xian}, \bibinfo{person}{Shuai Zhou},
+  \bibinfo{person}{Shoumeng Yan}, {and} \bibinfo{person}{Yinqian Zhang}.}
+  \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Framekernel: A Safe and Efficient Kernel
+  Architecture via Rust-based Intra-kernel Privilege Separation}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 15th ACM SIGOPS Asia-Pacific
+  Workshop on Systems}} (Kyoto, Japan) \emph{(\bibinfo{series}{APSys '24})}.
+  \bibinfo{publisher}{Association for Computing Machinery},
+  \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{31–37}.
+\newblock
+\showISBNx{9798400711053}
+\href{https://doi.org/10.1145/3678015.3680492}{doi:\nolinkurl{10.1145/3678015.3680492}}
+
+
+\bibitem[Renshaw(2025)]%
+        {fuzz-rustc}
+\bibfield{author}{\bibinfo{person}{David Renshaw}.}
+  \bibinfo{year}{2025}\natexlab{}.
+\newblock \bibinfo{title}{Fuzz Rustc}.
+\newblock
+\shownote{Accessed: 2026-01-23}.
+\newblock
+\urldef\tempurl%
+\url{https://github.com/dwrensha/fuzz-rustc}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Romano et~al\mbox{.}(2021)]%
+        {romano2021wasm}
+\bibfield{author}{\bibinfo{person}{Alan Romano}, \bibinfo{person}{Xinyue Liu},
+  \bibinfo{person}{Yonghwi Kwon}, {and} \bibinfo{person}{Weihang Wang}.}
+  \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{An Empirical Study of Bugs in WebAssembly
+  Compilers}. In \bibinfo{booktitle}{\emph{2021 36th IEEE/ACM International
+  Conference on Automated Software Engineering (ASE)}}.
+  \bibinfo{pages}{42--54}.
+\newblock
+\href{https://doi.org/10.1109/ASE51524.2021.9678776}{doi:\nolinkurl{10.1109/ASE51524.2021.9678776}}
+
+
+\bibitem[Rust-GCC({[n.\,d.]})]%
+        {rust-gcc}
+\bibfield{author}{\bibinfo{person}{Rust-GCC}.}
+  \bibinfo{year}{[n.\,d.]}\natexlab{}.
+\newblock \bibinfo{title}{GitHub - Rust-GCC/gccrs: GCC Front-End for Rust}.
+\newblock
+\urldef\tempurl%
+\url{https://github.com/Rust-GCC/gccrs}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Ryu and Park(2024)]%
+        {ryu2024javascript}
+\bibfield{author}{\bibinfo{person}{Sukyoung Ryu} {and} \bibinfo{person}{Jihyeok
+  Park}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{JavaScript Language Design and Implementation in
+  Tandem}.
+\newblock \bibinfo{journal}{\emph{Commun. ACM}} \bibinfo{volume}{67},
+  \bibinfo{number}{5} (\bibinfo{date}{May} \bibinfo{year}{2024}),
+  \bibinfo{pages}{86–95}.
+\newblock
+\showISSN{0001-0782}
+\href{https://doi.org/10.1145/3624723}{doi:\nolinkurl{10.1145/3624723}}
+
+
+\bibitem[Serebryany et~al\mbox{.}(2012)]%
+        {serebryany2012addresssanitizer}
+\bibfield{author}{\bibinfo{person}{Konstantin Serebryany},
+  \bibinfo{person}{Derek Bruening}, \bibinfo{person}{Alexander Potapenko},
+  {and} \bibinfo{person}{Dmitry Vyukov}.} \bibinfo{year}{2012}\natexlab{}.
+\newblock \showarticletitle{AddressSanitizer: a fast address sanity checker}.
+  In \bibinfo{booktitle}{\emph{Proceedings of the 2012 USENIX Conference on
+  Annual Technical Conference}} (Boston, MA) \emph{(\bibinfo{series}{USENIX
+  ATC'12})}. \bibinfo{publisher}{USENIX Association}, \bibinfo{address}{USA},
+  \bibinfo{pages}{28}.
+\newblock
+
+
+\bibitem[Shang et~al\mbox{.}(2025)]%
+        {shang2025lwrustip}
+\bibfield{author}{\bibinfo{person}{Guangyong Shang}, \bibinfo{person}{Guangpeng
+  Qi}, \bibinfo{person}{Jianing Ren}, \bibinfo{person}{Xianqi Jin},
+  \bibinfo{person}{Wanjiang Shen}, \bibinfo{person}{Junchao Li},
+  \bibinfo{person}{Xiuzhen Cheng}, {and} \bibinfo{person}{Runyu Pan}.}
+  \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{LwRustIP: Memory-safe and efficient embedded
+  networking stack with ownership semantics}.
+\newblock \bibinfo{journal}{\emph{High-Confidence Computing}}
+  (\bibinfo{year}{2025}), \bibinfo{pages}{100351}.
+\newblock
+\showISSN{2667-2952}
+\href{https://doi.org/10.1016/j.hcc.2025.100351}{doi:\nolinkurl{10.1016/j.hcc.2025.100351}}
+
+
+\bibitem[Sharma et~al\mbox{.}(2023)]%
+        {sharma2023rustsmith}
+\bibfield{author}{\bibinfo{person}{Mayank Sharma}, \bibinfo{person}{Pingshi
+  Yu}, {and} \bibinfo{person}{Alastair~F. Donaldson}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{RustSmith: Random Differential Compiler Testing for
+  Rust}. In \bibinfo{booktitle}{\emph{Proceedings of the 32nd ACM SIGSOFT
+  International Symposium on Software Testing and Analysis}} (Seattle, WA, USA)
+  \emph{(\bibinfo{series}{ISSTA 2023})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, USA},
+  \bibinfo{pages}{1483–1486}.
+\newblock
+\showISBNx{9798400702211}
+\href{https://doi.org/10.1145/3597926.3604919}{doi:\nolinkurl{10.1145/3597926.3604919}}
+
+
+\bibitem[Shen et~al\mbox{.}(2021)]%
+        {shen2021dlcompilerbugs}
+\bibfield{author}{\bibinfo{person}{Qingchao Shen}, \bibinfo{person}{Haoyang
+  Ma}, \bibinfo{person}{Junjie Chen}, \bibinfo{person}{Yongqiang Tian},
+  \bibinfo{person}{Shing-Chi Cheung}, {and} \bibinfo{person}{Xiang Chen}.}
+  \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{A comprehensive study of deep learning compiler
+  bugs}. In \bibinfo{booktitle}{\emph{Proceedings of the 29th ACM Joint Meeting
+  on European Software Engineering Conference and Symposium on the Foundations
+  of Software Engineering}} (Athens, Greece) \emph{(\bibinfo{series}{ESEC/FSE
+  2021})}. \bibinfo{publisher}{Association for Computing Machinery},
+  \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{968–980}.
+\newblock
+\showISBNx{9781450385626}
+\href{https://doi.org/10.1145/3468264.3468591}{doi:\nolinkurl{10.1145/3468264.3468591}}
+
+
+\bibitem[Sim et~al\mbox{.}(2026a)]%
+        {artifact}
+\bibfield{author}{\bibinfo{person}{Yusung Sim}, \bibinfo{person}{Sukyoung Ryu},
+  {and} \bibinfo{person}{Jaemin Hong}.} \bibinfo{year}{2026}\natexlab{a}.
+\newblock \bibinfo{title}{Rust's Type Checker Implementation is Unsound: An
+  Empirical Study on Soundness Bugs in rustc (Artifact)}.
+\newblock
+\href{https://doi.org/10.5281/zenodo.20728406}{doi:\nolinkurl{10.5281/zenodo.20728406}}
+
+
+\bibitem[Sim et~al\mbox{.}(2026b)]%
+        {supp}
+\bibfield{author}{\bibinfo{person}{Yusung Sim}, \bibinfo{person}{Sukyoung Ryu},
+  {and} \bibinfo{person}{Jaemin Hong}.} \bibinfo{year}{2026}\natexlab{b}.
+\newblock \bibinfo{title}{Supplementary Material for ``Rust's Type Checker
+  Implementation Is Unsound: An Empirical Study on Soundness Bugs in rustc''}.
+\newblock
+\href{https://doi.org/10.5281/zenodo.21452140}{doi:\nolinkurl{10.5281/zenodo.21452140}}
+
+
+\bibitem[Sun et~al\mbox{.}(2016)]%
+        {sun2016gccllvm}
+\bibfield{author}{\bibinfo{person}{Chengnian Sun}, \bibinfo{person}{Vu Le},
+  \bibinfo{person}{Qirun Zhang}, {and} \bibinfo{person}{Zhendong Su}.}
+  \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{Toward understanding compiler bugs in GCC and
+  LLVM}. In \bibinfo{booktitle}{\emph{Proceedings of the 25th International
+  Symposium on Software Testing and Analysis}} (Saarbr\"{u}cken, Germany)
+  \emph{(\bibinfo{series}{ISSTA 2016})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, USA},
+  \bibinfo{pages}{294–305}.
+\newblock
+\showISBNx{9781450343909}
+\href{https://doi.org/10.1145/2931037.2931074}{doi:\nolinkurl{10.1145/2931037.2931074}}
+
+
+\bibitem[{The MiniRust Project}(2026)]%
+        {gh-minirust}
+\bibfield{author}{\bibinfo{person}{{The MiniRust Project}}.}
+  \bibinfo{year}{2026}\natexlab{}.
+\newblock \bibinfo{title}{MiniRust: A Precise Specification for ``Rust Lite /
+  MIR Plus''}.
+\newblock \bibinfo{howpublished}{\url{https://github.com/minirust/minirust}}.
+\newblock
+\shownote{Accessed: 2026-01-23}.
+\newblock
+
+
+\bibitem[{The Rust Project}(2015)]%
+        {rfc1214}
+\bibfield{author}{\bibinfo{person}{{The Rust Project}}.}
+  \bibinfo{year}{2015}\natexlab{}.
+\newblock \bibinfo{title}{The Rust RFC Book:
+  1214-projections-lifetimes-and-wf}.
+\newblock
+\shownote{Accessed: 2026-01-23}.
+\newblock
+\urldef\tempurl%
+\url{https://rust-lang.github.io/rfcs/1214-projections-lifetimes-and-wf.html}
+\showURL{%
+\tempurl}
+
+
+\bibitem[{The Rust Project}(2026a)]%
+        {gh-amirformality}
+\bibfield{author}{\bibinfo{person}{{The Rust Project}}.}
+  \bibinfo{year}{2026}\natexlab{a}.
+\newblock \bibinfo{title}{a-mir-formality: A model of MIR and the Rust Type
+  System}.
+\newblock
+  \bibinfo{howpublished}{\url{https://github.com/rust-lang/a-mir-formality}}.
+\newblock
+\shownote{Accessed: 2026-01-23}.
+\newblock
+
+
+\bibitem[{The Rust Project}(2026b)]%
+        {gh-chalk}
+\bibfield{author}{\bibinfo{person}{{The Rust Project}}.}
+  \bibinfo{year}{2026}\natexlab{b}.
+\newblock \bibinfo{title}{Chalk: An Implementation of the Rust Trait System
+  Using a Prolog-like Logic Solver}.
+\newblock \bibinfo{howpublished}{\url{https://github.com/rust-lang/chalk}}.
+\newblock
+\shownote{Accessed: 2026-01-23}.
+\newblock
+
+
+\bibitem[{The Rust Project}(2026c)]%
+        {fls}
+\bibfield{author}{\bibinfo{person}{{The Rust Project}}.}
+  \bibinfo{year}{2026}\natexlab{c}.
+\newblock \bibinfo{title}{FLS}.
+\newblock
+\shownote{Accessed: 2026-01-23}.
+\newblock
+\urldef\tempurl%
+\url{https://rust-lang.github.io/fls}
+\showURL{%
+\tempurl}
+
+
+\bibitem[{The Rust Project}(2026d)]%
+        {gh-miri}
+\bibfield{author}{\bibinfo{person}{{The Rust Project}}.}
+  \bibinfo{year}{2026}\natexlab{d}.
+\newblock \bibinfo{title}{Miri: An interpreter for Rust's Mid-level
+  Intermediate Representation}.
+\newblock \bibinfo{howpublished}{\url{https://github.com/rust-lang/miri}}.
+\newblock
+\shownote{Accessed: 2026-01-23}.
+\newblock
+
+
+\bibitem[{The Rust Project}(2026e)]%
+        {rust-reference}
+\bibfield{author}{\bibinfo{person}{{The Rust Project}}.}
+  \bibinfo{year}{2026}\natexlab{e}.
+\newblock \bibinfo{title}{The Rust Reference}.
+\newblock
+\shownote{Accessed: 2026-01-23}.
+\newblock
+\urldef\tempurl%
+\url{https://doc.rust-lang.org/reference}
+\showURL{%
+\tempurl}
+
+
+\bibitem[{The Rust Project}(2026f)]%
+        {rust-lifetime-elision}
+\bibfield{author}{\bibinfo{person}{{The Rust Project}}.}
+  \bibinfo{year}{2026}\natexlab{f}.
+\newblock \bibinfo{title}{The Rust Reference: Lifetime Elision}.
+\newblock
+\shownote{Accessed: 2026-01-23}.
+\newblock
+\urldef\tempurl%
+\url{https://doc.rust-lang.org/reference/lifetime-elision.html}
+\showURL{%
+\tempurl}
+
+
+\bibitem[{The Rust Project}(2026g)]%
+        {rust-rfcs}
+\bibfield{author}{\bibinfo{person}{{The Rust Project}}.}
+  \bibinfo{year}{2026}\natexlab{g}.
+\newblock \bibinfo{title}{The Rust RFC Book}.
+\newblock
+\shownote{Accessed: 2026-01-23}.
+\newblock
+\urldef\tempurl%
+\url{https://rust-lang.github.io/rfcs}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Wagner et~al\mbox{.}(2025)]%
+        {wagner2025linearity}
+\bibfield{author}{\bibinfo{person}{Andrew Wagner}, \bibinfo{person}{Olek
+  Gierczak}, \bibinfo{person}{Brianna Marshall}, \bibinfo{person}{John~M. Li},
+  {and} \bibinfo{person}{Amal Ahmed}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{From Linearity to Borrowing}.
+\newblock \bibinfo{journal}{\emph{Proc. ACM Program. Lang.}}
+  \bibinfo{volume}{9}, \bibinfo{number}{OOPSLA2} (\bibinfo{date}{Oct.}
+  \bibinfo{year}{2025}).
+\newblock
+\href{https://doi.org/10.1145/3764117}{doi:\nolinkurl{10.1145/3764117}}
+
+
+\bibitem[Wang and Jung(2024)]%
+        {wang2024rustlantis}
+\bibfield{author}{\bibinfo{person}{Qian Wang} {and} \bibinfo{person}{Ralf
+  Jung}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Rustlantis: Randomized Differential Testing of the
+  Rust Compiler}.
+\newblock \bibinfo{journal}{\emph{Proc. ACM Program. Lang.}}
+  \bibinfo{volume}{8}, \bibinfo{number}{OOPSLA2}, Article
+  \bibinfo{articleno}{340} (\bibinfo{date}{Oct.} \bibinfo{year}{2024}),
+  \bibinfo{numpages}{27}~pages.
+\newblock
+\href{https://doi.org/10.1145/3689780}{doi:\nolinkurl{10.1145/3689780}}
+
+
+\bibitem[Wu and Demsky(2025)]%
+        {wu2025genc2rust}
+\bibfield{author}{\bibinfo{person}{Xiafa Wu} {and} \bibinfo{person}{Brian
+  Demsky}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{GenC2Rust: Towards Generating Generic Rust Code
+  from C}. In \bibinfo{booktitle}{\emph{2025 IEEE/ACM 47th International
+  Conference on Software Engineering (ICSE)}}. \bibinfo{publisher}{IEEE
+  Computer Society}, \bibinfo{address}{Los Alamitos, CA, USA},
+  \bibinfo{pages}{664--664}.
+\newblock
+\showISSN{1558-1225}
+\href{https://doi.org/10.1109/ICSE55347.2025.00127}{doi:\nolinkurl{10.1109/ICSE55347.2025.00127}}
+
+
+\bibitem[Xia et~al\mbox{.}(2023)]%
+        {xia2023rustcompilers}
+\bibfield{author}{\bibinfo{person}{Xinmeng Xia}, \bibinfo{person}{Yang Feng},
+  {and} \bibinfo{person}{Qingkai Shi}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Understanding Bugs in Rust Compilers}. In
+  \bibinfo{booktitle}{\emph{2023 IEEE 23rd International Conference on Software
+  Quality, Reliability, and Security (QRS)}}. \bibinfo{pages}{138--149}.
+\newblock
+\href{https://doi.org/10.1109/QRS60937.2023.00023}{doi:\nolinkurl{10.1109/QRS60937.2023.00023}}
+
+
+\bibitem[Xu and Huang(2025)]%
+        {xu2025optimizing}
+\bibfield{author}{\bibinfo{person}{Qingxiao Xu} {and} \bibinfo{person}{Jeff
+  Huang}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{Optimizing Type Migration for LLM-Based C-to-Rust
+  Translation: A Data Flow Graph Approach}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 14th ACM SIGPLAN International
+  Workshop on the State Of the Art in Program Analysis}} (Seoul, Republic of
+  Korea) \emph{(\bibinfo{series}{SOAP '25})}. \bibinfo{publisher}{Association
+  for Computing Machinery}, \bibinfo{address}{New York, NY, USA},
+  \bibinfo{pages}{8–14}.
+\newblock
+\showISBNx{9798400719226}
+\href{https://doi.org/10.1145/3735544.3735582}{doi:\nolinkurl{10.1145/3735544.3735582}}
+
+
+\bibitem[Yang et~al\mbox{.}(2024)]%
+        {yang2024rusttwins}
+\bibfield{author}{\bibinfo{person}{Wenzhang Yang}, \bibinfo{person}{Cuifeng
+  Gao}, \bibinfo{person}{Xiaoyuan Liu}, \bibinfo{person}{Yuekang Li}, {and}
+  \bibinfo{person}{Yinxing Xue}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Rust-twins: Automatic Rust Compiler Testing through
+  Program Mutation and Dual Macros Generation}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 39th IEEE/ACM International
+  Conference on Automated Software Engineering}} (Sacramento, CA, USA)
+  \emph{(\bibinfo{series}{ASE '24})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, USA},
+  \bibinfo{pages}{631–642}.
+\newblock
+\showISBNx{9798400712487}
+\href{https://doi.org/10.1145/3691620.3695059}{doi:\nolinkurl{10.1145/3691620.3695059}}
+
+
+\bibitem[Youn et~al\mbox{.}(2024)]%
+        {youn2024bringing}
+\bibfield{author}{\bibinfo{person}{Dongjun Youn}, \bibinfo{person}{Wonho Shin},
+  \bibinfo{person}{Jaehyun Lee}, \bibinfo{person}{Sukyoung Ryu},
+  \bibinfo{person}{Joachim Breitner}, \bibinfo{person}{Philippa Gardner},
+  \bibinfo{person}{Sam Lindley}, \bibinfo{person}{Matija Pretnar},
+  \bibinfo{person}{Xiaojia Rao}, \bibinfo{person}{Conrad Watt}, {and}
+  \bibinfo{person}{Andreas Rossberg}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Bringing the WebAssembly Standard up to Speed with
+  SpecTec}.
+\newblock \bibinfo{journal}{\emph{Proc. ACM Program. Lang.}}
+  \bibinfo{volume}{8}, \bibinfo{number}{PLDI} (\bibinfo{date}{June}
+  \bibinfo{year}{2024}).
+\newblock
+\href{https://doi.org/10.1145/3656440}{doi:\nolinkurl{10.1145/3656440}}
+
+
+\bibitem[Youn et~al\mbox{.}(2025)]%
+        {youn2025west}
+\bibfield{author}{\bibinfo{person}{Dongjun Youn}, \bibinfo{person}{Wonho Shin},
+  {and} \bibinfo{person}{Sukyoung Ryu}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{WEST: Specification-Based Test Generation for
+  WebAssembly}. In \bibinfo{booktitle}{\emph{2025 40th IEEE/ACM International
+  Conference on Automated Software Engineering (ASE)}}.
+  \bibinfo{pages}{1403--1414}.
+\newblock
+\href{https://doi.org/10.1109/ASE63991.2025.00119}{doi:\nolinkurl{10.1109/ASE63991.2025.00119}}
+
+
+\bibitem[Yu and Wang(2024)]%
+        {yu2024empiricalrustpl}
+\bibfield{author}{\bibinfo{person}{Sijie Yu} {and} \bibinfo{person}{Ziyuan
+  Wang}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{An Empirical Study on Bugs in Rust Programming
+  Language}. In \bibinfo{booktitle}{\emph{2024 IEEE 24th International
+  Conference on Software Quality, Reliability and Security (QRS)}}.
+  \bibinfo{pages}{296--305}.
+\newblock
+\href{https://doi.org/10.1109/QRS62785.2024.00037}{doi:\nolinkurl{10.1109/QRS62785.2024.00037}}
+
+
+\bibitem[Zhang et~al\mbox{.}(2025a)]%
+        {zhang2025scalable}
+\bibfield{author}{\bibinfo{person}{Hanliang Zhang}, \bibinfo{person}{Cristina
+  David}, \bibinfo{person}{Meng Wang}, \bibinfo{person}{Brandon Paulsen}, {and}
+  \bibinfo{person}{Daniel Kroening}.} \bibinfo{year}{2025}\natexlab{a}.
+\newblock \showarticletitle{Scalable, Validated Code Translation of Entire
+  Projects using Large Language Models}.
+\newblock \bibinfo{journal}{\emph{Proc. ACM Program. Lang.}}
+  \bibinfo{volume}{9}, \bibinfo{number}{PLDI} (\bibinfo{date}{June}
+  \bibinfo{year}{2025}).
+\newblock
+\href{https://doi.org/10.1145/3729315}{doi:\nolinkurl{10.1145/3729315}}
+
+
+\bibitem[Zhang et~al\mbox{.}(2023)]%
+        {zhang2023ownership}
+\bibfield{author}{\bibinfo{person}{Hanliang Zhang}, \bibinfo{person}{Cristina
+  David}, \bibinfo{person}{Yijun Yu}, {and} \bibinfo{person}{Meng Wang}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Ownership Guided C to Rust Translation}. In
+  \bibinfo{booktitle}{\emph{Computer Aided Verification}},
+  \bibfield{editor}{\bibinfo{person}{Constantin Enea} {and}
+  \bibinfo{person}{Akash Lal}} (Eds.). \bibinfo{publisher}{Springer Nature
+  Switzerland}, \bibinfo{address}{Cham}, \bibinfo{pages}{459--482}.
+\newblock
+\showISBNx{978-3-031-37709-9}
+\href{https://doi.org/10.1007/978-3-031-37709-9_22}{doi:\nolinkurl{10.1007/978-3-031-37709-9_22}}
+
+
+\bibitem[Zhang et~al\mbox{.}(2025b)]%
+        {zhang2025systematic}
+\bibfield{author}{\bibinfo{person}{Ruxin Zhang}, \bibinfo{person}{Shanxin
+  Zhang}, {and} \bibinfo{person}{Linbo Xie}.} \bibinfo{year}{2025}\natexlab{b}.
+\newblock \showarticletitle{A Systematic Exploration of C-to-Rust Code
+  Translation Based on Large Language Models: Prompt Strategies and Automated
+  Repair}.
+\newblock \bibinfo{journal}{\emph{Automated Software Engineering}}
+  \bibinfo{volume}{33}, \bibinfo{number}{1} (\bibinfo{date}{Oct.}
+  \bibinfo{year}{2025}).
+\newblock
+\showISSN{1573-7535}
+\href{https://doi.org/10.1007/s10515-025-00570-0}{doi:\nolinkurl{10.1007/s10515-025-00570-0}}
+
+
+\bibitem[Zhou et~al\mbox{.}(2025)]%
+        {zhou2025c2rusttv}
+\bibfield{author}{\bibinfo{person}{Han Zhou}, \bibinfo{person}{Yu Luo},
+  \bibinfo{person}{Mengtao Zhang}, {and} \bibinfo{person}{Dianxiang Xu}.}
+  \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{C2RustTV: An LLM-based Framework for C to Rust
+  Translation and Validation}. In \bibinfo{booktitle}{\emph{2025 IEEE 49th
+  Annual Computers, Software, and Applications Conference (COMPSAC)}}.
+  \bibinfo{pages}{1254--1259}.
+\newblock
+\href{https://doi.org/10.1109/COMPSAC65507.2025.00158}{doi:\nolinkurl{10.1109/COMPSAC65507.2025.00158}}
+
+
+\end{thebibliography}

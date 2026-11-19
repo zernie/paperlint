@@ -1,0 +1,1370 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{87}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{}, \showDOI{}, and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showDOI}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showDOI #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showDOI      \undefined \def \showDOI       #1{#1}\fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[Attarian et~al\mbox{.}(2020)]%
+        {attarian2020transforming}
+\bibfield{author}{\bibinfo{person}{Ioanna~Maria Attarian},
+  \bibinfo{person}{Brett~D Roads}, {and} \bibinfo{person}{Michael~Curtis
+  Mozer}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Transforming neural network visual representations
+  to predict human judgments of similarity}. In
+  \bibinfo{booktitle}{\emph{NeurIPS 2020 Workshop SVRHM}}.
+  \bibinfo{publisher}{NeurIPS}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.2010.06512}
+\showDOI{\tempurl}
+
+
+\bibitem[Baker et~al\mbox{.}(2018)]%
+        {baker2018deep}
+\bibfield{author}{\bibinfo{person}{Nicholas Baker}, \bibinfo{person}{Hongjing
+  Lu}, \bibinfo{person}{Gennady Erlikhman}, {and} \bibinfo{person}{Philip~J
+  Kellman}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Deep convolutional networks do not classify based
+  on global object shape}.
+\newblock \bibinfo{journal}{\emph{PLoS computational biology}}
+  \bibinfo{volume}{14}, \bibinfo{number}{12} (\bibinfo{year}{2018}),
+  \bibinfo{pages}{e1006613}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1371/journal.pcbi.1006613}
+\showDOI{\tempurl}
+
+
+\bibitem[Bowers et~al\mbox{.}(2023)]%
+        {bowers2023deep}
+\bibfield{author}{\bibinfo{person}{Jeffrey~S Bowers}, \bibinfo{person}{Gaurav
+  Malhotra}, \bibinfo{person}{Marin Dujmovi{\'c}},
+  \bibinfo{person}{Milton~Llera Montero}, \bibinfo{person}{Christian Tsvetkov},
+  \bibinfo{person}{Valerio Biscione}, \bibinfo{person}{Guillermo Puebla},
+  \bibinfo{person}{Federico Adolfi}, \bibinfo{person}{John~E Hummel},
+  \bibinfo{person}{Rachel~F Heaton}, {et~al\mbox{.}}}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Deep problems with neural network models of human
+  vision}.
+\newblock \bibinfo{journal}{\emph{Behavioral and Brain Sciences}}
+  \bibinfo{volume}{46} (\bibinfo{year}{2023}), \bibinfo{pages}{e385}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1017/s0140525x22002813}
+\showDOI{\tempurl}
+
+
+\bibitem[Buja et~al\mbox{.}(2009)]%
+        {buja2009statistical}
+\bibfield{author}{\bibinfo{person}{Andreas Buja}, \bibinfo{person}{Dianne
+  Cook}, \bibinfo{person}{Heike Hofmann}, \bibinfo{person}{Michael Lawrence},
+  \bibinfo{person}{Eun-Kyung Lee}, \bibinfo{person}{Deborah~F Swayne}, {and}
+  \bibinfo{person}{Hadley Wickham}.} \bibinfo{year}{2009}\natexlab{}.
+\newblock \showarticletitle{Statistical inference for exploratory data analysis
+  and model diagnostics}.
+\newblock \bibinfo{journal}{\emph{Philosophical Transactions of the Royal
+  Society A: Mathematical, Physical and Engineering Sciences}}
+  \bibinfo{volume}{367}, \bibinfo{number}{1906} (\bibinfo{year}{2009}),
+  \bibinfo{pages}{4361--4383}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1098/rsta.2009.0120}
+\showDOI{\tempurl}
+
+
+\bibitem[Bychkovsky et~al\mbox{.}(2011)]%
+        {bychkovsky2011learning}
+\bibfield{author}{\bibinfo{person}{Vladimir Bychkovsky},
+  \bibinfo{person}{Sylvain Paris}, \bibinfo{person}{Eric Chan}, {and}
+  \bibinfo{person}{Frédo Durand}.} \bibinfo{year}{2011}\natexlab{}.
+\newblock \showarticletitle{Learning photographic global tonal adjustment with
+  a database of input/output image pairs}. In \bibinfo{booktitle}{\emph{CVPR
+  2011}}. \bibinfo{pages}{97--104}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/CVPR.2011.5995413}
+\showDOI{\tempurl}
+
+
+\bibitem[Chen et~al\mbox{.}(2024)]%
+        {chen2023does}
+\bibfield{author}{\bibinfo{person}{Qing Chen}, \bibinfo{person}{Shixiong Cao},
+  \bibinfo{person}{Jiazhe Wang}, {and} \bibinfo{person}{Nan Cao}.}
+  \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{How Does Automation Shape the Process of Narrative
+  Visualization: A Survey of Tools}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Visualization and
+  Computer Graphics}} \bibinfo{volume}{30}, \bibinfo{number}{8}
+  (\bibinfo{year}{2024}), \bibinfo{pages}{4429--4448}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TVCG.2023.3261320}
+\showDOI{\tempurl}
+
+
+\bibitem[Chen et~al\mbox{.}(2020)]%
+        {chen2020simple}
+\bibfield{author}{\bibinfo{person}{Ting Chen}, \bibinfo{person}{Simon
+  Kornblith}, \bibinfo{person}{Mohammad Norouzi}, {and}
+  \bibinfo{person}{Geoffrey Hinton}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{A simple framework for contrastive learning of
+  visual representations}. In \bibinfo{booktitle}{\emph{Proceedings of the 37th
+  International Conference on Machine Learning}}
+  \emph{(\bibinfo{series}{ICML'20})}. \bibinfo{publisher}{JMLR.org}, Article
+  \bibinfo{articleno}{149}, \bibinfo{numpages}{11}~pages.
+\newblock
+
+
+\bibitem[Chiquet et~al\mbox{.}(2020)]%
+        {chiquet2020package}
+\bibfield{author}{\bibinfo{person}{Julien Chiquet}, \bibinfo{person}{Guillem
+  Rigaill}, \bibinfo{person}{Martina Sundqvist}, \bibinfo{person}{Valentin
+  Dervieux}, {and} \bibinfo{person}{Florent Bersani}.}
+  \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Package ‘aricode’}.
+\newblock \bibinfo{journal}{\emph{R package version}} (\bibinfo{year}{2020}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.32614/CRAN.package.aricode}
+\showDOI{\tempurl}
+
+
+\bibitem[CIE(1978)]%
+        {cie1978recommendations}
+\bibfield{author}{\bibinfo{person}{C CIE}.} \bibinfo{year}{1978}\natexlab{}.
+\newblock \showarticletitle{Recommendations on uniform color spaces, color
+  difference equations, psychometric color terms}.
+\newblock \bibinfo{journal}{\emph{CIE Publication}}  \bibinfo{volume}{15}
+  (\bibinfo{year}{1978}), \bibinfo{pages}{9--12}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1002/j.1520-6378.1977.tb00102.x}
+\showDOI{\tempurl}
+
+
+\bibitem[Cleveland and McGill(1984)]%
+        {cleveland1984graphical}
+\bibfield{author}{\bibinfo{person}{William~S Cleveland} {and}
+  \bibinfo{person}{Robert McGill}.} \bibinfo{year}{1984}\natexlab{}.
+\newblock \showarticletitle{Graphical perception: Theory, experimentation, and
+  application to the development of graphical methods}.
+\newblock \bibinfo{journal}{\emph{Journal of the American statistical
+  association}} \bibinfo{volume}{79}, \bibinfo{number}{387}
+  (\bibinfo{year}{1984}), \bibinfo{pages}{531--554}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.2307/2288400}
+\showDOI{\tempurl}
+
+
+\bibitem[Coates et~al\mbox{.}(2011)]%
+        {coates2011analysis}
+\bibfield{author}{\bibinfo{person}{Adam Coates}, \bibinfo{person}{Andrew Ng},
+  {and} \bibinfo{person}{Honglak Lee}.} \bibinfo{year}{2011}\natexlab{}.
+\newblock \showarticletitle{An analysis of single-layer networks in
+  unsupervised feature learning}. In \bibinfo{booktitle}{\emph{Proceedings of
+  the fourteenth international conference on artificial intelligence and
+  statistics}}. JMLR Workshop and Conference Proceedings,
+  \bibinfo{pages}{215--223}.
+\newblock
+
+
+\bibitem[Dang-Nguyen et~al\mbox{.}(2015)]%
+        {dang2015raise}
+\bibfield{author}{\bibinfo{person}{Duc-Tien Dang-Nguyen},
+  \bibinfo{person}{Cecilia Pasquini}, \bibinfo{person}{Valentina Conotter},
+  {and} \bibinfo{person}{Giulia Boato}.} \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{Raise: A raw images dataset for digital image
+  forensics}. In \bibinfo{booktitle}{\emph{Proceedings of the 6th ACM
+  multimedia systems conference}}. \bibinfo{pages}{219--224}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/2713168.2713194}
+\showDOI{\tempurl}
+
+
+\bibitem[Demiralp et~al\mbox{.}(2014a)]%
+        {demiralp2014learning}
+\bibfield{author}{\bibinfo{person}{{\c{C}}a{\u{g}}atay Demiralp},
+  \bibinfo{person}{Michael~S Bernstein}, {and} \bibinfo{person}{Jeffrey Heer}.}
+  \bibinfo{year}{2014}\natexlab{a}.
+\newblock \showarticletitle{Learning perceptual kernels for visualization
+  design}.
+\newblock \bibinfo{journal}{\emph{IEEE transactions on visualization and
+  computer graphics}} \bibinfo{volume}{20}, \bibinfo{number}{12}
+  (\bibinfo{year}{2014}), \bibinfo{pages}{1933--1942}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TVCG.2014.2346978}
+\showDOI{\tempurl}
+
+
+\bibitem[Demiralp et~al\mbox{.}(2014b)]%
+        {demiralpVisualEmbeddingModel2014}
+\bibfield{author}{\bibinfo{person}{Çagatay Demiralp},
+  \bibinfo{person}{Carlos~E. Scheidegger}, \bibinfo{person}{Gordon~L.
+  Kindlmann}, \bibinfo{person}{David~H. Laidlaw}, {and}
+  \bibinfo{person}{Jeffrey Heer}.} \bibinfo{year}{2014}\natexlab{b}.
+\newblock \showarticletitle{Visual {{Embedding}}: {{A Model}} for
+  {{Visualization}}}.
+\newblock \bibinfo{journal}{\emph{IEEE}} \bibinfo{volume}{34},
+  \bibinfo{number}{1} (\bibinfo{year}{2014}), \bibinfo{pages}{10--15}.
+\newblock
+\showISSN{1558-1756}
+\urldef\tempurl%
+\url{https://doi.org/10.1109/MCG.2014.18}
+\showDOI{\tempurl}
+
+
+\bibitem[Deng et~al\mbox{.}(2009)]%
+        {deng2009imagenet}
+\bibfield{author}{\bibinfo{person}{Jia Deng}, \bibinfo{person}{Wei Dong},
+  \bibinfo{person}{Richard Socher}, \bibinfo{person}{Li-Jia Li},
+  \bibinfo{person}{Kai Li}, {and} \bibinfo{person}{Li Fei-Fei}.}
+  \bibinfo{year}{2009}\natexlab{}.
+\newblock \showarticletitle{Imagenet: A large-scale hierarchical image
+  database}. In \bibinfo{booktitle}{\emph{2009 IEEE conference on computer
+  vision and pattern recognition}}. Ieee, \bibinfo{pages}{248--255}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/CVPR.2009.5206848}
+\showDOI{\tempurl}
+
+
+\bibitem[Ding et~al\mbox{.}(2020)]%
+        {dingImageQualityAssessment2020}
+\bibfield{author}{\bibinfo{person}{Keyan Ding}, \bibinfo{person}{Kede Ma},
+  \bibinfo{person}{Shiqi Wang}, {and} \bibinfo{person}{Eero~P. Simoncelli}.}
+  \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Image {{Quality Assessment}}: {{Unifying
+  Structure}} and {{Texture Similarity}}}.
+\newblock  (\bibinfo{year}{2020}), \bibinfo{pages}{1--1}.
+\newblock
+\showISSN{0162-8828, 2160-9292, 1939-3539}
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TPAMI.2020.3045810}
+\showDOI{\tempurl}
+
+
+\bibitem[Dosovitskiy et~al\mbox{.}(2021)]%
+        {dosovitskiyImageWorth16x162021}
+\bibfield{author}{\bibinfo{person}{Alexey Dosovitskiy}, \bibinfo{person}{Lucas
+  Beyer}, \bibinfo{person}{Alexander Kolesnikov}, \bibinfo{person}{Dirk
+  Weissenborn}, \bibinfo{person}{Xiaohua Zhai}, \bibinfo{person}{Thomas
+  Unterthiner}, \bibinfo{person}{Mostafa Dehghani}, \bibinfo{person}{Matthias
+  Minderer}, \bibinfo{person}{Georg Heigold}, \bibinfo{person}{Sylvain Gelly},
+  \bibinfo{person}{Jakob Uszkoreit}, {and} \bibinfo{person}{Neil Houlsby}.}
+  \bibinfo{year}{2021}\natexlab{}.
+\newblock \bibinfo{title}{An Image is Worth 16x16 Words: Transformers for Image
+  Recognition at Scale}.
+\newblock
+\newblock
+\showeprint[arxiv]{2010.11929}~[cs.CV]
+\urldef\tempurl%
+\url{https://arxiv.org/abs/2010.11929}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Eskicioglu and Fisher(1995)]%
+        {eskicioglu1995image}
+\bibfield{author}{\bibinfo{person}{Ahmet~M Eskicioglu} {and}
+  \bibinfo{person}{Paul~S Fisher}.} \bibinfo{year}{1995}\natexlab{}.
+\newblock \showarticletitle{Image quality measures and their performance}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on communications}}
+  \bibinfo{volume}{43}, \bibinfo{number}{12} (\bibinfo{year}{1995}),
+  \bibinfo{pages}{2959--2965}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/26.477498}
+\showDOI{\tempurl}
+
+
+\bibitem[Fleuret et~al\mbox{.}(2011)]%
+        {fleuret2011comparing}
+\bibfield{author}{\bibinfo{person}{Fran{\c{c}}ois Fleuret},
+  \bibinfo{person}{Ting Li}, \bibinfo{person}{Charles Dubout},
+  \bibinfo{person}{Emma~K Wampler}, \bibinfo{person}{Steven Yantis}, {and}
+  \bibinfo{person}{Donald Geman}.} \bibinfo{year}{2011}\natexlab{}.
+\newblock \showarticletitle{Comparing machines and humans on a visual
+  categorization test}.
+\newblock \bibinfo{journal}{\emph{Proceedings of the National Academy of
+  Sciences}} \bibinfo{volume}{108}, \bibinfo{number}{43}
+  (\bibinfo{year}{2011}), \bibinfo{pages}{17621--17625}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1073/pnas.1109168108}
+\showDOI{\tempurl}
+
+
+\bibitem[Fu et~al\mbox{.}(2023)]%
+        {fu2023dreamsim}
+\bibfield{author}{\bibinfo{person}{Stephanie Fu}, \bibinfo{person}{Netanel
+  Tamir}, \bibinfo{person}{Shobhita Sundaram}, \bibinfo{person}{Lucy Chai},
+  \bibinfo{person}{Richard Zhang}, \bibinfo{person}{Tali Dekel}, {and}
+  \bibinfo{person}{Phillip Isola}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Dreamsim: Learning new dimensions of human visual
+  similarity using synthetic data}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2306.09344}}
+  (\bibinfo{year}{2023}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.2306.09344}
+\showDOI{\tempurl}
+
+
+\bibitem[Gatys et~al\mbox{.}(2015)]%
+        {gatysNeuralAlgorithmArtistic2015}
+\bibfield{author}{\bibinfo{person}{Leon~A. Gatys},
+  \bibinfo{person}{Alexander~S. Ecker}, {and} \bibinfo{person}{Matthias
+  Bethge}.} \bibinfo{year}{2015}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{A {{Neural Algorithm}} of {{Artistic
+  Style}}}}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.1508.06576}
+\showDOI{\tempurl}
+
+
+\bibitem[Geirhos et~al\mbox{.}(2020)]%
+        {geirhosAccuracyQuantifyingTrialbytrial2020}
+\bibfield{author}{\bibinfo{person}{Robert Geirhos}, \bibinfo{person}{Kristof
+  Meding}, {and} \bibinfo{person}{Felix~A. Wichmann}.}
+  \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Beyond Accuracy: Quantifying Trial-by-Trial
+  Behaviour of {{CNNs}} and Humans by Measuring Error Consistency}. In
+  \bibinfo{booktitle}{\emph{Advances in {{Neural Information Processing
+  Systems}}}}, Vol.~\bibinfo{volume}{33}. \bibinfo{publisher}{{Curran
+  Associates, Inc.}}, \bibinfo{pages}{13890--13902}.
+\newblock
+\urldef\tempurl%
+\url{https://proceedings.neurips.cc/paper/2020/hash/9f6992966d4c363ea0162a056cb45fe5-Abstract.html}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Geirhos et~al\mbox{.}(2018)]%
+        {geirhos2018imagenet}
+\bibfield{author}{\bibinfo{person}{Robert Geirhos}, \bibinfo{person}{Patricia
+  Rubisch}, \bibinfo{person}{Claudio Michaelis}, \bibinfo{person}{Matthias
+  Bethge}, \bibinfo{person}{Felix~A Wichmann}, {and} \bibinfo{person}{Wieland
+  Brendel}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{ImageNet-trained CNNs are biased towards texture;
+  increasing shape bias improves accuracy and robustness}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:1811.12231}}
+  (\bibinfo{year}{2018}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.1811.12231}
+\showDOI{\tempurl}
+
+
+\bibitem[Girod(1993)]%
+        {girod1993s}
+\bibfield{author}{\bibinfo{person}{Bernd Girod}.}
+  \bibinfo{year}{1993}\natexlab{}.
+\newblock \showarticletitle{What's wrong with mean-squared error?}
+\newblock In \bibinfo{booktitle}{\emph{Digital images and human vision}}.
+  \bibinfo{pages}{207--220}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/MDSP.1991.639240}
+\showDOI{\tempurl}
+
+
+\bibitem[Gogolou et~al\mbox{.}(2018)]%
+        {gogolou2018comparing}
+\bibfield{author}{\bibinfo{person}{Anna Gogolou}, \bibinfo{person}{Theophanis
+  Tsandilas}, \bibinfo{person}{Themis Palpanas}, {and}
+  \bibinfo{person}{Anastasia Bezerianos}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Comparing similarity perception in time series
+  visualizations}.
+\newblock \bibinfo{journal}{\emph{IEEE transactions on visualization and
+  computer graphics}} \bibinfo{volume}{25}, \bibinfo{number}{1}
+  (\bibinfo{year}{2018}), \bibinfo{pages}{523--533}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TVCG.2018.2865077}
+\showDOI{\tempurl}
+
+
+\bibitem[Goodfellow et~al\mbox{.}(2014)]%
+        {goodfellow2014explaining}
+\bibfield{author}{\bibinfo{person}{Ian~J Goodfellow}, \bibinfo{person}{Jonathon
+  Shlens}, {and} \bibinfo{person}{Christian Szegedy}.}
+  \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{Explaining and harnessing adversarial examples}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:1412.6572}}
+  (\bibinfo{year}{2014}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.1412.6572}
+\showDOI{\tempurl}
+
+
+\bibitem[Gowda and Yuan(2019)]%
+        {gowda2019colornet}
+\bibfield{author}{\bibinfo{person}{Shreyank~N Gowda} {and}
+  \bibinfo{person}{Chun Yuan}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{ColorNet: Investigating the importance of color
+  spaces for image classification}. In \bibinfo{booktitle}{\emph{Computer
+  Vision--ACCV 2018: 14th Asian Conference on Computer Vision, Perth,
+  Australia, December 2--6, 2018, Revised Selected Papers, Part IV 14}}.
+  Springer, \bibinfo{pages}{581--596}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1007/978-3-030-20870-7_36}
+\showDOI{\tempurl}
+
+
+\bibitem[Guo et~al\mbox{.}(2002)]%
+        {guo2002learning}
+\bibfield{author}{\bibinfo{person}{Guo-Dong Guo}, \bibinfo{person}{Anil~K
+  Jain}, \bibinfo{person}{Wei-Ying Ma}, {and} \bibinfo{person}{Hong-Jiang
+  Zhang}.} \bibinfo{year}{2002}\natexlab{}.
+\newblock \showarticletitle{Learning similarity measure for natural image
+  retrieval with relevance feedback}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Neural Networks}}
+  \bibinfo{volume}{13}, \bibinfo{number}{4} (\bibinfo{year}{2002}),
+  \bibinfo{pages}{811--820}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TNN.2002.1021882}
+\showDOI{\tempurl}
+
+
+\bibitem[Haehn et~al\mbox{.}(2019)]%
+        {haehnEvaluatingGraphicalPerception2019}
+\bibfield{author}{\bibinfo{person}{Daniel Haehn}, \bibinfo{person}{James
+  Tompkin}, {and} \bibinfo{person}{Hanspeter Pfister}.}
+  \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Evaluating ‘{{Graphical Perception}}’ with
+  {{CNNs}}}.
+\newblock  \bibinfo{volume}{25}, \bibinfo{number}{1} (\bibinfo{year}{2019}),
+  \bibinfo{pages}{641--650}.
+\newblock
+\showISSN{1941-0506}
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TVCG.2018.2865138}
+\showDOI{\tempurl}
+
+
+\bibitem[He et~al\mbox{.}(2016)]%
+        {he2016deep}
+\bibfield{author}{\bibinfo{person}{Kaiming He}, \bibinfo{person}{Xiangyu
+  Zhang}, \bibinfo{person}{Shaoqing Ren}, {and} \bibinfo{person}{Jian Sun}.}
+  \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{Deep residual learning for image recognition}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the IEEE conference on computer
+  vision and pattern recognition}}. \bibinfo{pages}{770--778}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/CVPR.2016.90}
+\showDOI{\tempurl}
+
+
+\bibitem[Hebart et~al\mbox{.}(2019)]%
+        {hebart2019things}
+\bibfield{author}{\bibinfo{person}{Martin~N Hebart}, \bibinfo{person}{Adam~H
+  Dickter}, \bibinfo{person}{Alexis Kidder}, \bibinfo{person}{Wan~Y Kwok},
+  \bibinfo{person}{Anna Corriveau}, \bibinfo{person}{Caitlin Van~Wicklin},
+  {and} \bibinfo{person}{Chris~I Baker}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{THINGS: A database of 1,854 object concepts and
+  more than 26,000 naturalistic object images}.
+\newblock \bibinfo{journal}{\emph{PloS one}} \bibinfo{volume}{14},
+  \bibinfo{number}{10} (\bibinfo{year}{2019}), \bibinfo{pages}{e0223792}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1371/journal.pone.0223792}
+\showDOI{\tempurl}
+
+
+\bibitem[Hebart et~al\mbox{.}(2020)]%
+        {hebart2020revealing}
+\bibfield{author}{\bibinfo{person}{Martin~N Hebart}, \bibinfo{person}{Charles~Y
+  Zheng}, \bibinfo{person}{Francisco Pereira}, {and} \bibinfo{person}{Chris~I
+  Baker}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Revealing the multidimensional mental
+  representations of natural objects underlying human similarity judgements}.
+\newblock \bibinfo{journal}{\emph{Nature human behaviour}} \bibinfo{volume}{4},
+  \bibinfo{number}{11} (\bibinfo{year}{2020}), \bibinfo{pages}{1173--1185}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1038/s41562-020-00951-3}
+\showDOI{\tempurl}
+
+
+\bibitem[Hosseinpour et~al\mbox{.}(2024)]%
+        {hosseinpour2024examining}
+\bibfield{author}{\bibinfo{person}{Helia Hosseinpour}, \bibinfo{person}{Laura~E
+  Matzen}, \bibinfo{person}{Kristin~M Divis}, \bibinfo{person}{Spencer~C
+  Castro}, {and} \bibinfo{person}{Lace Padilla}.}
+  \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Examining Limits of Small Multiples: Frame Quantity
+  Impacts Judgments with Line Graphs}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Visualization and
+  Computer Graphics}} (\bibinfo{year}{2024}).
+\newblock
+
+
+\bibitem[Huang and Belongie(2017)]%
+        {huang2017arbitrary}
+\bibfield{author}{\bibinfo{person}{Xun Huang} {and} \bibinfo{person}{Serge
+  Belongie}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Arbitrary style transfer in real-time with adaptive
+  instance normalization}. In \bibinfo{booktitle}{\emph{Proceedings of the IEEE
+  international conference on computer vision}}. \bibinfo{pages}{1501--1510}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.1703.06868}
+\showDOI{\tempurl}
+
+
+\bibitem[Hullman et~al\mbox{.}(2013)]%
+        {hullman2013deeper}
+\bibfield{author}{\bibinfo{person}{Jessica Hullman}, \bibinfo{person}{Steven
+  Drucker}, \bibinfo{person}{Nathalie~Henry Riche}, \bibinfo{person}{Bongshin
+  Lee}, \bibinfo{person}{Danyel Fisher}, {and} \bibinfo{person}{Eytan Adar}.}
+  \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{A deeper understanding of sequence in narrative
+  visualization}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on visualization and
+  computer graphics}} \bibinfo{volume}{19}, \bibinfo{number}{12}
+  (\bibinfo{year}{2013}), \bibinfo{pages}{2406--2415}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TVCG.2013.119}
+\showDOI{\tempurl}
+
+
+\bibitem[Iandola et~al\mbox{.}(2016)]%
+        {iandola2016squeezenet}
+\bibfield{author}{\bibinfo{person}{Forrest~N Iandola}, \bibinfo{person}{Song
+  Han}, \bibinfo{person}{Matthew~W Moskewicz}, \bibinfo{person}{Khalid Ashraf},
+  \bibinfo{person}{William~J Dally}, {and} \bibinfo{person}{Kurt Keutzer}.}
+  \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{SqueezeNet: AlexNet-level accuracy with 50x fewer
+  parameters and< 0.5 MB model size}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:1602.07360}}
+  (\bibinfo{year}{2016}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.1602.07360}
+\showDOI{\tempurl}
+
+
+\bibitem[Indahl et~al\mbox{.}(2018)]%
+        {matrixcorrelation}
+\bibfield{author}{\bibinfo{person}{Ulf~Geir Indahl}, \bibinfo{person}{Tormod
+  Næs}, {and} \bibinfo{person}{Kristian~Hovde Liland}.}
+  \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{A similarity index for comparing coupled matrices}.
+\newblock \bibinfo{journal}{\emph{Journal of Chemometrics}}
+  \bibinfo{volume}{e3049} (\bibinfo{year}{2018}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1002/cem.3049}
+\showDOI{\tempurl}
+
+
+\bibitem[Jacobs et~al\mbox{.}(1991)]%
+        {jacobs1991cross}
+\bibfield{author}{\bibinfo{person}{Laurence Jacobs}, \bibinfo{person}{Charles
+  Keown}, \bibinfo{person}{Reginald Worthley}, {and} \bibinfo{person}{Kyung-Il
+  Ghymn}.} \bibinfo{year}{1991}\natexlab{}.
+\newblock \showarticletitle{Cross-cultural colour comparisons: Global marketers
+  beware!}
+\newblock \bibinfo{journal}{\emph{International marketing review}}
+  \bibinfo{volume}{8}, \bibinfo{number}{3} (\bibinfo{year}{1991}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1108/02651339110137279}
+\showDOI{\tempurl}
+
+
+\bibitem[Johnson et~al\mbox{.}(2016)]%
+        {johnson2016perceptual}
+\bibfield{author}{\bibinfo{person}{Justin Johnson}, \bibinfo{person}{Alexandre
+  Alahi}, {and} \bibinfo{person}{Li Fei-Fei}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{Perceptual losses for real-time style transfer and
+  super-resolution}. In \bibinfo{booktitle}{\emph{Computer Vision--ECCV 2016:
+  14th European Conference, Amsterdam, The Netherlands, October 11-14, 2016,
+  Proceedings, Part II 14}}. Springer, \bibinfo{pages}{694--711}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1007/978-3-319-46475-6_43}
+\showDOI{\tempurl}
+
+
+\bibitem[Kassambara(2023)]%
+        {ggpubr}
+\bibfield{author}{\bibinfo{person}{Alboukadel Kassambara}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{ggpubr: 'ggplot2' Based Publication Ready
+  Plots}}.
+\newblock
+\urldef\tempurl%
+\url{https://rpkgs.datanovia.com/ggpubr/}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{R package version 0.6.0}.
+
+
+\bibitem[Khaligh-Razavi and Kriegeskorte(2014)]%
+        {khaligh2014deep}
+\bibfield{author}{\bibinfo{person}{Seyed-Mahdi Khaligh-Razavi} {and}
+  \bibinfo{person}{Nikolaus Kriegeskorte}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{Deep supervised, but not unsupervised, models may
+  explain IT cortical representation}.
+\newblock \bibinfo{journal}{\emph{PLoS computational biology}}
+  \bibinfo{volume}{10}, \bibinfo{number}{11} (\bibinfo{year}{2014}),
+  \bibinfo{pages}{e1003915}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1371/journal.pcbi.1003915}
+\showDOI{\tempurl}
+
+
+\bibitem[Kim et~al\mbox{.}(2018)]%
+        {kim2018not}
+\bibfield{author}{\bibinfo{person}{Junkyung Kim}, \bibinfo{person}{Matthew
+  Ricci}, {and} \bibinfo{person}{Thomas Serre}.}
+  \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Not-So-CLEVR: learning same--different relations
+  strains feedforward neural networks}.
+\newblock \bibinfo{journal}{\emph{Interface focus}} \bibinfo{volume}{8},
+  \bibinfo{number}{4} (\bibinfo{year}{2018}), \bibinfo{pages}{20180011}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/doi.org/10.1098/rsfs.2018.0011}
+\showDOI{\tempurl}
+
+
+\bibitem[Kim et~al\mbox{.}(2017)]%
+        {kim2017graphscape}
+\bibfield{author}{\bibinfo{person}{Younghoon Kim}, \bibinfo{person}{Kanit
+  Wongsuphasawat}, \bibinfo{person}{Jessica Hullman}, {and}
+  \bibinfo{person}{Jeffrey Heer}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Graphscape: A model for automated reasoning about
+  visualization similarity and sequencing}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 2017 CHI conference on human
+  factors in computing systems}}. \bibinfo{pages}{2628--2638}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3025453.3025866}
+\showDOI{\tempurl}
+
+
+\bibitem[Kindlmann and Scheidegger(2014)]%
+        {kindlmann2014algebraic}
+\bibfield{author}{\bibinfo{person}{Gordon Kindlmann} {and}
+  \bibinfo{person}{Carlos Scheidegger}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{An algebraic process for visualization design}.
+\newblock \bibinfo{journal}{\emph{IEEE transactions on visualization and
+  computer graphics}} \bibinfo{volume}{20}, \bibinfo{number}{12}
+  (\bibinfo{year}{2014}), \bibinfo{pages}{2181--2190}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TVCG.2014.2346325}
+\showDOI{\tempurl}
+
+
+\bibitem[Kriegeskorte et~al\mbox{.}(2008)]%
+        {kriegeskorte2008representational}
+\bibfield{author}{\bibinfo{person}{Nikolaus Kriegeskorte},
+  \bibinfo{person}{Marieke Mur}, {and} \bibinfo{person}{Peter~A Bandettini}.}
+  \bibinfo{year}{2008}\natexlab{}.
+\newblock \showarticletitle{Representational similarity analysis-connecting the
+  branches of systems neuroscience}.
+\newblock \bibinfo{journal}{\emph{Frontiers in systems neuroscience}}
+  \bibinfo{volume}{2} (\bibinfo{year}{2008}), \bibinfo{pages}{249}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.3389/neuro.06.004.2008}
+\showDOI{\tempurl}
+
+
+\bibitem[Krizhevsky et~al\mbox{.}(2009)]%
+        {krizhevsky2009learning}
+\bibfield{author}{\bibinfo{person}{Alex Krizhevsky}, \bibinfo{person}{Geoffrey
+  Hinton}, {et~al\mbox{.}}} \bibinfo{year}{2009}\natexlab{}.
+\newblock \showarticletitle{Learning multiple layers of features from tiny
+  images}.
+\newblock  (\bibinfo{year}{2009}).
+\newblock
+\urldef\tempurl%
+\url{http://www.cs.utoronto.ca/~kriz/learning-features-2009-TR.pdf}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Krizhevsky et~al\mbox{.}(2012)]%
+        {krizhevsky2012imagenet}
+\bibfield{author}{\bibinfo{person}{Alex Krizhevsky}, \bibinfo{person}{Ilya
+  Sutskever}, {and} \bibinfo{person}{Geoffrey~E Hinton}.}
+  \bibinfo{year}{2012}\natexlab{}.
+\newblock \showarticletitle{Imagenet classification with deep convolutional
+  neural networks}.
+\newblock \bibinfo{journal}{\emph{Advances in neural information processing
+  systems}}  \bibinfo{volume}{25} (\bibinfo{year}{2012}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3065386}
+\showDOI{\tempurl}
+
+
+\bibitem[Kubilius et~al\mbox{.}(2018)]%
+        {kubilius2018cornet}
+\bibfield{author}{\bibinfo{person}{Jonas Kubilius}, \bibinfo{person}{Martin
+  Schrimpf}, \bibinfo{person}{Aran Nayebi}, \bibinfo{person}{Daniel Bear},
+  \bibinfo{person}{Daniel~LK Yamins}, {and} \bibinfo{person}{James~J DiCarlo}.}
+  \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Cornet: Modeling the neural mechanisms of core
+  object recognition}.
+\newblock \bibinfo{journal}{\emph{BioRxiv}} (\bibinfo{year}{2018}),
+  \bibinfo{pages}{408385}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1101/408385}
+\showDOI{\tempurl}
+
+
+\bibitem[Kumar et~al\mbox{.}(2022)]%
+        {kumarBetterImageNetClassifiers2022}
+\bibfield{author}{\bibinfo{person}{Manoj Kumar}, \bibinfo{person}{Neil
+  Houlsby}, \bibinfo{person}{Nal Kalchbrenner}, {and} \bibinfo{person}{Ekin~D.
+  Cubuk}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Do Better {{ImageNet}} Classifiers Assess
+  Perceptual Similarity Better?}}
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.2203.04946}
+\showDOI{\tempurl}
+
+
+\bibitem[Larson and Chandler(2010)]%
+        {larson2010most}
+\bibfield{author}{\bibinfo{person}{Eric~C Larson} {and}
+  \bibinfo{person}{Damon~M Chandler}.} \bibinfo{year}{2010}\natexlab{}.
+\newblock \showarticletitle{Most apparent distortion: full-reference image
+  quality assessment and the role of strategy}.
+\newblock \bibinfo{journal}{\emph{Journal of electronic imaging}}
+  \bibinfo{volume}{19}, \bibinfo{number}{1} (\bibinfo{year}{2010}),
+  \bibinfo{pages}{011006--011006}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1117/1.3267105}
+\showDOI{\tempurl}
+
+
+\bibitem[Ma et~al\mbox{.}(2018)]%
+        {ma2018scatternet}
+\bibfield{author}{\bibinfo{person}{Yuxin Ma}, \bibinfo{person}{Anthony~KH
+  Tung}, \bibinfo{person}{Wei Wang}, \bibinfo{person}{Xiang Gao},
+  \bibinfo{person}{Zhigeng Pan}, {and} \bibinfo{person}{Wei Chen}.}
+  \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Scatternet: A deep subjective similarity model for
+  visual analysis of scatterplots}.
+\newblock \bibinfo{journal}{\emph{IEEE transactions on visualization and
+  computer graphics}} \bibinfo{volume}{26}, \bibinfo{number}{3}
+  (\bibinfo{year}{2018}), \bibinfo{pages}{1562--1576}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TVCG.2018.2875702}
+\showDOI{\tempurl}
+
+
+\bibitem[Medin et~al\mbox{.}(1993)]%
+        {medinRespectsSimilarity1993}
+\bibfield{author}{\bibinfo{person}{Douglas~L. Medin},
+  \bibinfo{person}{Robert~L. Goldstone}, {and} \bibinfo{person}{Dedre
+  Gentner}.} \bibinfo{year}{1993}\natexlab{}.
+\newblock \showarticletitle{Respects for Similarity}.
+\newblock  \bibinfo{volume}{100}, \bibinfo{number}{2} (\bibinfo{year}{1993}),
+  \bibinfo{pages}{254--278}.
+\newblock
+\showISSN{1939-1471}
+\urldef\tempurl%
+\url{https://doi.org/10.1037/0033-295X.100.2.254}
+\showDOI{\tempurl}
+
+
+\bibitem[Pandey et~al\mbox{.}(2016)]%
+        {pandey2016towards}
+\bibfield{author}{\bibinfo{person}{Anshul~Vikram Pandey},
+  \bibinfo{person}{Josua Krause}, \bibinfo{person}{Cristian Felix},
+  \bibinfo{person}{Jeremy Boy}, {and} \bibinfo{person}{Enrico Bertini}.}
+  \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{Towards understanding human similarity perception
+  in the analysis of large sets of scatter plots}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 2016 CHI Conference on Human
+  Factors in Computing Systems}}. \bibinfo{pages}{3659--3669}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/2858036.2858155}
+\showDOI{\tempurl}
+
+
+\bibitem[Paszke et~al\mbox{.}(2019)]%
+        {paszke2019pytorch}
+\bibfield{author}{\bibinfo{person}{Adam Paszke}, \bibinfo{person}{Sam Gross},
+  \bibinfo{person}{Francisco Massa}, \bibinfo{person}{Adam Lerer},
+  \bibinfo{person}{James Bradbury}, \bibinfo{person}{Gregory Chanan},
+  \bibinfo{person}{Trevor Killeen}, \bibinfo{person}{Zeming Lin},
+  \bibinfo{person}{Natalia Gimelshein}, \bibinfo{person}{Luca Antiga},
+  {et~al\mbox{.}}} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Pytorch: An imperative style, high-performance deep
+  learning library}.
+\newblock \bibinfo{journal}{\emph{Advances in neural information processing
+  systems}}  \bibinfo{volume}{32} (\bibinfo{year}{2019}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.1912.01703}
+\showDOI{\tempurl}
+
+
+\bibitem[Pihlgren et~al\mbox{.}(2023)]%
+        {pihlgren2023systematic}
+\bibfield{author}{\bibinfo{person}{Gustav~Grund Pihlgren},
+  \bibinfo{person}{Konstantina Nikolaidou}, \bibinfo{person}{Prakash~Chandra
+  Chhipa}, \bibinfo{person}{Nosheen Abid}, \bibinfo{person}{Rajkumar Saini},
+  \bibinfo{person}{Fredrik Sandin}, {and} \bibinfo{person}{Marcus Liwicki}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{A Systematic Performance Analysis of Deep
+  Perceptual Loss Networks: Breaking Transfer Learning Conventions}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2302.04032}}
+  (\bibinfo{year}{2023}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.2302.04032}
+\showDOI{\tempurl}
+
+
+\bibitem[Ponomarenko et~al\mbox{.}(2015)]%
+        {ponomarenko2015image}
+\bibfield{author}{\bibinfo{person}{Nikolay Ponomarenko}, \bibinfo{person}{Lina
+  Jin}, \bibinfo{person}{Oleg Ieremeiev}, \bibinfo{person}{Vladimir Lukin},
+  \bibinfo{person}{Karen Egiazarian}, \bibinfo{person}{Jaakko Astola},
+  \bibinfo{person}{Benoit Vozel}, \bibinfo{person}{Kacem Chehdi},
+  \bibinfo{person}{Marco Carli}, \bibinfo{person}{Federica Battisti},
+  {et~al\mbox{.}}} \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{Image database TID2013: Peculiarities, results and
+  perspectives}.
+\newblock \bibinfo{journal}{\emph{Signal processing: Image communication}}
+  \bibinfo{volume}{30} (\bibinfo{year}{2015}), \bibinfo{pages}{57--77}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1016/j.image.2014.10.009}
+\showDOI{\tempurl}
+
+
+\bibitem[Prashnani et~al\mbox{.}(2018)]%
+        {prashnaniPieAPPPerceptualImageError2018}
+\bibfield{author}{\bibinfo{person}{Ekta Prashnani}, \bibinfo{person}{Hong Cai},
+  \bibinfo{person}{Yasamin Mostofi}, {and} \bibinfo{person}{Pradeep Sen}.}
+  \bibinfo{year}{2018}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{{{PieAPP}}: {{Perceptual Image-Error
+  Assessment}} through {{Pairwise Preference}}}}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.1806.02067}
+\showDOI{\tempurl}
+\showeprint[arxiv]{1806.02067}~[cs]
+
+
+\bibitem[Proma et~al\mbox{.}(2024)]%
+        {Proma2024}
+\bibfield{author}{\bibinfo{person}{Rifat~Ara Proma}, \bibinfo{person}{Michael
+  Correll}, \bibinfo{person}{Ghulam~Jilani Quadri}, {and} \bibinfo{person}{Paul
+  Rosen}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{{Visual Stenography: Feature Recreation and
+  Preservation in Sketches of Line Charts}}.
+\newblock
+\urldef\tempurl%
+\url{https://ieeevis.org/year/2024/program/poster_v-vis-posters-1100.html}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Qu and Hullman(2016)]%
+        {qu2016evaluating}
+\bibfield{author}{\bibinfo{person}{Zening Qu} {and} \bibinfo{person}{Jessica
+  Hullman}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{Evaluating visualization sets: Trade-offs between
+  local effectiveness and global consistency}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the Sixth Workshop on Beyond Time
+  and Errors on Novel Evaluation Methods for Visualization}}.
+  \bibinfo{pages}{44--52}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/2993901.2993910}
+\showDOI{\tempurl}
+
+
+\bibitem[Qu and Hullman(2017)]%
+        {qu2017keeping}
+\bibfield{author}{\bibinfo{person}{Zening Qu} {and} \bibinfo{person}{Jessica
+  Hullman}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Keeping multiple views consistent: Constraints,
+  validations, and exceptions in visualization authoring}.
+\newblock \bibinfo{journal}{\emph{IEEE transactions on visualization and
+  computer graphics}} \bibinfo{volume}{24}, \bibinfo{number}{1}
+  (\bibinfo{year}{2017}), \bibinfo{pages}{468--477}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TVCG.2017.2744198}
+\showDOI{\tempurl}
+
+
+\bibitem[Roads and Love(2021)]%
+        {roads2021enriching}
+\bibfield{author}{\bibinfo{person}{Brett~D Roads} {and}
+  \bibinfo{person}{Bradley~C Love}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Enriching imagenet with human similarity judgments
+  and psychological embeddings}. In \bibinfo{booktitle}{\emph{Proceedings of
+  the ieee/cvf conference on computer vision and pattern recognition}}.
+  \bibinfo{pages}{3547--3557}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.2011.11015}
+\showDOI{\tempurl}
+
+
+\bibitem[Roads and Love(2024)]%
+        {roads2024modeling}
+\bibfield{author}{\bibinfo{person}{Brett~D Roads} {and}
+  \bibinfo{person}{Bradley~C Love}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Modeling similarity and psychological space}.
+\newblock \bibinfo{journal}{\emph{Annual Review of Psychology}}
+  \bibinfo{volume}{75}, \bibinfo{number}{1} (\bibinfo{year}{2024}),
+  \bibinfo{pages}{215--240}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1146/annurev-psych-040323-115131}
+\showDOI{\tempurl}
+
+
+\bibitem[Roads and Mozer(2017)]%
+        {roads2017improving}
+\bibfield{author}{\bibinfo{person}{Brett~D Roads} {and}
+  \bibinfo{person}{Michael~C Mozer}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Improving human-machine cooperative classification
+  via cognitive theories of similarity}.
+\newblock \bibinfo{journal}{\emph{Cognitive science}} \bibinfo{volume}{41},
+  \bibinfo{number}{5} (\bibinfo{year}{2017}), \bibinfo{pages}{1394--1411}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1111/cogs.12400}
+\showDOI{\tempurl}
+
+
+\bibitem[Sampat et~al\mbox{.}(2009)]%
+        {sampat2009complex}
+\bibfield{author}{\bibinfo{person}{Mehul~P Sampat}, \bibinfo{person}{Zhou
+  Wang}, \bibinfo{person}{Shalini Gupta}, \bibinfo{person}{Alan~Conrad Bovik},
+  {and} \bibinfo{person}{Mia~K Markey}.} \bibinfo{year}{2009}\natexlab{}.
+\newblock \showarticletitle{Complex wavelet structural similarity: A new image
+  similarity index}.
+\newblock \bibinfo{journal}{\emph{IEEE transactions on image processing}}
+  \bibinfo{volume}{18}, \bibinfo{number}{11} (\bibinfo{year}{2009}),
+  \bibinfo{pages}{2385--2401}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TIP.2009.2025923}
+\showDOI{\tempurl}
+
+
+\bibitem[Schrimpf et~al\mbox{.}(2018)]%
+        {schrimpf2018brain}
+\bibfield{author}{\bibinfo{person}{Martin Schrimpf}, \bibinfo{person}{Jonas
+  Kubilius}, \bibinfo{person}{Ha Hong}, \bibinfo{person}{Najib~J Majaj},
+  \bibinfo{person}{Rishi Rajalingham}, \bibinfo{person}{Elias~B Issa},
+  \bibinfo{person}{Kohitij Kar}, \bibinfo{person}{Pouya Bashivan},
+  \bibinfo{person}{Jonathan Prescott-Roy}, \bibinfo{person}{Franziska Geiger},
+  {et~al\mbox{.}}} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Brain-score: Which artificial neural network for
+  object recognition is most brain-like?}
+\newblock \bibinfo{journal}{\emph{BioRxiv}} (\bibinfo{year}{2018}),
+  \bibinfo{pages}{407007}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1101/407007}
+\showDOI{\tempurl}
+
+
+\bibitem[Sheikh(2003)]%
+        {sheikh2003image}
+\bibfield{author}{\bibinfo{person}{Hamid~R Sheikh}.}
+  \bibinfo{year}{2003}\natexlab{}.
+\newblock \bibinfo{title}{Image and video quality assessment research at LIVE}.
+\newblock
+\newblock
+\urldef\tempurl%
+\url{http://live.ece.utexas.edu/research/quality/}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Simonyan and Zisserman(2014)]%
+        {simonyan2014very}
+\bibfield{author}{\bibinfo{person}{Karen Simonyan} {and}
+  \bibinfo{person}{Andrew Zisserman}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \bibinfo{title}{Very deep convolutional networks for large-scale
+  image recognition}.
+\newblock
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.1409.1556}
+\showDOI{\tempurl}
+
+
+\bibitem[Sucholutsky et~al\mbox{.}(2023)]%
+        {sucholutsky2023getting}
+\bibfield{author}{\bibinfo{person}{Ilia Sucholutsky}, \bibinfo{person}{Lukas
+  Muttenthaler}, \bibinfo{person}{Adrian Weller}, \bibinfo{person}{Andi Peng},
+  \bibinfo{person}{Andreea Bobu}, \bibinfo{person}{Been Kim},
+  \bibinfo{person}{Bradley~C Love}, \bibinfo{person}{Erin Grant},
+  \bibinfo{person}{Jascha Achterberg}, \bibinfo{person}{Joshua~B Tenenbaum},
+  {et~al\mbox{.}}} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Getting aligned on representational alignment}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2310.13018}}
+  (\bibinfo{year}{2023}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.2310.13018}
+\showDOI{\tempurl}
+
+
+\bibitem[Tan and Le(2019)]%
+        {tan2019efficientnet}
+\bibfield{author}{\bibinfo{person}{Mingxing Tan} {and} \bibinfo{person}{Quoc
+  Le}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Efficientnet: Rethinking model scaling for
+  convolutional neural networks}. In \bibinfo{booktitle}{\emph{International
+  conference on machine learning}}. PMLR, \bibinfo{pages}{6105--6114}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.1905.11946}
+\showDOI{\tempurl}
+
+
+\bibitem[Torgerson(1965)]%
+        {torgerson1965multidimensional}
+\bibfield{author}{\bibinfo{person}{Warren~S Torgerson}.}
+  \bibinfo{year}{1965}\natexlab{}.
+\newblock \showarticletitle{Multidimensional scaling of similarity}.
+\newblock \bibinfo{journal}{\emph{Psychometrika}} \bibinfo{volume}{30},
+  \bibinfo{number}{4} (\bibinfo{year}{1965}), \bibinfo{pages}{379--393}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1007/BF02289530}
+\showDOI{\tempurl}
+
+
+\bibitem[Tversky(1977)]%
+        {tversky1977features}
+\bibfield{author}{\bibinfo{person}{Amos Tversky}.}
+  \bibinfo{year}{1977}\natexlab{}.
+\newblock \showarticletitle{Features of similarity.}
+\newblock \bibinfo{journal}{\emph{Psychological review}} \bibinfo{volume}{84},
+  \bibinfo{number}{4} (\bibinfo{year}{1977}), \bibinfo{pages}{327}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1037/0033-295X.84.4.327}
+\showDOI{\tempurl}
+
+
+\bibitem[Ushey et~al\mbox{.}(2024)]%
+        {ushey}
+\bibfield{author}{\bibinfo{person}{Kevin Ushey}, \bibinfo{person}{JJ Allaire},
+  {and} \bibinfo{person}{Yuan Tang}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{reticulate: Interface to 'Python'}}.
+\newblock
+\urldef\tempurl%
+\url{https://rstudio.github.io/reticulate/}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{R package version 1.39.0, https://github.com/rstudio/reticulate}.
+
+
+\bibitem[Vaswani et~al\mbox{.}(2017)]%
+        {vaswani2017attention}
+\bibfield{author}{\bibinfo{person}{Ashish Vaswani}, \bibinfo{person}{Noam
+  Shazeer}, \bibinfo{person}{Niki Parmar}, \bibinfo{person}{Jakob Uszkoreit},
+  \bibinfo{person}{Llion Jones}, \bibinfo{person}{Aidan~N Gomez},
+  \bibinfo{person}{{\L}ukasz Kaiser}, {and} \bibinfo{person}{Illia
+  Polosukhin}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Attention is all you need}.
+\newblock \bibinfo{journal}{\emph{Advances in neural information processing
+  systems}}  \bibinfo{volume}{30} (\bibinfo{year}{2017}).
+\newblock
+
+
+\bibitem[Veras and Collins(2019)]%
+        {veras2019discriminability}
+\bibfield{author}{\bibinfo{person}{Rafael Veras} {and}
+  \bibinfo{person}{Christopher Collins}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Discriminability tests for visualization
+  effectiveness and scalability}.
+\newblock \bibinfo{journal}{\emph{IEEE transactions on visualization and
+  computer graphics}} \bibinfo{volume}{26}, \bibinfo{number}{1}
+  (\bibinfo{year}{2019}), \bibinfo{pages}{749--758}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TVCG.2019.2934432}
+\showDOI{\tempurl}
+
+
+\bibitem[Wah et~al\mbox{.}(2015)]%
+        {wah2015learning}
+\bibfield{author}{\bibinfo{person}{Catherine Wah}, \bibinfo{person}{Subhransu
+  Maji}, {and} \bibinfo{person}{Serge Belongie}.}
+  \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{{ Learning Localized Perceptual Similarity Metrics
+  for Interactive Categorization }}. In \bibinfo{booktitle}{\emph{2015 IEEE
+  Winter Conference on Applications of Computer Vision (WACV)}}.
+  \bibinfo{publisher}{IEEE Computer Society}, \bibinfo{address}{Los Alamitos,
+  CA, USA}, \bibinfo{pages}{502--509}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/WACV.2015.73}
+\showDOI{\tempurl}
+
+
+\bibitem[Wang et~al\mbox{.}(2021)]%
+        {wang2021survey}
+\bibfield{author}{\bibinfo{person}{Qianwen Wang}, \bibinfo{person}{Zhutian
+  Chen}, \bibinfo{person}{Yong Wang}, {and} \bibinfo{person}{Huamin Qu}.}
+  \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{A survey on ML4VIS: Applying machine learning
+  advances to data visualization}.
+\newblock \bibinfo{journal}{\emph{IEEE transactions on visualization and
+  computer graphics}} \bibinfo{volume}{28}, \bibinfo{number}{12}
+  (\bibinfo{year}{2021}), \bibinfo{pages}{5134--5153}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TVCG.2021.3106142}
+\showDOI{\tempurl}
+
+
+\bibitem[Wang et~al\mbox{.}(2004)]%
+        {wangImageQualityAssessment2004}
+\bibfield{author}{\bibinfo{person}{Z. Wang}, \bibinfo{person}{A.C. Bovik},
+  \bibinfo{person}{H.R. Sheikh}, {and} \bibinfo{person}{E.P. Simoncelli}.}
+  \bibinfo{year}{2004}\natexlab{}.
+\newblock \showarticletitle{Image {{Quality Assessment}}: {{From Error
+  Visibility}} to {{Structural Similarity}}}.
+\newblock  \bibinfo{volume}{13}, \bibinfo{number}{4} (\bibinfo{year}{2004}),
+  \bibinfo{pages}{600--612}.
+\newblock
+\showISSN{1057-7149}
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TIP.2003.819861}
+\showDOI{\tempurl}
+
+
+\bibitem[Wang et~al\mbox{.}(2003)]%
+        {wang2003multiscale}
+\bibfield{author}{\bibinfo{person}{Zhou Wang}, \bibinfo{person}{Eero~P
+  Simoncelli}, {and} \bibinfo{person}{Alan~C Bovik}.}
+  \bibinfo{year}{2003}\natexlab{}.
+\newblock \showarticletitle{Multiscale structural similarity for image quality
+  assessment}. In \bibinfo{booktitle}{\emph{The Thrity-Seventh Asilomar
+  Conference on Signals, Systems \& Computers, 2003}},
+  Vol.~\bibinfo{volume}{2}. Ieee, \bibinfo{pages}{1398--1402}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/ACSSC.2003.1292216}
+\showDOI{\tempurl}
+
+
+\bibitem[Wichmann and Geirhos(2023)]%
+        {wichmann2023deep}
+\bibfield{author}{\bibinfo{person}{Felix~A Wichmann} {and}
+  \bibinfo{person}{Robert Geirhos}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Are deep neural networks adequate behavioral models
+  of human visual perception?}
+\newblock \bibinfo{journal}{\emph{Annual Review of Vision Science}}
+  \bibinfo{volume}{9}, \bibinfo{number}{1} (\bibinfo{year}{2023}),
+  \bibinfo{pages}{501--524}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1146/annurev-vision-120522-031739}
+\showDOI{\tempurl}
+
+
+\bibitem[Wickham(2016)]%
+        {wickham2011ggplot2}
+\bibfield{author}{\bibinfo{person}{Hadley Wickham}.}
+  \bibinfo{year}{2016}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{ggplot2: Elegant Graphics for Data
+  Analysis}}.
+\newblock \bibinfo{publisher}{Springer-Verlag New York}.
+\newblock
+\showISBNx{978-3-319-24277-4}
+\urldef\tempurl%
+\url{https://ggplot2.tidyverse.org}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Wickham et~al\mbox{.}(2019)]%
+        {wickham2019welcome}
+\bibfield{author}{\bibinfo{person}{Hadley Wickham}, \bibinfo{person}{Mara
+  Averick}, \bibinfo{person}{Jennifer Bryan}, \bibinfo{person}{Winston Chang},
+  \bibinfo{person}{Lucy~D'Agostino McGowan}, \bibinfo{person}{Romain
+  François}, \bibinfo{person}{Garrett Grolemund}, \bibinfo{person}{Alex
+  Hayes}, \bibinfo{person}{Lionel Henry}, \bibinfo{person}{Jim Hester},
+  \bibinfo{person}{Max Kuhn}, \bibinfo{person}{Thomas~Lin Pedersen},
+  \bibinfo{person}{Evan Miller}, \bibinfo{person}{Stephan~Milton Bache},
+  \bibinfo{person}{Kirill Müller}, \bibinfo{person}{Jeroen Ooms},
+  \bibinfo{person}{David Robinson}, \bibinfo{person}{Dana~Paige Seidel},
+  \bibinfo{person}{Vitalie Spinu}, \bibinfo{person}{Kohske Takahashi},
+  \bibinfo{person}{Davis Vaughan}, \bibinfo{person}{Claus Wilke},
+  \bibinfo{person}{Kara Woo}, {and} \bibinfo{person}{Hiroaki Yutani}.}
+  \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Welcome to the {tidyverse}}.
+\newblock \bibinfo{journal}{\emph{Journal of Open Source Software}}
+  \bibinfo{volume}{4}, \bibinfo{number}{43} (\bibinfo{year}{2019}),
+  \bibinfo{pages}{1686}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.21105/joss.01686}
+\showDOI{\tempurl}
+
+
+\bibitem[Wilke and Wiernik(2020)]%
+        {wilke2020ggtext}
+\bibfield{author}{\bibinfo{person}{Claus~O Wilke} {and}
+  \bibinfo{person}{Brenton~M Wiernik}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{ggtext: Improved text rendering support for
+  ‘ggplot2’}.
+\newblock \bibinfo{journal}{\emph{R package version 0.1}}  \bibinfo{volume}{1}
+  (\bibinfo{year}{2020}).
+\newblock
+\urldef\tempurl%
+\url{https://wilkelab.org/ggtext/}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Wolfe(2020)]%
+        {wolfe2020visual}
+\bibfield{author}{\bibinfo{person}{Jeremy~M Wolfe}.}
+  \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Visual search: How do we find what we are looking
+  for?}
+\newblock \bibinfo{journal}{\emph{Annual review of vision science}}
+  \bibinfo{volume}{6}, \bibinfo{number}{1} (\bibinfo{year}{2020}),
+  \bibinfo{pages}{539--562}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1146/annurev-vision-091718-015048}
+\showDOI{\tempurl}
+
+
+\bibitem[Wu et~al\mbox{.}(2021)]%
+        {wu2021ai4vis}
+\bibfield{author}{\bibinfo{person}{Aoyu Wu}, \bibinfo{person}{Yun Wang},
+  \bibinfo{person}{Xinhuan Shu}, \bibinfo{person}{Dominik Moritz},
+  \bibinfo{person}{Weiwei Cui}, \bibinfo{person}{Haidong Zhang},
+  \bibinfo{person}{Dongmei Zhang}, {and} \bibinfo{person}{Huamin Qu}.}
+  \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Ai4vis: Survey on artificial intelligence
+  approaches for data visualization}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Visualization and
+  Computer Graphics}} \bibinfo{volume}{28}, \bibinfo{number}{12}
+  (\bibinfo{year}{2021}), \bibinfo{pages}{5049--5070}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TVCG.2021.3099002}
+\showDOI{\tempurl}
+
+
+\bibitem[Yang et~al\mbox{.}(2023)]%
+        {yang2023can}
+\bibfield{author}{\bibinfo{person}{Fumeng Yang}, \bibinfo{person}{Yuxin Ma},
+  \bibinfo{person}{Lane Harrison}, \bibinfo{person}{James Tompkin}, {and}
+  \bibinfo{person}{David~H. Laidlaw}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{How Can Deep Neural Networks Aid Visualization
+  Perception Research? Three Studies on Correlation Judgments in Scatterplots}.
+  In \bibinfo{booktitle}{\emph{Proceedings of the 2023 CHI Conference on Human
+  Factors in Computing Systems}} (Hamburg, Germany) \emph{(\bibinfo{series}{CHI
+  '23})}. \bibinfo{publisher}{Association for Computing Machinery},
+  \bibinfo{address}{New York, NY, USA}, Article \bibinfo{articleno}{822},
+  \bibinfo{numpages}{17}~pages.
+\newblock
+\showISBNx{9781450394215}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3544548.3581111}
+\showDOI{\tempurl}
+
+
+\bibitem[Zeng et~al\mbox{.}(2021)]%
+        {zeng2021evaluation}
+\bibfield{author}{\bibinfo{person}{Zehua Zeng}, \bibinfo{person}{Phoebe Moh},
+  \bibinfo{person}{Fan Du}, \bibinfo{person}{Jane Hoffswell},
+  \bibinfo{person}{Tak~Yeon Lee}, \bibinfo{person}{Sana Malik},
+  \bibinfo{person}{Eunyee Koh}, {and} \bibinfo{person}{Leilani Battle}.}
+  \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{An evaluation-focused framework for visualization
+  recommendation algorithms}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Visualization and
+  Computer Graphics}} \bibinfo{volume}{28}, \bibinfo{number}{1}
+  (\bibinfo{year}{2021}), \bibinfo{pages}{346--356}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.2109.02706}
+\showDOI{\tempurl}
+
+
+\bibitem[Zhang et~al\mbox{.}(2018)]%
+        {zhangUnreasonableEffectivenessDeep2018}
+\bibfield{author}{\bibinfo{person}{Richard Zhang}, \bibinfo{person}{Phillip
+  Isola}, \bibinfo{person}{Alexei~A. Efros}, \bibinfo{person}{Eli Shechtman},
+  {and} \bibinfo{person}{Oliver Wang}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{The {{Unreasonable Effectiveness}} of
+  {{Deep Features}} as a {{Perceptual Metric}}}}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.1801.03924}
+\showDOI{\tempurl}
+\showeprint[arxiv]{1801.03924}~[cs]
+
+
+\end{thebibliography}

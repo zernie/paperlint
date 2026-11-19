@@ -1,0 +1,201 @@
+\begin{thebibliography}{}
+
+\bibitem[\protect\citeauthoryear{Agarwal \bgroup \em et al.\egroup
+  }{1998}]{agarwal_parametric_1998}
+P.K. Agarwal, D.~Eppstein, L.J. Guibas, and M.R. Henzinger.
+\newblock Parametric and kinetic minimum spanning trees.
+\newblock In {\em Proceedings 39th Annual Symposium on Foundations of Computer
+  Science (Cat. No.98CB36280)}, pages 596--605. {IEEE} Comput. Soc, 1998.
+
+\bibitem[\protect\citeauthoryear{Blelloch}{1991}]{blelloch1990}
+Guy~E. Blelloch.
+\newblock {\em Prefix sums and their applications}, chapter~1.
+\newblock Morgan Kaufmann, Oxford, England, 1991.
+
+\bibitem[\protect\citeauthoryear{Calinescu \bgroup \em et al.\egroup
+  }{2011}]{calinescu_maximizing_2011}
+Gruia Calinescu, Chandra Chekuri, Martin Pál, and Jan Vondrák.
+\newblock Maximizing a {Monotone} {Submodular} {Function} {Subject} to a
+  {Matroid} {Constraint}.
+\newblock {\em SIAM Journal on Computing}, 40(6):1740--1766, January 2011.
+
+\bibitem[\protect\citeauthoryear{Camerini and
+  Vercellis}{1984}]{CAMERINI1984157}
+Paolo~M. Camerini and Carlo Vercellis.
+\newblock The matroidal knapsack: A class of (often) well-solvable problems.
+\newblock {\em Operations Research Letters}, 3(3):157--162, 1984.
+
+\bibitem[\protect\citeauthoryear{Carstensen}{1983}]{Carstensen83}
+Patricia~J. Carstensen.
+\newblock Complexity of some parametric integer and network programming
+  problems.
+\newblock {\em Mathematical Programming}, 26(1):64--75, May 1983.
+
+\bibitem[\protect\citeauthoryear{Chan \bgroup \em et al.\egroup
+  }{2024}]{ChanChengZheng2024}
+Timothy~M. Chan, Pingan Cheng, and Da~Wei Zheng.
+\newblock An optimal algorithm for higher-order {Voronoi} diagrams in the
+  plane: The usefulness of nondeterminism.
+\newblock In {\em Proceedings of the 2024 Annual ACM-SIAM Symposium on Discrete
+  Algorithms (SODA)}, pages 4451--4463. SIAM, 2024.
+
+\bibitem[\protect\citeauthoryear{Chan}{1999}]{Chan1999RemarksOK}
+Timothy~M. Chan.
+\newblock Remarks on k-level algorithms in the plane.
+\newblock Manuscript, 1999.
+
+\bibitem[\protect\citeauthoryear{Cole}{1987}]{Cole87}
+Richard Cole.
+\newblock Slowing down sorting networks to obtain faster sorting algorithms.
+\newblock {\em Journal of the ACM}, 34(1):200--208, January 1987.
+
+\bibitem[\protect\citeauthoryear{Dey}{1998}]{Dey1998}
+T.~K. Dey.
+\newblock Improved bounds for planar k -sets and related problems.
+\newblock {\em Discrete {\&} Computational Geometry}, 19(3):373--382, Mar 1998.
+
+\bibitem[\protect\citeauthoryear{Doron-Arad \bgroup \em et al.\egroup
+  }{2023}]{DoronAradKulikShachnai2023}
+Ilan Doron-Arad, Ariel Kulik, and Hadas Shachnai.
+\newblock An {FPTAS} for budgeted laminar matroid independent set.
+\newblock {\em Operations Research Letters}, 51(6):632--637, 2023.
+
+\bibitem[\protect\citeauthoryear{Doron-Arad \bgroup \em et al.\egroup
+  }{2024}]{doronarad_et_al:LIPIcs.ICALP.2024.56}
+Ilan Doron-Arad, Ariel Kulik, and Hadas Shachnai.
+\newblock {Lower Bounds for Matroid Optimization Problems with a Linear
+  Constraint}.
+\newblock In Karl Bringmann, Martin Grohe, Gabriele Puppis, and Ola Svensson,
+  editors, {\em 51st International Colloquium on Automata, Languages, and
+  Programming (ICALP 2024)}, volume 297 of {\em Leibniz International
+  Proceedings in Informatics (LIPIcs)}, pages 56:1--56:20, Dagstuhl, Germany,
+  2024. Schloss Dagstuhl -- Leibniz-Zentrum f{\"u}r Informatik.
+
+\bibitem[\protect\citeauthoryear{Doron-Arad \bgroup \em et al.\egroup
+  }{2026}]{DoronAradKulikShachnai2026}
+Ilan Doron-Arad, Ariel Kulik, and Hadas Shachnai.
+\newblock An {EPTAS} for budgeted matching, budgeted matroid independent set,
+  and budgeted matroid intersection via representative sets.
+\newblock {\em Mathematical Programming}, 2026.
+
+\bibitem[\protect\citeauthoryear{Dyer}{1984}]{Dyer84}
+M.~E. Dyer.
+\newblock An {{O}}(n) algorithm for the multiple-choice knapsack linear
+  program.
+\newblock {\em Mathematical Programming}, 29(1):57--63, May 1984.
+
+\bibitem[\protect\citeauthoryear{Efron}{1965}]{randompoint}
+Bradley Efron.
+\newblock The convex hull of a random set of points.
+\newblock {\em Biometrika}, 52(3/4):331--343, 1965.
+
+\bibitem[\protect\citeauthoryear{Eisner and
+  Severance}{1976}]{eisner_mathematical_1976}
+Mark~J. Eisner and Dennis~G. Severance.
+\newblock Mathematical {Techniques} for {Efficient} {Record} {Segmentation} in
+  {Large} {Shared} {Databases}.
+\newblock {\em Journal of the ACM}, 23(4):619--635, October 1976.
+
+\bibitem[\protect\citeauthoryear{Eppstein}{1998}]{Eppstein98}
+D.~Eppstein.
+\newblock Geometric {{Lower Bounds}} for {{Parametric Matroid Optimization}}.
+\newblock {\em Discrete \& Computational Geometry}, 20(4):463--476, December
+  1998.
+
+\bibitem[\protect\citeauthoryear{Erdös \bgroup \em et al.\egroup
+  }{1973}]{ERDOS1973139}
+P.~Erdös, L.~Lovász, A.~Simmons, and E.G. Straus.
+\newblock Chapter 13 - dissection graphs of planar point sets.
+\newblock In Jagdish~N. Srivastava, editor, {\em A Survey of Combinatorial
+  Theory}, pages 139--149. North-Holland, 1973.
+
+\bibitem[\protect\citeauthoryear{Fife and Oxley}{2017}]{fife_laminar_2017}
+Tara Fife and James Oxley.
+\newblock Laminar matroids.
+\newblock {\em European Journal of Combinatorics}, 62:206--216, 2017.
+
+\bibitem[\protect\citeauthoryear{Javaudin \bgroup \em et al.\egroup
+  }{2022}]{10.1109/ITSC55140.2022.9922143}
+Lucas Javaudin, Andrea Araldo, and Andr\'{e} de~Palma.
+\newblock Large-scale allocation of personalized incentives.
+\newblock In {\em 2022 IEEE 25th International Conference on Intelligent
+  Transportation Systems (ITSC)}, page 4151–4156. IEEE Press, 2022.
+
+\bibitem[\protect\citeauthoryear{Lovász}{1971}]{lovasz}
+L.~Lovász.
+\newblock On the number of halving lines.
+\newblock {\em Annales Universitatis Scientiarum Budapestinensis de Rolando
+  Eőtvős Nominatae Sectio Mathematica}, 14:107--108, 1971.
+
+\bibitem[\protect\citeauthoryear{Megiddo}{1983}]{Megiddo}
+Nimrod Megiddo.
+\newblock Applying parallel computation algorithms in the design of serial
+  algorithms.
+\newblock {\em J. ACM}, 30(4):852–865, oct 1983.
+
+\bibitem[\protect\citeauthoryear{Murty}{1980}]{Murty80}
+Katta~G. Murty.
+\newblock Computational complexity of parametric linear programming.
+\newblock {\em Mathematical Programming}, 19(1):213--219, December 1980.
+
+\bibitem[\protect\citeauthoryear{Pisinger}{2001}]{DavidPisinger}
+David Pisinger.
+\newblock Budgeting with bounded multiple-choice constraints.
+\newblock {\em European Journal of Operational Research}, 129(3):471--480,
+  2001.
+
+\bibitem[\protect\citeauthoryear{Schrijver}{2003}]{Schrijver2003}
+Alexander Schrijver.
+\newblock {\em Combinatorial Optimization: Polyhedra and Efficiency}.
+\newblock Springer, Berlin, Germany, 2003.
+
+\bibitem[\protect\citeauthoryear{Sinha and Zoltners}{1979}]{Zoltners}
+Prabhakant Sinha and Andris~A. Zoltners.
+\newblock The multiple-choice knapsack problem.
+\newblock {\em Operations Research}, 27(3):503--515, 1979.
+
+\bibitem[\protect\citeauthoryear{Sviridenko \bgroup \em et al.\egroup
+  }{2017}]{sviridenko_optimal_2017}
+Maxim Sviridenko, Jan Vondr{\'a}k, and Justin Ward.
+\newblock Optimal approximation for submodular and supermodular optimization
+  with bounded curvature.
+\newblock {\em Mathematics of Operations Research}, 42(4):1197--1218, 2017.
+
+\bibitem[\protect\citeauthoryear{Tokuyama}{2001}]{minimaxoptimization}
+Takeshi Tokuyama.
+\newblock Minimax parametric optimization problems and multi-dimensional
+  parametric searching.
+\newblock In {\em Proceedings of the Thirty-Third Annual ACM Symposium on
+  Theory of Computing}, STOC '01, page 75–83, New York, NY, USA, 2001.
+  Association for Computing Machinery.
+
+\bibitem[\protect\citeauthoryear{T{\'o}th}{2001}]{Toth01}
+G.~T{\'o}th.
+\newblock Point {{Sets}} with {{Many}} k-{{Sets}}.
+\newblock {\em Discrete \& Computational Geometry}, 26(2):187--194, January
+  2001.
+
+\bibitem[\protect\citeauthoryear{Wang and Shmoys}{2019}]{wang_shmoys_2019}
+Shujing Wang and David Shmoys.
+\newblock How to solve a linear optimization problem on incentive allocation?,
+  Sep 2019.
+
+\bibitem[\protect\citeauthoryear{Yang \bgroup \em et al.\egroup
+  }{2025}]{YangKovalyovZhang2025}
+Yang Yang, Mikhail~Y. Kovalyov, and Yong Zhang.
+\newblock An improved {FPTAS} for budgeted laminar matroid independent set.
+\newblock {\em Operations Research Letters}, 62:107307, 2025.
+
+\bibitem[\protect\citeauthoryear{Zadeh}{1973}]{Zadeh73b}
+Norman Zadeh.
+\newblock A bad network problem for the simplex method and other minimum cost
+  flow algorithms.
+\newblock {\em Mathematical Programming}, 5(1):255--266, December 1973.
+
+\bibitem[\protect\citeauthoryear{Zemel}{1984}]{ZEMEL1984123}
+Eitan Zemel.
+\newblock An {$O(n)$} algorithm for the linear multiple choice knapsack problem
+  and related problems.
+\newblock {\em Information Processing Letters}, 18(3):123--128, 1984.
+
+\end{thebibliography}

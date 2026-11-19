@@ -1,0 +1,77 @@
+\section{Introduction}
+\vspace{-1.5mm}
+
+
+\begin{figure}[t]
+    \includegraphics[width=\columnwidth]{Figures/introduction_motivation.pdf}
+    \vspace{-3mm}
+    \caption{
+        Simplified examples of three cases where existing methods struggle to retrieve the question-related documents correctly.
+        (a) Inadequate granularity of retrieval units leading to inaccurate retrieval results.
+        (b) Entity linking results cannot estimate essential query-aware relationships.
+        (c) Inability of advanced reasoning such as table aggregation and multi-hop reasoning.
+    }
+    \vspace{-5mm}
+\label{fig:motivation}
+\end{figure}
+
+Open-domain question answering (ODQA) over tables and text is important as it leverages the complementary strengths of structured and unstructured data.
+Tables offer vast amounts of related facts but lack diversity, while text provides broader contextual information~\citep{Hybridqa, OTT-QA}, making the integration of both modalities essential.
+Table-text retrieval plays a crucial role in ODQA by retrieving relevant tables and text to support retriever-reader systems ~\citep{OTT-QA, COS, CORE}.
+
+Despite its importance, table-text retrieval is challenging due to the need to bridge structured tables and unstructured passages.
+Tables encode information in rows and columns, requiring structural understanding, while passages follow a narrative format. Effective retrieval demands resolving multi-hop relationships across these distinct formats.
+
+
+Existing methods have achieved some success by employing either \textit{early} or \textit{late fusion} techniques in their top-$k$ retrieval.
+The \emph{early fusion} attempts to reduce the search space by grouping relevant documents before a query is presented. 
+It pre-aligns a table row with associated passages via entity linking, creating a \emph{fused block} as the retrieval unit~\citep{OTT-QA, OTTeR, DoTTeR}. 
+In contrast, the late fusion aligns relevant table rows and passages dynamically using query-based similarity matching after the query is given.
+It returns a ranked sequence of evidence chains, where an \emph{evidence chain} refers to a pair consisting of a table row and a passage ~\citep{CORE, COS}.
+
+However, the existing studies have several significant limitations.
+
+\textbf{(1) Inadequate granularity of retrieval unit.} 
+Early fusion strategy~\citep{OTT-QA, OTTeR, DoTTeR} constructs retrieval units independently of the query, often including query-irrelevant passages, which distorts similarity calculations between fused blocks and queries.
+For example in Figure~\ref{fig:motivation}(a), entity linking connects the \texttt{Grammy} \texttt{Award} \texttt{for} \texttt{Best} \texttt{Female} \texttt{Country} \texttt{Vocal} table with four surrounding passages, even though only the information on the \texttt{K. T. Oslin} is relevant (Figure~\ref{fig:motivation}(a)).
+In the late fusion strategy~\citep{CORE, COS}, retrieving a single table segment or passage may be partially relevant to a query, incurring the risk of retrieving incorrect tables.
+For instance, during the first iteration of retrieval, the system might retrieve the \texttt{Grammy} \texttt{Award} \texttt{for} \texttt{Best} \texttt{Rock} \texttt{Instrumental} table instead of the correct one. 
+Both tables share overlapping terms such as \texttt{Grammy}, \texttt{Artist}, and \texttt{Work}, causing ambiguity in target identification.
+
+\textbf{(2) Missing query-dependent relationships.} The early fusion strategy~\citep{OTT-QA, OTTeR, DoTTeR} relies on entity linking to predefine relationships between tables and passages, failing to capture query-dependent links that might contain the information necessary to answer the query.
+For instance, in Figure~\ref{fig:motivation}(b), the table \texttt{2012} \texttt{MLS} \texttt{SuperDraft} is early fused with the entity \texttt{University} \texttt{of} \texttt{Notre} \texttt{Dame}. 
+However, when the question specifies the information about \texttt{school} \texttt{colors}, it should be linked to the \texttt{Notre} \texttt{Dame} \texttt{Fighting} \texttt{Irish} passage.
+
+\textbf{(3) Lack of advanced reasoning.} 
+Queries that require complex reasoning, such as multi-hop or column-wise aggregation, often demand advanced logical inference beyond simple semantic similarity with the query. 
+Since previous approaches~\citep{OTT-QA, OTTeR, DoTTeR, COS, CORE} rely on semantic similarity, they might fail to retrieve rows or passages identifiable through logical inference.
+For example, in Figure~\ref{fig:motivation}(c), the query involves understanding the \texttt{most} \texttt{recent} \texttt{Segunda} \texttt{Liga} \texttt{Player} \texttt{of} \texttt{the} \texttt{Month} is \texttt{Basilio} \texttt{Almeida}, where the row with the latest \texttt{Year} and \texttt{Month} combination has to be inferred. 
+
+To systematically address these limitations, we first formalize the terms proposed in previous studies using a \emph{bipartite graph}, where table segments and passages are represented as two disjoint sets of nodes, and the links between them are represented as edges. 
+Therefore, the term \emph{fused block} used in the early fusion strategy \citep{OTT-QA, OTTeR, DoTTeR} can be represented as a star \citep{GraphTheory} centered on a node of type \texttt{table segment}, with connected nodes of type \texttt{passage}. 
+Similarly, the \emph{evidence chain} used in the late fusion strategy \citep{CORE, COS} corresponds to an edge connecting a pair of nodes: one of type \texttt{table segment} and one of type \texttt{passage}.
+
+Based on this formalization, we propose \texttt{HELIOS}, a novel graph-based retrieval consisting of three stages: early fusion, late fusion, and LLM reasoning. 
+Specifically, \texttt{HELIOS} adopts the following three key ideas:
+
+\textbf{(1) Combined usage of early and late fusion.}
+We selectively leverage the advantages of both early fusion and late fusion. 
+Early fusion pre-aligns tables with related passages to mitigate the risk of retrieving incomplete or partially relevant information inherent in late fusion, while late fusion dynamically resolves document relationships to address early fusion's reliance on predefined links.
+
+\vspace{-1mm}
+\textbf{(2) Graph refinement.} 
+We leverage LLMs to perform further advanced reasoning over the retrieved graph, enabling deeper logical inference beyond simple semantic similarity.
+For instance, in Figure~\ref{fig:motivation}(c), when the \texttt{SJPF} \texttt{Segunda} \texttt{Liga} \texttt{Player} \texttt{of} \texttt{the} \texttt{Month} table is retrieved, the LLM can perform aggregation to identify the most recent player and conduct multi-hop reasoning to select the corresponding passage for \texttt{Basilio} \texttt{Almeida}.
+
+\textbf{(3) Granularity determination for each retrieval stage.}
+In our retrieval pipeline, each stage early fusion, late fusion, and graph refinement serves a distinct purpose, necessitating the precise determination of the appropriate operational units for each.
+For the early fusion stage, we propose an {\editcolor edge-level, multi-vector-based retrieval}, striking a balance between eliminating irrelevant contexts in star graph retrieval and avoiding the partial information problem in node-based retrieval.
+In the late fusion stage, we set the unit as an individual node.
+We identify query-relevant nodes within the graph produced by the early fusion stage so that we can design the late fusion process to expand the graph using only nodes closely aligned with the query context.
+This approach mitigates the challenge where the earlier stage may retrieve nodes irrelevant to the query.
+Finally, the graph refinement stage presents an expanded graph from late fusion to the LLM, reducing hallucination risks by decomposing the graph into smaller star graphs.
+
+{\feditcolor
+We evaluate \texttt{HELIOS} and its competitors on the \texttt{OTT-QA} \citep{OTT-QA} and \texttt{MultimodalQA (MMQA)} \citep{MultiModalQA} datasets.
+}
+Experimental results demonstrate that \texttt{HELIOS} significantly outperforms SOTA systems.

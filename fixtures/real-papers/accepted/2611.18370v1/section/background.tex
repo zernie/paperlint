@@ -1,0 +1,55 @@
+\section{Background}
+
+\subsection{Problem Formulation}
+We study uncontaminated, unsupervised anomaly detection on tabular data. Let $\mathrm{X} \in \mathbb{R}^{n \times d}$ denote a training data matrix consisting solely of normal samples, where each row $\mathbf{x}_i \in \mathcal{X}$ for $i \in \{1, \dots, n\}$ is a sample with $d$ features, and $\mathrm{x_{i,j}}$ for $j \in \{1, \dots, d\}$ represents attributes of different types. The objective is to train an anomaly detector $f: \mathcal{X} \to \mathbb{R}$ using only $\mathcal{X}$. The detector assigns an anomaly score to each input, where higher values indicate a greater likelihood of being an anomaly. At evaluation time, a labeled test set $\mathrm{D'} = \{(\mathrm{x'_m}, \mathrm{y'_m})\}_{m=1}^{M}$ with $\mathrm{y'_m}\in\{0,1\}$ is provided, and compute $f(\mathrm{x'_m})$ for each test sample. A threshold can be employed to classify whether a sample is an anomaly based on these scores.
+
+
+In LLM-based anomaly detection frameworks like AnoLLM~\citep{tsai2025anollm}, each tabular row $\mathrm{x}_i$ is represented as a serialized token sequence. Specifically, each feature $\mathrm{x_{i,j}}$ is transformed into a natural language phrase ``$\mathrm{c_j}$ is $\mathrm{E}(\mathrm{x_{i,j}})$'', where $\mathrm{c_j}$ is column name and $\mathrm{E}(\cdot)$ is an encoder for pre-processing values. After handling missing values and column names, a permutation $\pi$ is dynamically sampled from $\mathrm{S}_d$ during training, where $\mathrm{S}_d$ denotes the symmetric group on $d$ elements, i.e., the group of all permutations of the set $\{1, 2, \ldots, d\}$ under composition\footnote{For example, with $d=3$, the symmetric group $\mathrm{S}_3$ contains $3! = 6$ permutations: the identity $(1)(2)(3)$, transpositions $(1,2)$, $(1,3)$, $(2,3)$, and 3-cycles $(1,2,3)$, $(1,3,2)$. In our notation, $\pi(i)$ denotes the image of element $i$ under permutation $\pi$.}. The resulting serialized sequence is defined as:
+\begin{equation*}
+\mathbf{S}(\pi, \mathrm{x}_i) = \text{``} \mathrm{c_{\pi(1)}} \text{ is } \mathrm{E}(\mathrm{x_{i,\pi(1)}}), \dots, \mathrm{c_{\pi(d)}} \text{ is } \mathrm{E}(\mathrm{x_{i,\pi(d)}}) \text{''}
+\end{equation*}
+
+The resulting set of serialized tabular strings is denoted as $\mathcal{S} = \{\mathbf{S}(\pi, \mathbf{x}_i) \mid \pi \in S_d, i \in \{1, \dots, n\}\}$. For each string $\mathbf{s} \in \mathcal{S}$, data is transformed into a token sequence $(\mathrm{w_0}, \mathrm{w_1}, \dots, \mathrm{w_{l(\mathbf{s})}}, \mathrm{w_{l(\mathbf{s})+1})}$, where $\mathrm{w_0}$ and $\mathrm{w_{l(\mathbf{s})+1}}$ represent the beginning-of-sequence (BoS) and end-of-sequence (EoS) tokens, respectively. The fine-tuning process minimizes causal language modeling loss:
+\begin{equation}
+\mathcal{L}(\boldsymbol{\theta}) = \mathbb{E}_{\mathbf{s} \in \mathcal{S}} \left[ -\sum_{k=1}^{l(\mathbf{s})+1} \log \pi_{\boldsymbol{\theta}}(\mathrm{w_k} \mid \mathrm{w_{0:k-1})} \right]
+\end{equation}
+where $\boldsymbol{\theta}$ represents the parameters of the model. Through this objective, LLM learns to predict subsequent column values based on previously observed features, leveraging its inherent semantic knowledge to capture the underlying structure of normal data. In the inference stage, anomaly score for a test sample $\mathbf{x}'$ is computed by averaging negative log-likelihood across $r$ different permutations:
+\begin{equation}
+f_{\boldsymbol{\theta}}(\mathbf{x}') =
+- \frac{1}{r} \sum_{j=1}^{r}
+\sum_{k=1}^{l(\mathbf{S}(\pi_j, \mathbf{x}'))+1}
+\log \pi_{\boldsymbol{\theta}}(\mathrm{w}^{(j)}_k \mid \mathrm{w}^{(j)}_{0:k-1})
+\end{equation}
+where $l(\mathbf{S}(\pi_j, \mathbf{x}'))$ denotes number of tokens used to encode tabular features under $j$-th permutation. Here, $\pi_1, \ldots, \pi_r \sim S_d$ denote distinct permutations of $\{1, 2, \ldots, d\}$, applied consistently across all samples.
+
+
+
+\subsection{$f$-Divergence}
+To quantify the discrepancy between two probability distributions, we utilize the family of statistical measures known as $f$-divergences \cite{Csiszar2004,Liese2006}. Given two distributions $P$ and $Q$ possessing, respectively, absolutely continuous density functions $p$ and $q$ with respect to a base measure defined on the domain $\mathcal{X}$, the $f$-divergence is defined as:
+\begin{equation}
+D_{f}\left(P\Vert Q\right)=\int_{\mathcal{X}}q(x)f\left(\frac{p(x)}{q(x)}\right)dx,
+\end{equation}
+where $f : \mathbb{R}^+ \rightarrow \mathbb{R}$ is a convex, lower-semi continuous function satisfying $f(1) = 0$.
+
+\subsection{Self-Play Fine-Tuning}
+
+Self-Play Fine-Tuning (SPIN)~\citep{chen2024self, le2025token, wang2026triplets} is a framework designed to enhance language model performance by employing a two-player game mechanism. At iteration $t+1$, model from the previous iteration, $\pi_{\boldsymbol{\theta}_t}$, acts as the opponent to generate synthetic responses $\mathbf{y}'$ for a given input $\mathbf{x}$. 
+Current model $\pi_{\boldsymbol{\theta}}$ (the main player) is trained to distinguish these self-generated responses from ground-truth responses $\mathbf{y}$ sampled from real data distribution $\mathbb{P}_d$.  The training objective maximizes the probabilistic gap between real and synthetic data distributions by minimizing the expected logistic loss $\ell(t) = \log(1+\exp(-t))$:
+
+\begin{equation}
+\mathcal{L}_{\text{SPIN}}(\boldsymbol{\theta})
+=
+\mathbb{E}
+\Bigg[
+\ell \Bigg(
+\lambda \log \frac{\pi_{\boldsymbol{\theta}}(\mathbf{y} \mid \mathbf{x})}
+{\pi_{\boldsymbol{\theta}_t}(\mathbf{y} \mid \mathbf{x})}
+-
+\lambda \log \frac{\pi_{\boldsymbol{\theta}}(\mathbf{y}' \mid \mathbf{x})}
+{\pi_{\boldsymbol{\theta}_t}(\mathbf{y}' \mid \mathbf{x})}
+\Bigg)
+\Bigg]
+\end{equation}
+
+where the expectation is taken over $\mathbf{x}, \mathbf{y} \sim \mathbb{P}_d$ and $\mathbf{y}' \sim \pi_{\boldsymbol{\theta}_t}$, and $\lambda > 0$ serves as a regularization parameter. Theoretically, the global optimum of this objective is attained if and only if the model's policy $\pi_{\boldsymbol{\theta}}$ 
+fully aligns with the target distribution $\mathbb{P}_d$, thereby facilitating iterative self-improvement without requiring additional human annotations.

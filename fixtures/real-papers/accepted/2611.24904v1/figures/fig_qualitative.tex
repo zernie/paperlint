@@ -1,0 +1,8 @@
+\begin{figure*}[t]
+  \centering
+  \includegraphics[height=4cm, width=\linewidth]{figure2.png}
+  \caption{\textbf{Failure mode and recovery under geographic transfer.}
+Rows: three architectures on tiles from their leave-one-city-out (LOCO) rotations, together spanning all three held-out cities. Columns: input, ground-truth mask (white $=$ shadow), and predicted shadow probability under Upper bound (within-city training), LOCO, and SIB (\S\ref{sec:sib}); shared colormap $[0, 1]$. $\bar{p}_S$: mean predicted shadow probability inside ground-truth shadow. \emph{What to look for:} LOCO collapses $\bar{p}_S$ while background stays dark — failure is washed-out predictions over true shadow regions, not hallucinated shadow elsewhere. SIB recovers foreground confidence on the same regions across all three architectures with varying magnitude.}
+  \label{fig:qualitative}
+\end{figure*}
+

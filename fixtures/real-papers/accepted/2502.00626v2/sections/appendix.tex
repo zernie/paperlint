@@ -1,0 +1,250 @@
+\documentclass[acmtog, nonacm]{acmart}
+
+
+\usepackage{booktabs} % For formal tables
+\usepackage{xcolor}
+
+\newcommand\EG[1]{{\color{ForestGreen!70!Yellow}{#1}}}
+
+\hyphenation{Ben-che-kroun}
+\newcommand\Revision[1]{{\color{black}{#1}}}
+\usepackage{mathtools}
+
+% TOG prefers author-name bib system with square brackets
+\citestyle{acmauthoryear}
+%\setcitestyle{nosort,square} % nosort to allow for manual chronological ordering
+\newcommand\todoChangy[1]{{\color{purple}{#1}}}
+\newcommand\todopyc[1]{{\color{blue}{Peter: #1}}}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{amsmath}
+% \usepackage{subfigure}
+\usepackage{algpseudocode}
+\usepackage{tabularx}
+\usepackage{bm}
+\usepackage{xcolor}
+\usepackage{cancel}
+\usepackage{calc}
+\usepackage{accents}
+\usepackage{tikz}
+\usepackage{pifont}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{decorations.pathreplacing, arrows.meta, tikzmark}
+\usetikzlibrary{calc}
+\usetikzlibrary {shapes.geometric} 
+\usepackage{wrapfig}
+\usetikzlibrary {fit}
+
+\usepackage{cleveref}
+\usepackage{tikzscale}
+\usepackage{graphicx}
+% \usepackage{subcaption}
+% \usepackage{graphicx}
+\usepackage{units} % for nicefrac
+\usepackage[percent]{overpic}
+\usepackage{subfig}
+\usepackage[export]{adjustbox}
+\usepackage{rotating} % For rotated text
+
+\usepackage{pgfplots}
+\usepgfplotslibrary{groupplots}
+\pgfplotsset{compat=1.18}
+
+
+\usepackage[table,xcdraw]{xcolor}
+\usepackage{booktabs} 
+\usepackage{makecell}
+
+
+\tikzset{every node/.style={font=\fontfamily{LinuxBiolinumT-TLF}\selectfont}}
+\usepackage{bm}
+\usetikzlibrary{spy}
+
+\newcommand{\refsec}[1] {Section~\ref{#1}}
+%\newcommand{\refeq}[1] {Eq.~(\ref{#1})}
+\newcommand{\reffig}[1] {Figure~\ref{#1}}
+\newcommand{\refalg}[1] {Algorithm~\ref{#1}}
+\newcommand{\reftab}[1] {Table~\ref{#1}}
+\newcommand{\refapx}[1] {Appendix~\ref{#1}}
+\newcommand{\zhecheng}[1]{\textcolor{orange}{Zhecheng: #1}}
+% \newcommand{\zhecheng}[1]{}
+
+\newcommand{\mengfei}[1]{\textcolor{magenta}{Mengfei: #1}}
+\newlength{\subcolumnwidth}
+\newenvironment{subcolumns}[1][0.45\columnwidth]
+ {\valign\bgroup\hsize=#1\setlength{\subcolumnwidth}{\hsize}\vfil##\vfil\cr}
+ {\crcr\egroup}
+\newcommand{\nextsubcolumn}[1][]{%
+  \cr\noalign{\hfill}
+  \if\relax\detokenize{#1}\relax\else\hsize=#1\setlength{\subcolumnwidth}{\hsize}\fi
+}
+\newcommand{\nextsubfigure}{\vfill}
+% \usepackage{showframe}
+\usepackage[ruled]{algorithm2e} % For algorithms
+\renewcommand{\algorithmcfname}{ALGORITHM}
+\SetAlFnt{\small}
+\SetAlCapFnt{\small}
+\SetAlCapNameFnt{\small}
+\SetAlCapHSkip{0pt}
+
+% Metadata Information
+\acmJournal{TOG}
+%\acmVolume{38}
+%\acmNumber{4}
+%\acmArticle{39}
+%\acmYear{2019}
+%\acmMonth{7}
+
+% Copyright
+%\setcopyright{acmcopyright}
+%\setcopyright{acmlicensed}
+%\setcopyright{rightsretained}
+%\setcopyright{usgov}
+%\setcopyright{usgovmixed}
+%\setcopyright{cagov}
+%\setcopyright{cagovmixed}
+
+% DOI
+%\acmDOI{0000001.0000001_2}
+
+% Paper history
+%\received{February 2007}
+%\received{March 2009}
+%\received[final version]{June 2009}
+%\received[accepted]{July 2009}
+
+
+% Document starts
+
+
+
+\makeatletter
+\newcommand{\showfontinfo}{
+    Font: \f@family \f@series \f@shape, Size: \f@size
+}
+\makeatother
+\begin{document}
+% Title portion
+\title{Supplementary Document for Lifting the Winding Number: \\ Precise Discontinuities in Neural Fields for Physics Simulation}
+
+\author{Yue Chang}
+\orcid{0000-0002-2587-827X}
+\affiliation{%
+  \institution{University of Toronto}
+  \country{Canada}}
+\email{changyue.chang@mail.utoronto.ca}
+
+
+\author{Mengfei Liu}
+\orcid{0000-0003-4989-6971}
+\affiliation{%
+  \institution{ University of Toronto}
+  \country{Canada}}
+\email{mengfei.liu@mail.utoronto.ca}
+
+
+\author{Zhecheng Wang}
+\orcid{0000-0003-4989-6971}
+\affiliation{%
+  \institution{ University of Toronto}
+  \country{Canada}}
+\email{zhecheng@cs.toronto.edu}
+
+\author{Peter Yichen Chen}
+\orcid{0000-0003-1919-5437}
+\affiliation{%
+  \institution{MIT CSAIL}
+  \country{USA}}
+\email{pyc@csail.mit.edu}
+
+
+\author{Eitan Grinspun}
+\orcid{0000-0003-4460-7747}
+\affiliation{%
+  \institution{ University of Toronto}
+  \country{Canada}}
+\email{eitan@cs.toronto.edu}
+
+\maketitle
+
+\renewcommand{\theequation}{A.\arabic{equation}} % Numbering format for the appendix
+\setcounter{equation}{0} % Reset equation counter
+
+\section{Integrating the generalized winding number}
+Our implementation represents $\Gamma$ as a collection of polylines (allowing for more than one cut). Each polyline $ \mathbf{P} $ consists of $N$ segments. Each segment  $S_i$ is represented by a sequence of points $ \{\mathbf{p}_{i}\}_{i=1}^{N+1} $. 
+
+Since we are going to calculate the integral of the generalized winding number from a partial curve, the segment set that is activated for winding number calculation is changing as the cutting extent $\alpha$ changes. We consider the fractional length of the curve being cut parameterized by $\alpha \in [0, 1]$. Let the segment length of the polyline $l_i$ be defined as $l_i = ||\mathbf{p}_{i+1} - \mathbf{p}_i||$. Then the total length of the polyline is $L = \sum_{i=1}^N l_i$. If $\alpha = 0.25$, this means including segments until the cumulative length reaches 25\% of the total curve length. 
+
+The integration bounds are calculated by walking along the polyline until the total length reaches $\alpha L$. Practically, this means constructing $\Gamma^\alpha$ by sequentially including $\mathbf{p}_i$ from $\mathbf{p}_1$ to $\mathbf{p}_k$ for some $k$, stopping when the total length either meets or would exceed the desired fractional length $\alpha L$  by adding an extra point. If $\sum_{i=1}^k l_i = \alpha L$, then we have obtained our desired polyline that represents $\Gamma_\alpha$, otherwise we would need to partially include the next segment. This is achieved through a linear interpolation. Let $t$ represent the fraction of the last partial segment to be included, calculated as
+\begin{align}
+    t = \frac{\alpha L - \sum_{i=1}^k l_i}{L_k}.
+\end{align}
+
+Therefore, the new endpoint can be calculated as 
+\begin{align}
+\mathbf{p}^{'}_{k+1}=(1 - t)\mathbf{p}^{k} + t\mathbf{p}^{k+1}.
+\end{align}
+
+The new set of $k$ segments with points $ \{\mathbf{p}_{0} \dots \mathbf{p}_{k}, \mathbf{p}'_{k+1}\}_{\alpha} $ can then be used to calculate the generalized winding number $H(\mathbf{x}, \alpha)$ at a query point $\mathbf{x}$.
+
+\begin{align}
+\label{eq:discrete_gwn}
+    H(\mathbf{x}, \alpha) =  \sum_{i=1}^{k-1} \frac{(\mathbf{x} - \mathbf{p}_{i})^\perp \cdot (\mathbf{p}_{i+1} - \mathbf{p}_{i})}{\|\mathbf{x} - \mathbf{p}_{i}\| \|\mathbf{x} - \mathbf{p}_{i+1}\|} +  \frac{(\mathbf{x} - \mathbf{p}_{k})^\perp \cdot (\mathbf{p}'_{k+1} - \mathbf{p}_{k})}{\|\mathbf{x} - \mathbf{p}_{k}\| \|\mathbf{x} - \mathbf{p}'_{k+1}\|}
+\end{align}
+
+
+
+\section{Handling Singularities}
+
+The kernel function $K(\mathbf{x}, \mathbf{p}, r)$ is a spatially changing function centered on the end point of the curve $\mathbf{p}=\Gamma(0)$ or $\mathbf{p}=\Gamma(t)$, the radius $r$ of the kernel function is calculated by the distance between the end point and the length of the margin.
+\begin{align}
+    r &= \|\Gamma(0) - \Gamma(m)\| \quad \text{or} \quad r = \|\Gamma(\alpha) - \Gamma(\alpha-m)\|
+\end{align}
+We use the following formulation for the kernel function in our implementation:
+\begin{equation}
+K(\mathbf{x}, \mathbf{p}, r) =
+\begin{cases}
+\Revision{
+   \frac{6\| \mathbf{x} - \mathbf{p} \|^2}{ r^2} \left( 1 - \frac{\| \mathbf{x} - \mathbf{p} \|}{r} \right)}, &  \text{for }  \Revision{0 \leq \| \mathbf{x} - \mathbf{p} \|  \leq \frac{r}{2} } \\[8pt]
+ \Revision{1-\frac{1}{4}(2 - \frac{2\| \mathbf{x} - \mathbf{p} \|}{r})^3,} & \text{for } \frac{r}{2} < \| \mathbf{x} - \mathbf{p} \| \leq r, \\[8pt]
+1, & \text{for } \| \mathbf{x} - \mathbf{p} \| > r.
+\end{cases}
+\end{equation}
+
+\begin{wrapfigure}{l}[-3pt]{0.4\linewidth}
+\vspace{-10pt}
+\includegraphics[width=1.1\linewidth]{figures/Ilus_kernel_revision.pdf}
+%\caption{Illustration of a domain with a discontinuity \EG{use $\Gamma$ instead of $\partial\Omega$}}
+\vspace{-20pt}
+\end{wrapfigure}
+This formulation is derived from the cubic spline kernel, modified as one minus the original function to smooth out the singularity at zero distance. \Revision{We visualize the kernel shape on the right. The function is smooth over the entire domain, zero at $\| \mathbf{x} - \mathbf{p} \| = 0$ to cancel the singularity, and constant beyond the margin length $r$.} The final representation of $H$ is therefore: 
+\begin{equation}
+\label{eq:winding_para_smooth}
+\begin{aligned}
+    H(\mathbf{x}, \alpha) &= \int_{m}^{\alpha-m} \frac{\Gamma'(t) \cdot (\Gamma(t) - \mathbf{x})^\perp}{|\Gamma(t) - \mathbf{x}|^2} \, dt \\
+   & +  K(x, \Gamma(0),  \|\Gamma(0) - \Gamma(m)\|) \int_{0}^{m} \frac{\Gamma'(t) \cdot (\Gamma(t) - \mathbf{x})^\perp}{|\Gamma(t) - \mathbf{x}|^2} \, dt \\
+   & +  K(x, \Gamma(\alpha),  \|\Gamma(\alpha) - \Gamma(\alpha-m)\|) \int_{\alpha-m}^{\alpha} \frac{\Gamma'(t) \cdot (\Gamma(t) - \mathbf{x})^\perp}{|\Gamma(t) - \mathbf{x}|^2} \, dt.
+\end{aligned}
+\end{equation}
+
+\section{Additional Details on Data-free Training}
+\label{sec::appendix:training_details}
+To construct skin\-ning eigen\-modes \cite{benchekroun2023FastComplemDynamics},
+let $\Tilde{w}_\theta : \Omega \times \mathbb{R} \rightarrow \mathbb{R}$ be a continuous volumetric real-valued field, with a corresponding $w: \Omega \rightarrow \mathbb{R} : w = \Tilde{w}_\theta \circ \mathcal{L}$ planar real-valued skinning weight field discontinuous over $\Gamma$. Consider the $k=9$ dimensional reduced space parameterized by the matrix $Z \in \mathbf{R}^{3 \times 3}$, or equivalently by the vector $\bm{z} \in \mathbb{R}^{9} : \bm{z} = \textrm{flatten}(Z)$. Following \citet{benchekroun2023FastComplemDynamics}, the displacement field is 
+\begin{align}
+    \bm{u}(\bm{x}) = w(\bm{x}) \, Z\, \begin{bmatrix} \bm{x} \\ 1\end{bmatrix} \ .
+\end{align}
+Observe that $\bm{u}$ is linear in $Z$, therefore, if it were desired, it could be represented in the form $\bm{u} = \bm{z}^T \bm{\Phi}$ described above. Following~\citet{Modi:2024:Simplicits}, we uniformly stochastically sample the 9-dimensional handle $Z$ to train $\Tilde{w}_\theta$ by minimizing the elastic energy 
+\begin{align} \label{eq:training-data-free}
+    \mathcal{L}_{\text{data-free}} = E_{\text{elas}} = \int_{\Omega}\Psi(\bm{u}(\bm{x})) \, \mathrm{d}\bm{x} 
+\end{align}
+subject to $\langle w_\theta, 1 \rangle = 1$, i.e., orthogonality to a constant field, a constraint enforced by Gram–Schmidt orthogonalization \cite{chang2024neuralrepresentationshapedependentlaplacian}. We choose a St. Venant-Kirchhoff (StVK) material for the elastic energy density $\Psi$~\cite{barbivc2005real}. The domain integral is estimated using uniform stochastic quadrature. 
+
+This process yields a 9-dimensional basis with a nonuniform weight function $w = \Tilde{w}_\theta \circ \mathcal{L}$. We extend this to an 18-dimensional basis by also incorporating a $3 \times 3$ matrix handle with uniform ($w=1$) weight~\cite{benchekroun2023FastComplemDynamics}.
+
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{main}
+
+\end{document}
+
+

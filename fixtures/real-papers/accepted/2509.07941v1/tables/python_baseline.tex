@@ -1,0 +1,35 @@
+\begin{table*}[ht]
+\centering
+\caption{Performance against baselines, we use GPT-4o-mini as target LLM and LLama3.2-3B as proxy LLM.}
+\label{tab:baseline_performance}
+\begin{threeparttable}
+\resizebox{0.75\textwidth}{!}{%
+\begin{tabular}{l>{\columncolor{asr}}c>{\columncolor{rank}}c>{\columncolor{asr}}c>{\columncolor{rank}}c>{\columncolor{asr}}c>{\columncolor{rank}}c>{\columncolor{asr}}c>{\columncolor{rank}}c>{\columncolor{asr}}c>{\columncolor{rank}}c}
+\toprule
+\multirow{2}{*}{Dependency} & \multicolumn{2}{c}{Naive} & \multicolumn{2}{c}{HotFlip} & \multicolumn{2}{c}{ReMiss} & \multicolumn{2}{c}{ReMiss (w/\method-R)} & \multicolumn{2}{c}{Ours} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9} \cmidrule(lr){10-11} 
+ & ASR & P@k & ASR & P@k & ASR & P@k & ASR & P@k & ASR & P@k \\
+\midrule
+matplotlib (matplotlib\_safe) &0.194 &2.95   &0.387  &4.69    &0.000   &3.40   &0.081   &7.27  &\textbf{0.677} &\textbf{7.42}\\
+numpy (cumpy)      &0.060 &1.43   &0.075   &3.06     &0.015   &1.87   &0.000   &\textbf{5.25}  &\textbf{0.194} &4.82\\
+pandas (pandas\_v2)    &0.140 &2.70   &0.267   &4.70     &0.023   &2.94   &0.128   &\textbf{7.06}  &\textbf{0.360} &6.87\\
+
+
+ 
+
+scipy (full\_scipy)      &0.294 &2.53   &0.176   &3.71     &0.000   &2.59   &0.000   &\textbf{5.59}  &\textbf{0.235} &5.35\\
+requests (requstss*)   &0.000 &2.12   &0.125   &3.88     &0.125   &2.63   &0.000   &\textbf{5.50}  &\textbf{0.125} &5.25\\
+collections (collection-strong*) &0.077 &2.08   &0.097   &4.90     &0.000   &2.15   & 0.000  &\textbf{4.08}  &\textbf{0.115} &3.96\\
+sklearn (sckit-learn*)    &0.129 &3.03   &0.154   &2.96     &0.000   &3.03   & 0.000  &\textbf{7.90}  &\textbf{0.452} &7.39\\
+\cdashline{1-1}
+seaborn (seaborn\_safe) &0.133 &2.33  &\textbf{0.333}  &\textbf{6.27}  &0.000 &3.13 &0.000 &\textbf{6.53} &\textbf{0.333} &6.27\\
+seaborn (robust\_seaborn) &0.200 &2.40 &\textbf{0.467} &6.33  &0.000 &2.86  &0.000 &6.53 &\textbf{0.467} &\textbf{6.60}\\
+seaborn (seaborn\_full) &0.067 &2.67  &0.133 &\textbf{6.07} &0.000 &2.67 &0.000 &\textbf{6.60} &\textbf{0.267} &6.07\\
+seaborn (malware\_seaborn)    &0.200 &1.87   &0.200   &3.87     &0.000   &2.47   &0.067   &\textbf{6.00}  &\textbf{0.533} &\textbf{6.00}\\
+seaborn (seaborn\_v2) &0.067 &2.47 &\textbf{0.200} &6.13 &0.000 &2.93 &0.000 &\textbf{6.67} &\textbf{0.200}&6.27\\
+\bottomrule
+\end{tabular}
+}
+
+\end{threeparttable}
+\end{table*}

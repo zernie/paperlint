@@ -1,0 +1,181 @@
+\section{Appendix}
+
+% \input{appendix/k_star_counting}
+\input{appendix/redundant_count}
+\input{appendix/experiment} 
+\subsection{Proofs}
+\label{app:proof}
+\input{appendix/proof_wk}
+\input{appendix/proof_path} 
+\input{appendix/proof_pattern}
+\input{appendix/proof_strawman}
+
+
+
+
+
+
+
+% k-olp sampling error
+
+
+
+% \begin{lemma}
+% For any graph $G$, path length $k$, and parameter $\beta$, 
+% the $k$-round non-private algorithm $\mathcal{F}_{\mathrm{k\text{-}olp}}$ satisfies,
+% \begin{equation*}
+%     \mathbb{E}[\mathcal{F}_{\mathrm{k\text{-}olp}}(G)] = P_k,
+% \end{equation*}
+% and with probability at least $1 - \beta$,
+% \begin{equation*}
+%     |\mathcal{F}_{\mathrm{k\text{-}olp}}(G)-P_k| \leq
+%     (k+1) \sqrt{N\beta^{-1}}(D+k+1)^k
+%     = O(\sqrt{N} D^k).
+% \end{equation*}
+
+% \end{lemma}
+
+
+
+
+
+% \begin{lemma}
+%     For any graph $G$, $k$-edge pattern $S$, and parameter $\beta$, 
+% the $(k {-} \lambda {+} 1)$-round non-private algorithm $\mathcal{F}_{\mathrm{k\text{-}olp}}$ satisfies,
+% \begin{equation*}
+%     \mathbb{E}[\mathcal{F}_S(G)] = Q_S,
+% \end{equation*}
+% and with probability at least $1 - \beta$,
+% \begin{equation*}
+%     |\mathcal{F}_S(G)- Q_S| \leq
+%     (k+1) \sqrt{N(\sigma(S)\beta)^{-1}}(D+k+1)^k
+%     = O(\sqrt{N} D^k).
+% \end{equation*}
+
+% \end{lemma}
+
+
+
+% Since the input pattern has only $k$ edges, each node can have at most $k$ child rounds.
+% We allocate a failure probability of $\beta'/2kN$ to each pair $(v_i, c)$ with $c \in \mathcal{C}(r_i)$. Then, by applying the multiplicative Chernoff bound (Lemma~\ref{lem:con_cher}), we obtain with probability at least $1 - \beta'/2$ that
+% \begin{equation}
+% \label{e:d*_pattern_bound}
+%    d^{(c)}(v_i) \leq d^*(G) := \frac{1}{k+1} (\hat{d}(G) + \gamma_1 \sqrt{\hat{d}(G)}),
+%    \quad \forall v_i \in V,\ c \in \mathcal{C}(r_i),
+% \end{equation}
+% where $\gamma_1 = \sqrt{3(k+1)\log(kN/\beta')}$ and $\hat{d}(G) := \max(D, \gamma_1)$.
+% Similar to the proof of Lemma~\ref{lem:k-lp_additive_bound}, we bound the reverse effective degree of each node $v_i$, defined as the number of immediate neighbors with mark $\mathcal{P}(r_i)$.
+% Since $\mathcal{P}(r_i)$ is unique, allocating an additional failure probability of $\beta'/2kN$ per node ensures this reverse degree is also bounded by $\hat{d}(G)$, with total failure probability at most $\beta'/2k$.
+
+
+% We now derive an upper bound on $\|\mathcal{X}^{(\ell)}\|_\infty$ under the condition that \eqref{e:d*_pattern_bound} holds. 
+
+% As a result,
+% \begin{equation*}
+%      |\mathcal{X}^{(\ell)}_i|  
+%      \leq 
+%      \prod_{c \in \mathcal{C}(\ell)} 
+%      (\hat{d}(G) + \frac{\gamma_2}{k+1})  \,\|\mathcal{X}^{(c)}\|_\infty. 
+% \end{equation*}
+
+
+
+
+
+
+% Applying the Laplace concentration bound to each node $v_i$ with failure probability $\beta'/N$, and substituting $\mathcal{Y}^{(c)}_i$ by its upper bound, we get:
+% \begin{equation*}
+%     \mathcal{X}^{(\ell)}_i \leq 
+%     ( \frac{\gamma_2}{k+1} D^{*\,C_\ell-1} 
+%     + D^{*\,C_\ell} )
+%     \prod_{c \in \mathcal{C}(\ell)} \|\mathcal{X}^{(c)}\|_\infty,
+% \end{equation*}
+% where $\gamma_2 = (k+1)\sqrt{8\log(2N/\beta')}/\varepsilon$.
+% This leads to:
+% \begin{align*}
+% \|\mathcal{X}^{(\ell)}\|_\infty 
+% &\leq D^{*\,C_\ell-1} (D^* + \frac{\gamma_2}{k+1}) 
+% \prod_{c \in \mathcal{C}(\ell)} \|\mathcal{X}^{(c)}\|_\infty \\
+% &\leq (D^* + \frac{\gamma_2}{k+1})^{C_\ell}
+% \prod_{c \in \mathcal{C}(\ell)} \|\mathcal{X}^{(c)}\|_\infty.
+% \end{align*}
+% Since $\|\mathcal{X}^{(c)}\|_\infty = 1$ for all leaf rounds $c \in \mathcal{L}(S)$, we conclude by induction that for any $\ell \leq k$,
+% \begin{equation}
+% \label{e:max_x_bound}
+% \|\mathcal{X}^{(\ell)}\|_\infty \leq (D^* + \frac{\gamma_2}{k+1})^{T_\ell},
+% \end{equation}
+% with probability at least $1 - 2\beta'$.
+% Meanwhile, the Laplace noise scale at node $v_i$ in round $\ell$ is bounded by
+% \begin{equation}
+% \label{e:pattern_noise_bound}
+% \frac{1}{\varepsilon} 
+% \max_{c \in \mathcal{C}(\ell)} 
+% \bigg| \|\mathcal{X}^{(c)}\|_\infty 
+% \prod_{c' \in \mathcal{C}(\ell)\setminus \{c\}} \mathcal{Y}^{(c')}_i 
+% \bigg|
+% \leq \frac{1}{\varepsilon} 
+% (D^* + \frac{\gamma_2}{k+1} )^{T_\ell - 1}.
+% \end{equation}
+
+
+% Next, we analyze the total Laplace noise introduced by the mechanism.  
+% Let $\eta^{(\ell)}_i$ denote the Laplace scale of node $v_i$ in round $\ell = r_i$, and let $f^{(\ell)}_i$ denote the multiplicative weight in the final output $\mathcal{M}_S(G, \varepsilon)$, which includes the scaling factor $(k+1)^{k+1}/\sigma$ (where $\sigma := \sigma(S)$).  
+% To avoid compounding noise, we assign the weight of each noise term to the earliest round it appears in.
+% The total error is then:
+% \begin{equation*}
+% |\mathcal{M}_S(G, \varepsilon) - \mathcal{F}_S(G)| 
+% = \sum_{\ell=1}^{k} \sum_{i : r_i = \ell} \mathrm{Lap}(f^{(\ell)}_i 
+% \, \eta^{(\ell)}_i).
+% \end{equation*}
+% Since each Laplace noise has zero expectation, $\mathcal{M}_S(G, \varepsilon)$ is an unbiased estimator of $Q_S$ under any fixed node marking.
+% Applying the Laplace concentration bound with failure probability $\beta/N$ per node, we have:
+% \begin{align}
+% |\mathcal{M}_S(G, \varepsilon) - \mathcal{F}_S(G)| 
+% &\leq \sum_{\ell=1}^{k} \sqrt{8 \log\frac{2N}{\beta'} 
+% \sum_{i : r_i = \ell} (f^{(\ell)}_i \, \eta^{(\ell)}_i)^2} \notag \\
+% &\leq k \cdot f^{(\ell)}_i \, \eta^{(\ell)}_i 
+% \, \sqrt{8N \log\frac{2N}{\beta'} }
+% \label{e:pattern_lap_sum}.
+% \end{align}
+% From \eqref{e:x_pattern_update_rule}, under the $D^*$ bound, we also have:
+% \begin{equation}
+% \label{e:pattern_noise_factor}
+% f^{(\ell)}_i \leq \frac{(k+1)^{k+1}}{\sigma} 
+% \left(D^* + \frac{\gamma_2}{k+1} \right)^{k - T_\ell}.
+% \end{equation}
+% Therefore, combining the upper bound on $\eta^{(\ell)}_i$ from \eqref{e:pattern_noise_bound}, 
+% \begin{equation}
+% \label{e:pattern_lap}
+% f^{(\ell)}_i \, \eta^{(\ell)}_i \leq 
+% \frac{(k+1)^{k+1}}{\sigma \varepsilon} 
+% \left(D^* + \frac{\gamma_2}{k+1} \right)^{k-1}.
+% \end{equation}
+% Substituting \eqref{e:pattern_lap} into \eqref{e:pattern_lap_sum}, we obtain:
+% \begin{align*}
+% |\mathcal{M}_S(G, \varepsilon) - \mathcal{F}_S(G)| 
+% &\leq \frac{k (k+1)^{k+1}}{\sigma \varepsilon}
+% \left(D^* + \frac{\gamma_2}{k+1} \right)^{k-1}
+% \sqrt{8N \log\frac{2N}{\beta'}} \\
+% &\leq \frac{k(k+1)}{\sigma} \gamma_2 
+% \left((k+1)D^* + \gamma_2 \right)^{k-1} \\
+% &\leq \frac{k(k+1)}{\sigma} \gamma_2 \sqrt{N} 
+% \left(\hat{d}(G) + \gamma_1 \sqrt{\hat{d}(G)} + \gamma_2 \right)^{k-1}.
+% \end{align*}
+% The above holds with total failure probability at most
+% $\beta'/2 + \beta'/2k + \beta' + k\beta'/N \leq 3\beta'$.  
+% Setting $\beta' := \beta/3$ ensures the desired bound holds with probability at least $1 - \beta$.
+
+
+% Finally, we define $\gamma := (k+1)\sqrt{8\log(6kN/\beta)}/\varepsilon$. Since $\gamma \geq \gamma_2$, and under typical privacy settings where $\varepsilon \leq \sqrt{8(k+1)/3}$, we also have $\gamma \geq \gamma_1$.  
+% Replacing $\gamma_1, \gamma_2$ with $\gamma$ and recalling $\hat{d}(G) = \max(D, \gamma)$, the final bound simplifies to
+% \begin{align*}
+%     |\mathcal{M}_S(G, \varepsilon) - \mathcal{F}_S(G)| 
+% &=  \frac{k(k+1)}{\sigma(S)} \,
+%     \gamma
+%     \sqrt{N}
+%     (\hat{d}(G) + \gamma \sqrt{\hat{d}(G)} + \gamma)^{k-1} \\
+% &= \tilde{O}(\sqrt{N} D^{k-1})
+% \end{align*}
+% as claimed.
+
+% \end{proof}

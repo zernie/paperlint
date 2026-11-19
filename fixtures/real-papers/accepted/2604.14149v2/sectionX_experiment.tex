@@ -1,0 +1,223 @@
+\vspace{-3pt}
+
+\section{Experiments}
+
+\vspace{-3pt}
+
+
+\subsection{Implementation Details}
+We fine-tune \name from VideoChat-Flash-2B~\cite{li2024videochat} for supervised compression tuning, integrating our proposed \drop mechanism. The core components follow the original setup from VideoChat-Flash: we use UMT-L~\cite{liu2022umt} as the visual encoder, token merging with an MLP-based connector, and Qwen2-1.5B~\cite{yang2024qwen2} as the large language model (LLM). For long videos, we segment them into short clips of 8 frames each. Each clip is compressed into 128 visual tokens, leading to an average of 16 tokens per frame.
+
+Our \drop mechanism introduces a progressive token reduction strategy across LLM layers. Initially, each frame is represented by 16 tokens. After each LLM layer $l$, we compute the target token count $N^{(l)}$ as defined in Equation~\ref{eq:cosine}. If the token count from the previous layer $N^{(l)}$ differs from $N^{(l-1)}$, we uniformly drop $N^{(l-1)} -N^{(l)}$ tokens for each frame across the temporal dimension. This process continues across all layers, eventually reducing to a single token per frame at the final LLM layer, \emph{i.e.}, $N^{(L)} = 1$. With \drop reducing the token sequence length during training, our method enables faster training of VLMs on video sequences with more frames. Concretely, we use the mixture of 128–1024 frames per video with up to 8 frames per second in fine-tuning. The fine-tuning data follows the mixture of short-video and long-video instruction tuning formats used in VideoChat-Flash~\cite{li2024videochat}, but our supervised compression tuning only requires 2.5\% of VideoChat-Flash's dataset. The training process costs around 24 hours on 8$\times$NVIDIA H100 GPUs.
+
+During the inference stage, we utilize \segment to conduct frame selection. When splitting the long video into short segments, each segment contains 64 frames, and we select 512 frames for videos with a duration of less than an hour, and 2048 frames for videos longer than an hour. More details on implementation are in the supplementary materials.
+
+\subsection{Main Results on Long Video Understanding}
+
+
+\begin{table}[t]
+\centering
+\caption{\textbf{Long video understanding comparison.} Our method \name built upon VideoChat-Flash-2B achieves state-of-the-art results among 2B-scale models, demonstrating the effectiveness of extreme compression in long video understanding. Note that the performance of proprietary models and 3$\sim$9B-scale VLMs are provided for reference. %\textcolor{red}{Include more models, give people good impression.}
+}
+\label{tab:general bench}
+\vspace{5pt}
+\small
+% \resizebox{0.95\linewidth}{!}{
+\begin{tabular}{l |c| c c c c}
+\toprule
+  & Size & LongVideoBench & MLVU & VideoMME (Long) & LVBench \\
+Average Duration &  & 473s & 651s & 2386s & 4101s \\
+\midrule
+\multicolumn{6}{l}{\emph{Proprietary Models}} \\
+\midrule
+GPT-4V~\cite{openai2024gpt4technicalreport}        & - & 59.1 & 49.2 & 53.5 & --    \\
+GPT-4o~\cite{openai2024gpt4ocard}         & - & \textbf{66.7} & \textbf{64.6} & 65.3 & 30.8  \\
+Gemini-1.5-Pro~\cite{geminiteam2024gemini15unlockingmultimodal}  & - & 64.0 & --   & \textbf{67.4} & \textbf{33.1}  \\
+\midrule
+\multicolumn{6}{l}{\emph{3$\sim$9B-Scale VLMs}} \\
+\midrule
+Qwen2.5VL-3B~\cite{bai2025qwen2} & 3B & 43.3 & 68.2 & -- & -- \\
+mPLUG-Owl3~\cite{ye2024mplug} & 7B &  52.1 & -- & 50.1 & 43.5 \\
+VideoChat-Flash-7B~\cite{li2024videochat} & 7B & 64.7 & 74.7 & \textbf{55.4} & \textbf{48.2} \\
+Eagle2.5-8B~\cite{chen2025eagle} & 8B & \textbf{66.4} & \textbf{77.6} & -- & -- \\
+Kangaroo~\cite{liu2024kangaroo} & 8B & 54.8 & 61.0 & 46.7 &  39.4 \\
+TimeMarker~\cite{chen2024timemarker} & 8B & 56.3 & -- & 46.4 & 41.3 \\
+InternVL3-9B~\cite{zhu2025internvl3} & 9B & 62.5 & 70.8 & -- & -- \\
+\midrule
+\multicolumn{6}{l}{\emph{2B-Scale VLMs}} \\
+\midrule
+% InternVL2.5-2B~\cite{chen2025expandingperformanceboundariesopensource}   & 2B  & 46.0 & 61.4 & --        & --    \\
+InternVL3-2B~\cite{zhu2025internvl3} & 2B & 55.4 & 64.2 & -- & -- \\
+VideoChat-Flash-2B~\cite{li2024videochat}  & 2B & 58.3 & 65.7 & 44.9 & 42.9  \\
+\rowcolor{gray!15}
+\name & 2B & \textbf{59.7} & \textbf{66.7} & \textbf{45.6} & \textbf{46.2}  \\
+\bottomrule
+\end{tabular}
+% }
+\end{table}
+
+\noindent\textbf{Benchmarks.}\;\; We assess our model on four widely used long video understanding benchmarks: LongVideoBench~\cite{wu2024longvideobench}, MLVU~\cite{zhou2024mlvu}, LVBench~\cite{wang2024lvbench}, and VideoMME~\cite{fu2024video} (w/o subtitles). Unlike short-video datasets, they feature extended video durations ranging from several minutes to over an hour, posing greater temporal reasoning and memory challenges. These benchmarks adopt a question-answering format, primarily using accuracy as the evaluation metric. 
+
+
+\textbf{Comparison.}\;\; We choose the baselines with similar model size of VideoChat-Flash-2B~\cite{li2024videochat} and InternVL3-2B~\cite{zhu2025internvl3}, as shown in Table~\ref{tab:general bench}. Importantly, our \name is trained from VideoChat-Flash using only 2.5\% of the data, the improvement over VideoChat-Flash suggests that our \emph{one token per highly selective frame} preserves the critical information after compression.
+
+\textbf{Leading Performance.}\;\; As shown in Table~\ref{tab:general bench}, our \name consistently improves the baseline VideoChat-Flash and outperforms the other VLMs at similar scales, even exhibiting comparable performance to some models at 7B scale. As also demonstrated in Fig.~\ref{fig:teaser}, our \name demonstrates the unique trend of improving performance with more input frames, demonstrating the effectiveness of our extreme compression.
+
+
+
+\textbf{Qualitative Analysis.}\;\; Figure~\ref{fig:case-study} presents an example from LongVideoBench illustrating how \name leverages \segment to effectively identify frames relevant to the question. In this long video question answering scenario, the question provides a detailed description of the background and inquires about the character's actions. Five answer candidates are also included. To answer the question, \segment divides the video into shorter segments of 64 frames each, mitigating attention biases such as the “lost-in-the-middle” issue. This segmentation allows the model to focus local attention on key frames, which receive high relevance scores with respect to both the question and the correct answer candidate. As a result, \name is able to discard 512 irrelevant frames and accurately identify the correct answer.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.99\linewidth]{figs/slides_with_pdf/case-study.pdf}
+\caption{\textbf{LongVideoBench case analysis.} \name leverages \segment to divide a long video into short segments, mitigating attention bias. Local attention highlights key frames relevant to the question and correct answer, enabling effective filtering of irrelevant content.}
+    \label{fig:case-study}
+    \vspace{-10pt}
+\end{figure}
+
+\subsection{Ablation Study}\label{sec:ablation}
+
+\begin{wraptable}{r}{0.63\textwidth}
+\vspace{-13pt}
+\centering
+
+\caption{\textbf{Ablation study using LVBench:}\;\;  progressive v.s. step-wise non-heuristic token compression v.s. heuristic compression from VideoChat-Flash, and learnable v.s. training-free token compression. All the evaluations are conducted with 1024 frames. Both progressive compression and staged compression would gradually compress tokens to 1 token per frame with the same amount of average tokens per frame.}\label{tab:lvbench_ablation}
+\vspace{-4pt}
+\begin{tabular}{l|cc}
+\toprule
+\textbf{Method} & \textbf{Training-free} & \textbf{Learnable} \\
+\midrule
+Baseline (w/o compression) & 41.8 & - \\
+\midrule
++ Heuristic & 41.1 & - \\
+\midrule
++ Step-wise  & 38.4 & 42.3 \\
++ Progressive & 39.7 & \textbf{44.3} \\
+\bottomrule
+\end{tabular}
+\vspace{-8pt}
+\end{wraptable}
+
+
+\textbf{Learnable Compression.}\;\;  The key insight of our \name is to train the LLM layers to condense the visual tokens. In Table~\ref{tab:lvbench_ablation}, we compare using learnable with training-free token compression. Enabling the LLM layers to learn the compression behavior consistently outperforms the training-free model, supporting the necessity of our learnable compression. Another critical comparison is that when using the heuristic token compression from VideoChat-Flash, which utilizes attention scores to select the tokens, it is worse than the original baseline under our extreme token compression ratio. This is precisely the observation that motivates us to propose the learnable token compression (Sec.~\ref{subsec:lpd}).
+
+\begin{wraptable}{r}{0.43\textwidth}
+\vspace{-13pt}
+\centering
+\caption{\textbf{Comparison of token compression strategies on LVBench and MLVU.} Both Uniform Drop and Suffix-Preservation follow the same Cosine compression schedule and efficient continual training.}
+\label{tab:drop-ablation}
+\begin{tabular}{l|c c}
+\toprule
+\textbf{Strategy} & \textbf{LVBench} & \textbf{MLVU} \\
+\midrule
+Uniform & 43.6 & 64.1 \\
+Suffix & 44.3 & 65.2 \\
+\bottomrule
+\end{tabular}
+\vspace{-6pt}
+\end{wraptable}
+
+\textbf{Progressive Compression.}\;\;  To investigate the importance of progressive token compression, \emph{i.e.}, utilizing all the LLM layers to gradually decreasing the token number, we conduct ablation experiments comparing it with the conventional \textit{step-wise} approach, which performs abrupt token reduction at pre-defined layers as in VideoChat-Flash~\cite{li2024videochat}. As shown in Table~\ref{tab:lvbench_ablation}, progressive token compression consistently outperforms the step-wise compression, indicating that smooth compression schedule is essential for preserving the critical visual information.
+
+
+
+
+
+
+\noindent
+\textbf{Compressing to Suffix Tokens.}\;\; 
+A critical design choice in our \drop is that the LLM layers should gradually preserve the information to the last token of each frame, namely, the suffix tokens. Such a design is compatible with the causal attention in LLM layers, and we analyze its necessity by comparing it with another intuitive strategy: keeping the tokens uniformly by their positions (implementation details in the supplementary materials).  As shown in Table~\ref{tab:drop-ablation}, preserving the suffix tokens outperforms its uniform counterpart strategy, supporting the importance of designing the compression strategy aligning with the attention of LLM layers.
+
+
+
+\noindent \textbf{Segmented Local Attention.}\;\;  To understand the impact of segment-wise attention in \segment, which is proposed to mitigate the position bias of attention in long contexts, we compare it with the conventional way of computing the attention between the question and all frames globally. 
+As shown in Table~\ref{tab:segment_vs_global}, segment-wise attention consistently leads to better performance across all three long video QA benchmarks LongVideoBench, MLVU, and VideoMME (long). This validates our design choice of computing frame scores locally within segments, effectively reducing positional bias and improving the relevance of retained frames in the early filtering stage.
+
+\begin{table}[H]
+\centering
+\vspace{-1.0em}
+\caption{\textbf{Comparison of attention strategies in QC-drop.} Segment-wise attention consistently outperforms global attention across benchmarks.}
+\label{tab:segment_vs_global}
+\begin{tabular}{l|ccc}
+\toprule
+Attention & LongVideoBench & MLVU & VideoMME (long) \\
+\midrule
+Global & 59.5 & 66.3 & 44.8 \\
+Segment Local (Ours) & 59.7 & 66.7 & 45.7 \\
+\bottomrule
+\end{tabular}
+\vspace{-0.6em}
+\end{table}
+
+
+
+\begin{wraptable}{r}{0.60\textwidth}
+\vspace{-1.5em}
+\centering
+\caption{\textbf{Ablation results showing the individual and combined impact of \drop and \segment on LongVideoBench.} Both components contribute to the overall performance gains of \name.}
+\label{tab:qc-comp}
+\begin{tabular}{l|c}
+\toprule
+ & \textbf{LongVideoBench} \\
+\midrule
+Baseline (w/o compression) & 58.3 \\
+\name w/o \segment & 58.8 \\
+\name & 59.7 \\
+\bottomrule
+\end{tabular}
+\vspace{-0.5em}
+\end{wraptable}
+
+\noindent
+\textbf{Effect of \drop and \segment.} \;\; 
+We perform an ablation study to analyze the impact of the two components in \name: \drop and \segment. As shown in Table~\ref{tab:qc-comp}, the baseline without any compression achieves a score of 58.3 on LongVideoBench. Adding \drop alone (\name without \segment) yields a slight improvement to 58.8. When both \drop and \segment are used (full \name), the performance reaches 59.7, suggesting that selectively removing less relevant content may help retain useful information. These results indicate that both components contribute to the final performance.
+
+
+\begin{table}[h!]
+% \renewcommand{\thetable}{E}
+\centering
+\caption{\textbf{The complete table of all ablation studies on LongVideoBench and LVBench.}}
+\label{tab: full ablation}
+\vspace{3pt}
+\small
+\begin{tabular}{lcccc|cc}
+\toprule
+Model Name & LP-Comp & Variants & QC-Comp & Variants & \textbf{LongVideoBench} & \textbf{LVBench} \\
+\midrule
+VideoChat-Flash & No & -       & No & -      & 58.3 & 42.9 \\
+XComp           & Yes & Uniform & No & -      & 58.2 & 43.6 \\
+XComp           & Yes & Suffix  & No & -      & 58.8 & 44.3 \\
+XComp           & Yes & Suffix  & Yes & Global & 59.5 & 45.6 \\
+XComp           & Yes & Suffix  & Yes & Segment Local  & \textbf{59.7} & \textbf{46.2} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\noindent
+\textbf{Compare All Variants Together.} \;\; Table~\ref{tab: full ablation} shows the complete results for all ablation studies of \name design, on two benchmarks, LongVideoBench and LVBench. The results are consistent with the studies above.
+
+
+
+
+\subsection{XComp for LLaVA-Next-Video}
+
+We apply XComp to LLaVA-Next-Video~\citep{zhang2024videoinstructiontuningsynthetic} to demonstrate the generalizability of our design. Similar to the experiments reported in the paper, XComp effectively enhances model efficiency, allowing a larger maximum number of frames to be processed under limited GPU memory. Following the paper’s setup, we use only 2.5\% of the training data of LLaVA-Next-Video (i.e., LLaVA-Video-178k).
+
+For a fair comparison, we also evaluate LLaVA-Next-Video with the same amount of fine-tuning data while keeping the model architecture unchanged. As shown in Table~\ref{tab: llava}, XComp improves performance across both benchmarks. 
+
+\begin{table}[h]
+\centering
+\caption{\textbf{Generalize to LLaVA-Next-Video, a different model from VideoChat-Flash.} XComp consistently improves the efficiency and accuracy of LLaVA-Next-Video on the two long video benchmarks, outperforming both the baseline and fine-tuning.}
+\label{tab: llava}
+\vspace{3pt}
+\begin{tabular}{lcc}
+\toprule
+Model Version & VideoMME (Long) & LVBench \\
+\midrule
+LLaVA-Next-Video                 & 62.7 & 40.6 \\
+LLaVA-Next-Video + FT & 61.4 & 41.4 \\
+LLaVA-Next-Video + XComp          & \textbf{63.2} & \textbf{43.1} \\
+\bottomrule
+\end{tabular}
+\end{table}

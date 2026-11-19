@@ -1,0 +1,218 @@
+\section{How to represent a discontinuous field using a continuous neural network}
+\label{sec:lifting}
+
+We aim to accurately represent 2D fields with lines of discontinuity. The field value differs depending on the side from which the discontinuity is approached. Let $f : \Omega \rightarrow \mathbb{R}$ be a real-valued function over $\Omega \subset \mathbb{R}^2$ discontinuous across a curve $\Gamma$, 
+\begin{align}
+\lim_{\mathbf{x} \to \bm{x_0}^+} f(\mathbf{x}) \neq \lim_{\mathbf{x} \to \bm{x_0}^-} f(\mathbf{x}) \ , \quad \bm{x}_0 \in \Gamma \ , \quad \bm{x} \in \Omega \ ,
+\end{align}
+\begin{wrapfigure}[6]{r}[-20pt]{0.2\linewidth}
+\vspace{-2ex}
+\includegraphics[width=1.2\linewidth]{figures/new/cut_didactic.pdf}
+%\caption{Illustration of a domain with a discontinuity \EG{use $\Gamma$ instead of $\partial\Omega$}}
+\end{wrapfigure}
+where $\bm{x_0}^+$ and $\bm{x_0}^-$ indicate approaching $\bm{x_0}$ from opposing sides 
+$\Gamma^+$ and $\Gamma^-$, respectively (see incident figure).
+With a discontinuity, arbitrarily small changes to the evaluation point may produce a finite jump in the field value. We would like to leverage available tools for training neural fields to learn such a function. Unfortunately, typical neural field architectures are poorly suited for this representation task.
+
+\paragraph{Challenges}
+Neural fields are typically continuous and differentiable because they are represented by neural networks, such as fully connected feedforward networks, which use smooth activation functions (e.g., sigmoid, or sine). \citet{Rahaman:2019:Spectral} study the spectral bias of such networks, observing that smooth activation functions naturally favor smoother outputs, and common architectures have a natural tendency to learn low-frequency components of a target function first. These properties pose a challenge to precisely representing sharp changes or discontinuities. 
+
+Some techniques may ameliorate, but do not inherently resolve this challenge. For instance, input encoding methods, such as Fourier feature mappings or sinusoidal positional embeddings~\cite{Tancik:2020:Fourier}, and improved activation functions, such as SIREN~\cite{Sitzmann:2020:Implicit}, improve the ability to approximate high-frequency details, but they do not inherently and explicitly model strict discontinuities. 
+
+\paragraph{Proposed architecture}
+We do \emph{not} seek to improve what appears to be a fundamental inability of neural fields to represent strict discontinuities. We avoid this limitation and embrace the low-frequency bias of neural fields. We will use feature augmentation to make the learning task easier, simplifying our task to learning only a \emph{continuous} field.
+
+Let $\Tilde{f}_{\theta} : \Omega \times \mathbb{R} \rightarrow \mathbb{R} : (x,y,z) \mapsto \Tilde{f}_{\theta}(x,y,z)$ be a neural field over a \emph{volumetric} domain $\Omega \times \mathbb{R} \subset \mathbb{R}^3$ parameterized
+by neural network weights $\theta$. Our learning task will seek a \emph{smooth} neural field $\Tilde{f}_{\theta}$, without discontinuities, by appropriately choosing and leveraging the augmented feature $z$.
+
+Let $z=H(\bm{x})$, where $\bm{x}=(x,y)$. Here, $H: \Omega \rightarrow \mathbb{R}$ is a function that is discontinuous over $\Gamma$. We require that $H$ have an analytical representation, that is, $H$ need not be trained using a neural network. 
+
+\begin{wrapfigure}[4]{r}[-10pt]{0.25\linewidth}
+\vspace{-5ex}
+\includegraphics[width=1.2\linewidth]{figures/new/lifting_didactic.pdf}
+\end{wrapfigure}
+\paragraph{Lifting}
+Our augmentation has a simple geometric interpretation. As depicted in the incident figure, our approach lifts the domain into a graph of $H(\bm{x})$ over $\Omega$:
+\begin{align}
+    \mathcal{L}(\bm{x}) = (\bm{x},H(\bm{x})) = (x,y,H(x,y)) \ , \quad \bm{x} \in \Omega \ .
+\end{align}
+%:  $\mathcal{L} : \Omega \rightarrow \mathbb{R}^3 : \bm{x} \mapsto (\bm{x},H(\bm{x}))$.
+Since $H$ is discontinuous over $\Gamma$, the graph $\mathcal{L}$ has separated boundaries $\Gamma^+$ and $\Gamma^-$.
+
+\paragraph{Central idea: Discontinuity by restriction}
+Our central idea is to define the 2D field $f$ as the restriction of the volumetric neural field $\Tilde{f}_{\theta}$ to the graph $\mathcal{L}$:
+\begin{align}
+\label{eq:restriction}
+\boxed{
+    f = \Tilde{f}_{\theta}\circ \mathcal{L} \ , \quad \textrm{or} \quad
+    f(\bm{x}) = \Tilde{f}_{\theta}(\mathcal{L}(\bm{x})) \ ,\quad \bm{x} \in \Omega \ .
+    }
+\end{align}
+
+%Consider the point $\bm{x}_0^- = \bm{x}_0^+ \in \Omega$ as approached from opposing sides of the discontinuity. $H$ lifts their one-sided neighborhoods sufficiently far apart, such that any discontinuity in $B(x,y)$ no longer needs to be a discontinuity in $\Tilde{B}_{\theta}$. This simplifies the training objective for $\Tilde{B}_{\theta}$.
+
+
+
+% \begin{figure}
+% \centering
+% \includegraphics[width=0.5\textwidth]{figures/Illus_lifting_1.pdf}
+% \caption{
+% Lifting the input of the continuous function.
+% } 
+% \label{fig:IllusLifting} 
+% \centering
+% \end{figure}
+
+\paragraph{Why it works.} 
+The benefit of lifting is that it decouples spatial discontinuity from the trainable continuous function $\Tilde{f}_{\theta}$. Without lifting, the jumps across $\Gamma$ must be captured by the weight of the neural field, which complicates training. However, our method alleviates this problem. By lifting, two positions $ \bm{x}_0^- \to \Gamma^- $ and $ \bm{x}_0^+ \to \Gamma^+ $, which are close in $\Omega $, are mapped to distinct coordinates in 3D, enabling $\Tilde{f}_{\theta}$ to represent a smooth function, while the discontinuity emerges from its restriction to the discontinuous graph.
+
+As a result, optimizing network weights becomes easier, as no sharp jumps need to be fit, as shown in the very right part in \reffig{fig:hand}. Another advantage of this construction is that it simplifies editing of the field $f$, as the output can be directly controlled by modifying the height function $H(\mathbf{x})$, as depicted in Figure \ref{fig:Interaction}.
+
+
+% \begin{figure}
+% \centering
+% \includegraphics[width=0.5\textwidth]{figures/show_weight.pdf}
+% \caption{
+% The trainable function $B$ is smooth over the higher dimensional domain, making the training process easier.
+% } 
+% \label{fig:WhyEasier} 
+% \centering
+% \end{figure}
+
+
+\paragraph{Winding graph}
+While any function discontinuous over $\Gamma$ may serve as the height $H$, we choose the generalized winding number field~\cite{Jacobson:2018:GWN}, a harmonic function with jump boundary condition across $\Gamma$ amenable to fast evaluation~\cite{Barill:FW:2018} 
+% \zhecheng{I think maybe GWN is the best off the shelf tool out there, this part is a bit contradictory to the related works 2.3, why not prove GWN is the best option here?}, 
+\begin{align}
+\label{eq:fixedUpper}
+    H(\mathbf{x}) = \int_{0}^{1} \frac{\mathbf{\Gamma}'(s) \cdot (\mathbf{\Gamma}(s) - \mathbf{x})^\perp}{|\mathbf{\Gamma}(s) - \mathbf{x}|^2} \, ds \ ,
+\end{align}
+where $\Gamma : (0,1) \rightarrow \Omega : s \mapsto \Gamma(s)$, and
+$(\cdot)^\perp$ rotates a vector by $\pi/2$. We refer to the graph of $H(\mathbf{x})$ as the \emph{winding graph}.
+
+\paragraph{Progressive cutting} 
+Compared to a permanent discontinuity, progressive cutting involves the notion that the curve of discontinuity lengthens over time. We introduce the parameter $\alpha \in [0,1]$ to mark the fraction of $\Gamma$ that has been cut thus far. We use $\Gamma^\alpha$ to denote the portion of $\Gamma$ corresponding to the first $\alpha$-fraction of its length, and we account for $\alpha$ by modifying the integration bounds:
+\begin{align}
+\label{eq:winding_para}
+    H^\alpha(\mathbf{x}) = \int_{0}^{\alpha} \frac{\mathbf{\Gamma}'(s) \cdot (\mathbf{\Gamma}(s) - \mathbf{x})^\perp}{|\mathbf{\Gamma}(s) - \mathbf{x}|^2} \, ds \ .
+\end{align}
+Similarly, since the cut progression generally affects the optimal kinematic basis, we also condition the volumetric neural field on $\alpha$:
+\begin{align} \label{eq:neural_para}
+    \Tilde{f}^\alpha_\theta : [0,1] \times \Omega \times \mathbb{R} \rightarrow \mathbb{R} : (\alpha,x,y,z) \xmapsto{\textrm{\scriptsize inference}}   \Tilde{f}^\alpha_{\theta}(x,y,z)  \ .
+\end{align}
+The lifting and restriction operators are unaffected, but for completeness we indicate their dependency on $\alpha$:
+\begin{align} \label{eq:lifting_para}
+    \mathcal{L}^\alpha(\bm{x}) = (\bm{x},H^\alpha(\bm{x}))  \quad \textrm{and}\quad
+    f^\alpha(\bm{x}) = \Tilde{f}^\alpha_{\theta}(\mathcal{L}^\alpha(\bm{x})) \ .
+\end{align}
+
+
+\paragraph{Outlook}
+Equations \ref{eq:winding_para}--\ref{eq:lifting_para} summarize the construction of a  function $f^\alpha : \Omega\rightarrow \mathbb{R}$ discontinuous across part of the curve $\Gamma$ depending on the cutting extent $\alpha$. As we have seen, $f^\alpha$ is constructed by restricting a learned volumetric neural field ($\Tilde{f}_\theta)$ to the \emph{winding graph} $H(\mathbf{x})$ using the \emph{lifting operator} $\mathcal{L}$.
+
+We are ready to construct ROMs that precisely resolve discontinuities, applying the same constructions and notation to kinematics-specific fields.
+
+
+% For example, the parameter interval $s \in (0,g)$ represents a segment of the curve $\Gamma(s)$, where the entire curve is recovered when $g=1$. We may therefore model progressive cutting by progressively increasing $g$ from zero to one.
+
+% Based on that idea, we incorporate a geometry code $\bm{g}$ as an input to both the volumetric neural network $\Tilde{B}_{\theta}$ and the parametric $\Gamma$, and in turn the lifting operator $\mathcal{L}$ (see Figure \ref{fig:showwinding}),
+% \begin{align}
+%     B(\bm{g},\bm{x}) = \Tilde{B}_{\theta}(\bm{g},\mathcal{L}(\bm{g},\bm{x})) \ ,\quad \bm{x} \in \Omega \ .
+% \end{align}
+% Now the field $B$ is governed by the cut geometry $\bm{g}$ 
+
+% \begin{figure}
+% \centering
+% \begin{tikzpicture}[x=0.5\textwidth, y=0.5\textwidth]
+% \node[anchor=south] (image) at (0,0) {
+% \includegraphics[width=8cm]{figures/Pipeline.pdf}
+% };
+% \node at ([shift={(-0.38, 0.15)}]image.south)[below] 
+%   {\scalebox{0.525} {$\mathbf{x}, \bm{g}\rightarrow$} };  
+% \node at ([shift={(-0.212, 0.157)}]image.south)[below] 
+%   {\scalebox{0.525} {$\rightarrow W(\mathbf{x}, \bm{g})$}  };  
+% \node at ([shift={(-0.3, 0.09)}]image.south)[below] 
+%   {\scalebox{0.525} {$T(\bm{g}) = 0.75$}  };  
+
+
+%   \node at ([shift={(-0.095, 0.15)}]image.south)[below] 
+%   {\scalebox{0.525} {$\mathbf{x}, \bm{g}\rightarrow$} };  
+% \node at ([shift={(0.08, 0.155)}]image.south)[below] 
+%   {\scalebox{0.525} {$\rightarrow F(\mathbf{x}, \bm{g})$}  };  
+  
+% \end{tikzpicture}
+
+% \caption{
+% To calculate a basis for a family of discontinuities in a mesh-free way, we represent the discontinuous boundaries using winding number fields. These fields are then combined with traditional MLP-based neural fields to calculate the final output. Notably, the overall function remains a coordinate network/neural field, preserving its discretization-agnostic nature.
+% } 
+% \label{fig:pipeline} 
+% \centering
+% \end{figure}
+
+
+
+% \subsubsection{Network Construction}
+
+% The neural field $B$, typically implemented as a multi-layer perceptron (MLP), takes the lifted coordinate as input, $B(H(\bm{x}), \bm{x})$ \mengfei{minor notation problem I think it takes $(\mathbf{x}, H(\mathbf{x}))$. The neural field $B$, typically implemented as an MLP (multi-layer perceptron), uses the lifted input to capture discontinuities in the domain...(?)}, to capture discontinuities. It then outputs the basis function for the displacement field, which can later be used in reduced space simulations. \zhecheng{I think this section should introduce the exact dimension of your network, $\bm x \in \mathbb{R}^{2, 3}$ and $H(\bm x) \in \mathbb{R}$, so... the MLP is $\mathbb{R}^{2, 3} \times \mathbb{R} \to \mathbb{R}$}
+
+% Simulating cutting presents a unique challenge due to the frequent changes in discontinuities over time. Unlike static discontinuities, cutting involves dynamic transitions, requiring the neural field to not only represent individual discontinuities but also capture a continuous family of discontinuities that evolve throughout the simulation. This necessitates a more flexible and adaptable approach to model these changing discontinuities. To address this, we introduce an additional geometry code $\bm{g}$ \zhecheng{I am tempted to call it cut code but geometry code is good} as an input to the neural field. This geometry code $\bm{g}$ influences both the weights of the trainable function $B$ and the non-trainable height field $H$. As shown in \reffig{fig:showwinding}, $\bm{g}$ is defined as a scalar function ranging from $0$ to $1$ to indicate the extent of the cut's progression. For instance, $\bm{g} = 0$ represents no cut, while $\bm{g} = 1$ represents the fully cut state \mengfei{Would it be easier to kind of just example that $\bm{g}$ is basically a dimensionless arc length parameter of some sort?}. \zhecheng{consider you have examples with multiple code and large genus cuts, consider make it as general as possible but still write everything in math. For example, I would say: For cases with multiple cuts or large-genus modifications, let \(\bm{g} \in \mathbb{R}^m\) be a vector of codes, where each component \(g_i\) corresponds to a different cut or genus modification. The network then incorporates these as:
+%    \[\text{\zhecheng{idk how to write this concisely}}\]
+%    where \(H_i(\bm{x})\) represents the base field associated with the \(i\)-th cut or discontinuity.}
+
+% Therefore, the final neural field takes both the lifted coordinate and the geometry code as input, $B(H_{\bm{g}}(\bm{x}), \bm{x}, \bm{g})$ \mengfei{I think the notation can be improved here. Make it so that the same letter takes the same parameters. I think this section's notation can be improved a little in general to avoid some confusion.}, and outputs the basis function corresponding to that discontinuity (cut shape). Note that the overall function can still be expressed as a function of the coordinate $\bm{x}$, parametrized by $\bm{g}$ and the boundary parameters (which are used to calculate the winding number field for $H$) \mengfei{\textbf{\textit{\underline{PERSONALLY}}} I feel like if you can remove the brackets without affecting the sentence you should remove them}. As such, it remains a coordinate network/neural field, preserving its discretization-agnostic nature.
+
+
+% \subsubsection{Parameterized Winding Number Field}
+
+
+
+
+% \begin{figure}
+% \centering
+% \begin{tikzpicture}[x=0.5\textwidth, y=0.5\textwidth]
+% \node[anchor=south] (image) at (0,0) {
+% \includegraphics[width=8cm]{figures/show_winding.pdf}
+% };
+
+% \node at ([shift={(-0.33, 0.47)}]image.south)[below] 
+%   {\scalebox{0.525} {$T(\bm{g}) = 0$}  };  
+%   \node at ([shift={(-0.16, 0.47)}]image.south)[below] 
+%   {\scalebox{0.525} {$T(\bm{g}) = 0.25$}  };  
+%   \node at ([shift={(0.01, 0.47)}]image.south)[below] 
+%   {\scalebox{0.525} {$T(\bm{g}) = 0.5$}  };  
+%   \node at ([shift={(0.174, 0.47)}]image.south)[below] 
+%   {\scalebox{0.525} {$T(\bm{g}) = 0.75$}  };  
+%   \node at ([shift={(0.35, 0.47)}]image.south)[below] 
+%   {\scalebox{0.525} {$T(\bm{g}) = 1$}  };  
+
+% \end{tikzpicture}
+
+% \caption{
+% Both the winding number field and the MLP are parameterized by the geometry information $\bm{g}$. For the winding number field, we use an explicit scalar $T(\bm{g})$ to indicate the extent of the cut's progression. In this figure, the winding number field and basis for $T(\bm{g}) = [0, 0.25, 0.5, 0.75, 1]$ are demonstrated from left to right, indicating different extents of the progressive cut.
+% } 
+% \label{fig:showwinding} 
+% \centering
+% \end{figure}
+
+
+% As mentioned earlier, we lift the input to the neural network $B$ using an additional height field $H$, which is calculated by the generalized winding number $w$:
+
+% \begin{align} H_{\bm{g}}(\bm{x}) = w(\mathbf{x}, \bm{g}) \end{align}
+
+
+% We start with the traditional non-parametrized winding number \zhecheng{cite Alec's paper or whatever he cited for continuous setting}. Suppose we have a curve $\mathcal{C}$ and a query point $\mathbf{x}$. The winding number $w(\mathbf{x})$ is the number of times $\mathcal{C}$ wraps around $\mathbf{x}$ in a given direction (e.g., clockwise). Therefore, it can be defined as:
+% \begin{align}
+% \label{eq:fixedUpper}
+%     w(\mathbf{x}) = \frac{1}{2\pi}\int_{\mathcal{C}} d\theta = \int_{0}^{1} \frac{\mathbf{C}'(t) \cdot (\mathbf{C}(t) - \mathbf{x})^\perp}{|\mathbf{C}(t) - \mathbf{x}|^2} \, dt
+% \end{align}
+% where $\theta$ is the angle of the projection of $\mathcal{C}$ onto a unit circle centered at the query point $\mathbf{x}$ and $\mathbf{C}(t)$ parameterizes curve $\mathcal{C}$. Here, $ (\mathbf{a})^\perp $ denotes the perpendicular vector to $ \mathbf{a} $, defined as $ (a_1, a_2)^\perp = (-a_2, a_1) $.
+
+% We then consider modeling the progressive cutting process, where the discontinuity evolves over time steps. To capture this change, we model the discontinuity as a changing curve parameterized by the geometry code $\bm{g}$.
+
+% To model the evolution of the cut, instead of a fixed upper bound $1$ for the integration $ \int_{0}^{1} \nicefrac{\left({\mathbf{C}'(t) \cdot (\mathbf{C}(t) - \mathbf{x})^\perp}\right)}{|\mathbf{C}(t) - \mathbf{x}|^2} \, dt$ \zhecheng{consider omit this inline expression and use text say \refeq{eq:fixedUpper}}, we used the geometry code $\bm{g} \in [0,1]$.
+% The extent of the cut is controlled by $\bm{g}$, where the cut grows progressively as $\bm{g}$ increases, as shown in Figure \ref{fig:showwinding}. Therefore, for a given $\bm{g}$, we calculate the winding number from a partial curve:
+% \begin{align}
+% \label{eq:winding_para}
+%     w(\mathbf{x}, \bm{g}) = \int_{0}^{\bm{g}} \frac{\mathbf{C}'(t) \cdot (\mathbf{C}(t) - \mathbf{x})^\perp}{|\mathbf{C}(t) - \mathbf{x}|^2} \, dt
+% \end{align}
+

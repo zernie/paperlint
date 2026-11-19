@@ -1,0 +1,92 @@
+\section{Overview of \sys}
+\label{sec:overview}
+
+We now present \sys{}, a practical SLO-aware resource management framework for MEC that support multiple heterogeneous applications through a decoupled scheduling approach.
+
+\subsection{Design Goals}
+\label{sec:design-goals}
+
+To address the limitations identified in~\autoref{sec:prior}, we aim to design \sys{} around four goals:
+
+\mypara{G1: No coordination between RAN and edge servers.}
+\sys{} should operate with completely decoupled schedulers at the RAN and edge servers. %, eliminating tight integration between them.
+This will address the practical deployment and technical challenges that make coordination-based approaches infeasible.
+
+\mypara{G2: Compatibility with existing infrastructure and applications.}
+\sys{} should require no significant modifications to existing 5G stacks, edge servers, or applications.
+This will enable incremental deployment without disrupting existing MEC infrastructures or requiring application re-engineering.
+
+\mypara{G3: Resource management for heterogeneous applications.}
+\sys{} should provide resource allocation across RAN and edge resources for multiple competing applications with diverse SLOs.
+This will enable MEC deployments where heterogeneous applications must coexist efficiently.
+
+\mypara{G4: SLO satisfaction through deadline-aware resource scheduling.}
+\sys{} should prioritize SLO satisfaction over conventional fairness objectives that often lead to latency variability. 
+Scheduling decisions must account for application deadlines and current resource availability, ensuring LC applications obtain the resources they need while still preventing starvation of BE  applications.
+
+
+\subsection{Challenges}
+\label{sec:challenges}
+
+Realizing SLO-aware scheduling without RAN--edge coordination presents three challenges:
+
+\mypara{C1: New request identification at the RAN.}
+RAN protocol layers, especially the MAC layer where resource allocation decisions are made, lack visibility into application payloads and find it impractical to parse application data due to the tight timing requirements of RAN processing.
+This makes it challenging to identify when new requests begin and trigger appropriate SLO-aware scheduling decisions.
+
+\mypara{C2: Network latency estimation at the edge.}
+The edge server needs to estimate the network transmission latency that each request has consumed during uplink transmission and will consume during downlink transmission for responses to compute the remaining time budget before the SLO deadline expires.
+However, it has no visibility into these transmission delays, making SLO-aware resource allocation challenging.
+
+\mypara{C3: Processing latency estimation for dynamic workloads.}
+Even with network latency estimation, the edge scheduler must also anticipate how long requests will take to process. 
+Request processing times vary with workloads and resource contention, and are hard to predict without intrusive application changes. 
+This makes lightweight yet accurate estimation essential for practical deployment.
+
+\subsection{Key Ideas}
+\label{sec:insights}
+
+Our core insight is that standard 5G protocols and MEC application behaviors already expose the necessary signals for decoupled SLO-aware scheduling.
+\sys{} exploits these readily available signals with no or minimal application modifications.
+This approach enables three key ideas that address the fundamental challenges of decoupled scheduling:
+
+\mypara{I1: Exploiting 5G control signal patterns for request identification (\autoref{sec:request-identify}).}
+Standard 5G control signaling between UE and base station naturally exhibits distinctive patterns when new application requests are generated.
+We find that buffer status reports (BSRs) and scheduling requests (SRs) provide reliable signatures that correlate with when the client sends a new request.
+\sys{} leverages these existing control signals to detect when new requests begin at the RAN without payload inspection or protocol modifications.
+
+\mypara{I2: Leveraging downlink stability for network latency estimation (\autoref{sec:reference-time}).}
+5G downlink transmission characteristics provide inherent signals for network latency estimation.
+We observe that downlink transmissions exhibit more predictable latency than uplink transmissions due to more wireless slots allocated for downlink, stable base station transmission power, and absence of scheduling jitter.
+\sys{} exploits this asymmetry in 5G protocol behavior through lightweight probing that exchanges small timing packets between edge servers and client devices, enabling accurate latency tracking without operator infrastructure coordination.
+
+\mypara{I3: Utilizing application lifecycle events for processing time prediction (\autoref{sec:proactive-resource-allocation}).}
+MEC applications' request-response behaviors expose key lifecycle events that enable processing time estimation.
+\sys{} tracks these naturally occurring events through server-side APIs and builds execution history without requiring invasive application changes.
+We show this lightweight approach provides sufficient accuracy for deadline-aware scheduling while maintaining practicality.
+
+\subsection{System Architecture}
+\label{sec:architecture}
+
+\begin{figure}[]
+    \centering
+    \includegraphics[width=1\columnwidth]{figures/smec_arch.pdf}
+    \tightcaption{\sys{} architecture: Blue boxes represent the main components of \sys{}, while grey boxes denote existing elements in the MEC stack. 
+    For brevity, the 5G packet core and upper 5G protocol layers are omitted.}
+    \label{fig:architecture}
+\end{figure}
+
+\autoref{fig:architecture} illustrates the \sys{} architecture, which consists of two main components that operate independently:
+
+\mypara{RAN resource manager (\autoref{sec:ran_sched})} operates at the MAC layer and monitors UE--RAN control signal patterns to identify application request boundaries.
+It dynamically allocates RAN resources based on each request's remaining time budget, increasing resource allocations when requests approach their deadlines to accelerate transmission.
+
+\mypara{Edge resource manager (\autoref{sec:edge_sched})} estimates network transmission delays using a timing protocol between the UE-side daemon and server-side module.
+It also estimates processing delays for incoming requests based on recent execution history to calculate remaining time budgets.
+The manager then allocates heterogeneous compute resources (CPU and GPU) according to these time budgets and implements early drop mechanisms for requests unlikely to meet their deadlines.
+
+\modified{\mypara{Specifying SLOs to the RAN.}
+LC applications communicate their SLO requirements to the RAN through standard 5G interfaces without requiring custom protocols.
+Edge servers can signal requirements through the Network Exposure Function (NEF) interface, or UE devices can convey QoS information when establishing Packet Data Unit (PDU) sessions~\cite{esti-5g-arch}.
+\sys{} leverages 5G QoS Identifier (5QI) classes to map application SLOs, aligning with how commercial network operators classify traffic rather than requiring fine-grained per-application specifications.
+This standards-compliant approach enables deployment within existing commercial MEC ecosystems while providing the necessary SLO information for effective resource management.}

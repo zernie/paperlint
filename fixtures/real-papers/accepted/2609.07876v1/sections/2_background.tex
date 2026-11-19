@@ -1,0 +1,19 @@
+
+\textbf{Transformer notation.} Large language models (LLMs) convert a token sequence into a probability distribution over subsequent tokens. Input tokens are first embedded in the $d_\text{m}$-dimensional residual space with positional embeddings, then passed through $n$ transformer layers before being unembedded into token logits.
+\begin{align*}
+    \mathbf{x}_0 = \operatorname{Embed}(\text{toks}) \qquad
+    \mathbf{x}_{i+1} = \operatorname{Layer_i}(\mathbf{x}_i) \qquad
+    \text{logits} = \operatorname{Unembed}(\mathbf{x}_n)
+\end{align*}
+Each transformer layer contains attention and MLP sublayers that produce ``contributions'' to the residual stream:
+\begin{align*}
+    \mathbf{x}_i' = \mathbf{x}_i + \operatorname{Attn_i}(\mathbf{x}_i) \qquad \qquad
+    \mathbf{x}_{i+1} = \mathbf{x}_i' + \operatorname{MLP_i}(\mathbf{x}_i')
+\end{align*}
+where $\mathbf{x}_i'$ is an intermediate state. The marginal contribution of layer $i$ is defined as $\mathbf{c}_i = \operatorname{Attn_i}(\mathbf{x}_i) + \operatorname{MLP_i}(\mathbf{x}_i + \operatorname{Attn_i}(\mathbf{x}_i))$, making $\mathbf{x}_{i+1} = \mathbf{x}_i + \mathbf{c}_i \label{eq:contribution}$. We define $\mathbf{c}_{i,t}$ to be the contribution of the $i$th layer on token $t$.
+
+\textbf{Feature-based interpretability.} Recent interpretability methods decompose residual stream contributions using sparse autoencoders (SAEs) to extract meaningful features for a residual stream contribution $\mathbf{c}$ \cite{cunningham2023sparseautoencodershighlyinterpretable, gao2024scalingevaluatingsparseautoencoders, templeton2024scaling}:
+$$\mathbf{c} = \mathbf{e} + \sum_{i=1}^k \beta_i \mathbf{v}_i$$
+where $\mathbf{e}$ is the error, $k$ is a small integer (usually less than 500), and $\mathbf{v}_i$ are the orthogonal feature vectors with activations $\beta_i$. These features can be labeled with semantic meanings and manipulated at inference time to steer model behavior. \cite{marks2025sparsefeaturecircuitsdiscovering, templeton2024scaling, chalnev2024improvingsteeringvectorstargeting}.
+
+\textbf{Models.} We study TLCM across 7 open-weight model families: Llama 3 \cite{grattafiori2024llama3herdmodels}, OLMo \cite{groeneveld2024olmoacceleratingsciencelanguage}, Mistral \cite{jiang2023mistral7b, jiang2024mixtralexperts}, Gemma \cite{gemmateam2024gemmaopenmodelsbased, gemmateam2024gemma2improvingopen}, Qwen2 \cite{yang2024qwen2technicalreport}, GPT-2 \cite{radford2019language}, and Phi \cite{abdin2024phi3technicalreporthighly, abdin2024phi4technicalreport}. Unless otherwise stated, we primarily report results on Llama 3.1 8B ($d_m = 4096$).

@@ -1,0 +1,65 @@
+\begin{table}[!htbp]
+\small
+\begin{center}
+\caption{
+SDG results (\%) on OfficeHome. 
+One domain is used as the source domain and the others are used as the target domain.
+}
+\label{tab:multi-source-officehome}
+\renewcommand\arraystretch{0.9}
+\scalebox{0.80}{
+\begin{tabular}{l|c|cccc|>{\columncolor{gray!30}}c}
+\hline
+\textbf{Method}  &\textbf{Venue}    &\textbf{A}     &\textbf{C}     &\textbf{P}     &\textbf{R}     &\textbf{Avg.}  \\ 
+\hline
+DANN~\cite{ganin2016domain}       
+& IJCAI'16    & 55.20 & 49.30  & 48.40  & 58.40 & 52.80 \\
+CORAL~\cite{sun2016deep}       
+& ICCV'16     & 55.60 & 52.80  & 50.30  & 59.40 & 54.50 \\
+IRM~\cite{arjovsky2019invariant}
+& -           & 54.90 & 53.20  & 48.60  & 59.20 & 54.00 \\
+MMD~\cite{li2018domain}
+& ICCV'18     & 55.10 & 52.00  & 50.30  & 59.30 & 54.20 \\
+OrgMixup~\cite{zhang2018mixup}
+& ICLR'18     & 56.00 & 54.40  & 50.40  & 61.00 & 55.50 \\
+Mixup~\cite{yan2020improve}
+& -           & 55.50 & 54.10  & 49.40  & 59.40 & 54.60 \\
+CutMix~\cite{yun2019cutmix}
+& CVPR'19     & 53.50 & 52.20  & 47.70  & 60.20 & 53.40 \\
+CDANN~\cite{ganin2016domain}
+& -           & 55.20 & 49.90  & 47.60  & 58.60 & 52.80 \\
+GroupDRO~\cite{sagawa2019distributionally}    
+& ICLR'20     & 55.10 & 52.00  & 50.30  & 59.30 & 54.20 \\
+MTL~\cite{blanchard2021domain}
+& JMLR'21     & 55.30 & 53.30  & 49.00  & 60.40 & 54.50 \\
+ARM~\cite{zhang2021adaptive}
+& NeurIPS'21  & 55.00 & 51.60  & 47.30  & 59.30 & 53.30 \\
+VREx~\cite{krueger2021out}        
+& ICML'21     & 55.50 & 52.60  & 49.10  & 59.30 & 54.10 \\
+Mixstyle~\cite{zhou2021domain}
+& ICLR'21     & 44.30 & 29.80  & 33.60  & 48.50 & 39.00 \\
+ERM~\cite{vapnik2013nature}
+& ICLR'21     & 55.60 & 52.80  & 50.30  & 59.40 & 54.50 \\
+SAM~\cite{li2018domain}
+& ICLR'21     & 56.90 & 53.80  & 50.90  & 61.50 & 55.80 \\
+SagNet~\cite{nam2021reducing}
+& CVPR'21     & 56.90 & 53.40  & 50.80  & 61.20 & 55.60 \\
+Fishr~\cite{rame2022fishr}
+& ICML'22     & 55.10 & 51.20  & 49.20  & 59.90 & 53.90 \\
+RIDG~\cite{chen2023domain}
+& ICCV'23     & 56.80 & 55.40  & 50.50  & 60.90 & 55.90 \\
+SAGM~\cite{wang2023sharpness}
+& CVPR'23     & 57.70 & 54.80  & 51.50  & 61.40 & 56.30 \\
+ITTA~\cite{chen2023improved}
+& CVPR'23     & 56.00 & 51.50  & 50.50  & \underline{61.60} & 54.90 \\
+UDIM~\cite{shinunknown}
+&ICLR'24      & \underline{58.50} & \underline{55.70}  & \underline{54.50}  & \textbf{64.50} & \underline{58.30} \\ 
+\hline              
+\textbf{PAPT (Ours)}  
+& -           & \textbf{59.81} & \textbf{68.30} &\textbf{59.12} & 60.87 &\textbf{62.03}   \\ 
+\hline\end{tabular}}
+\end{center}
+\vspace{-6.5mm}
+\end{table}
+
+

@@ -1,0 +1,36 @@
+\begin{table*}[h!]
+    \centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llcllll}
+\hline
+\multirow{2}{*}{\textbf{Direction}} &
+  \multirow{2}{*}{\textbf{Metric}} &
+  \multirow{2}{*}{\textbf{\begin{tabular}[c]{@{}c@{}}Reference\\ Summary\end{tabular}}} &
+  \multicolumn{1}{c}{\multirow{2}{*}{\textbf{\begin{tabular}[c]{@{}c@{}}Video\\ Used\end{tabular}}}} &
+  \multicolumn{3}{c}{\textbf{MLVU(VS)-Eval}} \\ \cline{5-7} 
+ &
+   &
+   &
+  \multicolumn{1}{c}{} &
+  \multicolumn{1}{c}{\textbf{Kendall's $\tau_b$}} &
+  \multicolumn{1}{c}{\textbf{Kendall's $\tau_c$}} &
+  \multicolumn{1}{c}{\textbf{Spearman's $\rho$}} \\ \hline
+\multirow{5}{*}{Rule-based}       & BLEU-1                   & \checkmark            &                               & 0.0217 (0.7803) & 0.0219 (0.7803) & 0.0431 (0.7045) \\
+                                  & BLEU-2                   & \checkmark            &                               & 0.0673 (0.3865) & 0.0680 (0.3865) & 0.1045 (0.3561) \\
+                                  & BLEU-3                   & \checkmark            &                               & 0.1994 (0.0152) & 0.1836 (0.0152) & 0.2836 (0.0108) \\
+                                  & BLEU-4                   & \checkmark            &                               & 0.2113 (0.0155) & 0.1578 (0.0155) & 0.2798 (0.0119) \\
+                                  & ROUGE-L                  & \checkmark            &                               & 0.1094 (0.1593) & 0.1104 (0.1593) & 0.1571 (0.1639) \\ \hline
+\multirow{5}{*}{Similarity-based} & METEOR                   & \checkmark            &                               & 0.2663 (0.0006) & 0.2689 (0.0006) & 0.3822 (0.0005) \\
+                                  & CIDEr                    & \checkmark            &                               & 0.2401 (0.0015) & 0.2435 (0.0014) & 0.3612 (0.0012) \\
+                                  & SPICE                    & \checkmark            &                               & 0.2287 (0.0021) & 0.2312 (0.0020) & 0.3489 (0.0019) \\
+                                  & BERTscore                & \checkmark            &                               & 0.1415 (0.0688) & 0.1428 (0.0688) & 0.1987 (0.0773) \\
+                                  & Video-Summary Similarity & \multicolumn{1}{l}{} & \multicolumn{1}{c}{\checkmark}                     & 0.0278 (0.0517) & 0.0266 (0.0522) & 0.0401 (0.0549) \\ \hline
+\multirow{2}{*}{LLM-based}        & MLVU                     & \checkmark            &                               & 0.5284 (0.0000) & 0.5309 (0.0000) & 0.6738 (0.0000) \\
+                                  & Video-LMM Judge          & \multicolumn{1}{l}{} & \multicolumn{1}{c}{\checkmark} & 0.5376 (0.0000) & 0.5441 (0.0000) & 0.6810 (0.0000) \\ \hline
+QA-based                          & QEVA(Ours)               & \multicolumn{1}{l}{} & \multicolumn{1}{c}{\checkmark} & \textbf{0.6465 (0.0000)} & \textbf{0.6407 (0.0000)} & \textbf{0.7326 (0.0000)} \\ \hline
+\end{tabular}%
+}
+\caption{Comparative evaluation results of QEVA and existing summarization evaluation metrics on the MLVU(VS)-Eval benchmark. We report correlations with human judgments using Kendall's $\tau_b$, $\tau_c$, and Spearman's $\rho$. The metrics are categorized into several groups: rule-based n-gram metrics (BLEU variants, ROUGE-L), similarity-based metrics (METEOR, CIDEr, SPICE, BERTScore, Video-Summary Similarity), LLM-based metrics (MLVU, Video-LMM Judge), and our proposed QA-based metric (QEVA). Reference usage and video modality usage for each metric are also indicated.
+\textbf{Takeaway:} QEVA consistently achieves significantly higher correlation with human judgments compared to existing metrics, demonstrating its effectiveness as a reference-free and multimodal evaluation metric.}
+    \label{tab:correlation-results}
+    \end{table*}

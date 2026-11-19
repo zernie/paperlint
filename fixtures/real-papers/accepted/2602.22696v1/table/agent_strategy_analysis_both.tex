@@ -1,0 +1,45 @@
+\begin{table*}[t]
+    \centering
+    \small
+    \tabcolsep 3pt
+    \begin{tabular}{l|cccc|cccc}
+        \toprule
+        \multirow{2}{*}{\bf{Persuasive Strategy}} & \multicolumn{4}{c|}{\bf Japanese} & \multicolumn{4}{c}{\bf English} \\ % 新しいヘッダー行
+        & \bf{PC-p} & \bf{PC-pd} & \bf{PC-r} & \bf{PC-rd} & \bf{PC-p} & \bf{PC-pd} & \bf{PC-r} & \bf{PC-rd} \\
+        \midrule
+        % 各モデルの戦略使用割合の平均で降順ソート（片方のモデルにしか存在しない戦略は4で割り，両方のモデルに存在する戦略は8で割ったものを平均とした）
+        Emotion appeal & \bf{0.488} & \bf{0.281} & \bf{0.282} & \bf{0.247} & \bf{0.294} & 0.165 & \bf{0.254} & 0.165 \\ % average: 0.272
+        Foot in the door & 0.221 & 0.144 & 0.241 & 0.241 & 0.232 & \bf{0.234} & 0.246 & \bf{0.233} \\ % average: 0.224
+        Donation information & 0.131 & 0.128 & - & - & 0.107 & 0.058 & - & - \\ % average: 0.106
+        Credibility appeal & 0.063 & 0.189 & 0.038 & 0.058 & 0.120 & 0.205 & 0.076 & 0.091 \\ % average: 0.105
+        Logical appeal & 0.039 & 0.048 & 0.031 & 0.127 & 0.051 & 0.162 & 0.054 & 0.176 \\ % average: 0.086
+        Detailed information & - & - & 0.099 & 0.040 & - & - & 0.096 & 0.011 \\ % average: 0.061
+        Source-related inquiry & 0.006 & 0.151 & 0.000 & 0.168 & 0.002 & 0.001 & 0.000 & 0.131 \\ % average: 0.057
+        Self-modeling & 0.029 & 0.023 & - & - & 0.123 & 0.044 & - & - \\ % average: 0.055
+        Social proof & - & - & 0.054 & 0.004 & - & - & 0.063 & 0.010 \\ % average: 0.033
+        Time pressure & - & - & 0.042 & 0.016 & - & - & 0.062 & 0.008 \\ % average: 0.032
+        Personal story & 0.020 & 0.023 & 0.003 & 0.000 & 0.067 & 0.063 & 0.038 & 0.002 \\ % average: 0.027
+        Feedback and thanks & - & - & 0.017 & 0.023 & - & - & 0.026 & 0.027 \\ % average: 0.023
+        Personal-related inquiry & 0.001 & 0.004 & 0.171 & 0.000 & 0.002 & 0.003 & 0.000 & 0.000 \\ % average: 0.023
+        Consistency & - & - & 0.001 & 0.023 & - & - & 0.005 & 0.053 \\ % average: 0.020
+        Scarcity & - & - & 0.004 & 0.013 & - & - & 0.027 & 0.033 \\ % average: 0.019
+        Personal relevance emphasis & - & - & 0.003 & 0.011 & - & - & 0.024 & 0.018 \\ % average: 0.014
+        Task-related inquiry & 0.004 & 0.008 & 0.000 & 0.000 & 0.002 & 0.064 & 0.001 & 0.000 \\ % average: 0.010
+        Message strength & - & - & 0.006 & 0.015 & - & - & 0.004 & 0.013 \\ % average: 0.010
+        Framing & - & - & 0.001 & 0.012 & - & - & 0.008 & 0.012 \\ % average: 0.008
+        Mutual concession & - & - & 0.000 & 0.001 & - & - & 0.000 & 0.014 \\ % average: 0.004
+        Shared Engagement & - & - & 0.003 & 0.000 & - & - & 0.009 & 0.000 \\ % average: 0.003
+        Ongoing trust building & - & - & 0.005 & 0.001 & - & - & 0.003 & 0.000 \\ % average: 0.002
+        Reciprocity & - & - & 0.001 & 0.000 & - & - & 0.005 & 0.001 \\ % average: 0.002
+        Metacognitive approach & - & - & 0.000 & 0.001 & - & - & 0.000 & 0.002 \\ % average: 0.001
+        Continuous communication & - & - & 0.000 & 0.000 & - & - & 0.000 & 0.000 \\ % average: 0.000
+        Manage cognitive load & - & - & 0.000 & 0.000 & - & - & 0.000 & 0.000 \\ % average: 0.000
+        \midrule
+        %\specialrule
+        Entropy (w/o unused str.) & 2.167 & 2.738 & 2.871 & 2.973 & 2.647 & 2.814 & 3.202 & 3.202 \\
+        Entropy (all) & 2.157 & 2.721 & 0.194 & 0.181 & 2.631 & 2.794 & 0.149 & 0.154 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Detailed distributions of strategies used by each agent. \textbf{PC-p}, \textbf{PC-pd}, \textbf{PC-r}, and \textbf{PC-rd} represent the shortened notations for \textbf{\textit{ProCoT-p4g}}, \textbf{\textit{ProCoT-p4g-desc}}, \textbf{\textit{ProCoT-rich}}, and \textbf{\textit{ProCoT-rich-desc}}, respectively.}
+    \label{tab:agent_strategy_analisis_both}
+\end{table*}

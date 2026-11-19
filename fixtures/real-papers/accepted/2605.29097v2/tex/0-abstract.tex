@@ -1,0 +1,15 @@
+\begin{abstract}
+
+\name{} is the first method to use neural implicit learning for near-range 3D geometry reconstruction from radio frequency (RF) signals.
+Unlike RGB or LiDAR-based methods, RF sensing can see through occlusion but suffers from low resolution and noise due to its \textit{lensless} imaging nature.  
+While lenses in RGB imaging constrain sampling to 1D rays, RF signals propagate through the entire space, introducing significant noise and leading to cubic complexity in volumetric rendering.
+Moreover, RF signals interact with surfaces via specular reflections,
+requiring fundamentally different modeling.
+To address these challenges, \name{} 
+(1) introduces filter-based rendering to suppress irrelevant signals, 
+(2) implements a physics-based RF volumetric rendering pipeline, and 
+(3) proposes a novel lensless sampling and lensless alpha blending strategy that makes full-space sampling feasible during training.  
+By learning signed distance functions, reflectiveness, and signal power through MLPs and trainable parameters, \name{} takes the first step towards reconstructing millimeter-level geometry from RF signals in real-world settings.
+\end{abstract}
+    
+    

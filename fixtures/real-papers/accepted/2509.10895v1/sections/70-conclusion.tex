@@ -1,0 +1,13 @@
+\section{Conclusion and Future Work}
+
+Throughout this paper, we learned a total of \nrStateMachines state machines of \nrImplementations server implementations. We find that \nrViolatingImplementations out of \nrImplementations server implementations suffer from at least one strict KEX violation, allowing us to answer our first research question in the negative. We further show that for two implementations, we can exploit violations to obtain severe security vulnerabilities, such as a rogue session attack against Tectia SSH and remote code execution in Erlang SSH, answering our second research question.
+
+We grouped the violations into four different categories, each corresponding to a potential pitfall when implementing the handshake hardening measures of strict KEX. We also observed two implementations that use a taint-based implementation of strict KEX, which, while not strictly adhering to the specification, can achieve the same security level if implemented correctly.
+
+Our findings should act as a reminder to protocol designers that defenses should be cryptographically enforced, if possible. Non-cryptographic countermeasures can be tricky to implement, and violations of the specification may not be apparent and require extensive testing to be found. This is especially true for two-part countermeasures consisting of cryptographic and non-cryptographic parts, where failing to implement one part can void the security benefits of the other or even allow for new attack vectors.
+
+\paragraph{Future Work}
+
+Our work strictly analyzes the state machines of SSH server implementations. In the future, examining the state machine of SSH client implementations with and without strict KEX may reveal new, previously unknown weaknesses and vulnerabilities. This is especially true because the SSH specification does not prevent servers from trying to open channels or spawning shells. To do this, future work may resort to techniques like snapshotting to reduce the learning times of deeper protocol levels.
+
+Future work may also improve on the limitations of this work. For mapper assumptions, these may be derived by analyzing implementations or performing an automated test suite before state learning. By doing so, state learning may become applicable to a broader range of SSH implementations, both with and without strict KEX enabled. Identifying possible sources of non-determinism in SSH implementations can be valuable in eliminating or at least reducing cache conflicts, resulting in more accurate state machines.

@@ -1,0 +1,264 @@
+\begin{thebibliography}{10}
+
+\bibitem{cnda_whitepaper}
+{Advanced Micro Devices, Inc.}
+\newblock {\em AMD CDNA 3 Architecture}, 2024.
+
+\bibitem{amd_isa}
+{Advanced Micro Devices, Inc.}
+\newblock {\em "AMD Instinct MI300" Instruction Set Architecture}, 2024.
+
+\bibitem{ck}
+{Advanced Micro Devices, Inc.}
+\newblock Composable kernel ({CK}) library, 2024.
+
+\bibitem{ROCmROCProfiler}
+{Advanced Micro Devices, Inc.}
+\newblock {\em ROCm ROCProfiler}, 2024.
+
+\bibitem{ROCmROCTracer}
+{Advanced Micro Devices, Inc.}
+\newblock {\em ROCm ROCTracer}, 2024.
+\newblock Version 6.2.4.
+
+\bibitem{amd2023rocblas}
+{AMD}.
+\newblock {\em rocBLAS Library}, 2023.
+
+\bibitem{ansel2024pytorch}
+Jason Ansel, Edward Yang, Horace He, Natalia Gimelshein, Animesh Jain, Michael Voznesensky, Bin Bao, Peter Bell, David Berard, Evgeni Burovski, et~al.
+\newblock Pytorch 2: Faster machine learning through dynamic python bytecode transformation and graph compilation.
+\newblock In {\em Proceedings of the 29th ACM International Conference on Architectural Support for Programming Languages and Operating Systems, Volume 2}, pages 929--947, 2024.
+
+\bibitem{bauer_cudadma_2011}
+Michael Bauer, Henry Cook, and Brucek Khailany.
+\newblock {CudaDMA}: optimizing {GPU} memory bandwidth via warp specialization.
+\newblock In {\em Proceedings of 2011 {International} {Conference} for {High} {Performance} {Computing}, {Networking}, {Storage} and {Analysis}}, pages 1--11, Seattle Washington, November 2011. ACM.
+
+\bibitem{bhatele2019hatchet}
+Abhinav Bhatele, Stephanie Brink, and Todd Gamblin.
+\newblock Hatchet: Pruning the overgrowth in parallel profiles.
+\newblock In {\em Proceedings of the International Conference for High Performance Computing, Networking, Storage and Analysis}, pages 1--21, 2019.
+
+\bibitem{jax2018github}
+James Bradbury, Roy Frostig, Peter Hawkins, Matthew~James Johnson, Chris Leary, Dougal Maclaurin, George Necula, Adam Paszke, Jake Vander{P}las, Skye Wanderman-{M}ilne, and Qiao Zhang.
+\newblock {JAX}: composable transformations of {P}ython+{N}um{P}y programs, 2018.
+
+\bibitem{brown2020language}
+Tom~B Brown.
+\newblock Language models are few-shot learners.
+\newblock {\em arXiv preprint arXiv:2005.14165}, 2020.
+
+\bibitem{chang2024flux}
+Li-Wen Chang, Wenlei Bao, Qi~Hou, Chengquan Jiang, Ningxin Zheng, Yinmin Zhong, Xuanrun Zhang, Zuquan Song, Chengji Yao, Ziheng Jiang, et~al.
+\newblock Flux: fast software-based communication overlap on gpus through kernel fusion.
+\newblock {\em arXiv preprint arXiv:2406.06858}, 2024.
+
+\bibitem{chen2018tvm}
+Tianqi Chen, Thierry Moreau, Ziheng Jiang, Lianmin Zheng, Eddie Yan, Haichen Shen, Meghan Cowan, Leyuan Wang, Yuwei Hu, Luis Ceze, et~al.
+\newblock $\{$TVM$\}$: An automated $\{$End-to-End$\}$ optimizing compiler for deep learning.
+\newblock In {\em 13th USENIX Symposium on Operating Systems Design and Implementation (OSDI 18)}, pages 578--594, 2018.
+
+\bibitem{tunner-autotvm}
+Tianqi Chen, Lianmin Zheng, Eddie Yan, Ziheng Jiang, Thierry Moreau, Luis Ceze, Carlos Guestrin, and Arvind Krishnamurthy.
+\newblock Learning to optimize tensor programs.
+\newblock {\em Advances in Neural Information Processing Systems}, 31, 2018.
+
+\bibitem{choquette2023nvidia}
+Jack Choquette.
+\newblock Nvidia hopper h100 gpu: Scaling performance.
+\newblock {\em IEEE Micro}, 43(3):9--17, 2023.
+
+\bibitem{choquette2018volta}
+Jack Choquette, Olivier Giroux, and Denis Foley.
+\newblock Volta: Performance and programmability.
+\newblock {\em Ieee Micro}, 38(2):42--52, 2018.
+
+\bibitem{crago_wasp_2024}
+Neal~C. Crago, Sana Damani, Karthikeyan Sankaralingam, and Stephen~W. Keckler.
+\newblock {WASP}: {Exploiting} {GPU} {Pipeline} {Parallelism} with {Hardware}-{Accelerated} {Automatic} {Warp} {Specialization}.
+\newblock In {\em 2024 {IEEE} {International} {Symposium} on {High}-{Performance} {Computer} {Architecture} ({HPCA})}, pages 1--16, Edinburgh, United Kingdom, March 2024. IEEE.
+
+\bibitem{10.1145/582153.582167}
+Jack~W. Davidson and Christopher~W. Fraser.
+\newblock Eliminating redundant object code.
+\newblock In {\em Proceedings of the 9th ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages}, POPL '82, page 128–132, New York, NY, USA, 1982. Association for Computing Machinery.
+
+\bibitem{chrome_trace}
+{Google}.
+\newblock Chrome trace format, 2023.
+
+\bibitem{guan2024amanda}
+Yue Guan, Yuxian Qiu, Jingwen Leng, Fan Yang, Shuo Yu, Yunxin Liu, Yu~Feng, Yuhao Zhu, Lidong Zhou, Yun Liang, et~al.
+\newblock Amanda: Unified instrumentation framework for deep neural networks.
+\newblock In {\em Proceedings of the 29th ACM International Conference on Architectural Support for Programming Languages and Operating Systems, Volume 1}, pages 1--18, 2024.
+
+\bibitem{sample_based_profiling}
+Wenlei He, Juli\'{a}n Mestre, Sergey Pupyrev, Lei Wang, and Hongtao Yu.
+\newblock Profile inference revisited.
+\newblock {\em Proc. ACM Program. Lang.}, 6(POPL), January 2022.
+
+\bibitem{huang_alcop_2023}
+Guyue Huang, Yang Bai, Liu Liu, Yuke Wang, Bei Yu, Yufei Ding, and Yuan Xie.
+\newblock {ALCOP}: {Automatic} {Load}-{Compute} {Pipelining} in {Deep} {Learning} {Compiler} for {AI}-{GPUs}, May 2023.
+\newblock arXiv:2210.16691.
+
+\bibitem{MLSYS2023_d6cde2c1}
+Guyue Huang, Yang Bai, Liu Liu, Yuke Wang, Bei Yu, Yufei Ding, and Yuan Xie.
+\newblock Alcop: Automatic load-compute pipelining in deep learning compiler for ai-gpus.
+\newblock In D.~Song, M.~Carbin, and T.~Chen, editors, {\em Proceedings of Machine Learning and Systems}, volume~5, pages 680--694. Curan, 2023.
+
+\bibitem{keyes2013multiphysics}
+David~E Keyes, Lois~C McInnes, Carol Woodward, William Gropp, Eric Myra, Michael Pernice, John Bell, Jed Brown, Alain Clo, Jeffrey Connors, et~al.
+\newblock Multiphysics simulations: Challenges and opportunities.
+\newblock {\em The International Journal of High Performance Computing Applications}, 27(1):4--83, 2013.
+
+\bibitem{lattner2004llvm}
+Chris Lattner and Vikram Adve.
+\newblock Llvm: A compilation framework for lifelong program analysis \& transformation.
+\newblock In {\em International symposium on code generation and optimization, 2004. CGO 2004.}, pages 75--86. IEEE, 2004.
+
+\bibitem{lattner2021mlir}
+Chris Lattner, Mehdi Amini, Uday Bondhugula, Albert Cohen, Andy Davis, Jacques Pienaar, River Riddle, Tatiana Shpeisman, Nicolas Vasilache, and Oleksandr Zinenko.
+\newblock Mlir: Scaling compiler infrastructure for domain specific computation.
+\newblock In {\em 2021 IEEE/ACM International Symposium on Code Generation and Optimization (CGO)}, pages 2--14. IEEE, 2021.
+
+\bibitem{lecun2015deep}
+Yann LeCun, Yoshua Bengio, and Geoffrey Hinton.
+\newblock Deep learning.
+\newblock {\em nature}, 521(7553):436--444, 2015.
+
+\bibitem{10.1145/258916.258943}
+John Lu and Keith~D. Cooper.
+\newblock Register promotion in c programs.
+\newblock {\em SIGPLAN Not.}, 32(5):308–319, May 1997.
+
+\bibitem{Triton-fa3}
+{Meta}.
+\newblock {\em Experimental FlashAttention3 using Triton}, 2024.
+\newblock Version 2024.12.2.
+
+\bibitem{nvidia2018turing}
+{NVIDIA Corporation}.
+\newblock {\em NVIDIA Turing GPU Architecture Whitepaper}, 2018.
+
+\bibitem{nvidia2023cublas}
+{NVIDIA Corporation}.
+\newblock {\em cuBLAS Library}, 2023.
+\newblock Retrieved from https://docs.nvidia.com/cuda/cublas/.
+
+\bibitem{nvidia2023cupti}
+{NVIDIA Corporation}.
+\newblock {\em CUPTI: CUDA Profiling Tools Interface}, 2023.
+
+\bibitem{NVIDIANsightCompute}
+{NVIDIA Corporation}.
+\newblock {\em NVIDIA Nsight Compute}, 2024.
+\newblock Version 2022.4.
+
+\bibitem{NVIDIANsightSystems}
+{NVIDIA Corporation}.
+\newblock {\em NVIDIA Nsight Systems}, 2024.
+\newblock Version 2024.7.1.
+
+\bibitem{NVIDIAPTX}
+{NVIDIA Corporation}.
+\newblock {\em NVIDIA PTX}, 2024.
+\newblock Version 8.5.
+
+\bibitem{Triton-gemm}
+{OpenAI Corpora}.
+\newblock {\em Group GEMM in Triton}, 2024.
+\newblock Version 2024.11.
+
+\bibitem{punniyamurthy2024optimizing}
+Kishore Punniyamurthy, Khaled Hamidouche, and Bradford~M Beckmann.
+\newblock Optimizing distributed ml communication with fused computation-collective operations.
+\newblock In {\em SC24: International Conference for High Performance Computing, Networking, Storage and Analysis}, pages 1--17. IEEE, 2024.
+
+\bibitem{torchprofiler}
+{PyTorch Core Team}.
+\newblock {PyTorch Profiler}.
+\newblock \url{https://pytorch.org/tutorials/intermediate/profiler_tutorial.html}, 2021.
+\newblock Accessed: 2025-04-21.
+
+\bibitem{reed2022reinventing}
+Daniel Reed, Dennis Gannon, and Jack Dongarra.
+\newblock Reinventing high performance computing: challenges and opportunities.
+\newblock {\em arXiv preprint arXiv:2203.02544}, 2022.
+
+\bibitem{rumelhart1986learning}
+David~E Rumelhart, Geoffrey~E Hinton, and Ronald~J Williams.
+\newblock Learning representations by back-propagating errors.
+\newblock {\em nature}, 323(6088):533--536, 1986.
+
+\bibitem{shahflashattention}
+Jay Shah, Ganesh Bikshandi, Ying Zhang, Vijay Thakkar, Pradeep Ramani, and Tri Dao.
+\newblock Flashattention-3: Fast and accurate attention with asynchrony and low-precision.
+\newblock In {\em The Thirty-eighth Annual Conference on Neural Information Processing Systems}.
+
+\bibitem{shah2024flashattention}
+Jay Shah, Ganesh Bikshandi, Ying Zhang, Vijay Thakkar, Pradeep Ramani, and Tri Dao.
+\newblock Flashattention-3: Fast and accurate attention with asynchrony and low-precision.
+\newblock {\em arXiv preprint arXiv:2407.08608}, 2024.
+
+\bibitem{tunner1}
+Junru Shao, Xiyou Zhou, Siyuan Feng, Bohan Hou, Ruihang Lai, Hongyi Jin, Wuwei Lin, Masahiro Masuda, Cody~Hao Yu, and Tianqi Chen.
+\newblock Tensor program optimization with probabilistic programs.
+\newblock {\em Advances in Neural Information Processing Systems}, 35:35783--35796, 2022.
+
+\bibitem{spector2024thunderkittens}
+Benjamin~F Spector, Simran Arora, Aaryan Singhal, Daniel~Y Fu, and Christopher R{\'e}.
+\newblock Thunderkittens: Simple, fast, and adorable ai kernels.
+\newblock {\em arXiv preprint arXiv:2410.20399}, 2024.
+
+\bibitem{Thakkar_CUTLASS_2023}
+Vijay Thakkar, Pradeep Ramani, Cris Cecka, Aniket Shivam, Honghao Lu, Ethan Yan, Jack Kosaian, Mark Hoemmen, Haicheng Wu, Andrew Kerr, Matt Nicely, Duane Merrill, Dustyn Blasig, Fengqi Qiao, Piotr Majcher, Paul Springer, Markus Hohnerbach, Jin Wang, and Manish Gupta.
+\newblock {CUTLASS}, January 2023.
+
+\bibitem{llm_for_medical}
+Arun~James Thirunavukarasu, Darren Shu~Jeng Ting, Kabilan Elangovan, Laura Gutierrez, Ting~Fang Tan, and Daniel Shu~Wei Ting.
+\newblock Large language models in medicine.
+\newblock {\em Nature medicine}, 29(8):1930--1940, 2023.
+
+\bibitem{tillet2019triton}
+Philippe Tillet, Hsiang-Tsung Kung, and David Cox.
+\newblock Triton: an intermediate language and compiler for tiled neural network computations.
+\newblock In {\em Proceedings of the 3rd ACM SIGPLAN International Workshop on Machine Learning and Programming Languages}, pages 10--19, 2019.
+
+\bibitem{villa2019nvbit}
+Oreste Villa, Mark Stephenson, David Nellans, and Stephen~W Keckler.
+\newblock Nvbit: A dynamic binary instrumentation framework for nvidia gpus.
+\newblock In {\em Proceedings of the 52nd Annual IEEE/ACM International Symposium on Microarchitecture}, pages 372--383, 2019.
+
+\bibitem{wang2025wlb}
+Zheng Wang, Anna Cai, Xinfeng Xie, Zaifeng Pan, Yue Guan, Weiwei Chu, Jie Wang, Shikai Li, Jianyu Huang, Chris Cai, et~al.
+\newblock Wlb-llm: Workload-balanced 4d parallelism for large language model training.
+\newblock {\em arXiv preprint arXiv:2503.17924}, 2025.
+
+\bibitem{rap}
+Zheng Wang, Yuke Wang, Jiaqi Deng, Da~Zheng, Ang Li, and Yufei Ding.
+\newblock Rap: Resource-aware automated gpu sharing for multi-gpu recommendation model training and input preprocessing.
+\newblock In {\em Proceedings of the 29th ACM International Conference on Architectural Support for Programming Languages and Operating Systems, Volume 2}, ASPLOS '24, page 964–979, New York, NY, USA, 2024. Association for Computing Machinery.
+
+\bibitem{llm_for_finance}
+Shijie Wu, Ozan Irsoy, Steven Lu, Vadim Dabravolski, Mark Dredze, Sebastian Gehrmann, Prabhanjan Kambadur, David Rosenberg, and Gideon Mann.
+\newblock Bloomberggpt: A large language model for finance.
+\newblock {\em arXiv preprint arXiv:2303.17564}, 2023.
+
+\bibitem{zheng2020ansor}
+Lianmin Zheng, Chengfan Jia, Minmin Sun, Zhao Wu, Cody~Hao Yu, Ameer Haj-Ali, Yida Wang, Jun Yang, Danyang Zhuo, Koushik Sen, et~al.
+\newblock Ansor: Generating $\{$High-Performance$\}$ tensor programs for deep learning.
+\newblock In {\em 14th USENIX symposium on operating systems design and implementation (OSDI 20)}, pages 863--879, 2020.
+
+\bibitem{9355258}
+Keren Zhou, Yueming Hao, John Mellor-Crummey, Xiaozhu Meng, and Xu~Liu.
+\newblock Gvprof: A value profiler for gpu-based clusters.
+\newblock In {\em SC20: International Conference for High Performance Computing, Networking, Storage and Analysis}, pages 1--16, 2020.
+
+\bibitem{zhou2022valueexpert}
+Keren Zhou, Yueming Hao, John Mellor-Crummey, Xiaozhu Meng, and Xu~Liu.
+\newblock Valueexpert: Exploring value patterns in gpu-accelerated applications.
+\newblock In {\em Proceedings of the 27th ACM International Conference on Architectural Support for Programming Languages and Operating Systems}, pages 171--185, 2022.
+
+\end{thebibliography}

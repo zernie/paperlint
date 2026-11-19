@@ -1,0 +1,104 @@
+% CVPR 2025 Paper Template; see https://github.com/cvpr-org/author-kit
+
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+%%%%%%%%% PAPER TYPE  - PLEASE UPDATE FOR FINAL VERSION
+% \usepackage{cvpr}              % To produce the CAMERA-READY version
+\usepackage{cvpr}      % To produce the REVIEW version
+% \usepackage[review]{cvpr} % To force page numbers, e.g. for an arXiv version
+% \usepackage[accsupp]{axessibility}
+% \usepackage{graphicx}
+% \usepackage{dsfont}
+
+\usepackage[accsupp]{axessibility}
+
+
+
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{multirow}
+\usepackage{booktabs}
+\usepackage{pifont}
+
+% \usepackage{algorithm2e}
+\usepackage{adjustbox}
+\usepackage{newfloat}
+\usepackage{listings}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\usepackage[pagebackref,breaklinks,colorlinks,allcolors=cvprblue]{hyperref}
+
+\input{preamble}
+% Import additional packages in the preamble file, before hyperref
+
+
+
+\newcommand{\tsb}{\textsubscript}
+\renewcommand{\algorithmicrequire}{\textbf{Inputs:}}
+\renewcommand{\algorithmicensure}{\textbf{Outputs:}}
+
+\definecolor{cvprblue}{rgb}{0.21,0.49,0.74}
+
+
+\newtheorem{assumption}{Assumption}
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{problem}{Problem}
+\newtheorem{remark}{Remark}
+
+% It is strongly recommended to use hyperref, especially for the review version.
+% hyperref with option pagebackref eases the reviewers' job.
+% Please disable hyperref *only* if you encounter grave issues, 
+% e.g. with the file validation for the camera-ready version.
+%
+% If you comment hyperref and then uncomment it, you should delete *.aux before re-running LaTeX.
+% (Or just hit 'q' on the first LaTeX run, let it finish, and you should be clear).
+
+
+% \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+% \newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+% \newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}}
+
+% \newcommand{\Skip}[1]{}
+% \newcommand{\paragraphTitle}[1]{\vspace{1mm}\noindent{\textbf{#1}\hspace{1mm}}}
+
+%%%%%%%%% PAPER ID  - PLEASE UPDATE
+\def\paperID{911} % *** Enter the Paper ID here
+\def\confName{CVPR}
+\def\confYear{2025}
+
+
+%%%%%%%%% TITLE - PLEASE UPDATE
+\title{Adversarial Domain Prompt Tuning and Generation for Single Domain Generalization}
+
+%%%%%%%%% AUTHORS - PLEASE UPDATE
+\author{Zhipeng Xu$^{1}$,De Cheng$^{1}$\thanks{Corresponding authors.}, Xinyang Jiang$^2$, Nannan Wang$^{1}$, Dongsheng Li$^2$, Xinbo Gao$^3$\\ 
+{$^{1}$}Xidian University, 
+{$^{2}$}Microsoft Research Asia, 
+{$^{3}$}Chongqing University of Posts and Telecommunications\\
+{\tt \small xu\_zhipeng@stu.xidian.edu.cn,  \{nnwang,dcheng\}@xidian.edu.cn}\\
+{\tt \small \{xinyangjiang, dongsli\}@microsoft.com, gaoxb@cqupt.edu.cn}}
+
+\begin{document}
+\maketitle
+
+\input{sec/0_abstract}    
+\input{sec/1_intro}
+\input{sec/2_formatting}
+\input{sec/3_finalcopy}
+{
+    \small
+    \bibliographystyle{ieeenat_fullname}
+    \bibliography{main}
+}
+
+% WARNING: do not forget to delete the supplementary pages from your submission 
+% \input{sec/X_suppl}
+
+\end{document}

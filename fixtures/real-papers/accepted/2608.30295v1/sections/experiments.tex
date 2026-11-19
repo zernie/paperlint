@@ -1,0 +1,245 @@
+\section{Experiments}
+\subsection{Setup}
+\paragraph{LLM and Benchmark}
+We employed five widely used LLMs in long-context scenarios: LLaMA-3-8B-Instruct-1048K~\cite{llama3-8b}, Phi-3-Mini-128K~\cite{phi}, Llama-3.1-8B~\cite{llama3-1}, Yi-9B-200K~\cite{yi} and Qwen2.5-7B~\cite{qwen}. The performance of \shortname was assessed on three challenging benchmarks: RULER~\cite{ruler}, LongBench~\cite{longbench}, and Needle in a Haystack (NIAH)~\cite{niah}. We built a reference set for head identification of CateKV by emulating Variable Tracking task from RULER, which is very distinct from the test set. The experiments were carried out on a single NVIDIA A100-80G GPU.
+
+\paragraph{Baselines}
+% Considering their relevance to our method and code availability, 
+We compare CateKV with eviction-based algorithms StreamingLLM~\cite{streamingllm}, SnapKV~\cite{snapkv}, PyramidKV~\cite{pyramidkv}, retrieval-based algorithms Quest~\cite{quest} and ShadowKV~\cite{shadowkv}, and the head-wise classification algorithm Duoattention~\cite{duoattention}.
+In our experiments, all approaches maintained an exact pre-filling stage and utilized sparse attention during the decoding stage.  
+We also do not perform memory optimization like ShadowKV in the accuracy comparison.
+For fairness, when comparing with the KV eviction methods and head classification methods, we maintain the same KV cache size, while comparing with KV retrieval methods, we integrate them under adaptive heads to ensure an equivalent computational budget.
+Given that Duoattention only provides attention patterns for Llama3 and Llama3.1 in the models used in our study, the comparison is restricted to these two models.
+When baselines require a chunk size, we all set it to 8 to maintain consistency.
+Further experimental details are in the Appendix~\ref{appendix-exp-detail}.
+
+
+
+
+\subsection{Effectiveness Evaluation}
+\label{acc_experiments}
+
+% \input{Tables/longbench_2}
+\subsubsection{Results on RULER}
+% We evaluated the performance of our method on the RULER benchmark with a context length of 128K. 
+In this experiment, we test 12 synthetic tasks under the context of 128K, with each task including 96 samples. To ensure a fair comparison with other baseline methods, we focus here on the task-aware setting.
+% The Common Words Extraction (CWE) task is excluded because all the models performed poorly on this task, even when utilizing full attention. 
+The results are shown in Table~\ref{tab:ruler-128k-eviction}. 
+% Notably, we set the sparse budget at 2048 (1.56\%) on all sparse heads. 
+% Specifically, we use a 40\% adaptive head ratio in \shortname and set the sparse budget of baselines to 40\% for a fair comparison.
+Specifically, in \shortname, we set the adaptive head ratio $r$ to 0.4, the retention ratio $\eta$ to 1.0 and allocate a sparse budget for consistent heads at 2048 (1.56\%), retaining approximately 41\% of the KV cache size. 
+Experimental results demonstrate that our method outperforms baselines and is comparable to full attention, despite evicting over half of the KV pairs.
+Besides, \shortname exhibits outstanding performance in complex tasks such as multi-document QA and variable tracking while maintaining high accuracy in other tasks. Due to the space limitation, we place results of more context lengths and combination with other retrieval-based methods in Appendix~\ref{appendix-ruler}.
+
+\input{Tables/longbench_3}
+
+\subsubsection{Results on LongBench}
+LongBench~\cite{longbench} is a comprehensive long-context benchmark including 6 main categories and 21 diverse tasks.
+Following ShadowKV~\cite{shadowkv}, we test samples with lengths exceeding 4096 tokens. In CateKV, we set the adaptive ratio $r$ and retention ratio $\eta$ to 0.4 and 1.0 respectively. The budget for consistent heads is set to 512.
+% Due to the high accuracy maintained with a smaller budget on the Longbench dataset, in this experiment, we combine \shortname with the query-aware retrieval method Quest and ShadowKV in adaptive heads. We compare \shortname with all baseline methods while maintaining the same computational load. The sparse budget for all heads is set to 512, which corresponds to approximately 3\% of the average length of the Longbench benchmark. 
+As shown in Table~\ref{tab:longbench_2}, CateKV enables a reduction in KV cache size to 42\% across five LLMs while maintaining an accuracy decline of no more than 0.3\% on average. 
+% In certain tasks, such as Llama3-8B, a slight improvement in performance is even observable. 
+Furthermore, when integrated with KV retrieval methods like Quest~\cite{quest} and ShadowKV~\cite{shadowkv}, CateKV facilitates a reduction in memory usage with only a minimal impact on accuracy, not exceeding a 0.2\% decrease, under the same computational budget.
+
+\begin{figure}[t!]
+\begin{center}
+    \includegraphics[width=0.5\textwidth]{Figures/niah-llama3-catekv.pdf}
+    \vspace{-0.3cm}
+    \caption{Needle In A Haystack from 20K to 1M in Llama3}
+    \label{fig:niah-llama3-catekv}
+    \vspace{-0.5cm}
+\end{center}
+\end{figure}
+
+\subsubsection{Results on Needle In A Haystack}
+As shown in Figure~\ref{fig:niah-llama3-catekv}, on the Needle In A Haystack dataset, \shortname demonstrates its robust ability to accurately identify and extract relevant information from long contexts, ranging from 20K to 1M tokens, while reducing memory and computational cost by more than half. Additional NIAH test results on other models are available in the Appendix~\ref{appendix-niah}.
+
+% \subsubsection{KV Cache Size-Accuracy Trade-Off}
+% To provide a comprehensive demonstration of our method's performance, we show CateKV under various KV cache size on the RULER-128K benchmark. In CateKV, we maintained a retention ratio of 1.0 and adjusted the overall KV cache size by tuning the adaptive head ratio. Figure~\ref{fig:ours_duo} presents the results for Llama3-8B and Llama3.1-8B. CateKV consistently outperformed Duoattention and maintained robust performance relative to full attention, affirming its effectiveness and adaptability. Notably, as shown in Tables~\ref{tab:ruler-128k-eviction} and~\ref{tab:longbench_2}, all models demonstrated performance comparable to full attention with an adaptive head ratio of 0.4. For specific models, this ratio could be reduced further; for instance, Llama3-8B maintained comparable performance to full attention at a ratio of 0.3.
+
+\input{Tables/cv_minference_quest}
+
+\subsubsection{CateKV vs. Duoattention}
+% \subsubsection{Comparison and Combination with Duoattention}
+Duoattention~\cite{duoattention} classifies attention heads into retrieval heads and streaming heads, similar to our approach. 
+For a comprehensive comparison, we evaluate \shortname against DuoAttention across varying ratios of adaptive/retrieval heads, ranging from 0.1 to 1.0.
+Figure~\ref{fig:ours_duo} shows that Duoattention's accuracy notably declines when the proportion of retrieval heads falls below 0.3. 
+In contrast, \shortname sustains performance close to full attention even when the ratio of adaptive heads decreases to 0.1.
+This discrepancy arises from the fundamental difference in attention patterns between our consistent head and their streaming head.
+The consistent head in CateKV captures similarity across different queries, whereas the streaming head primarily focuses on the coverage of initial and recent tokens.
+This essential difference enables our method to complement DuoAttention, mitigating its performance degradation at low full attention head ratios.
+To validate this, we conducted experiments presented in Table~\ref{tab:minference_quest}. Specifically, we set the retrieval head ratio in DuoAttention to 0.3, with the remaining 0.7 as streaming heads.
+In contrast, ``Duoattention w/ CateKV'' replaces part of the streaming heads with consistent heads, resulting in a 0.2 consistent head ratio and a 0.5 streaming head ratio.
+The results demonstrate that incorporating \shortname significantly improves DuoAttention’s performance at low full attention head ratios, further validating the effectiveness of our consistency pattern.
+
+\begin{figure*}[t]
+   \centering
+   \subfigure{
+    \includegraphics[width=0.45\linewidth]{Figures/efficiency_memory.pdf}
+        \label{fig:efficiency_memory}
+   }
+   \hfill
+    \subfigure{
+    \includegraphics[width=0.45\linewidth]{Figures/efficiency_latency.pdf}
+        \label{fig:efficiency_latency}
+    }
+    % \vspace{-0.3cm}
+    \caption{Comparison of decoding efficiency between \shortname and full attention. As the context length increases, both the memory usage (a) and decoding latency (b) increase linearly, but CateKV exhibits a smaller slope compared to full attention. OOM indicates that the GPU memory limit (80G) is exceeded; corresponding data is obtained by extrapolation. 
+    % Our method achieves up to 2.45$\times$ memory reduction for MHA and 1.65$\times$ for GQA models, along with up to 2.13$\times$ latency reduction for MHA and 1.5$\times$ for GQA models.
+    }
+    \vspace{-0.5cm}
+    \label{fig:efficiency_decoding}
+\end{figure*}
+
+\subsubsection{Efficient Pre-filling Methods Integration}
+\label{combination}
+% \paragraph{Compatibility with KV Retrieval Methods}
+% Since CateKV retains most KV pairs in adaptive heads, it can be seamlessly integrated with KV retrieval methods. We have combined CateKV with Quest~\cite{quest} and ShadowKV~\cite{shadowkv}, and the results are displayed in Tables~\ref{tab:longbench_2} and~\ref{tab:ruler-128k-appendix}. These results indicate that CateKV enables Quest and ShadowKV to reduce the KV cache size to 42\% while maintaining performance. In other words, the KV retrieval methods help CateKV reduce overall computational cost while preserving robust results in most tasks.
+% \paragraph{Compatibility with KV Retrieval Methods}
+% Since our method is orthogonal to other KV Retrieval approaches, it can be integrated with advanced KV Retrieval methods. 
+% For compatibility with Quest~\cite{quest}, we implemented Quest's sparse attention pattern on adaptive heads, applying the same sparse budget as used for consistent heads. 
+% Similarly, we integrated ShadowKV~\cite{shadowkv} with \shortname by applying ShadowKV to the adaptive heads.
+% The experimental results are presented in~\jc{Table~\ref{tab:longbench}.}
+% % The experimental results are summarized in Table~\ref{tab:minference_quest}.
+% Compared with the standalone \shortname, integrating \shortname with Quest or ShadowKV results in slight performance degradation but significantly reduces computational overhead. In other words, \shortname enables Quest and ShadowKV to achieve substantial memory savings.
+
+\shortname is designed to accelerate the decoding stage and can naturally integrate with prefilling acceleration methods.
+% To evaluate the compatibility of our method with such approaches, we combined \shortname with the state-of-the-art prefilling acceleration method, MInference~\cite{minference}. 
+We also combined \shortname with the efficient prefilling acceleration method, MInference~\cite{minference}, and tested it on RULER with contexts ranging from 8K to 256K.
+% Specifically, we directly replaced our prefilling stage with MInference.
+As shown in Table~\ref{tab:minference_quest}, combining \shortname with MInference does not lead to performance degradation and even a slight performance improvement has been observed.
+This shows that sequential consistency within the heads is unaffected by the pre-filling inference patterns, highlighting the robustness of our method.
+Moreover, the additional acceleration of the prefilling stage further improves the overall inference speed.
+
+
+% \paragraph{Integration with Duoattention}
+% Our method and DuoAttention categorize attention heads from different perspectives, leading to significant differences in their classifications. As illustrated in Figure~\ref{fig:ours_duo}, DuoAttention demonstrates robust performance when the retrieval head ratio is at least 50\%; however, its effectiveness markedly declines as the retrieval head ratio decreases. We have found that the consistent heads identified by our approach can further enhance DuoAttention's compression capabilities. Detailed experimental results are presented in Table~\ref{tab:minference_quest}.
+
+\subsection{Efficiency Evaluation}
+\input{Tables/efficiency}
+
+% We verify the efficiency of \shortname by evaluating the decoding latency and memory usage. 
+% All the experiments are conducted on NVIDIA A100 GPUs.
+% Overall, \shortname can achieve a 2.14$\times$reduction in memory usage and a 1.81$\times$acceleration during the decoding stage.
+To validate the efficiency of CateKV, we tested it under both single-sample and batch-sample inference scenarios.
+
+\subsubsection{Single-sample Inference}
+To evaluate the efficiency of CateKV during single-sample inference, we selected three models with different numbers of KV heads: Llama-3, Phi-3, and Yi. We compared CateKV to full attention on these models by measuring memory usage and decoding latency at the same input length. 
+We observed that memory and latency reductions increase as the context length grows (detailed in the Figure~\ref{fig:efficiency_decoding}).
+To demonstrate optimal performance, we selected the maximum input length that can be handled by full attention on a single A100 GPU. As shown in Table~\ref{tab:efficiency}, under the generic settings of $r=0.4$ and $\eta=1.0$, the Phi-3 model achieved reductions of $2.11\times$ in memory and $1.79\times$ in latency by using CateKV. By balancing efficiency and accuracy, CateKV further reduced memory usage by $2.72\times$ and decoding latency by $2.18\times$ on Llama-3, with accuracy decline on RULER-128K and Longbench tasks under 0.25\%.
+
+
+\subsubsection{Batch-sample Inference}
+Batch-sample inference is a more common scenario in real-world applications. By evicting a portion of the KV pairs, CateKV supports larger batch sizes, thereby increasing throughput. To evaluate CateKV's efficiency in batch-sample scenarios, we set each sample length to 40K and input them in batches, comparing throughput at the maximum batch size for both full attention and CateKV. The comparative results across three models are presented in Table~\ref{tab:efficiency}. With the generic settings, gains of up to $2.38\times$ in batch size and $2.25\times$ in throughput were achieved. Additionally, through further KV cache compression while maintaining accuracy, both batch size and throughput in the Llama-3 model were boosted to $4.33\times$ and $3.96\times$, respectively.
+
+\begin{figure}[t!]
+\begin{center}
+    \includegraphics[width=0.48\textwidth]{Figures/ours_duo_dark.pdf}
+    \vspace{-0.2cm}
+    \caption{Comparison of accuracy between our method and DuoAttention across different full attention head ratios.
+    % Our method maintains performance comparable to full attention at lower full attention head ratios.
+    }
+    \vspace{-0.5cm}
+    \label{fig:ours_duo}
+\end{center}
+\end{figure}
+
+% Figure~\ref{fig:efficiency_decoding} illustrates the variations in memory consumption and decoding latency of \shortname across different context lengths. 
+% In comparison to full attention, our approach demonstrates a substantial reduction in both decoding latency and memory utilization. Furthermore, these metrics exhibit a progressive decline as the context length increases, highlighting the scalability and efficiency of \shortname.
+
+% \subsubsection{Ratio of Adaptive Heads}
+% The adaptive head ratio $r$ is a pivotal control hyper-parameter that balances model accuracy and inference speed. 
+% Specifically, higher values of 
+% $r$ yield improved performance but greater decoding latency.
+% Notably, the algorithm exhibits two boundary conditions: it degenerates to a KV cache eviction algorithm when $r$ reaches 0 and transforms into a full attention mechanism implementation when $r$ attains 1.
+% To systematically analyze the impact of $r$, we evaluate the decoding latency and memory consumption of our method across a range of $r$ values. 
+% (Corresponding performance variations can be found in~\ref{ablation:r-performance}.)
+% As evidenced by the results in Figure~\ref{fig:ablation_ratio}, both decoding latency and memory usage exhibit a linear reduction as $r$ decreases.
+% Dynamically adjusting $r$ in response to specific task requirements enables optimal balancing between model performance and computational efficiency, facilitating adaptive optimization tailored to diverse application scenarios.
+% Under our settings in Table~\ref{tab:ruler-128k-eviction}, \shortname achieves maximum acceleration: 2.14$\times$ memory reduction and 1.81$\times$ latency reduction.
+
+
+
+% \paragraph{Memory Usage}
+% pass
+% \begin{figure*}[t]
+%     \centering
+%     \includegraphics[width=\linewidth]{Figures/ablation_budget.pdf}
+%     \caption{Comparison results between the models with full cache, \shortname, and Quest.}
+%     \label{fig:ablation_budget}
+% \end{figure*}
+
+% \begin{figure}[t]
+%    \centering
+%    \subfigure{
+%     \includegraphics[width=0.46\linewidth]{Figures/llama3-128k-sparse.pdf}
+%         \label{fig:budget_l3}
+%    }
+%    \hfill
+%     \subfigure{
+%     \includegraphics[width=0.46\linewidth]{Figures/llama3-128k-sparse.pdf}
+%         \label{fig:budget_l3_2}
+%     }
+%     \caption{Impact of sparse budget on (a) Llama-3-8B-1M and (b) GLM-4-9B-1M.}
+%     \vspace{-0.3cm}
+%     \label{fig:ablation_budget}
+% \end{figure}
+
+% \begin{figure}[t]
+%    \centering
+%    \subfigure{
+%     \includegraphics[width=0.46\linewidth]{Figures/ablation_needupdate.png}
+%         \label{fig:chunk_acc}
+%    }
+%    \hfill
+%     \subfigure{
+%     \includegraphics[width=0.46\linewidth]{Figures/ablation_needupdate.png}
+%         \label{fig:chunk_hitrate}
+%     }
+%     \caption{(a) Impact of chunk size on batch size and accuracy. (b) Minimal effect of chunk size on hit rate.}
+%     \vspace{-0.3cm}
+%     \label{fig:ablation_ratio}
+% \end{figure}
+
+\begin{figure*}[t]
+\begin{center}
+    \includegraphics[width=0.95\textwidth]{Figures/Ablation.pdf}
+    \vspace{-0.2cm}
+    \caption{(a) The effect of adaptive head ratio on memory and decoding latency is approximately linear. (b) Impact of retention ratio on accuracy in RULER-128K and decoding latency for 500K length input. (c) Minimal effect of sparse budget in consistent heads on accuracy.}
+    \vspace{-0.5cm}
+    \label{fig:ablation}
+\end{center}
+\end{figure*}
+
+
+\subsection{Ablation Study} 
+The ablation studies focus on three key aspects of \shortname: (1) ratio of adaptive heads, (2) retention ratio in the adaptive head, and (3) sparse KV cache budget in the consistent head.
+% More ablation studies about different identification methods are in the appendix~\ref{different_methods_ablation}.
+All experiments are conducted on the RULER-128K datasets using the Llama-3-8B-1M model.
+
+\subsubsection{Ratio of Adaptive Heads}
+\label{ablation:r-performance}
+The ratio of adaptive heads $r$ is a crucial hyperparameter balancing accuracy and inference speed. As shown in Figure~\ref{fig:ours_duo}, the relationship between $r$ and model performance does not exhibit a perfect inverse correlation. 
+Rather, the performance remains relatively stable with decreasing $r$ until reaching a critical threshold ($\approx$0.2), beyond which significant degradation occurs due to excessive reliance on critical tokens during the prefilling stage. In terms of efficiency, as shown in Figure~\ref{fig:ablation}(a), both memory usage and decoding latency decrease almost linearly with decreasing $r$.
+
+% Notably, optimal performance is typically achieved around 
+% $r=0.4$, indicating that moderate KV cache sparsification can be beneficial for enhancing model performance while improving efficiency.
+
+\subsubsection{Retention Ratio in Adaptive Head}
+In adaptive heads, there is still a subset of tokens that are always not important.
+This enables a reduction in the proportion of the KV cache retained within adaptive heads. Figure~\ref{fig:ablation}(b) illustrates the impact of changes in the retention ratio $\eta$ on accuracy and latency.
+When $\eta$ exceeds a certain threshold ($\approx$0.6), the model maintains or even surpasses the performance achieved with the full KV cache. 
+However, dropping below this threshold results in a significant performance decline, indicating that adaptive heads heavily depend on the majority of the KV cache. Additionally, a decrease in $\eta$ leads to a linear reduction in latency.
+In practical applications, it is essential to adjust both $r$ and $\eta$ to balance accuracy and memory consumption.
+
+\subsubsection{Sparse Budget in Consistent Head}
+
+As illustrated in Figure~\ref{fig:ablation}(c), \shortname demonstrates strong robustness across different sparse budgets. Under the settings of $r=0.4$ and $\eta=1.0$, even when the sparse budget in the consistent head is reduced to approximately 0.78\% (1024), CateKV still maintains comparable performance to full attention in terms of average accuracy. 
+ This indicates that, during inference, the consistent head only requires a minimal portion of the cache to perform its function, while the acquisition of global information relies primarily on adaptive heads, which retain the majority of KV pairs during the decoding stage. Since the sparse budget for the consistent head is a small fraction of the total cache, its impact on memory usage and inference latency is negligible.
+% As illustrated in Figure~\ref{fig:ablation_budget}, \shortname presents strong robustness across different sparse budgets, consistently outperforming SOTA baselines.
+% Our method can achieve comparable or even superior performance with full attention under most settings.
+% Experimental observations reveal that all sparse methods are characterized by a critical sparse budget threshold, beyond which substantial performance deterioration occurs.
+% It can be observed that the proposed method achieves a lower critical sparse budget threshold, which can be attributed to its adaptive heads that preserve full attention in the decoding stage.
+
+
+% In this ablation study, we maintain the sparse budget size consistent with that described in Section~\ref{acc_experiments}.

@@ -1,0 +1,125 @@
+\documentclass[letterpaper,twocolumn,10pt]{article}
+\usepackage{usenix-2020-09}
+
+\usepackage[ruled, lined, linesnumbered, commentsnumbered, noend, longend]{algorithm2e}
+
+\usepackage{xspace}
+\usepackage{tikz}
+\usepackage{amsmath}
+
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.16}
+
+\usepackage{subcaption}
+
+\usepackage{xcolor}
+% \usepackage{color}
+\usepackage{booktabs}
+% \usepackage{listings}
+\usepackage{url}
+\usepackage[subtle]{savetrees}
+
+\usepackage{makecell}
+\usepackage{array}
+\renewcommand\theadalign{lc}
+\renewcommand\theadfont{\bfseries}
+\renewcommand\theadgape{\Gape[4pt]}
+\renewcommand\cellgape{\Gape[4pt]}
+
+\usepackage[capitalise,nameinlink]{cleveref}
+\crefname{algorithm}{Algorithm}{Algorithms}
+\Crefname{algorithm}{Algorithm}{Algorithms}
+\crefname{section}{\S\!}{\S\S\!}
+\Crefname{section}{Section}{Sections}
+\crefname{figure}{Figure}{Figures}
+\Crefname{figure}{Figure}{Figures}
+\crefname{equation}{Equation}{Equations}
+\Crefname{equation}{Equation}{Equations}
+\crefname{listing}{Listing}{Listings}
+\Crefname{listing}{Listing}{Listings}
+\crefname{defn}{definition}{definitions}
+
+\usepackage[inline]{enumitem}
+\newlist{inlist}{enumerate*}{1}
+\setlist[inlist]{label=\textbf{(\arabic*)}}
+
+% for handling multiple authors easily
+\usepackage{authblk}
+
+\newcommand{\mashup}{\textsc{MashUp}\xspace}
+\newcommand{\bsic}{\textsc{BSIC}\xspace}
+\newcommand{\resail}{\textsc{RESAIL}\xspace}
+\newcommand{\sail}{\textsc{SAIL}\xspace}
+\newcommand{\dxr}{\textsc{DXR}\xspace}
+\newcommand{\hibst}{\textsc{Hi-BST}\xspace}
+\newcommand{\cram}{\textsc{CRAM}\xspace}
+
+%-------------------------------------------------------------------------------
+\begin{document}
+%-------------------------------------------------------------------------------
+
+%don't want date printed
+\date{}
+
+% make title bold and 14 pt font (Latex default is non-bold, 16 pt)
+\title{\vspace{-7em}\Large \bf Scaling IP Lookup to Large Databases using the CRAM Lens\vspace{-1em}}
+
+\makeatletter
+\renewcommand\AB@affilsepx{\quad\qquad\protect\Affilfont}
+\makeatother
+\setlength{\affilsep}{0.8em}
+\renewcommand\Affilfont{\itshape}
+\renewcommand\Authands{\qquad}
+\renewcommand\Authsep{\qquad}
+\author[1]{Robert Chang}
+\author[1]{Pradeep Dogga}
+\author[2]{Andy Fingerhut}
+\author[1]{Victor Rios}
+\author[1]{George Varghese}
+\affil[1]{University of California, Los Angeles}
+\affil[2]{Cisco Systems}
+
+\maketitle
+
+% suppress page numbers
+% \pagestyle{empty}
+
+%-------------------------------------------------------------------------------
+\begin{abstract}
+%-------------------------------------------------------------------------------
+
+Wide-area scaling trends require new approaches to Internet Protocol (IP) lookup, enabled by modern networking chips such as Intel Tofino~\cite{intel_tofino}, AMD Pensando~\cite{amd_pensando}, and Nvidia BlueField~\cite{nvidia_bluefield}, which provide substantial ternary content-addressable memory (TCAM) and static random-access memory (SRAM). However, designing and evaluating scalable algorithms for these chips is challenging due to hardware-level constraints. To address this, we introduce the \cram~(CAM+RAM) lens, a framework that combines a formal model for evaluating algorithms on modern network processors with a set of optimization idioms. We demonstrate the effectiveness of \cram by designing and evaluating three new IP lookup schemes: \resail, \bsic, and \mashup. \resail enables Tofino-2 to scale to 2.25 million IPv4 prefixes---likely sufficient for the next decade---while a pure TCAM approach supports only 250k prefixes, just 27\% of the current global IPv4 routing table. Similarly, \bsic scales to 390k IPv6 prefixes on Tofino-2, supporting 3.2 times as many prefixes as a pure TCAM implementation. In contrast, existing state-of-the-art algorithms, \sail~\cite{sail} for IPv4 and \hibst~\cite{hibst} for IPv6, scale to considerably smaller sizes on Tofino-2.
+
+\end{abstract}
+
+\input{sections/introduction.tex}
+\input{sections/cram}
+\input{sections/resail}
+\input{sections/bsic}
+\input{sections/mashup}
+\input{sections/results}
+\input{sections/scalability}
+\input{sections/cram_model_evaluation}
+\input{sections/related}
+\input{sections/conclusion}
+
+% \vspace{-\baselineskip}
+
+%-------------------------------------------------------------------------------
+\section*{Acknowledgments}
+%-------------------------------------------------------------------------------
+
+We thank our shepherd, Xiaoqi Chen, and the anonymous reviewers for their valuable feedback. We are also grateful to David Maltz and Vladimir Gurevich for their guidance. This research was supported in part by NSF grant CNS-2333587.
+
+%-------------------------------------------------------------------------------
+% \vspace{-\baselineskip}
+
+\bibliographystyle{plain}
+\bibliography{reference}
+
+\clearpage
+\input{sections/appendix}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

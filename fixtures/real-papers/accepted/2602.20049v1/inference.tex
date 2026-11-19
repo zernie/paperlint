@@ -1,0 +1,268 @@
+% !TEX root = ./main.tex
+
+
+
+\section{Compilation and Inference Algorithm}\label{sec:inference}
+This section describes the inference algorithm for closed and well-formed \NDICE programs in several steps.
+First, we describe how \NDICE expressions and programs are compiled into Boolean formulas. 
+Afterwards, we demonstrate how these formulas can be used to represent the behavior of the compiled expression as an \textit{Algebraic Decision Diagram} (ADD).
+We then lift this ADD to a \textit{Markov Decision Process} (MDP) and relate the semantics of the original \NDICE expression to conditional reachability properties on this MDP.
+
+\subsection{Compilation of \NDICE Expressions to Boolean Formulas}\label{sec:nDice_comp}
+
+	\noindent
+	We will now present how the \DICE compilation procedure from \Cref{sec:prelims_Dice} can be extended to compile \NDICE expressions.
+	In this extended compilation process, a \emph{compilation judgment} for a \NDICE expression $e$ has the form $\Gamma \vdash e \colon \tau \leadsto (\dot{\varphi},\, \gamma,\, t)$.  
+	Here, the model formula $\dot{\varphi}$ and accepting formula $\gamma$ are unchanged compared to the $\DICE$ compilation.
+	However, since nondeterministic behavior depends on the order of flip operations, an \textit{unordered} set of weights is no longer sufficient.
+	We thus compile an annotated trace of flips $t$, which both tracks the order of the flips in $e$ and stores their behavior.
+	To do so, $t$ is a list of pairs $f_i\colon a_i$, where $f_i$ is the Boolean variable which represents a flip and the label $a_i$ denotes the flip's behavior:
+	We use $a_i = n$ if $f_i$ belongs to a nondeterministic flip, and $a_i = p$ if $f_i$ represents a probabilistic flip $\FLIP{p}$.
+	
+	The rules for \NDICE compilation of expressions can be found in \Cref{nDice Compilation}, and they are largely identical to the rules for \DICE~\cite{holtzen2020scaling} as seen in \Cref{fig:dice_Comp}.
+	However, there are two notable changes:
+	For one, there is an additional rule \texttt{nC-NFlip} to compile $\NFLIP$ statements. 
+	This rule behaves fully analogous to the rule for probabilistic flips, but the boolean variable $f$ is now annotated with an $n$ to mark that it corresponds to a nondeterministic flip.
+	Secondly, all rules now consider a trace of literals instead of a set of weights, which has little effect on most rules.
+	However, when compiling a let-statement with the rule \texttt{nC-Let}, the trace of flips has to concatenate the trace for $e_1$ \textit{before} the trace for $e_2$ to capture the order of flip-operations.
+	As for if-statements, the traces for the branches are combined by simply concatenating them, but any interleaving of the traces would be sound as long as the order of the individual sub-traces is preserved.
+
+
+
+%
+%
+%\noindent%
+%
+%
+\begin{figure}
+	\begin{center}
+		\begin{adjustbox}{max width=\textwidth}
+			\renewcommand{\arraystretch}{3.2}
+			\begin{tabular}{c c}
+				
+				%value 
+				\inference[\ifthenelse{\boolean{showRuleNames}}{\texttt{(nC-Val)}}{}]
+				{}{  \Gamma \vdash v \colon \tau \leadsto (v, \TRUE, [])}
+				&
+				
+				%Variable
+				\inference[\ifthenelse{\boolean{showRuleNames}}{\texttt{(nC-Ident)}}{}]
+				{\Gamma(x) = \tau}{  \Gamma \vdash x \colon \tau \leadsto (F_\tau(x), \TRUE, [])}
+				\\
+				
+				%flip
+				\inference[\ifthenelse{\boolean{showRuleNames}}{\texttt{(nC-Flip)}}{}]
+				{\text{variable $f$ fresh}}{  \Gamma \vdash \FLIP{\theta} \colon \BOOL \leadsto (f, \TRUE, [f\colon \theta])}
+				&
+				
+				%nflip
+				\inference[\ifthenelse{\boolean{showRuleNames}}{\texttt{(nC-NFlip)}}{}]
+				{\text{variable $f$ fresh}}{  \Gamma \vdash \NFLIP \colon \BOOL \leadsto (f, \TRUE, [f\colon n])}
+				\\
+				
+				%tuple construction
+				\inference[\ifthenelse{\boolean{showRuleNames}}{\texttt{(nC-Tup)}}{}]
+				{\Gamma(x_1) = \tau_1 \qquad \Gamma(x_2) = \tau_2}{  \Gamma \vdash (x_1, x_2) \colon \tau_1 \times \tau_2 \leadsto ((F_{\tau_1}(x_1), F_{\tau_2}(x_2)) , \TRUE, [])}
+				&
+				
+				%observe
+				\inference[\ifthenelse{\boolean{showRuleNames}}{\texttt{(nC-Obs)}}{}]
+				{\Gamma \vdash \AEXP \colon \BOOL \leadsto (\varphi, \TRUE, [])}
+				{  \Gamma \vdash \OBSERVE{\AEXP} \colon \BOOL \leadsto (\TRUE, \varphi, [])}
+				\\
+				
+				%first
+				\inference[\ifthenelse{\boolean{showRuleNames}}{\texttt{(nC-Fst)}}{}]
+				{\Gamma(x) = \tau_1 \times \tau_2}
+				{ \Gamma \vdash \FST x \colon \tau_1 \leadsto (F_{\tau_1}(x_l), \TRUE, [])}
+				&
+				
+				%second
+				\inference[\ifthenelse{\boolean{showRuleNames}}{\texttt{(nC-Snd)}}{}]
+				{\Gamma(x) = \tau_1 \times \tau_2}
+				{ \Gamma \vdash \SND x \colon \tau_1 \leadsto (F_{\tau_2}(x_r), \TRUE, [])}
+				\\
+				
+				\multicolumn{2}{c}{
+					%if
+					\inference[\ifthenelse{\boolean{showRuleNames}}{\texttt{(nC-ITE)}}{}]
+					{\Gamma \vdash \AEXP \colon \BOOL \leadsto (\varphi_g, \TRUE, []) 
+						\qquad \Gamma \vdash e_T \colon \tau \leadsto (\dot{\varphi}_T, \gamma_T, t_T) 
+						\qquad \Gamma \vdash e_F \colon \tau \leadsto (\dot{\varphi}_F, \gamma_F, t_F)}
+					{  \Gamma \vdash \ITE{\AEXP}{e_T}{e_F} \colon \tau \leadsto \left( 
+						(\varphi_g \overset{\tau}{\land} \dot{\varphi}_T) \overset{\tau}{\lor} (\overline{\varphi}_g \overset{\tau}{\land} \dot{\varphi}_F), \;
+						(\varphi_g \land \gamma_T) \lor (\overline{\varphi}_g \land \gamma_F) ,\;
+						t_T \,@\, t_F \right)}
+				}\\
+				
+				\multicolumn{2}{c}{
+					%let
+					\inference[\ifthenelse{\boolean{showRuleNames}}{\texttt{(nC-Let)}}{}]
+					{\Gamma \vdash e_1 \colon \tau_1 \leadsto (\dot{\varphi}_1, \gamma_1, t_1) \qquad 
+						\Gamma \cup \{x \mapsto \tau_1 \} \vdash e_2 \colon \tau_2 \leadsto (\dot{\varphi}_2, \gamma_2, t_2)}
+					{  \Gamma \vdash\LET{x = e_1}{e_2} \colon \tau_2 \leadsto \left(
+						\dot{\varphi}_2[x\overset{\tau_1}{\mapsto} \dot{\varphi}_1], \;
+						\gamma_1 \land \gamma_2[x\overset{\tau_1}{\mapsto} \dot{\varphi}_1],\;
+						t_1 \,@\, t_2 \right)}
+				}
+				
+			\end{tabular}
+		\end{adjustbox}
+	\end{center}
+	\caption{\NDICE Compilation rules for expressions. These assume, without loss of generality but for simplicity, that fst, snd, and tuple construction are only ever performed with identifiers as arguments.}
+	\label{nDice Compilation} 
+\end{figure}%
+%
+%
+%
+
+\begin{example}
+	As an example, consider the following expression and its compilation judgment:
+	\begin{align*}
+		\LET{x = \FLIP{\tfrac{2}{3}}}{\LET{y = \NFLIP}{\LET{z = \OBSERVE{x \lor y}}{(x \land y,\, y)}}}  \tag{ExComp}\label{ExComp} \\
+		\{\}\vdash \text{\ref{ExComp}} \colon \BOOL \times \BOOL \leadsto \left((f_1 \land f_2,\, f_2),\; f_1 \lor f_2,\; \left[f_1\colon {\tfrac{2}{3}},\, f_2\colon n \right]\right)
+	\end{align*}
+	In the compilation result, $f_1$ represents the first flip, which is probabilistic, and $f_2$ represents the second flip, which is nondeterministic.
+	This behavior (along with the order of the flips) is stored in the trace $\left[ f_1 \colon {\tfrac{2}{3}}, \; f_2\colon n\right]$.
+	The model formula $(f_1 \land f_2,\, f_2)$ represents the output of the compiled expression, and each component of the model formula describes the behavior of the corresponding component in the output of \ref{ExComp}.
+	Finally, the accepting formula $f_1 \lor f_2$ encodes the only observe statement in \ref{ExComp}, hence if $f_1 \lor f_2$ is satisfied, then all observations in \ref{ExComp} succeed.
+	\hfill$\triangleleft$
+\end{example}
+
+
+\paragraph{Compilation of Functions and Programs}
+We are not discussing the compilation rules for \NDICE programs at this point, since they are fully identical to the rules from \DICE~\cite{holtzen2020scaling}.
+Furthermore, programs are still compiled to triples of the form $(\dot{\varphi}, \gamma, t)$, thus all subsequent inference steps are identical between the inference process for expressions and programs.
+For completeness, rules for functions and programs are given in \ext{\Cref{app:function_comp}}{the extended version \citeExtended}.
+
+
+
+
+
+\subsection{Algebraic Decision Diagrams}\label{sec:ndice_add}
+This section presents how the previously compiled Boolean formulas can be used to build a decision diagram which compactly represents the compiled program.
+Thereafter, we will enrich this decision diagram to an MDP on which we then do inference.
+
+Consider a compilation judgment $\{\} \vdash e \colon \tau \leadsto (\dot{\varphi}, \gamma, t)$ for a closed \NDICE expression $e$. 
+Our aim is now to use the compilation result $(\dot{\varphi}, \gamma, t)$ to define a function $(\dot{\varphi} \,|\, \gamma)_t\colon \BOOL^{len(t)}\rightarrow \llbracket\tau \rrbracket \, \cup \{R\}$, which mimics the behavior of $e$ for any given outcome of the flip operations in $e$. 
+Here, the notation $\llbracket\tau \rrbracket$ refers to the set of all values of type $\tau$.
+
+As a first observation, notice that if we assign either $\TRUE$ or $\FALSE$ to each flip operation in $e$,  then $e$ evaluates to a single value $v\in \llbracket\tau \rrbracket$ (assuming all observations in $e$ would succeed).
+Similarly, we can assign $\TRUE$ or $\FALSE$ to each variable in $\dot{\varphi}$ to evaluate $\dot{\varphi}$ to a value $v\in \llbracket\tau \rrbracket$.  
+Notably, for closed expressions each variable in $\dot{\varphi}$ and $\gamma$ corresponds to a flip statement in $e$, and hence each assignment to flips in $e$ defines an assignment to the variables in  $\dot{\varphi}$ and $\gamma$ and vice versa.
+Now, given any assignment to flip operations in $e$, we thus want the function $(\dot{\varphi} \,|\, \gamma)_t$ to return the same value $v\in \llbracket \tau \rrbracket$ as $e$ if all observations in $e$ would succeed, and otherwise $(\dot{\varphi} \,|\, \gamma)_t$ should return $R$ to denote a "rejected" run.
+
+
+Second of all, the function $(\dot{\varphi} \,|\, \gamma)_t$ takes a vector of Boolean values $(b_1,\dots,b_k) \colon \BOOL^k$ with $k=len(t)$ as input.
+Thus, we need to define how $\gamma$ and $\dot{\varphi}$ are evaluated with a vector $(b_1,\dots,b_k)$ before we define the function $(\dot{\varphi} \,|\, \gamma)_t$.
+In particular, we need to decide which variable in $\gamma$ and $\dot{\varphi}$ is substituted with which Boolean value $b_i$.
+To this end, we use the trace of flips $t$ and substitute the $i$-th flip $f_i$ from $t$ with $b_i$, written as $\gamma \statesubst{f_i}{b_i}$.
+The Boolean formulas resulting from these substitutions are ground, and can be evaluated to a Boolean value.
+Thus, the Boolean formula $\gamma$ represents a function of type $\BOOL^k\rightarrow \BOOL$, and the tuple of Boolean formulas $\dot{\varphi}$ can be evaluated recursively as a function of type $\BOOL^k\rightarrow \tau$:
+%
+\begin{align*}
+\gamma (b_1,\dots,b_k) &\coloneqq \gamma\statesubst{f_1}{b_1}\dots\statesubst{f_k}{b_k}\\
+ \left(\dot{\varphi}_1,\; \dot{\varphi}_2\right)(b_1,\dots,b_k) &\coloneqq \left(\dot{\varphi}_1 (b_1,\dots,b_k), \;\dot{\varphi}_2(b_1,\dots,b_k)\right)
+\end{align*}
+We can now combine the two formulas into a function $(\dot{\varphi} \,|\, \gamma)_t \colon \BOOL^k\rightarrow \tau\, \cup \{R\}$ by mimicking the behavior of \NDICE expressions:
+If $\gamma$ returns \TRUE, then all observations succeeded and we return the output of $\dot{\varphi}$.
+If $\gamma$ returns \FALSE, then an observation failed and the run will be rejected, so we return the special value $R$.
+Formally, we define this as:
+$$ (\dot{\varphi} \,|\, \gamma)_t (b_1,\dots,b_k)\coloneqq \begin{cases}
+	\dot{\varphi} (b_1,\dots,b_k), & \text{if } \gamma(b_1,\dots,b_k) = \TRUE\\
+	R, & \text{if } \gamma(b_1,\dots,b_k) = \FALSE
+\end{cases}$$%
+Once this \enquote{guarding} operator $(\cdot \,|\, \cdot)$ is defined, the ADD for $(\dot{\varphi} \,|\, \gamma)_t$ can be constructed from decision diagrams for $\dot{\varphi}$ and $\gamma$ using generic algorithms \cite{fujita1997multi}.
+Thus, we can represent $(\dot{\varphi} \,|\, \gamma)_t$ as an ADD, and if an ADD %$\mathcal{A}$ 
+uses the variable order defined by $t$ and represents $(\dot{\varphi} \,|\, \gamma)_t$, then we call it an ADD for the compiled formulas $(\dot{\varphi}, \gamma, t)$.
+If an ADD for $(\dot{\varphi}, \gamma, t)$ is a reduced ADD, then we call it the reduced ADD for $(\dot{\varphi}, \gamma, t)$.
+
+\begin{remark}[Permissible Variable Orderings]
+	As mentioned in \Cref{sec:prelims_ADD}, the variable ordering which is used during construction has a stark effect on the size of the ADD.
+	This appears to call for experiments with different variable orderings to speed up inference, as was done for \DICE \cite{cheng2021flip}.
+	However, changing the variable order amounts to changing the order of flips, which can alter the semantics of a \NDICE expression.
+	In fact, variable orders have to adhere to the natural program order to be sound for inference, and the trace $t$ provides one such order. 
+	\hfill $\triangleleft$
+\end{remark}
+
+\subsection{Lifting ADDs to Markov Decision Processes}\label{sec:MDP_inf}
+
+Given a \NDICE expression $e$ which compiles to a triple $(\dot{\varphi}, \gamma, t)$, the last part of the inference process is to lift the previously constructed ADD for $(\dot{\varphi}, \gamma, t)$ to an MDP by re-introducing the behavior of the individual flip operations into the ADD.
+To do so, we consider the variable stored in an inner ADD node, and determine the behavior of the corresponding flip operation by retrieving the annotated variable from the trace $t$.
+The ADD node will then be modeled by an MDP state, which behaves either probabilistic or nondeterministic depending on the nature of the flip operation.
+Afterwards, the reachability probabilities in this lifted MDP will align with the probabilities that the compiled expression $e$ returns a given value.
+
+We define the \textit{unnormalized} MDP $\mathcal{M}^u = (S, s_{init}, \mathit{Act}, P, AP, L)$ lifted from an ADD $\mathcal{A} = (V, T, r, E)$ for $(\dot{\varphi}, \gamma, t)$ as follows: 
+We define $S = V \cup T$ as the set of nodes of the ADD, $s_{init}$ as the root $r$ of the ADD, $\mathit{Act} = \{l, r, d\}$ and we define the transition relation as follows:
+\begin{itemize}
+	\item If $s \in T$ was lifted from a terminal node, then we only have the transition $s\xrightarrow{d, 1} s$
+	\item If $s\in V$ was lifted from an inner node with probabilistic variable $f$ with $(f\colon \theta) \in t$, then we have the transitions $s\xrightarrow{d, \theta} \mathit{then}(s)$ and $s\xrightarrow{d, 1 - \theta} \mathit{else}(s)$
+	\item If $s\in V$ was lifted from an inner node with nondeterministic variable $f$ with $(f\colon n) \in t$, then we have the transitions $s\xrightarrow{l, 1} \mathit{then}(s)$ and $s\xrightarrow{r, 1} \mathit{else}(s)$
+\end{itemize}
+Above, we re-use the notations $\mathit{then}(s)$ and $\mathit{else}(s)$ to refer to the MDP state lifted from the respective ADD successor node.
+We define $AP = \llbracket\tau \rrbracket \cup \{A, R\}$, and we define the labeling function $L$ as follows:
+$$L(s) = \begin{cases}
+	\{v, A\} &, \text{$s$ lifted from a terminal node with value $\mathit{val}(s) = v \neq R$}\\
+	\{R\} &, \text{$s$ lifted from a terminal node with value $\mathit{val}(s) = R$}\\
+	\emptyset & \text{otherwise}
+\end{cases}$$
+Here, states which were lifted from terminal nodes for values $v\in \llbracket\tau \rrbracket$ are labeled with their corresponding output in the ADD and the proposition $A$ to model an accepted run.
+States lifted from terminal nodes containing the value $R$ are labeled with the proposition $R$.
+
+Now consider some \NDICE expression $e$ with $\{\} \vdash e \colon \tau \leadsto (\dot{\varphi}, \gamma, t)$, as well as the unnormalized MDP $\mathcal{M}^u_e$ lifted from an ADD for $(\dot{\varphi}, \gamma, t)$.
+One can prove that the \textit{unnormalized} semantics of $e$ are closely related to reachability probabilities in $\mathcal{M}^u_e$.
+However, the central inference question for PPLs is to infer the behavior of the program under the condition that all observations succeeded, which corresponds to the \textit{normalized} semantics of $e$.
+Hence, we are not interested in the likelihood to just reach a particular value $v$, but we are instead interested in the likelihood to reach a particular $v$ under the condition that all observations pass, as modeled by reaching any state labeled with $A$.
+
+We are thus interested in the conditional reachability probability $Pr^{max}_{\mathcal{M}^u_e} (\lozenge v \;|\; \lozenge A)$.
+As discussed at the end of \Cref{sec:prelims_MDP}, there are two approaches to determine these conditional probabilities:
+The reduction to ordinary reachability properties by \citet{baier2014computing}, and the recent, bisection-based approach implemented by the Storm Model Checker \citeBisection.
+We will be using the bisection-based algorithm, as it is highly suited for our specific use-case.
+Namely, the algorithm is very efficient on acyclic MDPs, as our MDPs naturally are.
+Furthermore, the runtime of the algorithm is agnostic to the probability of an accepting run, hence the runtime of the inference process will be unaffected by conditioning with rare events.
+This is a desirable trait, since inference engines commonly struggle to infer probabilities which are conditioned by low-probability observations.
+
+
+ 
+ \subsection{Soundness}
+ It is now time to formally consider the connection between the semantics of a $\NDICE$ program $p$ and the unnormalized MDP lifted from its compiled Boolean formulas.
+ In practice it is infeasible to infer all distributions in $\llbracket p \rrbracket_D$, and thus we provide an upper bound for their behavior instead.
+ Formally, we show that the maximal probability to terminate with a value $v$ among all distributions in $\llbracket p \rrbracket_D$ is equal to the maximal conditional probability to reach a state labeled with $v$ in the unnormalized MDP lifted from the compiled formulas of $e$:
+
+\begin{theorem}[Inference Soundness]\label{ProgramSoundness}
+	Let $p$ be a \NDICE program  
+	%with free variables $x_1,\dots,x_n$ 
+	and let $\{\}, \{\} \vdash p \colon \tau \leadsto (\dot{\varphi}, \gamma, t)$. 
+	Then the reduced ADD for $(\dot{\varphi}, \gamma, t)$ can be lifted to an unnormalized MDP $\mathcal{M}_p$ so that:
+	$$ Pr^{max}_{M_p} (\lozenge v \,|\, \lozenge A) = \max \left\{d(v) \,|\, d \in \llbracket p\rrbracket^{\{\}}_D\right\}$$
+\end{theorem}
+\begin{proof}
+	 \ext
+	 {See \Cref{ProgramAppendix}, where the theorem is restated as \Cref{app:ProgramSoundness}.}
+	 {We refer to the extended version \citeExtended.}
+\end{proof}
+%
+%
+\noindent%
+%
+%
+The theorem above refers to the \textit{reduced} ADD for the formulas, meaning we may use the smallest ADD.
+Still, the construction of this ADD is PSPACE-hard \cite{holtzen2020scaling}, and the final ADD itself may be exponentially large in the number of flip operations in the expression.
+Additionally, we then still need to lift the ADD to an MDP and determine the necessary reachability probabilities.
+Lifting the ADD to an MDP can be done in a single pass, while determining conditional reachability probabilities takes polynomial time relative to the MDP's size \cite{puterman2014markov, baier2014computing}.
+
+On paper, this makes \NDICE inference very expensive.
+However, \citet{holtzen2020scaling} show how the \DICE compilation naturally exploits structural properties like conditional independence, determinism or context-specific independence to build compact BDDs quickly.
+\NDICE reuses the compilation of \DICE, and thus \NDICE exploits the same program structures for compact ADDs.
+While we refer to \citet{holtzen2020scaling} for details on structures exploited by \DICE, we still want to briefly review one central source of efficiency for \DICE and \NDICE: Conditional independence. 
+
+
+Intuitively, variables $x$ and $y$ are conditionally independent given $z$, if the behavior of $x$ does not depend on $y$ if a value for $z$ has been fixed.
+Programs contain conditional independence naturally since it arises from constructs like \texttt{let} statements or function calls, as seen in the introductory program from \Cref{fig:plane}:
+Here, all calls to \texttt{step} are conditionally independent of each other given their return values.
+After all, subsequent function calls and the behavior of the program only depend on the functions output.
+Hence, all intermediate values, like e.g. the flip operations in the \texttt{move} function, are conditionally independent of each other given the output of \texttt{step}.
+This conditional independence prevents an exponential blow-up during the ADD construction, as each function call only adds another conditionally independent \enquote{layer} of nodes.
+
+
+

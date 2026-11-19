@@ -1,0 +1,52 @@
+
+\begin{table}[t!]
+\renewcommand{\arraystretch}{0.98}
+\centering
+\resizebox{0.83\columnwidth}{!}{
+\begin{tabular}{lccc}
+\toprule
+Category & DocVQA & CORD & FUNSD \\
+\midrule
+Baseline  & 0.4959 (7) & 0.5390 (5) & 0.5577 (6) \\
+\hline
+\textsc{Revise}$_{meta}$ & \textbf{0.5137} (1)& \textbf{0.5443} (1)    & \textbf{0.5647} (1)\\
+% \hdashline  
+\textit{only} Column   & 0.4849 (8)& 0.5361 (6)& 0.5620 (2)\\
+\textit{only} Deletion & 0.4960 (6)& 0.5346 (7)& 0.5603 (3)\\
+\textit{only} Insertion & 0.5019 (3)& 0.5390 (5)& 0.5538 (8)\\
+\textit{only} Substitution  & 0.4992 (5)& 0.5402 (3)& 0.5566 (7)\\
+\textit{only} Segmentation  & 0.5096 (2)& 0.5408 (2)& 0.5601 (4)\\
+\textit{only} Transposition & 0.5008 (4)& 0.5398 (4)& 0.5583 (5)\\
+\bottomrule
+\end{tabular}
+}
+\caption{BERTScore performance on query–document pairs for DocVQA, CORD, and FUNSD}
+\label{bertscore}
+\end{table}
+
+
+
+% \begin{table}[t!]
+% \renewcommand{\arraystretch}{0.98}
+% \centering
+% \resizebox{0.83\columnwidth}{!}{
+% \begin{tabular}{lccc}
+% \toprule
+% Category & DocVQA & CORD & FUNSD \\
+% \midrule
+% Baseline  & 0.4959 (7) & 0.5390 (5) & 0.5577 (6) \\
+% \hline
+% \textsc{Revise\textsubscript{meta}} & \textbf{0.5137} (1)& \textbf{0.5443} (1)    & \textbf{0.5647} (1)\\
+% \hdashline[0.8pt/1.2pt]
+% \textit{only} Column   & 0.4849 (8)& 0.5361 (6)& 0.5620 (2)\\
+% \textit{only} Deletion & 0.4960 (6)& 0.5346 (7)& 0.5603 (3)\\
+% \textit{only} Insertion & 0.5019 (3)& 0.5390 (5)& 0.5538 (8)\\
+% \textit{only} Substitution  & 0.4992 (5)& 0.5402 (3)& 0.5566 (7)\\
+% \textit{only} Segmentation  & 0.5096 (2)& 0.5408 (2)& 0.5601 (4)\\
+% \textit{only} Transposition & 0.5008 (4)& 0.5398 (4)& 0.5583 (5)\\
+% \bottomrule
+% \end{tabular}
+% }
+% \caption{BERTScore performance on query--document pairs for DocVQA, CORD, and FUNSD}
+% \label{bertscore}
+% \end{table}

@@ -1,0 +1,289 @@
+\appendix
+\section{Related Work} \label{app:related}
+Off-policy evaluation (OPE) and learning (OPL) have gained particular attention in contextual bandit settings as they offer a safe and cost-efficient alternative to online A/B testing ~\citep{mehrotra2018towards,gilotte2018offline,saito2021evaluating,kiyohara2024towards} and are of high practical relevance. While several practical estimators and policy gradient methods (most of which are based on importance weighting) already exist ~\citep{saito2021counterfactual,uehara2022review,dudik2014doubly,wang2017optimal,su2020doubly} for each of OPE or OPL, the effectiveness of these methods can decline in challenging but realistic scenarios. First, high bias may occur when the logging policy fails to satisfy the common support condition~\citep{sachdeva2020off}, which becomes even more severe when the logging policy is deterministic or when there are new actions. Several recent works have addressed violations of common support (also known as support deficiency) by exploiting additional information about actions, restricting the action space, applying reward extrapolation, or limiting the policy space, but they cannot handle deterministic logging policies or entirely new actions \citep{felicioni2022off, sachdeva2020off}. It may also be helpful to use some structure in the action or reward space to relax the common support requirement, as explored by \cite{saito2022off,saito2023off,cief2024learning,taufiq2024marginal,sachdeva2024off,kiyohara2024off}. For example, \cite{saito2022off} leverage additional information about the actions in the form of action embeddings, and \cite{kiyohara2023off} define importance weights in a low-dimensional slate abstraction space. However, this useful structure is not always learnable.
+In addition, existing estimators and methods based on importance weighting face significant variance issues, particularly when the logged dataset is small and the action space is large ~\citep{saito2022off,cief2024learning,sachdeva2024off}. Weight clipping ~\citep{swaminathan2015counterfactual,su2020doubly} or normalization ~\citep{swaminathan2015self} might be applied to mitigate variance, but they often introduce a substantial amount of bias in estimation.
+
+Another line of work is OPE/L under covariate shift, as researched by \cite{uehara2020off}. This research focuses on cases where the context distributions differ between the logged data ($p^{\text{hist}}(x)$) and the evaluation environment ($p^{\text{eval}}(x)$), while the reward distribution $p(r|x, a)$ remains unchanged. Under this setup, \cite{uehara2020off} propose doubly robust and efficient estimators by leveraging an estimator of the density ratio between the historical and evaluation data distributions. In contrast, we aim to estimate the same estimand using data from both target and source domains (which may include multiple source domains), with each domain having unique context distributions $p^k(x)$ and reward distributions $p^k(r|x, a)$. By leveraging this new setup, our primary goal is to address challenging scenarios in the target domain, such as new actions, deterministic logging policies, and extremely small logged data, which clearly differ from the motivations of \cite{uehara2020off}.
+
+Finally, we mention the work by \cite{cief2024cross} and \cite{liu2024beyond}, which formulate the problem of cross-domain offline reinforcement learning (offline RL). The goals of their formulations are somewhat related to ours, as they aim to learn a policy that performs well in the target domain by leveraging data from both target and source domains. However, they focus on the offline RL setup and consider only shifts in transition dynamics. In contrast, we focus on the contextual bandit setup and address varying context and reward distributions across domains. We also analyze and experiment with the problem of OPE, while \cite{cief2024cross} and \cite{liu2024beyond} focus solely on policy learning. Furthermore, it is important to note that we explore the problem of cross-domain OPE/OPL to tackle the unsolved issues of new actions, deterministic logging, and limited logged data, whereas previous work more generally considers the cross-domain setup. Note that we did not compare pessimistic OPL methods~\citep{swaminathan2015counterfactual,london2019bayesian,gabbianelli2024importance,sakhi2024logarithmic} because they are not relevant to our context. Our main motivation is to solve the prevalent problem of (completely) deterministic logging and new actions, issues that pessimistic techniques do not aim to address. However, our proposed method could easily be combined with a pessimistic approach if one wants to do so.
+
+
+\section{Omitted Proofs} \label{app:proof}
+
+\subsection{Proof of Theorem~\ref{thm:bias-of-COPE}}
+\label{app:b1}
+\begin{proof}
+The bias of COPE under Condition~\ref{ass:common-cluster-support} is derived as
+\begin{align*}
+    &\mathrm{Bias}(\hat V_{\mathrm{COPE}}(\pi;D^{\phi(T)}))
+    \\&=\mathbb{E}[\hat V_{\mathrm{COPE}}(\pi;D^{\phi(T)})]-V^T(\pi)
+    \\&=\frac{1}{n^{\phi(T)}}\sum_{k\in\phi(T)}\sum_{i=1}^{n^{k}}
+    \mathbb{E}_{p^{k}(x)\pi_0^{k}(a|x)p^{k}(r|x,a)}[\frac{\pi(a_{i}^{k}|x_{i}^{k})}{{p^{\phi(T)}(a_{i}^{k}|x_{i}^{k})}}(r_{i}^{k}-\hat{q}(x_{i}^{k},a_{i}^{k}))]
+    \\&\phantom{=}+\frac{1}{n^{T}}\sum_{i=1}^{n^{T}}\mathbb{E}_{p^{T}(x)\pi_0^{T}(a|x)p^{T}(r|x,a)}
+    [\mathbb{E}_{\pi(a|x_{i})}\hat{q}(x_{i}^{T},a^T)]
+    \\&\phantom{=}-\mathbb {E}_{p^T(x)\pi(a|x)p^T(r|x,a)}[r]
+    \\&=\sum_{k\in\phi(T)}\frac{n^{k}}{n^{\phi(T)}}\mathbb{E}_{p^{k}(x)\pi_0^{k}(a|x)p^{k}(r|x,a)}[\frac{\pi(a^{k}|x^{k})}{{p^{\phi(T)}(a^{k}|x^{k})}}(r^{k}-\hat{q}(x^{k},a^{k}))]
+    \\&\phantom{=}+\mathbb{E}_{p^{T}(x)\pi_0^{T}(a|x)p^{T}(r|x,a)}
+    [\sum_{a \in \mathcal A}\pi(a|x^T)\hat{q}(x^T,a)]
+    \\&\phantom{=}-\mathbb {E}_{p^T(x)\pi(a|x)}[q^T(x,a)]
+    \\&=\sum_{k\in\phi(T)}\frac{n^{k}}{n^{\phi(T)}}\mathbb{E}_{p^{k}(x)\pi_0^{k}(a|x)}[\frac{\pi(a^{k}|x^{k})}{{p^{\phi(T)}(a^{k}|x^{k})}}\Delta_{q,\hat{q}}^k(x,a)]
+    \\&\phantom{=}+\sum_{x\in\mathcal{X}}
+    \sum_{a \in \mathcal A}p^{T}(x)\pi(a|x)\hat{q}(x,a)
+    \\&\phantom{=}-\sum_{x\in\mathcal{X}}
+    \sum_{a \in \mathcal A}p^{T}(x)\pi(a|x)q^T(x,a)
+    \\&=
+    \sum_{x\in\mathcal{X}}\sum_{k\in\phi(T)}\sum_{a\in\mathcal{A}}\frac{p^T(x)\pi(a|x)}{\sum_{k \in \phi(T)}\frac{n^{k}}{n^{\phi(T)}} p^{k}(x)\pi_0^{k}(a|x)}\frac{n^k}{n^{\phi(T)}}
+    p^{k}(x)\pi_0^{k}(a|x)\Delta_{q,\hat{q}}^k(x,a)
+    \\&\phantom{=}-\sum_{x\in\mathcal{X}}
+    \sum_{a \in \mathcal A}p^{T}(x)\pi(a|x)\Delta_{q,\hat{q}}^T(x,a)
+    \\&=
+    \sum_{x\in\mathcal{X}}p^T(x)\{(\sum_{k\in\phi(T)}\sum_{a\in\mathcal{A}}\frac{\pi(a|x)}{\sum_{k \in \phi(T)}\frac{n^{k}}{n^{\phi(T)}} p^{k}(x)\pi_0^{k}(a|x)}\frac{n^k}{n^{\phi(T)}}
+    p^{k}(x)\pi_0^{k}(a|x)\Delta_{q,\hat{q}}^k(x,a))
+    \\&\phantom{=}-\sum_{a \in \mathcal A}\pi(a|x)\Delta_{q,\hat{q}}^T(x,a)\}
+    \\&=
+    \sum_{x\in\mathcal{X}}p^T(x)\sum_{a\in\mathcal{A}}\pi(a|x)\{(\sum_{k\in\phi(T)}\frac{1}{\sum_{k \in \phi(T)}\frac{n^{k}}{n^{\phi(T)}} p^{k}(x)\pi_0^{k}(a|x)}\frac{n^k}{n^{\phi(T)}}
+    p^{k}(x)\pi_0^{k}(a|x)\Delta_{q,\hat{q}}^k(x,a))
+    \\&\phantom{=}-\Delta_{q,\hat{q}}^T(x,a)\}
+    \\&=
+    \mathbb{E}_{p^T(x)\pi(a|x)} \left[ \left\{ \left( \sum_{k\in\phi(T)} \frac{n^k}{n^{\phi(T)}}\frac{p^{k}(x)}{p^{T}(x)}\frac{\pi_0^{k}(a|x)}{p^{\phi(T)}(a|x)} \Delta_{q,\hat{q}}^k(x,a) \right)-\Delta_{q,\hat{q}}^T(x,a) \right\} \right].
+\end{align*}
+\end{proof}
+
+\subsection{Proof of Corollary \ref{prop3.3}}
+\begin{proof}
+Starting from the final expression of \ref{app:b1}, 
+the bias of COPE under the additional Condition~\ref{ass:cpc} is calculated as
+\label{proof3.3}
+\begin{align*}
+&\mathbb{E}_{p^T(x)\pi(a|x)} \left[ \left\{ \left( \sum_{k\in\phi(T)} \frac{n^k}{n^{\phi(T)}}\frac{p^{k}(x)}{p^{T}(x)}\frac{\pi_0^{k}(a|x)}{p^{\phi(T)}(a|x)} \Delta_{q,\hat{q}}^k(x,a) \right)-\Delta_{q,\hat{q}}^T(x,a) \right\} \right]\\
+&=
+\mathbb{E}_{p^T(x)\pi(a|x)} \left[ \left\{ \left( \sum_{k\in\phi(T)} \frac{n^k}{n^{\phi(T)}}\frac{p^{k}(x)}{p^{T}(x)}\frac{\pi_0^{k}(a|x)}{p^{\phi(T)}(a|x)} \Delta_{q,\hat{q}}^T(x,a) \right)-\Delta_{q,\hat{q}}^T(x,a) \right\} \right] \because \text{Condition~\ref{ass:cpc}}\\
+&=
+\mathbb{E}_{p^T(x)\pi(a|x)} \left[ \Delta_{q,\hat{q}}^T(x,a)\left\{ \left( \sum_{k\in\phi(T)} \frac{n^k}{n^{\phi(T)}}\frac{p^{k}(x)}{p^{T}(x)}\frac{\pi_0^{k}(a|x)}{p^{\phi(T)}(a|x)} \right)-1 \right\} \right]\\
+&= 0,
+\end{align*}
+which concludes the proof.
+% \begin{align*}
+%     &\mathbb{E}_{D^{\phi(T)}}[\hat V_{\mathrm{COPE}}(\pi;D^{\phi(T)})]\\
+%     &=\frac{1}{n^{\phi(T)}}\sum_{k\in\phi(T)}\sum_{i=1}^{n^{k}}
+%     \mathbb{E}_{p^{k}(x)\pi_0^{k}(a|x)p^{k}(r|x,a)}[\frac{\pi(a_{i}^{k}|x_{i}^{k})}{{p^{\phi(T)}(a_{i}^{k}|x_{i}^{k})}}(r_{i}^{k}-\hat{q}(x_{i}^{k},a_{i}^{k}))]
+%     \\&\phantom{=}+\frac{1}{n^{T}}\sum_{i=1}^{n^{T}}\mathbb{E}_{p^{T}(x)\pi_0^{T}(a|x)p^{T}(r|x,a)}
+%     [\mathbb{E}_{\pi(a|x_{i})}\hat{q}(x_{i}^{T},a^T)]
+%     \\&=\sum_{k\in\phi(T)}\frac{n^{k}}{n^{\phi(T)}}\mathbb{E}_{p^{k}(x)\pi_0^{k}(a|x)p^{k}(r|x,a)}[\frac{\pi(a^{k}|x^{k})}{{p^{\phi(T)}(a^{k}|x^{k})}}(r^{k}-\hat{q}(x^{k},a^{k}))]
+%     \\&\phantom{=}+\mathbb{E}_{p^{T}(x)\pi_0^{T}(a|x)p^{T}(r|x,a)}
+%     [\sum_{a \in \mathcal A}\pi(a|x^T)\hat{q}(x^T,a)]
+%     \\&=\sum_{k\in\phi(T)}\frac{n^{k}}{n^{\phi(T)}}\mathbb{E}_{p^{k}(x)\pi_0^{k}(a|x)}[\frac{\pi(a^{k}|x^{k})}{{p^{\phi(T)}(a^{k}|x^{k})}}\Delta_{q,\hat{q}}^k(x,a)]
+%     \\&\phantom{=}+\sum_{x\in\mathcal{X}}
+%     \sum_{a \in \mathcal A}p^{T}(x)\pi(a|x)\hat{q}(x,a)
+%     \\&=\sum_{x\in\mathcal{X}}
+%     \sum_{a \in \mathcal A}\frac{\pi(a|x)}{{p^{\phi(T)}(a|x)}}g^{\phi(T)}(x,a)\sum_{k\in\phi(T)}\frac{n^{k}}{n^{\phi(T)}}p^{k}(x)\pi_0^{k}(a|x)
+%     \\&\phantom{=}+\sum_{x\in\mathcal{X}}
+%     \sum_{a \in \mathcal A}p^{T}(x)\pi(a|x)\hat{q}(x,a)
+%     \\&=\sum_{x\in\mathcal{X}}
+%     \sum_{a \in \mathcal A}\frac{p^{T}(x)\pi(a|x)}{\sum_{k \in \phi(T)}\frac{n^{k}}{n^{\phi(T)}} p^{k}(x)\pi_0^{k}(a|x)}g^{\phi(T)}(x,a)\sum_{k\in\phi(T)}\frac{n^{k}}{n^{\phi(T)}}p^{k}(x)\pi_0^{k}(a|x)
+%     \\&\phantom{=}+\sum_{x\in\mathcal{X}}
+%     \sum_{a \in \mathcal A}p^{T}(x)\pi(a|x)\hat{q}(x,a)
+%     \\&=\sum_{x\in\mathcal{X}}
+%     \sum_{a \in \mathcal A}p^{T}(x)\pi(a|x)g^{\phi(T)}(x,a)
+%     \\&\phantom{=}+\sum_{x\in\mathcal{X}}
+%     \sum_{a \in \mathcal A}p^{T}(x)\pi(a|x)\hat{q}(x,a)
+%     \\&=\sum_{x\in\mathcal{X}}
+%     \sum_{a \in \mathcal A}p^{T}(x)\pi(a|x)(g^{\phi(T)}(x,a)+\hat{q}(x,a))
+%     \\&=\sum_{x\in\mathcal{X}}
+%     \sum_{a \in \mathcal A}p^{T}(x)\pi(a|x)q^T(x,a)
+%     \\&=\mathbb{E}_{p^{T}(x)\pi(a|x)}[q^T(x,a)]
+%     \\&=V^T(\pi).
+% \end{align*}
+\end{proof}
+
+\subsection{Bias of the Baseline Methods}
+
+
+Here, we can derive the bias of IPS-ALL by calculating its expectation as
+
+\begin{align*}
+\mathbb{E}_{\calD} [\hat{V}_{\mathrm{IPS-ALL}}(\pi;\calD)] 
+& = \frac{1}{N}\sum_{k=1}^K\sum_{i=1}^{n^{k}} \mathbb{E}_{p^k(x)\pi_0^k(a|x)} [w^{k}(x^{k},a^{k}) q^k(x,a)] \\
+& = \frac{1}{N}\sum_{k=1}^K\sum_{i=1}^{n^{k}} \mathbb{E}_{p^k(x)\pi^k(a|x)} [q^k(x,a)] \; \because w^{k}(x^{k},a^{k}) = \frac{\pi^k(a\,|\,x)}{\pi^k_0(a\,|\,x)} \\
+& = \sum_{k=1}^K \frac{n^k}{N} \mathbb{E}_{p_k(x)\pi(a|x)}[q^k(x,a)].
+\end{align*}
+
+
+Therefore, the bias of IPS-ALL is:
+$$ 
+\operatorname{Bias}(\hat{V}_{\mathrm{IPS}}(\pi ; \mathcal{D})) = 
+\left| \mathbb{E}_{p_T(x)\pi(a|x)}[q^T(x,a)] - \left( \sum_k \frac{n^k}{N} \mathbb{E}_{p_k(x)\pi(a|x)}[q^k(x,a)] \right)  \right|.
+$$
+
+We observe that they are no longer guaranteed to remain unbiased in our setup. This bias becomes significant when the reward distributions across domains differ substantially because the expectation of IPS-ALL is characterized by the weighted sum of the policy values of all the domains involved. In contrast, the bias becomes zero when the reward distributions across all domains are identical (which is no longer a cross-domain setup).
+Based on this derivation and Theorem 3.1, we can compare the bias of COPE and that of IPS/DR-ALL as follows:
+\begin{itemize}
+    \item COPE performs better when the distributions across domains are substantially different and also when the pairwise estimation by $\hat{q}(x,a)$ is accurate.
+    \item IPS/DR-ALL performs better when the distributions across domains are similar, i.e., when the cross-domain setup is close to a typical single-domain setup.
+\end{itemize}
+
+When the setup is close to the typical single-domain scenario, effective estimators such as DR and its extensions are already well-known. Therefore, we focused more on novel and challenging scenarios where the distributions across domains are not necessarily similar, as baseline methods tend to fail in these cases as shown above and in our experiments.
+
+In practice, we do not precisely know which of COPE and baselines are better. This is not the case only for our setup, but also for the other OPE problems. A typical example is that we never know which of IPS and DM is better, because the comparison depends on many (potentially unknown) parameters such as the reward noise and logged data size. This is why there exists an orthogonal line of work around estimator selection in OPE~\citep{su2020adaptive,udagawa2023policy,cief2024cross}, and we can use those methods to identify the appropriate estimator tailored to the specific problem when we use OPE in general.
+
+\section{Density Ratio Estimation} \label{app:dre}
+Our implementation in the experiments relies on one of the most standard methods, unconstrained Least-Squares Importance Fitting (uLSIF), to perform density ratio estimation proposed in \citep{kanamori2012statistical,sugiyama2012density}. The method considers minimizing the following squared error between $s$ and $r$ where $s$ is an estimator for the ratio and $w(x) = p^k(x)/p^{T}(x)$ is the ratio we need to estimate in order to use $p^{\phi(T)}(x, a)$ in Eq.~\eqref{eq:average-iw}:
+$$
+\mathbb{E} [(s(x)-w(x))^{2}]=\mathbb{E}_{p^k(x)} [(w(x))^{2}]-2 \mathbb{E}_{p^{T}(x)} [s(x)]+\mathbb{E}_{p^k(x)} [(s(x))^{2}]
+$$
+
+The first term of the equation does not affect the result of the optimization and we can ignore it, i.e., the density ratio is estimated through the following minimization problem:
+$$
+s^{*}=\underset{s \in \mathcal{S}}{\argmin} \, \left[\frac{1}{2} \mathbb{E}_{p^{T}(x)} [(s(x))^{2}]-\mathbb{E}_{p^k(x)} [s(x)] \right]
+$$
+
+To solve the empirical version of this optimization, \cite{kanamori2012statistical} use kernel-based hypotheses to estimate the density ratio nonparametrically with a regularization term as usual. \href{https://github.com/hoxo-m/densratio_py}{https://github.com/hoxo-m/densratio\_py}, which we relied on in our experiments, is one of the well-known public implementations of the method.
+
+
+\section{Additional Experiment Setup and Results}
+
+\subsection{Additional Results on Real-World Data} \label{app:real}
+This section compares the OPE estimators under varying sizes of the target cluster $|\phi(T)| \in \{2, 4, 6, 8, 10\}$ (a key hyperparameter of COPE) in Figure~\ref{fig7}. Note that the baseline estimators are independent of this parameter, so their results remain constant. We observe that COPE, when using a smaller target cluster size, has a small bias but a large variance. This is because the smaller target cluster size reduces the bias caused by differences in the distribution across domains. In contrast, the smaller size also decreases the amount of available logged data, leading to an increase in variance. Additionally, the figure suggests that COPE with a larger target cluster size exhibits higher variance. This occurs because as the number of domains included in the COPE estimation increases, larger variances are more likely to arise from the density ratio terms. Nevertheless, the results show that COPE outperforms the baseline estimators, even with small ($|\phi(T)|=2$) or large ($|\phi(T)|=10$) cluster sizes, as seen in the OPL experiment.
+
+\begin{figure}[t]
+\centering
+\begin{center}
+    \centering\includegraphics[width=0.85\columnwidth]{figures/legend_ope.png}
+\end{center}
+\begin{minipage}[b]{0.325\columnwidth}
+    \centering
+    \includegraphics[width=1.0\columnwidth]{figures/real-world_mse_graph_cl.png}
+\end{minipage}
+\begin{minipage}[b]{0.325\columnwidth}
+    \centering
+    \includegraphics[width=1.0\columnwidth]{figures/real-world_bias_graph_cl.png}
+\end{minipage}
+\begin{minipage}[b]{0.325\columnwidth}
+    \centering
+    \includegraphics[width=1.0\columnwidth]{figures/real-world_variance_graph_cl.png}
+\end{minipage}
+
+\caption{MSE(\textbf{left}), Squared Bias(\textbf{center}), and Variance(\textbf{right}) with with varying size of the target cluster.}
+\label{fig7}
+\end{figure}
+
+
+Moreover, we exclude $\bar{q}(u)$ from the definition of the user distribution $p^k(u)$, following an observation that this might favor our methods. Instead, we define a linear function of the user feature $f^k(u) = \beta^k x_u$, where the coefficient vector $\beta^k$ is sampled from a normal distribution separately for each domain $k$. We then define the user distribution $p^k(u)$ for each domain as $ p^{k}(u):=\frac{\exp (f^k(u))}{\sum_{u^{\prime} \in \mathcal{U}} \exp (f^k(u^{\prime}))} $. This procedure follows the multi-domain recommendation literature, which uses user features to define the domains in their experiments~\citep{yang2024mlora}. More importantly, this approach avoids any dependence of the distribution on $\bar{q}(u)$. We conducted both OPE and OPL experiments based on this new user distribution, and the results are summarized in Tables~\ref{table:ope-new-actions} to \ref{table:opl-deterministic-logging}. The results indicate that our method mostly outperforms the baseline methods that use only the target domain data or all the data across target and source domains in both OPE and OPL experiments (bold fonts indicate the best method, if the best and second best are not significantly different, we use bold fonts for both), even with $p^k(u)$ independent of $\bar{q}(u)$.
+
+Furthermore, we can extend the definition of the user distribution as:  
+$$ p^{k}(u):=\frac{\exp (\lambda \bar{q}(u) + (1-\lambda) f^k(u))}{\sum_{u^{\prime} \in \mathcal{U}} \exp (\lambda \bar{q}(u’) + (1-\lambda) f^k(u')))} $$
+where $\lambda$ controls the degree to which the user distribution depends on $\bar{q}(u)$. When $\lambda = 1$, the setup reduces to our original experiment. Table~\ref{table:opl-lambda} shows the result of the OPL experiment for varying $\lambda$ values. We should mention here that the difference between the proposed method and the baselines decreases when $\lambda$ is small, which is reasonable. These additional observations, however, demonstrate the robustness of COPE to varying user distributions, even with a simple clustering procedure. Nevertheless, we believe a more principled and effective approach to domain clustering for our method likely exists. As mentioned in Section 5, we consider the development of a clustering algorithm tailored to Cross-Domain OPE and OPL to be a valuable direction for future research.
+
+
+\input{additional_results}
+
+\subsection{Synthetic Experiment} \label{app:synthetic}
+This section empirically demonstrates the advantages of COPE over existing approaches using synthetic data. The benefits of using synthetic data include the ability to accurately compare estimators based on ground-truth policy values and the flexibility to control experiment configurations in order to test a wide range of scenarios. To generate the synthetic data, we first randomly cluster a total of $K=30$ domains, corresponding to the definition of $\phi(k)$. We then sample a 5-dimensional domain embedding $e^{k}$ for each domain $k$ from the standard normal distribution. We also sample 10-dimensional context vectors $x^{k}$ from a normal distribution with mean $\mu_{k}$ and a standard deviation of $\sigma_x = 1$. The mean parameter $\mu_{k}$ of the context distribution is sampled from a uniform distribution within the range $[-1.0,1.0]$.
+
+We synthesize the expected reward function by using domain embedding $e$ as an input as below. 
+\begin{equation}
+    \label{reward function in syns}
+    q(x,a,e; \lambda) = \lambda g(x,a,c) + h(x,a,e),
+\end{equation}
+where $\lambda$ is an experiment parameter that controls the influence of the domain-cluster effect ($g$) compared to the domain-specific effect ($h$), where we use $\lambda = 0.5$ as the default parameter. Specifically, we used the following functions as $g(\cdot, \cdot, \cdot)$ (domain-cluster effect) and $h(\cdot,\cdot,\cdot)$ (domain-specific effect), respectively.
+\begin{align*}
+g(x,a,c)&:=x^{\top}M^{c}_{x,a}\mathrm{one\_hot}_{a}+\theta_{x,c}^{\top}x+\theta_{a,c}^{\top}\mathrm{one\_hot}_{a}+\theta_{c}^{\top}\mathrm{one\_hot}_{c},\\
+h(x,a,e)&:=\theta_e^{\top}e+x^{\top}M_{x,e}e+\mathrm{one\_hot}_{a}^{\top}M_{a,e}e,
+\end{align*}
+where $\mathrm{one\_hot}_{a}$ is the one-hot encoding of the action and $\mathrm{one\_hot}_{c}$ is the one-hot encoding of the domain-cluster $c$. $M^{c}_{x, a}, \theta_{x,c}, \theta_{a,c}, \theta_{c}$ are parameter matrices or vectors in domain-cluster effect function sampled from a uniform distribution with range $[-1,1]$ separately for each given domain cluster $c$. Also, $ M_{x,e}, M_{a,e}$ are parameter matrices in domain-specific effect function sampled from a uniform distribution with range $[-1,1]$, and $\theta_e$ is parameter vector sampled from a uniform distribution with range $[-10,10]$ separately for each given domain cluster $c$.
+
+Based on the expected reward function, we sample the reward $r^{k}$ from a normal distribution with mean $q(x, a,e; \lambda)$ and standard deviation $\sigma_r = 1$. 
+
+We define the logging policy $\pi_0^{k}$ for each domain $k$ by applying softmax to the expected reward function $q(x,a,e; \lambda)$ as
+\begin{equation}
+    \label{logging policy in syns}
+    \pi_0^{k}(a|x):=\frac{\mathrm{exp}(\beta^k\cdot (q(x,a,e; \lambda)+\eta_{x,a})}{\sum_{a'\in \calA}\mathrm{exp}(\beta^k\cdot (q(x,a',e; \lambda)+\eta_{x,a})}
+\end{equation}
+where $\beta^{k}$ and $\eta_{x,a}$ are sampled from a uniform distribution within range $[-0.5,0.5]$ . 
+In contrast, the evaluation policy $\pi$ is defined as
+\begin{align}
+    \pi(a|x)= (1-\epsilon) \cdot \mathbb{I} \{ a= \mathrm{argmax}_{a'\in A} \quad q(x,a',e; \lambda)\}+\frac{\epsilon}{|\calA|}, 
+\end{align}
+where $\epsilon \in [0, 1]$ controls the quality of $\pi$ and we set $\epsilon = 0.2$ as default.
+
+
+\subsubsection{Baseline Estimators}
+Below, we define the baseline estimators compared in our (both synthetic and real-world) experiments.
+
+\textbf{Direct Method (DM).} The DM estimator, which uses only logged data from the target domain, is defined as follows:
+    $$\hat{V}_{\rm{DM}}(\pi;\calD^T, \hat{q}^T):= \frac{1}{n^T}\sum_{i=1}^{n^T}\mathbb{E}_{\pi(a|x_i)}[\hat{q}^T(x_i,a)],$$
+where $\hat{q}^T(x, a)$ estimates $q^T(x, a)$ based on logged bandit data from the target domain. Additionally, the DM-ALL estimator, which uses logged data from both the target and source domains, is defined as follows:
+    $$\hat{V}_{\rm{DM-ALL}}(\pi;\calD, \hat{q}):= \frac{1}{N}\sum_{k=1}^K\sum_{i=1}^{n^k}\mathbb{E}_{\pi(a|x_i^k)}[\hat{q}(x_i^k,a)],$$
+where $\hat{q}(x, a)$ estimates $q(x, a)$ based on all domains logged bandit data.
+
+\textbf{Inverse Propensity Score (IPS).} The IPS estimator, which uses only logged data from the target domain, is defined as follows:
+    $$\hat{V}_{\rm{IPS}}(\pi;\calD^T):=\frac{1}{n}\sum_{i=1}^{n}\frac{\pi(a_{i}|x_{i})}{\pi_0^T(a_{i}|x_{i})}r_{i}=\frac{1}{n}\sum_{i=1}^{n}w^T(x_{i},a_{i})r_{i},$$
+where $w^T(x,a):=\pi(a|x) / \pi_0^T(a|x)$ is importance weight of the target domain. 
+The IPS-ALL estimator, which uses logged data from both the target and source domains, is defined as follows:
+    $$\hat{V}_{\rm{IPS-ALL}}(\pi;\calD):=\frac{1}{N}\sum_{k=1}^K\sum_{i=1}^{n^{k}}\frac{\pi(a_{i}^k|x_{i}^k)}{\pi_0^k(a_{i}^k|x_{i}^k)}r_{i}^{k}:=\frac{1}{N}\sum_{k=1}^K\sum_{i=1}^{n^{k}}w^{k}(x_{i}^{k},a_{i}^{k})r_{i}^{k},$$
+where $w^k(x,a):=\pi(a|x) / \pi_0^k(a|x)$ is importance weight of each domain and $N:=\sum_{k=1}^Kn^{k}$. 
+
+\textbf{Doubly Robust (DR).} The DR estimator, which uses only logged data from the target domain, is defined as follows:
+    $$\hat{V}_{\rm{DR}}(\pi;\calD^T, \hat{q}^T):=\frac{1}{n}\sum_{i=1}^{n}\{w(x_{i},a_{i})(r_{i}-\hat{q}^T(x_{i},a_{i}))+ \mE_{\pi(a|x_i)}\lbrack \hat{q}^T(x_i,a)\rbrack \}.$$
+The DR-ALL estimator, which uses logged data from both the target and source domains, is defined as follows:
+    $$\hat{V}_{\rm{DR-ALL}}(\pi;\calD, \hat{q})
+    :=\frac{1}{N} \sum_{k=1}^K\sum_{i=1}^{n^{k}}\{w^{k}(x_{i}^{k},a_{i}^{k})(r_{i}^{k}-\hat{q}(x_{i}^{k},a_{i}^{k}))+ \mE_{\pi(a|x_i^k)}\lbrack \hat{q}(x_i^k,a)\rbrack \}.$$
+
+
+\subsubsection{Experiment Results on Synthetic Data} 
+In the following, we report and discuss the MSE, squared bias, and variance of the estimators computed over 150 sets of logged data, each replicated with different seeds. Note that the default parameters in our synthetic validation are $|\calA|= 20$, $K=30$, $n^{k}=100$, and $|c^T|= 9$.
+
+First, we compare the estimators under varying ratios of new actions in the target domain, $|\mathcal{U}_0^T|/|\mathcal{A}| \in \{0, 0.2, 0.4, 0.6, 0.8\}$, where $\mathcal{U}_0^T:= {a \in \mathcal{A} \,|\, \pi_0^T(a \,|\, x) = 0, \forall x}$ (see Figure~\ref{fig8}). The results show that COPE consistently outperforms the other estimators without being affected by the presence of new actions. As in the real-world data experiment, the estimators using only logged data from the target domain, particularly IPS(T) and DR(T), produce a large bias as the ratio increases. Estimators that naively use logged data from all domains, such as IPS(ALL), DR(ALL), and DM(ALL), exhibit consistently high bias due to their inability to handle differences in DGPs.
+
+Second, we compare the estimators under varying percentages of samples with deterministic logging, as shown in Figure~\ref{fig9}. In the experiment, we calculate the percentages (20\%, 40\%, 60\%, 80\%) of a particular one-dimensional context in the target domain. Then, if the value of the context in the target logged data is smaller than the percentile point, we apply a deterministic logging policy; otherwise, we apply a probabilistic logging policy defined by Eq.~\eqref{logging policy in syns}. The results indicate that COPE is robust against an increasing degree of deterministic logging policy and maintains a small bias. In contrast, IPS(T) and DR(T) show increasing bias as the percentile of the target domain context grows, similar to the real-world OPE experiment with varying numbers of users whose logging is deterministic in the target domain.
+
+Finally, we compare the estimators under varying logged data sizes of the target domain ($n^T$) in Figure~\ref{fig10}. We observe that most existing estimators show a decrease in MSE as the logged data size in the target domain increases, but COPE generally achieves the most accurate estimation. Notably, when $n^T = 50$, COPE outperforms the best baseline DM(T) and the second-best baseline DR(T) by a substantial margin $(\frac{\mathrm{MSE}(\hat{V}{\rm{DM(T)}})}{\mathrm{MSE}(\hat{V}{\rm{COPE}})} = 2.46, \frac{\mathrm{MSE}(\hat{V}{\rm{DR(T)}})}{\mathrm{MSE}(\hat{V}{\rm{COPE}})} = 3.29)$.
+
+\begin{figure}[t]
+\centering
+\begin{center}
+    \centering\includegraphics[width=0.9\columnwidth]{figures/legend_ope.png}
+\end{center}
+\begin{minipage}[b]{0.325\columnwidth}
+    \centering
+    \includegraphics[width=1.0\columnwidth]{figures/syns_mse_graph_newaction.png}
+\end{minipage}
+\begin{minipage}[b]{0.325\columnwidth}
+    \centering
+    \includegraphics[width=1.0\columnwidth]{figures/syns_bias_graph_newaction.png}
+\end{minipage}
+\begin{minipage}[b]{0.325\columnwidth}
+    \centering
+    \includegraphics[width=1.0\columnwidth]{figures/syns_variance_graph_newaction.png}
+\end{minipage}
+\caption{MSE(\textbf{left}), Squared Bias(\textbf{center}), and Variance(\textbf{right}) with varying ratios of new actions in the target domain.} \vspace{2mm}
+\label{fig8}
+\begin{minipage}[b]{0.325\columnwidth}
+    \centering
+    \includegraphics[width=1.0\columnwidth]{figures/syns_mse_graph_deterministic.png}
+\end{minipage}
+\begin{minipage}[b]{0.325\columnwidth}
+    \centering
+    \includegraphics[width=1.0\columnwidth]{figures/syns_bias_graph_deterministic.png}
+\end{minipage} 
+\begin{minipage}[b]{0.325\columnwidth}
+    \centering
+    \includegraphics[width=1.0\columnwidth]{figures/syns_variance_graph_deterministic.png}
+\end{minipage}
+\caption{MSE(\textbf{left}), Squared Bias(\textbf{center}), and Variance(\textbf{right}) with varying percentages of samples with a deterministic logging.} \vspace{2mm}
+\label{fig9}
+\begin{minipage}[b]{0.325\columnwidth}
+    \centering
+    \includegraphics[width=1.0\columnwidth]{figures/syns_mse_graph_samplesize.png}
+\end{minipage}
+\begin{minipage}[b]{0.325\columnwidth}
+    \centering
+    \includegraphics[width=1.0\columnwidth]{figures/syns_bias_graph_samplesize.png}
+\end{minipage}
+\begin{minipage}[b]{0.325\columnwidth}
+    \centering
+    \includegraphics[width=1.0\columnwidth]{figures/syns_variance_graph_samplesize.png}
+\end{minipage}
+\caption{MSE(\textbf{left}), Squared Bias(\textbf{center}), and Variance(\textbf{right}) with varying logged data sizes in the target domain. }
+\label{fig10}
+\end{figure}

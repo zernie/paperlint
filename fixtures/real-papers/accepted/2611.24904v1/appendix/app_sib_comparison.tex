@@ -1,0 +1,63 @@
+\section{Method Comparison by Gap to the Upper Bound}
+\label{app:sib-comparison}
+\label{app:method-profile}
+
+Table~\ref{tab:method-profile} compares every method by its gap to the
+within-city upper bound over the nine cells of \S\ref{sec:sib-results}.
+
+\begin{table}[h]
+\centering
+\caption{\textbf{Gap to the within-city upper bound for every method.} Nine cells (MAMNet,
+OGLANet, DINOv3 $\times$ Chicago, Miami, Phoenix), high resolution, two-class boundary-tolerant
+mIoU ($\pm 2$\,px) in percentage points, rows ordered by mean gap. Access: S source-only, U
+unlabeled target imagery, D deployment-time. Mean: mean gap with a cell-level bootstrap $95\%$
+CI ($B{=}10{,}000$). Worst: largest gap, with its cell. Harm/benefit: cells significantly worse
+or better than Vanilla (paired image bootstrap, Holm over the method's cells). Largest harm:
+smallest method-minus-Vanilla cell mean. SD: spread of the per-cell gap. \sib{}$-$method:
+\sib{}'s worst-case gap minus the method's, with an image-cluster bootstrap $95\%$ CI and
+Holm-adjusted $p$ over the nine comparisons; negative values favour \sib{}.}
+\label{tab:method-profile}
+\setlength{\tabcolsep}{3pt}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llclccccll}
+\toprule
+Method & Access & $n$ & Mean [95\% CI] & Worst (cell) & Harm/benefit & Largest harm & SD & \sib{}$-$method [95\% CI] & Holm $p$ \\
+\midrule
+\sib{} & S/U & 9 & $6.42$ $[5.01, 7.96]$ & $10.41$ (OGLANet/Mia) & 2/2 & $-3.79$ & $2.45$ & -- & -- \\
+FDA & U & 9 & $6.47$ $[5.34, 7.54]$ & $9.10$ (DINOv3/Phx) & 1/4 & $-6.51$ & $1.83$ & $+1.31$ $[-1.01, +3.65]$ & $0.227$ \\
+SegDeSiC & U & 9 & $6.84$ $[4.25, 9.33]$ & $13.20$ (OGLANet/Mia) & 2/3 & $-5.49$ & $4.09$ & $-2.80$ $[-5.16, -0.13]$ & $0.141$ \\
+SAR & D & 9 & $6.86$ $[4.81, 9.05]$ & $13.02$ (DINOv3/Chi) & 2/1 & $-0.01$ & $3.52$ & $-2.61$ $[-4.18, -0.16]$ & $0.141$ \\
+Vanilla & S & 9 & $6.91$ $[4.83, 9.11]$ & $13.01$ (DINOv3/Chi) & -- & -- & $3.55$ & $-2.61$ $[-4.18, -0.16]$ & $0.141$ \\
+BSM & S & 8 & $8.05$ $[5.14, 11.46]$ & $17.40$ (OGLANet/Chi) & 6/2 & $-6.74$ & $4.99$ & $-6.99$ $[-9.01, -4.01]$ & $\le 0.001$ \\
+FADA & S & 9 & $9.05$ $[6.98, 11.17]$ & $13.84$ (MAMNet/Mia) & 5/1 & $-9.39$ & $3.44$ & $-3.43$ $[-6.17, -1.24]$ & $0.016$ \\
+IIM & S & 9 & $9.75$ $[6.37, 14.01]$ & $24.06$ (MAMNet/Phx) & 4/1 & $-14.54$ & $6.19$ & $-13.66$ $[-16.38, -10.19]$ & $\le 0.001$ \\
+MRFP+ & S & 9 & $10.11$ $[6.57, 13.75]$ & $18.59$ (MAMNet/Phx) & 7/1 & $-9.07$ & $5.77$ & $-8.18$ $[-10.86, -5.52]$ & $\le 0.001$ \\
+ISW & S & 9 & $13.83$ $[10.22, 17.69]$ & $23.28$ (MAMNet/Phx) & 7/0 & $-13.76$ & $6.16$ & $-12.87$ $[-15.54, -10.45]$ & $\le 0.001$ \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\paragraph{Relative gaps.} As a percentage of the upper bound, \sib{}'s mean gap is
+$8.52\%$ and FDA's $8.53\%$; their worst-case relative gaps are $14.08\%$ and $13.42\%$.
+
+\paragraph{\sib{} against FDA per cell.} \sib{} is significantly closer to the upper bound than
+FDA in 2 of 9 cells, farther in 2, and not separable in 5 (Holm over 9).
+
+\paragraph{Cells that reach the upper bound.} Every method's gap is significant in every cell
+except SegDeSiC on DINOv3/Phoenix, the one cell whose method score exceeds its upper bound.
+
+\paragraph{Scope and caveats.} We chose this profile after the pre-committed comparison of
+worst-case gaps had been read, so it is exploratory. The grid is the one behind
+Table~\ref{tab:loco-main}: the 27 cells that originally trained on 900 images (MAMNet Vanilla
+and its six adaptation methods, OGLANet SegDeSiC and OGLANet \sib{}) are 450-image retrains, and
+every other cell is the published run. Each cell is one training seed, except MAMNet-\sib{},
+whose value is the mean of three seeds; the bootstraps resample test images only. The three
+OGLANet-\sib{} cells reached the 100-epoch limit with validation still improving, so they are
+lower bounds on the recipe; their FDA donor pool is the held-out city's 450 unlabeled training
+images. OGLANet inference depends on batch size and random state through a defect in our DFFM
+reimplementation (Appendix~\ref{app:oglanet-dffm}; up to $0.66$ mIoU across seeds on an OGLANet-\sib{} checkpoint), and every
+OGLANet value is a single pass. BSM has 8 cells because its DINOv3/Chicago model collapsed. SAR
+rows are Vanilla plus SAR's within-pass change, so SAR's harm/benefit counts test only whether
+that change differs from zero. The worst-case difference is a difference of two maxima and has no
+unbiased bootstrap, so its interval is descriptive. Harm, benefit and significance counts depend
+on $\alpha = 0.05$ and the stated Holm families.

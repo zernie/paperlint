@@ -1,0 +1,89 @@
+
+\subsection{RQ1: Performance of LLMs on Unit Testing Tasks}
+\label{sec:rq1}
+
+\textbf{Motivation.}
+Existing researches~\cite{hu_identify_2023, tufano_unit_2021, yaraghi_automated_2024} on unit testing tasks often utilize models smaller than 1 billion parameters, such as CodeBERT, CodeT5 and CodeGPT. Due to the limited size and number of models, these studies often lack comprehensive analysis of specific tasks. 
+In this RQ, we aim to provide a comprehensive evaluation of LLMs' performance on three unit testing tasks. Due to the large number of LLMs, we focus our analysis on selecting representative models for each task\footnote{Complete comparison of LLMs is presented in our repository due to page limit.}. 
+
+\subsubsection{Test Generation}
+\label{sec:rq1-test_generation}
+
+\textbf{Design.}
+In the test generation task, we compare the performance of LLMs with four state-of-the-art test generation approaches from previous research: \textsc{AthenaTest}~\cite{tufano_unit_2021}, A3Test~\cite{alagarsamy_a3test_2023}, ChatUniTest~\cite{chen_chatunitest_2024}, and CasModaTest$_{~GPT3.5}$~\cite{ni_casmodatest_2024}. 
+The evaluation uses five runtime-based metrics, primarily focusing on the correct test rate. Notably, due to resource constraints, we do not fine-tune several large-scale models in the test generation task.
+
+
+\input{table/rq1-TG}
+\textbf{Result.}
+Table~\ref{tab:tg_comparisons_llm} presents the comparison of LLMs and the four state-of-the-art approaches on the test generation task. We classify prior approaches into two categories: the first primarily leverages fine-tuning strategies for adapting models to the test generation task (e.g., \textsc{AthenaTest} and A3Test); the second employs prompt engineering based approaches to guide LLM behavior toward desired outputs without modifying model weights (e.g., ChatUniTest and CasModaTest$_{~GPT3.5}$, which predominantly uses GPT-3.5 as the underlying model).
+
+Compared to \textsc{AthenaTest}, the encoder-only models (e.g., CodeBERT, GraphCodeBERT, and UniXcoder) underperform across correct, passing, and build error rates. Among these, GraphCodeBERT performs the best but still shows a 27.39\% reduction in the correct test rate and a 55.36\% increase in the build error rate compared to \textsc{AthenaTest}. The encoder-decoder models (e.g., CodeT5-base, CodeT5p-220m, and PLBART-large) perform similarly to \textsc{AthenaTest}, while the decoder-only models generally achieve better results. The best-performing decoder-only model, DeepSeek-Coder-6b, reaches a correct rate of 33.68\%, which is 107.77\% higher than \textsc{AthenaTest}, and has a build error rate of 21.36\%, 49.63\% lower than \textsc{AthenaTest}.
+
+Despite their strong performance in correct test rates, decoder-only models exhibit higher syntax error rates. A manual analysis of the generated test cases marked with syntax errors reveals that these cases typically involve long contexts that exceed the models’ context window. For example, CodeGPT exhibits the highest syntax error rate, which can be attributed to its shorter context window of 1024 tokens compared to the 2048 tokens in other decoder-only models. To address this, we truncate the input context to leave enough space for the models to generate test cases. However, due to the auto-regressive fine-tuning objective, the models may attempt to complete the truncated input sequence rather than focus on generating the test case, even with adding the end-of-sequence (eos) token. In contrast, models with other architecture are less prone to this issue, likely due to the separation of tasks between the encoder and decoder components, which provides better handling of input context.
+
+When compared to A3Test, all LLMs show inferior performance. This is primarily due to A3Test incorporating additional post-processing verification components. In addition, prompt engineering-based approaches like ChatUniTest and CasModaTest$_{~GPT3.5}$ achieve higher correct test rates. Notably, CasModaTest$_{~GPT3.5}$ reaches a 77.16\% correct rate, which is 129.10\% higher than DeepSeek-Coder-6b. These results suggest two points: first, the fine-tuning approach can be improved by a well-designed post-process. Second, with effective task segmentation, prompt construction, and a robust feedback mechanism, prompt engineering approaches can deliver exceptional performance.
+
+
+\finding{1}{
+Although LLMs demonstrate improvements over \textsc{AthenaTest}, they underperform compared to A3Test and the two prompt engineering-based approaches. The results suggest that fine-tuning alone is insufficient to achieve state-of-the-art performance in the test generation task, and well-designed post-processing steps are also critical.
+}
+
+\subsubsection{Assertion Generation}
+\textbf{Design.}
+In the assertion generation task, we compare the performance of LLMs with six state-of-the-art assertion generation approaches from prior researches~\cite{watson_learning_2020, yu_automated_2022, sun_revisiting_2023}: $ATLAS$, $IR_{ar}$, $RA_{adapt}^H$, $RA_{adapt}^{NN}$, $Integration$, and \textsc{EditAS}, using three text-based metrics. Notably, due to resource constraints, we do not fine-tune several large-scale models.
+
+\textbf{Result.}
+Table~\ref{tab:ag_comparisons_llm} compares LLMs with state-of-the-art approaches on the assertion generation task. 
+We first compare the performance of the LLMs with the most relevant baseline approach, $ATLAS$, which also frames the assertion generation problem as a neural machine translation task, similar to the LLMs. 
+On the $Data_{old}$ dataset, the LLMs achieve prediction EMs ranging from 50.53\% to 71.42\%, representing an improvement of 60.82\% to 127.33\% over $ATLAS$. 
+Additionally, LLMs achieve the highest BLEU and CodeBLEU scores of 85.89\% and 88.25\%, respectively, which are improvements of 25.37\% and 38.76\%, over $ATLAS$. 
+These significant improvements suggest that LLMs have a distinct advantage in assertion generation task when compared to the default transformer model. 
+
+\input{table/rq1-AG}
+
+When compared to four retrieval-based approaches (i.e., $IR_{ar}$, $RA_{adapt}^H$, $RA_{dadpt}^{NN}$, and $intergration$), LLMs still demonstrate a clear advantage. 
+We compare the best EM, BLEU, and CodeBLEU scores achieved by LLMs,  71.42\%, 85.89\%, and 88.25\%, respectively, to those achieved by the $intergration$ approach, which performs best among four approaches.
+LLMs show improvements of 53.46\% in EM, 8.91\% in BLEU and 20.41\% in CodeBLEU. 
+Even when compared to the most recent retrieval-enhanced learning-based approach, \textsc{EditAS}, LLMs still outperform, with improvements of 33.60\% in EM, 6.34\% in BLEU and 14.61\% in CodeBLEU. 
+This further confirms the superiority of LLMs in the assertion generation task. 
+
+
+Additionally, we observe that while previous state-of-the-art approaches typically achieve higher BLEU scores than CodeBLEU scores, LLMs often exhibit the opposite trend, producing higher CodeBLEU scores compared to BLEU. 
+This discrepancy may be due to the extensive code-related corpus used during the LLMs’ pre-training phase, which enhances their understanding of code structure and boosts their performance on code-related tasks.
+
+
+\finding{2}{
+Compared to existing state-of-the-art approaches, LLMs demonstrate significant improvements across all three text-based metrics. 
+Notably, LLMs tend to achieve higher CodeBLEU scores than BLEU scores, which is opposite of the trend observed in previous approaches, suggesting that LLMs have a better understanding of code structure.
+}
+
+
+\subsubsection{Test Evolution}
+\label{sec:rq1-test-evolution}
+
+\textbf{Design.}
+In the test evolution task, we compare the performance of LLMs against the \textsc{Ceprot}~\cite{hu_identify_2023} approach and two traditional machine learning methods, KNN and NMT, using three text-based metrics.
+
+\textbf{Result.}
+Table~\ref{tab:tu_comparisons_llm} compares LLMs and three approaches on the test evolution task, showing that LLMs consistently outperform the two machine learning methods, KNN and NMT. 
+The prediction EM for LLMs ranges from 6.15\% to 35.58\%, showing a substantial improvement of 23.0\% to 611.6\% over NMT. 
+For the CodeBLEU metric, LLMs achieve scores ranging from 46.42\% to 86.35\%, marking an improvement of 23.46\% to 129.65\% over KNN. These results highlight that LLM-based methods significantly outperform traditional machine learning approaches in the test evolution task.
+
+\input{table/rq1-TE}
+
+We then compare the performance of LLMs with the \textsc{Ceprot} approach. Interestingly, we observe a similar situation as in the test generation task. 
+The encoder-only models perform the worst, while encoder-decoder models achieve results similar to \textsc{Ceprot}, and decoder-only models generally perform better. 
+The top-performing model, DeepSeek-Coder-6b, achieves 35.58\% EM and 86.35\% CodeBLEU, representing improvements of 189.27\% and 36.85\%, respectively. 
+Furthermore, as described in Section~\ref{sec:implementation}, we use a tuple containing the original method, the updated method, and the original test as model inputs, thereby removing the edit sequence compared to \textsc{Ceprot}. 
+We find that the edit sequence is too long to be fully incorporated into the input vector, and truncating it typically results in the loss of valuable information, leading us to remove the edit sequence entirely.
+Since \textsc{Ceprot} also utilizes CodeT5 as its base model, we compare the performance of the standalone CodeT5-base model directly with \textsc{Ceprot}.
+The standalone CodeT5-base model achieves 12.88\% in EM and 78.31\% in CodeBLEU, showing an improvement of 4.7\% in EM and 24.1\% in CodeBLEU compared to \textsc{Ceprot}. This indicates that reallocating space from the edit sequence to other content improves the LLMs’ performance, particularly in terms of the CodeBLEU score.
+
+
+
+
+
+\finding{3}{
+Overall, all LLMs outperform traditional ML-based methods, and most LLMs also surpass the performance of \textsc{Ceprot}. Furthermore, comparing CodeT5-base and \textsc{CEPROT} suggests that reallocating space from the edit sequence to other content can improve performance.
+}

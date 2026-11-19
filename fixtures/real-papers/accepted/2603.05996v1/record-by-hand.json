@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acl.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "naacl2021.sty",
+      "role": "preamble"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "35a7986a326fe22c25814f37c13cf2e2cd40235570fe38ba12909a36b7a5ee8d",
+    "acl.sty": "f2168b57b2f445aac55af82662c8aa9dbad771f6393da5a154fa163abec2e76a",
+    "naacl2021.sty": "7e271901060160da626c9f792788bff0389c82d3084867d5bc8db7d93c7dfbcb"
+  }
+}

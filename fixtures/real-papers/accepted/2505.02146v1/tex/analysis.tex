@@ -1,0 +1,103 @@
+\vspace{-5pt}
+\subsection{Motivation}
+
+To understand the design principle of \name{}, we evaluate transcompilation of real-world tensor programs by using state-of-the-art LLM (i.e., GPT-4) and program synthesis tools.
+
+%conducted evaluation on real-world datasets to illustrate the shortcomings of existing methods in transcompiling between DLPs.
+
+\textbf{Taxonomy of the transcompilation errors}. We first classified all errors introduced in the transcompilation process into 3 categories, each corresponding to specific characteristics of DLS: 
+(1) \emph{Parallelism-related errors}, where the transcompilation fails to analyze the loop semantics and generates the incorrect loops or builtin variables of DLS,
+(2) \emph{Memory-related errors}, where the transcompilation cannot deal with the intricate memory hierarchies for the DLS, resulting in incorrect memory declarations and usage, and 
+(3) \emph{Instruction-related errors}, which occur when the translated code utilizes incorrect instructions or parameters that cannot perform the same computation. Figure~\ref{fig:error-examples} illustrates examples of different errors when transcompiling from CUDA C to BANG C code by GPT-4.
+In Figure~\ref{fig:error-examples}(a), the translated code failed to perform the appropriate address offset calculations according to the parallelism characteristics of MLU.
+Figure~\ref{fig:error-examples}(b) fails to correctly place the B Tensor in the original GEMM operation into the appropriate memory hierarchy of the MLU (i.e., WRAM).
+Figure~\ref{fig:error-examples}(c) tends to replace the original SIMT-based scalar operations with SIMD-based tensorized instructions, but the parameter that indicates the tensor length should be $2309$ rather than $1024$.
+
+\begin{figure}[!ht]
+    \vspace{-10pt}
+    \centering
+    \includegraphics[width=1.0\linewidth]{figures/errors-figure3.pdf}
+    \vspace{-20pt}
+    \caption{\small The unsuccessful transcompilation examples of GPT-4: (a) Parallelism-related. (b) Memory-related. (c) Instruction-related.}
+    \label{fig:error-examples}
+    \vspace{-10pt}
+\end{figure}
+
+
+Based on the transcompilation error taxonomy, we examine the existing methods and draw the following observations.
+
+\textbf{Observation \#1:} \emph{The single-step LLM-based transcompilation exhibits significant error rates across all three categories, posing challenges for accurately transcompiling programs across deep learning systems.}
+
+Table~\ref{tab::outcome} presents the detailed results for transcompiling CUDA C code to BANG C for real-world operators (detailed in Sec.\ref{sec:evaluation}) using GPT-4. For the zero-shot, the compilation error rate was 100\%, primarily because the LLM struggled with the \emph{complex memory hierarchy} (100\%) and \emph{special instructions} (100\%) due to its insufficient training on DLS-specific datasets. For the few-shot which provided several examples in prompts, although the translated code compiled successfully, it showed functional errors, particularly with parallelism (97.2\%) and instruction-related issues (94.4\%), resulting in an overall computation error rate of 92.3\%. These findings highlight the limitations of single-step LLM-based transcompilations, even with the most advanced LLMs.
+
+
+% \vspace{-5pt}
+\begin{table}[!ht]
+\vspace{-5pt}
+    \caption{\small Breakdown of the unsuccessful transcompilations produced by GPT-4 based on outcome.(\%)}
+    \label{tab::outcome}
+    \centering
+    \vspace{-5pt}
+    \scriptsize
+    \setlength{\tabcolsep}{1pt}
+    \resizebox{.99\columnwidth}{!}{
+  \begin{tabular}{c|ccc|c|ccc|c|}
+   \toprule
+  \multirow{2}{*}{\textbf{Errors}} & 
+    \multicolumn{3}{c|}{\textbf{Compilation}} & \multirow{2}{*}{\textbf{Total}} & \multicolumn{3}{c|}{\textbf{Computation}} & \multirow{2}{*}{\textbf{Total}}\\ \cmidrule{2-4} \cmidrule{6-8}  
+     & \textbf{Parallelism} & \textbf{Memory} & \textbf{Instruction} & & \textbf{Parallelism} & \textbf{Memory} & \textbf{Instruction} &  \\  \midrule
+    \textbf{Zero-Shot} & 3 & 100 & 100 & 100 & -- & -- & -- & -- \\ 
+    \textbf{Few-Shot} & 2.3 & 27.1 & 76.5 & 49.4 & 97.2 & 2.8 & 94.4 & 92.3 \\
+
+\bottomrule 
+
+\end{tabular}
+}
+\vspace{-5pt}
+\end{table}
+
+
+\begin{figure*}[t]
+\vspace{-20pt}
+\centering
+\includegraphics[width=0.75\linewidth]{figures/fig3-xjx-crop.pdf}
+    \vspace{-10pt}
+    \caption{\small\todo{The overview of \name{}, a novel transcompiler for automatic transcompilation of tensor programs across different programming models. The transcompiler consists of two parts: (a) neural-symbolic program synthesis, which utilizes LLM to transform code and repair incorrect transformation through symbolic synthesis with limited scales, and (b) hierarchical performance auto-tuning, which systemically explores both the parameters and sequences of transformation passes.
+    }}% The black arrows show the candidate programs of the translated code. }
+    % \vspace{-15pt}
+    \label{fig:overview}
+    \vspace{-15pt}
+\end{figure*}
+
+
+
+
+\textbf{Observation \#2:} \emph{Search-based program synthesis excels at optimizing loop bounds and indexing but struggles with high-level program sketches generation, while LLMs are proficient at generating high-level program sketches but prone to errors in low-level details such as loop bounds and indexing.}
+
+
+% \vspace{-5pt}
+\begin{table}[!ht]
+\vspace{-5pt}
+    \caption{\footnotesize Taxonomy of the search-based program synthesis approach.}
+    \label{tab::fuck}
+    \centering
+    \vspace{-5pt}
+    \scriptsize
+    \setlength{\tabcolsep}{1pt}
+    \resizebox{.99\columnwidth}{!}{
+\begin{tabular}{c|c|c|c}
+\toprule
+                           & \textbf{Method}                        & \textbf{Inputs} & \textbf{Solving Time} \\ \midrule
+High-level Program Sketchs & Verified Lifting (Tenspiler~\cite{DBLP:conf/ecoop/QiuCBHSC24}) & Custom IR               & +++                   \\ %\midrule
+Low-level Program Details  & SMT Solver (Z3~\cite{Z3Solver})                   & SMT Query               & +                     \\ \bottomrule
+\end{tabular}
+}
+\vspace{-10pt}
+\end{table}
+
+
+We analyze the strengths and limitations of search-based program synthesis and LLMs in tensor program transcompilation, highlighting their complementary roles.
+Search-based synthesis, as shown in Table~\ref{tab::fuck}, excels at synthesizing and verifying low-level details such as loop bounds and indexing, leveraging its ability to handle mathematical constraints. However, it struggles with generating high-level structures like control flow and efficiently utilizing the memory hierarchy and specialized intrinsics. In contrast, LLMs are highly effective at generating high-level program skeletons but prone to errors in low-level details, such as loop bounds and indexing, as illustrated in Figure~\ref{fig:error-examples}(c).
+By combining both approaches, LLMs can generate the high-level program structure, while search-based synthesis refines the low-level details, leading to more accurate, efficient, and reliable program synthesis.
+
+These observations motivate us to decompose the program translation process into a series of LLM-assisted transformations, where program synthesis tools can further enhance the correctness of transcompilation.

@@ -1,0 +1,329 @@
+\section{Method}
+\label{sec:method}
+
+\subsection{Motivation}
+Adaptive reasoning is fundamentally a \emph{routing} problem. Before generating an answer, the model must decide whether to spend tokens on explicit deliberation.
+In open-domain tasks, supervising this routing is difficult because task \textit{difficulty} is latent: correctness can be ambiguous and the same query may be easy or hard depending on a model's calibration and knowledge.
+As a result, fixed heuristics (e.g., always long CoT or static budgets) are often miscalibrated.
+
+\paragraph{Why math as a proxy}
+We ground our training signal in mathematical reasoning because it admits \emph{deterministic} verification and a \emph{model-relative} notion of when reasoning pays off.
+For each input query $x$, we elicit two mode-conditioned behaviors: (i) a direct-answer mode (\textsc{Short}) and (ii) an explicit-reasoning mode (\textsc{Long}). 
+Let $c_S(x),c_L(x)\in\{0,1\}$ denote exact correctness under each mode. 
+Rather than relying on external difficulty labels, we can use the difference between mode-conditioned success rates (e.g., Pass@$k$) as an empirical difficulty proxy: instances where \textsc{Long} is more reliable than \textsc{Short} are treated as harder for the current model, and vice versa.
+This model-specific signal provides supervision for learning routing policies without external difficulty labels.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.95\linewidth]{ACL2026/figures/threshold_route.pdf}
+      \caption{Thresholding on a \textsc{Short}-mode confidence signal yields a smooth routing trade-off about probability threshold vs number of routed instances over MATH500 dataset~\cite{hendrycks2021measuring}.}
+    \label{fig:motivation-threshold}
+\end{figure}
+
+\paragraph{Self-taught difficulty signals}
+After a lightweight SFT step that teaches the model to follow our \textsc{Short}/\textsc{Long} templates (\S\ref{subsec:sft}), we observe that routing can be anticipated at the generation root.
+We obtain a model-specific difficulty signal by contrasting mode-conditioned accuracy on the same query (e.g., Pass@$k$ under \textsc{Short} vs.\ \textsc{Long}).
+To expose this signal for routing, we \emph{parameterize} the mode decision at the generation root: under our template, the first newline token(s) after \texttt{<think>} select \textsc{Long} vs.\ \textsc{Short} (\texttt{\textbackslash n} vs.\ \texttt{\textbackslash n\textbackslash n}).
+Let $z_S$ denote the \textsc{Short} root token (\texttt{\textbackslash n\textbackslash n}) and define a root-level \textsc{Short}-preference proxy as the model's conditional probability at this decision point:
+\[
+p_{\mathrm{short}}(x)\;=\;p_\theta\!\left(z_S \mid x,\texttt{<think>}\right).
+\]
+We route by thresholding:
+\[
+\pi_\tau(x)=
+\begin{cases}
+\textsc{Short} & \text{if } p_{\mathrm{short}}(x)\ge \tau,\\
+\textsc{Long}  & \text{otherwise}.
+\end{cases}
+\]
+Varying $\tau$ yields a simple calibration knob (\Autoref{fig:motivation-threshold}): larger $\tau$ makes the router more conservative, assigning fewer queries to \textsc{Short} and increasing the fraction routed to \textsc{Long}.
+This synthetically produces an interpretable accuracy--routing trade-off, where intermediate thresholds preserve overall accuracy while reducing \textsc{Long} usage (\Autoref{tab:motivation-threshold}).
+
+\begin{table}[t]
+\centering
+\small
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{l|lll}
+\toprule
+Method ($\tau$) & \textsc{Short} & \textsc{Long} & Overall \\
+\midrule
+Original & 0.00 (0) & 83.6 (500) & 83.6 (500) \\
+Adaptive (0.75) & 93.6 (62) & 82.4 (438) & 83.8 (500) \\
+Adaptive (0.70) & 89.7 (155) & 78.8 (345) & 82.2 (500) \\
+\bottomrule
+\end{tabular}%
+}
+\caption{Accuracy (\%) and routed instance counts (in parentheses) under threshold routing over MATH500 dataset~\cite{hendrycks2021measuring} with R1-1.5B model.}
+\label{tab:motivation-threshold}
+\end{table}
+
+\begin{figure}[t]
+  \centering
+  \begin{subfigure}[t]{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{ACL2026/figures/short.png}
+    \caption{\textsc{Short}}
+    \label{fig:tokenlen-short}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{ACL2026/figures/long.png}
+    \caption{\textsc{Long}}
+    \label{fig:tokenlen-long}
+  \end{subfigure}\hfill
+  \caption{Token-length histograms (log-scaled frequency) for \textsc{Short} and \textsc{Long} mode.}
+  \label{fig:tokenlen}
+\end{figure}
+
+Beyond accuracy, routing is motivated by \emph{compute}. We measure generation length $L(x)$ (output tokens) and find that \textsc{Long} exhibits a heavy-tailed length distribution (\Autoref{fig:tokenlen}), i.e., a small fraction of queries trigger disproportionately long traces. This makes the routing decision directly translate into cost control, and motivates learning a lightweight gating policy at the root that reduces unnecessary \textsc{Long} usage without the loss of the model capability.
+
+\subsection{SFT for mode selection}\label{subsec:sft}
+
+\paragraph{Mode definition}
+We define two generation modes using only the reasoning-tag template at the generation root.
+The token \texttt{<think>} is treated as a special token, and \texttt{\textbackslash n} vs.\ \texttt{\textbackslash n\textbackslash n} are tokenized into different root tokens.
+Concretely, we use:
+\begin{itemize}
+  \item \textsc{Long}: prefix \texttt{<think>\textbackslash n} so that the model continues with explicit reasoning content.
+  \item \textsc{Short}: prefix \texttt{<think>\textbackslash n\textbackslash n</think>\textbackslash n\textbackslash n} to suppress explicit reasoning.
+\end{itemize}
+
+\begin{algorithm}[t]
+\caption{SFT for mode selection}
+\label{alg:sft}
+\small
+\begin{algorithmic}[1]
+\Require base model $\pi_0$, prompts $\mathcal{D}$, samples per prompt $M$, tolerance $\epsilon$, budget $K$
+\State $a_0 \gets \mathrm{Eval}(\pi_0;\ \textsc{DefaultChat})$ \Comment{default template}
+\State $\pi \gets \pi_0$
+\While{$\big|\mathrm{Eval}(\pi;\ \textsc{DefaultChat}) - a_0\big| \le \epsilon$}
+  \State $\mathcal{S}_{S} \gets \mathrm{CollectCorrect}(\pi,\mathcal{D},M;\ \textsc{ShortPrefix})$
+  \State $\mathcal{S}_{L} \gets \mathrm{CollectCorrect}(\pi,\mathcal{D},M;\ \textsc{LongPrefix})$
+  \State $\mathcal{T} \gets \mathrm{Sample}(\mathcal{S}_{S},K)\ \cup\ \mathrm{Sample}(\mathcal{S}_{L},K)$
+  \State $\pi \gets \mathrm{SFT}(\pi,\mathcal{T})$
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Self-generated trajectories from OpenR1-Math queries}
+We construct SFT supervision from OpenR1-Math queries by sampling multiple generations from the given LRM under each mode template (\textsc{Short}/\textsc{Long}).
+We retain only generations that (i) satisfy the mode-specific template and (ii) match the exact answer, yielding two pools of correct demonstrations, $\mathcal{S}_{S}$ and $\mathcal{S}_{L}$.
+We then randomly sample $K$ instances from each pool for SFT.
+We do not enforce that a problem must be correct in both modes. 
+
+\paragraph{SFT}
+We use a SFT loop (\Autoref{alg:sft}) to manifest mode-conditioned \emph{style} without performance degradation under the default chat template.
+Let $\mathrm{Acc}_{\mathrm{orig}}$ $=\mathrm{Eval}(\pi_0;\textsc{DefaultChat})$ be the initial accuracy, and let $\mathrm{Acc}(\pi)=\mathrm{Eval}(\pi;\textsc{DefaultChat})$ denote the same metric for an SFT candidate $\pi$.
+We iteratively refresh the correctness-filtered SFT dataset and continue training only while the performance gap remains within a tolerance $\epsilon$:
+\[
+\big|\mathrm{Acc}(\pi) - \mathrm{Acc}_{\mathrm{orig}}\big| \le \epsilon.
+\]
+The loop is intentionally general. Empirically, across LRMs we tested, a single iteration typically sufficed (i.e., the constraint was satisfied without repeated resampling).
+
+\subsection{Root-token policy optimization (\Ours)}\label{subsec:rpo}
+SFT establishes \textsc{Short}/\textsc{Long} behaviors, but reliable \emph{adaptive selection} requires directly optimizing the gating policy.
+The post-SFT model already knows \emph{how} to produce either style; what remains is learning \emph{when} to invoke each one.
+We therefore view adaptive reasoning as a \emph{branching} problem: once the gate is chosen, the continuation is simply a mode-conditioned rollout rather than a learning target.
+Motivated by this hypothesis, we apply \Ours~only to the first gating token (the root), treating the remainder of each sampled trajectory purely as environment output.
+
+\begin{algorithm}[t]
+\caption{Root-token policy optimization}
+\label{alg:root-grpo}
+\small
+\begin{algorithmic}[1]
+\Require policy $\pi_{\theta}$ (init from SFT), reference $\pi_{\text{ref}}$ (frozen), prompts $\mathcal{D}_{\text{rl}}$,
+rollouts per prompt $n$ (even), context budget $S$, temperature $\tau$, KL weight $\beta$,
+mode weights $(\alpha_S,\alpha_L)$
+\State \textbf{Define gating tokens:} $z \in \{\texttt{\textbackslash n},\ \texttt{\textbackslash n\textbackslash n}\}$
+\State \textbf{Define templates:} $\textsc{Short}(z{=}\texttt{\textbackslash n\textbackslash n})$, $\textsc{Long}(z{=}\texttt{\textbackslash n})$
+\For{each training step}
+  \State Sample a minibatch $\mathcal{B} \subset \mathcal{D}_{\text{rl}}$
+  \For{each prompt $x \in \mathcal{B}$}
+    \State \textbf{Balanced rollouts:} generate $n/2$ trajectories with \textsc{Short} template and $n/2$ with \textsc{Long}
+    \State $\{(z_i^{(x)}, y_i^{(x)})\}_{i=1}^{n} \gets \mathrm{Rollout}(\pi_{\theta}, x;\ S,\tau)$ \Comment{$z_i^{(x)}$ is the root newline token(s)}
+    \State Compute correctness indicators $c_i^{(x)} \gets \mathbf{1}\{\mathrm{Ans}(y_i^{(x)})\ \text{is correct}\}$
+    \State Let $C_S(x) \gets \sum_{i:\,z_i^{(x)}=\texttt{\textbackslash n\textbackslash n}} c_i^{(x)},\quad C_L(x) \gets \sum_{i:\,z_i^{(x)}=\texttt{\textbackslash n}} c_i^{(x)}$
+    \For{$i=1$ to $n$}
+      \State $r_i^{(x)} \gets \alpha_S \cdot C_S(x)$ if $z_i^{(x)}=\texttt{\textbackslash n\textbackslash n}$ else $r_i^{(x)} \gets \alpha_L \cdot C_L(x)$
+    \EndFor
+    \State Store root-token log-probs $\ell_i^{(x)} \gets \log \pi_{\theta}(z_i^{(x)}\!\mid\! x)$ and $\ell_i^{(x),\text{ref}} \gets \log \pi_{\text{ref}}(z_i^{(x)}\!\mid\! x)$
+  \EndFor
+  \State \textbf{Per-mode group-relative advantages} :
+  \State $\mathcal{I}_m \gets \{(x,i) : x \in \mathcal{B},\ m_i^{(x)} = m\}$ 
+  \State $\mu_m \gets \frac{1}{|\mathcal{I}_m|}\!\!\sum_{(x,i) \in \mathcal{I}_m}\!\! r_i^{(x)},\quad
+         \sigma_m^2 \gets \frac{1}{|\mathcal{I}_m|}\!\!\sum_{(x,i) \in \mathcal{I}_m}\!\!(r_i^{(x)}-\mu_m)^2$
+  \State $A_i^{(x)} \gets (r_i^{(x)} - \mu_{m_i^{(x)}}) / (\sigma_{m_i^{(x)}} + \varepsilon)\quad \forall (x,i)$
+  \State \textbf{Root-token-only update} (mask all tokens except $z$):
+  \State $\theta \gets \mathrm{Update}\Big(\theta,\ \nabla_{\theta}\big[
+    -\frac{1}{|\mathcal{B}|}\sum_{x\in\mathcal{B}}\frac{1}{n}\sum_{i=1}^{n} A_i^{(x)}\,\ell_i^{(x)}
+    + \beta\cdot \mathrm{KL}(\pi_{\theta}(z\!\mid\!x)\ \Vert\ \pi_{\text{ref}}(z\!\mid\!x))
+  \big]\Big)$
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Root-token action space}
+We fix a \texttt{<think>} prefix and parameterize gating by the first newline tokenization:
+\vspace{-10pt}
+\[
+z \in \{\texttt{\textbackslash n},\; \texttt{\textbackslash n\textbackslash n}\}.
+\]
+Because \texttt{<think>} is a special token and \texttt{\textbackslash n} vs.\ \texttt{\textbackslash n\textbackslash n} are distinct tokens, $z$ is a well-defined categorical action.
+Selecting $z=\texttt{\textbackslash n}$ enters \textsc{Long}: the model continues generating inside the \texttt{<think>} block (explicit reasoning).
+Choosing $z=\texttt{\textbackslash n\textbackslash n}$ enters \textsc{Short}: the template immediately closes the thinking block, i.e.,
+\texttt{<think>\textbackslash n\textbackslash n</think>\textbackslash n\textbackslash n}.
+\Ours~optimizes only $p_\theta(z\mid x)$; subsequent tokens are masked from the gradient.
+
+\paragraph{Balanced rollouts}
+For each query $x$, we collect $n$ rollouts with a fixed split: $n/2$ \textsc{Short} and $n/2$ \textsc{Long}.
+Let $C_S(x)$ and $C_L(x)$ be the numbers of correct rollouts within the \textsc{Short} and \textsc{Long} groups, respectively.
+This balanced sampling prevents trivial mode collapse and yields comparable advantage statistics across modes.
+
+\begin{table*}[t]
+\centering
+\small
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lllllrr}
+\toprule
+Model & Method & Updated tokens $T$ & KV / rollout (GiB) & Act(bp) / rollout (GiB) & Train+Opt (GiB) & Peak @ $B{=}8$ (GiB) \\
+\midrule
+1.5B
+& Original GRPO & 12K & 2.38 & 13.18 & 22.35 & 146.86 (1.00$\times$)\\
+& \Ours & 1 & 2.38 & $1.10 \times 10^{-3}$ & 22.35 & 41.40 (0.28$\times$)\\
+& \Ours~with LoRA update & 1 & 2.38 & $1.10 \times 10^{-3}$ & 0.07 & 19.12 (0.13$\times$)\\
+\midrule
+7B
+& Original GRPO & 12K & 6.35 & 35.16 & 104.31 & 436.34 (1.00$\times$) \\
+& \Ours & 1 & 6.35 & $2.93 \times 10^{-3}$ & 104.31 & 155.11 (0.36$\times$)\\
+& \Ours~with LoRA update & 1 & 6.35 & $2.93 \times 10^{-3}$ & 0.21 & 51.01 (0.17$\times$)\\
+\bottomrule
+\end{tabular}%
+}
+\caption{
+Peak VRAM (GiB) for long-context GRPO with uniform context $S{=}13$K (1K prompt${+}$12K generation) and $B{=}8$ concurrent rollouts. \Ours~gains memory efficiency by updating the root token ($T{=}1$).
+LoRA further reduces trainable-state memory with fewer trainable parameters. 
+}
+\label{tab:vram-root-vs-vanilla}
+\end{table*}
+
+\paragraph{Prefix-level reward}
+For a fixed prompt $x$, we refer to the $n/2$ rollouts that share a forced mode as the \emph{per-prompt mode group} (one for \textsc{Short}, one for \textsc{Long}). Each rollout is rewarded by the success count of its per-prompt mode group:
+\vspace{-10pt}
+\[
+r_i^{(x)}=
+\begin{cases}
+\alpha_S \cdot C_S(x) & \text{if rollout } i \text{ is in \textsc{Short}},\\
+\alpha_L \cdot C_L(x) & \text{if rollout } i \text{ is in \textsc{Long}}.
+\end{cases}
+\]
+We set $\alpha_L{=}1$ and use a mild \textsc{Short} preference $\alpha_S{=}1+\frac{1}{n}$ to reflect the objective of saving compute without sacrificing the correctness.
+Because $r_i^{(x)}$ depends on the per-prompt mode-group outcome, the update favors routing toward the mode that yields higher group-level correctness for that prompt.
+
+\paragraph{Per-mode group-relative advantages}
+To optimize \emph{switching} under the enforced split, we standardize advantages within each mode by pooling rewards. Per-prompt-mode would be degenerate: by construction, $r_i^{(x)}=\alpha_{m_i}\!\cdot\! C_{m_i}(x)$ is constant across the $n/2$ rollouts that share a mode within prompt $x$, so the within-mode-group variance is identically zero. Cross-prompt variation in $C_S(x)$ and $C_L(x)$ is what supplies the non-degenerate variance needed for advantage estimation. Concretely, for rollout $i$ of prompt $x$ in mode $m_i^{(x)} \in \{S, L\}$, let $\mathcal{I}_m = \{(x,i) : x \in \mathcal{B},\ m_i^{(x)} = m\}$ denote the \emph{group-level mode pool}. Then,
+
+\[
+\resizebox{\linewidth}{!}{$
+\begin{aligned}
+A_i^{(x)} &= \frac{r_i^{(x)} - \mu_{m_i^{(x)}}}{\sigma_{m_i^{(x)}} + \varepsilon}, \\
+\mu_m &= \frac{1}{|\mathcal{I}_m|}\!\!\sum_{(x,j) \in \mathcal{I}_m}\!\! r_j^{(x)},\quad
+\sigma_m^2 = \frac{1}{|\mathcal{I}_m|}\!\!\sum_{(x,j) \in \mathcal{I}_m}\!\!\bigl(r_j^{(x)}-\mu_m\bigr)^2.
+\end{aligned}
+$}
+\]
+
+Pooling is \emph{per-mode} (separate $\mu_S, \sigma_S$ and $\mu_L, \sigma_L$) so that the standardized advantages remain on a comparable scale even when the two modes have systematically different success rates; pooling is \emph{group-level} so that within-mode variance is non-zero. The signal each $A_i^{(x)}$ encodes is therefore ``how does prompt $x$'s mode-$m$ success compare to the group-wide mode-$m$ baseline,'' which the policy converts into an updated routing distribution over $z$. This per-mode group relative scheme presupposes prompt-difficulty diversity within $\mathcal{B}$.
+
+\begin{table*}[t!]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.1}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llrrrrrrrrr|rrrr}
+\toprule
+Model & Stage
+& \multicolumn{3}{c}{MATH500}
+& \multicolumn{3}{c}{AIME24}
+& \multicolumn{3}{c}{AIME25}
+& \multicolumn{4}{|c}{Avg} \\
+\cmidrule(lr){3-5}\cmidrule(lr){6-8}\cmidrule(lr){9-11}\cmidrule(lr){12-15}
+ &  & P@1 & \#Tok & Think\% & P@1 & \#Tok & Think\% & P@1 & \#Tok & Think\%
+ & P@1 & \#Tok & Think\% & RAR$\downarrow$ \\
+\midrule
+Qwen3-1.7B & Baseline (\textsc{Long})
+& 91.1 & 4,539 & 100.0 & 45.6 & 15,569 & 100.0 & 38.1 & 15,830 & 100.0
+& 58.3 & 11,979 & 100.0 & 1.72 \\
+& Baseline (\textsc{Short})
+& 73.0 & 978 & 0.0 & 12.3 & 3,898 & 0.0 & 11.5 & 2,180 & 0.0
+& 32.3 & 2,352 & 0.0 & 0.00 \\
+ & + SFT
+& 85.5 & 3,767 & 69.8 & 34.4 & 12,558 & 72.9 & 30.4 & 12,648 & 75.6
+& 50.1 & 9,658 & 72.8 & 1.45 \\
+ & \cellcolor{gray!20}+ \Ours
+& \cellcolor{gray!20} 79.5 & \cellcolor{gray!20} 2,754 & \cellcolor{gray!20} 31.8 & \cellcolor{gray!20} 43.8 & \cellcolor{gray!20} 13,315 & \cellcolor{gray!20} 93.8 & \cellcolor{gray!20} 31.7 & \cellcolor{gray!20} 14,231 & \cellcolor{gray!20} 96.3
+& \cellcolor{gray!20} 51.7 & \cellcolor{gray!20} 10,100 & \cellcolor{gray!20} 74.0 & \cellcolor{gray!20} 1.43 \\
+\midrule
+Qwen3-8B & Baseline (\textsc{Long})
+& 96.6 & 4,777 & 100.0 & 74.4 & 14,184 & 100.0 & 64.8 & 16,950 & 100.0
+& 78.6 & 11,970 & 100.0 & 1.27 \\
+& Baseline (\textsc{Short})
+& 84.1 & 1,118 & 0.0 & 25.4 & 5,646 & 0.0 & 20.8 & 3,159 & 0.0
+& 43.4 & 3,308 & 0.0 & 0.00 \\
+ & + SFT
+& 90.6 & 3,390 & 53.5 & 54.0 & 12,350 & 59.2 & 46.7 & 12,661 & 59.2
+& 63.8 & 9,467 & 57.3 & 0.90 \\
+ & \cellcolor{gray!20}+ \Ours
+& \cellcolor{gray!20} 90.5 & \cellcolor{gray!20} 2,794 & \cellcolor{gray!20} 25.0 & \cellcolor{gray!20} 52.9 & \cellcolor{gray!20} 12,784 & \cellcolor{gray!20} 56.4 & \cellcolor{gray!20} 42.5 & \cellcolor{gray!20} 12,029 & \cellcolor{gray!20} 53.1
+& \cellcolor{gray!20} 62.0 & \cellcolor{gray!20} 9,202 & \cellcolor{gray!20} 44.8 & \cellcolor{gray!20} 0.72 \\
+\midrule
+Exaone4-1.2B & Baseline (\textsc{Long})
+& 91.0 & 5,416 & 100.0 & 54.0 & 18,529 & 100.0 & 43.8 & 19,124 & 100.0
+& 62.9 & 14,356 & 100.0 & 1.59 \\
+& Baseline (\textsc{Short})
+& 75.6 & 854 & 0.0 & 21.9 & 3,075 & 0.0 & 15.2 & 2,718 & 0.0
+& 37.6 & 2,216 & 0.0 & 0.00 \\
+ & + SFT
+& 84.6 & 3,015 & 40.9 & 37.3 & 9,524 & 39.8 & 31.3 & 10,562 & 49.4
+& 51.1 & 7,700 & 43.4 & 0.85 \\
+ & \cellcolor{gray!20}+ \Ours
+& \cellcolor{gray!20} 83.5 & \cellcolor{gray!20} 2,455 & \cellcolor{gray!20} 25.5 & \cellcolor{gray!20} 33.8 & \cellcolor{gray!20} 6,592 & \cellcolor{gray!20} 21.9 & \cellcolor{gray!20} 27.3 & \cellcolor{gray!20} 6,665 & \cellcolor{gray!20} 23.3
+& \cellcolor{gray!20} 48.2 & \cellcolor{gray!20} 5,237 & \cellcolor{gray!20} 23.6 & \cellcolor{gray!20} 0.49 \\
+\bottomrule
+\end{tabular}%
+}
+\caption{Baseline $\rightarrow$ SFT mode selection $\rightarrow$ \Ours~on math benchmarks.
+Pass@1 (P@1) is the average accuracy (\%) over 16 runs. \#Tok is average generated tokens. Think\% is the fraction routed to \textsc{Long}.
+\textbf{Avg} columns are simple averages over (MATH500, AIME24, AIME25).
+\textbf{RAR} (\(\downarrow\)) is the reasoning-per-accuracy ratio, defined as
+\(\mathrm{RAR}_{\text{avg}} = \frac{t_{\text{avg}}}{a_{\text{avg}}+\varepsilon}\), where \(a_{\text{avg}}\) and \(t_{\text{avg}}\) are Avg Pass@1 and Avg Think\% as fractions. Lower is better.}
+\label{tab:main_math_progress}
+\vspace{-10pt}
+\end{table*}
+
+\paragraph{\Ours~objective with KL regularization}
+We regularize the log-probability of the root action $z$ with KL-to-reference loss:
+\begin{align}
+\max_{\theta}\;\; & \mathbb{E}_{x}\!\left[\frac{1}{n}\sum_{i=1}^{n} A_i\,\log p_{\theta}(z_i\!\mid x)\right] \nonumber\\
+&-\beta\;\mathrm{KL}\!\left(p_{\theta}(z\!\mid x)\,\Vert\,p_{\theta_{\mathrm{ref}}}(z\!\mid x)\right).
+\end{align}
+where $\theta_{\mathrm{ref}}$ is the post-SFT checkpoint.
+In implementation, we generate full trajectories to evaluate correctness and compute rewards, but retain only the root log-probabilities. Other non-root tokens are discarded from the training graph, and the update is performed solely on $p_{\theta}(z{\mid}x)$.
+
+\paragraph{Balanced difficulty sampling}
+We perform \Ours~on a compact set of $\sim$1K queries comprised of a part of s1k \cite{muennighoff2025s1} and compression dataset \cite{arora2025training}.
+With the post-SFT model, We estimate mode-conditioned success rates and exclude items where \textsc{Long} is rarely correct ($\mathrm{acc}_{L}{<}\tau_{\min}{=}0.25$).
+We then stratify the remaining queries into \textit{easy} and \textit{hard} regimes and sample them in a 1:1 ratio to stabilize updates and avoid mode collapse.
+Concretely, \textit{easy} includes queries where \textsc{Short} is already competitive (e.g., $\mathrm{acc}_{S}{\ge} \tau_{\text{easy}}{=}0.75$), while \textit{hard} includes queries where \textsc{Long} is consistently preferable (e.g., $\mathrm{acc}_{S}{<}\mathrm{acc}_{L}{\le} \tau_{\text{hard}}$ with $\tau_{\text{hard}}{=}0.5$).
+
+\paragraph{Why root-only updates are memory-efficient} 
+Both vanilla GRPO and \Ours\ must work with KV-cache over the full rollout context length $S$ during sampling. The training-time gap arises from backpropagation. Vanilla GRPO updates all generated tokens, whereas \Ours\ masks the trajectory and updates only the root gating token ($T{=}1$). As a result, the dominant activation term scales with the number of updated tokens,
+\[
+\mathcal{M}_{\text{bp}} \propto B \cdot T \cdot L \cdot d \cdot b \cdot \kappa,
+\]
+where $B$ is the number of rollouts processed concurrently, $L$ and $d$ are model depth and width, $b$ is the activation precision (e.g., bf16), and $\kappa$ aggregates saved intermediates (e.g., attention/MLP). Thus, setting $T{=}1$ removes the linear dependence on long CoT length.
+\Autoref{tab:vram-root-vs-vanilla} quantifies this effect under long-context rollout scenarios, where activation memory dominates the feasibility boundary.
+
+\paragraph{Training configuration}
+Unless noted otherwise, we use three H100 GPUs in a node.
+Each iteration samples 8 queries and collects $n{=}16$ rollouts per query (8 per mode) with temperature 0.6 and top-$p$ 0.95. We allow maximum context length 16,384 for rollouts.

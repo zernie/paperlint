@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "aaai2026.sty",
+      "role": "preamble"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "f2675ff45658caee5c5d778491e47872a0d78461901f2124f478fe10214eb1bc",
+    "aaai2026.sty": "6f90c4d7a36f4a038daf187fdd6cec9fe578aba819733b49551574a37feecd35"
+  }
+}

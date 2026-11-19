@@ -1,0 +1,214 @@
+\section{Introduction}
+
+% First graph, Sub-graph pattern counting is important... But privacy issue... To address this, DP has been widely used: by adding... DP guarantee the privacy of node/edge. 
+
+
+
+Graph pattern counting is fundamental for extracting meaningful insights from graph data, with applications in community detection~\cite{palla2005uncovering}, fraud detection~\cite{akoglu2013anomaly}, and network characterization~\cite{milo2002network}.
+However, directly releasing such analytical results can pose significant privacy risks, as adversaries may infer sensitive information about nodes or edges in the graph~\cite{narayanan2009anonymizing, wu2021adapting, zhang2022inference}.
+To address this privacy concern, \emph{differential privacy} (DP)~\cite{dwork2006calibrating} has emerged as a gold-standard framework for privacy-preserving graph data analysis. 
+By injecting carefully calibrated noise into the computation, DP prevents the reliable inference of any single node or edge's presence, thereby providing node- or edge-level privacy guarantees.
+
+
+% However, traditional focuses central... Local model...
+
+
+
+Most existing studies on DP in graphs adopt the \emph{central differential privacy} (central-DP) model~\cite{nissim2007smooth,karwa2011private,zhang2015private,dong2023continual}, where a trusted curator accesses the entire dataset and applies the DP mechanism globally.
+While effective in utility (i.e., low error), this model assumes full trust in the curator, making it vulnerable to data breaches and privacy attacks. 
+To mitigate this risk, the \emph{local differential privacy} (LDP)~\cite{kasiviswanathan2011can,cormode2018privacy} model has gained traction, wherein each data holder privatizes their data locally before sharing it with any external party, including the analyzer and other data holders. 
+In the graph setting, each node functions as a data holder, with access only to its incident edges.
+Following prior work on LDP-based graph pattern counting~\cite{sun2019analyzing,ye2020towards,ye2020lf,Imola2021,Imola2022,eden2023triangle,he2025robust}, we adopt the same edge-level privacy setting, referred to as edge-LDP.
+Consequently, any released information is well protected, offering robust privacy guarantees even under adversarial conditions.
+
+
+% Following prior work on LDP for graph pattern counting~\cite{}, we focus specifically on protecting edge-level privacy, a setting known as edge-LDP. 
+
+
+
+% However, consider... is very complex. Why? a patten requires information of multiple nodes making it complex for privacy protection. As a result.. focuses on specific pattern like star, triangle .... There is no universal solution even only for the general acyclic counting queries. Therefore two challenges: 1. general collect data/ 2.remove node duplication
+
+
+However, realizing graph pattern counting under LDP is fundamentally challenging due to the decentralized nature of data collection. 
+More specifically, constructing a graph pattern typically requires aggregating information distributed across multiple nodes, which is inherently complex under the LDP privacy requirement. 
+As a result, existing works have primarily focused on simple, localized structures such as stars~\cite{Imola2021} and triangles~\cite{ye2020towards, ye2020lf,Imola2021, Imola2022,eden2023triangle, he2025robust}, where the required information can be gathered with minimal coordination between nodes.
+Despite this progress, no universal solution exists, even for the subclass of acyclic pattern counting queries, which serve as fundamental primitives in network analysis~\cite{milo2002network, itzkovitz2005subgraphs,katz1953new,liben2003link} and relational database queries~\cite{yannakakis1981algorithms, gottlob2001complexity} in the non-private setting.
+% LDP motivation
+Furthermore, realizing acyclic pattern counting under LDP is natural and practically important when the graph is inherently distributed across multiple parties (e.g., across social platforms).
+In this work, we identify the following two unresolved challenges in enabling acyclic graph pattern counting under LDP.
+
+
+
+
+\begin{table}[t]
+\centering
+% \setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.2}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{l c *{3}{c} *{3}{c}}
+\toprule
+ &  & \multicolumn{3}{c}{\textbf{Our Results}} & \multicolumn{3}{c}{\textbf{SOTA}} \\
+\cmidrule(lr){3-5}\cmidrule(lr){6-8}
+\textbf{Task} & \textbf{Query Result}
+& \textbf{Error} & \textbf{Comm.} & \textbf{Time}
+& \textbf{Error} & \textbf{Comm.} & \textbf{Time} \\
+
+\midrule
+$k$-line walk counting
+& $\leq N d(G)^{k}$
+& $\tilde{O}(\sqrt{N}d(G)^{k-1})$ & $O(M + N)$ & $O(N d(G))$
+& 
+{-}
+% \blue{$O(N^{k/2}d(G)^{k/2})$
+% \footnotemark} 
+& {$O(N^2)$} & {$O(N d(G))$} \\
+
+$k$-line path counting
+& $\leq N d(G)^{k}$
+& $\tilde{O}(\sqrt{N} d(G)^{k})$ & $O(M + N)$ & $O(Nd(G))$
+& {$O(N^k)$} & $O(N^2)$ & $O(N^{k+1})$ \\
+
+
+$k$-edge acyclic pattern counting
+& $\leq N d(G)^{k}$
+& $\tilde{O}(\sqrt{N} d(G)^{k})$ & $O(M + N)$ & $O(Nd(G))$
+& {$O(N^k)$} & $O(N^2)$ & $O(N^{k+1})$ \\
+
+% $k$-star counting
+% & $\leq N d(G)^{k}$
+% & $\tilde{O}(\sqrt{N} d(G)^{k-1})$ & $O(N)$ & $O(N)$
+% & $\tilde{O}(\sqrt{N} d(G)^{k-1})$ & $O(N)$ & $O(N)$ \\
+\bottomrule
+\end{tabular} 
+}
+\caption{
+Summary of results for three pattern counting queries under edge-LDP.\protect\footnotemark\protect\footnotemark
+Here, $N$ is the number of nodes, $M$ is the number of edges, $d(G)$ is the maximum degree of graph $G$, and $k$ is the number of edges in the pattern.
+SOTA denotes the state-of-the-art method: {\cite{betzer2024publishing} for $k$-line walk counting, and \cite{suppakitpaisarn2025counting} for both $k$-line path counting and $k$-edge acyclic pattern counting.}
+{The error bound in \cite{betzer2024publishing} depends on ad hoc parameters and is therefore not included.
+}
+}
+\label{tab:task-comparison}
+\end{table}
+
+\footnotetext[1]{
+We use $\Omega(\cdot)$ to denote asymptotic lower bounds, $O(\cdot)$ for asymptotic upper bounds, and $\tilde{O}(\cdot)$ to suppress logarithmic factors. 
+The number of pattern edges $k$, privacy budget $\varepsilon$, and error probability $\beta$ are treated as constants and omitted from the asymptotic notation.
+}
+
+\footnotetext[2]{
+All results in the introduction hold with constant probability.
+}
+
+
+
+\textbf{Challenge 1. Generalizing acyclic pattern construction.} 
+% Developing a general method to reconstruct arbitrary acyclic patterns from distributed information.
+Existing LDP pattern counting solutions typically exploit structure-specific properties to guide computation, making them hard to extend to more complex or varied patterns.
+For example, in star counting, each node independently counts the number of stars centered at itself and sends a perturbed count to the analyzer for aggregation.
+In triangle counting, a common approach is for each node to locally enumerate pairs of its neighbors and complete the triangle using the noisy information of the last edge.
+In contrast, general acyclic pattern counting should support arbitrary sizes and structures without relying on any pattern-specific assumptions.
+
+
+
+\textbf{Challenge 2. Eliminating node duplication.}  
+Acyclic patterns require that all nodes within a pattern instance be distinct, since repeated nodes would form cycles.
+While this constraint also applies to stars and triangles, duplication is easy to prevent there because all involved nodes lie within a local neighborhood, which allows a single node to ensure that no repeated nodes appear in the pattern. 
+In contrast, general acyclic patterns may span distant nodes, making it difficult for any single node to detect and eliminate duplication.
+
+
+
+
+
+A straightforward approach to addressing both challenges is to process data centrally on the analyzer using the standard LDP technique of \emph{Warner's Randomized Response} (RR)~\cite{warner1965randomized}, {as recently adopted by~\cite{suppakitpaisarn2025counting}}.
+Specifically, each node privatizes its incident edge list using RR and sends it to the analyzer, which then reconstructs a global noisy graph and performs analytics on it.
+However, this method yields poor utility with an error bound of {$O(N^k)$}, where $N$ is the number of nodes and $k$ is the number of edges in the target pattern. 
+In contrast, the true pattern count is at most $N d(G)^k$, where $d(G)$ is the maximum degree. 
+{For many real-world networks with relatively uniform degree distributions, the count typically scales as $O(N d(G)^k)$.
+This gap highlights the inefficiency of the RR-based method.
+In the central-DP literature, algorithms often achieve error bounds of the form $\tilde{O}(\mathrm{poly}(d(G)))$~\cite{johnson2018towards}.
+Since LDP typically incurs an additional $O(\sqrt{N})$ overhead~\cite{bonawitz2017practical} compared to central-DP, this raises the central question of our work:}
+% For most real-world graphs, prior work~\cite{Imola2021} and our experiments consistently show that the error of the RR approach exceeds the actual count by a wide margin, rendering it impractical.
+% This raises the central question of our work:
+
+
+% \footnotetext[1]{\marginnote{\blue{R2.O2}}\tocomplete{
+% The original paper’s error bound depends on ad hoc parameters, and we report the worst-case bound under the ideal clipping threshold $\sqrt{d(G)}$ suggested in that paper.
+% }}
+% We derive this worst-case error bound under the ideal assumption that the clipping threshold is set to $\sqrt{d(G)}$, as suggested in the original paper.
+
+
+
+
+
+
+
+% !!!!!! DO NOT FORGET:
+
+
+% As shown in Section~\ref{subsec:strawman}, this method suffers from poor utility with an error of $\Omega(N^{k+1})$
+% , and incurs an exponential runtime of $O(N^{k+1})$ on the analyzer side, making it infeasible for large-scale, real-world graphs. 
+
+
+
+\emph{{Is there a general solution for counting arbitrary acyclic graph patterns under edge-LDP with an error of $\tilde{O}(\sqrt{N}\,\mathrm{poly}(d(G)))$?}}
+% \emph{Is there a practical and general solution for counting arbitrary acyclic graph patterns under edge-LDP?}
+
+% Our result idea is to reduce subproblems.. Each node collect Solve sub-problem and then, based previous ... 
+% Give the line path counting query as an example, in each iteration, each collect, from neighbors. To remove ..., we invent rank marking 
+
+
+
+This paper answers the question affirmatively. 
+To address \textbf{Challenge~1}, we 
+%\marginnote{\orange{R3.O2}}\tocomplete{adapt the subtree decomposition~\cite{yannakakis1981algorithms} to the LDP setting}, recursively reducing acyclic pattern counting to subpattern counting and solving it step by step.
+recursively reduce acyclic pattern counting to subpattern counting, where each subpattern is also acyclic, and solve it step by step.
+Consider path counting as an example, where the goal is to count the number of paths with $k$ edges, namely $k$-line paths. 
+In each round, a node collects from its neighbors the counts of paths of a certain length ending at those neighbors, starting from the base case of $0$-line paths, each initialized with a count of $1$. 
+The node then aggregates these counts to compute the number of paths that are one edge longer and end at itself.
+After $k$ rounds, each node holds the count of $k$-line paths ending at itself, and the global count is obtained by summing over all nodes. 
+To address \textbf{Challenge~2}, {we develop a \emph{random marking} technique inspired by color-coding~\cite{alon1995color}, which was originally proposed to reduce the runtime of non-private path and cycle detection.}
+ % we propose a novel technique called \emph{random marking}
+With random marking, each node is restricted to appear only at a designated position in the pattern during computation. 
+This technique can be seamlessly combined with our first solution by allowing each node to participate in only one specific round. 
+By integrating both strategies, we develop the first general solution for acyclic pattern counting under edge-LDP. 
+% Table~\ref{tab:task-comparison} summarizes the results. 
+Our main contributions are as follows:
+
+
+
+
+
+
+\begin{enumerate}
+\item 
+As our first result, we address $k$-line walk counting under edge-LDP, which serves as the foundation of our mechanisms for acyclic patterns. 
+Our mechanism runs in $k-1$ rounds and produces an unbiased estimate of the true number of $k$-line walks, with an error of $\tilde{O}(\sqrt{N} d(G)^{k-1})$.
+Summing over all rounds, the mechanism incurs an overall communication cost of $O(M+N)$, a computation cost of $O(N)$ on the analyzer, and $O(d(G))$ on each node.
+
+
+\item
+We next address $k$-line path counting by applying random marking to our $k$-line walk counting solution.
+The resulting $k$-round mechanism also produces an unbiased estimate, with a slightly increased error of $\tilde{O}(\sqrt{N}d(G)^k)$. 
+Moreover, it maintains the same overall communication cost of $O(M+N)$ and computation costs of $O(N)$ on the analyzer and $O(d(G))$ on each node.
+
+
+\item 
+We further generalize our $k$-line path counting solution to handle arbitrary acyclic patterns with $k$ edges. 
+The resulting mechanism runs in at most $k$ rounds and produces an unbiased estimate, with asymptotically the same error of $\tilde{O}(\sqrt{N} d(G)^k)$.
+The communication and computation costs remain unchanged, with a total communication cost of $O(M+N)$, a computation cost of $O(N)$ on the analyzer, and $O(d(G))$ on each node.
+% Additionally, for $k$-star counting, we will show our mechanism can be optimized to achieve an error of $\tilde{O}(\sqrt{N}d(G)^{k-1})$, matching that of the SOTA method.
+
+\end{enumerate}
+
+
+
+Experimental results show that our mechanism achieves a relative error below ${8}\%$ on $k$-line walk counting queries. 
+For acyclic pattern counting tasks, including $k$-line path counting and $k$-edge acyclic pattern counting, our mechanisms yield up to ${46}$–${2600}\times$ improvement in utility and ${300}$–$650\times$ reduction in communication cost over the RR-based approach. 
+
+% Additionally, for $k$-star counting, our mechanism outperforms $\mathrm{LocalLap}_{k\star}$ with up to a $710\times$ improvement in utility and a $3\times$ reduction in communication cost.
+
+
+
+
+

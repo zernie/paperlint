@@ -1,0 +1,47 @@
+\label{sec:background}
+
+\subsection{Attacks on Digital Signature Schemes}
+\label{sec:background:sub:dssattacks}
+
+\paragraph{RSA}
+
+A direct way to attack RSA signatures is to compute factors of the RSA modulus, since this would allow attackers to calculate the private key. Notably, when two keys share a prime factor, factoring becomes as easy as calculating the greatest common divisor (GCD) of both moduli; for large collections of RSA moduli, batch GCD algorithms~\cite{bernstein2004find} can be applied. If a weak randomness source is used, this results in a higher probability that a prime factor is reused~\cite{yilek2009private}. RSA is susceptible to \emph{fault attacks} when employing the Chinese Remainder Theorem for modular exponentiation~\cite{JC:BonDeMLip01,CHES:ABFHS02}; such attacks have recently been applied to SSH server authentication~\cite{CCS:RHSH23}. If proprietary optimizations are used in key generation, this may also result in vulnerabilities~\cite{CCS:NSSKM17}. Our complete toolchain to analyze RSA public keys is detailed in \autoref{subsec:securitykeys}.
+
+\paragraph{(EC)DSA}
+
+DSA and ECDSA are parts of the \emph{Digital Signature Standard} (DSS,~\cite{FIPS-186-4,FIPS-186-5}). DSA uses a subgroup $G$ of the multiplicative group of a finite field $GF(p)$ whose order $q$ is tailored to specific hash functions. To compute a DSA signature $(r,s)$, the value $s$ is computed from the hash value $h(m)$ of the message to be signed, the private key $a$ of Alice, and $r=g^k$ computed from a random nonce $k$. It is known that using biased or repeated nonces $k$ enables recovering the private key of Alice from a set of valid DSA signatures~\cite{FC:BreHen19}. To mitigate this threat, the use of deterministic, pseudorandom nonces generated from a high-entropy secret value and some deterministic, non-repeating parameters was proposed~\cite{rfc6979}.
+
+In ECDSA~\cite{FIPS-186-4}, $G$ is an elliptic curve of order $q$. In Appendix D to~\cite{FIPS-186-4}, NIST recommends a list of elliptic curves for ECDSA. While the bit lengths of the elliptic curve moduli \poneninetwo, \ptwotwofour, \ptwofivesix, and \pthreeeightfour align with byte boundaries and hash lengths from the \shatwo and \shathree standards, this is not the case with \pfivetwoone---there is no typo switching the last two digits, but $p=2^{521}-1$ is one of the extremely rare \emph{Mersenne} prime numbers. This special form allows computations in $GF(2^{521}-1)$, and thus in the corresponding elliptic curve group, to be carried out very efficiently. Like their DSA counterparts, ECDSA algorithms allow the private key recovery if the nonces $k$ are biased or reused.
+
+\subsection{SSH}
+\label{subsec:ssh}
+
+\paragraph{Standards and Deployment}
+
+IETF standards~\cite{rfc4252,rfc4253,rfc4254} define the basic structure of SSH. There has been no major or minor version update since 2006, despite SSH's constant evolution and the addition of new cryptographic algorithms to its implementations. However, recently, an IETF working group tasked with formally documenting previously undocumented SSH features was established. In contrast to TLS, SSH is mainly deployed in small or closed ecosystems, where a small number of system administrators manage a small number of servers. Large platforms like GitHub offer their key registration services. As a result, no PKI or certificate support is necessary: Both clients and servers store lists of trusted credentials, typically public signature keys or username/password pairs.
+
+
+\paragraph{SSH Protocol Architecture}
+
+Academic publications typically investigate authenticated key exchange (AKE) protocols, which establish authenticated symmetric keys for client and server, and binary encryption layers, which use these keys for authenticated encryption. The SSH RFCs~\cite{rfc4252,rfc4253,rfc4254} use a different terminology:
+\begin{itemize}
+    \item The \textbf{Transport Layer Protocol}~\cite{rfc4253} consists of a handshake protocol, where only the server is authenticated, and an authenticated encryption layer called \emph{Binary Packet Protocol (BPP)}.
+    During the handshake, the server and client establish session keys for encryption, and the server authenticates itself to the client. To conclude the transport layer protocol, the client typically requests the \emph{authentication protocol} as a subsequent service from the server.
+    \item The \textbf{Authentication Protocol}~\cite{rfc4252} offers different methods to authenticate SSH clients and runs within the protected BPP layer of the Transport Layer Protocol. The primary justification for delaying client authentication after the session establishment is to allow the client to authenticate using a password instead of a public key signature. After successful execution, the client has authenticated to the server and specified a service name for the following message exchange. In virtually all cases, this is the connection protocol.
+    \item The \textbf{Connection Protocol}~\cite{rfc4254} multiplexes logical channels over the encrypted tunnel. Each channel may be used to implement a single application layer feature, such as remote shells, X11 forwarding, or port forwarding. The protocol runs indefinitely until the connection is closed on either end.
+\end{itemize}
+In this paper, we focus on the \emph{SSH Authentication Protocol}.
+We investigate deployed keys, supported signing algorithms, and the signature creation architecture.
+
+
+\paragraph{SSH Handshake (\autoref{fig:ssh-hs})}
+
+\begin{figure}
+    \centering
+    \frame{\includegraphics[width=\columnwidth]{img/SSH_Protocol_Flow_LinLibertine.pdf}}
+    \caption{Typical SSH handshake using a finite-field Diffie-Hellman key exchange. In this paper, we investigate the security of SSH Authentication Protocol implementations, especially the deployed keys and the signature algorithms.}
+    \Description{A typical SSH protocol flow using a Diffie-Hellman key exchange between a client and server starting with an ASCII banner exchange, followed by the SSH transport layer protocol handshake consisting out of the algorithm negotiation (\msgkexinit), actual key exchange (\msgkexdhinit / \msgkexdhreply), activation of encryption (\msgnewkeys), and service request by the client. After the handshake, the client authenticates itself as part of the SSH authentication protocol against the server by sending \msguserauthrequest messages with the publickey method. Eventually, application data is transmitted inside the SSH connection protocol.}
+    \label{fig:ssh-hs}
+\end{figure}
+
+To initiate an SSH connection, both peers exchange a version banner. The Binary Packet Protocol (BPP) is used from the third message onward, initially without encryption and authentication. In the \msgkexinit messages, nonces and ordered lists of algorithms are exchanged: There is one list for key exchange, one for server signatures, and two (one per direction) each for encryption, MAC, and compression. For each list, the negotiated algorithm is the first algorithm in the client's list, which is also offered by the server. In the \msgkexdhinit and \msgkexdhreply messages, a finite-field Diffie-Hellman key exchange is performed. SSH also supports elliptic curves (ECDH) and hybrid schemes with post-quantum cryptography (PQC) as alternatives. The server authenticates itself with a digital signature as part of the handshake. The signature is computed over the \emph{session identifier}, a hash over the relevant parts of the key exchange.

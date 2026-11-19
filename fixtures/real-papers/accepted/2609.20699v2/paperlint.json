@@ -1,0 +1,18 @@
+{
+  "cycles": [
+    {
+      "id": "ijcai-2025",
+      "venue": {
+        "kind": "named",
+        "name": "IJCAI 2025",
+        "url": "https://arxiv.org/abs/2609.20699v2"
+      },
+      "opened": "2026-09-20",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2026-09-20",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

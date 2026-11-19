@@ -1,0 +1,49 @@
+\begin{table}[htbp]
+\centering
+\begin{tabular}{l l}
+\toprule
+\textbf{Kernel} & \textbf{MAPE}\\
+\midrule
+scaled\_masked\_softmax\_warp\_backward & 0.41\% \\
+at\_cuda\_detailcubDeviceScanKernel & 5.80\% \\
+sum\_and\_scatter & 49.87\% \\
+write\_num\_of\_segments & 30.59\% \\
+vectorized\_elementwise\_kernel & 11.44\% \\
+indexSelectLargeIndex & 7.20\% \\
+elementwise\_kernel & 26.48\% \\
+krn\_partial\_segment\_offset & 48.18\% \\
+fused\_dropout\_kernel\_vec & 1.03\% \\
+index\_elementwise\_kernel & 10.47\% \\
+cuApplyLayerNorm & 1.36\% \\
+elementwise\_kernel\_with\_index & 31.91\% \\
+compute\_num\_of\_partial\_segments & 10.39\% \\
+cuComputePartGradGammaBeta & 3.05\% \\
+MemcpyDtoH & 39.56\% \\
+unrolled\_elementwise\_kernel & 13.89\% \\
+Memset & 36.75\% \\
+MemcpyHtoD & 25.61\% \\
+CatArrayBatchedCopy & 105.45\% \\
+krn\_partials\_per\_segment & 11.16\% \\
+cuComputeGradInput & 1.80\% \\
+cublasSgemm\_v2 & 4.58\% \\
+compute\_grad\_weight & 2.23\% \\
+triu\_tril\_kernel & 11.76\% \\
+multi\_tensor\_apply\_kernel & 3.40\% \\
+RadixSortHistogramKernel & 9.00\% \\
+at\_cuda\_detailcubDeviceScanInitKernel & 14.83\% \\
+masked\_softmax\_warp\_forward & 1.20\% \\
+RadixSortExclusiveSumKernel & 38.65\% \\
+thrustcuda\_cubcore\_kernel\_agent & 32.53\% \\
+cublasSgemmStridedBatched & 1.84\% \\
+cuComputeGradGammaBeta & 18.95\% \\
+CatArrayBatchedCopy\_aligned16\_contig & 20.19\% \\
+reduce\_kernel & 24.64\% \\
+RadixSortOnesweepKernel & 13.54\% \\
+MemcpyDtoD & 33.25\% \\
+scaled\_masked\_softmax\_warp\_forward & 0.48\% \\
+softmax\_warp\_backward & 1.04\% \\
+\bottomrule
+\end{tabular}
+\caption{Mean absolute percentage error on a held-out validation set, trained on V100 kernel runtimes. Important kernel types for Megatron-LM models include \texttt{cublasSgemm\_v2} and \texttt{cublasSgemmStridedBatched}, where we have <5\% prediction error. Kernels with large percentage-wise errors are extremely short in duration, and thus do not impact end-to-end latency significantly.}
+\label{tab:v100_kernel_accuracy}
+\end{table}

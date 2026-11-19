@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acmart.cls",
+      "role": "preamble"
+    },
+    {
+      "path": "packages.tex",
+      "role": "body"
+    },
+    {
+      "path": "commands.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/10-introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/20-background.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/30-methodology.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/40-eval-ssh.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/50-related-work.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/60-mitigation.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/61-discussion-limitations.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/70-conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/90-ack.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "778bbecc14f0f1caaaecc8738c6b52f66f531ec3e70f569965a4402e54698511",
+    "acmart.cls": "6895475b24fe526c12831f5cc1d16f37218ce5d65161f811dde4bce8dc4551b9",
+    "packages.tex": "8c0365705100b4c35d99aeeeabe8ac618efa5cbbc324efdb6b639cb9fc7bb645",
+    "commands.tex": "e48e8dc0621463d427c205f62ca2411568460eb276e28682a0c7e82e9c9b186d",
+    "sections/10-introduction.tex": "f01c75e2733200a0163f429a042c6438ed634b6ddd5f48f635cdb09c068b8614",
+    "sections/20-background.tex": "ca30c499d0e0ba2274254d1c0da2258686a30b2656ead51d97b6c54cec4c6100",
+    "sections/30-methodology.tex": "89866273de05e0f7c6551854702934447792fcb8b3face27cbf8d7fd6273b9bd",
+    "sections/40-eval-ssh.tex": "6bc196fd02d96014d2d50c6ec6c7376eb2ae215e9821e440f272707b2ba08491",
+    "sections/50-related-work.tex": "8489f620c6f886977e0fcb007074ce794adad90d5722f9cf3191c072f4a3e520",
+    "sections/60-mitigation.tex": "a1071f581fa332b7d5ce4cf62d780a49b12a54aa145158cae263c1f568f46281",
+    "sections/61-discussion-limitations.tex": "7db479cba3a50b1ba3792746807c28f1f7e1c81875bf9cc7651e4dede6b342cf",
+    "sections/70-conclusion.tex": "d52ef94b66fa4b31f948de9de1edbd5f7b50757a283152fc7d04986ca8db07ee",
+    "sections/90-ack.tex": "299213ba5620fc6f34c859c080a433cdaa8d52272306f3eb50b59a1498df5756"
+  }
+}

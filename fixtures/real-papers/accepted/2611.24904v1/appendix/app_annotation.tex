@@ -1,0 +1,189 @@
+
+\section{Annotation Pipeline Details}
+\label{app:annotation}
+
+\input{figures/fig_annotation}
+
+This appendix documents the three-phase pipeline summarized in
+Section~\ref{sec:annotation}: the per-phase tooling
+(Figure~\ref{fig:annotation}), the Phase~3 adjudication rules that
+reconcile human labels with model predictions
+(Table~\ref{tab:adjudication}), and the gold-image protocol and
+Cohen's $\kappa$ trajectory that monitor annotator drift across batches
+(Table~\ref{tab:kappa}). Together these mechanisms support the
+human-verified label claim made against S-EO~\cite{seo} in
+Table~\ref{tab:dataset_comparison}.
+
+\subsection{Three-Phase Pipeline}
+\label{app:phases}
+
+Seven trained annotators produced shadow masks in CVAT across
+$45$ sessions of $105$ images each ($100$ working images $+$ $5$
+gold images with frozen reference masks; \S\ref{app:gold}). Sessions
+proceed in three sequential phases (Figure~\ref{fig:annotation}); each
+phase's output seeds the next.
+
+\textbf{Phase 1: SAM-assisted manual labeling.} Annotators draw shadow
+masks on raw $384{\times}384$ patches. The CVAT AI Interactor \cite{cvat}, powered
+by the Segment Anything Model (SAM)~\cite{sam}, proposes a
+candidate boundary from a single annotator click; the annotator
+accepts, refines, or rejects it. Manual polygon drawing is available
+for thin-linear and irregular shadows where SAM under-segments. Each
+segment receives a shadow-type label from the six-category taxonomy
+(\S\ref{app:taxonomy}). Phase~1 spans the first $10$ sessions and
+is restricted to Chicago and Miami imagery balanced across the two
+native resolutions; Phoenix is admitted only after the label
+distribution stabilizes (gold-image $\kappa \geq 0.7$ for a
+majority of annotators). Mean throughput is 4.8 minutes per
+image after a one-session per-annotator ramp-up.
+
+\textbf{Phase 2: Model-in-the-loop acceleration.} After Phase~1, all
+labels train an interim shadow detector. The detector is one of
+\{MAMNet, OGLANet, DINOv3\}, drawn at random for each new $100$-image
+batch; rotating architectures limits annotator entrainment to any
+single model's failure modes. Predictions from the interim model are
+loaded into CVAT as the starting layer; annotators delete false
+positives, refine boundaries, and add missed segments rather than
+redraw from scratch. The interim model is retrained at session
+boundaries on the cumulative labeled corpus. Throughput rises to
+$75$ seconds per image, a $\sim\!4\times$ acceleration over
+Phase~1.
+
+\textbf{Phase 3: Retroactive quality control.} After all working
+sessions complete, a final shadow detector is trained on the full
+Phase~1$+$2 corpus and used to revisit every annotated segment. For
+each image we compute the per-segment Intersection-over-Union (IoU)
+between each human annotation $j$ and each model prediction $i$. Each
+(annotation, prediction) pair receives one of four statuses
+(Table~\ref{tab:adjudication}). Statuses are color-coded in CVAT so
+annotators triage at a glance: green segments are skipped; yellow,
+blue, and red segments are routed to a second annotator pass for
+adjudication. The status taxonomy is released with the dataset for
+downstream provenance analyses; for the LOCO benchmark
+(\S\ref{sec:loco}), all final segments are merged into the binary
+foreground class regardless of their adjudication route.
+
+\begin{table}[h]
+  \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \caption{
+    \textbf{Phase 3 adjudication rules.}
+    Each (annotation, prediction) pair on an image is assigned one of
+    four statuses based on their IoU and overlap, and routed to the
+    corresponding annotator action.
+    $j$: human annotation; $i$: model prediction.
+    Distribution column reports the share of all Phase 3 segments
+    falling into each status.
+  }
+  \label{tab:adjudication}
+  \begin{tabular}{@{}lp{3.1cm}p{2cm}p{3.4cm}c@{}}
+    \toprule
+    \textbf{Status (color)} & \textbf{Trigger} & \textbf{Kept segment} & \textbf{Annotator action} & \textbf{Share} \\
+    \midrule
+    Correct (green) &
+      $j \cap i \neq \emptyset$, IoU\,$>0.5$ &
+      $j$ &
+      Verify, usually skip &
+      $65\%$ \\
+    Potential\_Annotated (yellow) &
+      $j \cap i \neq \emptyset$, IoU\,$\leq 0.5$ &
+      $j$ (edit shape) &
+      Adjust boundary &
+      $21\%$ \\
+    Potential\_Model (blue) &
+      $i$ has no overlapping $j$ &
+      $i$ if validated &
+      Confirm or reject; assign type &
+      $9\%$ \\
+    Incorrect (red) &
+      $j$ has no overlapping $i$ &
+      $j$ if validated &
+      Verify segment is shadow &
+      $5\%$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Gold-Set Protocol and Inter-Annotator Agreement}
+\label{app:gold}
+
+\textbf{Gold images.} Every $100$-image working batch is paired with
+$5$ gold images that carry frozen reference masks. Gold images are
+drawn from previously closed batches that have already cleared
+Phase~3, and their reference masks are independently re-adjudicated
+by two senior annotators before the gold image enters circulation.
+Once frozen, a gold mask is not modified. Gold images are interleaved
+with working images and are not visually distinguishable from them in
+CVAT, so annotator behavior on gold matches their behavior on the rest
+of the batch.
+
+\textbf{Cohen's $\kappa$ trajectory.} For each annotator and each
+batch, we compute Cohen's $\kappa$ on binary shadow/background
+agreement between the annotator's mask and the frozen gold reference,
+pooled over the $5$ gold images. Mean $\kappa$ across the seven
+annotators rises from Phase~1 to Phase~2 as model seeding stabilizes
+the label distribution, and rises further after Phase~3 adjudication
+(Table~\ref{tab:kappa}). All Phase~2 and Phase~3 values fall within the
+substantial-to-almost-perfect range
+($\kappa\!\geq\!0.80$)~\cite{landis1977measurement}.
+
+\begin{table}[h]
+  \centering
+  \small
+  \setlength{\tabcolsep}{6pt}
+  \caption{
+    \textbf{Inter-annotator agreement across phases.}
+    Mean Cohen's $\kappa$ on gold images across the seven annotators,
+    with the across-annotator range and the per-batch first-submission
+    acceptance rate (\S\ref{app:gates}). Phase~3 reports
+    post-adjudication agreement against the final reconciled corpus.
+  }
+  \label{tab:kappa}
+  \begin{tabular}{@{}lcccc@{}}
+    \toprule
+    \textbf{Phase} & \textbf{Sessions} & \textbf{Mean $\kappa$} & \textbf{Range across annotators} & \textbf{First-submission accept} \\
+    \midrule
+    Phase 1 (manual)            & $1\text{--}10$  & $0.71$ & $[0.62,\,0.78]$ & $84\%$ \\
+    Phase 2 (model-in-the-loop) & $11\text{--}45$ & $0.84$ & $[0.79,\,0.89]$ & $96\%$ \\
+    Phase 3 (post-adjudication) & ---                   & $0.89$ & $[0.85,\,0.92]$ & --- \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\textbf{Acceptance gates.}
+\label{app:gates}
+A batch is accepted when its mean gold mask-IoU against the frozen
+reference is at least $0.90$; spot-checked on $5$--$10$ randomly
+selected working images by a senior annotator before entering the
+corpus. A batch with mean gold IoU between $0.80$ and $0.90$ is
+conditionally accepted: the annotator receives written feedback on the
+failed gold images, and the next batch dispatched to that annotator
+includes $5$ additional gold images. A batch with mean gold IoU below
+$0.80$ is rejected and the failed images returned for redo; a second
+failed submission triggers a paired-review session with a senior
+annotator before the next solo batch is dispatched. Across all
+sessions, $96\%$ of batches were accepted on first submission, and
+$4\%$ were resubmitted.
+
+\subsection{Annotator Recruitment and Instructions}
+\label{app:annotator-instructions}
+
+Annotation was paid, on-demand work carried out in India. The full text of the recruitment and task instructions given to annotators follows; amounts are in Indian rupees (INR). In practice every accepted image was paid INR~20, and each review by a second annotator was paid a further INR~20.
+
+\begin{quote}\small
+\textbf{Mark Shadow Areas on Images (Web Tool)}
+
+\textit{Why this work matters.} We're building a high-quality research dataset that helps improve mapping and city planning. Your careful work directly contributes to real-world research used by universities and labs.
+
+\textit{What you'll do.} Open a small set of images (satellite view) in a web tool. Mark areas that are in shadow by drawing/adjusting shapes. Save and move to the next image. That's it. No coding. No prior mapping experience required.
+
+\textit{Training \& support.} Short written guide with pictures. Quick sample demo. We provide fast feedback so you can improve and earn the quality bonus.
+
+\textit{Payment (per accepted image).} INR 20 per image. Each session is ${\sim}100$ images, so the typical total is INR 1,500--2,000. Payments are made after review of each session.
+
+\textit{How we review quality.} Each batch passed through a validation AI model. We do a short spot-check on a few others. If any images need fixes, we'll send them back with quick notes; you'll be paid for the final images once approved.
+
+\textit{Selection process (short test).} You'll get a mini test (5 images) in the same web tool. If the test looks good, we'll invite you for paid work immediately. Top performers get more sessions each week.
+
+\end{quote}

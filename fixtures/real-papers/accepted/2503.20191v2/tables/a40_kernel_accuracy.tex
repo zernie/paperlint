@@ -1,0 +1,35 @@
+\begin{table}[htbp]
+\centering
+\begin{tabular}{l l}
+\toprule
+\textbf{Kernel} & \textbf{MAPE}\\
+\midrule
+cudnnConvolutionBackwardFilter & 9.16\% \\
+elementwise\_kernel & 24.35\% \\
+CatArrayBatchedCopy\_aligned16\_contig & 14.96\% \\
+Memset & 34.27\% \\
+triton & 4.13\% \\
+cudnnConvolutionBackwardData & 7.89\% \\
+tensor\_kernel\_scan\_innermost\_dim & 153.91\% \\
+MemcpyDtoH & 37.05\% \\
+cublasSgemm\_v2 & 37.08\% \\
+softmax\_warp\_forward & 229.09\% \\
+MemcpyHtoD & 27.71\% \\
+cudnnConvolutionForward & 6.31\% \\
+multi\_tensor\_apply\_kernel & 1.51\% \\
+cublasSgemmStridedBatched & 63.61\% \\
+nll\_loss\_backward\_reduce\_cuda\_kernel\_2d & 253.28\% \\
+softmax\_warp\_backward & 164.03\% \\
+unrolled\_elementwise\_kernel & 10.98\% \\
+max\_pool\_backward\_nhwc & 17.19\% \\
+cublasLtMatmul & 83.92\% \\
+MemcpyDtoD & 65.84\% \\
+CatArrayBatchedCopy & 96.63\% \\
+vectorized\_elementwise\_kernel & 18.18\% \\
+distribution\_elementwise\_grid\_stride\_kernel & 228.62\% \\
+nll\_loss\_forward\_reduce\_cuda\_kernel\_2d & 171.61\% \\
+\bottomrule
+\end{tabular}
+\caption{Mean absolute percentage error on a held-out validation set, trained on A40 kernel runtimes. Important kernel types for vision models include \texttt{cudnnConvolution} and \texttt{triton}, where we have <10\% prediction error. Kernels with large percentage-wise errors are extremely short in duration, and thus do not impact end-to-end latency significantly.}
+\label{tab:a40_kernel_accuracy}
+\end{table}

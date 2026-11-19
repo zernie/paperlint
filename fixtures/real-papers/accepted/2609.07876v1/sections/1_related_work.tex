@@ -1,0 +1,12 @@
+\label{sec:recent-work}
+
+\textbf{Feature-based interpretability.}
+A common interpretability paradigm interprets the role of a layer in a neural network as the features present in its output.
+The linear representation hypothesis posits that neural networks represent concepts as linear features in their activation space \citep{mikolov2013linguistic, olah2020zoom}. 
+Feature-based interpretability extracts features using supervised linear probes \citep{alain2016understanding} as well as other more sophisticated techniques that can be unsupervised and/or causal (e.g.~\citet{nostalgebraist, burns2022discovering, geiger2024finding, bricken2023monosemanticity}). 
+
+\textbf{Correction mechanisms.}
+Self-repair refers to the phenomenon in which later model components compensate when earlier components are ablated. This has been observed in attention layers \citep{lad2024remarkable, mcgrath2023hydraeffectemergentselfrepair, rushing2024explorations} and in resilience to swapping transformer layers \citep{lad2024remarkable}. Other research has found mechanisms conjectured to help with self-repair, like copy suppression \citep{mcdougall2024copy}. TLCM is more pervasive (occurring multiple times on nearly all tokens) and occurs in an ordinary forward pass, not just under ablation.
+
+
+\textbf{Residual stream characterization.} The Iterative Inference Hypothesis proposes that transformers progressively refine their latent representations through successive layers \cite{brothers2024uncoveringuncertaintytransformerinference}. Other work builds methods that uncovers semantically-meaningful latents found in the residual stream \cite{belrose2023elicitinglatentpredictionstransformers}. \citet{todd2024function} highlight the process of enrichment: transformer layers construct enriched representations in the residual stream to perform next-token prediction; for example, function vectors encode input-output functions and are placed in the residual stream to induce execution. Additionally, models proactively consolidate entity-related information into the residual stream before it becomes relevant for prediction \cite{hernandez2024linearity, DBLP:conf/acl/LiNA20, hernandez2024inspectingeditingknowledgerepresentations, geva2023dissectingrecallfactualassociations, hendel2023incontextlearningcreatestask, skean2025layerlayeruncoveringhidden}.

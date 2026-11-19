@@ -1,0 +1,15 @@
+This work studies 30 soundness issues in \rustc{}, analyzing their affected
+features, symptoms, consequences, triggering features, community consensus, and
+lifecycles.
+%
+We also investigate potential test oracles, such as AddressSanitizer, Miri,
+Chalk, and a-mir-formality, and documents describing the language semantics,
+such as the Rust Reference, the FLS, and Rust RFCs.
+%
+We found that soundness issues are often triggered by associated types and the
+interaction between lifetimes and traits, while implied bounds and trait objects
+are especially relevant to memory bugs.
+%
+Existing tools are insufficient to serve as comprehensive test oracles, and a
+huge gap remains between existing documentation and the requirements for a
+mechanized specification.

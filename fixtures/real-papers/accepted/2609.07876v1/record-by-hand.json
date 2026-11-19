@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "neurips_2025.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "sections/0_introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/1_related_work.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/2_background.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/3_tlcm.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/4_adaptivity.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/6_discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/appendix.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/5_layernorm_blindness.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "0a8378a8b9f326910bc5939c7ac0a7f0a19254e4aa54c253f5c4455eaa4b2fd2",
+    "neurips_2025.sty": "ef7a55f0a7c9da12fea39af7990a6a314a721b74a23b1544f252e55fcba940cd",
+    "sections/0_introduction.tex": "141356e477eccf8ee583f9110bd40ba9bfebe50e87c84a9cc7dc710e8efc6c4c",
+    "sections/1_related_work.tex": "299c3b61c7684ac09cd9ca3e4bab932da103fe0e7ec22d832662597d7a29a982",
+    "sections/2_background.tex": "3ff97710e0340bdce83295668df28c8ef54022c295d5e450db90e53d4d0644e0",
+    "sections/3_tlcm.tex": "1c48c91a7d98d4c690efbae808c7e7eef456ac2a6158f1493f5213731a5d4157",
+    "sections/4_adaptivity.tex": "6fed4e8656cf688e19072daa150dd6c91bbbf2ad23b00e8ddc4bd56e69bdd8f8",
+    "sections/6_discussion.tex": "a52daec06a986de26605f63d0f3841cd889c42d7eb915794305fc62361ba22ed",
+    "sections/appendix.tex": "200881c1bb750dc9206a8b37b122a5cac710d6694f0542e9a92fbb52ed07a1d2",
+    "sections/5_layernorm_blindness.tex": "3a31d1a452c54b850eb2da1875ee9a83d5b484eddc776d06688907ea6a4020d8"
+  }
+}

@@ -1,0 +1,46 @@
+\subsection{Performance}
+\label{sec:eval:sub:equiv}
+
+\begin{table}
+    \centering
+    \small
+    \caption{Comparison of different equivalence algorithms when learning OpenSSH 9.9p2 with strict KEX enabled and an alphabet size of $|\mathcal{A}| = 86$.
+    For random oracles, we limited the number of queries to $1{,}000{,}000$. For the Wp-method, we chose a lookahead of $2$ and expected $10$ states overall. For our happy flow mutation, we allowed up to $n = 2$ message insertions. Queries answered by the cache are excluded. A dagger symbol (\textdagger) indicates that the equivalence oracle did not return after a reasonable time and was terminated manually.}
+    \label{sec:discussion:sub:perf:tab:comparison}
+    \begin{tabular}{lrccrr}
+        \toprule
+        ~ & ~ & \multicolumn{2}{c}{\# States} & \multicolumn{2}{c}{\# Queries} \\ \cmidrule{3-4}\cmidrule{5-6}
+         Algorithm & Time [s] & Total & Key Ex. & Total & Final  \\ \midrule
+         Random words & $3{,}189$\phantom{\textsuperscript{\textdagger}} & 8 & 6 & $45{,}466$ & $21{,}163$ \\
+         Random Wp & $37{,}367$\phantom{\textsuperscript{\textdagger}} & 38 & 6 & $792{,}680$ & $745{,}542$ \\
+         Wp-method & $128{,}832$\textsuperscript{\textdagger} & 18 & 6 & $4{,}533{,}240$ & $369{,}529$ \\
+         \midrule
+         This work & 206\phantom{\textsuperscript{\textdagger}} & 9 & 6 & 8,906 & 3,769 \\ \bottomrule
+    \end{tabular}
+\end{table}
+
+Our methodology is specifically tailored to the detection of strict KEX violations. To this end, our proposed equivalence oracle focuses on in-depth verification of handshake states but applies less scrutiny to post-handshake states, which are not in the scope of our study. As shown by our results, this approach allows us to detect issues in real-world implementations of the strict KEX mechanisms; however, it also allows us to extract state machines quickly. To illustrate this, we compared our equivalence oracle to other strategies used in prior work applying state learning to network protocols. Specifically, we use the implementation provided by LearnLib. Our results in \autoref{sec:discussion:sub:perf:tab:comparison} indicate that our equivalence oracle requires significantly fewer queries, and thus execution time, than generic approaches, while still discovering all relevant key exchange states. In contrast, generic approaches typically require more queries to discover additional authentication protocol states.
+
+\subsection{Message Injection in SSH}
+
+As seen in \autoref{sec:eval:sub:tectia}, incomplete implementations of strict KEX can ease message injection into the handshake, potentially exposing client and server implementation flaws to a MitM attacker. This issue becomes visible when comparing the rogue session attack against Tectia SSH with the original rogue session attack against AsyncSSH by Bäumer~et~al.~\cite{USENIX:BauBriSch24}. Without strict KEX, Bäumer~et~al. resort to the Terrapin attack's prefix truncation to enable a single message injection into the handshake. With strict KEX enabled, this is no longer necessary due to the sequence number reset. Therefore, if handshake hardening measures are faulty, an attacker can inject an arbitrary number of messages into the handshake.
+
+However, message injection without strict KEX does not necessarily involve performing a successful prefix truncation attack. A straightforward yet effective approach to inserting messages into the handshake is to replace optional unencrypted messages from the client or server with meaningful ones. Because messages are replaced rather than inserted, this does not cause sequence numbers to become misaligned, making this injection method independent of the algorithm choice.
+
+Another injection vector can be found in the specification of the AES-GCM encryption algorithms for SSH~\cite{rfc5647}. This specific AES-GCM construction does not rely on sequence numbers but instead uses an 8-byte invocation counter as part of the nonce to prevent packet deletion, reordering, or injection. The counter is initialized using output from the key derivation. While this is a direct violation of~\cite{rfc4253}, which requires the sequence number to be used in the computation of the integrity value, the specification's authors claim that the sequence numbers are equal to the invocation counter minus a constant offset. However, sequence numbers are never used to derive the initial value of the invocation counter, allowing for trivial message injection into the initial SSH handshake.
+
+To the best of our knowledge, message injection for AES-GCM, in particular, and by replacement of optional messages, has not been previously described elsewhere and is also not included in the security considerations of the specification. As these vectors apply to SSH in general, some of our findings may apply to implementations without strict KEX, for example, in the case of the rogue session attack against Tectia SSH. We therefore appeal to the IETF sshm working group to include the specification of a full handshake verification in their charter.
+
+\subsection{Limitations}
+\label{sec:discussion:sub:limitations}
+
+\paragraph{Mapper Assumptions}
+
+Most protocol messages are designed to affect the protocol state, for example, by advancing the handshake. Especially when sending such messages outside the protocol's expected order, it is unclear if the recipient actually processes it in whole or discards it, leaving the internal state unaffected. Hence, the implementers must define assumptions for the mapper on how to proceed when executing a symbol out of order. For example, our mapper assumes all \texttt{NEWKEYS} messages to set a pending cipher state as the new active state. If no cipher state has been negotiated yet because the learner queries the symbol too early, we assume a \texttt{none} cipher state using no message protection. We further assume each \texttt{NEWKEYS} will reset the sequence numbers as expected by strict KEX. However, the recipient may not always change its cipher state or reset its sequence numbers. In this case, the session state of our mapper and the SUL would become misaligned, and the following encrypted message sent would get rejected as invalid simply because we changed our state while the peer did not. Incorrect anticipation of the peer's behavior can introduce learning artifacts in the obtained state machines, manifesting as additional states. While these states are technically valid, they hinder comparability between different mappers unless the underlying assumptions are identical. This may also cause an implementation to behave non-deterministically, for example, when message decryption fails and returns unpredictable results instead.
+
+\paragraph{Non-Determinism}
+\label{par:nondeterminism}
+
+While most of our queries are deterministic due to the use of a reliable transport protocol, some queries exhibit non-deterministic behavior. Non-determinism poses a significant challenge to our cache, resulting in cache conflicts that necessitate restarting the learning algorithm. Continuing without a restart may cause the algorithm to produce inaccurate results or to terminate unexpectedly due to contradictory query outputs. However, some perceived non-determinism may actually stem from race conditions due to timeouts defined in the implementations. For example, the \texttt{LoginGraceTime} configuration option of OpenSSH causes the server to close an unauthenticated connection once an internal timer expires. As our state learner does not operate in constant time, we may query varying numbers of symbols in a given time frame. Consequently, we would sometimes observe the closed connection sooner (in terms of queried symbols) and sometimes later, making cache conflicts very likely. Ultimately, the number of cache conflicts renders our approach infeasible, as the learning process never converges. While earlier works used majority voting (best out of three) for all queries~\cite{CCS:HKICB21,NSDI:MHYBBSWYZ19}, we only fall back to this strategy to resolve cache conflicts, but then use a larger voting population of 13 to handle queries with a high degree of non-determinism.
+
+Another source of seemingly non-deterministic behavior is the probabilistic nature of cryptographic protocols involving nonces and randomness in general. In that case, we may not be able to reproduce the same behavior when executing a chain of symbols twice, as the individual abstract symbols only cover semantic equality, not byte-wise equality.

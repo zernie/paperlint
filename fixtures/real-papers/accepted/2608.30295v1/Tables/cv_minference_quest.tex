@@ -1,0 +1,19 @@
+\begin{table}[t]
+\centering
+\caption{Performance of \shortname combined with Duoattention and MInference on the RULER benchmark. The results are tested on the Llama-3-8B-1M model.}
+\resizebox{0.48\textwidth}{!}{
+\begin{tabular}{l|cccccc|c}
+\toprule
+Methods & 8K& 16K& 32K & 64K & 128K& 256K& Avg.\\ 
+\midrule
+Duoattention & 78.32  & 77.93 & 69.77 & 66.27 & 60.37 & 58.07 & 68.46 \\
+Duoattention w/ CateKV  & 89.93  & 91.08 & 89.96 & 86.44 & 84.57 & 81.59 & 87.26 \\
+\midrule
+MInference & 91.33 & 92.28 & 89.66 & 84.97 & 84.57 & 81.10 & 87.32 \\
+MInference w/ CateKV  & 91.32  & 92.13 & 89.71 & 85.90 & 85.14 & 82.27 & 87.74 \\
+	
+\bottomrule
+\end{tabular}}
+\label{tab:minference_quest}
+\vspace{-0.3cm}
+\end{table}

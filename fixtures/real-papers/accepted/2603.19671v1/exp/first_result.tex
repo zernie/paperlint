@@ -1,0 +1,142 @@
+
+\subsection{Experiment Results}
+\label{subsec:exp_results}
+
+
+\paragraph{Utility and communication cost}
+
+
+The experimental results, including relative errors and communication costs for all four tasks, are summarized in Table~\ref{tab:3queries} and Table~\ref{tab:star}. 
+Across all {72} query-dataset combinations, our mechanism consistently outperforms the baseline methods in both utility and communication cost.
+
+
+
+For $k$-line walk counting queries, our mechanism achieves a relative error of less than {$8\%$} on all datasets, 
+with generally better performance for {smaller $k$.}
+% $Q_{\mathrm{4\text{-}wk}}$, for which all errors are below $2\%$, compared to $Q_{\mathrm{5\text{-}wk}}$ \red{and $Q_{\mathrm{6\text{-}wk}}$}. 
+{In comparison, the $\mathrm{WalkClip}_k$ method consistently yields high relative errors due to significant clipping bias, as the clipping factor leads to the truncation of the majority of walks in large graphs.}
+{Regarding communication, results confirm that our optimization delivers substantial savings over the baselines.}
+{In summary, across all tested walk counting queries, our mechanisms achieve up to a $110\times$ reduction in error and a $300\times$ reduction in communication cost compared with the baseline methods.
+}
+
+% \red{
+% In summary, our mechanisms achieve up to $110\times$ error reduction and $300\times$ communication cost improvement on all tested walk counting queries compared with baseline methods.
+% }
+% Compared to the baseline method, our $3$- and $4$-round mechanisms achieve up to $980\times$ and $2900\times$ error reduction, and up to $300\times$ and $200\times$ communication cost improvement on $Q_{\mathrm{4\text{-}wk}}$ and $Q_{\mathrm{5\text{-}wk}}$, respectively.
+
+
+
+For $k$-line path counting queries, the utility of our mechanism shows a slight drop compared to the $k$-line walk queries of the same $k$, due to the involvement of sampling error. 
+Nonetheless, it offers lower communication cost and maintains a significant advantage over the baseline: 
+{we achieve up to a $2600\times$ error reduction and a $600\times$ communication cost improvement across all queries.}
+
+
+
+
+% to $21\times$ in error and $640\times$ in communication cost for $Q_{\pi_1}$, and by up to $38\times$ in error and $650\times$ in communication cost for $Q_{\pi_2}$. 
+For $k$-edge acyclic pattern counting queries, our mechanism outperforms the baseline method by up to {$46\times$ in error and $650\times$ in communication cost.
+In general, our mechanism achieves higher utility for smaller acyclic patterns.
+Notably, the communication cost remains stable across different values of $k$, demonstrating the effectiveness of our optimization strategy.
+}
+% However, the communication cost for three queries is similar.
+% , with $Q_{\pi_2}$ even incurring slightly lower cost. 
+% This is primarily because both $\mathcal{M}_{\mathcal{T}_1}$ and $\mathcal{M}_{\mathcal{T}_2}$ operate in $3$ rounds based on the given tree structure, but the latter typically involves fewer active nodes per round due to its structure with larger $k$.
+
+
+
+For $k$-star counting queries, our mechanism achieves a $3\times$ reduction in communication cost, as it does not depend on information about the maximum degree. 
+This enables each node to complete its interaction with the analyzer in a single round of communication.
+In addition to its communication efficiency, our mechanism yields up to {a $710\times$ error reduction,}
+while consistently maintaining a relative error below $0.5\%$ across all datasets. 
+This demonstrates the robustness and utility of our method.
+
+
+
+% \paragraph{Communication cost}
+
+
+
+\paragraph{Privacy budget $\varepsilon$}
+
+
+
+ 
+To evaluate the impact of the privacy budget $\varepsilon$ on performance, we assess queries $Q_{\mathrm{5\text{-}wk}}$, $Q_{\mathrm{5\text{-}pt}}$, $Q_{\pi_1}$, and $Q_{4\star}$ on the \textbf{AstroPh} dataset, varying $\varepsilon$ uniformly from $0.2$ to {$4.0$} in steps of $0.2$.
+Relative errors are shown in Figure~\ref{fig:privacy_budget_analysis}.
+Notably, communication cost remains independent of $\varepsilon$.
+As illustrated, all methods generally improve in utility as $\varepsilon$ increases, with our mechanism consistently achieving order-of-magnitude lower error across the full range. 
+{$\mathrm{WalkClip_5}$, however, maintains a stable error, as its performance is bottlenecked by the clipping bias rather than the DP noise.}
+For $Q_{\mathrm{5\text{-}pt}}$ and $Q_{\pi_1}$, the error of our mechanism stabilizes when $\varepsilon \geq 1.0$, as the sampling error, which is independent of $\varepsilon$, becomes dominant over the diminishing DP error.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[scale=0.54]{figures/privacy_budget_new.png}
+    \Description{Comparison of relative errors under different epsilon values for four queries.}    
+    \caption{
+    {Relative error (\%) for $Q_{5\text{-wk}}$, $Q_{5\text{-pt}}$, $Q_{\pi_1}$, and $Q_{4\star}$ on the \textbf{AstroPh} dataset under varying $\varepsilon$ values.}}
+    \label{fig:privacy_budget_analysis}
+\end{figure}
+
+
+
+\paragraph{Tree structure $\mathcal{T}$}
+In Section~\ref{sec:pattern}, we establish that the pre-processing tree structure of the input pattern does not affect the asymptotic error bounds or communication cost for $k$-edge acyclic pattern counting queries.
+To empirically validate this, we evaluate alternative tree structures $\mathcal{T}_1'$ and $\mathcal{T}_2'$ for patterns $\pi_1$ and $\pi_2$ (Figure~\ref{fig:tree_form}), with resulting mechanisms $\mathcal{M}_{\mathcal{T}_1'}$ and $\mathcal{M}_{\mathcal{T}_2'}$ that execute in $3$ and $4$ rounds.
+Evaluation results on the \textbf{Enron}, \textbf{Epinions1}, and \textbf{Twitter} datasets are presented in Table~\ref{tab:pattern_alt_trees}.
+
+
+\begin{table}[!hbtp]
+\centering
+\small
+% \setlength{\tabcolsep}{3pt}
+% \renewcommand{\arraystretch}{1}
+\resizebox{0.6\columnwidth}{!}{
+\begin{tabular}{c l c c c c}
+\toprule
+\textbf{Query} & \textbf{Method} & \textbf{Metric} & \textbf{Enron} & \textbf{Epinions1} & \textbf{Twitter} \\
+\midrule
+
+% ---------- Q_{\pi_1} ----------
+\multirow{4}{*}{$Q_{\pi_1}$}
+& \multirow{2}{*}{$\mathcal{M}_{\mathcal{T}_1}$}
+& \centering Rel. err (\%) & \cellcolor{gray!35}21.90 & \cellcolor{gray!35}11.71 & 15.16 \\
+& & \centering Comm. & 3.37~MB & \cellcolor{gray!12}7.36~MB & \cellcolor{gray!12}22.29~MB \\
+\cmidrule(lr){2-6}
+
+& \multirow{2}{*}{$\mathcal{M}_{\mathcal{T}_1'}$}
+& \centering Rel. err (\%) & 30.66 & 21.40 & \cellcolor{gray!35}14.69 \\
+& & \centering Comm. & \cellcolor{gray!12}3.36~MB & \cellcolor{gray!12}7.36~MB & 22.30~MB \\
+\midrule
+
+% ---------- Q_{\pi_2} ----------
+\multirow{4}{*}{$Q_{\pi_2}$}
+& \multirow{2}{*}{$\mathcal{M}_{\mathcal{T}_2}$}
+& \centering Rel. err (\%) & \cellcolor{gray!35}23.27 & 37.30 & 18.64 \\
+& & \centering Comm. & \cellcolor{gray!12}3.32~MB & \cellcolor{gray!12}7.23~MB & \cellcolor{gray!12}21.96~MB \\
+\cmidrule(lr){2-6}
+
+& \multirow{2}{*}{$\mathcal{M}_{\mathcal{T}_2'}$}
+& \centering Rel. err (\%) & 23.42 & \cellcolor{gray!35}28.70 & \cellcolor{gray!35}18.37 \\
+& & \centering Comm. & 3.47~MB & 7.60~MB & 22.71~MB \\
+\bottomrule
+\end{tabular}
+}
+\caption{
+Relative error (\%) and communication cost (MB) for acyclic pattern queries $Q_{\pi_1}$ and $Q_{\pi_2}$ using different tree structures on three datasets.
+}
+\label{tab:pattern_alt_trees}
+\end{table}
+
+
+
+
+Comparing the two tree structures for each pattern counting query, {while utility differences exist, the variations remain bounded within a constant factor. 
+This aligns with our theoretical conclusion that the asymptotic error bound is independent of the tree structure.}
+% we observe that the utility remains identical in $3$ out of $6$ query–dataset combinations, with only limited fluctuations in the remaining cases.
+Furthermore, the communication cost remains stable, even for $\pi_2$, where $\mathcal{M}_{\mathcal{T}_2'}$ requires an additional round compared to $\mathcal{M}_{\mathcal{T}_2}$.
+This is because the dominant communication overhead stems from publishing the randomized marking results, where all nodes participate, while later-round computations involve only subsets of nodes and contribute comparatively less to the total cost.
+
+
+

@@ -1,0 +1,68 @@
+ % strawman solution utility
+
+\begin{lemma}
+For any graph $G$, walk length $k$, and privacy budget $\varepsilon$, the RR-based method introduced in Section~\ref{subsec:strawman} outputs an estimator $\hat{W}_k$ of the true count $W_k$ that $\mathbb{E}[\hat{W}_k] = W_k$,
+and
+$\mathrm{Var}(\hat{W}_k) = \Omega({N^{k+1}})$.
+\end{lemma}
+
+
+\begin{proof}
+% unbiased estimator
+To begin with, since $W_k = \sum_w Z_w$ (over all $(k+1)$-node sequences) and $\mathbb{E}[\hat{Z}_w] = Z_w$, it follows that $\hat{W}_k = \sum_w \hat{Z}_w$ is an unbiased estimator of $W_k$. 
+
+
+The variance of $\hat{W}_k$ can be represented as
+\begin{equation*}
+    \mathrm{Var}(\hat{W}_k) = \sum_w \mathrm{Var}(\hat{Z}_{w}) 
+    + \sum_{w \neq w'} \mathrm{Cov}(\hat{Z}_{w}, \hat{Z}_{w'}).
+\end{equation*}
+We show that $\mathrm{Cov}(\hat{Z}_{w}, \hat{Z}_{w'}) \geq 0$.
+Let $\mathcal{E}_{\mathrm{dist}}(w)$ denote the set of distinct edges along the walk $w$, and define  
+$\mathcal{E}_\triangle = \mathcal{E}_{\mathrm{dist}}(w) \,\Delta\, \mathcal{E}_{\mathrm{dist}}(w')$  
+as the symmetric difference, and  
+$\mathcal{E}_\cap = \mathcal{E}_{\mathrm{dist}}(w) \cap \mathcal{E}_{\mathrm{dist}}(w')$  
+as the intersection of the distinct edges in the two $k$-line walks corresponding to $w$ and $w'$.
+Recalling that $ \hat{Z}_{w} = \prod_{(i,j)\in \mathcal{E}_{\mathrm{dist}}(w)} \hat{a}_{i,j}$,
+we have:
+\begin{align*}
+\mathrm{Cov}(\hat{Z}_{w},\hat{Z}_{w'}) 
+&= \mathbb{E}[\hat{Z}_{w} \hat{Z}_{w'}]-\mathbb{E}[\hat{Z}_{w}]\mathbb{E}[\hat{Z}_{w'}] \\
+&= \prod_{(i,j)\in \mathcal{E}_\triangle} \mathbb{E}[\hat a_{i,j}]
+   \;\prod_{(i,j)\in \mathcal{E}_\cap} 
+   \bigl(\mathbb{E}[\hat a_{i,j}^2]-\mathbb{E}[\hat a_{i,j}]^2\bigr) \\[2pt]
+&= \prod_{(i,j)\in \mathcal{E}_\triangle} \mathbb{E}[\hat a_{i,j}]
+   \;\prod_{(i,j)\in \mathcal{E}_\cap} \mathrm{Var}(\hat a_{i,j})
+   \;\;\ge 0.
+\end{align*}
+Therefore, the total variance of $\hat{W}_k$ is at least $\sum_w \mathrm{Var}(\hat{Z}_{w})$. 
+
+
+For a fixed $w$, we have
+\begin{equation*}
+    \operatorname{Var}(\hat{Z}_{w})
+= \mathbb{E}[ \hat{Z}_{w}^{2} ] - \mathbb{E}[\hat{Z}_{w}]^{2},
+\end{equation*}
+where $\mathbb{E}[\hat{Z}_{w}] \in \{0,1\}$, and 
+\begin{align*}
+    \mathbb{E}[\hat{Z}_{w}^{2}] 
+    &= \prod_{(i,j)\in \mathcal{E}_{\mathrm{dist}}(w)}\mathbb{E}[\hat{a}_{i,j}^2], \\
+    &= \prod_{(i,j)\in \mathcal{E}_{\mathrm{dist}}(w)} (\mathrm{Var}(\hat{a}_{i,j}) + \mathbb{E}[\hat{a}_{i,j}]^2).
+\end{align*}
+Because $\mathbb{E}[\hat{Z}_{w}] \leq \mathbb{E}[\hat{a}_{i,j}] \in \{0, 1\}$, we conclude that $\operatorname{Var}(\hat{Z}_{w}) \geq \mathrm{Var}(\hat{a}_{i,j})^{|\mathcal{E}_\mathrm{dist}(w)|} = (e^\varepsilon/(e^\varepsilon{-}1)^2)^{|\mathcal{E}_\mathrm{dist}(w)|}$. 
+Consider the subset of all $w$ where all nodes are distinct; this implies $|\mathcal{E}_\mathrm{dist}(w)| = k$, i.e., all edges are also distinct. 
+Since $k$ is constant, the number of such qualified $w$ is at least $N(N{-}1)\cdots(N{-}k) = \Omega(N^{k+1})$.
+
+% Consider the subset of all $w$ where $|\mathcal{E}_\mathrm{dist}(w)| =k$, i.e., all edges are distinct. 
+% Since $k$ is constant, the number of such qualified $w$ is at least $N(N{-}1)\dots(N{-}k) = \Omega(N^{k+1})$ where all involved nodes are distinct.
+
+
+
+Therefore, by summing the variances over all oriented $k$-line walks consisting of distinct nodes (and hence distinct edges), we obtain a lower bound on the variance of $\hat{W}_k$ as follows:
+\begin{align*}
+    \mathrm{Var}(\hat{W}_k)
+    &\geq \sum_{w: |\mathcal{E}_{\mathrm{dist}}(w)| = k} \mathrm{Var}(\hat{Z}_{w}) \\
+    &\geq  \frac{e^{\varepsilon k}}{(e^\varepsilon-1)^{2k}} \cdot \Omega(N^{k+1}) \\
+    &= \Omega(N^{k+1}). \qedhere
+\end{align*}
+\end{proof}

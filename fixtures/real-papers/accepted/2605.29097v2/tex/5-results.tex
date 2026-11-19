@@ -1,0 +1,138 @@
+\section{Experiments}
+
+\vspace{-0.5em}
+\noindent \textbf{Dataset \& Implementation}
+\label{sec:imp}
+As there are no publicly available radar datasets for near range imaging, we collected our own dataset using a TI 1843BOOST mmWave radar~\cite{ti1843} with a DCA1000EVM for raw data collection, attached to a Franka Research 3 controlled via the FrankaPy library~\cite{frankapy}. We emulate 2D arrays by moving the radar with the robotic arm for 17-68 array viewpoints per object.
+For ground truth collection we used the Scaniverse App with an iPhone, which uses camera and LiDAR scans to compute 3D meshes and pointclouds.
+We trained our model for 50{,}000 iterations over 32 hours on a single NVIDIA H100 GPU.
+See the Appendix~\ref{sec:radar-implementation} for detailed data description and training hyperparameters.
+
+\input{figures/quant-results-updated.tex}
+\vspace{-0.25em}
+\noindent \textbf{Comparison to Baseline}
+\label{sec:results}
+As baseline, we compare results from \name{} to the matched filter summation of all images. Since the corresponding output is a heatmap, we threshold the image and perform Poisson surface reconstruction on the point cloud. Qualitative comparisons are shown in Fig.~\ref{fig:results}. The object imaged is shown in the first row, followed by the camera scan, then the baseline matched filter reconstruction, and finally the output from \name. The first four columns show reconstruction results when the object is in line of sight of the radar, and the last three columns show results for the object when it is occluded with a box or large sheet of paper. In the non-line-of-sight data processing, the box is cropped out of the MF image to just reconstruct inside the box.
+It is clear that the extracted meshes from the matched filter ground truth are not as complete as the outputs from \name, and our method works even when vision methods would fail (eg. when line of sight is completely blocked).
+
+\input{figures/render-example}
+Though the output of \name{} is perhaps, not as detailed as the camera scans, this is primarily because our scans are limited to a single pitch axis, limiting the amount of reflections we can receive back from the objects, this limitation is discussed in more detail in Appendix~\ref{sec:app-discussion}. Fig.~\ref{fig:render-ex} shows examples of the similarity between the rendered output and the ground truth radar heatmap.
+More qualitative results will be included in supplementary material.
+
+
+Quantitative results are shown in Tab.~\ref{tab:quant-result}, for F1-Score (F1) and the Chamfer Distance (CD) in millimeters, explained in Appendix~\ref{sec:radar-implementation}, where points were sampled uniformly on the camera mesh, the matched filter mesh and \name{}'s mesh. We can see that our method outperforms the Matched Filter (MF) baseline in both F-Score and Chamfer distance with a slight drop in accuracy when the items are moved into the box.
+
+
+
+\noindent \textbf{Novel View Synthesis} We also demonstrate \name{}'s capability in novel view synthesis  (NVS)~\cite{mildenhall2021nerf}.
+To evaluate this, we split the available views into training and test sets. \name{} is trained using only the training views and evaluated on the held-out test views.
+To assess the quality of the synthesized matched filter images, we compute the Peak Signal-to-Noise Ratio (PSNR) between the rendered outputs and the ground truth matched filter images.
+PSNR is a widely used metric for evaluating image reconstruction fidelity, where higher values indicate closer similarity to the reference.
+The Peak Signal-to-Noise Ratio (PSNR) is computed as:
+\begin{equation}
+\text{PSNR} = 10 \cdot \log_{10} \left( \frac{MAX^2}{\text{MSE}} \right),
+\end{equation}
+where \( MAX \) is the maximum possible pixel value of the image, and MSE is the mean squared error between the synthesized image and the ground truth.
+Unlike RGB images, matched filter (MF) images do not have a fixed maximum pixel value.
+To make PSNR computation meaningful, we normalize each MF image by dividing it by its maximum value.
+As a result, the maximum possible pixel intensity is set to \( MAX = 1.0 \) for all PSNR evaluations.
+
+
+We present four novel view synthesis results on the Bunny object in Fig.~\ref{fig:nvs}.
+The selected views include the front, left, back, and right sides of the object.
+In each case, \name{} produces visualizations that closely match the ground truth.
+Quantitatively, the synthesized matched filter images achieve PSNR values around 30\,dB, demonstrating the feasibility and effectiveness of \name{} for novel view synthesis tasks.
+
+\input{figures/nvs_fig}
+
+\section{Ablation Studies}
+\label{sec:ablation}
+\subsection{Number of Radar Scanning Planes}
+We study the effect of varying the number of radar scanning planes (analogous to the number of views in vision-based reconstruction) used during training.
+A total of 104 planes were measured to cover a full 360-degree view of the object.
+We uniformly sampled subsets of these planes to simulate different input settings.
+
+
+Even with only 8 planes, \name{} is able to reconstruct the basic shape of the Bunny, though the result contains noticeable noise and inaccurate details.
+When the number of planes is fewer than 40, the reconstructed shape becomes visibly distorted, and the noise level increases significantly.
+With more than 72 planes, the overall shape is correctly reconstructed, and differences are mostly limited to fine details.
+This indicates that \name{} is robust to the number of input planes once a sufficient coverage threshold is met.
+
+Overall, the results show a clear trend: increasing the number of radar scanning planes improves the reconstruction quality, yielding more accurate geometry and less noise.
+
+
+\input{figures/abl_Nplane_fig}
+\subsection{Number of Temporal Sample}
+We study the effect of the number of temporal samples \( N_t \) on geometry reconstruction quality.
+According to the matched filter equation:
+\begin{equation*}
+P(\mathbf{x}) = \left| \left| \sum_{i = 1}^{N_{\text{ant}}} \sum_{t=1}^{N_t} s(i, t) \, e^{j 2\pi k \tau_i t} \, e^{j 2\pi f \tau_i} \right| \right|,
+\end{equation*}
+increasing the number of temporal samples improves resolution.
+However, the computational cost of the matched filter increases with \( N_t \).
+
+To assess this trade-off, we evaluate reconstruction quality under different values of \( N_t \), as shown in Fig.~\ref{fig:abl_nt_nl}.
+Empirically, we observe no significant degradation in performance as \( N_t \) varies, demonstrating \name{}'s robustness to noise.
+While using fewer temporal samples can theoretically reduce the quality of the ground truth matched filter image, the increase in latency with larger \( N_t \) remains relatively limited.
+Considering the balance between performance and efficiency, we set \( N_t = 64 \) in our final implementation.
+
+
+\subsection{Positional Encoding Frequency Level}
+We apply sinusoidal positional encoding as in NeRF~\cite{mildenhall2021nerf}, where each input \( x \) is mapped to a higher-dimensional space using:
+\[
+\gamma(x) = \left[ \sin(2^0 \pi x), \cos(2^0 \pi x), \ldots, \sin(2^{N_{\text{level}}-1} \pi x), \cos(2^{N_{\text{level}}-1} \pi x) \right],
+\]
+with \( N_{\text{level}} \) controlling the number of frequency bands.
+
+\input{figures/abl_Nt_Nlevel_fig}
+\input{figures/abl_Nr_Nz_fig}
+Low frequency levels (e.g., \( 2^0, 2^1 \)) capture coarse, smooth variations,
+while high frequency levels (e.g., \( 2^9, 2^{10} \)) capture fine, high-frequency details such as sharp edges or thin structures.
+The number of frequency levels \( N_{\text{level}} \) controls the trade-off between expressiveness and overfitting:
+a higher \( N_{\text{level}} \) enables modeling of finer details,
+whereas a lower \( N_{\text{level}} \) reduces model complexity and helps prevent overfitting to noise.
+
+To assess this trade-off, we evaluate reconstruction quality under different positional encoding frequency levels \( N_{\text{level}} \), as shown in the bottom of Fig.~\ref{fig:abl_nt_nl}.
+
+We observe that higher frequency levels enable better reconstruction of fine details in the Bunny and improve robustness to noise in radio frequency signals.
+Additionally, increasing \( N_{\text{level}} \) leads to higher computational latency, but the increase is relatively limited.
+Considering this trade-off, we set \( N_{\text{level}} = 10 \) in our final configuration.
+
+\subsection{Resolution}
+In Sec.~\ref{sec:lens-less-sampling}, we discuss the computational resources required by different training-time sampling resolutions.
+
+For the number of sampling rays, results show that increasing the number of rays leads to higher memory usage and longer latency, but surprisingly worse reconstruction performance.
+A possible explanation is that in radio frequency data, denser sampling introduces more noise, which slows convergence.
+As a result, under a fixed number of training iterations, higher sampling resolutions may lead to suboptimal solutions due to insufficient convergence.
+Based on these observations, we set \( N_{\text{ray}} = 1024 \) in our final configuration.
+
+For the number of depth samples \( N_z \), results indicate that fewer depth samples lead to lower reconstruction detail and a coarser overall shape.
+Although reducing depth samples improves training efficiency linearly in time, it comes at the cost of reduced fidelity.
+Therefore, we set \( N_z = 32 \) as our final configuration to balance quality and performance.
+
+\subsection{Dynamic loss masking}
+\input{figures/abl_mask_fig}
+In Sec.~\ref{sec:opt}, we discuss the motivation for using dynamic loss masking.
+The primary reason is the inherent ambiguity in interpreting low-power regions in matched filter (MF) imaging.
+Specifically, a weak signal response in the rendered radar image may arise from two distinct causes:
+(1) low volume density at the sampled location, or
+(2) high volume density with the signal being reflected away from the receiver due to geometric misalignment.
+This ambiguity makes direct supervision unreliable in low-reflection regions.
+
+As shown in the top of Fig.~\ref{fig:abl_mask}, training without dynamic loss masking leads to incorrect reconstruction.
+The model tends to interpret low-intensity regions as low density, resulting in artifacts—such as a distorted ear in the Bunny example—where the true geometry reflects weakly due to its orientation rather than material absence.
+This highlights the importance of masking unreliable regions during training to improve geometric fidelity.
+
+\input{figures/abl_diff_fig}
+\subsection{Effect of Radar physics}
+We introduce radar physics in Sec.~\ref{sec:background}.
+Radar reflections are dominated by specular effects and are commonly approximated using the Lambertian model~\cite{richards2010principles}.
+In this section, we study the effect of incorporating the Lambertian model into our formulation.
+
+To isolate its impact, we remove the \( \omega_o \cdot \omega_r \) term from Eq.~\ref{eq:reflection_angle}.
+As shown at the Fig.~\ref{fig:abl_diff}, the visual difference between using and not using the Lambertian model appears minor.
+However, quantitative results indicate that omitting the Lambertian term leads to worse performance.
+Specifically, in the left-side view, the reconstructed bottom of the Bunny appears significantly larger than in the right-side view, contributing to higher Chamfer Distance error.
+
+That said, the Lambertian model does not fully capture the physical behavior of radar reflections, especially under specular and material-dependent conditions.
+Thus, while it provides a useful approximation, the Lambertian model is not an optimal representation of true radar physics.
