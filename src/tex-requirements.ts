@@ -217,8 +217,6 @@ export interface PresetFile {
   readonly aliases: readonly string[];
   /** Whether the venue reviews double-blind; null when the file does not say. */
   readonly blind: boolean | null;
-  /** When the venue's names count as a mention in a paper's text; null when the file does not say. */
-  readonly mentions: "with-year" | null;
   /** Sections the venue requires; null when the file names none (a child's list replaces its parent's). */
   readonly requiredSections: readonly RequiredSection[] | null;
   /** Null when the file declares no `tex` block (allowed only with `extends`). */
@@ -293,7 +291,8 @@ interface PresetBodyJson {
   readonly template_forbids?: readonly string[];
   readonly aliases?: readonly string[];
   readonly blind?: boolean;
-  readonly mentions?: "with-year";
+  /** A workshop: the schema then requires `parent`, and refuses `parent` without it. */
+  readonly workshop?: true;
   readonly required_sections?: readonly {
     readonly title: string;
     readonly position?: "last";
@@ -560,7 +559,6 @@ export function parsePreset(
     ...templateOf(j),
     aliases: j.aliases ?? [],
     blind: orNull(j.blind),
-    mentions: orNull(j.mentions),
     requiredSections: sectionsOf(j.required_sections),
     tex: texOf(j.tex),
     format: formatOf(j.format),

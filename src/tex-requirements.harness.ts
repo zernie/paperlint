@@ -111,10 +111,10 @@ for (const v of venues.filter((x) => presetOf(x).extends === null)) {
 // Guards: the key tells a style family from a bare class — else every article-based style would be
 // held to REALM's list.
 check(
-  "neurips-style and realm are two templates: article + neurips_2026, article + no style",
+  "neurips-style and acl-latex are two templates: article + neurips_2026, article + no style",
   templateKey("neurips-style") === "article + neurips_2026" &&
-    templateKey("realm") === "article + no style",
-  `${templateKey("neurips-style")} · ${templateKey("realm")}`,
+    templateKey("acl-latex") === "article + no style",
+  `${templateKey("neurips-style")} · ${templateKey("acl-latex")}`,
 );
 for (const [t, vs] of byTemplate)
   check(
@@ -263,14 +263,14 @@ rmSync(tmp, { recursive: true, force: true });
 // ── 5. the parser's tolerances: an optional block left out, and Ajv's optional fields ───
 {
   const bare = R.parsePreset(
-    '{ "type": "venue", "name": "X", "url": "https://x.org/", "extends": "paperlint:aisec" }',
+    '{ "type": "venue", "name": "X", "url": "https://x.org/", "extends": "paperlint:aisec-2026" }',
     "bare.jsonc",
     VENUES,
   );
   check(
     "a preset that only extends another: no tex block, `rules` an empty object",
     JSON.stringify([bare.extends, bare.tex, bare.rules]) ===
-      '["paperlint:aisec",null,{}]',
+      '["paperlint:aisec-2026",null,{}]',
     bare,
   );
   // Guards: `packages` is read without a fallback because the schema refuses a tex block

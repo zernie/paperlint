@@ -63,7 +63,7 @@ portal accepts the creation and keeps the paper a draft — what #411 measured. 
 | `number`                  | `realnumber`                                          | a number, within `min` / `max`                     | HotCRP rounds to its `precision`; paperlint does not check it                                   |
 | `text`                    | `text`                                                | a string                                           | word limits are not recorded                                                                    |
 | `multiline_text`          | `mtext`                                               | a string, line breaks kept                         |                                                                                                 |
-| `email`                   | an author selector the API takes by an author's email | an email address                                   | measured on `msr` (`ACMCorAut`, 2026-10-20); not a type in `optiontypes.json`                   |
+| `email`                   | an author selector the API takes by an author's email | an email address                                   | measured on `msr-2027` (`ACMCorAut`, 2026-10-20); not a type in `optiontypes.json`              |
 | `pc_conflicts`            | the intrinsic PC-conflicts option                     | PC member's email → `true` or a conflict-type name | as before                                                                                       |
 | `document`, `attachments` | `pdf`, `slides`, `document`; `attachments`            | none: **paperlint does not send files for them**   | recorded so the preset says the form has them; the command lists them under "on the site"       |
 

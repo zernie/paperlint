@@ -24,7 +24,10 @@
 // Checklist"».
 {
   "type": "venue",
-  // The venue's name without the edition: the edition is in the comments and the deadlines.
+  // The series, without a year: the year is the id's (neurips-2026). Machine-learning papers name
+  // NeurIPS as the venue of the work they cite far more often than as their own; tex/venue-leftover
+  // counts the name in prose only beside a year no older than the paper's own edition's year minus
+  // one, so «NeurIPS 2023» in related work is not flagged.
   "name": "NeurIPS",
   // The call quoted above.
   "url": "https://neurips.cc/Conferences/2026/CallForPapers",
@@ -33,13 +36,6 @@
   // «All submissions must be anonymized» (the handbook above). anonymity/identity then requires the
   // paper's `identity`. No portal reading of it: OpenReview's public venue data has no blind flag.
   "blind": true,
-
-  // What the venue is called in a paper's text (tex/venue-leftover), and only beside a year
-  // («NeurIPS 2026», «NeurIPS'26»): machine-learning papers name NeurIPS as the venue of the work
-  // they cite far more often than as their own. 🔴 A year beside it is still any year: a paper of
-  // another venue that writes «published at NeurIPS 2023» in its text is reported (a warning). The
-  // card says so.
-  "mentions": "with-year",
 
   // No `portal`: submissions go through OpenReview («Submission link»:
   // https://openreview.net/group?id=NeurIPS.cc/2026/Conference), and `paperlint submission` has an

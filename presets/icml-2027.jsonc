@@ -42,13 +42,11 @@
   // with either, the names are in the PDF and in its Author field (measured: two findings).
   "blind": true,
 
-  // What the venue is called in a paper's text (tex/venue-leftover), and only beside a year («ICML
-  // 2027», «ICML'27»): machine-learning papers name ICML as the venue of the work they cite. Measured
-  // 2026-11-19 on 7 NeurIPS 2025 papers' arXiv sources: one writes «ELLM(ICML23)» in its prose. On 6
-  // ICML 2025 papers' sources the only «ICML» outside the bibliography is the kit's
-  // `\icmlkeywords{Machine Learning, ICML}`. 🔴 A year beside it is still any year: a paper of another
-  // venue that writes «published at ICML 2025» in its text is reported (a warning).
-  "mentions": "with-year",
+  // What the venue is called in a paper's text (tex/venue-leftover): machine-learning papers name
+  // ICML as the venue of the work they cite. Measured 2026-11-19 on 7 NeurIPS 2025 papers' arXiv
+  // sources: one writes «ELLM(ICML23)» in its prose. On 6 ICML 2025 papers' sources the only «ICML»
+  // outside the bibliography is the kit's `\icmlkeywords{Machine Learning, ICML}`. The rule counts
+  // the name in prose only beside a year no older than the paper's own edition's year minus one.
 
   // No `portal`: submissions go through OpenReview («Abstracts and papers can be submitted through
   // OpenReview: https://openreview.net/group?id=ICML.cc/2027/Conference»), and `paperlint

@@ -175,7 +175,7 @@ function lint(
   return out;
 }
 
-const DECL = { extends: "paperlint:agenticdev", kind: "short" };
+const DECL = { extends: "paperlint:agenticdev-2026", kind: "short" };
 const ids = (fs: readonly Finding[]) =>
   fs.map((f) => `${f.rule}:${f.messageId}`).sort();
 /** A patch that changes one field set of the `i`-th font. */
@@ -197,7 +197,7 @@ describe("a paper that meets its venue", () => {
 
   it("is silent on aisec, a second shipped ACM profile", () => {
     expect(
-      lint({ venue: { extends: "paperlint:aisec", kind: "research" } }),
+      lint({ venue: { extends: "paperlint:aisec-2026", kind: "research" } }),
     ).toEqual([]);
   });
 
@@ -247,7 +247,7 @@ describe("a paper that names no venue", () => {
       "the last cycle closed, none open",
       {
         id: "first-2026",
-        venue: { kind: "preset", extends: "paperlint:aisec" },
+        venue: { kind: "preset", extends: "paperlint:aisec-2026" },
         opened: "2026-07-01",
         outcome: { kind: "withdrawn", date: "2026-07-18", evidence: "n.md" },
       },
@@ -271,13 +271,13 @@ describe("pdf/profile — the declaration must resolve, or nothing is judged", (
       "an unknown venue (a typo would silently disable every check)",
       { extends: "paperlint:agentic-dev", kind: "short" },
       "preset",
-      /agent, agenticdev, agentverify, aidc, aisec, ase, ccs, fse, icml-2027, icml-style, icse, ieee-conference, msr, neurips-2026, neurips-style, nlbse, realm, sp/,
+      /acsac-2026, agent-2027, agenticdev-2026, agentverify-2027, aidc-2026, aisec-2026, ase-2026, ccs-2026, emnlp-2026, fse-2027, icml-2027, icml-style, icse-2027, icse-2028, ieee-conference, msr-2027, neurips-2026, neurips-style, nlbse-2027, realm-2026, sp-2027/,
     ],
     [
       "the base TeX set is not a venue",
       { extends: "paperlint:tex-base" },
       "preset",
-      /agent, agenticdev, agentverify, aidc, aisec, ase, ccs, fse, icml-2027, icml-style, icse, ieee-conference, msr, neurips-2026, neurips-style, nlbse, realm, sp/,
+      /acsac-2026, agent-2027, agenticdev-2026, agentverify-2027, aidc-2026, aisec-2026, ase-2026, ccs-2026, emnlp-2026, fse-2027, icml-2027, icml-style, icse-2027, icse-2028, ieee-conference, msr-2027, neurips-2026, neurips-style, nlbse-2027, realm-2026, sp-2027/,
     ],
     [
       "paperlint.json that is not JSON",
@@ -312,10 +312,10 @@ describe("pdf/profile — the declaration must resolve, or nothing is judged", (
 
 describe("pdf/profile — the kind", () => {
   it.each([
-    ["no kind", { extends: "paperlint:agenticdev" }, "kindMissing"],
+    ["no kind", { extends: "paperlint:agenticdev-2026" }, "kindMissing"],
     [
       "a kind the venue does not have",
-      { extends: "paperlint:agenticdev", kind: "long" },
+      { extends: "paperlint:agenticdev-2026", kind: "long" },
       "kindUnknown",
     ],
   ])(
@@ -354,7 +354,7 @@ describe("pdf/profile — the kind", () => {
     });
     expect(
       lint({
-        venue: { extends: "paperlint:realm", kind: "long" },
+        venue: { extends: "paperlint:realm-2026", kind: "long" },
         facts: realm,
       }),
     ).toEqual([]);
@@ -541,13 +541,16 @@ describe("format/page-limit", () => {
       "format/page-limit:pages",
     ]);
     expect(
-      lint({ venue: { extends: "paperlint:agenticdev", kind: "full" }, facts }),
+      lint({
+        venue: { extends: "paperlint:agenticdev-2026", kind: "full" },
+        facts,
+      }),
     ).toEqual([]);
   });
 });
 
 describe("format/page-limit on a venue whose limit includes the references (AGENT)", () => {
-  const AGENT = { extends: "paperlint:agent", kind: "full" };
+  const AGENT = { extends: "paperlint:agent-2027", kind: "full" };
   /** An AGENT full paper: a body that fills eight pages, its references on `refs` more. */
   const spill = (refs: number): Facts =>
     withFacts((f) => {
@@ -563,7 +566,7 @@ describe("format/page-limit on a venue whose limit includes the references (AGEN
     expect(fs.map((f) => [f.messageId, f.message])).toEqual([
       [
         "pages",
-        "pages, references included: 9, over the limit 8 for AGENT 2027/full — a desk reject; cut the text",
+        "pages, references included: 9, over the limit 8 for AGENT/full — a desk reject; cut the text",
       ],
     ]);
   });
@@ -730,7 +733,7 @@ describe("the IEEE conference family and AIDC", () => {
   const FAMILY = { extends: "paperlint:ieee-conference" };
   const IDENTITY = ["Ada Example", "adaexample", "ada@example.org"];
   const AIDC = {
-    extends: "paperlint:aidc",
+    extends: "paperlint:aidc-2026",
     kind: "regular",
     identity: IDENTITY,
   };
@@ -758,7 +761,7 @@ describe("the IEEE conference family and AIDC", () => {
 
   it.each([
     ["the family", FAMILY],
-    ["aidc", AIDC],
+    ["aidc-2026", AIDC],
   ])("the planted A4 build fails %s on both page dimensions", (_, venue) => {
     const facts = ieeeFacts(
       (f) => ((f.page_w_in = 8.264), (f.page_h_in = 11.694)),
@@ -771,7 +774,7 @@ describe("the IEEE conference family and AIDC", () => {
 
   it.each([
     ["the family", FAMILY],
-    ["aidc", AIDC],
+    ["aidc-2026", AIDC],
   ])("the planted Computer Modern build fails %s: no Times", (_, venue) => {
     const facts = ieeeFacts(
       (f) => (f.fonts = type1(["CMBX12", "CMR10", "CMTI10"])),
@@ -809,7 +812,7 @@ const acmsmallFacts = (patch: Patch = () => {}): Facts =>
 
 const ACMSMALL = { extends: "paperlint:acm-acmsmall" };
 const FSE = {
-  extends: "paperlint:fse",
+  extends: "paperlint:fse-2027",
   kind: "research",
   identity: ["Ada Example", "adaexample", "ada@example.org"],
 };
@@ -824,7 +827,7 @@ describe("the ACM single-column family and FSE", () => {
 
   it.each([
     ["the family", ACMSMALL],
-    ["fse", FSE],
+    ["fse-2027", FSE],
   ])(
     "🔴 the planted sigconf build fails %s: page, columns and body size",
     (_, venue) => {
@@ -1285,7 +1288,7 @@ describe("pdf/body-size on the IEEE family: 10 pt body, 8 pt references", () => 
       ids(
         lint({
           venue: {
-            extends: "paperlint:aidc",
+            extends: "paperlint:aidc-2026",
             kind: "regular",
             identity: ["Ada Example"],
           },
@@ -1314,7 +1317,7 @@ describe("pdf/body-size on the IEEE family: 10 pt body, 8 pt references", () => 
 
 /** An AIDC regular paper (12 body pages), for the page-limit tests. */
 const AIDC_REGULAR = {
-  extends: "paperlint:aidc",
+  extends: "paperlint:aidc-2026",
   kind: "regular",
   identity: ["Ada Example"],
 };
@@ -1552,7 +1555,7 @@ describe("format/page-limit with `appendix_in_body`: the appendix is body, the r
 
 /** An MSR technical paper that declares who wrote it. */
 const MSR = {
-  extends: "paperlint:msr",
+  extends: "paperlint:msr-2027",
   kind: "technical",
   identity: ["Ada Example"],
 };
@@ -1623,7 +1626,7 @@ describe("format/page-limit on MSR: ten pages of main text, appendices included,
 
 /** An AIDC paper that declares who wrote it. */
 const BLIND = {
-  extends: "paperlint:aidc",
+  extends: "paperlint:aidc-2026",
   kind: "regular",
   identity: ["Ada Example", "adaexample", "ada@example.org"],
 };
@@ -1631,7 +1634,7 @@ const said = (patch: Patch) => ieeeFacts(patch);
 
 describe("anonymity/identity — a blind venue (AIDC)", () => {
   it("no identity declared: an error, built or not — a missing input is not a clean pass", () => {
-    const noIdentity = { extends: "paperlint:aidc", kind: "regular" };
+    const noIdentity = { extends: "paperlint:aidc-2026", kind: "regular" };
     const built = lint({ venue: noIdentity, facts: ieeeFacts() });
     expect(ids(built)).toEqual(["anonymity/identity:noIdentity"]);
     expect(built[0]?.message).toMatch(/"identity": \["Your Name"/);
@@ -1694,7 +1697,7 @@ describe("anonymity/identity — a blind venue (AIDC)", () => {
 
 describe("an AIDC kind", () => {
   it("an AIDC kind that does not exist names the two that do", () => {
-    const fs = lint({ venue: { extends: "paperlint:aidc", kind: "wip" } });
+    const fs = lint({ venue: { extends: "paperlint:aidc-2026", kind: "wip" } });
     expect(ids(fs)).toContain("pdf/profile:kindUnknown");
     expect(fs.find((f) => f.rule === "pdf/profile")?.message).toMatch(
       /regular, short/,
@@ -1821,7 +1824,7 @@ const onCycle = (cycle: Record<string, unknown>) => ({
   cycles: [
     {
       id: "aidc-2026",
-      venue: { kind: "preset", extends: "paperlint:aidc" },
+      venue: { kind: "preset", extends: "paperlint:aidc-2026" },
       kind: "regular",
       opened: "2026-09-26",
       ...cycle,

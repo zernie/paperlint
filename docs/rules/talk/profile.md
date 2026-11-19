@@ -25,19 +25,19 @@ Failing — AgenticDev allows only remote video:
 
 ```json
 {
-  "extends": "paperlint:agenticdev",
+  "extends": "paperlint:agenticdev-2026",
   "kind": "short",
   "talk": { "mode": "in-person" }
 }
 ```
 
-> `agenticdev` allows the talk modes remote-video; this paper declares `in-person`
+> `AgenticDev` allows the talk modes remote-video; this paper declares `in-person`
 
 Failing — the email gave the short-paper slot only:
 
 ```json
 {
-  "extends": "paperlint:agenticdev",
+  "extends": "paperlint:agenticdev-2026",
   "kind": "full",
   "talk": { "mode": "remote-video" }
 }

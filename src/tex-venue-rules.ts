@@ -7,7 +7,8 @@
  *   tex/required-section  error  each section the preset requires is there, titled exactly, and
  *                                where the preset says (`last`: after every section of the body)
  *   tex/venue-leftover    warn   the text a reader sees names ANOTHER shipped venue — its `name`
- *                                or one of its `aliases` — than the one the paper extends
+ *                                or one of its `aliases` — than the edition the paper extends: in
+ *                                prose beside a recent year, in a venue-identity command always
  *
  * and, in the `format` plugin (named for the requirement, not the input — paperlint#151):
  *
@@ -59,6 +60,7 @@ import {
   type PresetTemplate,
 } from "./presets.ts";
 import type { NamedVenue } from "./domain/venue-name.ts";
+import { editionLabel } from "./domain/edition.ts";
 import type { PaperSource } from "./domain/paper-source.ts";
 import { readPaper, reportInPaper, type ProseDeps } from "./tex-paper.ts";
 import type { RequiredSection } from "./tex-requirements.ts";
@@ -418,50 +420,138 @@ export function judgeRequiredSections(
 }
 
 /**
- * Another shipped venue: the word for it, what it is called in a paper's text, and when a name
- * counts as naming it (`mentions`).
+ * Another shipped venue as the text names it: the word for it (its `name`), every name it goes by,
+ * and its edition's year (from its id).
  */
-export type OtherVenue = NamedVenue & Pick<Preset, "mentions">;
+export type OtherVenue = NamedVenue & Pick<Preset, "year" | "declaredAliases">;
 
 /**
- * What must follow a name for it to name a `with-year` venue: a year beside it — `2027`, `'27` or
- * `’27`, after spaces or none (`~` renders as a space). A lookahead, so the finding is the name.
+ * A year beside a name, right after it: `2027`, `'27` or `’27`, after spaces or none (`~` renders
+ * as a no-break space). Anchored: it is tried on the text after the name.
  */
-const YEAR_BESIDE = "(?=[\\s\\u00a0]*(?:\\d{4}|['’]\\d{2})(?![\\p{L}\\p{N}]))";
+const YEAR_AFTER = /^[\s\u00a0]*(?:(\d{4})|['’](\d{2}))(?![\p{L}\p{N}])/u;
+
+/** The year written right after offset `end` of `text`, or null. `'27` is 2027. Pure. */
+function yearAfter(text: string, end: number): number | null {
+  const m = YEAR_AFTER.exec(text.slice(end));
+  if (m === null) return null;
+  return m[1] !== undefined
+    ? Number.parseInt(m[1], 10)
+    : 2000 + Number.parseInt(String(m[2]), 10);
+}
 
 /** `s` as a pattern that matches it literally. */
 const literal = (s: string): string =>
   s.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
 
+/** One name a match is judged by: whether it is the paper's own, and the venue it shows as. */
+interface NameToJudge {
+  readonly name: string;
+  readonly own: boolean;
+  readonly shows: string;
+}
+
 /**
- * Each place the rendered text names another venue — one of its aliases as a whole word, case
- * and all — unless that alias is also this paper's venue's own, or its parent conference's
- * (`parentNames`: an AgenticDev paper may say «ASE 2026»).
+ * Every name to look for, once each: every other shipped venue's, shown as that venue's `name`, and
+ * the paper's own and its parent's, which count only in another edition. Pure.
+ */
+function namesToJudge(
+  preset: Pick<Preset, "label" | "aliases" | "parentNames">,
+  others: readonly OtherVenue[],
+): readonly NameToJudge[] {
+  const own = new Set([...preset.aliases, ...preset.parentNames]);
+  const shownBy = (name: string): string =>
+    others.find((o) => o.aliases.includes(name))?.label ??
+    (preset.aliases.includes(name) ? preset.label : name);
+  const all = [...new Set([...others.flatMap((o) => o.aliases), ...own])];
+  return all.map((name) => ({
+    name,
+    own: own.has(name),
+    shows: shownBy(name),
+  }));
+}
+
+/**
+ * Whether a name at a place, with `year` beside it (null: none), names another venue than the
+ * paper's edition (of year `paperYear`). Inside a venue-identity command (`inLine`) any other
+ * venue's name counts; in prose only beside a year no older than the paper's year minus one, so
+ * related work («ICSE 2019») and a bare acronym are not leftovers. The paper's own names, and its
+ * parent's, count only beside another year: another edition of its own series. Pure.
+ */
+export function namesAnotherEdition(
+  n: { readonly own: boolean; readonly inLine: boolean },
+  year: number | null,
+  paperYear: number | null,
+): boolean {
+  const recent = paperYear === null || (year !== null && year >= paperYear - 1);
+  if (n.own)
+    return (
+      year !== null &&
+      paperYear !== null &&
+      year !== paperYear &&
+      (n.inLine || recent)
+    );
+  return n.inLine || (year !== null && recent);
+}
+
+/** A name to look for, with the pattern that finds it as a whole word. */
+type NameMatcher = NameToJudge & { readonly re: RegExp };
+
+/**
+ * The findings of one name in one run: each whole-word match judged with the year beside it and
+ * whether it stands in a venue-stating command (`inLine`). Pure.
+ */
+function matchesIn(
+  run: TextRun,
+  n: NameMatcher,
+  paper: {
+    readonly inLine: (at: Span | null) => boolean;
+    readonly year: number | null;
+    readonly venue: string;
+  },
+): readonly Located[] {
+  const { inLine, venue } = paper;
+  const text = runText(run);
+  return [...text.matchAll(n.re)].flatMap((m) => {
+    const at = spanIn(run, m.index, m.index + m[0].length);
+    const year = yearAfter(text, m.index + m[0].length);
+    const judged = { own: n.own, inLine: inLine(at) };
+    if (!namesAnotherEdition(judged, year, paper.year)) return [];
+    const other = editionLabel(n.shows, year);
+    return [{ messageId: "leftover", data: { name: m[0], other, venue }, at }];
+  });
+}
+
+/**
+ * Each place the rendered text names another venue than the paper's edition — a name as a whole
+ * word, case and all, judged with the year beside it (`namesAnotherEdition`). `lines` are the spans
+ * of the commands that state the paper's venue (`\acmConference` …).
  */
 export function judgeLeftover(
   runs: readonly TextRun[],
+  lines: readonly Place[],
   preset: Preset,
   others: readonly OtherVenue[],
 ): readonly Located[] {
-  const own = new Set([...preset.aliases, ...preset.parentNames]);
-  const names = others.flatMap((o) =>
-    o.aliases
-      .filter((a) => !own.has(a))
-      .map((alias) => ({
-        other: o.label,
-        re: new RegExp(
-          `(?<![\\p{L}\\p{N}])${literal(alias)}(?![\\p{L}\\p{N}])${o.mentions === "with-year" ? YEAR_BESIDE : ""}`,
-          "gu",
-        ),
-      })),
+  const venue = editionLabel(preset.label, preset.year);
+  const inLine = (at: Span | null): boolean =>
+    at !== null &&
+    lines.some(
+      (l) =>
+        l.kind === "at" && l.span.start <= at.start && at.start < l.span.end,
+    );
+  const names: readonly NameMatcher[] = namesToJudge(preset, others).map(
+    (n) => ({
+      ...n,
+      re: new RegExp(
+        `(?<![\\p{L}\\p{N}])${literal(n.name)}(?![\\p{L}\\p{N}])`,
+        "gu",
+      ),
+    }),
   );
   return runs.flatMap((run) =>
-    names.flatMap(({ other, re }) =>
-      [...runText(run).matchAll(re)].map((m) => ({
-        messageId: "leftover",
-        data: { name: m[0], other, venue: preset.label },
-        at: spanIn(run, m.index, m.index + m[0].length),
-      })),
+    names.flatMap((n) =>
+      matchesIn(run, n, { inLine, year: preset.year, venue }),
     ),
   );
 }
@@ -599,7 +689,12 @@ const RULES: Readonly<
   },
   "venue-leftover": {
     judge: (r) =>
-      judgeLeftover(r.latex.renderedRuns(r.src), r.preset, r.others()),
+      judgeLeftover(
+        r.latex.renderedRuns(r.src),
+        r.latex.venueLines(r.src),
+        r.preset,
+        r.others(),
+      ),
     meta: {
       type: "suggestion",
       docs: {
@@ -643,7 +738,12 @@ export function otherVenues(
 ): readonly OtherVenue[] {
   return shippedVenueNames(deps)
     .filter((v) => !v.chain.every((f) => preset.chain.includes(f)))
-    .map(({ label, aliases, mentions }) => ({ label, aliases, mentions }));
+    .map(({ label, aliases, year, declaredAliases }) => ({
+      label,
+      aliases,
+      year,
+      declaredAliases,
+    }));
 }
 
 /**

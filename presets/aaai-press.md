@@ -104,6 +104,14 @@ set, or this family's list. Linted under `paperlint:aaai-2027`:
 | `\usepackage{hyperref}`, `{geometry}`, `{balance}`                 | no PDF: the style stops the build                             |
 | `[letterpaper,11pt]`; `times` or `\rmdefault{cmr}` in the preamble | nothing changes in the PDF                                    |
 
+## Known limit
+
+- **`submission` is required in every kind.** The family's `template_style` is
+  `\usepackage[submission]{aaai2027}`, the kit's line for the anonymous submission, and a venue's
+  kinds share one `template_style`. A camera-ready kind, whose paper drops `submission`, would get
+  `tex/template`'s «the style option `submission` is missing» on a correct paper. No such kind ships
+  today; one needs a per-kind style (or a camera-ready edition preset) first.
+
 ## What the family resolves to
 
 <!-- paperlint:preset-rules -->

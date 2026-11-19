@@ -70,7 +70,7 @@ export const factsPath = (paperDir: string): string =>
 
 /** What the facts need from a paper's `paperlint.json`: its venue's preset id, its kind, where its PDF is. */
 export interface VenueDecl {
-  /** The venue preset's id (`agenticdev`, never its display name), or null when the paper extends none. */
+  /** The venue preset's id (`agenticdev-2026`, never its display name), or null when the paper extends none. */
   readonly id: string | null;
   readonly kind: string | null;
   readonly pdf: string | null;

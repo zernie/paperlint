@@ -109,9 +109,9 @@ appendices do not count as content pages»).
   kit's `checklist.tex` sets it. Where it stands is not checked: the order is only «suggested». Whether
   its answers are filled in (`\answerTODO`) is not checked either.
 - **Names**: `NeurIPS`, what `tex/venue-leftover` and `paper/folder-venue-leftover` look for in
-  another venue's paper, and in the text only beside a year (`mentions: "with-year"`). 🔴 Any year: a
-  paper of another venue whose text says «published at NeurIPS 2023» gets a warning, although it
-  cites a NeurIPS paper and is no leftover. A bare «NeurIPS» is not reported, nor is the
+  another venue's paper. In prose it counts only beside a year no older than that paper's own
+  edition's year minus one: «NeurIPS 2026» in an AIDC 2026 paper is reported, «published at
+  NeurIPS 2023» is related work and is not. A bare «NeurIPS» is not reported, nor is the
   bibliography, which the rule does not read.
 
 ## Not verified
@@ -129,7 +129,7 @@ appendices do not count as content pages»).
 <!-- prettier-ignore-start -->
 <!-- Generated from neurips-2026.jsonc by `npx eslint --fix` (rule preset/card-rules). Edit the preset, not this section. -->
 
-**`paperlint:neurips-2026`** — venue preset for NeurIPS · call for papers: <https://neurips.cc/Conferences/2026/CallForPapers> · extends `paperlint:neurips-style`
+**`paperlint:neurips-2026`** — venue preset for NeurIPS 2026 · call for papers: <https://neurips.cc/Conferences/2026/CallForPapers> · extends `paperlint:neurips-style`
 
 No preset of this chain sets a rule: under it, every rule keeps paperlint's default.
 

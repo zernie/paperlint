@@ -442,10 +442,10 @@ test("chooseVenue: a preset by path (inside and outside the paper), by prefixed 
   const dir = join(root, "venues");
   writeTree(dir, {
     "papers/p/mine.jsonc": JSON.stringify(
-      venuePreset("mine", { extends: "paperlint:agenticdev" }),
+      venuePreset("mine", { extends: "paperlint:agenticdev-2026" }),
     ),
     "shared/ours.jsonc": JSON.stringify(
-      venuePreset("ours", { extends: "paperlint:agenticdev" }),
+      venuePreset("ours", { extends: "paperlint:agenticdev-2026" }),
     ),
     "shared/broken.jsonc": "{ nope",
   });
@@ -463,7 +463,7 @@ test("chooseVenue: a preset by path (inside and outside the paper), by prefixed 
   const results = await Promise.all([
     choose("./papers/p/mine.jsonc"),
     choose("./shared/ours.jsonc"),
-    choose("paperlint:agenticdev"),
+    choose("paperlint:agenticdev-2026"),
     choose("./shared/broken.jsonc"),
   ]);
   assert.deepEqual(
@@ -471,7 +471,7 @@ test("chooseVenue: a preset by path (inside and outside the paper), by prefixed 
     [
       "./mine.jsonc",
       "../../shared/ours.jsonc",
-      "paperlint:agenticdev",
+      "paperlint:agenticdev-2026",
       "--venue ./shared/broken.jsonc",
     ],
   );
@@ -650,7 +650,9 @@ test("build --dry-run on a paper with a venue plans for the preset's packages", 
     "package.json": "{}",
     "papers/v/paper.tex":
       "\\documentclass{acmart}\\begin{document}x\\end{document}\n",
-    "papers/v/paperlint.json": JSON.stringify({ extends: "paperlint:aisec" }),
+    "papers/v/paperlint.json": JSON.stringify({
+      extends: "paperlint:aisec-2026",
+    }),
   });
   const r = await withoutTex(dir, () =>
     cli(["build", "papers/v", "--dry-run"], dir),
@@ -972,7 +974,7 @@ const submissionPaper = (dir: string, site: string): void => {
     "package.json": "{}",
     "venue.jsonc": JSON.stringify(
       venuePreset("venue", {
-        extends: "paperlint:aidc",
+        extends: "paperlint:aidc-2026",
         portal: { kind: "hotcrp", url: site },
       }),
     ),

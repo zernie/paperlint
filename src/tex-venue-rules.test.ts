@@ -13,6 +13,7 @@ import { latexReader } from "./adapters/latex/index.ts";
 import {
   cyclePortRules,
   judgeRequiredSections,
+  judgeLeftover,
   judgeStyle,
   judgeTemplate,
   otherStyles,
@@ -119,7 +120,7 @@ function lint(
 const ids = (fs: readonly Finding[]) =>
   fs.map((f) => `${f.rule}:${f.messageId}`).sort();
 
-const AIDC = { extends: "paperlint:aidc", kind: "regular" };
+const AIDC = { extends: "paperlint:aidc-2026", kind: "regular" };
 /** A paper in `documentclass`; the default body carries AIDC's required closing section. */
 const paper = (
   documentclass: string,
@@ -248,7 +249,7 @@ describe("the venue rules read the whole paper: the files it \\inputs, spliced w
         PAPER,
         {
           "paper.tex": tex,
-          "intro.tex": "One line.\nFirst written for AgenticDev.\n",
+          "intro.tex": "One line.\nFirst written for AgenticDev 2026.\n",
         },
         [
           { path: "paper.tex", role: "body" },
@@ -308,7 +309,7 @@ describe("tex/template — several \\documentclass lines behind a TeX switch", (
   });
 });
 
-const MSR = { extends: "paperlint:msr", kind: "technical" };
+const MSR = { extends: "paperlint:msr-2027", kind: "technical" };
 
 describe("tex/template — options passed before the class line (`\\PassOptionsToClass`)", () => {
   it("🔴 an option passed to the class before \\documentclass is in effect: no missing-option finding", () => {
@@ -555,8 +556,8 @@ describe("tex/template — the class line kept in a file paper.tex \\inputs", ()
 describe("tex/template — the shipped ACM and ACL templates", () => {
   it("🔴 acmart without sigconf — the manuscript format — fails every ACM preset", () => {
     for (const settings of [
-      { extends: "paperlint:aisec", kind: "research" },
-      { extends: "paperlint:agenticdev", kind: "short" },
+      { extends: "paperlint:aisec-2026", kind: "research" },
+      { extends: "paperlint:agenticdev-2026", kind: "short" },
       { extends: "paperlint:acm-sigconf" },
     ])
       expect(ids(lint(paper("\\documentclass{acmart}"), settings))).toEqual([
@@ -564,14 +565,14 @@ describe("tex/template — the shipped ACM and ACL templates", () => {
       ]);
     expect(
       lint(paper("\\documentclass[sigconf,review,anonymous]{acmart}"), {
-        extends: "paperlint:aisec",
+        extends: "paperlint:aisec-2026",
         kind: "research",
       }),
     ).toEqual([]);
   });
 
   it("🔴 acmart without acmsmall — the manuscript or the sigconf format — fails the single-column family and FSE", () => {
-    const FSE = { extends: "paperlint:fse", kind: "research" };
+    const FSE = { extends: "paperlint:fse-2027", kind: "research" };
     for (const settings of [{ extends: "paperlint:acm-acmsmall" }, FSE])
       for (const cls of [
         "\\documentclass{acmart}",
@@ -581,7 +582,7 @@ describe("tex/template — the shipped ACM and ACL templates", () => {
           {
             rule: "tex/template",
             messageId: "missingOption",
-            message: `the class option \`acmsmall\` is missing: ${settings === FSE ? "FSE 2027" : "acm-acmsmall"} requires \`\\documentclass[acmsmall]{acmart}\``,
+            message: `the class option \`acmsmall\` is missing: ${settings === FSE ? "FSE" : "acm-acmsmall"} requires \`\\documentclass[acmsmall]{acmart}\``,
             line: 2,
           },
         ]);
@@ -596,7 +597,7 @@ describe("tex/template — the shipped ACM and ACL templates", () => {
   it("an ACL paper — article at 11pt, acl.sty as a package — passes realm", () => {
     expect(
       lint(paper("\\documentclass[11pt]{article}\n\\usepackage[review]{acl}"), {
-        extends: "paperlint:realm",
+        extends: "paperlint:realm-2026",
         kind: "long",
       }),
     ).toEqual([]);
@@ -605,7 +606,7 @@ describe("tex/template — the shipped ACM and ACL templates", () => {
 
 const PORTING = {
   id: "aidc-2026",
-  venue: { kind: "preset", extends: "paperlint:aidc" },
+  venue: { kind: "preset", extends: "paperlint:aidc-2026" },
   kind: "regular",
   opened: "2026-09-26",
   phase: "porting",
@@ -785,8 +786,8 @@ describe("tex/template — class options the preset forbids (`template_forbids`)
   });
 });
 
-describe("tex/template under paperlint:msr — `[10pt,conference]`, without compsoc or compsocconf", () => {
-  const MSR = { extends: "paperlint:msr", kind: "technical" };
+describe("tex/template under paperlint:msr-2027 — `[10pt,conference]`, without compsoc or compsocconf", () => {
+  const MSR = { extends: "paperlint:msr-2027", kind: "technical" };
 
   it("the class line MSR's call names passes", () => {
     expect(
@@ -1010,8 +1011,8 @@ describe("tex/required-section — what fails", () => {
   });
 });
 
-describe("tex/venue-leftover — FSE is named by its edition", () => {
-  it("🔴 «FSE 2027» in another venue's paper warns; FSE papers cited by other years do not", () => {
+describe("tex/venue-leftover — FSE in related work is no leftover", () => {
+  it("🔴 «FSE 2027» in another venue's paper warns; FSE papers cited by older years do not", () => {
     const leftover = (body: string) =>
       lint(aidcPaper(body + STATEMENT), AIDC)
         .filter((f) => f.rule === "tex/venue-leftover")
@@ -1047,7 +1048,7 @@ describe("tex/required-section — the edges", () => {
     expect(
       required(
         lint(paper("\\documentclass[sigconf]{acmart}"), {
-          extends: "paperlint:aisec",
+          extends: "paperlint:aisec-2026",
           kind: "research",
         }),
       ),
@@ -1059,7 +1060,7 @@ describe("tex/required-section — the edges", () => {
     const extra = {
       [own]: JSON.stringify(
         venuePreset("own", {
-          extends: "paperlint:aidc",
+          extends: "paperlint:aidc-2026",
           required_sections: [{ title: "Ethics" }],
         }),
       ),
@@ -1075,7 +1076,7 @@ describe("tex/required-section — the edges", () => {
 });
 
 const INSTITUTION =
-  "\\institution{Presented at AISec 2026, co-located with ACM CCS}";
+  "\\institution{Presented at AISec 2026, co-located with ACM CCS 2026}";
 const leftovers = (fs: readonly Finding[]) =>
   fs.filter((f) => f.rule === "tex/venue-leftover");
 
@@ -1084,8 +1085,8 @@ describe("tex/venue-leftover — another venue named in the text", () => {
     const tex = aidcPaper(`${INSTITUTION}\n${BODY}${STATEMENT}`);
     const fs = leftovers(lint(tex, AIDC));
     expect(fs.map((f) => f.message)).toEqual([
-      "«AISec» names AISec, and this paper extends AIDC — a leftover from an earlier submission? A reviewer reads it before the abstract. Comments and citation keys are not reported; a sentence that names the other venue on purpose can keep it with a disable directive",
-      expect.stringContaining("«ACM CCS» names ACM CCS"),
+      "«AISec» names AISec 2026, and this paper extends AIDC 2026 — a leftover from an earlier submission? A reviewer reads it before the abstract. Comments and citation keys are not reported; a sentence that names the other venue on purpose can keep it with a disable directive",
+      expect.stringContaining("«ACM CCS» names ACM CCS 2026"),
     ]);
     const line = tex.split("\n").indexOf(INSTITUTION) + 1;
     expect(fs.map((f) => f.line)).toEqual([line, line]);
@@ -1097,7 +1098,9 @@ describe("tex/venue-leftover — another venue named in the text", () => {
       `${INSTITUTION}\nText.`,
     );
     expect(
-      leftovers(lint(tex, { extends: "paperlint:aisec", kind: "research" })),
+      leftovers(
+        lint(tex, { extends: "paperlint:aisec-2026", kind: "research" }),
+      ),
     ).toEqual([]);
   });
 
@@ -1110,7 +1113,7 @@ describe("tex/venue-leftover — another venue named in the text", () => {
 
   it("a citation's note in square brackets is printed, so it is reported", () => {
     const tex = aidcPaper(
-      `As shown~\\citep[presented at AISec]{aisec2025}.\n${BODY}${STATEMENT}`,
+      `As shown~\\citep[presented at AISec 2026]{aisec2025}.\n${BODY}${STATEMENT}`,
     );
     expect(leftovers(lint(tex, AIDC)).map((f) => f.line)).toEqual([4]);
   });
@@ -1127,7 +1130,7 @@ describe("tex/venue-leftover — another venue named in the text", () => {
 describe("tex/venue-leftover — a workshop's parent conference (`parent`) is the paper's own", () => {
   const agenticdev = (text: string) =>
     paper("\\documentclass[sigconf]{acmart}", `${text}\nText.`);
-  const AGENTICDEV = { extends: "paperlint:agenticdev", kind: "full" };
+  const AGENTICDEV = { extends: "paperlint:agenticdev-2026", kind: "full" };
   const named = (fs: readonly Finding[]) =>
     leftovers(fs).map((f) => /«(.*?)» names (.*?),/u.exec(f.message)?.slice(1));
 
@@ -1139,18 +1142,18 @@ describe("tex/venue-leftover — a workshop's parent conference (`parent`) is th
 
   it("🔴 an AIDC paper naming ASE 2026 is reported once, as ASE", () => {
     const tex = aidcPaper(`Formerly at ASE 2026.\n${BODY}${STATEMENT}`);
-    expect(named(lint(tex, AIDC))).toEqual([["ASE", "ASE"]]);
+    expect(named(lint(tex, AIDC))).toEqual([["ASE", "ASE 2026"]]);
   });
 
   it("🔴 an AIDC paper naming ACM CCS 2026 is reported once, as ACM CCS; an AISec paper is silent", () => {
     const text = "Co-located with ACM CCS 2026.";
     expect(
       named(lint(aidcPaper(`${text}\n${BODY}${STATEMENT}`), AIDC)),
-    ).toEqual([["ACM CCS", "ACM CCS"]]);
+    ).toEqual([["ACM CCS", "ACM CCS 2026"]]);
     expect(
       leftovers(
         lint(agenticdev(text), {
-          extends: "paperlint:aisec",
+          extends: "paperlint:aisec-2026",
           kind: "research",
         }),
       ),
@@ -1160,7 +1163,7 @@ describe("tex/venue-leftover — a workshop's parent conference (`parent`) is th
   it("🔴 FSE and ASE do not collide: an AgenticDev paper names ASE as its own and FSE 2027 as another venue; an FSE paper reports ASE", () => {
     expect(
       named(lint(agenticdev("At ASE 2026, after FSE 2027."), AGENTICDEV)),
-    ).toEqual([["FSE 2027", "FSE 2027"]]);
+    ).toEqual([["FSE", "FSE 2027"]]);
     expect(
       named(
         lint(
@@ -1168,20 +1171,20 @@ describe("tex/venue-leftover — a workshop's parent conference (`parent`) is th
             "\\documentclass[acmsmall]{acmart}",
             "Formerly at ASE 2026, now FSE 2027.\nText.",
           ),
-          { extends: "paperlint:fse", kind: "research" },
+          { extends: "paperlint:fse-2027", kind: "research" },
         ),
       ),
-    ).toEqual([["ASE", "ASE"]]);
+    ).toEqual([["ASE", "ASE 2026"]]);
   });
 
   it("the parent's names are the paper's own, not the workshop's: AgenticDev still reports AISec", () => {
     expect(
-      named(lint(agenticdev("ASE 2026, after AISec."), AGENTICDEV)),
-    ).toEqual([["AISec", "AISec"]]);
+      named(lint(agenticdev("ASE 2026, after AISec 2026."), AGENTICDEV)),
+    ).toEqual([["AISec", "AISec 2026"]]);
   });
 });
 
-describe("tex/venue-leftover — MSR, a name that is also an acronym, counts only with a year (`mentions`)", () => {
+describe("tex/venue-leftover — in prose, a name counts only beside a recent year", () => {
   const under = (text: string) =>
     leftovers(lint(aidcPaper(`${text}\n${BODY}${STATEMENT}`), AIDC));
 
@@ -1199,31 +1202,119 @@ describe("tex/venue-leftover — MSR, a name that is also an acronym, counts onl
       "As shown~\\cite{msr2024}.\n\\begin{thebibliography}{1}\\bibitem{msr2024} A. Author, ``Mining,'' in \\emph{Proc. MSR 2024}, 2024.\\end{thebibliography}",
     ],
     ["a year that is not beside the name", "MSR, in 2027, scored best."],
+    ["a bare name", "Submitted to AISec, then to REALM."],
+    [
+      "related work: a year older than the paper's own minus one",
+      "As shown at ICSE 2019, FSE'24 and AISec~2023.",
+    ],
   ])("silent: %s", (_, text) => {
     expect(under(text)).toEqual([]);
   });
 
   it.each([
-    ["First written for MSR 2027.", "MSR"],
-    ["A version appeared as MSR'27 work.", "MSR"],
-    ["Submitted to MSR~2027.", "MSR"],
-  ])("🔴 reported: «%s»", (text, name) => {
+    ["First written for MSR 2027.", "MSR", "MSR 2027"],
+    ["A version appeared as MSR'27 work.", "MSR", "MSR 2027"],
+    ["Submitted to MSR~2027.", "MSR", "MSR 2027"],
+    ["Submitted to AISec 2025.", "AISec", "AISec 2025"],
+    ["Aimed at ICSE’28.", "ICSE", "ICSE 2028"],
+  ])("🔴 reported: «%s»", (text, name, other) => {
     const fs = under(text);
     expect(fs.map((f) => f.message)).toEqual([
       expect.stringMatching(
-        new RegExp(`^«${name}» names MSR, and this paper extends AIDC`),
+        new RegExp(
+          `^«${name}» names ${other}, and this paper extends AIDC 2026`,
+        ),
       ),
     ]);
     expect(fs[0]?.line).toBe(4);
   });
+});
 
-  it("under msr itself, its own name with a year is never a leftover", () => {
+describe("tex/venue-leftover — the paper's own series, and its parent's, in another edition", () => {
+  it("under msr itself, its own name with its own year is never a leftover", () => {
     const tex = paper(
       "\\documentclass[10pt,conference]{IEEEtran}",
       "First written for MSR 2027.",
     );
     expect(
-      leftovers(lint(tex, { extends: "paperlint:msr", kind: "technical" })),
+      leftovers(
+        lint(tex, { extends: "paperlint:msr-2027", kind: "technical" }),
+      ),
+    ).toEqual([]);
+  });
+
+  it("🔴 its own series in another recent edition is a leftover: «ICSE 2027» in an ICSE 2028 paper; «ICSE 2019» is not", () => {
+    const icse = (text: string) =>
+      leftovers(
+        lint(paper("\\documentclass[sigconf]{acmart}", text), {
+          extends: "paperlint:icse-2028",
+          kind: "research",
+        }),
+      ).map((f) =>
+        /«(.*?)» names (.*?), and this paper extends (.*?) —/u
+          .exec(f.message)
+          ?.slice(1),
+      );
+    expect(icse("First written for ICSE 2027.")).toEqual([
+      ["ICSE", "ICSE 2027", "ICSE 2028"],
+    ]);
+    expect(icse("Submitted to ICSE 2028, after ICSE 2019.")).toEqual([]);
+  });
+
+  it("a workshop's parent of the same year is its own; another recent edition of the parent is not", () => {
+    const nlbse = (text: string) =>
+      leftovers(
+        lint(paper("\\documentclass[conference]{IEEEtran}", text), {
+          extends: "paperlint:nlbse-2027",
+          kind: "full",
+        }),
+      ).map((f) => /«(.*?)» names (.*?),/u.exec(f.message)?.slice(1));
+    expect(nlbse("An NLBSE workshop of ICSE 2027.")).toEqual([]);
+    expect(nlbse("Rejected at ICSE 2028.")).toEqual([["ICSE", "ICSE 2028"]]);
+  });
+});
+
+describe("tex/venue-leftover — inside a command that states the venue, any other venue's name counts", () => {
+  const under = (line: string, settings: object = AIDC) =>
+    leftovers(lint(aidcPaper(`${line}\n${BODY}${STATEMENT}`), settings)).map(
+      (f) => /«(.*?)» names (.*?),/u.exec(f.message)?.slice(1),
+    );
+
+  it.each([
+    [
+      "\\acmConference[AISec]{AISec}{Nov 2026}{The Hague}",
+      [
+        ["AISec", "AISec"],
+        ["AISec", "AISec"],
+      ],
+    ],
+    ["\\acmBooktitle{Proceedings of ASE}", [["ASE", "ASE"]]],
+    ["\\conferenceinfo{MSR}{Dublin}", [["MSR", "MSR"]]],
+    ["\\IEEEpubid{978-1-2345 \\copyright 2019 IEEE S\\&P}", []],
+    ["\\IEEEpubid{Accepted at REALM}", [["REALM", "REALM"]]],
+    [
+      "\\acmConference[ICSE '19]{ICSE}{2019}{x}",
+      [
+        ["ICSE", "ICSE 2019"],
+        ["ICSE", "ICSE"],
+      ],
+    ],
+  ])("🔴 %s", (line, want) => {
+    expect(under(line)).toEqual(want);
+  });
+
+  it("the paper's own edition, and its parent, in the command: silent; its own name with another year: reported", () => {
+    expect(
+      under("\\acmConference[AIDC '26]{AIDC at ACSAC 2026}{x}{y}"),
+    ).toEqual([]);
+    expect(under("\\acmConference[AIDC '25]{AIDC}{x}{y}")).toEqual([
+      ["AIDC", "AIDC 2025"],
+    ]);
+  });
+
+  it("the same names in prose without a year, or in a comment: silent", () => {
+    expect(
+      under("Unlike AISec and ASE, and MSR.\n% \\acmConference{AISec}"),
     ).toEqual([]);
   });
 });
@@ -1247,7 +1338,7 @@ describe("tex/venue-leftover — a URL is not text, a definition body is", () =>
     "a macro definition naming another venue is reported at the definition, %s",
     (_, use) => {
       const tex = aidcPaper(
-        `\\newcommand{\\oldvenue}{AISec}\n${use}${BODY}${STATEMENT}`,
+        `\\newcommand{\\oldvenue}{AISec 2026}\n${use}${BODY}${STATEMENT}`,
       );
       const fs = leftovers(lint(tex, AIDC));
       expect(fs.map((f) => [f.line, f.message.slice(0, 16)])).toEqual([
@@ -1264,8 +1355,8 @@ describe("tex/venue-leftover — where names are found, and whose they are", () 
       "\\acmConference[AISec '26]{x}",
       ["AISec"],
     ],
-    ["a footnote", "Text.\\footnote{Submitted to REALM.}", ["REALM"]],
-    ["a tie inside the name", "ACM~CCS", ["ACM CCS"]],
+    ["a footnote", "Text.\\footnote{Submitted to REALM 2026.}", ["REALM"]],
+    ["a tie inside the name", "ACM~CCS~2026", ["ACM CCS"]],
     [
       "whole words only: AISecX and xAIDC are other words",
       "AISecX, EMNLPs and AgenticDevOps.",
@@ -1283,13 +1374,13 @@ describe("tex/venue-leftover — where names are found, and whose they are", () 
     const own = `${PAPER}/own.jsonc`;
     const extra = {
       [own]: JSON.stringify(
-        venuePreset("AIDC 2027", {
-          extends: "paperlint:aidc",
+        venuePreset("AIDC Next", {
+          extends: "paperlint:aidc-2026",
           aliases: ["ACM CCS"],
         }),
       ),
     };
-    const tex = aidcPaper(`ACM CCS and AIDC 2027.\n${BODY}${STATEMENT}`);
+    const tex = aidcPaper(`ACM CCS 2026 and AIDC 2027.\n${BODY}${STATEMENT}`);
     expect(
       leftovers(
         lint(tex, { extends: "./own.jsonc", kind: "regular" }, { extra }),
@@ -1301,7 +1392,7 @@ describe("tex/venue-leftover — where names are found, and whose they are", () 
     // ieee-conference is on aidc's chain, so under the family aidc is ANOTHER venue.
     const tex = paper(
       "\\documentclass[conference]{IEEEtran}",
-      "Accepted at AIDC. Formerly at AISec.",
+      "Accepted at AIDC 2026. Formerly at AISec 2026.",
     );
     expect(
       leftovers(lint(tex, { extends: "paperlint:ieee-conference" }))
@@ -1311,9 +1402,35 @@ describe("tex/venue-leftover — where names are found, and whose they are", () 
   });
 });
 
+describe("tex/venue-leftover, judged on places the parser did not give", () => {
+  const files = memoryFiles(shipped);
+  const aidc = resolvePreset("paperlint:aidc-2026", `${PAPER}/paperlint.json`, {
+    files,
+    venuesDir: VENUES,
+  });
+  const preset = aidc.ok ? aidc.value : null;
+
+  it("a venue line with no place holds no name; a parent's name no shipped venue carries is shown as written", () => {
+    expect(preset).not.toBeNull();
+    if (preset === null) return;
+    const src = "Unlike AISec, and Gone 2025.";
+    const runs = latexReader.renderedRuns(src);
+    // The line is unplaced, so «AISec» without a year stands in prose: silent.
+    const found = judgeLeftover(
+      runs,
+      [{ kind: "unplaced" }],
+      { ...preset, parentNames: ["Gone"] },
+      [],
+    );
+    expect(found.map((f) => f.data)).toEqual([
+      { name: "Gone", other: "Gone 2025", venue: "AIDC 2026" },
+    ]);
+  });
+});
+
 describe("the judges, on places the parser did not give", () => {
   const files = memoryFiles(shipped);
-  const aidc = resolvePreset("paperlint:aidc", `${PAPER}/paperlint.json`, {
+  const aidc = resolvePreset("paperlint:aidc-2026", `${PAPER}/paperlint.json`, {
     files,
     venuesDir: VENUES,
   });
@@ -1372,35 +1489,43 @@ describe("otherVenues", () => {
   it("every shipped venue off the paper's chain; one that does not resolve is skipped", () => {
     const files = memoryFiles(
       Object.fromEntries(
-        Object.entries(shipped).filter(([f]) => !f.endsWith("realm.jsonc")),
+        Object.entries(shipped).filter(
+          ([f]) => !f.endsWith("realm-2026.jsonc"),
+        ),
       ),
     );
     const deps = { files, venuesDir: VENUES };
     const from = `${PAPER}/paperlint.json`;
-    const aidc = resolvePreset("paperlint:aidc", from, deps);
+    const aidc = resolvePreset("paperlint:aidc-2026", from, deps);
     expect(aidc.ok).toBe(true);
     if (!aidc.ok) return;
-    expect(otherVenues(aidc.value, deps).map((o) => o.label)).toEqual([
-      "AAAI",
-      "aaai-press",
-      "acm-acmsmall",
-      "acm-sigconf",
-      "AGENT 2027",
-      "AgenticDev",
-      "AGENTVERIFY",
-      "AISec",
-      "ASE",
-      "ACM CCS",
-      "FSE 2027",
-      "ICML",
-      "icml-style",
-      "ICSE 2028",
-      "MSR",
-      "NeurIPS",
-      "neurips-style",
-      "NLBSE",
-      "IEEE S&P",
-    ]);
+    expect(otherVenues(aidc.value, deps).map((o) => [o.label, o.year])).toEqual(
+      [
+        ["AAAI", 2027],
+        ["aaai-press", null],
+        ["acl-latex", null],
+        ["acm-acmsmall", null],
+        ["acm-sigconf", null],
+        ["ACSAC", 2026],
+        ["AGENT", 2027],
+        ["AgenticDev", 2026],
+        ["AGENTVERIFY", 2027],
+        ["AISec", 2026],
+        ["ASE", 2026],
+        ["ACM CCS", 2026],
+        ["EMNLP", 2026],
+        ["FSE", 2027],
+        ["ICML", 2027],
+        ["icml-style", null],
+        ["ICSE", 2027],
+        ["ICSE", 2028],
+        ["MSR", 2027],
+        ["NeurIPS", 2026],
+        ["neurips-style", null],
+        ["NLBSE", 2027],
+        ["IEEE S&P", 2027],
+      ],
+    );
   });
 });
 
@@ -1710,12 +1835,16 @@ describe("format/layout-override and cycle/port-done under the NeurIPS style", (
   });
 });
 
-describe("tex/venue-leftover — NeurIPS counts only with a year beside it (`mentions`)", () => {
+describe("tex/venue-leftover — NeurIPS counts only beside a recent year", () => {
   const under = (text: string) =>
     leftovers(lint(aidcPaper(`${text}\n${BODY}${STATEMENT}`), AIDC));
 
   it.each([
     ["the venue named alone", "Benchmarks popular at NeurIPS are larger."],
+    [
+      "related work: an edition older than the paper's own year minus one",
+      "As shown at NeurIPS 2023, the bound is tight.",
+    ],
   ])("silent: %s", (_, text) => {
     expect(under(text)).toEqual([]);
   });
@@ -1724,12 +1853,10 @@ describe("tex/venue-leftover — NeurIPS counts only with a year beside it (`men
     ["First written for NeurIPS 2026."],
     ["A version appeared as NeurIPS'26 work."],
     ["Submitted to NeurIPS~2026."],
-    // 🔴 Any year: a citation in the text of last year's NeurIPS paper is reported too (neurips-2026.md).
-    ["As shown at NeurIPS 2023, the bound is tight."],
   ])("🔴 reported: «%s»", (text) => {
     expect(under(text).map((f) => f.message)).toEqual([
       expect.stringMatching(
-        /^«NeurIPS» names NeurIPS, and this paper extends AIDC/,
+        /^«NeurIPS» names NeurIPS 2026, and this paper extends AIDC 2026/,
       ),
     ]);
   });
@@ -1750,7 +1877,7 @@ const aaaiPaper = (
   style = "\\usepackage[submission]{aaai2027}",
 ) => paper(`\\documentclass[letterpaper]{article}\n${style}`, body);
 
-describe("tex/venue-leftover — AAAI counts only with a year beside it (`mentions`)", () => {
+describe("tex/venue-leftover — AAAI counts only beside a recent year", () => {
   const under = (text: string) =>
     leftovers(lint(aidcPaper(`${text}\n${BODY}${STATEMENT}`), AIDC));
 
@@ -1759,6 +1886,10 @@ describe("tex/venue-leftover — AAAI counts only with a year beside it (`mentio
     ["its press", "The AAAI Press style sets two columns."],
     // 🔴 The call's own spelling is not reached: a hyphen is not a year beside the name (aaai-2027.md).
     ["the call's spelling, with a hyphen", "First written for AAAI-27."],
+    [
+      "related work: an edition older than the paper's own year minus one",
+      "As shown at AAAI 2024, the bound is tight.",
+    ],
   ])("silent: %s", (_, text) => {
     expect(under(text)).toEqual([]);
   });
@@ -1767,11 +1898,11 @@ describe("tex/venue-leftover — AAAI counts only with a year beside it (`mentio
     ["First written for AAAI 2027."],
     ["A version appeared as AAAI'27 work."],
     ["Submitted to AAAI~2027."],
-    // 🔴 Any year: last year's AAAI in the text is reported too (aaai-2027.md).
-    ["As shown at AAAI 2024, the bound is tight."],
   ])("🔴 reported: «%s»", (text) => {
     expect(under(text).map((f) => f.message)).toEqual([
-      expect.stringMatching(/^«AAAI» names AAAI, and this paper extends AIDC/),
+      expect.stringMatching(
+        /^«AAAI» names AAAI 2027, and this paper extends AIDC 2026/,
+      ),
     ]);
   });
 
@@ -1883,7 +2014,7 @@ describe("the ICML style under tex/template, format/layout-override and cycle/po
   });
 });
 
-describe("tex/venue-leftover — ICML counts only with a year beside it (`mentions`)", () => {
+describe("tex/venue-leftover — ICML counts only beside a recent year", () => {
   const under = (text: string) =>
     leftovers(lint(aidcPaper(`${text}\n${BODY}${STATEMENT}`), AIDC));
 
@@ -1891,6 +2022,10 @@ describe("tex/venue-leftover — ICML counts only with a year beside it (`mentio
     ["the venue named alone", "Benchmarks popular at ICML are smaller."],
     // Measured in a NeurIPS 2025 paper's prose: a citation tag glued to its year is no whole word.
     ["a tag glued to its year", "ELLM(ICML23) uses an LLM as a planner."],
+    [
+      "related work: an edition older than the paper's own year minus one",
+      "As shown at ICML 2023, the bound is tight.",
+    ],
   ])("silent: %s", (_, text) => {
     expect(under(text)).toEqual([]);
   });
@@ -1899,11 +2034,11 @@ describe("tex/venue-leftover — ICML counts only with a year beside it (`mentio
     ["First written for ICML 2027."],
     ["A version appeared as ICML'27 work."],
     ["Submitted to ICML~2027."],
-    // 🔴 Any year: a citation in the text of last year's ICML paper is reported too (icml-2027.md).
-    ["As shown at ICML 2025, the bound is tight."],
   ])("🔴 reported: «%s»", (text) => {
     expect(under(text).map((f) => f.message)).toEqual([
-      expect.stringMatching(/^«ICML» names ICML, and this paper extends AIDC/),
+      expect.stringMatching(
+        /^«ICML» names ICML 2027, and this paper extends AIDC 2026/,
+      ),
     ]);
   });
 

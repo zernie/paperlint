@@ -54,7 +54,7 @@ no reference pages. A venue whose limit depends on those counts says what it doe
 <!-- prettier-ignore-start -->
 <!-- Generated from acm-acmsmall.jsonc by `npx eslint --fix` (rule preset/card-rules). Edit the preset, not this section. -->
 
-**`paperlint:acm-acmsmall`** — template family, no venue of its own · extended by `paperlint:fse`
+**`paperlint:acm-acmsmall`** — template family, no venue of its own · extended by `paperlint:fse-2027`
 
 No preset of this chain sets a rule: under it, every rule keeps paperlint's default.
 

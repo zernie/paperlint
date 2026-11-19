@@ -182,23 +182,26 @@ A venue is a **preset**, a JSONC file in `presets/`, validated by
 `venue-profile.schema.json` beside it. Adding one is three files and no code (the maintainer skill
 `.claude/skills/add-venue/` walks an agent through it, from the call for papers):
 
-1. **The preset, thin.** `presets/<name>.jsonc` extends the template family it is built on
+1. **The preset, thin, for one edition.** `presets/<series>-<year>.jsonc` (`nlbse-2027`; a workshop
+   is its own series, not `icse-nlbse`) extends the template family it is built on
    (`"extends": "paperlint:acm-sigconf"` for an ACM venue) and adds only what the call for papers
    sets: `format.kinds` (the page limit of each kind of paper) and, when the venue's producer asks
    for something an optional rule checks, `rules`. Every number carries the quote it came from.
    A venue on a template with no family yet stands alone (`template`, `tex`, `format`) — or, better,
    add the family first: measured on a real template build (banal + pdf.js), not copied from
-   documentation ([#88](https://github.com/zernie/paperlint/issues/88)).
-2. **The card.** `presets/<name>.md`, beside the preset — prose about the venue: deadlines, tracks, the blind model,
+   documentation ([#88](https://github.com/zernie/paperlint/issues/88)). Its `name` carries no year;
+   a workshop sets `"workshop": true` and `"parent": "paperlint:<conference>-<year>"` of its own year.
+2. **The card.** `presets/<series>-<year>.md`, beside the preset — prose about the venue: deadlines, tracks, the blind model,
    what the form asks. Lint fails while a preset has no card; the rules section between the generated
    markers is written by `npm run build && npx eslint --fix presets/` (the config loads the rule from
    `dist/`).
-3. **A test.** A case in `src/presets.test.ts` that `paperlint:<name>` resolves over its family with
+3. **A test.** A case in `src/presets.test.ts` that `paperlint:<series>-<year>` resolves over its family with
    the kinds you declared; `src/tex-requirements.harness.ts` already checks every shipped preset
    against the schema.
 
 `paperlint toolchain` picks the new preset's packages up by itself, and the README and
-[`docs/rules.md`](docs/rules.md#checks-against-the-venue) list the shipped presets — update both.
+[`docs/venues.md`](docs/venues.md#what-paperlint-ships) list the shipped presets — update both
+(`test/venues-doc.test.ts` fails while `docs/venues.md` misses one).
 
 ## Releases
 

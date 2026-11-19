@@ -27,7 +27,7 @@ async function lintPresets(): Promise<string[]> {
   });
   const results = await eslint.lintFiles(["presets"]);
   // Guards: the pairing rule must SEE the presets — a block that matches no .jsonc reports clean.
-  expect(results.filter((r) => r.filePath.endsWith(".jsonc"))).toHaveLength(23);
+  expect(results.filter((r) => r.filePath.endsWith(".jsonc"))).toHaveLength(27);
   return results.flatMap((r) =>
     r.messages.map(
       (m) =>
@@ -49,20 +49,23 @@ describe("every preset has a card beside it", LINTS_ALL_PRESETS, () => {
   });
 
   it("a preset whose card is gone: an error on the preset, naming the missing card", async () => {
-    rmSync(join(root, "presets", "aidc.md"));
+    rmSync(join(root, "presets", "aidc-2026.md"));
     const eslint = new ESLint({
       cwd: root,
       overrideConfigFile: true,
       overrideConfig: presetCards(root),
     });
-    const [r] = await eslint.lintFiles(["presets/aidc.jsonc"]);
+    const [r] = await eslint.lintFiles(["presets/aidc-2026.jsonc"]);
     expect(r?.messages.map((m) => [m.ruleId, m.message])).toEqual([
       [
         "project-structure/folder-structure",
-        "🔥 File 'aidc.jsonc' enforces the existence of other folders/files. 🔥\n\nEnforce existence = ./presets/aidc.md\nError location = ./presets/aidc.jsonc\n\n",
+        "🔥 File 'aidc-2026.jsonc' enforces the existence of other folders/files. 🔥\n\nEnforce existence = ./presets/aidc-2026.md\nError location = ./presets/aidc-2026.jsonc\n\n",
       ],
     ]);
-    cpSync(join(REPO, "presets", "aidc.md"), join(root, "presets", "aidc.md"));
+    cpSync(
+      join(REPO, "presets", "aidc-2026.md"),
+      join(root, "presets", "aidc-2026.md"),
+    );
     expect(await lintPresets()).toEqual([]);
   });
 });

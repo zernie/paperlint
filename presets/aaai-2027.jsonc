@@ -33,14 +33,11 @@
   "type": "venue",
   // The series, without its year: the file is the edition.
   "name": "AAAI",
-  // «AAAI» alone is what papers write whenever they mention an AAAI paper or AAAI Press, so it
-  // counts as naming the venue only with a year beside it (tex/venue-leftover): «AAAI 2027» (what
-  // OpenReview's venue group calls the edition, its `subtitle`,
+  // «AAAI» alone is what papers write whenever they mention an AAAI paper or AAAI Press, so
+  // tex/venue-leftover counts it in prose only beside a year no older than the paper's own edition's
+  // year minus one: «AAAI 2027» (what OpenReview's venue group calls the edition, its `subtitle`,
   // https://api2.openreview.net/groups?id=AAAI.org/2027/Conference, read 2026-11-19), «AAAI'27»,
-  // «AAAI~2027». 🔴 Not the call's own spelling «AAAI-27»: a hyphen is not a year beside the name,
-  // and an alias «AAAI-27» would need a year after it too. Any year counts, so «AAAI 2024» in the
-  // text of another venue's paper is reported as well.
-  "mentions": "with-year",
+  // «AAAI~2027». 🔴 Not the call's own spelling «AAAI-27»: a hyphen is not a year beside the name.
   // The call quoted above.
   "url": "https://aaai.org/conference/aaai/aaai-27/main-technical-track-call/",
   "extends": "paperlint:aaai-press",

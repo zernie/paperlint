@@ -85,7 +85,7 @@ async function refusal(entry: unknown): Promise<string> {
   );
 }
 
-const PRESET = { extends: "paperlint:agenticdev", kind: "short" };
+const PRESET = { extends: "paperlint:agenticdev-2026", kind: "short" };
 const CHICAGO = { title: "chicago-headline", headings: "chicago-headline" };
 const SENTENCE_CASE = [
   "\\section{Related work}",
@@ -255,10 +255,10 @@ describe("tex/heading-case on a paper whose preset does not turn it on", () => {
 
   it.each([
     ["acm-sigconf", undefined],
-    ["aisec", "research"],
+    ["aisec-2026", "research"],
     ["ieee-conference", undefined],
-    ["aidc", "short"],
-    ["realm", "short"],
+    ["aidc-2026", "short"],
+    ["realm-2026", "short"],
   ])(
     "🔴 is silent on paperlint:%s: its venue's case rule was not read, or is a variant not built",
     async (venue, kind) => {

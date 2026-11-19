@@ -95,46 +95,52 @@ describe("the shipped cards", { timeout: ALL_CARDS_MS }, () => {
     expect(results.map((r) => r.filePath.slice(P.length + 1)).sort()).toEqual([
       "aaai-2027.md",
       "aaai-press.md",
+      "acl-latex.md",
       "acm-acmsmall.md",
       "acm-sigconf.md",
-      "agent.md",
-      "agenticdev.md",
-      "agentverify.md",
-      "aidc.md",
-      "aisec.md",
-      "ase.md",
-      "ccs.md",
-      "fse.md",
+      "acsac-2026.md",
+      "agent-2027.md",
+      "agenticdev-2026.md",
+      "agentverify-2027.md",
+      "aidc-2026.md",
+      "aisec-2026.md",
+      "ase-2026.md",
+      "ccs-2026.md",
+      "emnlp-2026.md",
+      "fse-2027.md",
       "icml-2027.md",
       "icml-style.md",
-      "icse.md",
+      "icse-2027.md",
+      "icse-2028.md",
       "ieee-conference.md",
-      "msr.md",
+      "msr-2027.md",
       "neurips-2026.md",
       "neurips-style.md",
-      "nlbse.md",
-      "realm.md",
-      "sp.md",
+      "nlbse-2027.md",
+      "realm-2026.md",
+      "sp-2027.md",
       "tex-base.md",
     ]);
     expect(results.flatMap((r) => r.messages)).toEqual([]);
-  });
+    // Every card resolves its preset's whole chain: 21 cards took 5.0 s under `npm run test:changed`
+    // (2026-11-19), past vitest's default of 5 s.
+  }, 20_000);
 
   it("agenticdev: its own rules, linked to their page or to the index, and what it extends", async () => {
-    const text = readFileSync(join(P, "agenticdev.md"), "utf8");
+    const text = readFileSync(join(P, "agenticdev-2026.md"), "utf8");
     writeFileSync(
-      join(P, "agenticdev.md"),
+      join(P, "agenticdev-2026.md"),
       text.replace(sectionOf(text), `${SECTION_START}\n${SECTION_END}`),
     );
-    expect(await findings("agenticdev.md")).toEqual([STALE]);
+    expect(await findings("agenticdev-2026.md")).toEqual([STALE]);
     // Guards: --fix writes the resolved preset — the section is the generated output, compared whole.
-    expect(sectionOf(await fixed("agenticdev.md"))).toBe(
+    expect(sectionOf(await fixed("agenticdev-2026.md"))).toBe(
       [
         SECTION_START,
         "<!-- prettier-ignore-start -->",
-        "<!-- Generated from agenticdev.jsonc by `npx eslint --fix` (rule preset/card-rules). Edit the preset, not this section. -->",
+        "<!-- Generated from agenticdev-2026.jsonc by `npx eslint --fix` (rule preset/card-rules). Edit the preset, not this section. -->",
         "",
-        "**`paperlint:agenticdev`** — venue preset for AgenticDev · call for papers: <https://conf.researchr.org/home/ase-2026/agenticdev-2026> · extends `paperlint:acm-sigconf`",
+        "**`paperlint:agenticdev-2026`** — venue preset for AgenticDev 2026 · call for papers: <https://conf.researchr.org/home/ase-2026/agenticdev-2026> · extends `paperlint:acm-sigconf`",
         "",
         "| rule | severity | options | set in |",
         "| --- | --- | --- | --- |",
@@ -145,7 +151,7 @@ describe("the shipped cards", { timeout: ALL_CARDS_MS }, () => {
         SECTION_END,
       ].join("\n"),
     );
-    expect(await findings("agenticdev.md")).toEqual([]);
+    expect(await findings("agenticdev-2026.md")).toEqual([]);
   });
 });
 
@@ -157,7 +163,7 @@ describe("the origin column: set here, or inherited from the file of the chain t
         type: "venue",
         name: "Fixture",
         url: "https://example.org/cfp",
-        extends: "paperlint:agenticdev",
+        extends: "paperlint:agenticdev-2026",
         rules: { "pdf/body-size": "off", "tex/register": ["warn", "a|b"] },
       }),
     );
@@ -170,8 +176,8 @@ describe("the origin column: set here, or inherited from the file of the chain t
     // shows a dash, and a `|` in the options is escaped so the table keeps its columns.
     expect(text.split("\n").filter((l) => l.startsWith("| ["))).toEqual([
       "| [`pdf/body-size`](../docs/rules/pdf/body-size.md) | off | — | this preset |",
-      '| [`pdf/last-page-balance`](../docs/rules.md) | error | `{"tolerancePt":120}` | inherited from `paperlint:agenticdev` |',
-      '| [`tex/heading-case`](../docs/rules/tex/heading-case.md) | error | `{"title":"chicago-headline","headings":"chicago-headline"}` | inherited from `paperlint:agenticdev` |',
+      '| [`pdf/last-page-balance`](../docs/rules.md) | error | `{"tolerancePt":120}` | inherited from `paperlint:agenticdev-2026` |',
+      '| [`tex/heading-case`](../docs/rules/tex/heading-case.md) | error | `{"title":"chicago-headline","headings":"chicago-headline"}` | inherited from `paperlint:agenticdev-2026` |',
       '| [`tex/register`](../docs/rules/tex/register.md) | warn | `"a\\|b"` | this preset |',
     ]);
     // Appended after one blank line to a card that ended with a newline.

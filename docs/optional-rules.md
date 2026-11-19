@@ -69,12 +69,12 @@ writing, not a number the venue states.
 
 ### Turning it on
 
-A paper that extends `paperlint:agenticdev` has it already, at 120 pt. For any other paper, in its
+A paper that extends `paperlint:agenticdev-2026` has it already, at 120 pt. For any other paper, in its
 `papers/my-paper/paperlint.json`:
 
 ```json
 {
-  "extends": "paperlint:aisec",
+  "extends": "paperlint:aisec-2026",
   "kind": "research",
   "rules": { "pdf/last-page-balance": ["error", { "tolerancePt": 120 }] }
 }
