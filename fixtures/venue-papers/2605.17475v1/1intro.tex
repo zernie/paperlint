@@ -1,0 +1,56 @@
+\section{Introduction} \label{sec:intro}
+
+\emph{Correct-by-construction} model development is an important paradigm in formal methods, aiming to ensure correctness during development through formal verification rather than post-hoc testing.
+Typically, requirements are incrementally formalized into a sequence of models, where each intermediate model must be verified before further refinement.
+However, the steep learning curve and reliance on mathematical expertise have hindered their widespread adoption.
+As system complexity increases, the number of proof obligations grows rapidly.
+Representative frameworks such as the B-Method \cite{abrial1996b} and Event-B \cite{abrial2010modeling} often generate hundreds of proof obligations even for moderately complex models.
+Traditionally, the iterative process of constructing formal models, discharging proof obligations, and repairing accordingly is performed manually, making it time-consuming and dependent on human expertise.
+
+Meanwhile, the rise of large language models (LLMs) \cite{achiam2023gpt, openai_gpt5} has attracted growing attention across research communities \cite{jiang2024survey, hou2024large, zhang2025position}. 
+Their natural language understanding capabilities open new opportunities to automate formalization. 
+Recent research in formal methods has explored the potential of LLMs in a variety of autoformalization tasks, including linear temporal logic synthesis~\cite{cosler2023nl2spec, fuggitti2023nl2ltl} and program specification generation~\cite{wen2024enchanting, wu2023lemur}. 
+However, these works do not tackle system-level modeling. 
+By contrast, recent attempts at LLM-based formal model construction remain largely empirical and lack a systematic framework for the iterative procedure described above~\cite{hong2025effectiveness, capozucca2025ai}. 
+Notably, the recently proposed PAT-Agent~\cite{zuo2025pat} is designed specifically for formal model construction, leveraging model checking. 
+However, model checking alone does not suffice to prove the correctness of generated models. 
+While model checking is effective at reporting counterexamples within a given bound, the absence of counterexamples only guarantees correctness up to that bound, and the cost of exploration grows rapidly as the bounds increase.
+In contrast, theorem proving provides unbounded reasoning.
+Proof obligations can be generated to ensure well-definedness of expressions, preservation of invariants, feasibility of events under their guards, and termination of the model \cite{abrial1996b}.
+Consequently, correct-by-construction methods typically rely on a combination of model checking and theorem proving.
+Similar to autoformalization, there has been growing interest in LLM-powered automated theorem provers~\cite{first2023baldur, lu2024proof, carrott2024coqpyt}. 
+Yet most existing works focus on isolated tasks, such as theorem proving alone or model synthesis verified solely by model checking.
+In practice, formal development requires models and proofs to evolve together.
+When a theorem prover fails to discharge a proof obligation, the failure may stem from inadequate modeling or the inherent difficulty of automated reasoning.
+Since neither model correctness nor prover completeness can be assumed, practical development must allow revisions to both the formal model and its proof artifacts.
+To our knowledge, no existing automated approach formulates formal development as a joint state space over models and proof artifacts, enabling iterative coordination between model synthesis and proof-guided repair.
+
+To bridge this gap, we propose \textbf{Event-B Agent}, a novel framework for end-to-end formal model construction powered by LLM. 
+Given a requirement document in natural language, Event-B Agent constructs a formal model through three stages.
+(1) \textbf{Refinement Stratey Planning.}
+To allow incremental model design and reduce the complexity of both model synthesis and proof-guided repair, we adopt the LLM-proposed refinement strategy that distributes the requirements across multiple refinement steps.
+With proof obligations, refinement guarantees that properties proven in earlier steps are preserved in later ones, thereby reducing the difficulty of synthesis and theorem proving.
+(2) \textbf{Model Synthesis.}
+For each refinement step determined by the refinement strategy, a formal model is synthesized from the assigned requirements and iteratively repaired to ensure well-formedness.
+This process is crucial for effective model construction and achieving high requirement coverage.
+(3) \textbf{Model \& Proof Repair.}
+After synthesizing the model at a refinement step, it is verified and repaired as needed.
+The model \& proof repair component discharges the proof obligations~\cite{abrial2010modeling} required for refinement soundness and requirement correctness.
+This guarantees that properties established at earlier refinement levels are preserved, while newly introduced properties at the current level are verified.
+The process is repeated until all proof obligations at the current refinement step are discharged, after which the synthesis-and-repair procedure continues for the next step.
+The whole procedure stops when all the requirements have been addressed.
+
+We evaluate Event-B Agent on 27 formal systems, each with an average of 182.41 proof obligations, assessing the consistency and correctness of the constructed models.
+Since the existing works do not support joint evolution of models and proofs, we compare against the closest existing attempts with the same input and output setting, that is, the LLM-based autoformalization methods.
+Across all evaluated metrics, Event-B Agent consistently outperforms the baselines, achieving a proof obligation discharge rate (PDR) of 97.86\%, and surpasses the baselines in requirement coverage (RC) and requirement fulfillment (RF) by 4.63\% and 18.01\%, respectively.
+The ablation studies further demonstrate the effectiveness of the two key components of our framework: refinement strategy planning and model \& proof repair.
+Moreover, these components enhance the performance of each other.
+Refinement reduces the complexity of individual proofs, while the repair component establishes the correctness of refinements, ensuring that fulfilled requirements are preserved across refinement steps.
+Additionally, Event-B Agent completes synthesis and repair for each system in an average of \SI{74.45}{minutes}, while discharging proof obligations takes an average of \SI{0.24}{minutes}.
+In summary, this paper makes the following contributions:
+\begin{enumerate}
+  \item \textbf{Framework.} We introduce Event-B Agent, the first end-to-end framework for formal model synthesis and repair that supports refinement-based development with coordinated model construction and proof derivation, embodying the principle of correctness by construction.
+  \item \textbf{Tool.} We implement a proof-of-concept tool to demonstrate the practicality of our approach and integrate it into Rodin~\cite{rodin}, an IDE for Event-B that provides formal verification support, including model checking, SMT solving, and theorem proving.
+  \item \textbf{Evaluation.} We evaluate Event-B Agent on 27 formal systems against autoformalization baselines, including ablation studies to quantify component contributions, as well as efficiency and qualitative analyses. All code, datasets, and the interface are publicly available\footnote{\url{https://github.com/HongshuW/EventB_Agent}, \url{https://doi.org/10.5281/zenodo.19642103}}.
+\end{enumerate}
+

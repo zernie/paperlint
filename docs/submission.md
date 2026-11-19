@@ -14,20 +14,37 @@ npx paperlint submission update papers/my-paper --save    # changes the real sub
 
 ## What it needs
 
-| where                        | key                                                  | what it says                                                          |
-| ---------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------- |
-| the venue preset             | `"portal": { "kind": "hotcrp", "url": "https://…" }` | where the venue takes submissions (`paperlint:aidc`, `paperlint:msr`) |
-| the paper's `paperlint.json` | `"authors": [{ "name", "email", "affiliation"? }]`   | for `new`: every author, in the paper's order — never guessed         |
-| the paper's `paperlint.json` | `"submission": { "id": 7 }`                          | which submission is this paper's — `new --save` writes it             |
-| the environment              | `HOTCRP_TOKEN_<SITE>`, e.g. `HOTCRP_TOKEN_MSR2027`   | your API token for that site                                          |
+| where                        | key                                                  | what it says                                                                    |
+| ---------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------- |
+| the venue preset             | `"portal": { "kind": "hotcrp", "url": "https://…" }` | where the venue takes submissions (`paperlint:aidc-2026`, `paperlint:msr-2027`) |
+| the paper's `paperlint.json` | `"authors": [{ "name", "email", "affiliation"? }]`   | for `new`: every author, in the paper's order — never guessed                   |
+| the paper's `paperlint.json` | `"submission": { "id": 7 }`                          | which submission is this paper's — `new --save` writes it                       |
+| the environment              | `HOTCRP_TOKEN_HOTCRP_COM`, or `HOTCRP_TOKEN_<SITE>`  | your API token: one for all of hotcrp.com, one per self-hosted site             |
 
-**The token** works on the site it was made on only, so each site has its own variable:
-`HOTCRP_TOKEN_MSR2027` for `msr2027.hotcrp.com`; for a site not on hotcrp.com, its whole host
-(with a port other than the default) and path, every other character becoming `_`, so two paths
-on one host that differ only in punctuation (`/conf-a`, `/conf/a`) share one variable. A plain
-`HOTCRP_TOKEN` is not read. When the token is missing, misnamed or refused, the command prints
-where on that site to make one, which permissions to tick, and the exact variable to set. Set it
-in your environment — never paste it into a chat; paperlint never prints it.
+**The token** is read from the environment. One shared token for all of hotcrp.com is the normal
+case; a separate token is the exception — a self-hosted server, or a token made as "This site only".
+HotCRP's source says so ([`kohler/hotcrp`](https://github.com/kohler/hotcrp), `src/init.php` and
+`src/userinfo/u_developer.php`). Which variable is read depends on where the site is:
+
+- **A `*.hotcrp.com` site** (the hosted service): `HOTCRP_TOKEN_HOTCRP_COM`, one variable for every
+  site on it, because they share one account system. A per-site variable overrides it for that
+  site alone and is read first: `HOTCRP_TOKEN_MSR2027` for `msr2027.hotcrp.com`.
+- **A self-hosted install** (any other host): its own variable, named after its whole host (with a
+  port other than the default) and path, every other character becoming `_`, e.g.
+  `HOTCRP_TOKEN_AIDC_SUBMIT_ACSAC_ORG` for `aidc.submit.acsac.org`. Two paths on one host that
+  differ only in punctuation (`/conf-a`, `/conf/a`) share one variable. It never reads
+  `HOTCRP_TOKEN_HOTCRP_COM`: a self-hosted install is a separate installation and does not know a
+  hotcrp.com token (a token made on one answered `401` from `msr2027.hotcrp.com`, measured
+  2026-10-19).
+
+When you make the token (Account settings → Developer), HotCRP asks for "Site availability": choose
+**All sites** for the shared variable. An all-sites token starts `hcT_`; a "This site only" token
+starts `hct_` and works on one site, so it belongs in that site's own variable. A `hct_` token in
+`HOTCRP_TOKEN_HOTCRP_COM` is refused with a message saying so.
+
+A plain `HOTCRP_TOKEN` is not read. When the token is missing, misnamed or refused, the command
+prints where on that site to make one, which permissions to tick, and the exact variable to set. Set
+it in your environment — never paste it into a chat; paperlint never prints it.
 
 A missing key or token stops the command with exit 2 and a line naming what to set.
 

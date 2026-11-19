@@ -66,7 +66,7 @@ the count is not yet classified.
 | llm-splained-acsac25 | `tex/claim-provenance` | 11 | real | the authors' own results in `sections/*.tex` stated without a subject or a pointer ("GPT errors exceeded 30% in both categories …"); the owner is in a neighbouring sentence. One ("ranged from 1 to 13") is in a list item, which the rules did not read before; one is in the reviews' disabled branch (below) |
 | secure-acsac24 | `format/layout-override` | 2 | real | the source loads `geometry` and sets `\geometry{a4paper, margin=1in}` over IEEEtran's letter layout. It is the arXiv source, not the paper as submitted to ACSAC, and the rule is right to flag it |
 | barovox-acsac24 | `tex/claim-provenance` | 28 | sampled | percentages in the evaluation and discussion («81.38%», «90.51%» in `Chapters/08_Discussion.tex`) |
-| rr-dataset-quality-acsac24 | `tex/claim-provenance` | 15 | sampled | percentages in the results («31.3%», «17%» in `Result.tex`) and one in the related work («60%») |
+| rr-dataset-quality-acsac24 | `tex/claim-provenance` | 16 | sampled | percentages in the results («31.3%», «17%» in `Result.tex`) and one in the related work («60%»); «beam size 5» in `Result.tex` stands alone since a `%` comment line no longer glues it to the next sentence, which cites |
 | leaking-queries-acsac25 | `tex/claim-provenance` | 25 | sampled | percentages in the experiments and the appendix («86%», «90%», «72%») |
 | leaking-queries-acsac25 | `paper/section-word` | 1 | real | `\S\ref{subsec:results}` in `sections_full_version/discussion.tex`, where IEEE style writes «Section» |
 | agenticdev-acm26, barovox-acsac24, rr-dataset-quality-acsac24, secure-acsac24 | `paper/refs-checked` | 1 | known | the record (`tex-truth.json`) names the databases bibtex opened, and no `_build/references.json` says they were checked: the lint test never runs the build's online check |
@@ -153,7 +153,7 @@ banal reads 0.3 pt above the rendered size on both templates; `body_pt_tol` of 0
 ## The register band — AIDC's anchors are the ACSAC papers here
 
 `tex/contrast-frames`, `tex/claim-emphasis` and `tex/relation-markers` judge a body against the band
-its venue preset's anchors set. The five ACSAC papers are `paperlint:aidc`'s anchors (AIDC is ACSAC's
+its venue preset's anchors set. The five ACSAC papers are `paperlint:aidc-2026`'s anchors (AIDC is ACSAC's
 workshop, on its template, with no accepted papers of its own yet); the preset records each one's
 words and counts, and `src/register-bands.test.ts` re-measures them from these sources and requires
 the same numbers. The papers here extend `paperlint:ieee-conference`, which records no anchors, so

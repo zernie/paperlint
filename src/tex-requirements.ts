@@ -211,12 +211,12 @@ export interface PresetFile {
   readonly template: string | null;
   /** Class options the venue forbids, read with `template`; empty when the file names none. */
   readonly templateForbids: readonly string[];
+  /** The `\\usepackage` line of the style the template loads into its class; null when the file names none. */
+  readonly templateStyle: string | null;
   /** Other names the venue goes by in a paper's text; empty when the file names none. */
   readonly aliases: readonly string[];
   /** Whether the venue reviews double-blind; null when the file does not say. */
   readonly blind: boolean | null;
-  /** When the venue's names count as a mention in a paper's text; null when the file does not say. */
-  readonly mentions: "with-year" | null;
   /** Sections the venue requires; null when the file names none (a child's list replaces its parent's). */
   readonly requiredSections: readonly RequiredSection[] | null;
   /** Null when the file declares no `tex` block (allowed only with `extends`). */
@@ -287,10 +287,12 @@ interface PresetBodyJson {
   readonly extends?: string;
   readonly parent?: string;
   readonly template?: string;
+  readonly template_style?: string;
   readonly template_forbids?: readonly string[];
   readonly aliases?: readonly string[];
   readonly blind?: boolean;
-  readonly mentions?: "with-year";
+  /** A workshop: the schema then requires `parent`, and refuses `parent` without it. */
+  readonly workshop?: true;
   readonly required_sections?: readonly {
     readonly title: string;
     readonly position?: "last";
@@ -554,11 +556,9 @@ export function parsePreset(
     identity: identityOf(j),
     extends: orNull(j.extends),
     parent: orNull(j.parent),
-    template: orNull(j.template),
-    templateForbids: j.template_forbids ?? [],
+    ...templateOf(j),
     aliases: j.aliases ?? [],
     blind: orNull(j.blind),
-    mentions: orNull(j.mentions),
     requiredSections: sectionsOf(j.required_sections),
     tex: texOf(j.tex),
     format: formatOf(j.format),
@@ -568,6 +568,15 @@ export function parsePreset(
     ...portalBlocks(j, file),
   };
 }
+
+/** A preset's template: its class line, the options it forbids, and the style it loads. */
+const templateOf = (
+  j: PresetBodyJson,
+): Pick<PresetFile, "template" | "templateForbids" | "templateStyle"> => ({
+  template: orNull(j.template),
+  templateForbids: j.template_forbids ?? [],
+  templateStyle: orNull(j.template_style),
+});
 
 /** The text of one preset → the TeX requirements it declares itself (none without a `tex` block). */
 export function parseProfile(

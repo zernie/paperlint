@@ -185,7 +185,7 @@ function setup(geometry: Geometry = NONE) {
     [PDF]: PDF_BYTES,
     ...SHIPPED_PRESETS,
     [`${PAPER}/paperlint.json`]: JSON.stringify({
-      extends: "paperlint:agenticdev",
+      extends: "paperlint:agenticdev-2026",
       kind: "short",
     }),
   });
@@ -214,7 +214,7 @@ test("measure: venue and kind from paperlint.json, pdf relative to the paper, th
   );
   assert.deepEqual(
     [m.value.facts.venue, m.value.facts.kind],
-    ["agenticdev", "short"],
+    ["agenticdev-2026", "short"],
   );
   const over = await measurePaper(PAPER, PDF, { ...o, venue: "aisec" });
   assert.equal(over.ok && over.value.facts.venue, "aisec");
@@ -282,9 +282,9 @@ test("declaredVenue: none without paperlint.json; no id when it extends no prese
 test("declaredVenue: the id is the preset's — its file name, not its display name — and an extends that resolves nowhere is refused", () => {
   const ok = memoryFiles({
     ...SHIPPED_PRESETS,
-    [`${PAPER}/paperlint.json`]: '{"extends":"paperlint:aisec"}',
+    [`${PAPER}/paperlint.json`]: '{"extends":"paperlint:aisec-2026"}',
   });
-  assert.equal(declaredVenue(ok, PAPER)?.id, "aisec");
+  assert.equal(declaredVenue(ok, PAPER)?.id, "aisec-2026");
   const typo = memoryFiles({
     ...SHIPPED_PRESETS,
     [`${PAPER}/paperlint.json`]: '{"extends":"paperlint:aisek"}',

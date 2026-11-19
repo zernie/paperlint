@@ -348,7 +348,7 @@
   },
   "skills/build-label-page/scripts/label-page-browser.test.ts": {
     "playwright/no-raw-locators": {
-      "count": 37
+      "count": 36
     }
   },
   "skills/camera-ready/camera-ready.eval.mjs": {

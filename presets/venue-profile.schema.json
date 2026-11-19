@@ -12,14 +12,17 @@
       "minLength": 1
     },
     "type": {
-      "description": "What this file is. `venue`: one venue's call for papers, and it must say which venue (`name`) and where its call is (`url`). `family`: a publisher's template (acm-sigconf, ieee-conference) that venue presets extend; it names no venue, so it has neither `name` nor `url`. `base`: the TeX packages every paper gets (tex-base.jsonc); it holds only `tex` and nothing extends it.",
+      "description": "What this file is, exactly one of three. `venue`: one EDITION of a venue's call for papers, in a file named `<series>-<year>.jsonc` (`icse-2028`); it must say which venue (`name`) and where its call is (`url`). `family`: a publisher's template (acm-sigconf, ieee-conference, acl-latex) that venue presets extend, in a file whose name ends in no year; it names no venue, so it has neither `name` nor `url`. `base`: the TeX packages every paper gets (tex-base.jsonc); it holds only `tex` and nothing extends it.",
       "type": "string",
       "enum": ["venue", "family", "base"]
     },
     "name": {
-      "description": "A venue's name as its call for papers spells it (`AgenticDev`). Required on a venue, refused on a family. The label of messages, and one of the names `tex/venue-leftover` looks for.",
+      "description": "A venue's name as its call for papers spells it, WITHOUT a year (`AgenticDev`, `ICSE`): the year of a shipped edition is its id's (`icse-2028`), the one source of it, and a display that needs a year is the name and the id's year. Required on a venue, refused on a family. The label of messages, and one of the names `tex/venue-leftover` looks for.",
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "not": {
+        "pattern": "(^|[^0-9])(19|20)[0-9]{2}([^0-9]|$)|['’][0-9]{2}([^0-9]|$)"
+      }
     },
     "url": {
       "description": "A venue's call for papers or author instructions: the page its numbers are quoted from. Required on a venue, refused on a family.",
@@ -31,6 +34,11 @@
     },
     "template": {
       "description": "The \\documentclass the venue's template uses: a whole line, `\\documentclass[conference,compsoc]{IEEEtran}`, or a bare class name. `tex/template` requires a paper's class to be this one and to carry every option named here.",
+      "type": "string",
+      "minLength": 1
+    },
+    "template_style": {
+      "description": "The style package the venue's template loads into its class, for a template that is a style file from the venue's author kit and not a class: a whole `\\usepackage[…]{…}` line, the package and the options it requires (`\\usepackage{neurips_2026}`). `tex/template` then requires the paper to load that package with every option named here, and reports another venue's or another year's style loaded instead. A child's value replaces its parent's.",
       "type": "string",
       "minLength": 1
     },
@@ -49,23 +57,25 @@
       "type": "boolean"
     },
     "aliases": {
-      "description": "Other names the venue goes by in a paper's text — its acronym (`[\"AISec\"]`); the conference a workshop is held at is its `parent`. Read by `tex/venue-leftover`: a paper that extends another venue and says one of these is flagged. Matched as whole words, case-sensitive. Also read by `paper/folder-venue-leftover`, against the words of the paper's folder name, case ignored. Collected along the `extends` chain, with `name`.",
+      "description": "Other names the venue goes by in a paper's text — its acronym (`[\"AISec\"]`), without a year; the conference a workshop is held at is its `parent`. Read by `tex/venue-leftover`: in prose a name counts only beside a year no older than the paper's own edition's year minus one (`2027`, `'27`, `~2027`); inside a venue-identity command (`\\acmConference`, `\\acmBooktitle`, `\\conferenceinfo`, `\\IEEEpubid`), with or without one. Matched as whole words, case-sensitive. Also read by `paper/folder-venue-leftover`, against the words of the paper's folder name, case ignored. Collected along the `extends` chain, with `name`.",
       "type": "array",
       "uniqueItems": true,
       "items": {
         "type": "string",
-        "minLength": 1
+        "minLength": 1,
+        "not": {
+          "pattern": "(^|[^0-9])(19|20)[0-9]{2}([^0-9]|$)|['’][0-9]{2}([^0-9]|$)"
+        }
       }
     },
+    "workshop": {
+      "description": "This venue is a workshop held at a conference: then `parent` is required, and it names that conference's edition. Only `true`; a conference leaves it out. Refused on a family.",
+      "const": true
+    },
     "parent": {
-      "description": "The conference a workshop is held at: `paperlint:<name>` (shipped) or a path starting with ./ or ../, relative to this file, naming a venue preset (`\"parent\": \"paperlint:ccs\"` in aisec.jsonc). The parent's `name` and `aliases`, and its own parent's, count as the paper's own names: `tex/venue-leftover` and `paper/folder-venue-leftover` never report them in a paper of this venue, and report them as the parent in any other venue's paper. A parent that does not resolve to a venue, or parents that name each other, are refused. Refused on a family. A child's value replaces its parent's.",
+      "description": "The conference a workshop is held at, required on a workshop and refused elsewhere: `paperlint:<series>-<year>` (a shipped edition, of the workshop's own year) or a path starting with ./ or ../, relative to this file, naming a venue preset (`\"parent\": \"paperlint:ccs-2026\"` in aisec-2026.jsonc). The parent's `name` and `aliases`, and its own parent's, count as the paper's own names: `tex/venue-leftover` and `paper/folder-venue-leftover` never report them in a paper of this venue, and report them as the parent in any other venue's paper. A parent that does not resolve to a venue, a parent of another year, or parents that name each other, are refused. A child's value replaces its parent's.",
       "type": "string",
       "minLength": 1
-    },
-    "mentions": {
-      "description": "When the venue's `name` and `aliases` count as naming it in a paper's text (`tex/venue-leftover`). Absent: any whole-word use. `with-year`: only with a year beside the name — `MSR 2027`, `MSR'27`, `MSR~2027` — for a name that is also a common acronym (MSR: Microsoft Research, or an acronym a paper defines), where a bare use names something else far more often than the venue. A child's value replaces its parent's.",
-      "type": "string",
-      "enum": ["with-year"]
     },
     "portal": {
       "description": "Where the venue takes submissions, read by `paperlint submission`: the portal's kind (an adapter exists for `hotcrp`) and the site's base URL, the one its pages and `/api/` hang off. A paper says which submission is its own with `submission: { id }` in its paperlint.json. A child's value replaces its parent's.",
@@ -512,7 +522,9 @@
   },
   "required": ["type"],
   "dependencies": {
-    "template_forbids": ["template"]
+    "template_forbids": ["template"],
+    "template_style": ["template"],
+    "parent": ["workshop"]
   },
   "allOf": [
     {
@@ -540,7 +552,12 @@
         "properties": { "type": { "const": "family" } }
       },
       "then": {
-        "properties": { "name": false, "url": false, "parent": false }
+        "properties": {
+          "name": false,
+          "url": false,
+          "parent": false,
+          "workshop": false
+        }
       }
     },
     {
@@ -552,6 +569,10 @@
         "required": ["type", "tex"],
         "maxProperties": 2
       }
+    },
+    {
+      "if": { "required": ["workshop"] },
+      "then": { "required": ["parent"] }
     }
   ],
   "definitions": {

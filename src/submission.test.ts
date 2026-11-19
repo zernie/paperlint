@@ -72,6 +72,85 @@ test("only the site-less HOTCRP_TOKEN set: the rename instruction, and nothing i
   expect(r.errs.join("\n")).not.toMatch(/hct_old/);
 });
 
+test("🔴 a self-hosted site never uses the hosted-service variable: only it set → the site's own variable is asked for", async () => {
+  const r = await run({}, { env: { HOTCRP_TOKEN_HOTCRP_COM: "hct_all" } });
+  expect(r.code).toBe(2);
+  expect(r.seen).toStrictEqual([]);
+  expect(r.errs).toStrictEqual([
+    `no hotcrp token for ${SITE}: HOTCRP_TOKEN_127_0_0_1_9 is not set`,
+    ...STEPS,
+  ]);
+});
+
+test("🔴 the bare HOTCRP_TOKEN stays refused beside the shared variable's absence", async () => {
+  const r = await run({}, { env: { HOTCRP_TOKEN: "hct_old" } });
+  expect(r.code).toBe(2);
+  expect(r.seen).toStrictEqual([]);
+});
+
+const HOSTED_SITE = "https://msr2027.hotcrp.com";
+const HOSTED_PORTAL = { kind: "hotcrp", url: HOSTED_SITE } as const;
+const HOSTED_STEPS = (variable: string) => [
+  `  1. create a token on this site: ${HOSTED_SITE}/profile?t=developer (Account settings → Developer → API tokens), with the scopes submeta:read and document:read (show), submeta:write and document:write (update, new) — tick all four to use every subcommand`,
+  `  2. set it in your environment — never paste it into a chat: export ${variable}=<the token>`,
+  "  one token serves every hotcrp.com site: HOTCRP_TOKEN_HOTCRP_COM is read for all of them; HOTCRP_TOKEN_MSR2027, when set, overrides it for msr2027.hotcrp.com alone",
+];
+
+test("no token on a hosted-service site: the shared variable is what to set, the per-site override is mentioned", () => {
+  expect(
+    tokenProblemLines(HOSTED_PORTAL, hotcrpSite(HOSTED_SITE), {
+      kind: "missing",
+      variable: "HOTCRP_TOKEN_MSR2027",
+      shared: "HOTCRP_TOKEN_HOTCRP_COM",
+    }),
+  ).toStrictEqual([
+    `no hotcrp token for ${HOSTED_SITE}: HOTCRP_TOKEN_HOTCRP_COM is not set (HOTCRP_TOKEN_MSR2027 would override it for this site)`,
+    ...HOSTED_STEPS("HOTCRP_TOKEN_HOTCRP_COM"),
+  ]);
+});
+
+test("only the site-less variable set on a hosted-service site: both variables it may be renamed to", () => {
+  expect(
+    tokenProblemLines(HOSTED_PORTAL, hotcrpSite(HOSTED_SITE), {
+      kind: "site-less",
+      variable: "HOTCRP_TOKEN_MSR2027",
+      shared: "HOTCRP_TOKEN_HOTCRP_COM",
+      siteLess: "HOTCRP_TOKEN",
+    }),
+  ).toStrictEqual([
+    "HOTCRP_TOKEN is no longer read. If it was made on a hotcrp.com site, rename it to HOTCRP_TOKEN_HOTCRP_COM (every hotcrp.com site) or HOTCRP_TOKEN_MSR2027 (this site alone); if it was made on a self-hosted install, rename it to that install's variable (HOTCRP_TOKEN_<LABEL>) and create a token here:",
+    ...HOSTED_STEPS("HOTCRP_TOKEN_HOTCRP_COM"),
+  ]);
+});
+
+test("a site-only token in the shared variable: what is wrong, and both ways out", () => {
+  expect(
+    tokenProblemLines(HOSTED_PORTAL, hotcrpSite(HOSTED_SITE), {
+      kind: "site-only",
+      variable: "HOTCRP_TOKEN_MSR2027",
+      shared: "HOTCRP_TOKEN_HOTCRP_COM",
+    }),
+  ).toStrictEqual([
+    'HOTCRP_TOKEN_HOTCRP_COM holds a site-only token (it starts with hct_): that works on one hotcrp.com site only, not on all of them. Create a token with Site availability "All sites" (it starts with hcT_) and set that in HOTCRP_TOKEN_HOTCRP_COM, or move this one to HOTCRP_TOKEN_MSR2027 if it was made on this site:',
+    ...HOSTED_STEPS("HOTCRP_TOKEN_HOTCRP_COM"),
+  ]);
+});
+
+test("a 401 on a hosted-service site names the variable that was used", () => {
+  const f = { kind: "refused", httpStatus: 401, messages: [] } as const;
+  expect(
+    tokenRefusedLines(
+      HOSTED_PORTAL,
+      hotcrpSite(HOSTED_SITE),
+      f,
+      "HOTCRP_TOKEN_HOTCRP_COM",
+    ),
+  ).toStrictEqual([
+    "HOTCRP_TOKEN_HOTCRP_COM was used; it may belong to another hotcrp install (hotcrp.com sites share one token, a self-hosted install has its own), or be revoked or expired",
+    ...HOSTED_STEPS("HOTCRP_TOKEN_HOTCRP_COM"),
+  ]);
+});
+
 test("the site's variable set beside a site-less one: the site's token is the one used", async () => {
   const r = await run(
     {},
@@ -105,7 +184,7 @@ test("a 401 from the portal: the portal's words, which variable was used, and ho
   );
   const said = [
     "the portal refused (HTTP 401): Unauthorized",
-    "HOTCRP_TOKEN_127_0_0_1_9 was used; it may belong to another hotcrp site (tokens are per site), or be revoked or expired",
+    "HOTCRP_TOKEN_127_0_0_1_9 was used; it may belong to another hotcrp install (hotcrp.com sites share one token, a self-hosted install has its own), or be revoked or expired",
     ...STEPS,
   ];
   expect(map(runs, (r) => [r.code, r.errs])).toStrictEqual(
@@ -117,21 +196,33 @@ test("a 403 names a missing scope; any other failure says nothing about the toke
   const portal = { kind: "hotcrp", url: SITE } as const;
   const f = (httpStatus: number) =>
     ({ kind: "refused", httpStatus, messages: [] }) as const;
-  expect(tokenRefusedLines(portal, hotcrpSite(SITE), f(403))).toStrictEqual([
+  expect(
+    tokenRefusedLines(
+      portal,
+      hotcrpSite(SITE),
+      f(403),
+      "HOTCRP_TOKEN_127_0_0_1_9",
+    ),
+  ).toStrictEqual([
     "HOTCRP_TOKEN_127_0_0_1_9 was used; the site turned the request away — the token may lack a scope this subcommand needs",
     ...STEPS,
   ]);
-  expect(tokenRefusedLines(portal, hotcrpSite(SITE), f(500))).toStrictEqual([]);
   expect(
-    tokenRefusedLines(portal, hotcrpSite(SITE), {
-      kind: "unreachable",
-      detail: "x",
-    }),
+    tokenRefusedLines(portal, hotcrpSite(SITE), f(500), "X"),
+  ).toStrictEqual([]);
+  expect(
+    tokenRefusedLines(
+      portal,
+      hotcrpSite(SITE),
+      { kind: "unreachable", detail: "x" },
+      "X",
+    ),
   ).toStrictEqual([]);
   expect(
     tokenProblemLines(portal, hotcrpSite(SITE), {
       kind: "missing",
       variable: "HOTCRP_TOKEN_127_0_0_1_9",
+      shared: null,
     }),
   ).toStrictEqual([
     `no hotcrp token for ${SITE}: HOTCRP_TOKEN_127_0_0_1_9 is not set`,
@@ -218,7 +309,7 @@ test("the shipped aidc preset declares its HotCRP portal", () => {
   const fs = memoryFiles({
     "/w/package.json": "{}",
     [`${PAPER}/paperlint.json`]: JSON.stringify({
-      extends: "paperlint:aidc",
+      extends: "paperlint:aidc-2026",
       submission: { id: 7 },
     }),
   });

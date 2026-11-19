@@ -7,7 +7,6 @@
     "tex/claim-provenance": 20,
     "paper/section-word": 4,
     "paper/allowed-files-only": 2,
-    "pdf/measured": 1,
-    "tex/template": 1
+    "pdf/measured": 1
   }
 }

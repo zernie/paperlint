@@ -20,7 +20,8 @@ import { join } from "node:path";
 import { createChecker } from "../lib/check.ts";
 
 const R = await import("./tex-requirements.ts");
-const { parseTemplate } = await import("./adapters/latex/index.ts");
+const { parseTemplate, parseTemplateStyle } =
+  await import("./adapters/latex/index.ts");
 const VENUES = (await import("./package-dirs.ts")).presetsDir();
 
 const check = createChecker();
@@ -96,12 +97,25 @@ for (const v of acm) {
 // Venues on ONE template must not drift apart: a second list is how the old installer's three
 // dictionaries diverged. Since the ACM venues extend the `acm-sigconf` family, only the family
 // declares the template's packages, so this holds by construction; the check stays for any two
-// standalone presets that name the same template.
+// standalone presets that name the same template. A template is its class AND the style it loads
+// (`template_style`): NeurIPS's `article` + `neurips_2026` is not REALM's bare `article`.
+const styleOf = (v: string): string =>
+  parseTemplateStyle(presetOf(v).templateStyle ?? "")?.name ?? "";
+const templateKey = (v: string): string =>
+  `${String(templateOf(v))} + ${styleOf(v) || "no style"}`;
 const byTemplate = new Map<unknown, string[]>();
 for (const v of venues.filter((x) => presetOf(x).extends === null)) {
-  const t = templateOf(v);
+  const t = templateKey(v);
   byTemplate.set(t, [...(byTemplate.get(t) ?? []), v]);
 }
+// Guards: the key tells a style family from a bare class — else every article-based style would be
+// held to REALM's list.
+check(
+  "neurips-style and acl-latex are two templates: article + neurips_2026, article + no style",
+  templateKey("neurips-style") === "article + neurips_2026" &&
+    templateKey("acl-latex") === "article + no style",
+  `${templateKey("neurips-style")} · ${templateKey("acl-latex")}`,
+);
 for (const [t, vs] of byTemplate)
   check(
     `venues on template ${String(t)} declare the SAME packages (${vs.join(", ")})`,
@@ -249,14 +263,14 @@ rmSync(tmp, { recursive: true, force: true });
 // ── 5. the parser's tolerances: an optional block left out, and Ajv's optional fields ───
 {
   const bare = R.parsePreset(
-    '{ "type": "venue", "name": "X", "url": "https://x.org/", "extends": "paperlint:aisec" }',
+    '{ "type": "venue", "name": "X", "url": "https://x.org/", "extends": "paperlint:aisec-2026" }',
     "bare.jsonc",
     VENUES,
   );
   check(
     "a preset that only extends another: no tex block, `rules` an empty object",
     JSON.stringify([bare.extends, bare.tex, bare.rules]) ===
-      '["paperlint:aisec",null,{}]',
+      '["paperlint:aisec-2026",null,{}]',
     bare,
   );
   // Guards: `packages` is read without a fallback because the schema refuses a tex block

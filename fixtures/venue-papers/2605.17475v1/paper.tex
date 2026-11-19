@@ -1,0 +1,227 @@
+%%
+%% This is file `sample-acmsmall-conf.tex',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% samples.dtx  (with options: `all,proceedings,bibtex,acmsmall-conf')
+%% 
+%% IMPORTANT NOTICE:
+%% 
+%% For the copyright see the source file.
+%% 
+%% Any modified versions of this file must be renamed
+%% with new filenames distinct from sample-acmsmall-conf.tex.
+%% 
+%% For distribution of the original source see the terms
+%% for copying and modification in the file samples.dtx.
+%% 
+%% This generated file may be distributed as long as the
+%% original source files, as listed above, are part of the
+%% same distribution. (The sources need not necessarily be
+%% in the same archive or directory.)
+%%
+%%
+%% Commands for TeXCount
+%TC:macro \cite [option:text,text]
+%TC:macro \citep [option:text,text]
+%TC:macro \citet [option:text,text]
+%TC:envir table 0 1
+%TC:envir table* 0 1
+%TC:envir tabular [ignore] word
+%TC:envir displaymath 0 word
+%TC:envir math 0 word
+%TC:envir comment 0 0
+%%
+%% The first command in your LaTeX source must be the \documentclass
+%% command.
+%%
+%% For submission and review of your manuscript please change the
+%% command to \documentclass[manuscript, screen, review]{acmart}.
+%%
+%% When submitting camera ready or to TAPS, please change the command
+%% to \documentclass[sigconf]{acmart} or whichever template is required
+%% for your publication.
+%%
+%%
+\documentclass[acmsmall]{acmart}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{framed}
+\usepackage{fancyvrb}
+\usepackage{soul}
+% \usepackage{svg}
+\usepackage{siunitx}
+\soulregister\ref7
+\soulregister\eqref7
+\soulregister\cite7
+\soulregister\cref7
+\soulregister\Cref7
+\soulregister\autoref7
+
+\usepackage{appendix}
+\usepackage{amsmath}
+
+\colorlet{shadecolor}{blue!10!white}
+
+%%
+%% \BibTeX command to typeset BibTeX logo in the docs
+\AtBeginDocument{%
+  \providecommand\BibTeX{{%
+    Bib\TeX}}}
+
+
+%%% The following is specific to  and the paper
+%%% 'Event-B Agent: Towards LLM Agent for Formal Model Synthesis and Repair'
+%%% by Hongshu Wang, Xinyue Zuo, Yuhan Sun, Qin Li, Yamine Ait Ameur, and Jin Song Dong.
+%%%
+\setcopyright{cc}
+\setcctype{by}
+\acmDOI{10.1145/3808218}
+\acmYear{2026}
+\acmJournal{PACMSE}
+\acmVolume{3}
+\acmNumber{FSE}
+\acmArticle{FSE211}
+\acmMonth{7}
+\acmSubmissionID{fse26mainb-p3803-p}
+\received{2025-09-12}
+\received[accepted]{2026-03-24}
+
+
+
+\begin{document}
+
+\title{Event-B Agent: Towards LLM Agent for Formal Model Synthesis and Repair}
+
+\author{Hongshu Wang}
+\orcid{0009-0006-0198-148X}
+\affiliation{%
+  \institution{National University of Singapore}
+  \city{Singapore}
+  \country{Singapore}
+}
+\email{hongshu.wang@u.nus.edu}
+\authornote{Co-corresponding authors.}
+
+\author{Xinyue Zuo}
+\orcid{0009-0008-4411-3054}
+\affiliation{%
+  \institution{National University of Singapore}
+  \city{Singapore}
+  \country{Singapore}
+}
+\email{zuoxy@nus.edu.sg}
+
+\author{Yuhan Sun}
+\orcid{0009-0005-9132-5349}
+\affiliation{%
+  \institution{East China Normal University}
+  \city{Shanghai}
+  \country{China}
+}
+\email{51285902023@stu.ecnu.edu.cn}
+
+\author{Qin Li}
+\orcid{0000-0001-7476-4079}
+\affiliation{%
+  \institution{East China Normal University}
+  \city{Shanghai}
+  \country{China}
+}
+\email{qli@sei.ecnu.edu.cn}
+\authornotemark[1]
+
+\author{Yamine Ait Ameur}
+\orcid{0000-0003-4582-9712}
+\affiliation{%
+  \institution{IRIT - National Polytechnic Institute of Toulouse}
+  \city{Toulouse}
+  \country{France}
+}
+\email{yamine.aitameur@toulouse-inp.fr}
+
+\author{Jin Song Dong}
+\orcid{0000-0002-6512-8326}
+\affiliation{%
+  \institution{National University of Singapore}
+  \city{Singapore}
+  \country{Singapore}
+}
+\email{dcsdjs@nus.edu.sg}
+
+%%
+%% By default, the full list of authors will be used in the page
+%% headers. Often, this list is too long, and will overlap
+%% other information printed in the page headers. This command allows
+%% the author to define a more concise list
+%% of authors' names for this purpose.
+% \renewcommand{\shortauthors}{Trovato et al.}
+
+%%
+%% The abstract is a short summary of the work to be presented in the
+%% article.
+\begin{abstract}
+  Building software that is correct by construction is a long-standing goal in software engineering, as it ensures reliability during design and development rather than after deployment. Formal methods realize this vision by enabling the expression of system behavior and requirements in mathematics, thereby guaranteeing correctness through formal verification, including theorem proving and model checking. However, the steep learning curve and demand for mathematical expertise hinder the widespread adoption of formal methods. Large language models (LLMs) have recently shown promise in bridging this gap through autoformalization. However, existing LLM-based approaches are largely limited to isolated tasks, such as theorem proving without formalization or model synthesis with insufficient verification. While valuable, these efforts do not fully exploit the potential of a more comprehensive framework in which models and proofs evolve together, a process that closely reflects real-world development practice. To address this gap, we propose Event-B Agent, a novel framework inspired by the interleaved nature of software design. Given natural language requirements, Event-B Agent constructs an initial model and iteratively repairs and refines it using formal verification feedback. Refinement simplifies proof discharge, while repair of models and proofs ensures the soundness of each refinement step. Together, these two components reinforce each other to progressively improve the model quality. Evaluation across systems of varying complexity demonstrates that Event-B Agent substantially outperforms baselines in end-to-end formal model synthesis and repair, while maintaining reasonable efficiency. These results suggest that Event-B Agent is a promising step toward correct-by-construction formal model synthesis and repair.
+\end{abstract}
+
+%%
+%% The code below is generated by the tool at http://dl.acm.org/ccs.cfm.
+%% Please copy and paste the code instead of the example below.
+%%
+\begin{CCSXML}
+<ccs2012>
+   <concept>
+       <concept_id>10011007.10011074.10011099.10011692</concept_id>
+       <concept_desc>Software and its engineering~Formal software verification</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10011007.10011074.10011075.10011077</concept_id>
+       <concept_desc>Software and its engineering~Software design engineering</concept_desc>
+       <concept_significance>300</concept_significance>
+       </concept>
+ </ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Software and its engineering~Formal software verification}
+\ccsdesc[300]{Software and its engineering~Software design engineering}
+
+
+%%
+%% Keywords. The author(s) should pick words that accurately describe
+%% the work being presented. Separate the keywords with commas.
+\keywords{Autoformalization, Formal Verification, LLM Agent}
+% \keywords{Do, Not, Use, This, Code, Put, the, Correct, Terms, for,
+%   Your, Paper}
+
+
+\maketitle
+
+% \input{reviews}
+
+\input{1intro}
+\input{2motivation}
+\input{3preliminary}
+\input{4methodology}
+\input{5evaluation}
+\input{6related_work}
+\input{7threats_to_validity}
+\input{8conclusion}
+
+
+%%
+%% The next two lines define the bibliography style to be used, and
+%% the bibliography file.
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{reference}
+
+%%
+%% If your work has an appendix, this is the place to put it.
+% \appendix
+
+
+\end{document}
+\endinput
+%%
+%% End of file `sample-acmsmall-conf.tex'.

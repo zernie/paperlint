@@ -1,0 +1,87 @@
+
+{\small
+\setlength{\LTleft}{0pt}
+\setlength{\LTright}{\fill}
+\setlength{\LTcapwidth}{\textwidth}
+\setlength{\tabcolsep}{2pt}
+\renewcommand{\arraystretch}{1.08}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.12\textwidth} >{\raggedright\arraybackslash}p{0.21\textwidth} >{\raggedright\arraybackslash}p{\dimexpr0.67\textwidth-4\tabcolsep\relax}@{}}
+\caption{Definitions of the clean reference and 55 transformation conditions. The clean reference is listed separately; each transformation row gives its category, implementation, and parameter settings.}
+\label{tab:attack-implementation-summary}\\
+\toprule
+\textbf{Category} & \textbf{Condition} & \textbf{Definition} \\
+\midrule
+\endfirsthead
+\multicolumn{3}{@{}l}{\footnotesize\textit{Table~\thetable\ continued.}}\\
+\addlinespace[1pt]
+\toprule
+\textbf{Category} & \textbf{Condition} & \textbf{Definition} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{3}{r}{Continued on next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+Clean & Clean reference & No transformation is applied; the watermarked image is decoded directly. \\
+\addlinespace[2pt]
+Alignment & Random affine transform & Randomly samples affine parameters: rotation up to 180 degrees, x/y scale between 0.6 and 1.4, shear up to 0.3, and translation up to 0.2 in normalized coordinates. Ground-truth localization masks are transformed with the same operation. \\
+Alignment & Crop & Keeps a randomly located square crop with side ratio 0.32-0.95 and discards the rest of the frame. Ground-truth localization masks are cropped in the same way. \\
+Alignment & Resize and crop & Samples a crop area ratio from 0.10-1.0 and aspect ratio from 0.3-3.0, then resizes the crop back to the original image size. Ground-truth localization masks follow the same crop-and-resize transform. \\
+Alignment & Interpolation resize & Resizes the image with linear interpolation using fixed scale factors of 0.5, 0.75, 1.25, or 1.5, or a random factor between 0.5 and 1.5. Ground-truth localization masks use the same resizing factors. \\
+Alignment & Perspective transform & Applies a projective corner perturbation with distortion scale 0.1-0.8. The image and ground-truth localization masks share the same perspective map. \\
+Alignment & Rotation & Rotates by sampled ranges of +/-10, +/-30, or +/-90 degrees, or by fixed angles of 5, 10, 30, 45, 60, or 90 degrees; ground-truth localization masks use the same rotation. \\
+Alignment & Shearing & Applies horizontal and vertical shear factors of 0.1, 0.2, or 0.3. Ground-truth localization masks are transformed with the same operation. \\
+Alignment & Small geometric distortions & Applies a mild nonrigid warp from small corner shifts, sinusoidal bending, and local wave perturbations. Ground-truth localization masks are resampled with the same grid. \\
+Alignment & Translation & Shifts the image by 5, 10, or 20 pixels in both axes. Ground-truth localization masks are shifted consistently. \\
+Alignment & Grid warping & Applies a sinusoidal grid warp with one-pixel default amplitude and grid period 20 pixels. Ground-truth localization masks are warped with the same sampling grid. \\
+Alignment & Horizontal flip & Mirrors the image left to right and applies the same coordinate change to ground-truth localization masks. \\
+Alignment & Vertical flip & Mirrors the image top to bottom and applies the same coordinate change to ground-truth localization masks. \\
+Alignment & Diagonal flip & Transposes the image across its diagonal, swapping the horizontal and vertical axes of the image and ground-truth localization masks. \\
+Alignment & Row/column removal & Randomly removes 10, 30, or 50 rows and the same number of columns, producing a smaller image frame. Ground-truth localization masks use the same retained indices. \\
+Alignment & JPEG + crop + brightness chain & Applies JPEG compression at quality 40, 60, or 80, keeps a random 0.71-side crop, and then multiplies intensity by 0.5. \\
+Alignment & Outpainting (expanded canvas) & Places the full watermarked image on a larger canvas, scaled by 1.5-2.0, optionally rescales the pasted image by 0.8-1.2, and uses inpainting to synthesize the surrounding canvas. \\
+\addlinespace[2pt]
+Signal & Brightness & Multiplies image intensity by a factor selected from the fixed values \(\{0.1,0.25,0.5,0.75,1,1.25,1.5,1.75,2\}\) or the uniform distributions \(U[0.5,1.5]\) and \(U[0.7,1.3]\); clips the result to the valid pixel range. \\
+Signal & Contrast & Changes contrast around the image mean with factors from 0.5 to 2.0, including sampled ranges 0.5-1.5, 0.5-2.0, and 0.7-1.3. \\
+Signal & Saturation & Changes color saturation with factors 0.1, 0.5, sampled 0.5-2.0, sampled 0.7-1.3, 1.0, or 1.5 while preserving image geometry. \\
+Signal & Gamma correction & Applies nonlinear intensity remapping with gamma values 0.5, 0.8, 1.6, and 2.5. \\
+Signal & Color jitter & Shifts hue by \(0.1,0.2,-0.1,\) or \(-0.2\) radians, or by a value sampled uniformly from \([-0.1,0.1]\), while leaving brightness, contrast, and saturation unchanged. \\
+Signal & Randomized color jitter & Applies Kornia ColorJiggle using one of three amplitude tuples \((b,c,s,h)\): \((0.05,0.05,0.05,0.01)\), \((0.1,0.1,0.1,0.02)\), or \((0.1,0.1,0.1,0.05)\), where \(b,c,s,h\) specify brightness, contrast, saturation, and hue jitter. \\
+Signal & RGB channel shift & Adds symmetric per-channel RGB shifts with limits 0.02, 0.05, or 0.1 in normalized color units. \\
+Signal & Grayscale conversion & Converts the image to grayscale and keeps it in a three-channel representation for decoding. \\
+Signal & Histogram equalization & Redistributes image intensities to equalize the histogram while keeping the image frame fixed. \\
+Signal & Color inversion & Replaces each color value by its complement. \\
+Signal & Box blur & Applies a mean filter with kernel size 3, 5, or 7 pixels. \\
+Signal & Gaussian blur & Samples one kernel/standard-deviation configuration \((k,\sigma)\): \((3,0.5)\), \((3,U[0.1,1])\), \((3,3)\), \((5,1)\), \((5,U[0.1,1.5])\), \((7,U[0.1,2])\), \((9,1.5)\), \((13,2)\), \((17,2)\), or \((3,5)\); an additional configuration uses a rectangular \(3\times17\) kernel with \(\sigma\sim U[0.1,2]\). \\
+Signal & Motion blur & Applies directional blur kernels of size 3, 5, 7, or 9 to simulate camera or object motion. \\
+Signal & Sharpening & Enhances local contrast with sharpening factors 0.5, 1.0, or 2.5. \\
+Signal & High-pass filter & Suppresses low-frequency image content and emphasizes edges and fine texture. \\
+Signal & Low-pass filter & Suppresses high-frequency image content with kernel sizes 3, 5, or 7, keeping smoother low-frequency structure. \\
+Signal & Convolutional filter & Applies a fixed 3-by-3 edge-enhancing sharpening kernel. \\
+Signal & Median filter & Replaces each pixel by the median of a 3-, 5-, or 7-pixel local neighborhood, reducing impulse-like noise. \\
+Signal & Gaussian noise & Adds zero-mean Gaussian noise with standard deviation from 1.0 to 25.5 on the 0-255 pixel scale. \\
+Signal & Poisson noise & Applies signal-dependent shot noise with scale factors 0.75, 1.0, or 1.25. \\
+Signal & Speckle noise & Adds multiplicative noise proportional to local image intensity with standard deviation 0.05 or 0.15. \\
+Signal & Dither noise & Applies dithering noise with intensity 0.02, 0.08, or 0.12. \\
+Signal & Salt-and-pepper noise & Randomly sets 5\% or 10\% of pixels to black or white. \\
+Signal & JPEG compression & Encodes and decodes the image with JPEG quality 40, 50, 60, 70, 80, 90, or 95. \\
+Signal & JPEG 2000 compression & Encodes and decodes the image with JPEG 2000 compression ratios 35 or 100. \\
+Signal & GIF compression & Converts the image through a palette-based GIF representation. \\
+Signal & Posterization & Keeps 3, 4, 5, or 6 bits per color channel by dropping lower-order bits. \\
+Signal & Uniform quantization & Maps pixel values onto 8, 16, or 32 uniformly spaced intensity levels. \\
+Signal & Color quantization & Reduces the color palette to 256, 128, 64, 32, or 16 representative colors. \\
+Signal & DCT transform & Perturbs discrete cosine transform coefficients with strength levels 1-10 and power 0.01-0.1, with optional coefficient shuffling. \\
+Signal & DWT transform & Perturbs Haar or Daubechies wavelet coefficients with strength levels 1-15 and power 0.05-0.5. \\
+Signal & FFT transform & Perturbs Fourier-domain coefficients with strength levels 1-15 and power 0.001-0.05, with optional coefficient shuffling. \\
+\addlinespace[2pt]
+Indirect local edits & Blackout (independent region) & Places a black square occluder with side length 64, 128, or 256 pixels at a randomly sampled image location. The edit region is chosen independently of the watermark region. \\
+Indirect local edits & Inpainting (independent region) & Samples a rectangular edit region independently of the watermark region, with side ratios between 0.05 and one of 0.15, 0.35, or 0.50, then replaces that region with an inpainted fill. \\
+Indirect local edits & Inpainting (independent region, outside restored) & Uses the same rectangular-mask sampling protocol as inpainting (independent region), with independently sampled edit regions, and restores all pixels outside the edit region from the watermarked input after generation. \\
+Indirect local edits & Splicing (independent region) & Pastes donor content from another image in the same dataset into one or more independently sampled edit regions. \\
+Indirect local edits & Outpainting (fixed canvas) & Uses the complement of the watermark region as the generation mask at the original image size, without restoring unmasked pixels after generation. \\
+\addlinespace[2pt]
+Direct watermark edits & Inpainting (watermark region) & Uses the watermark region dilated with an odd square kernel whose side length is approximately 3\% of the shorter image side (at least three pixels) as the edit region, and replaces it with an inpainted fill. \\
+Direct watermark edits & Splicing (watermark region) & Pastes donor content from another image in the same dataset into the watermark region. \\
+\end{longtable}
+}

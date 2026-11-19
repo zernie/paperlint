@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/watermarking_methods_evaluation.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/clean_image_fidelity_values.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/attack_taxonomy_evaluation.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/local_adaptations.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/transformation_parameters.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/attack_condition_definitions.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "b40c6e471eee51a7ea08849382eb42a8f7e4486afafde16f19ca940850f67840",
+    "tables/watermarking_methods_evaluation.tex": "2aab9d6a45692b981973dbea1bc794a25f260be74ed7124b50031cf3e3608c13",
+    "tables/clean_image_fidelity_values.tex": "3bb3ee8cf4fd20e66fa598e9b63facfdc719251bc0cdd066b741f03eec362f43",
+    "tables/attack_taxonomy_evaluation.tex": "3633fd71b546ea0f53777b45f544e33f5e2f7d1139caf3a5f8b25ba2c78dc768",
+    "appendix/local_adaptations.tex": "59d7fc2245752daef0ba5e15c9ea99e68d4370d3ddcf5175d744142c425f6b64",
+    "appendix/transformation_parameters.tex": "bf71cd83bd2fa380b0f06bb5ae48bae8e4fa821400822c6a6beb50a8d47ea53e",
+    "tables/attack_condition_definitions.tex": "48e6fff5070d4129d21c1a76b516d396e81021ab58c4eec5e58ec5e4e39b0f04"
+  }
+}

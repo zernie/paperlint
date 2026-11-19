@@ -1,0 +1,167 @@
+// AAAI Press `aaai2027.sty` — the TEMPLATE FAMILY of AAAI Press's two-column style, 2027 edition:
+// everything the style file decides, whatever the venue (AAAI-27, and the AAAI Press proceedings
+// that take the same kit). A venue preset extends it ("extends": "paperlint:aaai-press") and adds
+// what its call for papers sets: the page limit of each kind, anonymity, the dates.
+//
+// 🔴 THE TEMPLATE IS A STYLE FILE, NOT A CLASS. The kit's paper opens with
+//   \documentclass[letterpaper]{article} % DO NOT CHANGE THIS
+//   \usepackage[submission]{aaai2027}  % DO NOT CHANGE THIS
+// and aaai2027.sty is not in TeX Live: it travels with the paper, from the AAAI-27 Author Kit
+// (https://aaai.org/authorkit27/ → https://aaai.org/wp-content/uploads/2026/10/AuthorKit27.zip,
+// Last-Modified 2026-10-21, sha256 9406a545…780c960, read 2026-11-19). `template` names the class
+// line and `template_style` the style line; paperlint does not ship the style file.
+//
+// The kit changed during the edition. The zip the page links today is the second one
+// (`\ProvidesPackage{aaai2027}[2027/10/21 …]`, TemplateVersion 2027.2); the first,
+// https://aaai.org/wp-content/uploads/2026/05/AuthorKit27.zip (Last-Modified 2026-05-28, sty dated
+// 2027/05/04, TemplateVersion 2027.1), is the one the Wayback Machine holds from 2026-07-26, two days
+// before the submission deadline. The two .sty differ only in the date line and in where the
+// copyright notice is placed and checked (diff, 2026-11-19); fonts, page and sizes are the same lines
+// in both.
+//
+// 🔴 THE NUMBERS ARE MEASURED, NOT COPIED. Built on 2026-11-19 from the kit's own
+// `AnonymousSubmission2027.tex` (the October kit) with `paperlint build` on paperlint's TeX Live 2026
+// (pdfTeX 1.40.29) and banal 1.2; the dimensions written to the log by a `\typeout{\the\textwidth …}`
+// added to its preamble. A synthetic paper on the same preamble (7 body pages, 40 references) gave
+// the same numbers.
+//   page (banal)          8.5 x 11 in (612 x 792 pt)
+//   columns (banal)       2
+//   body size (banal)     10.3                     (declared: \normalsize 10 pt on 11 pt)
+//   leading (banal)       11
+//   fonts (pdf.js)        TeXGyreTermesX-Regular / -Bold / -Italic (newtxtext), NimbusMonL (courier),
+//                         CMR10 / CMMI10 for mathematics — Type 1, embedded
+//   \textwidth            505.89pt = 7.0 in        \columnsep 27.10pt = 0.375 in
+//   \textheight           650.43pt = 9.0 in        \columnwidth 239.39pt = 3.31 in
+//   \paperwidth x \paperheight  614.295pt x 794.97pt = 8.5 x 11 in
+//   references            \normalsize, 10 pt (the log at each \bibitem); banal reports no reference
+//                         size when it equals the body's. With `\small` before \bibliography: banal
+//                         9.3; with `\scriptsize`: banal 7.3.
+//
+// The style decides the same in its source: `\setlength\textheight{9.0in} \setlength\textwidth{7.0in}`,
+// `\setlength\columnsep{0.375in}`, `\pdfpagewidth=8.5in \pdfpageheight=11in`,
+// `\def\normalsize{\@setfontsize\normalsize\@xpt{11}}   % 10 point on 11`, `\RequirePackage{newtxtext}`.
+// The kit's instructions say «ten-point Times Roman with twelve-point leading»; the style sets 11 pt
+// leading and banal measured 11. The style wins: it is what every paper is built with.
+//
+// What the planted defects did, on the same paper (each linted under paperlint:aaai-2027, 2026-11-19):
+//   `[a4paper]` for `[letterpaper]`       → page 8.264 x 11.694 in: pdf/geometry (twice), and
+//                                           tex/template. The style's `\pdfpagewidth=8.5in` does
+//                                           not hold: the PDF is A4
+//   the AAAI-26 kit (aaai2026.sty, which  → fonts NimbusRomNo9L-Regu / -Medi / -ReguItal, no
+//     loads no font; the paper loads times) TeXGyreTermesX: pdf/fonts. Page, columns, body size
+//                                           identical, so only the fonts tell last year's kit apart
+//   `\tiny` after \maketitle               → body 6.3: pdf/body-size
+//   `\scriptsize` before \bibliography     → references 7.3: pdf/body-size (below 9 − 0.5)
+//   `\usepackage{hyperref}`, `{geometry}`, → no PDF: the style stops the build («Package aaai
+//     `{balance}`                            Error: You must not use hyperref in AAAI papers.»,
+//                                           «Package geometry is forbidden.»)
+//   NOTHING in the facts changed for:
+//   `\usepackage{times}` or `\renewcommand{\rmdefault}{cmr}` in the preamble — newtxtext sets
+//     \rmdefault again at \begin{document}; `[letterpaper,11pt]` — the style redefines \normalsize;
+//   `\renewcommand{\baselinestretch}{0.95}` — leading 10.45 pt in the log, banal 10.4, and no fact
+//     carries leading (format/layout-override reads the source and reports it);
+//   `\usepackage[submission]{aaai2027}` → `\usepackage{aaai2027}` — only the text changes (author
+//     names and the copyright notice): anonymity/identity, when the paper declares its identity;
+//   `\renewcommand{\rmdefault}{cmr}\normalfont` after \maketitle — the text in cm-super (SFRM…,
+//     SFRB…), but the title is still TeXGyreTermesX, so pdf/fonts passes; the same blind spot as
+//     acm-acmsmall.jsonc records;
+//   `\renewcommand{\familydefault}{\sfdefault}` — the text in NimbusSanL, TeXGyreTermesX still
+//     present: pdf/fonts passes.
+//
+// Not encoded: the kit's lists of forbidden packages and commands. Its preamble comment and its
+// Table 2 disagree (float, babel, times, lmodern …), its own algorithm package loads float, which
+// both lists forbid, and aaai2027.sty already stops the build on 17 of them (hyperref, bbm,
+// authblk, balance, CJK, flushend, fullpage, geometry, navigator, savetrees, setspace, stfloats,
+// tabu, titlesec, tocbibind, ulem, wrapfig). The card quotes them.
+//
+// Its card, in prose: `aaai-press.md` beside this file.
+{
+  // A template family: it names no venue, so no `name` and no `url` (the venues that extend it do).
+  "type": "family",
+
+  // The two lines of the kit, each `% DO NOT CHANGE THIS`. `tex/template` requires `article` with
+  // `letterpaper`, and the style aaai2027 with `submission`: the option that removes the author
+  // block and the copyright notice, which the kit asks of every anonymous submission («You can
+  // remove the copyright notice and ensure that your names aren't shown by including submission
+  // option»). A camera-ready drops it; this family describes the submission.
+  "template": "\\documentclass[letterpaper]{article}",
+  "template_style": "\\usepackage[submission]{aaai2027}",
+
+  // TeX Live packages the style and the kit's paper need ON TOP OF tex-base.jsonc. Found
+  // 2026-11-19 by the loop build → missing file → `tlmgr search --global --file` → install, on the
+  // kit's paper: xpatch.sty (newtxtext), ts1-qtmr.tfm (tex-gyre), then placeins, algorithms,
+  // newfloat and listings. Then every file the builds read (112, from pdflatex's -recorder list
+  // over the kit's paper, A4, sans and \small-references variants and the synthetic paper) was
+  // traced to its package in texlive.tlpdb: each belongs to scheme-basic, to tex-base.jsonc or to
+  // this list.
+  //   newtx · kastrup — aaai2027.sty loads newtxtext; newtx needs binhex.tex (kastrup).
+  //   tex-gyre — newtxtext's text-companion glyphs (`ts1-qtmr.tfm`, `qtmr.pfb`): without it
+  //     «Font TS1/ntxtlf/m/n/10=ts1-qtmr at 10.0pt not loadable» and no PDF.
+  //   xpatch · xstring · xkeyval · fontaxes · figureversions · mweights — what newtxtext loads.
+  //   helvetic · courier — the style loads helvet and courier; their metrics are read only when
+  //     the paper sets sans or typewriter text.
+  //   placeins — the style's `\RequirePackage{placeins}`.
+  //   algorithms · float · newfloat · listings — the kit's paper loads algorithm, algorithmic,
+  //     newfloat and listings («recommended … but not required»); algorithm.sty loads float.sty.
+  //     The kit's own preamble lists float among its «DISALLOWED PACKAGES», yet the style does not
+  //     refuse it and the kit's algorithm package needs it.
+  "tex": {
+    "packages": {
+      "newtx": ["newtxtext.sty"],
+      "kastrup": ["binhex.tex"],
+      "tex-gyre": ["ts1-qtmr.tfm", "qtmr.pfb"],
+      "xpatch": ["xpatch.sty"],
+      "xstring": ["xstring.sty"],
+      "xkeyval": ["xkeyval.sty"],
+      "fontaxes": ["fontaxes.sty"],
+      "figureversions": ["figureversions.sty"],
+      "mweights": ["mweights.sty"],
+      "psnfss": ["helvet.sty", "courier.sty"],
+      "helvetic": ["phvr8t.tfm"],
+      "courier": ["pcrr8t.tfm"],
+      "placeins": ["placeins.sty"],
+      "algorithms": ["algorithm.sty", "algorithmic.sty"],
+      "float": ["float.sty"],
+      "newfloat": ["newfloat.sty"],
+      "listings": ["listings.sty"],
+    },
+  },
+
+  "format": {
+    // «formatted for US Letter (8.5″ x 11″) paper» (the AAAI-27 submission instructions); banal
+    // 612 x 792 pt; the style: `\pdfpagewidth=8.5in \pdfpageheight=11in`.
+    "page_size": "letter",
+    "page_w_in": 8.5,
+    "page_h_in": 11.0,
+
+    // \textwidth and \textheight, as the style sets them (the log, above). The kit: «Left margin:
+    // .75 inches», «Right margin: .75 inches», «Top margin: 1.25 inches (first page), .75 inches
+    // (others)», «Bottom margin: 1.25 inches».
+    "textblock_w_in": 7.0,
+    "textblock_h_in": 9.0,
+
+    // «Two-column format in AAAI style is required for all papers.» (the kit)
+    "columns": 2,
+
+    // «The main body of the paper must be formatted in black, ten-point Times Roman» (the kit);
+    // banal measures the rendered mode, 10.3. The 0.5 tolerance is the other families': banal
+    // reads 0.3 pt high on every template measured.
+    "body_pt": 10,
+    "body_pt_tol": 0.5,
+
+    // «References may be the same size as surrounding text. However, in this section (only), you
+    // may reduce the size to \small (9pt) if your paper exceeds the allowable number of pages.
+    // Making it any smaller than 9 point with 10 point linespacing, however, is not allowed.»
+    // (the kit). 9 to 10; body_pt_tol widens it to 8.5-10.5, so \small (banal 9.3) passes and
+    // \scriptsize (7.3) is reported. At the default 10 pt banal gives no reference size and the
+    // rule has nothing to judge.
+    "ref_pt_min": 9,
+    "ref_pt_max": 10,
+
+    // «Your paper must be formatted using the Times-like serif text font provided automatically by
+    // the aaai2027 style file (newtxtext).» (the kit). pdf.js reads TeXGyreTermesX-*; the AAAI-26
+    // style's Times (NimbusRomNo9L) is reported. Title and headings are the same family, so a
+    // `fonts_title` would repeat this check.
+    "fonts_text": "TeXGyreTermesX",
+  },
+}

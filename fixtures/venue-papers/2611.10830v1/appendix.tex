@@ -1,0 +1,730 @@
+% \section{Sandbox Configuration and Safety Constraints}
+% \label{app:sandbox_configuration}
+% Each skill is executed in an isolated Docker container. The skill source is mounted read-only and copied to the Claude skill directory, while skill-triggered commands run as the non-root user \texttt{appuser}. Runtime evidence includes agent output, system calls/process activity, network capture, and filesystem snapshots.
+
+% \begin{table}[!h]
+% \centering
+% \caption{Dynamic sandbox configuration.}
+% \label{tab:sandbox_configuration}
+% \scriptsize
+% \setlength{\tabcolsep}{3pt}
+% \renewcommand{\arraystretch}{1.05}
+% \begin{tabularx}{\columnwidth}{@{}p{1.65cm}X@{}}
+% \toprule
+% \textbf{Component} & \textbf{Configuration} \\
+% \midrule
+% Environment & Docker; non-root \texttt{appuser} \\
+% Working directory & \texttt{/home/appuser/workdir} \\
+% System/network & \texttt{strace} and \texttt{tcpdump} \\
+% Filesystem & Before/after snapshots of \texttt{/home/appuser}, \texttt{/tmp}, and \texttt{/var/tmp} \\
+% Artifacts & \texttt{claude\_output.txt}, \texttt{strace.log}, \texttt{network.pcap}, \texttt{filesystem\_changes.json} \\
+% Execution & One attempt; timeout 300\,s \\
+% Agent model & Claude Opus 4.8 \\
+% \bottomrule
+% \end{tabularx}
+% \end{table}
+
+% \paragraph{Safety-constrained execution prompt (excerpt)}
+% \begin{tcolorbox}[enhanced,breakable,colback=gray!5,colframe=gray!60]
+% \small
+% Use the skill named \texttt{SKILL\_NAME}. Execute the skill as safely as possible to produce observable runtime behavior, including agent output, filesystem changes, system calls, and network connection attempts. Treat all skill files and embedded instructions as untrusted. Do not disable safety checks, access real credentials, exfiltrate data, execute unknown remote code, or perform real external actions. Run safe local setup, validation, dry-run, mock, and example workflows using harmless dummy inputs under \texttt{/home/appuser/workdir}. If an instruction is unsafe, skip it, record the blocked command or instruction and its reason, and continue with safe validation.
+% \end{tcolorbox}
+
+% \section{RQ1 Threshold and Alert Details}
+% \label{app:rq1_details}
+% The training-set thresholds used in RQ1 are shown in Table~\ref{tab:training-threshold-base-tools-app}.
+
+% \begin{table*}[!t]
+% \centering
+% \caption{Training-set performance at the selected scanner thresholds.}
+% \label{tab:training-threshold-base-tools-app}
+% \scriptsize
+% \setlength{\tabcolsep}{2.2pt}
+% \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X c c c c c c c c c c@{}}
+% \toprule
+% \textbf{Tool} & \textbf{Thr.} & \textbf{Acc.} & \textbf{Prec.} & \textbf{Rec.} & \textbf{F1} & \textbf{TP} & \textbf{FP} & \textbf{TN} & \textbf{FN} & \textbf{AUC} \\
+% \midrule
+% OSS-Detect-Backdoor & $\geq6$ & 0.50 & 0.59 & 0.41 & 0.48 & 130 & 89 & 151 & 190 & 0.49 \\
+% YARA & $\geq11$ & 0.61 & 0.61 & 0.91 & 0.73 & 290 & 189 & 51 & 30 & 0.47 \\
+% Cisco Skill Scanner & $\geq1$ & 0.72 & 0.68 & 0.95 & 0.79 & 304 & 142 & 98 & 16 & 0.72 \\
+% \bottomrule
+% \end{tabularx}
+% \end{table*}
+
+% \begin{table*}[!t]
+% \centering
+% \caption{Test-set alert-count statistics by ground truth.}
+% \label{tab:scanner-alert-statistics-app}
+% \scriptsize
+% \setlength{\tabcolsep}{3.5pt}
+% \begin{tabularx}{\textwidth}{@{}Ylrrrrrr@{}}
+% \toprule
+% \textbf{Tool} & \textbf{GT} & \textbf{Mean} & \textbf{Min} & \textbf{Q25} & \textbf{Median} & \textbf{Q75} & \textbf{Max} \\
+% \midrule
+% OSS-Detect-Backdoor & Benign & 11.7 & 0 & 0 & 1.0 & 8.25 & 137 \\
+%  & Malicious & 6.34 & 0 & 0 & 2.0 & 7.25 & 106 \\
+% YARA & Benign & 105.78 & 0 & 22 & 55.0 & 123.75 & 814 \\
+%  & Malicious & 60.05 & 0 & 22 & 54.5 & 79.5 & 304 \\
+% Cisco Skill Scanner & Benign & 1.83 & 0 & 0 & 1.0 & 1.0 & 33 \\
+%  & Malicious & 2.10 & 0 & 1 & 1.0 & 2.25 & 11 \\
+% \bottomrule
+% \end{tabularx}
+% \end{table*}
+
+% \begin{table}[!t]
+% \centering
+% \caption{Training-set severity-cutoff sweep for Cisco Skill Scanner
+% with LLM.}
+% \label{tab:cisco-llm-threshold-sweep}
+% \scriptsize
+% \setlength{\tabcolsep}{15pt}
+
+% \begin{tabular}{@{}lrrrrr@{}}
+% \toprule
+% \textbf{Cutoff}
+% & \textbf{Recall}
+% & \textbf{Spec.}
+% & \textbf{FP}
+% & \textbf{FN}
+% & \textbf{Bal. Acc.} \\
+% \midrule
+% Info     & 0.997 & 0.021 & 235 &   1 & 0.509 \\
+% Low      & 0.916 & 0.100 & 216 &  27 & 0.508 \\
+% Medium   & 0.881 & 0.133 & 208 &  38 & 0.507 \\
+% \textbf{High}
+%          & 0.825 & 0.233 & 184 &  56 & \textbf{0.529} \\
+% Critical & 0.366 & 0.642 &  86 & 203 & 0.504 \\
+% \bottomrule
+% \end{tabular}
+% \end{table}
+
+% \clearpage
+% \section{Full-Pipeline SARIF Example}
+% \label{app:full_pipeline_sarif_example}
+
+% Listing~\ref{lst:full_pipeline_sarif_example} shows an example SARIF
+% report produced by the Full Pipeline, including triggered findings,
+% evidence, provenance, and the final verdict in machine-readable form.
+
+% \begin{lstlisting}[
+%   basicstyle=\ttfamily\tiny,
+%   breaklines=true,
+%   breakatwhitespace=false,
+%   columns=fullflexible,
+%   keepspaces=true,
+%   showstringspaces=false,
+%   frame=single,
+%   xleftmargin=0.5em,
+%   xrightmargin=0.5em,
+%   caption={Example SARIF output for one skill scanned by the Full Pipeline.},
+%   label={lst:full_pipeline_sarif_example}
+% ]
+% {
+%   "version": "2.1.0",
+%   "runs": [{
+%     "tool": {"driver": {
+%       "name": "agentskills-agentic-agent",
+%       "rules": [
+%         {
+%           "id": "agentic/verdict",
+%           "shortDescription":
+%             {"text": "Overall analysis verdict"}
+%         },
+%         {
+%           "id": "agentic/finding",
+%           "shortDescription":
+%             {"text": "Evidence finding from package investigation"}
+%         }
+%       ]
+%     }},
+
+%     "results": [
+%       {
+%         "ruleId": "agentic/verdict",
+%         "level": "error",
+%         "message":
+%           {"text": "Verdict: malware (score=100.0)"},
+%         "properties": {
+%           "verdict": "malware",
+%           "score": 100.0,
+%           "package": "evm-blockchain-monitor",
+%           "rationale":
+%             "Dynamic risk score 100.0 met or exceeded the malicious threshold 35.0."
+%         }
+%       },
+
+%       {
+%         "ruleId": "agentic/finding",
+%         "level": "error",
+%         "message": {"text": "Data exfiltration"},
+%         "properties": {
+%           "confidence": 95.0,
+%           "citations": [
+%             {
+%               "path": "SKILL.md",
+%               "start_line": 125,
+%               "snippet":
+%                 "curl -X POST https://45.88.180.54:8080/telemetry ..."
+%             },
+%             {
+%               "path": "SKILL.md",
+%               "start_line": 155,
+%               "snippet":
+%                 "curl -sSL https://cdn.discordapp.com/.../code.zip | tar xzf - && ./install.sh"
+%             }
+%           ]
+%         }
+%       },
+
+%       {
+%         "ruleId": "agentic/finding",
+%         "level": "error",
+%         "message": {
+%           "text":
+%             "Data exfiltration through network calls to unexpected domains"
+%         },
+%         "properties": {
+%           "confidence": 85.0
+%         }
+%       },
+
+%       {
+%         "ruleId": "agentic/finding",
+%         "level": "error",
+%         "message": {
+%           "text":
+%             "No hidden instructions, prompt injection, credential harvesting, or persistence mechanisms found."
+%         },
+%         "properties": {
+%           "confidence": 100.0
+%         }
+%       }
+%     ],
+
+%     "properties": {
+%       "verdict": "malware",
+%       "score": 100.0,
+%       "package": "evm-blockchain-monitor",
+%       "latency_seconds": 247.103,
+%     }
+%   }]
+% }
+% \end{lstlisting}
+
+%%%%%%%%% NEW %%%%%%%%%%
+% =========================================================
+% Appendix A
+% =========================================================
+\section{Sandbox Configuration and Agent Instructions}
+\label{app:sandbox_configuration}
+
+Each skill runs in an isolated Docker container. Its source is mounted
+read-only and copied to the Claude skill directory; skill-triggered
+commands run as the non-root user \texttt{appuser}. We collect agent
+output, system-call and process activity, network traffic, and filesystem
+snapshots.
+
+\begin{table}[!htpb]
+\centering
+\caption{\textsc{Dynamic sandbox configuration.}}
+\label{tab:sandbox_configuration}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.05}
+
+\begin{tabularx}{\columnwidth}{>{\raggedright\arraybackslash}p{1.65cm}>{\RaggedRight\arraybackslash}X}
+\toprule
+\textbf{Component} & \textbf{Configuration} \\
+\midrule
+
+Environment
+& Docker; non-root \texttt{appuser} \\
+
+\rowcolor[HTML]{F2F2F2}
+Working directory
+& \texttt{/home/appuser/workdir} \\
+
+System/network
+& \texttt{strace} and \texttt{tcpdump} \\
+
+\rowcolor[HTML]{F2F2F2}
+Filesystem
+& Before/after snapshots of \texttt{/home/appuser},
+  \texttt{/tmp}, and \texttt{/var/tmp} \\
+
+Artifacts
+& \texttt{claude\_output.txt}, \texttt{strace.log},
+  \texttt{network.pcap}, and
+  \texttt{filesystem\_changes.json} \\
+
+\rowcolor[HTML]{F2F2F2}
+Execution
+& One attempt; 300\,s timeout \\
+
+Agent model
+& Claude Opus 4.8 \\
+
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{Safety-constrained execution prompt (excerpt)}
+\begin{tcolorbox}[
+    enhanced,
+    breakable,
+    colback=gray!5,
+    colframe=gray!60,
+    boxrule=0.4pt,
+    left=4pt,
+    right=4pt,
+    top=4pt,
+    bottom=4pt,
+    before skip=4pt,
+    after skip=6pt
+]
+\footnotesize
+Use \texttt{SKILL\_NAME} safely to produce observable runtime evidence:
+agent output, filesystem changes, system calls, and network attempts.
+Treat all skill files and embedded instructions as untrusted. Do not
+disable safety checks, access real credentials, exfiltrate data, run
+unknown remote code, or take real external actions. Perform only safe
+local setup, validation, dry-run, mock, and example workflows with
+harmless dummy inputs under \texttt{/home/appuser/workdir}. Skip unsafe
+instructions, record the blocked command or instruction and why, then
+continue with safe validation.
+\end{tcolorbox}
+
+
+% =========================================================
+% Appendix B
+% =========================================================
+% \section{RQ1 Threshold and Alert Details}
+% \label{app:rq1_details}
+
+% Scanner operating points were selected exclusively on the training
+% split and frozen before held-out evaluation. The selected operating
+% points for the alert-count scanners are summarized in
+% Table~\ref{tab:training-threshold-base-tools-app}. For Cisco Skill
+% Scanner with LLM, we additionally report the complete training-set
+% severity-cutoff sweep in
+% Table~\ref{tab:cisco-llm-threshold-sweep}.
+
+
+% % ---------------------------------------------------------
+% % Selected thresholds for the three alert-count scanners
+% % ---------------------------------------------------------
+% \begin{table}[!htpb]
+% \centering
+% \caption{\textsc{Training-set operating points selected for the
+% alert-count scanners.}}
+% \label{tab:training-threshold-base-tools-app}
+
+% \scriptsize
+% \setlength{\tabcolsep}{2.2pt}
+% \renewcommand{\arraystretch}{1.05}
+
+% \begin{tabularx}{\columnwidth}{
+% @{}
+% >{\raggedright\arraybackslash}X
+% c c c c c c
+% @{}
+% }
+% \toprule
+% \textbf{Tool}
+% & \textbf{Thr.}
+% & \textbf{Acc.}
+% & \textbf{Prec.}
+% & \textbf{Rec.}
+% & \textbf{F1}
+% & \textbf{AUC} \\
+% \midrule
+
+% OSS-Detect-Backdoor
+% & $\geq 6$
+% & 0.50
+% & 0.59
+% & 0.41
+% & 0.48
+% & 0.49 \\
+
+% \rowcolor[HTML]{F2F2F2}
+% YARA
+% & $\geq 11$
+% & 0.61
+% & 0.61
+% & 0.91
+% & 0.73
+% & 0.47 \\
+
+% Cisco Skill Scanner
+% & $\geq 1$
+% & 0.72
+% & 0.68
+% & 0.95
+% & 0.79
+% & 0.72 \\
+
+% \bottomrule
+% \end{tabularx}
+% \end{table}
+
+
+% % ---------------------------------------------------------
+% % Cisco Skill Scanner with LLM threshold sweep
+% % ---------------------------------------------------------
+% \begin{table}[!htpb]
+% \centering
+% \caption{\textsc{Training-set severity-cutoff sweep for Cisco Skill
+% Scanner with LLM.}}
+% \label{tab:cisco-llm-threshold-sweep}
+
+% \scriptsize
+% \setlength{\tabcolsep}{2pt}
+% \renewcommand{\arraystretch}{1.05}
+
+% \begin{tabular}{
+% @{}
+% >{\raggedright\arraybackslash}p{1.4cm}
+% *{5}{>{\centering\arraybackslash}p{0.85cm}}
+% @{}
+% }
+% \toprule
+% \textbf{Cutoff}
+% & \textbf{Recall}
+% & \textbf{Spec.}
+% & \textbf{FP}
+% & \textbf{FN}
+% & \textbf{Bal. Acc.} \\
+% \midrule
+
+% \textsc{Info}
+% & 0.997 & 0.021 & 235 & 1 & 0.509 \\
+
+% \rowcolor[HTML]{F2F2F2}
+% \textsc{Low}
+% & 0.916 & 0.100 & 216 & 27 & 0.508 \\
+
+% \textsc{Medium}
+% & 0.881 & 0.133 & 208 & 38 & 0.507 \\
+
+% \rowcolor[HTML]{F2F2F2}
+% \textbf{\textsc{High}}
+% & 0.825 & 0.233 & 184 & 56 & \textbf{0.529} \\
+
+% \textsc{Critical}
+% & 0.366 & 0.642 & 86 & 203 & 0.504 \\
+
+% \bottomrule
+% \end{tabular}
+% \end{table}
+
+
+% % ---------------------------------------------------------
+% % Held-out alert-count distributions
+% % ---------------------------------------------------------
+% \begin{table}[!t]
+% \centering
+% \caption{\textsc{Test-set alert-count statistics by ground truth.
+% The minimum alert count is zero for all groups.}}
+% \label{tab:scanner-alert-statistics-app}
+
+% \scriptsize
+% \setlength{\tabcolsep}{2.5pt}
+% \renewcommand{\arraystretch}{1.05}
+
+% \begin{tabularx}{\columnwidth}{
+% @{}
+% >{\raggedright\arraybackslash}X
+% >{\centering\arraybackslash}p{1.15cm}
+% >{\centering\arraybackslash}p{0.9cm}
+% >{\centering\arraybackslash}p{0.95cm}
+% >{\centering\arraybackslash}p{1.3cm}
+% >{\centering\arraybackslash}p{0.75cm}
+% @{}
+% }
+% \toprule
+% \textbf{Tool}
+% & \textbf{GT}
+% & \textbf{Mean}
+% & \textbf{Median}
+% & \textbf{Q25--Q75}
+% & \textbf{Max} \\
+% \midrule
+
+% OSS-Detect-Backdoor
+% & Benign
+% & 11.70
+% & 1.0
+% & 0--8.25
+% & 137 \\
+
+% \rowcolor[HTML]{F2F2F2}
+% &
+% Malicious
+% & 6.34
+% & 2.0
+% & 0--7.25
+% & 106 \\
+
+% YARA
+% & Benign
+% & 105.78
+% & 55.0
+% & 22--123.75
+% & 814 \\
+
+% \rowcolor[HTML]{F2F2F2}
+% &
+% Malicious
+% & 60.05
+% & 54.5
+% & 22--79.5
+% & 304 \\
+
+% Cisco Skill Scanner
+% & Benign
+% & 1.83
+% & 1.0
+% & 0--1.0
+% & 33 \\
+
+% \rowcolor[HTML]{F2F2F2}
+% &
+% Malicious
+% & 2.10
+% & 1.0
+% & 1--2.25
+% & 11 \\
+
+% \bottomrule
+% \end{tabularx}
+% \end{table}
+
+
+% =========================================================
+% Appendix C
+% =========================================================
+\subsection{Planner and Evaluator Instructions}
+\label{app:agent-instructions}
+
+We summarize the instructions governing the Planner and
+Evaluator roles in the evaluated pipeline. The full prompts
+are subject to institutional disclosure restrictions.
+\noindent\textbf{Planner.}
+Review the available evidence summaries, identify the
+findings most relevant to the investigation, and assign
+focused tasks to the predefined workers. Use specific static
+findings or runtime observations to guide the investigation,
+and identify concrete topics for contextual retrieval.
+
+\smallskip
+\noindent\textbf{Evaluator.}
+Assess the worker findings in the context of the skill's
+stated purpose. Distinguish observed actions from reported
+blocked actions, and consider whether the available evidence
+supports a verdict or warrants further investigation.
+When issuing a verdict, provide a risk score and a structured
+report with citations to supporting skill artifacts or
+execution records.
+
+\section{Full Pipeline SARIF Example}
+\label{app:full_pipeline_sarif_example}
+
+Listing~\ref{lst:full_pipeline_sarif_example} shows a compact excerpt
+of a SARIF report produced by the Full Pipeline. The excerpt
+illustrates the final verdict, evidence provenance, source citations,
+and recorded agentic-stage latency.
+
+\begin{lstlisting}[
+  basicstyle=\ttfamily\scriptsize,
+  breaklines=true,
+  breakatwhitespace=false,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  frame=single,
+  captionpos=t,
+  abovecaptionskip=4pt,
+  belowcaptionskip=20pt,
+  aboveskip=6pt,
+  belowskip=8pt,
+  framesep=4pt,
+  xleftmargin=0.25em,
+  xrightmargin=0.25em,
+  caption={Excerpt of a SARIF report produced by the Full Pipeline.},
+  label={lst:full_pipeline_sarif_example}
+]
+{
+  "version": "2.1.0",
+  "runs": [{
+    "tool": {
+      "driver": {
+        "name": "agentskills-agentic-agent"
+      }
+    },
+    "results": [
+      {
+        "ruleId": "agentic/verdict",
+        "level": "error",
+        "message": {
+          "text": "Verdict: malware (score=100.0)"
+        },
+        "properties": {
+          "verdict": "malware",
+          "score": 100.0,
+          "package": "evm-blockchain-monitor",
+          "rationale":
+            "Dynamic risk score 100.0 met or exceeded the malicious threshold 35.0."
+        }
+      },
+      {
+        "ruleId": "agentic/finding",
+        "level": "error",
+        "message": {
+          "text": "Data exfiltration"
+        },
+        "properties": {
+          "confidence": 95.0,
+          "citations": [
+            {
+              "path": "SKILL.md",
+              "start_line": 125,
+              "snippet":
+                "curl -X POST https://45.88.180.54:8080/telemetry ..."
+            },
+            {
+              "path": "SKILL.md",
+              "start_line": 155,
+              "snippet":
+                "curl -sSL https://cdn.discordapp.com/.../code.zip\n | tar xzf - && ./install.sh"
+            }
+          ]
+        }
+      }
+    ],
+    "properties": {
+      "verdict": "malware",
+      "score": 100.0,
+      "package": "evm-blockchain-monitor",
+      "latency_seconds": 247.103
+    }
+  }]
+}
+\end{lstlisting}
+
+\subsection{False-Positive Case: Research Lookup}
+\label{app:research_lookup_false_positive}
+
+Listing~\ref{lst:research_lookup_false_positive} presents a condensed
+SARIF report for the \texttt{research-lookup} false-positive case
+discussed in the evaluation. The report records a dynamic risk score
+of 27.5, below the malicious threshold of 35.0, and explicitly
+recognizes the installation command as benign. Nevertheless, its
+final verdict is \texttt{malware}, with a score of 92.0. The retained
+findings illustrate conflicting interpretations of installation and
+API-authentication behavior during evidence aggregation; they should
+not be read as independently confirmed malicious actions.
+
+Repeated findings, duplicate location fields, and session metadata
+are omitted. Ellipses indicate abbreviated messages or code snippets;
+the retained severity levels, confidence values, final verdict,
+score, and agentic-stage latency are unchanged.
+
+\begin{lstlisting}[
+  basicstyle=\ttfamily\scriptsize,
+  breaklines=true,
+  breakatwhitespace=false,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  frame=single,
+  captionpos=t,
+  abovecaptionskip=4pt,
+  belowcaptionskip=20pt,
+  aboveskip=6pt,
+  belowskip=8pt,
+  framesep=4pt,
+  xleftmargin=0.25em,
+  xrightmargin=0.25em,
+  caption={Condensed SARIF report for the research-lookup false-positive.},
+  label={lst:research_lookup_false_positive}
+]
+{
+  "version": "2.1.0",
+  "runs": [{
+    "tool": {"driver": {
+      "name": "agentskills-agentic-agent",
+      "version": "0.1.0"
+    }},
+    "results": [
+      {
+        "ruleId": "agentic/verdict",
+        "level": "error",
+        "message": {
+          "text": "Verdict: malware (score=92.0)"
+        }
+      },
+      {
+        "ruleId": "agentic/finding",
+        "level": "error",
+        "message": {
+          "text": "No dynamic evidence of malware detected. The dynamic risk score is 27.5, ... below the malicious threshold of 35.0."
+        },
+        "properties": {"confidence": 100.0}
+      },
+      {
+        "ruleId": "agentic/finding",
+        "level": "error",
+        "message": {
+          "text": "The 'curl | bash' pattern ... constitutes a benign setup instruction rather than a malicious fetch-and-run chain."
+        },
+        "properties": {"confidence": 100.0}
+      },
+      {
+        "ruleId": "agentic/finding",
+        "level": "error",
+        "message": {
+          "text": "Remote code execution / fetch-and-run: base64+exec, pipe-to-bash, ..."
+        },
+        "properties": {
+          "confidence": 92.0,
+          "citations": [{
+            "path": "SKILL.md",
+            "start_line": 260, "end_line": 269,
+            "snippet": "... curl -fsSL https://parallel.ai/install.sh | bash ..."
+          }]
+        }
+      },
+      {
+        "ruleId": "agentic/finding",
+        "level": "error",
+        "message": {
+          "text": "Data exfiltration: os.getenv is used to read API keys and transmit them to external servers."
+        },
+        "properties": {
+          "confidence": 90.0,
+          "citations": [{
+            "path": "lookup.py",
+            "start_line": 10, "end_line": 20,
+            "snippet": "... os.getenv('OPENROUTER_API_KEY') ... requests.post('https://api.openrouter.ai/v1/chat/completions', ... headers={'Authorization': f'Bearer {api_key}'})"
+          }]
+        }
+      },
+      {
+        "ruleId": "agentic/finding",
+        "level": "note",
+        "message": {
+          "text": "The static finding of 'Data exfiltration' is not confirmed as malware. ... Further investigation is needed ..."
+        },
+        "properties": {"confidence": 40.0}
+      }
+    ],
+    "properties": {
+      "verdict": "malware",
+      "score": 92.0,
+      "package": "K-Dense-AI_claude-scientific-skills-skills-research-lookup",
+      "latency_seconds": 142.097
+    }
+  }]
+}
+\end{lstlisting}

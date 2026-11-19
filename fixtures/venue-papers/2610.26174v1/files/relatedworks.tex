@@ -1,0 +1,28 @@
+\section{Related Work}
+
+\noindent\textbf{Tactile Sensing Technologies.} Tactile sensors are capable of direct, contact-level feedback on force, slip, and material properties~\cite{dahiya2009tactile, li2020tactile}. 
+Recently, a diverse set of transduction principles has been extensively explored.
+Vision-based tactile sensors, e.g., GelSight~\cite{yuan2017gelsight}, DIGIT~\cite{lambeta2020digit}, and TacTip~\cite{ward2018tactip}, capture elastomer deformation with an embedded camera and extract high-resolution geometry and force fields through computer-vision pipelines.
+However, they are typically constrained by camera frame rate, image-processing overhead, and bulky optical packaging.
+Capacitive tactile sensors measure deformation-induced capacitance changes~\cite{schmitz2011methods}.
+However, this approach falls short in sensing fine-grained force information and is susceptible to parasitic capacitance, humidity, and temperature drift.
+Piezoresistive tactile sensors exploit force-induced resistance changes~\cite{stassi2014flexible}, thus having lower costs.
+However, this approach suffers from hysteresis, drift, and limited long-term stability.
+In contrast, magnetic tactile sensors transduce contact forces by tracking the displacement of an embedded magnet with a Hall-effect or magnetoresistive array~\cite{bhirangi2021reskin, yan2021softmagnetic}, enabling fine-grained three-dimensional force decoupling, compact form factors, robustness to optical occlusion, and low fabrication cost.
+
+\noindent\textbf{Physical-Layer Signal Injection Attacks.} 
+A broad class of prior work has demonstrated that adversaries can manipulate embedded sensors by injecting crafted physical signals, bypassing higher-level software defenses.
+Kune et al.~\cite{kune2013ghost} first systematically characterized electromagnetic signal injection against analog sensors, showing that EMI can induce spurious readings in implantable cardiac devices and consumer microphones without any physical contact.
+Trippel et al.~\cite{trippel2017walnut} demonstrated that MEMS accelerometers in wearables and drones can be driven to arbitrary output values via acoustic resonance injection, corrupting the inertial measurements that autonomous systems depend on.
+Ji et al.~\cite{ji2021poltergeist} extended this idea to vision pipelines, using acoustic signals to cause resonance-induced blur in camera image sensors, thereby degrading the perception of computer-vision-based autonomous vehicles.
+Xu et al.~\cite{xu2018analyzing} analyzed signal injection vulnerabilities in ultrasonic sensors used for obstacle detection in autonomous vehicles, demonstrating that spoofed echo signals can suppress or fabricate obstacles.
+Zhang et al.~\cite{zhang2017dolphinattack} and Yan et al.~\cite{yan2019feasibility} showed that voice assistants are vulnerable to inaudible ultrasonic command injection, which is imperceptible to humans yet recognized as valid speech by microphone front-ends.
+{\name} shares this adversarial philosophy but targets a qualitatively different modality---magnetic tactile sensing---and introduces a uniquely passive, \emph{deploy-and-forget} attack vector using battery-free permanent magnet tags, whereas prior injection attacks typically require active electronic signal generators in close proximity.
+
+\noindent\textbf{Security of Robotic Perception and Tactile Sensing.}
+As embodied AI systems are expanding to safety-critical settings, the security of robotic perception has attracted increasing attention. 
+Prior work has examined adversarial attacks on visual pipelines~\cite{ji2021poltergeist}, ultrasonic obstacle sensors~\cite{xu2018analyzing}, and inertial measurement units~\cite{trippel2017walnut}.
+However, limited efforts have been made into the potential security issues of tactile sensing.
+Existing anti-interference mechanisms in magnetic tactile sensors, such as gradiometric differential arrays~\cite{le2022gradiometric}, are only capable of overcoming common interfering magnetic fields. 
+To the best of our knowledge, {\name} is the first effort to characterize and exploit the security loophole in magnetic tactile sensors. 
+{\name} demonstrates the end-to-end hijacking performance of robotic closed-loop force control with an attack success rate exceeding 95\%.

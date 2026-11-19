@@ -107,6 +107,11 @@ export const KEY_SIGNATURES: Readonly<
   ...signed(["nobibliography"], "m"),
   ...signed(["includegraphics"], "s o o m"),
   ...signed(["usepackage", "RequirePackage", "documentclass"], "o m o"),
+  // Options for a class, given before its `\documentclass`: `tex/template` reads them as the line's.
+  // The same for a package, before its `\usepackage`.
+  ...signed(["PassOptionsToClass", "PassOptionsToPackage"], "m m"),
+  // A package given the options of the file that loads it: `\RequirePackageWithOptions{pkg}[date]`.
+  ...signed(["RequirePackageWithOptions"], "m o"),
 ]);
 
 /**
@@ -120,6 +125,20 @@ export const KEY_ARGUMENT: ReadonlyMap<string, number> = new Map([
 ]);
 
 const LINK_SIGNATURES = Object.fromEntries(signed(["href"], "m m"));
+
+/**
+ * The commands that state the paper's venue, by template: acmart's `\\acmConference[short]{name}{date}{place}`
+ * and `\\acmBooktitle{…}`, the older ACM classes' `\\conferenceinfo{name}{place}`, and IEEEtran's
+ * `\\IEEEpubid{…}` (the conference's copyright line). ACL's template has none. Signed so their
+ * arguments attach to them, and `tex/venue-leftover` can tell a name inside one from prose.
+ */
+export const VENUE_LINE_SIGNATURES: Readonly<
+  Record<string, { readonly signature: string }>
+> = Object.fromEntries([
+  ...signed(["acmConference"], "o m m m"),
+  ...signed(["acmBooktitle", "IEEEpubid"], "m"),
+  ...signed(["conferenceinfo"], "m m"),
+]);
 
 /**
  * Declarations unified-latex has no signature for: signed so their arguments (sizes, not text)
@@ -182,6 +201,7 @@ const parser = once(() =>
     macros: {
       ...KEY_SIGNATURES,
       ...LINK_SIGNATURES,
+      ...VENUE_LINE_SIGNATURES,
       ...DECLARATION_SIGNATURES,
       ...DEF_SIGNATURES,
       ...CAPTION_SIGNATURES,

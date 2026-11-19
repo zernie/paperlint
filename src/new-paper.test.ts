@@ -74,7 +74,7 @@ describe("paperlint new — paperlint.json", () => {
     });
     const s = settingsOf(join(papers, "demo"));
     expect(s["extends"]).toBeNull();
-    expect(String(s["$comment"])).toMatch(/paperlint:agenticdev/);
+    expect(String(s["$comment"])).toMatch(/paperlint:agenticdev-2026/);
     expect(parsePaperSettings(s)).toEqual({
       ok: true,
       value: {
@@ -97,14 +97,14 @@ describe("paperlint new — paperlint.json", () => {
     mkdirSync(join(papers, OVERRIDE_DIR), { recursive: true });
     writeFileSync(
       join(papers, OVERRIDE_DIR, "paperlint.json"),
-      '{ "extends": "paperlint:aisec", "kind": "research" }\n',
+      '{ "extends": "paperlint:aisec-2026", "kind": "research" }\n',
     );
     const r = newPaper(papers, "house", { venues: [] });
     expect(r.ok && r.files.find((f) => f.file === "paperlint.json")?.from).toBe(
       "project",
     );
     expect(settingsOf(join(papers, "house"))).toEqual({
-      extends: "paperlint:aisec",
+      extends: "paperlint:aisec-2026",
       kind: "research",
     });
   });
@@ -114,14 +114,14 @@ describe("paperlint new — paperlint.json", () => {
     mkdirSync(join(papers, "p"), { recursive: true });
     writeFileSync(
       join(papers, "p", "paperlint.json"),
-      '{"extends":"paperlint:aisec"}',
+      '{"extends":"paperlint:aisec-2026"}',
     );
     const r = newPaper(papers, "p", { venues: [] });
     expect(
       r.ok && r.files.find((f) => f.file === "paperlint.json")?.status,
     ).toBe("kept");
     expect(settingsOf(join(papers, "p"))).toEqual({
-      extends: "paperlint:aisec",
+      extends: "paperlint:aisec-2026",
     });
   });
 });
@@ -165,7 +165,7 @@ describe("paperlint lint — a paper with no venue preset chosen", () => {
   });
 
   it("a paper with a real extends does not get it", async () => {
-    const { messages } = await lintNew("paperlint:agenticdev");
+    const { messages } = await lintNew("paperlint:agenticdev-2026");
     expect(messages.map((m) => m.message).join("\n")).not.toMatch(
       /names no venue preset yet/,
     );
@@ -213,9 +213,9 @@ describe("paperlint new --venue / --kind", () => {
 `;
 
   it("a shipped venue and its kind → extends and kind in paperlint.json, lint resolves it", async () => {
-    const r = await newIn(["--venue", "agenticdev", "--kind", "short"]);
+    const r = await newIn(["--venue", "agenticdev-2026", "--kind", "short"]);
     expect(r.settings()).toEqual({
-      extends: "paperlint:agenticdev",
+      extends: "paperlint:agenticdev-2026",
       kind: "short",
     });
     expect(r.out).not.toMatch(/pdf\/profile/);
@@ -223,7 +223,7 @@ describe("paperlint new --venue / --kind", () => {
   });
 
   it("🔴 the new paper.tex is set in the venue's class, so tex/template passes on what new wrote; the required section is named", async () => {
-    const r = await newIn(["--venue", "aidc", "--kind", "regular"]);
+    const r = await newIn(["--venue", "aidc-2026", "--kind", "regular"]);
     const tex = readFileSync(join(r.dir, "paper.tex"), "utf8");
     expect(tex).toContain("\\documentclass[conference,compsoc]{IEEEtran}\n");
     expect(tex).not.toContain("{article}");
@@ -267,7 +267,7 @@ describe("paperlint new --venue / --kind", () => {
 
 describe("paperlint new --venue msr", () => {
   it("`new --venue msr` writes MSR's class line, and once the paper declares who wrote it, lint is clean", async () => {
-    const r = await newIn(["--venue", "msr", "--kind", "technical"]);
+    const r = await newIn(["--venue", "msr-2027", "--kind", "technical"]);
     const tex = readFileSync(join(r.dir, "paper.tex"), "utf8");
     expect(tex).toContain("\\documentclass[10pt,conference]{IEEEtran}\n");
     expect(r.out).not.toMatch(/tex\/template|format\/page-limit|pdf\/profile/);
@@ -285,8 +285,10 @@ describe("paperlint new --venue msr", () => {
       err: () => {},
     });
     // Guards: what remains is the reminder that the paper is not built yet — two warnings, not a
-    // finding about the paper: no PDF measured, no record of what TeX read.
-    expect(out.join("\n")).toMatch(/\(0 errors, 2 warnings\)/);
+    // finding about the paper: no PDF measured, no record of what TeX read — and that MSR 2027,
+    // whose every deadline passed in 2026, is over (it stays over, so the count is stable).
+    expect(out.join("\n")).toMatch(/\(0 errors, 3 warnings\)/);
+    expect(out.join("\n")).toMatch(/MSR 2027 is over.*paper\/edition-over/);
     expect(out.join("\n")).toMatch(/pdf\/measured/);
     expect(out.join("\n")).toMatch(/paper\/sources-fresh/);
     expect(code).toBe(0);
@@ -295,12 +297,23 @@ describe("paperlint new --venue msr", () => {
 
 describe("paperlint new --venue — a venue it cannot use", () => {
   it("an unknown venue exits 2, lists the shipped presets, and creates nothing", async () => {
-    const r = await newIn(["--venue", "neurips"]);
+    const r = await newIn(["--venue", "usenix"]);
     expect(r.code).toBe(2);
     // Guards: the list is read from the shipped presets, the same list lint prints.
     expect(r.err).toContain(shippedPresets(presetsDir()).join(", "));
-    expect(r.err).toMatch(/--venue neurips: no such venue preset/);
+    expect(r.err).toMatch(/--venue usenix: no such venue preset/);
     expect(existsSync(r.dir)).toBe(false);
+  });
+
+  it("🔴 a bare series exits 2, names the editions, and creates nothing: it is never the latest edition", async () => {
+    for (const venue of ["icse", "paperlint:icse"]) {
+      const r = await newIn(["--venue", venue]);
+      expect(r.code).toBe(2);
+      expect(r.err).toContain(
+        "--venue paperlint:icse names a series, not an edition: a venue preset is one edition, so a new edition never changes a paper's rules unasked. Shipped editions: paperlint:icse-2027, paperlint:icse-2028 — did you mean paperlint:icse-2028?",
+      );
+      expect(existsSync(r.dir)).toBe(false);
+    }
   });
 });
 
@@ -308,7 +321,7 @@ describe("paperlint new --venue / --kind — refusals and defaults", () => {
   it.each([
     [
       "a kind the preset lacks",
-      ["--venue", "agenticdev", "--kind", "long"],
+      ["--venue", "agenticdev-2026", "--kind", "long"],
       /`AgenticDev` has no kind `long`; its kinds: short, full, demo/,
     ],
     ["a kind without a venue", ["--kind", "short"], /--kind needs --venue/],
@@ -330,8 +343,8 @@ describe("paperlint new --venue / --kind — refusals and defaults", () => {
   });
 
   it("a venue with kinds and no --kind: written, and new says what lint will report", async () => {
-    const r = await newIn(["--venue", "agenticdev"]);
-    expect(r.settings()).toEqual({ extends: "paperlint:agenticdev" });
+    const r = await newIn(["--venue", "agenticdev-2026"]);
+    expect(r.settings()).toEqual({ extends: "paperlint:agenticdev-2026" });
     expect(r.out).toMatch(
       /kind: not set — `AgenticDev` sets a page limit per kind/,
     );
@@ -346,7 +359,7 @@ describe("paperlint new --venue / --kind — refusals and defaults", () => {
   });
 
   it("an existing paperlint.json is never overwritten: --venue is refused", async () => {
-    const r = await newIn(["--venue", "aisec"], {
+    const r = await newIn(["--venue", "aisec-2026"], {
       "papers/demo/paperlint.json": '{ "extends": null }\n',
     });
     expect(r.code).toBe(2);
@@ -367,19 +380,19 @@ describe("paperlint new — a name that names a venue is refused", () => {
       "nothing but a year left: no example",
       "aisec-2026",
       [],
-      '`aisec-2026` — the paper folder names a venue ("AISec"); venues change on resubmission, so name it after the work',
+      '`aisec-2026` — the paper folder names a venue ("AISec 2026"); venues change on resubmission, so name it after the work',
     ],
     [
       "its own venue too: right today, stale on the next resubmission",
       "aidc-2026",
-      ["--venue", "aidc"],
-      '`aidc-2026` — the paper folder names a venue ("AIDC"); venues change on resubmission, so name it after the work',
+      ["--venue", "aidc-2026"],
+      '`aidc-2026` — the paper folder names a venue ("AIDC 2026"); venues change on resubmission, so name it after the work',
     ],
     [
       "by an alias, glued to a year",
       "acsac2026-rules",
       [],
-      '`acsac2026-rules` — the paper folder names a venue ("ACSAC"); venues change on resubmission, so name it after the work',
+      '`acsac2026-rules` — the paper folder names a venue ("ACSAC 2026"); venues change on resubmission, so name it after the work (e.g. "rules")',
     ],
     [
       "two venues",
@@ -455,7 +468,7 @@ describe("paperlint new --allow-venue-name", () => {
     {
       what: "an existing paperlint.json with --venue",
       name: "realm-of-agents",
-      args: ["--venue", "aisec"],
+      args: ["--venue", "aisec-2026"],
       files: {
         "papers/realm-of-agents/paperlint.json": '{ "extends": null }\n',
       },
@@ -484,11 +497,11 @@ describe("chooseVenue — on a terminal", () => {
   };
 
   it("asks the venue from the shipped list, then its kind", async () => {
-    const t = at(["agenticdev", "full"]);
+    const t = at(["agenticdev-2026", "full"]);
     const r = await chooseVenue({ venue: null, kind: null }, t.opts);
     expect(r).toMatchObject({
       ok: true,
-      value: { extends: "paperlint:agenticdev", kind: "full" },
+      value: { extends: "paperlint:agenticdev-2026", kind: "full" },
     });
     expect(t.asked[0]).toContain(
       [...shippedPresets(presetsDir()), "none"].join(" / "),
@@ -505,7 +518,7 @@ describe("chooseVenue — on a terminal", () => {
   });
 
   it("without a terminal nothing is asked", async () => {
-    const t = at(["agenticdev"]);
+    const t = at(["agenticdev-2026"]);
     const r = await chooseVenue(
       { venue: null, kind: null },
       { ...t.opts, interactive: false },
@@ -523,7 +536,7 @@ describe("a project's own template", () => {
     writeFileSync(src, '{\n  // our house venue\n  "extends": null\n}\n');
     const r = newPaper(papers, "p", {
       venues: [],
-      venue: { extends: "paperlint:aisec", kind: null },
+      venue: { extends: "paperlint:aisec-2026", kind: null },
     });
     expect(r).toEqual({
       ok: false,

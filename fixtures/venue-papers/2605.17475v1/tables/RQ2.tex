@@ -1,0 +1,77 @@
+\begin{table*}[h!]
+\footnotesize
+\centering
+
+\begin{minipage}[c]{0.58\columnwidth}
+
+\begin{tabular}{llccc}
+
+\toprule
+Dataset & Method & PDR & RC & RF \\
+\midrule
+\multirow{4}{*}{Simple}
+ & (1) None enabled & 0.9279 & 0.7611 & 0.6833 \\
+ & (2) Refinement only & 0.9425 & 0.8944 & 0.8296 \\
+ & (3) Repair guidance only & 0.9890 & \textbf{0.9861} & \textbf{0.9583} \\
+ & (4) Event-B Agent & \textbf{0.9954} & 0.9639 & 0.9417 \\
+
+
+\midrule
+\multirow{4}{*}{Medium}
+ & (1) None enabled & 0.9799 & 0.8316 & 0.8316 \\
+ & (2) Refinement only & \textbf{0.9861} & 0.8970 & 0.8543 \\
+ & (3) Repair guidance only & 0.9659 & 0.9632 & 0.8863 \\
+ & (4) Event-B Agent & 0.9700 & \textbf{0.9667} & \textbf{0.9347} \\
+
+
+\midrule
+\multirow{4}{*}{Complex}
+ & (1) None enabled & 0.9600 & 0.9162 & 0.7954 \\
+ & (2) Refinement only & 0.9664 & 0.8951 & 0.8210 \\
+ & (3) Repair guidance only & 0.9529 & 0.8990 & 0.7548 \\
+ & (4) Event-B Agent & \textbf{0.9706} & \textbf{0.9834} & \textbf{0.9373} \\
+
+
+\midrule
+\multirow{4}{*}{Overall}
+ & (1) None enabled & 0.9559 & 0.8363 & 0.7701 \\
+ & (2) Refinement only & 0.9650 & 0.8955 & 0.8350 \\
+ & (3) Repair guidance only & 0.9693 & 0.9494 & 0.8665 \\
+ & (4) Event-B Agent & \textbf{0.9786} & \textbf{0.9713} & \textbf{0.9379} \\
+\bottomrule
+
+\end{tabular}
+\caption{Ablation studies on the refinement strategy planning and model \& proof repair components of Event-B Agent.}
+\label{tab:RQ2}
+
+\end{minipage}
+\hfill
+\begin{minipage}[c]{0.37\columnwidth}
+
+\begin{tabular}{ll p{0.22\columnwidth}}
+\toprule
+Dataset & Method & Refinement PDR \\
+\midrule
+\multirow{2}{*}{Simple} & Refinement only & 0.7778 \\
+ & Event-B Agent & \textbf{1.000} \\
+\midrule
+\multirow{2}{*}{Medium} & Refinement only & 0.7878 \\
+ & Event-B Agent & \textbf{0.9556} \\
+\midrule
+\multirow{2}{*}{Complex} & Refinement only & 0.4653 \\
+ & Event-B Agent & \textbf{0.8213} \\
+\midrule
+\multirow{2}{*}{Overall} & Refinement only & 0.6769 \\
+ & Event-B Agent & \textbf{0.9256} \\
+\bottomrule
+\end{tabular}
+
+\caption{Refinement PO Discharge Rate (Refinement $PDR$) of Event-B Agent and the refinement-related ablation baseline.
+Refinement $PDR$ estimates the confidence that the assumption of refinement correctness holds.}
+
+\label{tab:RQ2_refine}
+    
+\end{minipage}
+
+\end{table*}
+

@@ -1,0 +1,20 @@
+\begin{table}[htbp]
+\centering
+\caption{Image fidelity in the clean condition, used here as a proxy for imperceptibility. Rows report results with SyncSeal off and on; superscripts give the sample standard deviation across the four dataset means. Higher PSNR and SSIM and lower LPIPS indicate better image fidelity.}
+\label{tab:clean-fidelity}
+\scriptsize
+\setlength{\tabcolsep}{2.0pt}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}l c c c c c c}
+\toprule
+\textbf{Method} & \multicolumn{2}{c}{\textbf{PSNR (dB)}} & \multicolumn{2}{c}{\textbf{SSIM}} & \multicolumn{2}{c}{\textbf{LPIPS}} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+ & \shortstack{\textbf{SyncSeal}\\\textbf{off}} & \shortstack{\textbf{SyncSeal}\\\textbf{on}} & \shortstack{\textbf{SyncSeal}\\\textbf{off}} & \shortstack{\textbf{SyncSeal}\\\textbf{on}} & \shortstack{\textbf{SyncSeal}\\\textbf{off}} & \shortstack{\textbf{SyncSeal}\\\textbf{on}} \\
+\midrule
+MaskWM & 49.481{\textcolor{black!55}{\tiny$^{\pm 1.082}$}} & 42.309{\textcolor{black!55}{\tiny$^{\pm 0.617}$}} & 0.998{\textcolor{black!55}{\tiny$^{\pm 0.001}$}} & 0.990{\textcolor{black!55}{\tiny$^{\pm 0.004}$}} & 0.006{\textcolor{black!55}{\tiny$^{\pm 0.001}$}} & 0.009{\textcolor{black!55}{\tiny$^{\pm 0.002}$}} \\
+WAM & 62.549{\textcolor{black!55}{\tiny$^{\pm 1.185}$}} & 43.562{\textcolor{black!55}{\tiny$^{\pm 0.824}$}} & 1.000{\textcolor{black!55}{\tiny$^{\pm 0.000}$}} & 0.992{\textcolor{black!55}{\tiny$^{\pm 0.003}$}} & 0.000{\textcolor{black!55}{\tiny$^{\pm 0.000}$}} & 0.003{\textcolor{black!55}{\tiny$^{\pm 0.001}$}} \\
+PixelSeal & 56.800{\textcolor{black!55}{\tiny$^{\pm 1.243}$}} & 43.353{\textcolor{black!55}{\tiny$^{\pm 0.811}$}} & 0.999{\textcolor{black!55}{\tiny$^{\pm 0.000}$}} & 0.992{\textcolor{black!55}{\tiny$^{\pm 0.003}$}} & 0.000{\textcolor{black!55}{\tiny$^{\pm 0.000}$}} & 0.003{\textcolor{black!55}{\tiny$^{\pm 0.001}$}} \\
+TrustMark & 54.092{\textcolor{black!55}{\tiny$^{\pm 2.075}$}} & 42.978{\textcolor{black!55}{\tiny$^{\pm 0.857}$}} & 0.999{\textcolor{black!55}{\tiny$^{\pm 0.001}$}} & 0.991{\textcolor{black!55}{\tiny$^{\pm 0.003}$}} & 0.000{\textcolor{black!55}{\tiny$^{\pm 0.000}$}} & 0.003{\textcolor{black!55}{\tiny$^{\pm 0.000}$}} \\
+OmniGuard & 51.361{\textcolor{black!55}{\tiny$^{\pm 0.837}$}} & 42.730{\textcolor{black!55}{\tiny$^{\pm 0.841}$}} & 0.998{\textcolor{black!55}{\tiny$^{\pm 0.001}$}} & 0.991{\textcolor{black!55}{\tiny$^{\pm 0.003}$}} & 0.000{\textcolor{black!55}{\tiny$^{\pm 0.000}$}} & 0.003{\textcolor{black!55}{\tiny$^{\pm 0.001}$}} \\
+\bottomrule
+\end{tabular*}
+\end{table}

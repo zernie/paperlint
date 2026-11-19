@@ -3,7 +3,7 @@
  * classifies its pages. A venue that limits the body «excluding references and appendices» (AIDC)
  * cannot be judged on banal's body count: banal calls any page holding non-bibliography text body,
  * so an LLM Usage Statement or an appendix placed after the bibliography is counted as body, and a
- * correct paper fails (measured, `presets/aidc.jsonc`).
+ * correct paper fails (measured, `presets/aidc-2026.jsonc`).
  *
  * ── WHERE THE BODY ENDS: AT THE REFERENCES, OR AT THE APPENDIX, WHICHEVER COMES FIRST ──────
  * «Excluding references and appendices» excludes an appendix wherever it sits, so the body ends at
@@ -65,9 +65,11 @@ export type BodyEnd =
 /**
  * A line that is a references heading: `References` or `Bibliography`, in any case (IEEEtran sets
  * `REFERENCES` in small caps, which pdf.js may split as `R EFERENCES`), optionally numbered
- * (`7 References`, `VII. REFERENCES`). The line is compared with every space removed.
+ * (`7 References`, `VII. REFERENCES`), and with the line number `lineno` sets in a submission's
+ * margin, which pdf.js reads glued to the end of the line (`References346`). The line is compared
+ * with every space removed.
  */
-const HEADING = /^(?:(?:\d+|[ivxlcdm]+)\.?)?(?:references|bibliography)$/iu;
+const HEADING = /^(?:(?:\d+|[ivxlcdm]+)\.?)?(?:references|bibliography)\d*$/iu;
 
 /** Whether one line of a page's text is the references heading. */
 export const isReferencesHeading = (line: string): boolean =>

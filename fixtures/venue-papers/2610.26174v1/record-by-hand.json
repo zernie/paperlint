@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acmart.cls",
+      "role": "preamble"
+    },
+    {
+      "path": "files/intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "files/background.tex",
+      "role": "body"
+    },
+    {
+      "path": "files/attackmodel.tex",
+      "role": "body"
+    },
+    {
+      "path": "files/vulnerability.tex",
+      "role": "body"
+    },
+    {
+      "path": "files/design.tex",
+      "role": "body"
+    },
+    {
+      "path": "files/evaluation.tex",
+      "role": "body"
+    },
+    {
+      "path": "files/countermeasures.tex",
+      "role": "body"
+    },
+    {
+      "path": "files/relatedworks.tex",
+      "role": "body"
+    },
+    {
+      "path": "files/conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "2b0df910cda88a2bf415e2a82a097ed5b7fb372d5b48dbaf6f563c57e9c6f548",
+    "acmart.cls": "784c4f2fb07a70d8a797ee9d1c63f441c10fbd2f915c9c615d28cda35c0b742a",
+    "files/intro.tex": "d1a1965728d70b88e5ca5501eee414c03603326aa91c251feb186342ae8f07a1",
+    "files/background.tex": "0fb44ea5b9992b897864cce5a2ca4a051a8f6c3c2a229d77a54c8ab34bcdb8fe",
+    "files/attackmodel.tex": "46c04cd6ef444f319abfe9aab7d2d6ba4c1542e20c99243edb54f3477fa4a54e",
+    "files/vulnerability.tex": "e70400a8ca93bebea6efbc1775f3ed55632e28e896b7abc10e7b812590b5b95f",
+    "files/design.tex": "a21a3f9915ef198e02ad876d8b54733f8e240986ce5864fc558d0e4d4d549f8c",
+    "files/evaluation.tex": "db2b57e6662517c073045621c3e9ecb6bdc9e06072930bc9a7e910fc3d71d6b6",
+    "files/countermeasures.tex": "a18e00d7b3993ad44373367f80b86156d29a86a6165edcb6251462c02080884f",
+    "files/relatedworks.tex": "97b2c075ded740b61da648620143c482fe309a6dd0836aad36c5ac6561e6274e",
+    "files/conclusion.tex": "def90796283e72c7ddfa83010c9d95dd86b72cfee516fd8c62ef953f003849cd",
+    "appendix.tex": "4231636591498217aea44e9c29b56eae589fb231ce76c307c9ca33713581eb32"
+  }
+}

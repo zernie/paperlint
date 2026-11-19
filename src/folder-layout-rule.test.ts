@@ -224,7 +224,7 @@ describe("declaredRoots — nothing to add", () => {
   });
 
   it("a shipped preset names no file", () => {
-    expect(roots({ extends: "paperlint:aidc" })).toEqual([]);
+    expect(roots({ extends: "paperlint:aidc-2026" })).toEqual([]);
   });
 });
 

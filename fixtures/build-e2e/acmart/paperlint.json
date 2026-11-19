@@ -1,1 +1,1 @@
-{ "extends": "paperlint:agenticdev", "kind": "short" }
+{ "extends": "paperlint:agenticdev-2026", "kind": "short" }

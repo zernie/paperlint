@@ -1,0 +1,206 @@
+[
+  {
+    "arxiv_id": "2607.27374v2",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "7912e597ed535d019305ca95cd69f72f315e957d1ffb02d39018081cc3831807",
+    "main_tex": "./main.tex",
+    "class": "acmart",
+    "category": "cs.SE",
+    "size_bytes": 224713,
+    "dir": "2607.27374v2",
+    "accepted": {
+      "quote": "11 pages, 3 figures, 3 tables. Camera-ready version, accepted at the 41st IEEE/ACM International Conference on Automated Software Engineering (ASE 2026), Industry Showcase track, Munich, Germany, October 2026. v2 replaces the originally submitted version with the camera-ready: corrected bibliography entries and added figure descriptions; no changes to results or claims",
+      "url": "https://arxiv.org/abs/2607.27374v2",
+      "venue": "ASE 2026, Industry Showcase track"
+    },
+    "preset": "paperlint:acm-sigconf",
+    "kind": null
+  },
+  {
+    "arxiv_id": "2607.06766v2",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "bf5b351bb02ef0380f34d6cd1df5169e1ad8a30dfbf6662c48b4d773f97892cc",
+    "main_tex": "./main.tex",
+    "class": "acmart",
+    "category": "cs.SE",
+    "size_bytes": 167339,
+    "dir": "2607.06766v2",
+    "accepted": {
+      "quote": "Accepted at ASE 2026 - Industry Showcase",
+      "url": "https://arxiv.org/abs/2607.06766v2",
+      "venue": "ASE 2026, Industry Showcase track"
+    },
+    "preset": "paperlint:acm-sigconf",
+    "kind": null
+  },
+  {
+    "arxiv_id": "2609.10590v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "cec775354995d5925b0bbe5aab84f175aa4f0ae80601ec58bc633efdd8a6d842",
+    "main_tex": "./main.tex",
+    "class": "acmart",
+    "category": "cs.SE",
+    "size_bytes": 99035,
+    "dir": "2609.10590v1",
+    "accepted": {
+      "quote": "13 pages, 2 figures. Accepted at the 41st IEEE/ACM International Conference on Automated Software Engineering (ASE 2026), Munich, Germany, October 12-16, 2026",
+      "url": "https://arxiv.org/abs/2609.10590v1",
+      "venue": "ASE 2026 (track not named)"
+    },
+    "preset": "paperlint:acm-sigconf",
+    "kind": null
+  },
+  {
+    "arxiv_id": "2609.03920v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "e6016e82179ea931869564273313cf3df7c1269e9476a39e4e1aa62f10c0e2bd",
+    "main_tex": "./sigconf-arxiv.tex",
+    "class": "acmart",
+    "category": "cs.AI",
+    "size_bytes": 293586,
+    "dir": "2609.03920v1",
+    "accepted": {
+      "quote": "Accepted to AgenticDev Workshop at ASE 2026",
+      "url": "https://arxiv.org/abs/2609.03920v1",
+      "venue": "AgenticDev 2026 (workshop at ASE 2026)"
+    },
+    "preset": "paperlint:agenticdev-2026",
+    "kind": "short"
+  },
+  {
+    "arxiv_id": "2609.17164v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "862703a97bad83e14c6af1a089bcf0dfd67339115d21a331cca74497016f5b71",
+    "main_tex": "./aisec_camera_ready_final_clean.tex",
+    "class": "acmart",
+    "category": "cs.CR",
+    "size_bytes": 92141,
+    "dir": "2609.17164v1",
+    "accepted": {
+      "quote": "To be presented and published at 19 th ACM Workshop on Artificial Intelligence and Security (AISEC'26) colocated with ACM CCS 2026",
+      "url": "https://arxiv.org/abs/2609.17164v1",
+      "venue": "AISec 2026 (workshop at ACM CCS 2026)"
+    },
+    "preset": "paperlint:aisec-2026",
+    "kind": "research"
+  },
+  {
+    "arxiv_id": "2609.16832v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "36247c7f909bb295c8a31d00c723e1a71f32bf053499752b8858c9e0e2c5e375",
+    "main_tex": "./main.tex",
+    "class": "acmart",
+    "category": "cs.CV",
+    "size_bytes": 101762,
+    "dir": "2609.16832v1",
+    "accepted": {
+      "quote": "This work has been accepted for publication in the proceedings of the 19th ACM Workshop on Artificial Intelligence and Security (AISec 2026), co-located with ACM CCS 2026. The final version will be published in the ACM Digital Library",
+      "url": "https://arxiv.org/abs/2609.16832v1",
+      "venue": "AISec 2026 (workshop at ACM CCS 2026)"
+    },
+    "preset": "paperlint:aisec-2026",
+    "kind": "benchmark"
+  },
+  {
+    "arxiv_id": "2609.14098v2",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "f342f2fd48cf0167efca3a4f0fb00ee65c0e38f48b6d3bb7baee27a891518999",
+    "main_tex": "./deception_delta_ccs2026_camera_ready.tex",
+    "class": "acmart",
+    "category": "cs.CR",
+    "size_bytes": 124606,
+    "dir": "2609.14098v2",
+    "accepted": {
+      "quote": "14 pages, 1 figure, 4 tables. Accepted at ACM CCS 2026. v2: corrected version, matches the published ACM version",
+      "url": "https://arxiv.org/abs/2609.14098v2",
+      "venue": "ACM CCS 2026"
+    },
+    "preset": "paperlint:ccs-2026",
+    "kind": "research"
+  },
+  {
+    "arxiv_id": "2610.26174v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "7a336227bae0d601cec1ce7c7a12be33883485d41eb3bdce84db8fe4f14f920a",
+    "main_tex": "./main.tex",
+    "class": "acmart",
+    "category": "cs.CR",
+    "size_bytes": 235884,
+    "dir": "2610.26174v1",
+    "accepted": {
+      "quote": "Accepted at ACM CCS 2026. Project page: https://phantomtac.org",
+      "url": "https://arxiv.org/abs/2610.26174v1",
+      "venue": "ACM CCS 2026"
+    },
+    "preset": "paperlint:ccs-2026",
+    "kind": "research"
+  },
+  {
+    "arxiv_id": "2611.10830v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "e00863439a96b3f4b04059b6d152705c0cd66c1aa242d7cdda5c7a002052e49a",
+    "main_tex": "./main_camera_ready.tex",
+    "class": "IEEEtran",
+    "category": "cs.CR",
+    "size_bytes": 195831,
+    "dir": "2611.10830v1",
+    "accepted": {
+      "quote": "Accepted at the Workshop on Agentic AI in Offensive and Defensive Cyber Operations (AIDC 2026), co-located with ACSAC 2026",
+      "url": "https://arxiv.org/abs/2611.10830v1",
+      "venue": "AIDC 2026 (workshop at ACSAC 2026)"
+    },
+    "preset": "paperlint:aidc-2026",
+    "kind": "regular"
+  },
+  {
+    "arxiv_id": "2610.41369v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "778d1c8b06cf8a0e96bc5b1aef9558308405d1618db1d30121d0ef2f258d9fa4",
+    "main_tex": "./main.tex",
+    "class": "IEEEtran",
+    "category": "cs.CR",
+    "size_bytes": 114876,
+    "dir": "2610.41369v1",
+    "accepted": {
+      "quote": "Accepted by The Annual Computer Security Applications Conference 2026 (ACSAC, 2026)",
+      "url": "https://arxiv.org/abs/2610.41369v1",
+      "venue": "ACSAC 2026"
+    },
+    "preset": "paperlint:acsac-2026",
+    "kind": null
+  },
+  {
+    "arxiv_id": "2604.19400v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "f15cacef0774ea31eecc29e03e972e515e119404f54aef545a16222293293180",
+    "main_tex": "./main.tex",
+    "class": "acmart",
+    "category": "cs.SE",
+    "size_bytes": 142018,
+    "dir": "2604.19400v1",
+    "accepted": {
+      "quote": "23 pages, 3 figures. To appear in the proceedings of FSE 2026. Code available at https://github.com/TobiasKiecker/CASCADE/releases/tag/FSE2026-v1.0.0",
+      "url": "https://arxiv.org/abs/2604.19400v1",
+      "venue": "FSE 2026"
+    },
+    "preset": "paperlint:acm-acmsmall",
+    "kind": null
+  },
+  {
+    "arxiv_id": "2605.17475v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "d9fbf712208b53ea8aa30696139f5b424fe58bfe6c0af1993589e7d1da56025f",
+    "main_tex": "./main.tex",
+    "class": "acmart",
+    "category": "cs.SE",
+    "size_bytes": 235815,
+    "dir": "2605.17475v1",
+    "accepted": {
+      "quote": "accepted by FSE 2026",
+      "url": "https://arxiv.org/abs/2605.17475v1",
+      "venue": "FSE 2026 (track not named)"
+    },
+    "preset": "paperlint:acm-acmsmall",
+    "kind": null
+  }
+]

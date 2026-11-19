@@ -1,0 +1,17 @@
+{
+  "cycles": [
+    {
+      "id": "acsac-2026",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:acsac-2026"
+      },
+      "opened": "2026-10-30",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2026-10-30",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

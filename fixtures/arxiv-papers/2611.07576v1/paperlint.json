@@ -1,1 +1,18 @@
-{ "extends": "paperlint:ieee-conference" }
+{
+  "cycles": [
+    {
+      "id": "sp-2027",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:sp-2027"
+      },
+      "kind": "research",
+      "opened": "2026-11-05",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2026-11-05",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

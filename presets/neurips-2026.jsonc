@@ -1,0 +1,123 @@
+// NeurIPS 2026 Main Track (the Fortieth Annual Conference on Neural Information Processing Systems)
+// — a VENUE preset over the NeurIPS style family. Everything the style file decides (page size,
+// columns, fonts, font sizes, TeX packages) comes from neurips-style.jsonc; this file adds what the
+// main track's call sets. The 2027 call is not published: https://neurips.cc/Conferences/2027/CallForPapers
+// answered 404 on 2026-11-19. Its card, in prose: `neurips-2026.md` beside this file.
+//
+// The call (https://neurips.cc/Conferences/2026/CallForPapers, read 2026-11-19) gives the dates and
+// links to the Main Track Handbook, which holds the rules. Verbatim from
+// https://neurips.cc/Conferences/2026/MainTrackHandbook (read 2026-11-19):
+//   «The main text of a submitted paper is limited to nine content pages, including all figures and
+//    tables. Additional pages containing references, optional technical appendices and mandatory
+//    paper checklist do not count as content pages. If your submission is accepted, you will be
+//    allowed an additional content page for the camera-ready version.»
+//   «You must format your submission using the LaTeX style file for that year. … This is the only
+//    template we will accept … Submissions that violate the NeurIPS style (e.g., by decreasing
+//    margins or font sizes) or page limits may be desk rejected.»
+//   «All submissions must be anonymized and may not contain any identifying information that may
+//    violate the double-blind reviewing policy. … Papers violating this policy will be desk
+//    rejected.»
+//   «authors are required to complete the paper checklist included in the paper template.»
+// And from the author kit's checklist.tex (Formatting_Instructions_For_NeurIPS_2026.zip, read
+// 2026-11-19): «Do not remove the checklist: The papers not including the checklist will be desk
+// rejected.» and «Delete this instruction block, but keep the section heading "NeurIPS Paper
+// Checklist"».
+{
+  "type": "venue",
+  // The series, without a year: the year is the id's (neurips-2026). Machine-learning papers name
+  // NeurIPS as the venue of the work they cite far more often than as their own; tex/venue-leftover
+  // counts the name in prose only beside a year no older than the paper's own edition's year minus
+  // one, so «NeurIPS 2023» in related work is not flagged.
+  "name": "NeurIPS",
+  // The call quoted above.
+  "url": "https://neurips.cc/Conferences/2026/CallForPapers",
+  "extends": "paperlint:neurips-style",
+
+  // «All submissions must be anonymized» (the handbook above). anonymity/identity then requires the
+  // paper's `identity`. No portal reading of it: OpenReview's public venue data has no blind flag.
+  "blind": true,
+
+  // No `portal`: submissions go through OpenReview («Submission link»:
+  // https://openreview.net/group?id=NeurIPS.cc/2026/Conference), and `paperlint submission` has an
+  // adapter for HotCRP only.
+  //
+  // Two readings of each deadline, kept both. The call: «Abstract submission deadline: May 4, 2026
+  // (AOE)», «Full paper submission deadline, including all supplementary materials: May 6, 2026
+  // AOE», «Author notification: September 24, 2026 AoE» — the end of each AoE day is 11:59:59Z of
+  // the next. The dates page (https://neurips.cc/Conferences/2026/Dates, read 2026-11-19) agrees,
+  // and adds «Paper Camera Ready Deadline | Nov 06 '26 (Anywhere on Earth)». The portal: the
+  // OpenReview venue group's `date` field, «Abstract Registration: May 05 2026 11:59AM UTC-0,
+  // Submission Deadline: May 07 2026 11:59AM UTC-0» — 59 s before the call's; the earlier binds.
+  // Every one has passed: they are kept as the record of the edition.
+  "deadlines": [
+    {
+      "what": "registration",
+      "at": "2026-05-05T11:59:00Z",
+      "source": "portal",
+      "url": "https://api2.openreview.net/groups?id=NeurIPS.cc/2026/Conference",
+      "read": "2026-11-19",
+    },
+    {
+      "what": "registration",
+      "at": "2026-05-05T11:59:59Z",
+      "source": "call",
+      "url": "https://neurips.cc/Conferences/2026/CallForPapers",
+      "read": "2026-11-19",
+    },
+    {
+      "what": "submission",
+      "at": "2026-05-07T11:59:00Z",
+      "source": "portal",
+      "url": "https://api2.openreview.net/groups?id=NeurIPS.cc/2026/Conference",
+      "read": "2026-11-19",
+    },
+    {
+      "what": "submission",
+      "at": "2026-05-07T11:59:59Z",
+      "source": "call",
+      "url": "https://neurips.cc/Conferences/2026/CallForPapers",
+      "read": "2026-11-19",
+    },
+    {
+      "what": "notification",
+      "at": "2026-09-25T11:59:59Z",
+      "source": "call",
+      "url": "https://neurips.cc/Conferences/2026/CallForPapers",
+      "read": "2026-11-19",
+    },
+    {
+      "what": "camera-ready",
+      "at": "2026-11-07T11:59:59Z",
+      "source": "call",
+      "url": "https://neurips.cc/Conferences/2026/Dates",
+      "read": "2026-11-19",
+    },
+  ],
+
+  // The checklist, «mandatory» (the handbook) and a desk reject without it (checklist.tex), under the
+  // heading the kit says to keep. No `position`: the handbook gives the order only as «in this
+  // suggested order», and its reviewer FAQ says not to worry about «an incorrect order of the
+  // checklist, references, and supplementary materials».
+  "required_sections": [{ "title": "NeurIPS Paper Checklist" }],
+
+  "format": {
+    // «nine content pages … Additional pages containing references, optional technical appendices
+    // and mandatory paper checklist do not count as content pages.» Counted by banal: measured
+    // 2026-11-19 on fixtures/build-e2e/neurips, banal types the pages from the references on as
+    // bibliography and appendix — the checklist with them, after the appendix or straight after the
+    // references — and the page the references start on as body when the text runs onto it, as the
+    // call counts it.
+    // 🔴 NOT `body_ends_at`. The submission has line numbers (the style's `\linenumbers`) and pdf.js
+    // reads the heading as «References346»; the heading match now takes that (measured: without an
+    // appendix the fixture's body is found). With the kit's appendix after the references, hyperref
+    // anchors it and its heading reads «A Technical Appendix», which the appendix match does not take:
+    // «could not tell where the body ends» (measured on the same fixture). banal's count has neither problem.
+    "kinds": {
+      // The anonymous submission to the main track.
+      "main": { "body_pages_max": 9, "ref_pages_max": "unlimited" },
+      // «an additional content page for the camera-ready version». The same paper after acceptance:
+      // its paperlint.json switches `kind`, and its cycle's `accepted` turns the blind check off.
+      "camera-ready": { "body_pages_max": 10, "ref_pages_max": "unlimited" },
+    },
+  },
+}

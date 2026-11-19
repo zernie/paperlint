@@ -34,6 +34,19 @@ export const FixtureExpect = z.strictObject({
   /** Why this fixture exists, for a reader of the JSON. */
   $comment: z.string().optional(),
   /**
+   * Files the paper needs beside it that the repository does not ship — a venue's style file from
+   * its author kit, whose licence is unverified. Absent from the fixture's folder, the fixture is
+   * left out of the build and its tests are skipped, naming the file and where it comes from.
+   */
+  needs: z
+    .array(
+      z.strictObject({
+        file: z.string().regex(/^[^/\\]+$/u, "a file name, not a path"),
+        from: z.url(),
+      }),
+    )
+    .default([]),
+  /**
    * `pdf`: `paperlint build` writes paper.pdf. `failed`: it does not — and a stale paper.pdf planted
    * before the run must be gone after it, so an earlier build cannot pass for this one.
    */

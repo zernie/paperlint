@@ -4,17 +4,17 @@ import { experimental_skill } from "vigiles/spec";
 export default experimental_skill({
   name: "add-venue",
   description:
-    "Add a venue paperlint does not ship: turn a conference or workshop call for papers into a venue preset (presets/<name>.jsonc) and its card (presets/<name>.md), every number with its quote and URL. Use when asked to add a venue, write a preset or a card for a conference or workshop, or turn a call for papers into a preset. NOT for choosing which venue to submit to (find-venue), NOT for submitting (submit-paper).",
+    "Add a venue paperlint does not ship: turn a conference or workshop call for papers into a venue preset for one edition (presets/<series>-<year>.jsonc) and its card (presets/<series>-<year>.md), every number with its quote and URL. Use when asked to add a venue, write a preset or a card for a conference or workshop, or turn a call for papers into a preset. NOT for choosing which venue to submit to (find-venue), NOT for submitting (submit-paper).",
   tools: ["Read", "Write", "Edit", "Grep", "Glob", "Bash", "WebFetch"],
   body: `
 # add-venue — a call for papers becomes a preset and a card, with the proof beside every number
 
-Done for \`agent\`, \`agentverify\` and \`nlbse\`. A shipped venue is a pair, \`presets/<name>.jsonc\` and
-\`presets/<name>.md\`; the name is lowercase, with no publisher or parent-conference prefix. A venue of
-your own project, not shipped, is \`./venues/<name>.jsonc\` and \`.md\` (\`docs/rules.md\`, "Writing your
+Done for \`agent-2027\`, \`agentverify-2027\` and \`nlbse-2027\`. A shipped venue is one edition, a pair,
+\`presets/<series>-<year>.jsonc\` and \`.md\`; the series is lowercase, with no publisher or
+parent-conference prefix. A venue of your own project, not shipped, is \`./venues/<series>-<year>.jsonc\` and \`.md\` (\`docs/rules.md\`, "Writing your
 own venue preset"); steps 1 to 7 are the same.
 
-1. **Copy the closest pair.** \`aidc\` for an IEEE workshop, \`agenticdev\` for ACM. Read
+1. **Copy the closest pair.** \`aidc-2026\` for an IEEE workshop, \`agenticdev-2026\` for ACM. Read
    \`presets/venue-profile.schema.json\`: a key outside it fails the lint. The template family
    (\`extends: paperlint:ieee-conference\` or \`acm-sigconf\`) already holds page, columns and fonts.
 2. **Fetch the call yourself**, and the venue's dates page. \`WebFetch\` summarizes: it said «not
@@ -32,11 +32,16 @@ own venue preset"); steps 1 to 7 are the same.
 6. **Write the card**: sources with the fetch day, the facts, the kinds table in the call's words,
    «Not verified». Leave the generated section empty between its \`paperlint:preset-rules\` markers and
    run \`npx eslint --fix presets/\`. Never edit between the markers; the fix also rewrites the family's
-   card. A venue name that is an ordinary word is not the bare word (\`AGENT 2027\`, alias \`AGENT'27\`):
-   folder names are matched by words, and \`mentions: "with-year"\` reaches only the text rules.
+   card. One file per EDITION: \`presets/<series>-<year>.jsonc\` and \`.md\`, the year in four digits; a
+   workshop is its own series (\`nlbse-2027\`, not \`icse-nlbse\`). \`name\` and \`aliases\` carry no year
+   (\`AGENT\`, not \`AGENT 2027\`): the year is the id's. A workshop sets \`"workshop": true\` and
+   \`"parent": "paperlint:<conference>-<year>"\` of its own year; a parent not shipped yet gets a
+   minimal preset (name, aliases, url, the family its call names, no limits) whose card says only
+   the format is checked.
 7. **Register the name where shipped presets are listed**, or tests fail: \`src/presets.test.ts\`,
    \`src/preset-card-rule.test.ts\`, \`src/tex-venue-rules.test.ts\`, \`src/venue-rules.test.ts\`,
-   \`src/paper-settings-commands.test.ts\`, the count in \`test/preset-cards.test.ts\`. Then
+   \`src/paper-settings-commands.test.ts\`, the count in \`test/preset-cards.test.ts\`, and its row in
+   \`docs/venues.md\` (checked by \`test/venues-doc.test.ts\`). Then
    \`npx prettier --write\` on what you wrote.
 8. **A portal's form fields** (\`"submission_fields"\`): record them only from a logged-in read of
    the form, never from memory or from another venue's preset. Each field gets the kind that matches

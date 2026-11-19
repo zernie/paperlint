@@ -7,7 +7,8 @@
  *   tex/required-section  error  each section the preset requires is there, titled exactly, and
  *                                where the preset says (`last`: after every section of the body)
  *   tex/venue-leftover    warn   the text a reader sees names ANOTHER shipped venue — its `name`
- *                                or one of its `aliases` — than the one the paper extends
+ *                                or one of its `aliases` — than the edition the paper extends: in
+ *                                prose beside a recent year, in a venue-identity command always
  *
  * and, in the `format` plugin (named for the requirement, not the input — paperlint#151):
  *
@@ -33,21 +34,33 @@ import {
   collapse,
   documentClassLine,
   missingOptions,
+  optionsInEffect,
+  readWhole,
   runText,
   spanIn,
+  usepackageLine,
   type ClassCandidate,
   type ClassLine,
   type DocumentClass,
   type Heading,
   type LayoutOverride,
   type Outline,
+  type PackageLoad,
   type Place,
+  type StylePackage,
   type Span,
   type TextRun,
 } from "./domain/tex-document.ts";
 import type { LatexReader } from "./ports/latex.ts";
-import { paperPreset, shippedVenueNames, type Preset } from "./presets.ts";
+import {
+  paperPreset,
+  shippedStyles,
+  shippedVenueNames,
+  type Preset,
+  type PresetTemplate,
+} from "./presets.ts";
 import type { NamedVenue } from "./domain/venue-name.ts";
+import { editionLabel } from "./domain/edition.ts";
 import type { PaperSource } from "./domain/paper-source.ts";
 import { readPaper, reportInPaper, type ProseDeps } from "./tex-paper.ts";
 import type { RequiredSection } from "./tex-requirements.ts";
@@ -117,7 +130,10 @@ interface Wanted {
 
 /**
  * A class line that names a class, against the template's: the same class, with every option, and
- * none of the options the preset forbids.
+ * none of the options the preset forbids. An option `\PassOptionsToClass` gave the class before the
+ * line counts as the line's, and a forbidden one is reported where it is passed. When an option is
+ * built by a macro, what it carries is not known: no option is said to be missing, and a forbidden
+ * option written out is still reported — it is in effect whatever the macro holds.
  */
 function judgeClass(
   line: Extract<ClassLine, { readonly kind: "class" }>,
@@ -127,15 +143,22 @@ function judgeClass(
   const at = spanOf(line.place);
   if (line.cls !== want.cls.cls)
     return [{ messageId: "wrongClass", data: { ...data, got: line.cls }, at }];
-  const forbidden = want.forbids.filter((o) => line.options.includes(o));
   const without = want.forbids.map((o) => `\`${o}\``).join(", ");
+  const forbidden = (options: readonly string[], where: Span | null) =>
+    want.forbids
+      .filter((o) => options.includes(o))
+      .map((option) => ({
+        messageId: "forbiddenOption",
+        data: { ...data, option, without },
+        at: where,
+      }));
+  const missing = readWhole(line)
+    ? missingOptions(optionsInEffect(line), want.cls)
+    : [];
   return [
-    ...forbidden.map((option) => ({
-      messageId: "forbiddenOption",
-      data: { ...data, option, without },
-      at,
-    })),
-    ...missingOptions(line, want.cls).map((option) => ({
+    ...line.passed.flatMap((p) => forbidden(p.options, spanOf(p.place))),
+    ...forbidden(line.options, at),
+    ...missing.map((option) => ({
       messageId: "missingOption",
       data: { ...data, option },
       at,
@@ -143,23 +166,33 @@ function judgeClass(
   ];
 }
 
-/** A candidate as the message names it: its line, or an empty `\documentclass{}`. */
+/**
+ * A candidate as the message names it: its line, or an empty `\documentclass{}` — the one other
+ * kind a message names, since an unread candidate may match and silences the switch.
+ */
 const candidateLine = (c: ClassCandidate): string =>
   c.kind === "class" ? documentClassLine(c) : "\\documentclass{}";
 
+/** Whether a candidate may be the template's line: a class line with no finding, or an unread one. */
+const mayMatch = (
+  c: ClassCandidate,
+  want: Wanted,
+  data: TemplateData,
+): boolean =>
+  c.kind === "unread" ||
+  (c.kind === "class" && judgeClass(c, want, data).length === 0);
+
 /**
  * Several class lines behind a TeX switch: satisfied when any candidate is the template's class
- * with its options; otherwise one finding, at the first candidate, naming every one.
+ * with its options, or may be (one built by a macro); otherwise one finding, at the first
+ * candidate, naming every one.
  */
 function judgeCandidates(
   candidates: readonly [ClassCandidate, ...ClassCandidate[]],
   want: Wanted,
   data: TemplateData,
 ): readonly Located[] {
-  const matches = candidates.some(
-    (c) => c.kind === "class" && judgeClass(c, want, data).length === 0,
-  );
-  if (matches) return [];
+  if (candidates.some((c) => mayMatch(c, want, data))) return [];
   const named = candidates.map((c) => `\`${candidateLine(c)}\``).join(", ");
   const found = { ...data, count: candidates.length, candidates: named };
   return [
@@ -176,6 +209,10 @@ function judgeClassLine(
   switch (line.kind) {
     case "missing":
       return [{ messageId: "noClass", data, at: null }];
+    // A class this reader cannot see or read is not judged: it may be the venue's.
+    case "unseen":
+    case "unread":
+      return [];
     case "empty":
       return [{ messageId: "emptyClass", data, at: spanOf(line.place) }];
     case "class":
@@ -193,7 +230,8 @@ function judgeClassLine(
 export function judgeTemplate(
   line: ClassLine,
   preset: Preset,
-  latex: Pick<LatexReader, "template">,
+  latex: Pick<LatexReader, "template" | "templateStyle">,
+  style: StyleInput = NO_STYLE_INPUT,
 ): readonly Located[] {
   const t = preset.template;
   if (t === null) return [];
@@ -203,7 +241,159 @@ export function judgeTemplate(
     return [{ messageId: "badTemplate", data, at: null }];
   }
   const data = { venue: preset.label, template: documentClassLine(want) };
-  return judgeClassLine(line, { cls: want, forbids: t.forbids }, data);
+  // The style is judged only over the template's class: another class (or one this reader cannot
+  // read) may load a style of its own, and its finding is the class's.
+  return [
+    ...judgeClassLine(line, { cls: want, forbids: t.forbids }, data),
+    ...(isClass(line, want.cls) ? judgeStyle(style, preset, latex) : []),
+  ];
+}
+
+/** Whether the class line is `cls` — behind a switch, whether one of its candidates is. */
+const isClass = (line: ClassLine, cls: string): boolean =>
+  line.kind === "ambiguous"
+    ? line.candidates.some((c) => c.kind === "class" && c.cls === cls)
+    : line.kind === "class" && line.cls === cls;
+
+/** What the style check reads: the packages the paper loads, and the styles of other shipped venues. */
+export interface StyleInput {
+  readonly packages: readonly PackageLoad[];
+  /** The package names of the `template_style` of every shipped venue off this paper's chain. */
+  readonly others: readonly string[];
+  /** The preamble may load a package the reader does not see (`LatexReader.packagesUnseen`). */
+  readonly unseen: boolean;
+}
+
+const NO_STYLE_INPUT: StyleInput = { packages: [], others: [], unseen: false };
+
+/**
+ * The same package name in another case (`NeurIPS_2026`): a case-insensitive file system loads the
+ * style under it and a case-sensitive one does not, so nothing is said either way.
+ */
+const sameNameOtherCase = (a: string, b: string): boolean =>
+  a !== b && a.toLowerCase() === b.toLowerCase();
+
+/**
+ * A style's series: its name without the edition and what follows it — `neurips_2026` → `neurips`,
+ * `iclr2027_conference` → `iclr`, `ijcai26` → `ijcai`. Two names of one series and two editions are
+ * another year's style.
+ */
+const seriesOf = (name: string): string =>
+  name.replace(/[-_]?\d{2,4}(?:[-_].*)?$/u, "");
+
+/**
+ * Another style than the template's, loaded in its place: one a shipped preset off this paper's chain
+ * names, or one of the same series and another edition. Any other package is the paper's own.
+ */
+const isOtherStyle = (
+  name: string,
+  want: string,
+  others: readonly string[],
+): boolean =>
+  name !== want &&
+  (others.includes(name) ||
+    (seriesOf(name) !== "" && seriesOf(name) === seriesOf(want)));
+
+/** Whether a load is the style with every option the template names, among the options LaTeX hands it. */
+const carries = (load: PackageLoad, want: StylePackage): boolean =>
+  load.name === want.name &&
+  want.options.every((o) => load.options.includes(o));
+
+/**
+ * Whether the paper is known to load the preset's style with its options: a load that carries them,
+ * read whole. True when the preset names no style; false for a style line the reader cannot read.
+ * Silence from `judgeStyle` is not enough: it is also silent when a macro may carry an option.
+ */
+export function isStyleLoaded(
+  packages: readonly PackageLoad[],
+  preset: Preset,
+  latex: Pick<LatexReader, "templateStyle">,
+): boolean {
+  if (preset.templateStyle === null) return true;
+  const want = latex.templateStyle(preset.templateStyle.text);
+  return want !== null && packages.some((p) => carries(p, want));
+}
+
+/**
+ * The lines that load the template's style, none carrying every option it names (the caller
+ * checked): each option the first line lacks, at that line.
+ */
+function judgeLoaded(
+  first: PackageLoad,
+  loads: readonly PackageLoad[],
+  want: StylePackage,
+  data: { readonly venue: string; readonly style: string },
+): readonly Located[] {
+  // An option built by a macro may be the one wanted: what it holds is not known, so nothing is said.
+  if (loads.some((l) => l.unread.length > 0)) return [];
+  return want.options
+    .filter((o) => !first.options.includes(o))
+    .map((option) => ({
+      messageId: "missingStyleOption",
+      data: { ...data, option },
+      at: spanOf(first.place),
+    }));
+}
+
+/**
+ * The paper's packages against the preset's `template_style`: loaded with every option it names (by
+ * any of the lines, as several class lines behind a switch); loaded without one; another venue's or
+ * another year's style loaded instead; or not loaded at all.
+ */
+export function judgeStyle(
+  { packages, others, unseen }: StyleInput,
+  preset: Preset,
+  latex: Pick<LatexReader, "templateStyle">,
+): readonly Located[] {
+  const s = preset.templateStyle;
+  if (s === null) return [];
+  const want = latex.templateStyle(s.text);
+  if (want === null) {
+    const data = { file: s.file, text: JSON.stringify(s.text) };
+    return [{ messageId: "badStyle", data, at: null }];
+  }
+  const data = { venue: preset.label, style: usepackageLine(want) };
+  const loads = packages.filter((p) => p.name === want.name);
+  if (loads.some((l) => carries(l, want))) return [];
+  // What the reader cannot see may load the style or pass its options: an error never fires on that.
+  if (unseen || packages.some((p) => sameNameOtherCase(p.name, want.name)))
+    return [];
+  const [first] = loads;
+  if (first !== undefined) return judgeLoaded(first, loads, want, data);
+  const instead = packages.find((p) => isOtherStyle(p.name, want.name, others));
+  return instead === undefined
+    ? [{ messageId: "missingStyle", data, at: null }]
+    : [
+        {
+          messageId: "wrongStyle",
+          data: { ...data, got: instead.name },
+          at: spanOf(instead.place),
+        },
+      ];
+}
+
+/**
+ * Whether the paper's class line is known to be the template's: read whole — no class or option
+ * built by a macro, no class unseen — and judged without a finding; behind a switch, one candidate
+ * so. Silence from `judgeTemplate` is not enough: it is also silent on a line it cannot read.
+ */
+export function isTemplate(
+  line: ClassLine,
+  t: PresetTemplate,
+  venue: string,
+  latex: Pick<LatexReader, "template">,
+): boolean {
+  const want = latex.template(t.text);
+  if (want === null) return false;
+  const wanted = { cls: want, forbids: t.forbids };
+  const data = { venue, template: documentClassLine(want) };
+  const proved = (c: ClassLine): boolean =>
+    c.kind === "class" &&
+    readWhole(c) &&
+    judgeClass(c, wanted, data).length === 0;
+  return line.kind === "ambiguous"
+    ? line.candidates.some(proved)
+    : proved(line);
 }
 
 /** Where a heading starts, or null when the parser gave it no place. */
@@ -269,50 +459,138 @@ export function judgeRequiredSections(
 }
 
 /**
- * Another shipped venue: the word for it, what it is called in a paper's text, and when a name
- * counts as naming it (`mentions`).
+ * Another shipped venue as the text names it: the word for it (its `name`), every name it goes by,
+ * and its edition's year (from its id).
  */
-export type OtherVenue = NamedVenue & Pick<Preset, "mentions">;
+export type OtherVenue = NamedVenue & Pick<Preset, "year" | "declaredAliases">;
 
 /**
- * What must follow a name for it to name a `with-year` venue: a year beside it — `2027`, `'27` or
- * `’27`, after spaces or none (`~` renders as a space). A lookahead, so the finding is the name.
+ * A year beside a name, right after it: `2027`, `'27` or `’27`, after spaces or none (`~` renders
+ * as a no-break space). Anchored: it is tried on the text after the name.
  */
-const YEAR_BESIDE = "(?=[\\s\\u00a0]*(?:\\d{4}|['’]\\d{2})(?![\\p{L}\\p{N}]))";
+const YEAR_AFTER = /^[\s\u00a0]*(?:(\d{4})|['’](\d{2}))(?![\p{L}\p{N}])/u;
+
+/** The year written right after offset `end` of `text`, or null. `'27` is 2027. Pure. */
+function yearAfter(text: string, end: number): number | null {
+  const m = YEAR_AFTER.exec(text.slice(end));
+  if (m === null) return null;
+  return m[1] !== undefined
+    ? Number.parseInt(m[1], 10)
+    : 2000 + Number.parseInt(String(m[2]), 10);
+}
 
 /** `s` as a pattern that matches it literally. */
 const literal = (s: string): string =>
   s.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
 
+/** One name a match is judged by: whether it is the paper's own, and the venue it shows as. */
+interface NameToJudge {
+  readonly name: string;
+  readonly own: boolean;
+  readonly shows: string;
+}
+
 /**
- * Each place the rendered text names another venue — one of its aliases as a whole word, case
- * and all — unless that alias is also this paper's venue's own, or its parent conference's
- * (`parentNames`: an AgenticDev paper may say «ASE 2026»).
+ * Every name to look for, once each: every other shipped venue's, shown as that venue's `name`, and
+ * the paper's own and its parent's, which count only in another edition. Pure.
+ */
+function namesToJudge(
+  preset: Pick<Preset, "label" | "aliases" | "parentNames">,
+  others: readonly OtherVenue[],
+): readonly NameToJudge[] {
+  const own = new Set([...preset.aliases, ...preset.parentNames]);
+  const shownBy = (name: string): string =>
+    others.find((o) => o.aliases.includes(name))?.label ??
+    (preset.aliases.includes(name) ? preset.label : name);
+  const all = [...new Set([...others.flatMap((o) => o.aliases), ...own])];
+  return all.map((name) => ({
+    name,
+    own: own.has(name),
+    shows: shownBy(name),
+  }));
+}
+
+/**
+ * Whether a name at a place, with `year` beside it (null: none), names another venue than the
+ * paper's edition (of year `paperYear`). Inside a venue-identity command (`inLine`) any other
+ * venue's name counts; in prose only beside a year no older than the paper's year minus one, so
+ * related work («ICSE 2019») and a bare acronym are not leftovers. The paper's own names, and its
+ * parent's, count only beside another year: another edition of its own series. Pure.
+ */
+export function namesAnotherEdition(
+  n: { readonly own: boolean; readonly inLine: boolean },
+  year: number | null,
+  paperYear: number | null,
+): boolean {
+  const recent = paperYear === null || (year !== null && year >= paperYear - 1);
+  if (n.own)
+    return (
+      year !== null &&
+      paperYear !== null &&
+      year !== paperYear &&
+      (n.inLine || recent)
+    );
+  return n.inLine || (year !== null && recent);
+}
+
+/** A name to look for, with the pattern that finds it as a whole word. */
+type NameMatcher = NameToJudge & { readonly re: RegExp };
+
+/**
+ * The findings of one name in one run: each whole-word match judged with the year beside it and
+ * whether it stands in a venue-stating command (`inLine`). Pure.
+ */
+function matchesIn(
+  run: TextRun,
+  n: NameMatcher,
+  paper: {
+    readonly inLine: (at: Span | null) => boolean;
+    readonly year: number | null;
+    readonly venue: string;
+  },
+): readonly Located[] {
+  const { inLine, venue } = paper;
+  const text = runText(run);
+  return [...text.matchAll(n.re)].flatMap((m) => {
+    const at = spanIn(run, m.index, m.index + m[0].length);
+    const year = yearAfter(text, m.index + m[0].length);
+    const judged = { own: n.own, inLine: inLine(at) };
+    if (!namesAnotherEdition(judged, year, paper.year)) return [];
+    const other = editionLabel(n.shows, year);
+    return [{ messageId: "leftover", data: { name: m[0], other, venue }, at }];
+  });
+}
+
+/**
+ * Each place the rendered text names another venue than the paper's edition — a name as a whole
+ * word, case and all, judged with the year beside it (`namesAnotherEdition`). `lines` are the spans
+ * of the commands that state the paper's venue (`\acmConference` …).
  */
 export function judgeLeftover(
   runs: readonly TextRun[],
+  lines: readonly Place[],
   preset: Preset,
   others: readonly OtherVenue[],
 ): readonly Located[] {
-  const own = new Set([...preset.aliases, ...preset.parentNames]);
-  const names = others.flatMap((o) =>
-    o.aliases
-      .filter((a) => !own.has(a))
-      .map((alias) => ({
-        other: o.label,
-        re: new RegExp(
-          `(?<![\\p{L}\\p{N}])${literal(alias)}(?![\\p{L}\\p{N}])${o.mentions === "with-year" ? YEAR_BESIDE : ""}`,
-          "gu",
-        ),
-      })),
+  const venue = editionLabel(preset.label, preset.year);
+  const inLine = (at: Span | null): boolean =>
+    at !== null &&
+    lines.some(
+      (l) =>
+        l.kind === "at" && l.span.start <= at.start && at.start < l.span.end,
+    );
+  const names: readonly NameMatcher[] = namesToJudge(preset, others).map(
+    (n) => ({
+      ...n,
+      re: new RegExp(
+        `(?<![\\p{L}\\p{N}])${literal(n.name)}(?![\\p{L}\\p{N}])`,
+        "gu",
+      ),
+    }),
   );
   return runs.flatMap((run) =>
-    names.flatMap(({ other, re }) =>
-      [...runText(run).matchAll(re)].map((m) => ({
-        messageId: "leftover",
-        data: { name: m[0], other, venue: preset.label },
-        at: spanIn(run, m.index, m.index + m[0].length),
-      })),
+    names.flatMap((n) =>
+      matchesIn(run, n, { inLine, year: preset.year, venue }),
     ),
   );
 }
@@ -343,6 +621,8 @@ interface Reading {
   readonly latex: LatexReader;
   readonly preset: Preset;
   readonly others: () => readonly OtherVenue[];
+  /** The package names of the styles other shipped venues' templates load. */
+  readonly styles: () => readonly string[];
 }
 type Judge = (r: Reading) => readonly Located[];
 
@@ -374,7 +654,11 @@ const RULES: Readonly<
 > = {
   template: {
     judge: (r) =>
-      judgeTemplate(r.latex.documentClass(r.src), r.preset, r.latex),
+      judgeTemplate(r.latex.documentClass(r.src), r.preset, r.latex, {
+        packages: r.latex.packages(r.src),
+        others: r.styles(),
+        unseen: r.latex.packagesUnseen(r.src),
+      }),
     meta: {
       type: "problem",
       docs: {
@@ -396,6 +680,14 @@ const RULES: Readonly<
           "the class option `{{option}}` is missing: {{venue}} requires `{{template}}`",
         forbiddenOption:
           "the class option `{{option}}` is forbidden: {{venue}} requires `{{template}}` without {{without}}",
+        badStyle:
+          '{{file}}: the preset\'s "template_style" {{text}} is not one \\usepackage line naming one package, so the style cannot be checked',
+        missingStyle:
+          "{{venue}} requires `{{style}}`; paper.tex loads no such package — the page, the fonts and the margins the venue checks come from it",
+        wrongStyle:
+          "paper.tex loads `{{got}}`, another venue's or another year's style; {{venue}} requires `{{style}}`",
+        missingStyleOption:
+          "the style option `{{option}}` is missing: {{venue}} requires `{{style}}`",
         noCandidate:
           "none of the {{count}} \\documentclass lines is `{{template}}`, which {{venue}} requires: {{candidates}}. The source picks one behind a TeX switch, which is not evaluated; make one of them the venue's",
       },
@@ -437,7 +729,12 @@ const RULES: Readonly<
   },
   "venue-leftover": {
     judge: (r) =>
-      judgeLeftover(r.latex.renderedRuns(r.src), r.preset, r.others()),
+      judgeLeftover(
+        r.latex.renderedRuns(r.src),
+        r.latex.venueLines(r.src),
+        r.preset,
+        r.others(),
+      ),
     meta: {
       type: "suggestion",
       docs: {
@@ -481,7 +778,28 @@ export function otherVenues(
 ): readonly OtherVenue[] {
   return shippedVenueNames(deps)
     .filter((v) => !v.chain.every((f) => preset.chain.includes(f)))
-    .map(({ label, aliases, mentions }) => ({ label, aliases, mentions }));
+    .map(({ label, aliases, year, declaredAliases }) => ({
+      label,
+      aliases,
+      year,
+      declaredAliases,
+    }));
+}
+
+/**
+ * The package names of the styles every shipped venue off this paper's chain loads into its class:
+ * what `tex/template` reports when a paper loads one instead of its own venue's.
+ */
+export function otherStyles(
+  preset: Pick<Preset, "chain">,
+  deps: TexVenueRuleDeps,
+): readonly string[] {
+  return shippedStyles(deps)
+    .filter((s) => !s.chain.every((f) => preset.chain.includes(f)))
+    .flatMap((s) => {
+      const parsed = deps.latex.templateStyle(s.text);
+      return parsed === null ? [] : [parsed.name];
+    });
 }
 
 /** What the venue-conformance rules are built with: the preset store, the LaTeX reader, and the paper's files as the build recorded them. */
@@ -506,9 +824,10 @@ function readingOf(
     return null;
   const preset = p.preset;
   const others = () => otherVenues(preset, deps);
+  const styles = () => otherStyles(preset, deps);
   const paper = readPaper(filename, src, deps);
   return {
-    reading: { src: paper.text, latex: deps.latex, preset, others },
+    reading: { src: paper.text, latex: deps.latex, preset, others, styles },
     paper,
   };
 }
@@ -563,25 +882,16 @@ export function judgePortDone(
   r: Pick<Reading, "src" | "latex" | "preset">,
   cycleId: string,
 ): readonly Located[] {
-  if (r.preset.template === null) return [];
-  const mismatch = judgeTemplate(
-    r.latex.documentClass(r.src),
-    r.preset,
-    r.latex,
-  );
-  return mismatch.length > 0
-    ? []
-    : [
-        {
-          messageId: "done",
-          data: {
-            venue: r.preset.label,
-            template: r.preset.template.text,
-            id: cycleId,
-          },
-          at: null,
-        },
-      ];
+  const t = r.preset.template;
+  if (t === null) return [];
+  const line = r.latex.documentClass(r.src);
+  // Only a class line read whole and found to be the venue's ends the port: one built by a macro
+  // gets no finding from tex/template, and is not the venue's for that. And the style with it: a
+  // port from one article-based style to another is not done while the class line already matches.
+  if (!isTemplate(line, t, r.preset.label, r.latex)) return [];
+  if (!isStyleLoaded(r.latex.packages(r.src), r.preset, r.latex)) return [];
+  const data = { venue: r.preset.label, template: t.text, id: cycleId };
+  return [{ messageId: "done", data, at: null }];
 }
 
 const PORT_DONE_META: TexRuleModule["meta"] = {

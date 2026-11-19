@@ -1,0 +1,111 @@
+// ICML 2027 (the Forty-fourth International Conference on Machine Learning, Rio de Janeiro, 31 July
+// - 6 August 2027), main track — a VENUE preset over the ICML style family. Everything the style
+// file decides (page size, columns, fonts, font sizes, TeX packages) comes from icml-style.jsonc;
+// this file adds what the 2027 call sets. Position papers have a call of their own, not published
+// on 2026-11-19, and are not in this preset. Its card, in prose: `icml-2027.md` beside this file.
+//
+// Verbatim from https://icml.cc/Conferences/2027/CallForPapers (read 2026-11-19; the page's own
+// changelog: «Nov. 13th: initial version», «Nov. 17h: clarification added»):
+//   «All papers will be reviewed in a double-blind process»
+//   «Papers must be prepared and submitted as a single file: 8 pages for the main paper, with
+//    unlimited pages for references, the impact statement, and appendices.»
+//   «The final versions of accepted papers will be allowed one extra page for the main paper.»
+//   «Note: ICML is planning to make some updates to the submission process (but not the submission
+//    format). We will announce them by late November, please stay tuned.»
+//   «All submissions must include an AI Disclosure Statement. The statement does not count toward
+//    the paper page limit.»
+//   «Authors are required to include a statement of the potential broader impact of their work […]
+//    This statement should be in a separate section at the end of the paper (co-located with
+//    Acknowledgements, before References), and does not count toward the paper page limit.»
+//   «Abstract submission deadline: January 14, 2027 11:59 PM AOE», «Full paper submission
+//    deadline: January 22, 2027 11:59 PM AOE»
+// Verbatim from https://icml.cc/Conferences/2027/AuthorInstructions (read 2026-11-19):
+//   «Submitted papers are composed of a main body, which can be up to eight pages long, followed by
+//    any number of pages for references and appendices, all in a single PDF file.»
+//   «All submissions must be anonymized and follow the required format; otherwise, they will
+//    automatically be rejected. In particular, any submission whose main body goes over the 8 page
+//    limit will be automatically rejected.»
+//   «In the camera-ready version, you have an extra page […] the length limit of the paper body is 9
+//    pages, followed by any acknowledgements, the impact statement (for main track papers),
+//    references, and appendices.»
+{
+  "type": "venue",
+  // The venue's name without the edition: the edition is in the file's name, the comments and the
+  // deadlines.
+  "name": "ICML",
+  // The call quoted above.
+  "url": "https://icml.cc/Conferences/2027/CallForPapers",
+  "extends": "paperlint:icml-style",
+
+  // «All papers will be reviewed in a double-blind process» (the call). anonymity/identity then
+  // requires the paper's `identity`. The style hides \icmlauthor without [accepted] or [preprint];
+  // with either, the names are in the PDF and in its Author field (measured: two findings).
+  "blind": true,
+
+  // What the venue is called in a paper's text (tex/venue-leftover): machine-learning papers name
+  // ICML as the venue of the work they cite. Measured 2026-11-19 on 7 NeurIPS 2025 papers' arXiv
+  // sources: one writes «ELLM(ICML23)» in its prose. On 6 ICML 2025 papers' sources the only «ICML»
+  // outside the bibliography is the kit's `\icmlkeywords{Machine Learning, ICML}`. The rule counts
+  // the name in prose only beside a year no older than the paper's own edition's year minus one.
+
+  // No `portal`: submissions go through OpenReview («Abstracts and papers can be submitted through
+  // OpenReview: https://openreview.net/group?id=ICML.cc/2027/Conference»), and `paperlint
+  // submission` has an adapter for HotCRP only.
+  //
+  // The call's readings only. OpenReview's venue group exists (created 2026-10-19), but its
+  // Submission invitation, which would carry the portal's dates, does not («The Invitation
+  // ICML.cc/2027/Conference/-/Submission was not found», 2026-11-19): the site opens «January 8,
+  // 2027». The end of an AoE day is 11:59:59Z of the next, and the call's own countdown script says
+  // the same instants: «2027/01/15 11:59:59 UTC», «2027/01/23 11:59:59 UTC». The abstract deadline
+  // is a registration: «The author list cannot be changed after the abstract deadline». The
+  // notification (first-stage rejections by 23 February 2027, final decisions 3 May 2027) has a day
+  // and no time: in the card.
+  "deadlines": [
+    {
+      "what": "registration",
+      "at": "2027-01-15T11:59:59Z",
+      "source": "call",
+      "url": "https://icml.cc/Conferences/2027/CallForPapers",
+      "read": "2026-11-19",
+    },
+    {
+      "what": "submission",
+      "at": "2027-01-23T11:59:59Z",
+      "source": "call",
+      "url": "https://icml.cc/Conferences/2027/CallForPapers",
+      "read": "2026-11-19",
+    },
+  ],
+
+  // The impact statement: «required», «in a separate section at the end of the paper» (the call).
+  // The kit's example titles it `\section*{Impact Statement}`, and so did 6 of 7 ICML 2025 papers
+  // sampled from their arXiv sources (2026-11-19). No `position`: the kit lets it stand before or
+  // after the Acknowledgements («the two may appear in either order, but both must be before
+  // References»), and `last` would report an Acknowledgements section after it.
+  // 🔴 Not the AI Disclosure Statement, though the call requires it: its title is not fixed — the
+  // call says «AI Disclosure Statement», the kit's example `\section*{AI Use Statement}`, and the
+  // policy's examples a run-in «AI Disclosure Statement.» — and it may stand «before or after the
+  // references» (https://icml.cc/Conferences/2027/UseOfGenerativeAIByAuthors). One exact section
+  // title would report correct papers. The card says so.
+  "required_sections": [{ "title": "Impact Statement" }],
+
+  "format": {
+    // «8 pages for the main paper, with unlimited pages for references, the impact statement, and
+    // appendices.» Counted by banal: measured 2026-11-19 on the kit's example with filler text —
+    // the body to page 8 and the Impact Statement on page 9: 8; the Impact Statement alone filling
+    // page 9, the references on 10: 8; a 3-page two-column appendix: 8; the body onto page 9: 9;
+    // onto page 11: 11. banal types the impact statement's page and the appendix pages as
+    // references here.
+    // 🔴 NOT `body_ends_at`: it looks for a line reading «Appendix» on hyperref's appendix page, and
+    // ICML's appendix headings read «A. You can have an appendix here.», so format/page-limit could
+    // not tell where the body ends on every one of those builds with an appendix (one error each,
+    // measured). It would also count the statements before the references as body.
+    "kinds": {
+      // The anonymous submission to the main track.
+      "main": { "body_pages_max": 8, "ref_pages_max": "unlimited" },
+      // «one extra page for the main paper». The same paper after acceptance: its paperlint.json
+      // switches `kind`, and its cycle's `accepted` turns the blind check off.
+      "camera-ready": { "body_pages_max": 9, "ref_pages_max": "unlimited" },
+    },
+  },
+}

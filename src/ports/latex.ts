@@ -11,7 +11,10 @@ import type {
   Emphasis,
   LayoutOverride,
   Outline,
+  PackageLoad,
+  StylePackage,
   Passage,
+  Place,
   Span,
   TextRun,
   TitledHeading,
@@ -59,6 +62,11 @@ export interface LatexReader {
   /** The text a reader sees: prose, the author block, footnotes — not comments, keys, math, code. */
   readonly renderedRuns: (src: string) => readonly TextRun[];
   /**
+   * Where the source states its venue: each `\\acmConference`, `\\acmBooktitle`, `\\conferenceinfo`
+   * and `\\IEEEpubid` with its arguments, in source order — never one in a comment.
+   */
+  readonly venueLines: (src: string) => readonly Place[];
+  /**
    * The body's prose, as passages a sentence cannot cross: from the start of the document (the
    * abstract included) to the appendix or the bibliography, without headings, captions, floats,
    * code or the title block. Citations, links and cross-references stay in place as marks.
@@ -83,6 +91,18 @@ export interface LatexReader {
    * class name (no option). Null for anything else.
    */
   readonly template: (text: string) => DocumentClass | null;
+  /** Every package the preamble's `\usepackage` and `\RequirePackage` lines load, in source order. */
+  readonly packages: (src: string) => readonly PackageLoad[];
+  /**
+   * Whether the preamble may load a package `packages` does not see: an unread `\input`, a package
+   * line inside a macro, or one whose name a macro builds.
+   */
+  readonly packagesUnseen: (src: string) => boolean;
+  /**
+   * A preset's `template_style` → the package it names and the options it requires: one whole
+   * `\usepackage[…]{…}` line naming one package. Null for anything else.
+   */
+  readonly templateStyle: (text: string) => StylePackage | null;
   /**
    * `src` with its `\documentclass` set to `want` — unless it already is `want`'s class with every
    * option `want` names (the author's own options stay), or it has none.

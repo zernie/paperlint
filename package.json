@@ -128,6 +128,8 @@
     "!fixtures/arxiv-papers",
     "!fixtures/arxiv-manifest.json",
     "!fixtures/arxiv-fetch.ts",
+    "!fixtures/venue-papers",
+    "!fixtures/venue-manifest.json",
     "hooks",
     "lib",
     "presets",

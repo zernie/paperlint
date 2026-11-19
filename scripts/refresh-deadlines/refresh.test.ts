@@ -23,8 +23,8 @@ import {
 // The logic is tested over presets FROZEN at the portal's reading of 2026-10-19 (test/frozen-presets.ts):
 // the shipped files' dates are the refresh's own output, and a test of the refresh that read them
 // would turn red on the refresh's own pull request.
-const MSR = join(FROZEN_DIR, "msr.jsonc");
-const msrText = frozenText("msr.jsonc");
+const MSR = join(FROZEN_DIR, "msr-2027.jsonc");
+const msrText = frozenText("msr-2027.jsonc");
 const readings = (text: string) => parsePreset(text, MSR).deadlines ?? [];
 /** MSR with its submission deadline two days before the portal's. */
 const earlier = msrText.replace(
@@ -45,7 +45,7 @@ function inMemory(files: Readonly<Record<string, string>>) {
   return { presets, written };
 }
 
-/** What MSR 2027's portal lists — the readings the frozen msr.jsonc holds. */
+/** What MSR 2027's portal lists — the readings the frozen msr-2027.jsonc holds. */
 const MSR_PAGE: PortalDeadlines = {
   now: 1792434476,
   open: true,
@@ -63,7 +63,7 @@ const MSR_PAGE: PortalDeadlines = {
     },
   ],
 };
-/** What AIDC 2026's portal lists — the readings presets/aidc.jsonc holds. */
+/** What AIDC 2026's portal lists — the readings presets/aidc-2026.jsonc holds. */
 const AIDC_PAGE: PortalDeadlines = {
   now: 1791194489,
   open: true,
@@ -165,12 +165,12 @@ describe("refreshPreset on MSR 2027's page", () => {
 
 describe("refreshPreset — what it skips, and a portal it cannot read", () => {
   test("a preset without a portal, or with one paperlint has no adapter for, is skipped", async () => {
-    const aisec = join(FROZEN_DIR, "aisec.jsonc");
+    const aisec = join(FROZEN_DIR, "aisec-2026.jsonc");
     const skipped = { kind: "skipped" };
     expect(
       await refreshPreset({
         file: aisec,
-        text: frozenText("aisec.jsonc"),
+        text: frozenText("aisec-2026.jsonc"),
         portal: answering(ok(MSR_PAGE)),
         today: "2026-10-05",
       }),
@@ -266,7 +266,7 @@ describe("runRefresh — what it prints, writes and returns", () => {
 
 describe("runRefresh — a changed preset", () => {
   test("a changed preset is written back, and the summary names it", async () => {
-    const { presets, written } = inMemory({ "msr.jsonc": earlier });
+    const { presets, written } = inMemory({ "msr-2027.jsonc": earlier });
     const lines: string[] = [];
     const summaries: string[] = [];
     const code = await runRefresh({
@@ -277,12 +277,12 @@ describe("runRefresh — a changed preset", () => {
       summary: (text) => summaries.push(text),
     });
     expect(code).toBe(0);
-    expect(readings(written["msr.jsonc"] ?? "")[0]?.at).toBe(
+    expect(readings(written["msr-2027.jsonc"] ?? "")[0]?.at).toBe(
       "2026-10-21T11:59:59Z",
     );
     expect(lines.at(-1)).toBe("1 preset(s) changed");
     expect(summaries[0]).toMatch(
-      /^- `msr\.jsonc` \(https:\/\/msr2027\.hotcrp\.com\/deadlines\)\n {2}- submission: 2026-10-19T04:00:00Z → 2026-10-21T11:59:59Z$/m,
+      /^- `msr-2027\.jsonc` \(https:\/\/msr2027\.hotcrp\.com\/deadlines\)\n {2}- submission: 2026-10-19T04:00:00Z → 2026-10-21T11:59:59Z$/m,
     );
   });
 });

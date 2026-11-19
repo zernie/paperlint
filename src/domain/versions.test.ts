@@ -33,7 +33,7 @@ function cycles(...raw: readonly object[]): readonly Cycle[] {
 }
 const ALPHA = {
   id: "alpha-2026",
-  venue: { kind: "preset", extends: "paperlint:aisec" },
+  venue: { kind: "preset", extends: "paperlint:aisec-2026" },
   opened: "2026-06-01",
   submission: { id: 3 },
   outcome: {
@@ -457,7 +457,7 @@ describe("each version's state", () => {
       },
       {
         id: "gamma-2027",
-        venue: { kind: "preset", extends: "paperlint:msr" },
+        venue: { kind: "preset", extends: "paperlint:msr-2027" },
         opened: "2026-10-01",
       },
     );

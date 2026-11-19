@@ -1,0 +1,19 @@
+// IEEE ACSAC 2026 (the Annual Computer Security Applications Conference) — a MINIMAL venue preset:
+// the conference AIDC 2026 is held at, so the workshop can name it as its `parent`. It carries the
+// edition's names and its template family, and no page limit. Its card: `acsac-2026.md`.
+//
+// Verbatim from https://www.acsac.org/2026/submissions/papers/ (fetched 2026-11-19): «IEEE ACSAC
+// 2026 December 7-11, 2026 • Los Angeles, California, USA», «Submissions must be generated using
+// the double-column IEEE format», «LaTeX submissions must use the IEEEtran.cls version 1.8b
+// template with the \documentclass[conference,compsoc]{IEEEtran} documentclass option.»
+{
+  "type": "venue",
+  "name": "ACSAC",
+  // The call quoted above.
+  "url": "https://www.acsac.org/2026/submissions/papers/",
+  "extends": "paperlint:ieee-conference",
+
+  // What the conference is called in a paper's text (tex/venue-leftover). It stood in
+  // aidc-2026.jsonc's aliases until AIDC named this preset as its `parent`.
+  "aliases": ["ACSAC"],
+}

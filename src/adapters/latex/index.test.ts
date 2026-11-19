@@ -25,7 +25,10 @@ import {
   optional,
   outlineOf,
   parseLatex,
+  packagesOf,
+  packagesUnseen,
   parseTemplate,
+  parseTemplateStyle,
   placeOf,
   renderedRuns,
   replaceDocumentClass,
@@ -41,6 +44,8 @@ describe("documentClassOf — the class line's three states", () => {
       kind: "class",
       cls: "IEEEtran",
       options: ["conference", "compsoc"],
+      unread: [],
+      passed: [],
       place: {
         kind: "at",
         span: { start: 4, end: src.indexOf("}") + 1 },
@@ -74,6 +79,81 @@ describe("documentClassOf — the class line's three states", () => {
   it("a group in the class name and a paragraph break are read as text", () => {
     const line = documentClassOf(parseLatex("\\documentclass{{IEEE}\n\ntran}"));
     expect(line.kind === "class" && line.cls).toBe("IEEE tran");
+  });
+});
+
+describe("documentClassOf — options passed before the line, and what a macro builds", () => {
+  it("🔴 `\\PassOptionsToClass` before the line, for its class: each option as written, with its place", () => {
+    const src =
+      "\\PassOptionsToClass{compsoc}{IEEEtran}\n\\PassOptionsToClass{x}{article}\n\\documentclass[conference]{IEEEtran}\n\\PassOptionsToClass{late}{IEEEtran}";
+    expect(documentClassOf(parseLatex(src))).toEqual({
+      kind: "class",
+      cls: "IEEEtran",
+      options: ["conference"],
+      unread: [],
+      passed: [
+        {
+          options: ["compsoc"],
+          unread: [],
+          place: { kind: "at", span: { start: 0, end: 38 } },
+        },
+      ],
+      place: {
+        kind: "at",
+        span: {
+          start: src.indexOf("\\documentclass"),
+          end: src.indexOf("}\n\\PassOptionsToClass{late}") + 1,
+        },
+      },
+    });
+  });
+
+  it("an option built by a macro is unread, in the line and in a passed list; braces do not hide one", () => {
+    const src =
+      "\\PassOptionsToClass{\\more}{IEEEtran}\\documentclass[\\opts, a, b={\\c}]{IEEEtran}";
+    const line = documentClassOf(parseLatex(src));
+    expect(
+      line.kind === "class" && [
+        line.options,
+        line.unread,
+        line.passed.map((p) => p.unread),
+      ],
+    ).toEqual([
+      ["\\opts", "a", "b={\\c}"],
+      ["\\opts", "b={\\c}"],
+      [["\\more"]],
+    ]);
+  });
+});
+
+describe("documentClassOf — a line with a part missing, a class from a macro, a class out of reach", () => {
+  it("a \\PassOptionsToClass missing an argument passes nothing; a \\documentclass with no name is empty", () => {
+    const line = (src: string) => documentClassOf(parseLatex(src));
+    // At the end of the file: before a line, the parser would take the line as its argument.
+    for (const pass of ["\\PassOptionsToClass", "\\PassOptionsToClass{a}"]) {
+      const l = line(`\\documentclass{IEEEtran}\n${pass}`);
+      expect(l.kind === "class" && l.passed).toEqual([]);
+    }
+    expect(line("\\documentclass[a]").kind).toBe("empty");
+  });
+
+  it("🔴 a class name built by a macro is unread, not empty", () => {
+    expect(documentClassOf(parseLatex("\\documentclass[a]{\\cls}")).kind).toBe(
+      "unread",
+    );
+  });
+
+  it("🔴 unseen: no class line at the top, and one inside another macro, or an \\input in the preamble", () => {
+    const kind = (src: string) => documentClassOf(parseLatex(src)).kind;
+    expect(kind("{\\documentclass{article}}")).toBe("unseen");
+    expect(kind("\\input{preamble}\n\\begin{document}\\end{document}")).toBe(
+      "unseen",
+    );
+    expect(kind("\\input{preamble}")).toBe("unseen");
+    // The other half: an \input in the body does not stand where a class line goes.
+    expect(kind("\\begin{document}\\input{intro}\\end{document}")).toBe(
+      "missing",
+    );
   });
 });
 
@@ -152,6 +232,173 @@ describe("parseTemplate — a preset's template", () => {
   });
 });
 
+describe("parseTemplateStyle — a preset's template_style", () => {
+  it.each<[string, { name: string; options: string[] } | null]>([
+    ["\\usepackage{neurips_2026}", { name: "neurips_2026", options: [] }],
+    [
+      "% c\n\\usepackage[ main , final ]{neurips_2026}\n",
+      { name: "neurips_2026", options: ["main", "final"] },
+    ],
+    ["\\RequirePackage{icml2027}", { name: "icml2027", options: [] }],
+    ["\\usepackage{a,b}", null],
+    ["\\usepackage{}", null],
+    ["\\usepackage{a} \\usepackage{b}", null],
+    ["\\documentclass{article}", null],
+    ["neurips_2026", null],
+    ["", null],
+  ])("%j → %j", (text, want) => {
+    expect(parseTemplateStyle(text)).toEqual(want);
+  });
+});
+
+describe("packagesOf — options passed to a package before it is loaded (`\\PassOptionsToPackage`)", () => {
+  const optionsOf = (src: string) =>
+    packagesOf(parseLatex(src)).map((p) => [p.name, p.options]);
+
+  it("🔴 options passed before the load are in effect, to each package of a comma list", () => {
+    expect(
+      optionsOf(
+        "\\documentclass{article}\n\\PassOptionsToPackage{submission, x}{other, aaai2027}\n\\usepackage[y]{aaai2027}\n\\usepackage{other}\n",
+      ),
+    ).toEqual([
+      ["aaai2027", ["submission", "x", "y"]],
+      ["other", ["submission", "x"]],
+    ]);
+  });
+
+  it("options passed after the load, or to another package, are not", () => {
+    expect(
+      optionsOf(
+        "\\documentclass{article}\n\\PassOptionsToPackage{a}{other}\n\\usepackage{aaai2027}\n\\PassOptionsToPackage{submission}{aaai2027}\n\\PassOptionsToPackage{b}\n",
+      ),
+    ).toEqual([["aaai2027", []]]);
+  });
+});
+
+describe("packagesOf — only what TeX reads: nothing after \\end{document}", () => {
+  const doc =
+    "\\documentclass{article}\n\\usepackage{a}\n\\begin{document}\nx\n\\end{document}\n";
+
+  it("🔴 a load and a \\PassOptionsToPackage parked after it are not read", () => {
+    const src = `${doc}\\PassOptionsToPackage{o}{a}\n\\usepackage[p]{b}\n`;
+    expect(packagesOf(parseLatex(src)).map((p) => [p.name, p.options])).toEqual(
+      [["a", []]],
+    );
+  });
+
+  it("🔴 a load inside a macro after it hides nothing; one in the preamble's macro still does", () => {
+    const after = "\\newcommand{\\x}{\\usepackage{c}}\n";
+    expect(packagesUnseen(parseLatex(`${doc}${after}`))).toBe(false);
+    expect(packagesUnseen(parseLatex(`${after}${doc}`))).toBe(true);
+  });
+});
+
+describe("packagesOf — the options LaTeX hands a package: global, passed, its own (latex.ltx)", () => {
+  const loads = (src: string) =>
+    packagesOf(parseLatex(src)).map((p) => [p.name, p.options, p.unread]);
+
+  it("🔴 the class line's options are global: every package after it gets them, before its own", () => {
+    expect(
+      loads(
+        "\\documentclass[letterpaper, submission]{article}\n\\PassOptionsToPackage{x}{aaai2027}\n\\usepackage[y]{aaai2027}\n",
+      ),
+    ).toEqual([["aaai2027", ["letterpaper", "submission", "x", "y"], []]]);
+  });
+
+  it("options passed to the class with \\PassOptionsToClass are the class's alone, not global", () => {
+    expect(
+      loads(
+        "\\PassOptionsToClass{submission}{article}\n\\documentclass[letterpaper]{article}\n\\usepackage{aaai2027}\n",
+      ),
+    ).toEqual([["aaai2027", ["letterpaper"], []]]);
+  });
+
+  it("🔴 \\RequirePackageWithOptions loads the package with the global options, and what was passed to it is replaced", () => {
+    expect(
+      loads(
+        "\\documentclass[submission]{article}\n\\PassOptionsToPackage{x}{aaai2027}\n\\RequirePackageWithOptions{aaai2027}\n",
+      ),
+    ).toEqual([["aaai2027", ["submission"], []]]);
+  });
+
+  it("🔴 an option built by a macro, on the class line, passed, or on the load, is unread", () => {
+    expect(
+      loads(
+        "\\documentclass[\\cls]{article}\n\\PassOptionsToPackage{\\pass}{aaai2027}\n\\usepackage[\\own, y]{aaai2027}\n",
+      ),
+    ).toEqual([
+      [
+        "aaai2027",
+        ["\\cls", "\\pass", "\\own", "y"],
+        ["\\cls", "\\pass", "\\own"],
+      ],
+    ]);
+  });
+});
+
+describe("packagesUnseen — a preamble that may load what the reader does not see", () => {
+  const unseen = (preamble: string, body = "Text.") =>
+    packagesUnseen(
+      parseLatex(
+        `\\documentclass{article}\n${preamble}\n\\begin{document}\n${body}\n\\end{document}\n`,
+      ),
+    );
+
+  it("🔴 an \\input in the preamble, a package line inside a macro, a name a macro builds", () => {
+    expect(unseen("\\input{preamble}")).toBe(true);
+    expect(unseen("\\newcommand{\\load}{\\usepackage{x}}\n\\load")).toBe(true);
+    expect(unseen("\\usepackage{\\style}")).toBe(true);
+  });
+
+  it("🔴 options passed where the reader does not see them: inside a macro, or to a package a macro names", () => {
+    expect(
+      unseen("\\newcommand{\\opts}{\\PassOptionsToPackage{final}{x}}\n\\opts"),
+    ).toBe(true);
+    expect(unseen("\\PassOptionsToPackage{final}{\\style}")).toBe(true);
+  });
+
+  it("🔴 a file read through a loader the include reader does not follow, or a line built by \\csname", () => {
+    expect(unseen("\\InputIfFileExists{setup.tex}{}{}")).toBe(true);
+    expect(unseen("\\import{sections/}{preamble}")).toBe(true);
+    expect(unseen("\\csname usepackage\\endcsname{x}")).toBe(true);
+    expect(unseen("\\usepackage{x}", "\\import{sections/}{intro}")).toBe(false);
+  });
+
+  it("the whole preamble in view: plain lines and an \\input in the body; a bare \\usepackage hides nothing", () => {
+    expect(unseen("\\usepackage[a]{x,y}", "\\input{intro}")).toBe(false);
+    expect(packagesUnseen(parseLatex("\\usepackage"))).toBe(false);
+    expect(unseen("\\PassOptionsToPackage{\\opt}{x}\n\\usepackage{x}")).toBe(
+      false,
+    );
+  });
+});
+
+describe("packagesOf — the packages the preamble loads", () => {
+  it("a \\usepackage with no argument loads nothing", () => {
+    expect(
+      packagesOf(parseLatex("\\documentclass{article}\n\\usepackage\n")),
+    ).toEqual([]);
+  });
+
+  it("each package of each line, with the line's options and place; a comment loads nothing", () => {
+    const src =
+      "\\documentclass{article}\n% \\usepackage{x}\n\\usepackage[a, b]{p,q}\n\\RequirePackage{r}\n";
+    expect(
+      packagesOf(parseLatex(src)).map((p) => [
+        p.name,
+        p.options,
+        p.place.kind === "at"
+          ? src.slice(p.place.span.start, p.place.span.end)
+          : "",
+      ]),
+    ).toEqual([
+      ["p", ["a", "b"], "\\usepackage[a, b]{p,q}"],
+      ["q", ["a", "b"], "\\usepackage[a, b]{p,q}"],
+      ["r", [], "\\RequirePackage{r}"],
+    ]);
+  });
+});
+
 const replaced = (src: string) => replaceDocumentClass(parseLatex(src), IEEE);
 
 describe("replaceDocumentClass — the class `paperlint new` writes", () => {
@@ -187,6 +434,22 @@ describe("replaceDocumentClass — the class `paperlint new` writes", () => {
   it("no class, or an empty one, is returned as it is", () => {
     expect(replaced("just text")).toBe("just text");
     expect(replaced("\\documentclass{}\nx")).toBe("\\documentclass{}\nx");
+  });
+
+  it("🔴 an option passed with \\PassOptionsToClass is not added again; only the one still missing is", () => {
+    expect(
+      replaced(
+        "\\PassOptionsToClass{compsoc}{IEEEtran}\n\\documentclass{IEEEtran}",
+      ),
+    ).toBe(
+      "\\PassOptionsToClass{compsoc}{IEEEtran}\n\\documentclass[conference]{IEEEtran}",
+    );
+  });
+
+  it("🔴 a line built by a macro is returned as it is: what it lacks is not known", () => {
+    const opts = "\\documentclass[\\opts]{IEEEtran}";
+    expect(replaced(opts)).toBe(opts);
+    expect(replaced("\\documentclass{\\cls}")).toBe("\\documentclass{\\cls}");
   });
 
   it("the port does the same over a source", () => {
@@ -508,6 +771,53 @@ describe("bodyProse — passages a sentence cannot cross, with the marks that sa
       kind: "text",
       segment: { text: "%", at: 2 },
     });
+  });
+});
+
+describe("bodyProse — the space a % comment leaves, which TeX keeps", () => {
+  /** The text of the body's one passage, marks and math left out, spaces as TeX leaves them. */
+  const typeset = (src: string): string =>
+    bodyProse(parseLatex(src))
+      .flatMap((p) =>
+        p.pieces.map((x) => (x.kind === "text" ? x.segment.text : "")),
+      )
+      .join("");
+
+  it("🔴 an own-line comment between two sentences leaves the space the line break made", () => {
+    expect(typeset("First four.\n%\nSecond four.")).toBe(
+      "First four. Second four.",
+    );
+    expect(typeset("First four.\n% note\nSecond four.")).toBe(
+      "First four. Second four.",
+    );
+  });
+
+  it("🔴 a trailing comment leaves the space TeX keeps, with or without a space before the `%`", () => {
+    expect(typeset("First four. % note\nSecond four.")).toBe(
+      "First four. Second four.",
+    );
+    expect(typeset("First four.\n% note\nSecond four.")).toBe(
+      "First four. Second four.",
+    );
+  });
+
+  it("a comment glued to the word before it leaves no space: TeX sets `four.Second`", () => {
+    expect(typeset("First four.% note\nSecond four.")).toBe(
+      "First four.Second four.",
+    );
+    expect(typeset("a%\nb")).toBe("ab");
+  });
+
+  it("🔴 a run of comments leaves one space, and only when TeX kept one before the first of them", () => {
+    expect(typeset("some%\n% explanation\nthing")).toBe("something");
+    expect(typeset("some \n% one\n% two\nthing")).toBe("some thing");
+    expect(typeset("some % one\n% two\nthing")).toBe("some thing");
+  });
+
+  it("the text inside a comment is not prose, whichever way the comment stands", () => {
+    expect(typeset("A. % hidden words\nB.\n% more hidden\nC.")).toBe(
+      "A. B. C.",
+    );
   });
 });
 

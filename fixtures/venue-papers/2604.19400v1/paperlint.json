@@ -1,0 +1,17 @@
+{
+  "cycles": [
+    {
+      "id": "fse-2026",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:acm-acmsmall"
+      },
+      "opened": "2026-04-21",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2026-04-21",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

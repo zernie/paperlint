@@ -1158,6 +1158,28 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       ...onBlindConf("papers/blindconf-2026"),
     },
   },
+  // A paper on AIDC 2026, whose every deadline passed in 2026: the edition is over, and stays over.
+  "paper/edition-over": {
+    reports: {
+      tree: {
+        "papers/drift/PIPELINE-STATUS.md": STATUS,
+        "papers/drift/paper.tex": tex("x"),
+        "papers/drift/paperlint.json": JSON.stringify({
+          extends: "paperlint:aidc-2026",
+          kind: "regular",
+        }),
+      },
+      file: "papers/drift/PIPELINE-STATUS.md",
+      severity: 1,
+      line: 1,
+    },
+    // A venue of one's own whose preset records no deadline: nothing says when it ends.
+    silent: {
+      "papers/drift/PIPELINE-STATUS.md": STATUS,
+      "papers/drift/paper.tex": tex("x"),
+      ...onBlindConf("papers/drift"),
+    },
+  },
   // A plan beside the paper: the root holds only paperlint's own files and folders.
   "paper/allowed-files-only": {
     reports: {
@@ -1311,10 +1333,10 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       }),
     }),
   },
-  // EMNLP, a shipped venue's name (REALM's conference), in a BlindConf paper's text.
+  // EMNLP 2026, a shipped venue (REALM's conference), named with its year in a BlindConf paper's text.
   "tex/venue-leftover": {
     reports: {
-      tree: blind("First written for EMNLP."),
+      tree: blind("First written for EMNLP 2026."),
       file: TEX_FILE,
       severity: 1,
       line: 4,
@@ -1707,7 +1729,7 @@ describe("the writing set: off by default, one line turns it on", () => {
 
 describe("the register bands are in the writing set, on AIDC too", () => {
   /**
-   * A body against AIDC's real anchors (presets/aidc.jsonc, per 10,000 words): five contrast
+   * A body against AIDC's real anchors (presets/aidc-2026.jsonc, per 10,000 words): five contrast
    * frames and six bold claims over about 2,900 words are above their bands (0–10.4, 0–17.8), and
    * no relation marker is below 25.4.
    */
@@ -1722,7 +1744,7 @@ describe("the register bands are in the writing set, on AIDC too", () => {
   ];
   const onAidc = (
     rules: Record<string, string> | null,
-    preset = "paperlint:aidc",
+    preset = "paperlint:aidc-2026",
   ) =>
     paper(tex(`\\section{Introduction}\n${BODY}\n${STATEMENT}`, IEEE), {
       [`${P}/paperlint.json`]: JSON.stringify({
@@ -1749,6 +1771,58 @@ describe("the register bands are in the writing set, on AIDC too", () => {
     expect(
       await bands(
         onAidc({ "paperlint:writing": "warn" }, "paperlint:ieee-conference"),
+      ),
+    ).toEqual([]);
+  });
+});
+
+describe("tex/template — an author silences a finding they dispute, with the reason", () => {
+  const template = async (tree: Record<string, string>) =>
+    (await lintTree(tree))
+      .filter((m) => m.ruleId === "tex/template")
+      .map((m) => `${String(m.line)} ${m.message}`);
+  const missing = "\\documentclass[conference]{IEEEtran}";
+
+  it("🔴 the finding the directive silences is there without it", async () => {
+    expect(await template(blind("Text.", missing))).toEqual([
+      "1 the class option `compsoc` is missing: BlindConf requires `\\documentclass[conference,compsoc]{IEEEtran}`",
+    ]);
+  });
+
+  it("a disable-next-line comment above the class line, with its reason after `--`, silences it", async () => {
+    const cls = `% eslint-disable-next-line tex/template -- the venue's chair allowed this class by email\n${missing}`;
+    expect(await template(blind("Text.", cls))).toEqual([]);
+  });
+
+  it("a disable comment on the first line silences a finding reported at the top of the file", async () => {
+    const tree = paper(
+      "% eslint-disable tex/template -- the class line is written by the build script\n\\begin{document}\nText.\n\\section*{LLM Usage Statement}\nNone.\n\\end{document}\n",
+      BLIND_PAPER,
+    );
+    expect(await template(tree)).toEqual([]);
+    // The other half: without the comment, the missing class is reported there.
+    const bare = paper(
+      "\\begin{document}\nText.\n\\section*{LLM Usage Statement}\nNone.\n\\end{document}\n",
+      BLIND_PAPER,
+    );
+    expect(await template(bare)).toEqual([
+      "1 paper.tex has no \\documentclass; BlindConf requires `\\documentclass[conference,compsoc]{IEEEtran}`",
+    ]);
+  });
+
+  it("🔴 the same holds for format/layout-override, the other rule that reports in the preamble", async () => {
+    const layout = async (directive: string) =>
+      (
+        await lintTree(
+          blind("Text.", `${IEEE}\n${directive}\\usepackage{geometry}`),
+        )
+      )
+        .filter((m) => m.ruleId === "format/layout-override")
+        .map((m) => m.line);
+    expect(await layout("")).toEqual([2]);
+    expect(
+      await layout(
+        "% eslint-disable-next-line format/layout-override -- the venue's call allows A4 margins\n",
       ),
     ).toEqual([]);
   });

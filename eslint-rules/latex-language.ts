@@ -695,6 +695,40 @@ const DIRECTIVES: ReadonlyMap<string, DirectiveType> = new Map([
   ["eslint-disable-line", "disable-line"],
 ]);
 
+/** Where an offset of `src` stands, as the projection's `loc` counts it. */
+const pointAt = (src: string, offset: number): Point => ({
+  offset,
+  line: src.slice(0, offset).split("\n").length,
+  column: offset - src.lastIndexOf("\n", offset - 1),
+});
+
+/**
+ * 🔴 The disable directives of the preamble, as the `html` nodes ESLint reads directives from. The
+ * projection blanks the preamble and makes no node of anything in it, so a directive there was not
+ * seen — measured 2026-11-19: `% eslint-disable-next-line tex/template -- …` above the class line
+ * left the finding standing. The rules that report in the preamble (`tex/template` at the
+ * `\documentclass`, `format/layout-override` at a `\usepackage{geometry}`) need it. Only
+ * directives: nothing else in the preamble is a note a rule reads. A comment node may start at the
+ * newline before its `%` and end with the newline after it; the span is the `%` to the line's end.
+ */
+export function preambleDirectives(
+  tree: TexRoot,
+  src: string,
+): readonly MdNode[] {
+  const beginDoc = src.indexOf("\\begin{document}");
+  const preEnd = beginDoc > 0 ? beginDoc + "\\begin{document}".length : 0;
+  return tree.content.flatMap((n) => {
+    const pos = n.position;
+    if (n.type !== "comment" || !pos || pos.start.offset >= preEnd) return [];
+    if (!directiveStart.test(n.content)) return [];
+    const text = src.slice(pos.start.offset, pos.end.offset);
+    const start = pos.start.offset + text.indexOf("%");
+    const end = pos.start.offset + text.trimEnd().length;
+    const position = { start: pointAt(src, start), end: pointAt(src, end) };
+    return [{ type: "html" as const, value: n.content, position }];
+  });
+}
+
 class TexSourceCode extends TextSourceCodeBase<{
   LangOptions: LanguageOptions;
   RootNode: MdNode;
@@ -794,8 +828,16 @@ export const texLanguage: Language<{
   parse(file: File): ParseResult<MdNode> {
     try {
       const raw = String(file.body);
-      const { root, text } = texToMdast(raw);
-      return { ok: true, ast: root, projected: text, raw };
+      // One parse, read twice: by the projection, and for the preamble's directives.
+      const tree: TexRoot = getParser().parse(raw);
+      const { root, text } = texToMdast(raw, { parse: () => tree });
+      // In source order, as the projection keeps its own nodes.
+      const children = [
+        ...root.children,
+        ...preambleDirectives(tree, raw),
+      ].toSorted((a, b) => a.position.start.offset - b.position.start.offset);
+      const ast = { ...root, children };
+      return { ok: true, ast, projected: text, raw };
     } catch (ex) {
       // What the parser throws is an Error: its own syntax error, or the stack exhausted. ESLint
       // prints a parse failure at its `line` and `column`, and a failure of the whole parse has

@@ -25,7 +25,7 @@ import { frozenText } from "../test/frozen-presets.ts";
 
 /** msr FROZEN (test/frozen-presets.ts): the shipped file's deadlines are the scheduled refresh's output. */
 const frozenMsr = {
-  [join(presetsDir(), "msr.jsonc")]: frozenText("msr.jsonc"),
+  [join(presetsDir(), "msr-2027.jsonc")]: frozenText("msr-2027.jsonc"),
 };
 
 test("show: the portal from the preset, the id from the paper, the token from the site's variable", async () => {
@@ -125,7 +125,7 @@ test("the portal's refusal is printed with its own message, exit 1", async () =>
   expect(r.code).toBe(1);
   expect(r.errs).toStrictEqual([
     "the portal refused (HTTP 401): Missing credentials",
-    "HOTCRP_TOKEN_127_0_0_1_9 was used; it may belong to another hotcrp site (tokens are per site), or be revoked or expired",
+    "HOTCRP_TOKEN_127_0_0_1_9 was used; it may belong to another hotcrp install (hotcrp.com sites share one token, a self-hosted install has its own), or be revoked or expired",
     ...STEPS,
   ]);
 });
@@ -143,7 +143,7 @@ test("show prints the current attempt's deadlines in force: the preset's portal 
       cycles: [
         {
           id: "msr-2027",
-          venue: { kind: "preset", extends: "paperlint:msr" },
+          venue: { kind: "preset", extends: "paperlint:msr-2027" },
           kind: "technical",
           opened: "2026-10-05",
           submission: { id: 7 },
@@ -199,7 +199,7 @@ test("show, in the flat form: the deadlines in force are the preset's readings a
     ...frozenMsr,
     "/w/package.json": "{}",
     [`${PAPER}/paperlint.json`]: JSON.stringify({
-      extends: "paperlint:msr",
+      extends: "paperlint:msr-2027",
       kind: "technical",
       submission: { id: 7 },
     }),

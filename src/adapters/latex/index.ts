@@ -15,16 +15,19 @@
  * the parser the language already uses.
  *
  * ── STATES, NOT NULL ─────────────────────────────────────────────────────────────
- * A class line is missing, empty or a class; a node the parser gave no position is `unplaced`, not
- * offset 0; a run of text is a non-empty list of contiguous segments, and a range outside it has
- * no span (`spanIn` in `src/domain/tex-document.ts`). A tree travels only with its own source
+ * A class line is missing, unseen, empty, unread or a class; a node the parser gave no position is
+ * `unplaced`, not offset 0; a run of text is a non-empty list of contiguous segments, and a range
+ * outside it has no span (`spanIn` in `src/domain/tex-document.ts`). A tree travels only with its own source
  * (`ParsedTex`, minted by `parseLatex` alone).
  */
 import type { LatexReader } from "../../ports/latex.ts";
 import { abstractSpan, abstractText } from "./abstract.ts";
 import {
   documentClassOf,
+  packagesOf,
+  packagesUnseen,
   parseTemplate,
+  parseTemplateStyle,
   replaceDocumentClass,
 } from "./document-class.ts";
 import { citeKeysOf, macroTextsOf, registeredNumbersOf } from "./facts.ts";
@@ -35,12 +38,16 @@ import { outlineOf } from "./outline.ts";
 import { parseLatex } from "./parse.ts";
 import { bodyEmphasis, bodyProse } from "./prose.ts";
 import { renderedRuns } from "./rendered.ts";
+import { venueLinesOf } from "./venue-lines.ts";
 import { layoutOverridesOf } from "./layout.ts";
 import { filecontentsOf } from "./filecontents.ts";
 
 export {
   documentClassOf,
+  packagesOf,
+  packagesUnseen,
   parseTemplate,
+  parseTemplateStyle,
   replaceDocumentClass,
 } from "./document-class.ts";
 export {
@@ -59,6 +66,7 @@ export { outlineOf } from "./outline.ts";
 export { parseLatex, type ParsedTex } from "./parse.ts";
 export { bodyEmphasis, bodyProse } from "./prose.ts";
 export { renderedRuns } from "./rendered.ts";
+export { venueLinesOf } from "./venue-lines.ts";
 export { layoutOverridesOf } from "./layout.ts";
 
 /** The `LatexReader` port over unified-latex: each call parses its source once. */
@@ -67,12 +75,16 @@ export const latexReader: LatexReader = {
   outline: (src) => outlineOf(parseLatex(src)),
   headings: (src) => headingsOf(parseLatex(src)),
   renderedRuns: (src) => renderedRuns(parseLatex(src)),
+  venueLines: (src) => venueLinesOf(parseLatex(src)),
   bodyProse: (src) => bodyProse(parseLatex(src)),
   bodyEmphasis: (src) => bodyEmphasis(parseLatex(src)),
   captions: (src) => captionProse(parseLatex(src)),
   includes: (src) => includesOf(parseLatex(src)),
   documentBody: (src) => documentBodyOf(parseLatex(src)),
   template: parseTemplate,
+  packages: (src) => packagesOf(parseLatex(src)),
+  packagesUnseen: (src) => packagesUnseen(parseLatex(src)),
+  templateStyle: parseTemplateStyle,
   withDocumentClass: (src, want) => replaceDocumentClass(parseLatex(src), want),
   layoutOverrides: (src) => layoutOverridesOf(parseLatex(src)),
   filecontents: (src, jobname) => filecontentsOf(parseLatex(src), jobname),

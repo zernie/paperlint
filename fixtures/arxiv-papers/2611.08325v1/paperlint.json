@@ -1,1 +1,1 @@
-{ "extends": "paperlint:ieee-conference" }
+{ "extends": "paperlint:acm-sigconf" }

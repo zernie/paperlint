@@ -20,7 +20,7 @@ verbatim.
 | `get-searchcompletion.json` | `GET /api/searchcompletion` on msr2027.hotcrp.com with an author's token, 2026-10-20 — the site's search completions, its topics among them; no personal data, nothing replaced |  200 |
 
 To re-record: run the same four requests with `curl` against a HotCRP site where you have a
-submission and a token (`Authorization: bearer $HOTCRP_TOKEN_<SITE>`), always with `dry_run=1` on a `POST`,
+submission and a token (`Authorization: bearer $HOTCRP_TOKEN_HOTCRP_COM` (or the site's own variable)), always with `dry_run=1` on a `POST`,
 save each body, then replace every identifying value with a fake of the same type before committing.
 These files ship in the npm package with the rest of `src/`, like the tests beside them.
 

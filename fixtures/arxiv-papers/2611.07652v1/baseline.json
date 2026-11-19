@@ -7,8 +7,6 @@
     "tex/claim-provenance": 34,
     "paper/section-word": 6,
     "paper/allowed-files-only": 2,
-    "format/layout-override": 1,
-    "pdf/measured": 1,
-    "tex/template": 1
+    "pdf/measured": 1
   }
 }

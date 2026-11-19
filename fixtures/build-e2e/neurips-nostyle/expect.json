@@ -1,0 +1,26 @@
+{
+  "$comment": "The neurips fixture without \\usepackage{neurips_2026}: article's own Computer Modern (cm-super, SFRM) on article's text block. tex/template reports the style missing in the source, pdf/fonts that NeurIPS's Times is missing from the PDF, and nothing else does: the page is letter, one column, 10 pt, and the content stays within 9 pages.",
+  "build": {
+    "outcome": "pdf",
+    "pages": 11
+  },
+  "fonts": {
+    "none": "^NimbusRomNo9L"
+  },
+  "lint": {
+    "findings": [
+      {
+        "rule": "pdf/fonts",
+        "severity": 2,
+        "says": ["no font starts with `NimbusRomNo9L` (body text of NeurIPS)"]
+      },
+      {
+        "rule": "tex/template",
+        "severity": 2,
+        "says": [
+          "NeurIPS requires `\\usepackage{neurips_2026}`; paper.tex loads no such package"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,125 @@
+// The ICML style — the TEMPLATE FAMILY of the International Conference on Machine Learning:
+// everything the style file in ICML's author kit decides, whatever the edition. A venue preset
+// extends it ("extends": "paperlint:icml-style") and adds what its call for papers sets: the page
+// limit of each kind of paper, and the sections it requires. The 2027 edition is icml-2027.jsonc.
+//
+// The template is not a class. The author kit
+// (https://media.icml.cc/Conferences/ICML2027/styles/icml2027.zip, read 2026-11-19:
+// example_paper.tex, icml2027.sty «version of 2027-10-30», icml2027.bst, and its own copies of
+// fancyhdr.sty, algorithm.sty and algorithmic.sty) opens with `\documentclass{article}` and loads
+// `\usepackage{icml2027}` (`[accepted]` for the camera-ready) from a style file the author copies
+// beside paper.tex. The style sets the page itself (`\paperwidth=8.5in`, `\textwidth{6.75in}`,
+// `\textheight{9.0in}`, `\columnsep{0.25in}`, `\twocolumn`) and Times (`\RequirePackage{times}`),
+// and the kit's example says what it sets: «The text of the paper should be formatted in two
+// columns, with an overall width of 6.75 inches, height of 9.0 inches, and 0.25 inches between the
+// columns.», «all final versions must be produced for US letter size.», «Your paper should be in 10
+// point Times font.»
+//
+// 🔴 THE TEMPLATE IS THE CLASS AND THE STYLE. The class alone, plain `article`, would pass any article
+// paper, with or without the style (measured: a paper in NeurIPS 2025's style passed tex/template
+// under `\documentclass{article}` alone; only pdf/geometry's column count caught it). So the family
+// names both, and tex/template requires the style too, with no option: the call requires none for
+// the submission.
+//
+// 🔴 THE NUMBERS ARE MEASURED, NOT COPIED. Built on 2026-11-19 with `paperlint build` on paperlint's
+// TeX Live 2026 (pdfTeX 1.40.29) and banal: the kit's own example_paper.tex with its style, one line
+// added — `\crefname{assumption}{Assumption}{Assumptions}`: without it the kit's example does not
+// build («There were undefined references»: TeX Live 2026's cleveref has no format for its
+// `assumption` theorem; the kit's PDF, made with pdfTeX 1.40.25, prints «Assumption 2.6»). The
+// style's dimensions were written to the log by a `\typeout` at \begin{document}:
+//
+//   page (banal)          8.5 x 11 in                 \paperwidth x \paperheight 614.295pt x 794.97pt
+//   columns (banal)       2 (the kit's appendix is \onecolumn; banal still says 2)
+//   \textwidth            487.8225pt = 6.75 in        \columnsep 18.07pt = 0.25 in
+//   \textheight           650.43pt = 9.0 in
+//   body size             \f@size 10, \baselineskip 12pt (the kit says 11: the style redefines
+//                         \@normalsize, which LaTeX2e no longer calls); banal 10.3
+//   references            \normalsize (the style sets no \bibfont): banal reports no reference
+//                         size; with \bibfont \small, banal 9.3
+//   fonts (pdf.js)        NimbusRomNo9L-Regu / -Medi / -ReguItal / -MediItal (ptm), NimbusMonL-Regu
+//                         (\ttdefault pcr), Computer Modern math — Type 1, embedded. And
+//                         Times-Roman, NOT embedded, from the kit's own figure icml_numpapers.pdf
+//                         (in the kit's example_paper.pdf too): pdf/fonts reports it
+//
+// The planted defects, measured on the same example: `[11pt]` → banal 11.3, pdf/body-size;
+// `\renewcommand{\rmdefault}{cmr}` → Computer Modern, pdf/fonts; a bibliography in \small → banal
+// 9.3, pdf/body-size; NeurIPS 2025's style instead of ICML's → 1 column, pdf/geometry. What this
+// family does NOT see, measured: `\usepackage[margin=0.6in]{geometry}` gave \textwidth 527.57pt with
+// the same page, columns, fonts and body size, and no pdf/* rule reported it (no rule reads the text
+// block; format/layout-override runs only under a `template`). The style itself prints «The page
+// layout violates the ICML style.» on page 1 of such a build. `[a4paper]` changes nothing: the style
+// forces letter.
+//
+// Its card, in prose: `icml-style.md` beside this file.
+{
+  // A template family: it names no venue, so no `name` and no `url` (the venues that extend it do).
+  "type": "family",
+
+  // The kit's example_paper.tex: «\documentclass{article}» then «\usepackage{icml2027}». tex/template
+  // requires both, and names another shipped venue's style (neurips_2026) or another ICML edition's
+  // (icml2026) loaded instead.
+  "template": "\\documentclass{article}",
+  "template_style": "\\usepackage{icml2027}",
+
+  // TeX Live packages the style and the kit's example need ON TOP OF tex-base.jsonc. icml2027.sty
+  // itself travels with the paper. Measured 2026-11-19: every file the example's build read (219,
+  // pdflatex's -recorder list) mapped to its package through texlive.tlpdb.
+  //   eso-pic · forloop — the style's \RequirePackage; paperlint's cache had neither, and the build
+  //     stopped at «File `eso-pic.sty' not found».
+  //   psnfss · times · courier · helvetic — \RequirePackage{times}: Times for the text, Courier for
+  //     \ttfamily (pcrr7t.tfm read), Helvetica for \sffamily (\sfdefault phv).
+  //   fancyhdr · algorithms · float — the kit ships its own fancyhdr.sty, algorithm.sty and
+  //     algorithmic.sty; a paper without them builds from TeX Live's, with the same facts
+  //     (measured). algorithm.sty loads float.
+  //   amscls · mathtools · cleveref · todonotes — not the style's: example_paper.tex loads amsthm,
+  //     mathtools, cleveref and todonotes, and a paper started from the kit keeps them.
+  "tex": {
+    "packages": {
+      "eso-pic": ["eso-pic.sty"],
+      "forloop": ["forloop.sty"],
+      "psnfss": ["times.sty", "ot1ptm.fd"],
+      "times": ["ptmr7t.tfm", "utmr8a.pfb"],
+      "courier": ["pcrr7t.tfm"],
+      "helvetic": ["phvr7t.tfm"],
+      "fancyhdr": ["fancyhdr.sty"],
+      "algorithms": ["algorithm.sty", "algorithmic.sty"],
+      "float": ["float.sty"],
+      "amscls": ["amsthm.sty"],
+      "mathtools": ["mathtools.sty"],
+      "cleveref": ["cleveref.sty"],
+      "todonotes": ["todonotes.sty"],
+    },
+  },
+
+  "format": {
+    // «Your paper must be in US letter size (i.e., not A4 or other sizes).»
+    // (https://icml.cc/Conferences/2027/AuthorInstructions, read 2026-11-19); banal: 8.5 x 11 in.
+    "page_size": "letter",
+    "page_w_in": 8.5,
+    "page_h_in": 11.0,
+
+    // «an overall width of 6.75 inches, height of 9.0 inches» (the kit); \textwidth and \textheight
+    // in the log, above.
+    "textblock_w_in": 6.75,
+    "textblock_h_in": 9.0,
+
+    // «formatted in two columns» (the kit); banal: 2.
+    "columns": 2,
+
+    // «10 point Times font» (the kit); banal measures the rendered mode, 10.3. The 0.5 tolerance is
+    // the other families': banal reads 0.3 pt high on every template measured.
+    "body_pt": 10,
+    "body_pt_tol": 0.5,
+
+    // «The citation font size should be the same as that in the main body of the paper.» (the
+    // author instructions above, camera-ready section). 10 pt; body_pt_tol widens it to 9.5-10.5, so
+    // a bibliography in \small (banal 9.3) is reported. A bibliography at the body's size is given no
+    // reference size by banal, so it is not judged.
+    "ref_pt_min": 10,
+    "ref_pt_max": 10,
+
+    // The Times clone. The title and headings are bold Times, so a `fonts_title` would repeat this
+    // check and report a Computer Modern build twice.
+    "fonts_text": "NimbusRomNo9L",
+  },
+}

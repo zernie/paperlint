@@ -57,6 +57,13 @@ export interface CredentialHelp {
 export interface PortalSite {
   /** The environment variable this site's token is read from. */
   readonly tokenVariable: string;
+  /**
+   * The variable read when `tokenVariable` is not set, for a portal whose sites share one account
+   * system and so one token; null: this site's token is its own.
+   */
+  readonly sharedVariable: string | null;
+  /** Whether a token works on one site only, so is refused in the shared variable. */
+  readonly isSiteOnlyToken: (token: string) => boolean;
   /** The site-less variable no longer read: named when still set, never used. */
   readonly siteLessVariable: string;
   /** The shape of a site's variable, for a message about another site's. */

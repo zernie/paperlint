@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acmart.cls",
+      "role": "preamble"
+    },
+    {
+      "path": "sections/introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/background.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/methodology.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/results.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/graphs/c1/dataset-wu-comparison-table.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/graphs/c2/wu_et_al_all-literature-comparison-table.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/threats-to-validity.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/data-availability.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "711b841940c4e1dd20f7b87b145ea3919e3415ec86385cc680de47975c2cf11a",
+    "acmart.cls": "2f949e6e3f2a79f2cdc218b9dcdbaa7dd451adb4ee0be1af6dc7ebe00b318ea7",
+    "sections/introduction.tex": "4c71bb7f9d9d093d0939909734e2428ab885938b0d8072d180fba1b51f985ab6",
+    "sections/background.tex": "c4cbc8baed49e6c254f8f76851b9f9f0e9e299c8751a4ea75b02037fe1d80af8",
+    "sections/methodology.tex": "ad4be711deecca154948e635f099a0e5b2d6ecefacf65fa8f5ef1d52b56c0cdb",
+    "sections/results.tex": "9788a816c1fd337905e0b5fa9edafe0fed9ba59fc4c7b93d5b636528553630e1",
+    "figures/graphs/c1/dataset-wu-comparison-table.tex": "108ee2e3b83b7670c220554789d45235f1fe658c1bfb3760964a09c4c8553e1c",
+    "figures/graphs/c2/wu_et_al_all-literature-comparison-table.tex": "ff9ed23dc86723519f7f8726be7ea70f3c8cb16a2a56e1d14352069d19c58e83",
+    "sections/discussion.tex": "8c63e2aec991c61c3ce795ccfbfd7bf474f64412e195e4608c488d3d35ba691f",
+    "sections/threats-to-validity.tex": "c161c2371ed17c60703df25fdc02bc8b5c3e935d142e3be32215856f497bcfe3",
+    "sections/conclusion.tex": "810515a83316d3683a97d7c3d7d3b3002ca7e33a207b0157170394cfad819545",
+    "sections/data-availability.tex": "ef9cbd3f928f3713df7f2b2b9dddb86dd7a68bf856dc33ffbfa6a0f8e44a753f"
+  }
+}

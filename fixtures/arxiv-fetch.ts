@@ -1,7 +1,8 @@
 /**
  * Maintenance helper, not run by any test and not an npm script: re-download the exact arXiv
- * sources named in `arxiv-manifest.json` (the papers of `arxiv-papers/` and `arxiv-papers-extra/`)
- * and check each against its recorded sha256 — the provenance of the fixtures.
+ * sources named in `arxiv-manifest.json` (the papers of `arxiv-papers/`) and `venue-manifest.json`
+ * (the accepted papers of `venue-papers/`) and check each against its recorded sha256 — the
+ * provenance of the fixtures.
  *
  *   node --experimental-strip-types fixtures/arxiv-fetch.ts [outDir]
  *
@@ -23,8 +24,8 @@ const Manifest = z.array(
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const outDir = process.argv[2] ?? "arxiv-sources";
-const manifest = Manifest.parse(
-  JSON.parse(readFileSync(join(HERE, "arxiv-manifest.json"), "utf8")),
+const manifest = ["arxiv-manifest.json", "venue-manifest.json"].flatMap((f) =>
+  Manifest.parse(JSON.parse(readFileSync(join(HERE, f), "utf8"))),
 );
 const sleep = (ms: number): Promise<void> =>
   new Promise((done) => setTimeout(done, ms));

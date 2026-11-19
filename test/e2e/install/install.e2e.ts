@@ -1066,7 +1066,7 @@ function stepHooksAndContent(c: Consumer): void {
 
 /**
  * A preset added by name travels in the tarball: `paperlint new --venue aidc` resolves
- * `paperlint:aidc` from the INSTALLED package's `presets/`, sets the new paper.tex in its class, and
+ * `paperlint:aidc-2026` from the INSTALLED package's `presets/`, sets the new paper.tex in its class, and
  * `paperlint lint` judges the paper against it — the preset's required section is named, and no
  * finding says the preset did not resolve. Last: it adds a paper the corpus checks above do not count.
  */
@@ -1074,7 +1074,7 @@ function stepAidc(c: Consumer): void {
   const { consumer, bin } = c;
   const made = sh(
     bin,
-    ["new", "preset-demo", "--venue", "aidc", "--kind", "short"],
+    ["new", "preset-demo", "--venue", "aidc-2026", "--kind", "short"],
     {
       cwd: consumer,
     },
@@ -1085,7 +1085,7 @@ function stepAidc(c: Consumer): void {
       readFileSync(tex, "utf8").includes(
         "\\documentclass[conference,compsoc]{IEEEtran}",
       ),
-    "`paperlint new --venue aidc` resolves paperlint:aidc from the installed presets/ and sets its class",
+    "`paperlint new --venue aidc` resolves paperlint:aidc-2026 from the installed presets/ and sets its class",
     made.stdout + made.stderr,
   );
   const lint = sh(bin, ["lint", "papers/preset-demo", "--json"], {
@@ -1101,7 +1101,7 @@ function stepAidc(c: Consumer): void {
   }
   verdict(
     rules.includes("tex/required-section") && !rules.includes("pdf/profile"),
-    "and `paperlint lint` judges it against paperlint:aidc: its required section is named, the preset resolves",
+    "and `paperlint lint` judges it against paperlint:aidc-2026: its required section is named, the preset resolves",
     JSON.stringify(rules) + lint.stderr,
   );
 }
