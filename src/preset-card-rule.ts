@@ -28,6 +28,7 @@
  */
 import { basename, dirname, join, relative } from "node:path";
 import { callerPath } from "./caller-path.ts";
+import { editionLabel } from "./domain/edition.ts";
 import type { Files } from "./ports/files.ts";
 import {
   presetProblemText,
@@ -157,7 +158,7 @@ function identityLine(o: {
     .join("");
   switch (o.preset.identity.type) {
     case "venue":
-      return `**\`${spec}\`** — venue preset for ${o.preset.identity.name} · call for papers: <${o.preset.identity.url}>${extendsText}`;
+      return `**\`${spec}\`** — venue preset for ${editionLabel(o.preset.identity.name, o.preset.year)} · call for papers: <${o.preset.identity.url}>${extendsText}`;
     case "family": {
       const by = o.extendedBy.length
         ? o.extendedBy.map((s) => `\`${s}\``).join(", ")

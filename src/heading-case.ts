@@ -10,7 +10,7 @@
  * Which style a venue asks is the venue's, and venues name different authorities: Conference
  * Publishing (AgenticDev's proceedings) quotes the Chicago Manual of Style, ACL links APA title case,
  * IEEE's manual has its own list. So the rule is optional, like `pdf/last-page-balance`: a venue
- * preset whose author kit was read turns it on in its `rules` — today only `presets/agenticdev.jsonc`
+ * preset whose author kit was read turns it on in its `rules` — today only `presets/agenticdev-2026.jsonc`
  * — and a paper may turn it on in its own `paperlint.json`.
  *
  * ── THE OPTIONS ARE PARSED ONCE, WHEN ESLINT LOADS THE RULE ──────────────────────

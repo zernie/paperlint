@@ -754,7 +754,7 @@ const META: Readonly<Record<VenueRuleName, Meta>> = {
       unbuilt:
         "not built yet, so `{{venue}}`'s page limit, fonts and format are not checked — run `paperlint build`",
       noPreset:
-        'this paper names no venue preset yet, so its page limit, fonts and format are not checked — set "extends" in {{file}} (e.g. "paperlint:agenticdev"; see docs/rules.md)',
+        'this paper names no venue preset yet, so its page limit, fonts and format are not checked — set "extends" in {{file}} (e.g. "paperlint:agenticdev-2026"; see docs/rules.md)',
       noPresetCycle:
         'this paper\'s current cycle names no venue preset, so its page limit, fonts and format are not checked — set the venue in the current cycle in {{file}} ("venue": { "kind": "preset", "extends": "paperlint:…" }), or open a new cycle when the last one has ended',
       noGeometry:

@@ -35,11 +35,11 @@ The venue-specific facts (deadline, page limits, tracks, PC-member conflict list
 quirks, whether a supplementary-upload field exists) live in the venue's **card**, \`presets/<venue>.md\`
 in the paperlint package, beside the preset \`presets/<venue>.jsonc\` that the lint rules check a
 paper against:
-- \`presets/agenticdev.md\` — AgenticDev @ ASE (workshop; ASE workshop proceedings).
-- \`presets/aisec.md\` — AISec @ ACM CCS (security workshop; ACM DL; harder bar).
-- \`presets/aidc.md\` — AIDC @ IEEE ACSAC (workshop; IEEE template, LLM Usage Statement).
-- \`presets/msr.md\` — MSR Technical Papers (conference; IEEE template from 2027, appendices count in the page limit).
-- \`presets/realm.md\` — REALM @ EMNLP (ACL family, OpenReview).
+- \`presets/agenticdev-2026.md\` — AgenticDev @ ASE (workshop; ASE workshop proceedings).
+- \`presets/aisec-2026.md\` — AISec @ ACM CCS (security workshop; ACM DL; harder bar).
+- \`presets/aidc-2026.md\` — AIDC @ IEEE ACSAC (workshop; IEEE template, LLM Usage Statement).
+- \`presets/msr-2027.md\` — MSR Technical Papers (conference; IEEE template from 2027, appendices count in the page limit).
+- \`presets/realm-2026.md\` — REALM @ EMNLP (ACL family, OpenReview).
 
 **The card is prose; the machine-checked format is the PRESET beside it.** A paper declares its venue
 in \`<paper>/paperlint.json\`: \`{ "extends": "paperlint:<venue>", "kind": "<kind>" }\`, and the
@@ -202,7 +202,7 @@ convention with no reader.
 - Harden first: \`harden-paper\` (the submit checklist).
 - Publisher mechanics (camera-ready): \`references/publishers/<publisher>.md\`.
 - Venue specifics: the venue's card \`presets/<venue>.md\` in the paperlint package (e.g.
-  \`presets/agenticdev.md\`) for deadlines, page limits, PC-member conflict lists, and whether a
+  \`presets/agenticdev-2026.md\`) for deadlines, page limits, PC-member conflict lists, and whether a
   supplementary upload exists.
 `,
 });

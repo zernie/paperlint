@@ -64,7 +64,7 @@ function run(
     o.venue === null
       ? { type: "family", extends: "paperlint:acm-sigconf" }
       : venuePreset("venue", {
-          extends: "paperlint:agenticdev",
+          extends: "paperlint:agenticdev-2026",
           talk: { ...VENUE, ...o.venue },
         });
   writeTree(dir, {

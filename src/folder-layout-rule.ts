@@ -50,7 +50,7 @@ function rootOf(dir: string, p: string): string | null {
   return first === "" || first === ".." ? null : first;
 }
 
-/** A preset spec that names a file (`./venue.jsonc`), not a shipped preset (`paperlint:aidc`). */
+/** A preset spec that names a file (`./venue.jsonc`), not a shipped preset (`paperlint:aidc-2026`). */
 const isPresetFile = (spec: string): boolean =>
   spec.startsWith("./") || spec.startsWith("../");
 

@@ -14,6 +14,6 @@ export const FROZEN_DIR = join(
   "fixtures",
   "frozen-presets",
 );
-/** The text of the frozen preset `name` (`msr.jsonc`). */
+/** The text of the frozen preset `name` (`msr-2027.jsonc`). */
 export const frozenText = (name: string): string =>
   readFileSync(join(FROZEN_DIR, name), "utf8");

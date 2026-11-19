@@ -79,7 +79,7 @@ function project(): string {
     }),
     // A venue preset that carries `rules` of its own.
     "papers/a/paperlint.json": JSON.stringify({
-      extends: "paperlint:agenticdev",
+      extends: "paperlint:agenticdev-2026",
     }),
     "papers/a/paper.tex": TEX,
     "papers/a/PIPELINE-STATUS.md": "---\nstages: []\n---\n",

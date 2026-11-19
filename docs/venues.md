@@ -2,17 +2,97 @@
 
 paperlint keeps three kinds of venue knowledge, each in its own place:
 
-| place                                                                      | holds                                                                                                                                | written by                                                           | read by                                                                        |
-| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `presets/<venue>.jsonc` and `presets/<venue>.md`, in the paperlint package | a shipped **venue preset** (page limits, format, deadlines) and its **card** (the call's requirements in prose, the portal's quirks) | paperlint's maintainers; deadlines are re-read from the portal daily | `paperlint lint` (the preset), `submit-paper` (the card)                       |
-| `venues/<name>.jsonc` and `venues/<name>.md`, at your project's root       | your own preset and card, for a venue paperlint does not ship                                                                        | you, when `find-venue` picks such a venue (stage 2)                  | `paperlint lint`, through the paper's `"extends"`; `submit-paper`              |
-| `<papers-root>/venues/<venue>/`                                            | the venue's **corpus**: its accepted papers, measured and read                                                                       | `study-accepted-papers` (stage 2, and again at stage 5)              | `study-accepted-papers`, for this paper and every later one aimed at the venue |
+| place                                                                                                         | holds                                                                                                                                | written by                                                           | read by                                                                        |
+| ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `presets/<series>-<year>.jsonc` and its `.md`, in the paperlint package ([what ships](#what-paperlint-ships)) | a shipped **venue preset** (page limits, format, deadlines) and its **card** (the call's requirements in prose, the portal's quirks) | paperlint's maintainers; deadlines are re-read from the portal daily | `paperlint lint` (the preset), `submit-paper` (the card)                       |
+| `venues/<name>.jsonc` and `venues/<name>.md`, at your project's root                                          | your own preset and card, for a venue paperlint does not ship                                                                        | you, when `find-venue` picks such a venue (stage 2)                  | `paperlint lint`, through the paper's `"extends"`; `submit-paper`              |
+| `<papers-root>/venues/<venue>/`                                                                               | the venue's **corpus**: its accepted papers, measured and read                                                                       | `study-accepted-papers` (stage 2, and again at stage 5)              | `study-accepted-papers`, for this paper and every later one aimed at the venue |
 
 A preset and a card say what a venue **requires**: a paper that breaks them is sent back. A corpus
 says what a venue **rewards**: what its strongest accepted papers do that its ordinary ones do not.
 
 The two `venues/` folders are different places. With the default papers directory they are
 `venues/` (your presets) and `papers/venues/` (the corpora).
+
+## What paperlint ships
+
+A venue preset is one **edition**, `paperlint:<series>-<year>`; a **family** is a template, a format
+and not an edition, with no year in its id. A workshop names the edition of the conference it is held
+at (`parent`), of its own year. `test/venues-doc.test.ts` checks that every shipped preset is listed
+here and that every `paperlint:` id below exists.
+
+### Families
+
+| family                      | the template                             |
+| --------------------------- | ---------------------------------------- |
+| `paperlint:acm-sigconf`     | ACM `acmart`, sigconf (two columns)      |
+| `paperlint:acm-acmsmall`    | ACM `acmart`, acmsmall (one column)      |
+| `paperlint:ieee-conference` | IEEE `IEEEtran`, conference              |
+| `paperlint:acl-latex`       | ACL's style files (`article`, `acl.sty`) |
+
+The TeX base set, `tex-base.jsonc`, is extended by nothing: every paper gets it.
+
+### Editions, by field
+
+**Software engineering**
+
+| edition                      | parent                | family                      | what is checked                  |
+| ---------------------------- | --------------------- | --------------------------- | -------------------------------- |
+| `paperlint:icse-2028`        | —                     | `paperlint:acm-sigconf`     | the research track's call        |
+| `paperlint:icse-2027`        | —                     | `paperlint:ieee-conference` | the format only (minimal preset) |
+| `paperlint:fse-2027`         | —                     | `paperlint:acm-acmsmall`    | the research papers' call        |
+| `paperlint:ase-2026`         | —                     | `paperlint:acm-sigconf`     | the research track's call        |
+| `paperlint:msr-2027`         | —                     | `paperlint:ieee-conference` | the technical papers' call       |
+| `paperlint:nlbse-2027`       | `paperlint:icse-2027` | `paperlint:ieee-conference` | the workshop's call              |
+| `paperlint:agent-2027`       | `paperlint:icse-2027` | `paperlint:ieee-conference` | the workshop's call              |
+| `paperlint:agentverify-2027` | `paperlint:icse-2027` | `paperlint:ieee-conference` | the workshop's call              |
+| `paperlint:agenticdev-2026`  | `paperlint:ase-2026`  | `paperlint:acm-sigconf`     | the workshop's call              |
+
+MSR is held beside ICSE, but it is a conference of its own, not a workshop, so it names no parent.
+
+**Security**
+
+| edition                | parent                 | family                      | what is checked                  |
+| ---------------------- | ---------------------- | --------------------------- | -------------------------------- |
+| `paperlint:ccs-2026`   | —                      | `paperlint:acm-sigconf`     | the call                         |
+| `paperlint:sp-2027`    | —                      | `paperlint:ieee-conference` | the call                         |
+| `paperlint:acsac-2026` | —                      | `paperlint:ieee-conference` | the format only (minimal preset) |
+| `paperlint:aisec-2026` | `paperlint:ccs-2026`   | `paperlint:acm-sigconf`     | the workshop's call              |
+| `paperlint:aidc-2026`  | `paperlint:acsac-2026` | `paperlint:ieee-conference` | the workshop's call              |
+
+**Natural language processing**
+
+| edition                | parent                 | family                | what is checked                                 |
+| ---------------------- | ---------------------- | --------------------- | ----------------------------------------------- |
+| `paperlint:emnlp-2026` | —                      | `paperlint:acl-latex` | the class line and packages (minimal preset)    |
+| `paperlint:realm-2026` | `paperlint:emnlp-2026` | `paperlint:acl-latex` | the workshop's format; no page limit (its card) |
+
+**Machine learning and AI**, **human–computer interaction**: none shipped yet.
+
+A minimal preset carries the edition's names, its call and its family, and no page limit or deadline:
+it exists so the workshops held there can name it as their parent. Its card says so.
+
+### In progress
+
+NeurIPS, ICML, ICLR, AAAI and IJCAI have been measured and are not shipped yet. Their templates are
+not classes but style files a paper loads over `article` (`\usepackage{neurips_2026}`), and
+`tex/template` compares only the `\documentclass` line: every one of them would pass as `article`.
+They ship when the template check can see a style file.
+
+### Notable venues not covered
+
+USENIX Security and NDSS (security); ISSTA, OOPSLA and PLDI (software and programming languages);
+ACL, NAACL and EACL main conferences (NLP); KDD and The Web Conference (data); CHI, CSCW and UIST
+(HCI); OSDI and SOSP (systems); Springer LNCS venues.
+
+### Adding a venue
+
+Workshops are added on request, one edition at a time, with the edition of the conference they are
+held at as their parent (the `add-venue` skill writes the preset and its card from the call for
+papers). A venue paperlint does not ship needs no release: a user describes it in one file of their
+own, `venues/<series>-<year>.jsonc`, that extends a family (`paperlint:ieee-conference`) or a shipped
+conference edition (`paperlint:icse-2027`), and points the paper's `"extends"` at it
+([`rules.md`](rules.md#writing-your-own-venue-preset)).
 
 ## The corpus of accepted papers
 

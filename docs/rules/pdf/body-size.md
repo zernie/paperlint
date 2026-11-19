@@ -62,11 +62,11 @@ No rule options. From the preset's `format`: `body_pt` and `body_pt_tol` (both n
 check), `ref_pt_min` and `ref_pt_max` (both needed for the reference check). A preset without them
 does not check that size. The shipped presets:
 
-| preset                                    | `body_pt` ± `body_pt_tol` | references |
-| ----------------------------------------- | ------------------------- | ---------- |
-| `ieee-conference` (and `aidc`)            | 10 ± 0.5                  | 8          |
-| `acm-sigconf` (and `agenticdev`, `aisec`) | 9 ± 0.5                   | 7–9        |
-| `realm`                                   | 11 ± 0.5                  | 9–11       |
+| preset                                              | `body_pt` ± `body_pt_tol` | references |
+| --------------------------------------------------- | ------------------------- | ---------- |
+| `ieee-conference` (and `aidc-2026`)                 | 10 ± 0.5                  | 8          |
+| `acm-sigconf` (and `agenticdev-2026`, `aisec-2026`) | 9 ± 0.5                   | 7–9        |
+| `realm-2026`                                        | 11 ± 0.5                  | 9–11       |
 
 ## What it does not check
 
@@ -74,7 +74,7 @@ does not check that size. The shipped presets:
   tables, the title and the appendix are not measured. A table set in `\tiny` passes.
 - **A paper that is not built.** Without `_build/paper.facts.json`, or without banal, the rule is
   silent and `pdf/measured` says why.
-- **The `realm` preset** has not been checked on built accepted papers of its venue: its body size
+- **The `realm-2026` preset** has not been checked on built accepted papers of its venue: its body size
   is ACL's stated 11 pt, and its reference range was set from a single measurement.
 - A paper with no bibliography has no reference size, and only the body is judged.
 

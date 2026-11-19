@@ -1,0 +1,87 @@
+// ACM CCS 2026 (the 33rd ACM Conference on Computer and Communications Security), main research
+// papers — a VENUE preset over the ACM sigconf family. Not the AISec workshop held with it: that is
+// aisec-2026.jsonc. Everything the ACM template decides (page size, columns, fonts, font sizes, TeX
+// packages) comes from acm-sigconf.jsonc; this file adds what the CCS call for papers sets. Its card,
+// in prose: `ccs-2026.md` beside this file.
+//
+// THE EDITION. CCS 2026 is the most recent edition whose call is published, and every one of its
+// submission deadlines has passed (read 2026-11-19, during the conference, 15-19 November 2026).
+// CCS 2027 (Atlanta, 11-15 October 2027) has a call page, https://www.sigsac.org/ccs/CCS2027/cfp.html,
+// but it is not published: its «Important Dates» and «Submission Site» read «TBD», and the site's
+// menu has its «Call for Papers» link commented out (read 2026-11-19). Re-read it when it opens.
+//
+// Verbatim from https://www.sigsac.org/ccs/CCS2026/call-for/call-for-papers.html (read 2026-11-19
+// with curl and WebFetch; the two agree):
+//   «Submissions must be a PDF file in double-column ACM format using "sigconf" 2-column format, no
+//    more than 12 pages long, excluding the bibliography, well-marked appendices, and supplementary
+//    material.»
+//   «All papers MUST discuss Open Science. This MUST be in a separate appendix called "Open Science"
+//    (placed after the 12-page main content and the bibliography) [...]»
+//   «Papers found in violation of any of these requirements will be desk-rejected without review.»
+//   «All papers MUST NOT reveal the identity of the authors (e.g., names, self-references with "we",
+//    funding acknowledgements, deanonymizing Github repositories).»
+//   «All submissions must be received by 11:59 PM AoE (UTC-12) on the day of the corresponding
+//    deadline.»
+//
+// TWO REVIEW CYCLES, TWO PORTALS: «CCS has two review cycles in 2026.» Each cycle has its own HotCRP
+// site (https://ccs2026a.hotcrp.com/, https://ccs2026b.hotcrp.com/) and its own dates. `portal`
+// names one site and `deadlines` holds one reading per kind and source, so neither key can say which
+// cycle a paper is in, and the earlier reading binds: a Cycle A or Cycle B date of 2026 would bind
+// over a paper's own 2027 reading. Both are left out on purpose; the card lists every date of both
+// cycles with its quote, and a paper records its own cycle's dates in its `cycles`.
+{
+  "type": "venue",
+  "name": "ACM CCS",
+  // The call quoted above.
+  "url": "https://www.sigsac.org/ccs/CCS2026/call-for/call-for-papers.html",
+  "extends": "paperlint:acm-sigconf",
+
+  // What the venue is called in a paper's text (tex/venue-leftover): «ACM CCS», as the call heads
+  // its page («ACM CCS 2026»). Not the bare «CCS»: it is also the ACM Computing Classification
+  // System (acmart's «CCS Concepts» block, which the call itself calls «The Computing Classification
+  // System (CCS) information»), and an AISec paper says «ACM CCS» (aisec-2026.jsonc's own alias, so never
+  // reported there) but would be reported for the bare «CCS» inside «ACM CCS 2026».
+  "aliases": ["ACM CCS"],
+
+  // «All submissions should be properly anonymized. Papers should avoid revealing authors' identity
+  // in the text.», «during double-blind review» (the call above), and `"blind":true` in both
+  // portals' data (https://ccs2026a.hotcrp.com/deadlines, https://ccs2026b.hotcrp.com/deadlines,
+  // read 2026-11-19). anonymity/identity then requires the paper's `identity`.
+  "blind": true,
+
+  // «All papers MUST discuss Open Science. This MUST be in a separate appendix called "Open Science"
+  // (placed after the 12-page main content and the bibliography)» — one of the call's desk-reject
+  // requirements. The call's sample (https://members.loria.fr/VCortier/files/CCS2026/sample-ccs2026.tex,
+  // read 2026-11-19) writes it `\section{Open Science} %% CCS: DO NOT REMOVE`, after `\appendix`,
+  // after `\bibliography`. «Ethical Considerations» and «Generative AI Usage» are not required here:
+  // the call asks for them only for papers with ethical concerns and papers whose substantive content
+  // AI generated, and a rule cannot know either (the card has the quotes).
+  "required_sections": [{ "title": "Open Science", "position": "last" }],
+
+  "format": {
+    // 🔴 THE 12 PAGES ARE THE MAIN CONTENT ALONE: «no more than 12 pages long, excluding the
+    // bibliography, well-marked appendices, and supplementary material». The bibliography is not
+    // limited, and the required appendices (Open Science; Ethical Considerations and Generative AI
+    // Usage when they apply) stand after it. banal's default count takes every page of
+    // non-bibliography text as body, so those appendices would count against the 12; `references`
+    // ends the body at the references or the appendix, whichever comes first, and counts nothing
+    // after. Not measured on an acmart build here (no TeX Live in the container that wrote this).
+    "body_ends_at": "references",
+
+    // One kind: the call names no paper types («Note that CCS does not accept SoK or survey
+    // papers.»); its tracks are topics, with one limit.
+    "kinds": {
+      "research": { "body_pages_max": 12, "ref_pages_max": "unlimited" },
+    },
+  },
+
+  // CCS 2026's proceedings are produced by Sheridan Communications, whose page for the final versions
+  // (https://www.scomminc.com/pp/acmsig/ccs.htm, «Preparation Instructions for CCS 2026 Final
+  // Submissions», read 2026-11-19) says: «Be sure to remove page numbers from the bottom of all pages
+  // and balance the last page into 2 even length columns.» So every CCS paper gets the optional
+  // rule, as agenticdev-2026.jsonc does for its producer; a paper can turn it off in its own
+  // paperlint.json. 120 pt is the rule's default (docs/optional-rules.md).
+  "rules": {
+    "pdf/last-page-balance": ["error", { "tolerancePt": 120 }],
+  },
+}
