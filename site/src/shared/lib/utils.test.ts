@@ -22,12 +22,9 @@ describe("cn", () => {
     expect(cn("text-hero", "text-lead")).toBe("text-lead");
   });
 
-  it("merges the named spacing, widths and shadows by group", () => {
+  it("merges the named spacing and widths by group", () => {
     expect(cn("pt-hero", "pt-section", "max-w-page", "max-w-prose")).toBe(
       "pt-section max-w-prose",
-    );
-    expect(cn("shadow-soft", "shadow-shot", "bg-card")).toBe(
-      "shadow-shot bg-card",
     );
   });
 });

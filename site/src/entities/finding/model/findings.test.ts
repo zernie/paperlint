@@ -11,6 +11,8 @@ describe("findings", () => {
     rule: "r",
     level: "error",
     template: "\\`${s.a}\\` {{b}} {{c}} ${s.z}",
+    title: "",
+    plain: "",
     values: { a: "x", b: "y" },
     source: "",
   };
@@ -23,6 +25,9 @@ describe("findings", () => {
     "quotes %s verbatim from its source, and docs/rules.md lists it",
     (rule, f) => {
       expect(read(f.source)).toContain(f.template);
+      (f.sourced ?? []).forEach((key) => {
+        expect(read(f.source)).toContain(f.values[key]);
+      });
       expect(read("docs/rules.md")).toContain("`" + rule + "`");
     },
   );

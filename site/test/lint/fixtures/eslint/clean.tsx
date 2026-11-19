@@ -12,7 +12,7 @@ export function Clean({ on }: { readonly on: boolean }) {
         {count}
       </p>
       <Button
-        className="shadow-raised"
+        className="rounded-md"
         onClick={() => {
           setCount(count + 1);
         }}

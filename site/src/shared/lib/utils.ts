@@ -7,10 +7,18 @@ import { createCn } from "cn/config";
  * here.
  */
 export const themeTokens = {
-  text: ["hero", "display", "title", "lead", "body", "code"],
-  spacing: ["hero", "section", "stop"],
+  text: [
+    "hero",
+    "display",
+    "title",
+    "subtitle",
+    "lead",
+    "body",
+    "label",
+    "code",
+  ],
+  spacing: ["hero", "campus", "section"],
   container: ["page", "prose"],
-  shadow: ["soft", "shot", "raised"],
 } as const;
 
 /** shadcn's class merger: later classes win over earlier ones of the same group. */
@@ -20,7 +28,6 @@ export const cn = createCn({
       text: [...themeTokens.text],
       spacing: [...themeTokens.spacing],
       container: [...themeTokens.container],
-      shadow: [...themeTokens.shadow],
     },
   },
 });

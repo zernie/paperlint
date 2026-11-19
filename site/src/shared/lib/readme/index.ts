@@ -1,4 +1,5 @@
 export {
+  fencedAfter,
   layoutEntries,
   readmeContent,
   shortName,

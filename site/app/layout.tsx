@@ -1,15 +1,12 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { fontVariables } from "@/app";
-// The page's older plain CSS, after the Tailwind entry so it still wins while the page moves to
-// the design tokens (src/app/styles/globals.css).
-import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://paperlint.dev"),
-  title: "paperlint — a linter for LaTeX papers",
+  title: "paperlint — a checker for LaTeX papers, before peer review",
   description:
-    "paperlint catches what gets a paper desk-rejected — the page limit, the wrong font, a reference that does not exist — before you submit.",
+    "paperlint checks a LaTeX paper against your venue's rules — the page limit, the template, the fonts, the references — and flags what can get it sent back before peer review.",
 };
 
 export default function RootLayout({

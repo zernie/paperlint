@@ -59,59 +59,63 @@
   --color-ring: var(--color-ink-blue);
 }
 
-/* Type. next/font sets the three families' variables on <html> (src/app/styles/fonts.ts); `static`
-   emits these even before a class uses them, because the older plain CSS in app/ reads them too. */
+/* Type. next/font sets the three families' variables on <html> (src/app/styles/fonts.ts). */
 @theme static {
-  --font-display: var(--font-instrument-serif), Georgia, serif;
+  --font-display: var(--font-newsreader), Georgia, serif;
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, Menlo, monospace;
   --font-heading: var(--font-display);
 }
 
-/* The type scale beyond Tailwind's (xs 12px … 9xl 128px): the landing page's named sizes, each
-   fluid between a phone and a desktop, so no class needs `text-[128px]`. */
+/* The type scale beyond Tailwind's: the landing page's named sizes, fluid between a phone and a
+   desktop, so no class needs `text-[112px]`. Headlines are Newsreader, whose optical sizes tighten
+   it at display sizes; running text is Inter. */
 @theme {
-  /* The headline: 56px on a phone, 128px on a desktop. */
-  --text-hero: clamp(3.5rem, 9vw, 8rem);
-  --text-hero--line-height: 0.95;
-  --text-hero--letter-spacing: -0.02em;
-  /* A section's headline: 48–72px. */
-  --text-display: clamp(3rem, 6vw, 4.5rem);
-  --text-display--line-height: 1;
+  /* The headline: 56px on a phone, 112px on a desktop. */
+  --text-hero: clamp(3.5rem, 8vw, 7rem);
+  --text-hero--line-height: 1;
+  --text-hero--letter-spacing: -0.025em;
+  /* A section's headline: 40–56px. */
+  --text-display: clamp(2.5rem, 4.5vw, 3.5rem);
+  --text-display--line-height: 1.05;
   --text-display--letter-spacing: -0.02em;
-  /* A stop's title on the journey: 44–64px. */
-  --text-title: clamp(2.75rem, 5vw, 4rem);
-  --text-title--line-height: 1;
-  /* The paragraph under a headline: 18–22px. */
-  --text-lead: clamp(1.125rem, 2vw, 1.375rem);
-  --text-lead--line-height: 1.45;
+  /* A stop's title on the journey, a venue's name: 32–40px. */
+  --text-title: clamp(2rem, 3vw, 2.5rem);
+  --text-title--line-height: 1.1;
+  --text-title--letter-spacing: -0.015em;
+  /* A finding's or a question's title: 24px. */
+  --text-subtitle: 1.5rem;
+  --text-subtitle--line-height: 1.25;
+  /* The paragraph under a headline: 18–21px. */
+  --text-lead: clamp(1.125rem, 1.6vw, 1.3125rem);
+  --text-lead--line-height: 1.5;
   /* Running text. */
-  --text-body: 1.125rem;
-  --text-body--line-height: 1.55;
-  /* The lint output and other code. */
-  --text-code: 0.90625rem;
-  --text-code--line-height: 1.9;
+  --text-body: 1.0625rem;
+  --text-body--line-height: 1.65;
+  /* A label above a section, a caption under a figure. */
+  --text-label: 0.75rem;
+  --text-label--line-height: 1.4;
+  --text-label--letter-spacing: 0.08em;
+  /* Commands and the exact terminal output. */
+  --text-code: 0.875rem;
+  --text-code--line-height: 1.7;
 }
 
-/* Space and size. Tailwind's spacing scale (`p-6` = 24px, steps of 4px) stays; these name the
-   landing page's large distances and widths. */
+/* Space: every gap is a multiple of 8px (Tailwind's 2, 4, 6, 8, 12, 16, 24 …); these name the
+   page's large distances and its two widths. No shadows: sections are set apart by space and
+   hairlines (site/CLAUDE.md, "Modern Not 2010"). */
 @theme {
-  /* Above the hero, under the fixed header: 170px. */
-  --spacing-hero: 10.625rem;
-  /* Between sections: 150px. */
-  --spacing-section: 9.375rem;
-  /* Between two stops of the journey: 200px. */
-  --spacing-stop: 12.5rem;
-  /* The page's content width (1120px) and a paragraph's (640px). */
-  --container-page: 70rem;
+  /* Above the hero, under the header: 160px. */
+  --spacing-hero: 10rem;
+  /* The height of the hero's campus band: 288–640px. */
+  --spacing-campus: clamp(18rem, 44vw, 40rem);
+  /* Between sections: 160px. */
+  --spacing-section: 10rem;
+  /* The page's content width (1200px) and a paragraph's (640px). */
+  --container-page: 75rem;
   --container-prose: 40rem;
 
-  /* Soft depth: a card, the product shot under the hero, a raised button. */
-  --shadow-soft: 0 40px 80px -48px rgb(24 24 22 / 0.4);
-  --shadow-shot: 0 50px 100px -40px rgb(24 24 22 / 0.5);
-  --shadow-raised: 0 18px 40px -18px rgb(24 24 22 / 0.55);
-
-  /* shadcn's radius scale. */
+  /* shadcn's radius scale; the page itself uses only small radii. */
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -136,15 +140,45 @@
   translate: 0 calc(-50% - 2px);
 }
 
+/* The hero's etching melts into the paper: transparent at the top, where the headline sits, and at
+   the bottom and sides, so no rectangle edge shows (src/widgets/hero/ui/hero.tsx). */
+@utility mask-campus {
+  mask-image:
+    linear-gradient(
+      to bottom,
+      transparent 30%,
+      black 62%,
+      black 82%,
+      transparent
+    ),
+    linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+  mask-composite: intersect;
+}
+
+/* A section fades up as it scrolls in (src/shared/ui/reveal.tsx). Only where the browser has scroll
+   timelines and the reader has not asked for less motion; everywhere else it is simply there. */
+@keyframes reveal {
+  from {
+    opacity: 0;
+    translate: 0 1rem;
+  }
+}
+@utility reveal {
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      animation: reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 60%;
+    }
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   html {
-    @apply font-sans;
-    /* The page's older CSS in app/ was laid out against the browser's `normal`, not Tailwind's
-       1.5: measured, 1.5 made the page 52px taller on a desktop. Drop once app/ is on tokens. */
-    line-height: normal;
+    @apply scroll-smooth font-sans antialiased motion-reduce:scroll-auto;
   }
   body {
     @apply bg-background text-foreground;
