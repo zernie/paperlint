@@ -13,7 +13,7 @@ Updated: <ISO>
 **Readiness verdict:** <one line — submit-ready? if not, the WORST failing gate first. Any failing
 gate caps "ready"; an accept probability alone is not a verdict.>
 
-**Gates at a glance (worst first — mark any failing gate ✗):** readability(persona stalls) <density/verdict> · structure(tighten-paper) <verdict> · claims-honest(claims) <clean?> · defects(panel) <accept-prob/decision> · writing <NN/60> · content(strong-accept scorecard) <run?/mode>
+**Gates at a glance (worst first — mark any failing gate ✗):** readability(cold-read-diff, whole paper) <verdict> · structure(tighten-paper) <verdict> · claims-honest(claims) <clean?> · defects(panel) <accept-prob/decision> · content(strong-accept scorecard) <run?/mode>
 
 ## Plan / now
 
