@@ -545,6 +545,12 @@ describe("bodyProse — the space a % comment leaves, which TeX keeps", () => {
     expect(typeset("a%\nb")).toBe("ab");
   });
 
+  it("🔴 a run of comments leaves one space, and only when TeX kept one before the first of them", () => {
+    expect(typeset("some%\n% explanation\nthing")).toBe("something");
+    expect(typeset("some \n% one\n% two\nthing")).toBe("some thing");
+    expect(typeset("some % one\n% two\nthing")).toBe("some thing");
+  });
+
   it("the text inside a comment is not prose, whichever way the comment stands", () => {
     expect(typeset("A. % hidden words\nB.\n% more hidden\nC.")).toBe(
       "A. B. C.",

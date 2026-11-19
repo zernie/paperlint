@@ -389,17 +389,27 @@ const followsSpace = (n: NodeOf<"comment">): boolean =>
  * eats the rest of its line, never the space TeX keeps before it — that space. The parser folds the
  * space written before a trailing `%` into the comment as `leadingWhitespace`, and drops the line
  * break before an own-line comment (`sameline` is false). A comment glued to the word before it
- * (`four.% note`) leaves none. The text inside a comment is never prose.
+ * (`four.% note`) leaves none, and neither does one after another comment: the first ate the line
+ * break, so a run of comments leaves at most the one space before it (`some%`, then a line of
+ * comment, then `thing` sets `something`). The text inside a comment is never prose.
  */
 const silentEvents = (
   n: NodeOf<"comment" | "verb" | "root">,
+  prev: Node | undefined,
 ): readonly Event[] =>
-  n.type === "comment" && followsSpace(n) ? textAt(n, " ") : [];
+  n.type === "comment" && prev?.type !== "comment" && followsSpace(n)
+    ? textAt(n, " ")
+    : [];
 
-function nodeEvents(t: ParsedTex, n: Node): readonly Event[] {
+/** A node's events; `prev` is the node before it in the same list, which decides a comment's space. */
+function nodeEvents(
+  t: ParsedTex,
+  n: Node,
+  prev?: Node,
+): readonly Event[] {
   if (isMath(n)) return math(t, n);
   if (isBreak(n)) return [BREAK];
-  if (isSilent(n)) return silentEvents(n);
+  if (isSilent(n)) return silentEvents(n, prev);
   switch (n.type) {
     case "string":
       return textAt(n, stringText(n.content));
@@ -565,8 +575,9 @@ function walkList(
   );
   return nodes.flatMap((n, i) => {
     const opening = i === 0 ? opens : after[i - 1] === true;
-    if (!opening) return nodeEvents(t, n);
-    return isRunInHeading(t, n) ? [BREAK] : asOpening(n, nodeEvents(t, n));
+    const events = nodeEvents(t, n, nodes[i - 1]);
+    if (!opening) return events;
+    return isRunInHeading(t, n) ? [BREAK] : asOpening(n, events);
   });
 }
 
