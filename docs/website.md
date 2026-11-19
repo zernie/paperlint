@@ -44,18 +44,21 @@ The project and the domain are the maintainer's Vercel account. Once:
    to it). The domain was bought through Vercel, so its DNS is already there.
 5. Open `https://paperlint.dev` and check the certificate.
 
-## Deploys happen only when the maintainer asks
+## Production on every push to `main`; previews only on request
 
-`site/vercel.json` sets `git.deploymentEnabled: false`, so a push or a pull request deploys nothing,
-neither a preview nor production. The maintainer decided this on 2026-11-19. The Hobby plan has no
-project-level switch: Vercel's deployment policies need Pro (`pro_plan_required`, measured), so the
-switch lives in the repository.
+`site/vercel.json` sets `git.deploymentEnabled` to `{ "**": false, "main": true }`: a push to `main`
+deploys production, and a push to any other branch, or a pull request, deploys nothing. Vercel's
+Git configuration docs: «If a branch matches multiple rules and at least one rule is true, a
+deployment will occur», so `main` deploys and nothing else does. The pattern is `**`, not `*`:
+minimatch's `*` does not match a `/`, so a branch such as `feat/site-landing` would match no rule.
+The maintainer decided this on 2026-11-19. The Hobby plan has no project-level switch: Vercel's
+deployment policies need Pro (`pro_plan_required`, measured), so the switch lives in the repository.
 
-To deploy, on the maintainer's request only:
+On the maintainer's request only:
 
 - **A preview of a branch**: `vercel deploy` from `site/` on that branch, or the Vercel API's
   create-deployment with the branch as its git source (an agent uses the Vercel MCP tool).
-- **Production**: the same with `--prod`, or `target: "production"`.
+- **Production without a push to `main`**: the same with `--prod`, or `target: "production"`.
 
 A branch cut before `site/` reached `main` has no `site/vercel.json`, so Vercel still tries it and
 fails with «The specified Root Directory "site" does not exist»; that status is not the pull

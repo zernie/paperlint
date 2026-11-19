@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:7ca8620df60c7d23 compiled from site/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:6bedfaa746f8d055 compiled from site/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -78,9 +78,9 @@ design below was decided with the author on 2026-11-19, over three rounds of moc
 
 **Guidance only** — Animation is quiet and short: elements fade and rise into place as they scroll in, the venue name changes, the road draws itself. Nothing loops for attention, nothing bounces, and everything stops for a reader who asks for reduced motion.
 
-### Deploy Only On Request
+### Production From Main Previews On Request
 
-**Guidance only** — Nothing deploys on its own: `site/vercel.json` turns off Git deployments, previews included. A preview or a production deploy happens only when the author asks for it, by the CLI or the Vercel API (`docs/website.md`). The author decided this on 2026-11-19.
+**Guidance only** — A push to `main` deploys production, and nothing else deploys on its own: `site/vercel.json` turns Git deployments off for every branch (`**`, since `*` does not match a `/`) and on for `main`, so a pull request gets no preview. A preview happens only when the author asks for it, by the CLI or the Vercel API (`docs/website.md`). The author decided this on 2026-11-19.
 
 ### Static And Private
 
