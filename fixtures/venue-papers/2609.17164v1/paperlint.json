@@ -4,7 +4,7 @@
       "id": "aisec-2026",
       "venue": {
         "kind": "preset",
-        "extends": "paperlint:aisec"
+        "extends": "paperlint:aisec-2026"
       },
       "kind": "research",
       "opened": "2026-09-15",

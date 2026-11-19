@@ -4,7 +4,7 @@
       "id": "agenticdev-2026",
       "venue": {
         "kind": "preset",
-        "extends": "paperlint:agenticdev"
+        "extends": "paperlint:agenticdev-2026"
       },
       "kind": "short",
       "opened": "2026-09-03",

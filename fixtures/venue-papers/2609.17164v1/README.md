@@ -5,7 +5,7 @@
 - **Category:** cs.CR; **document class:** `[sigconf]{acmart}`
 - **Licence:** [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), as the arXiv abstract page states. The files are redistributed under it.
 - **Accepted at:** AISec 2026 (workshop at ACM CCS 2026). The arXiv comment of [2609.17164v1](https://arxiv.org/abs/2609.17164v1) says: «To be presented and published at 19 th ACM Workshop on Artificial Intelligence and Security (AISEC'26) colocated with ACM CCS 2026»
-- **Linted as:** `paperlint:aisec`, kind `research`, the camera-ready of an accepted attempt (the shipped edition, AISec 2026 (aisec.cc, the 19th workshop); kind `research`: the comment names no track)
+- **Linted as:** `paperlint:aisec-2026`, kind `research`, the camera-ready of an accepted attempt (the shipped edition, AISec 2026 (aisec.cc, the 19th workshop); kind `research`: the comment names no track)
 - **Text sources only, figures omitted.** Kept: `.tex`, `.bib`, `.bbl`, `.cls`, `.sty`, `.bst`, `.cfg`, `.def` of the main file's directory. Dropped: images, PDFs, data.
 - **Renamed, nothing inside changed:** `aisec_camera_ready_final_clean.tex` to `paper.tex`, `aisec_camera_ready_final_clean.bbl` to `paper.bbl`.
 - **Ours:** `paperlint.json`, `PIPELINE-STATUS.md`, `record-by-hand.json`, `baseline.json`, `README.md`.

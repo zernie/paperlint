@@ -5,7 +5,7 @@
 - **Category:** cs.CR; **document class:** `[sigconf]{acmart}`
 - **Licence:** [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), as the arXiv abstract page states. The files are redistributed under it.
 - **Accepted at:** ACM CCS 2026. The arXiv comment of [2610.26174v1](https://arxiv.org/abs/2610.26174v1) says: «Accepted at ACM CCS 2026. Project page: https://phantomtac.org»
-- **Linted as:** `paperlint:ccs`, kind `research`, the camera-ready of an accepted attempt (the shipped edition, ACM CCS 2026)
+- **Linted as:** `paperlint:ccs-2026`, kind `research`, the camera-ready of an accepted attempt (the shipped edition, ACM CCS 2026)
 - **Text sources only, figures omitted.** Kept: `.tex`, `.bib`, `.bbl`, `.cls`, `.sty`, `.bst`, `.cfg`, `.def` of the main file's directory. Dropped: images, PDFs, data.
 - **Renamed, nothing inside changed:** `main.bbl` to `paper.bbl`, `main.tex` to `paper.tex`.
 - **Ours:** `paperlint.json`, `PIPELINE-STATUS.md`, `record-by-hand.json`, `baseline.json`, `README.md`.

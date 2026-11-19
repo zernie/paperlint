@@ -5,7 +5,7 @@
 - **Category:** cs.CR; **document class:** `[sigconf]{acmart}`
 - **Licence:** [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), as the arXiv abstract page states. The files are redistributed under it.
 - **Accepted at:** ACM CCS 2026. The arXiv comment of [2609.14098v2](https://arxiv.org/abs/2609.14098v2) says: «14 pages, 1 figure, 4 tables. Accepted at ACM CCS 2026. v2: corrected version, matches the published ACM version»
-- **Linted as:** `paperlint:ccs`, kind `research`, the camera-ready of an accepted attempt (the shipped edition, ACM CCS 2026; v2 «matches the published ACM version» (the comment))
+- **Linted as:** `paperlint:ccs-2026`, kind `research`, the camera-ready of an accepted attempt (the shipped edition, ACM CCS 2026; v2 «matches the published ACM version» (the comment))
 - **Text sources only, figures omitted.** Kept: `.tex`, `.bib`, `.bbl`, `.cls`, `.sty`, `.bst`, `.cfg`, `.def` of the main file's directory. Dropped: images, PDFs, data.
 - **Renamed, nothing inside changed:** `deception_delta_ccs2026_camera_ready.bbl` to `paper.bbl`, `deception_delta_ccs2026_camera_ready.tex` to `paper.tex`.
 - **Ours:** `paperlint.json`, `PIPELINE-STATUS.md`, `record-by-hand.json`, `baseline.json`, `README.md`.

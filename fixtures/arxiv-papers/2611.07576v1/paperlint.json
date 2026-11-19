@@ -4,7 +4,7 @@
       "id": "sp-2027",
       "venue": {
         "kind": "preset",
-        "extends": "paperlint:sp"
+        "extends": "paperlint:sp-2027"
       },
       "kind": "research",
       "opened": "2026-11-05",

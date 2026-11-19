@@ -22,7 +22,7 @@
 import { cpSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { run } from "../src/cli.ts";
 import { latexReader } from "../src/adapters/latex/index.ts";
 import { nodeFiles } from "../src/adapters/node/index.ts";
@@ -83,12 +83,20 @@ it("the corpus holds papers, with names that are unique — an empty or collidin
   expect(new Set(PAPERS.map((p) => p.name)).size).toBe(PAPERS.length);
 });
 
+/**
+ * The day the baselines were measured. `paper/edition-over` reads the clock: an edition preset whose
+ * last deadline passes (`sp-2027`'s on 2027-04-09) would grow a baseline on that day with no change
+ * to the code or the papers. The lint runs on this day, so a count moves only when something here does.
+ */
+const MEASURED_ON = "2026-11-19T12:00:00Z";
+
 describe("every real paper, in one run", () => {
   it(
     "says no more than recorded, and no recorded rule has gone quiet",
     { timeout: 10 * 60_000 },
     async () => {
-      const found = await lintAll();
+      vi.setSystemTime(MEASURED_ON);
+      const found = await lintAll().finally(() => vi.useRealTimers());
       const verdicts = PAPERS.map(({ name, dir }) => ({
         name,
         ...compareToBaseline(found[name] ?? {}, recordedFindings(dir)),

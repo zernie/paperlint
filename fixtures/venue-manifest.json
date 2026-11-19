@@ -64,7 +64,7 @@
       "url": "https://arxiv.org/abs/2609.03920v1",
       "venue": "AgenticDev 2026 (workshop at ASE 2026)"
     },
-    "preset": "paperlint:agenticdev",
+    "preset": "paperlint:agenticdev-2026",
     "kind": "short"
   },
   {
@@ -81,7 +81,7 @@
       "url": "https://arxiv.org/abs/2609.17164v1",
       "venue": "AISec 2026 (workshop at ACM CCS 2026)"
     },
-    "preset": "paperlint:aisec",
+    "preset": "paperlint:aisec-2026",
     "kind": "research"
   },
   {
@@ -98,7 +98,7 @@
       "url": "https://arxiv.org/abs/2609.16832v1",
       "venue": "AISec 2026 (workshop at ACM CCS 2026)"
     },
-    "preset": "paperlint:aisec",
+    "preset": "paperlint:aisec-2026",
     "kind": "benchmark"
   },
   {
@@ -115,7 +115,7 @@
       "url": "https://arxiv.org/abs/2609.14098v2",
       "venue": "ACM CCS 2026"
     },
-    "preset": "paperlint:ccs",
+    "preset": "paperlint:ccs-2026",
     "kind": "research"
   },
   {
@@ -132,7 +132,7 @@
       "url": "https://arxiv.org/abs/2610.26174v1",
       "venue": "ACM CCS 2026"
     },
-    "preset": "paperlint:ccs",
+    "preset": "paperlint:ccs-2026",
     "kind": "research"
   },
   {
@@ -149,7 +149,7 @@
       "url": "https://arxiv.org/abs/2611.10830v1",
       "venue": "AIDC 2026 (workshop at ACSAC 2026)"
     },
-    "preset": "paperlint:aidc",
+    "preset": "paperlint:aidc-2026",
     "kind": "regular"
   },
   {
@@ -166,7 +166,7 @@
       "url": "https://arxiv.org/abs/2610.41369v1",
       "venue": "ACSAC 2026"
     },
-    "preset": "paperlint:ieee-conference",
+    "preset": "paperlint:acsac-2026",
     "kind": null
   },
   {

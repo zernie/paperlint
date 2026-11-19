@@ -4,7 +4,7 @@
       "id": "aidc-2026",
       "venue": {
         "kind": "preset",
-        "extends": "paperlint:aidc"
+        "extends": "paperlint:aidc-2026"
       },
       "kind": "regular",
       "opened": "2026-11-07",

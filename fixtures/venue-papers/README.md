@@ -38,13 +38,16 @@ only when all of these hold:
 
 ## The venue each paper is linted against
 
-- **The edition preset** when paperlint ships the edition that accepted the paper: `paperlint:ccs`
-  (ACM CCS 2026), `paperlint:aisec` (AISec 2026), `paperlint:agenticdev` (AgenticDev 2026),
-  `paperlint:aidc` (AIDC 2026).
-- **Otherwise the family** of the class the venue requires: `paperlint:fse` is FSE 2027, so an FSE
-  2026 paper extends `paperlint:acm-acmsmall`; ACSAC 2026 has no preset, so `ieee-conference`;
-  `paperlint:ase` is ASE 2026's Research Track, so a paper of another ASE track, or one whose
-  comment names no track, extends `acm-sigconf`. Each paper's README says which and why.
+- **The edition preset** when paperlint ships the edition that accepted the paper:
+  `paperlint:ccs-2026` (ACM CCS 2026), `paperlint:aisec-2026` (AISec 2026),
+  `paperlint:agenticdev-2026` (AgenticDev 2026), `paperlint:aidc-2026` (AIDC 2026),
+  `paperlint:acsac-2026` (ACSAC 2026, a minimal preset: names and the IEEE family, no kinds, no page
+  limit).
+- **Otherwise the family** of the class the venue requires: the FSE preset that ships is
+  `paperlint:fse-2027`, and there is no `fse-2026`, so an FSE 2026 paper extends
+  `paperlint:acm-acmsmall`; `paperlint:ase-2026` is ASE 2026's Research Track, so a paper of another
+  ASE track, or one whose comment names no track, extends `acm-sigconf`. Each paper's README says
+  which and why.
 - **Stage: camera-ready.** `paperlint.json` records one attempt (`cycles`) whose outcome is
   `accepted`, its evidence the paper's README. An accepted attempt is no longer judged blind, so
   `anonymity/identity` does not ask a published paper to hide its authors. The dates are those of
@@ -74,13 +77,13 @@ only when all of these hold:
 | [2607.27374v2](2607.27374v2/README.md) | ASE 2026, Industry Showcase track | `paperlint:acm-sigconf` | `acmart` | CC BY 4.0 | 219 KB |
 | [2607.06766v2](2607.06766v2/README.md) | ASE 2026, Industry Showcase track | `paperlint:acm-sigconf` | `acmart` | CC BY 4.0 | 163 KB |
 | [2609.10590v1](2609.10590v1/README.md) | ASE 2026 (track not named) | `paperlint:acm-sigconf` | `acmart` | CC BY 4.0 | 96 KB |
-| [2609.03920v1](2609.03920v1/README.md) | AgenticDev 2026 (workshop at ASE 2026) | `paperlint:agenticdev` `short` | `acmart` | CC BY 4.0 | 286 KB |
-| [2609.17164v1](2609.17164v1/README.md) | AISec 2026 (workshop at ACM CCS 2026) | `paperlint:aisec` `research` | `acmart` | CC BY 4.0 | 89 KB |
-| [2609.16832v1](2609.16832v1/README.md) | AISec 2026 (workshop at ACM CCS 2026) | `paperlint:aisec` `benchmark` | `acmart` | CC BY 4.0 | 99 KB |
-| [2609.14098v2](2609.14098v2/README.md) | ACM CCS 2026 | `paperlint:ccs` `research` | `acmart` | CC BY 4.0 | 121 KB |
-| [2610.26174v1](2610.26174v1/README.md) | ACM CCS 2026 | `paperlint:ccs` `research` | `acmart` | CC BY 4.0 | 230 KB |
-| [2611.10830v1](2611.10830v1/README.md) | AIDC 2026 (workshop at ACSAC 2026) | `paperlint:aidc` `regular` | `IEEEtran` | CC BY 4.0 | 191 KB |
-| [2610.41369v1](2610.41369v1/README.md) | ACSAC 2026 | `paperlint:ieee-conference` | `IEEEtran` | CC BY 4.0 | 112 KB |
+| [2609.03920v1](2609.03920v1/README.md) | AgenticDev 2026 (workshop at ASE 2026) | `paperlint:agenticdev-2026` `short` | `acmart` | CC BY 4.0 | 286 KB |
+| [2609.17164v1](2609.17164v1/README.md) | AISec 2026 (workshop at ACM CCS 2026) | `paperlint:aisec-2026` `research` | `acmart` | CC BY 4.0 | 89 KB |
+| [2609.16832v1](2609.16832v1/README.md) | AISec 2026 (workshop at ACM CCS 2026) | `paperlint:aisec-2026` `benchmark` | `acmart` | CC BY 4.0 | 99 KB |
+| [2609.14098v2](2609.14098v2/README.md) | ACM CCS 2026 | `paperlint:ccs-2026` `research` | `acmart` | CC BY 4.0 | 121 KB |
+| [2610.26174v1](2610.26174v1/README.md) | ACM CCS 2026 | `paperlint:ccs-2026` `research` | `acmart` | CC BY 4.0 | 230 KB |
+| [2611.10830v1](2611.10830v1/README.md) | AIDC 2026 (workshop at ACSAC 2026) | `paperlint:aidc-2026` `regular` | `IEEEtran` | CC BY 4.0 | 191 KB |
+| [2610.41369v1](2610.41369v1/README.md) | ACSAC 2026 | `paperlint:acsac-2026` | `IEEEtran` | CC BY 4.0 | 112 KB |
 | [2604.19400v1](2604.19400v1/README.md) | FSE 2026 | `paperlint:acm-acmsmall` | `acmart` | CC BY 4.0 | 138 KB |
 | [2605.17475v1](2605.17475v1/README.md) | FSE 2026 (track not named) | `paperlint:acm-acmsmall` | `acmart` | CC BY 4.0 | 230 KB |
 
@@ -97,8 +100,19 @@ From the baselines (the run with `RECORDED_OPT_IN` on, as for every corpus):
 | `format/layout-override` | 1 | 2609.14098v2: `\setlength{\headheight}` |
 | `pdf/last-page-balance` | 3 | AgenticDev and ACM CCS turn it on; it says the paper was not built |
 | `pdf/measured` | 12 | every paper: not built, so the PDF rules did not run |
+| `paper/edition-over` | 1 | 2611.10830v1: «AIDC 2026 is over», its last deadline (camera-ready, 2026-11-09) passed; the rule does not look at the accepted cycle. The rule reads the clock, so `real-papers.test.ts` lints on a fixed day (2026-11-19): on the real clock `sp-2027` would add one to `arxiv-papers/2611.07576v1` on 2027-04-09 (measured with the clock set to 2027-05-01) |
 
 Not classified yet: these are the next step's rows.
+
+After the edition rename (#546, `<series>-<year>` ids), measured 2026-11-19 by the same run: every
+label above moved to its edition id (`ccs` → `ccs-2026`, `aisec` → `aisec-2026`, `agenticdev` →
+`agenticdev-2026`, `aidc` → `aidc-2026`), and 2610.41369v1 moved from the `ieee-conference` family
+to the new minimal `acsac-2026`. One count moved: `paper/edition-over`, a rule #546 added, 0 → 1 on
+2611.10830v1. 2610.41369v1 says the same on `acsac-2026` as it did on the family. The five
+`tex/venue-leftover` findings are unchanged: «ASE» in the `\acmConference` and `\acmBooktitle` lines
+of 2607.27374v2 and 2609.10590v1 is a venue-stating command, which counts at any year, and the
+family has no edition of its own; 2611.10830v1's «A separate ASE 2026 study» is related work whose year
+is inside the rule's window (no older than 2026 minus one).
 
 ## The false positives the preprint corpus has caught, and what pins each
 
@@ -112,8 +126,10 @@ loses no protection. What the history holds (the commits of #453 and after, the 
 | arxiv-papers (#453) | two branches of `src/bib-rules.ts` reached only by real papers | yes — the test #453 added to `src/bib-rules.test.ts` |
 | arxiv-papers (#543, open) | the sentence splitter never breaks before a lowercase start («16 GB. fp16 …»): an 82-word «sentence» in 2611.09573v1 | **no** — open issue, no test |
 | arxiv-papers (#542, open) | a `%` comment's space is dropped, gluing two sentences (`four.Second`); the issue does not say which corpus found it, and `venue-papers/2611.10830v1` shows it («weight training.We compare») | **no** — open issue, no test |
-| arxiv-papers (this change) | `tex/venue-leftover` reads a hand-typed reference list: «EMNLP 2023» in 2611.09709v1's `\item` list, attributed to REALM | **no** — found here, listed as a follow-up |
-| arxiv-papers (this change) | `tex/venue-leftover` reports «ACSAC» as AIDC's name (AIDC's aliases include its parent conference), on 2611.08608v1, a paper accepted at ACSAC 2026 itself | **no** — found here, listed as a follow-up |
+| arxiv-papers (this change) | `tex/venue-leftover` reads a hand-typed reference list: «EMNLP 2023» in 2611.09709v1's `\item` list, attributed to REALM | **no** — found here, listed as a follow-up. Still reproduces after #546 (measured 2026-11-19): on `ieee-conference` «EMNLP 2023» and «EMNLP 2025» are reported as EMNLP's names, on `realm-2026` «EMNLP 2025» (its parent's previous edition) |
+| arxiv-papers (this change) | `tex/venue-leftover` reports «ACSAC» as AIDC's name (AIDC's aliases include its parent conference), on 2611.08608v1, a paper accepted at ACSAC 2026 itself | fixed by #546: ACSAC and EMNLP are presets of their own, named as `parent`; `src/tex-venue-rules.test.ts` («tex/venue-leftover — a workshop's parent conference (`parent`) is the paper's own») pins it. What is left is the next row's case: on the IEEE family the paper still gets «ACSAC» once, as ACSAC 2026; on `acsac-2026`, its label now, none |
+| venue-papers (this change) | a paper on a family preset that names its own venue: «ASE» in the `\acmConference` and `\acmBooktitle` lines of 2607.27374v2 and 2609.10590v1, accepted at ASE 2026 and linted on `acm-sigconf` | **no** — still reproduces after #546 (2 findings each), listed as a follow-up |
+| venue-papers (this change) | `paper/edition-over` reports an edition as over on a paper whose cycle was accepted at it (2611.10830v1, AIDC 2026) | **no** — found here, a candidate for the classification step |
 | arxiv-papers (#453) | `tex/template` fired on 100 of 108 papers because every paper extended `ieee-conference` | not a rule defect: the fixture's label. Fixed by this change's relabel |
 
 The accepted papers of `accepted-papers/` stay; the false positives they caught (its README,

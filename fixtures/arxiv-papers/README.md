@@ -28,15 +28,18 @@ on 100 of 108 by construction. Each `paperlint.json` now says what the paper's o
 
 | label | papers | why |
 | --- | ---: | --- |
-| `paperlint:sp`, an accepted cycle | 1 | 2611.07576v1: «Accepted by IEEE S&P 27, Lionel Z. Wang is the corresponding author» ([arXiv](https://arxiv.org/abs/2611.07576v1)); S&P 2027 is the edition `paperlint:sp` ships, kind `research` |
-| `paperlint:ieee-conference` | 8 | `IEEEtran` |
+| `paperlint:sp-2027`, an accepted cycle | 1 | 2611.07576v1: «Accepted by IEEE S&P 27, Lionel Z. Wang is the corresponding author» ([arXiv](https://arxiv.org/abs/2611.07576v1)); S&P 2027 is the edition `paperlint:sp-2027` ships, kind `research` |
+| `paperlint:acsac-2026`, an accepted cycle | 1 | 2611.08608v1: «To Appear In ACSAC 2026» ([arXiv](https://arxiv.org/abs/2611.08608v1)); `\documentclass[conference,compsoc,letterpaper]{IEEEtran}`, the class ACSAC 2026's call requires. ACSAC 2026 is a minimal preset (names and the IEEE family, no kinds, no page limit), shipped by #546 |
+| `paperlint:ieee-conference` | 7 | `IEEEtran` |
 | `paperlint:acm-sigconf` | 6 | `acmart` with `sigconf` |
 | `paperlint:acm-acmsmall` | 1 | `acmart` with `acmsmall` |
 | `{}` — no venue preset | 92 | any other class: `article` 73 (with or without a venue's style file), `llncs` 5, `elsarticle` 3, `svjour3` 2, `asmeconf` 2, one each of `sn-jnl`, `jmlr`, `ifacconf`, `ieeeconf`, `fairmeta`, `arxiv`, `IEEEcsmag` |
 
-Other comments name an acceptance at a venue with no shipped edition (ACSAC 2026, SIGCSE 2027,
-NeurIPS 2026 and its workshops, EMNLP 2026 Findings, …): those papers take the family of their class,
-or none.
+Other comments name an acceptance at a venue with no shipped edition (SIGCSE 2027, NeurIPS 2026 and
+its workshops, BlackboxNLP 2026, …): those papers take the family of their class, or none. One names
+an edition that ships but is not in its class: 2611.09734v1, «Accepted to EMNLP 2026 Findings», is
+`\documentclass[letterpaper,twocolumn,10pt]{article}`, not ACL's template, so it stays `{}`, as
+`venue-papers/` leaves out a paper re-typeset outside the venue's class.
 
 `{}` is measured: the paper is linted, every prose rule runs, `pdf/measured` says no venue preset is
 named, and the rules that need a venue — `tex/template`, `format/layout-override`,
@@ -47,7 +50,7 @@ No rule misbehaved on it. What the relabel changed, per rule, over the 108:
 | --- | ---: | ---: | --- |
 | `tex/template` | 100 | 1 | the 92 papers in other classes name no preset; the 7 ACM papers now extend their own family. Left: 2611.09075v1, `\documentclass[11pt]{IEEEtran}`, the journal layout, which lacks the `conference` option the IEEE conference family requires — true against its label |
 | `format/layout-override` | 37 | 3 | 34 were on papers that now name no preset. Left: the same 2611.09075v1, `\usepackage{geometry}`, `\geometry` and `\setlength{\columnsep}` over IEEEtran's layout — true against its label |
-| `tex/venue-leftover` | 6 | 4 | 2611.09709v1 (now `{}`) named «EMNLP 2023» twice in a hand-typed reference list, read as REALM's alias: a false positive, silent now only because no preset is named. Left: 2611.08608v1, «ACSAC» ×4, reported as AIDC's name — a false positive: the paper says it was accepted at ACSAC 2026, its own venue (listed in `../venue-papers/README.md`) |
+| `tex/venue-leftover` | 6 | 0 | 2611.09709v1 (now `{}`) named «EMNLP 2023» and «EMNLP 2025» in a hand-typed reference list: a false positive, silent now only because no preset is named. 2611.08608v1 had «ACSAC» ×4 reported as AIDC's name while AIDC listed its parent among its aliases; after #546 ACSAC is its own preset (`acsac-2026`), on the IEEE family the paper gets «ACSAC» once (line 347, «names ACSAC 2026»), and on `acsac-2026`, the edition its comment names, none (measured both, 2026-11-19) |
 | `paper/allowed-files-only` | 262 | 261 | 2611.09448v1 lints to 2 with its old label too: the baseline was one above what main reports |
 | every other rule | | unchanged | the prose rules do not read the venue |
 
@@ -99,8 +102,9 @@ not run by any test, not an npm script). The folder is not in the npm package (`
   measured here is measured on a belief about TeX, as for `llm-splained-acsac25`. An `\input` that is
   conditional or computed is not followed.
 - **The label is the paper's class, not a venue that accepted it** (below, «What each paper extends»).
-  Only one paper's comment names an edition paperlint ships; the rest are drafts for venues nobody
-  recorded, so the venue rules here say little.
+  Three papers' comments name an edition paperlint ships (S&P 2027, ACSAC 2026, EMNLP 2026); two
+  are linted against it, the third is not in the venue's class. The rest are drafts for venues
+  nobody recorded, so the venue rules here say little.
 - **Baselines store counts, not verdicts.** Nobody has classified a finding of these papers as real or
   false. A count that grows fails; why a count is what it is is not written down.
 - **Preprints are not accepted papers**: unpolished, under no venue's checklist. That is why they are not

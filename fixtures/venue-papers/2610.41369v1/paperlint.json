@@ -4,7 +4,7 @@
       "id": "acsac-2026",
       "venue": {
         "kind": "preset",
-        "extends": "paperlint:ieee-conference"
+        "extends": "paperlint:acsac-2026"
       },
       "opened": "2026-10-30",
       "outcome": {
