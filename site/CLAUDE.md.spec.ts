@@ -7,7 +7,8 @@ export default instructionFile({
 ${file("site/package.json")} and lock, so the npm package carries none of it. ${file("site/src/shared/lib/readme/content.ts")} reads
 the install commands, the lint output, the venue table and the disclaimer from the README at build time, and
 throws when one is gone, so the build fails instead of the page losing a section; it reads the folder
-tree from ${file("docs/layout.md")} the same way. ${file("site/src/entities/finding/model/findings.ts")} quotes each finding the
+tree from ${file("docs/layout.md")} the same way, and ${file("site/src/shared/lib/readme/venues.ts")} groups the shipped venues by field
+from ${file("docs/venues.md")}. ${file("site/src/entities/finding/model/findings.ts")} quotes each finding the
 journey shows from the file that holds it, and ${file("site/src/entities/finding/model/findings.test.ts")} fails when a quote is no
 longer there. Code lives in \`site/src/\` in Feature-Sliced Design layers, checked by Steiger (${file("site/steiger.config.mjs")});
 Next's routes stay in \`site/app/\`. A class name uses only the design tokens of ${file("site/src/app/styles/globals.css")}
@@ -23,10 +24,10 @@ design below was decided with the author on 2026-11-19, over three rounds of moc
       "The site sells the linter and the paper folder. The Claude Code skills, the hooks and anything agent-shaped are not mentioned on it, nor linked from it, until the author decides otherwise.",
     ),
     "modern-not-2010": guidance(
-      "Editorial, in the manner of Stripe Press and Anthropic: a large serif headline, warm paper, generous margins, illustrations set like plates. Layout on a 12-column grid, max width about 1200 px, every gap a multiple of 8 px, text left-aligned; sections are separated by hairlines and space, not by cards with drop shadows. The author rejected the earlier versions as looking like 2010 and then 2015 (2026-11-19): the dated parts were the spacing and grid, and cards with shadows. A change that shrinks the type, crowds the page or brings shadows back needs a screenshot and the author's yes.",
+      "Editorial, in the manner of Stripe Press and Anthropic: a large serif headline, warm paper, generous margins, illustrations set like plates. Layout on a 12-column grid, max width about 1200 px, every gap a multiple of 8 px, text left-aligned; sections are set apart by their grounds, hairlines and space, not by cards with drop shadows. The author rejected the earlier versions as looking like 2010 and then 2015 (2026-11-19): the dated parts were the spacing and grid, and cards with shadows. A change that shrinks the type, crowds the page or brings shadows back needs a screenshot and the author's yes.",
     ),
     "type-and-colour": guidance(
-      "Palette follows zernie.com: paper #faf9f5, ink #181816, the ink-blue accent #305e8b; terracotta #c15f3c only for an error. Newsreader (optical sizes, its italic for the venue name) for headings, Inter for body text and UI, JetBrains Mono for code, all through next/font, which downloads them at build time and serves them from this site. The author chose Newsreader over Source Serif 4, Literata and Instrument Serif from a side-by-side sheet on 2026-11-19; a font change is shown side by side first.",
+      "Palette follows zernie.com: paper #faf9f5, ink #181816, the ink-blue accent #305e8b; terracotta #c15f3c only for an error. Each section sits on its own ground, as on zernie.com, so the page reads as distinct parts: paper, sand #ead9b9 for a call-out, stone #f2f1ec for a quiet part, night #1c1c1a with light text; a section's label follows a small square marker. The author asked for this contrast on 2026-11-19. Newsreader (optical sizes, its italic for the venue name) for headings, Inter for body text and UI, JetBrains Mono for code, all through next/font, which downloads them at build time and serves them from this site. The author chose Newsreader over Source Serif 4, Literata and Instrument Serif from a side-by-side sheet on 2026-11-19; a font change is shown side by side first.",
     ),
     "the-journey": guidance(
       "The four checks are four stops on one road, each with its own real example: desk-reject checks, folder structure, measurements, prose, in that order (the default set first, the opt-in last). The road is a stepper: across the page from a tablet up, a click on a stop opens its panel; down the page on a phone, each stop opening in place. One stop is open at a time. They are never collapsed back into one plain list.",

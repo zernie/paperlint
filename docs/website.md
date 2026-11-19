@@ -18,14 +18,15 @@ vitest with 100% coverage of the pure logic) and then `next build`, which writes
 `site/out/`. Vercel runs only `next build`; the gates run in the `site` CI job. At build time the page
 reads:
 
-| what the page shows                            | read from                                                                       |
-| ---------------------------------------------- | ------------------------------------------------------------------------------- |
-| the install commands                           | the first `sh` block under "A new paper" in `README.md`                         |
-| the lint output under the hero                 | the `text` block after "the first run already catches something" in `README.md` |
-| the venue cards and the headline's venue names | the "Supported venues" table in `README.md`                                     |
-| "An aid, not a guarantee"                      | the README's quote of that name                                                 |
-| the paper folder in the journey                | the generated tree in `docs/layout.md`                                          |
-| each finding in the journey                    | quoted in `site/src/entities/finding/model/findings.ts` from the file it names  |
+| what the page shows                  | read from                                                                                                                              |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| the install commands                 | the first `sh` block under "A new paper" in `README.md`                                                                                |
+| the lint output under the hero       | the `text` block after "the first run already catches something" in `README.md`                                                        |
+| the headline's venue names           | the "Supported venues" table in `README.md`                                                                                            |
+| the venue grid, one column per field | "Editions, by field" and "Families" in `docs/venues.md`, each series' `"name"` in `presets/`, the README's table for format and limits |
+| "An aid, not a guarantee"            | the README's quote of that name                                                                                                        |
+| the paper folder in the journey      | the generated tree in `docs/layout.md`                                                                                                 |
+| each finding in the journey          | quoted in `site/src/entities/finding/model/findings.ts` from the file it names                                                         |
 
 When one of these is gone or reshaped, the build throws and names it, so the `site` CI job fails
 rather than the page losing a section. `findings.test.ts` beside it fails when a quoted finding is no

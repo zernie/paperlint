@@ -1,2 +1,2 @@
-export { GITHUB, NODE, NPM } from "./links.ts";
+export { AUTHOR, GITHUB, NODE, NPM } from "./links.ts";
 export { glossary } from "./glossary.ts";

@@ -74,7 +74,7 @@ describe("readmeContent", () => {
     expect(() =>
       readmeContent(README.replace("npm i -D paperlint", "echo")),
     ).toThrow(
-      "site: no `npm i` in the install block — the README changed; update site/src/shared/lib/readme/content.ts to match",
+      "site: no `npm i` in the install block — the README or a doc changed; update site/src/shared/lib/readme/ to match",
     );
   });
 });
@@ -134,10 +134,18 @@ describe("plain and shortName", () => {
 
   it("names a venue by what precedes @ or (, and a format-only preset by its family", () => {
     expect(
-      ["AISec @ ACM CCS", "MSR (Technical)", "any IEEE conference"].map(
-        shortName,
-      ),
-    ).toEqual(["AISec", "MSR", "an IEEE conference"]);
+      [
+        "AISec 2026 @ ACM CCS 2026",
+        "MSR 2027 (Technical)",
+        "any IEEE conference",
+        "any ACM conference (single-column)",
+      ].map(shortName),
+    ).toEqual([
+      "AISec 2026",
+      "MSR 2027",
+      "an IEEE conference",
+      "an ACM conference",
+    ]);
   });
 
   it("puts the names every reader knows first: IEEE, then ACM, then the named venues in order", () => {
@@ -151,6 +159,7 @@ describe("plain and shortName", () => {
       headlineVenues([
         v("any ACM conference"),
         v("AgenticDev @ ASE"),
+        v("any ACM conference (single-column)"),
         v("AISec @ ACM CCS"),
         v("any IEEE conference"),
         v("MSR (Technical)"),

@@ -27,13 +27,18 @@
   --color-ink-blue: #305e8b;
   /* Terracotta, for an error only. */
   --color-signal: #c15f3c;
-  /* The dark band and the text on it. */
-  --color-band: #1f1d19;
+  /* The section bands, after zernie.com: each section sits on its own ground, so the page reads as
+     distinct parts. Sand for a call-out, stone (a light grey) for a quiet part, night for the
+     darkest, with light text on it. `-edge` is a hairline drawn on that ground. */
+  --color-sand: #ead9b9;
+  --color-sand-edge: #d6c19b;
+  --color-stone: #f2f1ec;
+  --color-night: #1c1c1a;
+  --color-night-edge: #3a3934;
   --color-on-ink: #f0eee9;
   --color-on-ink-muted: #bab7b0;
-  /* The journey's road. */
-  --color-road: #f6f1e6;
-  --color-road-edge: #ebe4d4;
+  /* Text on night that is present but not chosen: a checkpoint that is not open. */
+  --color-on-ink-faint: #7d7a73;
   /* A finding's level: text on its tint. */
   --color-warn: #8a6a1c;
   --color-warn-surface: #f3ead3;
@@ -83,6 +88,10 @@
   --text-title: clamp(2rem, 3vw, 2.5rem);
   --text-title--line-height: 1.1;
   --text-title--letter-spacing: -0.015em;
+  /* A checkpoint's numeral in the index: 48–72px. */
+  --text-numeral: clamp(3rem, 5vw, 4.5rem);
+  --text-numeral--line-height: 1;
+  --text-numeral--letter-spacing: -0.02em;
   /* A finding's or a question's title: 24px. */
   --text-subtitle: 1.5rem;
   --text-subtitle--line-height: 1.25;
@@ -152,6 +161,12 @@
   @media (width < 22.5rem) {
     min-height: 2lh;
   }
+}
+
+/* A book's spine: its title runs down it, top to bottom, as on an English spine
+   (src/widgets/journey, the shelf). */
+@utility spine-text {
+  writing-mode: vertical-rl;
 }
 
 /* A section fades up as it scrolls in (src/shared/ui/reveal.tsx). Only where the browser has scroll

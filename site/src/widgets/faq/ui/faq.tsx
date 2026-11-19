@@ -108,8 +108,8 @@ export function Faq({
     },
   ];
   return (
-    <section className="mx-auto max-w-page px-6 pt-section md:px-8">
-      <Reveal className="grid grid-cols-1 gap-x-8 gap-y-10 lg:grid-cols-12">
+    <section data-test="faq" className="bg-stone py-24 md:py-32">
+      <Reveal className="mx-auto grid max-w-page grid-cols-1 gap-x-8 gap-y-10 px-6 md:px-8 lg:grid-cols-12">
         <SectionHeading label="Get started" id="get-started">
           Before you install.
         </SectionHeading>

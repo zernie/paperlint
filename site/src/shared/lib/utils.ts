@@ -11,6 +11,7 @@ export const themeTokens = {
     "hero",
     "display",
     "title",
+    "numeral",
     "subtitle",
     "lead",
     "body",

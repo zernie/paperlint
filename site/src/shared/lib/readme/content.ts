@@ -20,9 +20,9 @@ export interface ReadmeContent {
   readonly disclaimer: string;
 }
 
-const fail = (what: string): never => {
+export const fail = (what: string): never => {
   throw new Error(
-    `site: ${what} — the README changed; update site/src/shared/lib/readme/content.ts to match`,
+    `site: ${what} — the README or a doc changed; update site/src/shared/lib/readme/ to match`,
   );
 };
 
@@ -126,20 +126,25 @@ export const readmeContent = (readme: string): ReadmeContent => {
   };
 };
 
-/** The venue's name as the headline says it: "AISec @ ACM CCS" → "AISec", "any IEEE conference" → "an IEEE conference". */
+/**
+ * The venue's name as the headline says it: "AISec 2026 @ ACM CCS 2026" → "AISec 2026", "any IEEE
+ * conference" → "an IEEE conference", "any ACM conference (single-column)" → "an ACM conference".
+ */
 export const shortName = (venue: string): string =>
-  venue.startsWith("any ")
-    ? venue.replace(/^any /, "an ")
-    : venue.replace(/ @ .*$| \(.*$/, "").trim();
+  venue
+    .replace(/ @ .*$| \(.*$/, "")
+    .replace(/^any /, "an ")
+    .trim();
 
 /**
  * The names the headline cycles through, the ones every reader knows first: "an IEEE conference",
- * "an ACM conference", then each named venue in the README's order. The first is what the static
- * page shows before any script runs.
+ * "an ACM conference", then each named venue in the README's order, each once. The first is what
+ * the static page shows before any script runs.
  */
 export const headlineVenues = (venues: readonly Venue[]): readonly string[] =>
   R.pipe(
     venues.map((v) => shortName(v.venue)),
+    R.unique(),
     R.sortBy((name) => (name.startsWith("an ") ? 0 : 1)),
     R.sortBy((name) => (name.includes("IEEE") ? 0 : 1)),
   );

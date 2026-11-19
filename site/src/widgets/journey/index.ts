@@ -1,1 +1,2 @@
-export { Journey, type Stop } from "./ui/journey.tsx";
+export { Journey } from "./ui/journey.tsx";
+export type { Stop } from "./ui/panel.tsx";

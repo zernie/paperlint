@@ -1,28 +1,40 @@
-import { GITHUB, NPM } from "@/shared/config";
+import { AUTHOR, GITHUB, NPM } from "@/shared/config";
 
-/** The README's "an aid, not a guarantee", the licence and the links. */
+/** The page's end, on the night band: the README's "an aid, not a guarantee", the links, the licence and who made it. */
 export function SiteFooter({ disclaimer }: { readonly disclaimer: string }) {
   return (
-    <footer className="mx-auto mt-section max-w-page px-6 pb-16 md:px-8">
-      <div className="grid grid-cols-1 gap-x-8 gap-y-6 border-t border-border pt-8 lg:grid-cols-12">
-        <p className="max-w-prose text-sm text-muted-foreground lg:col-span-7">
+    <footer data-test="footer" className="bg-night py-16 md:py-24">
+      <div className="mx-auto grid max-w-page grid-cols-1 gap-8 px-6 md:px-8 lg:grid-cols-12">
+        <p className="max-w-prose text-sm text-on-ink-muted lg:col-span-7">
           {disclaimer}
         </p>
-        <p className="flex gap-6 text-sm text-muted-foreground lg:col-span-4 lg:col-start-9 lg:justify-end">
-          <span>MIT licence</span>
-          <a href={GITHUB} className="hover:text-foreground">
-            GitHub
-          </a>
-          <a href={NPM} className="hover:text-foreground">
-            npm
-          </a>
-          <a
-            href={`${GITHUB}/tree/main/docs`}
-            className="hover:text-foreground"
-          >
-            Docs
-          </a>
-        </p>
+        <div className="flex flex-col gap-4 text-sm lg:col-span-4 lg:col-start-9 lg:items-end">
+          <p className="flex gap-6 text-on-ink-muted">
+            <span>MIT licence</span>
+            <a href={GITHUB} className="text-on-ink hover:underline">
+              GitHub
+            </a>
+            <a href={NPM} className="text-on-ink hover:underline">
+              npm
+            </a>
+            <a
+              href={`${GITHUB}/tree/main/docs`}
+              className="text-on-ink hover:underline"
+            >
+              Docs
+            </a>
+          </p>
+          <p className="text-on-ink-muted">
+            Made by{" "}
+            <a
+              href={AUTHOR.url}
+              data-test="author"
+              className="text-on-ink underline decoration-night-edge underline-offset-4 hover:decoration-on-ink"
+            >
+              {AUTHOR.name}
+            </a>
+          </p>
+        </div>
       </div>
     </footer>
   );

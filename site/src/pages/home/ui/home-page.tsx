@@ -13,6 +13,8 @@ import {
   layoutEntries,
   readmeContent,
   headlineVenues,
+  presetName,
+  venueGrid,
 } from "@/shared/lib/readme";
 import { glossary } from "@/shared/config";
 import { Term } from "@/shared/ui/hint";
@@ -37,6 +39,9 @@ const tree = layoutEntries(readRepo("docs/layout.md"), [
   "versions/",
 ]);
 const venueNames = headlineVenues(readme.venues);
+const venues = venueGrid(readRepo("docs/venues.md"), readme.venues, (id) =>
+  presetName(readRepo(`presets/${id}.jsonc`)),
+);
 const firstRun = readme.lintOutput
   .filter((l) => /^\s+\d+:\d+/.test(l))
   .map(explain);
@@ -174,7 +179,7 @@ export function HomePage() {
           caption="Paste into a terminal, in your project's folder."
         />
         <Journey stops={stops} />
-        <Venues venues={readme.venues} />
+        <Venues grid={venues} />
         <Faq install={install} perPaper={perPaper} />
       </main>
       <SiteFooter disclaimer={readme.disclaimer} />
