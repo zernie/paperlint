@@ -38,7 +38,8 @@ export const LICENCES: ReadonlySet<string> = new Set([
 ]);
 
 /** An `accepted/` directory named by an arXiv id; the six older papers are named by words. */
-const isArxivDir = (name: string): boolean => name[0] >= "0" && name[0] <= "9";
+const isArxivDir = (name: string): boolean =>
+  name.charAt(0) >= "0" && name.charAt(0) <= "9";
 
 const editionOf = (e: Entry): string | null =>
   e.series === undefined || e.year === undefined
