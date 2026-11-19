@@ -4,7 +4,7 @@ description: "Rewrite an unclear passage of a paper — a sentence, paragraph, h
 allowed-tools: [Read, Edit, Grep, Glob, Agent]
 ---
 
-<!-- vigiles:sha256:2f12cbb95d0c0039 compiled from skills/rewrite-unclear/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:a3f786179ee370ea compiled from skills/rewrite-unclear/SKILL.md.spec.ts -->
 
 # rewrite-unclear — make a passage say its claim so a stranger gets it
 
@@ -119,6 +119,6 @@ When the passage came from a report with `findings` frontmatter (`cold-read-diff
 
 ## Compose with
 
-- `cold-read-diff` — finds the sentences; run it once more on the rewritten paragraphs as the confirming read.
+- `cold-read-diff` — finds the sentences; it confirms a rewrite only when the author asks.
 - `tighten-paper` — owns length; a measured overflow after rewrites goes there.
 - `argument-arc` — when step 1 fails because the section has no claim, the problem is the arc, not the sentence.

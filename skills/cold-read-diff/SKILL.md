@@ -1,10 +1,10 @@
 ---
 name: cold-read-diff
-description: "Send just-changed paper prose to two readers with NO context — an engineer who asks what each sentence claims, and a skimming workshop reviewer who asks whose result it states and whether it reads like a paper — the only check that catches a sentence which is short, true, jargon-free and still meaningless to anyone who does not already know the idea. Run ONCE per batch of prose edits — when a section is done, before committing it — not after each edit: it reads everything changed since the last commit. Its whole-paper mode (--whole) is step 2 of the final review, in chunks of at most 15 paragraphs. Not a structural pass (tighten-paper), not a defect review (pc-panel-review)."
+description: "Send just-changed paper prose to two readers with NO context — an engineer who asks what each sentence claims, and a skimming workshop reviewer who asks whose result it states and whether it reads like a paper — the only check that catches a sentence which is short, true, jargon-free and still meaningless to anyone who does not already know the idea. While drafting, run ONCE per batch of prose edits — when a section is done, before committing it — not after each edit; after the final review is closed, only when the author asks: it reads everything changed since the last commit. Its whole-paper mode (--whole) is step 2 of the final review, in chunks of at most 15 paragraphs. Not a structural pass (tighten-paper), not a defect review (pc-panel-review)."
 allowed-tools: [Bash, Read, Write, Agent]
 ---
 
-<!-- vigiles:sha256:fb3abfd9fe68321a compiled from skills/cold-read-diff/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:075637b159293156 compiled from skills/cold-read-diff/SKILL.md.spec.ts -->
 
 # cold-read-diff — the reader who cannot fake understanding
 
@@ -45,8 +45,8 @@ is to withhold the context rather than ask them to ignore it.
 
 A full cold read costs a long agent run, so it gets run once a day, which means prose written after
 it ships unread. Scoped to the changed paragraphs the readers cost seconds (two paragraphs,
-measured 2026-11-10: about 10 s and $0.03 for both), so it runs on every batch of edits — once
-per section or commit, not once per keystroke — and coverage beats depth here, because the
+measured 2026-11-10: about 10 s and $0.03 for both), so while drafting it runs on every batch of edits — once
+per section or commit, not once per keystroke; after the final review is closed, only when the author asks — and coverage beats depth here, because the
 defect is per-sentence.
 
 Scoping also makes the check honest. Hand an agent the whole paper and it reconstructs the idea from
@@ -180,12 +180,10 @@ findings:
   judging register without knowing the venue is guessing.
 - **`CANNOT PARSE` is a result, not a failure of the reader.** Never argue with it. The author's
   ability to understand his own sentence is not evidence about anyone else's.
-- **Run it on your own fixes too.** The author is the least qualified judge of whether his repair
-  reads, and that is exactly when he feels most certain.
 
 ## Compose with
 
-- `rewrite-unclear` — writes the fixes for the rows this read returns; step 7 confirms them.
+- `rewrite-unclear` — writes the fixes for the rows this read returns; step 7 confirms them only when the author asks.
 - `tighten-paper` — structural cuts. Note the interaction: a tighten pass that pays for an addition
   by shortening sentences elsewhere is precisely what generates work for this skill.
 - `paper-pipeline` — owns the final review; `--whole` is its second step.

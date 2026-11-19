@@ -7,8 +7,6 @@
 import { experimental_skill } from "vigiles/spec";
 import type { Flow } from "../../scripts/pipeline.ts";
 import argumentArc from "../argument-arc/SKILL.md.spec.ts";
-import coldReadDiff from "../cold-read-diff/SKILL.md.spec.ts";
-import tightenPaper from "../tighten-paper/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "rewrite-unclear",
@@ -129,7 +127,7 @@ When the passage came from a report with \`findings\` frontmatter (\`cold-read-d
 
 ## Compose with
 
-- \`cold-read-diff\` — finds the sentences; run it once more on the rewritten paragraphs as the confirming read.
+- \`cold-read-diff\` — finds the sentences; it confirms a rewrite only when the author asks.
 - \`tighten-paper\` — owns length; a measured overflow after rewrites goes there.
 - \`argument-arc\` — when step 1 fails because the section has no claim, the problem is the arc, not the sentence.
 `,
@@ -138,5 +136,5 @@ When the passage came from a report with \`findings\` frontmatter (\`cold-read-d
 export const flow = {
   stage: "draft",
   handsTo: () => [],
-  loopsBackTo: () => [coldReadDiff, tightenPaper, argumentArc],
+  loopsBackTo: () => [argumentArc],
 } satisfies Flow;

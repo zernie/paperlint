@@ -4,7 +4,7 @@ description: The orchestrator for writing a research paper end-to-end, from idea
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:31b37139040b64d3 compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:e8c62571f7f8dd02 compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
 
 # paper-pipeline — the conductor for the whole organism
 
@@ -178,6 +178,7 @@ The one place this order is written; every other skill points here.
   `PIPELINE-STATUS.md` `☑ closed <date>`. Ordinary edits, a re-approval (`versions approve`) and a
   gate older than the text do not reopen it; only the author does, by asking for a new final review.
   What is left goes to `harden-paper`, then `submit-paper`.
+- **After close, a cold read of an edit runs only when the author asks.** No skill schedules one.
 
 ## 📝 Text pass vs evidence pass — two independent axes, ask which one you want
 

@@ -217,6 +217,7 @@ The one place this order is written; every other skill points here.
   \`PIPELINE-STATUS.md\` \`☑ closed <date>\`. Ordinary edits, a re-approval (\`versions approve\`) and a
   gate older than the text do not reopen it; only the author does, by asking for a new final review.
   What is left goes to \`harden-paper\`, then \`submit-paper\`.
+- **After close, a cold read of an edit runs only when the author asks.** No skill schedules one.
 
 ## 📝 Text pass vs evidence pass — two independent axes, ask which one you want
 

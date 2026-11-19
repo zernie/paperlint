@@ -5,7 +5,7 @@
 Who hands work to whom, read from the skills themselves: each `skills/<name>/SKILL.md.spec.ts`
 exports `flow`, and `skills/jobs.ts` names the one owner of each job on a paper's text. A flow
 has three kinds of edge: **hands to** (27), the next step on the main path, drawn
-solid; **loops back to** (8), work sent back to an earlier skill, drawn dashed;
+solid; **loops back to** (6), work sent back to an earlier skill, drawn dashed;
 **runs** (49), a skill this one runs as one of its own steps or whose output it needs,
 written inside the box, never drawn. `test/pipeline.test.ts` fails on a cycle of hand-offs, a
 hand-off to an earlier stage, an edge the skill's own text never names, a job without an owner,
@@ -122,8 +122,6 @@ flowchart TB
   draft_paper["<b>draft-paper</b><br/>runs: cold-read-diff, rewrite-unclear, verify-citations"]
   rewrite_unclear["<b>rewrite-unclear</b><br/>rewrite for clarity<br/>fix a heading or a name"]
   tighten_paper["<b>tighten-paper</b><br/>cut for length<br/>runs: rewrite-unclear"]
-  rewrite_unclear -.-> cold_read_diff
-  rewrite_unclear -.-> tighten_paper
   rewrite_unclear -.-> argument_arc
   tighten_paper --> cold_read_diff
   to_stage_study(["→ 3 · Study"])
