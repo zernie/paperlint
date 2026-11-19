@@ -143,12 +143,7 @@ Short. He is asking because he wants to decide what to do next, not to read a re
 - \`paper-pipeline\` — owns the stage contract this reads.
 - \`harden-paper\` — the decision to submit; this only reports the inputs to it.
 - \`handoff\` — end-of-session preservation; this is the start-of-session counterpart.
-
-## Provenance
-
-Built 2026-08-04, the day before the \`compile-rules-2026\` deadline, after the author asked for paper status
-for the fourth time in one session and pointed out it should be a command: *"I ask this so often... there should be a skill"*. He was right, and the two things the skill measures first are the two
-things chat had most recently gotten wrong.`,
+`,
 });
 
 export const flow = {

@@ -4,7 +4,7 @@ description: Turn a venue's CFP dates into a scheduled, buffered plan on the Goo
 allowed-tools: [Read, Write, Grep, Glob, mcp__Google_Calendar__list_events, mcp__Google_Calendar__search_events, mcp__Google_Calendar__create_event, mcp__Google_Calendar__update_event]
 ---
 
-<!-- vigiles:sha256:323aa76ea265a1b9 compiled from skills/plan-paper-timeline/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:fb8288b3dae0325b compiled from skills/plan-paper-timeline/SKILL.md.spec.ts -->
 
 # plan-paper-timeline — CFP dates → a buffered schedule
 
@@ -124,7 +124,3 @@ Two, and they fail differently — see `paper-pipeline/references/pipeline-statu
 - **`find-venue`** — the source of the four CFP dates this skill consumes; run it first.
 - **`submit-paper`** (+ the venue subskill) — what submit-day actually executes; this skill just makes
   sure the runway before it exists, **and that the account it executes through is already ACTIVE**.
-
-## Provenance
-Two real papers were scheduled with this skill: **AgenticDev 2026 @ ASE** (submission 15 Jul, notify
-21 Aug, camera-ready 28 Aug, workshop 12 Oct) and **AISec 2026 @ ACM CCS** (submission 24 Jul).

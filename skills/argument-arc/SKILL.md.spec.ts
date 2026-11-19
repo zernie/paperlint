@@ -165,14 +165,7 @@ most needs help. This skill does:
 - **After** any refutation pass that killed a load-bearing claim (see the paper's \`CLAIMS.md\`).
 - When the outline shows the paper has no distinctive move to make, stop and tell the author: that is
   not an arc problem, and whether the idea carries a paper is \`research-ideate\`'s verdict.
-
-## Provenance
-
-Built 2026-07-30 after a full-day rewrite of \`the reference paper\` in which the author said the same
-thing five times — *"does not guide the reader sequentially through the ideas, but simply throws a bunch of
-different ideas, references, and benchmarks at them"* — and got five local edits in reply. The pipeline had a skill
-for length, a skill for sentences and a skill for defects; the question *does this paper carry the
-reader to one conclusion* belonged to nobody, and that is the one that failed.`,
+`,
 });
 
 export const flow = {

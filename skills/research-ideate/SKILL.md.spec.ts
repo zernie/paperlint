@@ -91,17 +91,7 @@ Emit a compact verdict:
 - \`build-benchmark\` — the MVP finding usually IS a small benchmark; this skill scopes it.
 - \`draft-paper\` — the sharpest-framing sentence becomes the paper's one-contribution seed.
 - \`plan-paper-timeline\` — once go/no-go is "go," size the effort against a real deadline.
-
-## Provenance
-Both real papers passed this filter as **proof-of-method, medium-severity-is-sufficient** ideas in one
-lane:
-- **AgenticDev 2026 @ ASE — "Measuring the Wrong Number"** (~90%, submitted). The contribution was the
-  *measurement method*, not a verdict on one tool; a medium-severity finding was enough because the
-  reusable way-to-measure was the point. Stayed in the AI-assisted-SE reliability lane.
-- **AISec 2026 @ ACM CCS — "Safety Theater in Agentic Coding"** (~87–88%). Same shape at a security
-  bar: a reusable probe/finding about agentic coding safety, proof-of-method sufficient, squarely in
-  the security-of-AI-coding lane. Together the two form a *connected corpus* — exactly what axis (e)
-  rewards — rather than two scattered one-offs.`,
+`,
 });
 
 export const flow = {

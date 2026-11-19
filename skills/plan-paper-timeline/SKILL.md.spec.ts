@@ -142,10 +142,7 @@ Two, and they fail differently — see \`paper-pipeline/references/pipeline-stat
 - **\`find-venue\`** — the source of the four CFP dates this skill consumes; run it first.
 - **\`submit-paper\`** (+ the venue subskill) — what submit-day actually executes; this skill just makes
   sure the runway before it exists, **and that the account it executes through is already ACTIVE**.
-
-## Provenance
-Two real papers were scheduled with this skill: **AgenticDev 2026 @ ASE** (submission 15 Jul, notify
-21 Aug, camera-ready 28 Aug, workshop 12 Oct) and **AISec 2026 @ ACM CCS** (submission 24 Jul).`,
+`,
 });
 
 export const flow = {

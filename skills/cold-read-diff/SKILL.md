@@ -4,7 +4,7 @@ description: "Send just-changed paper prose to two readers with NO context — a
 allowed-tools: [Bash, Read, Write, Agent]
 ---
 
-<!-- vigiles:sha256:1170e19d50e02ba1 compiled from skills/cold-read-diff/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:fb3abfd9fe68321a compiled from skills/cold-read-diff/SKILL.md.spec.ts -->
 
 # cold-read-diff — the reader who cannot fake understanding
 
@@ -189,9 +189,3 @@ findings:
 - `tighten-paper` — structural cuts. Note the interaction: a tighten pass that pays for an addition
   by shortening sentences elsewhere is precisely what generates work for this skill.
 - `paper-pipeline` — owns the final review; `--whole` is its second step.
-
-## Provenance
-
-Built 2026-08-05, the day before the `the reference paper` deadline, after the corpus owner read the built PDF and
-found eleven unreadable passages in twenty minutes — none of which any automated check had flagged,
-and several of which had been introduced that same morning by fixes to other automated checks.

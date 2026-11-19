@@ -4,7 +4,7 @@ description: Use when the numbers exist and it's time to WRITE the paper — "dr
 allowed-tools: [Read, Write, Edit, Grep, Glob, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:04a3013302fe22fb compiled from skills/draft-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:eee8b1e9da298580 compiled from skills/draft-paper/SKILL.md.spec.ts -->
 
 # draft-paper — prose that survives review and gets cited
 
@@ -108,15 +108,3 @@ prose QA to them.
 - **`verify-citations`** — every cite in Related Work must exist AND say what you claim.
 - Then the final review, once (`paper-pipeline`, "The final review"): `tighten-paper` →
   `cold-read-diff --whole` → **`pc-panel-review`** (its venue-fit seat alone gives a quick fit score).
-
-## Provenance (two real papers)
-- **AgenticDev 2026 @ ASE — "Measuring the Wrong Number."** The thesis IS the construct-validity frame:
-  the field optimizes a metric that isn't the thing anyone cares about. The method (how to measure the
-  *right* number) is the contribution; the tool verdict is just the demonstration. Its "what we do NOT
-  claim" paragraph and lower-bound-not-point-estimate threats framing are what moved it through review.
-- **AISec 2026 @ ACM CCS — "Safety Theater."** A security-venue measurement paper: a defense that
-  *looks* like safety without measurably being it. Needs the explicit threat model + ethics/disclosure
-  sections above, and dunks on the *defense pattern*, never the maintainers who shipped it — the
-  credit-the-humans rule is load-bearing at a top-tier security venue where a hostile framing draws a
-  hostile review. Both papers win on precise claim-sizing and an honest threats section, not on the
-  size of the effect.

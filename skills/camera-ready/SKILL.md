@@ -4,7 +4,7 @@ description: On acceptance, turn the anonymized-for-review paper into the de-ano
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch]
 ---
 
-<!-- vigiles:sha256:fb3e15168397cb3f compiled from skills/camera-ready/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:205ef8977153ac4e compiled from skills/camera-ready/SKILL.md.spec.ts -->
 
 # camera-ready — de-anonymize an accepted paper into the final proceedings version
 
@@ -120,10 +120,3 @@ If tight, ACM allows references to spill into the reference-only extra pages.
 - **submit-paper** (upstream — this reverses what it anonymized).
 - **paper-pipeline/references/anonymization.md** — the canonical list of anonymization moves; undo each.
 - **extend-paper** (next — the accepted+indexed paper is the base for a second, stronger publication).
-
-## Provenance
-Both portfolio papers are anonymized-for-review and **defer de-anonymization + the public artifact to
-camera-ready by design**: AgenticDev "Measuring the Wrong Number" (submitted, camera-ready 28 Aug if
-accepted) and AISec "Safety Theater" (ships an anonymized artifact; hook names anonymized; responsible
-disclosure to named maintainers owed before any de-anonymized public release). ORCID is identical
-across both so every indexed version resolves to one researcher.

@@ -243,20 +243,7 @@ is the difference-maker on both runs so far: it doesn't judge the paper's number
 The panel runs once. A confirming panel runs only when the author asks for it — same lenses, FRESH
 reviewers, told nothing about the previous round; the chair, not the reviewers, sets the new reviews
 beside the old ones and checks that each earlier must-fix is gone. There is no second confirmation.
-
-## Provenance (two papers, battle-tested)
-- **AgenticDev 2026** (2026-07-12): 3 lenses (stats / practitioner / artifact-runner) + chair. Caught
-  what two prior single-lens rounds missed — a paper↔artifact mismatch ("raw 140-run data" vs shipped
-  per-arm aggregates) and a mislabeled "paired" test, both flagged by ≥2 reviewers. Round→confirm:
-  ~85%→90%.
-- **AISec 2026 @ CCS** (2026-07-13): same shape at a harder (top-tier security) bar. The artifact-runner
-  ran all four harnesses AND stress-tested the release gate (planted a leak, confirmed it caught it);
-  the ethics reviewer caught the release-vs-paper anonymization contradiction (the released artifact
-  named 46 maintainers) — the single highest reject-vector, invisible to a paper-only read. After the
-  fixes + a confirm round, all three moved to Accept (~87–88%, from Weak-Accept/conditional/leak-risk).
-  Lesson: the two things that most move a security paper — an ethics/disclosure contradiction and a
-  reproduction/anonymization leak — live in the ARTIFACT, so the artifact-runner + an ethics lens are
-  non-optional at security venues.`,
+`,
 });
 
 export const flow = {

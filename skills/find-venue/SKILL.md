@@ -4,7 +4,7 @@ description: "Discover and rank real venues for a given paper, scored by whether
 allowed-tools: [Read, Write, Grep, Glob, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:abb9866454e5424e compiled from skills/find-venue/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:d63449710e4800b6 compiled from skills/find-venue/SKILL.md.spec.ts -->
 
 # find-venue — rank real venues by what makes a publication, then keep or switch
 
@@ -84,12 +84,3 @@ rank = archival-weight × topic-fit × accept-probability × deadline-feasibilit
   of accepted papers, `<papers-root>/venues/<venue>/` (`study-accepted-papers`): the three places are
   told apart in `docs/venues.md` in the paperlint package.
 - `extend-paper` — the prestige-upgrade target this skill names but defers.
-
-## Provenance
-The **AgenticDev 2026 @ ASE** venue decision was made by a **9-agent analysis** that checked every open
-venue against this exact rubric. It **kept AgenticDev** — nothing open beat it on fit × archival ×
-timeline: NeurIPS Eval had already **closed**, and FSE/MSR each needed a **full paper** (wrong type /
-too much scope for the deadline). The prestige upgrade was deliberately deferred to an **extension to
-MSR/NeurIPS 2027**, not a switch — proving the rule: ship the best-fit archival venue open now, extend
-later. **AISec 2026 @ ACM CCS** confirmed the archival-weight logic at a top-tier security bar. Both
-papers are indexed proceedings; neither was down-ranked for the workshop's newness.

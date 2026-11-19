@@ -4,7 +4,7 @@ description: The orchestrator for writing a research paper end-to-end, from idea
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:389535d61b1dfbd3 compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:51a39e746958d3ca compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
 
 # paper-pipeline — the conductor for the whole organism
 
@@ -16,7 +16,7 @@ owns the shared reference docs the others cite.
 ## Shared references (single source of truth — all skills cite these)
 - `references/artifact-checklist.md` — the self-checking reproduction artifact.
 - `references/anonymization.md` — the double-blind deny-list + hygiene (and its reverse at camera-ready).
-- `references/writing-craft.md` — how well-written papers read (craft rules + exemplar lessons);
+- `references/writing-craft.md` — how well-written papers read (craft rules);
   cited by `draft-paper`, `rewrite-unclear` and `tighten-paper`.
 - `references/review-ratchet.md` — how to fix a caught overclaim (tighten → cut → Threats → hedge);
   cited by `pc-panel-review` and `harden-paper`.
@@ -41,91 +41,9 @@ their grade/result, what's open,* and a one-line **submit-ready verdict**. Rules
   reconstruct from chat.
 - Distinct from `SUBMIT-CHECKLIST.md` (venue-format compliance); both must be green before upload.
 
-## 🗺️ Where every check actually runs — and where it can be walked around
+## Four kinds of work, four shapes
 
-```
-   YOU EDIT                    YOU COMMIT                YOU BUILD              YOU PUSH
-      │                            │                         │                      │
-      ▼                            ▼                         ▼                      ▼
- ┌──────────────┐          ┌────────────────┐       ┌────────────────┐    ┌────────────────┐
- │ PostToolUse  │          │  .githooks/    │       │ build-         │    │ GitHub Actions │
- │ lint-edited  │ BLOCKS   │  pre-commit    │REFUSES│ submission.sh  │    │ paper-gates    │
- │  new error   │          │                │       │                │    │                │
- │ paper-lint   │ nudges   │  numbers gate  │       │  numbers gate  │REFUSES  numbers+self│
- │  post        │          │                │       │                │    │                 │
- │              │          │                │ nudge │  page count    │    │                 │
- │   SHAVE      │          │  self-test if  │       │  overfull      │    │  check-anon     │
- │   numbers    │          │   you touched  │       │  unresolved    │    │  verify-cites   │
- │  paper-edit- │ BLOCKS   │   a gate       │       │   refs         │    │  provenance     │
- │   guard      │  bash    │  harness if    │       │  dropped glyphs│    │  scorecard      │
- └──────────────┘          │   you touched  │       │  anon grep     │    │  harness        │
-        │                  │   a hook       │       └────────────────┘    │  LaTeX build    │
-        │                  │  RAW DNA       │REFUSES        │             └────────────────┘
-        │                  └────────────────┘               │                     │
-        │                          │                        │                     │
-   watches EVENTS            watches STATE            watches OUTPUT        watches EVERYTHING
-   (Edit/Write fired)        (what is staged)         (the actual PDF)       (after the fact)
-        │                          │
-        │                          │
-   🕳 BYPASSABLE:              🛡 NOT bypassable by that route: it does not care
-   write from Bash and            HOW the bytes got there. However you wrote the
-   no event fires, so             file, you still have to commit it.
-   every PostToolUse
-   check silently
-   does not run.
-```
-
-**Read the bottom row, it is the whole point.** Each column watches a different KIND of thing, and
-that is why they are not three copies of one check:
-
-- **Editor hooks watch events.** Fast, and the only layer that can stop a bad edit *before* it lands.
-  Bypassable by construction — an event that never fires cannot be checked, and writing the file from
-  Bash produces no event. Documented in `papers/CLAUDE.md`, open since 2026-08-04.
-- **The git hook watches state.** Immune to that whole class, because it reads what is staged and has
-  no opinion about how it got staged. This is the layer that was missing, and the one to reach for
-  when an editor check turns out to be walkable-around.
-- **The build watches output.** Only it can see page count, overfull boxes, and glyphs pdflatex
-  silently dropped — none of which exist until the PDF does.
-- **CI watches everything, but after the fact.** Its real job is the slow checks nobody will wait for
-  locally (the anonymity self-test copies a 24 MB bundle per leak category) and the self-tests, which
-  are what catch a gate that has quietly stopped catching things.
-
-🔴 **A fifth kind, and none of the four columns can see it: does the MODEL call these skills at all?**
-Every column above watches something the repository produced — an event, staged bytes, a PDF, a commit.
-None watches *selection*: whether a real model, reading 37 competing descriptions, picks `tighten-paper`
-over `cold-read-diff` when the draft is bloated. A harness test proves a skill works once invoked;
-it cannot prove it gets invoked. That needs the real CLI and it costs money, so it is a measurement, not
-a gate — `.claude/skills/paper-pipeline/pipeline-firing.eval.mjs`, run manually or by the weekly
-`skill-firing` job (`workflow_dispatch` + `schedule`, deliberately NOT on push). It installs every skill
-in this repo natively so selection is *competitive*, feeds each skill 4 prompts it should fire on plus 4
-its colliding sibling owns, and reports recall / false-positive / precision per skill against a committed
-baseline. **What it measures drifts without a commit here** — a model update can change routing while
-every file stays byte-identical, which is exactly the regression no check in the diagram can see.
-Prior art is named in the file header (`adewale/skill-eval-harness` does this too); the idea is not ours.
-
-🔴 **Still manual, and no mechanism has been found for it:** the **cold read** — a reader with no
-context restating each sentence — is the only check that catches a sentence that is short, true,
-threshold-passing and meaningless. It needs a fresh subagent, so no hook can run it.
-
-Install the git hook once per clone: `git config core.hooksPath .githooks`.
-
-## 🔴 There is no stage 7. Four kinds of work, four shapes.
-
-**This section replaced a single numbered list running 0 → 12, on 2026-08-03.** That list had a
-paragraph on top explaining that the numbers were dependencies rather than turns — and underneath it,
-a table numbered straight through, which every reader (including this pipeline's own author) read as a
-waterfall. The paragraph was the tell: a document that needs a disclaimer explaining how not to read
-it is mis-shaped, and the fix is to change the shape, not to add a second disclaimer. That is the
-argument `compile-rules-2026` makes about instruction files, applied here.
-
-Three concrete errors the numbering produced, all real:
-
-- **`verify-citations` sat at 7**, looking like a one-shot step, while the project rule is that it runs
-  every cycle — an edit on the last day adds a `\cite` that "we checked last cycle" does not cover.
-- **`map-prior-work` sat at 1.5** and its own description told you to re-run it as a cheap delta before
-  submit — so it was simultaneously a stage and a continuous check, and the table could only show one.
-
-Work is now grouped by **how it runs**, and only the groups that are genuinely ordered carry an order.
+Work is grouped by **how it runs**, and only the groups that are genuinely ordered carry an order.
 
 | kind | shape | how to read it |
 |---|---|---|
@@ -257,10 +175,6 @@ The one place this order is written; every other skill points here.
 
 ## 📝 Text pass vs evidence pass — two independent axes, ask which one you want
 
-The author, 2026-08-05 (translated from Russian): *"can we just run the gate on the text? we just
-checked the numbers, and now I want to grade the text — assume the numbers are fine."* He is right that these are separable, and
-running both when only one is wanted burns an hour for nothing.
-
 Every gate belongs to exactly one axis. **Sort by what invalidates it**, not by what it reads:
 
 | axis | invalidated by | gates |
@@ -285,97 +199,15 @@ and the artifact-runner; skip readability entirely.
 which axis it covered will be read as covering both — which is how a paper ends up believed to be
 checked on a dimension nobody looked at.
 
-### 🔢 The one defect neither axis can see: a number correct on both axes and wrong anyway
+### 🔢 The one defect neither axis can see
 
-**Observed 2026-08-05, on page 1, 29 hours before a deadline.** The abstract read *"147 real rules
-files exactly as their projects committed them, 22 fail admission"*. The data has two arms over the
-same 147 files: **strict** (files byte-for-byte as committed — nothing fails) and **annotated** (the
-same files with the tool's proposed pointers written in — 22 fail). The 22 was from the annotated arm
-and was described in the strict arm's words. Five more numbers had the same defect; a sixth was found
-later in an appendix by machine, after two people had searched by hand.
-
-**Every gate passed, and each for a good reason.** `cites` checks the reference is real. `claims` checks the
-claim did not grow — and it did not, 22 was always 22. The artifact-runner recomputes the number from
-the data and it reconciles, *because the number is correct*. The reading panel takes "unmodified" as a
-fact about the world, which is what a reader does. **The defect lives only in the join between a
-sentence and a field path, and nothing was holding both.** It is not a TEXT defect and not an EVIDENCE
-defect; it is a defect of the edge between them, so no pass on either axis can be made to see it.
-
-**The construction, not another pass.** A registered quantity is not written as digits at all:
-
-```
-Over {{corpus.n}} real rules files, with the extractor's proposed mapping
-taken as if an author had written it, {{annotated.failedContradicted}} fail admission.
-```
-
-`<paper>/repro/data/numbers.tsv` gives each name its value, the JSON path or **formula** that recomputes
-it, and two guards. The build refuses a PDF unless: the name resolves · the value still matches the
-data · the **paragraph** names the arm (`requires`) · the **sentence** does not claim a different one
-(`forbids`). Requires and forbids are separate on purpose — the pairing is auditing's, where a control
-is tested once for *design* and once for *operating effectiveness*.
-
-**Why paragraph for one and sentence for the other.** *"Every figure in this paragraph is the
-counterfactual arm"* is good writing, and a sentence-scoped `requires` would forbid it. But *"exactly
-as committed"* nine words from the number is the defect itself, so `forbids` has to be tight.
-
-**Coverage without a migration.** `numbers-grandfathered.txt` lists every quantity that predates the
-gate; adding a new raw one fails the build. This is `ADD CONSTRAINT ... NOT VALID` — the constraint
-binds every row from now on, and the existing rows are *enumerated rather than exempted*, so the file
-says out loud how many figures still have no machine-checked path to data. On the paper that has it:
-7 guarded, 248 grandfathered. That ratio is a finding, not a score.
-
-**Adopting it in another paper:** copy `repro/tools/paper_numbers.py`, `repro/tools/paper_numbers.selftest.py`
-and the build step that calls `expand()` on `paper.tex` before `pdflatex`; generate the
-grandfather list from the current draft; register the numbers a reviewer will actually check first.
-
-🔴 **Do not write the substitution half — it is `jinja2`, and `{{name}}` is already its syntax.**
-Eleven candidates were installed and run on a real ACL paper on 2026-08-05. The result is not a
-matter of taste:
-
-| candidate | verdict, from an actual run |
-|---|---|
-| **jinja2** | **adopt.** Our `{{annotated.failRate}}` was already valid Jinja2; dotted names are attribute access. Zero characters changed in the paper, byte-identical `.tex`. This is Manubot's mechanism, taken without Manubot. Use `StrictUndefined`, and move the block/comment delimiters off `{%`/`{#` if the paper might ever quote a config file |
-| **knitr** | equally proven, also byte-identical. Rejected only for putting an R runtime into an artifact that otherwise needs `python3` + `pdflatex` |
-| `\newcommand` + `numbers.tex` | works; the folk convention, ~12 GitHub hits, all hand-rolled. No package exists |
-| **cog.py** | ❌ line-oriented; cannot substitute mid-sentence |
-| **pythontex** | ❌ not in Ubuntu TeX Live at any level, not on PyPI; CTAN zip + `.ins` build |
-| **showyourwork** | ❌ it manages *figures*, not in-text numbers |
-| DVC · datalad · papermill | orthogonal and **worth adding**: they pin the data file to the pipeline that made it, a layer below anything here |
-
-**🔴 Computing the value DISSOLVES the freshness problem — do not build a checker for it.** With no
-recorded value there is nothing that can go stale, so there is nothing to verify. Adopting jinja2
-deleted 137 lines of ours outright: a hand-rolled expression language with an `eval()` sandbox, a
-renderer guessing which of six formattings the paper meant, a JSON-path walker and the comparison.
-Recording-plus-verifying is the trap; computing is the wheel.
-
-**Binding a number to its CONDITION is genuinely unoccupied**, and the reason is structural rather
-than an accident of packaging: **every literate-programming tool models the paper as a program that
-prints text**, so the prose is opaque *output*, not an input to a check. None of them has a hook
-where you could say "and the sentence around this must say *counterfactual* and must not say *as
-committed*". The near-misses read the manuscript but never the data — `statcheck` recomputes
-p-values from statistics printed in the same sentence; `RegCheck` compares a paper to a study
-registration with an LLM and reports to a human instead of failing a build. Searched and empty:
-GitHub repo search (0 results), the Actions marketplace, the pre-commit hook ecosystem, PyPI, and
-the Claude skill marketplaces.
-
-🔴 **And it is not a number-keyed table**: the first version keyed rules on the digits, and a paper
-printing two unrelated 22s broke it the same hour. Key on the occurrence.
-
-🔴 **Hand the gate to a red team the same day you build it.** This one was, and seven holes came
-back, the worst being that the original defect could simply be **retyped as digits** — its value was
-grandfathered, so the guard applied to the macro and not to the claim. Every hole is now a case in
-`repro/tools/paper_numbers.selftest.py` (18/18, including three that must stay **quiet** — a gate that
-fires on ordinary writing gets muted, and then its silence reads as coverage).
+A number can be correct on both axes and still be described in the wrong arm's words (the 22 of the
+annotated arm reported as "exactly as committed"). No pass on either axis sees it. Write a registered
+quantity as a name (`{{corpus.n}}`, rendered with jinja2), not as digits, with a guard that the
+paragraph names its arm and the sentence does not claim another. The construction, the tools tried
+and the red-team holes: `docs/design/paper-pipeline-history.md` in the package.
 
 ## 🔴 The page limit is a SUBMISSION gate, not an EDIT gate
-
-**Observed failure, `compile-rules-2026`, 2026-08-02/03.** The body oscillated 8 ↔ 9 pages for roughly
-fifty iterations. Each time content went in, the page count read 9, and prose came out to get back to
-8 — sixty characters at a time. Every individual cut looked harmless. Their sum is the unanimous 2/5
-for clarity: the first compression took real repetition, the second had none left and took
-transitions, antecedents and the conclusion's honest half. The structural pass named the arithmetic —
-780 words of genuine repetition removed, then 880 words in and 480 out, leaving the paper 51 words
-*heavier* than before the pass that cut 780.
 
 **The rule.** Content work runs OVER the limit on purpose. Compression is **one pass, at the end**,
 when the content has settled — with a whole-draft view, so it can move a section instead of shaving a
@@ -384,8 +216,7 @@ still growing.
 
 **The trigger to catch yourself:** you just added something, ran the page count, saw it over, and
 started looking for words to remove **in the section you were just editing**. That is the failure, in
-progress. The page count is information for the end of the work, not an alarm during it. (The author's
-own words on catching it, translated from Russian: *"you're cutting the text right away — dunno if that really needs doing immediately."*)
+progress. The page count is information for the end of the work, not an alarm during it.
 
 **What is still continuous:** rendering, and looking at pages 1–2. Seeing the number is fine. Acting
 on it is what waits.
@@ -403,35 +234,13 @@ honest limitation reads as strength).
 **A `☐` in GATES is a hole. A `☐` in CONTINUOUS is worse** — it means the check exists, ran once, and
 has been silently stale ever since. That is the shape of every failure this pipeline has actually had.
 
-## ⏱️ What each stage actually costs — MEASURED, not estimated
+## ⏱️ What each stage costs
 
-The author, 2026-08-05, watching a run he could not size (translated from Russian): *"is it worth
-writing the timing problem into the pipeline skill?"*. Yes — because the project already forbids guessing here. The rule in the papers tree's own `CLAUDE.md`
-says an estimate must be decomposed into labour / calendar / result-risk / access and **spiked
-rather than guessed**, and the same session it was written I still launched an experiment with no
-upper bound and had to cut it four hours later.
-
-Every number below is subagent **wall clock, measured on 2026-08-04/05** while finishing
-`compile-rules-2026`. They are one machine, one paper, one day — treat them as an order of
-magnitude, not a promise. Re-measure rather than inherit.
-
-| stage | measured | note |
-|---|--:|---|
-| `verify-citations`, one reference | **3 min** | sonnet; a fetch and a comparison |
-| `verify-citations`, eight references | **3 min** | the fetches parallelise; count barely matters |
-| a single reconciliation ("do these two numbers agree?") | **4 min** | sonnet, over committed data |
-| a second-rater pass over ~20 rows | **8 min** | opens every cited file |
-| a process/mechanism research pass (docs + source + issue tracker) | **10 min** | |
-| `pc-panel-review`, full panel + chair | **17 min** | unchanged for the confirming round |
-| bundling an experiment into the artifact + gate + re-zip | **24–39 min** | scales with directories, not bytes |
-| a design/measurement **spike** (feasibility, a handful of cells) | **27 min** | |
-| `tighten-paper` applied, with a loss letter | **34 min** | includes several build round-trips |
-| **an experiment with real checkouts and installed dependencies** | **≈4 h for 143 cells** | median cell **76 s**; the outlier by an order of magnitude |
+Measured wall clock per stage (one machine, one paper; re-measure rather than inherit): `docs/design/paper-pipeline-history.md` in the package.
 
 **What the shape tells you, which matters more than the rows.**
 
-- **The final review is measured in tens of minutes** (`tighten-paper` 34, `pc-panel-review` 17,
-  above). It runs once, not after each edit.
+- **The final review is measured in tens of minutes** (`tighten-paper` 34 min, `pc-panel-review` 17 min). It runs once, not after each edit.
 - **Reading, checking and reviewing are all minutes.** Anything whose cost is dominated by fetching,
   parsing or judging text lands in the 3–40 minute band regardless of how important it feels.
 - 🔴 **Anything that installs dependencies and runs an agent inside a real checkout is hours, and
@@ -462,8 +271,3 @@ Override per call when a stage clearly needs otherwise; this is the default, not
 - **Never fabricate** a citation, number, or result. Mark `% VERIFY` and check (`verify-citations`).
 - **Commit + push after each stage**, keep the tree clean (resume-safe across `/compact`); update
   `<papers-root>/research/README.md` in the same commit as any new research file (its CLAUDE.md enforces this).
-
-## Provenance
-Two real papers this session ran this pipeline end-to-end: **AgenticDev 2026 @ ASE** ("Measuring the
-Wrong Number," ~90%, submitted #20) and **AISec 2026 @ ACM CCS** ("Safety Theater," Weak-Accept→~87–88%
-after a panel round + confirm). The stage skills and shared refs are distilled from exactly those runs.

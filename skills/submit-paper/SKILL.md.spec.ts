@@ -204,12 +204,7 @@ convention with no reader.
 - Venue specifics: the venue's card \`presets/<venue>.md\` in the paperlint package (e.g.
   \`presets/agenticdev.md\`) for deadlines, page limits, PC-member conflict lists, and whether a
   supplementary upload exists.
-
-## Provenance
-Written from the AgenticDev 2026 @ ASE submission (2026-07-13): PC-panel-reviewed, self-checking
-artifact hosted on an OSF anonymized view-only link (no supplementary field at the venue), submitted #20
-ready-for-review. The friction points here — no supplementary slot, 4open needing a repo, the abstract
-re-paste, "ready for review" being a separate step, the PDF-only rule — are the ones that cost time.`,
+`,
 });
 
 export const flow = {

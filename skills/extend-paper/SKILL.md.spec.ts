@@ -67,12 +67,7 @@ its extension together.
 - **plan-paper-timeline** — schedule the new experiments + write-up against the target deadline.
 - **research-ideate** — if the ≥30% new contribution isn't obvious yet, find it here first.
 - **camera-ready** — the accepted, de-anonymized, DOI'd base version you're extending from.
-
-## Provenance
-The AgenticDev 2026 "Measuring the Wrong Number" workshop paper's **planned** extension to **MSR 2027**
-(deadline ~Oct 23, 2026) or **NeurIPS 2027 Evaluations & Datasets** (~May 2027) — a second, stronger,
-higher-prestige indexed publication. AgenticDev's CFP
-explicitly invites journal extensions; the same ORCID links the workshop paper and its extension.`,
+`,
 });
 
 export const flow = {
