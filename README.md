@@ -288,7 +288,7 @@ They are opt-in, in the writing set: `"rules": { "paperlint:writing": "warn" }` 
 - [`docs/configuration.md`](docs/configuration.md) — every setting, how `build` compiles, using your own ESLint
 - [`docs/rules.md`](docs/rules.md) — every check, venue presets, recording a submitted PDF
 - [`docs/references.md`](docs/references.md) — the reference check, and the cache file to commit
-- [`docs/submission.md`](docs/submission.md) — creating, reading and updating a submission on the venue's portal (HotCRP); one token variable per site
+- [`docs/submission.md`](docs/submission.md) — creating, reading and updating a submission on the venue's portal (HotCRP); one token variable for all of hotcrp.com, one per self-hosted site
 - [`docs/optional-rules.md`](docs/optional-rules.md) — checks only some venues need, and the opt-in writing set
 - [`docs/toolchain.md`](docs/toolchain.md) — TeX Live, and Banal (HotCRP's page-geometry checker, GPL)
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — how the package is tested and released, and adding a venue to it
