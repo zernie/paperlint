@@ -59,6 +59,23 @@ updates:
 
   # Versions of GitHub Actions themselves go stale silently and are only noticed when
   # the runner drops a warning about old Node.
+  # paperlint.dev (site/): its own lock, so its Next.js and React updates come in their own PR.
+  - package-ecosystem: "npm"
+    directory: "/site"
+    schedule:
+      interval: "monthly"
+      time: "06:00"
+      timezone: "Asia/Almaty"
+    cooldown:
+      default-days: 3
+    groups:
+      site:
+        patterns: ["*"]
+    open-pull-requests-limit: 1
+    commit-message:
+      prefix: "deps"
+    labels: ["dependencies"]
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

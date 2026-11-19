@@ -1,1 +1,4 @@
-{ "rules": { "require-instructions-spec": "error" } }
+{
+  "rules": { "require-instructions-spec": "error" },
+  "exclude": ["site/node_modules", "site/.next", "site/out"]
+}

@@ -1,0 +1,387 @@
+/* Palette and type from zernie.com (site/CLAUDE.md): warm paper, ink, one ink-blue accent;
+   terracotta only for an error. Display: Instrument Serif; text: Inter; code: JetBrains Mono. */
+:root {
+  --bg: #faf9f5;
+  --fg: #181816;
+  --muted: #5f5d58;
+  --text: #45433e;
+  --border: #e4e1d8;
+  --surface: #ffffff;
+  --accent: #305e8b;
+  --signal: #c15f3c;
+  --ink: #1f1d19;
+  --on-ink: #f0eee9;
+  --on-ink-muted: #bab7b0;
+  --road: #f6f1e6;
+  --road-edge: #ebe4d4;
+  --shadow: 0 40px 80px -48px rgba(24, 24, 22, 0.4);
+  --display: var(--font-display), Georgia, serif;
+  --sans: var(--font-sans), system-ui, sans-serif;
+  --mono: var(--font-mono), ui-monospace, Menlo, monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html {
+  scroll-behavior: smooth;
+}
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 18px;
+  -webkit-font-smoothing: antialiased;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+code,
+pre {
+  font-family: var(--mono);
+}
+h1,
+h2,
+h3 {
+  font-family: var(--display);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+/* Navigation: a floating pill. */
+.nav {
+  position: fixed;
+  z-index: 10;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1120px, calc(100% - 32px));
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 8px 8px 20px;
+  border: 1px solid rgba(24, 24, 22, 0.08);
+  border-radius: 999px;
+  background: rgba(250, 249, 245, 0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  font-size: 15px;
+}
+.logo {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-weight: 600;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+}
+.mark-square {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.nav-links {
+  display: flex;
+  gap: 28px;
+  align-items: center;
+  color: var(--muted);
+}
+.nav-links a:hover {
+  color: var(--fg);
+}
+.nav-links .nav-cta {
+  background: var(--fg);
+  color: var(--bg);
+  border-radius: 999px;
+  padding: 9px 18px;
+  font-weight: 500;
+}
+
+/* Hero: the headline over the etching's empty sky. */
+.hero {
+  position: relative;
+  min-height: 1040px;
+  padding: 170px 24px 0;
+  text-align: center;
+  background: url(/campus.webp) center bottom / max(1600px, 110%) auto no-repeat;
+}
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 760px 380px at 50% 330px,
+    var(--bg) 45%,
+    rgba(250, 249, 245, 0) 100%
+  );
+}
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(250, 249, 245, 0) 62%,
+    var(--bg) 97%
+  );
+}
+.hero-text {
+  position: relative;
+  z-index: 1;
+}
+.eyebrow {
+  display: inline-flex;
+  gap: 8px;
+  border: 1px solid rgba(24, 24, 22, 0.12);
+  background: rgba(250, 249, 245, 0.7);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.eyebrow b {
+  color: var(--fg);
+  font-weight: 500;
+}
+h1 {
+  font-size: clamp(56px, 9vw, 128px);
+  line-height: 0.95;
+  margin-top: 28px;
+}
+.venue {
+  color: var(--accent);
+  font-style: italic;
+}
+.venue-name {
+  display: inline-block;
+  animation: venue-in 0.5s ease both;
+}
+@keyframes venue-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.25em);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.lede {
+  font-size: clamp(18px, 2vw, 22px);
+  line-height: 1.45;
+  color: #3d3b37;
+  max-width: 640px;
+  margin: 26px auto 0;
+}
+.cta {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 36px;
+}
+.command {
+  max-width: 100%;
+  display: inline-flex;
+  gap: 14px;
+  align-items: center;
+  background: var(--fg);
+  color: var(--bg);
+  border-radius: 14px;
+  padding: 12px 12px 12px 22px;
+  font-family: var(--mono);
+  font-size: 16px;
+  box-shadow: 0 18px 40px -18px rgba(24, 24, 22, 0.55);
+}
+.prompt {
+  color: #8f8c84;
+}
+.copy {
+  font: 500 14px var(--sans);
+  color: var(--on-ink-muted);
+  background: transparent;
+  cursor: pointer;
+  border: 0;
+  border-left: 1px solid #3a3833;
+  padding: 4px 6px 4px 14px;
+}
+.copy:hover {
+  color: var(--bg);
+}
+.ghost {
+  border: 1px solid rgba(24, 24, 22, 0.16);
+  background: rgba(250, 249, 245, 0.8);
+  border-radius: 14px;
+  padding: 15px 22px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* The terminal window over the hero's foot. */
+.window {
+  position: relative;
+  z-index: 2;
+  width: min(1120px, calc(100% - 32px));
+  margin: -170px auto 0;
+  overflow: hidden;
+  background: var(--ink);
+  border-radius: 18px;
+  box-shadow: 0 50px 100px -40px rgba(24, 24, 22, 0.5);
+}
+.window-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid #3a3833;
+  color: var(--on-ink-muted);
+  font-size: 13px;
+}
+.window-bar i {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #4a4742;
+}
+.window-bar span {
+  margin-left: 12px;
+}
+.terminal {
+  padding: 24px 28px 28px;
+  color: var(--on-ink);
+  font-family: var(--mono);
+  font-size: 14.5px;
+  line-height: 1.9;
+  white-space: pre;
+  overflow-x: auto;
+}
+.t-dim {
+  color: var(--on-ink-muted);
+}
+.t-err {
+  color: #e88761;
+}
+.t-warn {
+  color: #d9b46a;
+}
+
+/* Venues: the dark band. */
+.venues {
+  background: var(--ink);
+  color: var(--on-ink);
+  padding: 150px 24px 140px;
+  margin-top: 80px;
+}
+.venues-inner {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+}
+.venues h2 {
+  font-size: clamp(44px, 6vw, 64px);
+  line-height: 1;
+}
+.venues p {
+  color: var(--on-ink-muted);
+  font-size: 19px;
+  margin-top: 16px;
+}
+.venue-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  margin-top: 56px;
+}
+.venue-card {
+  border: 1px solid #3a3833;
+  border-radius: 16px;
+  padding: 22px;
+  background: #24221e;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.venue-card b {
+  font-size: 20px;
+  font-weight: 500;
+}
+.venue-format {
+  font: 13px var(--mono);
+  color: var(--on-ink-muted);
+}
+.venue-limits {
+  font-size: 15px;
+  line-height: 1.45;
+  color: #d8d5ce;
+}
+.venues-more {
+  display: inline-block;
+  margin-top: 32px;
+  color: var(--on-ink);
+  border-bottom: 1px solid rgba(240, 238, 233, 0.4);
+}
+
+/* Install and footer. */
+.install {
+  text-align: center;
+  padding: 150px 24px 120px;
+}
+.install h2 {
+  font-size: clamp(48px, 6vw, 72px);
+  line-height: 1;
+  margin-bottom: 36px;
+}
+.command.big {
+  font-size: 17px;
+}
+.command > span:not(.prompt) {
+  min-width: 0;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.note {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.5;
+  max-width: 620px;
+  margin: 26px auto 0;
+}
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 26px max(24px, calc(50% - 560px));
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--muted);
+}
+.footer a:hover {
+  color: var(--fg);
+}
+
+/* Below a tablet's width. */
+@media (max-width: 900px) {
+  .nav-links a:not(.nav-cta) {
+    display: none;
+  }
+  .hero {
+    min-height: 760px;
+    padding-top: 120px;
+    background-size: 900px auto;
+  }
+  .terminal {
+    font-size: 12.5px;
+    padding: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .venue-name {
+    animation: none;
+  }
+}

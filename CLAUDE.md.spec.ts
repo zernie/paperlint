@@ -38,6 +38,7 @@ This file loads on every turn, so it holds only what applies to **any** change h
 | writing or changing a skill | [\`skills/CLAUDE.md\`](skills/CLAUDE.md) | how skills ship |
 | in \`src/\` | [\`src/CLAUDE.md\`](src/CLAUDE.md) | the two layer axes |
 | thinking of a Claude Code plugin | [\`plugin/CLAUDE.md\`](plugin/CLAUDE.md) | why there is none, and what must be measured to bring it back |
+| working on the website, paperlint.dev | [\`site/CLAUDE.md\`](site/CLAUDE.md) | the design the author chose, and what the page may claim |
 | changing CI, Dependabot or the release | [\`.github/CLAUDE.md\`](.github/CLAUDE.md) | cost, Dependabot cadence, release from the PR title |
 | writing a test | [\`docs/testing.md\`](docs/testing.md), [\`docs/e2e.md\`](docs/e2e.md) | which kind of test, fakes, the e2e triggers |`,
 

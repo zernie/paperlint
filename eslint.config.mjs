@@ -607,6 +607,13 @@ export default [
       "docs/prior-art/repro/",
       "dist/",
       "skills/*/scripts/*.js",
+      // paperlint.dev (site/CLAUDE.md): Next.js's build output, and the app's own config, which
+      // imports `next` from site/node_modules and is type-checked by `next build`, not here.
+      // site/lib/ is linted like the rest: it holds what the page reads and its test.
+      "site/.next/",
+      "site/out/",
+      "site/next-env.d.ts",
+      "site/next.config.ts",
     ],
   },
   // 🔴 THE PACKAGE'S TYPESCRIPT, and before 2026-09-24 no block matched it — the same silent

@@ -19,7 +19,8 @@
     "pipeline": "node scripts/pipeline.ts",
     "refresh-deadlines": "node --conditions=paperlint-source scripts/refresh-deadlines/main.ts",
     "fmt": "prettier --write .",
-    "fmt:check": "prettier --check ."
+    "fmt:check": "prettier --check .",
+    "site:build": "npm ci --prefix site && npm run build --prefix site"
   },
   "dependencies": {
     "@eslint/markdown": "^8.0.3",
