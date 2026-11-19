@@ -83,13 +83,12 @@ the scorecard explains itself where it lives:
 | `render`      | CONTINUOUS | build the PDF; the page count everything else is blocked on               | `render-paper`                  |
 | `numbers`     | CONTINUOUS | every printed quantity traces to committed data                           | the paper's own numbers gate    |
 | `structure`   | GATES      | the developmental/editorial verdict + cut plan                            | `tighten-paper`                 |
-| `writing`     | GATES      | writing craft + the persona stall inventory                               | `grade-paper-writing`           |
 | `panel`       | GATES      | the simulated PC decision                                                 | `pc-panel-review`               |
 | `artifact`    | GATES      | defects found by **executing** the artifact                               | `pc-panel-review` §C            |
 | `claims`      | GATES      | claim-preservation diff after every rewrite                               | Fable diff (`writing-craft.md`) |
-| `harden`      | GATES      | the multi-axis pre-submit gate                                            | `harden-paper`                  |
+| `harden`      | GATES      | the submit checklist                                                      | `harden-paper`                  |
 | `submit`      | GATES      | the upload itself                                                         | `submit-paper`                  |
-| `coldread`    | GATES      | a reader with no context on the changed prose                             | `cold-read-diff`                |
+| `coldread`    | GATES      | the final review's cold read, two blind readers per chunk                 | `cold-read-diff`                |
 | `cameraready` | AFTER      | de-anonymize, disclose, archive                                           | `camera-ready`                  |
 | `extend`      | AFTER      | the ≥30%-new follow-on at a stronger venue                                | `extend-paper`                  |
 

@@ -15,7 +15,6 @@ import cameraReady from "../camera-ready/SKILL.md.spec.ts";
 import draftPaper from "../draft-paper/SKILL.md.spec.ts";
 import extendPaper from "../extend-paper/SKILL.md.spec.ts";
 import findVenue from "../find-venue/SKILL.md.spec.ts";
-import gradePaperWriting from "../grade-paper-writing/SKILL.md.spec.ts";
 import hardenPaper from "../harden-paper/SKILL.md.spec.ts";
 import labelAgentRuns from "../label-agent-runs/SKILL.md.spec.ts";
 import mapPriorWork from "../map-prior-work/SKILL.md.spec.ts";
@@ -61,8 +60,8 @@ of that — who is filing what, and when — stays in the author's own private n
   decisions credit value forces on the pipeline.
 - \`references/artifact-checklist.md\` — the self-checking reproduction artifact.
 - \`references/anonymization.md\` — the double-blind deny-list + hygiene (and its reverse at camera-ready).
-- \`references/writing-craft.md\` — how well-written papers read (craft rules + exemplar lessons + the
-  gradeable 10-dim writing rubric); cited by \`draft-paper\`, \`grade-paper-writing\`, and \`harden-paper\`.
+- \`references/writing-craft.md\` — how well-written papers read (craft rules + exemplar lessons);
+  cited by \`draft-paper\`, \`rewrite-unclear\` and \`tighten-paper\`.
 - \`references/review-ratchet.md\` — how to fix a caught overclaim (tighten → cut → Threats → hedge);
   cited by \`pc-panel-review\` and \`harden-paper\`.
 - \`references/pipeline-status-template.md\` — the per-paper **readiness scorecard** (which stages ran,
@@ -138,7 +137,7 @@ that is why they are not three copies of one check:
 🔴 **A fifth kind, and none of the four columns can see it: does the MODEL call these skills at all?**
 Every column above watches something the repository produced — an event, staged bytes, a PDF, a commit.
 None watches *selection*: whether a real model, reading 37 competing descriptions, picks \`tighten-paper\`
-over \`grade-paper-writing\` when the draft is bloated. A harness test proves a skill works once invoked;
+over \`cold-read-diff\` when the draft is bloated. A harness test proves a skill works once invoked;
 it cannot prove it gets invoked. That needs the real CLI and it costs money, so it is a measurement, not
 a gate — \`.claude/skills/paper-pipeline/pipeline-firing.eval.mjs\`, run manually or by the weekly
 \`skill-firing\` job (\`workflow_dispatch\` + \`schedule\`, deliberately NOT on push). It installs every skill
@@ -251,10 +250,9 @@ Ordered, and the order is real: every one refuses to run without the output of t
 
 | Gate | Skill | Requires (hard) |
 |---|---|---|
-| **Final review** | **\`tighten-paper\`** → **\`cold-read-diff --whole\`** → **\`pc-panel-review\`** | A rendered PDF and a page count. Once, in that order, then closed: the next section. Sentences the readers flag are rewritten by **\`rewrite-unclear\`**. |
-| **Writing grade** | **\`grade-paper-writing\`** | The current draft and the cold-read report. The 1–5 grade, when the author asks for one; not a step of the final review. |
+| **Final review** | **\`tighten-paper\`** → **\`cold-read-diff\`** \`--whole\` → **\`pc-panel-review\`** | A rendered PDF and a page count. Once, in that order, then closed: the next section. Sentences the readers flag are rewritten by **\`rewrite-unclear\`**. |
 | **Claim preservation** | Fable diff (\`claims\`) | The pre-pass baseline. Run after **every** aggressive rewrite, before committing. |
-| **Harden** | **\`harden-paper\`** | The closed final review. Closes the desk-reject axes a reviewer-sim misses: threat-model, ethics/dual-use, page-fit, citability, double-blind hygiene, artifact-runs-clean. It takes the final review's reports and does not run them again. |
+| **Harden** | **\`harden-paper\`** | The closed final review. The submit checklist: \`npx paperlint lint\`, then the items no rule decides (threat model and ethics, the artifact and its numbers, the headline table). It takes the final review's reports and does not run them again. |
 | **Submit** | **\`submit-paper\`** (+ the venue card) | 🔴 **The \`access\` row green.** Portal mechanics, PDF-only, artifact hosted anonymously, "ready for review" marked. |
 
 ## AFTER — only reachable by acceptance
@@ -272,14 +270,14 @@ skill: 🔴 **argument architecture** — does the whole thing carry the reader 
 nobody's) · **content strength** — does the contribution clear *this venue's* bar (\`study-accepted-papers\`,
 from the venue's own award winners: in SETUP as requirements for the study, and again on the draft as the strong-accept scorecard, M1–M10) ·
 **scientific defects** — what a hostile reviewer attacks (\`pc-panel-review\`)
-· **writing craft** — does it read like a human wrote it (\`grade-paper-writing\`, the 10-dim rubric in
-\`references/writing-craft.md\`; called by \`harden-paper\`). A paper can ace one and fail another — grade all four.
+· **clarity** — can a reader with no context say what each sentence claims (\`cold-read-diff\`, in the
+final review). A paper can ace one and fail another — check all four.
 **The arc axis comes first**, because tightening length and polishing sentences inside a broken arc is
 how a day disappears and the same paper ships.
 
 **Panel vs harden — not rival gates, they're sequential.** \`pc-panel-review\` predicts what the PC does.
-\`harden-paper\` takes the final review's reports and closes the desk-reject axes a reviewer-sim doesn't
-systematically hit (threat-model, ethics/dual-use, page-fit, citability, double-blind hygiene). Order is
+\`harden-paper\` is the submit checklist: the lint run, the final review's reports, and the few items no rule
+decides. Order is
 **final review → harden → submit**.
 
 ## The final review — once, in this order, then closed
@@ -287,7 +285,7 @@ systematically hit (threat-model, ethics/dual-use, page-fit, citability, double-
 The one place this order is written; every other skill points here.
 
 1. **\`tighten-paper\`** — the structural verdict and the proposed cuts. It applies nothing.
-2. **\`cold-read-diff --whole\`** — the whole paper in chunks of at most 15 paragraphs, two blind readers
+2. **\`cold-read-diff\`** \`--whole\` — the whole paper in chunks of at most 15 paragraphs, two blind readers
    per chunk; no reader sees more than its chunk.
 3. **\`pc-panel-review\`** — one panel, with the reports of steps 1–2 as its inputs.
 
@@ -312,7 +310,7 @@ Every gate belongs to exactly one axis. **Sort by what invalidates it**, not by 
 
 | axis | invalidated by | gates |
 |---|---|---|
-| **TEXT** — does the argument land? | a change to the **prose**: any edit, cut, reorder (until the final review is closed) | \`structure\` tighten-paper · \`writing\` grade-paper-writing · \`arc\` argument-arc · the prose lenses of \`panel\` pc-panel-review |
+| **TEXT** — does the argument land? | a change to the **prose**: any edit, cut, reorder (until the final review is closed) | \`structure\` tighten-paper · \`coldread\` cold-read-diff · \`arc\` argument-arc · the prose lenses of \`panel\` pc-panel-review |
 | **EVIDENCE** — is it true? | a change to the **data, code, or artifact** | \`claims\` claim-preservation · \`cites\` verify-citations · \`artifact\` the artifact-runner lens · the numeric half of \`harden\` harden-paper |
 
 **Why this matters more than it looks.** The two axes expire on completely different clocks. Rewriting
@@ -470,17 +468,15 @@ magnitude, not a promise. Re-measure rather than inherit.
 | a second-rater pass over ~20 rows | **8 min** | opens every cited file |
 | a process/mechanism research pass (docs + source + issue tracker) | **10 min** | |
 | \`pc-panel-review\`, full panel + chair | **17 min** | unchanged for the confirming round |
-| \`grade-paper-writing\` incl. the persona cold read | **20 min** | |
 | bundling an experiment into the artifact + gate + re-zip | **24–39 min** | scales with directories, not bytes |
 | a design/measurement **spike** (feasibility, a handful of cells) | **27 min** | |
 | \`tighten-paper\` applied, with a loss letter | **34 min** | includes several build round-trips |
-| \`harden-paper\` | **36 min** | the widest gate; it runs the artifact |
 | **an experiment with real checkouts and installed dependencies** | **≈4 h for 143 cells** | median cell **76 s**; the outlier by an order of magnitude |
 
 **What the shape tells you, which matters more than the rows.**
 
-- **A full gate cycle — \`tighten\` → \`grade\` → \`panel\` — measured about 1.2 hours.** The final
-  review runs it once, not after each edit.
+- **The final review is measured in tens of minutes** (\`tighten-paper\` 34, \`pc-panel-review\` 17,
+  above). It runs once, not after each edit.
 - **Reading, checking and reviewing are all minutes.** Anything whose cost is dominated by fetching,
   parsing or judging text lands in the 3–40 minute band regardless of how important it feels.
 - 🔴 **Anything that installs dependencies and runs an agent inside a real checkout is hours, and
@@ -494,15 +490,14 @@ magnitude, not a promise. Re-measure rather than inherit.
 ## Model policy (which model runs which stage)
 Single home for the whole suite — stage skills point here instead of each re-deciding. Default:
 - **Adversarial / red-team / verify a claim** → **Fable** (a separate model; never the author grading
-  itself): \`pc-panel-review\` reviewers, \`harden-paper\` threat-model +
-  citability red-team, disputed \`verify-citations\` verdicts.
+  itself): \`pc-panel-review\` reviewers, disputed \`verify-citations\` verdicts.
 - **Heavy generation / synthesis** → the session's main model (**Opus**): \`draft-paper\`,
   \`build-benchmark\` design, \`extend-paper\`, \`research-ideate\`.
 - **Cheap bulk fetch / extraction** → **Haiku** (or Sonnet): \`study-accepted-papers\` corpus pull,
   \`plan-paper-timeline\`.
 - **No model at all (mechanical)** → \`verify-citations\`'s \`../verify-citations/scripts/verify-cites.mjs\` reducer,
   \`harden-paper\`'s \`check-*.sh\` linters, \`render-paper\` toolchain.
-- **Judge panels use DIVERSE models, not N copies of one** → \`grade-paper-writing\`, \`pc-panel-review\`:
+- **Judge panels use DIVERSE models, not N copies of one** → \`pc-panel-review\`:
   mix Opus + Fable + Sonnet so independent lenses catch what redundancy can't.
 
 Override per call when a stage clearly needs otherwise; this is the default, not a straitjacket.
@@ -540,7 +535,6 @@ export const flow = {
     analyzeSiblingPaper,
     renderPaper,
     tightenPaper,
-    gradePaperWriting,
     coldReadDiff,
     rewriteUnclear,
     pcPanelReview,

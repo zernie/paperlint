@@ -4,11 +4,11 @@ description: Build or repair the paper's argument architecture — the one-sente
 allowed-tools: [Read, Write, Grep, Glob, Agent]
 ---
 
-<!-- vigiles:sha256:e60db94f4b1c04f0 compiled from skills/argument-arc/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:7aacc0cb34fe3091 compiled from skills/argument-arc/SKILL.md.spec.ts -->
 
 # argument-arc — does the paper carry the reader to one conclusion
 
-> **Which structure skill?** `tighten-paper` = length, sag, what to cut. `grade-paper-writing` =
+> **Which structure skill?** `tighten-paper` = length, sag, what to cut. `cold-read-diff` =
 > sentences, jargon, where a reader stalls. **`argument-arc` (you are here) = the load-bearing order
 > of ideas.** The first two assume the argument is right and the delivery is wrong. This one asks
 > whether the argument exists. Run it *before* them — cutting words inside a broken arc is how a
@@ -49,7 +49,7 @@ only as a repair, which meant nobody stated the claim while stating it was still
 - Before a rewrite touching more than one section.
 - After a claim dies. When a refutation pass kills a load-bearing claim, the arc built on it is
   usually dead too, and it will not announce itself — the sections still read fine one at a time.
-- Before `tighten-paper` / `grade-paper-writing` / `pc-panel-review` on any draft whose thesis has
+- Before the final review (`tighten-paper` / `cold-read-diff` / `pc-panel-review`) on any draft whose thesis has
   changed since those gates last ran.
 
 ## How to run it
@@ -150,7 +150,7 @@ most needs help. This skill does:
 
 ## Compose with
 
-- **Before** `tighten-paper` (length/sag) and `grade-paper-writing` (sentences/stalls) — both assume
+- **Before** `tighten-paper` (length/sag) and `cold-read-diff` (sentences/stalls) — both assume
   the arc holds. Their verdicts are the gate inputs `pc-panel-review` demands.
 - **After** any refutation pass that killed a load-bearing claim (see the paper's `CLAIMS.md`).
 - `sweep-design-space` when the outline shows the paper has no distinctive move to make — that is a

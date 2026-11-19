@@ -41,7 +41,6 @@ const FROZEN: readonly string[] = [
   "draft-paper",
   "extend-paper",
   "find-venue",
-  "grade-paper-writing",
   "harden-paper",
   "map-prior-work",
   "osf-artifact-upload",

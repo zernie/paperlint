@@ -23,7 +23,6 @@
     "skills/draft-paper/draft-paper.harness.mjs",
     "skills/extend-paper/extend-paper.harness.mjs",
     "skills/find-venue/find-venue.harness.mjs",
-    "skills/grade-paper-writing/grade-paper-writing.harness.mjs",
     "skills/harden-paper/harden-paper.harness.mjs",
     "skills/map-prior-work/map-prior-work.harness.mjs",
     "skills/osf-artifact-upload/osf-artifact-upload.harness.ts",

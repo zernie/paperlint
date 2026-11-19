@@ -5,7 +5,6 @@
 // `test/pipeline.test.ts` fails on a job with no owner, and `docs/pipeline.md` lists each owner's jobs.
 import argumentArc from "./argument-arc/SKILL.md.spec.ts";
 import coldReadDiff from "./cold-read-diff/SKILL.md.spec.ts";
-import gradePaperWriting from "./grade-paper-writing/SKILL.md.spec.ts";
 import hardenPaper from "./harden-paper/SKILL.md.spec.ts";
 import paperPipeline from "./paper-pipeline/SKILL.md.spec.ts";
 import rewriteUnclear from "./rewrite-unclear/SKILL.md.spec.ts";
@@ -13,7 +12,6 @@ import tightenPaper from "./tighten-paper/SKILL.md.spec.ts";
 
 export const JOBS = {
   "find unclear sentences": coldReadDiff,
-  "grade the prose": gradePaperWriting,
   "rewrite for clarity": rewriteUnclear,
   "cut for length": tightenPaper,
   "the order of the argument": argumentArc,

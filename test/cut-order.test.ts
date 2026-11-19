@@ -1,8 +1,8 @@
 /**
  * ONE CUT ORDER (#486). What to spend first when a paper's body overruns its page limit is written
  * once, in `skills/paper-pipeline/references/body-vs-appendix.md`, section "When the body overruns".
- * The skills that cut for length (`tighten-paper`, `harden-paper`)
- * point there and keep no order of their own: when each skill carried its own wording, the one the
+ * The skill that cuts for length (`tighten-paper`)
+ * points there and keeps no order of its own: when each skill carried its own wording, the one the
  * pass followed ranked a result above a 689-word Threats section and 26 once-cited references.
  *
  * Read from the compiled SKILL.md, the text an agent loads. Every predicate runs twice: over the real
@@ -284,15 +284,6 @@ const SKILLS = {
       `own ordering: "Make a fold list first, before any sentence-level cutting"`,
     ],
   },
-  "harden-paper": {
-    now: "If it spills, measure the overflow and spend it in the cut order of",
-    before:
-      "Trim the reference list to the essential subset if it spills — the body text + a lean ~10 refs is what must fit. Before:",
-    expected: [
-      `own ordering: "Trim the reference list to the essential subset"`,
-      `own ordering: "lean ~10 refs"`,
-    ],
-  },
 } as const;
 
 describe.each(Object.entries(SKILLS))(
@@ -318,16 +309,16 @@ describe.each(Object.entries(SKILLS))(
 );
 
 describe("the old name of step 2 is gone", () => {
-  it.each([
-    REFERENCE,
-    ...["tighten-paper", "harden-paper"].map((n) => `skills/${n}/SKILL.md`),
-  ])("%s does not call sentences about the text scaffolding", (path) => {
-    const md = read(path);
-    expect([
-      OLD_NAME.test(md),
-      OLD_NAME.test(`${md} Cut scaffolding.`),
-    ]).toEqual([false, true]);
-  });
+  it.each([REFERENCE, ...["tighten-paper"].map((n) => `skills/${n}/SKILL.md`)])(
+    "%s does not call sentences about the text scaffolding",
+    (path) => {
+      const md = read(path);
+      expect([
+        OLD_NAME.test(md),
+        OLD_NAME.test(`${md} Cut scaffolding.`),
+      ]).toEqual([false, true]);
+    },
+  );
 });
 
 describe("tighten-paper's own changes of #486", () => {

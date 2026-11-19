@@ -401,16 +401,6 @@
       "count": 1
     }
   },
-  "skills/grade-paper-writing/grade-paper-writing.eval.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
-  "skills/grade-paper-writing/grade-paper-writing.harness.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
   "skills/harden-paper/harden-paper.eval.mjs": {
     "local/js-needs-reason": {
       "count": 1
@@ -446,11 +436,6 @@
       "count": 1
     }
   },
-  "skills/paper-pipeline/grade-paper-writing-ablation.eval.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
   "skills/paper-pipeline/paper-pipeline.eval.mjs": {
     "local/js-needs-reason": {
       "count": 1
@@ -472,11 +457,6 @@
     }
   },
   "skills/paper-pipeline/references/occupancy-2026-08-06-probe/run_retext.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
-  "skills/paper-pipeline/repro/2026-08-08-parent-replication.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }

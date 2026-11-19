@@ -1,6 +1,6 @@
 # Writing-craft reference — how well-written papers actually read
 
-Grounding for `grade-paper-writing`, `draft-paper`, and `harden-paper`. Distilled from the canonical
+Grounding for `draft-paper`, `rewrite-unclear` and `tighten-paper`. Distilled from the canonical
 craft sources + an honest dissection of exemplar papers (writing craft only, not scientific impact).
 The point: grade a draft's _prose and structure_ against how the best-written papers do it, not against
 taste. Especially for the failure mode "a wall of text and jargon that doesn't drive home how crazy the
@@ -79,7 +79,7 @@ attributed to Kent Beck — treat as widely-cited, not primary-verified.)
 - **MapReduce** — "Simplified" in the title = the reader's _benefit_ as the promise; clean topic sentences;
   motivating example before mechanism.
 
-## The gradeable rubric — 10 dimensions, score 1–5 (anchors), most-severe first
+## Ten dimensions of how a paper reads (anchors 1–5), most-severe first
 
 For the "wall of jargon" failure mode, **weight #5 Prose, #6 Jargon, #7 Landing-the-point ×2**; for the
 "blog post" failure mode, **weight #10 Register ×2** as well. Score each, name the offending
@@ -127,42 +127,11 @@ validity`, `null`, `coarse`, coined handles) used with no plain-words gloss — 
     quotes the reference sentence it was compared against. No reference papers → not graded, and the
     report says so; this dimension is never scored from memory.
 
-## Scoring calibration — how to avoid an inflated grade (read before scoring)
-
-A writing grade is worthless if it's inflated, and the default failure mode is a single grader — _especially
-one that just wrote, rewrote, or verified the paper_ — scoring on optimism and anchoring on "it got better."
-
-**⚠️ The blind panel does NOT fix the expertise blind spot.** LLM graders share a vocabulary: all three know
-`Bonferroni`, `construct validity`, `null`, `coarse` — so a blind 3-grader panel can _converge_ on 44/60 and
-all be wrong the same way (this happened; the human target reader then found the paper unreadable). The panel
-fixes _optimism/anchoring_, not _"the graders are experts and the reader isn't."_ Defenses: (1) every grader
-runs the stall pass, with its two readers (owner: `grade-paper-writing`); (2) **if the human target reader
-stalls where the panel didn't, the human wins — they ARE the reader the grade is for.** A panel consensus that
-contradicts the actual reader's "I was bored / lost" is a mis-grade, not a tie.
-
-Two disciplines are mandatory:
-
-**1. Absolute scale, not relative.** Grade against the whole field, NEVER against the previous draft.
-
-- **5** = the best-written papers in existence (Trusting-Trust tier: a non-expert reads it willingly, one
-  unforgettable line). Vanishingly rare — almost no real paper earns a 5 on most dimensions.
-- **4** = clearly above average, a pleasure to read; nothing a reviewer would ask to fix.
-- **3** = competent and publishable but a slog in places.
-- **2** = a real weakness a reviewer gripes about. **1** = bad.
-  "It improved from the last draft" is not evidence of a 4; grade only what is on the page today.
-
-**2. One grade is not trustworthy — run a blind panel when the number matters.** Spawn **≥3 independent
-graders**, each blind to (a) any prior score, (b) each other, and (c) the "we improved X" framing — give
-them only the current page and the field's best as the yardstick. **Report the distribution (per-dimension
-and overall min / median / max), not a point estimate.** Treat a lone high score as suspect until a blind
-panel confirms it; if graders disagree by >1 on a dimension, that dimension is genuinely ambiguous — say so.
-(This is the writing-axis analogue of `pc-panel-review`'s N-independent-reviewers design.)
-
 ## The cold-read stall pass (the "wait, what does that even mean?" axis)
 
-The stall pass has one owner: `grade-paper-writing`, section "The stall pass — specification"; the two
+The stall pass has one owner: `cold-read-diff`, with `--whole` over the whole paper; the two
 readers' prompts have one owner, `skills/cold-read-diff/scripts/readers.ts`. Rewrites of what it finds:
-`rewrite-unclear`. Kept here: the term buckets below and the density caps the rubric applies.
+`rewrite-unclear`. Kept here: the term buckets below.
 
 ### Register calibration — which terms to KEEP vs kill (the hard balance)
 
@@ -191,13 +160,6 @@ methodologist.** Sort every candidate term into three buckets:
    reader): `robust coverage` → _coverage under evasion_; `honest residue` → _what still gets through_; a "corner"
    / "split" / "axis" used before it's shown. Test: **did we invent this label, and does it describe the thing or
    just brand it?** If it brands, it is a stall; the new name comes from `rewrite-unclear`.
-
-**Stall density HARD-CAPS the score (mechanical, not "considered").** A paper the target reader stalls on every
-paragraph is NOT "above average," however correct or clean-sentenced. Apply as a ceiling:
-
-- **> 1 stall/page → Jargon (#6) ≤ 2.**
-- **> 2 stalls/page → Jargon ≤ 2, Prose (#5) ≤ 2, and Landing (#7) ≤ 3.**
-- Report stalls/page next to the scorecard.
 
 ## The claim-preservation diff (`claims`) — mandatory after EVERY rewrite
 

@@ -269,32 +269,6 @@ const CASES = [
     ],
   },
   {
-    skill: "grade-paper-writing",
-    why: "prose craft — the sentence is the unit, NOT the section",
-    pairs: [
-      {
-        origin: "ru",
-        ru: "оцени как написано — читается как стена жаргона",
-        en: "grade how it is written — it reads like a wall of jargon",
-      },
-      {
-        origin: "en",
-        en: "is the writing any good or does it read like shit",
-        ru: "текст вообще нормальный или читается как дерьмо",
-      },
-      {
-        origin: "ru",
-        ru: "abstract звучит криво хотя по смыслу всё на месте, дай оценку прозе",
-        en: "the abstract sounds clumsy even though the substance is fine, grade the prose",
-      },
-      {
-        origin: "en",
-        en: "grade the craft: title, abstract, sentence clarity, hedge stacking",
-        ru: "оцени ремесло: заголовок, аннотация, ясность предложений, нагромождение хеджей",
-      },
-    ],
-  },
-  {
     skill: "argument-arc",
     why: "argument architecture — does one conclusion become inevitable",
     pairs: [

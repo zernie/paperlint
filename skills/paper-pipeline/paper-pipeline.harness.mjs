@@ -79,10 +79,6 @@ for (const name of new Set(asserted)) {
 /** Shipped skills the conductor does NOT name, each with why. */
 const NOT_IN_MAP = new Map([
   [
-    "cold-read-diff",
-    "reached through `grade-paper-writing`, which routes to it; missing only from the map",
-  ],
-  [
     "sweep-design-space",
     "reached through `argument-arc`; missing only from the map",
   ],

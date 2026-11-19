@@ -82,17 +82,17 @@ Date = when it last ran. If that predates the current text, the pass is stale �
 
 ### GATES
 
-| id        | Gate               | Skill               | Requires                                     | Status | Date | Result | Open |
-| --------- | ------------------ | ------------------- | -------------------------------------------- | ------ | ---- | ------ | ---- |
-| structure | Structure          | tighten-paper       | render, arc                                  | ☐      | —    | —      | —    |
-| writing   | Writing craft      | grade-paper-writing | draft, arc, structure                        | ☐      | —    | —      | —    |
-| panel     | Review decision    | pc-panel-review     | structure, writing                           | ☐      | —    | —      | —    |
-| claims    | Claim preservation | Fable diff          | draft, writing                               | ☐      | —    | —      | —    |
-| harden    | Harden (all axes)  | harden-paper        | panel, structure, writing, cites, priordelta | ☐      | —    | —      | —    |
-| submit    | Submit             | submit-paper        | harden, access                               | ☐      | —    | —      | —    |
+| id        | Gate                    | Skill           | Requires                 | Status | Date | Result | Open |
+| --------- | ----------------------- | --------------- | ------------------------ | ------ | ---- | ------ | ---- |
+| structure | Structure               | tighten-paper   | render, arc              | ☐      | —    | —      | —    |
+| coldread  | Cold read (whole paper) | cold-read-diff  | draft, arc, structure    | ☐      | —    | —      | —    |
+| panel     | Review decision         | pc-panel-review | structure, coldread      | ☐      | —    | —      | —    |
+| claims    | Claim preservation      | Fable diff      | draft, coldread          | ☐      | —    | —      | —    |
+| harden    | Submit checklist        | harden-paper    | panel, cites, priordelta | ☐      | —    | —      | —    |
+| submit    | Submit                  | submit-paper    | harden, access           | ☐      | —    | —      | —    |
 
-**Harden sub-axes** (`harden` is an orchestrator — track its axes so `◐` is legible):
-structure(=structure) ☐ · threat-model ☐ · ethics/dual-use ☐ · page/word-fit ☐ · de-anon hygiene ☐ · citability ☐ · artifact-runs-clean ☐ · writing(=writing) ☐
+**Harden checklist items** (track them so `◐` is legible):
+lint ☐ · final review closed ☐ · citations and siblings ☐ · claims ☐ · threat model and ethics ☐ · artifact and numbers ☐ · headline table ☐ · anonymity beyond the PDF ☐
 
 ### AFTER
 

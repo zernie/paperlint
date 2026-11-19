@@ -13,7 +13,7 @@ after deciding to use the tool, not before.
 | program              | comes from                       | which skills call it                     | what happens without it                                               |
 | -------------------- | -------------------------------- | ---------------------------------------- | --------------------------------------------------------------------- |
 | `pdflatex`, `bibtex` | TeX Live (`paperlint toolchain`) | render-paper, submit-paper, camera-ready | no PDF is produced — loud                                             |
-| `texcount`           | TeX Live (`paperlint toolchain`) | render-paper, grade-paper-writing        | the length checks cannot run                                          |
+| `texcount`           | TeX Live (`paperlint toolchain`) | render-paper                             | the length checks cannot run                                          |
 | `checkcites`         | TeX Live (`paperlint toolchain`) | render-paper                             | nothing asks whether a bibliography entry is uncited                  |
 | `latexdiff`          | TeX Live (`paperlint toolchain`) | `paperlint versions diff`                | the command exits 2 with one line saying so                           |
 | `java`               | any JRE (21 works)               | render-paper                             | TeXtidote does not run, and **nothing else spell-checks the text**    |

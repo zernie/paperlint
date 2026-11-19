@@ -1,10 +1,10 @@
 ---
 name: draft-paper
-description: Use when the numbers exist and it's time to WRITE the paper — "draft the paper", "turn these findings into a submission", "write the abstract/intro/threats". Gives the section skeleton of a measurement/benchmark paper plus what gets it accepted AND cited — precise claim-sizing (including an explicit "what we do NOT claim"), a construct-validity frame, an honest threats-to-validity section that turns limitations in your favor, and one memorable stat that travels. Encodes the two theses that carried real measurement papers ("measuring the wrong number", "safety theater"). NOT for grading finished prose (grade-paper-writing) or structural editing (tighten-paper) — this is the generative counterpart. Compose with build-benchmark (numbers), grade-paper-writing (prose QA), render-paper, verify-citations, then the review skills.
+description: Use when the numbers exist and it's time to WRITE the paper — "draft the paper", "turn these findings into a submission", "write the abstract/intro/threats". Gives the section skeleton of a measurement/benchmark paper plus what gets it accepted AND cited — precise claim-sizing (including an explicit "what we do NOT claim"), a construct-validity frame, an honest threats-to-validity section that turns limitations in your favor, and one memorable stat that travels. Encodes the two theses that carried real measurement papers ("measuring the wrong number", "safety theater"). NOT for finding unclear sentences in finished prose (cold-read-diff) or structural editing (tighten-paper) — this is the generative counterpart. Compose with build-benchmark (numbers), cold-read-diff (prose QA), render-paper, verify-citations, then the review skills.
 allowed-tools: [Read, Write, Edit, Grep, Glob, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:0cd62e233a4a59ca compiled from skills/draft-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:3347e6b866836375 compiled from skills/draft-paper/SKILL.md.spec.ts -->
 
 # draft-paper — prose that survives review and gets cited
 
@@ -83,29 +83,26 @@ each extra qualified number dilutes the one that matters and invites nitpicks be
 reaches the method. Hedge in Results/Threats, not the abstract. If you can't say the contribution in one
 sentence, you haven't found it yet — go back to the method. Structure it against the five-move template
 (context → gap → approach → one number → so-what) in `../paper-pipeline/references/writing-craft.md`, which
-also holds the craft rules and the writing rubric `grade-paper-writing` grades against — write toward the
-grade.
+also holds the craft rules.
 
 ## Run the prose through the PAPER suite's QA (do not skip — and do not use the blog skills)
 Before any review pass, run the draft through the paper-side prose QA — it catches what a self-read won't:
-- **`grade-paper-writing`** — the 10-dim rubric + the PERSONA cold-read stall pass (a committed
-  non-academic persona, per-section — the localized "wait, what does that even mean?" axis authors are
-  blind to). Its avoid-list grep also flags the AI-writing tropes (hedge-stacking, "it's worth
-  noting", fake balance) that make a draft read unserious to a human PC.
-- **`../paper-pipeline/references/writing-craft.md`** — write toward the rubric; its
+- **`cold-read-diff`** — two readers with no context on each finished section (the localized "wait,
+  what does that even mean?" axis authors are blind to).
+- **`../paper-pipeline/references/writing-craft.md`** — its
   register-calibration buckets decide which jargon to keep / gloss / rename for the venue's actual reader.
 - **`rewrite-unclear`** — rewrites each passage the QA above flags, and any passage the author calls
   unclear; a section is not done while one of its flagged passages is unrewritten or undecided.
 
 **Boundary:** the site repo's `writing-quality` + `audience-test` skills are for **blog posts only**.
-For papers they duplicate — and are superseded by — `grade-paper-writing`'s persona
-pass (the blog skills lack the persona fix, so they under-fire on paper prose). Never route paper
+For papers they are superseded by `cold-read-diff`'s readers (the blog skills lack the
+no-context reader, so they under-fire on paper prose). Never route paper
 prose QA to them.
 
 ## Compose with
 - **`build-benchmark`** — its numbers/CIs are the Results section's raw material; never hand-type a
   number that isn't in its output (that's how paper↔artifact mismatches get born).
-- **`grade-paper-writing`** (+ `../paper-pipeline/references/writing-craft.md`) — the paper-side prose
+- **`cold-read-diff`** (+ `../paper-pipeline/references/writing-craft.md`) — the paper-side prose
   QA, above. (Site-repo `writing-quality` / `audience-test` = blog posts only.)
 - **`render-paper`** — compile + eyeball pages 1–2 once prose is in.
 - **`verify-citations`** — every cite in Related Work must exist AND say what you claim.

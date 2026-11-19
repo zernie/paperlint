@@ -87,8 +87,7 @@ source, and record them (`anchorOf` in `src/register-bands.ts` is the one way an
 ## What it does not check
 
 Whether a given frame is needed. A frame is the right sentence where a reader would otherwise assume
-the rejected alternative; the rule counts, and judging each one is the job of the `grade-paper-writing`
-skill. It does not read a frame split over two sentences (_It is fast. Not exact._), a negation by
+the rejected alternative; the rule counts, and judging each one is a reader's job. It does not read a frame split over two sentences (_It is fast. Not exact._), a negation by
 synonym (_ignores_, _fails to_), or anything in the appendix.
 
 ## How to fix

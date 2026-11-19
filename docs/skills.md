@@ -59,12 +59,11 @@ Which skill hands work to which, drawn from each skill's own `flow`: [`pipeline.
 
 ## 5 · Review
 
-| you get                                                                                            | skill                 |
-| -------------------------------------------------------------------------------------------------- | --------------------- |
-| a writing grade, with the sentence to fix for each point                                           | `grade-paper-writing` |
-| every cited work confirmed to exist, with the right authors, title and year                        | `verify-citations`    |
-| a simulated program committee: several reviews, one of them hostile, a decision and the must-fixes | `pc-panel-review`     |
-| ready or not ready to submit, worst problem first                                                  | `harden-paper`        |
+| you get                                                                                            | skill              |
+| -------------------------------------------------------------------------------------------------- | ------------------ |
+| every cited work confirmed to exist, with the right authors, title and year                        | `verify-citations` |
+| a simulated program committee: several reviews, one of them hostile, a decision and the must-fixes | `pc-panel-review`  |
+| ready or not ready to submit, worst problem first                                                  | `harden-paper`     |
 
 ## 6 · Submit
 

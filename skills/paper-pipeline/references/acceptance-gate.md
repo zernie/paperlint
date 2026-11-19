@@ -137,8 +137,8 @@ model. ARIS's file names our construction without having seen it:
 > accept, so it's robust." Five draws from one distribution is one opinion with error bars, not five
 > opinions.
 
-That is `pc-panel-review` (N lenses → chair's meta-review → calibrated probability) and the blind
-multi-grader panel in `grade-paper-writing`, described from the outside. By ARIS's own verifier our
+That is `pc-panel-review` (N lenses → chair's meta-review → calibrated probability), described from
+the outside. By ARIS's own verifier our
 chain grades `provisional` and never `accepted` — and strictly worse than that, since their
 `model_family()` does not know the word `fable` and would reject the artifact outright with
 `unrecognized_model_family`.
@@ -154,7 +154,7 @@ taste. That is the shape to copy.
 
 ---
 
-## The classification: all 21 verdict-bearing gates
+## The classification: all 20 verdict-bearing gates
 
 Every skill under `.claude/skills/` that records a verdict to the ledger — 21 with a `Record the
 verdict` block, plus `map-prior-work`, which was in `EXPECTED_GATES` with no block at all when this
@@ -186,7 +186,6 @@ we want more of.
 | `argument-arc`          | the arc carries the reader end to end                                                            | **B**                                 | ❌ drive only                                                                                                         |
 | `cold-read-diff`        | every changed sentence came back restated correctly                                              | **B**                                 | ❌ drive only — **and the cold reader is the same family as the writer**                                              |
 | `tighten-paper`         | a cover-to-cover read produced no action                                                         | **B**                                 | ❌ drive only                                                                                                         |
-| `grade-paper-writing`   | the stall inventory came back empty                                                              | **B**                                 | ❌ drive only                                                                                                         |
 | `analyze-sibling-paper` | the delta is real and no text has to change                                                      | **B**                                 | ❌ drive only                                                                                                         |
 | `study-accepted-papers` | the draft already passes the strong-accept scorecard                                             | **B**                                 | ❌ drive only (the corpus is external; the comparison is ours)                                                        |
 | `pc-panel-review`       | accept with no must-fix                                                                          | **B**                                 | ❌ drive only — the flagship offender                                                                                 |
@@ -194,13 +193,13 @@ we want more of.
 
 ### The honest count
 
-**Of 21 verdict-bearing gates: 5 may acquit outright, 4 may acquit only their A-part, and 12 may
-only drive.** Sixteen of twenty-one therefore reach a verdict at least partly beyond what they are
+**Of 20 verdict-bearing gates: 5 may acquit outright, 4 may acquit only their A-part, and 11 may
+only drive.** Fifteen of twenty therefore reach a verdict at least partly beyond what they are
 entitled to give.
 
-🔴 **Narrow it to the review chain — the eight gates whose job is to decide whether the paper is good
-enough — and the number is 8 of 8. Every one of them can only drive.** They are `argument-arc`,
-`cold-read-diff`, `tighten-paper`, `grade-paper-writing`, `analyze-sibling-paper`,
+🔴 **Narrow it to the review chain — the seven gates whose job is to decide whether the paper is good
+enough — and the number is 7 of 7. Every one of them can only drive.** They are `argument-arc`,
+`cold-read-diff`, `tighten-paper`, `analyze-sibling-paper`,
 `study-accepted-papers`, `pc-panel-review`, `harden-paper`. Not one has a
 judge outside the family that wrote the text. Nothing in the review chain acquits; the entire chain
 drives, and `harden-paper`'s PASS then hands that driving to `submit-paper` as if it were an
@@ -271,15 +270,15 @@ line because **nobody had given it a threshold at all**.
 
 Three things are actionable today, and one is not.
 
-1. **`single-family-jury` watches two gates; it should watch twelve.**
+1. **`single-family-jury` watches two gates; it should watch eleven.**
    _(2026-08-26: this check now lives in `eslint-rules/pipeline-status.mjs` as the ESLint rule
    `pipeline/judge-recorded`, together with `unattributed-verdict`. The widening to fourteen names
    happened 2026-08-10 and moved with it.)_
    The `ACQUITTING` set is `pc-panel-review` and `harden-paper`. The other
-   ten drive-only gates — `find-venue`, `research-ideate`, `sweep-design-space`, `map-prior-work`,
-   `argument-arc`, `cold-read-diff`, `tighten-paper`, `grade-paper-writing`,
+   nine drive-only gates — `find-venue`, `research-ideate`, `sweep-design-space`, `map-prior-work`,
+   `argument-arc`, `cold-read-diff`, `tighten-paper`,
    `analyze-sibling-paper`, `study-accepted-papers` — report a clean run with no judge recorded and
-   nothing objects. Widening that set is a one-line change to a set literal and it makes ten hidden
+   nothing objects. Widening that set is a one-line change to a set literal and it makes nine hidden
    acquittals countable.
 2. ~~**`map-prior-work` records nothing.**~~ **Closed the same day.** It was in `EXPECTED_GATES`
    with no ledger call, so the gate deciding what we may still claim had never entered the ledger —

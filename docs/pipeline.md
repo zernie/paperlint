@@ -4,9 +4,9 @@
 
 Who hands work to whom, read from the skills themselves: each `skills/<name>/SKILL.md.spec.ts`
 exports `flow`, and `skills/jobs.ts` names the one owner of each job on a paper's text. A flow
-has three kinds of edge: **hands to** (33), the next step on the main path, drawn
-solid; **loops back to** (9), work sent back to an earlier skill, drawn dashed;
-**runs** (61), a skill this one runs as one of its own steps or whose output it needs,
+has three kinds of edge: **hands to** (32), the next step on the main path, drawn
+solid; **loops back to** (8), work sent back to an earlier skill, drawn dashed;
+**runs** (55), a skill this one runs as one of its own steps or whose output it needs,
 written inside the box, never drawn. `test/pipeline.test.ts` fails on a cycle of hand-offs, a
 hand-off to an earlier stage, an edge the skill's own text never names, a job without an owner,
 and this file when it is stale. The stages are those of [`skills.md`](skills.md).
@@ -21,7 +21,7 @@ flowchart LR
   stage_venue["<b>2 · Venue</b><br/>find-venue<br/>plan-paper-timeline<br/>study-accepted-papers"]
   stage_study["<b>3 · Study</b><br/>build-benchmark<br/>build-label-page<br/>label-agent-runs<br/>run-agent-grid"]
   stage_draft["<b>4 · Draft</b><br/>argument-arc<br/>cold-read-diff<br/>draft-paper<br/>render-paper<br/>rewrite-unclear<br/>tighten-paper"]
-  stage_review["<b>5 · Review</b><br/>grade-paper-writing<br/>harden-paper<br/>pc-panel-review<br/>verify-citations"]
+  stage_review["<b>5 · Review</b><br/>harden-paper<br/>pc-panel-review<br/>verify-citations"]
   stage_submit["<b>6 · Submit</b><br/>osf-artifact-upload<br/>submission-portal<br/>submit-paper"]
   stage_camera_ready["<b>7 · Camera-ready</b><br/>camera-ready"]
   stage_extend["<b>8 · Extend</b><br/>extend-paper"]
@@ -39,18 +39,16 @@ flowchart LR
   stage_study --> stage_submit
   stage_draft --> stage_review
   stage_review --> stage_submit
-  stage_review --> stage_extend
   stage_submit --> stage_camera_ready
   stage_camera_ready --> stage_extend
   stage_draft -.-> stage_idea
   stage_draft -.-> stage_study
-  stage_review -.-> stage_draft
   stage_extend -.-> stage_idea
 ```
 
 ## Across every stage
 
-- `paper-pipeline` (owns: which stage runs next; the final review) runs 23 skills: `research-ideate`, `map-prior-work`, `find-venue`, `study-accepted-papers`, `plan-paper-timeline`, `argument-arc`, `build-benchmark`, `run-agent-grid`, `label-agent-runs`, `build-label-page`, `draft-paper`, `verify-citations`, `analyze-sibling-paper`, `render-paper`, `tighten-paper`, `grade-paper-writing`, `cold-read-diff`, `rewrite-unclear`, `pc-panel-review`, `harden-paper`, `submit-paper`, `camera-ready`, `extend-paper`.
+- `paper-pipeline` (owns: which stage runs next; the final review) runs 22 skills: `research-ideate`, `map-prior-work`, `find-venue`, `study-accepted-papers`, `plan-paper-timeline`, `argument-arc`, `build-benchmark`, `run-agent-grid`, `label-agent-runs`, `build-label-page`, `draft-paper`, `verify-citations`, `analyze-sibling-paper`, `render-paper`, `tighten-paper`, `cold-read-diff`, `rewrite-unclear`, `pc-panel-review`, `harden-paper`, `submit-paper`, `camera-ready`, `extend-paper`.
 - `paper-status`.
 
 ## 1 · Idea
@@ -125,7 +123,7 @@ flowchart TB
 flowchart TB
   argument_arc["<b>argument-arc</b><br/>the order of the argument<br/>judge headings (the headings as a set)<br/>one name for one thing across the paper (the name budget)<br/>runs: rewrite-unclear"]
   cold_read_diff["<b>cold-read-diff</b><br/>find unclear sentences<br/>judge headings (a heading in the last edit)<br/>runs: rewrite-unclear"]
-  draft_paper["<b>draft-paper</b><br/>runs: grade-paper-writing, rewrite-unclear, render-paper,<br/>verify-citations"]
+  draft_paper["<b>draft-paper</b><br/>runs: cold-read-diff, rewrite-unclear, render-paper,<br/>verify-citations"]
   render_paper["<b>render-paper</b>"]
   rewrite_unclear["<b>rewrite-unclear</b><br/>rewrite for clarity<br/>fix a heading or a name"]
   tighten_paper["<b>tighten-paper</b><br/>cut for length<br/>runs: rewrite-unclear"]
@@ -147,16 +145,11 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-  grade_paper_writing["<b>grade-paper-writing</b><br/>grade the prose<br/>runs: rewrite-unclear, render-paper"]
-  harden_paper["<b>harden-paper</b><br/>is it ready to submit<br/>runs: tighten-paper, pc-panel-review, verify-citations,<br/>analyze-sibling-paper, grade-paper-writing, rewrite-unclear,<br/>render-paper, argument-arc"]
+  harden_paper["<b>harden-paper</b><br/>is it ready to submit<br/>runs: tighten-paper, cold-read-diff, pc-panel-review,<br/>verify-citations, analyze-sibling-paper"]
   pc_panel_review["<b>pc-panel-review</b><br/>runs: tighten-paper, cold-read-diff"]
   verify_citations["<b>verify-citations</b><br/>runs: analyze-sibling-paper, map-prior-work"]
-  to_stage_draft(["→ 4 · Draft"])
   to_stage_submit(["→ 6 · Submit"])
-  to_stage_extend(["→ 8 · Extend"])
-  grade_paper_writing -. "argument-arc" .-> to_stage_draft
   harden_paper -- "submit-paper" --> to_stage_submit
-  harden_paper -- "extend-paper" --> to_stage_extend
 ```
 
 ## 6 · Submit

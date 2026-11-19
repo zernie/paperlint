@@ -1,10 +1,10 @@
 ---
 name: tighten-paper
-description: "Use when a paper \"feels long / bloated / overly complex / hard to read / doesn't deliver its point / the middle drags\". The developmental / editorial pass on a DRAFTED paper: what a real human editor thinks reading it cover to cover — the ONE point, does every section earn its place, can it be SKIMMED, is it too long for its contribution, which sections are TMI that belong in the artifact/appendix, does the conclusion pay off the intro's promise. Produces a structural verdict + a concrete cut / fold / merge / reorder plan that it proposes and never applies — NOT sentence fixes; \"nothing to cut\" is a valid verdict. The first step of the final review, and a required INPUT to pc-panel-review. NOT sentence craft or a writing grade (grade-paper-writing), NOT unclear sentences (cold-read-diff), NOT scientific defects (pc-panel-review)."
+description: "Use when a paper \"feels long / bloated / overly complex / hard to read / doesn't deliver its point / the middle drags\". The developmental / editorial pass on a DRAFTED paper: what a real human editor thinks reading it cover to cover — the ONE point, does every section earn its place, can it be SKIMMED, is it too long for its contribution, which sections are TMI that belong in the artifact/appendix, does the conclusion pay off the intro's promise. Produces a structural verdict + a concrete cut / fold / merge / reorder plan that it proposes and never applies — NOT sentence fixes; \"nothing to cut\" is a valid verdict. The first step of the final review, and a required INPUT to pc-panel-review. NOT sentence craft or unclear sentences (cold-read-diff), NOT scientific defects (pc-panel-review)."
 allowed-tools: [Read, Write, Edit, Grep, Glob, Agent]
 ---
 
-<!-- vigiles:sha256:9ed8eeddc7167ba2 compiled from skills/tighten-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:5b82e3f59d9e5385 compiled from skills/tighten-paper/SKILL.md.spec.ts -->
 
 # tighten-paper — the developmental edit
 

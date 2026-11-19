@@ -1,7 +1,6 @@
 # The venue's bar: one input for every skill that scores soundness or novelty
 
-Used by `pc-panel-review` (every reviewer seat and the chair) and
-`harden-paper` (its soundness and novelty axes). The wording lives here and nowhere else.
+Used by `pc-panel-review` (every reviewer seat and the chair). The wording lives here and nowhere else.
 
 ## The input
 

@@ -307,18 +307,7 @@ const CASES = [
       "после трёх раундов ревью там одна вода и хеджи, нужен план сокращения",
       "sections 4 and 5 say the same thing twice, and nobody would skim any of it",
     ],
-    collides: ["grade-paper-writing", "argument-arc"],
-  },
-  {
-    skill: "grade-paper-writing",
-    why: "prose craft — the sentence is the unit, NOT the section",
-    prompts: [
-      "оцени как написано — читается как стена жаргона",
-      "is the writing any good or does it read like shit",
-      "abstract звучит криво хотя по смыслу всё на месте, дай оценку прозе",
-      "grade the craft: title, abstract, sentence clarity, hedge stacking",
-    ],
-    collides: ["tighten-paper", "argument-arc"],
+    collides: ["cold-read-diff", "argument-arc"],
   },
   {
     skill: "argument-arc",
@@ -329,7 +318,7 @@ const CASES = [
       "мы вводим пять именованных штук и три числа — по-моему это перебор",
       "before the big rewrite I want one sentence per section, bottom up",
     ],
-    collides: ["tighten-paper", "grade-paper-writing"],
+    collides: ["tighten-paper", "cold-read-diff"],
   },
   {
     skill: "pc-panel-review",
@@ -340,7 +329,7 @@ const CASES = [
       "что решат на PC discussion — accept или reject",
       "нужно несколько независимых ревьюеров с разными линзами плюс мета-ревью от чейра",
     ],
-    collides: ["grade-paper-writing"],
+    collides: ["tighten-paper"],
   },
   {
     skill: "cold-read-diff",
@@ -351,7 +340,7 @@ const CASES = [
       "поправил формулировки в 4.2, прогони свежим читателем до того как я закрою правку",
       "эти предложения короткие, правдивые и всё равно непонятно что они утверждают",
     ],
-    collides: ["grade-paper-writing", "tighten-paper"],
+    collides: ["tighten-paper", "argument-arc"],
   },
   {
     skill: "verify-citations",
@@ -643,9 +632,9 @@ if (flag("update-baseline")) {
 // not to a number invented here. Tighten these only against recorded runs.
 //
 // Precision is NOT gated. A colliding sibling firing alongside the right skill is often CORRECT
-// chaining — grade-paper-writing's own description says to run tighten-paper first on a bloated
-// draft — so a false positive here means "fired on a prompt another skill owns", which includes
-// legitimate hand-offs. Gating it would punish the composition these skills are designed for.
+// chaining — the final review runs tighten-paper before the cold read on a bloated draft — so a
+// false positive here means "fired on a prompt another skill owns", which includes legitimate
+// hand-offs. Gating it would punish the composition these skills are designed for.
 const FLOOR = { min: 0.5, maxFalsePositive: 0.75 };
 if (GATE) {
   const failures = [];

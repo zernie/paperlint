@@ -1,10 +1,10 @@
 ---
 name: pc-panel-review
-description: "Use when asking \"what would the program committee decide?\" / \"simulate the reviewers\" / \"what's this paper's accept probability?\" / \"red-team this paper\" / \"what would Reviewer 2 attack?\" on a drafted paper + artifact. Spawns N independent reviewers with DISTINCT lenses (one actually RUNS the artifact, one is a skimming genre/register reviewer, one is the hostile Reviewer 2), then synthesizes a PC-chair meta-review into an accept/reject prediction reported as min/median/max, a calibrated probability, and consensus must-fixes (or none). Takes tighten-paper's structural verdict and cold-read-diff's whole-paper report as inputs — the panel cannot feel reader fatigue on its own. The third and last step of the final review. Also runs one seat alone: the hostile seat for a fast red-team, or the VENUE-FIT seat for a CFP-fit spot-check. NOT a writing grade (grade-paper-writing) or the submit checklist (harden-paper)."
+description: "Use when asking \"what would the program committee decide?\" / \"simulate the reviewers\" / \"what's this paper's accept probability?\" / \"red-team this paper\" / \"what would Reviewer 2 attack?\" on a drafted paper + artifact. Spawns N independent reviewers with DISTINCT lenses (one actually RUNS the artifact, one is a skimming genre/register reviewer, one is the hostile Reviewer 2), then synthesizes a PC-chair meta-review into an accept/reject prediction reported as min/median/max, a calibrated probability, and consensus must-fixes (or none). Takes tighten-paper's structural verdict and cold-read-diff's whole-paper report as inputs — the panel cannot feel reader fatigue on its own. The third and last step of the final review. Also runs one seat alone: the hostile seat for a fast red-team, or the VENUE-FIT seat for a CFP-fit spot-check. NOT the submit checklist (harden-paper)."
 allowed-tools: [Read, Write, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:6ef65ef14d2cc571 compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:b5654fd0fc48e3a9 compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
 
 # pc-panel-review — model the whole PC, not one reviewer
 

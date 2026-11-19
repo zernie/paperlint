@@ -1,10 +1,10 @@
 ---
 name: cold-read-diff
-description: "Send just-changed paper prose to two readers with NO context — an engineer who asks what each sentence claims, and a skimming workshop reviewer who asks whose result it states and whether it reads like a paper — the only check that catches a sentence which is short, true, jargon-free and still meaningless to anyone who does not already know the idea. Run ONCE per batch of prose edits — when a section is done, before committing it — not after each edit: it reads everything changed since the last commit. Its whole-paper mode (--whole) is step 2 of the final review, in chunks of at most 15 paragraphs. Not a writing grade (grade-paper-writing), not a structural pass (tighten-paper), not a defect review."
+description: "Send just-changed paper prose to two readers with NO context — an engineer who asks what each sentence claims, and a skimming workshop reviewer who asks whose result it states and whether it reads like a paper — the only check that catches a sentence which is short, true, jargon-free and still meaningless to anyone who does not already know the idea. Run ONCE per batch of prose edits — when a section is done, before committing it — not after each edit: it reads everything changed since the last commit. Its whole-paper mode (--whole) is step 2 of the final review, in chunks of at most 15 paragraphs. Not a structural pass (tighten-paper), not a defect review (pc-panel-review)."
 allowed-tools: [Bash, Read, Write, Agent]
 ---
 
-<!-- vigiles:sha256:bac18a98d1c16761 compiled from skills/cold-read-diff/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:1170e19d50e02ba1 compiled from skills/cold-read-diff/SKILL.md.spec.ts -->
 
 # cold-read-diff — the reader who cannot fake understanding
 
@@ -186,8 +186,6 @@ findings:
 ## Compose with
 
 - `rewrite-unclear` — writes the fixes for the rows this read returns; step 7 confirms them.
-- `grade-paper-writing` — the 1–5 writing grade; this skill finds the unclear sentences, in the
-  last edit or, with `--whole`, in the whole paper.
 - `tighten-paper` — structural cuts. Note the interaction: a tighten pass that pays for an addition
   by shortening sentences elsewhere is precisely what generates work for this skill.
 - `paper-pipeline` — owns the final review; `--whole` is its second step.

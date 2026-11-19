@@ -1,8 +1,8 @@
 // Compiled to SKILL.md by `vigiles compile`. Edit THIS file, never the markdown.
 //
 // The one owner of turning an unclear passage into a clear one. Every skill that FINDS an unclear
-// sentence (grade-paper-writing, cold-read-diff, tighten-paper, harden-paper, study-accepted-papers
-// mode D, draft-paper) hands the passage here instead of carrying its own repair instructions.
+// sentence (cold-read-diff, tighten-paper, harden-paper, study-accepted-papers mode D,
+// draft-paper) hands the passage here instead of carrying its own repair instructions.
 // The ten rules are what an author's accepted rewrites did, one rule per kind of change.
 import { experimental_skill } from "vigiles/spec";
 import type { Flow } from "../../scripts/pipeline.ts";
@@ -13,7 +13,7 @@ import tightenPaper from "../tighten-paper/SKILL.md.spec.ts";
 export default experimental_skill({
   name: "rewrite-unclear",
   description:
-    'Rewrite an unclear passage of a paper — a sentence, paragraph, heading, section or the abstract — so a reader outside the subfield understands it, keeping every claim, number and citation; more words are allowed. Use whenever someone points at paper text and wants it changed because it is unclear, confusing, too dense, full of undefined terms or reads like an LLM wrote it: simplify it, explain it plainly, rewrite it so a human gets it — "make it simpler", "I can\'t follow this, rewrite it", "перепиши понятнее", "напиши проще", "не понимаю, что тут написано, переделай" — and when grade-paper-writing or cold-read-diff hands over a flagged passage. Rewrite here, not inline: this skill checks each rewrite with a reader who has no context and with a claim-preservation diff. Not for a verdict or score on how the writing reads (grade-paper-writing), cutting length (tighten-paper), finding unclear sentences (cold-read-diff) or the order of the argument (argument-arc).',
+    'Rewrite an unclear passage of a paper — a sentence, paragraph, heading, section or the abstract — so a reader outside the subfield understands it, keeping every claim, number and citation; more words are allowed. Use whenever someone points at paper text and wants it changed because it is unclear, confusing, too dense, full of undefined terms or reads like an LLM wrote it: simplify it, explain it plainly, rewrite it so a human gets it — "make it simpler", "I can\'t follow this, rewrite it", "перепиши понятнее", "напиши проще", "не понимаю, что тут написано, переделай" — and when cold-read-diff hands over a flagged passage. Rewrite here, not inline: this skill checks each rewrite with a reader who has no context and with a claim-preservation diff. Not for cutting length (tighten-paper), finding unclear sentences (cold-read-diff) or the order of the argument (argument-arc).',
   tools: ["Read", "Edit", "Grep", "Glob", "Agent"],
   body: `
 # rewrite-unclear — make a passage say its claim so a stranger gets it
@@ -25,14 +25,12 @@ unclear text and hand it here:
 | who finds it | what it hands over |
 |---|---|
 | \`cold-read-diff\` | the rows its readers marked \`CANNOT PARSE\`, \`ONLY-IF\`, \`CLEVER\`, \`WHOSE?\`, \`REGISTER\` |
-| \`grade-paper-writing\` | its stall inventory and the sentences behind every dimension at 3 or below |
 | \`tighten-paper\` | a sentence that explains something and sits inside a cut |
 | \`harden-paper\`, \`study-accepted-papers\` (mode D) | the sentences their readability or wording checks flag |
 | the author | "this is unclear", by name or by pointing at it |
 
 **What it does not do:** cut for length (\`tighten-paper\`), decide whether a section should exist
-(\`tighten-paper\`), reorder the argument (\`argument-arc\`), score the prose (\`grade-paper-writing\`),
-or change a result.
+(\`tighten-paper\`), reorder the argument (\`argument-arc\`), or change a result.
 
 ## Input
 
@@ -115,8 +113,7 @@ sentence, why no edit could say the claim), and the step-4 result. Apply the rew
 \`Edit\` only when the author asked for fixes or the task already was "fix the prose"; otherwise the
 rewrites are a proposal the author accepts or rejects one by one.
 
-When the passage came from a report with \`findings\` frontmatter (\`cold-read-diff\`,
-\`grade-paper-writing\`), set that finding's \`status\` to \`fixed\` once the rewrite is applied and step
+When the passage came from a report with \`findings\` frontmatter (\`cold-read-diff\`), set that finding's \`status\` to \`fixed\` once the rewrite is applied and step
 4 passed, or leave it \`open\` with the reason when the author kept the original.
 
 ## Rules
@@ -133,7 +130,6 @@ When the passage came from a report with \`findings\` frontmatter (\`cold-read-d
 ## Compose with
 
 - \`cold-read-diff\` — finds the sentences; run it once more on the rewritten paragraphs as the confirming read.
-- \`grade-paper-writing\` — grades the whole paper and hands its stalls here.
 - \`tighten-paper\` — owns length; a measured overflow after rewrites goes there.
 - \`argument-arc\` — when step 1 fails because the section has no claim, the problem is the arc, not the sentence.
 `,

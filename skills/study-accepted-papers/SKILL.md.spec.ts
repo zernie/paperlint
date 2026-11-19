@@ -182,7 +182,7 @@ weak accept, so check these first); the **review criteria**; the **award criteri
 - **"Accepted" is the reference, "strong" is the target.** Isolate what got in enthusiastically, against
   ordinary papers of the same years, not what got in.
 - **Venue-specific, not generic.** A lever counts only if this venue's papers, rubric or committee ground
-  it. Prose craft is \`grade-paper-writing\` and \`tighten-paper\`.
+  it. Prose craft is \`cold-read-diff\` and \`tighten-paper\`.
 - **Cheap or expensive, and the deadline.** Tag every lever: CHEAP (framing, a scoped sentence, a cited
   belief, a missing citation) or EXPENSIVE (a new oracle, a new column, a new corpus). In mode C or D an
   expensive lever is normally an \`extend-paper\` task or an accepted ceiling, said explicitly; in modes A

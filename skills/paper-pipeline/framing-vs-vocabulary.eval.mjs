@@ -370,35 +370,6 @@ const CASES = [
     },
   },
   {
-    skill: "grade-paper-writing",
-    cells: {
-      AH: [
-        "grade the writing craft in this draft and name the offending sentence in each dimension",
-        "run the blind multi-grader panel over the prose clarity and jargon discipline",
-        "score the title, the abstract and the intro architecture one to five",
-        "grade how well this reads, hedge stacking included, and give me the fix for each",
-      ],
-      AL: [
-        "mark this manuscript out of five on how it is put together at the sentence level",
-        "give me a scored report card on the language, with the worst example under each heading",
-        "rate how professional the phrasing sounds against papers people actually finish",
-        "assign a number to the quality of the English here and point at the ugliest example",
-      ],
-      SH: [
-        "the abstract reads like a wall of jargon",
-        "the intro architecture is fine but the prose clarity is not",
-        "there is hedge stacking everywhere and the point never lands",
-        "the writing does not read well even though the draft is finished",
-      ],
-      SL: [
-        "something about the way this is worded makes me wince and I cannot name it",
-        "my supervisor said the English gets in the way of the science",
-        "the sentences are correct but they feel like wet cardboard",
-        "I went through my own opening twice and still had to start over",
-      ],
-    },
-  },
-  {
     skill: "argument-arc",
     cells: {
       AH: [
