@@ -6,8 +6,8 @@ import { useInterval } from "usehooks-ts";
 
 /**
  * The headline's venue, followed by its question mark: each shipped preset in turn, the first one
- * only for a reader who asks for less motion. It keeps a two-line height on small screens and a
- * one-line height on large ones (the `venue-lines` utility), so changing names never moves the page.
+ * only for a reader who asks for less motion. It keeps one line's height, two on the narrowest
+ * phones (the `venue-lines` utility), so changing names never moves the page.
  */
 export function VenueCycle({ names }: { readonly names: readonly string[] }) {
   const reduce = useReducedMotion() === true;

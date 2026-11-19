@@ -20,18 +20,15 @@ export function Hero({
 }) {
   return (
     <section id="top" className="relative isolate overflow-hidden">
-      <div className="mx-auto grid max-w-page grid-cols-1 gap-x-8 gap-y-16 px-6 pt-hero md:px-8 lg:grid-cols-12">
+      <div className="mx-auto grid max-w-page grid-cols-1 gap-x-8 gap-y-16 px-6 pt-16 md:px-8 md:pt-24 lg:grid-cols-12 lg:pt-hero">
         <div className="lg:col-span-7">
-          <p className="text-label font-medium text-muted-foreground uppercase">
-            For LaTeX papers, before peer review
-          </p>
-          <h1 className="mt-6 font-display text-display text-foreground">
+          <h1 className="font-display text-display text-foreground">
             Writing a paper for <VenueCycle names={venues} />
           </h1>
           <p className="mt-8 max-w-prose text-lead text-copy">
-            paperlint reads your LaTeX paper and its PDF, checks them against
-            your venue&apos;s rules, and tells you in plain words what could get
-            the paper sent back.
+            paperlint checks your LaTeX paper and its PDF against your
+            venue&apos;s rules before peer review, and tells you in plain words
+            what could get the paper sent back.
           </p>
           <div className="mt-10 max-w-xl">
             <CommandLine lines={install} caption={caption} />

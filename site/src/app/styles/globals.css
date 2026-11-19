@@ -144,12 +144,13 @@
   mask-composite: intersect;
 }
 
-/* The headline's changing venue keeps one height while the names change: two lines on a phone,
-   where "an IEEE conference?" wraps, one line from a large screen up (src/features/cycle-venue). */
+/* The headline's changing venue keeps one height while the names change: one line, and two on
+   the narrowest phones, where "an IEEE conference?" wraps (measured: it wraps at 320px, not at
+   360px) (src/features/cycle-venue). */
 @utility venue-lines {
-  min-height: 2lh;
-  @media (width >= 64rem) {
-    min-height: 1lh;
+  min-height: 1lh;
+  @media (width < 22.5rem) {
+    min-height: 2lh;
   }
 }
 
