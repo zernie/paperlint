@@ -1,0 +1,228 @@
+// IJCAI 2027 Main Track (the 36th International Joint Conference on Artificial Intelligence, Kyoto,
+// 7-13 August 2027, with a satellite event in Hengqin, 15-17 August 2027) — a VENUE preset that
+// stands alone: IJCAI's template is not a class but a style file of its own author kit,
+// `ijcai27.sty`, loaded on `\documentclass{article}`; it is in no TeX Live package and travels
+// with the paper. No other venue uses it, so there is no family to extend.
+//
+// 🟡 DRAFT (feat/venue-ijcai, wip): not registered in the shared lists, no card yet. How a venue
+// whose template is a style file is checked (`tex/template` compares only the class) is being
+// settled with NeurIPS first; see «What this preset cannot say» at the end.
+//
+// Verbatim from https://2027.ijcai.org/ijcai-2027-call-for-papers-main-track/ (read 2026-11-19):
+//   «Page limit: Papers must be no longer than 9 pages in total: 7 pages for the body of the paper
+//    (including all figures/tables), plus up to 2 additional pages with references; the optional
+//    ethics statement can be placed either in the body of the paper or in the reference pages.
+//    Overlength papers will be rejected without review.»
+//   «Formatting guidelines: The updated LaTeX styles and Word template are available at
+//    https://www.ijcai.org/authors_kit.»
+//   «Paper format: Papers submitted to IJCAI 2027 must be formatted according to the IJCAI 2027
+//    guidelines. […] Submissions that violate the IJCAI 2027 style (e.g., by decreasing margins or
+//    font sizes) will be rejected without review.»
+//   «Anonymity: From the authors' perspective, reviewing for IJCAI 2027 is double-blind. […]
+//    Submissions that violate anonymity will be rejected without further review.»
+//   «Acknowledgements and contribution statement: No acknowledgements or contribution statements
+//    should be included in submissions.»
+//   «Note that such an ethics statement is not required, but we recommend that papers working with
+//    sensitive data or on sensitive tasks include such discussion.»
+//   Its dates: «Abstract submission deadline: January 4, 2027», «Full paper submission deadline
+//   (including Appendix): January 11, 2027», «Paper notification: April 21, 2027», «Camera-ready
+//   copy: May 7, 2027», «(all times are 23:59 Anywhere On Earth, UTC-12)».
+//
+// The author kit, https://ijcai.org/sites/default/files/Guidelines/FormattingGuidelines-IJCAI-27.zip
+// (linked from https://www.ijcai.org/authors_kit, read 2026-11-19): ijcai27.sty («Conference Style,
+// version of November 2018», file date 2024-12-13), ijcai27.tex (`/TemplateVersion
+// (IJCAI.2027.0)`), named.bst, ijcai27.bib, ijcai27.docx. Its ijcai27.tex says:
+//   «All paper submissions to the main track must have a maximum of seven pages, plus at most two
+//    for references / acknowledgements / contribution statement / ethics statement.»
+//   «These appendices count towards the page limit» — appendices go «after the main content, but
+//    before references».
+//   «Submissions must include line numbers to facilitate feedback in the review process.»
+//   «These must be PDF (Portable Document Format) files formatted for 8-1/2'' x 11'' paper.»
+//   «For reasons of uniformity, use of Adobe's Times Roman font is strongly suggested.»
+//   «Use 10-point type in a clear, readable font with 1-point leading (10 on 11).»
+//
+// 🔴 THE NUMBERS ARE MEASURED, NOT COPIED. Built on 2026-11-19 from the kit's own ijcai27.tex with
+// `paperlint build` on paperlint's TeX Live 2026 (pdfTeX 1.40.29) and banal 1.2, a
+// `\typeout{\the\textwidth …}` added after `\begin{document}`:
+//   page (banal)          8.5 x 11 in            (\paperwidth 614.295pt x \paperheight 794.97pt;
+//                                                  the kit sets \pdfpagewidth=8.5in itself)
+//   columns (banal)       2                      (\columnsep 18.07pt = 0.25 in, \columnwidth
+//                                                  243.91pt = 3.375 in)
+//   body size (banal)     10.3                   (\f@size 10, \baselineskip 11pt: «10 on 11»)
+//   \textwidth            505.89pt = 7.000 in    (ijcai27.sty: \setlength\textwidth{7.0in})
+//   \textheight           650.43pt = 9.000 in    (ijcai27.sty: \setlength\textheight{9.0in})
+//   reference size        \f@size 10 in the bibliography (the article class's thebibliography,
+//                         which the style leaves alone); banal reports none, because it writes a
+//                         reference size only when it differs from the body's
+//   fonts (pdf.js)        NimbusRomNo9L-Regu / -Medi / -ReguItal, NimbusSanL-Regu, NimbusMonL-Regu,
+//                         CM math (CMR, CMMI, CMSY, CMEX) — Type 1, embedded
+//   pages                 6: banal body 5, references 1
+//
+// The kit lints clean under this preset (only bib/reachable-entry warnings on its sample .bib).
+// Planted defects on the same kit, 2026-11-19:
+//   `\documentclass[a4paper]{article}`   → 8.264 x 11.694 in (hyperref resets the PDF page over
+//                                          the kit's \pdfpagewidth): pdf/geometry, twice
+//   `\setlength{\textheight}{9.5in}`      → format/layout-override; no pdf/* rule reads the text block
+//   `\usepackage[margin=0.5in]{geometry}` → format/layout-override; the page stays letter
+//   the bibliography in \small           → banal 9.3: pdf/body-size
+//   `\documentclass[11pt]{article}`      → NOTHING, and rightly: ijcai27.sty redefines \normalsize
+//                                          to 10 on 11, so the build is identical (\f@size 10)
+//   no `\usepackage{times}`              → Computer Modern; nothing (no `fonts_text`, below)
+//   no `\usepackage{ijcai27}`            → no PDF: the kit's \affiliations and \emails are the
+//                                          style's, «Undefined control sequence»
+//   `\usepackage{ijcai26}`               → no PDF: the file is not there
+//   `\documentclass[sigconf]{acmart}`    → no PDF (the kit's preamble does not build on acmart)
+// So the style is checked only through what it does to the PDF; a paper that loads another style
+// with the same page, columns and sizes passes. The PDF does carry the kit's own version,
+// `/TemplateVersion (IJCAI.2027.0)` in its info dictionary (the facts' `metadata`), which no
+// rule reads.
+{
+  "type": "venue",
+  // «IJCAI» alone is what every AI paper writes when it cites an IJCAI paper: IJCAI's own BibTeX
+  // says «Proceedings of the Thirty-Fourth International Joint Conference on Artificial
+  // Intelligence, {IJCAI-25}» (https://www.ijcai.org/proceedings/2025/1, read 2026-11-19). As a
+  // name it would flag those papers (tex/venue-leftover). The edition is the name instead, the
+  // call's spelling: «IJCAI 2027».
+  "name": "IJCAI 2027",
+  // The proceedings' spelling, «IJCAI-27» (their BibTeX, above), and the kit's, «IJCAI--27» in
+  // ijcai27.tex (IJCAI–27 in the PDF). Measured 2026-11-19 on a REALM paper's source: «IJCAI-27»,
+  // «IJCAI 2027» and «IJCAI~2027» are reported by the name and the first alias; «IJCAI--27» is
+  // reported only by its own alias (the match is literal); «IJCAI-25» and a bare «IJCAI» are not.
+  "aliases": ["IJCAI-27", "IJCAI--27"],
+  // The call quoted above.
+  "url": "https://2027.ijcai.org/ijcai-2027-call-for-papers-main-track/",
+
+  // The class the kit's ijcai27.tex opens with. 🔴 It is the whole of what tex/template can check
+  // today: `\usepackage{ijcai27}`, the template itself, is not compared (see the end).
+  "template": "article",
+
+  // «reviewing for IJCAI 2027 is double-blind» (the call above). anonymity/identity then requires
+  // the paper's `identity`.
+  "blind": true,
+
+  // No `portal`: «Submission site: TBA» (https://2027.ijcai.org/ijcai-2027-submission-process/,
+  // read 2026-11-19); the kit's ijcai27.tex says supplementary material is «submitted separately
+  // through CMT», an adapter paperlint does not have.
+
+  // The call's dates, «23:59 Anywhere On Earth, UTC-12»: the end of each day AoE is 11:59:59Z of
+  // the next. No portal reading: the site is not open.
+  "deadlines": [
+    {
+      "what": "registration",
+      "at": "2027-01-05T11:59:59Z",
+      "source": "call",
+      "url": "https://2027.ijcai.org/ijcai-2027-call-for-papers-main-track/",
+      "read": "2026-11-19",
+    },
+    {
+      "what": "submission",
+      "at": "2027-01-12T11:59:59Z",
+      "source": "call",
+      "url": "https://2027.ijcai.org/ijcai-2027-call-for-papers-main-track/",
+      "read": "2026-11-19",
+    },
+    {
+      "what": "notification",
+      "at": "2027-04-22T11:59:59Z",
+      "source": "call",
+      "url": "https://2027.ijcai.org/ijcai-2027-call-for-papers-main-track/",
+      "read": "2026-11-19",
+    },
+    {
+      "what": "camera-ready",
+      "at": "2027-05-08T11:59:59Z",
+      "source": "call",
+      "url": "https://2027.ijcai.org/ijcai-2027-call-for-papers-main-track/",
+      "read": "2026-11-19",
+    },
+  ],
+
+  // No `required_sections`, on purpose: the call requires none. The ethics statement is «not
+  // required, but we recommend» it; the kit's «Ethical Statement», «Acknowledgements» and
+  // «Contribution Statement» are each «optional», and the last two are not allowed at submission.
+
+  // TeX Live packages the kit's ijcai27.tex needs ON TOP OF tex-base.jsonc. Measured 2026-11-19:
+  // every file the build read (pdflatex's -recorder list, paper.fls) belongs to a package of TeX
+  // Live's scheme-basic, of tex-base.jsonc, of this list, or of a dependency tlmgr installs with one
+  // of them. ijcai27.sty itself loads nothing; the rest is what the example paper loads.
+  //   psnfss · times · helvetic · courier — `\usepackage{times}`: the body in the URW Times clone
+  //     (NimbusRomNo9L), sans and mono in Helvetica and Courier clones (both drawn in the PDF).
+  //   lineno — «Submissions must include line numbers» (`\usepackage[switch]{lineno}`).
+  //   soul · algorithms · float — loaded by the example (`algorithm.sty` needs float.sty, and the
+  //     algorithms package does not declare it as a dependency in tlpdb).
+  //   amscls — amsthm.sty; in scheme-basic, kept so the list is the example's whole list.
+  "tex": {
+    "packages": {
+      "psnfss": ["times.sty"],
+      "times": ["ptmr7t.tfm", "utmr8a.pfb"],
+      "helvetic": ["phvr7t.tfm", "uhvr8a.pfb"],
+      "courier": ["pcrr7t.tfm", "ucrr8a.pfb"],
+      "lineno": ["lineno.sty"],
+      "soul": ["soul.sty"],
+      "algorithms": ["algorithm.sty", "algorithmic.sty"],
+      "float": ["float.sty"],
+      "amscls": ["amsthm.sty"],
+    },
+  },
+
+  "format": {
+    // «formatted for 8-1/2'' x 11'' paper», «it is of utmost importance to specify the letter
+    // format» (the kit); banal 8.5 x 11 in.
+    "page_size": "letter",
+    "page_w_in": 8.5,
+    "page_h_in": 11.0,
+
+    // ijcai27.sty: \textwidth 7.0in, \textheight 9.0in (the log, above).
+    "textblock_w_in": 7.0,
+    "textblock_h_in": 9.0,
+
+    "columns": 2,
+
+    // «Use 10-point type» (the kit); the style's \normalsize is 10 on 11; banal 10.3.
+    "body_pt": 10,
+    "body_pt_tol": 0.5,
+
+    // The bibliography is set at the body's 10 pt (the log). banal reports a reference size only
+    // when it differs from the body's, so this range speaks only when a paper shrinks or grows its
+    // bibliography: \small (9) gives 9.3, outside 9.5-10.5.
+    "ref_pt_min": 10,
+    "ref_pt_max": 10,
+
+    // No `fonts_text`, on purpose: Times is «strongly suggested», not required; a paper in another
+    // font is not refused by the call, so it is not refused here.
+
+    // «7 pages for the body of the paper (including all figures/tables), plus up to 2 additional
+    // pages with references» and «no longer than 9 pages in total»: all three are gated, the body
+    // and reference pages by banal's count, the total by pdf.js's.
+    //
+    // 🔴 NOT `body_ends_at: references`, MEASURED. A submission must carry line numbers (the kit),
+    // and lineno glues the number to the heading's line: pdf.js reads «References446», so no line
+    // reads «References» and every line-numbered build is reported «could not tell where the body
+    // ends» — on the kit's own ijcai27.tex too. Planted on 2026-11-19, the kit's preamble, two
+    // columns, line numbers on (the same verdicts with them off, where tried):
+    //   7 body + 2 reference pages (legal)          banal: body 7, refs 2 → clean
+    //   6 body + appendix + 2 reference pages       banal: body 7, refs 2 → clean
+    //   8 body + 1 reference page (over)            banal: body 8 → reported
+    //   6 body + 2 appendix + 1 reference (over)    banal: body 8 → reported
+    //   7 body + 3 reference pages (over)           banal: refs 3, total 10 → reported
+    //   7 body, the ethics statement on page 8,     banal: body 8 → REPORTED, although the call
+    //     references on pages 8-9 (legal)           allows the ethics statement «in the reference
+    //                                               pages». No field excludes one section from the
+    //                                               body count (fse.jsonc has the same gap).
+    "kinds": {
+      "main": { "body_pages_max": 7, "ref_pages_max": 2, "pages_max": 9 },
+    },
+  },
+
+  // What this preset cannot say, measured 2026-11-19:
+  //   - the template: `tex/template` compares the class only, so `"article"` accepts any article
+  //     paper; `\usepackage{ijcai27}` has no field.
+  //   - src/tex-requirements.harness.ts holds every standalone preset on one class to ONE package
+  //     list, keyed by the class: with this file it fails «venues on template article declare the
+  //     SAME packages (ijcai, realm)». Every venue whose template is a style file on article
+  //     (REALM's acl.sty, this one, the ML venues) lands in that one group.
+  //   - line numbers break `body_ends_at` (above); the ethics statement on the reference pages is
+  //     counted as body (above).
+  //   - no rule requires line numbers, which the kit requires at submission; the facts already
+  //     record them (`last_page.line_numbers`).
+}
