@@ -402,11 +402,7 @@ const silentEvents = (
     : [];
 
 /** A node's events; `prev` is the node before it in the same list, which decides a comment's space. */
-function nodeEvents(
-  t: ParsedTex,
-  n: Node,
-  prev?: Node,
-): readonly Event[] {
+function nodeEvents(t: ParsedTex, n: Node, prev?: Node): readonly Event[] {
   if (isMath(n)) return math(t, n);
   if (isBreak(n)) return [BREAK];
   if (isSilent(n)) return silentEvents(n, prev);
