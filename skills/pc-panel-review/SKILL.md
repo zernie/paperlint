@@ -1,17 +1,17 @@
 ---
 name: pc-panel-review
-description: "Use when asking \"what would the program committee decide?\" / \"simulate the reviewers\" / \"what's this paper's accept probability?\" / \"red-team this paper\" / \"what would Reviewer 2 attack?\" on a drafted paper + artifact. Spawns N independent reviewers with DISTINCT lenses (one actually RUNS the artifact, one is a skimming genre/register reviewer, one is the hostile Reviewer 2), then synthesizes a PC-chair meta-review into an accept/reject prediction reported as min/median/max, a calibrated probability, and consensus must-fixes (or none). Takes tighten-paper's structural verdict and cold-read-diff's whole-paper report as inputs — the panel cannot feel reader fatigue on its own. The third and last step of the final review. Also runs one seat alone: the hostile seat for a fast red-team, or the VENUE-FIT seat for a CFP-fit spot-check. NOT the submit checklist (harden-paper)."
+description: Use when asking "what would the program committee decide?" / "simulate the reviewers" / "what's this paper's accept probability?" / "red-team this paper" / "what would Reviewer 2 attack?" on a drafted paper + artifact. Spawns N independent reviewers with DISTINCT lenses (one actually RUNS the artifact, one is a skimming genre/register reviewer, one is the hostile Reviewer 2), then synthesizes a PC-chair meta-review into an accept/reject prediction reported as min/median/max, a calibrated probability, and consensus must-fixes (or none). Takes tighten-paper's structural verdict and cold-read-diff's whole-paper report as inputs — the panel cannot feel reader fatigue on its own. The third and last step of the final review; a red-team request runs the whole panel, whose hostile seat is Reviewer 2. Also runs the VENUE-FIT seat alone for a CFP-fit spot-check. NOT the submit checklist (harden-paper).
 allowed-tools: [Read, Write, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:1ea89db69dac0856 compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:3fb0bd4b021ed100 compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
 
 # pc-panel-review — model the whole PC, not one reviewer
 
 > The whole PC (N independent lenses incl. an artifact-runner) + a chair meta-review, run once as the
-> last step of the final review (`paper-pipeline`, "The final review"). One seat run alone is a
-> spot-check: the **hostile seat** (step 3) for a fast red-team, or **Venue-fit mode** (below) for a
-> named venue's CFP rubric. A single seat is recorded as `single review`, never as the panel.
+> last step of the final review (`paper-pipeline`, "The final review"). The hostile seat runs only
+> inside the panel; the one seat that runs alone is **Venue-fit mode** (below), a spot-check against a
+> named venue's CFP rubric, recorded as `venue-fit`, never as the panel.
 
 A real decision is made by **2–4 reviewers with different priorities + a meta-review** that weighs
 consensus over any single voice. This skill runs that. The payoff over a single review: a **must-fix
@@ -31,7 +31,8 @@ prose-only read can.
 2. **Collect the two readability/structure artifacts.** Before any reviewer spawns, there must exist
    for THIS draft: (a) the **structural verdict** from `tighten-paper` (length / sag / TMI / cut
    plan), and (b) the **whole-paper cold-read report** from `cold-read-diff --whole`. In the final
-   review they are its first two steps; outside it, invoke both by name with the Skill tool first.
+   review they are its first two steps; a panel outside it invokes both by name with the Skill tool
+   first. Venue-fit mode needs neither.
 
    Why these inputs: a frontier-LLM reviewer knows every term and cannot feel reader
    fatigue, so a panel scoring on its own felt read will score a bloated, unreadable paper high
@@ -55,8 +56,9 @@ prose-only read can.
      not list (adaptive attackers, one model or dataset, a convenience sample); obvious uncited prior
      work and an unstated delta over the nearest neighbour; desk-reject risks (length, template,
      de-anonymising self-citations or repo links, unreadable figures, tables that contradict the text);
-     and tone (naming small hobbyist projects as broken; prefer aggregate numbers and one named
-     example). Its form adds the strongest available reframing of the contribution. It does not
+     tone (naming small hobbyist projects as broken; prefer aggregate numbers and one named example);
+     and responsible disclosure (a weakness in a named, still-exploitable system that its maintainers
+     have not been told of before the paper goes public is a must-fix). Its form adds the strongest available reframing of the contribution. It does not
      fabricate citations ("verify" when unsure), and if the paper is strong it says so: no weakness is
      a valid answer.
    - **Methods/stats skeptic** — sample size, construct validity, multiple comparisons, overclaims,

@@ -4,7 +4,7 @@ description: The orchestrator for writing a research paper end-to-end, from idea
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:70e0e3f001da15ae compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:31b37139040b64d3 compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
 
 # paper-pipeline — the conductor for the whole organism
 
@@ -134,8 +134,8 @@ Ordered, and the order is real: every one refuses to run without the output of t
 **`extend-paper`** — extend (≥30% new) to a higher-prestige venue, the "second, stronger publication."
 
 **Which review skill?** `pc-panel-review`: the full panel + meta-review predicts the accept/reject
-**decision**; one of its seats run alone is a spot-check (the **hostile seat** for a red-team, the
-**venue-fit seat** for a CFP-fit score).
+**decision**, and a red-team request runs it (its hostile seat is Reviewer 2); the **venue-fit seat**
+alone is a spot-check for a CFP-fit score.
 
 **Four grading axes — don't confuse them.** A draft is judged on four independent axes, each its own
 skill: 🔴 **argument architecture** — does the whole thing carry the reader to one conclusion
