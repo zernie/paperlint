@@ -451,11 +451,6 @@
       "count": 1
     }
   },
-  "skills/paper-pipeline/references/occupancy-2026-08-06-probe/run_retext.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
   "skills/paper-pipeline/scripts/consumer.harness.mjs": {
     "local/js-needs-reason": {
       "count": 1

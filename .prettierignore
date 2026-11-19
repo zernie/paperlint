@@ -23,7 +23,6 @@ CLAUDE.md
 # bytes are the record (same class as vigiles' docs/design/probes/).
 docs/prior-art/repro/
 skills/paper-pipeline/repro/
-skills/paper-pipeline/references/occupancy-2026-08-06-probe/
 
 # HotCRP deadlines pages, recorded whole (src/adapters/hotcrp/cassette/README.md): the bytes a live site
 # answered are the fixture; reformatting them would test the formatter, not the parser.

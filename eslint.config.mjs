@@ -829,14 +829,10 @@ export default [
    * taken yet.
    *
    * `n/no-missing-import` is the standard rule for this and covers relative AND package
-   * specifiers, static and dynamic, against the real resolver. Its own block so the one
-   * exception below does not leak into the other rules: the occupancy probe is EVIDENCE, kept
-   * exactly as it was run in a scratch environment where `retext-*` was installed — the same
-   * reason `docs/prior-art/repro/` is ignored globally above.
+   * specifiers, static and dynamic, against the real resolver.
    */
   {
     files: ["**/*.mjs"],
-    ignores: ["skills/paper-pipeline/references/occupancy-2026-08-06-probe/**"],
     plugins: { n },
     rules: { "n/no-missing-import": "error" },
   },
