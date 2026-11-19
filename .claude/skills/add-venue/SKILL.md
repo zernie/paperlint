@@ -1,10 +1,10 @@
 ---
 name: add-venue
-description: "Add a venue paperlint does not ship: turn a conference or workshop call for papers into a venue preset (presets/<name>.jsonc) and its card (presets/<name>.md), every number with its quote and URL. Use when asked to add a venue, write a preset or a card for a conference or workshop, or turn a call for papers into a preset. NOT for choosing which venue to submit to (find-venue), NOT for submitting (submit-paper, submission-portal)."
+description: "Add a venue paperlint does not ship: turn a conference or workshop call for papers into a venue preset (presets/<name>.jsonc) and its card (presets/<name>.md), every number with its quote and URL. Use when asked to add a venue, write a preset or a card for a conference or workshop, or turn a call for papers into a preset. NOT for choosing which venue to submit to (find-venue), NOT for submitting (submit-paper)."
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebFetch]
 ---
 
-<!-- vigiles:sha256:d679867b2f689d2a compiled from .claude/skills/add-venue/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:f8dc04d43c9c091f compiled from .claude/skills/add-venue/SKILL.md.spec.ts -->
 
 # add-venue — a call for papers becomes a preset and a card, with the proof beside every number
 

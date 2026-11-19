@@ -1,22 +1,9 @@
 /**
- * render-paper — the free, deterministic tier. No model, no network.
+ * The render gate (`check-render.sh`) — the free, deterministic tier. No model, no network.
  *
- * COLOCATED ON PURPOSE. vigiles decides coverage by PLACEMENT as of 2026-08-11:
- * a test that merely names a surface no longer counts, because that tier was
- * crediting surfaces nothing touched. So each skill needs a file inside its own
- * directory — this one.
- *
- * The assertions live in `.claude/lib/skill-checks.mjs` and are CALLED here with
- * this skill's name. They are not copied: 22 copies of the same checks is the drift that
- * module exists to avoid. (Until 2026-08-11 this was an env-var side channel into a
- * 614-line file named after no surface; it is a function call now.)
- *
- * What this proves: this skill's frontmatter parses as strict YAML, its declared
- * tool contract is sane, its pipeline wiring points at scripts that exist, and it
- * announces/records under ITS OWN identity rather than a sibling's.
- *
- * What it does NOT prove: that the skill fires, or that its guidance produces a
- * good result. Those need a real model — see `render-paper.eval.mjs`.
+ * What this proves: the script finds `paper-guards.tex` through the right directories, in the
+ * right order, whatever directory it is started from. What it does NOT prove: that a real build
+ * passes; the TeX e2e suite does that. The commands are documented in `docs/render.md`.
  */
 import assert from "node:assert/strict";
 import {
@@ -33,14 +20,11 @@ import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { checkSkill } from "../../lib/skill-checks.mjs";
 import { papersRoot } from "#eslint-rules/papers";
 import {
   consumerRoot,
   settingsOf,
 } from "../paper-pipeline/scripts/consumer.mjs";
-
-await checkSkill("render-paper");
 
 // The TeX package pins that stood here (texlive-fonts-extra, texlive-plain-generic in
 // ensure-toolchain.sh) moved with the list itself: the venue profiles declare the packages, and

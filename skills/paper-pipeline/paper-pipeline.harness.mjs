@@ -86,14 +86,6 @@ const NOT_IN_MAP = new Map([
     "paper-status",
     "reports ON the pipeline rather than being a stage in it — the conductor has nothing to route to it",
   ],
-  [
-    "osf-artifact-upload",
-    "a helper that uploads an artifact file, not a stage of writing a paper",
-  ],
-  [
-    "submission-portal",
-    "a helper that reads and updates the submission on the portal, reached through `submit-paper`",
-  ],
 ]);
 
 for (const name of dirs) {

@@ -25,7 +25,6 @@
     "skills/find-venue/find-venue.harness.mjs",
     "skills/harden-paper/harden-paper.harness.mjs",
     "skills/map-prior-work/map-prior-work.harness.mjs",
-    "skills/osf-artifact-upload/osf-artifact-upload.harness.ts",
     "skills/paper-pipeline/paper-pipeline.harness.mjs",
     "skills/paper-pipeline/scripts/consumer.harness.mjs",
     "skills/paper-pipeline/scripts/extract-ref-facts.harness.mjs",

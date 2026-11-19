@@ -55,7 +55,6 @@ Which skill hands work to which, drawn from each skill's own `flow`: [`pipeline.
 | a cut plan: what to cut, merge or move to the appendix                                                             | `tighten-paper`   |
 | what a reader with no context understood from your last edit (or the whole paper, in chunks), sentence by sentence | `cold-read-diff`  |
 | an unclear passage rewritten, checked by a reader with no context, every number kept                               | `rewrite-unclear` |
-| the compiled pages as images, to read on a screen or a phone                                                       | `render-paper`    |
 
 ## 5 · Review
 
@@ -67,11 +66,9 @@ Which skill hands work to which, drawn from each skill's own `flow`: [`pipeline.
 
 ## 6 · Submit
 
-| you get                                                                        | skill                 |
-| ------------------------------------------------------------------------------ | --------------------- |
-| the submission, step by step: anonymization, the form, the artifact            | `submit-paper`        |
-| the reproduction artifact uploaded to OSF for anonymous review                 | `osf-artifact-upload` |
-| the PDF and abstract replaced on HotCRP, and proof the portal holds your build | `submission-portal`   |
+| you get                                                             | skill          |
+| ------------------------------------------------------------------- | -------------- |
+| the submission, step by step: anonymization, the form, the artifact | `submit-paper` |
 
 ## 7 · Camera-ready
 

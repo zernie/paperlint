@@ -80,7 +80,7 @@ the scorecard explains itself where it lives:
 | `cites`       | CONTINUOUS | every `\cite` is real, and the delta over the nearest neighbour is stated | `verify-citations`              |
 | `siblings`    | CONTINUOUS | deep read of a competing/concurrent paper                                 | `analyze-sibling-paper`         |
 | `priordelta`  | CONTINUOUS | re-sweep restricted to work posted since                                  | `map-prior-work` (delta)        |
-| `render`      | CONTINUOUS | build the PDF; the page count everything else is blocked on               | `render-paper`                  |
+| `render`      | CONTINUOUS | build the PDF; the page count everything else is blocked on               | `npx paperlint build`           |
 | `numbers`     | CONTINUOUS | every printed quantity traces to committed data                           | the paper's own numbers gate    |
 | `structure`   | GATES      | the developmental/editorial verdict + cut plan                            | `tighten-paper`                 |
 | `panel`       | GATES      | the simulated PC decision                                                 | `pc-panel-review`               |

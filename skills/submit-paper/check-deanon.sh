@@ -58,7 +58,7 @@ scan() { # scan <label> <file-or-textfile>
   fi
 }
 
-# 1. PDF text (via pymupdf — same dep render-paper uses)
+# 1. PDF text (via pymupdf — the same dep the page images use, docs/render.md)
 if [ -f "$DIR/$PDF" ]; then
   if python3 - "$DIR/$PDF" "$TMP/pdf.txt" <<'PY' 2>/dev/null
 import sys

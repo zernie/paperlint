@@ -73,12 +73,12 @@ Status: `pass` · `partial` · `fail` · `—` (not scored). A `fail` names an o
 
 Date = when it last ran. If that predates the current text, the pass is stale — the checker says so.
 
-| id         | Trigger               | Skill                     | Status | Date | Result                | Open      |
-| ---------- | --------------------- | ------------------------- | ------ | ---- | --------------------- | --------- |
-| cites      | any \cite added/moved | verify-citations          | ☐      | —    | —                     | —         |
-| siblings   | a sibling surfaces    | analyze-sibling-paper     | ☐      | —    | —                     | siblings/ |
-| priordelta | framing moved         | map-prior-work (delta)    | ☐      | —    | —                     | —         |
-| render     | any source edit       | render-paper + page count | ☐      | —    | <N> pages / limit <M> | —         |
+| id         | Trigger               | Skill                   | Status | Date | Result                | Open      |
+| ---------- | --------------------- | ----------------------- | ------ | ---- | --------------------- | --------- |
+| cites      | any \cite added/moved | verify-citations        | ☐      | —    | —                     | —         |
+| siblings   | a sibling surfaces    | analyze-sibling-paper   | ☐      | —    | —                     | siblings/ |
+| priordelta | framing moved         | map-prior-work (delta)  | ☐      | —    | —                     | —         |
+| render     | any source edit       | paperlint build + pages | ☐      | —    | <N> pages / limit <M> | —         |
 
 ### GATES
 

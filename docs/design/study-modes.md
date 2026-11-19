@@ -123,7 +123,7 @@ A sample row:
   `harden-paper` and `pc-panel-review` check that every confirmatory claim rests on a
   `decide_before_run` study whose decision commit precedes its first output, and flag a
   "pre-registered" or "decided before" claim the table does not support; `tighten-paper` keeps that
-  sentence; `osf-artifact-upload` and `camera-ready` ship each plan, its decision file and the index,
+  sentence; the artifact checklist and `camera-ready` ship each plan, its decision file and the index,
   with the whole history. Each regenerates the index first, so the commits are this checkout's.
 
 ### 5. Reads stay inside the paper

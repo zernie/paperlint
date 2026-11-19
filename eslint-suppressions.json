@@ -421,11 +421,6 @@
       "count": 1
     }
   },
-  "skills/osf-artifact-upload/osf-artifact-upload.eval.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
   "skills/paper-pipeline/description-language.eval.mjs": {
     "local/js-needs-reason": {
       "count": 1
@@ -541,11 +536,6 @@
       "count": 1
     }
   },
-  "skills/render-paper/render-paper.eval.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
   "skills/render-paper/render-paper.harness.mjs": {
     "local/js-needs-reason": {
       "count": 1
@@ -567,11 +557,6 @@
     }
   },
   "skills/study-accepted-papers/study-accepted-papers.harness.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
-  "skills/submission-portal/submission-portal.eval.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }

@@ -1,10 +1,10 @@
 ---
 name: paper-pipeline
-description: The orchestrator for writing a research paper end-to-end, from idea to accepted-and-extended, with every stage graded for the credit it earns a body of work. START HERE when writing/hardening a paper (AgenticDev, AISec, and future ones) and want the whole lifecycle driven, not one step. Routes to the stage skills — research-ideate, find-venue, plan-paper-timeline, build-benchmark, draft-paper, render-paper, verify-citations, the review skills, submit-paper (+ venue cards), camera-ready, extend-paper — and owns the shared references.
+description: The orchestrator for writing a research paper end-to-end, from idea to accepted-and-extended, with every stage graded for the credit it earns a body of work. START HERE when writing/hardening a paper (AgenticDev, AISec, and future ones) and want the whole lifecycle driven, not one step. Routes to the stage skills — research-ideate, find-venue, plan-paper-timeline, build-benchmark, draft-paper, verify-citations, the review skills, submit-paper (+ venue cards), camera-ready, extend-paper — and owns the shared references.
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:216c04a10bcb4070 compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:796b6a93bcea182b compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
 
 # paper-pipeline — the conductor for the whole organism
 
@@ -126,7 +126,6 @@ Three concrete errors the numbering produced, all real:
 
 - **`verify-citations` sat at 7**, looking like a one-shot step, while the project rule is that it runs
   every cycle — an edit on the last day adds a `\cite` that "we checked last cycle" does not cover.
-- **`render-paper` sat at 6**, as a stage. It is a command you run twenty times a day.
 - **`map-prior-work` sat at 1.5** and its own description told you to re-run it as a cheap delta before
   submit — so it was simultaneously a stage and a continuous check, and the table could only show one.
 
@@ -201,7 +200,7 @@ These have no position, because a position is what made them look finished. Each
 | any `\cite` added or moved | **`verify-citations`** | An edit on the last day adds a citation the last run never saw. "We checked last cycle" does not count — the project rule, and it was numbered as a one-shot anyway. |
 | a genuine sibling surfaces | **`analyze-sibling-paper`** | Deep-read, scoop/delta, saved in `<paper-dir>/siblings/`. |
 | the contribution's framing moves | **`map-prior-work`** (delta mode) | A cheap re-sweep. ⚠️ If a rival first surfaces during citation checking, the SETUP sweep was skipped and you are reshaping the contribution under deadline. |
-| any `.tex` edit | **`render-paper`** + page count | **Not a stage — a command.** Render, then eyeball pages 1–2 before believing anything about the paper. 🔴 **Rendering is continuous; ACTING on the page count is not** — see the rule below. |
+| any `.tex` edit | `npx paperlint build` + the render gate (`docs/render.md` in the package), page count | **Not a stage — a command.** Build, then look at every page with a figure for what the log cannot flag (label collisions inside a figure, legibility, misaligned sub-figures) before believing anything about the paper; send the page images to the author with what changed since the last build. 🔴 **Rendering is continuous; ACTING on the page count is not** — see the rule below. |
 | the deadline approaches | the `access` row | Re-check that the profile is still ACTIVE and the portal still opens. External state rots without telling you. |
 
 ## GATES — late, expensive, each blocked on a named input
@@ -456,7 +455,7 @@ Single home for the whole suite — stage skills point here instead of each re-d
 - **Cheap bulk fetch / extraction** → **Haiku** (or Sonnet): `study-accepted-papers` corpus pull,
   `plan-paper-timeline`.
 - **No model at all (mechanical)** → `verify-citations`'s `../verify-citations/scripts/verify-cites.mjs` reducer,
-  `harden-paper`'s `check-*.sh` linters, `render-paper` toolchain.
+  `harden-paper`'s `check-*.sh` linters, `paperlint build`.
 - **Judge panels use DIVERSE models, not N copies of one** → `pc-panel-review`:
   mix Opus + Fable + Sonnet so independent lenses catch what redundancy can't.
 

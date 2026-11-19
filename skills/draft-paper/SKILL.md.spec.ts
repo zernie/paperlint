@@ -8,14 +8,13 @@ import { experimental_skill } from "vigiles/spec";
 import type { Flow } from "../../scripts/pipeline.ts";
 import coldReadDiff from "../cold-read-diff/SKILL.md.spec.ts";
 import pcPanelReview from "../pc-panel-review/SKILL.md.spec.ts";
-import renderPaper from "../render-paper/SKILL.md.spec.ts";
 import rewriteUnclear from "../rewrite-unclear/SKILL.md.spec.ts";
 import verifyCitations from "../verify-citations/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "draft-paper",
   description:
-    'Use when the numbers exist and it\'s time to WRITE the paper — "draft the paper", "turn these findings into a submission", "write the abstract/intro/threats". Gives the section skeleton of a measurement/benchmark paper plus what gets it accepted AND cited — precise claim-sizing (including an explicit "what we do NOT claim"), a construct-validity frame, an honest threats-to-validity section that turns limitations in your favor, and one memorable stat that travels. Encodes the two theses that carried real measurement papers ("measuring the wrong number", "safety theater"). NOT for finding unclear sentences in finished prose (cold-read-diff) or structural editing (tighten-paper) — this is the generative counterpart. Compose with build-benchmark (numbers), cold-read-diff (prose QA), render-paper, verify-citations, then the review skills.',
+    'Use when the numbers exist and it\'s time to WRITE the paper — "draft the paper", "turn these findings into a submission", "write the abstract/intro/threats". Gives the section skeleton of a measurement/benchmark paper plus what gets it accepted AND cited — precise claim-sizing (including an explicit "what we do NOT claim"), a construct-validity frame, an honest threats-to-validity section that turns limitations in your favor, and one memorable stat that travels. Encodes the two theses that carried real measurement papers ("measuring the wrong number", "safety theater"). NOT for finding unclear sentences in finished prose (cold-read-diff) or structural editing (tighten-paper) — this is the generative counterpart. Compose with build-benchmark (numbers), cold-read-diff (prose QA), verify-citations, then the review skills.',
   tools: ["Read", "Write", "Edit", "Grep", "Glob", "Agent", "Skill"],
   body: `
 # draft-paper — prose that survives review and gets cited
@@ -116,7 +115,7 @@ prose QA to them.
   number that isn't in its output (that's how paper↔artifact mismatches get born).
 - **\`cold-read-diff\`** (+ \`../paper-pipeline/references/writing-craft.md\`) — the paper-side prose
   QA, above. (Site-repo \`writing-quality\` / \`audience-test\` = blog posts only.)
-- **\`render-paper\`** — compile + eyeball pages 1–2 once prose is in.
+- **\`npx paperlint build\`** and the render gate (\`docs/render.md\` in the package) — once prose is in, then look at the pages.
 - **\`verify-citations\`** — every cite in Related Work must exist AND say what you claim.
 - Then the final review, once (\`paper-pipeline\`, "The final review"): \`tighten-paper\` →
   \`cold-read-diff --whole\` → **\`pc-panel-review\`** (its venue-fit seat alone gives a quick fit score).
@@ -137,5 +136,5 @@ prose QA to them.
 export const flow = {
   stage: "draft",
   handsTo: () => [pcPanelReview],
-  calls: () => [coldReadDiff, rewriteUnclear, renderPaper, verifyCitations],
+  calls: () => [coldReadDiff, rewriteUnclear, verifyCitations],
 } satisfies Flow;

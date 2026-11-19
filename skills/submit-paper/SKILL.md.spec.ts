@@ -7,15 +7,12 @@
 import { experimental_skill } from "vigiles/spec";
 import type { Flow } from "../../scripts/pipeline.ts";
 import cameraReady from "../camera-ready/SKILL.md.spec.ts";
-import osfArtifactUpload from "../osf-artifact-upload/SKILL.md.spec.ts";
 import pcPanelReview from "../pc-panel-review/SKILL.md.spec.ts";
-import renderPaper from "../render-paper/SKILL.md.spec.ts";
-import submissionPortal from "../submission-portal/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "submit-paper",
   description:
-    'End-to-end playbook for submitting a peer-reviewed paper to a double-blind venue (HotCRP workshops/conferences) — from a hardened draft to "ready for review." Covers building and anonymously hosting a reproduction artifact, HotCRP profile + form mechanics, double-blind hygiene, and the authorship/credential angles for an independent researcher. Use when the paper is drafted and reviewed and it\'s time to actually submit. Compose with pc-panel-review (harden first), and with the venue card (presets/<venue>.md in the paperlint package) for venue specifics.',
+    'End-to-end playbook for submitting a peer-reviewed paper to a double-blind venue (HotCRP workshops/conferences) — from a hardened draft to "ready for review." Covers building and anonymously hosting a reproduction artifact, HotCRP profile + form mechanics, double-blind hygiene, and the authorship/credential angles for an independent researcher. Use when the paper is drafted and reviewed and it\'s time to actually submit, and for the HotCRP portal via `paperlint submission`: register the paper, choose its topics and PC conflicts, replace the PDF or abstract, and prove the portal holds the latest build. Compose with pc-panel-review (harden first), and with the venue card (presets/<venue>.md in the paperlint package) for venue specifics.',
   tools: [
     "Read",
     "Write",
@@ -71,7 +68,7 @@ to prevent** — it was written into \`agenticdev-2026/CAMERA-READY-FORM.md\` fi
 never find it.
 
 ## 0. Pre-flight
-- PDF compiles clean (\`pdflatex; bibtex; pdflatex; pdflatex\`), ≤ page limit, 0 undefined refs.
+- PDF builds clean: \`npx paperlint build\` and the render gate (\`docs/render.md\` in the package), ≤ page limit, 0 undefined refs.
 - **De-anon scan the PDF text AND every shipped file** before submitting — author-identifying strings
   must return zero; identifying the *studied* artifact is fine, identifying *you* is a desk-reject.
   **MECHANICAL GATE (run it, don't eyeball) — greps the PDF text + every artifact file + inside any
@@ -80,7 +77,7 @@ never find it.
   bash .claude/skills/submit-paper/check-deanon.sh <paper-dir> [pdf=paper.pdf]
   \`\`\`
   Must PASS (exit 0) for a double-blind submission. Deny-list: \`.claude/skills/submit-paper/deanon-denylist.txt\`
-  (edit as handles/repos change). This is the sibling of \`render-paper/check-render.sh\` and guards the
+  (edit as handles/repos change). It guards the
   single highest reject-vector (an artifact README naming real maintainers/repos is invisible to a
   paper-only read). Only run it on *double-blind* papers — a de-anonymized single-blind PDF is supposed
   to carry your name and will (correctly) fail. Canonical deny-list rationale → \`paper-pipeline/references/anonymization.md\`.
@@ -99,7 +96,7 @@ Many workshop HotCRPs have **no supplementary-upload field** — check first; if
   title, no name), upload the files/zip, then **Contributors → View-only Links → Add → check
   "Anonymize" → Create**. Keep the project private; the anonymized view-only link is what reviewers get.
   OSF has a REST API + \`osfclient\` (\`OSF_TOKEN\`) → **automatable**: with a personal access token you can
-  create the project, upload, and mint the link programmatically. See \`osf-artifact-upload\` for the API calls; whatever uploader you use must read the token
+  create the project, upload, and mint the link programmatically. Replacing a file through the API: \`docs/osf-artifact.md\` in the package; whatever uploader you use must read the token
   from the \`OSF_TOKEN\` environment variable and never from a file in the repository. Record each
   minted view-only link in your own notes and REUSE it — a second link for the same paper is a
   second thing reviewers can be handed, and only one of them is the one you cited.
@@ -143,7 +140,32 @@ Many workshop HotCRPs have **no supplementary-upload field** — check first; if
   is the step people miss.
 - You can edit until the deadline: use **Replace** on the Submission field to swap the PDF for a late
   fix (e.g. adding the artifact link after you host it). Submit early, upgrade before the deadline.
-- When the venue preset declares its HotCRP portal, replacing the PDF or abstract and proving the portal holds the latest build is \`submission-portal\` (\`paperlint submission show|update\`).
+- When the venue preset declares its HotCRP portal, the form is \`paperlint submission\`: see "The portal" below.
+
+## The portal
+
+When the venue preset declares \`"portal"\`, \`npx paperlint submission new|show|update|topics\`
+creates, reads and updates the submission; what each prints and refuses: \`docs/submission.md\` in the
+package. What the command cannot decide is yours:
+
+- **The token.** When the command reports a missing, misnamed or refused token, relay its message to
+  the author verbatim and stop. Never ask for the token in chat, print it or write it to a file.
+- **The authors** in \`paperlint.json\` are written by the author; never fill them in from the paper,
+  a profile or memory.
+- **Topics and every other recorded field are chosen with the author.** Run \`submission topics\`
+  (exit 1: the preset's list is stale, say so), propose topics from the abstract and contribution, and
+  ask with \`AskUserQuestion\` (\`multiSelect: true\`, each with one line on why it fits). Write only
+  the chosen ones into \`"fields"\`, spelled as listed.
+- **A PC-conflict guess** (\`portal says: pc_conflicts: …\`) is shown to the author name by name;
+  never mark a conflict from the warning alone.
+- **Dry run, then ask, then send.** Before every \`--save\`, ask with \`AskUserQuestion\` ("Yes, send
+  it" / "No"), naming the paper folder's full path, the PDF's sha256 and quoting the dry run's venue
+  check. One yes covers one send. Where the \`submission-confirm\` hook is installed it stops a send
+  without that yes and says what to ask. Never \`--save\` to test, or because a dry run passed.
+- **An approved copy** that differs from the source blocks \`--save\`; re-approving with
+  \`paperlint versions approve\` is the author's decision, never yours.
+- **Prove it landed.** \`show\` must read \`match yes — the portal holds this build\` and the intended
+  status; anything else is not done, say so.
 
 ## 6. Independent-researcher / dossier notes
 - **Name consistency** is the quiet risk: publications, LinkedIn, passport, letters must resolve to one
@@ -189,7 +211,7 @@ cited \`L. 166\` and there was nothing to resolve the line against. A folder wit
 convention with no reader.
 
 ## Compose with
-- Harden first: \`pc-panel-review\` (incl. its venue-fit seat), \`render-paper\`.
+- Harden first: \`harden-paper\` (the submit checklist).
 - Publisher mechanics (camera-ready): \`references/publishers/<publisher>.md\`.
 - Venue specifics: the venue's card \`presets/<venue>.md\` in the paperlint package (e.g.
   \`presets/agenticdev.md\`) for deadlines, page limits, PC-member conflict lists, and whether a
@@ -205,10 +227,5 @@ re-paste, "ready for review" being a separate step, the PDF-only rule — are th
 export const flow = {
   stage: "submit",
   handsTo: () => [cameraReady],
-  calls: () => [
-    osfArtifactUpload,
-    submissionPortal,
-    pcPanelReview,
-    renderPaper,
-  ],
+  calls: () => [pcPanelReview],
 } satisfies Flow;

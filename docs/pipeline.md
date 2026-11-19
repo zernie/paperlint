@@ -4,9 +4,9 @@
 
 Who hands work to whom, read from the skills themselves: each `skills/<name>/SKILL.md.spec.ts`
 exports `flow`, and `skills/jobs.ts` names the one owner of each job on a paper's text. A flow
-has three kinds of edge: **hands to** (32), the next step on the main path, drawn
+has three kinds of edge: **hands to** (29), the next step on the main path, drawn
 solid; **loops back to** (8), work sent back to an earlier skill, drawn dashed;
-**runs** (55), a skill this one runs as one of its own steps or whose output it needs,
+**runs** (50), a skill this one runs as one of its own steps or whose output it needs,
 written inside the box, never drawn. `test/pipeline.test.ts` fails on a cycle of hand-offs, a
 hand-off to an earlier stage, an edge the skill's own text never names, a job without an owner,
 and this file when it is stale. The stages are those of [`skills.md`](skills.md).
@@ -20,9 +20,9 @@ flowchart LR
   stage_idea["<b>1 · Idea</b><br/>analyze-sibling-paper<br/>map-prior-work<br/>research-ideate<br/>sweep-design-space"]
   stage_venue["<b>2 · Venue</b><br/>find-venue<br/>plan-paper-timeline<br/>study-accepted-papers"]
   stage_study["<b>3 · Study</b><br/>build-benchmark<br/>build-label-page<br/>label-agent-runs<br/>run-agent-grid"]
-  stage_draft["<b>4 · Draft</b><br/>argument-arc<br/>cold-read-diff<br/>draft-paper<br/>render-paper<br/>rewrite-unclear<br/>tighten-paper"]
+  stage_draft["<b>4 · Draft</b><br/>argument-arc<br/>cold-read-diff<br/>draft-paper<br/>rewrite-unclear<br/>tighten-paper"]
   stage_review["<b>5 · Review</b><br/>harden-paper<br/>pc-panel-review<br/>verify-citations"]
-  stage_submit["<b>6 · Submit</b><br/>osf-artifact-upload<br/>submission-portal<br/>submit-paper"]
+  stage_submit["<b>6 · Submit</b><br/>submit-paper"]
   stage_camera_ready["<b>7 · Camera-ready</b><br/>camera-ready"]
   stage_extend["<b>8 · Extend</b><br/>extend-paper"]
   stage_idea --> stage_venue
@@ -48,7 +48,7 @@ flowchart LR
 
 ## Across every stage
 
-- `paper-pipeline` (owns: which stage runs next; the final review) runs 22 skills: `research-ideate`, `map-prior-work`, `find-venue`, `study-accepted-papers`, `plan-paper-timeline`, `argument-arc`, `build-benchmark`, `run-agent-grid`, `label-agent-runs`, `build-label-page`, `draft-paper`, `verify-citations`, `analyze-sibling-paper`, `render-paper`, `tighten-paper`, `cold-read-diff`, `rewrite-unclear`, `pc-panel-review`, `harden-paper`, `submit-paper`, `camera-ready`, `extend-paper`.
+- `paper-pipeline` (owns: which stage runs next; the final review) runs 21 skills: `research-ideate`, `map-prior-work`, `find-venue`, `study-accepted-papers`, `plan-paper-timeline`, `argument-arc`, `build-benchmark`, `run-agent-grid`, `label-agent-runs`, `build-label-page`, `draft-paper`, `verify-citations`, `analyze-sibling-paper`, `tighten-paper`, `cold-read-diff`, `rewrite-unclear`, `pc-panel-review`, `harden-paper`, `submit-paper`, `camera-ready`, `extend-paper`.
 - `paper-status`.
 
 ## 1 · Idea
@@ -114,7 +114,6 @@ flowchart TB
   build_benchmark -- "pc-panel-review" --> to_stage_review
   build_benchmark -- "submit-paper" --> to_stage_submit
   build_label_page -- "draft-paper" --> to_stage_draft
-  run_agent_grid -- "osf-artifact-upload" --> to_stage_submit
 ```
 
 ## 4 · Draft
@@ -123,11 +122,9 @@ flowchart TB
 flowchart TB
   argument_arc["<b>argument-arc</b><br/>the order of the argument<br/>judge headings (the headings as a set)<br/>one name for one thing across the paper (the name budget)<br/>runs: rewrite-unclear"]
   cold_read_diff["<b>cold-read-diff</b><br/>find unclear sentences<br/>judge headings (a heading in the last edit)<br/>runs: rewrite-unclear"]
-  draft_paper["<b>draft-paper</b><br/>runs: cold-read-diff, rewrite-unclear, render-paper,<br/>verify-citations"]
-  render_paper["<b>render-paper</b>"]
+  draft_paper["<b>draft-paper</b><br/>runs: cold-read-diff, rewrite-unclear, verify-citations"]
   rewrite_unclear["<b>rewrite-unclear</b><br/>rewrite for clarity<br/>fix a heading or a name"]
   tighten_paper["<b>tighten-paper</b><br/>cut for length<br/>runs: rewrite-unclear"]
-  render_paper --> tighten_paper
   rewrite_unclear -.-> cold_read_diff
   rewrite_unclear -.-> tighten_paper
   rewrite_unclear -.-> argument_arc
@@ -138,7 +135,6 @@ flowchart TB
   argument_arc -. "build-benchmark" .-> to_stage_study
   argument_arc -. "sweep-design-space" .-> to_stage_idea
   draft_paper -- "pc-panel-review" --> to_stage_review
-  render_paper -- "pc-panel-review" --> to_stage_review
 ```
 
 ## 5 · Review
@@ -156,9 +152,7 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-  osf_artifact_upload["<b>osf-artifact-upload</b>"]
-  submission_portal["<b>submission-portal</b>"]
-  submit_paper["<b>submit-paper</b><br/>runs: osf-artifact-upload, submission-portal, pc-panel-review,<br/>render-paper"]
+  submit_paper["<b>submit-paper</b><br/>runs: pc-panel-review"]
   to_stage_camera_ready(["→ 7 · Camera-ready"])
   submit_paper -- "camera-ready" --> to_stage_camera_ready
 ```
