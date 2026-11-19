@@ -1,0 +1,115 @@
+// ACM `acmart` acmsmall — the TEMPLATE FAMILY of ACM's single-column format: everything the ACM
+// template decides in that format, whatever the venue. A venue preset extends it ("extends":
+// "paperlint:acm-acmsmall") and adds what its call for papers sets: the page limit of each kind of
+// paper, and the rules its producer implies. ACM's two-column format is the sibling family,
+// acm-sigconf.jsonc.
+//
+// 🔴 THE NUMBERS ARE MEASURED, NOT COPIED. Built on 2026-11-19 from acmart's own sample for this
+// format, `samples/acmsmall-conf.tex` of the acmart package (acmart 2026/11/01 v2.21, TeX Live
+// revision 80934; the doc container acmart.doc.tar.xz from CTAN, since `paperlint toolchain`
+// installs no documentation), with `paperlint build` on paperlint's TeX Live 2026 (pdfTeX
+// 1.40.29) and banal 1.2. The class's own dimensions were written to the log by a
+// `\typeout{\the\textwidth …}` added to the sample's preamble. The sample with the two class lines:
+//
+//                         [acmsmall]           [acmsmall,screen,review,anonymous]
+//   page (banal)          6.75 x 10 in         6.75 x 10 in
+//   columns (banal)       1                    1
+//   body size (banal)     10.3                 10.3                    (declared 10pt)
+//   fonts (pdf.js)        LinLibertineT / -TB / -TI, LinBiolinumT / -TB / -TI, Inconsolatazi4,
+//                         LibertineMath*, newtx's txsys / txmiaX / txexs — Type 1, embedded; the
+//                         same on both
+//   \textwidth            395.8225pt = 5.477 in
+//   \textheight           574.0pt = 7.942 in
+//   \paperwidth x \paperheight  487.8225pt x 722.7pt = 6.75 x 10 in
+//   reference size        \footnotesize = 8 pt in the log; banal 8.3 on the sample without its
+//                         appendix (with the appendix after the references, banal types the
+//                         reference pages as appendix and reports no reference size)
+//
+// The class decides the same in its source (acmart.cls): `\def\ACM@fontsize{10pt}` for acmsmall,
+// and `\geometry{… paperwidth=6.75in, paperheight=10in, top=58pt, bottom=44pt, inner=46pt,
+// outer=46pt …}`. The planted defects fail as they should, measured on the same sample:
+//   `[sigconf]` instead of `[acmsmall]`    → page 8.5 x 11 in, 2 columns, body 9.3: pdf/geometry
+//                                            (three findings), pdf/body-size and tex/template
+//   `\renewcommand{\rmdefault}{cmr}` and    → the text in cm-super (SFRM…, SFSX…), no LinBiolinum:
+//   `\renewcommand{\sfdefault}{cmss}`        pdf/fonts. LinLibertineT is still among the PDF's
+//                                            fonts, so the text family alone would not have caught it
+// and both class lines above lint clean on every rule of this family.
+//
+// Its card, in prose: `acm-acmsmall.md` beside this file.
+{
+  // A template family: it names no venue, so no `name` and no `url` (the venues that extend it do).
+  "type": "family",
+
+  // `tex/template` requires a paper's class to be acmart WITH `acmsmall`: acmart's default format is
+  // `manuscript`, and `sigconf` is the two-column format of the sibling family. Other options
+  // (review, anonymous, screen, nonacm) are the paper's to add: the check requires the options the
+  // template names and forbids only those in `template_forbids`, which this family leaves empty.
+  "template": "\\documentclass[acmsmall]{acmart}",
+
+  // TeX Live packages the acmart template needs ON TOP OF tex-base.jsonc — the same class as
+  // acm-sigconf.jsonc, so acm-sigconf's list, for the same reasons (see the comments there: acmart
+  // falls back to Computer Modern in silence when libertine, inconsolata or newtx is missing).
+  // pbalance, filehook and zref are kept although acmsmall's one column never loads them:
+  // src/tex-requirements.harness.ts holds every preset on one template to ONE list, so two lists
+  // for acmart cannot drift apart, and the toolchain installs acm-sigconf's anyway. Measured
+  // 2026-11-19: every file the two acmsmall builds above
+  // read (247, from pdflatex's -recorder list) belongs to a package of TeX Live's scheme-basic, of
+  // tex-base.jsonc, of this list, or of a dependency tlmgr installs with one of them
+  // (figureversions, fontaxes and mweights with libertine; trimspaces with environ; xkeyval and
+  // infwarerr with hyperref and oberdiek).
+  "tex": {
+    "packages": {
+      "acmart": ["acmart.cls"],
+      "amscls": ["amsart.cls"],
+      "libertine": ["libertine.sty"],
+      "inconsolata": ["zi4.sty"],
+      "newtx": ["newtxmath.sty"],
+      "kastrup": ["binhex.tex"],
+      "fancyhdr": ["fancyhdr.sty"],
+      "totpages": ["totpages.sty"],
+      "environ": ["environ.sty"],
+      "preprint": ["balance.sty"],
+      "pbalance": ["pbalance.sty"],
+      "filehook": ["filehook.sty"],
+      "zref": ["zref-abspage.sty"],
+      "xstring": ["xstring.sty"],
+      "everyshi": ["everyshi.sty"],
+      "hyperxmp": ["hyperxmp.sty"],
+      "ncctools": ["manyfoot.sty"],
+      "cmap": ["cmap.sty"],
+      "float": ["float.sty"],
+      "comment": ["comment.sty"],
+      "upquote": ["upquote.sty"],
+      "doclicense": ["doclicense.sty"],
+      "textcase": ["textcase.sty"],
+    },
+  },
+
+  "format": {
+    // No `page_size`: the schema names only letter and A4, and acmsmall is neither.
+    // banal: 6.75 x 10 in; the class: paperwidth=6.75in, paperheight=10in.
+    "page_w_in": 6.75,
+    "page_h_in": 10.0,
+
+    // \textwidth and \textheight, as the class sets them (the log, above).
+    "textblock_w_in": 5.477,
+    "textblock_h_in": 7.942,
+
+    "columns": 1,
+
+    // acmsmall's default is 10pt (acmart.cls); banal measures the rendered mode, 10.3. The 0.5
+    // tolerance is acm-sigconf's: banal reads 0.3 pt high on every template measured.
+    "body_pt": 10,
+    "body_pt_tol": 0.5,
+
+    // The bibliography is set in \footnotesize, 8 pt at 10pt (the log); banal 8.3. body_pt_tol
+    // widens it to 7.5-8.5, so a bibliography in \scriptsize or \small is reported.
+    "ref_pt_min": 8,
+    "ref_pt_max": 8,
+
+    // The text in Linux Libertine, the title and headings in Linux Biolinum: acmart's fonts in
+    // every format, and what pdf.js read on both builds.
+    "fonts_text": "LinLibertine",
+    "fonts_title": "LinBiolinum",
+  },
+}
