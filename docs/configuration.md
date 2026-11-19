@@ -359,7 +359,7 @@ reading, an override, an outcome, a venue — is an error, so an override typed 
 cannot look recorded and not be in force.
 
 **Where the readings come from.** A shipped venue preset whose venue takes submissions on HotCRP
-carries the portal's readings itself, as `deadlines` (`presets/msr.jsonc`). A cycle whose venue is that
+carries the portal's readings itself, as `deadlines` (`presets/msr-2027.jsonc`). A cycle whose venue is that
 preset **derives** them: write only what the call says and any override; a portal reading the preset
 already carries is reported by [`cycle/record`](rules/cycle/record.md) as a second copy. A scheduled
 workflow in paperlint's repository re-reads every such portal once a day and, when a value changed,

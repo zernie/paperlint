@@ -63,7 +63,7 @@ const MSR_PAGE: PortalDeadlines = {
     },
   ],
 };
-/** What AIDC 2026's portal lists — the readings presets/aidc.jsonc holds. */
+/** What AIDC 2026's portal lists — the readings presets/aidc-2026.jsonc holds. */
 const AIDC_PAGE: PortalDeadlines = {
   now: 1791194489,
   open: true,

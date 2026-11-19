@@ -19,7 +19,7 @@ consistent history:
   date typed wrong or an AoE day miscounted.
 
 - **a portal reading the venue's preset already carries.** A cycle whose venue is a preset derives
-  the portal's readings from it (`presets/msr.jsonc` carries MSR's); the same reading typed into the
+  the portal's readings from it (`presets/msr-2027.jsonc` carries MSR's); the same reading typed into the
   paper is a second copy, and it goes stale the day paperlint updates the preset.
 
 The structural problems of the record — a bare date where an instant is needed, two open cycles, an

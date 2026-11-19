@@ -1729,7 +1729,7 @@ describe("the writing set: off by default, one line turns it on", () => {
 
 describe("the register bands are in the writing set, on AIDC too", () => {
   /**
-   * A body against AIDC's real anchors (presets/aidc.jsonc, per 10,000 words): five contrast
+   * A body against AIDC's real anchors (presets/aidc-2026.jsonc, per 10,000 words): five contrast
    * frames and six bold claims over about 2,900 words are above their bands (0–10.4, 0–17.8), and
    * no relation marker is below 25.4.
    */
