@@ -12,6 +12,45 @@ The run lints with the default rules plus the eight opt-in rules it ran by defau
 moved into the writing set (`RECORDED_OPT_IN` in `baseline.ts`); the rest of the set is not run
 here.
 
+## What this corpus measures: recall, not yet a number
+
+These are drafts, under no venue's checklist: they are where paperlint should FIND real errors. The
+findings are counts and none is classified as true or false, so recall is not yet a number. The
+opposite measure — a finding on a paper a venue published is presumed false — is
+[`../venue-papers/`](../venue-papers/README.md), the accepted camera-ready papers, each linted
+against the venue that accepted it.
+
+## What each paper extends
+
+Until 2026-11-19 every paper extended `paperlint:ieee-conference`, a placeholder: `tex/template` fired
+on 100 of 108 by construction. Each `paperlint.json` now says what the paper's own first
+`\documentclass` and arXiv comment support:
+
+| label | papers | why |
+| --- | ---: | --- |
+| `paperlint:sp`, an accepted cycle | 1 | 2611.07576v1: «Accepted by IEEE S&P 27, Lionel Z. Wang is the corresponding author» ([arXiv](https://arxiv.org/abs/2611.07576v1)); S&P 2027 is the edition `paperlint:sp` ships, kind `research` |
+| `paperlint:ieee-conference` | 8 | `IEEEtran` |
+| `paperlint:acm-sigconf` | 6 | `acmart` with `sigconf` |
+| `paperlint:acm-acmsmall` | 1 | `acmart` with `acmsmall` |
+| `{}` — no venue preset | 92 | any other class: `article` 73 (with or without a venue's style file), `llncs` 5, `elsarticle` 3, `svjour3` 2, `asmeconf` 2, one each of `sn-jnl`, `jmlr`, `ifacconf`, `ieeeconf`, `fairmeta`, `arxiv`, `IEEEcsmag` |
+
+Other comments name an acceptance at a venue with no shipped edition (ACSAC 2026, SIGCSE 2027,
+NeurIPS 2026 and its workshops, EMNLP 2026 Findings, …): those papers take the family of their class,
+or none.
+
+`{}` is measured: the paper is linted, every prose rule runs, `pdf/measured` says no venue preset is
+named, and the rules that need a venue — `tex/template`, `format/layout-override`,
+`tex/venue-leftover`, `tex/required-section`, `anonymity/identity`, the page limit — stay silent.
+No rule misbehaved on it. What the relabel changed, per rule, over the 108:
+
+| rule | before | after | why |
+| --- | ---: | ---: | --- |
+| `tex/template` | 100 | 1 | the 92 papers in other classes name no preset; the 7 ACM papers now extend their own family. Left: 2611.09075v1, `\documentclass[11pt]{IEEEtran}`, the journal layout, which lacks the `conference` option the IEEE conference family requires — true against its label |
+| `format/layout-override` | 37 | 3 | 34 were on papers that now name no preset. Left: the same 2611.09075v1, `\usepackage{geometry}`, `\geometry` and `\setlength{\columnsep}` over IEEEtran's layout — true against its label |
+| `tex/venue-leftover` | 6 | 4 | 2611.09709v1 (now `{}`) named «EMNLP 2023» twice in a hand-typed reference list, read as REALM's alias: a false positive, silent now only because no preset is named. Left: 2611.08608v1, «ACSAC» ×4, reported as AIDC's name — a false positive: the paper says it was accepted at ACSAC 2026, its own venue (listed in `../venue-papers/README.md`) |
+| `paper/allowed-files-only` | 262 | 261 | 2611.09448v1 lints to 2 with its old label too: the baseline was one above what main reports |
+| every other rule | | unchanged | the prose rules do not read the venue |
+
 ## Why real papers
 
 A new rule must not fire on correct real text, and a rule written against fixtures we wrote ourselves
@@ -59,8 +98,9 @@ not run by any test, not an npm script). The folder is not in the npm package (`
   compiled. The accepted papers carry `tex-truth.json`, written by a real build; these do not, so what is
   measured here is measured on a belief about TeX, as for `llm-splained-acsac25`. An `\input` that is
   conditional or computed is not followed.
-- **Every paper extends `paperlint:ieee-conference`**, the template family the tests know. For a paper in
-  another class `tex/template` fires by construction, and its count says nothing about the paper.
+- **The label is the paper's class, not a venue that accepted it** (below, «What each paper extends»).
+  Only one paper's comment names an edition paperlint ships; the rest are drafts for venues nobody
+  recorded, so the venue rules here say little.
 - **Baselines store counts, not verdicts.** Nobody has classified a finding of these papers as real or
   false. A count that grows fails; why a count is what it is is not written down.
 - **Preprints are not accepted papers**: unpolished, under no venue's checklist. That is why they are not
