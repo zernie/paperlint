@@ -1,36 +1,22 @@
 import Image from "next/image";
 import { CommandLine } from "@/features/copy-command";
 import { VenueCycle } from "@/features/cycle-venue";
+import type { Explained } from "@/entities/finding";
 import campus from "./campus.webp";
-
-const PREVIEW = [
-  {
-    level: "Must fix",
-    title: "One page over the limit",
-    plain: "Seven pages before the references; AIDC short papers allow six.",
-  },
-  {
-    level: "Must fix",
-    title: "The wrong body font",
-    plain: "LaTeX fell back to Computer Modern; AgenticDev requires Libertine.",
-  },
-  {
-    level: "Advice",
-    title: "Write \u201cSection\u201d, not \u00a7",
-    plain: "paperlint can rewrite it for you.",
-  },
-] as const;
 
 /** The opening: who it is for, what it does and the first command, over the campus etching. */
 export function Hero({
   venues,
   install,
   caption,
+  preview,
 }: {
   readonly venues: readonly string[];
   /** The README's install commands, one per line; Copy joins them with `&&`. */
   readonly install: readonly string[];
   readonly caption: string;
+  /** The README's first lint output, in plain words: what a first check says. */
+  readonly preview: readonly Explained[];
 }) {
   return (
     <section id="top" className="relative isolate overflow-hidden">
@@ -65,19 +51,19 @@ export function Hero({
             What a first check says
           </p>
           <ul className="mt-4">
-            {PREVIEW.map((f) => (
+            {preview.map((f) => (
               <li
                 key={f.title}
                 className="border-t border-border py-4 first:border-t-0"
               >
                 <p
                   className={
-                    f.level === "Advice"
+                    f.level === "warning"
                       ? "text-label font-medium text-warn uppercase"
                       : "text-label font-medium text-error uppercase"
                   }
                 >
-                  {f.level}
+                  {f.level === "warning" ? "Advice" : "Must fix"}
                 </p>
                 <p className="mt-1 font-display text-subtitle text-foreground">
                   {f.title}

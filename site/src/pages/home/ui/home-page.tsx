@@ -164,6 +164,7 @@ export function HomePage() {
         <Hero
           venues={venueNames}
           install={readme.install}
+          preview={firstRun}
           caption="Run in your project's folder. Needs Node.js 22.13 or newer."
         />
         <FirstRun findings={firstRun} />
