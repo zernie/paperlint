@@ -52,8 +52,8 @@ export default defineConfig({
         test: {
           name: "real-papers",
           include: ["fixtures/real-papers.test.ts"],
-          testTimeout: 10 * 60_000,
-          hookTimeout: 10 * 60_000,
+          testTimeout: 20 * 60_000,
+          hookTimeout: 20 * 60_000,
         },
       },
       // The package as users install it: `npm pack`, then npm and pnpm. Needs both managers.

@@ -224,7 +224,8 @@ jobs:
     # there is no pull_request object, and a bare `.draft` would be missing and kill every check there.
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # 10 + 5 for the two e2e steps, 20 for the real papers below.
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v7
 
@@ -264,13 +265,14 @@ jobs:
         run: npm run test:e2e:studies
         timeout-minutes: 5
 
-      # Every rule over every real paper of the corpus (6 accepted, 108 arXiv preprints) in ONE
+      # Every rule over every real paper of the corpus (98 accepted, 108 arXiv preprints) in ONE
       # `paperlint lint --json`, against each paper's baseline: the vitest project `real-papers`,
       # outside `unit` so the macOS shards and the coverage run do not repeat it. No TeX needed.
-      # Why every paper runs, and what it costs: fixtures/real-papers/preprints/README.md.
+      # Why every paper runs, and what it costs: fixtures/real-papers/preprints/README.md. The lint
+      # of the 206 papers took 582.7 s locally (2026-11-19), past the 10 minutes this step had.
       - name: vitest run --project real-papers
         run: npx vitest run --project real-papers
-        timeout-minutes: 10
+        timeout-minutes: 20
 
   # paperlint.dev: `site/` is a static Next.js export with its own package.json and lock. Its build
   # reads README.md and docs/layout.md and throws when a block it shows is gone, so this job is the

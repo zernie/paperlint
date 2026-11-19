@@ -94,7 +94,8 @@ const MEASURED_ON = "2026-11-19T12:00:00Z";
 describe("every real paper, in one run", () => {
   it(
     "says no more than recorded, and no recorded rule has gone quiet",
-    { timeout: 10 * 60_000 },
+    // 206 papers linted in 582.7 s on 2026-11-19, in one run: 10 minutes was no longer enough.
+    { timeout: 20 * 60_000 },
     async () => {
       vi.setSystemTime(MEASURED_ON);
       const found = await lintAll().finally(() => vi.useRealTimers());
