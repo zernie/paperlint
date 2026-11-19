@@ -13,6 +13,8 @@
  * caller narrows `--base` instead. `--whole` reads every paragraph and heading of the paper instead
  * of the diff, cut into chunks of at most `--max`: each chunk goes to its own pair of readers, so no
  * reader is handed the whole paper to reconstruct an idea from (the final review, paper-pipeline).
+ * `--whole` reads the paper as its last build did, the files it recorded spliced in; a paper that
+ * includes files and has no fresh build record is refused, not read in part.
  *
  * Usage: node cold-read.js <paper.tex> [--base=REV | --whole] [--max=N] [--venue=NAME]
  * Exit: 0 — the paragraphs on stdout · 2 — refused (nothing changed, too many, a bad flag).
@@ -23,6 +25,10 @@ import { basename, dirname, resolve } from "node:path";
 import { visit } from "@unified-latex/unified-latex-util-visit";
 import { chunk, last } from "remeda";
 import { latexReader, parseLatex } from "#src/adapters/latex/index";
+import { nodeFiles } from "#src/adapters/node/index";
+import { sourcesCodec } from "#src/adapters/sources-record/index";
+import { paperRecord } from "#src/paper-record";
+import { readPaper } from "#src/tex-paper";
 import type { Passage, Span } from "#src/domain/tex-document";
 import { ENGINEER, promptFor, reviewer } from "./readers.ts";
 
@@ -36,6 +42,11 @@ export const DEFAULT_MAX = 15;
  * reader before).
  */
 export interface Paragraph {
+  /**
+   * First and last line: of the main file in a diff read; of the spliced paper in a `--whole` read,
+   * so not a line of any one file there. They only order the paragraphs and are never printed:
+   * the paragraph's quoted text is what the author searches for in the source.
+   */
   readonly start: number;
   readonly end: number;
   readonly text: string;
@@ -246,14 +257,26 @@ export const optionsOf = (argv: readonly string[]): Options => {
   };
 };
 
+/** The disk, the LaTeX reader and the build record's schema, as argument-arc's headings read a paper. */
+const DEPS = { files: nodeFiles, latex: latexReader, codec: sourcesCodec };
+
 /**
- * Every paragraph and heading of the paper: `extract` with every line counted as changed. No cap:
- * the caller cuts it into chunks.
+ * Every paragraph and heading of the paper: the main file with the files its last build recorded
+ * spliced in (`readPaper`), and `extract` over it with every line counted as changed. Which files
+ * TeX reads is the record's to say, so a paper that includes files and has no fresh record refuses:
+ * the main file alone would skip them silently. No cap: the caller cuts it into chunks.
  */
-const wholePaper = (o: Options, src: string): Paragraph[] => {
+const wholePaper = (o: Options, file: string, src: string): Paragraph[] => {
+  const includes = latexReader.includes(src).length;
+  if (includes > 0 && paperRecord(dirname(file), DEPS).kind !== "fresh")
+    throw new Refusal(
+      `${o.paper} includes ${String(includes)} file(s) and has no fresh build record, ` +
+        `so a whole read would skip them: run npx paperlint build first`,
+    );
+  const text = readPaper(file, src, DEPS).text;
   const found = extract(
-    src,
-    src.split("\n").map((_, i) => i + 1),
+    text,
+    text.split("\n").map((_, i) => i + 1),
   );
   if (!found.length) throw new Refusal(`no prose in ${o.paper}`);
   return found;
@@ -263,7 +286,7 @@ const wholePaper = (o: Options, src: string): Paragraph[] => {
 const paragraphsFor = (o: Options): Paragraph[] => {
   const paper = resolve(o.paper);
   if (!existsSync(paper)) throw new Refusal(`${o.paper} does not exist`);
-  if (o.whole) return wholePaper(o, readFileSync(paper, "utf8"));
+  if (o.whole) return wholePaper(o, paper, readFileSync(paper, "utf8"));
   const diff = execFileSync(
     "git",
     ["diff", "-U0", "--no-color", o.base, "--", basename(paper)],

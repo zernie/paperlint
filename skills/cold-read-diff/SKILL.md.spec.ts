@@ -136,7 +136,9 @@ In the final review (\`paper-pipeline\`, "The final review") the read covers the
 node \${CLAUDE_SKILL_DIR}/scripts/cold-read.js <paper.tex> --whole --venue="<venue>"
 \`\`\`
 
-It prints every paragraph and heading of the paper, cut into chunks of at most 15 (\`--max\`), each
+It reads the paper as its last build did, with the \`\\input\`, \`\\include\` and \`\\subfile\` files that
+build recorded spliced in; a paper that includes files and has no fresh build record is refused (run
+\`npx paperlint build\` first), never read in part. It prints every paragraph and heading of the paper, cut into chunks of at most 15 (\`--max\`), each
 under \`=== chunk i of n: engineer ===\` and \`=== chunk i of n: reviewer ===\`. Each chunk goes to its
 own pair of readers, started as in step 2, and each reader sees only its chunk: a reader handed the
 whole paper reconstructs the idea from the rest of it and stops reporting. Steps 3–6 are the same,

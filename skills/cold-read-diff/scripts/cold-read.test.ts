@@ -8,6 +8,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test, vi } from "vitest";
+import { planted, plantedOnDisk } from "../../../test/recorded-fixture.ts";
 import { runNode, useTempDir, writeTree } from "../../../test/support.ts";
 import {
   changedLines,
@@ -284,6 +285,34 @@ test("numbered: one block per paragraph, nothing else", () => {
     ]),
     "¶1 A.\n\n¶2 B.",
   );
+});
+
+test("🔴 --whole reads the files the build recorded: an \\input section reaches the readers", () => {
+  // p1: paper.tex \input's sections/intro.tex («Results»), and its build recorded that file.
+  const dir = join(root, "spliced");
+  plantedOnDisk(dir, "p1");
+  assert.deepEqual(runMain([join(dir, "paper.tex"), "--whole"]), {
+    status: 0,
+    stdout:
+      "=== chunk 1 of 1 ===\n" +
+      "¶1 (heading) \\section{Introduction}\n\n" +
+      "¶2 We cite the inline entry~\\cite{inline2024} and the stale one~\\cite{stale2020}.\n\n" +
+      "¶3 (heading) \\section{Results}\n\n" +
+      "¶4 We release the harness with this paper. It cuts the cost by 42\\% on the benchmark.\n",
+    stderr: "",
+  });
+});
+
+test("🔴 --whole refuses a paper with includes and no fresh build record, rather than read part of it", () => {
+  // The same paper with no _build/sources.json: which files TeX reads is unknown, so the section
+  // behind \input would be skipped silently. A single-file paper needs no record (the --whole test above).
+  const dir = writeTree(join(root, "unbuilt"), planted("p1").files);
+  const paper = join(dir, "paper.tex");
+  assert.deepEqual(runMain([paper, "--whole"]), {
+    status: 2,
+    stdout: "",
+    stderr: `cold read: ${paper} includes 1 file(s) and has no fresh build record, so a whole read would skip them: run npx paperlint build first\n`,
+  });
 });
 
 test("the command refuses: above the cap, no change, a bad flag, no paper", () => {
