@@ -81,7 +81,14 @@ const sectionOf = (text: string): string =>
 const STALE =
   "preset/card-rules: the rules section does not match the preset beside this card — run `npx eslint --fix` on this file to rewrite it from the preset";
 
-describe("the shipped cards", () => {
+/**
+ * The first test lints every card in presets/, and that grows with each venue. Measured in CI's
+ * coverage job with 19 cards: 2.0 s and 3.5 s (run 44507805064, attempts 1 and 2); 1.4 s here with
+ * 17. At that rate it passes vitest's 5 s default at about 27 cards.
+ */
+const ALL_CARDS_MS = 30_000;
+
+describe("the shipped cards", { timeout: ALL_CARDS_MS }, () => {
   it("every shipped card holds the section its preset resolves to", async () => {
     const results = await eslint().lintFiles([join(P, "*.md")]);
     // Guards: a glob that matched nothing lints nothing and reports clean.
