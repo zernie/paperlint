@@ -8,7 +8,6 @@ import { createCn } from "cn/config";
  */
 export const themeTokens = {
   text: [
-    "hero",
     "cover",
     "display",
     "title",
@@ -19,7 +18,7 @@ export const themeTokens = {
     "label",
     "code",
   ],
-  spacing: ["hero", "band", "section"],
+  spacing: ["band"],
   container: ["page", "prose", "measure", "wide", "cover"],
 } as const;
 

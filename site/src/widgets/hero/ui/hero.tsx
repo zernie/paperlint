@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { VenueCycle } from "@/features/cycle-venue";
+import { Wordmark } from "@/shared/ui/wordmark";
 import campus from "./campus.webp";
 
 /** One short fact of the hero: a word in the serif in its own colour, over a small muted label. */
@@ -36,9 +37,9 @@ export function Hero({
           Writing a paper for <VenueCycle names={venues} />
         </h1>
         <p className="mt-8 max-w-measure text-lead text-copy">
-          paperlint checks your LaTeX paper and its PDF against your
-          venue&apos;s rules before peer review, and tells you in plain words
-          what could get the paper sent back.
+          <Wordmark className="text-subtitle" /> checks your LaTeX paper and its
+          PDF against your venue&apos;s rules before peer review, and tells you
+          in plain words what could get the paper sent back.
         </p>
         <ul
           data-test="facts"

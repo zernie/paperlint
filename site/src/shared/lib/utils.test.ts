@@ -8,7 +8,7 @@ const css = readFileSync(
   "utf8",
 );
 
-/** The names globals.css declares under `--<key>-`, sub-properties (`--text-hero--line-height`) aside. */
+/** The names globals.css declares under `--<key>-`, sub-properties (`--text-cover--line-height`) aside. */
 const declared = (key: string): readonly string[] =>
   R.pipe(
     [...css.matchAll(new RegExp(`^\\s*--${key}-([a-z0-9-]+):`, "gm"))],
@@ -18,13 +18,13 @@ const declared = (key: string): readonly string[] =>
 
 describe("cn", () => {
   it("keeps a named size beside a colour, and lets a later size win", () => {
-    expect(cn("text-hero", "text-copy")).toBe("text-hero text-copy");
-    expect(cn("text-hero", "text-lead")).toBe("text-lead");
+    expect(cn("text-cover", "text-copy")).toBe("text-cover text-copy");
+    expect(cn("text-cover", "text-lead")).toBe("text-lead");
   });
 
   it("merges the named spacing and widths by group", () => {
-    expect(cn("pt-hero", "pt-section", "max-w-page", "max-w-prose")).toBe(
-      "pt-section max-w-prose",
+    expect(cn("pt-8", "pt-band", "max-w-page", "max-w-prose")).toBe(
+      "pt-band max-w-prose",
     );
   });
 });

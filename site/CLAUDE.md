@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:debd0abac0d0cdee compiled from site/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:04a04ceff51d6650 compiled from site/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -15,7 +15,8 @@ longer there. Code lives in `site/src/` in Feature-Sliced Design layers, checked
 Next's routes stay in `site/app/`. A class name uses only the design tokens of `site/src/app/styles/globals.css`
 (Tailwind v4, its palette cleared), which `site/eslint.config.mjs` enforces. Build it with `npm run site:build`
 from the root, which runs site/'s lint, type check and tests first; deploying is in `docs/website.md`. The
-design below was decided with the author on 2026-11-19, over three rounds of mockups.
+design system and the decisions behind it: `site/DESIGN.md`; read it before changing how the page looks. The rules
+below were decided with the author on 2026-11-19, over eight rounds of screenshots.
 
 ## Rules
 
@@ -29,15 +30,15 @@ design below was decided with the author on 2026-11-19, over three rounds of moc
 
 ### Modern Not 2010
 
-**Guidance only** — Editorial, in the manner of Stripe Press and Anthropic: a large serif headline, warm paper, generous margins, illustrations set like plates. Layout on a 12-column grid, max width about 1200 px, every gap a multiple of 8 px, text left-aligned; sections are set apart by their grounds, hairlines and space, not by cards with drop shadows. The author rejected the earlier versions as looking like 2010 and then 2015 (2026-11-19): the dated parts were the spacing and grid, and cards with shadows. A change that shrinks the type, crowds the page or brings shadows back needs a screenshot and the author's yes.
+**Guidance only** — Editorial, in the manner of a design magazine (Kinfolk and Cereal for the air, Monocle for the structure), never a scientific journal: a large serif headline, warm paper, generous margins, the etching set like a plate. A 12-column grid, max width about 1200 px, every gap a multiple of 8 px, text left-aligned; sections are set apart by their grounds, thin rules and space, not by cards with drop shadows. The author rejected the earlier versions as looking like 2010 and then 2015 (2026-11-19). A change that shrinks the type, crowds the page or brings shadows back needs a screenshot and the author's yes. The details: `site/DESIGN.md`.
 
 ### Type And Colour
 
-**Guidance only** — Palette follows zernie.com: paper #faf9f5, ink #181816, the ink-blue accent #305e8b; terracotta #c15f3c only for an error. Each section sits on its own ground, as on zernie.com, so the page reads as distinct parts: paper, sand #ead9b9 for a call-out, stone #f2f1ec for a quiet part; a section's label follows a small square marker. The author asked for this contrast on 2026-11-19, and for it to stay soft: grounds, hairlines and space, never a dark band ('terrifying'; 'I like zen'). Newsreader (optical sizes, its italic for the venue name) for headings, Inter for body text and UI, JetBrains Mono for code, all through next/font, which downloads them at build time and serves them from this site. The author chose Newsreader over Source Serif 4, Literata and Instrument Serif from a side-by-side sheet on 2026-11-19; a font change is shown side by side first.
+**Guidance only** — Colours, grounds, type and sizes are the named tokens of `globals.css`, listed with their use in `site/DESIGN.md`. Terracotta is for an error only. Grounds stay soft, never a dark band ('terrifying'; 'I like zen', 2026-11-19). Newsreader for headings, Inter for body text and UI, JetBrains Mono for code, through next/font; the author chose Newsreader from a side-by-side sheet on 2026-11-19, and a font change is shown side by side first.
 
 ### The Journey
 
-**Guidance only** — The four checks are four stops on one road, each with its own real example: desk-reject checks, folder structure, measurements, prose, in that order (the default set first, the opt-in last). From a tablet up, a table of contents of the four stops on the left (large serif numerals, the open one in ink with its numeral in the accent, the others muted) and the open stop's plate on the right, a white sheet with a hairline edge and no shadow; a click on an entry opens its plate. On a phone, each stop opens in place down the page. One stop is open at a time. They are never collapsed back into one plain list. The section is calm, 'zen' in the author's word, on the quiet stone ground: no dark band (the author chose this on 2026-11-19, over a near-black index and a shelf of book spines).
+**Guidance only** — The four checks are four stops on one road, each with its own real example: desk-reject checks, folder structure, measurements, prose, in that order (the default set first, the opt-in last). From a tablet up, an index of the four stops on the left and the open stop's plate on the right; on a phone each stop opens in place. One stop is open at a time, and they are never collapsed into one plain list. Findings appear only here. The author chose this index on 2026-11-19, on the quiet stone ground; what was rejected is in `site/DESIGN.md`.
 
 ### A Short Page
 

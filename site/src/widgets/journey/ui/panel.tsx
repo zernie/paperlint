@@ -25,16 +25,11 @@ const Badge = ({ s }: { readonly s: Stop }) => (
   </p>
 );
 
-/** One stop's page: its number and when it runs, its title, what it checks, then a real finding. */
+/** One stop's page: whether it is on by default, its title, what it checks, then real findings. */
 export function Panel({ s }: { readonly s: Stop }) {
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <p className="text-label font-medium text-muted-foreground uppercase">
-          {s.n} · {s.when}
-        </p>
-        <Badge s={s} />
-      </div>
+      <Badge s={s} />
       <h3 className="mt-4 font-display text-title text-foreground">
         {s.title}
       </h3>

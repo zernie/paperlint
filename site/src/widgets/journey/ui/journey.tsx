@@ -17,11 +17,7 @@ export function Journey({ stops }: { readonly stops: readonly Stop[] }) {
     <section data-test="journey" className="bg-stone py-band">
       <div className="mx-auto max-w-page px-6 md:px-8">
         <Reveal>
-          <Rubric
-            n="01"
-            name="Checks"
-            deck="From the first file to the camera-ready"
-          />
+          <Rubric n="01" name="Checks" />
           <div className="mt-12">
             <SectionHeading id="journey">
               Four checkpoints along the way.

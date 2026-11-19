@@ -6,8 +6,8 @@ import { Button } from "@/shared/ui/button";
 export function Clean({ on }: { readonly on: boolean }) {
   const [count, setCount] = useState(0);
   return (
-    <section className="max-w-page bg-background px-6 pt-hero">
-      <h1 className="font-display text-hero text-foreground">paperlint</h1>
+    <section className="max-w-page bg-background px-6 pt-band">
+      <h1 className="font-display text-cover text-foreground">paperlint</h1>
       <p className={cn("text-lead text-copy", on && "text-muted-foreground")}>
         {count}
       </p>

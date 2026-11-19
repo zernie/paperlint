@@ -75,12 +75,7 @@ export function Faq({
     },
     {
       q: "Do I need to know how to program?",
-      a: (
-        <p>
-          No. You copy a few commands into a terminal. The checker itself uses
-          no AI.
-        </p>
-      ),
+      a: <p>No. You copy a few commands into a terminal.</p>,
     },
     {
       q: "Does it change my paper?",
@@ -111,7 +106,7 @@ export function Faq({
     <section data-test="faq" className="py-band">
       <Reveal className="mx-auto grid max-w-page grid-cols-1 gap-x-8 gap-y-12 px-6 md:px-8 lg:grid-cols-12">
         <div className="lg:col-span-12">
-          <Rubric n="03" name="Questions" deck="Get started" />
+          <Rubric n="03" name="Questions" />
         </div>
         <div className="lg:col-span-4">
           <SectionHeading id="get-started">Before you install.</SectionHeading>

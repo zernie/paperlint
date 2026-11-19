@@ -28,12 +28,11 @@
   /* Terracotta, for an error only. */
   --color-signal: #c15f3c;
   /* The section grounds, after zernie.com: each section sits on its own ground, so the page reads
-     as distinct parts, softly. Sand for a call-out, stone (a light warm grey) for a quiet part. No
-     dark band: the author asked for a calm page (2026-11-19). `-edge` is a hairline on sand. */
-  --color-sand: #ead9b9;
-  --color-sand-edge: #d6c19b;
-  /* Sand washed out, for a large calm ground: the venues. */
+     as distinct parts, softly: soft sand for the venues, stone (a light warm grey) for the checks
+     and the footer. No dark band: the author asked for a calm page (2026-11-19). */
   --color-sand-soft: #f3ead9;
+  /* A hairline or an underline on soft sand. */
+  --color-sand-edge: #d6c19b;
   --color-stone: #f2f1ec;
   /* Two quiet accents for the hero's facts, beside the ink-blue and the ink: a green-grey and a
      deep sand. Never terracotta, which is for an error. */
@@ -43,9 +42,7 @@
   --color-faint: #85827a;
   /* A finding's level: text on its tint. */
   --color-warn: #8a6a1c;
-  --color-warn-surface: #f3ead3;
   --color-error: #a24a2b;
-  --color-error-surface: #f6e3db;
 
   /* shadcn's semantic names, mapped onto the palette. */
   --color-background: var(--color-paper);
@@ -83,10 +80,6 @@
    desktop, so no class needs `text-[112px]`. Headlines are Newsreader, whose optical sizes tighten
    it at display sizes; running text is Inter. */
 @theme {
-  /* The headline: 56px on a phone, 112px on a desktop. */
-  --text-hero: clamp(3.5rem, 8vw, 7rem);
-  --text-hero--line-height: 1;
-  --text-hero--letter-spacing: -0.025em;
   /* The cover line, the hero's headline, at the regular weight and normal tracking, which read
      better than light and tight at this size: 56–88px. */
   --text-cover: clamp(3.5rem, 6.5vw, 5.5rem);
@@ -126,12 +119,8 @@
    page's large distances and its two widths. No shadows: sections are set apart by space and
    hairlines (site/CLAUDE.md, "Modern Not 2010"). */
 @theme {
-  /* Above the hero, under the header: 160px. */
-  --spacing-hero: 10rem;
   /* A section's top and bottom inside its ground: 96px. */
   --spacing-band: 6rem;
-  /* Between sections: 160px. */
-  --spacing-section: 10rem;
   /* The page's content width (1200px) and a paragraph's (640px). */
   --container-page: 75rem;
   --container-prose: 40rem;

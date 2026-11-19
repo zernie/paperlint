@@ -9,26 +9,18 @@ export function SectionLabel({ children }: { readonly children: ReactNode }) {
   );
 }
 
-/**
- * A section's rubric, as in a magazine: a thin rule across the page, the section's number and name
- * on the left, and a short deck on the right from a tablet up.
- */
+/** A section's rubric, as in a magazine: a thin rule across the page, the section's number and name. */
 export function Rubric({
   n,
   name,
-  deck,
 }: {
   readonly n: string;
   readonly name: string;
-  readonly deck: string;
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-8 border-t border-foreground pt-4 text-label font-medium text-muted-foreground uppercase">
-      <p>
-        <span className="text-foreground">{n}</span> — {name}
-      </p>
-      <p className="hidden md:block">{deck}</p>
-    </div>
+    <p className="border-t border-foreground pt-4 text-label font-medium text-muted-foreground uppercase">
+      <span className="text-foreground">{n}</span> — {name}
+    </p>
   );
 }
 

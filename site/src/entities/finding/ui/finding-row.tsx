@@ -50,7 +50,9 @@ export function FindingRow({
         </CollapsibleTrigger>
         <CollapsibleContent className="mt-3 overflow-x-auto rounded-md bg-card px-4 py-3 font-mono text-code text-copy">
           <p className="whitespace-pre">{raw}</p>
-          <p className="mt-1 text-muted-foreground">{rule}</p>
+          {raw.includes(rule) ? null : (
+            <p className="mt-1 text-muted-foreground">{rule}</p>
+          )}
         </CollapsibleContent>
       </div>
     </Collapsible>
