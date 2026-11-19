@@ -139,7 +139,8 @@ Statement}`, the title exactly, after the last section of the body (`tex/require
   Both are camera-ready requirements; a paper can turn either off in its own `paperlint.json`.
 - **Names**: `ASE`, what `tex/venue-leftover` looks for in another venue's paper — only with a year
   beside it (`mentions: with-year`: «ASE 2026», «ASE'26»), since «ASE» is also a three-letter
-  acronym that sentences use for other things.
+  acronym that sentences use for other things. AgenticDev names this preset as its `parent`, so an
+  AgenticDev paper may say «ASE 2026».
 - **Not encoded**: the register of the body (no accepted ASE paper is in
   `fixtures/accepted-papers/` to anchor `tex/contrast-frames` and its siblings), the «experience
   paper» phrase, and the submission form's fields (no logged-in read of the form was made).
@@ -163,4 +164,15 @@ Statement}`, the title exactly, after the last section of the body (`tex/require
 ## What the preset resolves to
 
 <!-- paperlint:preset-rules -->
+<!-- prettier-ignore-start -->
+<!-- Generated from ase.jsonc by `npx eslint --fix` (rule preset/card-rules). Edit the preset, not this section. -->
+
+**`paperlint:ase`** — venue preset for ASE · call for papers: <https://conf.researchr.org/track/ase-2026/ase-2026-research-track> · extends `paperlint:acm-sigconf`
+
+| rule | severity | options | set in |
+| --- | --- | --- | --- |
+| [`pdf/last-page-balance`](../docs/rules.md) | error | `{"tolerancePt":120}` | this preset |
+| [`tex/heading-case`](../docs/rules/tex/heading-case.md) | error | `{"title":"chicago-headline","headings":"chicago-headline"}` | this preset |
+
+<!-- prettier-ignore-end -->
 <!-- /paperlint:preset-rules -->

@@ -152,9 +152,9 @@ Limit for all content, no extra pages» for CCS 2026. Not in the preset.
   «Be sure to remove page numbers from the bottom of all pages and balance the last page into 2 even
   length columns.»
 - **The name** `ACM CCS`, what `tex/venue-leftover` looks for in another venue's paper. Not the bare
-  `CCS`, which is also the ACM Computing Classification System and which an AISec paper writes in
-  «ACM CCS 2026». The preset's label, `ccs`, is what `paper/folder-venue-leftover` matches in folder
-  names.
+  `CCS`, which is also the ACM Computing Classification System. AISec names this preset as its
+  `parent`, so an AISec paper may write «ACM CCS 2026». `paper/folder-venue-leftover` matches the
+  same name in folder names: the words `acm` and `ccs` in a row.
 
 ## Not verified
 

@@ -80,8 +80,8 @@
   ],
 
   // What the venue is called in a paper's text (tex/venue-leftover) — and only beside a year
-  // («ASE 2026», «ASE'26»): «ASE» is a three-letter acronym that sentences use for other things,
-  // which is why agenticdev.jsonc leaves it out of its own names.
+  // («ASE 2026», «ASE'26»): «ASE» is a three-letter acronym that sentences use for other things.
+  // agenticdev.jsonc names this preset as its `parent`, so an AgenticDev paper may say «ASE 2026».
   "aliases": ["ASE"],
   "mentions": "with-year",
 

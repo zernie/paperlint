@@ -92,6 +92,7 @@ describe("the shipped cards", () => {
       "agentverify.md",
       "aidc.md",
       "aisec.md",
+      "ase.md",
       "ccs.md",
       "icse.md",
       "ieee-conference.md",
