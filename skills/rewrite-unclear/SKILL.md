@@ -1,10 +1,10 @@
 ---
 name: rewrite-unclear
-description: "Rewrite an unclear passage of a paper — a sentence, paragraph, heading, section or the abstract — so a reader outside the subfield understands it, keeping every claim, number and citation; more words are allowed. Use whenever someone points at paper text and wants it changed because it is unclear, confusing, too dense, full of undefined terms or reads like an LLM wrote it: simplify it, explain it plainly, rewrite it so a human gets it — \"make it simpler\", \"I can't follow this, rewrite it\", \"перепиши понятнее\", \"напиши проще\", \"не понимаю, что тут написано, переделай\" — and when grade-paper-writing or cold-read-diff hands over a flagged passage. Rewrite here, not inline: this skill checks each rewrite with a reader who has no context and with a claim-preservation diff. Not for a verdict or score on how the writing reads (grade-paper-writing), cutting length (tighten-paper), finding unclear sentences (cold-read-diff) or the order of the argument (argument-arc)."
+description: "Rewrite an unclear passage of a paper — a sentence, paragraph, heading, section or the abstract — so a reader outside the subfield understands it, keeping every claim, number and citation; more words are allowed. Use whenever someone points at paper text and wants it changed because it is unclear, confusing, too dense, full of undefined terms or reads like an LLM wrote it: simplify it, explain it plainly, rewrite it so a human gets it — \"make it simpler\", \"I can't follow this, rewrite it\", \"перепиши понятнее\", \"напиши проще\", \"не понимаю, что тут написано, переделай\" — and when cold-read-diff hands over a flagged passage. Rewrite here, not inline: this skill checks each rewrite with a reader who has no context and with a claim-preservation diff. Not for cutting length (tighten-paper), finding unclear sentences (cold-read-diff) or the order of the argument (argument-arc)."
 allowed-tools: [Read, Edit, Grep, Glob, Agent]
 ---
 
-<!-- vigiles:sha256:629ee9cd959a15b6 compiled from skills/rewrite-unclear/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:9eab16a8b56dfecb compiled from skills/rewrite-unclear/SKILL.md.spec.ts -->
 
 # rewrite-unclear — make a passage say its claim so a stranger gets it
 
@@ -15,14 +15,12 @@ unclear text and hand it here:
 | who finds it | what it hands over |
 |---|---|
 | `cold-read-diff` | the rows its readers marked `CANNOT PARSE`, `ONLY-IF`, `CLEVER`, `WHOSE?`, `REGISTER` |
-| `grade-paper-writing` | its stall inventory and the sentences behind every dimension at 3 or below |
 | `tighten-paper` | a sentence that explains something and sits inside a cut |
 | `harden-paper`, `study-accepted-papers` (mode D) | the sentences their readability or wording checks flag |
 | the author | "this is unclear", by name or by pointing at it |
 
 **What it does not do:** cut for length (`tighten-paper`), decide whether a section should exist
-(`tighten-paper`), reorder the argument (`argument-arc`), score the prose (`grade-paper-writing`),
-or change a result.
+(`tighten-paper`), reorder the argument (`argument-arc`), or change a result.
 
 ## Input
 
@@ -68,7 +66,9 @@ paragraph before it and the one after it too; they decide which terms the reader
    `../paper-pipeline/references/writing-craft.md` → "The claim-preservation diff" over the
    before and after: no number moved, no hedge dropped, no claim strengthened, no new absolute, no
    `\cite` or `\ref` lost, nothing that contradicts the unchanged text. A rewrite that fails it is
-   reverted, not patched.
+   reverted, not patched. Record the result in the `claims` row of `PIPELINE-STATUS.md` (date,
+   passages, passed or reverted) in the same commit as the rewrite: it is the record
+   `harden-paper` reads.
 
 ## The ten rules
 
@@ -95,7 +95,9 @@ Rules 6–9 are partly countable, so a lint rule may find the case; this skill w
 A clearer passage may take more words. Pay for them by moving material to an appendix or the
 artifact, never by shortening another sentence that explains something: that is how the unclear
 passage was made. Whether the paper still fits is measured by the build after the rewrites, and a
-measured overflow goes to `tighten-paper`, which owns length.
+measured overflow goes to `tighten-paper`, which owns length. After the final review is closed,
+`tighten-paper` does not run again: the overflow is paid from the next cut not yet taken in its
+recorded ranked plan (`reviews/<date>-tighten-paper.md`), on the author's yes.
 
 ## Output
 
@@ -105,14 +107,13 @@ sentence, why no edit could say the claim), and the step-4 result. Apply the rew
 `Edit` only when the author asked for fixes or the task already was "fix the prose"; otherwise the
 rewrites are a proposal the author accepts or rejects one by one.
 
-When the passage came from a report with `findings` frontmatter (`cold-read-diff`,
-`grade-paper-writing`), set that finding's `status` to `fixed` once the rewrite is applied and step
-4 passed, or leave it `open` with the reason when the author kept the original.
+When the passage came from a report with `findings` frontmatter (`cold-read-diff`), set that finding's `status` to `fixed` once the rewrite is applied and step
+4 passed, or to `wontfix` with `note` giving the author's reason when he kept the original.
 
 ## Rules
 
 - **The author decides.** The reader's verdict and the restatement are evidence; the author accepts
-  or rejects each rewrite. "Leave it" is a valid outcome, recorded as `wontfix`.
+  or rejects each rewrite. "Leave it" is a valid outcome, recorded as `wontfix` with his reason.
 - **Do not argue with a reader who could not parse it.** The author's understanding of their own
   sentence is not evidence about anyone else's.
 - **Do not write the claim stronger to make it clearer.** A hedge that makes a sentence harder to read
@@ -122,7 +123,7 @@ When the passage came from a report with `findings` frontmatter (`cold-read-diff
 
 ## Compose with
 
-- `cold-read-diff` — finds the sentences; run it once more on the rewritten paragraphs as the confirming read.
-- `grade-paper-writing` — grades the whole paper and hands its stalls here.
-- `tighten-paper` — owns length; a measured overflow after rewrites goes there.
+- `cold-read-diff` — finds the sentences; it confirms a rewrite only when the author asks.
+- `tighten-paper` — owns length; a measured overflow after rewrites goes there, or, after the final review
+  is closed, to the next cut in its recorded plan.
 - `argument-arc` — when step 1 fails because the section has no claim, the problem is the arc, not the sentence.

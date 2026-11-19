@@ -113,6 +113,20 @@ against the venue's call for papers.
 The safe order: `new`, `new --save` once; then `show`, `update`, `update --save`, and `show` again
 until it says `match yes`. Every `--save` comes after the author has read the dry run and said yes.
 
+## Reading the answers
+
+- `match yes` is the only proof the reviewers get the PDF you built; `submitted` alone says
+  nothing about which PDF.
+- `portal says: …` lines are the portal's own words; quote them.
+- `portal says: pc_conflicts: You may have missed conflicts of interest with …` is HotCRP's guess
+  from the authors' and the committee's profiles, chiefly a shared affiliation string (two
+  "Independent Researcher"s are flagged though they are strangers). Ask the author about each name;
+  a real conflict goes into `"fields": { "pc_conflicts": { "<their email>": "<type>" } }`. Never mark
+  one from the warning alone.
+- `NOT TAKEN` — the portal kept none of that field's options: the spelling is not the portal's.
+  Run `submission topics` and fix the value.
+- `SAVE WITHHELD` or `NOTHING CREATED` — the portal saved nothing.
+
 ## What a save freezes
 
 In a paper that keeps `cycles`, a `new --save` or `update --save` the portal took freezes what it

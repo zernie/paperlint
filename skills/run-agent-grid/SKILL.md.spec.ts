@@ -3,12 +3,11 @@ import { COMMANDS } from "./scripts/grid-guard-commands.ts";
 import type { Flow } from "../../scripts/pipeline.ts";
 import buildLabelPage from "../build-label-page/SKILL.md.spec.ts";
 import labelAgentRuns from "../label-agent-runs/SKILL.md.spec.ts";
-import osfArtifactUpload from "../osf-artifact-upload/SKILL.md.spec.ts";
 
 export default experimental_skill({
   name: "run-agent-grid",
   description:
-    "Run a paid or counted agent experiment grid end to end — units × arms × seeds (× agent stacks), one agent CLI run per cell in a fresh working copy, scored by an outcome oracle — without the failures that silently spoil one: an unapproved or hand-picked sample, a timeout that kills a slower model, two drivers sharing a working copy, secrets in transcripts, a classifier that mislabels outcomes, a session cap that kills the run, results lost from scratch space. Use when a study design exists and you are about to spend money or count runs: the registry and approval gate, the sandbox and secret probe, the smoke per model, the locked detached driver, the overlap audit, hand labels and the commit of finished runs. Ships grid-guard.js (lock, gate, overlap audit, env probe, key scan, pre-commit). Composes with build-benchmark (the design, upstream), build-label-page (hand labels) and osf-artifact-upload (the artifact).",
+    "Run a paid or counted agent experiment grid end to end — units × arms × seeds (× agent stacks), one agent CLI run per cell in a fresh working copy, scored by an outcome oracle — without the failures that silently spoil one: an unapproved or hand-picked sample, a timeout that kills a slower model, two drivers sharing a working copy, secrets in transcripts, a classifier that mislabels outcomes, a session cap that kills the run, results lost from scratch space. Use when a study design exists and you are about to spend money or count runs: the registry and approval gate, the sandbox and secret probe, the smoke per model, the locked detached driver, the overlap audit, hand labels and the commit of finished runs. Ships grid-guard.js (lock, gate, overlap audit, env probe, key scan, pre-commit). Composes with build-benchmark (the design, upstream) and build-label-page (hand labels).",
   tools: ["Read", "Write", "Edit", "Grep", "Glob", "Bash", "Agent"],
   body: prose`
 # run-agent-grid — running a counted agent grid without spoiling it
@@ -193,7 +192,7 @@ any stack the fix touched, then resume. A harness change is an addendum like any
 - **label-agent-runs** (downstream) — the outcome labels: codebook first, hand labels for every
   uncertain run, a blind second rater, labels frozen after the analysis.
 - **build-label-page** — the page a person labels those runs on.
-- **osf-artifact-upload** — the artifact, after \`${COMMANDS.scanKeys}\` is clean.
+- **The artifact upload** (\`docs/osf-artifact.md\` in the package) — only after \`${COMMANDS.scanKeys}\` is clean.
 - An **independent refutation pass** (a second agent framed to refute, not to confirm) on the
   registry and the smoke before the first counted run.
 `,
@@ -201,5 +200,5 @@ any stack the fix touched, then resume. A harness change is an addendum like any
 
 export const flow = {
   stage: "study",
-  handsTo: () => [labelAgentRuns, buildLabelPage, osfArtifactUpload],
+  handsTo: () => [labelAgentRuns, buildLabelPage],
 } satisfies Flow;

@@ -269,32 +269,6 @@ const CASES = [
     ],
   },
   {
-    skill: "grade-paper-writing",
-    why: "prose craft — the sentence is the unit, NOT the section",
-    pairs: [
-      {
-        origin: "ru",
-        ru: "оцени как написано — читается как стена жаргона",
-        en: "grade how it is written — it reads like a wall of jargon",
-      },
-      {
-        origin: "en",
-        en: "is the writing any good or does it read like shit",
-        ru: "текст вообще нормальный или читается как дерьмо",
-      },
-      {
-        origin: "ru",
-        ru: "abstract звучит криво хотя по смыслу всё на месте, дай оценку прозе",
-        en: "the abstract sounds clumsy even though the substance is fine, grade the prose",
-      },
-      {
-        origin: "en",
-        en: "grade the craft: title, abstract, sentence clarity, hedge stacking",
-        ru: "оцени ремесло: заголовок, аннотация, ясность предложений, нагромождение хеджей",
-      },
-    ],
-  },
-  {
     skill: "argument-arc",
     why: "argument architecture — does one conclusion become inevitable",
     pairs: [
@@ -317,32 +291,6 @@ const CASES = [
         origin: "en",
         en: "before the big rewrite I want one sentence per section, bottom up",
         ru: "перед большой переписью хочу по одному предложению на секцию, снизу вверх",
-      },
-    ],
-  },
-  {
-    skill: "paper-adversarial-review",
-    why: "ONE hostile reviewer, fast",
-    pairs: [
-      {
-        origin: "ru",
-        ru: "red-team эту статью, чем будет бить reviewer 2",
-        en: "red-team this paper, what will reviewer 2 hit it with",
-      },
-      {
-        origin: "en",
-        en: "would reviewer 2 buy this claim about the hook finding",
-        ru: "купится ли reviewer 2 на это утверждение про находку с хуком",
-      },
-      {
-        origin: "ru",
-        ru: "найди слабые места до сабмита — один злой но честный рецензент",
-        en: "find the weak spots before submission — one hostile but fair reviewer",
-      },
-      {
-        origin: "en",
-        en: "what is our desk reject risk and where do we overclaim",
-        ru: "какой у нас риск desk reject и где мы переобещаем",
       },
     ],
   },

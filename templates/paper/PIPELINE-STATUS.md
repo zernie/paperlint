@@ -13,7 +13,7 @@ Updated: <ISO>
 **Readiness verdict:** <one line — submit-ready? if not, the WORST failing gate first. Any failing
 gate caps "ready"; an accept probability alone is not a verdict.>
 
-**Gates at a glance (worst first — mark any failing gate ✗):** readability(persona stalls) <density/verdict> · structure(tighten-paper) <verdict> · claims-honest(claims) <clean?> · defects(panel) <accept-prob/decision> · writing <NN/60> · content(strong-accept scorecard) <run?/mode>
+**Gates at a glance (worst first — mark any failing gate ✗):** readability(cold-read-diff, whole paper) <verdict> · structure(tighten-paper) <verdict> · claims-honest(claims) <clean?> · defects(panel) <accept-prob/decision> · content(strong-accept scorecard) <run?/mode>
 
 ## Plan / now
 
@@ -71,28 +71,28 @@ Status: `pass` · `partial` · `fail` · `—` (not scored). A `fail` names an o
 
 ### CONTINUOUS
 
-Date = when it last ran. If that predates the current text, the pass is stale — the checker says so.
+Date = when it last ran. Each row fires on its own trigger, not on an edit of the text.
 
-| id         | Trigger               | Skill                     | Status | Date | Result                | Open      |
-| ---------- | --------------------- | ------------------------- | ------ | ---- | --------------------- | --------- |
-| cites      | any \cite added/moved | verify-citations          | ☐      | —    | —                     | —         |
-| siblings   | a sibling surfaces    | analyze-sibling-paper     | ☐      | —    | —                     | siblings/ |
-| priordelta | framing moved         | map-prior-work (delta)    | ☐      | —    | —                     | —         |
-| render     | any source edit       | render-paper + page count | ☐      | —    | <N> pages / limit <M> | —         |
+| id         | Trigger               | Skill                   | Status | Date | Result                | Open      |
+| ---------- | --------------------- | ----------------------- | ------ | ---- | --------------------- | --------- |
+| cites      | any \cite added/moved | verify-citations        | ☐      | —    | —                     | —         |
+| siblings   | a sibling surfaces    | analyze-sibling-paper   | ☐      | —    | —                     | siblings/ |
+| priordelta | framing moved         | map-prior-work (delta)  | ☐      | —    | —                     | —         |
+| render     | any source edit       | paperlint build + pages | ☐      | —    | <N> pages / limit <M> | —         |
 
 ### GATES
 
-| id        | Gate               | Skill               | Requires                                     | Status | Date | Result | Open |
-| --------- | ------------------ | ------------------- | -------------------------------------------- | ------ | ---- | ------ | ---- |
-| structure | Structure          | tighten-paper       | render, arc                                  | ☐      | —    | —      | —    |
-| writing   | Writing craft      | grade-paper-writing | draft, arc, structure                        | ☐      | —    | —      | —    |
-| panel     | Review decision    | pc-panel-review     | structure, writing                           | ☐      | —    | —      | —    |
-| claims    | Claim preservation | Fable diff          | draft, writing                               | ☐      | —    | —      | —    |
-| harden    | Harden (all axes)  | harden-paper        | panel, structure, writing, cites, priordelta | ☐      | —    | —      | —    |
-| submit    | Submit             | submit-paper        | harden, access                               | ☐      | —    | —      | —    |
+| id        | Gate                    | Skill           | Requires                 | Status | Date | Result | Open |
+| --------- | ----------------------- | --------------- | ------------------------ | ------ | ---- | ------ | ---- |
+| structure | Structure               | tighten-paper   | render, arc              | ☐      | —    | —      | —    |
+| coldread  | Cold read (whole paper) | cold-read-diff  | draft, arc, structure    | ☐      | —    | —      | —    |
+| panel     | Review decision         | pc-panel-review | structure, coldread      | ☐      | —    | —      | —    |
+| claims    | Claim preservation      | Fable diff      | draft, coldread          | ☐      | —    | —      | —    |
+| harden    | Submit checklist        | harden-paper    | panel, cites, priordelta | ☐      | —    | —      | —    |
+| submit    | Submit                  | submit-paper    | harden, access           | ☐      | —    | —      | —    |
 
-**Harden sub-axes** (`harden` is an orchestrator — track its axes so `◐` is legible):
-structure(=structure) ☐ · threat-model ☐ · ethics/dual-use ☐ · page/word-fit ☐ · de-anon hygiene ☐ · citability ☐ · artifact-runs-clean ☐ · writing(=writing) ☐
+**Harden checklist items** (track them so `◐` is legible):
+lint ☐ · final review closed ☐ · citations and siblings ☐ · claims ☐ · threat model and ethics ☐ · artifact and numbers ☐ · headline table ☐ · anonymity beyond the PDF ☐
 
 ### AFTER
 

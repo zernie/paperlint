@@ -80,16 +80,15 @@ the scorecard explains itself where it lives:
 | `cites`       | CONTINUOUS | every `\cite` is real, and the delta over the nearest neighbour is stated | `verify-citations`              |
 | `siblings`    | CONTINUOUS | deep read of a competing/concurrent paper                                 | `analyze-sibling-paper`         |
 | `priordelta`  | CONTINUOUS | re-sweep restricted to work posted since                                  | `map-prior-work` (delta)        |
-| `render`      | CONTINUOUS | build the PDF; the page count everything else is blocked on               | `render-paper`                  |
+| `render`      | CONTINUOUS | build the PDF; the page count everything else is blocked on               | `npx paperlint build`           |
 | `numbers`     | CONTINUOUS | every printed quantity traces to committed data                           | the paper's own numbers gate    |
 | `structure`   | GATES      | the developmental/editorial verdict + cut plan                            | `tighten-paper`                 |
-| `writing`     | GATES      | writing craft + the persona stall inventory                               | `grade-paper-writing`           |
 | `panel`       | GATES      | the simulated PC decision                                                 | `pc-panel-review`               |
 | `artifact`    | GATES      | defects found by **executing** the artifact                               | `pc-panel-review` §C            |
 | `claims`      | GATES      | claim-preservation diff after every rewrite                               | Fable diff (`writing-craft.md`) |
-| `harden`      | GATES      | the multi-axis pre-submit gate                                            | `harden-paper`                  |
+| `harden`      | GATES      | the submit checklist                                                      | `harden-paper`                  |
 | `submit`      | GATES      | the upload itself                                                         | `submit-paper`                  |
-| `coldread`    | GATES      | a reader with no context on the changed prose                             | `cold-read-diff`                |
+| `coldread`    | GATES      | the final review's cold read, two blind readers per chunk                 | `cold-read-diff`                |
 | `cameraready` | AFTER      | de-anonymize, disclose, archive                                           | `camera-ready`                  |
 | `extend`      | AFTER      | the ≥30%-new follow-on at a stronger venue                                | `extend-paper`                  |
 
@@ -105,9 +104,9 @@ existed. Neither is expressible now. Keep new ids lowercase, one word, and say w
 - **One row per unit of work; update the row in the SAME commit as the work.** Status + ISO date +
   result + open findings + a link to the durable artifact (`siblings/`, a saved grader report).
 - **Four sections, because the four kinds fail differently** (see `paper-pipeline` → "There is no
-  stage 7"). SETUP is done-or-not. LOOP iterates. **CONTINUOUS is never done** — its date is compared
-  against the paper's own mtime, and a `☑` older than the text is a _stale pass_, which reads as
-  green and is not. GATES are blocked on named inputs.
+  stage 7"). SETUP is done-or-not. LOOP iterates. **CONTINUOUS is never done** — each row fires on its
+  own trigger (a `\cite` added or moved, a sibling surfacing), not on any edit of the text. GATES are
+  blocked on named inputs.
 - 🔴 **The `Requires` cells above are not free-form — do not thin them.** The cell was retyped by
   hand for every paper until 2026-08-08, and `compile-rules-2026` had lost four of them — including
   `arc`, which argument-arc's SKILL.md says must precede `tighten-paper`. A dropped edge is
@@ -150,6 +149,5 @@ name filled in, and a project that keeps its own richer scorecard puts one at
 - **After running anything** (here or in a subagent) → update its row before moving on; commit with the
   work.
 - **Before submit** → every non-`n/a` row is `☑`, or a consciously-accepted `◐`/`⚠` named in the verdict
-  line. **An unrun GATE is not a valid "anti-churn" skip if capacity exists: run it.** Anti-churn covers
-  re-polishing prose that already passed a gate, never skipping a gate that never ran. And a **stale
-  CONTINUOUS row is worse than an empty one** — it reads as green while being false.
+  line. A GATE that never ran is a `☐` row named in that line, not a pass. A gate the closed final
+  review already ran is not run again for a later edit (`paper-pipeline`, "The final review").

@@ -3,7 +3,7 @@
  * quiet on a sibling's? Declared here, whole; `vigiles eval` discovers this file by its name.
  *
  * The should-not-fire prompts are the neighbours' territory: `find-venue` (choosing a venue),
- * `submit-paper` and `submission-portal` (submitting).
+ * `submit-paper` (submitting).
  *
  * ⚠️ NEVER RUN. Written with the skill; its rates are UNKNOWN, not assumed good.
  *

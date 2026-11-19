@@ -8,7 +8,9 @@
     "findings": {
       "description": "What the review found, one record per finding.",
       "type": "array",
-      "items": { "$ref": "#/definitions/finding" }
+      "items": {
+        "$ref": "#/definitions/finding"
+      }
     }
   },
   "definitions": {
@@ -20,17 +22,22 @@
           "description": "How the review body refers to this finding.",
           "type": ["integer", "string"]
         },
-        "status": { "enum": ["open", "fixed", "wontfix"] },
+        "status": {
+          "enum": ["open", "fixed", "wontfix"]
+        },
         "cause": {
-          "description": "What in the PIPELINE let this through: a defective skill, a missing skill, a hook, or a rule. Fix that, and the text edit falls out of running the fixed tool.",
+          "description": "Optional: what in the PIPELINE let this through: a defective skill, a missing skill, a hook, or a rule. Fix that, and the text edit falls out of running the fixed tool.",
           "enum": ["skill-defect", "missing-skill", "hook", "rule"]
         },
-        "title": { "type": "string" },
-        "note": { "type": "string" }
+        "title": {
+          "type": "string"
+        },
+        "note": {
+          "description": "Free text; a waiver is `status: wontfix` with `note: \"waived by the author: <reason>\"`.",
+          "type": "string"
+        }
       },
-      "additionalProperties": false,
-      "if": { "properties": { "status": { "const": "open" } } },
-      "then": { "required": ["cause"] }
+      "additionalProperties": false
     }
   }
 }

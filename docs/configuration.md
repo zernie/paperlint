@@ -373,14 +373,14 @@ Two kinds of file under a paper keep a record in their YAML frontmatter, and pap
 each against a JSON Schema it ships (`eslint-rules/*.schema.json`):
 
 - **a review** under `reviews/` (`review/frontmatter`, error) — its findings, each with a status and,
-  when open, the pipeline cause that let it through:
+  optionally, the pipeline cause that let it through:
 
   ```yaml
   ---
   findings:
     - id: 1
       status: open # open | fixed | wontfix
-      cause: missing-skill # skill-defect | missing-skill | hook | rule — required when open
+      cause: missing-skill # skill-defect | missing-skill | hook | rule — optional
   ---
   ```
 

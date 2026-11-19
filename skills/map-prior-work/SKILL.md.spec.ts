@@ -30,8 +30,7 @@ export default experimental_skill({
 The expensive failure this prevents, in one sentence: **you discover the paper that already did your
 contribution after the draft is finished, when the only move left is rewriting the claim under deadline.**
 
-Grounding: the original-contribution criterion. A paper
-a reviewer reads as a repackaging earns no authorship credit even if it is accepted. Composes with
+A paper a reviewer reads as a repackaging is rejected as incremental. Composes with
 \`research-ideate\` (upstream: it validated *whether* the idea is worth doing; this validates whether it is
 still *yours*), \`analyze-sibling-paper\` (this hands it the papers that need a full read), and
 \`draft-paper\` (which consumes the related-work skeleton).
@@ -168,7 +167,9 @@ Per \`../../CLAUDE.md\` (research is recorded verbatim, in detail):
 
 \`\`\`
 <papers-root>/<paper>/siblings/
-├── README.md                      # index: table of every candidate + verdict + what's unread
+├── README.md                      # index: table of every candidate + verdict + what's unread;
+│                                  # first line: the closest match and its disposition (distinguish
+│                                  # or escalate), or "no close match found"
 ├── <date>-<name>.md               # one file per deep-read (analyze-sibling-paper's output)
 └── <date>-sweep.md                # the sweep itself: queries run, sources hit, candidates
                                    # dropped and WHY, coverage gaps stated honestly

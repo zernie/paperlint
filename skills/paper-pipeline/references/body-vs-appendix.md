@@ -1,8 +1,7 @@
 # Body, appendix, or artifact — the one rule that decides
 
 Shared reference. Read by `draft-paper` (where do I put this as I write?), `tighten-paper` (what
-moves out when the body overruns?), `harden-paper` (is the body self-contained, and does it fit?)
-and `paper-adversarial-review` (what to cut). Do not copy it into those skills — link it, the way
+moves out when the body overruns?), and `harden-paper` (is every bound in the body, not only in an appendix?). Do not copy it into those skills — link it, the way
 they link `review-ratchet.md`.
 
 ## Why this file exists
@@ -66,8 +65,8 @@ other way round.
 
 ## When the body overruns
 
-This list is the one cut order. `tighten-paper`, `harden-paper` and `paper-adversarial-review` point
-here and keep no order of their own. Spend in this order until the measured overflow is covered.
+This list is the one cut order. `tighten-paper` points
+here and keeps no order of its own. Spend in this order until the measured overflow is covered.
 
 0. **Measure, then strike the steps this venue makes worthless.** Read the overflow (pt or lines)
    from the build, and what the limit counts from the paper's resolved preset, never from memory.

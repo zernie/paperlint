@@ -401,16 +401,6 @@
       "count": 1
     }
   },
-  "skills/grade-paper-writing/grade-paper-writing.eval.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
-  "skills/grade-paper-writing/grade-paper-writing.harness.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
   "skills/harden-paper/harden-paper.eval.mjs": {
     "local/js-needs-reason": {
       "count": 1
@@ -431,32 +421,12 @@
       "count": 1
     }
   },
-  "skills/osf-artifact-upload/osf-artifact-upload.eval.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
-  "skills/paper-adversarial-review/paper-adversarial-review.eval.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
-  "skills/paper-adversarial-review/paper-adversarial-review.harness.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
   "skills/paper-pipeline/description-language.eval.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
   },
   "skills/paper-pipeline/framing-vs-vocabulary.eval.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
-  "skills/paper-pipeline/grade-paper-writing-ablation.eval.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -477,16 +447,6 @@
     }
   },
   "skills/paper-pipeline/pipeline-language.eval.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
-  "skills/paper-pipeline/references/occupancy-2026-08-06-probe/run_retext.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
-  "skills/paper-pipeline/repro/2026-08-08-parent-replication.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -571,11 +531,6 @@
       "count": 1
     }
   },
-  "skills/render-paper/render-paper.eval.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
   "skills/render-paper/render-paper.harness.mjs": {
     "local/js-needs-reason": {
       "count": 1
@@ -601,27 +556,12 @@
       "count": 1
     }
   },
-  "skills/submission-portal/submission-portal.eval.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
   "skills/submit-paper/submit-paper.eval.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
   },
   "skills/submit-paper/submit-paper.harness.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
-  "skills/sweep-design-space/sweep-design-space.eval.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
-  "skills/sweep-design-space/sweep-design-space.harness.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }

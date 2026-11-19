@@ -10,17 +10,17 @@ after deciding to use the tool, not before.
 
 ## The programs
 
-| program              | comes from                       | which skills call it                     | what happens without it                                               |
-| -------------------- | -------------------------------- | ---------------------------------------- | --------------------------------------------------------------------- |
-| `pdflatex`, `bibtex` | TeX Live (`paperlint toolchain`) | render-paper, submit-paper, camera-ready | no PDF is produced — loud                                             |
-| `texcount`           | TeX Live (`paperlint toolchain`) | render-paper, grade-paper-writing        | the length checks cannot run                                          |
-| `checkcites`         | TeX Live (`paperlint toolchain`) | render-paper                             | nothing asks whether a bibliography entry is uncited                  |
-| `latexdiff`          | TeX Live (`paperlint toolchain`) | `paperlint versions diff`                | the command exits 2 with one line saying so                           |
-| `java`               | any JRE (21 works)               | render-paper                             | TeXtidote does not run, and **nothing else spell-checks the text**    |
-| `python3`            | your system                      | assess-novelty, the analysis scripts     | those scripts do not start (`crop_quote.py` also needs `pymupdf`)     |
-| `tlmgr`              | TeX Live                         | the TeX installer itself                 | you cannot add a TeX package                                          |
-| `banal`              | HotCRP (`paperlint toolchain`)   | `paperlint build`, extract-pdf-facts     | page size, columns and font sizes are `null` in the facts file        |
-| `perl`               | your system (macOS has it)       | banal                                    | banal cannot run — the same `null`, and `paperlint toolchain` refuses |
+| program              | comes from                       | which skills call it                 | what happens without it                                               |
+| -------------------- | -------------------------------- | ------------------------------------ | --------------------------------------------------------------------- |
+| `pdflatex`, `bibtex` | TeX Live (`paperlint toolchain`) | `paperlint build`, the render gate   | no PDF is produced — loud                                             |
+| `texcount`           | TeX Live (`paperlint toolchain`) | your own `texcount/*` rules          | the length checks cannot run                                          |
+| `checkcites`         | TeX Live (`paperlint toolchain`) | your own citation checks             | nothing asks whether a bibliography entry is uncited                  |
+| `latexdiff`          | TeX Live (`paperlint toolchain`) | `paperlint versions diff`            | the command exits 2 with one line saying so                           |
+| `java`               | any JRE (21 works)               | TeXtidote (`ensure-checkers.sh`)     | TeXtidote does not run, and **nothing else spell-checks the text**    |
+| `python3`            | your system                      | assess-novelty, the analysis scripts | those scripts do not start (`crop_quote.py` also needs `pymupdf`)     |
+| `tlmgr`              | TeX Live                         | the TeX installer itself             | you cannot add a TeX package                                          |
+| `banal`              | HotCRP (`paperlint toolchain`)   | `paperlint build`, extract-pdf-facts | page size, columns and font sizes are `null` in the facts file        |
+| `perl`               | your system (macOS has it)       | banal                                | banal cannot run — the same `null`, and `paperlint toolchain` refuses |
 
 🔴 **Most of these fail QUIETLY**, which is why they are listed rather than left to be discovered.
 A missing checker and a passing checker look identical from outside, so every script here states in

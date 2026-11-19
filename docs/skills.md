@@ -27,7 +27,6 @@ Which skill hands work to which, drawn from each skill's own `flow`: [`pipeline.
 | a go / no-go on the idea, with the reason and the smallest result that makes a paper    | `research-ideate`       |
 | who already works on it, dated against your deadline, and what you can still claim      | `map-prior-work`        |
 | one close competitor read in full: is yours "just X?", and the sentence that answers it | `analyze-sibling-paper` |
-| candidate mechanisms from other fields, when the work needs a design, not a measurement | `sweep-design-space`    |
 
 ## 2 · Venue
 
@@ -48,32 +47,27 @@ Which skill hands work to which, drawn from each skill's own `flow`: [`pipeline.
 
 ## 4 · Draft
 
-| you get                                                                              | skill             |
-| ------------------------------------------------------------------------------------ | ----------------- |
-| a first draft from your results: claims sized, threats to validity written           | `draft-paper`     |
-| an outline where each section follows from the one before                            | `argument-arc`    |
-| a cut plan: what to cut, merge or move to the appendix                               | `tighten-paper`   |
-| what a reader with no context understood from your last edit, sentence by sentence   | `cold-read-diff`  |
-| an unclear passage rewritten, checked by a reader with no context, every number kept | `rewrite-unclear` |
-| the compiled pages as images, to read on a screen or a phone                         | `render-paper`    |
+| you get                                                                                                            | skill             |
+| ------------------------------------------------------------------------------------------------------------------ | ----------------- |
+| a first draft from your results: claims sized, threats to validity written                                         | `draft-paper`     |
+| an outline where each section follows from the one before                                                          | `argument-arc`    |
+| a cut plan: what to cut, merge or move to the appendix                                                             | `tighten-paper`   |
+| what a reader with no context understood from your last edit (or the whole paper, in chunks), sentence by sentence | `cold-read-diff`  |
+| an unclear passage rewritten, checked by a reader with no context, every number kept                               | `rewrite-unclear` |
 
 ## 5 · Review
 
-| you get                                                                       | skill                      |
-| ----------------------------------------------------------------------------- | -------------------------- |
-| a writing grade, with the sentence to fix for each point                      | `grade-paper-writing`      |
-| every cited work confirmed to exist, with the right authors, title and year   | `verify-citations`         |
-| one hostile review: overclaims, missing baselines, holes in the method        | `paper-adversarial-review` |
-| a simulated program committee: several reviews, a decision and the must-fixes | `pc-panel-review`          |
-| ready or not ready to submit, worst problem first                             | `harden-paper`             |
+| you get                                                                                            | skill              |
+| -------------------------------------------------------------------------------------------------- | ------------------ |
+| every cited work confirmed to exist, with the right authors, title and year                        | `verify-citations` |
+| a simulated program committee: several reviews, one of them hostile, a decision and the must-fixes | `pc-panel-review`  |
+| ready or not ready to submit, worst problem first                                                  | `harden-paper`     |
 
 ## 6 · Submit
 
-| you get                                                                        | skill                 |
-| ------------------------------------------------------------------------------ | --------------------- |
-| the submission, step by step: anonymization, the form, the artifact            | `submit-paper`        |
-| the reproduction artifact uploaded to OSF for anonymous review                 | `osf-artifact-upload` |
-| the PDF and abstract replaced on HotCRP, and proof the portal holds your build | `submission-portal`   |
+| you get                                                             | skill          |
+| ------------------------------------------------------------------- | -------------- |
+| the submission, step by step: anonymization, the form, the artifact | `submit-paper` |
 
 ## 7 · Camera-ready
 

@@ -38,6 +38,10 @@ zip below is built from it; the anonymized copy that was uploaded goes in the pa
 - `README.md` — a **"what reproduces which paper number"** table (paper location → the line that prints
   it), a scope/method note, and the run command.
 - `LICENSE` — MIT (or similar); the "Available" badge often requires one. Anonymized author line for review.
+- For every study the paper reports: its `plan.json` (its mode) and its decision file, and
+  `repro/README.md` with the index regenerated (`npx paperlint studies index <paper-dir>`) — each
+  study's mode, decision commit and first output — with the command that re-checks the order
+  (`npx paperlint lint` on a full clone). A zip without them asks a reviewer to take the modes on trust.
 - No `__pycache__` / `node_modules` / generated `*results*.json` in the shipped zip (`.pyc` can embed
   your absolute repo path — a de-anon leak). Strip distinctive fingerprints (an exact star count, a
   total-spend figure).
@@ -49,7 +53,8 @@ zip below is built from it; the anonymized copy that was uploaded goes in the pa
 - Zip **only** the artifact dir (never sibling internal dirs). A release-gate script that greps for
   identity + Cyrillic, re-runs the harnesses, and zips only the artifact is the pattern
   (`<papers-root>/<paper>/check-release.sh` is a working example in the first consumer).
-- Host it anonymized for double-blind review — see `submit-paper` §hosting and `osf-artifact-upload`.
+- Host it anonymized for double-blind review — see `submit-paper` §hosting; replacing a file on OSF:
+  `docs/osf-artifact.md` in the paperlint package.
 
 ## Provenance
 

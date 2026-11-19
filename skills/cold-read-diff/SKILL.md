@@ -1,10 +1,10 @@
 ---
 name: cold-read-diff
-description: "Send just-changed paper prose to two readers with NO context — an engineer who asks what each sentence claims, and a skimming workshop reviewer who asks whose result it states and whether it reads like a paper — the only check that catches a sentence which is short, true, jargon-free and still meaningless to anyone who does not already know the idea. Run ONCE per batch of prose edits — when a section is done, before committing it, before reporting it fixed — not after each edit: it reads everything changed since the last commit. Scoped to the diff, so it is cheap enough to run on every batch. Not a writing grade (grade-paper-writing), not a structural pass (tighten-paper), not a defect review."
+description: "Send just-changed paper prose to two readers with NO context — an engineer who asks what each sentence claims, and a skimming workshop reviewer who asks whose result it states and whether it reads like a paper — the only check that catches a sentence which is short, true, jargon-free and still meaningless to anyone who does not already know the idea. While drafting, run ONCE per batch of prose edits — when a section is done, before committing it — not after each edit; after the final review is closed, only when the author asks: it reads everything changed since the last commit. Its whole-paper mode (--whole) is step 2 of the final review, in chunks of at most 15 paragraphs. Not a structural pass (tighten-paper), not a defect review (pc-panel-review)."
 allowed-tools: [Bash, Read, Write, Agent]
 ---
 
-<!-- vigiles:sha256:3de7406b087ef93f compiled from skills/cold-read-diff/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:2b423a85aed89031 compiled from skills/cold-read-diff/SKILL.md.spec.ts -->
 
 # cold-read-diff — the reader who cannot fake understanding
 
@@ -45,8 +45,8 @@ is to withhold the context rather than ask them to ignore it.
 
 A full cold read costs a long agent run, so it gets run once a day, which means prose written after
 it ships unread. Scoped to the changed paragraphs the readers cost seconds (two paragraphs,
-measured 2026-11-10: about 10 s and $0.03 for both), so it runs on every batch of edits — once
-per section or commit, not once per keystroke — and coverage beats depth here, because the
+measured 2026-11-10: about 10 s and $0.03 for both), so while drafting it runs on every batch of edits — once
+per section or commit, not once per keystroke; after the final review is closed, only when the author asks — and coverage beats depth here, because the
 defect is per-sentence.
 
 Scoping also makes the check honest. Hand an agent the whole paper and it reconstructs the idea from
@@ -112,10 +112,28 @@ only model calls are the two readers. They start in the background, so you keep 
    prose", hand the rows to `rewrite-unclear`, the one skill that rewrites for clarity: each row's
    paragraph, its verdict and the reader's words. Record each finding in the report's frontmatter
    once it is decided.
-7. **Confirm once, on the fix.** Run steps 1–5 again on the rewritten paragraphs. An edit is not
-   done until the engineer parses the replacement AND the reviewer finds its owner and its
-   register. A fix for the engineer that goes colloquial is a new `REGISTER` finding, and the
-   reverse holds too. One confirming round; do not loop past it.
+7. **Confirm once, on the fix, only when the author asks.** Run steps 1–5 again on the rewritten
+   paragraphs. One confirming round; do not loop past it.
+
+**No rows is a valid result.** A reader that returns no table has found nothing, and the read is
+done: report "no findings" with the report's path.
+
+## The whole paper, in chunks (the final review)
+
+In the final review (`paper-pipeline`, "The final review") the read covers the whole paper once:
+
+```
+node ${CLAUDE_SKILL_DIR}/scripts/cold-read.js <paper.tex> --whole --venue="<venue>"
+```
+
+It reads the paper as its last build did, with the `\input`, `\include` and `\subfile` files that
+build recorded spliced in; a paper that includes files and has no fresh build record is refused (run
+`npx paperlint build` first), never read in part. It prints every paragraph and heading of the paper, cut into chunks of at most 15 (`--max`), each
+under `=== chunk i of n: engineer ===` and `=== chunk i of n: reviewer ===`. Each chunk goes to its
+own pair of readers, started as in step 2, and each reader sees only its chunk: a reader handed the
+whole paper reconstructs the idea from the rest of it and stops reporting. Steps 3–6 are the same,
+with one report for all chunks. It runs once per final review; the read after an edit is not repeated
+unless the author asks for the one confirmation.
 
 ## 🔴 Hand the reader WHOLE PARAGRAPHS, never `+` lines
 
@@ -140,19 +158,22 @@ ones that do not are noise, and noise is how this check gets muted.
 
 Once the findings are decided, the report opens with YAML frontmatter that lists them, one
 record per finding.
-`paperlint lint` validates it (`review/frontmatter`): an **open** finding must name the
-pipeline `cause` that let it through — fix that, and the text edit falls out of running the
-fixed tool.
+`paperlint lint` validates it (`review/frontmatter`). A finding the author kept is `wontfix` with a
+`note` giving his reason (`waived by the author: <reason>` for a `CANNOT PARSE`, a blocker). Name
+the pipeline `cause` when one let the finding through, so the tool gets fixed, not only the text.
 
 ```yaml
 ---
 findings:
   - id: 1
     status: open            # open | fixed | wontfix
-    cause: missing-skill    # skill-defect | missing-skill | hook | rule — required when open
+    cause: missing-skill    # skill-defect | missing-skill | hook | rule — optional
     title: "§3 opens on a term the reader has not met"
   - id: 2
     status: fixed
+  - id: 3
+    status: wontfix
+    note: "waived by the author: the term is the venue's own"
 ---
 ```
 
@@ -164,20 +185,10 @@ findings:
   judging register without knowing the venue is guessing.
 - **`CANNOT PARSE` is a result, not a failure of the reader.** Never argue with it. The author's
   ability to understand his own sentence is not evidence about anyone else's.
-- **Run it on your own fixes too.** The author is the least qualified judge of whether his repair
-  reads, and that is exactly when he feels most certain.
 
 ## Compose with
 
-- `rewrite-unclear` — writes the fixes for the rows this read returns; step 7 confirms them.
-- `grade-paper-writing` — the batch readability gate; this is its continuous counterpart. That one
-  produces a stall inventory over the whole paper; this one asks whether the last edit means anything.
+- `rewrite-unclear` — writes the fixes for the rows this read returns; step 7 confirms them only when the author asks.
 - `tighten-paper` — structural cuts. Note the interaction: a tighten pass that pays for an addition
   by shortening sentences elsewhere is precisely what generates work for this skill.
-- `paper-pipeline` — owns the text-pass / evidence-pass split; this belongs to the text pass.
-
-## Provenance
-
-Built 2026-08-05, the day before the `the reference paper` deadline, after the corpus owner read the built PDF and
-found eleven unreadable passages in twenty minutes — none of which any automated check had flagged,
-and several of which had been introduced that same morning by fixes to other automated checks.
+- `paper-pipeline` — owns the final review; `--whole` is its second step.

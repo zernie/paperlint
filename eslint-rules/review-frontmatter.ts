@@ -7,12 +7,12 @@
  *   findings:
  *     - id: 1
  *       status: open            # open | fixed | wontfix
- *       cause: missing-skill    # skill-defect | missing-skill | hook | rule — required when open
+ *       cause: missing-skill    # skill-defect | missing-skill | hook | rule — optional
  *
- * The pipeline convention behind it: a review does not end with a list of findings, it ends with
- * what in the PIPELINE let each one through. Otherwise the text gets fixed while the tool that
- * missed it stays the same. The schema is `review-frontmatter.schema.json` beside this file, and
- * "an open finding names its cause" is its `if`/`then`, not code here.
+ * Where a finding has a pipeline cause, the record names it, so the tool that missed it gets fixed
+ * and not only the text. The schema is `review-frontmatter.schema.json` beside this file.
+ * The cause is optional: a final review closes with findings still open, and a finding about a
+ * sentence has no pipeline cause to name. A waiver is `wontfix` with a `note` giving the reason.
  *
  * The same mechanism, with a schema of its own, is `sibling/frontmatter`
  * (`sibling-frontmatter.mjs`): `frontmatterRule` below is the one implementation.

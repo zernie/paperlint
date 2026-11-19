@@ -1,21 +1,21 @@
 ---
 name: tighten-paper
-description: "Use when a paper \"feels long / bloated / overly complex / hard to read / doesn't deliver its point / the middle drags\" — or after review rounds deposited hedge-mass. The developmental / editorial pass on a DRAFTED paper: what a real human editor thinks reading it cover to cover — the ONE point, does every section earn its place, can it be SKIMMED, is it too long for its contribution, which sections are TMI that belong in the artifact/appendix, does the conclusion pay off the intro's promise. Produces a structural verdict + a concrete cut / fold / merge / reorder plan — NOT sentence fixes. Its verdict is a required INPUT to pc-panel-review and a hard gate in harden-paper. NOT sentence craft or a writing grade (grade-paper-writing), NOT jargon stalls (the persona stall pass), NOT scientific defects (pc-panel-review / paper-adversarial-review). Run it BEFORE those on a bloated draft — no point polishing sentences in a section that should be cut."
+description: "Use when a paper \"feels long / bloated / overly complex / hard to read / doesn't deliver its point / the middle drags\". The developmental / editorial pass on a DRAFTED paper: what a real human editor thinks reading it cover to cover — the ONE point, does every section earn its place, can it be SKIMMED, is it too long for its contribution, which sections are TMI that belong in the artifact/appendix, does the conclusion pay off the intro's promise. Produces a structural verdict + a concrete cut / fold / merge / reorder plan that it proposes and never applies — NOT sentence fixes; \"nothing to cut\" is a valid verdict. The first step of the final review, and a required INPUT to pc-panel-review. NOT sentence craft or unclear sentences (cold-read-diff), NOT scientific defects (pc-panel-review)."
 allowed-tools: [Read, Write, Edit, Grep, Glob, Agent]
 ---
 
-<!-- vigiles:sha256:b31b300249a35350 compiled from skills/tighten-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:c2336c32059ba9b7 compiled from skills/tighten-paper/SKILL.md.spec.ts -->
 
 # tighten-paper — the developmental edit
 
-🔴 **When `versions/<cycle>/approved.tex` exists, a cut is proposed, never made.** Write each proposed cut as an entry of `versions/<cycle>/changes.yaml` (`type: cut`, `before`, `why`, `reader_loses`, and `drops` for the numbers and citations it removes), run `npx paperlint versions diff` to show the author what the draft would lose against the approved copy, and apply the cut only after his explicit yes. Never cut before that. Without an approved copy this does not apply. (EXPERIMENTAL: `docs/rules/cycle/changes-since-approved.md`.)
+🔴 **A cut is proposed, never made by this pass.** The author decides each one, and the accepted cuts are applied in one write after his explicit yes. When `versions/<cycle>/approved.tex` exists, write each proposed cut as an entry of `versions/<cycle>/changes.yaml` (`type: cut`, `before`, `why`, `reader_loses`, and `drops` for the numbers and citations it removes) and run `npx paperlint versions diff` to show the author what the draft would lose against the approved copy. (EXPERIMENTAL: `docs/rules/cycle/changes-since-approved.md`.)
 
 Sentence-level passes make a wall of text into readable text. They do **not** tell you the wall shouldn't be there
 at all. This pass is the editor who reads the whole paper once and asks: *is this the right paper, at the right
 length, delivering the right point?* Its deliverable is a **cut/fold/merge/reorder plan and a length verdict**, not
 reworded sentences.
 
-**Run it as a persona subagent too** (the persona mechanic: `grade-paper-writing`, "Two readers, and both run"): an
+**Run it as a persona subagent too** (a fresh subagent with no history, as `cold-read-diff`'s readers are): an
 editor persona who reads the whole thing once, fast, the way a busy reviewer skims before deciding. A frontier model
 grading section-by-section never feels the *cumulative* drag; a persona reading cover-to-cover does.
 
@@ -121,13 +121,9 @@ which cross-references break and how many.
 7. **The payoff check.** Does the conclusion deliver the exact thing the intro promised — no more (no new claims), no
    less (no anticlimax)? Do intro and conclusion agree on what the paper is about?
 
-## Aggression
-The failure this skill keeps hitting is **timidity**: it concludes "the skeleton is clean, nothing major to cut"
-and trims lightly, so the paper stays at the page limit and still *feels* fat (GateBench 2026-07-25: the author
-called it "fat for no reason" after a pass that cut almost nothing and left it 10pp). Fix the posture:
-- **Clean skeleton ≠ tight paper.** A perfectly-organized section list can still be 30–40% fat prose. "No whole
-  section to cut" is **NOT a stopping condition** — go INSIDE each section and cut at the paragraph and sentence
-  level. A tightening pass whose conclusion is "structure is already clean" has not done its job.
+## How hard to cut
+- **Clean skeleton ≠ tight paper.** A well-organized section list can still carry fat prose, so look inside
+  each section at the paragraph and sentence level as well as at the skeleton.
 - **Burden of proof is on the words, not the editor.** Do not ask "can I justify removing this?" Ask "does this
   sentence change what the reader BELIEVES or can DO?" If not — cut. A sentence that explains something does,
   and is never cut for length (see the caveats).
@@ -138,12 +134,9 @@ called it "fat for no reason" after a pass that cut almost nothing and left it 1
   X" reassurance; per-case enumerations (→ artifact); hedge-stacks (→ one scope sentence); a sentence that
   restates the previous one in new words; throat-clearing lead-ins ("It is worth noting that…"); any paragraph
   whose deletion the ARGUMENT would not notice.
-- **Measured, not vibes.** Report before→after LINES (or words) per section and total. **A tightening pass that
-  does not move the line count materially DID NOT HAPPEN** — say so and cut harder. On a paper that "feels fat,"
-  −20–30% of body prose is a normal result, not an extreme one.
-- **"It's all load-bearing numbers" is the SECOND timid excuse — reject it too** (the first is "the skeleton is
-  clean"). A paragraph can be FULL of protected numbers/cites and STILL carry restatements and per-case
-  walkthroughs. Load-bearing protects the claim, its number and the sentences that explain it — not a sentence
+- **Measured, not vibes.** Report the words each proposed cut saves, per section and in total.
+- **Dense is not unmovable.** A paragraph can be FULL of protected numbers/cites and STILL carry restatements and
+  per-case walkthroughs. Load-bearing protects the claim, its number and the sentences that explain it — not a sentence
   that restates it. An explanation the body cannot afford is never shortened: it moves, whole, to the appendix
   or the artifact (`MOVE→`). **Dense ≠ unmovable** (GateBench 2026-07-25: a pass cut only 5% hiding behind
   this; the author correctly pushed back that whole sections were over-explained, not just number-dense).
@@ -156,7 +149,7 @@ called it "fat for no reason" after a pass that cut almost nothing and left it 1
   breakdowns, secondary analyses, exhaustive robustness sub-results, ablation walkthroughs, and every "we also
   checked X" MOVE there: keep the headline number + one pointer ("the artifact's per-guard matrix reports the
   rest"), cut the in-paper walkthrough. This is NOT dropping a claim by omission — the public artifact recomputes
-  it. **A dense benchmark paper that folds NOTHING to its own artifact has not been tightened.** Where a fold
+  it. Where a fold
   ranks against the other kinds of cut is not decided here (next rule).
 - **The ORDER in which kinds of content are spent has one owner:** `paper-pipeline/references/body-vs-appendix.md`,
   section "When the body overruns". Rank the plan by it, not by words saved and not by a list of your own. A plan
@@ -164,24 +157,25 @@ called it "fat for no reason" after a pass that cut almost nothing and left it 1
   taken, reason for each left) first.
 - **This skill owns length; no other skill cuts for it.** A clearer rewrite elsewhere may add words.
   Whether the paper still fits is measured by the build afterwards, and a measured overflow comes here, to be
-  paid in the order above, never by shortening a sentence that explains something.
+  paid in the order above, never by shortening a sentence that explains something. After the final review is
+  closed, this skill does not run again: the overflow is paid from the next cut not yet taken in the plan its
+  report recorded, on the author's yes.
 - **Length is calibrated to CONTRIBUTION WEIGHT, not to the page limit.** A moderate finding + a moderate-complexity
   benchmark does not need to sit at the limit; being over-length for the weight of the contribution is itself a
   defect — it reads as padding even when each sentence is individually "true." Right-size to the contribution's
   natural length, then stop. Ask: "for how big this finding actually is, how many pages does it deserve?" — and cut
   to THAT, not to the ceiling.
-- **Apply it — don't defer it (see caveats for why this is safe).** When invoked to TIGHTEN (not merely audit for
-  harden/pc-panel input), APPLY the prose/TMI cuts directly and report the measured delta. A plan with no applied
-  cuts is only acceptable for a pure pre-review audit; "tighten this, it's fat" means CUT.
+- **Propose; the author applies.** Every cut, small or structural, goes to the author as a proposal with its
+  words saved. "Nothing to cut" is a valid verdict: say so, with the length verdict, and stop.
 
-## 🔴 Write the per-section verdict INTO the paper, not just into chat
+## 🔴 Write the per-section verdict into the report, not just into chat
 
 A verdict that lives in a chat log is gone by the next session, and the next session then re-derives
-it or ignores it. **Every section and subsection gets a one-line verdict comment immediately above its
-heading**, in `paper.tex`, as LaTeX `%` comments, stamped with the date and the skill that
-produced it:
+it or ignores it. **Every section and subsection gets a verdict block in the report**,
+`reviews/<date>-tighten-paper.md` in the paper's folder, stamped with the date and the skill that
+produced it, above the heading it judges. This pass does not write into `paper.tex`:
 
-```latex
+```text
 % TIGHTEN 2026-08-06 · score 8/10 · verdict: KEEP · 190w
 %   carries: tools get close but none resolves a NAMED rule against a committed config
 %   because: it is the only place the tool-ecosystem gap is closed; a reviewer who skips it
@@ -276,17 +270,17 @@ fix there is expansion, not compression. **A size finding says LOOK HERE. It doe
 do.** A pass returning SHORTEN on high-scoring sections it has not re-read is doing arithmetic, and
 its verdicts should be treated as unread.
 
-Rules for these comments:
+Rules for these verdicts:
 - **Every section AND every appendix block.** Demanding one note per heading asks nothing of an
   appendix, which is one heading with thirty-five arguments under it — and that is exactly where
   unpriced prose accumulates, because nothing there costs a page.
-- **Stale beats absent, but not by much.** A comment whose date precedes the last substantive edit to
-  its section is stale; re-grade it rather than trusting it.
+- **Stale beats absent, but not by much.** A verdict whose date precedes the last substantive edit to
+  its section is stale; say so rather than trusting it. After the final review is closed, an edit does
+  not make the verdict stale: name the edit instead, and an overflow is paid from the recorded plan.
 - **A verdict nobody executed is a note, not a decision.** List the blocks still carrying a
-  non-KEEP verdict — a paper full of unexecuted CUTs is worse than one never graded,
-  because it reads as decided.
-- They are working notes: a `%` comment never reaches the PDF.
-- The chat summary still gets written — but it is the *derivative*, and the paper is the record.
+  non-KEEP verdict, each marked executed, rejected by the author (with his reason), or open. Only an
+  open one is undecided; a cut the author rejected is decided, not a defect.
+- The chat summary still gets written — but it is the *derivative*, and the report is the record.
 
 ## 🧱 Enforce subsections — a section without them is a wall
 
@@ -300,10 +294,7 @@ out, named by the belief and not by the topic) or explain why the section is gen
 argument. Introductions and conclusions are the usual legitimate exceptions; a results or related-work
 section almost never is.
 
-Mechanical leg: `paper-lint`'s `checkPaperWalls()` reports oversized unsubsectioned sections on the Stop
-pass, so this does not depend on someone remembering to run the skill.
-
-## Output — the verdict AND the applied cuts
+## Output — the verdict AND the proposed cuts
 Produce:
 - **The one-sentence point** (as you could best extract it) + whether the paper delivers it clearly (yes / buried / no).
 - **Length verdict:** is it too long? by roughly how much? Is it at the page limit because it's full of argument, or
@@ -317,21 +308,16 @@ Produce:
 - **Skim-test failures** (headings/lead-sentences that don't carry the argument).
 
 ## Compose
-Run this FIRST on a draft that "feels bloated" — before grade-paper-writing / the stall pass / pc-panel, because
-polishing sentences in a section that should be folded to the artifact is wasted work. After the plan is applied,
-THEN run the sentence-level passes on what remains. On a page-limited paper, this pass is also what *buys* the space
+The first step of the final review (`paper-pipeline`, "The final review"), before the cold read and the panel,
+because polishing sentences in a section that should be folded to the artifact is wasted work. On a page-limited paper, this pass is also what *buys* the space
 a sentence-level readability pass needs (cut a TMI section → the core mechanism gets room to breathe).
 
 ## Honesty / scope caveats
-- **Separate the two risk classes — they are NOT the same, and conflating them is what makes this pass timid.**
-  (1) **Prose/TMI cutting** — deleting fat sentences, folding enumerations to the artifact, collapsing hedge-stacks
-  — removes words that don't change what the reader believes. **LOW risk; apply it aggressively even the day of
-  the deadline.** A sentence that explains something is not fat: it is never shortened to save space, and when it
-  reads badly it goes to `rewrite-unclear`, not into a cut. Timidity here IS the failure, not the safe choice.
-  (2) **Skeleton surgery** — merging, reordering, or deleting whole sections — can destabilize a done paper. **THIS
-  is the deadline judgment call:** propose it, get author sign-off, hold for camera-ready if unsure. Never let
-  caution about (2) suppress (1) — a "hold big cuts for later" reflex applied to *prose* fat is exactly how a
-  "feels fat" paper survives a tightening pass unchanged. Don't silently do (2); do (1) hard.
+- **Label each proposal with its risk class.** (1) **Prose/TMI cutting** — deleting fat sentences, folding
+  enumerations to the artifact, collapsing hedge-stacks — removes words that don't change what the reader
+  believes: low risk. A sentence that explains something is not fat: it is never shortened to save space, and when
+  it reads badly it goes to `rewrite-unclear`, not into a cut. (2) **Skeleton surgery** — merging, reordering,
+  or deleting whole sections — can destabilize a done paper; near a deadline, say so beside the proposal.
 - "Fold to the artifact" only works if the artifact actually exists and can hold it — verify (ties to the
   availability check in `harden-paper`).
 - Cutting changes claims by omission. Anything cut/folded still gets the claim-preservation diff (the `claims` row) — a

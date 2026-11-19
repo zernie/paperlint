@@ -177,28 +177,6 @@ const FIXTURE = {
 // the English arm anything.
 const CASES = [
   {
-    skill: "grade-paper-writing",
-    gapPp: -42,
-    prompts: [
-      {
-        ru: "у меня ощущение, что вступление написано тяжело, но я не понимаю чем именно",
-        en: "the introduction feels heavy to me and I cannot tell what exactly makes it so",
-      },
-      {
-        ru: "рецензент назвал текст многословным — согласен ли ты и где конкретно",
-        en: "a reviewer called the text wordy — do you agree, and where exactly",
-      },
-      {
-        ru: "нужен разбор по пунктам: заголовок, первый абзац, подача выводов",
-        en: "I want a point-by-point breakdown: the title, the opening paragraph, how findings are delivered",
-      },
-      {
-        ru: "сравни как это написано с тем, как пишут сильные статьи в этой области",
-        en: "compare how this is written against how strong papers in this field are written",
-      },
-    ],
-  },
-  {
     skill: "argument-arc",
     gapPp: -33,
     prompts: [

@@ -42,8 +42,8 @@ resolve_venues() {
   fi
 
   # 2) the package this script is part of: `skills/render-paper/` → `presets/tex/`. `cd -P` follows
-  # the symlinks a consumer's `.claude/skills/render-paper` is made of, so `../..` is the PACKAGE's
-  # root, not the consumer's `.claude/`. Depends neither on the cwd nor on a git tree.
+  # any symlink on the way, so `../..` is the PACKAGE's root. Depends neither on the cwd nor on a
+  # git tree.
   own="$(cd -P "$SELF_DIR" && pwd)/../../presets/tex"
   if [ -f "$own/paper-guards.tex" ]; then
     (cd "$own" && pwd)
