@@ -112,14 +112,18 @@ A later batch follows these rules, so that the set stays a sample and not a sele
    reason it was kept or rejected.
 5. **Rules 2–4 are never loosened to fill a quota.** A quota that comes up short is a result: report
    it as kept/quota, with the yield and the top rejection reasons, as the table above does.
-6. **To rerun**: `node fixtures/real-papers/accepted/sampling/sample.mjs --root <work-dir>` (outputs go
-   to the work directory, outside the repository; `--only ml,nlp` restricts the fields; `--budget-seconds`
-   and `--deadline` stop it, and a rerun resumes from the log). Papers already in the corpora are
-   skipped: the ids of the manifests at `--base` (default `origin/main`), so reproducing this batch
-   needs `--base 61e49ed`, the `origin/main` it was collected against. `--rejudge` re-applies rule 1
-   to the kept comment-sourced entries. `node fixtures/real-papers/accepted/sampling/verify.mjs` checks
-   the committed batch (`--root <work-dir>` a fresh run): sizes, record hashes, licences, the fields
-   every entry needs, at most 5 per edition; it prints the per-field tables and ends «no problems».
+6. **To grow it**: raise the quotas in `sampling/queries.json`, then run
+   `node scripts/grow-real-papers/main.ts` (a dry run: it prints each candidate with its rank and
+   reason and, for each kept paper, the files it would stage; it writes nothing). `--write fixtures`
+   stages in place: the paper directories, their `venue-manifest.json` entries, and the lines of
+   `sampling/probe-log.jsonl` and `sampling/staging-notes.json`, each as soon as a candidate is
+   decided. `--only ml,nlp` restricts the fields; `--minutes N` or `--deadline <ISO>` stop it, and a
+   rerun resumes from the log (a failed download is judged again, nothing else is). Quotas, caps and
+   the 5 per edition are **totals** over every entry of `venue-manifest.json`, earlier batches
+   included: a quota already met adds nothing. Papers already in either manifest are skipped. The
+   rules are pure functions in `scripts/grow-real-papers/rules.ts` and the staging in `archive.ts`,
+   each tested beside it; `sampling/sample.mjs` and `sampling/verify.mjs` are kept as the record of
+   the 2026-11-20 run, not as tools.
 7. **The mechanical part is a test**: [`../balance.test.ts`](../balance.test.ts) fails when an edition
    holds more than 5 papers, an entry lacks acceptance evidence (a quote, or `acceptance:
    "s2-venue-listing"`) or a CC BY 4.0 / CC BY-SA 4.0 / CC0 licence, a field is over its quota in
@@ -168,8 +172,9 @@ A later batch follows these rules, so that the set stays a sample and not a sele
   here, and every file it resolves to is in the record, is held by `../inputs.test.ts` over both
   folders. It caught one paper (2610.17767v1) whose main file sat in a subfolder: the collector
   staged from that subfolder, while arXiv compiles from the archive's root, so the sections went
-  unread and its baseline counted little more than the abstract. Restaged by hand; the collector's
-  rule (`sampling/sample.mjs`, `dirname(pick)`) is fixed in its tested rewrite, not here.
+  unread and its baseline counted little more than the abstract. Restaged by hand; the collector now stages
+  from the archive root (`stagingPlan` in `scripts/grow-real-papers/archive.ts`), and its test with a
+  main file in a subfolder fails against the old rule.
 - **An arXiv source is the author's, not the publisher's file.** Several carry acmart's `nonacm`
   option, which drops the ACM furniture the proceedings add; the class and its format option are
   the venue's.
