@@ -1,8 +1,8 @@
-/** `GlobFiles` over `node:fs`: `fs.globSync` under a folder, its regular files only. */
-import { globSync, statSync } from "node:fs";
-import { join, relative } from "node:path";
+/** `ListTree` over `node:fs`: a recursive `readdirSync` under a folder, its regular files only. */
+import { readdirSync, statSync } from "node:fs";
+import { join, relative, sep } from "node:path";
 import type { AbsolutePath } from "../../domain/paths.ts";
-import type { GlobFiles } from "../../ports/glob-files.ts";
+import type { ListTree } from "../../ports/list-tree.ts";
 import { codeOf } from "../../domain/text.ts";
 
 /** Whether `dir` is a directory; a path that is absent or runs through a file is not. */
@@ -16,10 +16,10 @@ function isDir(dir: AbsolutePath): boolean {
   }
 }
 
-export const nodeGlobFiles: GlobFiles = (dir, pattern) =>
+export const nodeListTree: ListTree = (dir) =>
   isDir(dir)
-    ? globSync(pattern, { cwd: dir, withFileTypes: true })
+    ? readdirSync(dir, { recursive: true, withFileTypes: true })
         .filter((d) => d.isFile())
-        .map((d) => relative(dir, join(d.parentPath, d.name)))
+        .map((d) => relative(dir, join(d.parentPath, d.name)).split(sep).join("/"))
         .toSorted()
     : null;

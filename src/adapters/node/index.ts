@@ -37,4 +37,4 @@ export { hostDirs } from "./host.io.ts";
 export { nodeListDir } from "./list-dir.io.ts";
 export { nodeListEntries } from "./list-entries.io.ts";
 export { nodeCopyFile, nodeMoveFile } from "./move-file.io.ts";
-export { nodeGlobFiles } from "./glob-files.io.ts";
+export { nodeListTree } from "./list-tree.io.ts";

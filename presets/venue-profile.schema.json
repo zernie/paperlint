@@ -203,27 +203,6 @@
         }
       }
     },
-    "artifact_bar": {
-      "description": "What the edition's artifact-evaluation call asks a paper's artifact to hold, as READ — from which page (`url`) and on which day (`read`). `files`: names the artifact's top level must hold, each without an extension (`README` is answered by README.md, README.txt, readme.pdf or README). Read by `artifact/contents`, off unless a paper turns it on. A child's value replaces its parent's; a workshop with none takes its parent conference's.",
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["source", "url", "read", "files"],
-      "properties": {
-        "source": { "type": "string", "enum": ["call"] },
-        "url": { "type": "string", "pattern": "^https?://[^\\s/]+[^\\s]*$" },
-        "read": {
-          "description": "The day the call was read, YYYY-MM-DD.",
-          "type": "string",
-          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
-        },
-        "files": {
-          "type": "array",
-          "minItems": 1,
-          "uniqueItems": true,
-          "items": { "type": "string", "pattern": "^[^/\\\\.\\s]+$" }
-        }
-      }
-    },
     "required_sections": {
       "description": "Sections the venue requires, read by `tex/required-section`. Each is a `\\section` or `\\section*` whose title equals `title` once whitespace is collapsed. `position: \"last\"`: after every section of the body (the ones before the appendix and the bibliography); it may stand after the bibliography. A child preset's list replaces its parent's.",
       "type": "array",

@@ -63,6 +63,7 @@ import {
   nodeAdapters,
   nodeFiles,
   nodeListDir,
+  nodeListTree,
   nodeCopyFile,
   nodeMoveFile,
 } from "./adapters/node/index.ts";
@@ -187,6 +188,7 @@ import paperStages from "#eslint-rules/paper-stages";
 import preregCoverage from "#eslint-rules/prereg-coverage";
 import { CYCLE_RULE_LEVELS, cycleRules } from "./cycle-rules.ts";
 import { EDITION_RULE_LEVELS, editionRules } from "./edition-rule.ts";
+import { ARTIFACT_RULE_LEVELS, artifactRules } from "./artifact-rules.ts";
 import { changesRules } from "./changes-rule.ts";
 import { latexDiff, withTexBin } from "./adapters/latexdiff/index.ts";
 import { runVersions } from "./versions-command.ts";
@@ -630,6 +632,10 @@ export function buildConfig(
           },
         },
         repro: { rules: REPRO_RULES },
+        // On for every paper, silent for one whose paperlint.json declares no `artifact`.
+        artifact: {
+          rules: artifactRules({ files: nodeFiles, listTree: nodeListTree }),
+        },
         // Registered, on for no paper: `"study/declare-sample": "error"` in paperlint.json turns it on.
         study: { rules: preregCoverage.rules },
         cycle: { rules: CYCLE_STATUS_RULES },
@@ -641,6 +647,7 @@ export function buildConfig(
         "paper/source": "error",
         ...FOLDER_VENUE_RULE_LEVELS,
         ...EDITION_RULE_LEVELS,
+        ...ARTIFACT_RULE_LEVELS,
         ...FOLDER_LAYOUT_RULE_LEVELS,
         ...REPRO_RULE_LEVELS,
         ...STATUS_CYCLE_RULE_LEVELS,

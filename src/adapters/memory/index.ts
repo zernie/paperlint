@@ -5,8 +5,7 @@
 import { absolutePath } from "../../domain/paths.ts";
 import type { Download } from "../../ports/download.ts";
 import type { Files } from "../../ports/files.ts";
-import { matchesGlob } from "node:path";
-import type { GlobFiles } from "../../ports/glob-files.ts";
+import type { ListTree } from "../../ports/list-tree.ts";
 import type { ListDir } from "../../ports/talk-media.ts";
 import type { ListEntries } from "../../ports/list-entries.ts";
 import type { CopyFile, MoveFile } from "../../ports/move-file.ts";
@@ -77,18 +76,17 @@ export const memoryListDir =
   ];
 
 /**
- * `GlobFiles` over `memoryFiles`: the files under a folder whose relative path matches the glob,
- * sorted; null when no file is under it (memory holds no empty folder) or it is itself a file.
+ * `ListTree` over `memoryFiles`: every file under a folder, relative and sorted; null when no file is
+ * under it (memory holds no empty folder).
  */
-export const memoryGlobFiles =
-  (files: MemoryFiles): GlobFiles =>
-  (dir, pattern) => {
+export const memoryListTree =
+  (files: MemoryFiles): ListTree =>
+  (dir) => {
     const under = [...files.map.keys()]
       .filter((k) => k.startsWith(`${dir}/`))
-      .map((k) => k.slice(dir.length + 1));
-    return under.length === 0
-      ? null
-      : under.filter((p) => matchesGlob(p, pattern)).toSorted();
+      .map((k) => k.slice(dir.length + 1))
+      .toSorted();
+    return under.length === 0 ? null : under;
   };
 
 /** `MoveFile` over `memoryFiles`: the bytes under the new path, none under the old; nothing there throws. */

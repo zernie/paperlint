@@ -84,7 +84,6 @@ import type { VenueTalk } from "./domain/talk.ts";
 import type { VenuePortal } from "./domain/submission.ts";
 import type { VenueFields } from "./domain/submission-fields.ts";
 import type { Reading } from "./domain/deadline.ts";
-import type { ArtifactBar, SourcedBar } from "./domain/artifact.ts";
 
 /** The prefix of a shipped preset's spec. */
 export const SHIPPED_PREFIX = "paperlint:";
@@ -167,11 +166,6 @@ export interface Preset {
   readonly deadlines: readonly Reading[];
   /** The fields the edition's submission form asks (`paperlint submission`); null when no file of the chain records any. */
   readonly submissionFields: VenueFields | null;
-  /**
-   * What the edition's artifact call asks the artifact to hold (`artifact/contents`), with the edition
-   * whose call it is: the chain's own, else its parent conference's; null when neither records one.
-   */
-  readonly artifactBar: SourcedBar | null;
 }
 
 /** Why a spec does not resolve. */
@@ -336,12 +330,10 @@ const namesOf = (i: PresetIdentity): readonly string[] =>
 /** What the merge carries from file to file: the preset without what only the whole chain knows. */
 type Merging = Omit<
   Preset,
-  "id" | "label" | "chain" | "identity" | "parentNames" | "year" | "artifactBar"
+  "id" | "label" | "chain" | "identity" | "parentNames" | "year"
 > & {
   readonly name: string | null;
   readonly parent: ParentLink | null;
-  /** The chain's own `artifact_bar`, before a parent's may stand in for it. */
-  readonly bar: ArtifactBar | null;
 };
 
 /** A `parent` as a file of the chain names it: the spec, and the file it is resolved from. */
@@ -368,7 +360,6 @@ const NOTHING_MERGED: Merging = {
   portal: null,
   deadlines: [],
   submissionFields: null,
-  bar: null,
 };
 
 /** The blocks a child replaces whole: the child's when it names one, else its parents'. Pure. */
@@ -417,7 +408,6 @@ const mergeOne = (
     ...acc.ruleOrigins,
     ...Object.fromEntries(Object.keys(p.rules).map((id) => [id, file])),
   },
-  bar: p.artifactBar ?? acc.bar,
   ...wholeBlocks(acc, p),
 });
 
@@ -426,10 +416,7 @@ function merged(
   spec: string,
   rootFirst: readonly { readonly preset: PresetFile; readonly file: string }[],
   leaf: { readonly preset: PresetFile },
-): Omit<Preset, "parentNames" | "artifactBar"> & {
-  readonly parent: ParentLink | null;
-  readonly bar: ArtifactBar | null;
-} {
+): Omit<Preset, "parentNames"> & { readonly parent: ParentLink | null } {
   const { name, ...rest } = rootFirst.reduce(mergeOne, NOTHING_MERGED);
   return {
     id: labelOf(spec),
@@ -456,24 +443,18 @@ function refusal(p: PresetProblem, venuesDir: string): PresetProblem {
     : { ...p, shipped };
 }
 
-/** What a venue takes from its parent conference: its names, and its artifact bar. */
-type FromParent = Pick<Preset, "parentNames" | "artifactBar">;
-
-const NO_PARENT: FromParent = { parentNames: [], artifactBar: null };
-
 /**
- * What `parent` brings, resolved from the file that names it: the parent venue's names and its own
- * `parentNames`, and its artifact bar (its own, or its parent's). `below` is every venue whose parent
- * led here, so a cycle is refused. A problem of a parent further up is passed on as it is: it names
- * the file that says the bad parent.
+ * The names `parent` brings, resolved from the file that names it: the parent venue's names and its
+ * own `parentNames`. `below` is every venue whose parent led here, so a cycle is refused. A problem
+ * of a parent further up is passed on as it is: it names the file that says the bad parent.
  */
-function fromParent(
+function parentNamesOf(
   parent: ParentLink,
   below: readonly string[],
   deps: PresetDeps,
-): Result<FromParent, PresetProblem> {
+): Result<readonly string[], PresetProblem> {
   const up = resolveFrom(parent.spec, parent.file, deps, below);
-  const bad = (why: string): Result<FromParent, PresetProblem> =>
+  const bad = (why: string): Result<readonly string[], PresetProblem> =>
     err({ kind: "bad-parent", file: parent.file, why });
   const named = `"parent": "${parent.spec}"`;
   if (!up.ok) {
@@ -486,12 +467,7 @@ function fromParent(
   }
   const why = parentProblem(named, parent.file, up.value);
   return why === null
-    ? ok({
-        parentNames: [
-          ...new Set([...up.value.aliases, ...up.value.parentNames]),
-        ],
-        artifactBar: up.value.artifactBar,
-      })
+    ? ok([...new Set([...up.value.aliases, ...up.value.parentNames])])
     : bad(why);
 }
 
@@ -526,23 +502,13 @@ function resolveFrom(
     return err({ kind: "parent-cycle", chain: here });
   const chain = chainUp([leaf.value], leaf.value, deps);
   if (!chain.ok) return err(refusal(chain.error, deps.venuesDir));
-  const { parent, bar, ...preset } = merged(
+  const { parent, ...preset } = merged(
     spec,
     [...chain.value].reverse(),
     leaf.value,
   );
-  const up = parent === null ? ok(NO_PARENT) : fromParent(parent, here, deps);
-  if (!up.ok) return up;
-  // The chain's own bar is this edition's; with none, the parent's stands, naming the parent.
-  const artifactBar =
-    bar === null
-      ? up.value.artifactBar
-      : {
-          ...bar,
-          venue: editionLabel(preset.label, preset.year),
-          preset: preset.id,
-        };
-  return ok({ ...preset, parentNames: up.value.parentNames, artifactBar });
+  const names = parent === null ? ok([]) : parentNamesOf(parent, here, deps);
+  return names.ok ? ok({ ...preset, parentNames: names.value }) : names;
 }
 
 /**

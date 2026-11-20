@@ -21,26 +21,4 @@
   // The research track's call quoted above.
   "url": "https://conf.researchr.org/track/icse-2027/icse-2027-research-track",
   "extends": "paperlint:ieee-conference",
-
-  // What the Artifact Evaluation track asks an artifact to hold. Its workshops have no artifact
-  // track of their own (AGENT's call says nothing about artifacts), so they take this bar through
-  // `parent`. Verbatim from https://conf.researchr.org/track/icse-2027/icse-2027-artifact-evaluation
-  // (read 2026-11-20):
-  //   «Includes a README detailing the environment setup, data structure (if applicable), and usage
-  //    examples.»
-  //   «Each artifact repository must include the following materials: Accepted paper (PDF) - A copy
-  //    of the accepted paper that includes a link to the archival repository where the artifact is
-  //    hosted. LICENSE file - A clear description of the distribution rights. For artifacts seeking
-  //    the Available badge, the license must permit public access and reuse.»
-  //   «README file - Provided in Markdown, plain text, or PDF format»
-  //   «In order to be eligible for the Artifacts Available badge, it must be placed in a repository
-  //    with a permanence plan and a stable identifier (e.g., DOI).»
-  // README and LICENSE are recorded. Not recorded: the accepted paper's PDF and the archival DOI —
-  // both exist only after acceptance, and a review-time artifact is usually an anonymous link.
-  "artifact_bar": {
-    "source": "call",
-    "url": "https://conf.researchr.org/track/icse-2027/icse-2027-artifact-evaluation",
-    "read": "2026-11-20",
-    "files": ["README", "LICENSE"],
-  },
 }
