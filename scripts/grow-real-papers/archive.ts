@@ -188,6 +188,12 @@ const pointAtPaper = (
   };
 };
 
+/** A rename target the archive already holds: staging both would drop one of the two files. */
+const takenTwice = (staged: readonly { path: string }[]): string | undefined =>
+  ["paper.tex", "paper.bbl"].find(
+    (p) => staged.filter((f) => f.path === p).length > 1,
+  );
+
 /**
  * Every text source of the archive, kept at its path from the root; the main file becomes
  * `paper.tex`, the `.bbl` beside it with its stem `paper.bbl`, and an `\input` of the main file
@@ -207,6 +213,9 @@ export function stagingPlan(
     path: target(f.path),
     ...pointAtPaper(f, stem),
   }));
+  const taken = takenTwice(staged);
+  if (taken !== undefined)
+    return { ok: false, reason: `two files would be staged as ${taken}` };
   return {
     ok: true,
     main: pick.path,

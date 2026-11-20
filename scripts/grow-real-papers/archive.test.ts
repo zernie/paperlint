@@ -220,6 +220,29 @@ describe("renaming the main file", () => {
   });
 });
 
+describe("renaming the main file onto a file the archive already has", () => {
+  test("an archive with its own paper.tex or paper.bbl besides another main is rejected", () => {
+    const readme = file("00README.XXX", "main.tex toplevelfile");
+    // Guards: two files would be staged as paper.tex, and one would be lost.
+    expect(
+      stagingPlan([
+        readme,
+        file("main.tex", mainTex("")),
+        file("paper.tex", "x"),
+      ]),
+    ).toEqual({ ok: false, reason: "two files would be staged as paper.tex" });
+    // Guards: the same for the .bbl.
+    expect(
+      stagingPlan([
+        readme,
+        file("main.tex", mainTex("")),
+        file("main.bbl", ""),
+        file("paper.bbl", ""),
+      ]),
+    ).toEqual({ ok: false, reason: "two files would be staged as paper.bbl" });
+  });
+});
+
 describe("record-by-hand.json", () => {
   test("paper.tex, root class and style files, then inputs depth first, hashed", () => {
     const staged = [
