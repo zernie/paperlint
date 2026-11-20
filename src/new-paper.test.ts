@@ -841,10 +841,12 @@ describe("paperlint lint — a scaffolded paper has no layout finding", () => {
 });
 
 describe("paperlint lint — extra/ is never read", () => {
-  // An archived snapshot of an older paper carries every marker a paper does. Under extra/ it is
-  // spillover the layout promises never to judge; anywhere else its folder reads as a paper root.
+  // An archived snapshot of an older paper carries every marker a paper does, its own paperlint.json
+  // too. Under extra/ it is spillover the layout promises never to judge; anywhere else its own
+  // settings file makes its folder a paper root (a copy without one is ignored anywhere, #582).
   const SNAPSHOT = (dir: string) => ({
     [`${dir}/PIPELINE-STATUS.md`]: "# Pipeline status\n",
+    [`${dir}/paperlint.json`]: "{}\n",
     [`${dir}/notes.txt`]: "x\n",
   });
 
