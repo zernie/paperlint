@@ -24,6 +24,24 @@ export const serviceOf = (
     : { key: host, gapMs: 1100 };
 };
 
+/** One request: its answer, or the status worth a retry (429, 5xx, a dropped connection). */
+const once = async (
+  fetchFn: typeof fetch,
+  url: string,
+): Promise<Fetched | Readonly<{ retry: string }>> => {
+  try {
+    const res = await fetchFn(url, { headers: { "user-agent": USER_AGENT } });
+    if (res.ok)
+      return { ok: true, bytes: new Uint8Array(await res.arrayBuffer()) };
+    const status = String(res.status);
+    return res.status === 429 || res.status >= 500
+      ? { retry: status }
+      : { ok: false, status };
+  } catch (e) {
+    return { retry: String(e) };
+  }
+};
+
 export function throttledGet(
   fetchFn: typeof fetch,
   clock: Clock,
@@ -35,28 +53,18 @@ export function throttledGet(
     if (due > 0) await clock.sleep(due);
     last.set(key, clock.now());
   };
-  return async (url: string): Promise<Fetched> => {
+  const tryFrom = async (url: string, attempt: number): Promise<Fetched> => {
     const { key, gapMs } = serviceOf(url);
-    let status = "no attempt";
-    for (let attempt = 1; attempt <= attempts; attempt++) {
-      await wait(key, gapMs);
-      try {
-        const res = await fetchFn(url, {
-          headers: { "user-agent": USER_AGENT },
-        });
-        if (res.ok)
-          return { ok: true, bytes: new Uint8Array(await res.arrayBuffer()) };
-        status = String(res.status);
-        if (res.status !== 429 && res.status < 500)
-          return { ok: false, status };
-      } catch (e) {
-        status = String(e);
-      }
-      await clock.sleep(10_000 * attempt);
-    }
-    return {
-      ok: false,
-      status: `${status} after ${String(attempts)} attempts`,
-    };
+    await wait(key, gapMs);
+    const r = await once(fetchFn, url);
+    if (!("retry" in r)) return r;
+    if (attempt >= attempts)
+      return {
+        ok: false,
+        status: `${r.retry} after ${String(attempts)} attempts`,
+      };
+    await clock.sleep(10_000 * attempt);
+    return tryFrom(url, attempt + 1);
   };
+  return (url) => tryFrom(url, 1);
 }

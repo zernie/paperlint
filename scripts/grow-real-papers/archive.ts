@@ -27,30 +27,49 @@ const safePath = (p: string): string | null => {
     : parts.join("/");
 };
 
+type TarEntry = Readonly<{
+  name: string;
+  type: string;
+  body: Uint8Array;
+  next: number;
+}>;
+
+/** The tar entry whose header starts at `at`, or null at the end of the archive. */
+const entryAt = (tar: Uint8Array, at: number): TarEntry | null => {
+  if (at + 512 > tar.length || tar[at] === 0) return null;
+  const head = tar.subarray(at, at + 512);
+  const size = parseInt(cString(head, 124, 12).trim(), 8);
+  const prefix = cString(head, 345, 155);
+  return {
+    name: (prefix === "" ? "" : `${prefix}/`) + cString(head, 0, 100),
+    type: latin1(head.subarray(156, 157)),
+    body: tar.subarray(at + 512, at + 512 + size),
+    next: at + 512 + Math.ceil(size / 512) * 512,
+  };
+};
+
+/** The name a GNU long-name (`L`) or pax (`x`) entry gives the entry after it. */
+const nameForNext = (e: TarEntry): string | null =>
+  e.type === "L"
+    ? cString(e.body, 0, e.body.length)
+    : e.type === "x"
+      ? (/(?:^|\n)\d+ path=([^\n]*)\n/.exec(latin1(e.body))?.[1] ?? null)
+      : null;
+
 /** The regular files of a tar stream; links, directories and unsafe paths are left out. */
-export function untar(tar: Uint8Array): readonly ArchiveFile[] {
-  const files: ArchiveFile[] = [];
-  let at = 0;
-  let longName: string | null = null;
-  while (at + 512 <= tar.length && tar[at] !== 0) {
-    const head = tar.subarray(at, at + 512);
-    const size = parseInt(cString(head, 124, 12).trim(), 8);
-    const type = latin1(head.subarray(156, 157));
-    const body = tar.subarray(at + 512, at + 512 + size);
-    const prefix = cString(head, 345, 155);
-    const name =
-      longName ?? (prefix === "" ? "" : `${prefix}/`) + cString(head, 0, 100);
-    longName = null;
-    if (type === "L") longName = cString(body, 0, size);
-    else if (type === "x")
-      longName = /(?:^|\n)\d+ path=([^\n]*)\n/.exec(latin1(body))?.[1] ?? null;
-    else if (type === "0" || type === "\0") {
-      const path = safePath(name);
-      if (path !== null) files.push({ path, bytes: body });
-    }
-    at += 512 + Math.ceil(size / 512) * 512;
-  }
-  return files;
+export function untar(
+  tar: Uint8Array,
+  at = 0,
+  longName: string | null = null,
+): readonly ArchiveFile[] {
+  const e = entryAt(tar, at);
+  if (e === null) return [];
+  const regular = e.type === "0" || e.type === "\0";
+  const path = regular ? safePath(longName ?? e.name) : null;
+  return [
+    ...(path === null ? [] : [{ path, bytes: e.body }]),
+    ...untar(tar, e.next, nameForNext(e)),
+  ];
 }
 
 /** The e-print's files: a gzipped tar, or one gzipped `.tex` (named `main.tex`). */
@@ -129,61 +148,74 @@ export type StagingPlan = Readonly<{
 
 const escape = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+const isMain = (f: ArchiveFile): boolean => {
+  const t = stripComments(latin1(f.bytes));
+  return (
+    ext(f.path) === "tex" &&
+    t.includes("\\documentclass") &&
+    t.includes("\\begin{document}")
+  );
+};
+
+/** The one `00README` names, else one called main, paper or ms, else the largest candidate. */
+const pickMain = (
+  mains: readonly ArchiveFile[],
+  named: string | null,
+): ArchiveFile | undefined =>
+  mains.find((f) => f.path === named) ??
+  mains.find((f) => /(^|\/)(main|paper|ms)\.tex$/.test(f.path)) ??
+  mains.toSorted((a, b) => b.bytes.length - a.bytes.length)[0];
+
+/** Rewrites an `\input`/`\include` of the main file to `paper`, noting each «from to to». */
+const pointAtPaper = (
+  f: ArchiveFile,
+  stem: string,
+): Readonly<{ bytes: Uint8Array; edits: readonly string[] }> => {
+  if (ext(f.path) !== "tex" || stem === "paper")
+    return { bytes: f.bytes, edits: [] };
+  const re = new RegExp(
+    `\\\\(input|include)\\{${escape(stem)}(\\.tex|\\.bbl)?\\}`,
+    "g",
+  );
+  const text = latin1(f.bytes);
+  const edits = [...text.matchAll(re)].map(
+    (m) => `${m[0]} to \\${String(m[1])}{paper${m[2] ?? ""}}`,
+  );
+  return {
+    bytes: Buffer.from(text.replace(re, "\\$1{paper$2}"), "latin1"),
+    edits,
+  };
+};
+
 /**
- * The main file: the one `00README` names, else one called main, paper or ms, else the largest
- * candidate. Every text source of the archive is kept at its path from the root; the main file
- * becomes `paper.tex`, the `.bbl` beside it with its stem `paper.bbl`, and an `\input` of the
- * main file (rare: a wrapper) is rewritten to `paper`.
+ * Every text source of the archive, kept at its path from the root; the main file becomes
+ * `paper.tex`, the `.bbl` beside it with its stem `paper.bbl`, and an `\input` of the main file
+ * (rare: a wrapper) is rewritten to `paper`.
  */
 export function stagingPlan(
   files: readonly ArchiveFile[],
 ): Verdict<StagingPlan> {
-  const mains = files.filter((f) => {
-    const t = stripComments(latin1(f.bytes));
-    return (
-      ext(f.path) === "tex" &&
-      t.includes("\\documentclass") &&
-      t.includes("\\begin{document}")
-    );
-  });
-  const named = toplevelOf(files);
-  const pick =
-    mains.find((f) => f.path === named) ??
-    mains.find((f) => /(^|\/)(main|paper|ms)\.tex$/.test(f.path)) ??
-    mains.toSorted((a, b) => b.bytes.length - a.bytes.length)[0];
+  const mains = files.filter(isMain);
+  const pick = pickMain(mains, toplevelOf(files));
   if (pick === undefined) return { ok: false, reason: "no main .tex found" };
   const stem = pick.path.replace(/\.tex$/, "");
-  const inputOfMain = new RegExp(
-    `\\\\(input|include)\\{${escape(stem)}(\\.tex|\\.bbl)?\\}`,
-    "g",
-  );
   const target = (p: string): string =>
     p === pick.path ? "paper.tex" : p === `${stem}.bbl` ? "paper.bbl" : p;
   const kept = files.filter((f) => TEXT_EXT.has(ext(f.path)));
-  const edits: string[] = [];
-  const staged = kept.map((f) => {
-    if (ext(f.path) !== "tex" || stem === "paper")
-      return { path: target(f.path), bytes: f.bytes };
-    const text = latin1(f.bytes).replace(
-      inputOfMain,
-      (m, cmd: string, e?: string) => {
-        const to = `\\${cmd}{paper${e ?? ""}}`;
-        edits.push(`${m} to ${to}`);
-        return to;
-      },
-    );
-    return { path: target(f.path), bytes: Buffer.from(text, "latin1") };
-  });
+  const staged = kept.map((f) => ({
+    path: target(f.path),
+    ...pointAtPaper(f, stem),
+  }));
   return {
     ok: true,
     main: pick.path,
     mainText: latin1(pick.bytes),
     mainCandidates: mains.length,
-    staged,
+    staged: staged.map((f) => ({ path: f.path, bytes: f.bytes })),
     renames: kept
       .filter((f) => target(f.path) !== f.path)
       .map((f) => `${f.path} to ${target(f.path)}`),
-    edits,
+    edits: staged.flatMap((x) => x.edits),
     size: staged.reduce((n, f) => n + f.bytes.length, 0),
   };
 }
@@ -191,37 +223,43 @@ export function stagingPlan(
 export const sha256 = (b: Uint8Array): string =>
   createHash("sha256").update(b).digest("hex");
 
+const INPUT = /\\(?:input|include)\s*\{([^}]+)\}/g;
+
+/** The `.tex` files reached from `file`, depth first in source order, after those in `seen`. */
+const reached = (
+  byPath: ReadonlyMap<string, Uint8Array>,
+  file: string,
+  seen: readonly string[],
+): readonly string[] =>
+  [
+    ...stripComments(latin1(byPath.get(file) ?? new Uint8Array())).matchAll(
+      INPUT,
+    ),
+  ].reduce<readonly string[]>((acc, m) => {
+    const n = String(m[1]).trim().replace(/^\.\//, "");
+    const hit = [n, `${n}.tex`].find((x) => ext(x) === "tex" && byPath.has(x));
+    return hit === undefined || acc.includes(hit)
+      ? acc
+      : reached(byPath, hit, [...acc, hit]);
+  }, seen);
+
 /**
  * `record-by-hand.json`, NOT TeX's answer: `paper.tex`, the class and style files at the root in
  * name order, then each `\input`/`\include` reached from `paper.tex`, depth first in source order,
- * every one hashed over the staged bytes.
+ * every one hashed over the staged bytes. A staging without `paper.tex` records it as empty.
  */
 export function recordOf(staged: readonly ArchiveFile[]) {
   const byPath = new Map(staged.map((f) => [f.path, f.bytes]));
-  const bytesOf = (p: string): Uint8Array => byPath.get(p) ?? new Uint8Array();
   const preamble = staged
     .map((f) => f.path)
     .filter((p) => !p.includes("/") && ["cls", "sty"].includes(ext(p)))
     .toSorted();
-  const follow = (file: string, seen: readonly string[]): readonly string[] =>
-    [
-      ...stripComments(latin1(bytesOf(file))).matchAll(
-        /\\(?:input|include)\s*\{([^}]+)\}/g,
-      ),
-    ].reduce<readonly string[]>((acc, m) => {
-      const n = String(m[1]).trim().replace(/^\.\//, "");
-      const hit = [n, `${n}.tex`].find(
-        (x) => ext(x) === "tex" && byPath.has(x),
-      );
-      return hit === undefined || acc.includes(hit)
-        ? acc
-        : follow(hit, [...acc, hit]);
-    }, seen);
-  const body = follow("paper.tex", ["paper.tex"]);
   const inputs = [
     { path: "paper.tex", role: "body" },
     ...preamble.map((path) => ({ path, role: "preamble" })),
-    ...body.slice(1).map((path) => ({ path, role: "body" })),
+    ...reached(byPath, "paper.tex", ["paper.tex"])
+      .slice(1)
+      .map((path) => ({ path, role: "body" })),
   ];
   return {
     schema: 1,
@@ -230,7 +268,10 @@ export function recordOf(staged: readonly ArchiveFile[]) {
     bibdata: [],
     bibtex: { ran: false },
     sha256: Object.fromEntries(
-      inputs.map((i) => [i.path, sha256(bytesOf(i.path))]),
+      inputs.map((i) => [
+        i.path,
+        sha256(byPath.get(i.path) ?? new Uint8Array()),
+      ]),
     ),
   };
 }

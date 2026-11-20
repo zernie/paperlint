@@ -65,43 +65,53 @@ export async function* arxivCandidates(
   maxPages: number,
 ): AsyncGenerator<Found> {
   const seen = new Set<string>();
-  let rank = 0;
   for (const query of slot.queries)
-    for (let page = 0; page < maxPages; page++) {
-      const u = new URL(ARXIV_API);
-      u.searchParams.set("search_query", query);
-      u.searchParams.set("sortBy", "submittedDate");
-      u.searchParams.set("sortOrder", "descending");
-      u.searchParams.set("start", String(page * slot.max_results));
-      u.searchParams.set("max_results", String(slot.max_results));
-      const r = await get(u.toString());
-      if (!r.ok) {
-        yield { searchError: `${query} page ${String(page)}: ${r.status}` };
-        break;
+    for await (const e of searchPages(get, slot, query, maxPages)) {
+      if ("searchError" in e) {
+        yield e;
+        return;
       }
-      const entries = parseFeed(text(r.bytes));
-      for (const e of entries.filter((x) => !seen.has(x.id))) {
-        seen.add(e.id);
-        rank += 1;
-        yield { ...e, rank, query };
-      }
-      if (entries.length < slot.max_results) break;
+      if (seen.has(e.id)) continue;
+      seen.add(e.id);
+      yield { ...e, rank: seen.size, query };
     }
 }
 
+/** One query's results, page after page, until a short page or `maxPages`. */
+async function* searchPages(
+  get: Get,
+  slot: Slot,
+  query: string,
+  maxPages: number,
+): AsyncGenerator<Entry | Readonly<{ searchError: string }>> {
+  for (let page = 0; page < maxPages; page++) {
+    const u = new URL(ARXIV_API);
+    u.searchParams.set("search_query", query);
+    u.searchParams.set("sortBy", "submittedDate");
+    u.searchParams.set("sortOrder", "descending");
+    u.searchParams.set("start", String(page * slot.max_results));
+    u.searchParams.set("max_results", String(slot.max_results));
+    const r = await get(u.toString());
+    if (!r.ok) {
+      yield { searchError: `${query} page ${String(page)}: ${r.status}` };
+      return;
+    }
+    const entries = parseFeed(text(r.bytes));
+    yield* entries;
+    if (entries.length < slot.max_results) return;
+  }
+}
+
 const S2Page = z.object({
-  total: z.number().optional(),
   token: z.string().nullish(),
-  data: z
-    .array(
-      z.object({
-        title: z.string().nullish(),
-        venue: z.string().nullish(),
-        publicationDate: z.string().nullish(),
-        externalIds: z.object({ ArXiv: z.string().optional() }).nullish(),
-      }),
-    )
-    .optional(),
+  data: z.array(
+    z.object({
+      title: z.string().nullish(),
+      venue: z.string().nullish(),
+      publicationDate: z.string().nullish(),
+      externalIds: z.object({ ArXiv: z.string().optional() }).nullish(),
+    }),
+  ),
 });
 type Listed = Readonly<{
   id: string;
@@ -114,83 +124,96 @@ type Listed = Readonly<{
 export const s2Url = (slot: Slot): string =>
   `https://api.semanticscholar.org/graph/v1/paper/search/bulk?query=*&venue=${encodeURIComponent(slot.s2Venue ?? slot.series)}&year=${String(slot.year)}&fields=title,externalIds,venue,year,publicationDate`;
 
-async function s2Listing(
-  get: Get,
-  url: string,
-): Promise<readonly Listed[] | string> {
-  const all: Listed[] = [];
-  let token: string | null | undefined = null;
-  for (let page = 0; page < 20 && (page === 0 || token); page++) {
-    const r = await get(
-      url + (token ? `&token=${encodeURIComponent(token)}` : ""),
-    );
-    if (!r.ok) return `s2 ${r.status}`;
-    const parsed = S2Page.safeParse(jsonOf(text(r.bytes)));
-    if (!parsed.success) return "s2 answer not understood";
-    token = parsed.data.token;
-    for (const p of parsed.data.data ?? [])
-      if (p.externalIds?.ArXiv)
-        all.push({
+const listed = (p: z.infer<typeof S2Page>["data"][number]): Listed[] =>
+  p.externalIds?.ArXiv === undefined
+    ? []
+    : [
+        {
           id: p.externalIds.ArXiv,
           venue: p.venue ?? "",
           publicationDate: p.publicationDate ?? null,
           title: p.title ?? "",
-        });
-  }
-  return [...new Map(all.map((p) => [p.id, p])).values()].toSorted((a, b) =>
-    a.id < b.id ? -1 : 1,
+        },
+      ];
+
+/** Every page of the listing (at most 20, following `token`), or why it stopped. */
+async function s2Pages(
+  get: Get,
+  url: string,
+  token: string | null = null,
+  page = 0,
+): Promise<readonly Listed[] | string> {
+  const r = await get(
+    token === null ? url : `${url}&token=${encodeURIComponent(token)}`,
   );
+  if (!r.ok) return `s2 ${r.status}`;
+  const parsed = S2Page.safeParse(jsonOf(text(r.bytes)));
+  if (!parsed.success) return "s2 answer not understood";
+  const here = parsed.data.data.flatMap(listed);
+  const next = parsed.data.token ?? null;
+  if (next === null || page >= 19) return here;
+  const rest = await s2Pages(get, url, next, page + 1);
+  return typeof rest === "string" ? rest : [...here, ...rest];
+}
+
+/** One chunk of listed ids with arXiv's metadata; an id arXiv does not describe has none. */
+async function withMetadata(
+  get: Get,
+  chunk: readonly Listed[],
+): Promise<readonly (readonly [Listed, Entry | undefined])[] | string> {
+  const r = await get(
+    `${ARXIV_API}?id_list=${chunk.map((p) => p.id).join(",")}&max_results=50`,
+  );
+  if (!r.ok) return r.status;
+  const byId = new Map(
+    parseFeed(text(r.bytes)).map((e) => [baseId(e.id), e] as const),
+  );
+  return chunk.map((p) => [p, byId.get(p.id)] as const);
 }
 
 /**
  * A Semantic Scholar venue listing: the entries with an arXiv id, in arXiv-id order, each with
  * arXiv's metadata (fetched 50 ids at a time). An id arXiv does not describe comes with empty
- * metadata, and the collector rejects it.
+ * metadata (`updated` empty), and the collector rejects it.
  */
 export async function* s2Candidates(
   get: Get,
   slot: Slot,
 ): AsyncGenerator<Found> {
   const url = s2Url(slot);
-  const list = await s2Listing(get, url);
-  if (typeof list === "string") {
-    yield { searchError: list };
+  const pages = await s2Pages(get, url);
+  if (typeof pages === "string") {
+    yield { searchError: pages };
     return;
   }
+  const list = [...new Map(pages.map((p) => [p.id, p])).values()].toSorted(
+    (a, b) => (a.id < b.id ? -1 : 1),
+  );
   for (let i = 0; i < list.length; i += 50) {
-    const chunk = list.slice(i, i + 50);
-    const r = await get(
-      `${ARXIV_API}?id_list=${chunk.map((p) => p.id).join(",")}&max_results=50`,
-    );
-    if (!r.ok) {
+    const chunk = await withMetadata(get, list.slice(i, i + 50));
+    if (typeof chunk === "string") {
       yield {
-        searchError: `arXiv metadata of listed ids from rank ${String(i + 1)}: ${r.status}`,
+        searchError: `arXiv metadata of listed ids from rank ${String(i + 1)}: ${chunk}`,
       };
       return;
     }
-    const byId = new Map(
-      parseFeed(text(r.bytes)).map((e) => [baseId(e.id), e] as const),
-    );
-    for (const [j, p] of chunk.entries()) {
-      const e = byId.get(p.id);
-      const empty = {
-        id: p.id,
-        updated: "",
-        title: p.title,
-        comment: "",
-        journal_ref: "",
-        category: "",
-        authors: [],
-      };
+    for (const [j, [p, e]] of chunk.entries())
       yield {
-        ...(e ?? empty),
+        ...(e ?? { ...NO_METADATA, id: p.id, title: p.title }),
         rank: i + j + 1,
         query: url,
         s2: { venue: p.venue, publicationDate: p.publicationDate },
       };
-    }
   }
 }
+
+const NO_METADATA = {
+  updated: "",
+  comment: "",
+  journal_ref: "",
+  category: "",
+  authors: [],
+} as const;
 
 /** The `<license>` of arXiv's OAI record of a paper, or undefined for arXiv's default licence. */
 export async function licenceUrl(

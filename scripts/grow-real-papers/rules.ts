@@ -77,6 +77,16 @@ const NEGATIVE =
   /submitted|under review|to be accepted|extended version|full version|long version|journal version|technical report|supplementary version|pending|extended abstract|late[- ]breaking|doctoral|student research|demo(nstration)? (track|paper)|tutorial|companion|workshop|\bSRW\b|demonstrations?|\bdemo\b|\bposter/gi;
 const FINDINGS_SERIES = new Set(["ACL", "EMNLP", "NAACL", "EACL"]);
 
+/** The first negative word of a comment (a poster is not one where the slot allows posters), or an «@ venue». */
+const negativeWord = (
+  text: string,
+  slot: Pick<Slot, "venue" | "allowPoster">,
+): string | undefined =>
+  [...text.matchAll(NEGATIVE)]
+    .map((m) => m[0])
+    .find((n) => !(/^poster/i.test(n) && slot.allowPoster === true)) ??
+  new RegExp(`@\\s*(?:${slot.venue})`, "i").exec(text)?.[0];
+
 /**
  * Rule 1 on an arXiv comment and journal-ref: the slot's venue and year stand together, no
  * negative word (a poster passes where the slot allows posters), no workshop title naming the
@@ -102,11 +112,7 @@ export function judgeComment(
     return no(
       `not accepted wording: reads as a workshop title ("${workshop[0].slice(0, 60)}")`,
     );
-  const blocking = [...text.matchAll(NEGATIVE)]
-    .map((m) => m[0])
-    .filter((n) => !(/^poster/i.test(n) && slot.allowPoster === true));
-  const atVenue = new RegExp(`@\\s*(?:${slot.venue})`, "i").exec(text)?.[0];
-  const said = blocking[0] ?? atVenue;
+  const said = negativeWord(text, slot);
   if (said !== undefined)
     return no(`not accepted wording: comment says "${said}"`);
   if (!POSITIVE.test(text))
