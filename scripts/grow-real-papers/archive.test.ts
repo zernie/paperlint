@@ -80,6 +80,19 @@ describe("unpack", () => {
   });
 });
 
+describe("unpack — a tar this reader does not take", () => {
+  test("a tar without the ustar mark (old V7 format) is rejected, not staged as one .tex", () => {
+    const v7 = Buffer.from(
+      tar([{ name: "main.tex", body: "\\begin{document}" }]),
+    );
+    v7.fill(0, 257, 263);
+    expect(unpack(gzipSync(v7))).toEqual({
+      ok: false,
+      reason: "unreadable source: binary data, not a ustar tar",
+    });
+  });
+});
+
 describe("the top-level file", () => {
   test.each([
     [

@@ -80,11 +80,12 @@ export function unpack(
     return { ok: false, reason: "no source: not gzip (PDF-only submission)" };
   try {
     const raw = gunzipSync(bytes);
-    const isTar = latin1(raw.subarray(257, 262)) === "ustar";
-    return {
-      ok: true,
-      files: isTar ? untar(raw) : [{ path: "main.tex", bytes: raw }],
-    };
+    if (latin1(raw.subarray(257, 262)) === "ustar")
+      return { ok: true, files: untar(raw) };
+    // A NUL byte is no TeX: an older tar with no ustar mark, which this reader does not take.
+    return raw.includes(0)
+      ? { ok: false, reason: "unreadable source: binary data, not a ustar tar" }
+      : { ok: true, files: [{ path: "main.tex", bytes: raw }] };
   } catch (e) {
     return {
       ok: false,
