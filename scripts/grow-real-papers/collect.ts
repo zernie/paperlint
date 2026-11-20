@@ -18,6 +18,7 @@ import {
   judgeSize,
   PER_EDITION,
   preambleOf,
+  type Preamble,
   SlotSchema,
   type Slot,
 } from "./rules.ts";
@@ -30,6 +31,7 @@ import {
   type Found,
   type Get,
 } from "./sources.ts";
+import * as R from "remeda";
 import { z } from "zod";
 
 export const QueriesSchema = z.object({
@@ -108,23 +110,37 @@ export const targets = (
   );
 };
 
-/** Rules 2 to 4, and the staging, for a candidate that passed rule 1. */
-async function judgeSources(
-  w: Walk,
-  c: Candidate,
-  slot: Slot,
-  track: string | null,
-): Promise<Readonly<{ reason: string; detail?: object; paper?: KeptPaper }>> {
-  const oai = await licenceUrl(w.get, c.id);
+type Judged = Readonly<{ reason: string; detail?: object; paper?: KeptPaper }>;
+type Sources = Readonly<{
+  licence: Extract<ReturnType<typeof judgeLicence>, { ok: true }>;
+  plan: Extract<ReturnType<typeof stagingPlan>, { ok: true }>;
+  sourceSha: string;
+}>;
+
+/** Rule 2 and the download: the licence, then the e-print and what it stages. */
+async function fetchSources(
+  get: Get,
+  id: string,
+): Promise<Sources | Readonly<{ reason: string }>> {
+  const oai = await licenceUrl(get, id);
   if (!oai.ok) return { reason: `download failed: OAI ${oai.status}` };
   const licence = judgeLicence(oai.url);
-  if (!licence.ok) return { reason: licence.reason };
-  const src = await eprint(w.get, c.id);
+  if (!licence.ok) return licence;
+  const src = await eprint(get, id);
   if (!src.ok) return { reason: `download failed: src ${src.status}` };
   const files = unpack(src.bytes);
-  if (!files.ok) return { reason: files.reason };
+  if (!files.ok) return files;
   const plan = stagingPlan(files.files);
-  if (!plan.ok) return { reason: plan.reason };
+  return plan.ok ? { licence, plan, sourceSha: sha256(src.bytes) } : plan;
+}
+
+/** Rules 3 and 4 on what the e-print staged: the class and style, then the size. */
+function judgeStaged(
+  slot: Slot,
+  plan: Sources["plan"],
+):
+  | Readonly<{ preamble: Preamble; style?: string; styleOpts?: string }>
+  | Judged {
   const preamble = preambleOf(plan.mainText);
   const cls = judgeClass(slot.classSpec, preamble);
   if (!cls.ok)
@@ -134,123 +150,185 @@ async function judgeSources(
     };
   const size = judgeSize(plan.size);
   if (!size.ok) return { reason: size.reason };
-  const paper = keptPaper({
-    c,
-    slot,
-    track,
-    licence,
-    plan,
-    preamble,
-    ...(cls.style === undefined
-      ? {}
-      : { style: cls.style, styleOpts: cls.styleOpts ?? "" }),
-    sourceSha: sha256(src.bytes),
-    shipped: w.shipped,
-  });
+  return { preamble, ...R.omit(cls, ["ok"]) };
+}
+    : { preamble, style: cls.style, styleOpts: cls.styleOpts ?? "" };
+}
+
+/** Rules 2 to 4, and the staging, for a candidate that passed rule 1. */
+async function judgeSources(
+  w: Walk,
+  c: Candidate,
+  slot: Slot,
+  track: string | null,
+): Promise<Judged> {
+  const got = await fetchSources(w.get, c.id);
+  if ("reason" in got) return { reason: got.reason };
+  const staged = judgeStaged(slot, got.plan);
+  if ("reason" in staged) return staged;
   return {
-    reason: `passes rules 1-4`,
-    detail: { licence: licence.name },
-    paper,
+    reason: "passes rules 1-4",
+    detail: { licence: got.licence.name, comment: c.comment.slice(0, 200) },
+    paper: keptPaper({ ...got, ...staged, c, slot, track, shipped: w.shipped }),
   };
 }
 
-/** Walks every field of `w.queries`, and returns how each edition's walk ended. */
-export async function collect(w: Walk): Promise<readonly SlotEnd[]> {
-  const counted: Counted[] = [...w.entries];
-  const ids = new Set([
-    ...w.otherIds,
-    ...w.entries.map((e) => baseId(e.arxiv_id)),
-  ]);
-  const judged = new Set(
+/** What a walk remembers across editions: the counted entries, the ids taken, the pairs judged. */
+type State = Readonly<{
+  counted: Counted[];
+  ids: Set<string>;
+  judged: Set<string>;
+}>;
+
+const judgedKey = (id: string, s: Readonly<{ series: string; year: number }>) =>
+  `${id} ${s.series} ${String(s.year)}`;
+
+/** A failed download is judged again on the next run; every other verdict stands. */
+const stateOf = (w: Walk): State => ({
+  counted: [...w.entries],
+  ids: new Set([...w.otherIds, ...w.entries.map((e) => baseId(e.arxiv_id))]),
+  judged: new Set(
     w.logged
       .filter(
         (l) => l.outcome === "kept" || !l.reason.startsWith("download failed"),
       )
-      .map((l) => `${l.id} ${l.series} ${String(l.year)}`),
-  );
-  const inField = (f: string) => counted.filter((e) => e.field === f).length;
-  const inEdition = (s: Slot) =>
-    counted.filter((e) => edition(e) === edition(s)).length;
-  const ends: SlotEnd[] = [];
+      .map((l) => judgedKey(l.id, l)),
+  ),
+});
+
+/** Rule 1, then the rest, for one candidate. */
+async function judge(w: Walk, st: State, c: Candidate, slot: Slot) {
+  if (st.ids.has(baseId(c.id))) return { reason: "already in the corpora" };
+  if (c.s2 !== undefined && c.updated === "")
+    return { reason: "arXiv metadata missing for the listed id" };
+  const rule1 =
+    c.s2 === undefined ? judgeComment(c, slot) : judgeListedVenue(c.s2.venue);
+  if (rule1.ok) return judgeSources(w, c, slot, rule1.track);
+  return {
+    reason: rule1.reason,
+    detail: c.s2 === undefined ? { comment: c.comment.slice(0, 160) } : {},
+  };
+}
+
+const lineOf = (slot: Slot, c: Candidate, v: Judged): ProbeLine => {
+  const s2 = slot.source === "semantic-scholar";
+  return {
+    id: c.id,
+    field: slot.field,
+    series: slot.series,
+    year: slot.year,
+    rank: c.rank,
+    query: c.query,
+    source: s2 ? "semantic-scholar" : "arxiv-comment",
+    acceptance: s2 ? "s2-venue-listing" : "arxiv-comment",
+    outcome: v.paper === undefined ? "rejected" : "kept",
+    reason: v.reason,
+    ...v.detail,
+  };
+};
+
+/** Judges one candidate not judged before for this edition, counts it when kept, emits its line. */
+async function probe(
+  w: Walk,
+  st: State,
+  slot: Slot,
+  c: Candidate,
+): Promise<void> {
+  const key = judgedKey(c.id, slot);
+  if (st.judged.has(key)) return;
+  st.judged.add(key);
+  const verdict: Judged = await judge(w, st, c, slot);
+  if (verdict.paper !== undefined) {
+    const { field, series, year } = slot;
+    st.counted.push({ arxiv_id: c.id, field, series, year });
+    st.ids.add(baseId(c.id));
+  }
+  await w.emit(lineOf(slot, c, verdict), verdict.paper);
+}
+
+type Stop = Omit<SlotEnd, "slot" | "walkedTo">;
+
+/** The candidate to judge next, or why the walk stops before it. */
+const next = (
+  f: Found,
+  w: Walk,
+  full: () => boolean,
+): Readonly<{ stop: Stop }> | Readonly<{ candidate: Candidate }> => {
+  if ("searchError" in f)
+    return { stop: { ended: "search error", error: f.searchError } };
+  if (w.outOfTime()) return { stop: { ended: "time" } };
+  return full() ? { stop: { ended: "full" } } : { candidate: f };
+};
+
+async function walkSlot(
+  w: Walk,
+  st: State,
+  slot: Slot,
+  full: () => boolean,
+): Promise<Omit<SlotEnd, "slot">> {
+  const found =
+    slot.source === "semantic-scholar"
+      ? s2Candidates(w.get, slot)
+      : arxivCandidates(w.get, slot, w.queries.maxPages);
+  let walkedTo = 0;
+  for await (const f of found) {
+    const n = next(f, w, full);
+    if ("stop" in n) return { ...n.stop, walkedTo };
+    walkedTo = n.candidate.rank;
+    await probe(w, st, slot, n.candidate);
+  }
+  return { ended: full() ? "full" : "exhausted", walkedTo };
+}
+
+/**
+ * Walks every field of `w.queries`, and returns how each edition's walk ended. An edition is full
+ * when the manifest holds its round's target for it, or its field's quota: both TOTALS.
+ */
+export async function collect(w: Walk): Promise<readonly SlotEnd[]> {
+  const st = stateOf(w);
+  const count = (keep: (e: Counted) => boolean) =>
+    st.counted.filter(keep).length;
   const slots = w.queries.slots.filter(
     (s) => w.only === null || w.only.includes(s.field),
   );
-  for (const field of [...new Set(slots.map((s) => s.field))]) {
-    const quota = w.queries.quotas[field] ?? 0;
-    for (const [slot, target] of targets(
+  const order = [...new Set(slots.map((s) => s.field))].flatMap((field) =>
+    targets(
       slots.filter((s) => s.field === field),
       w.queries.hardCap,
-    )) {
-      const full = () => inEdition(slot) >= target || inField(field) >= quota;
-      if (full()) continue;
-      const end = await walkSlot(slot, full);
-      ends.push({ slot: slotKey(slot), ...end });
-      if (end.ended === "time") return ends;
-    }
+    ),
+  );
+  const ends: SlotEnd[] = [];
+  for (const [slot, target] of order) {
+    const full = () =>
+      count((e) => edition(e) === edition(slot)) >= target ||
+      count((e) => e.field === slot.field) >=
+        (w.queries.quotas[slot.field] ?? 0);
+    if (full()) continue;
+    const end = await walkSlot(w, st, slot, full);
+    ends.push({ slot: slotKey(slot), ...end });
+    if (end.ended === "time") break;
   }
   return ends;
-
-  async function walkSlot(
-    slot: Slot,
-    full: () => boolean,
-  ): Promise<Omit<SlotEnd, "slot">> {
-    const s2 = slot.source === "semantic-scholar";
-    const found: AsyncGenerator<Found> = s2
-      ? s2Candidates(w.get, slot)
-      : arxivCandidates(w.get, slot, w.queries.maxPages);
-    let walkedTo = 0;
-    for await (const c of found) {
-      if ("searchError" in c)
-        return { ended: "search error", walkedTo, error: c.searchError };
-      if (w.outOfTime()) return { ended: "time", walkedTo };
-      if (full()) return { ended: "full", walkedTo };
-      walkedTo = c.rank;
-      const key = `${c.id} ${slot.series} ${String(slot.year)}`;
-      if (judged.has(key)) continue;
-      judged.add(key);
-      const verdict = await judge(c, slot, s2);
-      const line: ProbeLine = {
-        id: c.id,
-        field: slot.field,
-        series: slot.series,
-        year: slot.year,
-        rank: c.rank,
-        query: c.query,
-        source: s2 ? "semantic-scholar" : "arxiv-comment",
-        acceptance: s2 ? "s2-venue-listing" : "arxiv-comment",
-        outcome: verdict.paper === undefined ? "rejected" : "kept",
-        reason: verdict.reason,
-        ...verdict.detail,
-      };
-      if (verdict.paper !== undefined) {
-        counted.push(verdict.paper.entry as Counted);
-        ids.add(baseId(c.id));
-      }
-      await w.emit(line, verdict.paper);
-    }
-    return { ended: full() ? "full" : "exhausted", walkedTo };
-  }
-
-  async function judge(c: Candidate, slot: Slot, s2: boolean) {
-    if (ids.has(baseId(c.id))) return { reason: "already in the corpora" };
-    if (c.s2 !== undefined && c.updated === "")
-      return { reason: "arXiv metadata missing for the listed id" };
-    const rule1 =
-      c.s2 === undefined ? judgeComment(c, slot) : judgeListedVenue(c.s2.venue);
-    if (!rule1.ok)
-      return {
-        reason: rule1.reason,
-        detail: s2 ? {} : { comment: c.comment.slice(0, 160) },
-      };
-    const rest = await judgeSources(w, c, slot, rule1.track);
-    return rest.paper === undefined
-      ? rest
-      : {
-          ...rest,
-          detail: { ...rest.detail, comment: c.comment.slice(0, 200) },
-        };
-  }
 }
+
+const reasonKey = (r: string): string =>
+  r
+    .replace(/[0-9]+ bytes|\(.*?\)|\[.*?\]|\d{4}/g, "")
+    .trim()
+    .slice(0, 60);
+
+/** The three commonest rejection reasons of a field, with their counts. */
+const topReasons = (lines: readonly ProbeLine[], field: string): string =>
+  Object.entries(
+    R.countBy(
+      lines.filter((l) => l.field === field && l.outcome === "rejected"),
+      (l) => reasonKey(l.reason),
+    ),
+  )
+    .toSorted((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([k, n]) => `${k} (${String(n)})`)
+    .join("; ");
 
 /** The per-field table of a run: kept against quota, candidates probed, yield, top 3 reasons. */
 export function summary(
@@ -258,29 +336,12 @@ export function summary(
   entries: readonly Counted[],
   lines: readonly ProbeLine[],
 ): string {
-  const reasonKey = (r: string) =>
-    r
-      .replace(/[0-9]+ bytes|\(.*?\)|\[.*?\]|\d{4}/g, "")
-      .trim()
-      .slice(0, 60);
   const rows = Object.entries(queries.quotas).map(([f, quota]) => {
     const kept = entries.filter((e) => e.field === f).length;
     const probed = new Set(lines.filter((l) => l.field === f).map((l) => l.id))
       .size;
-    const reasons = Object.entries(
-      lines
-        .filter((l) => l.field === f && l.outcome === "rejected")
-        .reduce<Record<string, number>>((t, l) => {
-          t[reasonKey(l.reason)] = (t[reasonKey(l.reason)] ?? 0) + 1;
-          return t;
-        }, {}),
-    )
-      .toSorted((a, b) => b[1] - a[1])
-      .slice(0, 3)
-      .map(([k, n]) => `${k} (${String(n)})`)
-      .join("; ");
     const pct = probed === 0 ? "0" : ((100 * kept) / probed).toFixed(1);
-    return `| ${f} | ${String(kept)} / ${String(quota)} | ${String(probed)} | ${pct}% | ${reasons} |`;
+    return `| ${f} | ${String(kept)} / ${String(quota)} | ${String(probed)} | ${pct}% | ${topReasons(lines, f)} |`;
   });
   return [
     "| field | kept / quota | probed | yield | top 3 rejection reasons |",

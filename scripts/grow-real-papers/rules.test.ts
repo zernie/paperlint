@@ -82,7 +82,8 @@ describe("rule 1: the acceptance wording", () => {
     // Guards: a workshop venue string is rejected.
     expect(judgeListedVenue("NeurIPS Workshop on X")).toEqual({
       ok: false,
-      reason: 'S2 venue string is not the main proceedings: "NeurIPS Workshop on X"',
+      reason:
+        'S2 venue string is not the main proceedings: "NeurIPS Workshop on X"',
     });
     // Guards: the proceedings pass.
     expect(judgeListedVenue("OSDI")).toEqual({ ok: true, track: null });
@@ -138,11 +139,12 @@ describe("rule 3: the class and style", () => {
 
   const pre = (main: string) => preambleOf(main);
   test.each([
+    ["a missing class", "neurips", "", "template: class null, not article"],
     [
-      "a missing class",
-      "neurips",
+      "no class where a class decides",
+      "ieee",
       "",
-      "template: class null, not article",
+      "template: class null, not IEEEtran",
     ],
     [
       "the class without the style package",
@@ -180,17 +182,17 @@ describe("rule 3: the class and style", () => {
       { ok: true, style: "neurips_2025", styleOpts: "final" },
     ],
     ["ieee", "\\documentclass[conference]{IEEEtran}", { ok: true }],
-    [
-      "acm_or_ieee",
-      "\\documentclass[conference]{IEEEtran}",
-      { ok: true },
-    ],
+    ["acm_or_ieee", "\\documentclass[conference]{IEEEtran}", { ok: true }],
     ["acm_or_ieee", "\\documentclass[sigconf]{acmart}", { ok: true }],
-    ["usenix", "\\documentclass{article}\\usepackage{usenix2019_v3}", {
-      ok: true,
-      style: "usenix2019_v3",
-      styleOpts: "",
-    }],
+    [
+      "usenix",
+      "\\documentclass{article}\\usepackage{usenix2019_v3}",
+      {
+        ok: true,
+        style: "usenix2019_v3",
+        styleOpts: "",
+      },
+    ],
   ])("keeps a camera-ready of %s", (spec, main, verdict) => {
     // Guards: the clean case of each kind of spec (style, class, either side of an either).
     expect(judgeClass(spec, pre(main))).toEqual(verdict);

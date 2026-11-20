@@ -35,6 +35,32 @@ const FAMILIES: readonly (readonly [RegExp, string, string])[] = [
 ];
 const NONE = " as no preset ships for this edition";
 
+type PresetChoice = Readonly<{ preset: string | null; why: string }>;
+const ALIAS: Readonly<Record<string, string>> = {
+  "acm-ccs": "ccs",
+  "ieee-s-p": "sp",
+};
+
+/** The template family of an acmart or IEEEtran class, or null. */
+const classFamily = (p: Preamble): PresetChoice | null => {
+  if (p.cls === "IEEEtran" && p.clsOpts.includes("conference"))
+    return {
+      preset: "paperlint:ieee-conference",
+      why: `the IEEE conference family${NONE}`,
+    };
+  if (p.cls !== "acmart") return null;
+  const fmt = /acmsmall|sigconf/.exec(p.clsOpts)?.[0];
+  return fmt === undefined
+    ? {
+        preset: null,
+        why: `no preset: the class is acmart with format [${p.clsOpts}], which is neither the sigconf nor the acmsmall family, and no preset ships for this edition`,
+      }
+    : {
+        preset: `paperlint:acm-${fmt}`,
+        why: `the acmart ${fmt} family${NONE}`,
+      };
+};
+
 /**
  * The preset a paper is linted against: the edition's when paperlint ships it, else the family of
  * its style or class, else none (a named venue, so no venue rule applies).
@@ -44,12 +70,8 @@ export function presetFor(
   p: Preamble,
   style: string | undefined,
   shipped: ReadonlySet<string>,
-): Readonly<{ preset: string | null; why: string }> {
-  const alias: Readonly<Record<string, string>> = {
-    "acm-ccs": "ccs",
-    "ieee-s-p": "sp",
-  };
-  const edition = `${alias[slug(slot.series)] ?? slug(slot.series)}-${String(slot.year)}`;
+): PresetChoice {
+  const edition = `${ALIAS[slug(slot.series)] ?? slug(slot.series)}-${String(slot.year)}`;
   if (shipped.has(edition))
     return {
       preset: `paperlint:${edition}`,
@@ -58,27 +80,12 @@ export function presetFor(
   const family = FAMILIES.find(([re]) => re.test(style ?? ""));
   if (family !== undefined)
     return { preset: `paperlint:${family[1]}`, why: family[2] + NONE };
-  if (p.cls === "acmart") {
-    const fmt = /acmsmall|sigconf/.exec(p.clsOpts)?.[0];
-    return fmt === undefined
-      ? {
-          preset: null,
-          why: `no preset: the class is acmart with format [${p.clsOpts}], which is neither the sigconf nor the acmsmall family, and no preset ships for this edition`,
-        }
-      : {
-          preset: `paperlint:acm-${fmt}`,
-          why: `the acmart ${fmt} family${NONE}`,
-        };
-  }
-  if (p.cls === "IEEEtran" && p.clsOpts.includes("conference"))
-    return {
-      preset: "paperlint:ieee-conference",
-      why: `the IEEE conference family${NONE}`,
-    };
-  return {
-    preset: null,
-    why: "no preset ships for this edition and no template family matches the class: no `extends`, as arxiv-papers does for such papers, but with the accepted cycle",
-  };
+  return (
+    classFamily(p) ?? {
+      preset: null,
+      why: "no preset ships for this edition and no template family matches the class: no `extends`, as arxiv-papers does for such papers, but with the accepted cycle",
+    }
+  );
 }
 
 const pair = (r: string): string => {
@@ -89,13 +96,14 @@ const pair = (r: string): string => {
 /** Everything the collector writes for one kept paper. */
 export type KeptPaper = Readonly<{
   id: string;
-  /** Path inside the paper's directory → its bytes or text. */
+  /** Path inside the paper's directory, to its bytes or text. */
   files: ReadonlyMap<string, Uint8Array | string>;
-  entry: Readonly<Record<string, unknown>>;
+  entry: Readonly<Record<string, unknown>> & Readonly<{ arxiv_id: string }>;
   note: Readonly<Record<string, unknown>>;
 }>;
 
-export function keptPaper(k: {
+/** What the collector learned about a paper that passed rules 1 to 4. */
+export type Kept = Readonly<{
   c: Candidate;
   slot: Slot;
   track: string | null;
@@ -106,107 +114,128 @@ export function keptPaper(k: {
   styleOpts?: string;
   sourceSha: string;
   shipped: ReadonlySet<string>;
-}): KeptPaper {
-  const { c, slot, plan, preamble: p } = k;
-  const { preset, why } = presetFor(slot, p, k.style, k.shipped);
-  const absUrl = `https://arxiv.org/abs/${c.id}`;
-  const venue = `${slot.series} ${String(slot.year)}${k.track === null ? "" : ` (${k.track})`}`;
-  const cycle = {
-    id: `${slug(slot.series)}-${String(slot.year)}${k.track === null ? "" : "-findings"}`,
-    venue:
-      preset === null
-        ? { kind: "named", name: venue, url: absUrl }
-        : { kind: "preset", extends: preset },
-    opened: c.updated,
-    outcome: { kind: "accepted", date: c.updated, evidence: "README.md" },
-  };
-  const quote =
-    c.s2 === undefined
-      ? [c.comment, c.journal_ref && `journal-ref: ${c.journal_ref}`]
-          .filter(Boolean)
-          .join(" | ")
-      : `Semantic Scholar venue listing: venue "${c.s2.venue}", year ${String(slot.year)}, publication date ${c.s2.publicationDate ?? "not given"}${c.comment ? `; arXiv comment: ${c.comment}` : ""}`;
+}>;
+
+const absUrl = (c: Candidate): string => `https://arxiv.org/abs/${c.id}`;
+const venueOf = (k: Kept): string =>
+  `${k.slot.series} ${String(k.slot.year)}${k.track === null ? "" : ` (${k.track})`}`;
+
+/** The acceptance evidence quoted in the manifest: the comment, or the listing. */
+const quoteOf = ({ c, slot }: Kept): string =>
+  c.s2 === undefined
+    ? [c.comment, c.journal_ref && `journal-ref: ${c.journal_ref}`]
+        .filter(Boolean)
+        .join(" | ")
+    : `Semantic Scholar venue listing: venue "${c.s2.venue}", year ${String(slot.year)}, publication date ${c.s2.publicationDate ?? "not given"}${c.comment ? `; arXiv comment: ${c.comment}` : ""}`;
+
+const changesOf = (plan: StagingPlan): string => {
+  const head = `${plan.renames.length > 0 ? "Renamed" : "Nothing renamed"}${plan.edits.length > 0 ? ", one thing changed inside" : ", nothing inside changed"}`;
+  const list = [
+    plan.renames.length > 0
+      ? plan.renames.map(pair).join(", ")
+      : "the main file was already paper.tex",
+    ...plan.edits.map(pair),
+  ].join("; ");
+  return `**${head}:** ${list}.`;
+};
+
+const readmeOf = (k: Kept, choice: PresetChoice): string => {
+  const { c, preamble: p } = k;
   const style =
     k.style === undefined
       ? ""
       : `, **style package:** \`${k.style}${k.styleOpts ? `[${k.styleOpts}]` : ""}\``;
   const evidence =
     c.s2 === undefined
-      ? `The arXiv comment of [${c.id}](${absUrl}) says: «${quote}»`
-      : `Semantic Scholar's venue listing (the proceedings) holds [${c.id}](${absUrl}) — acceptance evidence without comment wording — query \`${c.query}\`: «${quote}»`;
-  const changed = [
-    plan.renames.length > 0 ? "Renamed" : "Nothing renamed",
-    plan.edits.length > 0
-      ? ", one thing changed inside"
-      : ", nothing inside changed",
-  ].join("");
-  const changes = [
-    plan.renames.length > 0
-      ? plan.renames.map(pair).join(", ")
-      : "the main file was already paper.tex",
-    ...plan.edits.map(pair),
-  ].join("; ");
-  const readme = `# ${c.title}
+      ? `The arXiv comment of [${c.id}](${absUrl(c)}) says: «${quoteOf(k)}»`
+      : `Semantic Scholar's venue listing (the proceedings) holds [${c.id}](${absUrl(c)}) — acceptance evidence without comment wording — query \`${c.query}\`: «${quoteOf(k)}»`;
+  const linted =
+    choice.preset === null
+      ? "no preset (`extends` left out)"
+      : `\`${choice.preset}\``;
+  return `# ${c.title}
 
 - **Authors:** ${c.authors.join(", ")}
-- **Source:** arXiv [${c.id}](${absUrl}), e-print \`https://arxiv.org/src/${c.id}\` (sha256 \`${k.sourceSha}\`)
+- **Source:** arXiv [${c.id}](${absUrl(c)}), e-print \`https://arxiv.org/src/${c.id}\` (sha256 \`${k.sourceSha}\`)
 - **Category:** ${c.category}; **document class:** \`[${p.clsOpts}]{${String(p.cls)}}\`${style}
 - **Licence:** [${k.licence.name}](${k.licence.url}), as the arXiv abstract page states. The files are redistributed under it.
-- **Accepted at:** ${venue}. ${evidence}
-- **Linted as:** ${preset === null ? "no preset (`extends` left out)" : `\`${preset}\``}, the camera-ready of an accepted attempt (${why})
+- **Accepted at:** ${venueOf(k)}. ${evidence}
+- **Linted as:** ${linted}, the camera-ready of an accepted attempt (${choice.why})
 - **Text sources only, figures omitted.** Kept: \`.tex\`, \`.bib\`, \`.bbl\`, \`.cls\`, \`.sty\`, \`.bst\`, \`.cfg\`, \`.def\`, each at its path from the archive's root, where arXiv compiles. Dropped: images, PDFs, data.
-- **${changed}:** ${changes}.
+- ${changesOf(k.plan)}
 - **Ours:** \`paperlint.json\`, \`PIPELINE-STATUS.md\`, \`record-by-hand.json\`, \`baseline.json\`, \`README.md\`.
 
 \`paperlint.json\` records one attempt, accepted, whose evidence is this file. Its dates are those of the arXiv version that states the acceptance: the real decision day is earlier and not known here. \`record-by-hand.json\` is NOT TeX's answer: it lists \`paper.tex\`, the class and style files at the root, then the \`\\input\`/\`\\include\` files in the order the source names them, hashed over the bytes here. See [\`../README.md\`](../README.md).
 `;
-  const json = (v: unknown): string => `${JSON.stringify(v, null, 2)}\n`;
-  const source = c.s2 === undefined ? "arxiv-comment" : "semantic-scholar";
+};
+
+const cycleOf = (k: Kept, choice: PresetChoice) => ({
+  id: `${slug(k.slot.series)}-${String(k.slot.year)}${k.track === null ? "" : "-findings"}`,
+  venue:
+    choice.preset === null
+      ? { kind: "named", name: venueOf(k), url: absUrl(k.c) }
+      : { kind: "preset", extends: choice.preset },
+  opened: k.c.updated,
+  outcome: { kind: "accepted", date: k.c.updated, evidence: "README.md" },
+});
+
+const entryOf = (k: Kept, choice: PresetChoice): KeptPaper["entry"] => ({
+  arxiv_id: k.c.id,
+  license: k.licence.key,
+  source_sha256: k.sourceSha,
+  main_tex: `./${k.plan.main}`,
+  class: k.preamble.cls,
+  category: k.c.category,
+  size_bytes: k.plan.size,
+  dir: k.c.id,
+  accepted: { quote: quoteOf(k), url: absUrl(k.c), venue: venueOf(k) },
+  preset: choice.preset,
+  kind: null,
+  field: k.slot.field,
+  series: k.slot.series,
+  year: k.slot.year,
+  ...(k.track === null ? {} : { track: k.track }),
+  source: k.c.s2 === undefined ? "arxiv-comment" : "semantic-scholar",
+  acceptance: k.c.s2 === undefined ? "arxiv-comment" : "s2-venue-listing",
+});
+
+/** For a listed paper: whether the arXiv version kept predates the venue's date. */
+const versionNote = (
+  updated: string,
+  s2: NonNullable<Candidate["s2"]>,
+): string =>
+  s2.publicationDate !== null && updated < s2.publicationDate
+    ? `latest arXiv version (${updated}) predates the venue date (${s2.publicationDate}); kept the latest version`
+    : `latest arXiv version ${updated}; venue date ${s2.publicationDate ?? "not given"}`;
+
+const noteOf = (k: Kept, choice: PresetChoice) => ({
+  clsOpts: k.preamble.clsOpts,
+  style: k.style ?? null,
+  styleOpts: k.styleOpts ?? null,
+  mainCandidates: k.plan.mainCandidates,
+  presetWhy: choice.why,
+  edits: k.plan.edits,
+  renames: k.plan.renames,
+  title: k.c.title,
+  ...(k.c.s2 === undefined
+    ? {}
+    : { versionNote: versionNote(k.c.updated, k.c.s2) }),
+});
+
+const json = (v: unknown): string => `${JSON.stringify(v, null, 2)}\n`;
+
+export function keptPaper(k: Kept): KeptPaper {
+  const choice = presetFor(k.slot, k.preamble, k.style, k.shipped);
   return {
-    id: c.id,
+    id: k.c.id,
     files: new Map<string, Uint8Array | string>([
-      ...plan.staged.map((f) => [f.path, f.bytes] as const),
-      ["record-by-hand.json", json(recordOf(plan.staged))],
+      ...k.plan.staged.map((f) => [f.path, f.bytes] as const),
+      ["record-by-hand.json", json(recordOf(k.plan.staged))],
       ["PIPELINE-STATUS.md", "---\nstages: []\n---\n# PIPELINE-STATUS\n"],
-      ["paperlint.json", json({ cycles: [cycle] })],
-      ["README.md", readme],
+      ["paperlint.json", json({ cycles: [cycleOf(k, choice)] })],
+      ["README.md", readmeOf(k, choice)],
     ]),
-    entry: {
-      arxiv_id: c.id,
-      license: k.licence.key,
-      source_sha256: k.sourceSha,
-      main_tex: `./${plan.main}`,
-      class: p.cls,
-      category: c.category,
-      size_bytes: plan.size,
-      dir: c.id,
-      accepted: { quote, url: absUrl, venue },
-      preset,
-      kind: null,
-      field: slot.field,
-      series: slot.series,
-      year: slot.year,
-      ...(k.track === null ? {} : { track: k.track }),
-      source,
-      acceptance: c.s2 === undefined ? "arxiv-comment" : "s2-venue-listing",
-    },
-    note: {
-      clsOpts: p.clsOpts,
-      style: k.style ?? null,
-      styleOpts: k.styleOpts ?? null,
-      mainCandidates: plan.mainCandidates,
-      presetWhy: why,
-      edits: plan.edits,
-      renames: plan.renames,
-      title: c.title,
-      ...(c.s2 === undefined
-        ? {}
-        : {
-            versionNote:
-              c.s2.publicationDate !== null && c.updated < c.s2.publicationDate
-                ? `latest arXiv version (${c.updated}) predates the venue date (${c.s2.publicationDate}); kept the latest version`
-                : `latest arXiv version ${c.updated}; venue date ${c.s2.publicationDate ?? "not given"}`,
-          }),
-    },
+    entry: entryOf(k, choice),
+    note: noteOf(k, choice),
   };
 }

@@ -23,9 +23,17 @@ describe("unpack", () => {
       tar([
         { name: "./main.tex", body: "m" },
         { name: "sec.tex", prefix: "ACL2026", body: "s" },
-        { name: "././@LongLink", type: "L", body: `${"d/".repeat(60)}long.tex\0` },
+        {
+          name: "././@LongLink",
+          type: "L",
+          body: `${"d/".repeat(60)}long.tex\0`,
+        },
         { name: "truncated", body: "l" },
-        { name: "PaxHeader/short.bib", type: "x", body: "30 path=pax/named.bib\n" },
+        {
+          name: "PaxHeader/short.bib",
+          type: "x",
+          body: "30 path=pax/named.bib\n",
+        },
         { name: "short.bib", body: "p" },
         { name: "PaxHeader/nul.sty", type: "x", body: "20 mtime=1700000000\n" },
         { name: "nul.sty", type: "\0", body: "n" },
@@ -45,9 +53,9 @@ describe("unpack", () => {
       "nul.sty",
     ]);
     // Guards: a stream cut before the end-of-archive blocks still ends.
-    expect(untar(tar([{ name: "a.tex", body: "a" }]).subarray(0, 1024))).toEqual(
-      [{ path: "a.tex", bytes: Buffer.from("a") }],
-    );
+    expect(
+      untar(tar([{ name: "a.tex", body: "a" }]).subarray(0, 1024)),
+    ).toEqual([{ path: "a.tex", bytes: Buffer.from("a") }]);
   });
 
   test("a gzipped tar, a lone gzipped .tex, a PDF and a broken gzip", () => {
@@ -67,8 +75,7 @@ describe("unpack", () => {
     // Guards: gzip magic over garbage is rejected, not thrown.
     expect(unpack(Buffer.from([0x1f, 0x8b, 1, 2, 3]))).toEqual({
       ok: false,
-      reason:
-        "unreadable source: Error: unknown compression method",
+      reason: "unreadable source: Error: unknown compression method",
     });
   });
 });
@@ -77,7 +84,12 @@ describe("the top-level file", () => {
   test.each([
     [
       "00README.json names it",
-      [file("00README.json", '{"sources":[{"usage":"toplevel","filename":"ACL2026/main.tex"}]}')],
+      [
+        file(
+          "00README.json",
+          '{"sources":[{"usage":"toplevel","filename":"ACL2026/main.tex"}]}',
+        ),
+      ],
       "ACL2026/main.tex",
     ],
     [
@@ -91,7 +103,11 @@ describe("the top-level file", () => {
       [file("00README.XXX", "sub/ms.tex toplevelfile\n")],
       "sub/ms.tex",
     ],
-    ["a legacy 00README without one", [file("00README.XXX", "nostamp\n")], null],
+    [
+      "a legacy 00README without one",
+      [file("00README.XXX", "nostamp\n")],
+      null,
+    ],
     ["no 00README", [file("main.tex", "")], null],
   ])("%s", (_, files, named) => {
     // Guards: what arXiv compiles first, as its own README says.
@@ -194,7 +210,9 @@ describe("record-by-hand.json", () => {
     const staged = [
       file(
         "paper.tex",
-        mainTex("\\input{./a}\\include{b.tex}\\input{a}% \\input{c}\n\\input{gone}"),
+        mainTex(
+          "\\input{./a}\\include{b.tex}\\input{a}% \\input{c}\n\\input{gone}",
+        ),
       ),
       file("a.tex", "\\input{sub/d}"),
       file("sub/d.tex", "d"),
@@ -206,7 +224,14 @@ describe("record-by-hand.json", () => {
     ];
     const hash = (p: string) =>
       sha256(staged.find((f) => f.path === p)?.bytes ?? new Uint8Array());
-    const order = ["paper.tex", "acl.cls", "z.sty", "a.tex", "sub/d.tex", "b.tex"];
+    const order = [
+      "paper.tex",
+      "acl.cls",
+      "z.sty",
+      "a.tex",
+      "sub/d.tex",
+      "b.tex",
+    ];
     // Guards: the order and roles a reader audits, no repeat, a commented or missing input left out.
     expect(recordOf(staged)).toEqual({
       schema: 1,

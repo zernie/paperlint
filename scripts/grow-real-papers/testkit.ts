@@ -48,8 +48,10 @@ export const text = (f: ArchiveFile | undefined): string =>
   f === undefined ? "<missing>" : Buffer.from(f.bytes).toString("latin1");
 
 /** A main file: a class, a document, and whatever body is given. */
-export const mainTex = (body: string, cls = "\\documentclass{article}"): string =>
-  `${cls}\n\\begin{document}\n${body}\n\\end{document}\n`;
+export const mainTex = (
+  body: string,
+  cls = "\\documentclass{article}",
+): string => `${cls}\n\\begin{document}\n${body}\n\\end{document}\n`;
 
 export type Route = string | Uint8Array | Readonly<{ status: string }>;
 
