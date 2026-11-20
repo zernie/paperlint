@@ -1,0 +1,34 @@
+% \begin{table*}[]
+% \normalsize
+% \centering
+% \footnotesize
+% % \setlength{\tabcolsep}{1.5pt}
+% \begin{tabular}{ccccc}
+% \hline
+%                 & \# Exs. & Baseline Model & Judge Model & Metric             \\ \hline
+% AlpacaEval 2    & 805     & GPT-4 Turbo    & GPT-4.1     & LC \& raw win rate \\
+% Arena-Hard      & 500     & GPT-4-0314         & GPT-4o     & Win rate           \\
+% MT-Bench        & 80      & -              & GPT-4o     & Rating of 1-10     \\ \hline
+% \end{tabular}
+% \caption{Evaluation details for AlpacaEval 2, Arena-Hard, and MT-Bench. The baseline model refers to the model compared against.}
+% \label{tab:evaluation_details}
+% \end{table*}
+
+
+\begin{table}[]
+\setlength{\tabcolsep}{1.5pt}
+\centering
+\footnotesize
+% \setlength{\tabcolsep}{1.5pt}
+\begin{tabular}{cccc}
+\hline
+                 & Baseline & Judge Model & Metric             \\ \hline
+AlpacaEval 2        & GPT-4 Turbo    & GPT-4.1     & LC \& raw win rate \\
+Arena-Hard         & GPT-4-0314         & GPT-4o     & Win rate           \\
+MT-Bench            & -              & GPT-4o     & Rating of 1-10     \\ \hline
+\end{tabular}
+\caption{Evaluation details for AlpacaEval 2, Arena-Hard, and MT-Bench. The baseline model refers to the model compared against.}
+\label{tab:evaluation_details}
+\vspace{-1em}
+\end{table}
+

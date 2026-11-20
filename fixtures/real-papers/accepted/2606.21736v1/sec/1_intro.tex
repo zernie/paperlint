@@ -1,0 +1,153 @@
+\section{Introduction}
+%Deep neural networks have achieved exciting performance on various tasks under the assumption that training and testing data are independently and identically distributed.However, this assumption often does not hold in many real-world scenarios due to the domain shift, especially when testing on out-of-distribution (OOD) or previously unseen datasets.To mitigate the issue of domain shift, various approaches have been proposed, including domain adaptation (DG) and domain generalization (DA) methods.
+% Domain adaptation methods typically involve the incorporation of unlabeled images from the target domain during the model training phase.
+% Multiple domain generalization methods attempt to address the domain shift issue by leveraging data from multiple training domains to some extent. 
+% Despite showing encouraging performances on OOD data, their real-world applications are still limited due to the necessity of having data from other domains. 
+% Despite showing encouraging performances on OOD data, their real-world applications are still limited due to the necessity of having data from other domains. This poses challenges as it may involve the data acquiring budget or privacy issues.
+%Despite showing encouraging performances on OOD data, their real-world applications are still limited due to the necessity of having data from other domains. This requirement poses challenges, as it may involve considerations such as data acquisition budgets and privacy issues. As a result, these methods may not be universally applicable in all scenarios.
+% Multiple domain generalization methods attempt to address the domain shift issue by incorporating data from multiple training domains to some extent. However, both of these approaches have limitations due to the expensive data acquisition and data privacy. As a result, these methods may not be universally applicable in all scenarios.
+
+
+Recent machine learning models ($e.g.$, deep neural network) have achieved remarkable performances on various tasks, under the key assumption that the training and testing data are independently and identically distributed ($i.e.$, $iid$). However, this assumption often does not hold in many real-world scenarios due to the domain shift, especially when testing on out-of-distribution (OOD) or previously unseen datasets. To mitigate the issue of domain shift, various approaches have been proposed, including domain adaptation (DA)~\cite{ganin2016domain, long2013transfer, pan2019transferrable, qu2022bmd, qu2023upcycling, cheng2023efficient} and domain generalization (DG) methods~\cite{IKI, StPR, wang2022generalizing, zhang2022towards, cheng2024disentangled, PADG, RD-MLDG}. These methods typically involve incorporating data from multiple training domains ($e.g.$, multi-domain generalization), or the target domain data. Despite showing encouraging performances on the OOD data, it may not always be applicable due to data acquiring budget or privacy issue. Therefore, we aim to address the more challenging but more useful task, $i.e.$, single domain generalization (SDG).
+
+
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.47\textwidth]{pic/introduction_pic_plus_plus.pdf}
+    \vspace{-2.5mm}
+    \caption{
+    % Most existing data augmentation method unable to generate training data with significant distribution from the source domain. Meanwhile, these data are not diverse enough.
+    % This figure shows that existing domain augmentation methods struggle to generate training data that is both significantly different from the source domain distribution and diverse. 
+    % This figure shows
+    %Most existing domain augmentation methods struggle to generate diverse and challenging training data.
+    % However, our proposed method, by leveraging the pre-trained T2I model, can generate diverse data that is difficult to describe with text under the guidance of prompts.
+   % However, our proposed method can leverage the pre-trained T2I model to generate diverse training data $\mathcal{D}^G$ that has a significant distribution from the data in source domain $\mathcal{D}^S$.
+   Comparison between our method with existing single domain generalization approaches: \emph{Left:} the traditional domain augmentation-based method; \emph{Middle:} the simple T2I foundation model with text description as prompt for domain augmentation; \emph{Right:} our proposed method, which learns two sets of abstract prompts ($i.e.$, category and domain) instead of the static textual domains, to instruct the diffusion-based T2I foundation model for generating images of a wide range of domain styles.     
+    }
+    \label{pic:introduction}
+    % \vspace{-5.5mm}
+    \vspace{-6.5mm}
+\end{figure}
+
+
+SDG aims to train a model on a labeled source domain and perform well on multiplied unseen target domains.  
+% SDG aims to train a model on a labeled source domain and perform well on multiplied unseen target domains.  
+% This learning paradigm poses significant challenges due to the fact that the distribution of the testing data significantly differs from the training data.
+% This learning paradigm presents significant challenges because the distribution of the testing data differs significantly from that of the training data. 
+This learning paradigm presents significant challenges because only one source domain is given and the target domains are usually unseen/out-of-distribution and unavailable during training.
+Existing works have made considerable successes by employing data augmentation to extend the distribution of the source domain~\cite{carlucci2019domain, shankar2018generalizing} or learning adaptive data normalization~\cite{fan2021adversarially} typically.
+However, it remains challenging how to construct diverse domains to achieve a provable generalization performance on target domains. 
+Namely, it is challenging to guarantee a mitigated distribution discrepancy between the generated domains and target domains.
+% Fortunately, latest researches show clear evidence that latent diffusion model (LDM) have powerful data generation ability. 
+% Fortunately, recent research provides compelling evidence that text-to-image (T2I) foundation models possess a robust ability to generate diverse data.
+Recent research provides strong evidence that Text-to-Image (T2I) foundation models have a powerful ability to generate images from text descriptions. Given that text inherently conveys rich semantic information, these models can produce a wide variety of images across different domains using text prompts. 
+% Meanwhile, text/language is inherently rich in semantic information，so we can generate a sufficient number of images from different domains under the guidance of text prompts.
+% Moreover, since text and language inherently convey rich semantic information, we can generate a significant number of images from various domains under the guidance of text prompts.
+%Furthermore, the inherent richness of semantic information in text and language allows us to leverage text prompts effectively. By providing descriptive and specific text prompts, we can guide the generation of images across various domains. 
+However, there still contains the following key issues that need to be addressed:
+\emph{1) How to generate images from domains whose characteristics that are too abstract to describe with language? 2) How to enable T2I models to automatically generate a sufficiently diverse range of images across different domains?}
+
+
+% However, generating a sufficiently diverse set of images based on general descriptions (\emph{e.g.}, a photo of 
+% a) can be challenging, and certain domains may be difficult to describe accurately. 
+% However, generating a sufficiently diverse set of images based on general descriptions, such as requesting "a photo of a," can be challenging, and accurately describing certain domains may prove difficult.
+% Meanwhile, It is important to consider that adding excessive domain-related text may inadvertently reveal the domain label of the test data, which poses a significant challenge that needs to be addressed.
+% Moreover, it is essential to consider the potential issue of adding excessive domain-relevant text, as it may inadvertently disclose the domain label of the test data. This presents a significant challenge that requires careful consideration.
+% Thus, we require a learnable prompt that can represent a particular domain and guide the generation of images consistently across various domains.
+%However, there are still some issues that need to be addressed. 
+%1) Employing generic descriptions (\emph{e.g.}, a photo of a [class label] in the style of [domain label].) may potentially cover the domain label of the test data; 2) How to generate images in styles that are challenging to describe using text.; 3) How to enable text-to-image models to generate sufficiently diverse images automatically.
+
+% However, there are still some problems that need to be addressed. 1) Employing generic descriptions (\emph{e.g.}, a photo of a [class label] in the style of [domain label].) may potentially cover the domain label of the test data; 2) How to generate images in styles that are challenging to describe using text.; 3) How to enable text-to-image models to generate sufficiently diverse images automatically.
+
+
+
+% To address these challenges, we recognize the need for a learnable prompt that can effectively represent a specific domain and consistently guide the generation of images across various domains. In this paper, our solution to this challenge is to fully leverage a distinctive aspect of LDM, which is the diversity in generating data distributions.
+% We propose to overcome these challenges by finding new words in the textual embedding space of pre-trained text-to-image models.
+% In this paper, we propose to overcome these challenges by using a learnable prompt that can effectively represent a specific domain in the textual embedding space of pre-trained text-to-image models.
+% In this paper, we propose to overcome these challenges by using the learnable prompt in the textual embedding space of pre-trained text-to-image models. 
+
+%In this paper, our solution to these challenges is to use the learnable prompt in the textual embedding space of pre-trained text-to-image models. We use domain-specific prompts to represent more abstract domains, and during the training process, we add prompts from different stages to a collection. This means that we consider domain-specific prompts to represent different styles of domains at different training stages.
+
+% To address the challenges in generating OOD images with T2I models, instead of specific textual descriptions, this paper proposes to automatically learn abstract prompts that cover a wide range of domain styles by adversarial prompt tuning on pre-trained diffusion models, as shown in Fig.~\ref{pic:introduction}. 
+%To address the challenges in generating out-of-distribution (OOD) images with text-to-image (T2I) models, this paper proposes adopting prompt tuning on pre-trained diffusion models to automatically learn abstract prompts, rather than relying on manually crafted textual descriptions. 
+% To address these challenges, this paper proposes to automatically learn a group of abstract prompts for out-of-distribution image generation with T2I models, eliminating the need for manually crafted descriptions. 
+% As shown in Fig.~\textcolor{red}{\ref{pic:introduction}}, our method applies prompt-tuning to diffusion-based T2I models, learning two types of abstract prompts: category prompts, which capture category information that remains consistent across domains, and domain prompts, which represent diverse domain styles, including those too abstract to express in words ($e.g.$, ``a \ photo \ of \ [class\_prompt] \ in \ the \ style \ of \ [domain\_prompt]''). 
+To address these challenges, this paper proposes to automatically learn a group of abstract prompts for out-of-distribution image generation with T2I models, eliminating the need for manually crafted descriptions. 
+As shown in Fig.~\textcolor{red}{\ref{pic:introduction}}, our method applies prompt-tuning to diffusion-based T2I models, learning two types of abstract prompts: \emph{category prompts}, which capture domain-invariant category information that remains consistent across domains, and \emph{domain prompts}, which represent diverse domain styles, including those too abstract to express in words ($e.g.$, ``a \ photo \ of \ [class\_prompt] \ in \ the \ style \ of \ [domain\_prompt]''). 
+%The learned abstract prompts is able to represent diverse domain styles, including those too complex to describe in language, as shown in Fig.~\textcolor{red}{\ref{pic:introduction}}. 
+%The proposed adversarial prompt tuning enable the learnable prompts to
+%benefit the generation of images in the styles that are challenging to describe by the text itself. 
+%In this paper, we propose the adversarial domain prompt training method by utilizing the powerful pre-trained T2I foundation models ($i.e.$, stable diffusion model), to solve this challenging single domain generalization task. 
+%The goal of our approach is to use single source domain to generate `fictitious' yet `challenging' populations with high diversity. 
+% The goal of our approach is to learn prompts that generates various domain styles while preserving the consistency in the key categorical features. 
+%Our method aims to learn prompts that generates various domain styles while preserving the consistency in the key categorical features. 
+%However, this is not trivial but contains technical barriers and contradiction. %That is, the generated `fictitious' domains should be largely different with the source domain, while still satisfy the semantic consistency constraint.  
+%To better modeling this non-trivial and relatively contradicting objective, 
+%Specifically, a set of category prompts containing categorical features are first learned on the source domain data. %we firstly sample several images from each class in the source domain to optimize the learnable prompt of the category concept in the diffusion model.
+Furthermore, to ensure both diversity in domain styles and consistency in key categorical features of generated images, we propose a novel Progressive Adversarial Prompt Tuning (PAPT) framework. In this framework, we first learn category prompts from the source domain data, then progressively learn new domain prompts, which are stored in a domain-specific memory bank. This framework reduces style similarity between newly generated domains and those already in the memory bank while enhancing semantic consistency between generated images and their corresponding category prompts.
+%through progressive adversarial learning. As new domain prompts are learned, they are added to a domain-specific memory bank. 
+
+%for different domains should keep semantic consistency, while show high diversity through the adversarial domain augmentation constraint. 
+%To further improve the diversity of the learned general domain concept prompt, we optimize the adversarial domain augmentation loss in a progressive training scheme, by continuously add new domain descriptions to the domain-specific memory bank for adversarial learning.
+
+
+
+%As a result, we propose a novel prompt tuning framework for single domain generalization with disentangled representation based text-to-image model. 
+%Specifically, we sample 3-5 images from each class in the source domain and set a group of class-relevant learnable prompts to learn the concepts of different categories. Next, we set up a domain-specific query to contain some basic domain descriptions, such as "oil painting" or "sketch". During training, we concatenate the domain-specific learnable prompt with the prompts from the previous step. After generating images using the text-to-image model, we calculate a similarity score between the generated images and the descriptions in the domain-specific query. We then maximize these scores to update the domain-specific prompt. Meanwhile, during the training process, we adopt a dynamic updating approach to continuously add new domain descriptions to the domain-specific query. In other words, the domain-specific prompt will be constantly updated and added to the domain-specific query until a sufficient number of different domain styles are generated.
+
+
+%To achieve this goal of exploring many `fictitious' domains to guarantee their diversity, we specially design a group of learnable prompts to learn the general concept of different domains as the target domain is usually unseen, rather than using the common text descriptions themselves in the T2I model, $e.g.$, ``a \ photo \ of \ [class\_name] \ in \ the \ style \ of \ [domain\_name]''. Such general learnable category and domain prompts benefit the generation of images in the styles that are challenging to describe by the text itself. Specifically, we firstly sample several images from each class in the source domain to optimize the learnable prompt of the category concept in the diffusion model. Afterwards, we optimize the learnable prompt of the universal domain concept in an adversarial learning manner. The generated images for different domains should keep semantic consistency, while show high diversity through the adversarial domain augmentation constraint. To further improve the diversity of the learned general domain concept prompt, we optimize the adversarial domain augmentation loss in a progressive training scheme, by continuously add new domain descriptions to the domain-specific memory bank for adversarial learning.
+
+
+
+
+
+
+
+% The main contributions of this work can be summarized as follows:
+The main contributions can be summarized as follows:
+%\begin{itemize}
+%\item We propose a novel prompt tuning framework for single domain generalization with disentangled representation based text-to-image model.
+%\item Extensive experiments on mainstream SDG datasets namely PACS, VLCS, show that the proposed [] method achieves superior performances to state-of-the-art SDG methods.
+%\end{itemize}
+
+\begin{itemize}
+\item We propose the first work that leverages the text-to-image foundation model for single-domain generalization (SDG). To obtain a wider range of domain styles beyond manual language description, we propose to learn a group of abstract learnable prompts representing diverse domains instead of static textual domains.
+%, which greatly benefits the generated images in the styles that are challenging to describe using the abstract text.  
+\item %We propose to optimize the domain prompt tuning and generation objective in a
+We propose a novel Progressive Adversarial Prompt Tuning (PAPT) framework to balance the trade-off between generating images in diverse domain styles and preserving key categorical features. % which could well address the image generation contradiction between domain diversity and semantic consistency constraint. 
+% \item Through generating images with high domain diversity, the proposed method achieves superior performances to state-of-the-art SDG methods, illustrated by extensive experiments on mainstream SDG datasets namely PACS, VLCS. 
+\item Through generating images with high domain diversity, the proposed method achieves superior performances to state-of-the-art SDG methods, illustrated by extensive experiments on mainstream SDG datasets. 
+\end{itemize}
+
+\begin{figure*}[htbp] \label{main_pic}
+    \centering
+    \includegraphics[width=1.0\textwidth]{pic/framework_plus_plus_plus.pdf}
+    \vspace{-6.0mm}
+    \caption{
+    The framework of our proposed method. 
+    % The process of Part A involves training an abstract concept $\mathbf{E}_i^I$ for each class. 
+    % The process of Category Prompt Tuning involves training a category concept $\mathbf{E}_k^c$ for each class instead of class label.
+    % The process of Category Prompt Tuning involves training a set of abstract prompts $\mathbf{E}_k^c$ for each class to capture domain-invariant category information in step \textcolor{red}{(a)}.
+    % We first train a set of abstract prompts $\mathbf{E}_k^c$ for each class to capture domain-invariant category information in step \textcolor{red}{(a)}.
+    We first train a set of category prompts $\mathbf{E}_k^c$ for each class to capture domain-invariant category information in step \textcolor{red}{(a)}.
+    % Subsequently, we train a domain-specific prompt $\mathbf{E}_o^S$ to generate OOD data that is difficult to describe in text. 
+    % Subsequently, in step (b), we train a domain-specific prompt $\mathbf{E}_o^S$ to generate OOD data that is difficult to describe in text.
+    % Subsequently, in step (b), we train a domain-specific prompt $\mathbf{E}_o^d$ to generate out-of-domain that is difficult to describe in text.
+    % Subsequently, we train domain prompts $\mathbf{E}_o^d$ that describe various image styles through progressive adversarial learning in step \textcolor{red}{(c)}. 
+    % Subsequently, we train domain prompts $\mathbf{E}_o^d$ that represent abstract domain styles through domain prompt tuning in step \textcolor{red}{(b)}. 
+    Subsequently, we train domain prompts $\mathbf{E}_o^d$ that represent abstract domain styles instead of rigid textual domains through adversarial domain prompt tuning in step \textcolor{red}{(b)}. 
+    As new domain prompts are learned, they are added to a domain-specific memory bank.  We then minimize the style similarity between the newly generated domain and previous domains in the memory bank, while maximizing the semantic consistency between generated images and the corresponding category in step \textcolor{red}{(c)}.
+    % to generate out-of-domain that is difficult to describe in text.
+    % We use a domain prompt pool $\mathcal{P}$ to store these trained domains. 
+    % In terms of training methodology, we employ adversarial training to ensure that, while the classification is correct, it is inconsistent with the existing domains in $\mathcal{P}$ to create entirely new domains.
+    % Then, we employ adversarial training to ensure that, while the classification is correct, it is inconsistent with the existing domains in $\mathcal{P}$ to create entirely new domains.
+    % After training $\mathbf{E}_o^S$, we use the Progressive Training Scheme to add $\mathbf{E}_o^S$ to $\mathcal{P}$ and continuously repeat this process.
+    % Finally, we use the Progressive Training Scheme in step (c) to add $\mathbf{E}_o^S$ to $\mathcal{P}$ and continuously repeat this process.
+    % Finally, we use the Progressive Training Scheme in step (c) to add $\mathbf{E}_o^d$ to $\mathcal{P}$ and continuously repeat this process.
+    }
+    \label{pic:main}
+    \vspace{-5.5mm}
+\end{figure*}  

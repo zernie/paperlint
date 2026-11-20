@@ -1,0 +1,87 @@
+\section{Experiment}\label{sec:experiments}
+In this section, we evaluate PRM4RL on a diverse suite of long-term, sparse reward RL tasks, testing its ability to provide high-level plan and guide low-level training.
+
+\subsection{Experiment Settings}\label{sec:experimental-settings}
+The framework is implemented based on the Stable-Baselines3 framework\cite{stable-baselines3}, ensuring consistency across all methods. We employ the same RL algorithm with identical training parameters for all methods.
+For all LLM-related requirements, we utilize OpenAI’s GPT-4o\cite{hurst2024gpt}.
+Details of the hyper-parameters are provided in Appendix \ref{app:hyperparameters}.
+To ensure robustness and reliability, all experiments are conducted with five different random seeds.
+
+\textbf{Baselines.}
+ELLM(ICML23) \cite{du2023guiding} utilizes an LLM as a high-level planner, embedding subtask priors into the policy. It serves as an example of an LLM-planner approach.
+T2R(ICLR24) \cite{xie2024text2reward} combines LLMs and human feedback to generate dense reward functions for policy training. We use it as an example of an LLM-rewarder approach.
+Oracle is the expert-written dense reward function provided by the environment. The details of the baseline settings are provided in Appendix \ref{app:baselines}.
+
+\textbf{Environments}
+MetaWorld\cite{yu2019meta}
+is an open-source simulated benchmark features a Sawyer robot interacting with a tabletop setup that includes drawer, window, ball, faucet, door and many objects.
+Maniskill\cite{taomaniskill3}
+is an advanced robotics simulation platform designed for high-fidelity manipulation tasks. Further details about the environment and the tasks are provided in Appendix \ref{app:tasks}.
+
+\subsection{Evaluation Analysis}
+\subsubsection{Outperform previous LLM approaches}
+As shown in Figures \ref{fig:learning-curves} and \ref{fig:success-rates}, our method consistently outperforms the comparison methods across nearly all environments, demonstrating faster convergence and superior performance. We observe the following advantages:
+(1) In complex long-term tasks such as MW-pick-out-of-hole and MS-LiftPegUpright, the baseline methods achieve less than 15\% success, while our method achieves nearly 100\% success, highlighting our ability to effectively solve challenging tasks.
+(2) When compared to ELLM, our approach demonstrates a significantly improved convergence speed, which underscores the efficiency of the Progress Reward Model in providing dense, theoretically guaranteed rewards for the low-level control policy. This results in more stable and faster learning compared to traditional LLM-based planning approaches.
+(3) In comparison with T2R, the subtask decomposition in our framework plays a critical role in simplifying the coding process. By breaking down complex tasks into more manageable subtasks, our method reduces the difficulty of understanding environment dynamics and designing useful metrics, enabling us to solve complex tasks that T2R fails to address. This advantage is particularly evident in tasks where the environment is more intricate and requires a clear separation of the planning and reward stages.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/success-rates.png}
+  \caption{The evaluation results of comparison methods on Metaworld(With prefix `MW') and Maniskill(with prefix `MS') measured by success rate. All experiments are conducted with 5 random seeds.}
+  \label{fig:success-rates}
+\end{figure}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\textwidth]{figures/ablation-results.jpg}
+  \caption{The evaluation results of ablation study on Metaworld measured by success rate. All experiment is conducted with 5 random seeds.}
+  \label{fig:ablation}
+\end{figure}
+
+\subsubsection{Ablation Study}
+
+To further validate the effectiveness of the two augmentations in our framework, we conduct an ablation study by constructing three additional baselines:
+
+\begin{wrapfigure}{r}[0cm]{0pt}
+\includegraphics[width=0.25\textwidth]{figures/potential-reward-ablation.jpg}
+\caption{Training details of our and our w.o. potential reward. }
+\label{fig:potential-reward-ablation}
+\vspace{-20pt}
+\end{wrapfigure}
+
+\textbf{w.o. PRM reward} (denoted as `our w.o. prm'): The PRM reward is replaced with the oracle reward, while retaining the subtask prior.
+
+\textbf{w.o. subtask prior} (denoted as `our w.o. prior'): No subtask prior is provided, while retaining the PRM reward.
+
+\textbf{w.o. potential-based reward shaping} (denoted as `our w.o. potential reward'): The progress function is used directly as the reward, while retaining the subtask prior.
+
+The results are shown in Figure \ref{fig:ablation}. We observe the following findings:
+
+(1) Compared with `our w.o. prm', replacing the PRM reward with the oracle reward leads to a significant drop in performance. This demonstrates that, without an efficient and effective reward signal, directly feeding the subtask prior to the policy does not improve its performance. In most cases, the training curves and evaluation results of `our w.o. prm' are similar to those of the oracle, with some instances where adding the subtask prior even causes a slight performance decrease.
+
+(2) The performance of `our w.o. prior' shows that abandoning the subtask prior results in slower convergence in the training curves. This highlights the role of the subtask prior in enabling efficient convergence for complex, long-term tasks. Moreover, `our w.o. prior' still outperforms T2R, further demonstrating the effectiveness of the PRM reward in guiding the policy.
+
+(3)The performance of `our w.o. potential reward' further demonstrate the effectiveness of our potential-based reward model, where directly using progress as reward signal lead to a significant drop in performance.
+We also analyzed the anomalous behavior of `our w.o. potential reward', where the success rate initially rises but then declines as training progresses.
+As shown in Figure \ref{fig:potential-reward-ablation}, the episode reward increases, while the success rate paradoxically decreases.
+This suggests that the using progress function directly as reward function suffers from inefficiencies, as there are instances where the task fails despite receiving a high reward, leading the policy to learn in an undesirable direction.
+In contrast, our method ensures stable convergence, with the PRM providing well-structured and task-relevant rewards with optimality and convergence guarantees.
+
+In summary, the two enhancements in our framework—the subtask prior and the PRM reward—work synergistically to produce a "1+1 > 2" effect. Without the subtask prior, convergence speed is hindered, and without the reward signal, providing effective and efficient guidance becomes challenging.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\textwidth]{figures/generalization-results.jpg}
+  \caption{The evaluation results of generalization experiment. The results are averaged on 5 random seeds and 100 evaluations per seed.}
+  \label{fig:generalization}
+\end{figure}
+
+\subsubsection{Generalization Results}\label{sec:generalization}
+To evaluate the generalization capabilities of the trained policy, we test the trained policy's performance on unseen tasks in MetaWorld. Additional results and detailed information regarding the tasks are provided in Appendix \ref{app:generalization}.
+As shown in Figure \ref{fig:generalization}, while most methods perform well on the original task, we observe a performance decline on the unseen tasks.
+In comparison to other methods, our framework experiences the least performance loss, demonstrating relatively strong generalization abilities.
+Notably, when comparing to our `w.o. prior' (our framework without the subtask prior), we observe a significant drop in performance on unseen tasks.
+This highlights the critical role of the subtask prior in enhancing generalization.
+The "verb + noun" pattern we designed effectively captures commonalities across different tasks, acting as a powerful prior that guides the policy to perform well on unseen tasks.
+Thus, the subtask prior serves as a robust tool for improving the generalization of reinforcement learning policies across a wide range of tasks.

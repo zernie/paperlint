@@ -1,0 +1,35 @@
+\section{Analysis}\label{sec:Analysis}
+
+\paragraph{Controlling the degree of routing}
+\Autoref{fig:calib-scatter} plots P@1 against Think\% for intermediate \Ours~checkpoints. Points with comparable accuracy but different thinking ratios indicate multiple feasible operating points.
+Thus, calibration is practical: choose a checkpoint that satisfies a compute/routing budget while maintaining accuracy. The achievable frontier depends on the RL prompt set and easy/hard mix, so checkpoint selection is dataset-conditioned rather than universal.
+
+\paragraph{LiveCodeBench and GPQA}
+\Autoref{tab:non_math_tasks} extends evaluation beyond math to coding and scientific QA, where the optimal amount of thinking is more heterogeneous.
+Across models, SFT already introduces a meaningful reduction in explicit reasoning, while \Ours~further reshapes the accuracy routing profile by updating only the root decision.
+The effect is model-size dependent: on Qwen3-8B and Exaone4-1.2B, \Ours~compresses average decoding effort and lowers RAR; on Qwen3-32B, where SFT already produces a near-baseline operating point (Avg Think\%${=}94.6$, RAR${=}1.52$), \Ours~yields a comparable but not strictly better RAR (1.55), reflecting that the room for further routing-only gains shrinks once the underlying solver is sufficiently strong and the SFT operating point is already conservative. Practically, this suggests treating the post-\Ours~checkpoint as a controllable router (with $\tau$-sweeps) rather than as a fixed point that uniformly dominates SFT.
+
+\begin{figure}[t]
+    \centering
+    \begin{subfigure}[t]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{ACL2026/figures/math500_reliability_diagram_nothink.pdf}
+        \caption{\textsc{Math500}.}
+        \label{fig:calib-math500-nothink}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{ACL2026/figures/aime25_reliability_diagram_nothink.pdf}
+        \caption{\textsc{AIME25}.}
+        \label{fig:calib-aime25-nothink}
+    \end{subfigure}
+    \caption{Reliability diagrams \cite{guo2017calibration} for the root confidence $p_{\mathrm{short}}(x){=}p_\theta(z_S {\mid} x,\texttt{<think>})$. Each bin plots empirical accuracy against predicted confidence, with the diagonal indicating perfect calibration.}
+    \label{fig:calib-nothink}
+    \vspace{-10pt}
+\end{figure}
+
+\paragraph{Calibration of root confidence}
+\Autoref{fig:calib-nothink} reports reliability diagrams with Qwen3-1.7B model for the root \textsc{Short} confidence $p_{\mathrm{short}}(x){=}p_\theta(z_S{\mid}x,\texttt{<think>})$. We bin $p_{\mathrm{short}}$ into 10 uniform intervals and compute (i) \textbf{Corr}, the Pearson correlation between per query confidence and empirical accuracy, and (ii) calibration errors \textbf{ECE} $=\sum_b \frac{n_b}{N}\lvert \mathrm{acc}_b-\mathrm{conf}_b\rvert$ and \textbf{MCE} $=\max_b \lvert \mathrm{acc}_b-\mathrm{conf}_b\rvert$, where $\mathrm{acc}*b$ and $\mathrm{conf}*b$ are the average accuracy and confidence within bin $b$ \cite{guo2017calibration}. Overall, $p_{\mathrm{short}}(\cdot)$ tends to correlate with correctness, but the signal is weak and dataset dependent. On AIME25, which is substantially harder, mass concentrates at low $p_{\mathrm{short}}(\cdot)$, so the router rarely assigns high \textsc{Short} confidence, whereas MATH500 shows a broader spread with more high confidence bins. 
+Further discussions are in Appendix.
+

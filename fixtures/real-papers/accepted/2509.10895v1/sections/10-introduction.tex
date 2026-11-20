@@ -1,0 +1,122 @@
+\section{Introduction}
+\label{sec:intro}
+
+\paragraph{SSH}
+
+The Secure Shell (SSH) protocol was developed to prevent sniffing and active man-in-the-middle (MitM) attacks when an administrator executes commands on a remote server. Such servers can be stand-alone Linux or Windows systems, cloud-based virtual machines, or embedded devices such as routers, switches, and management systems. The security of SSH servers is thus of critical importance to the Internet and telecommunication networks. Since the release of the SSHv2 standard in 2006 by the IETF as a series of RFCs~\cite{rfc4250,rfc4251,rfc4252,rfc4253,rfc4254}, SSH has continuously evolved through a series of extensions, some published as separate RFCs, some developed by the community, and some proprietary to a single product. In 2024, the IETF formed the Secure Shell Maintenance~(sshm) working group, intending to revitalize the standardization of SSH under its leadership. These efforts were also motivated by the worldwide transition to post-quantum cryptography and the countermeasures against the Terrapin attack that require SSH standard changes.
+
+\paragraph{Terrapin Attack and Strict KEX}
+
+At USENIX 2024, Bäumer~et~al. presented the Terrapin attack~\cite{USENIX:BauBriSch24} against the integrity of the encrypted and authenticated channel in an SSH connection. The attacker can remove an arbitrary number of messages from the beginning of the channel, for example, drop an \msgextinfo message. The attack exploits that SSH allows optional messages in the handshake (e.g., the \msgignore messages in the partial state machine in \autoref{fig:ssh-hs}), and the fact that sequence numbers are not reset before switching to authenticated encryption. As mitigation, OpenSSH proposed a new protocol extension called \emph{strict KEX}~\cite{ietf-sshm-strict-kex-00}. The client and server can negotiate this protocol extension by sending a pseudo-algorithm identifier in their \msgkexinit messages. If proposed by both parties, any optional or invalid messages must cause the handshake to fail, effectively banning these messages from this phase. This restriction is also applied retroactively to any messages seen before \msgkexinit. Additionally, the two sequence number counters maintained by each peer will be reset, for each of the two unidirectional channels, after sending and receiving the \msgnewkeys message.
+
+\begin{figure}
+    \centering
+    \frame{\includegraphics[width=.62\columnwidth,page=1]{img/SSH_State_Machines.pdf}}
+    \caption{A simplified state machine of a strict KEX-compliant SSH server implementation. The happy flow on the left side can only be traversed by sending the expected symbol at each protocol state. Any unexpected or unknown message causes the connection to terminate immediately. \texttt{PRE KEXINIT} represents the subgraph before sending \msgkexinit.}
+    \Description{The figure depicts a simplified state machine of an SSH server that has strict KEX enabled. The state machine starts in the ``BBP START'' state and transitions through the happy flow on the left consisting of the states ``ALG NEGOTIATION DONE'', ``KEYS DERIVED'', ``KEX COMPLETE'', and the accepting state ``AUTH START''. All unexpected messages cause the connection to terminate, which is also the case for messages sent before the KEXINIT messages.}
+    \label{fig:ssh-strict-kex-sm}
+\end{figure}
+
+A secure implementation requires both the sequence number reset and strict message handling to be done correctly. As any violation of the sequence number reset would prevent a peer from using the secure channel, we assume it is correctly implemented. For strict message handling, the implementation's state machine of the key exchange must be modified; a compliant server state machine is depicted in \autoref{fig:ssh-strict-kex-sm}. At any point during the handshake after \msgkexinit, a peer receiving optional or invalid messages must terminate the connection. However, peers may allow optional messages before \msgkexinit, but must consequently terminate the connection if any such message is received and strict KEX is negotiated.
+
+Such changes to an existing implementation can introduce new errors due to the complexity of the SSH protocol. Developers might make mistakes that are difficult to find because a non-compliant implementation can still be fully functional in development, testing, and deployment. Finding a violation amounts to the problem of finding \emph{any} message flow that does not conform to the specification, resulting in an exponential search space. Thus, we require an automated approach to find such violations.
+
+\paragraph{State Machine Learning (SML)}
+
+SML is a technique where a \emph{learner} uses a learning algorithm (for example, $L^*$~\cite{angluin1987learning} or TTT~\cite{isberner2014ttt}) to infer a hypothesis about a state machine by interaction. The learning algorithm uses a fixed \emph{alphabet} consisting of \emph{symbols} to formulate membership queries. In practice, a \emph{mapper} must translate these symbols into concrete inputs that the \emph{system under learning} (SUL) can understand and respond to. With each new hypothesis, an \emph{equivalence oracle} is queried to find counterexamples disproving the hypothesis. Any counterexample found can then be passed to the learning algorithm to refine the hypothesis.
+
+The size and degree of detail of the retrieved Mealy automaton may differ significantly: It depends on the abstraction level of the learner and the feedback it gets from the \emph{system under learning} (SUL). For example, if we can observe the CPU and its registers, we can easily distinguish exponentially many CPU states with limited insight. If, on the other hand, we can only distinguish different responses sent from the SUL over a network, then we will only learn a much simpler Mealy automaton---but this automaton will give us valuable insights into the logical structure of the SUL. Typical security errors found with this latter configuration are authentication bypasses, where an attacker can bypass client authentication by sending an unexpected, non-standard sequence of messages~\cite{USENIX:FJMRSS20}.
+
+\paragraph{SML on SSH}
+
+Inferring state machines from SSH implementations is challenging due to optional messages, which enable arbitrarily long protocol flows even before the handshake is completed. For example, all of these flows end up in \texttt{KEX COMPLETE} of \autoref{fig:ssh-hs}:
+
+\indent {\small (\msgkexinit, \sshmsg{ECDH\_INIT}, \msgnewkeys, \msgservicerequest),}\\ 
+\indent {\small (\msgkexinit, \msgignore, \sshmsg{ECDH\_INIT}, \msgnewkeys, \msgservicerequest),}\\
+\indent {\small (\msgkexinit, \msgignore, \msgignore, \sshmsg{ECDH\_INIT}, \msgnewkeys, \msgservicerequest),}\\
+For this reason, previous research~\cite{SPIN:fiterauSshModelChecking,tijssen2014automatic,NDSS:FJST23} did not include optional messages in their alphabet, effectively learning only a partial model of the implementation's state machine. However, optional messages were instrumental in the Terrapin attack, so such simplifications could hide details relevant to the security of the protocol.
+
+\newcommand{\adapted}{\textsuperscript{\textdagger}}
+\begin{table*}
+    \centering
+    \small
+    \caption{Comparison of research publications on active state learning of SSH and other security-related protocols, sorted by publication year and author names. We provide the protocol of the system under learning, the number of learned state machines, the number of symbols in the input alphabet, and details about the mapper and equivalence oracle. A dagger symbol (\textdagger) indicates that the mapper implementation is modified to enable state learning. If multiple alphabets are used during learning, we give an upper bound for the number of symbols in the alphabet.}
+    \label{tab:related}
+    \begin{tabular}{lcclrrll}
+        \toprule
+        Authors & Year & Ref. & Protocol & \# SMs & \# Symbols & Mapper & Eq. Oracle \\
+        \midrule
+        de Ruiter~et~al. & 2015 & \cite{USENIX:dRuPol15} & TLS & 16 & $\leq 13$ & \emph{novel} & W-method, modified  \\
+        de Ruiter & 2016 & \cite{SecITSys:dRu16} & TLS & 290 & $\leq 8$ & \multicolumn{2}{c}{\cellcolor{black!10} Reuses learner from~\cite{USENIX:dRuPol15}} \\
+        Fiter\u{a}u-Bro\c{s}tean~et~al. & 2017 & \cite{SPIN:fiterauSshModelChecking} & SSH & 3 & $\leq 21$ & Paramiko\adapted & \cite{automatalearning-ecs} \\
+        Daniel~et~al. & 2018 & \cite{danielopenvpnstatelearning} & OpenVPN & 12 & $\leq 12$ & based on de Ruiter~et~al.~\cite{USENIX:dRuPol15} & W-method, modified \\
+        Stone~et~al. & 2018 & \cite{ESORICS:StoChodRu18} & 802.11 & 7 & 45 & Scapy & \emph{novel} + W-method \\
+        Yadav~et~al. & 2018 & \cite{SSCC:YadSad19} & TLS & 6 & \emph{unknown} & \emph{unknown} & \emph{unknown} \\
+        Guo~et~al. & 2019 & \cite{8913552} & IPSec & 3 & 17 & Scapy & \cite{533956} \\
+        Rasool~et~al. & 2019 & \cite{rasool2019state} & QUIC & 2 & $\leq 5$ & \emph{novel} & random words \\
+        Fiter\u{a}u-Bro\c{s}tean~et~al. & 2020 & \cite{USENIX:FJMRSS20} & DTLS & 31 & 17 & TLS-Attacker~\cite{2024TLSAttacker} & (random) Wp-method \\
+        Chlosta~et~al. & 2021 & \cite{WISEC:ChlRupHol21} & LTE & 7 & $\leq 67$ & srsRAN\adapted & random words \\
+        Ferreira~et~al. & 2021 & \cite{10.1145/3452296.3472938} & QUIC & 3 & 7 & \emph{novel} & Wp-method \\
+        Hussain~et~al. & 2021 & \cite{CCS:HKICB21} & LTE & 14 & 35 & srsLTE\adapted & \emph{novel} \\
+        Pferscher~et~al. & 2021 & \cite{FM:PfeAic21} & BLE & 7 & $\leq 9$ & Scapy & state prefixed random walk \\
+        Pferscher~et~al. & 2022 & \cite{NFM:PfeAic22} & BLE & 8 & $\leq 9$ & \multicolumn{2}{c}{\cellcolor{black!10} Reuses learner from~\cite{FM:PfeAic21}} \\
+        Rasoamanana~et~al. & 2022 & \cite{ESORICS:RasLevDeb22} & TLS & $> 2000$ & \emph{unknown} & TLS-Attacker~\cite{2024TLSAttacker} & random walk \\
+        Stone~et~al. & 2022 & \cite{CCS:STVHBC22} & TLS & 14 & \emph{unknown} & based on de Ruiter~et~al.~\cite{USENIX:dRuPol15} & W-method, modified \\
+        ~ & ~ & ~ & 802.11 & 2 & $\leq 40$ & based on Stone~et~al.~\cite{ESORICS:StoChodRu18} & W-method, modified \\
+        Fiter\u{a}u-Bro\c{s}tean~et~al. & 2023 & \cite{NDSS:FJST23} & SSH & 3 & 21 & \multicolumn{2}{c}{\cellcolor{black!10} Reuses learner from~\cite{SPIN:fiterauSshModelChecking}}  \\
+        ~ & ~ & ~ & DTLS & 16 & 17 & \multicolumn{2}{c}{\cellcolor{black!10} Reuses learner from~\cite{USENIX:FJMRSS20}} \\
+        Karim~et~al. & 2023 & \cite{SP:KIHB23} & BLE & 25 & 32 & SweynTooth\adapted~\cite{sweyntooth} & Wp-method \\
+        Tu~et~al. & 2024 & \cite{USENIX:TIRDWW24} & 5G CPP & 19 & 29 & OpenAirInterface\adapted / srsRAN\adapted / Open5GS\adapted & Wp-method  \\
+        Dong~et~al. & 2025 & \cite{dong2025corecrisis} & 5G Core & 4 & $18 + x$ & UERANSIM\adapted & \emph{novel} \\ 
+        Ang~et~al. & 2025 & \cite{quic-states-2025} & QUIC & 186 & 26 &  aioquic\adapted & Wp-method \\
+        Maehren~et~al. & 2025 & \cite{maehren2025towards} & TLS & 1304 & 60 & TLS-Attacker~\cite{2024TLSAttacker} & \emph{novel} \\ 
+        \midrule
+        This work & ~ & ~ & SSH & \nrStateMachines & 94 & \emph{novel} & \emph{novel} + random words \\
+        \bottomrule
+    \end{tabular}
+\end{table*}
+
+In \autoref{tab:related}, we provide a comparison of prior works applying SML to various protocols. Besides excluding invalid messages, two previous studies focusing on SSH employed a relatively limited alphabet consisting of at most 21 input symbols. To achieve a thorough but practical analysis of the SSH key exchange extending beyond the limited alphabets of previous works, we adopted state learning to SSH by the following strategy: (i) Alphabet: Our novel contribution is the largest alphabet for SSH used to date, which is adapted to the analysis of strict KEX. Additionally, we use ``forbidden'' symbols during the handshake, which enabled us to find a critical Erlang vulnerability. (ii) Mapper: Using our own custom SSH implementation, we introduce a novel mapper that can create arbitrary valid or invalid SSH messages at any time during the connection. These messages require dynamic generation based on the cryptographic connection state. (iii) Equivalence Oracle: A generic equivalence oracle leads to overlong learning times (see \autoref{sec:eval:sub:equiv}), with little coverage of the state machine. We propose an oracle that enables TTT to find unexpected state transitions starting from deep paths within a reasonable runtime, utilizing a randomized component.
+
+\subsection{Research Questions}
+
+With strict KEX enabled, all optional messages \emph{should} terminate the connection. However, as this requirement is not cryptographically ensured, the question remains whether this is the case in practice.
+
+\begin{quote}
+    RQ 1: Do implementations of strict KEX correctly ban all optional or invalid messages in all edge cases?
+\end{quote}
+We answer this question in the negative. In fact, we find that implementers used a variety of strategies to implement strict KEX, but many were not successful in completely implementing it. \nrViolatingImplementationsUpper out of \nrImplementations implementations do not implement strict KEX correctly.
+
+\paragraph{Security Vulnerabilities in Strict KEX Implementations}
+
+After finding non-compliant implementations of SSH strict KEX, we extend our research question:
+\begin{quote}
+    RQ 2: Do violations of the strict KEX specification lead to exploitable security vulnerabilities?
+\end{quote}
+We answer this question affirmatively. We find two implementations that are vulnerable to powerful practical attacks, compromising the security of the client or server. The first attack is against Tectia SSH, a proprietary implementation by a company founded by Tatu Ylönen (the inventor of the SSH protocol). It is a rogue session attack against the client, where a MitM attacker with a shell account on the vulnerable server can log the victim user into the attacker's account. Henceforth, the attacker can control the terminal output seen by the user and extract the user's keyboard input, allowing for phishing attacks. The second attack affects the official SSH implementation of the Erlang Open Telecom Platform. It is a pre-authentication remote code execution that allows an attacker with network access to the SSH server to execute arbitrary code in the security context of the SSH daemon.
+
+\paragraph{Contributions}
+
+Our main contributions are as follows:
+\begin{itemize}
+    \item We provide the first security analysis of the SSH strict KEX countermeasure to the Terrapin attack in SSH servers, analyzing \nrImplementations implementations across five different key exchange flows. We find that \nrViolatingImplementations implementations fail to implement strict KEX correctly, allowing optional or invalid messages during the handshake, despite strict KEX being active.
+
+    \item We provide an implementation of a state learner for the SSH protocol tailored to the analysis of the key exchange phase with an extensive alphabet exploring all defined and selected undefined message types, allowing for an efficient and exhaustive analysis of this crucial phase of the protocol.
+
+    \item We provide \nrStateMachines learned state machines for \nrImplementations SSH server implementations, supporting up to five different key exchange flow types, with strict KEX enabled.
+
+    \item We demonstrate critical security vulnerabilities in two SSH servers, allowing a MitM attacker to launch a rogue session attack against another user in one server and execute remote code before authentication in the other.
+\end{itemize}
+
+\paragraph{Artifacts}
+
+The artifacts contain our custom SSH implementation written in Java, our SSH state learner written in Kotlin, proofs-of-concept for the attacks against Tectia SSH (\autoref{sec:eval:sub:tectia}) and Erlang SSH (\autoref{sec:eval:sub:erlang}), as well as the state machines that we obtained during evaluation. We also include one protocol flow definition violating strict KEX requirements per affected implementation and additional material. 
+%
+The artifacts are available at:
+\begin{quote}
+    \artifactsUrl
+\end{quote}
+
+\paragraph{Ethical Considerations}
+
+We reveal several violations against strict KEX, a security-relevant protocol extension of the SSH protocol. While not all violations pose an immediate security threat to users, this may change as the protocol evolves. Additionally, we identify critical vulnerabilities in Tectia SSH and Erlang SSH that can be exploited in practice. We initiated a responsible disclosure process with each affected vendor. The Erlang developers have confirmed our findings and provided an updated version as part of a public disclosure. Cisco\footnote{\url{https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-erlang-otp-ssh-xyZZy}, accessed: 2025-09-09} and NetApp\footnote{\url{https://security.netapp.com/advisory/ntap-20250425-0001/}, accessed: 2025-09-09} published a list of affected devices. The vendor of Tectia SSH also confirmed our findings and distributed an updated version to their customers. The public disclosure for this vulnerability is currently scheduled for mid-September. We were awarded a €$2{,}000$ bug bounty for the Tectia SSH vulnerability.

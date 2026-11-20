@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "5607d4c0c649e86bd2a2f52e6dd7f4b5b28fccbbad0354ddfe3a4079b7e6d004"
+  }
+}

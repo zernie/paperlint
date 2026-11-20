@@ -1,0 +1,243 @@
+\section{Method}
+\label{sec:aao}
+
+% In this section, we first review the pipeline of alternative methods to RLHF, mainly focusing on pairwise methods that do not involve a reward model. Then we analyze the limitations of the ambiguous content in these methods. Furthermore, a novel Ambiguity Awareness Optimization (AAO) method is proposed to address these limitations.
+
+\subsection{Preliminaries}
+\label{subsec:preliminaries}
+
+% Alternative methods to RLHF typically bypass reward learning and contain two phases: supervised fine-tuning (SFT) and preference optimization. These methods have been widely applied in subsequent works.\cite{DBLP:journals/corr/abs-2305-10425, DBLP:journals/corr/abs-2402-01306, DBLP:journals/corr/abs-2310-12036}.
+
+% \textbf{SFT phase:} To unleash the potential of LLMs in specific tasks, a generic pre-trained LLM is commonly fine-tuned on a well-designed dataset with supervised learning. 
+
+% \textbf{Preference optimization phase:} 
+The RLHF method without a reward model starts by collecting preferred $y_w$ and dispreferred $y_l$ answers for each prompt $x$. These methods guide the LLM $\pi_{\theta}$ (initialized from the SFT model) to generate responses closer to $y_w$ and farther from $y_l$. The prompt $x$ is concatenated with $y_w$ and $y_l$ as inputs to $\pi_{\theta}$, which outputs predictions. The loss is then computed as the product of the predicted probabilities for the target tokens, as follows:
+\begin{equation}
+    \pi_{\theta}(y_\varepsilon |x) =\prod_{i=1}^{K_\varepsilon }  P_{\theta }(y_\varepsilon ^{(i)}|x,y_\varepsilon ^{(<i)}),
+    \label{eq:pi_theta}
+\end{equation}
+\noindent where $\varepsilon \in \{w,l\}$, $K_{\varepsilon}$ is the number of tokens in answer $y_{\varepsilon}$, and $P_{\theta}(y_\varepsilon^{(i)}|x,y_\varepsilon^{(<i)})$ denotes the predicted likelihood for the $i^{th}$ target token in $y_\varepsilon$. The RLHF method without a reward model (e.g., DPO) aims to decrease $\pi_\theta(y_w|x)$ and increase $\pi_\theta(y_l|x)$. It also employs a reference model $\pi_{ref}$ (e.g., a frozen SFT model) to mitigate alignment deviation, using simultaneous inputs to obtain the loss factor $\pi_{ref}(y_\varepsilon|x)$. Based on these factors, this approach achieves its objective with the following function:
+\begin{equation}
+\begin{split}
+    \mathcal{L}_{DPO}(\pi_{\theta},\pi_{ref}) = -\mathbb{E}_{(x,y_w,y_l)\sim \mathcal{D} } \\ 
+    \left [ \log\sigma(\beta \log \frac{\pi_{\theta(y_w|x)}}{\pi_{ref}(y_w|x)} - \beta \log \frac{\pi_{\theta(y_l|x)}}{\pi_{ref}(y_l|x)})\right ],
+\end{split}
+    \label{eq:dpo_loss}
+\end{equation}
+\noindent where $\sigma(\cdot)$ denotes a logistic function (e.g., sigmoid). The parameter $\beta$ controls the deviation from $\pi_{ref}$. Although the specific operations of these methods are different, they all ultimately revolve around $\pi_{\theta}(y_\varepsilon|x)$ \cite{ethayarajh2024kto,azar2024general}.
+% More details of alternative methods to RLHF are presented in Appendix~\ref{appendix:dpo_methods}.
+
+
+\subsection{Theoretical Analysis of AAO}
+\label{subsec:motivation}
+
+Through reviewing existing alternative methods to RLHF, we note that their implementations mainly rely on the preference loss factor $\pi_{\theta}(y_\varepsilon|x)$. The mechanism of logarithmic subtraction of these factors enables LLMs to generate preferred answers. As reported in \cite{rafailov2023direct}, the gradient of the loss function $\mathcal{L}_{DPO}$ increases the likelihood of the preferred answers $y_w$ and decreases that of the dispreferred answers $y_l$. Take a close look at Eq.~\ref{eq:dpo_loss}, which can be reformulated as follows:
+\begin{equation}
+\begin{split}
+    \mathcal{L}_{DPO}(\pi_{\theta},\pi_{ref})= -\mathbb{E}_{x,y_w,y_l\sim \mathcal{D}} \\ \left [ \log \sigma (\beta \log (\frac{\pi_{ref}(y_l|x) }{\pi_{ref}(y_w|x)}\cdot \frac{\pi_{\theta }(y_w|x) }{\pi_{\theta }(y_l|x)})) \right ], 
+\end{split}
+    \label{eq:dpo_2}
+\end{equation}
+\noindent where $\frac{\pi_{ref}(y_l|x)}{\pi_{ref}(y_w|x)}$ is a constant scaling factor due to the reference model without the need for gradient updates, while $\frac{\pi_{\theta }(y_w|x) }{\pi_{\theta }(y_l|x)}$ serves as the core component and enables LLMs to effectively achieve preference optimization. According to Eq.~\ref{eq:pi_theta}, the latter can be further transformed as follows:
+\begin{equation}
+\small
+\label{eq:core}
+\begin{aligned}
+&\mathcal{L}_{core}(\pi_\theta,x,y_w,y_l) =\frac{\prod_{i=1}^{K_w}P_{\theta }(y_w^{(i)}|x,y_w^{(<i)}) }{\prod_{i=1}^{K_l}P_{\theta }(y_l^{(i)}|x,y_l^{(<i)}) } \\
+&=\sum_{i=1}^{K_w} \log P_{\theta}(y_w^{(i)}|x, y_w^{(<i)}) - \sum_{j=1}^{K_l} \log P_{\theta}(y_l^{(j)}|x, y_l^{(<j)}).
+\end{aligned}
+\end{equation}
+
+In the preferred answer $y_w$ and the non-preferred answer $y_l$, if there exists a common token $y^{(c)}$ appearing at position $i$ in the preferred answer and at position $j$ in the non-preferred answer, the corresponding conditional probabilities are represented as $P_{\theta}(y^{(c)} | x, y_w^{(<i)})$ and $P_{\theta}(y^{(c)} | x, y_l^{(<j)})$, respectively. Under the optimization objective of Eq.~\ref{eq:core}, the contribution term of the common token $y^{(c)}$to the log-probability difference is expressed as follows:
+\begin{equation}
+\log P_{\theta}(y^{(c)} | x, y_w^{(<i)}) - \log P_{\theta}(y^{(c)} | x, y_l^{(<j)})
+\end{equation}
+
+Since $y^{(c)}$ appears in different contexts in the preferred path and the non-preferred path, specifically $y_w^{(<i)} \neq y_l^{(<j)}$, the model generates conflicting gradient signals for the prediction of the same token:
+\begin{itemize}
+    \item  In the preferred path, the optimization pushes $\log P_{\theta}(y^{(c)} | x, y_w^{(<i)})$ to increase in order to boost the overall probability of the preferred path.
+    
+    \item In the non-preferred path, the optimization drives $\log P_{\theta}(y^{(c)} | x, y_l^{(<j)})$ to decrease in order to reduce the probability of the non-preferred path.
+\end{itemize}
+
+However, since$ y^{(c)}$ is the same token in both paths and shares the same model parameters, $\pi_{\theta}$ is required to simultaneously increase and decrease their predicted occurrence probabilities during optimization. As a result, their gradient signals may cancel each other out in the parameter space. Furthermore, when their contexts are similar or even identical, the gradient directions tend to be highly aligned, with almost identical magnitudes. Specifically:
+\begin{equation}
+\small
+\nabla_{\theta} \log P_{\theta}(y^{(c)} | x, y_w^{(<i)}) \approx \nabla_{\theta} \log P_{\theta}(y^{(c)} | x, y_l^{(<j)}),
+\end{equation}
+their contribution to the overall gradient of the loss function approaches zero:
+$\nabla_{\theta} f(\pi_{\theta}) \approx 0$
+
+This implies that regardless of whether the contexts are entirely identical, when the same token appears in both the preferred and non-preferred answers, the optimization objective of DPO, although aiming to widen the probability gap between the preferred and non-preferred paths, struggles to effectively update the parameters at these common token positions. This optimization conflict not only could reduce convergence efficiency but also would weaken the model’s ability to distinguish between the preferred and non-preferred paths in similar contexts, thereby suppressing the contrastive learning effect of DPO.
+
+% Now assume that all tokens within answers $y_w$ and $y_l$ are identical, resulting in the same inputs when the prompt $x$ is concatenated with these answers. Under auto-regressive framework, LLMs will generate the same next prediction $P_{\theta}(y_\varepsilon^{(i)}|x,y_\varepsilon^{(<i)})$ for both preferred and dispreferred answers, respectively. At this point, the numerator and denominator in Eq.~\ref{eq:core_loss} will cancel each other out (i.e., $\mathcal{L}_{core}=1$), which leads to a zero gradient and prevents any updates to the LLM $\pi_{\theta}$. From the perspective of semantic learning, this is reasonable, as $\pi_{\theta}$ does not need to learn any information when the preferred and dis-preferred answers are completely identical. Of course, this assumption represents an extreme and highly unlikely case. However, it is noteworthy that preference answers often share some tokens in various tasks, such as summarization. For example, users might use the same words and expressions to describe an idea from a post. If these same tokens are located at the beginning of the preference answers, their losses will be ignored (i.e., the probabilities can be canceled out in the Eq.~\ref{eq:core_loss}) by $\pi_{\theta}$. Nevertheless, due to the differing expression habits among users, these tokens often appear in different positions within the preference answers. This positional mismatch makes it difficult for their probabilities, as the prediction of the $i^{th}$ token is influenced by the preceding $i$ tokens. Consequently, the same tokens commonly cannot be ignored, causing confusion during training, as $\pi_{\theta}$ must simultaneously increase and decrease their predicted probabilities. This drives us to reconsider the impact of such tokens on preference alignment. In fact, the issue extends beyond identical tokens, semantically similar tokens also induce similar problems.
+
+% When LLMs sequentially predict the next token based on the inputs, the last layer of LLMs outputs the embedding $\mathbf{e}=\{e_1, e_2, \dots, e_n\}$, which are further transformed into logits $\ell$ by a Fully Connected (FC) network. The logit $\ell_i$ for the $i^{th}$ token in the vocabulary can be defined as follows:
+% \begin{equation}
+%    \ell _i = w_{i1}e_1 + w_{i2}e_2 + \dots + w_{in}e_n + b_i,
+%     \label{eq:fc_out}
+% \end{equation}
+
+% \noindent where $w_{in}$ is the $n^{th}$ weight of the $i^{th}$ neuron in the FC with the bias $b_i$. Suppose the $i^{th}$ and $j^{th}$ tokens are in $y_w$ and $y_l$, respectively. We define $\ell_i-\ell_j$ as $\zeta_{ij}$, as follows:
+% \begin{equation}
+%     \zeta_{ij} = (w_{i1}-w_{j1})e_1 + \dots + (w_{in}-w_{jn})e_n + (b_i-b_j).
+%     \label{eq:zeta_ij}
+% \end{equation}
+
+% \noindent We can observe that $\zeta_{ij}$ is a hyperplane (decision boundary) in geometric space when $\zeta_{ij}=0$. The embedding $\mathbf{e}$ represents a point ($e_1, e_2, \dots, e_n$) in the space. If the point is above the hyperplane, then $\zeta_{ij} > 0$. During alignment, alternative methods to RLHF aim to increase the logit $\ell_i$ while inhibiting the logit $\ell_j$, such that $\zeta_{ij}$ is progressively amplified. In geometric space, this process represents the decision boundary bias towards the side of $j^{th}$ token, resulting in a smaller and larger decision region for $j^{th}$ and $i^{th}$ token, respectively. In other words, the aligned LLMs tend to select $i^{th}$ token over $j^{th}$ token from the vocabulary. This is anticipated when $i^{th}$ token embodies preferred information and $j^{th}$ token contains dispreferred information. However, if the $j^{th}$ token is semantically similar to the $i^{th}$ token and contains no dispreferred information, this may cause confusion during training.
+
+% Based on the above analysis, the same or semantically similar tokens located in different position within the preference answers may have a negative impact on preference optimization. Current methods commonly approach the task from a sentence-level perspective, primarily focusing on the preference discrepancies between pairs of sentences. At a fine-grained view, the relative quality of two sentences is often reflected in distinctions at the level of individual words, phrases, or subsentences. The same or similar tokens that appear in both sentences commonly serve a ambiguous role, lacking human preferences. Therefore, requiring LLMs to simultaneously favor and distance from the ambiguous is neither reasonable nor necessary. Instead, the focus should shift towards the target tokens that genuinely encapsulate preference information, which are overlooked by existing methods.
+
+
+
+\subsection{Identifying Ambiguous Tokens}
+\label{subsec:identifying_focused_and_ambiguous_tokens}
+To mitigate the negative impact of ambiguous vocabulary on preference alignment training, we propose a concise and effective method - AAO. This approach can identify ambiguous tokens in preference answers, encouraging LLMs to focus more on the core tokens that genuinely reflect human preferences. Specifically, we first encode each token in the answers into corresponding embedding vectors using the language model’s embedding layer. To determine whether a token in one answer has semantically similar or identical tokens in the other answer, we compute the cosine similarity between each token embedding in the preferred answer and all token embeddings in the rejected answer, and vice versa. We then record the maximum similarity score for each token, formulated as:
+% \begin{equation}
+%    S_\varepsilon^{(i)} = \max_{j} \mathcal{F}(e_\varepsilon^{(i)}, e_{\neg \varepsilon}^{(j)}),
+% \end{equation}
+\begin{equation}
+\footnotesize
+S_\varepsilon^{(i)} = \max_{j \in K_{\neg \varepsilon}} \left( 
+\frac{ \mathcal{F}(e_\varepsilon^{(i)}, e_{\neg \varepsilon}^{(j)}) - \min\limits_{k \in K_{\neg \varepsilon}} \mathcal{F}(e_\varepsilon^{(i)}, e_{\neg \varepsilon}^{(k)}) }
+{ \max\limits_{k \in K_{\neg \varepsilon}} \mathcal{F}(e_\varepsilon^{(i)}, e_{\neg \varepsilon}^{(k)}) - \min\limits_{k \in K_{\neg \varepsilon}} \mathcal{F}(e_\varepsilon^{(i)}, e_{\neg \varepsilon}^{(k)}) } 
+\right),
+\label{eq:normalized_cosine_similarity}
+\end{equation}
+where $S_\varepsilon^{(i)}$ denotes the normalized similarity score of the i-th token in answer $y_\varepsilon$, with $\varepsilon \in \{w, l\}$ corresponding to the preferred and rejected answers, respectively. $K_\varepsilon$ is the number of tokens in the answer, and $\mathcal{F}(\cdot)$ represents the cosine similarity function between two embedding vectors. To enhance the comparability of similarity scores across different tokens, we perform min-max normalization over all cross-answer token similarities and take the normalized maximum similarity as the final score for each token. Based on this score, we introduce a threshold to distinguish different categories of tokens. The specific threshold-setting strategy is detailed in Section~\ref{subsec:adaptive_thresholds}. This approach enables the model to effectively identify and mitigate the influence of ambiguous tokens during training, thereby improving its ability to capture genuine human preference signals and enhancing preference alignment performance.
+
+\subsection{Adaptive Thresholds}
+\label{subsec:adaptive_thresholds}
+Due to significant differences in semantic similarity between preferred answers across different tasks, and even among different queries, it is challenging to manually set fixed thresholds that can adapt to these varying semantic environments. To address this issue, we design a dynamic threshold adjustment mechanism that better accommodates the diverse semantics of different tasks. Specifically, we introduce a lightweight linear layer to automatically output the thresholds, formulated as follows:
+\begin{equation}
+  a, b = AW(P(y | x, \theta)),
+\end{equation}
+where $P(y | x, \theta)$ represents the output logits of the model, and $AW$ is a multi-layer perceptron (MLP). The values of parameters $a$ and $b$ are constrained within the range $[0, 1]$. To ensure validity, we introduce a clipping operation during computation to guarantee that $a > b$ is always satisfied.
+This adaptive threshold module is designed to be lightweight and efficient, introducing minimal additional computational overhead while maintaining plug-and-play capability. Experimental results demonstrate that the impact of this module on time consumption is negligible (see Section~\ref{subsec:ablation}).
+
+To further optimize the threshold outputs of the linear layer, we design an additional loss function to assist in training, enabling the model to better learn adaptive thresholds for different tasks. This loss function consists of two main components: Fine-grained Contrastive Suppression Loss and Preference Reward Enhancement Loss.
+
+\textbf{Fine-grained contrastive suppression loss.}
+To enable the reweighted generation to more precisely extract key tokens from both preferred and non-preferred data, we design a Fine-grained Contrastive Suppression Loss. Our goal is to significantly reduce the interference of background tokens and enhance the attention to key tokens, thereby optimizing the feature representation of preferred and non-preferred data more effectively.
+
+Specifically, we define two types of similarity matrices:
+\begin{equation}
+\footnotesize
+\begin{aligned}
+&S_{\text{pref}} = \frac{\sum_{i=1}^{T_p} \sum_{j=1}^{T_d} \cos \left(E_{\text{pref}, i}\cdot w_{\text{pref,i}}, E_{\text{dis}, j}\cdot w_{\text{dis},i} \right)}{T_p \cdot T_d} ,\\
+&S_{\text{dis}} = \frac{\sum_{i=1}^{T_d} \sum_{j=1}^{T_p} \cos \left(E_{\text{dis}, j}\cdot w_{\text{dis},i}, E_{\text{pref}, i}\cdot w_{\text{pref,i}} \right)}{T_d \cdot T_p} ,
+\end{aligned}
+\end{equation}
+% \begin{equation}
+% \footnotesize
+% S_{\text{dis}} = \frac{\sum_{i=1}^{T_d} \sum_{j=1}^{T_p} \cos \left(E_{\text{dis}, j}\cdot w_{\text{dis},i}, E_{\text{pref}, i}\cdot w_{\text{pref,i}} \right)}{T_d \cdot T_p} ,
+% \end{equation}
+where $T_p$ and $T_d$ represent the number of tokens in the preferred and non-preferred data, respectively. $E_{\text{pref}}$ and $E_{\text{dis}}$ are the feature representations of the preferred and non-preferred data, while $w_{\text{pref}}$ and $w_{\text{dis}}$ are the corresponding weighting coefficients. We measure the average similarity between each token in the preferred data and all tokens in the non-preferred data, and vice versa, to quantify the feature differences between the two.
+
+Based on this fine-grained comparison, we formulate the contrastive suppression loss as follows:
+\begin{equation}
+\mathcal{L}_{\text{contrastive}} = S_{\text{pref}} + S_{\text{dis}}.
+\end{equation}
+
+
+The optimization objective of this loss function is to maximize the difference between the preferred and non-preferred data in the high-dimensional feature space, thereby enhancing the model’s ability to capture preference expression effectively.
+
+\textbf{Preference reward enhancement loss.}
+To further improve the model’s performance on preferred samples (chosen), we introduce a Preference Reward Enhancement Loss. Unlike traditional contrastive learning, which focuses solely on the differences between positive and negative samples, our approach not only aims to increase the distinction between chosen and rejected samples but also seeks to significantly enhance the log-probability of chosen samples.
+
+Specifically, given the model’s output probability distribution $P(y | x)$, we calculate the sum of log-probabilities over all time steps for the preferred samples as the reward metric:
+\begin{equation}
+R_{\text{chosen}} = \sum_{t=1}^T \log P(y_t | x, \theta),
+\end{equation}
+where $y_t$ represents the output of the preferred data (chosen) at time step $t$, and $\theta$ denotes the model parameters. Under the adaptive weighting mechanism, the influence of background tokens is suppressed while the significance of key tokens is magnified. This adjustment enables the model to focus more on high-information regions during the generation of preferred answers, thereby increasing the log-probability.
+
+To further strengthen this mechanism, we introduce an optimization objective for $R_{\text{chosen}}$ in the loss function:
+\begin{equation}
+\mathcal{L}{\text{reward}} = -\mathbb{E}[R_{\text{chosen}}].
+\end{equation}
+
+This optimization objective implies that during each training iteration, the model is encouraged to enhance the log-probability of chosen samples, thereby amplifying the distinction between preferred and non-preferred samples in contrastive learning.
+
+To summarize, the complete form of the auxiliary loss function is expressed as follows:
+\begin{equation}
+\mathcal{L}_{\text{auxiliaryloss}} = \mathcal{L}_{\text{contrastive}} + \mathcal{L}_{\text{reward}}.
+\end{equation}
+% \textbf{Weight smoothness regularization.}
+% To prevent excessive weight jumps between adjacent tokens that may disrupt the stability of gradient propagation, we introduce Weight Smoothness Regularization, which constrains the variations of weights across neighboring positions. Specifically, the loss function for weight smoothness regularization is defined as follows:
+% \begin{equation}
+% \mathcal{L}{\text{smooth}} = \sum{t=1}^{T-1} (w_{t+1} - w_t)^2,
+% \end{equation}
+% where $T$ denotes the total number of tokens, and $w_t$ represents the weight of the t-th token.
+
+% This regularization strategy effectively constrains the differences in weights of adjacent tokens, preventing sharp fluctuations during the optimization process. It not only enhances the smoothness of gradient propagation but also reduces the impact of local noise on weight updates, contributing to more stable and robust model training.
+
+\subsection{Re-weighting Strategies}
+\label{subsec:re_weighting_strategies}
+In this study, we introduce two similarity thresholds, $a$ and $b$ (with $a > b$), to distinguish tokens based on their semantic roles. Specifically, tokens with similarity scores greater than a are classified as ambiguous tokens, which represent highly redundant tokens that may introduce confusion during training. Tokens with similarity scores below b are treated as key tokens, indicating core words that are highly discriminative and more likely to reflect true human preferences. Tokens with similarity scores between b and a are considered transitional tokens, reflecting an intermediate semantic state between ambiguous and key tokens.
+
+After identifying these three token categories, we design a targeted reweighting strategy to suppress the influence of ambiguous noise and enhance the model’s focus on key semantics during preference alignment training. The strategy is as follows:
+
+
+\textbf{Suppressing ambiguous tokens.}
+For ambiguous tokens, we reduce their contribution to the training loss by down-weighting their importance based on their similarity score. As the similarity approaches 1, the weight decreases non-linearly, diminishing their impact during optimization. The weight is computed as:
+\begin{equation}
+   w_{\varepsilon}^{(i)} = (1 - S_\varepsilon^{(i)})^2.
+\end{equation}
+
+This effectively reduces the influence of high-redundancy tokens in the optimization process.
+
+\textbf{Emphasizing key tokens.}
+Since key tokens are more likely to carry genuine preference signals, we assign them higher training weights to encourage the model to focus on these crucial semantic units. The weighting function is defined as:
+\begin{equation}
+  w_{\varepsilon}^{(i)} = 1 + S_\varepsilon^{(i)}.
+\end{equation}
+
+This enhances the contribution of key tokens to parameter updates while maintaining smooth gradients.
+
+\textbf{Preserving transitional tokens.} 
+% Transitional tokens are those whose semantic similarity lies between ambiguous tokens and key tokens. They are neither highly repetitive and potentially confusing ambiguous tokens, nor clearly indicative key tokens that strongly reflect human preferences. Instead, they serve as intermediate tokens that act as semantic bridges and help maintain the flow of information. During training, we assign transitional tokens a weight of 1, meaning no additional weighting adjustment is applied. This choice is based on several considerations: first, transitional tokens contain auxiliary semantic details that support comprehensive understanding; maintaining their weight helps preserve information completeness and prevents loss of contextual coherence caused by weight reduction. Second, not reweighting transitional tokens avoids semantic distortion and preserves the natural distribution of training signals. Third, keeping the weight unchanged contributes to training stability by balancing the weakening of ambiguous tokens and the emphasis on key tokens. Finally, empirical results show that adjusting the weights of transitional tokens yields limited training improvement, while maintaining their weight at 1 simplifies the training process and ensures stable model performance. Therefore, setting the weight of transitional tokens to 1 is a reasonable and effective design choice.
+Transitional tokens have semantic similarity between ambiguous and key tokens, acting as semantic bridges to maintain information flow. During training, they are assigned a fixed weight of 1 without adjustment for several reasons: they carry auxiliary semantic details crucial for context completeness; reweighting could distort their natural distribution; keeping the weight stable balances the weakening of ambiguous tokens and emphasis on key tokens, enhancing training stability; and empirical results show limited benefits from adjusting their weights(see Section~\ref{subsec:ablation}). Thus, setting transitional tokens’ weight to 1 is a reasonable and effective choice that simplifies training while ensuring stable performance.
+
+In summary, our final weighting formula is as follows:
+\begin{equation}
+w_{\varepsilon}^{(i)}=
+\begin{cases}
+  (1 - S_\varepsilon^{(i)})^2&     \text{ if } S_\varepsilon^{(i)} > a \\
+  1&   \text{ if } a<S_\varepsilon^{(i)} < b \\
+  1 + S_\varepsilon^{(i)}&   \text{ if } S_\varepsilon^{(i)} < b
+\end{cases}.
+\end{equation}
+
+However, during the actual training process, traditional threshold-based decisions do not support backpropagation, resulting in ineffective parameter updates for the adaptive model. To address this issue, we redesigned an alternative formulation to overcome the limitations of non-differentiable thresholds. The new formulation is expressed as follows:
+% \begin{equation}
+% \begin{aligned}
+% &high_{region} = \frac{1}{1 + e^{-\alpha \cdot ( S_\varepsilon^{(i)} - a)}}, \\
+% &low_{region}  = \frac{1}{1 + e^{-\alpha \cdot (b - S_\varepsilon^{(i)})}},\\
+% &w_{\varepsilon}^{(i)} = high_{region} \cdot (1 - S_\varepsilon^{(i)})^2 \\
+%                           &\quad + low_{region} \cdot (1 + S_\varepsilon^{(i)}) \\
+%                           &\quad + (1 - high_{region} - low_{region}),
+% \end{aligned}
+% \end{equation}
+\begin{equation}
+\small
+\begin{aligned}
+&w_{\varepsilon}^{(i)} = \frac{(1 - S_\varepsilon^{(i)})^2}{1 + e^{-\alpha \cdot ( S_\varepsilon^{(i)} - a)}}   + \frac{ (1 + S_\varepsilon^{(i)})}{1 + e^{-\alpha \cdot (b - S_\varepsilon^{(i)})}}  \\
+& + (1 -  \frac{1}{1 + e^{-\alpha \cdot ( S_\varepsilon^{(i)} - a)}} - \frac{1}{1 + e^{-\alpha \cdot (b - S_\varepsilon^{(i)})}}),
+\end{aligned}
+\end{equation}
+% \begin{equation}
+% high_{region} = \frac{1}{1 + e^{-\alpha \cdot ( S_\varepsilon^{(i)} - a)}}, 
+% \end{equation}
+% \begin{equation}
+% low_{region}  = \frac{1}{1 + e^{-\alpha \cdot (b - S_\varepsilon^{(i)})}},
+% \end{equation}
+% \begin{equation}
+% \begin{aligned}
+% &w_{\varepsilon}^{(i)} = high_{region} \cdot (1 - S_\varepsilon^{(i)})^2 \\
+%                           &\quad + low_{region} \cdot (1 + S_\varepsilon^{(i)}) \\
+%                           &\quad + (1 - high_{region} - low_{region}),
+% \end{aligned}
+% \end{equation}
+where $\alpha$ represents the fitting weight. When $\alpha = 200$, this parameter effectively fits Equation (16). Hence, in the subsequent experiments, we consistently set a to 200 to ensure result consistency.
+
+Finally, we apply these weights to the logits of the final output from the LLMs, enabling the subsequent weighted training process.

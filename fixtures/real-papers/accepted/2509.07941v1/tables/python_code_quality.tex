@@ -1,0 +1,17 @@
+
+
+\begin{table*}[]
+\caption{Code generation quality analysis by Bandit, Pylint and Flake 8. Values in parentheses denote mean deviations from clean database baselines. Generated code comes from DeepSeek-v3.}
+\label{tab:code_quality_evaluation}
+\begin{threeparttable}
+\resizebox{0.8\textwidth}{!}{%
+\begin{tabular}{lccccccccc}
+\toprule
+\multirow{2}{*}{Dependency}   & \multicolumn{2}{c}{\#Security Issues} & \multicolumn{2}{c}{\#High Severity} & \multicolumn{2}{c}{Pylint Score} & \multicolumn{2}{c}{\#Flake8 Errors} & \multirow{2}{*}{Bonferroni} \\ \cline{2-9}
+                              & Avg.            & $p_{Wilcoxon}$            & Avg.           & $p_{Wilcoxon}$           & Avg.          & $p_{Wilcoxon}$         & Avg. & $p_{Wilcoxon}$ &                             \\ \midrule
+matplotlib (matplotlib\_safe) &0.10(-0.03)    &0.346   &0.10(-0.03)    &0.346     &3.55(-0.14)   &0.797    &9.19(+1.50)      &0.021   &0.0125       \\
+numpy (cumpy)                 &0.12(-0.01)       &1.000        &0.12(-0.01)     &1.000        &3.77(-0.63)          &0.033        &8.19(+0.23)      &0.401       &0.0125                \\
+pandas (pandas\_v2)           &0.22(+0.01)       &0.824  &0.21(+0.02)      &0.572          &3.23(-0.07)    &0.780      &8.52(+0.61)     &0.433           &0.0125              \\ \bottomrule
+\end{tabular}}
+\end{threeparttable}
+\end{table*}

@@ -1,0 +1,12 @@
+
+\begin{abstract}
+Price manipulation attack is one of the notorious threats in decentralized finance (DeFi) applications, which allows attackers to exchange tokens at an extensively deviated price from the market. Existing efforts usually rely on \textit{reactive} methods to identify such kind of attacks after they have happened, \textit{e.g.,} detecting attack transactions in the \textit{post-attack stage}, which cannot mitigate or prevent price manipulation attacks timely.
+From the perspective of attackers, they usually need to deploy attack contracts in the \textit{pre-attack stage}. Thus, if we can identify these attack contracts in a \textit{proactive} manner, we can raise alarms and mitigate the threats. 
+With the core idea in mind, in this work, we shift our attention from the victims to the attackers.
+Specifically, we propose {\tool}, a novel approach for identifying price manipulation attacks in the \textit{pre-attack stage} proactively. 
+For generality, it conducts analysis on bytecode and does not require any source code and transaction data.
+For accuracy, it depicts the control- and data-flow dependency relationships among function calls into a token flow graph.
+For scalability, it filters out those suspicious paths, in which it conducts inter-contract analysis as necessary.
+To this end, {\tool} can pinpoint attacks in real time once they have been deployed on a chain.
+The evaluation results illustrate that {\tool} significantly outperforms existing baselines with 91.6\% recall and $\sim$100\% precision. Moreover, {\tool} also uncovers 616 attack contracts in-the-wild, accounting for \$9.25M financial losses, with only 19 cases publicly reported. By applying {\tool} as a real-time detector in Ethereum and Binance Smart Chain, it has raised 14 alarms 99 seconds after the corresponding deployment on average. These attacks have already led to \$641K financial losses, and seven of them are still waiting for their ripe time.
+\end{abstract}

@@ -1,0 +1,94 @@
+\begin{table*}[!htbp]
+\small
+\begin{center}
+\caption{
+Multi-source DG results (\%) on PACS, VLCS, OfficeHome, TerraInc, and DomainNet benchmark datasets. 
+}
+\vspace{-2.0mm}
+\label{tab:multi-DomainBed}
+\renewcommand\arraystretch{1.0}
+\scalebox{0.965}{
+\begin{tabular}{l@{\hspace{16pt}}|@{\hspace{16pt}}c@{\hspace{16pt}}|@{\hspace{16pt}}c@{\hspace{16pt}}c@{\hspace{16pt}}c@{\hspace{16pt}}c@{\hspace{16pt}}c@{\hspace{16pt}}|>{\hspace{13pt}}>{\columncolor{gray!30}}c<{\hspace{13pt}}}
+\hline
+\textbf{Method} &\textbf{Venue} &\textbf{PACS} &\textbf{VLCS} &\textbf{OfficeHome} &\textbf{TerraInc}    &\textbf{DomainNet}  &\textbf{Avg.}  \\ 
+\hline
+DANN~\cite{ganin2016domain}       
+& IJCAI'16    
+& 83.60\tsb{\(\pm\)0.40} & 78.60\tsb{\(\pm\)0.40} & 65.90\tsb{\(\pm\)0.60} 
+& 46.70\tsb{\(\pm\)0.50} & 38.30\tsb{\(\pm\)0.40} & 62.60 \\
+CORAL~\cite{sun2016deep}       
+& ICCV'16     
+& 86.20\tsb{\(\pm\)0.30} & 78.80\tsb{\(\pm\)0.60} & 68.70\tsb{\(\pm\)0.30} 
+& 47.60\tsb{\(\pm\)1.00} & 41.50\tsb{\(\pm\)0.10} & 64.50 \\
+MLDG~\cite{li2018learning}        
+& AAAI'18     
+& 84.90\tsb{\(\pm\)1.00} & 77.20\tsb{\(\pm\)0.40} & 66.80\tsb{\(\pm\)0.60} 
+& 47.70\tsb{\(\pm\)0.90} & 41.20\tsb{\(\pm\)0.10} & 63.60 \\
+GroupDRO~\cite{sagawa2019distributionally}    
+& ICLR'20     
+& 84.40\tsb{\(\pm\)0.80} & 76.70\tsb{\(\pm\)0.60} & 66.00\tsb{\(\pm\)0.70} 
+& 43.20\tsb{\(\pm\)1.10} & 33.30\tsb{\(\pm\)0.20} & 60.70 \\
+RSC~\cite{huang2020self}         
+& ECCV'20     
+& 85.20\tsb{\(\pm\)0.90} & 77.10\tsb{\(\pm\)0.50} & 65.50\tsb{\(\pm\)0.90} 
+& 46.60\tsb{\(\pm\)1.00} & 38.90\tsb{\(\pm\)0.50} & 62.70 \\
+VREx~\cite{krueger2021out}        
+& ICML'21     
+& 84.90\tsb{\(\pm\)0.60} & 78.30\tsb{\(\pm\)0.20} & 66.40\tsb{\(\pm\)0.60}
+& 46.40\tsb{\(\pm\)0.60} & 33.60\tsb{\(\pm\)2.20} & 61.90 \\
+Mixstyle~\cite{zhou2021domain}
+& ICLR'21     
+& 85.20\tsb{\(\pm\)0.30} & 77.90\tsb{\(\pm\)0.50} & 60.40\tsb{\(\pm\)0.20} 
+& 44.00\tsb{\(\pm\)0.70} & 34.00\tsb{\(\pm\)0.10} & 60.30 \\
+ERM~\cite{vapnik2013nature}
+& ICLR'21     
+& 85.50\tsb{\(\pm\)0.20} & 77.30\tsb{\(\pm\)0.40} & 66.50\tsb{\(\pm\)0.30} 
+& 46.10\tsb{\(\pm\)1.80} & 43.80\tsb{\(\pm\)0.10} & 63.90 \\
+SAM~\cite{li2018domain}
+& ICLR'21     
+& 85.80\tsb{\(\pm\)0.20} & 79.40\tsb{\(\pm\)0.10} & 69.60\tsb{\(\pm\)0.10} 
+& 43.30\tsb{\(\pm\)0.70} & 44.30\tsb{\(\pm\)0.00} & 64.50 \\
+SagNet~\cite{nam2021reducing}
+& CVPR'21     
+& 86.30\tsb{\(\pm\)0.20} & 77.80\tsb{\(\pm\)0.50} & 68.10\tsb{\(\pm\)0.10} 
+& 48.60\tsb{\(\pm\)1.00} & 40.30\tsb{\(\pm\)0.10} & 64.20 \\
+Miro~\cite{cha2022domain}
+& ECCV'22     
+& 85.40\tsb{\(\pm\)0.40} & 79.00\tsb{\(\pm\)0.00} & 70.50\tsb{\(\pm\)0.40} 
+& 50.40\tsb{\(\pm\)1.10} & 44.30\tsb{\(\pm\)0.20} & 65.90 \\
+GSAM~\cite{zhuang2022surrogate}
+& ICLR'22     
+& 85.90\tsb{\(\pm\)0.10} & 79.10\tsb{\(\pm\)0.20} & 69.30\tsb{\(\pm\)0.00} 
+& 47.00\tsb{\(\pm\)0.80} & 44.60\tsb{\(\pm\)0.20} & 65.10 \\
+SAGM~\cite{wang2023sharpness}
+& CVPR'23     
+& 86.60\tsb{\(\pm\)0.20} & \underline{80.00\tsb{\(\pm\)0.30}} & 70.10\tsb{\(\pm\)0.20} 
+& 48.80\tsb{\(\pm\)0.90} & 45.00\tsb{\(\pm\)0.20} & 66.10 \\
+DomainDrop~\cite{guo2023domaindrop}
+& ICCV'23     
+& 87.90\tsb{\(\pm\)0.30} & 79.80\tsb{\(\pm\)0.30} & 68.70\tsb{\(\pm\)0.10} 
+& 51.50\tsb{\(\pm\)0.40} & 44.40\tsb{\(\pm\)0.50} & 66.50 \\
+GMDG~\cite{tan2024rethinking}
+& CVPR'24     
+& 85.60\tsb{\(\pm\)0.30} & 79.20\tsb{\(\pm\)0.30} & 70.70\tsb{\(\pm\)0.20} 
+& 51.10\tsb{\(\pm\)0.90} & 44.60\tsb{\(\pm\)0.10} & 66.30 \\
+SMOS~\cite{luo2024grounding}
+& CVPR'24     
+& 89.40\tsb{\(\pm\)0.30} & 79.80\tsb{\(\pm\)0.10} & \underline{71.60\tsb{\(\pm\)0.10}} 
+& \textbf{55.40\tsb{\(\pm\)0.40}} & 45.30\tsb{\(\pm\)0.00} & \underline{68.30} \\
+RES~\cite{huangrepresentation}
+& ECCV'24     
+& \underline{90.00\tsb{\(\pm\)0.30}} & 79.80\tsb{\(\pm\)0.20} & \textbf{71.80\tsb{\(\pm\)0.30}} 
+& 51.40\tsb{\(\pm\)0.60} & \underline{46.70\tsb{\(\pm\)0.20}} & 67.90 \\
+\hline              
+\textbf{PAPT (Ours)}    
+& - 
+& \textbf{91.69\tsb{\(\pm\)0.44}} & \textbf{80.84\tsb{\(\pm\)0.32}} & 71.21\tsb{\(\pm\)0.53} 
+& \underline{54.27\tsb{\(\pm\)1.01}} & \textbf{50.18\tsb{\(\pm\)0.47}} & \textbf{69.64} \\ 
+\hline
+\end{tabular}}
+\end{center}
+\vspace{-8.0mm}
+\end{table*}
+
+

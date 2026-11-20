@@ -1,0 +1,1180 @@
+\section{Training configurations}
+\label{app:training}
+
+This appendix documents the architecture and training configuration for
+each of the four architectures (MAMNet, OGLANet, DINOv3, CrossEarth)
+and the eight adaptation methods (FDA, SegDeSiC, IIM, ISW, MRFP+, FADA,
+BSM, SAR).  SegDeSiC, IIM, ISW, MRFP+ and FADA are not run on
+CrossEarth, whose query-based Mask2Former decoder has no per-pixel head
+these methods are defined on.  Each adaptation block lists only those
+hyperparameters that differ from the corresponding base configuration;
+values matching the base are omitted.  
+
+\subsection{MAMNet}
+\label{sec:mamnet-base}
+
+\textbf{Architecture.}
+ResNet-34~\cite{he2016deep} backbone with pretrained weights
+\texttt{ResNet34\_Weights.IMAGENET1K\_V1} (torchvision); \texttt{conv1}
+stride changed from 2 to 1 and \texttt{maxpool} replaced by
+\texttt{nn.Identity}, so the encoder returns five feature maps at
+channels $\{64,128,256,512,512\}$ with output strides
+$\{1,2,4,8,16\}$ relative to the $384\times384$ input
+(\texttt{feat5}: $512{\times}24{\times}24$).
+The MSCAF module operates on \texttt{feat5} before the decoder.
+The decoder comprises four \texttt{DecoderBlock} stages
+($512{\to}256{\to}128{\to}64{\to}64$); each block applies Criss-Cross
+Attention (CCA) to the incoming skip-connection feature, bilinearly
+upsamples the previous decoder map, concatenates, and refines with
+two $3{\times}3$-BN-ReLU convolutions.  CCA uses $1{\times}1$
+projections to $C/8$ channels for $Q,K$ and $C$ for $V$; row- and
+column-wise attention maps are summed and gated by a learnable scalar
+$\gamma$ (init.\ 0): $\text{out} = \gamma(H{+}W) + x$.  Three
+auxiliary branches (AUX1--3) attach to decoder outputs at $256/128/64$
+channels (Conv$3{\times}3$-BN-ReLU-Dropout(0.3)-Conv$1{\times}1$,
+bilinearly upsampled to input resolution).
+Input is $384{\times}384$ four-channel RGBC; the contrast-channel
+\texttt{conv1} weight is initialised as the channel-mean of the
+pretrained RGB weights.
+
+\begin{table}[h]
+\centering
+\caption{MAMNet training configuration.
+$^\dagger$Shell script overrides the Python-file default of
+$1{\times}10^{-3}$.}
+\label{tab:mamnet-config}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Optimisation}} \\
+Optimizer        & Adam \\
+Learning rate    & $1{\times}10^{-4}$$^\dagger$ \\
+Weight decay     & $1{\times}10^{-4}$ \\
+Batch size       & 8 \\
+Epochs           & 100 \\
+LR scheduler     & \texttt{ReduceLROnPlateau}
+                   (mode=\texttt{max}, factor=0.5, patience=3) \\
+Decision metric  & Per-image tolerant mIoU ($\pm$2\,px) \\
+Early stopping   & patience = 10 epochs \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Loss}} \\
+Main loss        & \texttt{nn.CrossEntropyLoss} (2-class, unweighted) \\
+Total loss       & $\mathcal{L}_\text{main} + 0.4\cdot
+                    \tfrac{1}{3}\sum_{k=1}^{3}\mathcal{L}_{\text{aux}_k}$ \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Data}} \\
+Input size       & $384{\times}384$ \\
+Channels         & 4 (RGBC) \\
+Train aug.       & H-flip $p{=}0.5$, V-flip $p{=}0.5$ \\
+Val/test aug.    & None (resize + ImageNet normalisation only) \\
+Post-processing  & Remove connected components $<10$\,px \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Infrastructure}} \\
+Hardware         & 1$\times$ NVIDIA A100 (NCSA Delta, \texttt{gpuA100x4}) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{MAMNet + FDA}
+
+\textbf{MAMNet\,+\,FDA.}
+FDA~\cite{fda} is applied at the input stage, before resize and
+normalisation: each source training image (uint8 PIL $\to$ numpy) is
+passed through \texttt{FDATransform} on CPU.  Per-channel 2-D FFT
+separates amplitude and phase; the source amplitude rectangle of
+half-width $b{=}\lfloor\min(H,W)\cdot L\rfloor$ centred on the shifted
+spectrum is replaced element-wise by the corresponding target
+rectangle (no blending), and the image is reconstructed from the
+mutated amplitude with the source phase
+$\hat{\mathbf{s}} = \operatorname{Re}\bigl(\mathcal{F}^{-1}(\hat{\mathcal{A}}_s
+e^{i\mathcal{P}_s})\bigr)$, clipped to $[0,255]$.
+With $L{=}0.01$ and $\min(H,W){=}384$, the swapped region is $6{\times}6$
+per channel.  Validation and test images are unmodified.  Run in LOCO
+mode only; the target pool is up to 100 unlabelled images sampled
+uniformly per iteration from the held-out city's \texttt{train/images}.
+
+\begin{table}[h]
+\centering
+\caption{MAMNet\,+\,FDA hyperparameters; settings matching
+Table~\ref{tab:mamnet-config} are omitted.}
+\label{tab:mamnet-fda}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+FDA low-freq.\ ratio $L$ & 0.01 \\
+Target pool size         & $\leq 100$ images \\
+Target domain            & Held-out city \texttt{train/images} (unlabelled) \\
+Application point        & Input (pre-resize, train only) \\
+Target sampling          & Uniform random per iteration \\
+Early-stopping patience  & 15 epochs \\
+Modes run                & LOCO only \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{MAMNet + SegDeSiC}
+
+\textbf{MAMNet\,+\,SegDeSiC.}
+SegDeSiC~\cite{segdesicnet} attaches a geographic coordinate
+branch to \texttt{feat5} ($512{\times}24{\times}24$): global average
+pool $\to$ MLP
+($512{\to}256{\to}256{\to}40$, ReLU + Dropout(0.3) between layers)
+$\to$ $\ell_2$ normalisation, predicting a 40-d GRID encoding of
+$(\varphi,\lambda)$ produced by sphere projection
+($x{=}\cos\varphi\cos\lambda$, $y{=}\cos\varphi\sin\lambda$) and
+$[\sin(\omega_k x),\cos(\omega_k x),\sin(\omega_k y),\cos(\omega_k y)]$
+across 10 log-spaced wavelengths
+$\lambda_k\in[10^{-4},10^{4}]$ ($\omega_k{=}2\pi/\lambda_k$).
+The domain loss is
+$\mathcal{L}_{\text{dom}}{=}1-\cos\langle\hat{e},e^{*}\rangle$,
+batch-mean.
+In LOCO mode the loss is computed on both the labelled source batch
+and an unlabelled target batch (held-out city, no segmentation labels);
+both terms are summed before the $\alpha$ scaling.  No coordinates are
+passed at validation or test time.  
+
+\begin{table}[h]
+\centering
+\caption{MAMNet\,+\,SegDeSiC hyperparameters; settings matching
+Table~\ref{tab:mamnet-config} are omitted.
+$^\dagger$No submit script provided; \texttt{argparse} default may have
+been overridden at launch.}
+\label{tab:mamnet-segdesic}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Geographic branch}} \\
+Attachment point         & \texttt{feat5} ($512{\times}24{\times}24$) \\
+GRID scales / range      & 10 / $[10^{-4},10^{4}]$ log-spaced \\
+Encoding dim             & 40 ($4{\times}10$) \\
+MLP hidden dim / dropout & 256 / 0.3 (both layers) \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Loss}} \\
+Domain loss              & $1-\cos\langle\hat{e},e^{*}\rangle$, batch mean \\
+$\alpha$ (domain weight) & 0.5 \\
+Total loss               & $\mathcal{L}_{\text{seg}}
+                            + \alpha(\mathcal{L}_{\text{dom,src}}
+                                    + \mathcal{L}_{\text{dom,tgt}})$ \\
+CE ignore index          & 255 \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Optimisation}} \\
+Learning rate            & $1{\times}10^{-3}$ \\
+Early-stopping patience  & 15 epochs \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Data}} \\
+Target domain (LOCO)     & Held-out city \texttt{train/images} (unlabelled) \\
+Geo.\ metadata           & Per-image lat/lon in \texttt{mapping.json} \\
+Modes run                & LOCO only \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{MAMNet + IIM}
+
+\textbf{MAMNet\,+\,IIM.}
+IIM~\cite{yola} is an input-level preprocessor placed before the
+backbone: input RGB is denormalised, log-transformed, and convolved by
+$K{=}8$ learnable $5{\times}5$ kernels in three cross-channel pairs
+($W{*}\log R-W{*}\log B$, $W{*}\log R-W{*}\log G$,
+$W{*}\log G-W{*}\log B$), producing 24 channels.  A FuseConv block
+fuses these with the original RGB through two parallel
+$3{\times}3$ paths (each $\to$ BN-ReLU), concatenation, and two
+$3{\times}3$ convolutions, returning a 3-channel output that replaces
+the RGB input to MAMNet.  After every \texttt{optimizer.step()} each
+kernel is projected to zero-mean
+($W{\leftarrow}W-\overline{W}$) to enforce illumination cancellation
+in the log-domain.
+A consistency loss
+$\mathcal{L}_{\text{II}} = \operatorname{SmoothL1}\!\bigl(
+\text{IIM}(I),\,\text{IIM}(\sigma_\gamma I)\bigr)$
+with random $\gamma\sim U[0.5,2.0]$ regularises kernel invariance; an
+adaptive weight
+$\eta = r\cdot\mathcal{L}_{\text{task}}/(\mathcal{L}_{\text{II}}{+}\epsilon)$
+holds the II contribution at $r{=}1\%$ of the task loss
+(gradients flow only through $\mathcal{L}_{\text{II}}$).
+IIM adds 0.008\,M parameters.
+
+\begin{table}[h]
+\centering
+\caption{MAMNet\,+\,IIM hyperparameters; settings matching
+Table~\ref{tab:mamnet-config} are omitted.}
+\label{tab:mamnet-iim}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{IIM module}} \\
+Num.\ kernels $K$        & 8 \\
+Kernel size              & $5{\times}5$ \\
+Cross-channel pairs      & (R,B), (R,G), (G,B) $\to$ 24 features \\
+Zero-mean projection     & After every optimizer step \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Loss}} \\
+II loss                  & SmoothL1 ($\beta{=}1.0$) on IIM features \\
+II weighting             & Adaptive, target ratio $r{=}0.01$ \\
+Gamma range              & $\gamma\sim U[0.5,2.0]$ \\
+Total loss               & $\mathcal{L}_{\text{task}}
+                            + \eta\,\mathcal{L}_{\text{II}}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{MAMNet + ISW}
+
+\textbf{MAMNet\,+\,ISW.}
+ISW~\cite{isw} is a training-only feature-covariance
+regulariser; the inference architecture is unchanged.
+\emph{Phase 1 (offline)}: each training image and its photometric
+augmentation (\texttt{ColorJitter(0.4,0.4,0.4,0.1)}\,+\,\texttt{Gaussian\-Blur}
+$p{=}0.5$) are passed through the encoder; the per-instance covariance
+of standardised features at \texttt{feat1}, \texttt{feat2},
+\texttt{feat3} is computed, and the variance of each covariance
+element across the original/augmented pair is averaged over the
+training set.  Upper-triangular variance values are partitioned by
+$k$-means ($k{=}3$); the top $k{-}m{=}2$ clusters are flagged as
+style-sensitive, producing a binary mask $\widetilde M$ per layer.
+\emph{Phase 2 (training)}: at each step, forward hooks capture
+features at the same three layers; per-image standardised covariance
+is masked element-wise with $\widetilde M$ and reduced to
+$\mathcal{L}_{\text{ISW}}^{\ell}{=}\|\widetilde M\odot\Sigma_s\|_1$
+(per-image mean), then averaged across the three layers.
+Total loss is $\mathcal{L}_{\text{seg}}+\lambda\,\mathcal{L}_{\text{ISW}}$.
+
+\begin{table}[h]
+\centering
+\caption{MAMNet\,+\,ISW hyperparameters; settings matching
+Table~\ref{tab:mamnet-config} are omitted.}
+\label{tab:mamnet-isw}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{ISW configuration}} \\
+$\lambda$ (ISW weight)         & 0.6 \\
+Hooked layers                  & \texttt{feat1, feat2, feat3} \\
+$k$-means $k$ / $m$            & 3 / 1 (bottom 1 cluster $=$ content) \\
+Photometric aug.\ (mask precomp.)\!\!
+  & \texttt{ColorJitter(0.4,0.4,0.4,0.1)} \\
+  & + \texttt{GaussianBlur} $p{=}0.5$ \\
+Loss reduction                 & Per-image mean, then layer mean \\
+Total loss                     & $\mathcal{L}_{\text{seg}}
+                                  + \lambda\,\mathcal{L}_{\text{ISW}}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{MAMNet + MRFP+}
+
+\textbf{MAMNet\,+\,MRFP+.}
+MRFP+~\cite{mrfp} adds three training-only stochastic
+perturbations.  HRFP attaches after \texttt{conv1}-\texttt{bn1}-\texttt{relu}
+and before \texttt{layer1} (64\,ch, $H/2$): a 4-encoder/4-decoder
+overcomplete autoencoder with $\sim$1.2$\times$ bilinear upsampling per
+encoder layer; its conv weights are He-reinitialised and BN
+$\gamma,\beta$ resampled from $\mathcal{N}(0,0.5^2)$ \emph{at every
+forward pass}, and its output is added to the encoder stream under
+\texttt{no\_grad}+\texttt{detach}.  NP+ attaches at \texttt{feat4}
+($512{\times}48{\times}48$): channel-mean perturbation
+$y = \alpha x + \delta(\beta-\alpha)\mu_c$ with $\alpha,\beta\sim
+\mathcal{N}(0,1)$ and $\delta$ a normalised cross-batch variance.
+HRFP+ adds the max-resolution intermediate feature from the HRFP
+encoder to decoder stage \texttt{dec3}; three parameter-free
+\texttt{InstanceNorm2d} layers (affine=False) are applied on
+\texttt{feat1}/\texttt{feat2}/\texttt{feat3}.  Each module is toggled
+independently with $p{=}0.5$.  At inference all modules are disabled
+and the model is identical to base MAMNet (HRFP weights add $\sim$74\,K
+frozen parameters never saved).
+
+\begin{table}[h]
+\centering
+\caption{MAMNet\,+\,MRFP+ hyperparameters; settings matching
+Table~\ref{tab:mamnet-config} are omitted.}
+\label{tab:mamnet-mrfp}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Perturbation modules (training only)}} \\
+HRFP attach point        & After stem (64\,ch, $H/2$) \\
+NP+ attach point         & \texttt{feat4} (512\,ch, $H/32$) \\
+HRFP+ attach point       & Decoder \texttt{dec3} (64\,ch) \\
+Inst.\ Norm layers       & \texttt{feat1}, \texttt{feat2}, \texttt{feat3}
+                           (affine=False) \\
+HRFP / NP+ / HRFP+ prob.\ & 0.5 / 0.5 / 0.5 (independent) \\
+HRFP arch.               & 4 enc + 4 dec, $\sim$1.2$\times$ scale per layer \\
+HRFP BN std $\sigma$     & 0.5 \\
+HRFP weights             & Frozen, re-randomised every forward pass \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{MAMNet + FADA}
+
+\textbf{MAMNet\,+\,FADA.}
+FADA~\cite{fada} freezes the ResNet-34 encoder
+(\texttt{requires\_grad=False}; BN in \texttt{eval} mode using
+pretrained running statistics) and inserts a frequency adapter at
+\texttt{feat3}, \texttt{feat4}, and \texttt{feat5}.  Each FADA block
+applies a 2-D Haar DWT $\to$ $\{$LL, LH, HL, HH$\}$;
+the LL subband is processed by a low-frequency branch (LoRA tokens
+$T_L\in\mathbb{R}^{m\times c}$ with $T{=}AB$, rank $r$; scaled-dot
+attention; MLP projection; skip fusion) for content stabilisation;
+the concatenated LH/HL/HH are processed by a high-frequency branch
+(separate LoRA tokens $T_H\in\mathbb{R}^{3m\times c}$; scaled-dot
+attention; \emph{Instance Normalisation applied to the similarity
+map}; MLP projection; skip fusion) for style suppression; the four
+adapted subbands are recombined by inverse Haar DWT.  Stages 1 and 2
+are excluded for memory reasons (spatial dims $384^2$ and $192^2$
+yield prohibitive token attention).
+Trainable parameters: $\approx$8.4\,M (FADA $\approx$2.5\,M, MSCAF +
+decoder + AUX $\approx$5.9\,M); frozen $\approx$21.3\,M.
+
+\begin{table}[h]
+\centering
+\caption{MAMNet\,+\,FADA hyperparameters; settings matching
+Table~\ref{tab:mamnet-config} are omitted.}
+\label{tab:mamnet-fada}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{FADA configuration}} \\
+Adapter stages           & \texttt{feat3, feat4, feat5} \\
+LoRA rank $r$            & 16 \\
+Token length $m$         & 100 \\
+LF branch                & LoRA tokens on LL (content) \\
+HF branch                & LoRA tokens + IN on similarity map (LH/HL/HH) \\
+Decomposition            & Haar DWT (orthogonal, invertible) \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Optimisation overrides}} \\
+Backbone state           & Frozen (BN in eval mode) \\
+Trainable groups         & FADA blocks + MSCAF + decoder + AUX \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{OGLANet}
+\label{sec:oglanet-base}
+
+\textbf{Architecture.}
+OGLANet~\cite{oglanet} is a four-stage encoder--decoder with
+dense skip connections.  The encoder consists of five Global-Local
+Aware Module (GLAM) stages on top of a ResNet-34 backbone (pretrained
+on ImageNet via \texttt{torchvision.models.resnet34}); the original
+paper specifies ResNet-101, but ResNet-34 is substituted to match
+MAMNet's parameter budget.  Each GLAM wraps one ResNet layer (LFEM)
+between two GFEM self-attention modules ($1{\times}1$ Q/K/V
+projections, sigmoid-gated, followed by $3{\times}3$ conv with
+stride 2 for downsampling or stride 1 for refinement).  GLAM5 is an
+additional stage (not in the original figure) that expands 512$\to$1024
+channels with a stride-2 $3{\times}3$ conv plus a non-downsampling
+GFEM.  The DFFM forms four decoder maps $S^D_1$--$S^D_4$ by
+concatenating multi-scale encoder features iteratively downsampled
+with stride-2 $3{\times}3$ convs, each followed by a $1{\times}1$
+channel-reduction conv (BN-ReLU).  The decoder bilinearly upsamples
+DFFM features through Conv$3{\times}3$-BN-ReLU blocks, producing
+outputs at $\{12{\times}12, 48{\times}48, 96{\times}96,
+384{\times}384\}$.  The OAM produces six $1{\times}1$-conv predictions:
+$P_1$--$P_4$ from the four decoder scales, $P_5$ from
+$\operatorname{concat}(P_1{:}P_4)$, $P_6$ from
+$\operatorname{concat}(P_1{:}P_5)$.  All six are deeply supervised at
+training; only $P_6$ is used at inference.  Input is $384{\times}384
+{\times}4$ (RGBC); the contrast-channel \texttt{conv1} weight is
+initialised as the channel-mean of the pretrained RGB weights.
+Output stride 1.  
+
+\textbf{DFFM reimplementation defect.}\label{app:oglanet-dffm}
+We reimplemented the DFFM from the published architecture figure, and the
+reimplementation makes OGLANet inference depend on the random state and the
+batch size.  Its $20$ downsampling convolutions and their batch-normalization
+layers are constructed inside \texttt{forward()} on every call and never
+registered as modules.  They are absent from the checkpoint, receive fresh
+random weights on every forward pass, and stay in training mode under
+\texttt{model.eval()}, so they normalize with the statistics of the current
+batch.  With a fixed seed, inference is bit-identical across jobs and nodes.
+Over repeated unseeded passes of one checkpoint on the same $150$ test images,
+the standard deviation of the cell mean reaches $0.42$ mIoU.  Changing the
+inference seed among three values moves the cell mean by up to $0.66$ mIoU on
+an OGLANet-\sib{} checkpoint and by up to $1.37$ mIoU on a published Vanilla
+checkpoint, both on Chicago at high resolution.  Every OGLANet value in the
+paper is one inference pass at its run's inference batch size, and its
+confidence interval does not include this variation.  We left the module
+unchanged because every reported OGLANet number was produced with it, and the
+released code contains the same module.
+
+\begin{table}[h]
+\centering
+\caption{OGLANet training configuration.}
+\label{tab:oglanet-config}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Optimisation}} \\
+Optimizer        & Adamax \\
+Learning rate    & $5{\times}10^{-4}$ \\
+Weight decay     & Adamax default \\
+Batch size       & 8 (script override; \texttt{train.py} default 12) \\
+Epochs           & 100 \\
+LR scheduler     & \texttt{ReduceLROnPlateau}
+                   (mode=\texttt{max}, factor=0.5, patience=5) \\
+Decision metric  & Per-image tolerant mIoU ($\pm$2\,px) \\
+Early stopping   & patience = 10 epochs \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Loss}} \\
+Loss             & \texttt{OGLANetLoss}: six CE terms
+                   ($\mathcal{L}_1$--$\mathcal{L}_6$ on $P_1$--$P_6$),
+                   equal weights \\
+Post-processing  & Remove connected components $<10$\,px \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Data}} \\
+Input            & $384{\times}384{\times}4$ (RGBC) \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Infrastructure}} \\
+Hardware         & 1$\times$ NVIDIA A100 40\,GB
+                   (NCSA Delta, \texttt{gpuA100x4}) \\
+Mixed precision  & Disabled \\
+Gradient clip.   & Disabled \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{OGLANet + FDA}
+
+\textbf{OGLANet\,+\,FDA.}
+FDA is applied identically to MAMNet\,+\,FDA (see \S E.2): per-channel
+2-D FFT, central $2b{\times}2b$ amplitude swap with $b{=}\lfloor
+\min(H,W)\cdot L\rfloor$, source phase preserved, reconstruction
+clipped to $[0,255]$.  Applied as input-level preprocessing in the
+dataset pipeline before standard augmentation; model architecture and
+optimisation are unchanged.  Run in LOCO mode only; the target pool is
+sampled uniformly per iteration from the held-out city's
+\texttt{train/images}.
+
+\begin{table}[h]
+\centering
+\caption{OGLANet\,+\,FDA hyperparameters; settings matching
+Table~\ref{tab:oglanet-config} are omitted.}
+\label{tab:oglanet-fda}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+FDA low-freq.\ ratio $L$ & 0.01 \\
+Target pool size         & $\leq 100$ images \\
+Target domain            & Held-out city \texttt{train/images} (unlabelled) \\
+Target sampling          & Uniform random per iteration \\
+Application point        & Input (dataset, pre-augmentation) \\
+Modes run                & LOCO only \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{OGLANet + SegDeSiC}
+
+\textbf{OGLANet\,+\,SegDeSiC.}
+The SegDeSiC module is attached in parallel to \texttt{feat5}
+($1024{\times}6{\times}6$, GLAMEncoder output): global average pool
+$\to$ Linear(1024, 256) $\to$ ReLU+Dropout(0.3)
+$\to$ Linear(256, 256) $\to$ ReLU+Dropout(0.3)
+$\to$ Linear(256, 40) $\to$ $\ell_2$ normalisation; weights Xavier
+uniform.  GRID encoding ($S{=}10$, $\lambda{\in}[10^{-4},10^{4}]$) and
+the cosine-dissimilarity domain loss are identical to
+MAMNet\,+\,SegDeSiC (\S E.3).  Total loss combines the deep-supervision
+six-CE segmentation loss (equal weights $\tfrac{1}{6}$) with source and
+target geographic terms scaled by $\alpha{=}0.5$ (target term
+LOCO-only).  Coordinates are not supplied at validation or test time.
+
+\begin{table}[h]
+\centering
+\caption{OGLANet\,+\,SegDeSiC hyperparameters; settings matching
+Table~\ref{tab:oglanet-config} are omitted.}
+\label{tab:oglanet-segdesic}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{SegDeSiC module}} \\
+Attachment point         & \texttt{feat5} ($1024{\times}6{\times}6$) \\
+GRID scales / range      & 10 / $[10^{-4},10^{4}]$ log-spaced \\
+Encoding dim             & 40 \\
+MLP hidden dim / dropout & 256 / 0.3 \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Loss}} \\
+Seg.\ loss               & Mean CE over $P_1$--$P_6$, equal weights \\
+Domain loss              & $1-\cos\langle\hat{e},e^{*}\rangle$, batch mean \\
+$\alpha$                 & 0.5 (both source and target terms) \\
+Target domain (LOCO)     & Held-out city \texttt{train} split (unlabelled) \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Optimisation overrides}} \\
+Learning rate            & $3{\times}10^{-4}$ (vs.\ $5{\times}10^{-4}$ base) \\
+Batch size               & 4 (vs.\ 8 base) \\
+Modes run                & LOCO only \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{OGLANet + IIM}
+
+\textbf{OGLANet\,+\,IIM.}
+The IIM preprocessor (identical to \S E.4: 8 learnable $5{\times}5$
+zero-mean kernels, three cross-channel pairs, FuseConv, adaptive II
+loss with $r{=}0.01$ and $\gamma\sim U[0.5,2.0]$) is inserted before
+the OGLANet stem.  The downstream architecture (GLAMEncoder, DFFM,
+decoder, OAM) is unchanged.  The optimiser is switched from Adamax to
+Adam to handle the gradient-scale gap between the small IIM module
+($\approx$0.008\,M) and the pretrained ResNet-34 backbone
+($\approx$21\,M).
+
+\begin{table}[h]
+\centering
+\caption{OGLANet\,+\,IIM hyperparameters; settings matching
+Table~\ref{tab:oglanet-config} are omitted.}
+\label{tab:oglanet-iim}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{IIM module}} \\
+Num.\ kernels $K$        & 8 \\
+Kernel size              & $5{\times}5$ \\
+Cross-channel pairs      & (R,B), (R,G), (G,B) $\to$ 24 features \\
+Zero-mean projection     & After every optimizer step \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Loss}} \\
+II loss                  & SmoothL1 ($\beta{=}1.0$) on IIM features \\
+II weighting             & Adaptive, target ratio $r{=}0.01$ \\
+Gamma range              & $\gamma\sim U[0.5,2.0]$ \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Optimisation overrides}} \\
+Optimizer                & Adam (vs.\ Adamax) \\
+Learning rate            & $1{\times}10^{-4}$ (vs.\ $5{\times}10^{-4}$) \\
+Weight decay             & $1{\times}10^{-4}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{OGLANet + ISW}
+
+\textbf{OGLANet\,+\,ISW.}
+ISW is applied as in \S E.5 with hooks on \texttt{glam1},
+\texttt{glam2}, \texttt{glam3} (the first three GLAMEncoder outputs).
+Phase 1 precomputes binary masks
+$\widetilde M$ once per LOCO fold from the photometric augmentation
+covariance variance, partitioned by $k$-means ($k{=}3$, $m{=}1$);
+Phase 2 adds $\lambda\,\mathcal{L}_{\text{ISW}}$ to the six-CE
+segmentation loss, with $\mathcal{L}_{\text{ISW}}$ averaged
+per-image and across the three layers.  Inference is unchanged.
+
+\begin{table}[h]
+\centering
+\caption{OGLANet\,+\,ISW hyperparameters; settings matching
+Table~\ref{tab:oglanet-config} are omitted.}
+\label{tab:oglanet-isw}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+$\lambda$ (ISW weight)         & 0.6 \\
+Hooked layers                  & \texttt{glam1, glam2, glam3} \\
+$k$-means $k$ / $m$            & 3 / 1 \\
+Photometric aug.\ (mask precomp.)\!\!
+  & \texttt{ColorJitter(0.4,0.4,0.4,0.1)} \\
+  & + \texttt{GaussianBlur} $p{=}0.5$ \\
+Loss reduction                 & Per-image mean, then layer mean \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{OGLANet + MRFP+}
+
+\textbf{OGLANet\,+\,MRFP+.}
+HRFP attaches after \texttt{conv1}-\texttt{bn1}-\texttt{relu} of the
+GLAMEncoder stem (64\,ch, $H/2$); NP+ attaches at \texttt{glam4}
+(512\,ch, $H/32$); HRFP+ adds the max-resolution intermediate HRFP
+feature to the decoder's \texttt{s1\_d\_up} stage (64\,ch,
+$384{\times}384$).  Modules are toggled independently with $p{=}0.5$.
+\emph{The InstanceNorm layers specified in the original MRFP+ paper
+are removed} (Option A): the GLAM stages end with two GFEM
+self-attention modules whose channel-wise statistics are essential
+to subsequent processing, and applying \texttt{InstanceNorm2d}
+(affine=False) after GFEM caused class collapse (mIoU $<$1\%) in all
+three cities.  HRFP and NP+ alone span both ends of the perturbation
+spectrum.  HRFP weights ($\approx$74\,K) are frozen, re-randomised
+each forward pass, and discarded at inference.
+
+\begin{table}[h]
+\centering
+\caption{OGLANet\,+\,MRFP+ hyperparameters; settings matching
+Table~\ref{tab:oglanet-config} are omitted.}
+\label{tab:oglanet-mrfp}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Perturbation modules (training only)}} \\
+HRFP attach point        & After stem (64\,ch, $H/2$) \\
+NP+ attach point         & \texttt{glam4} (512\,ch, $H/32$) \\
+HRFP+ attach point       & Decoder \texttt{s1\_d\_up} (64\,ch, $384{\times}384$) \\
+Inst.\ Norm layers       & Removed (Option A) \\
+HRFP / NP+ / HRFP+ prob.\ & 0.5 / 0.5 / 0.5 \\
+HRFP arch.               & 4 enc + 4 dec, $\sim$1.2$\times$ scale per layer \\
+HRFP BN std $\sigma$     & 0.5 \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Optimisation overrides}} \\
+Learning rate            & $1{\times}10^{-4}$ (vs.\ $5{\times}10^{-4}$) \\
+Weight decay             & $1{\times}10^{-4}$ \\
+Loss reduction           & Per-image mean CE over $P_1$--$P_6$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{OGLANet + FADA}
+
+\textbf{OGLANet\,+\,FADA.}
+Only the ResNet-34 core inside each GLAM stage
+(\texttt{conv1}, \texttt{bn1}, \texttt{layer1}--\texttt{layer4}) is
+frozen; the GFEM modules, \texttt{glam5\_conv}, \texttt{glam5\_gfem},
+DFFM, decoder, and OAM remain trainable because they are not pretrained
+and freezing them collapsed mIoU to $<$1\% in pilot runs.  FADA blocks
+are inserted between the frozen LFEM output and the trainable GFEM at
+stages 3 and 4 (256\,ch and 512\,ch, $24{\times}24$ and $12{\times}12$);
+stages 1, 2, and 5 are excluded for either spatial-cost or
+non-pretrained-component reasons.  The block internals (Haar DWT,
+LL LoRA-token branch, IN-on-similarity-map HF branch, inverse Haar
+DWT) are identical to MAMNet\,+\,FADA (\S E.7).  Trainable parameters:
+$\approx$7--9\,M; frozen $\approx$21.3\,M.
+
+\begin{table}[h]
+\centering
+\caption{OGLANet\,+\,FADA hyperparameters; settings matching
+Table~\ref{tab:oglanet-config} are omitted.}
+\label{tab:oglanet-fada}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{FADA configuration}} \\
+Adapter stages           & GLAM 3, 4 (LFEM output, pre-GFEM) \\
+LoRA rank $r$            & 16 \\
+Token length $m$         & 100 \\
+Decomposition            & Haar DWT \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Optimisation overrides}} \\
+Optimizer                & Adam (vs.\ Adamax) \\
+Learning rate            & $1{\times}10^{-4}$ (vs.\ $5{\times}10^{-4}$) \\
+Weight decay             & $1{\times}10^{-4}$ \\
+LR scheduler             & \texttt{ReduceLROnPlateau} (factor=0.5, patience=3) \\
+Frozen                   & ResNet-34 core only (BN in eval mode) \\
+Trainable                & FADA + GFEM + DFFM + decoder + OAM \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{DINOv3}
+\label{sec:dinov3-base}
+
+\textbf{Architecture.}
+DINOv3 ViT-S/16 backbone (\texttt{dinov3\_vits16}): patch size
+$16{\times}16$, embedding dimension $d{=}384$, 12 transformer blocks.
+Pretrained weights
+\texttt{dinov3\_vits16\_pretrain\_lvd1689m-08c60483.pth}
+(\texttt{github.com/facebookresearch/dinov3}); all backbone parameters
+trainable (\texttt{frozen\_stages}${=}{-1}$).
+Intermediate features extracted after blocks 3, 6, 9, and 11 at
+$H/16{\times}W/16$, concatenated along the channel axis, and fused by
+a $1{\times}1$-Conv-BN-ReLU ($4{\times}384{\to}384$,
+\texttt{bias=False}).  The decoder applies four
+\texttt{ConvTranspose2d} ($2{\times}2$, stride 2) stages
+($\tfrac{1}{16}{\to}\tfrac{1}{8}{\to}\tfrac{1}{4}{\to}\tfrac{1}{2}{\to}1$)
+each followed by Conv-BN-ReLU; channel sequence
+$[384, 256, 128, 64, 32]$.  No encoder skip connections (all ViT
+features share the same spatial resolution); a final $1{\times}1$ conv
+yields 2-class logits.  No auxiliary branches; single output head.
+Input is $384{\times}384$ RGB, yielding exactly $24{\times}24$ patches
+with no padding; output stride 16.  
+
+\begin{table}[h]
+\centering
+\caption{DINOv3 training configuration.}
+\label{tab:dinov3-config}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Optimisation}} \\
+Optimizer        & AdamW ($\beta_1{=}0.9$, $\beta_2{=}0.999$) \\
+Learning rate    & $5{\times}10^{-5}$
+                   (CLI; argparse default $3{\times}10^{-4}$) \\
+Weight decay     & 0.05 \\
+Batch size       & 8 \\
+Epochs (max)     & 100 \\
+LR scheduler     & Cosine + linear warmup (5 ep.,
+                   $\eta_\text{min}{=}10^{-6}$) \\
+Decision metric  & Per-image strict mIoU
+                   (\texttt{DetailedEvaluator}) \\
+Early stopping   & 20 (single, LOCO); 10 (all) \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Loss}} \\
+Loss             & \texttt{nn.CrossEntropyLoss} (2-class, no weights,
+                   no aux.) \\
+Post-processing  & Remove connected components $<10$\,px \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Data}} \\
+Input size       & $384{\times}384$ \\
+Channels         & 3 (RGB) \\
+Train aug.       & H-flip $p{=}0.5$, V-flip $p{=}0.5$ (PIL, train split) \\
+Normalisation    & ImageNet $\mu, \sigma$ \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Infrastructure}} \\
+Hardware         & 1$\times$ A100 (NCSA Delta, \texttt{gpuA100x4}) \\
+Sampling seed    & 42 (dataset subsampling only) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{DINOv3 + FDA}
+
+\textbf{DINOv3\,+\,FDA.}
+FDA is applied as in \S E.2 (per-channel 2-D FFT, central
+$2b{\times}2b$ amplitude swap with $b{=}\lfloor\min(H,W)\cdot
+L\rfloor$, source phase preserved, reconstruction clipped).
+Inserted in the dataset pipeline before PIL$\to$tensor and ImageNet
+normalisation; validation and test images are unmodified.  FDA and
+SegDeSiC are mutually exclusive in all launch scripts.  Run in LOCO
+mode only.
+
+\begin{table}[h]
+\centering
+\caption{DINOv3\,+\,FDA hyperparameters; settings matching
+Table~\ref{tab:dinov3-config} are omitted.}
+\label{tab:dinov3-fda}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+FDA low-freq.\ ratio $L$ & 0.01 \\
+Target pool size         & $\leq 100$ images \\
+Target domain            & Held-out city \texttt{train/images} (unlabelled) \\
+Application point        & Input (pre-tensor, pre-normalisation) \\
+Early-stopping patience  & 10 (all modes) \\
+Modes run                & LOCO only \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{DINOv3 + SegDeSiC}
+
+\textbf{DINOv3\,+\,SegDeSiC.}
+A \texttt{SegDesicModule} is attached to \texttt{feat\_block11}
+($384{\times}24{\times}24$, the deepest extracted ViT feature).  The
+module predicts a 40-d GRID encoding ($S{=}10$,
+$\lambda{\in}[10^{-4},10^{4}]$) via global average pool and a 256-dim
+hidden MLP, with cosine-dissimilarity loss against the ground-truth
+encoding from $(\varphi,\lambda)$.  In LOCO mode an additional
+unlabelled forward pass over the held-out city's training images
+contributes a target-domain cosine loss; no segmentation loss is
+applied to the target.  Total loss:
+$\mathcal{L} = \mathcal{L}_\text{seg} + \alpha(\mathcal{L}^{\text{src}}_\text{dom}
++ \mathcal{L}^{\text{tgt}}_\text{dom})$.
+
+\begin{table}[h]
+\centering
+\caption{DINOv3\,+\,SegDeSiC hyperparameters; settings matching
+Table~\ref{tab:dinov3-config} are omitted.}
+\label{tab:dinov3-segdesic}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{SegDeSiC module}} \\
+Attachment point         & \texttt{feat\_block11} ($384{\times}24{\times}24$) \\
+GRID scales / range      & 10 / $[10^{-4},10^{4}]$ \\
+Encoding dim             & 40 \\
+MLP hidden dim / dropout & 256 / 0.3 \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Loss}} \\
+Domain loss              & $1-\cos\langle\hat{e},e^{*}\rangle$ \\
+$\alpha$                 & 0.5 (both terms) \\
+Auxiliary weight         & 0 (no aux.\ branches) \\
+Target domain (LOCO)     & Held-out city \texttt{train} split (unlabelled) \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Optimisation overrides}} \\
+Learning rate            & $3{\times}10^{-4}$ (vs.\ $5{\times}10^{-5}$) \\
+Batch size               & 4 (vs.\ 8) \\
+Early-stopping patience  & 10 (all modes) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{DINOv3 + IIM}
+
+\textbf{DINOv3\,+\,IIM.}
+The IIM preprocessor (8 learnable $5{\times}5$ zero-mean kernels,
+three cross-channel pairs, FuseConv, adaptive II loss with
+$r{=}0.01$, $\gamma\sim U[0.5,2.0]$; identical to \S E.4) is inserted
+before the ViT-S/16 stem.  Output is the 3-channel fused image
+re-normalised with ImageNet statistics.  The base DINOv3 strict mIoU
+decision metric is replaced by tolerant per-image mIoU
+($\pm$2\,px) for consistency with the IIM ablation protocol.
+
+\begin{table}[h]
+\centering
+\caption{DINOv3\,+\,IIM hyperparameters; settings matching
+Table~\ref{tab:dinov3-config} are omitted.}
+\label{tab:dinov3-iim}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{IIM module}} \\
+Num.\ kernels $K$        & 8 \\
+Kernel size              & $5{\times}5$ \\
+Cross-channel pairs      & (R,B), (R,G), (G,B) $\to$ 24 features \\
+Zero-mean projection     & After every optimizer step \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Loss}} \\
+II loss                  & SmoothL1 ($\beta{=}1.0$) \\
+II weighting             & Adaptive, $r{=}0.01$ \\
+Gamma range              & $\gamma\sim U[0.5,2.0]$ \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Optimisation overrides}} \\
+Decision metric          & Per-image tolerant mIoU ($\pm$2\,px) \\
+Early-stopping patience  & 15 epochs \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{DINOv3 + ISW}
+
+\textbf{DINOv3\,+\,ISW.}
+ISW hooks are registered on the outputs of ViT blocks 3, 6, and 9
+(block 11, used by the decoder, is left untouched).  The
+\texttt{[B, N+1, D]} token output is stripped of the CLS token and
+the $576$ patch tokens reshaped to \texttt{[B, 384, 24, 24]} before
+the standardised covariance is computed.  Mask precomputation and
+loss formulation are identical to \S E.5.  Inference is unchanged.
+
+\begin{table}[h]
+\centering
+\caption{DINOv3\,+\,ISW hyperparameters; settings matching
+Table~\ref{tab:dinov3-config} are omitted.}
+\label{tab:dinov3-isw}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+$\lambda$ (ISW weight)         & 0.6 \\
+Hooked blocks                  & ViT blocks 3, 6, 9 \\
+Token reshape                  & Strip CLS; $576\to24{\times}24$ \\
+$k$-means $k$ / $m$            & 3 / 1 \\
+Photometric aug.\ (mask precomp.)\!\!
+  & \texttt{ColorJitter(0.4,0.4,0.4,0.1)} \\
+  & + \texttt{GaussianBlur} $p{=}0.5$ \\
+Loss reduction                 & Per-image mean, then block mean \\
+Decision metric                & Per-image tolerant mIoU ($\pm$2\,px) \\
+Early-stopping patience        & 15 epochs \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{DINOv3 + MRFP+}
+
+\textbf{DINOv3\,+\,MRFP+.}
+HRFP attaches at \texttt{feat\_block3} ($384{\times}24{\times}24$);
+NP+ attaches at \texttt{feat\_block11} ($384{\times}24{\times}24$);
+HRFP+ projects the max-resolution intermediate HRFP feature
+($\sim$$H/8$, 384\,ch) through a frozen $1{\times}1$ conv
+($384{\to}64$) and adds it to the decoder's \texttt{up3} output
+(64\,ch, $192{\times}192$).  Modules are toggled independently with
+$p{=}0.5$.  As in \S E.13, the original-paper InstanceNorm layers are
+removed: in DINOv3 the four block features feed a single
+\texttt{Conv}-\texttt{BatchNorm2d}-\texttt{ReLU} fusion, and applying
+unconditional IN to blocks 6 and 9 during training corrupted that BN's
+running statistics, producing decoder checkerboard artefacts and zero
+mIoU at evaluation.  HRFP and NP+ alone span both ends of the
+perturbation spectrum.  HRFP+HRFP+ projection adds $\approx$99\,K
+frozen parameters; inference is identical to base DINOv3.
+
+\begin{table}[h]
+\centering
+\caption{DINOv3\,+\,MRFP+ hyperparameters; settings matching
+Table~\ref{tab:dinov3-config} are omitted.}
+\label{tab:dinov3-mrfp}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Perturbation modules (training only)}} \\
+HRFP attach point        & \texttt{feat\_block3} (384\,ch, $24{\times}24$) \\
+NP+ attach point         & \texttt{feat\_block11} (384\,ch, $24{\times}24$) \\
+HRFP+ attach point       & Decoder \texttt{up3} (64\,ch, $192{\times}192$) \\
+HRFP+ projection         & Frozen $1{\times}1$ conv $384{\to}64$ \\
+Inst.\ Norm layers       & Removed \\
+HRFP / NP+ / HRFP+ prob.\ & 0.5 / 0.5 / 0.5 \\
+HRFP arch.               & 4 enc + 4 dec, $\sim$1.2$\times$ scale per layer \\
+HRFP BN std $\sigma$     & 0.5 \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Optimisation overrides}} \\
+Decision metric          & Per-image tolerant mIoU ($\pm$2\,px) \\
+Early-stopping patience  & 15 epochs \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{DINOv3 + FADA}
+
+\textbf{DINOv3\,+\,FADA.}
+The DINOv3 ViT-S/16 backbone is fully frozen
+(\texttt{requires\_grad=False}); ViT uses LayerNorm so no
+\texttt{eval}-mode override is needed.  FADA blocks are inserted after
+ViT blocks 3, 6, 9, and 11 (all four feature-extraction blocks), each
+operating on the spatial patch tokens \texttt{[B, 384, 24, 24]}: 2-D
+Haar DWT, LL LoRA-token branch (content), HF LoRA-token branch with
+Instance Normalisation on the similarity map (style suppression),
+inverse Haar DWT, and re-injection into the token stream.  Gradients
+propagate through frozen blocks (parameters not updated) to upstream
+adapters.  Trainable parameters: $\approx$3.4\,M
+($4{\times}\!\approx$0.48\,M FADA + $\approx$1.5\,M decoder).
+
+\begin{table}[h]
+\centering
+\caption{DINOv3\,+\,FADA hyperparameters; settings matching
+Table~\ref{tab:dinov3-config} are omitted.}
+\label{tab:dinov3-fada}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{FADA configuration}} \\
+Adapter blocks           & ViT blocks 3, 6, 9, 11 \\
+LoRA rank $r$            & 16 \\
+Token length $m$         & 100 \\
+LF branch                & LoRA tokens on LL \\
+HF branch                & LoRA tokens + IN on similarity map (LH/HL/HH) \\
+Decomposition            & Haar DWT \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Optimisation overrides}} \\
+Optimizer                & Adam (vs.\ AdamW) \\
+Learning rate            & $1{\times}10^{-4}$ (vs.\ $5{\times}10^{-5}$) \\
+Weight decay             & $1{\times}10^{-4}$ (vs.\ 0.05) \\
+LR scheduler             & \texttt{ReduceLROnPlateau}
+                           (factor=0.5, patience=3) \\
+Backbone state           & Frozen (LayerNorm; no eval-mode override) \\
+Decision metric          & Per-image tolerant mIoU ($\pm$2\,px) \\
+Early-stopping patience  & 15 epochs \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{CrossEarth}
+\label{sec:crossearth-base}
+
+\textbf{CrossEarth.}
+We train CrossEarth~\cite{gong2025crossearth} from its official release
+on our splits, starting from the release's
+DINOv2~\cite{oquab2024dinov2} ViT-L/14 backbone initialisation at patch
+size 16.  The backbone is frozen; the trainable components are the Rein
+adapters~\cite{wei2024rein} (token length 100, LoRA rank 16) and a
+Mask2Former decoder~\cite{cheng2022mask2former} with a two-class head.
+The code release omits four components described in the CrossEarth paper
+(the Geospatial Semantic Extractor, the cross-attention Injector, the
+masked-image-modelling branch with its ASPP decoder, and Earth-Style
+Injection), so our cells train the released Rein and Mask2Former
+configuration without the Million-AID style pool.  No CrossEarth
+per-benchmark checkpoint is used.  Table~\ref{tab:crossearth-config}
+lists the configuration and our deviations from the release, which
+adapt it to our $384{\times}384$ patches, our $450$-image training
+sets, the 4-hour partition limit, and source-only validation.
+
+\begin{table}[h]
+\centering
+\caption{CrossEarth configuration.  Every CrossEarth cell
+(Vanilla, FDA, SIB, BSM; LOCO and within-city upper bound) uses these
+settings, high resolution only, seed 0.}
+\label{tab:crossearth-config}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Architecture}} \\
+Backbone                 & DINOv2 ViT-L/14 at patch 16, frozen ($303.7$\,M parameters) \\
+Adapters                 & Rein, token length 100, LoRA rank 16 \\
+Decoder                  & Mask2Former, 2 classes \\
+Trainable parameters     & $23.6$\,M \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Optimisation}} \\
+Optimizer                & AdamW ($\beta_1{=}0.9$, $\beta_2{=}0.999$, $\epsilon{=}10^{-8}$) \\
+Learning rate            & $1{\times}10^{-4}$ \\
+Weight decay             & 0.05 \\
+LR scheduler             & Polynomial (power 0.9, horizon 40{,}000 iterations) \\
+Batch size               & 4 (release: 1) \\
+Iterations               & 10{,}000 (release: 30{,}000) \\
+Crop                     & $384{\times}384$ (release: $512{\times}512$) \\
+Precision                & bf16 autocast; deformable attention in fp32 \\
+Validation               & Every 500 iterations, source cities only \\
+Checkpoint selection     & Best two-class tolerant mIoU ($\pm$2\,px) on source-city validation \\
+Inference                & Whole image (release: sliding window) \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Infrastructure}} \\
+Hardware                 & 1$\times$ NVIDIA A100 40\,GB (NCSA Delta, \texttt{gpuA100x4}) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{CrossEarth\,+\,FDA.}  FDA is applied as for the other
+architectures: low-frequency ratio $L{=}0.01$ ($6{\times}6$ swapped
+region per channel), a pool of 100 unlabelled images from the held-out
+city's \texttt{train/images}, input stage, training only.
+
+\textbf{CrossEarth\,+\,SIB.}  SIB on CrossEarth is the Haar and VIB path
+of Appendix~\ref{app:sib-impl}; FDA preprocessing and skip-attention
+gates are CNN-only components and are not applied.  One shared-weight
+SIB block is inserted before the Mask2Former pixel decoder and applied
+to all four backbone feature scales (strides 4, 8, 16, 32), adding
+$2.4$\,M trainable parameters.  The VIB weights, hidden widths ($C/2$
+and $C/4$ at $C{=}1024$), KL warm-up and coverage criterion follow
+Appendix~\ref{app:sib-impl}; $c^*_{val}$ is fitted on source-city
+validation per cell.
+
+\subsection{BSM}
+\label{sec:bsm}
+
+\textbf{BSM.}
+No official BSM code has been released, so we reimplemented it from
+the paper~\cite{luo2023bsm}.  At each training step a frozen AdaIN
+style-transfer network~\cite{huang2017adain} re-renders every image in
+the batch with the style of another image from the same batch (a random
+permutation with distinct pairs), and the result is mixed with the
+original at a fixed coefficient $\alpha$.  The style source is the
+training batch itself, so no external or held-out-city imagery enters
+training.  BSM is applied to the RGB input before the network, with the
+architecture's input normalisation inverted before mixing and reapplied
+after; the contrast channel of MAMNet and OGLANet passes through
+unmodified.  BSM is disabled at evaluation.  Each architecture otherwise
+keeps its base configuration (Tables~\ref{tab:mamnet-config},
+\ref{tab:oglanet-config}, \ref{tab:dinov3-config},
+\ref{tab:crossearth-config}).  The DINOv3/Chicago cell collapsed at
+seed 0 (best source-city validation mIoU $5.51$, below the training
+floor of $10.0$) and is excluded from Table~\ref{tab:loco-main} without
+imputation.
+
+\begin{table}[h]
+\centering
+\caption{BSM hyperparameters; settings matching each architecture's
+base configuration are omitted.}
+\label{tab:bsm}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+Style network            & AdaIN: VGG-19 encoder to \texttt{relu4\_1} + mirror decoder, frozen \\
+Style-network weights    & Public pretrained AdaIN release; 0 trainable parameters \\
+Style source             & Permuted training batch \\
+Mixing coefficient $\alpha$ & 0.5 (fixed; checked for non-degeneracy on source-city validation) \\
+Application probability  & 1.0 per training batch \\
+Batch size               & 8 (CrossEarth: 4) \\
+Early-stopping patience  & 20 epochs (vs.\ 10; CrossEarth: fixed 10{,}000 iterations) \\
+Modes run                & LOCO, high resolution only \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{SAR}
+\label{sec:sar}
+
+\textbf{SAR.}
+SAR~\cite{niu2023sar} trains nothing.  It adapts the normalisation-layer
+affine parameters of each cell's Vanilla LOCO checkpoint (for MAMNet,
+the matched-450 retrain) on each test image's own prediction, by
+minimising the entropy of reliable pixels under sharpness-aware
+minimisation~\cite{foret2021sam}.  We run it episodically at batch size
+1: parameters are restored before every image, so nothing accumulates
+across the target set, and no held-out-city label or source image is
+used.  Normalisation layers stay in evaluation mode on source running
+statistics, because MAMNet and OGLANet return auxiliary and
+deep-supervision outputs in training mode.  We keep upstream's skip list
+and collect the affine parameters of every remaining BatchNorm,
+LayerNorm and GroupNorm layer.  The two-class entropy constants are
+upstream's, rescaled from $C{=}1000$ to $C{=}2$ and never tuned on
+target mIoU.  When the reliability filter admits no pixel, the step is
+skipped.  Each SAR row in Table~\ref{tab:loco-main} is the Vanilla
+cell's per-image values plus the change SAR produces within its own
+pass (final step minus step 0), so the row isolates the adaptation
+effect from any difference between the SAR pass and the stored Vanilla
+inference.
+
+\begin{table}[h]
+\centering
+\caption{SAR hyperparameters.}
+\label{tab:sar}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+Adapted parameters       & Affine of BatchNorm/LayerNorm/GroupNorm layers \\
+Excluded (upstream)      & \texttt{layer4}, ViT blocks 9--11, final \texttt{norm} \\
+Normalisation statistics & Source running statistics (evaluation mode) \\
+Optimizer                & SAM ($\rho{=}0.05$) over SGD (momentum 0.9) \\
+Learning rate            & $2.5{\times}10^{-4}$ (upstream ViT default, not batch-scaled) \\
+Steps per image          & 1 (MAMNet, OGLANet, DINOv3); 10 (CrossEarth) \\
+Entropy margin $E_0$     & $0.4\ln 2 = 0.277$ \\
+Model-recovery threshold & $0.0201$ nats \\
+EMA momentum             & 0.9 \\
+Batch size               & 1, episodic \\
+\midrule
+Hardware                 & 1$\times$ NVIDIA A100 40\,GB (NCSA Delta, \texttt{gpuA100x4}) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Selection.}  For MAMNet, OGLANet and DINOv3, we selected the
+learning rate ($\{1, 10, 100\}\times$ the base rate) and step count
+($\{1, 10\}$) on source-city validation in a pilot on the Phoenix fold
+that pooled DINOv3 and MAMNet.  Upstream additionally scales the learning
+rate by batch size over 64, which at batch size 1 gives
+$3.9{\times}10^{-6}$; we do not apply that scaling.
+
+\textbf{SAR on CrossEarth.}  CrossEarth exposes no logits, so SAR
+minimises the entropy of the logarithm of the normalised two-class
+Mask2Former score.  Its recipe (base rate, 10 steps) is borrowed from
+the S-EO pilot, which selected on S-EO source-city validation with
+MAMNet, OGLANet and DINOv3 and did not include CrossEarth; no internal
+CrossEarth cell selected it.  The SAR pass runs in fp32 while the parent
+cells were inferred under bf16 autocast.  Before adaptation, the SAR
+pass differs from the stored Vanilla value by $+0.0063$ (Chicago),
+$+0.1053$ (Miami) and $+0.0070$ (Phoenix) mIoU; most of the Miami
+difference comes from one image with 46 foreground pixels.  This
+difference does not enter the row, which adds only the within-pass
+change: $-0.0011$, $-0.0054$ and $+0.0020$ mIoU.  The run's divergence
+guard, which fires when more than $20\%$ of images predict a foreground
+fraction below $0.01$, fires on Miami and Phoenix.  The number of such
+images is the same before and after adaptation in every city (11, 42 and
+53 of 150), so the flag reflects the parent model.

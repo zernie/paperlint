@@ -32,7 +32,7 @@ See [optional rules](../../optional-rules.md).
 A very long sentence loses its subject before its verb, and a skimming reviewer stops reading it.
 
 The default is a general one, not measured per venue. It has not been checked against the accepted
-papers of `fixtures/accepted-papers/` in this version; the earlier draft of the issue recorded that
+papers of `fixtures/real-papers/accepted/` in this version; the earlier draft of the issue recorded that
 every accepted paper fires at least one of the two sibling ceilings, which is why both are off.
 
 ## Examples

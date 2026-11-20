@@ -1,0 +1,29 @@
+\begin{algorithm}[!t]
+    \caption{\label{alg} \mname}
+    \KwIn{Video $V = \{f_i\}_{i=1}^{n}$, query $q$, select size $k$.}
+    \KwOut{A set of frame indices $S$ with $|S| = k$.}
+    
+    Initialize $Q_{0,0}^* = 0$ and $\T_{0,0} = [\,]$\;
+    Extract embeddings $f_i$ and $q$ using \cref{eq:emb}\;
+    
+    \For{$t \gets 1$ to $T = \lceil n/m \rceil$}{
+        Compute $\mr_t$, $\mL_t$, and $\tilde{\mL}_t$ using \cref{eq:k_family,eq:cond_k,eq:tilde_L,eq:cmgk}\;
+        Compute offset $\mathrm{o} = -\log(\det(\tilde{\mL}_t + \I_t))$\;
+        
+        \For{$C_{t-1} \gets 0$ to $k$}{
+            \For{$k_{t-1} \gets 0$ to $\min(m, k, k - C_{t-1})$}{
+            	Get $C_t = C_{t-1}+k_{t-1}$\;
+	            Get $\mathrm{rwd}^* = \R_{S_t}^*(t-1, C_{t-1})$ and $S_t = \pi(t, C_t)$ using DPP as \cref{eq:greedy,eq:cond_dpp,eq:seq_score,eq:reward}\;
+                Compute $cur\_q = Q_{t-1, C_{t-1}} + \mathrm{rwd}^*$\;
+
+                \If{$cur\_q > Q_{t, C_t}$}{
+                    Update $Q_{t, C_t} \gets cur\_q$\;
+                    Update $\T_{t, C_t} \gets \T_{t-1, C_{t-1}} \cup S_t$\;
+                }
+            }
+        }
+    }
+    \Return $\T_{T, k}$\;
+\end{algorithm}
+
+

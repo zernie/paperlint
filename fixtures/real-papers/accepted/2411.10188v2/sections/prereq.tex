@@ -1,0 +1,159 @@
+\section{Preliminaries}
+
+
+\subsection{DNS in a Nutshell} \label{subsec:dns}
+The Domain Name System (DNS) is a decentralized database that translates human-readable domain names into  IP addresses. For example, when a user visits the website \name{www.sigplan.org}, the web browser  sends a DNS request to retrieve the IP address of the server hosting the site.
+
+\paragraph{Namespace} 
+The DNS namespace is organized hierarchically in a tree structure, 
+with a root domain at the top, followed by top-level domains (TLDs), second-level domains (SLDs), and further subdomains. 
+\Cref{fig:namespace} shows a small portion of this namespace, including the 
+TLDs \name{org} and \name{com} as well as  SLDs such as 
+\name{sigplan}. 
+A domain name such as \name{www.sigplan.org} uniquely identifies a path in this tree, with the associated labels concatenated  bottom up, using the `.' character; the root node has an empty label, which is typically omitted. 
+The entire namespace is divided into \emph{zones} or subtrees,
+each managed by authoritative \emph{nameservers}.
+
+\paragraph{Resource Records}
+A DNS \emph{resource record} (RR) stores 
+specific information about a domain name,
+including the owner name (where this RR resides), record type, time to live (TTL), and 
+value. In general, multiple
+RRs with the same owner name and type can exist, provided they have
+different values. 
+Common types of RRs include 
+\rtype{A}, \rtype{NS}, \rtype{SOA}, \rtype{TXT},  \rtype{CNAME}, and \rtype{DNAME}, 
+each serving a distinct purpose. 
+For example, an \rtype{A} record 
+maps a domain name to an IPv4 address.
+An \rtype{NS} record
+specifies the authoritative nameservers for a domain.
+A \rtype{CNAME} record
+maps an alias domain name, e.g., \name{example.net}, 
+to its canonical name, e.g., \name{www.example.com}; any request for \name{example.net} will be redirected to \name{www.example.com}.
+A \rtype{DNAME} record
+provides redirection for an \emph{entire subtree} of the domain name space to another domain.
+For instance, 
+a \rtype{DNAME} record at \name{legacy.example.com} with value \name{new.example.com}
+would cause a query for \name{any.legacy.example.com} 
+to be restarted for \name{any.new.example.com}.
+
+
+
+A \emph{wildcard} record is
+a special type (\name{$\star$}) of DNS record that
+ matches requests for non-existent domain names. 
+ This simplifies DNS management by allowing a single record to cover multiple potential queries.
+For instance, suppose there is an \rtype{A} record
+with \name{1.2.3.4} for \name{$\star$.example.org}.
+Queries for  \name{one.example.org} or \name{any.example.org}
+will all resolve to \name{1.2.3.4}, 
+provided that no other records exist for these specific names.
+
+\paragraph{Name Resolution}
+A client  such as a web browser
+initiates a DNS request by
+directing the query to a \emph{recursive resolver} 
+that handles the resolution process on the client's behalf.
+If the recursive resolver has a cached response from a prior query, it can promptly reply to the client.
+Otherwise,
+it queries a hierarchy of authoritative nameservers to retrieve the answer.
+
+\begin{figure}
+\begin{minipage}[b]{.33\linewidth}
+\centering
+   \includegraphics[width=\textwidth]{img/namespace.pdf}
+\captionsetup{skip=10pt}
+   \caption{A small portion of the DNS namespace. 
+   Dashed lines mark the zone cuts. }
+   \label{fig:namespace}
+\end{minipage}
+\hfill
+\begin{minipage}[b]{.65\linewidth}
+\centering
+   \includegraphics[width=\textwidth]{img/dns.pdf}
+\captionsetup{skip=0pt}
+   \caption{Name resolution for the type \rtype{A} query \name{www.sigplan.org}, with an empty cache at the DNS resolver. }
+   \label{fig:dns}
+\end{minipage}
+\end{figure}
+
+\begin{example}[Name Resolution] \label{example:resolution}
+\Cref{fig:dns} depicts a DNS name resolution process. 
+A client initiates a type \rtype{A} query for the name \name{www.sigplan.org} (\ding{182}). 
+Assuming an empty cache, the recursive resolver forwards this query to one of the root nameservers  (\ding{183}). 
+Here, the root nameserver cannot answer the query as it is only authoritative for the \name{root} zone. Hence, it refers the resolver to the authoritative nameservers for the \name{org} zone by  attaching the associated \rtype{NS} records and IP addresses in the referral (\ding{184}). 
+The resolver then asks one of the \name{org} nameservers (\ding{185}). As the nameserver is not authoritative for the full domain,  it further refers the resolver to the authoritative nameservers for \name{sigplan.org} (\ding{186}). The resolver  finally receives the result, the IP address for \name{www.sigplan.org} (\ding{187} and \ding{188}), which it then sends back to the client (\ding{189}).
+\end{example}
+
+Note that, owing to  \emph{caching},
+if the same query needs to be resolved again, the resolver can answer it directly without contacting the nameservers, provided the records' TTL has not expired.
+Likewise, for a query of another name within an already cached zone, the resolver only needs to reach out to the relevant nameservers rather than starting from the root.
+Note also that when a resolver has multiple nameservers to choose from, the selection is typically based on factors like response time and availability. DNS RFCs do not prescribe a specific nameserver selection algorithm, leaving this to the developers’ discretion.
+
+\new{\paragraph{Subqueries}
+During DNS resolution, the recursive resolver may need to perform additional queries to collect all the necessary information to resolve a client query. 
+For instance,
+suppose that a user wants to visit \name{example.org} and
+ the authoritative
+nameserver for the \name{example.org} zone is \name{sub.query.com},
+the resolver must first resolve \name{sub.query.com}.\footnote{\new{This is a randomly chosen name just for illustrative purposes. As long as the authoritative
+nameserver's name  differs from \name{example.org}, the resolver must then make additional subqueries to resolve it.}}
+This process begins by querying the \name{com} TLD, followed by \name{query.com} (assuming the authoritative nameserver for \name{query.com} provides the IP address for \name{sub.query.com}). 
+ These two additional queries are called \emph{subqueries}, as they are initiated by the resolver to resolve the original query.
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Labelled Transition Systems}\label{subsec:lts}
+Given an alphabet $\Sigma$, a \emph{string} $str \in A^*$ is a sequence of labels $l_0 \cdot \ldots \cdot l_k$, where $l_0$ is the first label and $l_k$ is the last label. The length of the sequence, $k+1$, is denoted by $|str|$. For $i < j < |str|$, $str[i\ldots j]$ denotes the sequence $l_i\ldots l_j$ and $\epsilon$ denotes the \emph{empty} sequence. \new{Given two strings $str$ and $str'$, we write $str \preceq str'$ ($str \prec str'$) to denote that $str$ is a (proper) prefix of $str'$.} For notational convenience, we sometimes drop the explicit binary operator for concatenation.
+
+\begin{definition}
+	A \emph{labelled transition system} (LTS) \cite{heussner2012reachability}  $\cal A = \tup{S,S_{\mathit{init}},A,\trans}$ is given by a set of \emph{states} $S$, a set of initial states $S_{\mathit{init}}\subseteq S$, an alphabet $A$ of actions, and a set of transition rules $\scrsf{trans}$ of the form $s \xrightarrow{a} s'$, where $s,s'\in S$ and $a \in A$. As usual, we define an \emph{automaton} $\cal F = \tup{S, S_{\mathit{init}}, A, \trans, S_{\mathit{fin}}}$ as the LTS $\cal A$ along with a set of \emph{final} states $S_{\mathit{fin}} \subseteq S$. The automaton $\cal F$ is called a \emph{finite automaton} (FA) if the sets $S$ and $A$ are finite.
+\end{definition}
+
+A \emph{run} in the LTS $\cal A$ is a finite sequence $\rho = s_0 \xrightarrow{a_1} s_1 \ldots s_{n-1} \xrightarrow{a_n} s_n$, for $s_i \in S$ such that for every $1 \leq i \leq n$, $s_{i-1} \xrightarrow{a_i} s_i \in \trans$. We say that $\rho$ is a run from $s_0$ to $s_n$. The length of $\rho$ is $n$ and is denoted by $|\rho|$. The \emph{trace} of the run $\rho$ is the sequence of actions $a_1\ldots a_n$. Two runs are \emph{trace equivalent} if they have the same traces. Given the FA $\cal F$, a run in $\cal A$ is \emph{accepting} if it starts in an initial state and ends in a final state.
+
+A state $s \in S$ is \emph{reachable} in $\cal A$ if there exists a run of $\cal A$ from an initial state $s_0$ to $s$.  The \emph{LTS verification} \emph{problem} asks whether, given an LTS $\cal A = \tup{S,S_{\mathit{init}},A,\trans}$, and an automaton $\cal F'$
+over strings in $A^*$, there exists a run $\rho$ in $\cal A$ from an initial state, and an accepting, trace equivalent run $\rho'$ in $\cal F'$. We call the corresponding trace a \emph{witness} trace. The problem can be analogously defined for any system with an LTS semantics.
+
+
+
+
+
+
+	
+
+
+
+
+
+
+
+
+
+		
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,33 @@
+\section{Implementation}
+\label{sec:impl}
+
+We have implemented a prototype of \sys{} consisting of the RAN resource manager and edge resource manager, comprising approximately 7,700 lines of Python and C++ code~\cite{smec-github}.
+
+\mypara{RAN resource manager.}
+We implement the RAN resource manager in the srsRAN 5G's MAC layer~\cite{srsran} with our request identification mechanism and deadline-aware scheduling algorithm.
+Since our design is not tightly coupled with srsRAN, it can be ported to other RAN stacks such as OAI 5G~\cite{oai5g:www}.
+
+\mypara{Edge resource manager.}
+We implement the edge resource manager as a user-space daemon that coordinates with applications through the \sys{} API.
+It consists of four core components: network latency estimation, processing time prediction, CPU/GPU management modules described below.
+
+\mypara{Network latency estimation.}
+The network latency estimation module operates on both client and server to enable accurate per-request network latency measurement.
+The client periodically sends a probe message containing a 4-byte compensation factor tagged with a 4-byte probe ID to the server.
+The server replies with 12-byte ACK packets containing the same probe ID and the ACK's sending timestamp over the stable downlink path.
+In our prototype, we use a 1-second probing frequency to balance accuracy with overhead.
+
+\mypara{Processing time prediction.}
+The processing estimation module maintains a sliding window of the past $R$ requests' processing times for each application to predict future delays.
+By tracking both queueing and processing components through the \sys{} API events, the system builds application-specific performance profiles.
+We use $R=10$ as the window size in our prototype, providing sufficient history while remaining responsive to workload changes.
+
+\mypara{CPU management.}
+Our CPU manager leverages Linux's \texttt{sched\_setaffinity} system call~\cite{sched-setaffinity:manpage} to dynamically bind application processes to specific CPU cores based on deadline urgency.
+This user-space approach enables fine-grained CPU allocation and reclamation without requiring kernel modifications or custom scheduling classes. 
+
+\mypara{GPU management.}
+Our GPU scheduler operates through NVIDIA's MPS, which enables CUDA stream priorities from different application processes to be compared on a unified scale.
+For example, a stream with priority -3 from one process correctly receives higher priority than a stream with priority 0 from another process.
+Each application creates multiple CUDA streams at initialization using the \texttt{cudaStreamCreateWithPriority()} API~\cite{cuda-stream-priority}, with each stream assigned a distinct priority level.
+Based on deadline urgency feedback from the resource manager, incoming requests are dispatched to the appropriate stream, ensuring urgent requests execute on high-priority streams while less critical requests use lower-priority streams.

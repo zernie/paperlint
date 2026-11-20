@@ -1,0 +1,87 @@
+\section{Background}
+
+\subsection{Smart Contracts \& Decentralized Finance}
+\label{sec:smart}
+Ethereum smart contracts are self-executing programs typically implemented in high-level languages like Solidity~\cite{dannen2017introducing}. They are compiled into bytecode, deployed, and executed in the Ethereum Virtual Machine (EVM)~\cite{hirai2017defining}, a stack-based virtual machine.
+The immutable nature of the blockchain makes smart contracts susceptible to vulnerabilities once deployed. To address this, smart contracts often utilize proxy mechanisms~\cite{eip1967} for upgrading their logic or fixing bugs.
+Smart contracts use three data structures to maintain data: \textit{Memory}, \textit{Storage}, and \textit{Calldata}. \textit{Memory} holds temporary data required during function execution, \textit{Storage} stores data permanently on-chain, and \textit{Calldata} contains read-only function arguments passed from external calls initiated by opcodes like CALL and DELEGATECALL.
+
+
+DeFi, an emerging financial ecosystem built on smart contracts, showcases immense potential.
+We highlight some widely-adopted DeFi protocols in the following.
+
+\noindent
+\textbf{Token}. Except for the native token in Ethereum, accounts are allowed to create and issue tokens by implementing some standards, \textit{e.g.,} ERC-20~\cite{erc20} and ERC-721~\cite{erc721}.
+% , and ERC-1155~\cite{erc1155}.
+Moreover, DeFi widely leverages \textit{stablecoins} and \textit{liquidity provider (LP) tokens}. Specifically, stablecoins can ensure price stability by anchoring specific currencies, like USD, offering a reliable medium for value exchange. LP tokens are issued by DeFi projects to represent someone's shares and benefits.
+
+
+\noindent
+\textbf{Decentralized Exchange}. Decentralized exchange (DEX) uses smart contracts for token exchange, ensuring transparency, openness, and trustlessness. Lots of well-known DEXes exist in Ethereum, like Uniswap~\cite{uniswap}.
+DEX typically employs the \textit{automated market maker} (AMM) mechanism, dynamically adjusting token prices based on the token reserve in liquidity pools.
+Users can deposit tokens into DEXes to provide liquidity and earn interest in an LP token form.
+
+\noindent
+\textbf{Flashloan}. Flashloan is a form of uncollateralized loan that must be taken and 
+Protocols such as Aave~\cite{aave} and Uniswap~\cite{uniswap} provide flashloan services, allowing users to borrow large amounts without upfront collateral. 
+Though flashloan provides convenience, it has also led to various attack incidents in recent years~\cite{wang2020towards, qin2021attacking}.
+
+
+
+\subsection{Price Manipulation}
+\label{sec:pm}
+Price manipulation in DeFi is basically achieved by exploiting how DEXes calculate token prices.
+Typically, for a token in a liquidity pool, the lower the supply, the higher the price. When the supply balance between tokens is disrupted, price deviations may occur. 
+The existence of flashloan further worsens this issue by enabling someone to borrow large amounts of assets without collateral, \textit{i.e.,} causing rapid and significant price fluctuation before the loan is repaid.
+Based on how the victim contract is affected, it is divided into \textit{direct price manipulation (DPM)} and \textit{indirect price manipulation (IPM)}.
+
+
+\begin{figure}[t]
+    \centering
+    \subfigure[DPM in \textit{ElephantStatus}.]{
+        \centering
+        \includegraphics[width=0.45\columnwidth]{Figure/sec3/elephant7.pdf}
+        \label{fig:elephant}
+    }
+    \hspace{0.02\columnwidth} 
+    \subfigure[IPM in \textit{Cheese Bank}.]{
+        \centering
+        \includegraphics[width=0.45\columnwidth]{Figure/sec3/cheese7.pdf}
+        \label{fig:cheese}
+    }
+    \vspace{-0.2in}
+    \caption{Two types of price manipulation.}
+    \vspace{-0.1in}
+    \label{fig:pm}
+\end{figure}
+
+\noindent
+\textbf{Direct Price Manipulation (DPM).}
+\label{sec:dpm}
+By exploiting calculation errors or access control issues within the victim contract, attackers can directly perform price manipulation in the liquidity pools of DEXes. 
+This typically involves three steps: \textbf{i)} the attacker uses a large amount of token \texttt{A} to exchange for token \texttt{B} in the liquidity pool, causing the price of token \texttt{B} to increase; \textbf{ii)} the attacker further decreases the liquidity of token \texttt{B} by exploiting the victim contract, \textit{e.g.,} let the victim purchase a large amount of token \texttt{B}, driving up the price of token \texttt{B}; and \textbf{iii)} the attacker sells the acquired token \texttt{B} and profits from the price manipulation.
+
+Figure~\ref{fig:elephant} illustrates a real-world example of direct price manipulation, where \textit{ElephantStatus} was exploited on Dec. 6th, 2023, resulting in approximately \$165K financial losses~\cite{elephant}.
+As we can see, the attacker borrows a large amount of BUSD tokens via flashloan (step \ding{172}), which are then swapped to WBNB tokens (step \ding{173}). The attacker then calls \texttt{sweep} in the victim contract (step \ding{174}), which transfers a large amount of BUSD into the liquidity pool and withdraws an equivalent value of WBNB from the pool (step \ding{175}). This operation artificially inflates the price of WBNB in the liquidity pool.
+Finally, the attacker swaps the previously acquired WBNB back to BUSD (step \ding{176}), a stablecoin, obtaining profits by such a direct price manipulation.
+Note that,  there is a variant of DPM, where attackers can also directly leverage flashloans to significantly impact the asset reserves in the liquidity pool, subsequently profiting from the price fluctuations. In this situation, the victim is the liquidity pool itself.
+
+
+\noindent
+\textbf{Indirect Price Manipulation (IPM).}
+\label{sec:ipm}
+Instead of directly exploiting the victim contract, attackers conduct indirect price manipulation by disturbing token prices in DEXes, which are adopted as price oracles by victim contracts.
+Specifically, it generally consists of three steps: \textbf{i)} the attacker intentionally creates an imbalance in the token reserves of a liquidity pool; \textbf{ii)} the attacker interacts with the victim contract, which calculates the token prices in real-time based on the oracle exposed by the liquidity pool. To this end, the attacker can sell or stake tokens to the victim contract at an inflated price; and \textbf{iii)} the attacker restores the balance of the liquidity pool.
+
+
+Figure~\ref{fig:cheese} illustrates a concrete example of an indirect price manipulation, which occurred on Nov. 6th, 2020, leading to financial losses of Cheese Bank estimated at \$3.3M~\cite{cheese}.
+Specifically, the attacker first borrows a large amount of ETH via flashloan (step \ding{172}). Then, the attacker deposits ETH and CHEESE tokens to the liquidity pool in exchange for the corresponding number of LP tokens (step \ding{173}).
+The attacker further swaps a large amount of ETH for CHEESE tokens (step \ding{174}).
+Since \textit{Cheese Bank} calculates the price of LP tokens based on the amount of ETH in the liquidity pool, through a legitimate external call, the attacker drains the victim contract, which is tricked into thinking that the price of LP tokens is extremely high (step \ding{175}).
+Finally, the attacker redeems ETH from the liquidity pool (step \ding{176}).
+
+\subsection{Threat Model}
+
+As for conducting price manipulation attacks, compared to ordinary accounts in Ethereum, attackers have no other extra privileges. All attack logic is embedded in the deployed contract, and the attack is launched by initiating a transaction.
+As illustrated in \S\ref{sec:pm}, both liquidity pools and contracts that have the ability to interact with the pools can be potential victims.
+\textit{Leveraging the time window between the attack contract deployment and the attack launch is critical.} In the real world, attackers may delay the attack until certain conditions are met or until the profit is maximized. 

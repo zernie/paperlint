@@ -1,0 +1,30 @@
+\section{Guidelines}
+\label{sec:implication}
+
+We summarize some guidelines to suggest better practices for leveraging LLMs in unit testing.
+
+\textbf{(1) Potential of LLM-based approaches.} 
+As discussed in Section~\ref{sec:rq1}, our study shows that fine-tuning LLMs significantly outperforms state-of-the-art methods such as $ATLAS$ for assertion generation, \textsc{AthenaTest} for test generation, and \textsc{Ceprot} for test evolution across nearly all metrics. This improvement highlights the potential of LLMs for a wide range of unit testing tasks. Therefore, LLM-based approaches should be regarded as a primary strategy for achieving superior results.
+
+\textbf{(2) Incorporating Additional Post-Processing.}
+As detailed in Section~\ref{sec:rq1-test_generation}, LLMs 
+fall short compared to A3Test, which, though also based on fine-tuning, incorporates a post-processing step to ensure naming consistency, parentheses completion, and test signature accuracy. This suggests that even a straightforward post-processing step can effectively enhance LLMs' performance. Thus, exploring post-processing techniques, especially those that integrate program analysis knowledge, may be essential to enhance LLM effectiveness further.
+
+\textbf{(3) Importance of Input Length.}
+In Section~\ref{sec:rq1-test-evolution}, we describe reallocating input space in the \textsc{Ceprot} approach by removing the edit sequence to include additional content—such as the original method, updated method, and original test. This adjustment led to a 4.7\% improvement in EM and a 24.1\% increase in CodeBLEU, demonstrating that extending input context length significantly enhances LLMs' performance in the future.
+
+\textbf{(4) Selection of LLMs.}
+As discussed in Section~\ref{sec:rq2}, we provide empirical recommendations for selecting LLMs in unit testing tasks. First, large-scale LLMs consistently outperform smaller ones, indicating that larger models should be prioritized when sufficient computing resources are available. The CodeLlama and DeepSeek-Coder series are especially worth considering for their strong performance. Second, encoder-decoder architectures perform better among models with fewer than one billion parameters. 
+Thus, in resource-constrained settings, encoder-decoder models, particularly the CodeT5p series, maybe the optimal choice for unit testing tasks.
+
+\textbf{(5) Potential Issue with Failing Tests and Build Errors.}
+As illustrated in Fig.~\ref{fig:rq2_3_all_tasks}, a considerable proportion of generated test cases fail when executed against production code, regardless of model size.
+Moreover, according to Table~\ref{tab:tg_comparisons_llm}, even the top-performing model, DeepSeek-Coder-6b, still suffers from a high failure and build error rate of 30.36\% on Defects4J.
+These failures, often resulting from incorrect test prefixes or assertions, significantly hinder the effectiveness of automated test case generation and impair the precision of bug detection. 
+Therefore, reducing failing and build error test rates is crucial for further advancements.
+
+
+\textbf{(6) Runtime-based Metrics rather than Text-based Metrics.}
+As discussed in Section~\ref{sec:metrics_comparison}, LLMs may perform poorly on text-based metrics due to the diversity of test cases, which significantly impacts test generation tasks. The other two tasks may also be affected. Therefore, it is recommended to use runtime-based metrics to evaluate approaches for unit testing tasks.
+
+

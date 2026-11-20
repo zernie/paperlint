@@ -1,0 +1,48 @@
+\begin{table*}[ht]
+    \centering
+    \footnotesize
+    \begin{tabular}{p{15cm}}
+        \toprule
+        % \bf{Prompt} \\
+        % \midrule
+        I will provide you with a persuasion background, as well as the corresponding goal, the persuader, the persuadee, and a historical conversation. Based on the historical conversation, there will be a dialogue system called Persuader to continue chatting with persuadee in two parallel universes (Denoted as Uni-X and Uni-Y). \\
+        Your task is to judge which universe Persuader performs better. \\
+        You have to follow the rules: \\
+        1. The evaluation dimensions for``performs better''include persuasiveness, Semantic relevance, emotional factors, factual correctness, overall evaluation, etc.; \\
+        2. You should first summarize the history conversation, and then summarize the performance of Persuader in Uni-X and Uni-Y separately; \\
+        3. After the summarization, you should compare and analyze the statements in two universes, and finally tell me in which universe Persuader performed better; \\
+        4. Don't be affected by the order of the universe. You just need to pay attention to the conversation
+        Next, I will tell you the persuasion scenario, the historical conversation, and the Persuader dialogue in the parallel universe Uni-X and Uni-Y one by one. \\
+        And I will tell you the output format at the end, then you tell me the results in the output format. \\
+        \\
+        Background: \{background\} \\
+        Goal: \{goal\} \\
+        \\
+        The historical dialogue is as follows: \\
+        \{conversation\_history\} \\
+         \\
+        The dialogue in the parallel universe Uni-X is as follows: \\
+        Persuader: \{persuader\_x\} \\
+         \\ 
+        The dialogue in the parallel universe Uni-Y is as follows: \\
+        Persuader: \{persuader\_y\} \\
+        \\
+        Please output the results in the following format: \\
+        1. Your next output should only be a JSON-formatted Python dict, it should not contain anything else; \\
+        2. The output format should be: \{``summary\_history'': string,``summary\_X'': string,``summary\_Y'': string,``explain'': string,``result'': string\}; \\
+        3. summary\_history should be your summary of the historical conversation, if the historical conversation is empty, then the string in summary\_history should be empty; \\
+        4. summary\_X and summary\_Y are your summaries of the conversation by Persuader in Uni-X and Uni-Y respectively; \\
+        5. The content in``result''must be one of the following options:
+          -``Uni-X''if Persuader in Uni-X performed clearly better; \\
+          -``Uni-Y''if Persuader in Uni-Y performed clearly better; \\
+          -``Comparable-Good''if both Uni-X and Uni-Y performed equally well and there is no significant difference between them; \\
+          -``Comparable-Bad''if both Uni-X and Uni-Y performed equally poorly and there is no significant difference between them.
+        Do not output anything else such as``both",``TBD",``neither", or``I don't know", etc.; \\
+        6. The content in``explain''should be a detailed analysis, objectively and accurately comparing the performance of Persuader in Uni-X and Uni-Y, and if you find that the performances are comparable, clearly justify which label ("Comparable-Good''or``Comparable-Bad") is most appropriate; \\
+        7. In the explanation of the``explain''part, you should first provide analysis and comparison, and then at the end explain which universe you think performs better, rather than showing a clear tendency from the beginning; \\
+        \bottomrule
+    \end{tabular}
+    \centering
+    \caption{Prompt template for judge model in DailyPersuasion.}
+    \label{tab:judge-daily-persuasion}
+\end{table*}

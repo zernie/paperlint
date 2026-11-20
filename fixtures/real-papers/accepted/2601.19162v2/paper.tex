@@ -1,0 +1,64 @@
+\documentclass[letterpaper,twocolumn,10pt]{article}
+\usepackage{usenix-2020-09}
+\usepackage{kim-paper-macros}
+\renewcommand{\arraystretch}{1.5}
+
+\hypersetup{pdfstartview=FitH,pdfpagelayout=SinglePage}
+
+\newcommand{\dk}[1]{{\note{blue}{(DK: #1)}}}
+\newcommand{\xz}[1]{{\note{cyan}{(XZ: #1)}}}
+\newcommand{\todo}[1]{{\note{red}{(TODO: #1)}}}
+\newcommand{\modified}[1]{{\color{black}#1}}
+
+
+%% Affix the indicated badges to the paper.
+\usepackage[available,functional,reproduced]{usenixbadges}
+
+\interfootnotelinepenalty=10000
+\widowpenalty10000
+\clubpenalty10000
+
+\begin{document}
+
+\newcommand{\sys}{\mbox{{SMEC}}\xspace}
+\newcommand{\dallas}{\mbox{{Dallas}}\xspace}
+\newcommand{\nanjing}{\mbox{{Nanjing}}\xspace}
+\newcommand{\seoul}{\mbox{{Seoul}}\xspace}
+\newcommand{\tutti}{\mbox{{Tutti}}\xspace}
+\newcommand{\arma}{\mbox{{ARMA}}\xspace}
+
+\pagenumbering{gobble}
+
+\title{Enabling SLO-Aware 5G Multi-Access Edge Computing with \sys}
+
+\author{
+    {\rm Xiao Zhang  \quad Daehyeok Kim}\\
+    The University of Texas at Austin\\
+}
+
+\maketitle
+\frenchspacing
+\input{00_abstract}
+\pagestyle{empty}
+
+\input{01_intro}
+\input{02_motivation}
+\input{03_overview}
+\input{04_ran_sched}
+\input{05_edge_sched}
+\input{06_impl}
+\input{07_eval}
+\input{08_discuss}
+\input{09_concl}
+\input{acks}
+\label{EndOfPaper}
+
+{
+\bibliographystyle{plain}
+\bibliography{ref}
+}
+
+\input{10_appendix.tex}
+
+\end{document}
+

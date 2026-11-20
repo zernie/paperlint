@@ -1,0 +1,203 @@
+\section{Experimental Setup}\label{sec:setup}
+
+\subsection{Target Package}\label{subsec:target_package}
+In our evaluation, the names of the target packages are both manually created and existing. 
+
+In our experiments, we constructed malicious package names based on real-world malicious packages and insights from recent research~\citep{software_supply_chain_sec_1,software_supply_chain_sec_2,software_supply_chain_sec_3}. Existing malicious package naming strategies~\citep{malicious_package_collection} include typosquatting (e.g., \texttt{requests} vs. \texttt{requesqs}), dependency confusion (e.g., uploading a package named “\texttt{lodash}” with a higher version number to mimic a JavaScript library), impersonating security updates or patches (using keywords such as “security,” “update,” or “patch”), and mimicking submodules or functionalities of legitimate libraries (e.g., \texttt{numpy} vs. \texttt{numpy-core}). Following these patterns, we designed a series of custom 'potential' malicious package names to test whether LLMs could be deceived.
+
+It is important to note that we did not use the same type of malicious name extension for all target packages, such as uniformly appending the suffix “\texttt{\_safe}” or adding the prefix “\texttt{robust\_}”. As previously mentioned, we considered a variety of malicious name extensions based on real-world cases, including different types of prefixes, suffixes, and common misspellings. Conducting identical experiments for every target package by exhaustively combining all possible malicious name extensions would not only be of limited value but would also unnecessarily bloat our experimental results.
+
+In fact, the attack success rate depends both on the specific target package (for example, highly popular packages like \texttt{numpy} that frequently appear in LLM training data may be harder to attack successfully) and on the type of malicious name extension used (for instance, misspelling-based attacks may become more effective as LLMs' typo-correction abilities improve). Our main objective is to demonstrate that our approach can successfully attack a wide range of popular packages using both real-world (for the actually existing malicious library names, we mark them with "*" in the table. These names are collected from ~\citep{malicious_package_collection}) and custom malicious package names.
+
+Nevertheless, we conducted an ablation study using the target package \texttt{seaborn} to investigate the impact of different malicious name extensions on the attack success rate.
+
+
+\subsection{Datasets}\label{subsec:dataset}
+To validate the effectiveness of our novel \method attack framework, we construct new benchmarks and datasets by systematically categorizing and aggregating common code-related datasets according to programming languages. We select \textbf{Python}, \textbf{Rust}, and \textbf{JavaScript}—three widely adopted languages with frequent third-party library dependencies. For language selection rationale, refer to \autoref{tab:package_compare} in Appendix~\autoref{app:dataset}, which lists the related information about the six most commonly used programming languages, and details the exclusion of other popular languages due to significant discrepancies between their third-party library usage and installation workflows and our attack chain architecture. While these discrepancies pose challenges for attacking languages like C/C++ under our current framework, we emphasize that this does not imply immunity for other languages, as discussed in Section~\autoref{subsec:language_select}.
+
+For each selected language, we partition datasets into RAG Database and Query Dataset components. \textbf{RAG Database}: Comprises code-related datasets from Huggingface containing complete code snippets with explicit third-party package/library declarations. We prioritize dataset diversity and size to approximate real-world RAG retrieval scenarios, though true simulation remains infeasible due to the dynamic nature of production RAG systems. 
+Notably, these datasets closely align with those used in LLM training, explaining current models' proficiency in generating complete code snippets. 
+
+\textbf{Query Dataset.} Consists of real-world programming queries matching typical user distributions. This dataset was split 8:2 into proxy and test subsets. The 80\% proxy queries were used to poison relevant database entries, while the 20\% test queries were strictly held out for evaluation. Crucially, no overlap exists between proxy and test queries to maintain validity under our threat model. Dataset sources details are shown in \autoref{tab:source} in the Appendix.
+ 
+
+
+\textbf{Poisoning Ratio.} Unless otherwise specified, in our experiments, we poison all documents related to the target package that are identified through proxy queries as described in \autoref{subsec:doc_query}. It should be noted that the actual poisoning ratio is calculated as the proportion of poisoned documents among all documents in the whole database.
+% 
+Consequently, in all experiments, the poisoning ratio is far less than 100\%, depending on the number and diversity of proxy queries used. \autoref{tab:main_performance} shows the default poisoning ratios for all target databases.
+
+
+
+ 
+\subsection{Evaluation Metrics}\label{subsec:metrics}
+
+
+We evaluate our framework using the following metrics.
+\begin{itemize}
+\item \textbf{Attack Success Rate (ASR).}
+ASR measures the proportion of test queries for each target library where the LLM's response contains the target library name. Notably, LLMs typically include library names in import statements during code generation (though they may also appear in explanations, comments, or post-code descriptions). We only consider cases where the target library appears in import statements; other occurrences, such as those in comments, are ignored.
+
+
+
+\item \textbf{Precision@k.}
+Following prior work~\citep{poisonedrag}, Precision@k quantifies the fraction of poisoned documents containing the target library name within the top-k results retrieved by Contriever. We exclude recall and F1-score because precision alone suffices to evaluate ranking attack efficiency in RAG systems. Unless otherwise specified, we set $k=10$ by default (which is a common setting in RAG systems).
+% Additionally, since poisoning targets specific libraries, measuring the proportion of target-library-containing documents among all poisoned documents is irrelevant.
+
+\item \textbf{\#Queries.}
+This metric represents the average number of proxy queries per poisoned document. As attackers do not know real user queries, a lower \#Queries (at fixed ASR) indicates easier attacks, requiring fewer proxies to approximate user query distributions. 
+% Note that \#Queries scales with dataset size and benefits ASR when resources are sufficient, as larger proxy sets better mimic real query distributions.
+
+\item \textbf{Average Processing Time (APT).}
+APT measures the mean time per document required to execute poisoning. 
+% This efficiency metric is critical due to wide variability in attack method performance. 
+Lower APT values enable attackers to rapidly inject large volumes of poisoned documents into RAG databases.
+\end{itemize}
+
+\subsection{Models}\label{subsec:models}
+A RAG system contains two models: the contriever for retrieving related documents with the input query given by the user, and an LLM to generate the code snippet with the user query and top-k documents as the context, combining the whole prompt.
+
+\textbf{Contriever.} We consider three retrievers: mGTE~\citep{mgte}, and bge-base-en-v1.5~\citep{bgeM3_embeddingmode}, all-mpnet-base-v2~\citep{all-mpnet} and e5-base-v2~\citep{e5-base}. 
+% Among them, mGTE and BGE-M3 use global dense vector representations, while ColBERTv2 employs a token-level contextualized late interaction architecture. 
+By default, we use the cosine similarity between the embedding vectors of a question and a text in the knowledge database of the local proxy retriever to calculate their similarity score. 
+
+\textbf{LLM.} We evaluate our \method on many SOTA LLMs that have powerful code generation abilities. For the surrogate models, we use LLama3.2-3B~\cite{llama3}, Qwen2.5-Coder-7B-Instruct~\citep{hui2024qwen2} and CodeLlama-7b-Python-hf~\cite{codellama}. For target LLMs, we choose both open-source and closed-source LLMs, including DeepSeek series~\citep{deepseekr1} (DeepSeek V3, R1), GPT series (GPT4-Turbo, GPT4o, GPT4o-mioi),  and Claude (Claude 3.5 Sonnet). To ensure reproducibility, we set $temperature=0$ and $seed=100$. The prompt we use in our evaluation is shown in the Appendix ~\autoref{app:prompt}.
+
+
+\subsection{Attack Parameters}
+In our \method-R method, unless otherwise specified, we set maximum sequence length $L=20$, beam width $B=10$, top candidates per position $k_b=15$, number of iterations of first search $N=50$ and number of iterations of research $N'=25$ by default. The number of initial insertion positions $\mathit{num\_pos}$ is determined by the number of lines in the document, and we default to inserting the Ranking Sequence at the end of each line of the document. For the local proxy LLM, we use LLama3.2-3B by default. For the local proxy LLM, we use GPT4o-mini by default. For the local proxy contriever, we use gte-base-en-v1.5 by default.
+
+
+\subsection{Baselines}
+
+We choose ReMiss~\citep{remiss}, a SOTA jailbreaking method, as baselines for our generation attack against our proposed \method-G. We also choose HotFlip~\citep{ebrahimi2017hotflip} as baselines for our retrieval attack part against our proposed \method-R.
+
+\section{Results}\label{sec:result}
+We conduct comprehensive experiments to evaluate the effectiveness, transferability, and practicality of our proposed method.
+
+\subsection{Effectiveness of \method}\label{subsec:main_performance}
+For performance benchmarking, we select state-of-the-art LLMs (both open/closed-source) renowned for code generation capabilities. Our evaluation covers Python, Rust and JavaScript-three languages with heavy third-party dependency usage patterns. As shown in \autoref{tab:main_performance}, our findings are summarized as follows.
+
+\textbf{Query Efficiency.} Across all the target package names, poisoning required only about 3 surrogate queries on average to establish attack relevance.
+
+\textbf{Precision@k.} Achieve values exceeding 5 for Python/Rust targets, indicating over 50\% of poisoned documents ranked in the Top-10 retrievals per test query.
+
+\textbf{Attack Success Rate (ASR).} Our method demonstrates remarkable efficacy against closed-source SOTA LLMs (e.g., 67\% ASR on GPT-4o and 51\% on DeepSeek-r1), successfully overriding internal model knowledge and safety alignment to induce targeted dependency recommendations. Notably, even explicitly suspicious names like \texttt{malware\_seaborn} achieved high ASR (over 30\%), revealing critical trust vulnerabilities. Although ASR is lower on some black-box LLMs, these results are achieved via transfer attacks, highlighting strong transferability; meanwhile, the Precision@k remains high, indicating poisoned documents often appear in model contexts.
+
+\textbf{Package Naming Dynamics.} Packages with names like safe, robust, or v2 achieved high ASR (mostly over 20\%), exploiting LLMs’ preference for “trustworthy” naming conventions. Misspelled names (e.g., \texttt{requstss}, \texttt{cumpy}) showed lower ASR due to LLMs’ strong typo-correction capabilities, a sharp contrast to traditional software supply chain risks where typosquatting dominates. Known malicious packages (e.g., \texttt{tn-moment}) achieved poor ASR, aligning with typosquatting observations and suggesting LLMs inherit some malware awareness from training data.
+
+Notice that Claude-3.5-Sonnet exhibits unusually high ASR (all over 50\%) against Rust-related poisoning despite its superior general code generation performance, suggesting insufficient safety alignment for Rust-specific dependencies. JavaScript shows significantly lower ASR compared to Python/Rust, likely due to its flexible dependency import patterns (e.g., HTTP-based imports) versus strict import/use declarations.
+
+It is important to note that our primary goal in designing these package names was to demonstrate that our approach is effective not only against existing malicious package names, but also provides attackers with the flexibility to control and customize package names, thus amplifying the security risk. For example, an attacker could preemptively poison a set of customized package names before uploading the actual malicious packages. Our experimental results confirm that current LLMs lack defences against these types of malicious package names.
+
+\input{tables/main_performance}
+
+\subsection{Performance compared to other baselines}
+\input{tables/python_baseline}
+Our experimental comparison in ~\autoref{tab:baseline_performance} evaluates four baselines with our \method. The Naive means Basic implementation without ranking sequences, containing only a single unoptimized 'security' suggestion in package comments. For HotFlip~\citep{ebrahimi2017hotflip}, we use it to generate the ranking sequence; for the jailbreaking sequence, we use the naive suggestion. For ReMiss~\citep{remiss}, we test both with and without our ranking sequence integration.
+
+ The table shows that our \method achieves substantially higher ASR across all target packages compared to baselines. \method outperforms HotFlip in search rankings, demonstrating our ranking sequence's superiority in elevating poisoned documentation visibility. While ReMiss with our ranking sequence achieves comparable Precision@k to our method, its ASR remains significantly lower. The gibberish-like jailbreaking sequences generated by ReMiss exhibit low transferability. This aligns with our attack insight, i.e., successful poisoning primarily relies on convincing the model to adopt our crafted 'usage recommendations'. 
+
+
+\subsection{Ratio of Poisoned Documents}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.5\textwidth]{Images/ratio2.pdf}
+  \caption{Performance of different poisoning percentages of the relevant documents (those containing the target package name) from our RAG database. The number below represents the actual poisoning ratio, which is the proportion of the entire database. The target package is \texttt{matplotlib} (\texttt{matplotlib\_safe}). We use DeepSeek-v3 as the target LLM. }
+  \label{fig:ratio}
+\end{figure}
+We select \texttt{matplotlib} (\texttt{matplotlib\_safe}) as target package and inject poisoned documentation into the database following the proportion ratios illustrated in \autoref{fig:ratio}. The total document count is calculated based on all matplotlib-related entries (i.e., documents containing “\texttt{matplotlib}”). ASR improvement emerges when poisoning proportion of relevant documents exceeds 3\% of relevant documents (0.01\% of total documents), demonstrating that successful attacks require minimal poisoned documentation, which validates the practical viability of our method, since making bulk poisoning practically impossible, particularly given that real-world RAG databases are orders of magnitude larger than experimental setups. Note that divergent growth patterns between ASR and Precision@K metrics reveal that at low poisoning ratios, document ranking improvements yield disproportionate benefits to ASR, which provides empirical evidence for both the effectiveness and operational practicality of our approach in real-world deployment scenarios.
+
+In the Appendix~\autoref{app:vscode}, we provide a real-world example demonstrating how Copilot in VSCode could be misled into suggesting malicious packages through manipulated reference documentation. 
+
+
+\subsection{Ablation Study}\label{subsec:ablation}
+
+\textbf{Module ablation.}
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.5\textwidth]{Images/module_abl.pdf}
+  \caption{Ablation performance of modules in our \method. R denotes \method-R. G denotes \method-G. R+G and G+R mean different orders. R(N+N') indicates the incorporation of additional reconstruction iterations from the second-round ranking sequence into the first round.}
+  \label{fig:module_abl}
+\end{figure}
+The experimental results in \autoref{fig:module_abl} demonstrate that component R significantly enhances the retrieval ranking of poisoned documents, while component G effectively improves the target LLM's success rate in generating desired package imports. However, introducing new sequences through G may inadvertently degrade R's effectiveness by altering the embedding similarity between documents and queries. Therefore, our additional round of R compensates for this ranking degradation caused by G's interference. The R(N+N') experiments further validate that simply increasing first-round iteration counts cannot substitute for this dedicated compensation mechanism. Notably, while the R+G ordering shows marginally better performance than G+R, the difference remains subtle, which stems from their asymmetric mutual influence patterns, where G's impact on R outweighs R's effect on G, despite both being relatively limited in magnitude.
+
+\textbf{Hyperparameter tuning.}
+We select Maximum sequence length ($L$), Beam width ($B$) and Top candidates per position ($k_b$), three hyperparameters that have the greatest impact on performance. The results are shown in \autoref{fig:abl_hyperp}.
+
+Due to the inherent characteristics of the beam search algorithm, in essence, when computational resources are sufficient, larger values for these three hyperparameters generally lead to better performance. However, the marginal gains in performance diminish as the values increase, while the time overhead for constructing a poisoned document rises significantly. Therefore, our default hyperparameter selection balances the largest feasible combination supported by the experimental equipment with acceptable efficiency, avoiding excessive slowdown.
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.45\textwidth]{Images/abl.pdf}
+  \caption{Ablation of hyperparameters in our \method-R. }
+  \label{fig:abl_hyperp}
+\end{figure}
+
+\textbf{Local proxy LLM selection.}
+We investigate the impact of local surrogate model selection on ASR, as shown in ~\autoref{tab:abl_local_llm}. Since our method strategically generates inductive suggestions optimized to maximize the probability of inducing target package names in local models, the transferability of these suggestions between surrogate and target LLMs becomes crucial. Experimental results demonstrate enhanced transferability when employing larger models (e.g., Qwen2.5-Coder-7B-Instruct and CodeLlama-7b-Python-HF), which exhibit superior generalization capabilities compared to smaller variants. This observation clarifies that while our default choice of Llama3.2-3B (due to computational constraints in other experiments) achieves competent performance, it does not inherently represent the optimal proxy model. The performance gap primarily stems from larger models' improved capacity to capture transferable semantic patterns between suggestion crafting and target LLM execution.
+% rather than mere parameter count advantages.
+\input{tables/python_transfer_local_llm}
+
+\textbf{Precision@k.}
+Since RAG-LLMs can flexibly select how many retrieved documents to use, as we use k=10 in most experiments (which is a common setting in RAG systems). We also conduct an ablation study on the number of documents selected by the LLM from those retrieved via RAG, i.e., the value of k in Precision@k, as shown in the \autoref{tab:pk_transfer}. Our results indicate that increasing k leads to more poisoned documents being retrieved by RAG; however, this does not necessarily correspond to a higher proportion of poisoned documents, nor does it guarantee a higher ASR. Nonetheless, what is truly important is that we demonstrate our method can effectively compromise several of the most popular Python packages across different values of k.
+\input{tables/python_transfer_pk}
+
+
+\subsection{Influences on Code Generation Quality}
+\input{tables/python_code_quality}
+We evaluate the effects of poisoned RAG databases by comparing code outputs generated using both poisoned and clean documentation sources in \autoref{tab:code_quality_evaluation}. Code quality assessment employed Bandit (security analysis), Pylint (code quality scoring), and Flake8 (syntactic verification), with metrics including (1) \textbf{\#Security Issues} from security vulnerabilities detected by Bandit. (2) \textbf{\#High Severity} from critical-risk vulnerabilities from Bandit. (3) \textbf{Pylint Score} from comprehensive code quality rating by Pylint, 0-10 scale. (4) \textbf{\#Flake8 Errors} from code syntax/style violations from Flake8.
+
+Statistical significance across all four metrics was rigorously verified through Wilcoxon signed-rank tests, with Bonferroni correction applied to address multiple comparison effects. This analysis quantifies how documentation poisoning influences not just ASR but also fundamental code integrity characteristics.
+
+The analysis reveals that while code generated using poisoned documentation contains measurable quantities of potential bugs, these differences show no statistically significant deviation from the clean documentation group ($p_{Wilcoxon}<\alpha=0.05$), which is reinforced by the adjusted $\alpha'=\alpha/m$ from Bonferroni correction. This is because of the inherent nature of current LLM-generated code, where initial outputs frequently contain errors and vulnerabilities regardless of documentation quality. 
+% , typically requiring iterative human guidance through multi-turn dialogues. 
+The observed parity in code quality metrics between poisoned and clean conditions suggests our attack method preserves the LLM's baseline code generation characteristics while achieving its security objectives.
+
+% \subsection{Poisoning Ratio Thresholds for Practical Attack Deployment}
+% \td{We use a line plot to measure the connection between poisoning ratio and performance.}
+
+\subsection{Transferability}
+Transferability serves as a critical metric for evaluating the performance of RAG poisoning attacks. In our transferability experiments, we systematically examine three dimensions: 1) cross-retrieval model transferability (testing with different retrieval models between real user query processing and poisoned document construction), 2) cross-target model transferability (as demonstrated in \autoref{subsec:main_performance}), and 3) cross-linguistic query transferability (considering users' potential multilingual interactions when seeking LLM-based code generation suggestions).
+
+\textbf{Contriever.}
+\input{tables/python_transfer_contriever}
+The cross-retrieval model experimental results in \autoref{tab:contriever_transfer} reveal that while attack effectiveness diminishes when switching retrieval models, successful compromises remain achievable. This performance degradation primarily stems from distinct embedding patterns across different retrieval architectures. Smaller models exhibit heightened sensitivity to textual variations, which consequently impacts the enhancement of embedding similarity critical for successful attacks.
+
+\textbf{Query.}
+For linguistic transferability evaluation (see \autoref{tab:query_transfer}), we test on Chinese and French queries through translations of English queries using DeepSeek-v3. Despite the language shift, the performance remains significant, showing the method's robustness against semantic-preserving transformations of user queries.
+% , highlighting potential vulnerabilities in multilingual deployment scenarios of RAG systems.
+\input{tables/python_transfer_query}
+% \textbf{Poisoned Document.}
+
+% \subsection{Other Metrics.}
+% \input{tables/python_other_metric}
+% See \autoref{tab:other_metric}.
+
+
+\subsection{Mitigation}
+
+Since we are the first work to comprehensively propose this attack, no validated defense method currently exists against it. Therefore, we propose a detection approach as a mitigation strategy in this part. We leverage LLM to detect malicious and harmful components throughout the attack process. Specifically, we submit three critical elements: the RAG-retrieved documents, the complete prompt submitted to the target LLM, and the LLM's output, to a powerful LLM for judgment and detection. Our primary approach involves querying the LLM to determine whether the provided materials (documents, prompts, and outputs) contain harmful code or suspicious dependency libraries.
+
+This interim mitigation comes with consideration of alternative mitigation measures and their potential consequences.
+
+\textbf{Allowlist.} Although potentially effective, enforcing strict allowlist filtering in dependency recommendations for RACG may further exacerbate dependency monopolization.
+% While effective, strict whitelist policies could exacerbate monopolization in LLM dependency selection.
+
+\textbf{Rule-based detection of suggestions.} Our recommendations focus on functionality, security, and integrity, making them inappropriate for prohibition, especially in code comments.
+
+\textbf{Detection of nonsensical strings in documents.} We cannot reasonably prohibit random gibberish in RAG-provided code manuals where such patterns commonly occur.
+
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.5\textwidth]{Images/mitigation.pdf}
+  \caption{Mitigation results. Documents, Prompt and Response above denote three possible stages to detect the potentially harmful or unsafe content. The y-axis is the cumulative detection success rate. We use DeepSeek-v3 as the detector.}
+  \label{fig:mitigation}
+\end{figure}
+
+As shown in \autoref{fig:mitigation}, DeepSeek-v3 demonstrates partial effectiveness in detecting our poisoning attacks. 
+For RAG documents, the detection success rate is low because not all the documents are poisoned, plus computational costs when applied to all retrieved documents. 
+Full-prompt detection shows effectiveness with similar scalability challenges. Output-based detection achieves lower accuracy despite its cost efficiency.
+
+Our findings reveal that while LLM-based detection can identify potential malicious content in documents, prompts, and outputs, this approach faces significant limitations, including high operational costs and low success rates, even when disregarding recall rate considerations. 
+% We therefore advocate for the development of more effective mitigation strategies against such attacks in future research.

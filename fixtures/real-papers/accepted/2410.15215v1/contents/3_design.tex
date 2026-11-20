@@ -1,0 +1,298 @@
+\subsection{Correctness Requirements}
+
+While FHE allows for computation on encrypted data, it does not inherently provide mechanisms for verification of the computations performed. This limitation means that while data remains confidential, the correctness and authenticity of the computation cannot be independently verified under standard FHE protocols. On the other hand, ABFT enhances system reliability by embedding verification capability into computational algorithms, but cannot protect against malicious manipulations by adversaries.
+
+DataSeal aims to combine build on ABFT and integrate it to FHE. In secure computation, three critical properties must be ensured: correctness, completeness, and soundness. We follow the definition of them from~\cite{viand2023verifiable}. 
+Correctness ensures that an honest computation yields correct decrypted results. Completeness guarantees that the verification computation always accepts an honest computation result. Soundness ensures an adversary cannot make the verifier accept an incorrect or altered computation. While ABFT and FHE aim to achieve these properties to some extent, their limitations can be exploited under certain conditions. 
+
+\begin{definition}[Correctness]
+The scheme is correct if an honest computation yields correct decrypted results.
+\begin{equation}
+\scriptsize
+    \Pr\left[
+    \text{Dec}_{sk}(c_y) = f(x)
+    \;\middle|\;
+    \begin{aligned}
+        &(pk, sk) \leftarrow \text{KGen}(1^\lambda,f), \\
+        &(c_x, \tau_x) \leftarrow \text{Enc}_{\text{key}}(x), \\
+        &(c_y, \tau_y) \leftarrow \text{Eval}_{\text{key}}(c_x)
+    \end{aligned}
+    \right] = 1
+\end{equation}
+\end{definition}
+
+\begin{definition}[Completeness]
+The scheme is complete if the verification computation always accepts an honest computation result.
+\begin{equation}
+\scriptsize
+    \Pr\left[
+    \text{Verify}_{sk}(c_y, \tau_x, \tau_y) = 1
+    \;\middle|\;
+    \begin{aligned}
+        &(pk, sk) \leftarrow \text{KGen}(1^\lambda,f), \\
+        &(c_x, \tau_x) \leftarrow \text{Enc}_{\text{key}}(x), \\
+        &(c_y, \tau_y) \leftarrow \text{Eval}_{\text{key}}(c_x)
+    \end{aligned}
+    \right] = 1
+\end{equation}
+\end{definition}
+
+\begin{definition}[Soundness]
+The scheme is sound if an adversary cannot make the verifier accept an incorrect or altered computation.
+\begin{equation}
+\scriptsize
+\Pr\left[
+\begin{array}{c}
+    \text{Verify}_{sk}(c_y, \tau_x, \tau_y) = 1 \\
+    \land \\
+    \text{Dec}_{sk}(c_y) \neq f(x)
+\end{array}
+\;\middle|\;
+\begin{aligned}
+    &(pk, sk) \leftarrow \text{KGen}(1^\lambda,f), \\
+    &x \leftarrow A^{\text{OEnc},\text{ODec}}(pk), \\
+    &(c_x, \tau_x) \leftarrow \text{Enc}_{\text{key}}(x), \\
+    &(c_y, \tau_y) \leftarrow A^{\text{OEnc},\text{ODec}}(c_x, \tau_x)
+\end{aligned}
+\right] = 1
+\end{equation}
+\end{definition}
+
+ABFT is not secure because it does not fully meet the completeness and soundness properties. Completeness refers to the ability of the system to correctly verify genuine, unaltered results, which ABFT can achieve. However, soundness, which ensures incorrect computations are detected and rejected, is not fully met. A primary weakness of ABFT is that it relies on a function for computing the checksum that can be inverted, i.e. knowing a value of a checksum that evades verification, the attacker can figure out what alterations to data need to be performed.  An adversary can manipulate the results so that the checksum validations pass, creating a false sense of correctness. This lack of robust soundness against adversarial manipulations is the core weakness that allows such attacks to succeed in ABFT and ABFT combined with FHE.
+
+
+To address these gaps, this paper proposes an enhanced ABFT approach specifically tailored for integration with FHE systems. Our method replaces the checksum function used in ABFT with a secret checksum function that relies on a client-specific secret key. Unless the attackers know this key, they cannot determine what data should be modified to evade the verification pass. This ensures data privacy through FHE and introduces additional mechanisms to provide robust verification and integrity checks. By strengthening the soundness property, our enhanced ABFT approach can detect and reject malicious manipulations, thereby preventing adversaries from passing incorrect or altered computations as correct. This integration ensures that the system meets the critical properties of correctness, completeness, and soundness, thereby enhancing computations' overall security and reliability in adversarial environments. The specific details on how our proposed method addresses these vulnerabilities and the mitigation strategies are discussed in Section~\ref{sec:design}.
+
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.47\textwidth]{figures/overview.pdf}
+    \caption{An example of matrix multiplication workflow using our DataSeal. }
+    \label{fig:overview}
+\end{figure}
+
+\subsection{DataSeal Overview}
+
+
+Similar to ABFT, DataSeal incurs low space and computation overheads. Whereas ABFT relies on adding one row, DataSeal adds up to two additional rows (depending on computation operation) to the original matrix, regardless of the matrix size. Hence, the space overheads scales with $\frac{2N}{N^2}=\frac{2}{N}$ which asymptotically approaches zero as $N$ increases. Being software-based, DataSeal is hardware-agnostic, making it deployable in various hardware platforms. 
+
+Our DataSeal's workflow is illustrated in Figure~\ref{fig:overview}, showcasing the matrix multiplication process between input matrix 1 and input matrix 2 as an example. Prior to performing FHE computation in the cloud, the client performs an initial encoding setup. In this step, a secret key 1 vector is chosen and multiplied with input matrix 1 to generate a hash value, essentially a weighted checksum. This hash 1 is then scaled to create hash 2, combined with input matrix 2 to produce the golden output. Before server sharing, input matrices 1 and 2 and hash 1 and 2 are encrypted. The server then calculates the FHE matrix to obtain the output matrix and the corresponding output hashes 1 and 2. Post-calculation, these values are decrypted for verification purposes. During the verification phase, the client employs the secret key to multiply with the output matrix, verifying if the result matches output hash 1. Additionally, the golden output is checked against output hash 2. The computation is verified only if both these comparisons are successful, confirming the integrity and accuracy of the computation. While matrix multiplication is used as an illustrative example here, DataSeal's methodology is equally applicable to other matrix operations such as addition, squaring, and more, which will be covered in subsequent sections.
+
+Note that computationally, the client-side setup and verification are much cheaper than matrix multiplication. Hash 1, 2, and golden output are single-dimension vectors. Their multiplication with input matrices 1 and 2 is thus less complex than the matrix multiplication. That is, if the size of matrices 1 and 2 are $N\times N$, the asymptotic computation complexity of the setup and verification, compared to the matrix multiplication, is $\mathcal{O}(\frac{1}{N})$, which again decreases the overheads as the matrix size increases.  
+
+\noindent\textbf{Weighted Checksum.} The idea behind the weighted checksum is to improve security by using a weighted sum instead of a simple checksum. A weighted checksum is generated by multiplying the secret key vector with the input matrix, creating a more secure hash value. Specifically, consider the input matrix \( \mathbf{A} \in \mathbb{R}^{m \times n} \) and the secret key vector \( \mathbf{k} \in \mathbb{R}^n \):
+
+\[
+\footnotesize
+\mathbf{A} = \begin{pmatrix}
+a_{11} & a_{12} & \cdots & a_{1n} \\
+a_{21} & a_{22} & \cdots & a_{2n} \\
+\vdots & \vdots & \ddots & \vdots \\
+a_{m1} & a_{m2} & \cdots & a_{mn}
+\end{pmatrix}, \quad
+\mathbf{k} = \begin{pmatrix}
+k_1 & k_2 & \cdots & k_n
+\end{pmatrix}
+\]
+
+The weighted checksum \( \mathbf{w} \) can be computed as:
+\[
+\footnotesize
+\mathbf{w} = \mathbf{k} \cdot \mathbf{A} 
+=
+\begin{pmatrix}
+\sum_{i=1}^n k_i a_{i1} & \sum_{i=1}^n k_i a_{i2} & \cdots & \sum_{i=1}^n k_i a_{im}
+\end{pmatrix}
+\]
+
+Each element in the weighted checksum vector \( \mathbf{w} \) depends on all the secret values of secret vector $\mathbf{k}$. Not knowing $\mathbf{k}$, if the attacker modifies an element of the original matrix $\mathbf{A}$, he/she cannot figure out what checksum value can evade verification check unless he/she knows $\mathbf{k}$ which is a client's secret. Furthermore, the attacker cannot use a linear solver to solve for $\mathbf{k}$ given a system of linear equations with $n$ equations and $m$ unknown variables because the weighted checksum $\mathbf{w}$ is also encrypted with FHE prior to being sent to the server. 
+
+There is only one vulnerability that the attacker can exploit. He/she can multiply the entire matrix by a constant and still pass the verification, as the proportionality of the weights would remain unchanged. Specifically, the adversary can multiply the entire matrix \( \mathbf{A} \) by a constant \( c \), producing a new matrix \( \mathbf{A}' = c \cdot \mathbf{A} \). The weighted checksum for \( \mathbf{A}' \) becomes:
+
+\[
+\mathbf{w}' = \mathbf{k} \cdot \mathbf{A}' = \mathbf{k} \cdot (c \cdot \mathbf{A}) = c \cdot (\mathbf{k} \cdot \mathbf{A}) = c \cdot \mathbf{w}
+\]
+
+Since the proportionality remains unchanged, the altered matrix \( \mathbf{A}' \) could still pass the verification based on the weighted checksum, revealing a limitation in this approach. In practice, entire-matrix constant scaling is quite restrictive as an attack and may not lead to any useful exploit. However, we would still like to be able to detect such tampering, which leads us to the next scheme. 
+
+\noindent\textbf{Golden Input and Output.} The golden input concept addresses the weighted checksum's limitations. Instead of leaving the weighted checksum as is, it is multiplied by a random constant, treating it as a vector input to the operation. Let \( r \) be the random constant. The golden input \( \mathbf{g} \) is computed as:
+
+\[
+\mathbf{g} = r \cdot \mathbf{w} = r \cdot (\mathbf{k} \cdot \mathbf{A})
+\]
+This golden input \( \mathbf{g} \) is then combined with another input matrix \( \mathbf{B} \in \mathbb{R}^{n \times p} \) to produce a golden output \( \mathbf{R} \):
+
+\[
+\mathbf{R} = \mathbf{g} \cdot \mathbf{B} = (r \cdot (\mathbf{k} \cdot \mathbf{A})) \cdot \mathbf{B}
+\]
+
+During verification, if an adversary attempts to multiply the entire matrix \( \mathbf{A} \) by a constant \( c \), the new matrix \( \mathbf{A}' \) is:
+
+\[
+\mathbf{A}' = c \cdot \mathbf{A}
+\]
+
+The weighted checksum for \( \mathbf{A}' \) would be:
+
+\[
+\mathbf{w}' = \mathbf{k} \cdot \mathbf{A}' = \mathbf{k} \cdot (c \cdot \mathbf{A}) = c \cdot (\mathbf{k} \cdot \mathbf{A}) = c \cdot \mathbf{w}
+\]
+
+The golden input for \( \mathbf{A}' \) would be:
+
+\[
+\mathbf{g}' = r \cdot \mathbf{w}' = r \cdot (c \cdot \mathbf{w}) = c \cdot (r \cdot \mathbf{w}) = c \cdot \mathbf{g}
+\]
+
+The golden output with the altered matrix \( \mathbf{A}' \) would be:
+
+\[
+\mathbf{R}' = \mathbf{g}' \cdot \mathbf{B} = (c \cdot \mathbf{g}) \cdot \mathbf{B} = c \cdot (\mathbf{g} \cdot \mathbf{B}) = c \cdot \mathbf{R}
+\]
+
+This would result in a mismatch during verification because \( c \cdot \mathbf{R} \neq \mathbf{R} \), thus failing the verification.
+
+However, relying solely on the golden output is also insufficient. An adversary could calculate the golden input honestly and perform the computation, then overwrite the main data post-computation to pass the verification. Therefore, both the weighted checksum and the golden output are used together to enhance security, ensuring that both must be validated to confirm the integrity and accuracy of the computation.
+
+
+The overhead introduced by DataSeal is low due to its efficient design. During the encoding phase, the overhead consists of two vector and matrix multiplications to generate the weighted checksum and golden output rows. In the cloud computation phase, the overhead is the addition of two extra rows to the matrix. During the verification phase, the overhead is one vector-matrix multiplication to validate the results. By keeping the computational complexity low through vector-based operations for encoding and verification, DataSeal ensures that the performance impact on the system is negligible, thereby maintaining overall computational efficiency while enhancing security.
+
+
+
+\subsection{Message Encoding in DataSeal}
+\label{s:setup}
+
+Given two input matrices, \( M_A \) and \( M_B \), the function \( f(M_A, M_B) = M_o \) represents the computation that can be matrix multiplication, addition, or polynomial operations such as squaring. The primary objective of the encoder within \textit{DataSeal} is to transform \( M_A \) and \( M_B \) in such a way that the output \( M_o \) not only adheres to the computational requirements but is also verifiable post-computation. To achieve this, the \textit{DataSeal} encoder, invoked as \texttt{DataSeal.encode(f(.), M\_a, M\_b)}, outputs encoded versions of the matrices \( M^*_A \) and \( M^*_B \), along with a verification key (vk) and a vector \( v_o \) that serves as the golden output for verification purposes. The verification key \( vk \) is generated using a Pseudo-Random Function (PRF), ensuring that each encoding session is unique and secure. This ABFT-based approach enhances the encoder’s ability to maintain integrity and ensure verifiability of the computational results. The subsequent parts will delve into the specifics of the encoding techniques tailored for each type of operation---matrix multiplication, addition, and squaring.
+
+\begin{algorithm}
+\caption{\texttt{DataSeal.encode(f(X), M\_A, M\_B)}}
+\label{alg:enc_multiplication}
+\begin{algorithmic}[1]
+\STATE $vk, \alpha = PRF()$
+\STATE Compute $v_A = vk \cdotp M_A$.
+\STATE Compute $v_B = \alpha \cdotp v_A$.
+\STATE Compute $v_o = v_B \cdotp M_B$.
+\STATE Append $v_A$ and $v_B$ as the last row of matrix $M_A$, forming $M^*_A$.
+\end{algorithmic}
+\end{algorithm}
+
+\noindent\textbf{Multiplication.}
+For matrix multiplication, the encoding process is defined in Algorithm \ref{alg:enc_multiplication}, which details the steps to prepare Matrix \( A \) owned by the client for multiplication with Matrix \( B \), assumed to be known by both the client and the server. The process begins by generating a verification key (\( vk \)) and a scalar (\( \alpha \)) using a pseudorandom function (PRF). The client computes a blinded version of Matrix \( A \), \( v_A \), by multiplying \( vk \) with \( M_A \), and then applies \( \alpha \) to \( v_A \) to obtain \( v_B \). Subsequently, \( v_B \) is multiplied by Matrix \( B \) to produce the golden output \( v_o \). Finally, \( v_A \) and the result of \( v_B \cdot M_B \) are appended as the last row to Matrix \( A \), forming \( M^*_A \), which is then encrypted using FHE to produce \( \text{enc}_{\text{FHE}}(M^*_A) \). This encoded matrix \( M^*_A \) maintains confidentiality and allows for the verification of the computation's correctness and integrity.
+
+\begin{algorithm}
+\caption{\texttt{DataSeal.encode(f(+), M\_A, M\_B)}}
+\label{alg:enc_addition}
+\begin{algorithmic}[1]
+\STATE $vk = PRF()$
+\STATE Compute $v_A = vk \cdotp M_A$.
+\STATE Compute $v_B = vk \cdotp M_B$.
+\STATE Compute $v_o = v_A + v_B$.
+\STATE Append $v_A$ as the last row of matrix $M_A$, forming $M^*_A$.
+\STATE Append $v_B$ as the last row of matrix $M_B$, forming $M^*_B$.
+\end{algorithmic}
+\end{algorithm}
+
+\noindent\textbf{Addition.}
+The encoding process is outlined in Algorithm \ref{alg:enc_addition} for matrix addition. This process starts with the generation of a verification key (\( vk \)) using a pseudorandom function (PRF). The client then computes \( v_a \) by multiplying \( vk \) with Matrix \( M_A \) and \( v_B \) by multiplying \( vk \) with Matrix \( M_B \). These operations produce vectors \( v_A \) and \( v_B \), which are then added together to form \( v_o \), representing the encoded result of the matrix addition. To ensure the integrity and verifiability of the computation, \( v_A \) is appended as the last row to Matrix \( M_A \), forming \( M^*_A \), and \( v_B \) is appended as the last row to Matrix \( M_B \), forming \( M^*_B \). The augmented matrices \( M^*_A \) and \( M^*_B \) are then encrypted using FHE, enabling secure and verifiable addition operations.
+
+\begin{algorithm}
+\caption{\texttt{DataSeal.encode($f((.)^n$),$M_A$)}}
+\label{alg:enc_polynomial}
+\begin{algorithmic}[1]
+\STATE $vk = PRF()$
+\STATE For each column $i$ of $M_A$, compute $v_{A_i} = vk_i \times \left( \prod_{j} (M_{A_{ji}}) \right) \mod m$, where $j$ iterates over the rows of $M_A$.
+\STATE $v_o = v_{A}^n \mod m $ \COMMENT{Element-wise polynomial}
+\STATE Append $v_A$ as the last row of matrix $M_A$ forming $M^*_A$.
+\end{algorithmic}
+\end{algorithm}
+
+\noindent\textbf{Polynomial Computation.}
+Additionally, the encoding for matrix polynomial computation in the DataSeal framework is detailed in Algorithm \ref{alg:enc_polynomial}. This process begins with the generation of a verification key (\( vk \)) using a pseudorandom function (PRF). For each column \( i \) of Matrix \( M_A \), the algorithm computes \( v_{A_i} \) by multiplying \( vk_i \) (a component of \( vk \)) with the product of elements in column \( i \), taken modulo \( m \). This operation is performed element-wise across all columns, where \( j \) iterates over the rows of \( M_A \). After computing these values, each \( v_{A_i} \) is then raised to the power \( n \) and taken modulo \( m \) to achieve the element-wise polynomial values \( v_A \). These computed values \( v_A \) are then appended as the last row of Matrix \( M_A \), forming \( M^*_A \). The augmented matrix \( M^*_A \) is then encrypted and processed in the cloud. Upon decryption, the client performs verification checks to confirm the integrity of the polynomial computation and the matrix data, ensuring that the computations are accurate and secure.
+
+
+\subsection{FHE Evaluation and DataSeal Verification}
+\label{s:cloud}
+
+We combine DataSeal encoding with a Homomorphic Encryption (HE) scheme to develop a homomorphic authenticator. DataSeal encoding occurs on plaintext, so no modification is needed for the FHE algorithm. DataSeal's verification protocol ensures the consistency of the verification key, matrix output, and embedded redundancy, verifying that output vectors \(v_o\) match their precomputed values from the encoding phase. The verification mechanisms are tailored for each operation type (addition, multiplication, and polynomial computations).
+
+\label{s:verification}
+\begin{algorithm}
+\caption{Matrix Multiplication Evaluation in DataSeal}
+\label{alg:ver_multiplication}
+\begin{algorithmic}[1]
+\STATE Separate $v_1$ (last row of $M_C^*$), $v_2$ (second last row of $M_C^*$), and the rest of $M_C$.
+\STATE Check if $v_2$ equals $v_o$.
+\STATE Check if $v_k \times M_C$ equals $v_1$.
+\end{algorithmic}
+\end{algorithm}
+
+\noindent\textbf{Matrix Multiplication Verification:}
+In Algorithm \ref{alg:ver_multiplication}, the client decrypts $enc_{FHE}(C^*)$ to obtain $C^*$. The client first verifies the correctness of the cloud's computation by checking if $v_2 = v_o$ and then confirms the integrity of matrix $A$ by verifying if $v_k \times M_C = v_1$. Additionally, the client verifies that the computation result matches the precomputed golden output.
+
+\textit{Correctness:} To verify matrix multiplication \(A \cdot B = C\), apply a weighted checksum vector \(v\) with the verification key \(v_k\) to \(A\), yielding \(v_k A = w\). Multiply \(w\) by \(B\) to get \(w \cdot B = v_k \cdot A \cdot B = v_k \cdot C\). Verifying \(v_k \cdot C = w \cdot B\) confirms the correctness of the multiplication. Additionally, the golden output \(v_o\) provides an extra layer of confirmation, ensuring the final result matches the precomputed expected value.
+
+\textit{Soundness:} If \(v_k \cdot C = w \cdot B\), it ensures that the original multiplication \(A \cdot B = C\) was performed correctly, as the weighted checksum with verification key captures errors in the process. The golden output \(v_o\) further verifies that no tampering occurred during computation.
+
+\textit{Completeness:} If the original multiplication is correct, \(v_k \cdot C = w \cdot B\) will hold, guaranteeing the verification will not produce false negatives. The golden output \(v_o\) ensures that all valid computations are confirmed, reinforcing the integrity of the verification process.
+
+\begin{algorithm}
+\caption{Secure Matrix Addition in DataSeal}
+\label{alg:ver_addition}
+\begin{algorithmic}[1]
+\STATE Separate $v_1$ (last row of $M_C^*$) and the rest of $M_C$.
+\STATE Check if $v_o$ equals $v_1$.
+\STATE Check if $v_k \times M_C$ equals $v_C$.
+\end{algorithmic}
+\end{algorithm}
+
+\noindent\textbf{Matrix Addition Verification:}
+In Algorithm \ref{alg:ver_addition}, the client decrypts \(\text{enc}_A(C^*)\) to get \(C^*\). The client first checks if \(v_o = v_1\) and then verifies the integrity of matrix \(A\) by checking if \(v_k \times M_C = v_C\). Additionally, the client verifies that the computation result matches the precomputed golden output.
+
+\textit{Correctness:} For \(A + B = C\), apply the weighted checksum vector \(v\) with verification key \(v_k\) to \(A\), \(B\), and \(C\). If \(v_k \cdot C = v_k \cdot A + v_k \cdot B\), the addition is correct. The golden output \(v_o\) further confirms that the final result matches the expected value.
+
+\textit{Soundness:} If \(v_k \cdot C = v_k \cdot A + v_k \cdot B\), it ensures that \(A + B = C\) was performed correctly. The weighted checksum with verification key and the golden output \(v_o\) verify the computation's integrity.
+
+\textit{Completeness:} If the original addition is correct, \(v_k \cdot C = v_k \cdot A + v_k \cdot B\) will hold, ensuring no false negatives. The golden output \(v_o\) guarantees that all valid additions are verified accurately.
+
+\begin{algorithm}
+\caption{Secure Matrix Polynomial Verification}
+\label{alg:ver_polynomial}
+\begin{algorithmic}[1]
+\STATE Separate $v_C$ (last row of $M_C^*$) and the rest of $M_C$.
+\STATE Check if $v_C$ equals $v_o$.
+\STATE Check if $v_Ci = v_k i^n \times \left( \prod_{j} ( A_{ji}) \right) \mod m$. \COMMENT{Integrity check of $M_A$ in computation}
+\end{algorithmic}
+\end{algorithm}
+
+\noindent\textbf{Verification for Polynomial Computation:}
+In Algorithm \ref{alg:ver_polynomial}, after decrypting \(\text{enc}_A(C^*)\), the client first verifies if \(v_C\) equals \(v_o\) and then checks if for each column \(i\), \(v_Ci = v_k i^n \times \left( \prod_{j} ( A_{ji}) \right) \mod m\). Additionally, the client verifies that the computation result matches the precomputed golden output.
+
+\textit{Correctness:} For polynomial computations, apply the weighted checksum with verification key to each matrix column. The method ensures multiplicative relationships are maintained in the results, verifying the correctness of complex computations. The golden output \(v_o\) confirms that the final result is as expected.
+
+\textit{Soundness:} If the checksum condition holds, it ensures that the polynomial computation was performed correctly. The verification key and golden output \(v_o\) further validate the computation's integrity.
+
+\textit{Completeness:} If the original computation is correct, the checksum condition will hold, ensuring no false negatives. The golden output \(v_o\) guarantees that all valid polynomial computations are verified accurately.
+
+% \textit{Correctness:}
+% The correctness of our verification mechanism is linked to the FHE scheme's ability to perform computations on encrypted data without decryption, preserving confidentiality while ensuring computational accuracy.
+
+
+\subsection{Design Analysis and Limitation}
+\label{s:analysis}
+
+\noindent\textbf{Matrix Computation.} 
+DataSeal is optimized for matrix operations like multiplication, polynomial, and addition. It introduces scalable overhead with two extra rows, significant for small matrices but less impactful for larger ones, making it efficient for large-scale computations. However, its efficiency drops with non-matrix data types like single values or vectors due to data replication instead of a more efficient compression approach.
+
+\noindent\textbf{One Shot Integrity Protection.} 
+DataSeal can verify only one operation at a time, requiring re-encoding for each subsequent operation. This limitation adds overhead in complex tasks. For instance, in \(A \times B + C\), DataSeal validates \(A \times B\) but must re-encode before adding \(C\), increasing overhead in sequential operations.
+
+\noindent\textbf{Large-scale Data Transfer.} 
+DataSeal can easily adapt to latency sensitive applications in the cloud computing scenarios.
+Verification latency, data volume and bandwidth are not a concern for a single NN layer. For multilayer NN, verification is required per layer, but the latency can be hidden, e.g. verifying layer $x$ is overlapped with inferencing layer $x+1$. Data volume and bandwidth have increased but are still much smaller than alternatives (ZKP and MAC).
+
+However, when considering large-scale data transfers, such as in scenarios with massive datasets, DataSeal's matrix-based encoding introduces overhead that scales with the matrix dimensions, rather than with the overall dataset size. This results in a more predictable and manageable overhead compared to traditional cryptographic techniques (e.g., ZKP or MAC), where the overhead typically scales with the entire data volume. As a result, DataSeal remains efficient even in large-scale cloud computing operations.
+
+
+
+\noindent\textbf{Robustness to Attacks.} Under the setting of DataSeal, clients encrypt all inputs, including hashes, restricting adversaries from manipulating ciphertexts, which does not result in valid encrypted hashes. Furthermore, verification keys and scalars are dynamically generated for each session using a PRF, which mitigates replay attacks~\cite{mo2009secure}. DoS attacks~\cite{long2001trends} are a risk but are beyond the goal of DataSeal, which is to enhance integrity checks for outsourced computations.
+

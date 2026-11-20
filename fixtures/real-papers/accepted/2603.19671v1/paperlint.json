@@ -1,0 +1,17 @@
+{
+  "cycles": [
+    {
+      "id": "sigmod-2026",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:acm-acmsmall"
+      },
+      "opened": "2026-03-20",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2026-03-20",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

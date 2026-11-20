@@ -1,0 +1,321 @@
+\begin{thebibliography}{10}
+
+\bibitem{batchu2024satellite}
+Vishal Batchu, Alex Wilson, Betty Peng, Carl Elkin, Umangi Jain, Christopher
+  Van~Arsdale, Ross Goroshin, and Varun Gulshan.
+\newblock Satellite sunroof: High-res digital surface models and roof
+  segmentation for global solar mapping.
+\newblock In {\em NeurIPS 2024 Workshop on Tackling Climate Change with Machine
+  Learning}, 2024.
+
+\bibitem{dashadebench}
+Longchao Da, Xiangrui Liu, Mithun Shivakoti, T~Pranav Kutralingam, Yezhou Yang,
+  and Hua Wei.
+\newblock Shadebench: A benchmark dataset and method for shade simulation in
+  sustainable society.
+\newblock In {\em NeurIPS 2025 UrbanAI: Harnessing Artificial Intelligence for
+  Smart Cities}, 2025.
+
+\bibitem{ukkusuri2024heatwaves}
+S.~V. Ukkusuri, S.~U. Park, S.~Mittal, L.~Chapman, G.~Manoli, A.~Santos, et~al.
+\newblock We need to prepare our transport systems for heatwaves---here's how.
+\newblock {\em Nature}, 632(8024):253--256, 2024.
+
+\bibitem{seo}
+El{\'\i}as Masquil, Roger Mar{\'\i}, Thibaud Ehret, Enric Meinhardt-Llopis,
+  Pablo Mus{\'e}, and Gabriele Facciolo.
+\newblock S-eo: A large-scale dataset for geometry-aware shadow detection in
+  remote sensing applications.
+\newblock In {\em Proceedings of the Computer Vision and Pattern Recognition,
+  EarthVision: Large Scale Computer Vision for Remote Sensing Imagery}, pages
+  2383--2393, 2025.
+
+\bibitem{mittal2025overcoming}
+S.~Mittal and S.~V. Ukkusuri.
+\newblock Overcoming data scarcity in transit planning: A novel framework
+  combining machine learning and metaheuristics.
+\newblock {\em Data Science for Transportation}, 7(1):4, 2025.
+
+\bibitem{verma2025spatial}
+R.~Verma, S.~Mittal, and S.~V. Ukkusuri.
+\newblock Spatial {Access} of {America}: Multiple indicators of accessibility
+  to opportunities.
+\newblock {\em Scientific Data}, 12(1):1223, 2025.
+
+\bibitem{ogier2022flamby}
+Jean Ogier~du Terrail, Samy-Safwan Ayed, Edwige Cyffers, Felix Grimberg,
+  Chaoyang He, Regis Loeb, Paul Mangold, Tanguy Marchand, Othmane Marfoq, Erum
+  Mushtaq, et~al.
+\newblock Flamby: Datasets and benchmarks for cross-silo federated learning in
+  realistic healthcare settings.
+\newblock {\em Advances in Neural Information Processing Systems},
+  35:5315--5334, 2022.
+
+\bibitem{wang2021loveda}
+Junjue Wang, Zhuo Zheng, Ailong Ma, Xiaoyan Lu, and Yanfei Zhong.
+\newblock Loveda: A remote sensing land-cover dataset for domain adaptive
+  semantic segmentation.
+\newblock {\em arXiv preprint arXiv:2110.08733}, 2021.
+
+\bibitem{gong2025crossearth}
+Ziyang Gong, Zhixiang Wei, Di~Wang, Xiaoxing Hu, Xianzheng Ma, Hongruixuan
+  Chen, Yuru Jia, Yupeng Deng, Zhenming Ji, Xiangwei Zhu, et~al.
+\newblock Crossearth: Geospatial vision foundation model for domain
+  generalizable remote sensing semantic segmentation.
+\newblock {\em IEEE Transactions on Pattern Analysis and Machine Intelligence},
+  2025.
+
+\bibitem{aisd}
+Shuang Luo, Huifang Li, and Huanfeng Shen.
+\newblock Deeply supervised convolutional neural network for shadow detection
+  based on a novel aerial shadow imagery dataset.
+\newblock {\em ISPRS Journal of Photogrammetry and Remote Sensing},
+  167:443--457, 2020.
+
+\bibitem{sbu}
+Tom{\'a}s F~Yago Vicente, Le~Hou, Chen-Ping Yu, Minh Hoai, and Dimitris
+  Samaras.
+\newblock Large-scale training of shadow detectors with noisily-annotated
+  shadow examples.
+\newblock In {\em European conference on computer vision}, pages 816--832.
+  Springer, 2016.
+
+\bibitem{istd}
+Jifeng Wang, Xiang Li, and Jian Yang.
+\newblock Stacked conditional generative adversarial networks for jointly
+  learning shadow detection and shadow removal.
+\newblock In {\em Proceedings of the IEEE conference on computer vision and
+  pattern recognition}, pages 1788--1797, 2018.
+
+\bibitem{azimi2023airborne}
+Seyed~Majid Azimi and Reza Bahmanyar.
+\newblock Airborne-shadow: towards fine-grained shadow detection in aerial
+  imagery.
+\newblock In {\em DAGM German conference on pattern recognition}, pages 34--49.
+  Springer, 2023.
+
+\bibitem{mamnet}
+Lei Zhang, Qing Zhang, Yu~Wu, Yanfeng Zhang, Shan Xiang, Donghai Xie, and Zeyu
+  Wang.
+\newblock A full-scale shadow detection network based on multiple attention
+  mechanisms for remote-sensing images.
+\newblock {\em Remote Sensing}, 16(24):4789, 2024.
+
+\bibitem{mbcsanet}
+Xueli Chang, Haiyang Shi, Tiejun Zhang, Huazhong Jin, and Ao~Xu.
+\newblock Shadow detection in remote sensing images based on multibranch
+  feature aggregation and channel-spatial attention.
+\newblock {\em IEEE Journal of Selected Topics in Applied Earth Observations
+  and Remote Sensing}, 18:2618--2630, 2024.
+
+\bibitem{csdformer}
+Jiayi Li and Qunming Wang.
+\newblock Csdformer: A cloud and shadow detection method for landsat images
+  based on transformer.
+\newblock {\em International Journal of Applied Earth Observation and
+  Geoinformation}, 129:103799, 2024.
+
+\bibitem{oglanet}
+Yakun Xie, Dejun Feng, Hongyu Chen, Ziyang Liao, Jun Zhu, Chuangnong Li, and
+  Sung~Wook Baik.
+\newblock An omni-scale global--local aware network for shadow extraction in
+  remote sensing imagery.
+\newblock {\em ISPRS Journal of Photogrammetry and Remote Sensing}, 193:29--44,
+  2022.
+
+\bibitem{cuhkshadow}
+Xiaowei Hu, Tianyu Wang, Chi-Wing Fu, Yitong Jiang, Qiong Wang, and Pheng-Ann
+  Heng.
+\newblock Revisiting shadow detection: A new benchmark dataset for complex
+  world.
+\newblock {\em IEEE Transactions on Image Processing}, 30:1925--1934, 2021.
+
+\bibitem{hu2026unveiling}
+Xiaowei Hu, Zhenghao Xing, Tianyu Wang, Chi-Wing Fu, and Pheng-Ann Heng.
+\newblock Unveiling deep shadows: A survey and benchmark on image and video
+  shadow detection, removal, and generation in the deep learning era.
+\newblock {\em International Journal of Computer Vision}, 134(4):158, 2026.
+
+\bibitem{fda}
+Yanchao Yang and Stefano Soatto.
+\newblock Fda: Fourier domain adaptation for semantic segmentation.
+\newblock In {\em Proceedings of the IEEE/CVF conference on computer vision and
+  pattern recognition}, pages 4085--4095, 2020.
+
+\bibitem{yola}
+Mingbo Hong, Shen Cheng, Haibin Huang, Haoqiang Fan, and Shuaicheng Liu.
+\newblock You only look around: learning illumination-invariant feature for
+  low-light object detection.
+\newblock {\em Advances in neural information processing systems},
+  37:87136--87158, 2024.
+
+\bibitem{luo2023bsm}
+Muying Luo, Shunping Ji, and Shiqing Wei.
+\newblock A diverse large-scale building dataset and a novel plug-and-play
+  domain generalization method for building extraction.
+\newblock {\em IEEE Journal of Selected Topics in Applied Earth Observations
+  and Remote Sensing}, 16:4122--4138, 2023.
+
+\bibitem{isw}
+Sungha Choi, Sanghun Jung, Huiwon Yun, Joanne~T Kim, Seungryong Kim, and Jaegul
+  Choo.
+\newblock Robustnet: Improving domain generalization in urban-scene
+  segmentation via instance selective whitening.
+\newblock In {\em Proceedings of the IEEE/CVF conference on computer vision and
+  pattern recognition}, pages 11580--11590, 2021.
+
+\bibitem{segdesicnet}
+Sachin Verma, Frank Lindseth, and Gabriel Kiss.
+\newblock Segdesicnet: Lightweight semantic segmentation in remote sensing with
+  geo-coordinate embeddings for domain adaptation.
+\newblock In {\em 2025 IEEE/CVF Winter Conference on Applications of Computer
+  Vision (WACV)}, pages 9093--9104. IEEE, 2025.
+
+\bibitem{mrfp}
+Sumanth Udupa, Prajwal Gurunath, Aniruddh Sikdar, and Suresh Sundaram.
+\newblock Mrfp: Learning generalizable semantic segmentation from sim-2-real
+  with multi-resolution feature perturbation.
+\newblock In {\em Proceedings of the IEEE/CVF Conference on Computer Vision and
+  Pattern Recognition}, pages 5904--5914, 2024.
+
+\bibitem{fada}
+Qi~Bi, Jingjun Yi, Hao Zheng, Haolan Zhan, Yawen Huang, Wei Ji, Yuexiang Li,
+  and Yefeng Zheng.
+\newblock Learning frequency-adapted vision foundation model for domain
+  generalized semantic segmentation.
+\newblock {\em Advances in Neural Information Processing Systems},
+  37:94047--94072, 2024.
+
+\bibitem{wang2021tent}
+Dequan Wang, Evan Shelhamer, Shaoteng Liu, Bruno Olshausen, and Trevor Darrell.
+\newblock Tent: Fully test-time adaptation by entropy minimization.
+\newblock In {\em International Conference on Learning Representations}, 2021.
+
+\bibitem{niu2023sar}
+Shuaicheng Niu, Jiaxiang Wu, Yifan Zhang, Zhiquan Wen, Yaofo Chen, Peilin Zhao,
+  and Mingkui Tan.
+\newblock Towards stable test-time adaptation in dynamic wild world.
+\newblock In {\em International Conference on Learning Representations}, 2023.
+
+\bibitem{dinov3}
+Oriane Sim{\'e}oni, Huy~V Vo, Maximilian Seitzer, Federico Baldassarre, Maxime
+  Oquab, Cijo Jose, Vasil Khalidov, Marc Szafraniec, Seungeun Yi, Micha{\"e}l
+  Ramamonjisoa, et~al.
+\newblock Dinov3.
+\newblock {\em arXiv preprint arXiv:2508.10104}, 2025.
+
+\bibitem{geifman2017selective}
+Yonatan Geifman and Ran El-Yaniv.
+\newblock Selective classification for deep neural networks.
+\newblock {\em Advances in neural information processing systems}, 30, 2017.
+
+\bibitem{traub2024overcoming}
+Jeremias Traub, Till~J Bungert, Carsten~T L{\"u}th, Michael Baumgartner,
+  Klaus~H Maier-Hein, Lena Maier-Hein, and Paul~F J{\"a}ger.
+\newblock Overcoming common flaws in the evaluation of selective classification
+  systems.
+\newblock {\em Advances in Neural Information Processing Systems},
+  37:2323--2347, 2024.
+
+\bibitem{cattelan2023fix}
+Lu{\'\i}s Felipe~P Cattelan and Danilo Silva.
+\newblock How to fix a broken confidence estimator: Evaluating post-hoc methods
+  for selective classification with deep neural networks.
+\newblock {\em arXiv preprint arXiv:2305.15508}, 2023.
+
+\bibitem{inria}
+Emmanuel Maggiori, Yuliya Tarabalka, Guillaume Charpiat, and Pierre Alliez.
+\newblock Can semantic labeling methods generalize to any city? the inria
+  aerial image labeling benchmark.
+\newblock In {\em 2017 IEEE International geoscience and remote sensing
+  symposium (IGARSS)}, pages 3226--3229. IEEE, 2017.
+
+\bibitem{alemi2017deep}
+Alexander~A Alemi, Ian Fischer, Joshua~V Dillon, and Kevin Murphy.
+\newblock Deep variational information bottleneck.
+\newblock In {\em International Conference on Learning Representations}, 2017.
+
+\bibitem{boerner2023access}
+Timothy~J. Boerner, Stephen Deems, Thomas~R. Furlani, Shelley~L. Knuth, and
+  John Towns.
+\newblock {ACCESS}: Advancing innovation: {NSF}'s advanced cyberinfrastructure
+  coordination ecosystem: Services \& support.
+\newblock In {\em Practice and Experience in Advanced Research Computing (PEARC
+  '23)}. ACM, 2023.
+
+\bibitem{gebru2021datasheets}
+Timnit Gebru, Jamie Morgenstern, Briana Vecchione, Jennifer~Wortman Vaughan,
+  Hanna Wallach, Hal~Daum{\'e} Iii, and Kate Crawford.
+\newblock Datasheets for datasets.
+\newblock {\em Communications of the ACM}, 64(12):86--92, 2021.
+
+\bibitem{cvat}
+{CVAT.ai Corporation}.
+\newblock Computer vision annotation tool (cvat).
+
+\bibitem{sam}
+Alexander Kirillov, Eric Mintun, Nikhila Ravi, Hanzi Mao, Chloe Rolland, Laura
+  Gustafson, Tete Xiao, Spencer Whitehead, Alexander~C Berg, Wan-Yen Lo, et~al.
+\newblock Segment anything.
+\newblock In {\em Proceedings of the IEEE/CVF international conference on
+  computer vision}, pages 4015--4026, 2023.
+
+\bibitem{mittal2026shadowtransferdata}
+Shagun Mittal, Raymond~A. Yeh, and Satish Ukkusuri.
+\newblock {ShadowTransfer} (revision 5bef90e), 2026.
+
+\bibitem{landis1977measurement}
+J~Richard Landis and Gary~G Koch.
+\newblock The measurement of observer agreement for categorical data.
+\newblock {\em biometrics}, pages 159--174, 1977.
+
+\bibitem{kattenborn2022spatially}
+Teja Kattenborn, Felix Schiefer, Julian Frey, Hannes Feilhauer, Miguel~D
+  Mahecha, and Carsten~F Dormann.
+\newblock Spatially autocorrelated training and validation samples inflate
+  performance assessment of convolutional neural networks.
+\newblock {\em ISPRS Open Journal of Photogrammetry and Remote Sensing},
+  5:100018, 2022.
+
+\bibitem{he2016deep}
+Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun.
+\newblock Deep residual learning for image recognition.
+\newblock In {\em Proceedings of the IEEE conference on computer vision and
+  pattern recognition}, pages 770--778, 2016.
+
+\bibitem{oquab2024dinov2}
+Maxime Oquab, Timoth{\'e}e Darcet, Th{\'e}o Moutakanni, Huy Vo, Marc
+  Szafraniec, Vasil Khalidov, Pierre Fernandez, Daniel Haziza, Francisco Massa,
+  Alaaeldin El-Nouby, et~al.
+\newblock {DINOv2}: Learning robust visual features without supervision.
+\newblock {\em Transactions on Machine Learning Research}, 2024.
+
+\bibitem{wei2024rein}
+Zhixiang Wei, Lin Chen, Yi~Jin, Xiaoxiao Ma, Tianle Liu, Pengyang Ling, Ben
+  Wang, Huaian Chen, and Jinjin Zheng.
+\newblock Stronger, fewer, \& superior: Harnessing vision foundation models for
+  domain generalized semantic segmentation.
+\newblock In {\em Proceedings of the IEEE/CVF Conference on Computer Vision and
+  Pattern Recognition}, pages 28619--28630, 2024.
+
+\bibitem{cheng2022mask2former}
+Bowen Cheng, Ishan Misra, Alexander~G. Schwing, Alexander Kirillov, and Rohit
+  Girdhar.
+\newblock Masked-attention mask transformer for universal image segmentation.
+\newblock In {\em Proceedings of the IEEE/CVF Conference on Computer Vision and
+  Pattern Recognition}, pages 1280--1289, 2022.
+
+\bibitem{huang2017adain}
+Xun Huang and Serge Belongie.
+\newblock Arbitrary style transfer in real-time with adaptive instance
+  normalization.
+\newblock In {\em Proceedings of the IEEE International Conference on Computer
+  Vision}, pages 1510--1519, 2017.
+
+\bibitem{foret2021sam}
+Pierre Foret, Ariel Kleiner, Hossein Mobahi, and Behnam Neyshabur.
+\newblock Sharpness-aware minimization for efficiently improving
+  generalization.
+\newblock In {\em International Conference on Learning Representations}, 2021.
+
+\end{thebibliography}

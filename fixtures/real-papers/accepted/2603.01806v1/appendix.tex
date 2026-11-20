@@ -1,0 +1,196 @@
+\clearpage
+\appendix
+\begin{appendix}
+\section{Affinity Truncation  Score Analysis}
+In this section, we calculate an affinity truncation score to demonstrate the effectiveness of GCTAM. Here, RA represents the affinity truncation score derived from the original features and graph structure. Our goal is to enhance the strong affinity between nodes connected by normal edges (normal nodes) while maintaining a weak affinity for nodes connected by anomalous edges (abnormal nodes). A higher affinity truncation score for the truncated graph indicates improved downstream representation and more effective anomaly detection. The affinity truncation score is formally defined in Equation~\ref{eq: affinity truncation score}.        
+
+\begin{table}[H]
+\centering
+\caption{Comparison of affinity truncation scores.}
+\label{tab: affinity truncation scores}
+\resizebox{0.8\columnwidth}{!}{%
+\begin{tabular}{c|c|c}
+\hline
+Dataset & Method & Affinity Truncation Score
+\\ \hline
+\multirow{3}{*}{Amazon} & RA & 26.26 \\
+ & TAM & \underline{46.52} \\
+ & GCTAM & \textbf{55.52} \\ \hline
+\multirow{3}{*}{YelpChi} & RA & \underline{24.75} \\
+ & TAM & 18.29 \\
+ & GCTAM & \textbf{42.84} \\ \hline
+\multirow{3}{*}{Facebook} & RA & 23.80 \\
+ & TAM & \underline{62.74} \\
+ & GCTAM & \textbf{69.13} \\ \hline
+\multirow{3}{*}{Reddit} & RA & 12.20 \\
+ & TAM &  \textbf{16.08} \\
+ & GCTAM &  \underline{15.52} \\ \hline
+\multirow{3}{*}{Amazon-all} & RA & \underline{18.14} \\
+ & TAM & 12.57  \\
+ & GCTAM & \textbf{66.92} \\ \bottomrule
+\end{tabular}%
+}
+\end{table}
+
+As shown in Table~\ref{tab: affinity truncation scores}, we achieved the highest truncation scores on most of the datasets except Reddit. As discussed previously, this is because Reddit has a low homophily distribution of normal nodes and anomaly nodes dataset.
+Specifically, on the Amazon-all dataset, we achieved affinity truncation scores of 66.92, much higher than the 12.57 obtained by TAM and the 18.14 received by the original attribute features.
+
+
+
+
+\section{Description of Datasets}
+\label{app: datasets}
+Here is a more detailed description of all datasets.
+\begin{itemize}
+    \item \textbf{Amazon} is a graph dataset capturing the relations between users and product reviews. Following \cite{dou2020enhancing,zhang2020gcn}, three different user-user graph datasets are derived from Amazon using different adjacency matrix construction approaches. 
+    In this work, we focus on the Amazon-UPU dataset that connects the users who give reviews to at least one product. The users with less than 20\% are treated as anomalies. 
+
+    \item \textbf{YelpChi} includes hotel and restaurant reviews filtered (spam) and recommended (legitimate) by Yelp. Following \cite{mukherjee2013yelp,rayana2015collective}, three different graph datasets derived from Yelp using different connections in user, product review text, and time.
+    
+    \item \textbf{ACM} is a citation graph dataset where the nodes denote the published papers and the edge denotes the citation relationship between the papers. The attributes of each node are the content of the corresponding paper.
+    
+    \item \textbf{Facebook} \cite{xu2022contrastive} is a social network where users build relationships with others and share their friends.
+
+    \item \textbf{Reddit} is a network of forum posts from the social media Reddit, in which the user who has been banned from the platform is annotated as an anomaly. Their post texts were converted to a vector as their attribute.
+    
+    \item \textbf{Amazon-all and YelpChi-all}  are two datasets by treating the different relations as a single relation following \cite{chen2022gccad}.
+\end{itemize}
+
+
+
+
+
+
+\section{Implementation Details}
+\subsection{Implementation Details.} 
+The experiments in this study were conducted on a Linux server running Ubuntu 20.04. The server was equipped with a 13th Gen Intel(R) Core(TM) i9-13900K CPU, 128GB of RAM, and an NVIDIA GeForce RTX 4090 GPU (24GB memory). For software, we used Anaconda3 to manage the Python environment and PyCharm as the development IDE. The specific software versions were Python 3.10.14, CUDA 11.7, DGL 1.01~\cite{wang2019deep} and PyTorch 1.13.1~\cite{44_paszke2019pytorch}. This setup provided a robust and efficient environment for our node classification experiments.
+
+
+
+\subsection{Searched Hyperparameters}
+\label{app: search hyper}
+
+To facilitate the reproducibility of this work, we list in Table \ref{tab: parameter setting} the GCTAM hyperparameters searched on different datasets. In particular, for the more homophily dataset YelpChi, we conduct a larger exploration of the Number of neighbors in kNN k: \{5,15,25,35,45,50,55,60\}.
+The search space is provided as follows:
+
+
+\begin{table}[ht!]
+\centering
+\caption{Hyperparameter settings on each dataset.}
+\label{tab: parameter setting}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{ccccccc}
+\hline
+\textbf{Dataset} & Lr & Epochs & Neighbors k & $\beta$ & Layers & HiddenSize \\ \hline
+\textbf{Amazon} & 1e-5 & 500 & 20 & 0.9 & 2 & 128 \\
+\textbf{YelpChi} & 1e-5 & 500 & 55 & 0.0 & 2 & 128 \\
+\textbf{ACM} & 1e-5 & 500 & 25 & 0.3 & 2 & 128 \\
+\textbf{Facebook} & 1e-5 & 500 & 20 & 0.3 & 2 & 128 \\
+\textbf{Reddit} & 1e-5 & 500 & 20 & 0.1 & 2 & 128 \\
+\textbf{Amazon-all} & 1e-5 & 500 & 20 & 0.9 & 2 & 128 \\
+\textbf{YelpChi-all} & 1e-5 & 500 & 20 & 0.0 & 2 & 128 \\ \hline
+\end{tabular}%
+}
+\end{table}
+
+
+\begin{itemize}
+    \item Learning rate lr: \{0.01, 0.001, 0.0001 ,0.00001\}
+    \item Weight decay : \{1e-3, 1e-4, 1e-5, 1e-6\}
+    \item Number of epochs: \{300, 400, 500\}
+    \item Number of neighbors in kNN $k$: \{5, 10, 15, 20, 25, 30, 35\}
+    \item Edge truncation ratio $\beta$: \{0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95\}
+\end{itemize}
+
+
+
+\subsection{Algorithm}
+
+The training algorithm of \textbf{GCTAM} is summarized in Algorithm \ref{alg:alg1}.
+\begin{algorithm}[h!]
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Parameters:}}
+\caption{The training algorithm of GCTAM}
+\label{alg:alg1}
+
+\begin{algorithmic}
+\REQUIRE Original graph $G=(\mathcal{V}, A, {X})$;  Feature matrix  ${X}$; Adjacency matrix ${A}$.
+\ENSURE Number of epoch $T$ , Edge truncated rate $\beta$;
+\end{algorithmic} 
+
+\begin{algorithmic}[1]
+\STATE Generate initial parameters for all learnable parameters. 
+\WHILE{$\beta < \text{Edge Truncation Threshold}$}
+    \STATE Execute contextual affinity truncation (CAT) to obtain graph $G^{\circledast}$ by Eq.(\ref{eq: sim_matrix}) - Eq.(\ref{eq: Truncated graph})
+    \STATE Update edges truncation ratio $\beta$ based on current edge state
+\ENDWHILE
+
+\FOR{\text{\rm each epoch} $i=0,1,2,...,T$}
+\STATE Execute global affinity truncation (GAT)  to obtain graph $G^{*}$ by Eq. (\ref{eq: projection}) - Eq.(\ref{eq: global affinity graph})\\
+\STATE Embedding node representations ${H}^{\circledast}$ and ${H}^{*}$ with GCNs by Eq.(\ref{eq: gnn})
+\STATE Calculate nodes affinity score by Eq. (\ref{eq: affinity socre})  \\
+\STATE Maximize node affinity by Eq.(\ref{eq: objective})
+\STATE Update model parameters via gradient descent
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
+
+
+\begin{figure*}[ht!]
+    \centering
+    \includegraphics[width=1\textwidth]{Affinity_compare/Affinity-compare_appendix.pdf}
+    \caption{Amazon-all and Facebook  Affinity Truncation Score Compare}
+    \label{fig: affinity compare add}
+\end{figure*}
+
+
+\section{Additional Experimental Results}
+\subsection{Computational Efficiency}
+\noindent\textbf{Computational Efficiency}. The runtime (including both training and inference time) results are shown in Table~\ref{tab: run_time}.  As shown in the results, the training and inference time of our method on all five datasets is much lower than that of the previous SOTA method. Specifically, GCTAM uses only two layers of GCN with shared weights, compared with the TAM method, which needs to perform multiple graph truncations and train multiple LAMNets, so the training and inference time is much less.  Contrastive-based Self-Supervised CoLA method, their time consumption is much higher than that of our method, GCTAM, this is because of the need to construct comparative learning objectives. 
+
+\begin{table}[ht!]
+\centering
+\caption{Runtime (in seconds) results.}
+\label{tab: run_time}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{l|ccccc}
+\hline
+\multirow{2}{*}{{\textbf{Method}}} & \multicolumn{5}{c}{\textbf{Dataset}} \\
+ & Amazon & YelpChi & ACM & Facebook & Reddit \\ \hline
+CoLA & 821 & 15340 & 1604 & 65 & 2761 \\
+TAM & 142 & 683 & 827 & 23 & 161 \\
+GCTAM (Ours) & 86 & 369  & 192  & 5 & 89 \\ \hline
+\end{tabular}%
+}
+\end{table}
+
+\subsection{Affinity Truncation Score Visualization}
+As shown in Fig.~\ref{fig: affinity compare add}. We also visualize the affinity truncation scores on Facebook and Amazon-all. The results show that our method achieves very distinguishable affinity truncation scores compared with other methods. In particular, on the Amazon-all dataset, our method achieves a visualization result and affinity truncation score of 66.95, which is much better than that of the current TAM method, which is 12.57.
+This can be attributed to the effectiveness of our proposed contextual affinity truncation and global affinity truncation mechanisms, which reduce the affinity of anomalous nodes while enhancing the affinity of normal nodes, thereby improving the discriminative power of the affinity score.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{appendix}

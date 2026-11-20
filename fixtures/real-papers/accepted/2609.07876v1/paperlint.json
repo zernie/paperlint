@@ -1,0 +1,17 @@
+{
+  "cycles": [
+    {
+      "id": "neurips-2025",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:neurips-style"
+      },
+      "opened": "2026-09-07",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2026-09-07",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

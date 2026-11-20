@@ -1,0 +1,206 @@
+
+  \begin{figure*}
+    \centering
+    \includegraphics[width=0.9\linewidth]{fig/fa3_benchmark_combined.pdf}
+    \vspace{-0.6cm}
+    \caption{Benchmarking FA3 kernels with a head dimension of 128 and 16 heads. The batch size and sequence length are set to 16 and 4096 in the two benchmarks, respectively.}
+    \label{fig:fa3_benchmark}
+  \end{figure*}
+
+\vspace{-0.3cm}
+\section{Evaluation} \label{sec:evaluation}
+\vspace{-0.3cm}
+
+In this section, we evaluate the performance of the designed region-based timing tool and the \thiswork{} approach.
+
+\vspace{-0.3cm}
+
+\subsection{Experimental Setup}
+
+\paragraph{Testbed.} 
+The evaluation of \thiswork{} was conducted on servers equipped with state-of-the-art GPU cards, including NVIDIA H100-HBM3 and AMD MI300X. The software environment included Triton 3.0.0 and LLVM 19.1, ensuring compatibility with the latest compiler technologies and GPU architectures.
+
+\paragraph{Benchmarks.}
+To assess the usability and performance of the proposed tool, we benchmarked it on key AI workloads, specifically GEMM\cite{Triton-gemm} and experimental Flash Attention operators from Triton\cite{Triton-fa3}. 
+These operators are foundational to popular AI models, representing the majority of workloads in tasks such as training and inference. 
+We selected mainstream implementations of these operators that deliver state-of-the-art performance and conducted sensitivity experiments to evaluate the method's effectiveness and scalability.
+
+\subsection{A Journey of Flash-Attention 3} \label{sec:use_case}
+
+
+
+
+
+We first demonstrate utilizing the region-based timing tool to improve the FA3 kernel.
+As FA3 involves many optimization techniques dedicated to the Nvidia platform, we focus on optimizing the H100 GPU first and conduct many more thorough benchmarks later.
+
+
+\subsubsection{Attention Overlapping Optimization}
+
+We begin by demonstrating the usage of the region-based timing tool to identify a particular inefficiency in the FA3 kernel's WS overlapping design. 
+Using the proposed timing tool, we parse the FA3 kernel’s IR structure and profile its asynchronous behavior to guide a better overlapping design. 
+The critical stages of the FA3 kernel are identified and listed in \Tbl{\ref{tbl:fa3}}. Each stage is labeled with a unique region ID, providing a clear mapping for analysis.
+By employing the timing tool, we obtain a fine-grained timeline trace of the vanilla FA3 kernel from Triton, shown in \Fig{\ref{fig:fa3_trace}}-(a), which also illustrates the user interface with the Chrome Trace as the front-end.
+The trace identifies the critical path consisting of 4 GEMMs and 2 loading stages, including region 22, 12, 25, 15, 6 and 3.
+Specifically, the loading V stage of region 6 is blocked by the arrival barrier of region 16 in consumer 1, causing a longer critical path and lower hardware utilization.
+
+
+
+
+Following this observation, we can advance the arrival barrier of V in region 16, as shown with the red arrows, to prevent it from stalling the issue of successive data loading.
+The GEMM1 regions are released from the critical path by fully overlapping it with the concurrent K tensor loading.
+This modification breaks data dependency between the arrival and computation and requires extra pre-loading in the prologue before the iterations.
+We can achieve a much more compact timeline where the softmax and GEMM computation are overlapped, shown in \Fig{\ref{fig:fa3_trace}}-(b).
+The improved overlapping results in a reduced wall time of each iteration in the kernel.
+
+  
+  
+  \begin{table}[]
+    \caption{Performance models}
+    \vspace{0.5em}
+    \label{tbl:performance_model}
+    \resizebox{\linewidth}{!}{
+    \begin{tabular}{lm{7cm}}
+    \Xhline{3\arrayrulewidth}
+    Category      & Analytic Model \\ \hline
+    SWP Model     & \vspace{-0.5cm}\[
+    \begin{aligned}
+    \Delta = &N_{WG}*N_{pipe}*\Sigma_i T_{comp}-Max_i(T_{load}^i+T_{comp}^i) \\
+    &\begin{cases}
+    \Sigma_i T_{comp}^i * N_{loop}, \Delta >= 0 \\ 
+    Max_i(T_{load}^i+T_{comp}^i)\times N_{loop} / N_{pipe}
+    \end{cases}
+    \end{aligned}
+    \]      \vspace{-0.3cm}         \\
+    WS Model      &   $\Sigma_{i \in CriticalPath} T_{load/comp}^i$             \\
+    Compute Model &  $ FLOPs / Throughput $              \\
+    Memory Model  &   $T_{read} + Bytes / Bandwidth$              \\ \Xhline{3\arrayrulewidth}
+    \end{tabular}
+    }
+    \end{table}
+
+
+
+\subsubsection{Performance Modeling for GPU Overlapping}
+
+
+
+We then demonstrate how to adopt the proposed compiler-centric profiler design to build a compiler pass to determine the optimal overlapping design.
+This is achieved by extracting the critical path of the FA3 kernel with the profiling results and compute the utilization of the workload using an overlapping performance model. 
+The performance model is outlined in \Tbl{\ref{tbl:performance_model}}, focusing on compute and data loading stages while simplifying less relevant aspects such as initialization, epilogue, and overall kernel performance, which have been studied extensively in prior works~\cite{huang_alcop_2023}.We emphasize the non-trivial parts of modeling the overlapping techniques.
+
+For the SWP model, the discriminant $\Delta$ determines whether the bottleneck lies in data loading or computation.
+If $\Delta \geq 0$, the data loading latency is fully overlapped by computation, and the total latency corresponds to the accumulated computation time across all stages.
+Conversely, if $\Delta < 0$, the latency is dominated by the most time-consuming loading and computation stages.
+For the WS model, the latency is determined by identifying the kernel’s critical path, as discussed in \Sec{\ref{sec:usecase}}. The WS latency is intuitively calculated as the sum of the latencies of all stages along the critical path.
+
+Using this model, we can quantitatively assess the overlapping efficiency of the FA3 kernel. The region-based profiler collects detailed performance data, allowing us to analyze the current implementation and refine overlapping designs to minimize latency and improve resource utilization.
+For example, for an attention kernel with head dimension 128, head number 16, batch size 16, and sequence length 4096, the 2-stage SWP is calculated with a 467.07 TFLOPs and the vanilla Triton FA3 reaches a 526.97 TFLOPs.
+With the optimization passes incorporated, we can tune an FA3 kernel with improved overlapping, achieving 582.44 predicted TFLOPs.
+
+
+\subsubsection{Improved FA3 Evaluation}
+
+Combining the manual optimization passes with the profiling insights and performance model pass together, we can get an improved FA3 compiler pass optimization suite built upon Triton.
+Compared to the original execution dataflow of the vanilla Triton FA3, the optimized FA3 kernel achieves a $24.1\%$ improvement as shown in \Fig{\ref{fig:fa3_benchmark}}. 
+This shows the efficacy of the optimization insights discovered with the assistance of the performance tool.
+The improved Triton-FA3 kernel also outperforms the best manual FA3 kernel\cite{shahflashattention} by $7.6\%$. 
+Particularly, without the assistance of the region-based timing tool, the vanilla Triton-FA3 kernel fails to achieve a competitive performance compared to the manual kernels. 
+This suggests the immeasurable value of a fine-grained profiling tool benefiting the compiler passes and kernel optimization.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{fig/latency_overhead.pdf}~
+    \includegraphics[width=0.5\linewidth]{fig/latency_overhead_amd.pdf}
+    \vspace{-0.85cm}
+    \caption{Normalized latency overhead}
+    \label{fig:latency_overhead}
+\end{figure}
+
+\subsection{Profiling Overhead}
+We evaluate the profiling overhead of the proposed region-based timing tool in terms of both latency and memory consumption. Particular attention is given to shared memory usage, which is a critical bottleneck in the design of performance tools for GPU workloads.
+We benchmark SOTA GEMM operators with SWP designs divided into 2 or 3 stages, marked as GEMM-SWP-2/3, and WS FA3 operators with vanilla overlapping and the improved counterpart with the profiling insights, marked as FA3-WS-a/b.
+
+\paragraph{Latency Overhead.}
+We measure the end-to-end latency of the instrumented kernels and normalize the results to their original execution time. \Fig{\ref{fig:latency_overhead}} illustrates the latency overhead across the evaluated benchmarks. For most cases, the overhead remains under 10\%, ensuring that the proposed tool is practical for real-world scenarios without significantly impacting kernel performance. 
+For the most complicated SWP GEMM kernel with three stages, we insert many records to cover its three stages.
+Even in this case, the overhead is kept within 15\%.
+This minimal latency impact is crucial for enabling real-time profiling and maintaining production-level throughput during optimization workflows.
+
+\R{
+We hightlight that with the post-processing trace replay technique in \Sec{\ref{sec:replay}} mitigating the interference of the profiling instructions, we can get relatively accurate profile results even if the overhead is extended. 
+We have also introduced several memory management techniques like circular buffers, which together reduce the profiling overhead to approximately 8\% in our evaluation. Moreover, ongoing enhancements, such as low-level instruction scheduling and clock offsetting, can further reduced the overhead.
+}
+
+
+
+\paragraph{Shared Memory Overhead.}
+As detailed in \Sec{\ref{sec:profiler:memory}}, the proposed timing tool employs a circular buffer design to store recent profiling records within the limited shared memory available on GPUs. This approach ensures compatibility with diverse workloads, regardless of the size of the available shared memory, while also allowing flexible adaptation of the profiling life cycle.
+
+\begin{figure}
+    \centering
+    \vspace{-0.3em}
+    \includegraphics[width=0.5\linewidth]{fig/memory_overhead.pdf}~
+    \includegraphics[width=0.48\linewidth]{fig/memory_overhead_amd.pdf}
+    \vspace{-1cm}
+    \caption{Memory usage}
+    \label{fig:memory_overhead}
+\end{figure}
+
+\Fig{\ref{fig:memory_overhead}} shows the shared memory usage across the benchmarked workloads. For this experiment, the circular buffer size was set to either maximize usable shared memory space or accommodate all profiling records for the workload. The results demonstrate that the tool effectively operates within the constraints of shared memory, even for industrial-grade kernels, without spilling profiling records to external memory.
+
+For instance, in the most storage-intensive kernel, the SWP GEMM with 3 stages, there remains an unused shared memory space of 10.9 KB. With 4 profiled regions, the timing tool can track up to 16 iterations, providing sufficient and stable coverage to estimate the entire execution process. This efficient memory usage highlights the applicability of the tool for large-scale GPU workloads.
+
+
+\subsection{Low-level Deep-dive} \label{sec:evaluation:cycle}
+
+
+To provide an empirical analysis of the optimization performance degradation introduced by \thiswork{}, we examine its impact at the low-level instruction level. Specifically, we identify the instrumented instructions generated by IR-level profiling and compare them with their vanilla counterparts to evaluate how profiling IR affects the compilation stack.
+
+\paragraph{Cycle-level Overhead.}
+At the GPU assembly code level, the SASS ISA, each \thiswork{} record node is lowered to three instructions: a clock read instruction, an integer move instruction, and a predicated store instruction. These instructions collectively incur an average overhead of 33 cycles, as shown in \Fig{\ref{fig:cycle_benchmark}}. This latency represents the per-record profiling overhead observed in our sensitivity analysis. For loop-based timing, where profiling records are inserted into loop structures, five additional instructions are generated at the loop entry for index management. The instructions for each profiling record remain consistent at three, with their destination adjusted dynamically based on the loop iteration variable.
+
+\paragraph{Optimization Degradation.}
+One critical observation in our analysis is that profiling instrumentation can interfere with the compiler’s low-level optimizations, such as instruction reordering and constant folding. Integrated profiling semantics at the IR level inherently trade some low-level control for improved tool portability and compatibility, as discussed in \Sec{\ref{sec:compiler_centric}}. This tradeoff introduces potential risks of unintended instruction reordering when profiling instructions interact with adjacent non-profiling instructions.
+
+To study this impact, we modeled the theoretical execution time of the instrumented kernel as
+\begin{equation}
+    T_{theoretical} = T_{vanilla} + N_{record} * Cycle_{record}.
+\end{equation}
+The $N_{record}$ is the number of instrumented records, and the cycles are measured as \Fig{\ref{fig:cycle_benchmark}}.
+Using this model, we compared the theoretical execution time with the actual performance of the instrumented workload to assess deviations caused by profiling instrumentation.
+
+The results, summarized in \Tbl{\ref{tbl:degradation}}, show that the performance impact remains within 2\%. This suggests that the profiling instrumentation at the compiler IR level introduces minimal overhead while maintaining compatibility with compiler optimizations. The findings highlight the practicality of the proposed approach, ensuring accurate profiling without significant performance degradation.
+
+\begin{figure}
+\centering
+  \begin{minipage}[t]{0.37\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{fig/cycle_benchmark.pdf}%
+    \vspace{-0.5cm}
+    \caption
+      {%
+Cycle-level benchmarks
+      }
+      \label{fig:cycle_benchmark}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[t]{.57\linewidth}
+    \centering
+    \vspace{-2cm}
+\resizebox{\linewidth}{!}{
+\begin{tabular}{lrrr}
+\Xhline{3\arrayrulewidth}
+                     & GEMM   & Theoretical & Actual                     \\ \hline
+\makecell[l]{\small{Active}\\\small{     Cycles}}        & 199381 & 224981      & \multicolumn{1}{r}{229663} \\
+\makecell[l]{\small{Relative}\\\small{     Performance}} & 0.89   & 1           & 1.02 \\   \Xhline{3\arrayrulewidth}                  
+\end{tabular}
+}
+\vspace{-0.02cm}
+    \captionof{table}
+      {%
+        Performance degradation evaluation
+        \label{tbl:degradation}%
+      }
+  \end{minipage}
+\end{figure}

@@ -1,0 +1,299 @@
+% !TEX root = main.tex
+
+\section{Syntax and Semantics of the \protect\NDICE Language}\label{sec:semantics}
+
+This section provides the syntax and denotational semantics for \NDICE, a first-order functional language extended with typical probabilistic statements and a nondeterministic coin flip. 
+
+\subsection{Syntax}
+
+\begin{figure}
+	\begin{align*}
+		\tau 
+		\qmorespace{\Coloneqq} &
+		\BOOL 
+		~\;{}|{}~\; 
+		\tau \times \tau 
+		%
+		\qquad\qquad
+		%
+		v 
+		\qmorespace{\Coloneqq} 
+		\TRUE  
+		~\;{}|{}~\; 
+		\FALSE  
+		~\;{}|{}~\; 
+		(v, v)
+		%
+		\qquad\qquad
+		%
+		\AEXP 
+		\qmorespace{\Coloneqq} 
+		x  
+		~\;{}|{}~\; 
+		v
+		\\[.25em]
+		%
+		e 
+		\qmorespace{\Coloneqq}&
+		\AEXP  
+		~\;{}|{}~\; 
+		(\AEXP, \AEXP) 
+		~\;{}|{}~\; 
+		\FST \,\AEXP  
+		~\;{}|{}~\; 
+		\SND \,\AEXP  
+		\\
+		&\quad{}~\;{}|{}~\;
+		\ITE{\AEXP}{e}{e} 
+		~\;{}|{}~\; 
+		\LET{x = e}{e} 
+		~\;{}|{}~\; 
+		\FUNCNAME(\AEXP)
+		\\
+		&\quad{}~\;{}|{}~\;
+		\FLIP{\theta} 
+		~\;{}|{}~\; 
+		\NFLIP 
+		~\;{}|{}~\; 
+		\OBSERVE{\AEXP} 
+		\\[.25em]
+		%
+		\mathit{fun} 
+		\qmorespace{\Coloneqq} &
+		\FUNC{\FUNCNAME(x\colon \tau)\colon \, \tau}{e}\\[.25em]
+		%
+		p 
+		\qmorespace{\Coloneqq} &
+		\bullet e ~\;{}|{}~\; \mathit{fun}\;\, p
+	\end{align*}%
+	\caption{Syntax for the \NDICE language in A-normal form. Here, $\theta$ ranges over rational numbers in $[0,1]$}%
+	\label{fig:syntax}%
+\end{figure}%
+%
+%
+The syntax for \NDICE is defined in \Cref{fig:syntax}.
+\NDICE acts as a conservative extension of \DICE, and we thus also adopt the use of atomic expressions (\AEXP) to enforce an A-normal form \cite{flanagan1993essence}.
+This will simplify the semantics and compilation rules without restricting the expressiveness of the language. 
+For example, the tuple $(\FLIP{\frac{1}{3}}, \TRUE)$ can be expressed as $\LET{x = \FLIP{\frac{1}{3}}}{(x, \TRUE)}$.
+Atomic expressions themselves are either values $v \in \VAL$ or variables $x \in \VARS$.
+Much like \DICE, \NDICE expressions may be Booleans, tuples or tuple operations, function calls with non-recursive functions as well as the standard programming language features of sequential execution by let-statements or conditional branching through if-statements.
+A \NDICE program $p$ is a series of function definitions 
+followed by a single base expression $e$.
+Later on, the practical implementation of \NDICE will relax the constraints imposed by the A-normal form, and will also introduce syntactic sugar for Boolean operations and bounded numbers.
+We use these relaxations freely in our examples.
+
+Additionally, \NDICE features two kinds of uncertainty:
+Firstly, $\FLIP{\theta}$ models a \emph{probabilistic} coin flip which returns $\TRUE$ with probability $\theta \in [0, 1]$ and $\FALSE$ otherwise.
+Secondly, $\NFLIP$ models a \emph{nondeterministic} choice, also taking values $\TRUE$ or \FALSE, but with no probability attached.
+The use of these expressions is not restricted, and it is possible to interleave probabilistic and nondeterministic behavior arbitrarily.
+Finally, \NDICE includes the statement \OBSERVE{e} to enable conditioning via observations. 
+For purely probabilistic programs, this amounts to Bayesian reasoning, but \NDICE also features conditioning in the presence of nondeterminism.
+
+
+\subsection{Semantics}
+
+Probabilistic programs typically model a probability distribution over their output values. 
+In the presence of nondeterminism, however, this is not sufficient as each resolution of nondeterminism may lead to a different probability distribution, and thus we generalize from distributions to sets of distributions.
+This approach is grounded in category theory, where both probability and nondeterminism can be modeled as a monad. 
+Namely, nondeterminism is modeled by the powerset monad, whereas probabilistic choice corresponds to the monad of finite distributions \cite{goy2020combining}.
+Combining nondeterminism and probability thus amounts to composing these monads, which requires a distributive law between them \cite{beck1969distributive}.
+%
+Sadly, \citet{varacca2006distributing} showed that there is no distributive law between the monad of finite distributions and the powerset monad, making a suitable composition impossible.
+This leads to difficulties for the design of programming languages:
+A semantics which combines nondeterminism and probability naively will not be compositional, and the semantics of $c_1; (c_2; c_3)$ may differ from $(c_1; c_2); c_3$.
+
+To address this, many approaches to combining the probabilistic and nondeterministic monad have been developed, for example \citet{varacca2006distributing} generalize the probabilistic monad to indexed valuations and \citet{goy2020combining} use weak distributive laws instead.
+Our semantics will follow the work of \citet{mislove2000nondeterminism} and \citet{tix2009semantic}, which retains compositionality by requiring the sets of distributions to be convex.
+We call a set $S$ of distributions convex, if for all distributions $d_1, d_2 \in S$ and $p \in [0,1]$, the distribution $p\cdot d_1 + (1-p)\cdot d_2$ is also in $S$.
+Hence, we will use convex sets to model nondeterministic behavior, which has been applied to programming languages before \cite{zilberstein2025demonic, varacca2006distributing, jifeng1997probabilistic}. 
+\\
+
+
+\begin{figure}
+		\begin{center}
+		\begin{adjustbox}{max width=\textwidth}
+				\renewcommand{\arraystretch}{2.1}
+				\begin{tabular}{c@{\qquad}c}
+					\multicolumn{2}{c}{ 
+					% value 
+					$\llbracket v \rrbracket \ttriangleq \{1|v\rangle \}$ 
+					\hfill
+					
+					% flip
+					$\llbracket \FLIP{\theta} \rrbracket \ttriangleq \{\theta|\TRUE\rangle + (1 - \theta)|\FALSE\rangle\}$
+					
+					\hfill
+					%nflip
+					$\llbracket \NFLIP \rrbracket \ttriangleq
+					% semantics option 1
+					\{\theta|\TRUE\rangle +  (1-\theta)|\FALSE\rangle \,|\, \theta \in [0,1]\}$
+
+					}
+					\\
+					
+					
+					\multicolumn{2}{c}{ 
+						
+						% fst(v,v)
+						$\llbracket \FST\,(v_1, v_2) \rrbracket \ttriangleq \{1|v_1\rangle \}$
+						\hfill
+						
+						
+						% snd(v,v)
+						$\llbracket \SND\,(v_1, v_2) \rrbracket \ttriangleq \{1|v_2\rangle \}$
+						\hfill
+						
+						% function call
+						$\llbracket \FUNCNAME(v) \rrbracket^T \ttriangleq T(\FUNCNAME)(v)$
+					}
+					\\[1em]
+					%
+					% observe
+					$\llbracket \OBSERVE{v} \rrbracket \ttriangleq \begin{cases}
+						\{1|\TRUE\rangle\},	&\text{if } v = \TRUE\\
+						\{0|\TRUE\rangle\},	&\text{if } v = \FALSE\\
+						\emptyset, 		& \text{otherwise}\\
+					\end{cases}$
+					&
+					
+					%if
+					$\llbracket \ITE{v_g}{e_1}{e_2} \rrbracket \ttriangleq \begin{cases}
+						\llbracket e_1\rrbracket, 	& \text{if } v_g = \TRUE\\
+						\llbracket e_2\rrbracket, 	& \text{if } v_g = \FALSE\\
+						\emptyset,				& \text{otherwise}\\
+					\end{cases} $
+					\\
+					
+					%let
+					% d_1(v) > 0 ensures that we only plug in correctly typed values, if we omit it there are problems with the observe not generating any distributions and the existential quantifiers
+					\multicolumn{2}{c}{ 
+						\renewcommand{\arraystretch}{1.2}
+						$\begin{matrix}
+							\phantom{space maker}\\
+							d \iin \llbracket \LET{x = e_1}{e_2} \rrbracket\\
+							\qmorespace{\Longleftrightarrow} 
+							\exists\, d_1 \in \llbracket e_1 \rrbracket~{}~{}~
+							\forall\, v, d_1(v) > 0~{}~{}~
+							\exists\, d_v \in \llbracket e_2[x \mapsto v] \rrbracket~{}~{}~
+							\forall\, v'\colon \quad
+							d(v') = \sum\limits_{v,\; d_1(v) > 0 } d_1(v) \cdot d_{v}(v')
+						\end{matrix}$
+					}
+						\end{tabular}
+			\end{adjustbox}
+		\end{center}
+	\caption{Semantics of \NDICE expressions. The function table $T$ is left implicit in most rules.}
+	\label{fig:semantics} 
+\end{figure}
+
+
+
+
+Before we present the semantics of \NDICE, we will briefly introduce some notations. 
+Given a finite set $X$, we call a function $d \colon X \rightarrow [0,1]$ a distribution if $\sum_{x \in X} d(x) = 1$, and we call $d$ a \textit{sub}-distribution if $\sum_{x \in X} d(x) \leq 1$. 
+We use bra-ket notation $d = p_1{| v_1 \rangle} + {\ldots} +  p_n {|v_n \rangle}$ to denote a sub-distribution with $d(v_i) = p_i$.
+We denote the set of all sub-distributions over $X$ as $\mathcal{D}(X)$, and we denote the powerset of $X$ by $\mathcal{P}(X)$.
+%
+We then define the semantics of \NDICE expressions as convex sets of (sub-)distributions.
+Formally, the semantics function $\llbracket \:\cdot\: \rrbracket^T\colon \NDICE \rightarrow  \mathcal{P}(\mathcal{D}(\mathit{Val}))$ associates to each \NDICE expression a set of sub-distributions over values which may be generated by it.
+The semantics function is parametrized with a function table $T$ to store the behavior of functions.
+Note that the function table is only needed for function calls, therefore we omit $T$ in most cases.
+
+The semantics for closed \NDICE expressions are defined in \Cref{fig:semantics}, and they conservatively extend the semantics of \DICE~\cite{holtzen2020scaling} for well-formed programs.
+For the sake of completeness, we define the semantics of ill-formed programs, e.g.\ programs which use non-Boolean values as guards of if-statements, to be the empty set.
+From now on we will assume that programs are well-formed, as our inference algorithm only considers well-formed programs.
+
+We begin by considering the semantics of values and tuple operations.
+Notably, these expressions contain neither (a) nondeterminism nor (b) randomness.
+Their semantics are hence (a) \emph{singleton} sets with only one (b) \emph{Dirac} distribution assigning probability 1 to a single value.
+The probabilistic $\FLIP{\theta}$ is not nondeterministic but is random.
+Thus, its semantics is a still a singleton but containing a non-Dirac distribution over \textit{two} possible values. 
+The semantics of $\ITE{v_g}{e_1}{e_2}$ is standard. 
+Due to the A-normal form, condition $v_g$ is always a value.
+If it is $\TRUE$, then the if-statement behaves like $e_1$, otherwise it behaves like $e_2$. 
+Next, we examine the remaining rules in greater detail.
+
+\paragraph{Nondeterministic Flips}
+The statement $\NFLIP$ is nondeterministic, but not inherently random. 
+Still, we want non-determinism to act as an abstraction for all possible decision procedures we could use to return either $\TRUE$ or $\FALSE$, which includes random choices.
+Thus, the semantics of $\NFLIP$ do not include just the deterministic distributions $1|\TRUE\rangle$ and $1|\FALSE\rangle$, but also all possible distributions in between.
+Additionally, the semantics of $\NFLIP$ then form a convex set.
+
+\paragraph{Let Statement}
+The semantics of $\LET{x=e_1}{e_2}$ is a set of distributions that emerges from all resolutions of the nondeterminism in both $e_1$ and $e_2$.
+For this, we first pick one distribution $d_1$ from the set $\llbracket e_1 \rrbracket$, thus resolving the nondeterminism in $e_1$.
+Now, since there may be many values $v$ with $d_1(v) > 0$, and $e_2$ may depend on $v$, we must next pick a distribution $d_v$ from $\llbracket e_2 [x\mapsto v]\rrbracket$ -- where $e_2 [x\mapsto v]$ is $e_2$ with all free occurrences of $x$ replaced by $v$ -- for all possible intermediate values $v$.
+We have now fully resolved the nondeterminism within the let statement, and the probability to output a value $v'$ can be found by considering all possible execution paths, so that $e_1$ first terminates in an intermediate value $v$, and then $e_2[x\mapsto v]$ terminates in $v'$.
+Like this, we can determine the distribution for \textit{one} possible resolution to the nondeterminism. 
+The semantics of the let-statement as a whole are generated by considering \textit{all} possible resolutions to the nondeterminism, which is done by considering all combinations of distributions which could be picked from the semantics of $e_1$ and $e_2$.
+To illustrate this, consider the following example:
+\begin{align*}
+	\LET{x = \NFLIP}{\LET{y = \FLIP{\tfrac{2}{3}}}{x \leftrightarrow y}} \tag{ExLet1}\label{ExLet1}\\
+%	\LET{x = \FLIP{\tfrac{2}{3}}}{\LET{y = \NFLIP}{x \leftrightarrow y}}  \tag{ExLet2}\label{ExLet2}\\
+	\llbracket ExLet1 \rrbracket = \left\{p | \TRUE \rangle + (1-p)| \FALSE \rangle \,|\, p \in \left[\tfrac{1}{3},\tfrac{2}{3}\right]\right\}
+\end{align*}
+To generate a distribution from $\llbracket \text{\ref{ExLet1}} \rrbracket$, we first pick a distribution from $\llbracket \NFLIP \rrbracket$, for example $d_1 = \frac{1}{4}|\TRUE\rangle + \frac{3}{4}|\FALSE\rangle$.
+This gives us a two values with $d_1(v) > 0$, namely $\TRUE$ and $\FALSE$.  
+Thus, we have to pick distributions from the two singleton sets $\llbracket \LET{y = \FLIP{\tfrac{2}{3}}}{{\color{orange}\TRUE} \leftrightarrow y} \rrbracket = \left\{\frac{2}{3}|\TRUE\rangle + \frac{1}{3}|\FALSE\rangle\right\}$ and $\llbracket \LET{y = \FLIP{\tfrac{2}{3}}}{{ \color{orange} \FALSE} \leftrightarrow y} \rrbracket = \left\{\frac{1}{3}|\TRUE\rangle + \frac{2}{3}|\FALSE\rangle\right\}$.
+Combining the three distributions then generates a possible distribution for the overall let statement, namely:
+$$
+\left(\tfrac{1}{4}\cdot \tfrac{2}{3} + \tfrac{3}{4}\cdot \tfrac{1}{3}\middle)\middle|\TRUE\right\rangle + 
+\left(\tfrac{1}{4}\cdot \tfrac{1}{3} + \tfrac{3}{4}\cdot \tfrac{2}{3}\middle)\middle|\FALSE\right\rangle 
+= \left. \tfrac{5}{12}\middle|\TRUE\right\rangle + \left. \tfrac{7}{12}\middle |\FALSE \right\rangle
+\in \llbracket \text{\ref{ExLet1}} \rrbracket 
+$$
+%
+Notably, the behavior of this expression changes if we swap the order of the flips:
+%
+\begin{align*}
+	\LET{x = \FLIP{\tfrac{2}{3}}}{\LET{y = \NFLIP}{x \leftrightarrow y}}  \tag{ExLet2}\label{ExLet2}\\
+	\llbracket ExLet2 \rrbracket = \{p | \TRUE \rangle + (1-p)| \FALSE \rangle \,|\, p \in [0,1]\}
+\end{align*}
+Intuitively, the additional distributions arise as $\NFLIP$ can act depending on the outcome of the previous flip.
+More formally, the probabilistic flip may return two different values, which results in \textit{two} opportunities to pick a distribution from the semantics of the nondeterministic flip.
+In particular, we may pick a different distribution depending on the outcome of  the probabilistic flip, and thus we could pick $1|\TRUE\rangle$ or $1|\FALSE\rangle$ to always match the previous flip or not.
+This does not occur for \ref{ExLet1} as the outcome of the probabilistic flip is still unclear when the nondeterministic flip happens.
+Hence, nondeterministic choices can depend on past outcomes, but they cannot predict the future.%
+
+
+
+\paragraph{Observations and Conditioning}
+The observe statement allows us to condition the behavior of expressions on the assumption that all observations succeed, i.e.\ the arguments to all observe statements were $\TRUE$.
+Our semantics follow prior work and "filter out" failed observations by assigning them a probability of $0$ \cite{claret2013bayesian, fierens2015inference, borgstrom2011measure, huang2016application}.
+We will illustrate this with the following example:
+\begin{align*}
+	\LET{x = \NFLIP}{\LET{ y = \FLIP{\tfrac{2}{3}} }{ \LET{t =\OBSERVE{x\lor y}}{y}} } \tag{ExObs}\label{ExObs}\\
+	\llbracket ExObs \rrbracket = \left\{\left. \tfrac{2}{3}\middle|\TRUE \right\rangle + \left(\tfrac{1}{3} \cdot p\middle)\middle|\FALSE\right\rangle \;\middle|\; p\in \left[0, 1\right]\right\}
+\end{align*}
+The semantics of \ref{ExObs} can be explained as follows: With a probability of $\frac{2}{3}$ the second flip returns $\TRUE$, meaning the observation succeeds and the program returns $\TRUE$.
+But, if the probabilistic flip returns $\FALSE$, then the observation only succeeds if the first flip returned $\TRUE$.
+Thus, the probability to return $\FALSE$ depends on the resolution of the nondeterminism, which is represented by the parameter $p$.
+
+Notably, $\llbracket \text{\ref{ExObs}} \rrbracket$ contains \textit{sub}-distributions like $\frac{2}{3}|\TRUE \rangle + \frac{1}{6}|\FALSE\rangle$, where the missing probability mass amounts to the likelihood for the observation to fail as both flips returned $\FALSE$.
+We thus call the semantics in \Cref{fig:semantics} \textit{unnormalized semantics}. 
+Retrieving the normalized semantics of an expression $e$ is straightforward, as we simply normalize the distributions in $\llbracket e \rrbracket$.
+To do so, we define the normalizing constant $d_D$ of a distribution $d$ and the normalized semantics $\llbracket e \rrbracket_D$ of an expression $e$:
+%
+$$ d_D \coloneqq \sum_{v} d(v) \qquad \qquad \llbracket e \rrbracket_D \coloneqq \left\{d' \,\left|\; \exists d\in \llbracket e \rrbracket \colon \forall v \colon d'(v) = \frac{d(v)}{d_D} \right. \right\}$$
+%
+For $d_D = 0$ we define the fraction to be $0$.
+The semantics $\llbracket e \rrbracket_D$ describe all output distributions of $e$, conditioned by all observations succeeding.
+For example, consider $\llbracket \text{\ref{ExObs}} \rrbracket_D$ compared to $\llbracket \text{\ref{ExObs}} \rrbracket$, where $\TRUE|\frac{2}{3}\rangle + \frac{1}{3} |\FALSE \rangle$ remains unchanged, but $\frac{2}{3}|\TRUE \rangle$ will be normalized to $1|\TRUE\rangle$.
+Considering unnormalized semantics first and normalizing at the end is standard, and we share this approach with \DICE and other PPLs \cite{claret2013bayesian, fierens2015inference}.
+
+
+\paragraph{Function Calls and Programs}
+The semantics of a function $\FUNCNAME(x \colon \tau_1)$ takes an input value $v$ of type $\tau_1$ and returns the semantics of $\FUNCNAME$'s function body $e$ (i.e.\ a set of distributions), but in which each occurrence of $x$ is replaced by $v$.
+Hence, the semantics of a \NDICE function $\FUNCNAME$ is of type $\llbracket \FUNC{\FUNCNAME(x\colon \tau_1)\colon \, \tau_2}{e} \rrbracket: \mathit{Val} \rightarrow \mathcal{P}(\mathcal{D}(\mathit{Val}))$ and given formally by:
+%
+$$\llbracket \FUNC{\FUNCNAME(x\colon \tau_1)\colon \, \tau_2}{e} \rrbracket (v) \triangleq \llbracket e[x \mapsto v]\rrbracket$$
+%
+In \Cref{fig:semantics}, we use this semantical object as stored in the function table $T$ to define the semantics for function calls: 
+We look up the identifier $\FUNCNAME$ of the called function in the function table $T$ and return the corresponding set of unnormalized distributions for the input value $v$.
+
+We can now define the semantics of a \NDICE program $p$ as $\llbracket p \rrbracket^T \colon  \mathcal{P}(\mathcal{D}(\mathit{Val}))$.
+We determine $\llbracket p \rrbracket^T$ by first adding each function to the function table, until eventually the base expression $\bullet \, e$ is reached.
+Finally, the semantics of the program as a whole are the semantics of the base expression $e$ in the context of the accumulated function table $T$.
+This behavior is formalized by the following rules, where $\bullet$ denotes the empty sequence and $\eta(fun)$ retrieves the function's identifier:
+$$ \llbracket \bullet \, e \rrbracket^T \triangleq \llbracket e \rrbracket^T \qquad \llbracket fun \; p \rrbracket^T \triangleq \llbracket p \rrbracket^{T \cup \{\eta(fun) \rightarrow \llbracket fun \rrbracket^T\}} $$
+

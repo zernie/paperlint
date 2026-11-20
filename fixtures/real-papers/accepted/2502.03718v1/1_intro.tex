@@ -1,0 +1,48 @@
+\section{Introduction}
+
+
+Since the emergence of Ethereum, smart contracts have been its killer application, \textit{i.e.,} the feature distinguishes it from old-school Bitcoin~\cite{nakamoto2008bitcoin}.
+By decoupling complex interactions into different smart contracts, developers are able to build Decentralized Applications (DApps)~\cite{raval2016decentralized}, and even Decentralized Finance (DeFi)~\cite{zetzsche2020decentralized}, which specifically provides financial services, like lending, exchanging, and even insurance, in a decentralized manner~\cite{shah2023systematic}.
+In 2024, the total value locked, one of the critical metrics to reflect the prosperity, in DeFi protocols has surged to over \$90 billion~\cite{biance_re}.
+
+
+Unfortunately, due to the anonymity and immutability of Ethereum smart contracts, numerous DeFi projects are exploited by unidentifiable accounts, leading to \$473 million financial losses in 2024~\cite{coindesk}.
+Among all vulnerabilities in DeFi protocols, \textit{price manipulation} must be one of the most notorious ones~\cite{zhang2023demystifying}. In short, attackers can obtain massive profits from token transfers or exchanges at a price far from the market's normal fluctuation.
+Various reasons could finally lead to a price manipulation attack, \textit{e.g.,} incorrect slippage settings, unprotected public functions, and reliance on untrusted price oracles~\cite{mo2023toward}. Furthermore, cunning attackers would take advantage of the Flashloan mechanism~\cite{qin2021attacking} to conduct exploitation to ensure that the whole attack transaction can be rolled back promptly if any condition is not met. 
+
+
+Existing studies against price manipulation are in two forms, \textit{i.e.,} either \textit{reactively identifying attacks in the post-attack stage according to transaction data} or \textit{detecting if there are price manipulation vulnerabilities in DeFi protocols}.
+As for the former one, DeFiRanger~\cite{wu2023defiranger} constructs a cash flow tree from transaction traces, while DeFiGuard~\cite{wang2024defiguard} extracts behavioral patterns from transactions and combines them with a graph neural network. However, neither tool can mitigate such attacks proactively.
+As for the latter form, FlashSyn~\cite{chen2024flashsyn} uses a numerical approximation to synthesize transactions for exploiting Flashloan-based price manipulation vulnerabilities, and DeFiTainter~\cite{kong2023defitainter} detects vulnerabilities in DeFi projects using generic rules.
+However, most price manipulation attacks stem from poorly designed contract business logic, which have to be manually modeled one by one in these methods, significantly impacting their scalability.
+
+In other words, \textit{current work cannot mitigate or prevent price manipulation attacks effectively and timely}.
+Therefore, standing from the attackers' perspective, in this work, we \textit{proactively detect these attacks in the pre-attack stage}. We focus on newly deployed Ethereum contracts and uncover if they possess such malicious intent.
+However, two main challenges arise.
+On the one hand, in Ethereum, only 2\% contracts are open-sourced~\cite{percent}. Furthermore, to cover their malicious intent, such attack contracts typically avoid releasing their implementations. We have to precisely recover their behavioral semantics without introducing too many false positives and negatives.
+On the other hand, currently, there are around 39K newly deployed contracts a day in Ethereum~\cite{daily}. We have to precisely identify these attack contracts out of numerous benign ones. Moreover, rational attackers must initiate attacks once everything is settled down, which also requires the timeliness of our detecting methods.
+
+
+\textbf{This Work.}
+In this work, we propose {\tool}, a static analysis framework to identify price manipulation attack contracts.
+To recover the behavioral semantics, it extracts the callee address and invoked function for each function call. We also propose a \textit{data-flow-based heuristic arguments recovery algorithm} to recover the arguments for these function calls.
+Based on the inter-procedural control flow graph (ICFG), we construct \textit{cross-function callsite graph} (xFCG) and \textit{token flow graph} (TFG) to depict the control- and data-flow dependency relations among function calls.
+To enable efficient analysis, we propose a \textit{sensitive path filtering method} to selectively conduct cross-contract analysis on the TFG. Additionally, we formalize a set of rules to characterize two types of price manipulation attack behaviors in a sound and precise manner.
+
+
+In the evaluation, we construct a ground truth dataset consisting of 84 price manipulation attack contracts and 8,000 benign contracts. The results show that {\tool} can correctly identify 77 out of the 84 attack contracts, with a negligible false positive rate, extensively outperforming the existing three available baselines.
+We then apply {\tool} on a large-scale dataset with over 77K real-world contracts. It identifies 616 price manipulation attacks, where only 19 cases were reported previously, causing \$9.25M financial losses in total.
+Furthermore, to evaluate its timeliness, we deploy {\tool} on Ethereum and Binance Smart Chain for 50 days. In total, {\tool} has raised 14 alarms 99 seconds after the corresponding contract deployment on average. These attacks have led to \$641K financial losses already, and seven contracts are still waiting for the ripe time.
+
+We summarize our contributions as follows:
+
+\begin{itemize}
+    \item We propose {\tool} for identifying price manipulation attack contracts through anomalous token flow. To the best of our knowledge, this is the first work to identify such attack contracts on the bytecode level.
+    \item Based on an extensively constructed ground truth dataset, the precision and recall of {\tool} are $\sim$100\% and 91.6\%, respectively, significantly outperforming existing available baselines and demonstrating robustness against obfuscation techniques.
+    % It also excels in identifying recent price manipulation attack incidents.
+    \item {\tool} have identified 616 price manipulation attack contracts out of  770K real-world deployed contracts, where only 19 were reported publicly. {\tool} can analyze 99\% cases within 40.6 seconds.
+    \item As a real-time detector, {\tool} has raised alarms 14 times in Ethereum and BSC. These attacks have led to \$641K financial losses already.
+\end{itemize}
+
+
+

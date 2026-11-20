@@ -1,0 +1,12 @@
+%\section{Conclusions \& Future Work}
+\section{Conclusion}
+
+
+We described \sys{}, a system that combines the flexibility of eager execution with the program-wide optimizations and scheduling of graph-based execution for dynamic DL algorithms. \sys{} introduces \emph{recurrent tensors}, which add explicit \emph{temporal dimensions} to tensors that can be indexed using \emph{symbolic expressions} to express dynamic dependencies. \sys uses \emph{symbolic dependence graphs}~(SDG), to extend traditional optimizations to dynamic DL programs: it views vectorization, and tiling as transformations that move tensor dimensions from temporal to spatial and vice versa. \sys{} leverages tiling to decompose dynamic computations into static-size tiles, which enables code-generation with minimal padding. To find valid execution schedules, \sys{} uses the polyhedral model and augments SDGs to schedule memory management operations. \sys{} achieves substantial performance speed-ups, which demonstrates its potential of whole-program optimization for dynamic DL workloads.
+
+%\tinyskip
+%\tinyskip
+%\mypar{Acknowledgements}
+%We thank our anonymous reviewers and our shepherd for their insightful feedback and suggestions, which greatly improved this paper.
+
+

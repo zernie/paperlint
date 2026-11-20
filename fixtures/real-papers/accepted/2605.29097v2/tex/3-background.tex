@@ -1,0 +1,64 @@
+\section{Technical Background}
+\label{sec:background}
+\noindent \textbf{Radar Basics}
+\label{sec:background-mm}
+\input{figures/diffusion-fmcw}
+A mmWave radar works by transmitting a wireless
+signal and receiving back reflections that come from reflectors in the scene.
+It operates in the millimeter-wavelength frequency bands, and uses Frequency Modulated Continuous Wave (FMCW) and antenna arrays to help resolve spatial ambiguity.
+As shown in Fig.~\ref{fig:fmcw}(a), the transmitted FMCW is a function that is linearly increasing in frequency over time.
+Considering a single reflector and a single antenna, the received chirp is simply a time-delayed version of the transmitted chirp, see Fig.~\ref{fig:fmcw}(b).
+To resolve range ambiguity, the received chirp is multiplied with the conjugate of the transmitted chirp and can be expressed as a complex function:
+\begin{equation}
+\label{eq:fmcw}
+s(t) =  A \cdot e^{-j 2 \pi(f+kt)   d /c}  = A \cdot e^{-(j 2\pi k \tau )t} \cdot e^{-j 2\pi f \tau}
+\end{equation}
+where $A$ is the signal amplitude, $d$ is the round-trip propagation distance, $c$ is the speed of light, $\tau=d/c$ is the round-trip delay, $f$ is the starting frequency, and $k$ is the chirp slope. For multiple reflectors, we simply receive the linear combination of all the reflections.
+
+\input{figures/lens-less-explained}
+
+\vspace{-0.1em}
+\noindent \textbf{Reflections}
+Unlike light, whose wavelength (order of \( 10^{-7} \) meters) is much smaller than surface irregularities, resulting in predominantly diffused reflection, RF signals have much longer wavelengths (order of \( 10^{-3} \) meters).
+In this case, the majority of surfaces appear relatively smooth to the RF signal, and specular reflections becomes more prominent than diffused scattering.
+For specular reflections, the angle of incidence is the same as the angle of reflection, while diffused reflections tend to scatter at different angles. The difference is illustrated in Fig.~\ref{fig:fmcw}(c,d).
+
+In this paper, we primarily expect specular reflections.
+We follow a shifted Lambertian model~\cite{richards2010principles, ren2020diffuse}, where the power of the reflections that return to the receiver, is scaled according to the normal and the signals reflection angle, see Fig.~\ref{fig:fmcw}(e).
+The received power is modulated by the directional scaling factor \( (\omega_o \cdot \omega_r) \), where \( (\omega_o\) is the ideal specular vector and \( \omega_r \) is the vector from the reflecting surface to the receiver (see Appendix~\ref{sec:app-radar-ref}).
+The reflection strength also depends on material properties and the thickness of the object, which we model using a reflective coefficient \( a \).
+
+An additional power decay factor of \({(4\pi u)^2}\) is divided from the received reflection amplitude (\({(4\pi u)^4}\) for power), where \(u\) is the distance between the point and antennas, to accurately model the free space path loss (see Appendix~\ref{sec:app-radar-pwr}). Given an input signal with amplitude $ A_{\text{tx}} $, the received signal amplitude $ A_{\text{rx}} $ can be expressed as:
+\begin{equation}
+\label{eq:reflection_angle}
+A_{\text{rx}} \propto \frac{a}{(4\pi u)^2} A_{\text{tx}}\, (\omega_o \cdot \omega_r)
+\end{equation}
+
+\vspace{-0.1em}
+\noindent \textbf{Lensless imaging}
+Unlike traditional visual imaging systems that rely on lenses, radar imaging is inherently a \textbf{lensless} imaging technique.
+As illustrated in Fig.~\ref{fig:lensless}, a pinhole in visual systems acts as a physical filter, allowing only one ray per scene point to reach the CMOS sensor while blocking unrelated rays.
+In photography, increasing the aperture size allows more light rays to enter, but this also leads to blur and noise in the image.
+As the aperture approaches an infinite size, the system transitions into a lensless imaging model.
+Lensless imaging, such as with radar antenna arrays, does not employ any physical pinhole—\textit{all} incoming rays are received by all antennas.
+
+In contrast, radar imaging relies on algorithmic processing to reconstruct the scene.
+The core idea involves applying a digital filter to remove unrealistic signals and keep the most relevant ones, leveraging the time-varying and phase-delay information of the received signals.
+Each received signal, arriving via a different path, carries a distinct phase shift defined by its propagation delay.
+The algorithm used for this process is called the \textbf{matched filter}.
+
+\vspace{-0.1em}
+\noindent \textbf{Differentiable Matched Filter}
+This algorithm is implemented by correlating the received signal with an ideal reference signal.
+From Eq.~\ref{eq:fmcw}, the reference signal for a single reflector and a single antenna is known.
+For multiple antenna measurements, we have:
+\begin{equation}
+\label{eq:mf-sm}
+P(\mathbf{x}) = \left| \left| \sum_{i = 1}^{N_{\text{ant}}} \sum_{t} s(i, t) \, e^{j 2\pi k \tau_i t} \, e^{j 2\pi f \tau_i} \right| \right|,
+\end{equation}
+where \( N_{\text{ant}} \) is the number of antennas, \( \tau_i \) represent the round-trip delay corresponding to the \( i \)-th antenna, and \( s(i, t) \) denotes the received signal at time \( t \) from the \( i \)-th antenna. We omit the transmitted amplitude \( A_{\text{tx}} \) since it is constant.
+This process effectively averages out signals that are inconsistent with the hypothesized signal model, a matched filter (MF) power image is shown in Fig.~\ref{fig:heatmap}.
+
+To enable integration into a differentiable rendering framework, we also compute the backpropagation of MF.
+Both the forward and backward passes are implemented in parallel on the GPU.
+All implementation details are provided in Appendix~\ref{sec:app-mf} and \ref{sec:app-alg}.

@@ -1,0 +1,227 @@
+% Evaluation
+
+\section{Evaluation}
+\label{sec:eval}
+
+We evaluate \sys{} to answer the following questions: do \sys{}'s optimizations lead to more efficient computation compared to existing approaches? %~(\S\ref{sec:eval_small})
+does \sys{}'s tiling and memory management enable scaling on a single GPU? %~(\S\ref{sec:eval:scale})
+can \sys{} effectively support algorithm-specific execution and memory-management schedules? %~(\S\ref{sec:eval:alg_scheduling})
+does \sys{}'s compilation scale to large model sizes? %~(\S\ref{sec:eval:alg_scheduling})
+
+\subsection{Methodology}
+\label{sec:eval:methodology}
+
+We evaluate \sys on LLM decoding and RL training.
+
+\mypar{LLM decoding} We focus on decoding, because it often dominates LLM inference latency~\cite{agrawal2024taming}. We implement a Llama-3.2-3B~\cite{dubey2024llama} decoding loop (\F\ref{fig:transformer_decoding}) in \sys{}, and compare it against end-to-end JIT-compiled JAX~\cite{frostig2018compiling} (a graph-based system), and Torch~\cite{paszke2019pytorch}\footnote{We use Meta's open-source inference implementation from \\\url{https://github.com/meta-llama/llama3}.} (an eager-execution system). For the JAX baseline, we pad the minimal amount possible (\ie up to the sequence length being decoded). We compare the performance as we modify batch size, sequence length, and the attention pattern from causal~\cite{vaswani2017attention} to windowed~\cite{zaheer2020big}. All systems use the same tokenizer, sampling method, and prompts.
+%We do not compare against specialized LLM serving frameworks~\cite{kwon2023efficient,zheng2024sglang} as these are orthogonal to \sys{}, which is a general-purpose DL system.
+
+\mypar{RL training} We experiment with (a)~PPO~\cite{schulman2017proximal}, (b)~REINFORCE~\cite{williams1992simple} and (c)~REINFORCE with $n$-step returns~\cite{sutton1988learning} (essentially A2C~\cite{mnih2016asynchronous}).
+We compare \sys{} against 5 RL frameworks with different focus: (i)~performance-focused frameworks (SampleFactory~v2.1.1~\cite{Petrenko2020SampleFE}, RLGames~v1.6.1~\cite{rl-games2022}), (ii)~single-file algorithm implementations (CleanRL~commit~e648ee2~\cite{huang2022cleanrl}), and (iii)~scalable RL frameworks (Ray RLlib~v2.5.0~\cite{liang2018rllib}). To focus on framework overheads, we employ a test RL environment~\cite{freeman2021brax, makoviychuk2021isaac} with short simulation-step time for all experiments. It is GPU-accelerated except for RLlib, which lacks such support. %\sys{} was validated and produces the same gradients as CleanRL up to numerical error of $10^{-5}$ for all tested algorithms.
+
+
+% We do not compare against asynchronous~\cite{espeholt2019seed,espeholt2018impala} or distributed~\cite{zhu2023msrl, pan2022optimizing} RL frameworks, as \sys{} is designed for single-GPU training.
+
+
+% All these baselines use the actor-learner architecture.
+
+%%We evaluate \sys{} on a range of RL algorithms, including REINFORCE~\cite{williams1992simple}, A2C~\cite{mnih2016asynchronous} and PPO~\cite{schulman2017proximal}, as well as, DQN~\cite{mnih2013playing}.
+%%As baselines, we pick RL frameworks that are representative of the three main classes of RL systems: bespoke high-performance algorithm implementations (synchronous SampleFactory~\cite{Petrenko2020SampleFE} and RLGames~\cite{rl-games2022}), single-file implementations (CleanRL~\cite{huang2022cleanrl}), and large-scale general frameworks (RLLib~\cite{liang2018rllib}).
+%We align our implementations to match CleanRL\cite{huang2022cleanrl} in learning. %, and show they follow the same learning trajectory in \F\ref{fig:semantics}.
+
+
+All experiments use the same hardware and software configuration. We use a server with an AMD EPYC 7402P 24-core CPU, 384\unit{GB} of DDR4 RAM (3200\unit{MT/s}) and an NVIDIA RTX A6000 GPU (48\unit{GB} of GDDR6 RAM, PCIe Gen4 $\times$16 at 32\unit{GB/s}). We run Ubuntu~v22.04 with Linux kernel~v5.15, CUDA~v12.8, PyTorch~v2.7.1, and JAX~v0.6.2. We discard the first iteration of each experiment to avoid warmup effects.
+
+\begin{figure*}[t]
+  \centering
+  \begin{subfigure}[t]{0.356\textwidth}
+    \centering
+    \includegraphics[width=\linewidth, trim={2 5 3 1}, clip]{cr_figures/eval/lm/tpt/causal_16}
+    \caption{Causal attention~\cite{vaswani2017attention} at batch size 16}
+    \label{fig:llama:causal_attention_16}
+  \end{subfigure}%
+  \hfill
+  \begin{subfigure}[t]{0.318\textwidth}
+    \centering
+    \includegraphics[width=\linewidth, trim={45 5 3 1}, clip]{cr_figures/eval/lm/tpt/causal_4}
+    \caption{Causal attention~\cite{vaswani2017attention} at batch size 4}
+    \label{fig:llama:causal_attention_4}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{0.318\textwidth}
+    \centering
+    \includegraphics[width=\linewidth, trim={45 5 3 1}, clip]{cr_figures/eval/lm/tpt/window_16}
+    \caption{Window attention~\cite{zaheer2020big} at batch size 16}
+    \label{fig:llama:window_attention_16}
+  \end{subfigure}%
+  \caption{Llama-3.2-3B mean time between tokens (MTBT) with different attention mechanisms and batch sizes}
+  \label{fig:llama:throughput}
+\end{figure*}
+
+\subsection{LLM decoding}
+\label{sec:eval:decoding}
+
+We begin our evaluation with LLama-3.2-3B~\cite{dubey2024llama} token-by-token decoding. For each system, we fix the batch size to $16$ and measure the latency in terms of mean time between tokens (MTBT) when decoding sequences of length~$T\!=\!2,048$ to $T\!=\!65,536$ tokens with standard causal attention. \F\ref{fig:llama:causal_attention_16} shows the results, where the factors indicate speedups over the slowest system. 
+In general, as we increase the sequence length, the MTBT of all systems increases. This is expected as the dynamic $[0\!:\!t\!+\!1]$ dependency of causal attention increases the amount of work with each added timestep.
+
+Torch is consistently the slowest system, and its MTBT grows the fastest. This is because, as an eager-execution system, Torch does not make use of compilation-based optimizations. For $T\!<\!4,096$, \sys{} and JAX behave similarly,
+as both process the entire sequence as a single padded tensor. 
+For $T\!\geq\!4,096$, however, JAX continues to add padding, while \sys{} begins tiling attention (\S\ref{sec:tiling}). 
+This causes an initial slow-down at $\!T=\!4,096$ as \sys{}'s tiling reduces parallelism, but a growing speedup for $T\!>\!4,096$, due to reduced padding overhead.
+\sys{} is up to 43\% faster at $T\!=\!16,384$, and while this gap should grow with $T$, all systems run out of GPU memory at $T\!=\!16,384$ due to K/V cache pressure.
+
+\mypar{Decoding long sequences}
+To scale to longer sequences, we lower the batch size to $4$ and repeat the experiment. \F\ref{fig:llama:causal_attention_4} shows the results. Similar behavior is observed, with 16,384 now serving as the point at which \sys{}'s tiling reduces parallelism and JAX starts accumulating padding overhead. However, the longer sequence lengths cause more drastic slowdown for JAX, as the amount of padding it processes grows linearly with $T$. At $T\!=\!32,768$, \sys{} is 2$\times$ faster than JAX, and that grows to 2.5$\times$ faster at $T\!=\!65,536$.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth, trim={4 8 6 7}, clip]{cr_figures/eval/lm/block_size/block}
+  \caption{Effect of \sys{}'s tile size on Llama-3.2-3B}\label{fig:llama:block_size}
+\end{figure}
+
+\mypar{Static tile size} These results can be better understood by studying how \sys{}’s tiling strategy (\S\ref{sec:tiling}) impacts decoding performance. The tile size used to decompose causal attention into statically-sized tiles is a key parameter that controls the trade-off between parallelism and padding overhead.
+
+\F\ref{fig:llama:block_size} shows the tile size affects latency for a fixed decode length of $T\!=\!16,384$ tokens and varying batch size $B$. At $B\!=\!4$, increasing the tile size up to $Z\!=\!8,192$ progressively lowers MTBT despite adding large padding, because the GPU has spare capacity to process this padding.
+At $BS\!=\!16$, however, MTBT decreases until the GPU utilization is maximized with $Z\!=\!2,048$, at which point it begins increasing again, yielding a \emph{u-shaped} latency curve. This is because padding adds overhead when there is no spare GPU capacity. For medium to long sequence lengths, JAX is essentially in the low spare GPU capacity regime, and thus it is affected by padding overheads.
+
+\mypar{Windowed attention} Another method for scaling LLMs to longer sequences is to switch to a windowed attention pattern. \F\ref{fig:llama:window_attention_16} shows the results for Llama-3.2-3B with windowed attention at $B\!=\!16$. \sys{} and Torch achieve near constant MTBTs due to their support for dynamic shapes. Torch is eager however, while \sys{} enjoys whole-program compilation, making \sys{} up to 3.9$\times$ faster. JAX retains the exact same MTBT profile as for causal attention (\F\ref{fig:llama:causal_attention_16}) since it models dynamic dependencies using masking over a spatial dimension. At $T\!=\!16,384$ \sys{} is up to $7\times$ faster. Furthermore, \sys{} is the only system that adapts memory management to window dynamic dependencies. \sys{} uses a circular store for K/Vs and infers when old K/Vs can be deallocated, scaling to at least 4$\times$ longer sequences.
+
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.975\columnwidth, trim={1 8 1 1}, clip]{cr_figures/eval/lm/mem/runtime_mem}
+  \caption{Runtime GPU memory use for Llama-3.2-3B decoding}\label{fig:llama:memory_usage}
+\end{figure}
+
+These conclusions are further confirmed by examining the runtime GPU memory usage (\F\ref{fig:llama:memory_usage}). JAX and Torch retain the same memory usage behavior between causal and windowed attention, \ie they preallocate large buffers up-front and never deallocate memory. In contrast, \sys{} effectively manages memory according to algorithm-specific dynamic dependencies.
+For causal attention, \sys{}'s memory usage grows only as \sys{} requires more static tiles to be processed, yielding a stepped usage pattern; for windowed attention, \sys{}'s circular buffer tensor storage uses a small static allocation for all sequence lengths.
+
+
+
+
+
+
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.9\textwidth, trim = {4cm 17cm 4cm 0.25cm}, clip]{cr_figures/eval/rl/small_to_med_scale_no_cleanrl_c}
+
+  \begin{subfigure}[t]{0.273\textwidth}
+    \centering
+    \includegraphics[width=\columnwidth, trim = {0.1cm 1.4cm 44.75cm 2.85cm}, clip]{cr_figures/eval/rl/small_to_med_scale_no_cleanrl_c}
+    \caption{Simulation length}\label{fig:small-scale:episodes}
+  \end{subfigure}%
+  ~
+  \begin{subfigure}[t]{0.229\textwidth}
+    \centering
+    \includegraphics[width=\columnwidth, trim = {17.8cm 1.4cm 29.90cm 2.85cm}, clip]{cr_figures/eval/rl/small_to_med_scale_no_cleanrl_c}
+    \caption{Parameters per layer}\label{fig:small-scale:parameters}
+  \end{subfigure}%
+  ~
+  \begin{subfigure}[t]{0.229\textwidth}
+    \centering
+    \includegraphics[width=\columnwidth, trim = {32.6cm 1.4cm 15.05cm 2.85cm}, clip]{cr_figures/eval/rl/small_to_med_scale_no_cleanrl_c}
+    \caption{Number of hidden layers}\label{fig:small-scale:hidden_layers}
+  \end{subfigure}%
+  ~
+  \begin{subfigure}[t]{0.229\textwidth}
+    \centering
+    \includegraphics[width=\columnwidth, trim = {47.5cm 1.4cm 0.16cm 2.85cm}, clip]{cr_figures/eval/rl/small_to_med_scale_no_cleanrl_c}
+    \caption{Number of environments}\label{fig:small-scale:envs}
+  \end{subfigure}%
+  \caption{End-to-end iteration time and GPU utilization for PPO at small-to-medium scale.}
+  \label{fig:small-scale}
+\end{figure*}
+
+\subsection{Training performance for RL}
+\label{sec:eval:rl}
+
+%<left> <bottom> <right> <top>
+
+
+%We implement an RL library on \sys{} (TRL) and evaluate its end-to-end RL training performance, starting with PPO, a popular RL algorithm with an anti-causal dependency (\F\ref{fig:access_patterns:anti_causal}) that prevents parallel acting and learning.
+We evaluate the end-to-end RL training performance of \sys{} with PPO, a popular RL algorithm. PPO includes an anti-causal dependency~(\F\ref{fig:access_patterns:anti_causal}) that prevents parallel acting and learning. We start with a default configuration with a simulation length of $250$, 512~environments, 64~parameters per layer, 2~hidden layers, and a $3\tighttimes4\tighttimes4$ observation shape and then vary each parameter individually.% their performance impact. We compare against all of the baselines.
+
+\mypar{Small-to-medium scale PPO} \F\ref{fig:small-scale} shows the result by reporting iteration time, GPU utilization, and speed-up factors over the slowest system. \sys{} has consistently lower iteration times than all other baselines: it is up to 54$\times$ faster than RLlib, and on average 2.6$\times$ faster than the next fastest system, CleanRL, which is a hand-optimized Torch PPO implementation. This is due to \sys{}'s whole-program compilation: \sys{} deduplicates the forward passes of actor and learner by caching actor activations. In addition, \sys{}'s vectorization of the timestep dimension, efficient scheduling, and code-generation further improve performance.
+
+As simulation length grows~(\F\ref{fig:small-scale:episodes}), all systems slow down linearly, narrowing relative performance differences. Adjusting the number of parameters per layer~(\F\ref{fig:small-scale:parameters}) does not affect relative performance until $256$ parameters, when \sys{} begins tiling the backward pass.
+Increasing hidden layers~(\F\ref{fig:small-scale:hidden_layers}) slows down all systems, but particularly \sys{}. This is likely due to Python-level AST interpretation overheads, which become apparent at this smaller scale and could be avoided by using an efficient C++ AST executor. We confirm this by the fact that adding environments~(\F\ref{fig:small-scale:envs}) improves \sys{}'s relative performance, because AST interpretation overheads are amortized.% and optimizations like activation caching become more impactful.
+
+\sys{}'s Torch backend is consistently slower (by 2$\times$ on average) than the JAX backend. This highlights the importance of pairing \sys{} with a capable code-generator such as XLA~\cite{openxla2024}, with support for Triton~\cite{tillet2019triton} to find optimized kernels, CUDAGraphs~\cite{cudagraphs} to lower dispatch overheads, and buffer donations~(\S\ref{sec:mem_sched}) to avoid allocations.
+
+At this scale, the GPU is generally underutilized by all systems. However, \sys{}'s GPU utilization is on average higher than the other systems, which indicates lower dispatch overheads due to our vectorization and dataflow fusion optimizations. Peak utilization is also high for RLlib, but this is due to CPU/GPU data transfers performed every timestep.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.9955\columnwidth, trim={4 10 6 6}, clip]{cr_figures/eval/rl/large_obs}
+  \caption{Scaling to large observation sizes with PPO}
+  \label{fig:large_scale_range}
+\end{figure}
+
+\mypar{Scaling to large observations} Training RL models from image observations is a common use case~\cite{handa2023dextreme, kiran2021deep, yu2021reinforcement} that actor-learner RL frameworks struggle with. Higher image resolutions improve task performance, but require more memory. In this experiment, we halve the number of environments to 256, set the simulation length to 1,000, and show iteration times, GPU utilization and memory, and CPU memory, as we scale observations up to $3\tighttimes256\tighttimes256$.
+
+As \F\ref{fig:large_scale_range} shows, the actor-learner approach stores and learns from all observations at once, resulting in a GPU peak memory usage that exceeds capacity. RLlib enters a fail-retry loop before $3\htighttimes64\htighttimes64$, while the other baselines fail to scale due to out-of-memory~(OOM) errors. In contrast, \sys{} scales to $3\tighttimes256\tighttimes256$ (16$\times$ larger) by balancing GPU/CPU memory usage through tiling and swapping (see~\S\ref{sec:tiling} and \S\ref{sec:mem_sched}), without the need for a replay buffer. 
+\sys uses tiling after $3\tighttimes64\tighttimes64$, leading to a slight slow-down, and swapping is used after $3\tighttimes128\tighttimes128$. To scale PPO further, \sys would only require adding more CPU memory.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth, trim={2 7 2 6}, clip]{cr_figures/eval/rl/cleanrl_vs_cleanrlcache}
+  \caption{Activation caching without symbolic differentiation}
+  \label{fig:cleanrl_vs_cleanrlcache}
+\end{figure}
+
+\mypar{Activation caching} We modify CleanRL to also cache and reuse forward pass activations during learning. \F\ref{fig:cleanrl_vs_cleanrlcache} shows that CleanRL's iteration time is on average 2$\times$ slower with caching~(CleanRL~(C)). In Torch, which CleanRL uses, each forward pass creates a corresponding backpropagation graph. The full backward graph concatenates each timestep's graph, causing \emph{graph size explosion}. Thus, Torch must process thousands of small subgraphs, incurring large overhead. In \sys{}, forward pass activations have an explicit timestep dimension, which is automatically vectorized~(\S\ref{sec:vectorization}), enabling an efficient backpropagation graph.
+
+
+%\sys{} also utilizes the GPU more effectively than the other systems, as shown by the GPU utilization.
+%While we have demonstrated scale through observation size, \sys behaves similarly with larger batch sizes, episodes or model sizes, since the memory management techniques are agnostic to the source of the memory pressure.
+
+\subsection{Algorithm-specific scheduling}
+\label{sec:eval:alg_scheduling}
+
+\begin{figure}
+  \centering
+  \begin{subfigure}[t]{\columnwidth}
+    \centering
+    \includegraphics[width=\columnwidth, trim={9 8 6 4}, clip]{cr_figures/eval/rl/runtime_metrics}
+    \caption{Aligned runtime metrics for different algorithms}
+    \label{fig:alg_scheduling:runtime_metrics}
+  \end{subfigure}
+  \begin{subfigure}[t]{0.95\columnwidth}
+    \centering
+    \includegraphics[width=\columnwidth, trim={8 8 8 1}, clip]{cr_figures/eval/rl/td_vs_mc_iter_time}
+    \caption{Iteration times for REINFORCE variations}
+    \label{fig:alg_scheduling:iter_time}
+  \end{subfigure}
+  \caption{Algorithm-specific scheduling with \sys{}-JAX}
+  \label{fig:alg_scheduling:combined}
+\end{figure}
+
+We explore \sys{}'s ability to adapt scheduling to algorithm-specific dynamic dependencies in the large observation setting ($3\tighttimes256\tighttimes256$). We use the two variations of REINFORCE shown in \A\ref{alg:experimentation}, which use: (i)~traditional Monte Carlo~\cite{williams1992simple} returns; and (ii)~$n$-step temporal-difference~(TD) returns~\cite{sutton1988learning}. 
+
+
+\F\ref{fig:alg_scheduling:runtime_metrics} shows how \sys{} executes these two algorithms. Since Monte Carlo (red line) uses an anti-causal access pattern ($r[t:T]$), \sys{}'s scheduler waits until the simulation finishes before learning. During simulation  (red shading), \sys{} continually evicts observations to CPU memory, maintaining low GPU memory usage, but not fully utilizing the GPU. Once finished, learning begins (orange shading), and \sys{} incrementally swaps observations back to GPU memory, learning from them while fully utilizing the GPU.
+
+With $n$-step TD (blue and teal lines), however, \sys{}'s scheduler finds a different strategy: due to the forward window access pattern ($r[t\!:\!min(t\!+\!n, T)]$), after an $n$-step delay, it begins computing gradients \emph{in parallel} with simulation (blue shading). This enables \sys{} to: (i)~fully utilize the GPU; (ii)~only store the last $n$~observations, deallocating older data as early as possible; and (iii)~avoid swapping due to the lower memory demand. Due to the $64$-step delay before learning starts, $64$-step TD still experiences a slight GPU utilization dip, which $8$-step TD does not. 
+
+For smaller $n$, \sys{} parallelizes acting and learning sooner, leading to faster iteration times, as shown in \F\ref{fig:alg_scheduling:iter_time}.
+Note that actor-learner frameworks~(see~\S\ref{sec:frameworks}) cannot use such parallel strategies due to coarsening dynamic dependencies between acting and learning to $[0\!:\!T]$.
+For either algorithm, \sys{} finds an effective schedule,
+allowing for large-scale training on a single GPU.
+
+\subsection{Compilation scalability}
+\label{sec:eval:compilation_scalability}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\columnwidth, trim={4 7 14 6}, clip]{cr_figures/eval/lm/compilation/compilation_breakdown_multiple.pdf}
+  \caption{Compilation breakdown for different model sizes}
+  \label{fig:compilation_breakdown}
+\end{figure}
+
+We evaluate the scalability of \sys{}'s compilation process by varying the number of transformer blocks in the Llama-3.2 architecture.  \F\ref{fig:compilation_breakdown} shows that the compilation time remains near constant as the model size is increased. This is due to \sys{}'s ability to exploit repeated structure in models with a temporal dimension $l$ for layers, creating small SDGs even for large models. Each layer~$l$ depends upon the previous layer~$l\!-\!1$, and the final output is given by layer~$L\!-\!1$.
+
+Compilation times are around 18\unit{s}, of which 7\unit{s} are spent in DL backend code-generation and 1\unit{s} is spent on initial allocations for tensor stores. Beyond this, the majority of the compilation time is taken by polyhedral scheduling and buffer donation analysis. This is because these steps require invocations of the polyhedral library~\cite{verdoolaege2010isl}, which parses constraint strings. Due to \sys{}'s fusion and layer encoding, ILP solving accounts for only 2\unit{s} of the scheduling time.
+The remaining compiler passes are fast, because they involve only SDG and symbolic manipulations. Vectorization, tiling and the optimizer each take under 1\unit{s} to complete, despite their fairly complex transformations. Dataflow fusion takes slightly longer, because it performs a large number of validity checks for each fusion. 
+
+% End

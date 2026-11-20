@@ -1,0 +1,1145 @@
+\documentclass{article} %
+\usepackage{iclr2026_conference,times}
+
+\usepackage{amsmath, amssymb, amsfonts}
+
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{threeparttable}
+\usepackage{makecell}
+
+\usepackage[svgnames,table]{xcolor}
+\usepackage{colortbl}
+
+\usepackage[ruled,vlined]{algorithm2e}
+
+\usepackage{listings}
+
+\usepackage{soul}
+\usepackage{enumitem}
+
+\usepackage{tikz}
+\usetikzlibrary{
+    shapes.geometric, 
+    arrows.meta, 
+    positioning, 
+    fit, 
+    backgrounds,
+    decorations.pathreplacing,
+    calc
+}
+\usepackage{pgfplots}
+\usepgfplotslibrary{fillbetween}
+\pgfplotsset{compat=1.18}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{nicefrac}
+\usepackage{microtype}
+
+\usepackage{hyperref}
+\usepackage{url}
+
+\usepackage[most]{tcolorbox}
+\newtcolorbox{promptbox}[1]{
+    breakable,
+    colback=gray!5,
+    colframe=gray!75,
+    fonttitle=\bfseries,
+    title=#1,
+    arc=2mm,
+    boxrule=1pt,
+}
+
+\definecolor{hl_thermo}{RGB}{255, 224, 204} %
+\definecolor{hl_wave}{RGB}{204, 229, 238}   %
+\definecolor{hl_em}{RGB}{255, 255, 204}     %
+\definecolor{hl_linalg}{RGB}{204, 238, 204} %
+\definecolor{hl_mech}{RGB}{221, 204, 221}   %
+\definecolor{hl_ops}{RGB}{250, 217, 213}
+\definecolor{codegray}{rgb}{0.95,0.95,0.95}
+\definecolor{tagblue}{rgb}{0.1,0.2,0.7}
+\definecolor{contentblack}{rgb}{0.1,0.1,0.1}
+\definecolor{pastelblue}{rgb}{0.27, 0.51, 0.71}
+\definecolor{pastelred}{rgb}{0.8, 0.36, 0.36}
+\definecolor{lightgray}{gray}{0.9}
+
+\newcommand{\hlthermo}[1]{{\sethlcolor{hl_thermo}\hl{#1}}}
+\newcommand{\hlwave}[1]{{\sethlcolor{hl_wave}\hl{#1}}}
+\newcommand{\hlem}[1]{{\sethlcolor{hl_em}\hl{#1}}}
+\newcommand{\hllinalg}[1]{{\sethlcolor{hl_linalg}\hl{#1}}}
+\newcommand{\hlmech}[1]{{\sethlcolor{hl_mech}\hl{#1}}}
+\newcommand{\hlops}[1]{{\sethlcolor{hl_ops}\hl{#1}}}
+
+\lstdefinestyle{customxml}{
+    language=XML,
+    backgroundcolor=\color{codegray},
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{tagblue}\bfseries,
+    stringstyle=\color{contentblack},
+    commentstyle=\color{gray},
+    showstringspaces=false,
+    breaklines=true,
+    breakatwhitespace=true,
+    frame=tb,
+    rulecolor=\color{black!30},
+    tabsize=2,
+    morekeywords={action, reasoning, new_operator_name, base_template, new_prompt, architecture, query, current architecture, action taken, outcome, identity, directives, description, target_operator_1, target_operator_2},
+    escapechar=\`
+}
+
+\lstdefinestyle{PythonStyle}{
+    language=Python,
+    basicstyle=\ttfamily\footnotesize,
+    commentstyle=\color{gray},
+    keywordstyle=\color{blue},
+    stringstyle=\color{green},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=5pt,
+    backgroundcolor=\color{white},
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=4,
+    breaklines=true,
+    breakatwhitespace=true,
+    captionpos=b,
+    frame=single
+}
+
+\iclrfinalcopy
+
+\title{Automated Stateful Specialization \\ for Adaptive Agent Systems}
+
+
+
+\author{%
+  Myan Vu$^{1*}$ \quad
+  Harrish Ayyanar$^{2}$ \quad
+  Jiang Pang$^{3}$ \quad
+  Anwiketh Reddy$^{4}$ \quad
+  Mayank Goel$^{5}$ \\[0.3em]
+  \small $^1$University of Auckland \quad
+  $^2$University College London \quad
+  $^3$Algoverse \quad
+  $^4$Northeastern University \quad
+  $^5$Lossfunk
+}
+
+
+
+\providecommand{\KwInit}{}
+\providecommand{\EndIf}{}
+\providecommand{\EndFor}{}
+\providecommand{\multirow}{}
+\begin{document}
+
+
+\maketitle
+\footnotetext[1]{Corresponding author: myanvoos@gmail.com}
+\begin{abstract}
+
+Current automated agent design frameworks produce either static workflows that lack adaptability or per-query optimizers that prevent the accumulation of deep, agent-level task expertise. We propose a new direction that reconciles these paradigms: creating stateful teams of specialist agents that accumulate knowledge over time and can be reconfigured for novel tasks entirely without human intervention. To this end, we introduce \textsc{ASpec}, a framework that manages this full agent lifecycle by first autonomously \textbf{discovering} specialist archetypes via evolutionary search and then \textbf{cultivating} their expertise through experience, mirroring how human experts learn through practice and reflection. We further introduce a lightweight hierarchical control policy, "retain-then-escalate," which governs when to leverage the established agent system versus when to adapt its structure. Through comprehensive experiments, we demonstrate that this approach leads to significant performance gains on expert-level scientific benchmarks like GPQA while matching the state-of-the-art on broader domain tasks, demonstrating a promising path toward agent systems that are simultaneously expert, adaptive, and efficient. We will release the code at \href{https://github.com/myanvoos/ASpec}{https://github.com/myanvoos/ASpec}.
+
+\end{abstract}
+
+
+\section{Introduction}
+
+\paragraph{Motivation.} 
+The emergence of sophisticated multi-agent systems capable of tackling complex problems \citep{wu2023autogen, li2023camel, hong2023metagpt} has marked a significant advance for autonomous agents. While effective, these foundational systems were often manually hand-crafted for specific tasks, which limited their scalability. In response, research has shifted towards automating aspects of these systems, starting with prompt optimization \citep{khattab2023dspy, yuksekgonul2024textgrad, yang2023large} or inter-agent communication via graph-based workflow representations \citep{zhuge2024gptswarm, liu2023dynamic, zhang2024gdesigner}, and then, to the designs of agent systems themselves. The automation of agent designs has since largely split into two distinct paradigms: task-level optimization and query-level adaptation. In the case of \textbf{(I) Task-Level Architecture Search}, prior works optimized for a single, static agent workflow for a specific task domain. These approaches, which mirror early approaches in AutoML and Neural Architecture Search (NAS) \citep{elsken2019neural}, were pioneered by ADAS \citep{hu2024automated}, which uses Meta Agent Search to iteratively program new agents in executable code; AFlow \citep{zhang2024aflow}, which similarly adopts code representation but utilizes Monte Carlo Tree Search (MCTS) to efficiently navigate the search space; and AgentSquare \citep{shang2024agentsquare}, which employs module evolution and recombination to discover novel configurations in a constrained, modular code-based search space. The primary limitation of these methods is their intrinsic "one-size-fits-all" nature: by searching for a single best design for an entire task domain, they fundamentally lack the adaptability necessary to dynamically allocate inference resources or customize the structure for individual user queries. 
+
+To address the rigidity of task-level systems, a recent paradigm shift has focused on generating a unique workflow for each incoming query, \textbf{(II) Query-Level Architecture Adaptation}. MaAS \citep{zhang2025multi} introduces the concept of an "agentic supernet", optimizing a probabilistic distribution of agent architectures during training and sampling a bespoke architecture from said distribution for each query during inference. This paradigm has been extended by other methods like FlowReasoner \citep{gao2025flowreasoner}, which uses a reasoning-based meta-agent to generate query-specific agent systems; ScoreFlow \citep{wang2025scoreflow}, which introduces Score-DPO, a method that fine-tunes its per-query workflow generator using quantitative evaluation scores; MAS-GPT \citep{ye2025masgpt}, which trains an LLM to treat workflow construction as a generative task; and MAS-Zero \citep{ke2025maszero}, which employs a meta-agent at inference time to iteratively generate and refine agent configurations based on self-generated feedback. While these approaches offer superior adaptivity, they are challenged by the lack of long-term state. Because the architecture is regenerated or resampled for every query, the system incurs a significant "rediscovery" cost, and the individual components or agents are largely prevented from accumulating deep, persistent expertise over time. 
+
+The prior work demonstrate a critical chasm between monolithic, task-level robustness and adaptive, per-query regeneration. The former is static at inference, while the latter incurs "rediscovery" costs by repeatedly invoking meta-agents for architectural search in lieu of leveraging persistent knowledge, a system-level problem that a modular, agent-level memory addition would fail to address. Our proposed framework, \textsc{ASpec}, reconciles these limitations by integrating the specialized mechanisms of self-evolving agents into a unified lifecycle within agent design automation. This lifecycle establishes stable, persistent agent archetypes deployed by a "retain-then-escalate" control policy, allowing the system to default to efficient \textit{and} effective execution by relying on the persistent knowledge of its specialist agents.
+
+\paragraph{Contributions.} In short, our core contributions are as follows:
+\begin{itemize}
+     \item We propose \textsc{ASpec}, a framework that manages the full lifecycle of expert specialist agents via an automated two-stage methodology: \textbf{(I) Discovery}, where an LLM autonomously explores the design space of agent archetypes using evolutionary processes, and \textbf{(II) Cultivation}, where selected agents autonomously cultivate their expertise on a training corpus.
+     
+    \item We introduce "retain-then-escalate", a control policy that, instead of being either fully static or fully dynamic, defaults to retaining a stateful agent team across related queries to leverage expertise and minimize cost, only escalating to architectural resampling when needed. 
+\end{itemize}
+
+\paragraph{Related Work.}
+The mechanisms for autonomous discovery and expertise cultivation as seen in self-evolving agents have been explored individually across various research efforts. For instance, parallel to workflow optimization, a distinct stream of research has explored agent specialization via prompt optimization, starting with role assignment via ExpertPrompting \citep{xu2023expertprompting}, PromptBreeder \citep{fernando2023promptbreeder}, and PromptAgent \citep{wang2023promptagent}. Multi-agent frameworks like EvoAgent \citep{yuan2024evoagent}, which utilizes evolutionary algorithms to automatically generate and optimize multiple specialized agents with diverse settings and roles; MASS \citep{zhou2025mass}, which optimizes individual role prompts alongside refining inter-agent communication; and AgentVerse \citep{chen2023agentverse} and AutoAgents \citep{chen2023autoagents}, which dynamically synthesize and coordinate teams of expert roles, validate a critical insight: the \textit{identity} of the agents is as important as their interaction topology. 
+However, this specialization is often stateless, and the focus remains on generating an optimal team for a single task. In contrast, \textsc{ASpec}'s Discovery process generates persistent specialists whose structures are specifically designed to be retained and cultivated over time rather than generated for transient collaboration or discarded after a single optimization run.
+
+Another stream of research in self-evolving agents is expertise cultivation, focused on endowing agents with non-parametric state (memory and experience) that persists beyond a single task interaction. Such mechanisms are embodied by works like Reflexion \citep{shinn2023reflexion}, which allows agents to record natural-language critiques of their past actions in episodic memory to guide future behavior and avoid recurring mistakes, and Self-Refine \citep{madaan2023self}, which employs a continuous iterative refinement loop where the agent critiques and revises its initial outputs. Furthermore, ExpeL \citep{zhao2024expel} processes past trajectories to generate insights and rules to guide further interactions, AutoGuide \citep{fu2024autoguide} automatically generates context-aware guidelines from offline experiences, facilitating the provision of relevant knowledge for active decision-making processes, while Agent Workflow Memory \citep{wang2024agentworkflowmem} records common subtask sequences that can be retrieved and reused without re-planning from scratch. These prior works illustrate how experiential knowledge can be accumulated and generalized into long-term competence.  
+
+While memory systems and reflection mechanisms exist, \textsc{ASpec} proposes a systematic, two-stage lifecycle framework where the Cultivation phase is explicitly linked to the output of the Discovery phase. This linkage ensures that the stateful expertise (memory/reflections) is accumulated within the designated, persistent specialist archetypes, facilitating the emergence of role-specific expertise.
+
+\section{Preliminaries}
+\label{sec:components}
+\begin{figure}[h]
+    \makebox[\textwidth][c]{%
+      \includegraphics[width=\textwidth]{components_drawio.pdf}%
+    }
+    \caption{The three main components of \textsc{ASpec}.}
+    \label{fig:components}
+\end{figure}
+
+\textsc{ASpec} can be framed as a Hierarchical Reinforcement Learning (\textsc{HRL}) methodology consisting of a low-level generative process for architectural redesign and agentic operator pool evolution, as well as a lightweight, high-level policy that learns \textit{when} to invoke this process efficiently. We formally define these components below, starting with the modular units they operate upon: agentic operators.
+
+\paragraph{Definition (Agentic Operator).} Following MaAS \citep{zhang2025multi}, we define an agentic operator $O$ as a tuple $O = ( \mathcal{M}, \mathcal{P}, \{\mathcal{T}_i\}_{i=1}^n)$ where $\mathcal{M} \in \mathbb{M}$ denotes the LLM backbone, $\mathcal{P} \in \mathbb{P}$ denotes the prompt, and $\{\mathcal{T}_i\} \subseteq \mathbb{T}$ denotes the available tools. A multi-agent system is then represented as a directed acyclic graph \(\mathcal{G} = \{V,E\}\) where each vertex \(v \in V\) represents an instance of an agentic operator and each edge \(e \in E\) defines the connection between two operators. 
+
+To facilitate the evolutionary process at the heart of our methodology, we structure the operator pool \(\mathbb{O}_t\) into two functionally distinct sets. First, the base operators (\(\mathbb{O}_\text{base}\)), a static set of foundational, stateless operators consisting of extensible single-/multi-agent systems, for instance Chain-of-Thought \citep{wei2022chain} or LLM-Debate \citep{du2023improving}. Second, the specialist operators (\(\mathbb{O}_\text{spec}\)), a dynamic set of operators derived from base operators. 
+
+A specialist \(O_\text{i}^{S} \in \mathbb{O}_\text{spec}\) extends a base operator \(O_\text{i} \in \mathbb{O}_\text{base}\) with a learned identity and a persistent memory while inheriting its foundational reasoning structure (e.g., "think step-by-step"). It is a tuple \(O_\text{i}^{S} = (O_i, \mathcal{P}_s, M) \) where \(\mathcal{P}_s\) is a specialized prompt and $M$ is a persistent, experience-driven memory module. We decompose \(\mathcal{P}_s\) into an \textbf{identity}, which is a rich descriptor of who the agent is \citep{xu2023expertprompting}, and a set of \textbf{directives}, which are methodological principles for the agent's thought process, allowing for a rich and diverse "genetic" space of reasoning approaches \citep{naik2023diversity}.
+
+
+\paragraph{Definition (Architect).} The architect is the low-level generative component responsible for evolving the operator pool and redesigning the multi-agent architecture, implemented as an in-context learning LLM that operates via a multi-turn iterative reasoning process. We provide the prompt in Appendix \ref{app:architect_prompt} and give an example of its reasoning in Appendix \ref{app:architect_reasoning}. Functionally, given a query \(q_t\), the Architect is a process \(f_{\mathbb{A}}\) that maps a rich contextual input to a new system configuration
+\begin{equation}
+\label{eq:architect_def}
+    f_{\mathbb{A}} ( q_t, \mathcal{H}_{t-m:t-1}, \mathbb{O}_{t-1}, \mathcal{G}_{t-1} ) \to (\mathcal{G}_t, \mathbb{O}_t)
+\end{equation}
+
+where \(\mathcal{H}_{t-m:t-1}\) is a sliding window of the past $m$ experiences including the executed architectures and performance outcomes; \(\mathbb{O}_{t-1}\) is the previous operator pool; and \(\mathcal{G}_{t-1}\) is the current architecture. Its objective is to find an architecture that maximizes the immediate cost-aware utility while being general enough to be potentially retained for future tasks. We define this value in terms of the utility with respect to the oracle \(a_t\), \(U_t = U(\mathcal{G}_t;q_t,a_t)\), and the total costs of all API LLM calls, \(C_t(\mathcal{G}_t)\).
+
+\begin{equation}
+    \label{eq:arch_objective}
+    \mathcal{G}_t^* = \arg \max_{\mathcal{G}_i \in \mathcal{G}} \mathbb{E} \left[ U_t - \lambda C_t(\mathcal{G}_t) + V_{\pi_\theta}(s_{t+1}) \right]
+\end{equation}
+
+where \(V_{\pi_\theta}(s_{t+1}) \) is the expected future value given the next state, formally defined in Equation \ref{eq:mdp_state}. While this generative process enables adaptation, by continuously rebuilding the architecture, the system potentially forgoes the chance for the active specialists to deepen their expertise on the novel task. Additionally, and perhaps even more importantly, the Architect's invocation is computationally expensive and poses a practical challenge at scale. To address the trade-off between adaptability, experiential learning, and cost-efficiency, we propose the meta-controller, a lightweight gating module that decides when to escalate to the Architect during deployment.
+
+\label{sec:online_training}
+\begin{figure}[t!]
+    \makebox[\textwidth][c]{%
+      \includegraphics[width=\textwidth]{arch_drawio.pdf}%
+    }
+    \caption{The online adaptation loop of \textsc{ASpec}.}
+    \label{fig:architecture}
+\end{figure}
+
+
+\paragraph{Definition (Meta-Controller).} The meta-controller is a neural policy \(\pi_{\theta}(a_t|s_t)\) that makes a single high-level decision: retain the current agent architecture, or resample a new one for a given query. Its action space is discrete, that is, $\mathcal{A} = \{a_\text{RETAIN}, a_\text{RESAMPLE}\}$. We formulate the training of the meta-controller as a Markov Decision Process (MDP), where the action taken at step \(t-1\) determines the architecture \(\mathcal{G}_{t-1}\) available in the subsequent state \(s_t\). The state $s_t$ at timestep $t$ is therefore:
+\begin{equation}
+\label{eq:mdp_state}
+    s_t = (e_q(q_t), e_g(\mathcal{G}_{t-1}))
+\end{equation}
+where $e_q(\cdot)$ and $e_g(\cdot)$ are fixed-length query and textual graph embeddings, embedded with MiniLM \citep{wang2020minilm}. While previous work \citep{zhang2024gdesigner} has used Graph Neural Networks (GNNs) to encode architectural topology,  we opt for a simpler, query-aware semantic representation. Our \textit{'bag-of-operators'} approach represents an architecture as an attention-weighted average of the embeddings of its constituent operators. The attention weights are computed based on the similarity between each operator and the input query embedding \(e_q(q_t)\). This method, inspired by \citet{vaswani2017attention}, yields a dynamic, query-contextual state representation that captures \textit{what} an architecture can do for a specific query without the significant training overhead of a dedicated GNN.
+
+The explicit objective for the meta-controller is to maximize the expected discounted sum of future rewards over a stream of queries:
+\begin{equation}
+    \label{eq:meta_objective}
+    \pi_\theta ^* = \arg \max_{\pi_\theta} \mathbb{E} \left[ \sum_{t=0}^{t=T} \gamma^t \cdot R_t(s_t, a_t) \right], \hspace{1em} \gamma \in [0,1)
+\end{equation}
+
+
+
+
+\section{Methodology}
+\label{methods}
+\begin{figure}[H]
+    \makebox[\textwidth][c]{%
+      \includegraphics[width=\textwidth]{spec_drawio.pdf}%
+    }
+    \caption{The offline automated specialist discovery and cultivation process.}
+    \label{fig:spec_search}
+\end{figure}
+
+Our framework's methodology is twofold. First, an end-to-end offline process discovers stateful specialists and trains the meta-controller (Figure \ref{fig:spec_search} and Algorithm \ref{alg:offline_search}). These components are then deployed in an online adaptation loop to handle unseen queries, with the operator pool fixed (Figure \ref{fig:architecture} and Algorithm \ref{alg:online_workflow}). To explore the space of possible specialists and identify a set of specialist operators \(\mathbb{O_\text{spec}}\) such that the resulting operator pool is (1) high-performing, (2) diverse, and (3) specialized to the problem task domain \textbf{without human intervention}, we split the learning objectives into two distinct phases: an initial exploratory specialist discovery phase to address (1) and (2), and a focused, experience-gathering cultivation phase to address (3), mirroring how a human expert might first learn broad concepts and then deepen their knowledge through practice.
+
+\subsection{Specialist Discovery}
+\label{subsec:spec_search}
+
+Depicted as stages \textbf{I} and \textbf{II} in Figure \ref{fig:spec_search}, during the specialist discovery phase, the Architect iteratively evolves a pool of specialists using its full action space (detailed in Appendix \ref{app:architect_prompt}). We formalize the action space using the notions of creation and crossover.
+
+\paragraph{Creation.} Let  $\mathbb{O}_\text{spec}^{(1)}$ be the pool of specialist operators during the specialist discovery phase and $\mathbb{O}_\text{spec}^{(2)}$ be the pool of specialist operators during the cultivation phase. For a query \(q_t\), the Architect can propose a specialist \(O_i^S \in \mathbb{O}_\text{spec}^{(1)}\) derived from a base operator \(O_i\) by instantiating its prompt with a structured identity-directive pair. The creation process employs multi-variant synthesis with LLM adjudication. In practice, we overgenerate $S=3$ candidate identity-directive variants with diverse pairs, then judge variants via an LLM-guided evaluation process that considers the reasoning methodology and domain coverage. We provide the prompts for the Judge in Appendix \ref{app:judge}.
+
+To prevent early fragmentation, we enforce a dynamic pool size limit of $2 \times k$, where $k$ is the maximum size of the final specialist selection pool. If the pool exceeds this limit, the Architect is restricted from creating new specialists and must combine or prune existing agents, forcing the consolidation of narrow capabilities. 
+
+\paragraph{Crossover.} Given parent specialist operators \(O_1^S\) and \(O_2^S\), the Architect can synthesize a child specialist \(O_c^S\), similarly by using variant generation. This similarly triggers a multi-variant synthesis process with LLM adjudication that combines both parents' specialist identities and directives, preserving their expertise. We provide the prompts used to perform this synthesis in Appendix \ref{app:spec_synthesis}. 
+
+\paragraph{Selection.} At the end of the specialist discovery phase, we select the top-$k$ specialists for cultivation by solving a multi-objective optimization problem that balances performance and diversity:
+
+\begin{figure}[H]
+    \centering
+    \makebox[\textwidth][c]{%
+      \includegraphics[width=0.90\textwidth]{lineage_spec_drawio.pdf}%
+    }
+    \caption{Case study of a physics specialist discovered on GPQA. The crossover action allows us to trace back the agent's "lineage" and identify aspects of its prompt that have been inherited from its ancestors. The full final prompt and more examples of its memory entries are in Appendix \ref{app:specialist_example}.}
+    \label{fig:spec_example}
+\end{figure}
+
+
+\vspace{-2\baselineskip} 
+\begin{equation}
+\label{eq:spec_selection}
+    \begin{gathered}
+        \mathbb{O}_\text{spec}^{(2)} = \arg\max_{|\mathbb{\mathbb{O}_\text{spec}}| \leq k} \left\{ \sum_{O_i^S \in \mathbb{O}_\text{spec}^{(1)}} p(O_i^S) + \text{Diversity}(\mathbb{\mathbb{O}_\text{spec}}) \right\}   \\
+         \text{Diversity}(\mathbb{O}_\text{spec}^{(2)}) = \sum_{j=1}^{ k} \max_{O_i^S \in C_j \cap \mathbb{\mathbb{O}_\text{spec}}} p(O_i^S)    
+    \end{gathered}
+\end{equation}
+\vspace{-0.5\baselineskip} 
+
+
+where $p(O_i^S)$ represents the average performance of specialist $O_i^S$ and $C_j$ is the $j$-th cluster in embedding space obtained via K-means clustering on specialist operator embeddings. 
+
+\subsection{Specialist Cultivation}
+\label{subsec:spec_culti}
+Depicted as stage \textbf{III} of Figure \ref{fig:spec_search}, during the specialist cultivation phase, the selected top-$k$ discovered specialists deepen their domain expertise through post-execution reflection on a training corpus. The cultivation process is applied independently to each specialist, resulting in distinct, specialized memories, as can be seen in Figure \ref{fig:spec_example}. For each specialist $O_i^S$ with accumulated memory $M_i$, we implement a semantic retrieval mechanism \citep{lewis2020retrieval} to inject relevant experience during tasks. Given a query $q_t$, we partition the memory into structured chunks, then inject the most relevant chunks as contextual knowledge during specialist execution.
+
+
+\section{Results}
+\paragraph{Benchmarks \& Baselines.} We evaluate \textsc{ASpec} on five public benchmarks across three domains: \textbf{math reasoning} with MATH \citep{hendrycks2021measuring}, \textbf{question answering} with MMLU \citep{hendrycks2021measuring} and GPQA \citep{rein2024gpqa}, \textbf{code generation} with HumanEval \citep{chen2021evaluating} and SciCode \citep{tian2024scicode}. In particular, GPQA and SciCode are expert-level QA and coding benchmarks respectively. Further details on the dataset statistics are in Appendix \ref{app:dataset_stats}. 
+
+We select 13 representative baselines across \textbf{(1) hand-designed single agents}, in particular Chain-of-Thought \citep{wei2022chain}, Self-Refine \citep{madaan2023self}, Self-Consistency \citep{wang2022self}, Reflexion \citep{shinn2023reflexion}; \textbf{(2) hand-designed multi-agents}, in particular LLM-Debate \citep{du2023improving}, DyLAN \citep{liu2023dynamic}; \textbf{(3) automated agent specialisation methods} with Role Assignment \citep{xu2023expertprompting}, AutoAgents \citep{chen2023autoagents}, EvoAgent \citep{yuan2024evoagent}; and \textbf{(4) autonomous agent design frameworks}, including query-level MaAS \citep{zhang2025multi}, and task-level AFlow \citep{zhang2024aflow} and ADAS \citep{hu2024automated}. Details for the baseline setups are in Appendix \ref{app:baselines}.
+
+\paragraph{Implementation.} We select Gemini 2.0 Flash to be the standard execution model across all methods, alongside GPT-4o-mini and Llama 3.3 70B Instruct in Figure \ref{fig:transf}. We set the size of the sliding window in Equation \ref{eq:architect_def} to be \(m = 10\) and the maximum number of specialists in Equation \ref{eq:spec_selection} to be \(k=5\). 
+
+\begin{table}[h]
+\caption{Performance comparison across methods. We use Gemini 2.0 Flash with a temperature of $T=0.3$ consistently across all methods. Best results are in \textbf{bold}, second-best are \underline{underlined}.}
+\label{tab:individuals_breakdown_polished}
+\centering
+\scriptsize
+\begin{tabular}{l cccccc c}
+\toprule
+\textbf{Method} & \makecell{\textbf{MATH}} & \makecell{\textbf{HumanEval}} & \makecell{\textbf{MMLU}} & \makecell{\textbf{GPQA}} & \makecell{\textbf{SciCode (SP)}} & \makecell{\textbf{Average}} \\
+\midrule
+Vanilla & 73.2 & 87.8 & 86.0 & 56.3 & 24.0 & 65.3 \\
+\midrule
+CoT \citep{wei2022chain} & 74.5 & 90.4& 88.2 & 58.2 & 24.3 & 65.5 \\
+CoT-SC \citep{wang2022self} & 75.1 & 91.2 & 88.8 & 57.1 & 25.2  & 67.5 \\
+Self-Refine \citep{madaan2023self} & 74.8 & 91.3 & 88.5 & 57.4 & 24.6 & 67.3 \\
+Reflexion \citep{shinn2023reflexion} & 73.5 & 86.8 & 88.5 & 57.1 & 25.1 & 66.2 \\
+\midrule
+LLM-Debate \citep{du2023improving} & 74.4 & 85.5 & 87.1 & 59.7 & 24.0 & 66.1 \\
+DyLAN \citep{liu2023dynamic} & 75.4 & 89.3 & 88.9 & 61.3 & 25.2 & 68.0 \\
+\midrule
+Role Assignment \citep{xu2023expertprompting} & 72.4 & 91.2 & 89.5 & 57.4 & 23.5 & 67.6 \\
+AutoAgents \citep{chen2023autoagents} & 73.4 & 88.0 & 85.3 & 56.8 & 24.8 & 65.7 \\
+EvoAgent \citep{yuan2024evoagent} & 75.9 & 90.2 & 88.3 & \underline{61.5} & 24.8 & 68.1 \\
+\midrule
+ADAS \citep{hu2024automated} & 74.5 & 82.9 & \underline{90.0} & 58.2 & 24.8 & 66.2 \\
+AFlow \citep{zhang2024aflow} & \underline{76.5} & 89.3 & \textbf{90.5} & 61.3 & 24.3 & \underline{68.4} \\
+MaAS \citep{zhang2025multi} & 74.4 & \textbf{91.6} & 87.3 & 57.8 & 25.6 & 67.4 \\
+\midrule
+\textbf{\textsc{ASpec}} & \textbf{77.3} & \underline{91.4} & \underline{90.0} & \textbf{62.8} & \textbf{26.6} & \textbf{69.6} \\
+\bottomrule
+
+\end{tabular}%
+\end{table}
+
+
+\begin{figure}[h]
+\centering
+\caption{Cross-model (left) and cross-benchmark (right) transferability results. We evaluate both the full \textsc{ASpec} and \textsc{ASpec} with \textit{only} specialists trained on a different benchmark.}
+\label{fig:transf}
+\begin{minipage}[c]{0.55\textwidth}
+    \centering
+    \scriptsize
+   \begin{tabular}{l ccc} 
+    \toprule
+    \textbf{LLM Backbone} & \textbf{\makecell{GPQA}} & 
+    \textbf{\makecell{MATH}} & \textbf{\makecell{HumanEval}} \\
+    \midrule
+    Gemini 2.0 Flash  & 56.3 & 73.2  & 87.8 \\
+    \textsc{ASpec} (Gemini 2.0 Flash) & 62.5 & 77.3 & 91.4 \\
+    \midrule
+    GPT-4o-mini  & 38.2 & 61.8  & 86.6 \\
+    \textsc{ASpec} (GPT-4o-mini) & 43.8 & 64.7 & 90.9 \\
+    \midrule
+    Llama 3.3 70B Instruct & 45.6 & 51.3 & 88.5 \\
+    \textsc{ASpec} (Llama 3.3 70B Instruct) & 53.5 & 54.8 & 90.8 \\
+    \bottomrule
+    \end{tabular}
+\end{minipage}%
+\begin{minipage}[c]{0.45\textwidth}
+\centering
+\tiny
+\begin{tikzpicture}
+    \begin{axis}[
+        width=\linewidth,
+        height=3.2cm, 
+        title={\textbf{ASpec}},
+        title style={font=\tiny, yshift=1ex}, 
+        ybar,
+        bar width=7pt, %
+        enlarge x limits=0.4, 
+        ylabel={Score},
+        ylabel style={font=\tiny},
+        symbolic x coords={HumanEval, MMLU}, %
+        xtick=data,
+        xticklabel style={font=\tiny},
+        yticklabel style={font=\tiny},
+        ymin=60, ymax=95, 
+        legend style={
+            at={(0.5, 1.1)}, %
+            anchor=south,
+            legend columns=2, %
+            font=\tiny,
+            /tikz/every even column/.append style={column sep=0.1em}
+        }
+    ]
+    \addplot coordinates {(HumanEval, 90.6) (MMLU, 89.2)};
+    \addplot coordinates {(HumanEval, 90.9) (MMLU, 89.8)};
+    \addplot coordinates {(HumanEval, 89.3 ) (MMLU, 88.2)};
+    \addplot coordinates {(HumanEval, 90.2) (MMLU, 89.8)};
+
+    \legend{Full - Train:GPQA, OnlySpec - Train:GPQA, Full - Train:MATH, OnlySpec - Train:MATH}
+    \end{axis}
+
+
+\end{tikzpicture}
+\end{minipage}
+\end{figure}
+
+\paragraph{Performance Analysis.} The results from Table \ref{tab:individuals_breakdown_polished} demonstrate that \textsc{ASpec} can consistently match or outperform existing hand-crafted or automated agentic systems across mathematical reasoning, question answering, and coding. Its benefits are most pronounced on GPQA, where it achieves a score of \(62.8\%\). This represents a substantial \(6.5\%\) improvement over the vanilla Gemini 2.0 Flash model. Furthermore, \textsc{ASpec} surpasses the leading hand-designed agent (LLM-Debate) by \(3.1\%\), the top autonomous agent framework (AFlow) by \(1.5\%\), and the best automated agent specialisation method (EvoAgent) by \(1.3\%\). \textsc{ASpec} also leads on SciCode, a benchmark composed of realistic scientific research problems that are decomposed into sequential subproblems. We note that the "retain-then-escalate" structure allows retained specialists to build upon context and learned knowledge from previous steps, which is crucial for success in multi-part scientific coding. 
+
+This naturally leads to the question of whether specialists trained on specific domains can be transferred to other domains. To this end, Figure \ref{fig:transf} shows that the performance gains from the \textsc{ASpec} methodology are robustly transferable across different models and benchmarks. In the cross-benchmark analysis (Figure \ref{fig:transf}, right), we compare the standard configuration against an ablation labeled \textsc{OnlySpec}, where the operator pool is restricted exclusively to specialists trained on a different source domain (e.g., utilizing MATH-trained specialists for HumanEval), and find that the \textsc{OnlySpec} configuration matches or even slightly exceeds the performance of the full system. 
+
+We attribute this to the cultivation of "T-shaped" reasoning strategies for specialists (Appendix \ref{app:judge}); furthermore, restricting the pool prevents the Architect from defaulting to "safe" but less capable generalist base operators, effectively forcing the utilization of these expert reasoning archetypes. 
+
+
+\begin{table}[H]
+\caption{Efficiency comparison across methods on the GPQA benchmark.}
+\label{tab:costs_and_timings}
+\centering
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{l ccc cccc}
+\toprule
+& \multicolumn{3}{c}{\textbf{Training}} & \multicolumn{3}{c}{\textbf{Inference}} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-8}
+\textbf{Method} & \makecell{Total \\ tokens} & \makecell{Total costs \\ (USD)} & \makecell{Wall clock \\ (min)} & \makecell{Total \\ tokens} & \makecell{Total costs \\ (USD)} & \makecell{Wall clock \\ (min)} & \makecell{Accuracy \\ (\%)} \\
+\midrule
+CoT-SC \citep{wang2022self}  & -- & -- & -- & 3,757,527 & \textbf{0.85} & 58 & 57.1 \\
+LLM-Debate \citep{du2023improving}      & -- & -- & -- & 4,081,114 & 0.94 & \underline{50} & 59.7 \\
+EvoAgent \citep{yuan2024evoagent} & -- & -- & -- & 7,080,338 & 1.45 & 75 & \underline{61.8} \\
+\midrule
+AFlow \citep{zhang2024aflow}  & 102,012,408 & 20.14 & 257 & 9,997,154 & 1.58 & \textbf{45} & 61.3 \\
+MaAS \citep{zhang2025multi} & 11,600,690 & 3.43 & 139 & 11,015,542 & 2.07 & 93 & 57.8 \\
+\midrule
+\textbf{\textsc{ASpec}} & \textbf{2,395,636} & \textbf{1.38} & \textbf{53} & \textbf{3,204,549} & \underline{0.88} & 63 & \textbf{62.8} \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+
+\paragraph{Efficiency Analysis.} Table \ref{tab:costs_and_timings} demonstrates that \textsc{ASpec} is cost-efficient across both training and inference. In particular, running the offline training process on GPQA incurred only a total cost of \(1.38\) USD. We find that once a strong specialist pool has been found, the Architect often prefers lean architectures utilizing those specialists. As shown in Table \ref{tab:ablation_study}, removing specialists causes costs to increase significantly -- the Architect becomes under-confident in its generalist pool and samples highly complex, but redundant multi-agent architectures in an attempt to compensate.
+
+
+
+\section{Discussion}
+\subsection{Ablations of System Components and Control Policies}
+
+\begin{figure}[h]
+\centering
+
+\caption{Ablation study of our framework's components (left) and sensitivity to the maximum number of specialists \(k\) and sliding window length \(m\) (right) on GPQA. For sensitivity plots, the central line shows the mean performance over 4 runs.}
+
+\begin{minipage}[c]{0.4\textwidth}
+    \centering
+    \label{tab:ablation_study}
+    \renewcommand{\arraystretch}{1.1} 
+    \scriptsize
+    \begin{tabular}{@{}l cc@{}} 
+    \toprule
+    \textbf{Method} & \textbf{\makecell{Accuracy\\(\%)}} & \textbf{\makecell{Total cost\\(USD)}} \\
+    \midrule
+    \multicolumn{3}{c}{\textit{Control Policy Alternatives}} \\
+    \midrule
+    \textsc{ASpec} w/ random policy & 58.3 & 1.05 \\
+    \textsc{ASpec} w/ \(h=0.2\) & 59.6 & 1.21 \\
+    \textsc{ASpec} w/ LLM-as-gate & 62.5 & 3.74 \\
+    (Gemini 2.0 Flash) \\
+    \midrule
+    \multicolumn{3}{c}{\textit{System Components}} \\
+    \midrule
+    \textsc{ASpec} w/o specialist operators  & 57.4  & 2.26 \\
+    \textsc{ASpec} w/o base operators & 61.3 & 0.48 \\
+    \textsc{ASpec} w/o meta-controller & 62.7  &2.0 \\
+    \textsc{ASpec} w/o Architect & 61.0 & 1.28 \\
+    \textsc{ASpec} w/o specialist memory & 61.4 & 0.94 \\
+    \midrule
+    \textbf{\textsc{ASpec}} & 62.8& 0.88 \\
+    \bottomrule
+    \end{tabular}
+\end{minipage}
+\hfill
+\begin{minipage}[c]{0.5\textwidth}
+    \centering
+    \begin{tikzpicture}
+        \pgfplotsset{
+            width=\linewidth,
+            height=3.8cm,  %
+            xlabel={Maximum number of specialists ($k$)},
+            xlabel style={font=\small},
+            xmin=0, xmax=11,
+            legend pos=north west,
+            legend style={draw=black, fill=white, legend cell align=left, font=\tiny},
+        }
+        \begin{axis}[
+            axis y line*=left, ymin=52, ymax=68, 
+        ]
+        \addplot[draw=none, name path=accuracy_upper, forget plot] coordinates {(1, 59.5) (3, 61.4) (5, 64.0) (7, 62.6) (10, 61.7)};
+        \addplot[draw=none, name path=accuracy_lower, forget plot] coordinates {(1, 57.9) (3, 58.7) (5, 61.4) (7, 60.3) (10, 60.2)};
+        \addplot[fill=pastelblue, fill opacity=0.3, forget plot] fill between[of=accuracy_upper and accuracy_lower];
+        \addplot[color=pastelblue, mark=*, thick, forget plot, mark size=1pt] coordinates {(1, 58.8) (3, 60.4) (5, 62.8) (7, 61.4) (10, 60.9)};
+        \addlegendimage{color=pastelblue, mark=*, thick} \addlegendentry{Accuracy}
+        \addlegendimage{color=pastelred, mark=triangle*, thick, dashed} \addlegendentry{Total cost}
+        \end{axis}
+        \begin{axis}[
+            axis y line*=right, axis x line=none, ymin=0.4, ymax=2.7,
+        ]
+        \addplot[draw=none, name path=cost_upper, forget plot] coordinates {(1, 2.134) (3, 1.487) (5, 1.02) (7, 0.923) (10, 1.059)};
+        \addplot[draw=none, name path=cost_lower, forget plot] coordinates {(1, 1.704) (3, 0.987) (5, 0.58) (7, 0.687) (10, 0.679)};
+        \addplot[fill=pastelred, fill opacity=0.3, forget plot] fill between[of=cost_upper and cost_lower];
+        \addplot[color=pastelred, mark=triangle*, thick, dashed, forget plot, mark size=2pt] coordinates {(1, 1.904) (3, 1.287) (5, 0.76) (7, 0.807) (10, 0.859)};
+        \end{axis}
+    \end{tikzpicture}
+    
+    \begin{tikzpicture}
+        \pgfplotsset{
+            width=\linewidth,
+            height=3.8cm, %
+            xlabel={Sliding window length ($m$)},
+            xlabel style={font=\small},
+            xmin=0, xmax=21,
+            legend pos=north west,
+            legend style={draw=black, fill=white, legend cell align=left, font=\scriptsize},
+        }
+        \begin{axis}[
+            axis y line*=left, ymin=56, ymax=64,
+        ]
+        \addplot[draw=none, name path=accuracy_upper_m, forget plot] coordinates {(1, 57.8) (5, 59.1) (10, 63.2) (15, 62.7) (20, 62.3)};
+        \addplot[draw=none, name path=accuracy_lower_m, forget plot] coordinates {(1, 56.4) (5, 58.0) (10, 61.6) (15, 61.6) (20, 61.0)};
+        \addplot[fill=pastelblue, fill opacity=0.3, forget plot] fill between[of=accuracy_upper_m and accuracy_lower_m];
+        \addplot[color=pastelblue, mark=*, thick, forget plot, mark size=1pt] coordinates {(1, 57.0) (5, 58.5) (10, 62.5) (15, 62.2) (20, 61.6)};
+        \addlegendimage{color=pastelblue, mark=*, thick} \addlegendentry{Accuracy}
+        \addlegendimage{color=pastelred, mark=triangle*, thick, dashed} \addlegendentry{Total cost}
+        \end{axis}
+        \begin{axis}[
+            axis y line*=right, axis x line=none, ymin=0.6, ymax=1.8,
+        ]
+        \addplot[draw=none, name path=cost_upper_m, forget plot] coordinates {(1, 1.31) (5, 1.141) (10, 0.95) (15, 1.027) (20, 1.11)};
+        \addplot[draw=none, name path=cost_lower_m, forget plot] coordinates {(1, 1.01) (5, 0.951) (10, 0.82) (15, 0.907) (20, 0.91)};
+        \addplot[fill=pastelred, fill opacity=0.3, forget plot] fill between[of=cost_upper_m and cost_lower_m];
+        \addplot[color=pastelred, mark=triangle*, thick, dashed, forget plot, mark size=2pt] coordinates {(1, 1.15) (5, 1.061) (10, 0.88) (15, 0.97) (20, 1.01)};
+        \end{axis}
+    \end{tikzpicture}
+\end{minipage}
+\label{fig:ablation_and_sensitivity}
+\end{figure}
+
+We perform an ablation study on five key components: \textbf{(I) without specialist operators}, with the operator pool restricted to $\mathbb{O} = \mathbb{O_{\text{base}}}$ for all $q_t$; \textbf{(II) without base operators}, with $\mathbb{O} = \mathbb{O_{\text{spec}}}$ for all $q_t$; \textbf{(III) without meta-controller}, which is akin to always resampling; and \textbf{(IV) without architect}, in which we construct a static architecture consisting of all specialist operators in \(\mathbb{O}_\text{spec}\), and \textbf{(V) without specialist memory}. Furthermore, we perform additional experiments on a suite of alternative control policies. These include a random "coin-flip", a cosine similarity heuristic (resample if the cosine similarity of \(q_t\) and \(\mathcal{G}_{t-1}\) is below a threshold of \(h=0.2\)), and LLM-as-gate.
+
+As seen in Figure \ref{fig:ablation_and_sensitivity} (left), removing specialists causes a 5.4\% drop in performance from 62.8\% to 57.4\% and a near tripling of the total cost from \(0.88\) USD to \(2.26\) USD. Additionally, removing base operators, but keeping specialists, resulted in a lesser \(1.5\%\) drop. This demonstrates that the expert specialists are the primary drivers of both performance and efficiency. Removing the meta-controller results in a comparable performance of \(62.7\%\) at a \(\sim 2.3\) times increase in total costs. We note that even in this mode, the Architect can learn to proxy the "retain" action by re-sampling \(\mathcal{G}_{t-1}\), but this invocation process is fundamentally less efficient that the explicit "retain" decision made by the controller. Figure \ref{fig:ablation_and_sensitivity} (left) further reveals that the alternative control policies yield significantly lower accuracy at \(58.3\%\) compared to the meta-controller's \(62.8\%\), and while the LLM-as-gate policy achieves a comparatively high accuracy \(62.5\%\), it does so at a substantially higher cost, \(\sim 4.25\) times that of the meta-controller. 
+
+\subsection{Sensitivity Analyses}
+\label{subsec:sensitivity}
+We analyze the sensitivity of \textsc{ASpec} to two main parameters: the maximum size of the specialist pool, \(k\), from Equation \ref{eq:spec_selection}, and the length of the sliding window from Equation \ref{eq:architect_def}, \(m\). As shown in Figure \ref{fig:ablation_and_sensitivity}, setting \(k\) at both extremities reduced performance, suggesting a light Goldilocks-like effect on GPQA. At $k = 1$, the system achieves $58.8\%$, performing similarly to the "\textsc{ASpec} w/o specialist operators" ablation as seen in Table \ref{tab:ablation_study}, indicating that a single specialist lacks the domain coverage to outperform generalist operators. Conversely, at $k = 10$, performance drops to $60.9\%$, which aligns closely with the "\textsc{ASpec} w/o specialist memory" ablation. We attribute this to experience fragmentation: with a larger pool size, individual specialists are selected less frequently by the Architect during the Cultivation phase. Since memory is only acquired upon execution, these "sparse" specialists fail to accumulate the dense history required to form deep expertise. 
+
+We hypothesize that this is not necessarily a hard limitation and the Goldilocks distribution might depend more on the depth of an average specialist's experience and exposure to problems. 
+
+
+\subsection{Convergence of the Specialist Discovery Process}
+
+\begin{figure}[h] %
+    \centering
+    \caption{Visualization of discovered specialist operator embeddings on a "narrow" domain benchmark (GPQA) and on a "broad" domain benchmark (MMLU).}
+    \label{fig:spec_viz} 
+    \resizebox{0.8\textwidth}{!}{%
+        \begin{minipage}{0.5\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{gpqa_specialist_clusters.png}
+        \end{minipage}%
+        \begin{minipage}{0.5\textwidth}
+            \centering
+            
+            \includegraphics[width=\linewidth]{mmlu_specialist_clusters.png}
+        \end{minipage}
+    }
+\end{figure}
+
+To determine whether \textsc{ASpec}'s discovery process reliably finds similar expert archetypes, we embedded the prompts of discovered specialists across 5 independent trials and plotted them in Figure \ref{fig:spec_viz}. We find that there is strong convergence on GPQA (Figure \ref{fig:spec_viz}, left), with different runs independently discovering the same key roles (chemistry, biology, physics), demonstrating the robustness of the process for specialized domains. Conversely, on the broad-domain MMLU benchmark (Figure \ref{fig:spec_viz}, right), the process shows some divergence, exploring different but viable team compositions to cover the vast topic space. Even so, we find pockets of convergence in well-defined sub-domains like the physical sciences. Taken together, these results show that the \textsc{ASpec} discovery process adapts its convergence/divergence behavior based on the specificity of the target domain.
+
+
+\subsubsection{Rationality Analysis.}
+\label{rationality}
+\begin{figure}[h] %
+    \centering
+    \caption{Side-by-side comparison of confusion matrices for GPQA (left) and MMLU (right).}
+    \label{fig:confusion_matrices} 
+    \resizebox{0.8\textwidth}{!}{%
+        \begin{minipage}{0.5\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{gpqa_conf_matrix.png}
+        \end{minipage}%
+        \begin{minipage}{0.5\textwidth}
+            \centering
+            
+            \includegraphics[width=\linewidth]{mmlu_conf_matrix.png}
+        \end{minipage}
+    }
+\end{figure}
+
+We compare a learned meta-controller's decisions against the LLM-as-gate "oracle proxy" in Table \ref{tab:ablation_study}. On GPQA, the controller learns a pragmatic economic policy, where its high rate of "overconfident" disagreements with the perfectionist oracle reflects a deliberate trade-off for cost efficiency. On MMLU, this behavior persists, but instances of "wasteful caution" reveal the limitations of its lightweight state representation, leading to unnecessary resampling. 
+
+
+\section{Limitations \& Future Works}
+\label{future}
+A key future direction is the development of a rigorous theoretical framework to model the convergence properties of the specialist discovery process with respect to factors like domain breadth, potentially leading to principles for self-tuning the discovery process. Future work should also validate \textsc{ASpec}'s applicability in more diverse environments, particularly on complex, real-world software engineering tasks such as those in SWE-bench \citep{jimenez2023swe}. Intuitively, specialists discovered and cultivated on a specific repository could autonomously internalize its unique conventions and APIs, a promising avenue for automating repository-specific expertise without manually engineered rules. Finally, specialists may amplify training biases through memory cultivation, a risk that warrants further investigation and the development of mitigation strategies.
+
+While our lightweight meta-controller is crucial for efficiency, we identify its alignment with an "oracle proxy" LLM-as-gate policy as another critical area for improvement. The results of our ablation study on GPQA in Table \ref{tab:ablation_study} might be masking an underlying limitation: the meta-controller's decision-making process diverges from the oracle proxy's. This divergence can become a significant weakness when its lightweight state representation leads to errors such as unnecessary resampling or over-cautious retaining. The central challenge is to design a gating mechanism that achieves the decision-making fidelity of the LLM-as-gate oracle proxy while retaining the low computational overhead of a small, specialized policy.
+
+Finally, we observe that the interplay between the meta-controller’s policy, the Architect’s choices, and the specialists’ memory accumulation creates a complex, co-evolutionary dynamic. A conservative "Retain" policy concentrates experience into a smaller set of active architectures, potentially guiding those agents to develop broader, more resilient memories to cope with slightly mismatched queries. Conversely, a highly dynamic policy distributes experience more sparsely across the specialist pool. Furthermore, because the Architect conditions its decisions on recent history (sliding window), it may develop path-dependent preferences for certain teams that "suffice" even if they are not optimal, further influencing the distribution of experience. Future work could explicitly model this joint optimization to ensure the control policy and specialist cultivation are perfectly aligned. 
+
+\section{Conclusion}
+This paper introduced \textsc{ASpec}, a framework designed to bridge the gap between static, efficient agent workflows and adaptive, per-query optimizers. Our central contribution is a methodology for creating and managing stateful specialist agents that accumulate expertise over time, mirroring human learning. This is achieved through an automated lifecycle of evolutionary discovery and experiential cultivation, governed by a "retain-then-escalate" policy that ensures cost-effective adaptation. Our results on challenging scientific benchmarks such as GPQA suggest that this agent-centric approach can lead to substantial performance improvements without sacrificing efficiency. We believe this work presents a promising direction for autonomously creating agent systems that can develop deep expertise while retaining the flexibility to adapt to new challenges. \footnote{Large Language Models (LLMs) were used to assist in writing this paper.}
+\newpage
+
+\bibliographystyle{unsrtnat}
+\bibliography{iclr2026_conference}
+
+
+\clearpage
+\appendix
+
+\section{Case Study}
+\subsection{Meta-controller Decision-Making}
+\label{app:controller_probe}
+
+We provide a few examples of a trained meta-controller's decision-making process on GPQA. These include \(\textbf{(I) rational decisions}\), such as retaining or resampling sensibly, and \(\textbf{(II) irrational decisions}\), when the imperfect meta-controller chooses to retain a mismatching architecture or resample a matching architecture, thereby incurring expensive, unnecessary costs from the Architect call. 
+
+\subsubsection{Rational Decisions}
+
+
+
+\begin{lstlisting}[style=customxml]
+Query: "Determine which set of states mentioned below are only entangled states:
+(a) (1/`$\surd$`30)* (|00>+ 2i|01>`$-$` 3|10>`$-$` 4i|11>)
+(b) (1/5)* (|00>+ 2i|01>`$-$` 2|10>`$-$` 4i|11>)
+(c) (1/2)(|00>+ |01>+|10>`$-$` |11>)
+(d) (1/2)(|00>+ |01>-|10>`$-$` |11>)."
+
+Current architecture: [["CoT"], ["CoT_TheoreticalPhysics"]]
+Action taken: "RETAIN"
+Resulting architecture: [["CoT"], ["CoT_TheoreticalPhysics"]]
+Outcome: CORRECT
+\end{lstlisting}
+
+\begin{lstlisting}[style=customxml]
+Query: "Identify the missing reagents in the following reaction.
+(3r,5r,7r)-adamantane-1-carboxylic acid + A ---> (3r,5r,7r)-adamantane-1-carbonyl azide + B ---> (3s,5s,7s)-adamantan-1-amine."
+
+Current architecture: [["CoT"], ["CoT_TheoreticalPhysics"]]
+Action taken: "RESAMPLE"
+Resulting architecture: [["CoT_OrganicSpectroscopy"]]
+Outcome: CORRECT
+\end{lstlisting}
+
+\subsubsection{Irrational Decisions}
+
+\begin{lstlisting}[style=customxml]
+Query: "The Cope rearrangement is a chemical reaction where a 1,5-diene molecule undergoes rearrangement, resulting in a change in the positions of its carbon-carbon double bonds. This rearrangement can be initiated by heat or light and is valuable for creating complex organic compounds with changed structures. Select the major products from the following rearrangements [...]"
+
+Current architecture: [["CoT"], ["CoT_TheoreticalPhysics"]]
+Action taken: "RETAIN"
+Resulting architecture: [["CoT"], ["CoT_TheoreticalPhysics"]]
+Outcome: INCORRECT
+\end{lstlisting}
+
+\begin{lstlisting}[style=customxml]
+Problem index: 2
+Query: "Astronomers are searching for exoplanets around two stars with exactly the same masses. Using the RV method, they detected one planet around each star, both with masses similar to that of Neptune [...]
+
+The question is: How many times is the orbital period of planet #2 longer than that of planet #1?"
+
+Current architecture: [["CoT_TheoreticalPhysics"]]
+Action taken: "RESAMPLE"
+Resulting architecture: [["CoT_TheoreticalPhysics"]]
+Outcome: CORRECT
+\end{lstlisting}
+
+\subsection{Architect Reasoning Process}
+\label{app:architect_reasoning}
+
+\begin{tcolorbox}[
+    breakable,
+    title={Figure 9: A three-turn reasoning process of the Architect.},
+    label={fig:architect_reasoning_box}, %
+    colback=gray!5, %
+    colframe=gray!75, %
+    fonttitle=\bfseries,
+    arc=2mm, %
+    boxrule=1pt
+]
+    
+    \paragraph{Initial State}
+    During the discovery phase, the system receives a query that asks it to solve a complex quantum mechanics problem involving both wave function normalization and energy eigenvalue calculations. The current architecture is \texttt{[[CoT]]}. The operator pool contains basic operators and a \texttt{CoT\_Astrophysics} specialist, but lacks quantum mechanics expertise.
+    
+    \tcbline %
+    
+    \paragraph{Turn 1: Specialist Creation}
+    The Architect analyzes the query and identifies the need for domain-specific expertise in quantum mechanics.
+    
+    \begin{lstlisting}[style=customxml]
+<action>CREATE_OPERATOR</action>
+<reasoning>
+The query requires deep expertise in quantum mechanics, specifically wave function normalization and energy eigenvalue calculations. I will create a specialized operator that can handle the mathematical rigor required for quantum mechanical problems.
+</reasoning>
+<new_operator_name>CoT_QuantumMechanics</new_operator_name>
+<base_template>CoT</base_template>
+<identity>You are an expert quantum physicist specializing in wave function analysis and energy eigenvalue problems. You have deep expertise in Schrodinger equations, Hilbert spaces, and operator theory, with broad knowledge across theoretical physics and mathematical methods.</identity>
+<directives>
+    - Always verify wave function normalization conditions
+    - Apply systematic eigenvalue analysis using appropriate boundary conditions [...]
+</directives>
+    \end{lstlisting}
+    
+    \tcbline %
+    
+    \paragraph{Turn 2: Operator Combination}
+    After creating the quantum specialist, the Architect decides to combine it with an existing physics specialist.
+    
+    \begin{lstlisting}[style=customxml]
+<action>COMBINE_OPERATORS</action>
+<reasoning>
+Analyzing the recent sliding window of past experiences reveals a pattern of diverse physics problems including both quantum mechanics and astrophysics queries. Rather than maintaining narrow specialists that may underperform on this broader distribution, I will combine CoT_QuantumMechanics and CoT_Astrophysics into a unified CoT_TheoreticalPhysics specialist.
+</reasoning>
+<target_operator_1>CoT_QuantumMechanics</target_operator_1>
+<target_operator_2>CoT_Astrophysics</target_operator_2>
+<new_operator_name>CoT_TheoreticalPhysics</new_operator_name>
+<identity>You are an expert theoretical physicist with deep expertise in quantum mechanics and astrophysics. You combine rigorous mathematical analysis with physical intuition to solve complex problems in quantum theory, astrophysics, and mathematical physics.</identity>
+<directives>
+- For quantum mechanics problems, always verify wave function normalization conditions and apply systematic eigenvalue analysis [...]
+- For astrophysics problems, apply scaling analysis and use dimensional arguments to constrain solutions [...]
+</directives>
+    \end{lstlisting}
+    
+    \tcbline %
+    
+    \paragraph{Turn 3: Architecture Finalization}
+    With the enhanced specialist available, the Architect designs the optimal processing pipeline.
+    
+    \begin{lstlisting}[style=customxml]
+<action>FINALIZE_ARCHITECTURE</action>
+<reasoning>
+I will create a two-layer architecture: [['CoT_TheoreticalPhysics'], ['SelfRefine']]. The theoretical physics specialist will provide the initial detailed analysis, and SelfRefine will critically evaluate and improve the solution.
+</reasoning>
+<architecture>[["CoT_TheoreticalPhysics"], ["SelfRefine"]]</architecture>
+    \end{lstlisting}
+\end{tcolorbox}
+
+\subsection{Anatomy of a Specialist}
+\label{app:specialist_example}
+    
+We provide an example of a physicist that has been autonomously discovered and cultivated on GPQA. This specialist was the result of a crossover between two parent specialists, \hlthermo{\textsc{CoT\_Thermodynamics}} and \hlwave{\textsc{CoT\_WaveOptics}}, who themselves descended from \hlem{\textsc{CoT\_Electromagnetism}}, \hllinalg{\textsc{CoT\_LinearAlgebra}}, \hlops{\textsc{CoT\_Optics}}, and \hlmech{\textsc{CoT\_Mechanics}}.
+
+\begin{tcolorbox}[
+    colback=gray!5, %
+    colframe=gray!75, %
+    fonttitle=\bfseries,
+    title=Specialist Prompt: \textsc{CoT\_Physics},
+    arc=2mm, %
+    boxrule=1pt,
+    breakable
+]
+You are an expert physicist tackling complex scientific problems. You have deep expertise in physics, including \hlem{electromagnetism}, \hlthermo{thermodynamics}, \hlwave{wave optics}, \hllinalg{linear algebra}, \hlwave{wave phenomena}, \hlmech{kinetics, and statistical mechanics}. When faced with a complex problem, you always start by identifying the fundamental physical principles at play, breaking down the problem into its core components before attempting to solve it. \hlem{You visualize physical phenomena as interconnected networks of energy} and \hlmech{momentum}, allowing you to intuitively understand their behavior.
+
+\vspace{1em}
+Think step by step and derive a concise final answer.
+\vspace{1em}
+
+\begin{itemize}
+    \itemsep0.5em
+    \item Focus on identifying the fundamental physical principles underlying the problem.
+    \item Apply knowledge from various areas of physics, including \hlem{electromagnetism}, \hlthermo{thermodynamics}, \hlmech{kinetics}, \hlwave{wave optics}, \hllinalg{linear algebra}. Consider the interplay between physics, chemistry, and biology when relevant.
+    \item \hlmech{Prioritize dimensional analysis and order-of-magnitude estimates} to quickly assess the plausibility of different solutions. Likewise, \hllinalg{simplify complex problems by identifying dominant terms and making appropriate approximations}.
+    \item Analyze wave phenomena using \hlwave{Huygens' principle, superposition, and interference}. Relate wave properties such as wavelength, frequency, and amplitude to the energy and momentum of the wave. \hlthermo{Apply the laws of thermodynamics} and \hlmech{statistical mechanics} \hlthermo{to analyze systems involving heat, energy, and entropy}.
+\end{itemize}
+
+\vspace{1em}
+\textbf{\# Learned from experience:}
+\begin{itemize}
+    \itemsep0.5em
+    \item Prioritize accurate identification of fundamental transformations (e.g., electron flow) before making broader predictions.
+    \item When comparing results from different methodologies, explicitly consider the limitations and biases inherent in each technique. Focus on underlying mechanisms and principles rather than superficial alignment of results.
+    \item Consider frequency and averaging effects when integrating data from population-level and single-entity measurements.
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[
+    colback=gray!5, %
+    colframe=gray!75, %
+    fonttitle=\bfseries,
+    title=Specialist Memory: \textsc{CoT\_Physics},
+    arc=2mm, %
+    boxrule=1pt,
+    breakable
+]
+\textbf{\# Structured memory entry:}
+\begin{itemize}
+    \itemsep0.5em
+    \item Problem pattern: EM wave attenuation; inconsistent parameters lead to physically impossible results (e.g., amplification instead of attenuation).
+    \item Approach summary: Verify problem consistency by calculating attenuation from given parameters. Identify and state inconsistencies explicitly.
+    \item Failure mode: Blindly applying formulas without checking physical plausibility; incorrect assumptions about attenuation contributions.
+    \item General rule: Before solving, check if given parameters yield physically plausible results. If not, state the flaw and assumptions made for a solution.
+\end{itemize}
+
+\vspace{1em}
+
+\textbf{\# Structured memory entry:}
+\begin{itemize}
+    \itemsep0.5em
+    \item Problem pattern: Expectation value of an operator (e.g., \(p^2\)) given a non-normalized wavefunction.
+    \item Approach summary: Normalize wavefunction, apply the operator, and integrate.
+    \item Failure mode: Forgetting to normalize the wavefunction before calculating the expectation value.
+    \item General rule: ALWAYS normalize the wavefunction before calculating expectation values in quantum mechanics.
+\end{itemize}
+
+\vspace{1em}
+
+\textbf{\# Structured memory entry:}
+\begin{itemize}
+    \itemsep0.5em
+    \item Problem pattern: Particle decay (e.g., \(\Pi \to \mu + \nu\)) with known rest masses and initial state. Find KE of products.
+    \item Approach summary: Apply energy and momentum conservation. Use relativistic energy-momentum relation (\(E^2 = (pc)^2 + (mc^2)^2\)) to relate KE and momentum.
+    \item Failure mode: Incorrectly applying relativistic formulas or conservation laws; algebraic errors in solving the equations.
+    \item General rule: In particle decay, use energy/momentum conservation and relativistic relations. If one particle is at rest initially, simplify accordingly.
+\end{itemize}
+
+\end{tcolorbox}
+    
+
+\section{Baselines}
+\label{app:baselines}
+
+In this section, we detail the implementation for each of the baseline methods. For Chain-of-Thought \citep{wei2022chain}, Self-Consistency \citep{wang2022self}, Self-Refine (\citep{madaan2023self}), and LLM-Debate \citep{du2023improving}, we refer to Appendix \ref{app:op_space} for the configuration details, as they were used as seed base operators in \textsc{ASpec}. For Reflexion, we adhere to the implemention provided in \citep{shinn2023reflexion}. Following ADAS \citep{hu2024automated}, we implement Role Assignment \citep{xu2023expertprompting} by prompting a role-selector LLM to choose a role from a predefined set, then use another LLM to act as the chosen role to answer the question. 
+
+For each of the benchmarks, the roles for Role Assignment were:
+\begin{itemize}
+    \item \textbf{MATH}: Algebraist, Number Theorist, Real Analyst, Statistician, Logician
+    \item \textbf{HumanEval}: Senior Python Engineer, Algorithms Expert, Software Architect, Data Scientist, Competitive Programmer
+    \item \textbf{MMLU}: Biologist, Physicist, Mathematician, Engineer, Doctor, Lawyer
+    \item \textbf{GPQA}: Physicist, Chemist, Biologist, Scientific Reasoning Expert, Graduate Student
+    \item \textbf{SciCode}: Biologist, Physicist, Chemist, Computer Scientist, Mathematician
+\end{itemize}
+
+For DyLAN and EvoAgent, we directly used the implementations from \cite{liu2023dynamic} and \citep{yuan2024evoagent}. We adhered to the official configuration for AutoAgents \citep{chen2023autoagents}. For ADAS \citep{hu2024automated}, we set the Meta Agent Search's \(n\)-generation to 20. For MaAS, our experimental setup directly utilized the optimized graphs and operator spaces from \citep{zhang2025multi} for MATH and HumanEval. For benchmarks not explicitly included in the MaAS repository (GPQA, MMLU, SciCode), we implemented the operator space as described in the appendix. Following \citet{zhang2025multi}, for AFlow, we utilized Gemini 2.0 Flash consistently throughout our experiments in place of GPT-4o-mini and Claude 3.5 Sonnet for homogeneity.
+
+
+
+\section{Operator Space}
+\label{app:op_space}
+
+Following MaAS \citep{zhang2025multi}, we use the following operator space for our base operators:
+
+\begin{itemize}
+    \item \textbf{Chain-of-Thought} \citep{wei2022chain}, which encourages the execution LLM to think step-by-step before outputting an answer.
+    \item \textbf{ReAct} \citep{yao2023react}, allowing the execution LLM to use a library of tools to answer the question.
+    \item \textbf{Self-Consistency} \citep{wang2022self}, which aggregates five Chain-of-Thought answers and majority votes to agree on a final answer.
+    \item \textbf{Self-Refine} \citep{madaan2023self}, which iteratively refines an initial Chain-of-Thought answer over five iterations.
+    \item \textbf{LLM-Debate} \citep{du2023improving}, which uses multiple execution LLMs to debate against each other to reach a final consensus. We similarly use three debaters and two rounds of debate in our implementation.
+    \item \textbf{Ensemble} \citep{jiang2023llm}, which takes in two or more answers from different sources and uses pairwise ranking to aggregate these responses into a final answer.
+    \item \textbf{Testing} \citep{huang2023agentcoder}, which generates test cases for subsequent execution LLMs given a coding problem.  
+\end{itemize}
+
+
+\section{Algorithms}
+\label{app:algos}
+\begin{algorithm}[H]
+\caption{Online adaptation algorithm of \textsc{ASpec}}
+\label{alg:online_workflow}
+\SetAlgoLined
+\KwIn{Trained meta-controller \(\pi_\theta\); operator pool \(\mathbb{O}\); queries \(Q = \{q_1, \dots, q_T\}\); sliding window buffer \(\mathcal{H}.\)}
+\KwInit{Initial graph \(\mathcal{G}_0\).}
+
+\For{$t=1, 2, \dots, T$}{
+    Construct state \(s_t = (e_q(q_t), e_g(\mathcal{G}_{t-1}))\)\;
+    Sample action \(a_t \sim \pi_\theta(a_t | s_t)\)\;
+    
+    \eIf{$a_t = a_{\text{RESAMPLE}}$}{
+        \(\mathcal{G}_t \leftarrow f_{\mathbb{A}}(q_t, \mathcal{H}_{t-m:t-1}, \mathbb{O}, \mathcal{G}_{t-1})\)\;
+    }{
+        \(\mathcal{G}_t \leftarrow \mathcal{G}_{t-1}\)\;
+    }
+    
+    \(p_t \leftarrow \text{Execute}(\mathcal{G}_t, \mathbb{O}, q_t)\)\;
+    
+    \(U_t, C_t \leftarrow \text{Evaluate}(p_t, a_t)\)\;
+    
+    Store experience \((q_t, \mathcal{G}_t, S_t, C_t)\) in \(\mathcal{H}\)\;
+}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{Offline specialist discovery and cultivation}
+\label{alg:offline_search}
+\SetAlgoLined
+\KwIn{Queries \(Q = \{q_1, \dots, q_T\}\); base operator set \(\mathbb{O}_{\text{base}}\).}
+\KwInit{Initial operator pool \(\mathbb{O}_0 = \mathbb{O}_{\text{base}}\), initial specialist pool \(\mathbb{O}_{\text{spec}}^{(0)} \leftarrow \emptyset\), random-weights meta-controller \(\pi_\theta^{(0)}\); empty sliding window buffer \(\mathcal{H} \leftarrow \emptyset\).}
+
+\For{$t = 1, 2, \dots, T$}{
+    Construct state \(s_t = (e_q(q_t), e_g(\mathcal{G}_{t-1}))\)\;
+    Sample action \(a_t \sim \pi_\theta(a_t | s_t)\)\;
+
+    \eIf{$a_t = a_{\text{RESAMPLE}}$}{
+        \( a_\mathbb{A} \leftarrow f_{\mathbb{A}}(q_t, \mathcal{H}_{t-m:t-1}, \mathbb{O}_{t-1}, \mathcal{G}_{t-1}) \)
+        
+        \If{$a_\mathbb{A} = \text{CREATE\_OPERATOR}$}{
+            \(O_{\text{new}} \leftarrow \text{CreateSpecialist}(q_t, \mathbb{O}_{\text{base}}) \) \;
+            \(\mathbb{O}_{\text{spec}}^{(t)} \leftarrow \mathbb{O}_{\text{spec}}^{(t-1)} \cup \{O_{\text{new}}\} \) \;
+            \(\mathbb{O}_t \leftarrow \mathbb{O}_{t-1} \cup \mathbb{O}_\text{spec}^{({t})}  \) 
+        }
+        \ElseIf{$a_\mathbb{A} = \text{COMBINE\_OPERATOR}$}{
+            \((O_1, O_2) \leftarrow \text{SelectOperators}(\mathbb{O}_{\text{spec}}^{(t-1)})\) \;
+            \(O_{\text{child}} \leftarrow \text{Combine}(O_1, O_2, q_t)\) \;
+            \(\mathbb{O}_{\text{spec}}^{(t)} \leftarrow (\mathbb{O}_{\text{spec}}^{(t-1)} \setminus \{O_1, O_2\}) \cup \{O_{\text{child}}\} \) \;
+            \(\mathbb{O}_t \leftarrow \mathbb{O}_{t-1} \cup \mathbb{O}_\text{spec}^{({t})}  \) 
+        }
+        \ElseIf{$a_\mathbb{A} = \text{PRUNE\_OPERATOR}$}{
+           \(O_{\text{to\_prune}} \leftarrow \text{SelectOperator}(\mathbb{O}_{\text{spec}}^{(t-1)})\) \;
+            \(\mathbb{O}_{\text{spec}}^{(t)} \leftarrow \mathbb{O}_{\text{spec}}^{(t-1)} \setminus \{O_{\text{to\_prune}}\} \) \;
+            \(\mathbb{O}_t \leftarrow \mathbb{O}_{t-1} \cup \mathbb{O}_\text{spec}^{({t})}  \) 
+        }
+        \EndIf
+        \(\mathcal{G}_t \leftarrow f_{\mathbb{A}}(\mathcal{H}_{t-m:t-1}, \mathbb{O}_t, \mathcal{G}_{t-1}) \) \;
+    }{
+        \(\mathcal{G}_t \leftarrow \mathcal{G}_{t-1}\) \;
+    }
+
+    \(p_t \leftarrow \text{Execute}(\mathcal{G}_t, \mathbb{O}_t, q_t)\)\;
+    \(U_t, C_t \leftarrow \text{Evaluate}(p_t, a_t)\)\;
+    
+    \(\pi_\theta^{(t)} \leftarrow \text{UpdateWeights}\left(U_t, C_t, a_t, \pi_\theta^{(t-1)}\right)\)
+
+    \ForAll{\(O \in \text{SpecialistsUsedIn}(\mathcal{G}_t, \mathbb{O}_t)\)}{
+        \(r \leftarrow \text{Reflect}(O, q_t, P_t, a_t, U_t)\) \;
+        \(\text{WriteToMemory}(O, r)\)
+    }
+    \EndFor
+
+    Store experience \((q_t, \mathcal{G}_t, U_t, C_t)\) in \(\mathcal{H}\)\;
+}\EndFor
+\end{algorithm}
+
+\section{Meta-controller Implementation}
+\label{app:meta_impl}
+The meta-controller is trained using the REINFORCE algorithm, with a standard batch policy loss:
+\begin{equation}
+    \mathcal{L}_\text{batch}(\theta) = -\frac{1}{N} \sum_{t=1}^{N} \log \pi_\theta (a_t |s_t)R_t
+\end{equation}
+The reward \(R_t\) is designed to balance performance, cost, and contextual appropriateness. It is a function of the final task score \(s_t\), the total cost \(C_t\), and the cosine similarity between the query and the current architecture, \(\text{sim}(q_t, \mathcal{G}_{t-1})\).
+
+The core of our reward function is a weighting mechanism that modulates the score \(s_t\) based on this similarity. The reward for a \texttt{RETAIN} action is boosted when the architecture is a good match for the query (high similarity), while the reward for a \texttt{RESAMPLE} action is boosted when there is a mismatch (low similarity). This can be expressed conceptually as:
+\begin{equation}
+    R_t = s_t \cdot w(a_t, \text{sim}(q_t, \mathcal{G}_{t-1})) - \lambda C_t
+\end{equation}
+where the weighting function \(w(\cdot, \cdot)\) increases the effective reward for correct decisions. For example, \(w(\texttt{RETAIN}, \text{sim})\) is an increasing function of similarity. This formulation provides a dense and informative signal that guides the meta-controller to learn an efficient, context-aware policy.
+
+\section{Dataset Statistics}
+\label{app:dataset_stats}
+
+For each of the benchmarks, we follow established methodologies for workflow automation (\citet{hu2024automated}, \citet{zhang2024aflow}, \citet{zhang2025multi}) and use a train-to-test ratio of \(1:4\). We select 19 subdomains for MMLU, spanning formal mathematics, biology, chemistry, clinical medicine, business, and engineering. For SciCode, we use the standard subproblem setup without prior scientist annotations and report the subproblem pass rate. 
+
+\begin{table}[H]
+\centering
+\caption{Dataset statistics.}
+\label{tab:dataset_stats}
+\begin{tabular}{l lccc}
+\toprule
+Domain           & Dataset    & Train Samples & Test Samples & Metric   \\ \midrule
+\multirow{Math Reasoning} & MATH  & 100      & 400    & Accuracy   \\ \midrule
+\multirow{Question Answering}  
+                & MMLU      & 100     & 400   & Accuracy \\ 
+                & GPQA      & 89 & 359 & Accuracy \\                
+\midrule
+Code Generation         & HumanEval       & 33      & 131    & Pass@1 \\
+                        & SciCode (subproblems) & 51 & 287 & Pass@1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Prompts}
+\subsection{Architect's Prompt}
+\label{app:architect_prompt}
+We used the following prompt for the Architect. The decision to define the architecture representation with mathematical notation was deliberate. We observed through preliminary experiments that providing a formal syntax, as opposed to a natural language description, makes the instructions for concepts like parallelism and aggregation less ambiguous for the LLM. This leads to more consistent and structurally valid outputs from the Architect.
+
+\begin{tcolorbox}[
+    colback=gray!5, %
+    colframe=gray!75, %
+    fonttitle=\bfseries,
+    title=Architect Prompt,
+    arc=2mm, %
+    boxrule=1pt,
+    breakable
+]
+You are a multi-agent architect \(f_{\mathbb{A}}\) mapping a query and context to an agent architecture: \(f_{\mathbb{A}}: (q, C) \mapsto G\). 
+
+\vspace{1em}
+
+Goal: propose or adjust a layered operator architecture that is robust, performs well now, and is generalizable to future queries.
+
+\vspace{1em}
+
+Follow these steps:
+\begin{itemize}
+\itemsep0.5em
+    \item Decompose the query, pick an initial architectural pattern, and justify briefly.
+    \item Think of 2 other alternative architectural patterns, consider all 3 options, and select the best one.
+    \item If creating specialists, provide concise identity and bullet directives (no steps or formulas - you are encouraged to use different reasoning patterns and strategies like adversarial prompting, quality-diversity prompting, step-back prompting, multi-choice elimination, etc.)
+    \item Use the recent sliding window experiences as guidance for your decisions.
+\end{itemize}
+
+\vspace{1em}
+
+Architecture representation: \(A = [L_1, \dots, L_K ] \) where layer \(L_i = [o_{i,1}, \dots, o_{i,m_i}]\) lists operators executed in parallel. Execution is layerwise: let \(x_1 = x\) and for \(i=1, ..., K\), compute a layer output \(h_i(x_i)\). If \(|L_{i-1}|>1\), include an Ensemble aggregator \(g_i\) to combine parallel outputs: \(h_i(x_i) = g_i(\{{{\, o(x_i) \mid o \in L_{i-1} \,}}\})\). If \(|L_{i-1}|=1\), then \(h_i(x_i) = o(x_i)\) for the unique \(o\in L_{i-1}\). The input to the next layer is \(x_{{i+1}} = h_i(x_i)\).
+
+\vspace{1em}
+
+Query: [...]
+
+\vspace{1em}
+
+Context for your decision:
+\begin{itemize}
+\itemsep0.5em
+    \item Operator pool: [...]
+    \item Current architecture: [...]
+    \item Allowed actions: [...]
+    \item Recent sliding window experiences: [...]
+\end{itemize}
+
+\vspace{1em}
+
+XML formatting guide: [...]
+\end{tcolorbox}
+
+where the allowed actions are conditional on the specific phase the system is in. During the specialist discovery phase, the full operator space is used:
+\begin{itemize}
+    \item \texttt{CREATE\_OPERATOR}: Defines a new specialist operator $O_{\text{spec}}$ and adds it to $\mathbb{O}_{\text{spec}}^{(t)}$.
+    \item \texttt{COMBINE\_OPERATORS}: Merges two specialist operators into a single, more general specialist.
+    \item \texttt{PRUNE\_OPERATOR}: Removes a specialist operator from $\mathbb{O}_{\text{spec}}^{(t)}$.
+    \item \texttt{FINALIZE\_ARCHITECTURE}: Commits to a final graph $\mathcal{G}_t$ and terminates the reasoning loop.
+\end{itemize}
+We then restrict the allowed actions to only \(\texttt{FINALIZE\_ARCHITECTURE}\) during the specialist cultivation and evaluation phases.
+
+\subsection{Specialist Synthesis Prompts}
+\label{app:spec_synthesis}
+
+\subsubsection{Creation}
+
+\begin{promptbox}{Creation: Identity Synthesis Prompt}
+You will propose diversified identity variants for a new specialist, \texttt{{operator\_name}}, which is based on \texttt{{base\_template}}.
+
+\medskip\noindent
+Specialist description: \texttt{[...]}
+\medskip
+
+Each identity should be a detailed second-person identity including their professional role (i.e., 'a particle physicist', do not include names), their fields of expertise (deep + broad), and a non-domain-specific reasoning heuristic that distinguishes them from other specialists.
+
+\medskip\noindent
+Examples of reasoning heuristics:
+\begin{itemize}[leftmargin=*, topsep=2pt, itemsep=0pt]
+    \item Works backwards from contradictory answers to identify wrong assumptions or equations.
+    \item Never assumes anything not explicitly stated; always returns to first principles when confused.
+    \item Builds multiple competing hypotheses simultaneously and tests them against evidence.
+    \item Visualizes problems as interconnected networks of constraints and relationships.
+\end{itemize}
+\medskip
+
+Output the identity text starting with 'You are...'
+\end{promptbox}
+
+\begin{promptbox}{Creation: Directive Synthesis Prompt}
+You will propose diversified directive variants for a new specialist, \texttt{{operator\_name}}, which is based on \texttt{{base\_template}}.
+
+\medskip\noindent
+Specialist description: \texttt{[...]}
+\medskip
+
+Create a bulleted list of methodological principles and reasoning approaches that this new specialist will follow. Do not provide specific formulas, step-by-step procedures, formatting instructions, or direct solutions. Focus on \textbf{how} the specialist should think and approach problems, not what specific steps to take. 
+
+\medskip
+
+Include strategic reasoning approaches like self-criticism, assumption questioning, hypothesis building, pattern recognition, systematic analysis, etc. It is very important that the directives should guide analytical thinking without restricting the specialist's reasoning search space.
+\end{promptbox}
+
+\subsubsection{Crossover}
+
+\begin{promptbox}{Crossover: Identity Synthesis Prompt}
+You will propose diversified identity variants for a combined specialist that synthesizes the expertise of two parent specialists. The specialist is \texttt{{operator\_name}}, which is based on \texttt{{base\_template}}.
+
+\medskip\noindent
+Specialist description: \texttt{[...]} \\
+Parent 1's identity: \texttt{[...]} \\
+Parent 2's identity: \texttt{[...]}
+\medskip
+
+Each identity should be a detailed second-person identity including their professional role (i.e., 'a particle physicist'), their fields of expertise (deep + broad), and a non-domain-specific reasoning heuristic. The combined identity should integrate the best aspects of both parent specialists while creating a coherent, unified specialist persona.
+
+\medskip\noindent
+Examples of reasoning heuristics:
+\begin{itemize}[leftmargin=*, topsep=2pt, itemsep=0pt]
+    \item Works backwards from contradictory answers to identify wrong assumptions or equations.
+    \item Never assumes anything not explicitly stated; always returns to first principles when confused.
+    \item Builds multiple competing hypotheses simultaneously and tests them against evidence.
+    \item Visualizes problems as interconnected networks of constraints and relationships.
+\end{itemize}
+\medskip
+
+Output the identity text starting with 'You are...'
+\end{promptbox}
+
+\begin{promptbox}{Crossover: Directive Synthesis Prompt}
+You will propose diversified directive variants for a combined specialist that synthesizes the expertise of two parent specialists. The specialist is \texttt{{operator\_name}}, which is based on \texttt{{base\_template}}.
+
+\medskip\noindent
+Specialist description: \texttt{[...]} \\
+Parent 1's identity: \texttt{[...]} \\
+Parent 2's identity: \texttt{[...]}
+\medskip
+
+Create a bulleted list of methodological principles and reasoning approaches that this new specialist will follow. Do not provide specific formulas, step-by-step procedures, formatting instructions, or direct solutions. Focus on how the specialist should think and approach problems, not what specific steps to take. The combined directives should integrate the best aspects of both parent specialists' directives, including any existing reasoning approaches.
+
+\medskip
+
+Include strategic reasoning approaches like self-criticism, assumption questioning, hypothesis building, pattern recognition, systematic analysis, etc. It is very important that the directives should guide analytical thinking without restricting the specialist's reasoning search space.
+
+\end{promptbox}
+
+\subsection{Judge Prompts}
+\label{app:judge}
+
+\begin{promptbox}{Judge Prompt: Evaluating Identities}
+You are judging specialist identities for: \texttt{{operator\_name}}, which is based on \texttt{{base\_template}}.
+
+\medskip\noindent
+Specialist description: \texttt{[...]} \\
+Identity candidates: \texttt{[...]}
+\medskip
+
+Pick the best identity based on the following criteria:
+\begin{enumerate}[leftmargin=*, topsep=2pt, itemsep=0pt]
+    \item Non-domain-specific reasoning heuristics for a rich reasoning ’gene’ pool (quality-diversity, step-back analysis, assumption-challenging, etc.)
+    \item Avoids making assumptions not explicitly stated in the problem
+    \item The resulting specialist is a T-shaped specialist. In other words, it has both a deep specialization and broader domain coverage. Avoid hyperspecific specialists that are too narrow in their domain coverage.
+    \item Combines domain expertise with general problem-solving approaches
+\end{enumerate}
+\end{promptbox}
+
+\begin{promptbox}{Judge Prompt: Evaluating Directives}
+You are judging specialist directives for: \texttt{{operator\_name}}, which is based on \texttt{{base\_template}}.
+
+\medskip\noindent
+Specialist description: \texttt{[...]} \\
+Directive candidates: \texttt{[...]}
+\medskip
+
+Pick the best directives based on the following criteria:
+\begin{enumerate}[leftmargin=*, topsep=2pt, itemsep=0pt]
+    \item Focus on how to think, not what specific steps to take. Mimic domain-specific human experts to guide analytical thinking without constraining solution paths
+    \item Prefer methodological principles over rigid instructions. Avoid specific formulas, procedures, or direct solutions
+    \item Has a specific methodology for handling contradictions or confusion
+\end{enumerate}
+\end{promptbox}
+
+
+\end{document}

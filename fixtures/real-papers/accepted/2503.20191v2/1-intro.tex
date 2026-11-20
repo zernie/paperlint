@@ -1,0 +1,51 @@
+\section{Introduction}\label{sec:Introduction}
+
+
+
+
+\input{figures-tex/banner}
+\input{figures-tex/parallel_coords_strong_scaling_18b_h100}
+
+Large foundation models like ChatGPT \cite{openai2023chatgpt} and Sora \cite{sora} have demonstrated human-level performance across various natural language and visual tasks. The development of these models critically depends on scaling both model sizes and training corpora \cite{kaplan2020scaling}. Consequently, the computational demands for training have reached staggering proportions. For instance, training the Llama-3 405B model required 54 days on 16,000 accelerators \cite{dubey2024llama}, a setup that would cost over \$250 million on the Microsoft Azure public cloud \cite{dubey2024llama}.
+
+Training at this scale requires sophisticated system optimizations. Researchers have developed techniques spanning distributed training strategies (tensor, pipeline, expert parallelism) \cite{megatron,singh2023hybrid}, compute optimizations (kernel fusion, pipeline interleaving) \cite{megatron}, and memory optimizations (activation checkpointing, gradient accumulation) \cite{megatron,zero,korthikanti2023reducing}. Engineers meticulously craft \textit{training recipes} that combine these techniques to maximize hardware utilization. However, the vast array of techniques and their associated parameters create a combinatorial explosion in the configuration space.
+
+Furthermore, these recipes need to be tailored for each deployment scenario. As depicted in \Cref{fig:motivation:strongscalingconfigs:configs}, even small changes in the deployment scenario can require significant alterations to the configuration. Applying a recipe optimized for one scenario to another can degrade efficiency by up to \ctc{}\%, as shown in \Cref{fig:motivation:strongscalingconfigs:costofmisconfig}.
+
+These challenges prop up the need for efficient runtime modeling that can evaluate training strategies without requiring actual hardware deployment. Naive analytical models cannot capture the complex characteristics of these distributed training workloads, leading to inaccurate prediction. To address this challenge, several advanced runtime modeling systems \cite{duan2023proteus,bang2023vtrain,lu2023distsim,zhu2020daydream,isaev2023calculon,moolchandani2023amped,santhanam2021distir} have been proposed. However, these systems suffer from a fundamental limitation: they cannot operate directly on the user code, and require translating the workloads into \textit{\csl}.
+
+This translation process introduces two fundamental critical challenges. Consider that a user wants to optimize a GPT-3 model run using one of the existing tools. To employ Proteus \cite{duan2023proteus}, an engineer must translate the original PyTorch workload into a ``Strategy Tree" format --- requiring hundreds of lines of specialized code \cite{proteusgithub} that explicitly encode parallelization patterns, communication topology, and memory optimizations. Any detail omitted or simplified during this manual translation leads to prediction errors (\Cref{fig:eval:fidelity:pointcloud}), resulting in up to \evaltc\% higher training costs (\Cref{fig:eval:fidelity:cost}). We term this loss of implementation detail during the translation process as the \textbf{\textit{semantic gap}}.
+
+Second, system designers face an inherent \textbf{\textit{generality-usability tradeoff}}. Systems prioritizing generality like Proteus employ expressive but complex specifications, while systems optimizing for usability like Calculon \cite{isaev2023calculon} and AMPed \cite{moolchandani2023amped} offer simpler interfaces but only support specific frameworks like Megatron-LM, limiting their applicability.
+
+We observe that while training systems are complex, they interact with accelerators through a narrow, well-defined interface of device APIs. Moreover, training workloads exhibit a fundamental property: control flow (executed on CPUs) rarely depends on specific numerical computation results (executed on accelerators). This decoupling is pervasive in modern training --- data-parallelism processes different data shards with identical control flow, and even techniques like gradient accumulation and mixed precision training maintain deterministic control patterns. While this excludes certain architectures with data-dependent control flow (e.g., some MoE implementations), these represent a small fraction of workloads found in the wild \cite{zhu2020daydream,geoffrey2021habitat,duan2023proteus,isaev2023calculon,lu2023distsim,flexflow,unger2022unity}.
+
+We present \sysname, a transparent runtime modeling system that exploits these insights through \textit{transparent device emulation}. Rather than requiring workload translation, \sysname intercepts and emulates all accelerator API interactions from unmodified training code, creating the illusion of actual device execution while capturing complete workload behavior. This approach eliminates both the semantic gap and the generality-usability tradeoff. Our evaluation demonstrates prediction error below \evalpe{}\% across diverse configurations.
+
+\noindent In summary, we make the following contributions:
+
+\begin{itemize}[leftmargin=*,itemsep=3pt,topsep=3pt]
+\item We identify intrinsic limitations of existing runtime modeling approaches for DL training workloads, specifically the semantic gap and generality-usability tradeoff arising from custom specification languages.
+\item We propose \sysname, a transparent and flexible runtime modeling system that emulates workload execution on accelerated compute clusters.
+\item We demonstrate that \sysname can predict the end-to-end runtime of workloads with < \evalpe{}\% error across a variety of models and training configurations.
+\item Finally, we demonstrate the efficacy of our system for finding optimal training recipes, reducing training cost by up to \evaltc{}\% compared to existing systems.
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

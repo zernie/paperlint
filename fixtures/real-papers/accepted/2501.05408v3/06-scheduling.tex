@@ -1,0 +1,118 @@
+% Polyhedral scheduling
+
+\section{Scheduling SDGs with the Polyhedral Model}
+\label{sec:analysis}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth, trim={1 7 1 2}, clip]{cr_figures/sched_viz}
+  %Use an example figure
+  \caption{How \sys{} schedules $y[t] = f(x[t\!:\!min(t\!+\!3, T)])$}  
+  \label{fig:scheduling_viz}
+\end{figure}
+
+RTs are declarative and thus require scheduling to find an execution order. Due to their dynamic dependencies, existing dataflow scheduling techniques~\cite{abadi2016tensorflow,moritz2018ray}, however, are unsuitable. \sys{} uses a \emph{polyhedral model}~\cite{bondhugula2008pluto,verdoolaege2010isl} to address this challenge. Scheduling occurs in two rounds: \sys first finds a schedule for tensor operations~(\S\ref{sec:polyhedral_model}), and then uses it to schedule memory management operations~(\S\ref{sec:mem_sched}).
+
+\subsection{Polyhedral execution scheduling}
+\label{sec:polyhedral_model}
+
+%Scheduling a RL program is non-trivial due to their dynamic and cyclic dependencies.
+%The polyhedral model is a powerful mathematical framework for program analysis that has its roots in scheduling dynamic uniform recurrence equations~\cite{karp1967organization}.
+%While the polyhedral model has evolved to support a richer set of computations~\cite{benabderrahmane2010polyhedral,verdoolaege2010isl,bondhugula2008pluto}, today it is mainly adopted for optimizing small loop nests in imperative programs~\cite{grosser2012polly,vasilache2018tensor}, due to difficulty in modeling arbitrary programs.
+
+The polyhedral model~\cite{verdoolaege2010isl, bondhugula2008pluto} has its origins in the scheduling of uniform recurrence equations~\cite{karp1967organization}, but has since evolved to support more complex computation~\cite{benabderrahmane2010polyhedral}. Today, it is used to optimize localized loop nests (kernels) in imperative programs~\cite{grosser2012polly, vasilache2018tensor}, as using it to model arbitrary programs remains challenging~\cite{verdoolaege2012polyhedral}. Since RTs are inspired by recurrence equations, \sys{} can apply the polyhedral model for whole-program scheduling. 
+%\sys{} uses the \texttt{isl} library~\cite{verdoolaege2010isl} to schedule SDGs using the polyhedral model as shown in \F\ref{fig:scheduling_viz}.
+
+%\noteps{Fairly sure we do not need this level of complexity. Try to reuse our own definitions of $\Omega$ and $\phi$}
+%In a polyhedral model, each tensor~$x$ has its \emph{domain} represented by a polyhedron, $\Omega_{x} = \{ p \in \mathbb{Z}^{n} \; | \; \mathrm{constraints} \}$, which is the set of integer points in an $n$-dimensional space that satisfy a set of \emph{inequality constraints}.  A dependence of tensor~$x$ on $y$ is also represented by a polyhedron in the product of the two domains, $\phi_{x \rightarrow y} = \{(p,p') \in \Omega_{x} \times \Omega_{y} \; | \; \mathrm{constraints} \}$. For simplicity, we treat $\phi_{x \rightarrow y}$ as a function $\phi_{x \rightarrow y}(p) = \{p' \in \Omega_y | (p,p') \in \phi_{x \rightarrow y}\}$ that, given a point in $\Omega_x$, yields all points in $\Omega_y$ that it depends on.
+
+%Additionally because of this, \sys can avoid complex dataflow analysis~\cite{grosser2012polly} to find hidden dependencies (e.g. caused by aliasing), which is typically the first step in polyhedral scheduling.
+
+Scheduling in a polyhedral model finds a \emph{schedule function}~$\theta$ that maps each $n$-dimensional timestep of an operation to an \emph{execution time} in~$\mathbb{Z}^{s}$, $s \geq n$, and where the lexicographic order\footnote{Lexicographic order compares tuples left to right: $(1,2) \prec (1,5) \prec (2,1)$.} ($\prec$) determines what operation executes first. A \emph{valid} schedule must respect all dependencies, \ie  for $y[t]\!=\!f(x[\phi(t)])$ then $\forall t \in \Omega(y) . \theta(x[\phi(t)]) \prec \theta(y[t])$. 
+Finding a schedule function requires solving an integer linear program~(ILP)~\cite{verdoolaege2010isl}, with an ILP objective which minimizes the sum of \emph{dependence distances} $\theta(y[t]) - \theta(x[\phi(t)])$ constrained by a set of \emph{validity constraints} derived from program dependencies. This yields schedules with low makespan.
+%Through isl~\cite{verdoolaege2010isl}, \sys{} uses the pluto~\cite{bondhugula2008pluto} scheduler, whose objective function maximizes parallelism and locality by minimizing the \emph{dependence distance} $\theta(t) - \theta(\phi(t))$.
+
+\F\ref{fig:scheduling_viz} shows the scheduling approach in \sys. SDGs already represent tensor domains, dependencies and conditions explicitly using symbolic expressions, which can be translated easily into polyhedral validity constraints (\ding{202} in \F\ref{fig:scheduling_viz}). In addition, \sys{} creates \emph{proximity constraints}, which guide the scheduler towards schedules with higher temporal locality and smaller tensor lifetimes. \sys{} uses the \emph{Pluto} scheduler~\cite{bondhugula2008pluto} through the \emph{isl} library~\cite{verdoolaege2010isl} (\ding{203}). 
+In \F\ref{fig:scheduling_viz}, the schedule found delays $y$'s execution by 3 steps.
+
+Since \sys fuses large regions of the SDG, the number of operations is reduced, making the ILP tractable even for large programs. 
+\sys{} stores the resulting schedule function~$\theta$ (\ding{204}) for scheduling memory management operations, as discussed next. We describe how \sys scans the schedule to produce an imperative program AST (\ding{205}) in \S\ref{sec:ast_build}.
+
+
+\subsection{Memory management}
+\label{sec:mem_sched}
+
+\begin{figure}[t]
+  \centering
+  \begin{subfigure}[t]{0.38\columnwidth}
+    \centering
+    \includegraphics[width=\columnwidth, trim={0 1 1 0}, clip]{cr_figures/dealloc_augment}
+    \caption{Deallocation}\label{fig:mem_man:dealloc}
+  \end{subfigure}%
+  \hfill
+  \begin{subfigure}[t]{0.58\columnwidth}
+    \centering
+    \includegraphics[width=\columnwidth, trim={0 1 1 0}, clip]{cr_figures/swap_augment}
+    \caption{Swap}\label{fig:mem_man:swap}
+  \end{subfigure}%
+  \caption{SDG memory management augmentations}
+  \label{fig:mem_man_augment}
+\end{figure}
+
+
+Memory management is a key concern in DL systems~\cite{peng2020capuchin,rhu2016vdnn,wang2018superneurons}. Using the polyhedral model, \sys{} automates memory management concerns: (i)~deallocations, (ii)~GPU/CPU memory swapping, and (iii)~buffer donations. 
+%
+
+The key idea is to \emph{augment} the SDG with memory management operations (and constraining dependencies), which enable \sys{} to reuse the polyhedral scheduler to find a memory management schedule.
+
+\mypar{Scheduling deallocations} 
+\F\ref{fig:mem_man:dealloc} shows how \sys{} augments the SDG with deallocations for the tensor produced by $P$ and consumed by $C$. Since $P$ produces a tensor for each timestep in its domain, $\Omega_P$, the deallocation $\mathrm{Dealloc}$ shares this same domain. \sys{} interprets the execution of $\mathrm{Dealloc}[t]$ as the time to deallocate the tensor $P[t]$.
+
+Deallocation must always happen after production, which \sys{} models with an identity dependence, $\mathrm{Dealloc} \rightarrow P$. 
+Then, to also ensure $P[t]$ is deallocated only after the consumer has finished using it, \sys{} adds a dependence from $\mathrm{Dealloc}$ to $C$, with the inverse dependence expression $C$ has on $P$. 
+For example, if $\phi\!=\!t-3$, then $\mathrm{Dealloc}[t]$ must wait for $C[t+3]$ to run, before it can deallocate $P[t]$.
+
+\mypar{Scheduling GPU/CPU memory swapping} 
+\F\ref{fig:mem_man:swap} shows how \sys{} augments the SDG with evict (GPU-to-CPU) and load (CPU-to-GPU) memory movement operations. 
+\sys{} inserts an initial evict operation $\mathrm{Evict_A}$, which evicts the tensor $P[t]$ immediately after production.
+It then inserts $\mathrm{Load}$ and $\mathrm{Evict_B}$ operators, to re-load and again evict all timesteps of $P$ needed by $C$ at timestep $t$. All operations have domain $\Omega_P$ and \sys{} interprets the execution of $\mathrm{Evict_{A/B}}[t]$ and $\mathrm{Load}[t]$ as the time to evict or load $P[t]$, respectively.
+
+
+A tensor can only be evicted after it has been produced, and loaded after it has been evicted. \sys{} models this with the identity dependencies, $\mathrm{Load} \rightarrow \mathrm{Evict_A} \rightarrow P$.
+To guarantee that the timesteps of $P$ needed by $C[t]$ are available in-memory when $C[t]$ executes, \sys{} adds $C \xrightarrow{\smash{\phi}} \mathrm{Load}$.
+Finally, similarly to deallocations, $\mathrm{Evict_B}$ must execute only after the last use of $P[t]$ by $C$, so \sys{} adds the inverse of the consumer's dependence from $\mathrm{Evict_B}$ to $C$.
+
+
+By placing these dependencies, \sys{} introduces constraints on when the memory management operations can execute, which guarantees that the resulting schedule is valid and efficient.
+To prevent thrashing~\cite{denning1968working}, \sys{} does not currently swap frequently accessed tensors, such as DNN parameters or K/V caches in attention models.
+At runtime, \sys{} performs such swap operations \emph{asynchronously}, through a shared \emph{page-locked} host-memory manager, which pre-allocates page-locked buffers for each swapped RT.
+
+\mypar{Finding buffer donations} Given the SDG's stateless nature, it is also important to detect when a tensor produced by one operation can be \emph{donated} to be reused by another operation. This avoids expensive re-allocations and enables in-place mutation of, \eg DNN parameters.
+
+After a tensor is donated, it is invalidated and can no longer be used by other operations.
+Thus, an operator $O_d$ can only donate its output tensor to one of its dependents, called the \emph{donation receiver} $O_r$, if for every timestep $t$ in its domain $\Omega(O_d)$, $O_r$ is the last user of $O_d[t]$. This requires that it is scheduled \emph{after} all other competing dependents $O_c$ according to the schedule function~$\theta$. Formally, \sys donates $O_d$ to $O_r$ if and only if
+\begin{align*}
+\forall t \in \Omega(O_d) .\ \forall O_c \in \mathcal{D}(O_d) \setminus \{O_r\} .\ \theta\left(\phi^{-1}_{c}(t)\right) \prec \theta\left(\phi^{-1}_{r}(t)\right)
+\end{align*}
+where $\mathcal{D}(O_d)$ is the set of dependents of $O_d$, $\phi^{-1}_{c}$ and $\phi^{-1}_{r}$ are the inverse dependence expressions from $O_c$ and $O_r$ to $O_d$ respectively, and $\setminus$ is the set difference operator. %This information is used by \sys{}'s runtime when it is code-generating kernels (\S\ref{sec:runtime}), so that code-generators are aware that, for example, more efficient in-place operations can be used.
+
+\subsection{Generating imperative programs}
+\label{sec:ast_build}
+
+\sys{} must obtain an imperative program for the user's declarative RT computation, but the schedule function~$\theta$ produced by the polyhedral scheduler~\cite{bondhugula2008pluto} is not directly executable. \sys{} transforms it into an abstract syntax tree~(AST) by using the polyhedral library~\cite{verdoolaege2010isl} to scan~\cite{grosser2015polyhedral} it. The AST contains the following types of statements:
+%
+\begin{myitemize}
+  \item \textbf{sequence}: a block of AST nodes executed in order;%or in parallel.
+  \item \textbf{if}: a conditional with then and else sub-ASTs;
+  \item \textbf{loop}: a generic loop with an iteration counter, start value, condition, step and body sub-AST;
+  %TODO: removed parallel due to space
+  \item \textbf{execute}: executes operation~$O[t]$, where $t$ is given by a mapping from loop counters; and
+  \item \textbf{deallocate/load/evict}: executes the memory instruction for timestep~$t$ (or multiple steps at once) given by a mapping from loop counters.
+\end{myitemize}
+
+To generate efficient ASTs, \sys applies further optimizations: (1)~it \emph{partially unrolls} loops to reduce the number of nested conditionals; (2)~it \emph{promotes} static loops that contain only memory management operations into batched instructions by mapping the loop's range to a slice of points; and (3)~it finds and removes redundant loads/evicts by removing (i)~any evict followed by a load or deallocation for the same tensor; and (ii)~loads for already in-memory tensors. %(as long as there is no user in between).
+
+
+By interpreting the AST at runtime, users are able to step through the program with high granularity. This allows for simpler debugging and integration with existing DL libraries.%, but it can also be a performance bottleneck due to interpretation overheads for small programs, which we leave for future work.
+
+% End

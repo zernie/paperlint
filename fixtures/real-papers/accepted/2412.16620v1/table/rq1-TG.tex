@@ -1,0 +1,28 @@
+\begin{table*}[htbp]
+\centering
+\small
+\caption{Comparisons of LLMs with previous approaches on the test generation task using the Defects4J dataset. The best results among all LLMs are \textbf{bolded}, and the second-best results are \uline{underlined}.}
+\label{tab:tg_comparisons_llm}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Approaches/LLMs} & \textbf{Correct} & \textbf{Passing} & \textbf{Failing} & \textbf{Build Error} & \textbf{Syntax Error} \\
+\midrule
+\textsc{AthenaTest} & 16.21\% & 21.35\% & 26.71\% & 42.41\% & 9.49\% \\
+A3Test & 40.05\% & - & - & - & - \\
+ChatUniTest & 40.14\% & - & - & - & - \\
+CasModaTest$_{~GPT3.5}$ & 77.16\%  & - & - & - & - \\
+\midrule
+CodeBERT & 5.56\% & 8.41\% & \textbf{5.99\%} & 78.90\% & 6.70\% \\
+GraphCodeBERT & 11.77\% & 14.02\% & 11.19\% & 65.89\% & 8.89\% \\
+UniXcoder & 6.42\% & 8.12\% & 10.48\% & 69.02\% & 12.37\% \\
+CodeT5-base & 15.91\% & 18.76\% & 14.90\% & 61.36\% & \uline{4.98\%} \\
+CodeT5p-220m & 17.75\% & 19.79\% & 27.07\% & 50.26\% & \textbf{2.88\%} \\
+PLBART-large & 17.50\% & 20.25\% & 20.63\% & 52.96\% & 6.16\% \\
+CodeGPT & 7.66\% & 9.64\% & 9.81\% & 39.67\% & 40.88\% \\
+StarCoder2-7b & 20.78\% & 23.10\% & 23.16\% & 41.45\% & 12.30\% \\
+CodeLlama-7b & \uline{29.50\%} & \uline{32.14\%} & \uline{7.86\%} & \uline{30.87\%} & 29.13\% \\
+DeepSeek-Coder-6b & \textbf{33.68\%} & \textbf{36.02\%} & 9.00\% & \textbf{21.36\%} & 33.62\% \\
+\bottomrule
+\end{tabular}
+\vspace{-0.5cm}
+\end{table*}

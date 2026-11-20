@@ -1,0 +1,16 @@
+{\editcolor 
+\vspace{-1mm}
+\section{Limitations}
+\label{sec:limitations}
+\vspace{-1mm}
+
+Our approach currently focuses on the connections between table segments and passages. 
+{\feditcolor
+In future work, we aim to extend our method to more general types of connections between nodes of arbitrary modalities, such as images and inter-table links. 
+Concretely, we are actively exploring extensions to HELIOS’s graph construction and traversal mechanisms to incorporate image-based nodes alongside text and tables. 
+At this stage, we convert image inputs into text representations using vision-language models (e.g., Qwen2.5-VL 7B), and treat the resulting summaries as nodes. 
+Even with this simple transformation, preliminary experimental results indicate that HELIOS already outperforms existing multimodal SOTA retrievers. We plan to further develop this line of research and present it in a dedicated future publication.
+Moreover, as shown in Section~\ref{sec:exp_ablation_study}, the effectiveness of our SLR module can be limited by LLM hallucinations. 
+An interesting direction for future work is to explore self-evaluation techniques~\citep{wangself, zhang2024self}—for instance, computing confidence scores and re-checking low-confidence outputs—to further reduce any remaining hallucinations.
+}
+}

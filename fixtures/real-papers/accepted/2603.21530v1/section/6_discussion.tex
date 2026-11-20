@@ -1,0 +1,31 @@
+\label{sec:discuss}
+
+
+\subsection{Why does MIST work?}
+
+The effectiveness of MIST lies in guiding LLM generation with hierarchical documentation structure and systematically exploring execution paths through MCTS-based mutation. As demonstrated in Figure~\ref{fig:case_study}, we present a case study using Qwen2.5-7B on SQLite, comparing three approaches to SQL test case generation: simple synthesization, feature-guided synthesization, and MCTS-guided mutation.
+
+\subsubsection{Feature-guided synthetization for enriching the semantics of test cases with document knowledge}
+
+As shown in Figure~\ref{fig:case_study}, \textit{Simple Synthesization} fails to provide sufficient semantic richness. It relies solely on basic table structures and straightforward \texttt{INSERT/SELECT} statements, generating the minimal SQL that achieves only 14.0\% line coverage and 9.0\% branch coverage. This represents the lower bound of what random generation can produce. In contrast, by organizing DBMS features into a hierarchical tree and performing path-based sampling, MIST systematically selects features that exercise deeper components. The feature-guided approach incorporates PRIMARY KEY constraints (F1), CREATE INDEX (F2), aggregation functions (F3), and subqueries (F4) into the generated SQL, resulting in improvements of 30.0\%, 19.7\%, and 35.6\% in terms of line coverage, function coverage, and branch coverage, respectively. This demonstrates that hierarchical feature selection effectively guides LLMs to generate semantically rich SQL that explores wider execution paths.
+
+\subsubsection{Monte Carlo tree search-based mutation for exploring deeper execution paths to enhance coverage}
+
+MIST strategically mutates existing high-quality seeds using rules selected through MCTS, which ensures that mutation rules are systematically chosen to maximize coverage improvement potential rather than being randomly applied. Specifically, the mutation introduces boundary value insertion (R1) with extreme values (NULL, -50.00), CASE WHEN branches (R2) with conditional logic, and NULL handling (R3) with IS NOT NULL predicates. These mutations trigger edge case handling in arithmetic operations and storage management, activate different evaluation paths in the executor, and exercise NULL value processing logic. The MCTS-guided mutation achieves 19.4\% line coverage, 28.3\% function coverage, and 13.4\% branch coverage, representing additional improvements of 6.6\%, 3.7\%, and 9.8\% over feature-guided synthesis, respectively.
+
+The comparison across three approaches demonstrates that feature-guided synthesis and MCTS-based mutation address different aspects of coverage improvement. Feature selection provides semantic richness by guiding LLMs based on documentation knowledge, while MCTS-based mutation provides systematic edge case exploration when generation saturates, demonstrating the effectiveness of MIST in comprehensive DBMS testing.
+
+\subsection{Threats to Validity}
+
+We identify three main threats to the validity of our study:
+
+\noindent\textbf{Internal Validity.} The primary threat concerns coverage measurement accuracy. We use compiler-based instrumentation (gcov/lcov) to collect coverage data, which may introduce runtime overhead. To mitigate this, we use dedicated coverage-enabled builds separate from production binaries and verify that instrumentation does not alter DBMS functional correctness. Another concern is the non-deterministic nature of LLM-based generation. To mitigate this variability, we configure a fixed temperature of 0.2 and use consistent random seeds across all experiments for reproducibility. The substantial and consistent coverage improvements observed across all four LLMs and three DBMSs demonstrate that MIST's effectiveness remains stable despite this inherent randomness.
+
+
+\textbf{External Validity.} Our evaluation focuses on three open-source DBMSs (DuckDB, PostgreSQL, SQLite) and two LLM families (Qwen and Llama), which may limit the generalizability to other systems. However, these DBMSs represent diverse architectural designs and cover a broad spectrum of SQL dialects. The consistent improvements across different model sizes (7B to 32B parameters) suggest that MIST is generalizable to similar systems and models.
+
+% \textbf{Construct Validity.} We use code coverage (line, function, and branch) as the primary metric for evaluating test effectiveness. While coverage is a widely accepted proxy for test quality, high coverage does not guarantee the absence of bugs or complete functional correctness. Our choice is motivated by its prevalence in both research and industrial practice, and we complement coverage metrics with module-level analysis to provide a more comprehensive assessment. 
+
+% \textbf{Construct Validity.} We use code coverage (line, function, and branch) as the primary metric for evaluating test effectiveness. While coverage is a widely accepted proxy for test quality, it does not directly measure fault detection capability. Our evaluation does not analyze the types or number of faults discovered by MIST compared to the baseline. This represents a limitation of the current study, and future work could evaluate fault-finding effectiveness through mutation testing or analysis of discovered bugs.
+
+\textbf{Construct Validity.} We use code coverage (line, function, and branch) as the primary metric for evaluating test effectiveness. While coverage is a widely accepted proxy for test quality, high coverage does not guarantee the absence of bugs or complete functional correctness. We acknowledge that our evaluation does not include explicit fault detection analysis, such as counting crashes or assertion failures triggered by the generated test cases. Nevertheless, the substantially higher coverage achieved by MIST suggests that it exercises deeper execution paths and edge cases that are more likely to expose latent faults compared to the baseline approach. Future work could evaluate fault-finding effectiveness through mutation testing or analysis of discovered bugs.

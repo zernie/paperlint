@@ -1,0 +1,145 @@
+\documentclass[10pt,conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+
+\usepackage{graphicx} % Required for inserting images
+\usepackage{url}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{flushend}
+\usepackage{balance}
+
+
+\graphicspath{{figs/}}
+
+\usepackage{ifthen}
+\newboolean{showcomments}
+\setboolean{showcomments}{false}          
+\ifthenelse{\boolean{showcomments}}
+  {\newcommand{\nb}[2]{
+    \fcolorbox{gray}{yellow}{\bfseries\scriptsize#1}
+    {\scriptsize$\blacktriangleright${#2}$\blacktriangleleft$}
+   } 
+  }
+  {\newcommand{\nb}[2]{}}
+  
+\newcommand{\jordi}[1]{\nb{Jordi}{#1}}
+\newcommand{\javi}[1]{\nb{Javi}{#1}}
+\newcommand{\adem}[1]{\nb{Adem}{#1}}
+\newcommand{\gwendal}[1]{\nb{Gwendal}{#1}}
+
+\abovedisplayshortskip=-10pt
+\belowdisplayshortskip=-10pt
+\abovecaptionskip=1pt
+\belowcaptionskip=1pt
+
+\floatsep=8.0pt plus 0pt minus 0pt
+\textfloatsep=1.0pt plus 0pt minus 0pt
+\intextsep=10.0pt plus 0pt minus 0pt
+
+\makeatletter
+\newcommand{\linebreakand}{%
+  \end{@IEEEauthorhalign}
+  \hfill\mbox{}\par
+  \mbox{}\hfill\begin{@IEEEauthorhalign}
+}
+\makeatother
+
+\title{Towards Automated Governance: A DSL for Human-Agent Collaboration in Software Projects%
+\thanks{This work has been funded by the European Union under the Grant Agreement No 101189664 (MOSAICO project) and TED2021-130331B-I00 funded by MCIN/AEI/10.13039/501100011033 and European Union NextGenerationEU/PRTR. Views and opinions expressed are those of the author(s) only and do not necessarily reflect those of the European Union or the European Health and Digital Executive Agency (HADEA). Neither the European Union nor the granting authority can be held responsible for them.
+Jordi Cabot is supported by the Luxembourg National Research Fund (FNR) PEARL program, grant agreement 16544475.}}
+
+
+
+% Towards an Specification and enforcement of agent-aware governance policies: the case of Open Source Software
+% \author{Anonymous (double blind)}
+\date{June 2025}
+
+\author{
+    \IEEEauthorblockN{Adem Ait}
+    \IEEEauthorblockA{\textit{University of Luxembourg}\\
+    Esch-sur-Alzette, Luxembourg\\
+    adem.ait@uni.lu}
+    \and
+    \IEEEauthorblockN{Gwendal Jouneaux}
+    \IEEEauthorblockA{\textit{Luxembourg Institute of Science and Technology}\\
+    Esch-sur-Alzette, Luxembourg \\
+    gwendal.jouneaux@list.lu}
+    \linebreakand    
+    \IEEEauthorblockN{Javier Luis C\'anovas Izquierdo}
+    \IEEEauthorblockA{\textit{Universitat Oberta de Catalunya} \\
+    Barcelona, Spain \\
+    jcanovasi@uoc.edu}
+    \and 
+    \IEEEauthorblockN{Jordi Cabot}
+    \IEEEauthorblockA{\textit{University of Luxembourg} \\
+    \textit{Luxembourg Institute of Science and Technology}\\
+    Esch-sur-Alzette, Luxembourg \\
+    jordi.cabot@list.lu}
+}
+
+\begin{document} 
+
+\maketitle
+
+\begin{abstract}
+    The stakeholders involved in software development are becoming increasingly diverse, with both human contributors from varied backgrounds and AI-powered agents collaborating together in the process.
+    This situation presents unique governance challenges, particularly in Open-Source Software (OSS) projects, where explicit policies are often lacking or unclear.
+  %  While diversity can lead to more innovative solutions, it also requires robust governance mechanisms to ensure equitable representation and ethical decision-making.
+    This paper presents the vision and foundational concepts for a novel Domain-Specific Language (DSL) designed to define and enforce rich governance policies in systems involving diverse stakeholders, including agents. 
+    % Our DSL provides a structured approach for expressing governance rules, roles, responsibilities, and decision-making processes, with particular attention to fairness and representation. 
+   % We propose core principles for such a DSL, emphasizing the explicit modeling of diverse participant profiles (both human and agent), their unique characteristics, roles, and adaptable decision-making processes, with a central focus on fostering fairness and transparency. 
+    % By establishing a language tailored to modern governance needs, this work aims to enhance transparency, accountability, and inclusion in collaborative environments, fostering more equitable and effective interaction between humans and AI agents, while also providing a mechanism to automate the enforcement of these governance policies.
+    % Our language supports modern governance needs by promoting transparency, accountability, and inclusion in collaborative environments.
+    % It fosters equitable human-agent collaboration and enables automated enforcement of governance policies.
+    This DSL offers a pathway towards more robust, adaptable, and ultimately automated governance, paving the way for more effective collaboration in software projects, especially OSS ones.
+\end{abstract} 
+
+\section{Introduction}
+\label{sec:introduction}
+\input{ase-introduction}
+
+% \section{Background}
+% \label{sec:background}
+% \input{ase-background}
+
+\section{State of the Art}
+\label{sec:motivation}
+\input{ase-motivation}
+
+\section{Defining Governance Policies}
+\label{sec:dsl}
+\input{ase-our-dsl}
+\input{ase-engine-short}
+
+\section{Proof of Concept}
+\label{sec:proof-of-concept}
+\input{ase-proof-of-concept}
+
+% \section{Enforcing governance on GitHub}
+% \label{sec:engine}
+% \input{ase-engine}
+
+% \section{Validation}
+% \label{sec:validation}
+% \input{ase-validation}
+
+% \section{Related Work}
+% \label{sec:related}
+% \input{ase-related}
+
+\section{Roadmap}
+\label{sec:discussion}
+\input{ase-discussion}
+
+\section{Conclusion}
+\label{sec:conclusion}
+\input{ase-conclusion}
+
+
+\bibliographystyle{ieeetr}
+\bibliography{ase-main}
+
+\end{document}

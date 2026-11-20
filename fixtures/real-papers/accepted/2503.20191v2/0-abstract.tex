@@ -1,0 +1,13 @@
+\begin{abstract}
+
+Training large foundation models costs hundreds of millions of dollars, making deployment optimization critical. Current approaches require machine learning engineers to manually craft \textit{training recipes} through  error-prone trial-and-error on expensive compute clusters. To enable efficient exploration of training configurations, researchers have developed performance modeling systems. However, these systems force users to translate their workloads into \csl, introducing a fundamental \textit{\semg} between the actual workload and its representation. This gap creates an inherent tradeoff: systems must either support a narrow set of workloads to maintain usability, require complex specifications that limit practical adoption, or compromise prediction accuracy with simplified performance models.
+
+We present \sysname, a performance modeling system that eliminates these tradeoffs through transparent device emulation. By operating at the narrow interface between training frameworks and accelerator devices, \sysname can capture complete workload behavior without requiring code modifications or translations. \sysname intercepts device API calls from unmodified training code to directly observe low-level operations, enabling accurate performance prediction while maintaining both ease of use and generality. Our evaluation shows \sysname achieves less than \evalpe{}\% prediction error across diverse models and optimization strategies, identifying configurations that reduce training costs by up to \evaltc{}\% compared to existing approaches.
+
+
+
+
+
+
+
+\end{abstract}

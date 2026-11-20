@@ -1,0 +1,388 @@
+\begin{thebibliography}{10}
+
+\bibitem{alipay}
+{Alipay}.
+\newblock \url{https://en.wikipedia.org/wiki/Alipay}, 2024.
+
+\bibitem{careem}
+{Careem}.
+\newblock \url{https://en.wikipedia.org/wiki/Careem}, 2024.
+
+\bibitem{wechatsdk}
+{Development guide of the framework in WeChat mini-program}.
+\newblock \url{https://developers.weixin.qq.com/miniprogram/en/dev/framework/}, 2024.
+
+\bibitem{Eleme}
+{Ele.me}.
+\newblock \url{https://en.wikipedia.org/wiki/Ele.me}, 2024.
+
+\bibitem{alipaysdk}
+{Explaination of Alipay OpenAPI (Chinese)}.
+\newblock \url{https://open.alipay.com/api#jsapi}, 2024.
+
+\bibitem{tiktoksdk}
+{Introduction of the mini-app in Tiktok/ByteDance}.
+\newblock \url{https://developer.open-douyin.com/docs/resource/zh-CN/mini-app/develop/overview/introduction}, 2024.
+
+\bibitem{NBSC}
+{National Bureau of Statistics of China}.
+\newblock \url{https://www.stats.gov.cn/english/}, 2024.
+
+\bibitem{wechat}
+{WeChat}.
+\newblock \url{https://en.wikipedia.org/wiki/WeChat}, 2024.
+
+\bibitem{alizadeh2020gdpr}
+Fatemeh Alizadeh, Timo Jakobi, Alexander Boden, Gunnar Stevens, and Jens Boldt.
+\newblock Gdpr reality check-claiming and investigating personally identifiable data from companies.
+\newblock In {\em 2020 IEEE European Symposium on Security and Privacy Workshops (EuroS\&PW)}, pages 120--129. IEEE, 2020.
+
+\bibitem{balash2022security}
+David~G Balash, Xiaoyuan Wu, Miles Grant, Irwin Reyes, and Adam~J Aviv.
+\newblock Security and privacy perceptions of $\{$Third-Party$\}$ application access for google accounts.
+\newblock In {\em 31st USENIX Security Symposium (USENIX Security 22)}, pages 3397--3414, 2022.
+
+\bibitem{10.1145/3607199.3607236}
+Supraja Baskaran, Lianying Zhao, Mohammad Mannan, and Amr Youssef.
+\newblock Measuring the leakage and exploitability of authentication secrets in super-apps: The wechat case.
+\newblock In {\em Proceedings of the 26th International Symposium on Research in Attacks, Intrusions and Defenses}, RAID '23, page 727–743, New York, NY, USA, 2023. Association for Computing Machinery.
+
+\bibitem{bielova2024effect}
+Nataliia Bielova, Laura Litvine, Anysia Nguyen, Mariam Chammat, Vincent Toubiana, and Estelle Harry.
+\newblock The effect of design patterns on (present and future) cookie consent decisions.
+\newblock In {\em USENIX Security Symposium. USENIX Association. Accepted for publication}, 2024.
+
+\bibitem{bui2021consistency}
+Duc Bui, Yuan Yao, Kang~G Shin, Jong-Min Choi, and Junbum Shin.
+\newblock Consistency analysis of data-usage purposes in mobile apps.
+\newblock In {\em Proceedings of the 2021 ACM SIGSAC Conference on Computer and Communications Security}, pages 2824--2843, 2021.
+
+\bibitem{cai2024famos}
+Yifeng Cai, Ziqi Zhang, Jiaping Gui, Bingyan Liu, Xiaoke Zhao, Ruoyu Li, Zhe Li, and Ding Li.
+\newblock Famos: Robust privacy-preserving authentication on payment apps via federated multi-modal contrastive learning.
+\newblock In {\em 33rd USENIX Security Symposium (USENIX Security 24)}, pages 289--306, 2024.
+
+\bibitem{chen2023obsan}
+Yanzuo Chen, Yuanyuan Yuan, and Shuai Wang.
+\newblock Obsan: An out-of-bound sanitizer to harden dnn executables.
+\newblock In {\em NDSS}, 2023.
+
+\bibitem{chen2019demystifying}
+Yi~Chen, Mingming Zha, Nan Zhang, Dandan Xu, Qianqian Zhao, Xuan Feng, Kan Yuan, Fnu Suya, Yuan Tian, Kai Chen, et~al.
+\newblock Demystifying hidden privacy settings in mobile apps.
+\newblock In {\em 2019 IEEE Symposium on Security and Privacy (SP)}, pages 570--586. IEEE, 2019.
+
+\bibitem{cheng2017enterprise}
+Long Cheng, Fang Liu, and Danfeng Yao.
+\newblock Enterprise data breach: causes, challenges, prevention, and future directions.
+\newblock {\em Wiley Interdisciplinary Reviews: Data Mining and Knowledge Discovery}, 7(5):e1211, 2017.
+
+\bibitem{diamantaris2021sneaky}
+Michalis Diamantaris, Serafeim Moustakas, Lichao Sun, Sotiris Ioannidis, and Jason Polakis.
+\newblock This sneaky piggy went to the android ad market: Misusing mobile sensors for stealthy data exfiltration.
+\newblock In {\em Proceedings of the 2021 ACM SIGSAC Conference on Computer and Communications Security}, pages 1065--1081, 2021.
+
+\bibitem{ding2019modeling}
+Daizong Ding, Mi~Zhang, Xudong Pan, Min Yang, and Xiangnan He.
+\newblock Modeling extreme events in time series prediction.
+\newblock In {\em Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery \& Data Mining}, pages 1114--1122, 2019.
+
+\bibitem{dongexploring}
+Zikan Dong, Tianming Liu, Jiapeng Deng, Haoyu Wang, Li~Li, Minghui Yang, Meng Wang, Guosheng Xu, and Guoai Xu.
+\newblock Exploring covert third-party identifiers through external storage in the android new era.
+
+\bibitem{du2023withdrawing}
+Xiaolin Du, Zhemin Yang, Jiapeng Lin, Yinzhi Cao, and Min Yang.
+\newblock Withdrawing is believing? detecting inconsistencies between withdrawal choices and third-party data collections in mobile apps.
+\newblock In {\em 2024 IEEE Symposium on Security and Privacy (SP)}, pages 14--14. IEEE Computer Society, 2023.
+
+\bibitem{273705}
+Erhu Feng, Xu~Lu, Dong Du, Bicheng Yang, Xueqiang Jiang, Yubin Xia, Binyu Zang, and Haibo Chen.
+\newblock Scalable memory protection in the {PENGLAI} enclave.
+\newblock In {\em 15th {USENIX} Symposium on Operating Systems Design and Implementation ({OSDI} 21)}, pages 275--294. {USENIX} Association, July 2021.
+
+\bibitem{ferreira2023rulekeeper}
+Mafalda Ferreira, Tiago Brito, Jos{\'e}~Fragoso Santos, and Nuno Santos.
+\newblock Rulekeeper: Gdpr-aware personal data compliance for web frameworks.
+\newblock In {\em 2023 IEEE Symposium on Security and Privacy (SP)}, pages 2817--2834. IEEE, 2023.
+
+\bibitem{pmlr-v70-guo17a}
+Chuan Guo, Geoff Pleiss, Yu~Sun, and Kilian~Q. Weinberger.
+\newblock On calibration of modern neural networks.
+\newblock In Doina Precup and Yee~Whye Teh, editors, {\em Proceedings of the 34th International Conference on Machine Learning}, volume~70 of {\em Proceedings of Machine Learning Research}, pages 1321--1330. PMLR, 06--11 Aug 2017.
+
+\bibitem{guo2014scientific}
+Huadong Guo, Lizhe Wang, Fang Chen, and Dong Liang.
+\newblock Scientific big data and digital earth.
+\newblock {\em Chinese science bulletin}, 59:5066--5073, 2014.
+
+\bibitem{haney2021s}
+Julie~M Haney, Yasemin Acar, and Susanne Furman.
+\newblock " it's the company, the government, you and i": User perceptions of responsibility for smart home privacy and security.
+\newblock In {\em USENIX Security Symposium}, pages 411--428, 2021.
+
+\bibitem{he2016deep}
+Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun.
+\newblock Deep residual learning for image recognition.
+\newblock In {\em Proceedings of the IEEE conference on computer vision and pattern recognition}, pages 770--778, 2016.
+
+\bibitem{hochreiter1997long}
+Sepp Hochreiter and J{\"u}rgen Schmidhuber.
+\newblock Long short-term memory.
+\newblock {\em Neural computation}, 9(8):1735--1780, 1997.
+
+\bibitem{hong2020holmes}
+Shenda Hong, Yanbo Xu, Alind Khare, Satria Priambada, Kevin Maher, Alaa Aljiffry, Jimeng Sun, and Alexey Tumanov.
+\newblock Holmes: Health online model ensemble serving for deep learning models in intensive care units.
+\newblock In {\em Proceedings of the 26th ACM SIGKDD International Conference on Knowledge Discovery \& Data Mining}, pages 1614--1624, 2020.
+
+\bibitem{10.1145/2750858.2805837}
+Chakajkla Jesdabodi and Walid Maalej.
+\newblock Understanding usage states on mobile devices.
+\newblock In {\em Proceedings of the 2015 ACM International Joint Conference on Pervasive and Ubiquitous Computing}, UbiComp '15, page 1221–1225, New York, NY, USA, 2015. Association for Computing Machinery.
+
+\bibitem{jordan2021viceroy}
+Scott Jordan, Yoshimichi Nakatsuka, Ercan Ozturk, Andrew Paverd, and Gene Tsudik.
+\newblock Viceroy: Gdpr-/ccpa-compliant enforcement of verifiable accountless consumer requests.
+\newblock {\em arXiv preprint arXiv:2105.06942}, 2021.
+
+\bibitem{khandelwal2023unpacking}
+Rishabh Khandelwal, Asmit Nayak, Paul Chung, and Kassem Fawaz.
+\newblock Unpacking privacy labels: A measurement and developer perspective on google’s data safety section.
+\newblock {\em arXiv preprint arXiv:2306.08111}, 2023.
+
+\bibitem{klein2023general}
+David Klein, Benny Rolle, Thomas Barber, Manuel Karl, and Martin Johns.
+\newblock General data protection runtime: Enforcing transparent gdpr compliance for existing applications.
+\newblock In {\em Proceedings of the 2023 ACM SIGSAC Conference on Computer and Communications Security}, pages 3343--3357, 2023.
+
+\bibitem{koch2023ok}
+Simon Koch, Benjamin Altpeter, and Martin Johns.
+\newblock The $\{$OK$\}$ is not enough: A large scale study of consent dialogs in smartphone applications.
+\newblock In {\em 32nd USENIX Security Symposium (USENIX Security 23)}, pages 5467--5484, 2023.
+
+\bibitem{kollnig2023before}
+Konrad Kollnig, Lu~Zhang, Jun Zhao, and Nigel Shadbolt.
+\newblock Before and after china's new data laws: Privacy in apps.
+\newblock {\em arXiv preprint arXiv:2302.13585}, 2023.
+
+\bibitem{pmlr-v80-kuleshov18a}
+Volodymyr Kuleshov, Nathan Fenner, and Stefano Ermon.
+\newblock Accurate uncertainties for deep learning using calibrated regression.
+\newblock In Jennifer Dy and Andreas Krause, editors, {\em Proceedings of the 35th International Conference on Machine Learning}, volume~80 of {\em Proceedings of Machine Learning Research}, pages 2796--2804. PMLR, 10--15 Jul 2018.
+
+\bibitem{kuppers2020multivariate}
+Fabian Kuppers, Jan Kronenberger, Amirhossein Shantia, and Anselm Haselhoff.
+\newblock Multivariate confidence calibration for object detection.
+\newblock In {\em Proceedings of the IEEE/CVF conference on computer vision and pattern recognition workshops}, pages 326--327, 2020.
+
+\bibitem{lecun1995convolutional}
+Yann LeCun, Yoshua Bengio, et~al.
+\newblock Convolutional networks for images, speech, and time series.
+\newblock {\em The handbook of brain theory and neural networks}, 3361(10):1995, 1995.
+
+\bibitem{li2022collect}
+Shuai Li, Zhemin Yang, Nan Hua, Peng Liu, Xiaohan Zhang, Guangliang Yang, and Min Yang.
+\newblock Collect responsibly but deliver arbitrarily? a study on cross-user privacy leakage in mobile apps.
+\newblock In {\em Proceedings of the 2022 ACM SIGSAC Conference on Computer and Communications Security}, pages 1887--1900, 2022.
+
+\bibitem{li2023minitracker}
+Wei Li, Borui Yang, Hangyu Ye, Liyao Xiang, Qingxiao Tao, Xinbing Wang, and Chenghu Zhou.
+\newblock Minitracker: Large-scale sensitive information tracking in mini apps.
+\newblock {\em IEEE Transactions on Dependable and Secure Computing}, 2023.
+
+\bibitem{liu2015role}
+Rongbing Liu.
+\newblock The role of alipay in china.
+\newblock {\em Nijmegen, Radboud University, Nijmegen, The Netherlands}, 2015.
+
+\bibitem{liu2015cloudy}
+Yang Liu, Armin Sarabi, Jing Zhang, Parinaz Naghizadeh, Manish Karir, Michael Bailey, and Mingyan Liu.
+\newblock Cloudy with a chance of breach: Forecasting cyber security incidents.
+\newblock In {\em 24th USENIX Security Symposium (USENIX Security 15)}, pages 1009--1024, 2015.
+
+\bibitem{lu2021whois}
+Chaoyi Lu, Baojun Liu, Yiming Zhang, Zhou Li, Fenglu Zhang, Haixin Duan, Ying Liu, Joann~Qiongna Chen, Jinjin Liang, Zaifeng Zhang, et~al.
+\newblock From whois to whowas: A large-scale measurement study of domain registration privacy under the gdpr.
+\newblock In {\em NDSS}, 2021.
+
+\bibitem{lu2020demystifying}
+Haoran Lu, Luyi Xing, Yue Xiao, Yifan Zhang, Xiaojing Liao, XiaoFeng Wang, and Xueqiang Wang.
+\newblock Demystifying resource management risks in emerging mobile app-in-app ecosystems.
+\newblock In {\em Proceedings of the 2020 ACM SIGSAC conference on computer and communications Security}, pages 569--585, 2020.
+
+\bibitem{lyons2023log}
+Allan Lyons, Julien Gamba, Austin Shawaga, Joel Reardon, Juan Tapiador, Serge Egelman, and Narseo Vallina-Rodr{\'\i}guez.
+\newblock Log:$\{$It’s$\}$ big,$\{$It’s$\}$ heavy,$\{$It’s$\}$ filled with personal data! measuring the logging of sensitive information in the android ecosystem.
+\newblock In {\em 32nd USENIX Security Symposium (USENIX Security 23)}, pages 2115--2132, 2023.
+
+\bibitem{ma2021effectiveness}
+Haoyu Ma, Jianwen Tian, Debin Gao, and Chunfu Jia.
+\newblock On the effectiveness of using graphics interrupt as a side channel for user behavior snooping.
+\newblock {\em IEEE Transactions on Dependable and Secure Computing}, 19(5):3257--3270, 2021.
+
+\bibitem{mayer2021now}
+Peter Mayer, Yixin Zou, Florian Schaub, and Adam~J Aviv.
+\newblock " now i'm a bit $\{$angry:$\}$" individuals' awareness, perception, and responses to data breaches that affected them.
+\newblock In {\em 30th USENIX Security Symposium (USENIX Security 21)}, pages 393--410, 2021.
+
+\bibitem{meng2023post}
+Mark~Huasong Meng, Qing Zhang, Guangshuai Xia, Yuwei Zheng, Yanjun Zhang, Guangdong Bai, Zhi Liu, Sin~G Teo, and Jin~Song Dong.
+\newblock Post-gdpr threat hunting on android phones: dissecting os-level safeguards of user-unresettable identifiers.
+\newblock In {\em The Network and Distributed System Security Symposium (NDSS)}, 2023.
+
+\bibitem{muller2019does}
+Rafael M{\"u}ller, Simon Kornblith, and Geoffrey~E Hinton.
+\newblock When does label smoothing help?
+\newblock {\em Advances in neural information processing systems}, 32, 2019.
+
+\bibitem{nan2023are}
+Yuhong Nan, Xueqiang Wang, Luyi Xing, Xiaojing Liao, Ruoyu Wu, Jianliang Wu, Yifan Zhang, and XiaoFeng Wang.
+\newblock Are you spying on me? large-scale analysis on iot data exposure through companion apps.
+\newblock 2023.
+
+\bibitem{nguyen2021share}
+Trung~Tin Nguyen, Michael Backes, Ninja Marnau, and Ben Stock.
+\newblock Share first, ask later (or never?) studying violations of $\{$GDPR's$\}$ explicit consent in android apps.
+\newblock In {\em 30th USENIX Security Symposium (USENIX Security 21)}, pages 3667--3684, 2021.
+
+\bibitem{nguyen2022freely}
+Trung~Tin Nguyen, Michael Backes, and Ben Stock.
+\newblock Freely given consent? studying consent notice of third-party tracking and its violations of gdpr in android apps.
+\newblock In {\em Proceedings of the 2022 ACM SIGSAC Conference on Computer and Communications Security}, pages 2369--2383, 2022.
+
+\bibitem{10.1145/3604271}
+Naoto Nishida, Kaori Ikematsu, Junichi Sato, Shota Yamanaka, and Kota Tsubouchi.
+\newblock Single-tap latency reduction with single- or double- tap prediction.
+\newblock {\em Proc. ACM Hum.-Comput. Interact.}, 7(MHCI), sep 2023.
+
+\bibitem{6957307}
+Jason~R.C. Nurse, Oliver Buckley, Philip~A. Legg, Michael Goldsmith, Sadie Creese, Gordon~R.T. Wright, and Monica Whitty.
+\newblock Understanding insider threat: A framework for characterising attacks.
+\newblock In {\em 2014 IEEE Security and Privacy Workshops}, pages 214--228, 2014.
+
+\bibitem{oviedo2020frustrating}
+Oscar Oviedo-Trespalacios, Verity Truelove, and Mark King.
+\newblock “it is frustrating to not have control even though i know it’s not legal!”: A mixed-methods investigation on applications to prevent mobile phone use while driving.
+\newblock {\em Accident Analysis \& Prevention}, 137:105412, 2020.
+
+\bibitem{pantrap}
+Shidong Pan, Dawen Zhang, Mark Staples, Zhenchang Xing, Jieshan Chen, Xiwei Xu, and Thong Hoang.
+\newblock Is it a trap? a large-scale empirical study and comprehensive assessment of online automated privacy policy generators for mobile apps.
+
+\bibitem{salehinejad2017recent}
+Hojjat Salehinejad, Sharan Sankar, Joseph Barfett, Errol Colak, and Shahrokh Valaee.
+\newblock Recent advances in recurrent neural networks.
+\newblock {\em arXiv preprint arXiv:1801.01078}, 2017.
+
+\bibitem{shauly2020public}
+Orr Shauly, Gregory Stone, and Daniel Gould.
+\newblock The public’s perception of the severity and global impact at the start of the sars-cov-2 pandemic: a crowdsourcing-based cross-sectional analysis.
+\newblock {\em Journal of Medical Internet Research}, 22(11):e19768, 2020.
+
+\bibitem{thomas2017data}
+Kurt Thomas, Frank Li, Ali Zand, Jacob Barrett, Juri Ranieri, Luca Invernizzi, Yarik Markov, Oxana Comanescu, Vijay Eranti, Angelika Moscicki, et~al.
+\newblock Data breaches, phishing, or malware? understanding the risks of stolen credentials.
+\newblock In {\em Proceedings of the 2017 ACM SIGSAC conference on computer and communications security}, pages 1421--1434, 2017.
+
+\bibitem{tian2021and}
+Yuan Tian, Ke~Zhou, and Dan Pelleg.
+\newblock What and how long: Prediction of mobile app engagement.
+\newblock {\em ACM Transactions on Information Systems (TOIS)}, 40(1):1--38, 2021.
+
+\bibitem{tu2018your}
+Zhen Tu, Runtong Li, Yong Li, Gang Wang, Di~Wu, Pan Hui, Li~Su, and Depeng Jin.
+\newblock Your apps give you away: distinguishing mobile users by their app usage fingerprints.
+\newblock {\em Proceedings of the ACM on Interactive, Mobile, Wearable and Ubiquitous Technologies}, 2(3):1--23, 2018.
+
+\bibitem{vaswani2017attention}
+Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan~N Gomez, {\L}ukasz Kaiser, and Illia Polosukhin.
+\newblock Attention is all you need.
+\newblock {\em Advances in neural information processing systems}, 30, 2017.
+
+\bibitem{wang2023taintmini}
+Chao Wang, Ronny Ko, Yue Zhang, Yuqing Yang, and Zhiqiang Lin.
+\newblock Taintmini: Detecting flow of sensitive data in mini-programs with static taint analysis.
+\newblock In {\em 2023 IEEE/ACM 45th International Conference on Software Engineering (ICSE)}, pages 932--944. IEEE, 2023.
+
+\bibitem{10.5555/3620237.3620608}
+Chao Wang, Yue Zhang, and Zhiqiang Lin.
+\newblock One size does not fit all: Uncovering and exploiting cross platform discrepant apis in wechat.
+\newblock In {\em Proceedings of the 32nd USENIX Conference on Security Symposium}, SEC '23, USA, 2023. USENIX Association.
+
+\bibitem{10.1145/3576915.3616676}
+Chao Wang, Yue Zhang, and Zhiqiang Lin.
+\newblock Uncovering and exploiting hidden apis in mobile super apps.
+\newblock In {\em Proceedings of the 2023 ACM SIGSAC Conference on Computer and Communications Security}, CCS '23, page 2471–2485, New York, NY, USA, 2023. Association for Computing Machinery.
+
+\bibitem{wang2021rethinking}
+Deng-Bao Wang, Lei Feng, and Min-Ling Zhang.
+\newblock Rethinking calibration of deep neural networks: Do not be afraid of overconfidence.
+\newblock {\em Advances in Neural Information Processing Systems}, 34:11809--11820, 2021.
+
+\bibitem{wang2022srr}
+Han Wang, Hanbin Hong, Li~Xiong, Zhan Qin, and Yuan Hong.
+\newblock L-srr: Local differential privacy for location-based services with staircase randomized response.
+\newblock In {\em Proceedings of the 2022 ACM SIGSAC Conference on Computer and Communications Security}, pages 2809--2823, 2022.
+
+\bibitem{wang2021confident}
+Xiao Wang, Hongrui Liu, Chuan Shi, and Cheng Yang.
+\newblock Be confident! towards trustworthy graph neural networks via confidence calibration.
+\newblock {\em Advances in Neural Information Processing Systems}, 34:23768--23779, 2021.
+
+\bibitem{wang2023tabi}
+Yiding Wang, Kai Chen, Haisheng Tan, and Kun Guo.
+\newblock Tabi: An efficient multi-level inference system for large language models.
+\newblock In {\em Proceedings of the Eighteenth European Conference on Computer Systems}, pages 233--248, 2023.
+
+\bibitem{wu2022linkteller}
+Fan Wu, Yunhui Long, Ce~Zhang, and Bo~Li.
+\newblock Linkteller: Recovering private edges from graph neural networks via influence analysis.
+\newblock In {\em 2022 ieee symposium on security and privacy (sp)}, pages 2005--2024. IEEE, 2022.
+
+\bibitem{10.1145/3576915.3623067}
+Anhao Xiang, Weiping Pei, and Chuan Yue.
+\newblock Policychecker: Analyzing the gdpr completeness of mobile apps' privacy policies.
+\newblock In {\em Proceedings of the 2023 ACM SIGSAC Conference on Computer and Communications Security}, CCS '23, page 3373–3387, New York, NY, USA, 2023. Association for Computing Machinery.
+
+\bibitem{xiao2023lalaine}
+Yue Xiao, Zhengyi Li, Yue Qin, Xiaolong Bai, Jiale Guan, Xiaojing Liao, and Luyi Xing.
+\newblock Lalaine: Measuring and characterizing $\{$Non-Compliance$\}$ of apple privacy labels.
+\newblock In {\em 32nd USENIX Security Symposium (USENIX Security 23)}, pages 1091--1108, 2023.
+
+\bibitem{yang2022cross}
+Yuqing Yang, Yue Zhang, and Zhiqiang Lin.
+\newblock Cross miniapp request forgery: Root causes, attacks, and vulnerability detection.
+\newblock In {\em Proceedings of the 2022 ACM SIGSAC Conference on Computer and Communications Security}, pages 3079--3092, 2022.
+
+\bibitem{young2022skilldetective}
+Jeffrey Young, Song Liao, Long Cheng, Hongxin Hu, and Huixing Deng.
+\newblock $\{$SkillDetective$\}$: Automated $\{$Policy-Violation$\}$ detection of voice assistant applications in the wild.
+\newblock In {\em 31st USENIX Security Symposium (USENIX Security 22)}, 2022.
+
+\bibitem{zerveas2021transformer}
+George Zerveas, Srideepika Jayaraman, Dhaval Patel, Anuradha Bhamidipaty, and Carsten Eickhoff.
+\newblock A transformer-based framework for multivariate time series representation learning.
+\newblock In {\em Proceedings of the 27th ACM SIGKDD conference on knowledge discovery \& data mining}, pages 2114--2124, 2021.
+
+\bibitem{zhang2022identity}
+Lei Zhang, Zhibo Zhang, Ancong Liu, Yinzhi Cao, Xiaohan Zhang, Yanjun Chen, Yuan Zhang, Guangliang Yang, and Min Yang.
+\newblock Identity confusion in $\{$WebView-based$\}$ mobile app-in-app ecosystems.
+\newblock In {\em 31st USENIX Security Symposium (USENIX Security 22)}, pages 1597--1613, 2022.
+
+\bibitem{zhang2023understanding}
+Xiaohan Zhang, Haoqi Ye, Ziqi Huang, Xiao Ye, Yinzhi Cao, Yuan Zhang, and Min Yang.
+\newblock Understanding the (in) security of cross-side face verification systems in mobile apps: a system perspective.
+\newblock In {\em 2023 IEEE Symposium on Security and Privacy (SP)}, pages 934--950. IEEE, 2023.
+
+\bibitem{10.1145/3576915.3616591}
+Yue Zhang, Yuqing Yang, and Zhiqiang Lin.
+\newblock Don't leak your keys: Understanding, measuring, and exploiting the appsecret leaks in mini-programs.
+\newblock In {\em Proceedings of the 2023 ACM SIGSAC Conference on Computer and Communications Security}, CCS '23, page 2411–2425, New York, NY, USA, 2023. Association for Computing Machinery.
+
+\bibitem{zuo2019does}
+Chaoshun Zuo, Zhiqiang Lin, and Yinqian Zhang.
+\newblock Why does your data leak? uncovering the data leakage in cloud from mobile apps.
+\newblock In {\em 2019 IEEE Symposium on Security and Privacy (SP)}, pages 1296--1310. IEEE, 2019.
+
+\end{thebibliography}

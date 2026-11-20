@@ -1,0 +1,330 @@
+\label{sec:overview}
+In this section, we propose MIST, an LLM-based test case generation framework for DBMS through Monte Carlo tree search. We first present the overview of MIST and then describe its details in the following subsections.
+
+\subsection{Overview}
+
+Given a target DBMS and a lightweight LLM, MIST generates high-quality SQL test cases through a two-stage approach, as shown in Figure~\ref{fig:framework}. In the (1) \textit{Feature-Guided Error-Driven Test Case Synthetization} stage, MIST constructs a hierarchical feature tree from official documentation and samples feature paths to guide LLM generation. Execution errors are captured and fed back to refine subsequent generations, progressively improving the syntactic validity and semantic diversity of test cases. When coverage growth plateaus, MIST transitions to the (2) \textit{Monte Carlo Tree Search-Based Test Case Mutation} stage, where it treats generated queries as seeds and employs MCTS to iteratively select seeds and apply mutation rules. Coverage feedback from test execution guides the search toward unexplored code regions, systematically improving coverage beyond the initial generation plateau.
+
+% \begin{figure}[] 
+% \begin{AIbox}{Prompt Template for Test Case Synthetization}
+% \underline{\bf Role Definition:} 
+% {
+% \begin{tcolorbox}[colback=gray!10, colframe=gray!10, boxrule=0pt, sharp corners, left=0pt, right=0pt, top=0pt, bottom=0pt]
+% You are a professional database testing engineer. Generate high-quality SQL test cases for [DBMS\_TYPE] database. Ensure all SQL statements follow [DBMS\_TYPE] conventions.
+% \end{tcolorbox}
+% }
+
+% \underline{\bf Target Features:} 
+% {
+% \begin{tcolorbox}[colback=gray!10, colframe=gray!20, boxrule=0pt, left=0pt, sharp corners, right=0pt, top=0pt, bottom=0pt]
+% Generate a complete SQL test case that MUST use ALL of the following features:
+
+% 1. \textit{[FEATURE\_1]} - Description: \textit{[DESC\_1]}
+
+% 2. \textit{[FEATURE\_2]} - Description: \textit{[DESC\_2]}
+
+% [$\cdots$]
+% \end{tcolorbox}
+% }
+
+% \underline{\bf Error Memory:} 
+% {
+% \begin{tcolorbox}[colback=gray!10, colframe=gray!20, boxrule=0pt, sharp corners,left=0pt, right=0pt, top=0pt, bottom=0pt]
+% Common errors to avoid (from previous failures):
+
+% \textit{[ERROR\_MEMORY]}
+
+% Please carefully avoid these errors in your generated SQL test case.
+% \end{tcolorbox}
+% }
+
+% \underline{\bf Output Requirements:} 
+% {
+% \begin{tcolorbox}[colback=gray!10, colframe=gray!20, boxrule=0pt, sharp corners,left=0pt, right=0pt,top=0pt, bottom=0pt]
+% Output ONLY pure SQL statements. NO explanations, NO comments. The output must include DDL, DML and DQL.
+% \end{tcolorbox}
+% }
+% \end{AIbox} 
+% \caption{The prompt template for test case synthetization. \textit{[DBMS\_TYPE]} is the target DBMS, \textit{[FEATURE\_LIST]} contains selected features from the hierarchical tree, and \textit{[ERROR\_MEMORY]} provides feedback from previous execution failures.}
+% \label{fig:prompt_test}
+% \end{figure}
+
+% \begin{figure}[]
+% \setlength{\fboxsep}{6pt}
+% \noindent
+% \fcolorbox{black!0}{gray!10}{
+% \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{
+% \textbf{Prompt Template for Test Case Synthetization}
+
+% \vspace{4pt}
+% \underline{\bf Role Definition:}
+
+% \fcolorbox{black!0}{gray!10}{
+% \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{
+% You are a professional database testing engineer. Generate high-quality SQL test cases for [DBMS\_TYPE] database. Ensure all SQL statements follow [DBMS\_TYPE] conventions.
+% }}
+
+% \vspace{6pt}
+% \underline{\bf Target Features:}
+
+% \fcolorbox{black!0}{gray!10}{
+% \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{
+% Generate a complete SQL test case that MUST use ALL of the following features:
+
+% 1. \textit{[FEATURE\_1]} — Description: \textit{[DESC\_1]}
+
+% 2. \textit{[FEATURE\_2]} — Description: \textit{[DESC\_2]}
+
+% [$\cdots$]
+% }}
+
+% \vspace{6pt}
+% \underline{\bf Error Memory:}
+
+% \fcolorbox{black!0}{gray!10}{
+% \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{
+% Common errors to avoid (from previous failures):
+
+% \textit{[ERROR\_MEMORY]}
+
+% Please carefully avoid these errors in your generated SQL test case.
+% }}
+
+% \vspace{6pt}
+% \underline{\bf Output Requirements:}
+
+% \fcolorbox{black!0}{gray!10}{
+% \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{
+% Output ONLY pure SQL statements. NO explanations, NO comments. The output must include DDL, DML and DQL.
+% }}
+
+% }
+% }
+% \caption{The prompt template for test case synthetization. \textit{[DBMS\_TYPE]} is the target DBMS, \textit{[FEATURE\_LIST]} contains selected features from the hierarchical tree, and \textit{[ERROR\_MEMORY]} provides feedback from previous execution failures.}
+% \label{fig:prompt_test}
+% \end{figure}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[scale=1]{figure/prompt.pdf}
+    \caption{The prompt template for test case synthetization. \textit{[DBMS\_TYPE]} is the target DBMS, \textit{[FEATURE\_LIST]} contains selected features from the hierarchical tree, and \textit{[ERROR\_MEMORY]} provides feedback from previous execution failures.}
+    \label{fig:prompt_test}
+\end{figure}
+
+\subsection{Feature-Guided Error-Driven Test Case Synthetization}
+
+As shown in Stage I of Figure~\ref{fig:framework}, this stage generates SQL test cases by guiding the LLM with DBMS-specific features. MIST first constructs a hierarchical feature tree from official documentation, then samples feature combinations to construct prompts for generation. Execution error memory enables the LLM to learn dialect-specific constraints and progressively improve the syntactic validity and semantic diversity of generated test cases.
+
+\subsubsection{Feature tree construction}
+
+We collect official documentation from target DBMSs, where each document describes SQL features with syntax specifications and usage examples. These documents cover the full spectrum of SQL dialects, including data types, operators, functions, and query constructs.
+
+\textbf{Feature extraction.} The documentation manager parses documentation files to extract feature entries. Each entry contains a feature name, its functional description, and representative syntax patterns. For instance, DuckDB's string concatenation operator \texttt{||} is extracted with its description and usage pattern \texttt{SELECT 'A' || 'B'}. Similarly, PostgreSQL's \texttt{CONCAT} function is extracted as a distinct feature, capturing the syntactic divergence between DBMSs for the same functionality.
+
+\textbf{Feature organization.} Extracted features are organized into a three-level hierarchical tree, as shown in Figure~\ref{fig:framework}. The first level represents different DBMSs, the second level categorizes features into functional groups (e.g., String Operations, Aggregation Functions), and the third level contains specific feature topics within each group. This parsed feature tree captures the multi-level semantic organization of DBMS functionalities, linking each database with its functional categories and concrete SQL features, thereby enabling fine-grained and context-aware feature sampling.
+
+The feature extraction process is performed manually by parsing official documentation and organizing features into the hierarchical tree structure. For the three evaluated DBMSs, we extract a total of 143 SQL features for DuckDB (covering basic operations, joins/aggregations, advanced features, and specific functionalities), 167 features for PostgreSQL (including basic operations, advanced queries, transactions/views, and specific extensions), and 62 features for SQLite (spanning basic syntax, advanced queries, joins, constraints/indexes, transactions/triggers, and advanced features). Each feature entry contains the feature name, functional description, and representative syntax patterns extracted from the official documentation. The manual construction process for each DBMS takes approximately 6-8 hours, including documentation review, feature extraction, and tree organization. Once constructed, the feature tree can be reused across all experiments and extended incrementally when new DBMS versions introduce additional features.
+
+\subsubsection{Hierarchical feature selection}
+
+To guide the LLM in generating diverse and semantically coherent SQL queries, we employ a two-step feature selection strategy that samples feature combinations from the hierarchical tree.
+
+\textbf{Hierarchical path sampling.} We first randomly select a main path from the feature tree, traversing from a specific DBMS through a feature group to individual features. For example, a sampled path might be ``DuckDB → String Operations → \texttt{||} operator''. We then sample additional features within the same path and expand to related paths within the same DBMS to maintain semantic consistency. This ensures that selected features are functionally related and can be meaningfully combined in a single SQL query.
+
+\textbf{Diversity-aware enhancement.} To increase functional diversity, we introduce cross-category features that are not selected in the first step. For instance, if the main path focuses on string operations, we may add features from aggregation or join operations. This enhancement prevents generated queries from concentrating in a single functional area. The resulting composite feature list balances semantic coherence and functional diversity, providing comprehensive guidance for LLM generation.
+
+\subsubsection{Error-Driven test case generation}
+
+With the selected feature combinations, we construct a structured input prompt to guide the LLM in generating SQL test cases. The prompt template, illustrated in Figure~\ref{fig:prompt_test}, includes four components: (1) a role definition instructing the LLM to act as a database testing engineer, (2) the selected feature list with descriptions, (3) error memory containing common mistakes from previous generations, and (4) output requirements specifying that the response should contain only executable SQL statements including DDL, DML, and DQL. This structured prompt provides both positive guidance through features to use and negative guidance through errors to avoid. The generated test cases are then executed on the target DBMS, and any encountered errors are captured and stored in the memory module. The accumulated error feedback in this memory subsequently guides the LLM to refine and generate more accurate test cases, forming a closed feedback loop that enables MIST to learn from past errors and improve generation quality continuously.
+
+MIST employs an implicit oracle approach where test cases are considered to pass if they execute without crashes, runtime exceptions, or syntax errors. Specifically, we define three types of test failures: (1) \textit{syntax errors} detected during SQL parsing, (2) \textit{runtime exceptions} raised during query execution (e.g., type mismatch, constraint violations), and (3) \textit{system crashes} that terminate the DBMS process. When a test case fails, the error message is captured and stored in the error memory module. This accumulated error feedback guides subsequent LLM generations to avoid similar mistakes, enabling MIST to progressively improve the syntactic validity and semantic correctness of generated test cases. While this implicit oracle approach cannot verify functional correctness (i.e., whether query results are semantically correct), it is highly effective for discovering crashes, parser bugs, and executor errors, which are critical for DBMS reliability.
+
+% \subsection{Overview}
+
+% As shown in Figure \ref{fig:framework}, MIST consists of two stages:
+% (1) {\it Feature-Guided Error-Driven Test Case Synthetization}, which aims to generate semantically rich and feature-diverse test cases that reflect the functional characteristics of the target DBMS; and
+% (2) {\it Monte Carlo Tree Search-Based Test Case Mutation}, which focuses on iteratively exploring and mutating existing test cases to maximize testing coverage and uncover hidden errors.
+% By combining feature-aware generation with search-driven mutation, MIST achieves both high semantic relevance and diversity in the generated SQL test cases, ensuring comprehensive and efficient DBMS testing.
+
+% \subsection{Feature-Guided Error-Driven Test Case Synthetization}
+
+% As shown in Figure~\ref{}
+% In this stage, (1) MIST first builds a hierarchical feature tree by parsing the official documents of multiple DBMSs (e.g., DuckDB, MySQL, PostgreSQL, etc.).
+% This tree captures the multi-level semantic organization of DBMS functionalities, linking each database with its functional categories and the concrete SQL features that describe its capabilities, thereby enabling fine-grained and context-aware feature reasoning.
+% (2) Subsequently, MIST employs a hierarchical and diversity-aware feature selection strategy to derive composite feature sets that represent the core functional characteristics of each DBMS.
+% (3) These selected features are then injected into the LLM through structured prompting to generate corresponding SQL test cases.
+% The generated cases are executed on the target DBMS, and the resulting errors are recorded into an execution error memory, which continuously guides the LLM to refine subsequent generations.
+% This feedback process mimics human learning by learning from errors, enabling MIST to progressively improve the correctness and coverage of synthesized SQL tests.
+% By repeating the above process multiple times, MIST can continuously generate diverse and executable SQL test cases for a specific DBMS.
+
+% {\textbf{Construction of hierarchical feature tree.}} MIST constructs a hierarchical feature tree by first collecting the official manuals of multiple types of DBMSs. We make extensive efforts to gather comprehensive documentation for mainstream systems such as DuckDB, MySQL, PostgreSQL, and SQLite, covering the full spectrum of commonly used SQL dialects \cite{}.
+% From these documents, MIST extracts multi-level feature information, including the functional categories, syntax patterns, and characteristic behaviors of each operation, and organizes them into a hierarchical tree that links each database to its functionalities and concrete SQL features.
+
+% \begin{example}
+% Let us consider the string concatenation operator in DuckDB and PostgreSQL, which aims to combine two strings into one. A branch in the tree may correspond to the ``DuckDB → String Operations → Concatenation → CONCAT Operator'' path, which reflects DuckDB’s use of the double‐pipe operator (\texttt{||}) for string concatenation, for example:
+% {\tt SELECT 'Hello' || ' ' || 'World';}
+% In contrast, a comparable branch for PostgreSQL may correspond to ``PostgreSQL → String Operations → Concatenation → CONCAT Function,'' where the same functionality is expressed through the built‐in function:
+% {\tt SELECT CONCAT('Hello', ' ', 'World');}
+% This example highlights a clear syntactic divergence between DuckDB and PostgreSQL when realizing the same fundamental string concatenation functionality.
+% \end{example}
+
+
+% {\textbf{Hierarchical feature selector.}} MIST constructs semantically coherent feature combinations by leveraging the hierarchical feature tree and operates in two steps.
+% In the first step, it performs {\it hierarchical path sampling}, randomly selecting a main path from the tree, sampling features within that path, and then expanding to related paths within the same database to maintain semantic consistency. In the second step, it performs {\it diversity enhancement}, introducing a small fraction of cross-category features that were not selected in the first step to increase functional diversity. Together, these two steps balance semantic alignment and functional diversity, enabling MIST to generate SQL test cases that are both comprehensive and contextually meaningful.
+
+% \begin{figure}[] 
+% \begin{AIbox}{Prompt for extracting high-level insights}
+% \underline{\bf Insight Extraction Instruction:} 
+% {%\scriptsize
+% \begin{tcolorbox}[colback=gray!10, colframe=gray!10, boxrule=0pt, sharp corners, left=0pt, right=0pt]
+% You are an expert RAG system analyst. Your task is to analyze a specific RAG configuration along with its representative query executions, then produce insights that explain its performance patterns and give actionable recommendations.
+% \end{tcolorbox}
+% }
+% \underline{\bf Analysis Requirements:} 
+% {
+% \begin{tcolorbox}[colback=gray!10, colframe=gray!20, boxrule=0pt, left=0pt, sharp corners, right=0pt]
+% 1. Identifies Key Success/Failure Factors.
+
+% 2. Explains Component Interactions.
+
+% 3. Provides Actionable Recommendations.
+
+% 4. Highlights Query Type Patterns.
+% \end{tcolorbox}
+% }
+
+% \underline{\bf Input Placeholder:} 
+% {
+% \begin{tcolorbox}[colback=gray!10, colframe=gray!20, boxrule=0pt, sharp corners,left=0pt, right=0pt]
+% Dataset information: [Info] 
+
+% Current configuration: [Configuration] 
+
+% Representative queries: [Query1][Query2][$\cdots$]
+
+% \end{tcolorbox}
+% }
+% \end{AIbox} 
+% \caption{\textcolor{red}{The prompt for extracting high-level insights.}}
+% \label{fig:prompt_test}
+% \end{figure}
+
+
+% \noindent
+% \begin{tikzpicture}
+% \filldraw (0,0) -- (-0.15,0.08) -- (-0.15,-0.08) -- cycle ;
+% \end{tikzpicture}
+% \textbf{Memory-guided test case generation.}
+% Based on the feature set obtained from the previous two steps, MIST prompts the LLM to generate semantically aware SQL test cases. 
+% These generated cases are then executed on the target DBMS, and any encountered errors are captured and stored in the memory module. 
+% The accumulated insights in this memory subsequently guide the LLM to refine and regenerate more accurate test cases, forming a closed feedback loop that enables MIST to learn from past errors and improve generation quality continuously.
+% The prompting template used to guide the LLM in this stage is illustrated in Figure \ref{fig:prompt_test}.
+
+
+
+
+
+
+
+
+
+\subsection{Monte Carlo Tree Search-Based Test Case Mutation}
+
+
+After the first stage generates an initial set of test cases, coverage growth typically plateaus as new queries become repetitive. To systematically explore deeper execution paths and maximize code coverage, we employ Monte Carlo Tree Search (MCTS) to guide the mutation process, as shown in Stage II of Figure~\ref{fig:framework}.
+
+\subsubsection{Mutation rules curation}
+
+We formulate test case mutation as a tree-structured search problem over a directed tree $\mathcal{T} = (V, E)$. In this formulation, each node represents a test case, while each edge corresponds to an action, either selecting a seed SQL from the test case pool or applying a specific mutation rule. Therefore, each root-to-leaf path represents a mutation trajectory, i.e., a complete sequence of selections and transformations that progressively evolve an initial seed test case into a newly mutated one. By employing MCTS, we can jointly optimize the selection of seed test cases and the application of mutation rules, thereby discovering the most coverage-effective mutations.
+
+% To support this search process, we curate a collection of dialect-aware mutation rules covering schema, data, and query operations. 
+
+To support this search process, we curate a collection of 135 dialect-aware mutation rules (45 rules per DBMS) covering schema, data, and query operations. For each DBMS, the rules are distributed as follows: 10 DDL rules that modify database schemas (e.g., adding columns with complex data types, creating indexes), 10 DML rules that manipulate data (e.g., inserting boundary values, NULL handling), and 25 DQL rules that transform queries (e.g., changing join types, adding subqueries, introducing window functions). Together, these rule categories define a comprehensive mutation space that allows MIST to systematically transform SQL test cases while preserving syntactic validity.
+
+% After the first stage, MIST obtains a set of SQL test cases that cover the core features of the target DBMS. However, these cases may not fully explore the diverse execution paths or edge conditions of the system under test. To address this limitation, we design a novel {\it Monte Carlo Tree Search (MCTS)–based Test Case Mutation} stage, which aims to enhance test diversity and systematically improve coverage. By iteratively mutating existing SQL cases and guiding the exploration through coverage feedback, this stage enables MIST to discover untested behaviors and achieve broader coverage expansion.
+
+% The key idea is to employ carefully designed mutation rules to generate new test cases from the existing ones produced in the first stage.
+% Thus, two key challenges must be addressed:
+% {\bf Challenge 1:} How to design effective mutation rules that can meaningfully alter SQL structures while preserving syntactic validity; and
+% {\bf Challenge 2:} How to select suitable seed SQL statements and determine which mutation rule should be applied to each seed to generate diverse and valuable new test cases.
+
+\begin{algorithm}[t]
+\caption{{\tt MCTS for test case mutation}}
+\label{alg:traditional-mcts}
+\KwIn{The number of iterations $T$}
+\KwOut{Mutated test case with maximum reward}
+Initialize MCTS tree root $v_0$\;
+\ForEach{$t \gets 1, 2, 3, \cdots, T$}{
+  $v_{t} \gets \texttt{Select}(v_0)$ \;
+  % \tcp{\textcolor{teal}{Traverse tree using UCT to find a leaf}}
+  
+  $(v_{t}', a_t) \gets \texttt{Expand}(v_{t})$ \;
+  % \tcp{\textcolor{teal}{Add a new child node to explore}}
+
+  \tcp{\textcolor{teal}{Complete the mutation trajectory randomly}}
+  $\theta_{t} \gets \texttt{Rollout}(v_{t}')$ \;
+  
+  $ \widehat{R}(v_t, a_t) \gets f_{Q}(\theta_{t})$ \;
+  {Backpropagation via equations (2) - (4)}\;
+
+}
+\end{algorithm}
+
+
+% {\textbf{Collecting mutation rules.}} To address the {\bf Challenge 1}, we collect a total of 135 mutation rules across three mainstream DBMSs (PostgreSQL, SQLite, and DuckDB), with 45 rules per system, categorized into three groups:
+% \begin{itemize}[topsep=1mm, partopsep=0pt, itemsep=0pt, leftmargin=10pt]
+% \item {\it 10 rules for Data Definition Language (DDL).}  
+% Define structural mutation operations on database schemas, including creating or altering tables, adding or removing columns and constraints, modifying data types, and creating indexes or views.  
+% These rules focus on exploring schema-level variations that may trigger parser or planner errors.
+
+% \item {\it 10 rules for Data Manipulation Language (DML).}  
+% Capture data mutation behaviors, such as inserting, updating, and deleting records with boundary values, \texttt{NULL}s, and complex data patterns.  
+% The goal is to stress-test data modification logic and constraint enforcement in each DBMS.
+
+% \item {\it 25 rules for Data Query Language (DQL).}  
+% Cover query-level mutations such as changing \texttt{JOIN} types, applying aggregation or window functions, introducing subqueries or CTEs, using set operations (\texttt{UNION}, \texttt{INTERSECT}), and modifying filtering or ordering clauses.  
+
+% \end{itemize}
+
+% Together, these rule categories define a comprehensive mutation space that allows MIST to systematically transform and expand SQL test cases, improving coverage across schema, data, and query dimensions.
+
+\subsubsection{MCTS-based mutation process} We employ MCTS to iteratively explore the mutation search space and discover high-coverage test cases. As detailed in Algorithm~\ref{alg:traditional-mcts}, MCTS operates through four fundamental steps that work together to balance exploration of new mutations and exploitation of promising trajectories. At each iteration, the algorithm starts from the root node and progressively builds the search tree by selecting actions, expanding nodes, simulating complete mutation trajectories, and updating node statistics based on coverage feedback from the target DBMS.
+% We show the detailed process in Algorithm \ref{alg:traditional-mcts}.
+
+\textbf{Selection.} At each iteration, MCTS traverses the search tree from the root $v_0$ to a leaf $v_t$ by recursively selecting the child node with the highest score (line~3 in Algorithm~\ref{alg:traditional-mcts}), where the Upper Confidence Bound for Trees (UCT)~\cite{kocsis2006bandit} is used as the scoring policy.
+
+Specifically, for a state $v$ and an action $a \in \mathcal{A}(v)$, where $\mathcal{A}(v)$ denotes the set of feasible actions from $v$, the UCT score is:
+\begin{equation}
+    U(v,a) = \frac{R(v,a)}{N(v,a)} \;+\; c \cdot \sqrt{\frac{\ln N(v)}{N(v,a)}},
+\end{equation}
+where $R(v,a)$ is the cumulative reward obtained by executing action $a$ at state $v$, $N(v,a)$ is the number of times action $a$ has been taken from $v$, and $N(v)$ is the total number of visits to $v$.  The constant $c$ balances exploration and exploitation.
+
+\textbf{Expansion.}
+In the $t$-th iteration, if the selected node $v_t$ is not at the terminal layer or is not fully expanded (i.e., there exists an action in $\mathcal{A}(v_t)$ that has not yet been executed), we randomly choose one such unexplored action, denoted as $a_t$. Executing $a_t$ generates a new child state $v_t'$, which is then added to the search tree (line 4).
+
+\begin{figure}[t]
+    \centering
+        % \setlength{\abovecaptionskip}{-0.05cm}
+    % \setlength{\belowcaptionskip}{-0.13cm}
+    \includegraphics[scale=0.6]{figure/mcts_case.pdf}
+    \caption{Illustrating the MCTS for test case mutation.}
+    \label{fig:MCTS_case_study}
+\end{figure}
+
+\textbf{Simulation.} In the simulation phase (lines 5–6), suppose the newly expanded node $v_t'$ lies at layer $i$. The algorithm then performs a rollout strategy to complete the remaining mutation trajectory from $v_t'$ to a terminal node. A commonly used strategy is random playout, in which the remaining mutation actions are sampled uniformly at random and combined with the already fixed actions along the path leading to $v_t'$, thereby producing a complete mutated test case for evaluation.
+
+\textbf{Backpropagation.} Following the simulation phase, the final reward $\widehat{R}(v_t, a_t) = f(\theta_t)$ is propagated back along the search path, where $f(\theta_t)$ denotes the coverage rate achieved by executing the generated test cases $\theta_t$ on the current DBMS under test. The goal of this backpropagation phase is to update the value estimates and visit counts for all intermediate state–action pairs encountered during the rollout, thereby refining the search policy toward actions that yield higher coverage in subsequent iterations. Specifically, for each state-action pair $(v, a)$ along the search path, we update three statistics:
+\begin{align}
+    R(v, a) & \leftarrow R(v, a) + \widehat{R}(v, a) \\
+    N(v)      & \leftarrow N(v) + 1 \\
+    N(v, a) & \leftarrow N(v, a) + 1
+\end{align}
+where $R(v,a)$ is the cumulative reward, $N(v)$ is the visit count of node $v$, and $N(v,a)$ is the visit count of action $a$ from node $v$.
+
+\begin{example}
+Figure~\ref{fig:MCTS_case_study} illustrates an example of MCTS for test case mutation. Each iteration begins at the root node. The algorithm traverses the tree by repeatedly selecting the node with the highest UCT score (i.e., selecting a seed SQL) until it reaches an expandable node. From there, the algorithm expands the tree by randomly choosing an untried action, i.e., selecting a DDL mutation rule, to create a new node.
+Next, a simulation (or rollout) is performed from this state, randomly applying additional actions from the DML and DQL rule sets to complete the mutation trajectory. The resulting mutated SQL query is then executed on the target DBMS to obtain a reward (i.e., the achieved coverage).
+Finally, this reward is used to update the statistics of all nodes along the path back to the root, which is highlighted the black in this figure.
+\end{example}
+
+\textbf{Early termination.} To improve search efficiency, we design an early termination strategy that prioritizes seed SQLs with recently high performance while automatically pruning saturated or over-complex ones. Specifically, the strategy continuously tracks the recent branch coverage improvement of each SQL; once its coverage gain becomes saturated, the corresponding node is excluded from further expansion in subsequent MCTS iterations.

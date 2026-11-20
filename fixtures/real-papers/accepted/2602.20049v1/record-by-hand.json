@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "macros.tex",
+      "role": "body"
+    },
+    {
+      "path": "abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "overview.tex",
+      "role": "body"
+    },
+    {
+      "path": "semantics.tex",
+      "role": "body"
+    },
+    {
+      "path": "background.tex",
+      "role": "body"
+    },
+    {
+      "path": "inference.tex",
+      "role": "body"
+    },
+    {
+      "path": "implementation.tex",
+      "role": "body"
+    },
+    {
+      "path": "relatedWork.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendixFunctionComp.tex",
+      "role": "body"
+    },
+    {
+      "path": "soundnessProof.tex",
+      "role": "body"
+    },
+    {
+      "path": "implementationDetails.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "f46280aa7cb1fd0f5bcb22948249eac32ad0cd6c12a49803b7479dc4e83c08ab",
+    "macros.tex": "80b6893f41fa51047198d33d7d8cd4e55b8fff54573dec552aa222f21a943f34",
+    "abstract.tex": "ac76cd8787d089ab58b3675eb226b78644c99c69a2f181492c0f795445d9803e",
+    "introduction.tex": "e383a6f4731c61096e8b688b9d46766f16ba1f9079a2574ea17103f0541ab387",
+    "overview.tex": "69b1e4246ee091fe2b26768f9a1dcd8f7f20d85acaf2d2a598c111b2ba5bc5f9",
+    "semantics.tex": "023404d2ff2230f3134d88fcf7a3e16e48d1e3c4640666ffcc9557a71e708315",
+    "background.tex": "34859645bcf1e00882d1b2f53830830f9235c8e439c341ce54fcb4a5f68c82a9",
+    "inference.tex": "fe04d2ae88cdf0dd6a49d78f447abba8e8c2a2239b3893795d08122f3c20bee0",
+    "implementation.tex": "faa5fe0b21d4a0167c67a9c3bf4958b8e10e4ab5f6702779e050b238a3feec17",
+    "relatedWork.tex": "3f7751be83a5e54dbb92399bc6444b213164b6ce3a38b70d7d1ca2f7c983095b",
+    "appendixFunctionComp.tex": "06aed7aa56f11afd12e822c9018ce6e9abb56c42051e9edfea1206a6561535a2",
+    "soundnessProof.tex": "af53df9662f9bfeeab57003687dc504612ef8af94d92d7dcd3af4253dbf17135",
+    "implementationDetails.tex": "4b982685b12bba6435ee3e5ffe17cfb34d32aca5043c540443d777329a362ee2"
+  }
+}

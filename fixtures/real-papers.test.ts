@@ -1,13 +1,13 @@
 /**
- * Every rule, on every real paper of the corpus, in ONE run of the CLI: the six accepted papers of
- * `accepted-papers/`, the arXiv preprints of `arxiv-papers/` (its README says what they are, and
- * why all of them run) and the accepted camera-ready papers of `venue-papers/`, each linted against
- * the venue that accepted it. The subject is the corpus as one object: each directory of those
- * folders is a paper with its own `baseline.json`, so a paper added without a baseline fails here.
+ * Every rule, on every real paper of the corpus, in ONE run of the CLI: the accepted papers of
+ * `real-papers/accepted/` (published; the calibration yardstick) and the arXiv preprints of
+ * `real-papers/preprints/` (drafts; `real-papers/README.md` says what each folder answers). The
+ * subject is the corpus as one object: each directory of those folders is a paper with its own
+ * `baseline.json`, so a paper added without a baseline fails here.
  *
  * A rule that says MORE about a real paper than recorded has gained a false positive until shown
  * otherwise; a rule that goes fully quiet without the recording being updated has died. A partial
- * drop is what a fix looks like. The comparison is `accepted-papers/baseline.ts`, the one the install
+ * drop is what a fix looks like. The comparison is `real-papers/baseline.ts`, the one the install
  * e2e uses too, not a second copy.
  *
  * One `paperlint lint --json` over a temporary project holding every paper under `papers/`, not one
@@ -36,21 +36,22 @@ import {
   countByPaper,
   RECORDED_OPT_IN,
   recordedFindings,
-} from "./accepted-papers/baseline.ts";
+} from "./real-papers/baseline.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-/** The accepted papers, by name: the ones whose register is recorded below. */
-const ACCEPTED = readdirSync(join(HERE, "accepted-papers")).filter((name) =>
-  statSync(join(HERE, "accepted-papers", name)).isDirectory(),
-);
-const FOLDERS = ["accepted-papers", "arxiv-papers", "venue-papers"].map((f) =>
-  join(HERE, f),
-);
+const ACCEPTED_DIR = join(HERE, "real-papers", "accepted");
+const FOLDERS = [ACCEPTED_DIR, join(HERE, "real-papers", "preprints")];
+
+/** The directories of a folder that are not papers: the record of how `accepted/` was sampled. */
+const NOT_PAPERS: ReadonlySet<string> = new Set(["sampling"]);
 
 /** Every paper: its directory name (unique across the folders) and where it is. */
 const PAPERS = FOLDERS.flatMap((root) =>
   readdirSync(root)
-    .filter((name) => statSync(join(root, name)).isDirectory())
+    .filter(
+      (name) =>
+        !NOT_PAPERS.has(name) && statSync(join(root, name)).isDirectory(),
+    )
     .map((name) => ({ name, dir: join(root, name) })),
 );
 
@@ -93,7 +94,8 @@ const MEASURED_ON = "2026-11-19T12:00:00Z";
 describe("every real paper, in one run", () => {
   it(
     "says no more than recorded, and no recorded rule has gone quiet",
-    { timeout: 10 * 60_000 },
+    // 206 papers linted in 582.7 s on 2026-11-19, in one run: 10 minutes was no longer enough.
+    { timeout: 20 * 60_000 },
     async () => {
       vi.setSystemTime(MEASURED_ON);
       const found = await lintAll().finally(() => vi.useRealTimers());
@@ -121,12 +123,15 @@ const CONJUNCTION_STARTS_PER_1000: Readonly<Record<string, string>> = {
   "secure-acsac24": "0.00",
 };
 
-describe.each(ACCEPTED)("tex/register on the accepted paper %s", (name) => {
-  const file = join(HERE, "accepted-papers", name, "paper.tex");
+/** The six papers whose register is recorded, named: the other papers of `accepted/` are not among them. */
+const ACCEPTED_REGISTER_PAPERS = Object.keys(CONJUNCTION_STARTS_PER_1000);
+
+describe.each(ACCEPTED_REGISTER_PAPERS)("tex/register on the accepted paper %s", (name) => {
+  const file = join(ACCEPTED_DIR, name, "paper.tex");
   const m = measureRegister(
     latexReader.bodyProse(
       readPaper(file, readFileSync(file, "utf8"), {
-        files: withRecord(nodeFiles, join(HERE, "accepted-papers", name)),
+        files: withRecord(nodeFiles, join(ACCEPTED_DIR, name)),
         latex: latexReader,
         codec: sourcesCodec,
       }).text,

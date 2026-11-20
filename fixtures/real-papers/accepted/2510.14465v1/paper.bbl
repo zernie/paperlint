@@ -1,0 +1,167 @@
+\begin{thebibliography}{10}
+
+\bibitem{DBLP:journals/cacm/IzquierdoC23}
+J.~L. {C{\'{a}}novas Izquierdo} and J.~Cabot, ``For a more transparent
+  governance of open source,'' {\em Commun. {ACM}}, vol.~66, no.~8, pp.~32--34,
+  2023.
+
+\bibitem{DBLP:conf/icse/IzquierdoC15}
+J.~L. {C{\'{a}}novas Izquierdo} and J.~Cabot, ``Enabling the definition and
+  enforcement of governance rules in open source systems,'' in {\em Int. Conf.
+  on Software Engineering}, pp.~505--514, 2015.
+
+\bibitem{DBLP:journals/pacmhci/WesselSSWPCG18}
+M.~S. Wessel, B.~M. de~Souza, I.~Steinmacher, I.~S. Wiese, I.~Polato, A.~P.
+  Chaves, and M.~A. Gerosa, ``The power of bots: Characterizing and
+  understanding bots in {OSS} projects,'' {\em Hum. Comput. Interact.}, vol.~2,
+  no.~{CSCW}, pp.~182:1--182:19, 2018.
+
+\bibitem{DBLP:conf/xpu/RasheedWSKA0SA24}
+Z.~Rasheed, M.~Waseem, M.~A. Sami, K.~Kemell, A.~Ahmad, A.~Nguyen{-}Duc,
+  K.~Syst{\"{a}}, and P.~Abrahamsson, ``Autonomous agents in software
+  development: {A} vision paper,'' in {\em Int. Conf. on Agile Software
+  Development}, pp.~15--23, 2024.
+
+\bibitem{bjorn2023diversity}
+P.~Bj{\o}rn, M.~Menendez-Blanco, and V.~Borsotti, {\em Diversity in computer
+  science: Design artefacts for equity and inclusion}.
+\newblock Springer Nature, 2023.
+
+\bibitem{DBLP:journals/ese/Rodriguez-Perez21}
+G.~Rodr{\'{\i}}guez{-}P{\'{e}}rez, R.~Nadri, and M.~Nagappan, ``Perceived
+  diversity in software engineering: a systematic literature review,'' {\em
+  Empir. Softw. Eng.}, vol.~26, no.~5, p.~102, 2021.
+
+\bibitem{DBLP:conf/ijcai/GuoCWCPCW024}
+T.~Guo, X.~Chen, Y.~Wang, R.~Chang, S.~Pei, N.~V. Chawla, O.~Wiest, and
+  X.~Zhang, ``Large language model based multi-agents: {A} survey of progress
+  and challenges,'' in {\em Int. Joint Conf. on Artificial Intelligence},
+  pp.~8048--8057, 2024.
+
+\bibitem{yang2022gender}
+Y.~Yang, T.~Y. Tian, T.~K. Woodruff, B.~F. Jones, and B.~Uzzi, ``Gender-diverse
+  teams produce more novel and higher-impact scientific ideas,'' {\em
+  Proceedings of the National Academy of Sciences}, vol.~119, no.~36,
+  p.~e2200841119, 2022.
+
+\bibitem{gunatilake2024impact}
+H.~Gunatilake, J.~C. Grundy, R.~Hoda, and I.~Mueller, ``The impact of human
+  aspects on the interactions between software developers and end-users in
+  software engineering: {A} systematic literature review,'' {\em Inf. Softw.
+  Technol.}, vol.~173, p.~107489, 2024.
+
+\bibitem{DBLP:journals/corr/abs-2503-05470}
+J.~Giner{-}Miguelez, S.~Morales, S.~Cobos, J.~L.~C. Izquierdo,
+  R.~Claris{\'{o}}, and J.~Cabot, ``The software diversity card: {A} framework
+  for reporting diversity in software projects,'' {\em CoRR},
+  vol.~abs/2503.05470, 2025.
+
+\bibitem{DBLP:conf/icse/DuttaCST23}
+R.~Dutta, D.~E. Costa, E.~Shihab, and T.~Tajmel, ``Diversity awareness in
+  software engineering participant research,'' in {\em Int. Conf. on Software
+  Engineering: Software Engineering in Society}, pp.~120--131, 2023.
+
+\bibitem{DBLP:conf/icse/CatolinoPTSF19}
+G.~Catolino, F.~Palomba, D.~A. Tamburri, A.~Serebrenik, and F.~Ferrucci,
+  ``Gender diversity and women in software teams: how do they affect community
+  smells?,'' in {\em Int. Conf. on Software Engineering: Software Engineering
+  in Society}, pp.~11--20, 2019.
+
+\bibitem{doi:10.1073/pnas.2200841119}
+Y.~Yang, T.~Y. Tian, T.~K. Woodruff, B.~F. Jones, and B.~Uzzi, ``Gender-diverse
+  teams produce more novel and higher-impact scientific ideas,'' {\em
+  Proceedings of the National Academy of Sciences}, vol.~119, no.~36,
+  p.~e2200841119, 2022.
+
+\bibitem{DBLP:conf/chi/VasilescuPRBSDF15}
+B.~Vasilescu, D.~Posnett, B.~Ray, M.~G.~J. van~den Brand, A.~Serebrenik, P.~T.
+  Devanbu, and V.~Filkov, ``Gender and tenure diversity in github teams,'' in
+  {\em Conf. on Human Factors in Computing Systems}, pp.~3789--3798, 2015.
+
+\bibitem{DBLP:conf/msr/KinsmanWGT21}
+T.~Kinsman, M.~S. Wessel, M.~A. Gerosa, and C.~Treude, ``How do software
+  developers use github actions to automate their workflows?,'' in {\em Int.
+  Conf. on Mining Software Repositories}, pp.~420--431, 2021.
+
+\bibitem{DBLP:journals/ese/WesselVGT23}
+M.~Wessel, J.~Vargovich, M.~A. Gerosa, and C.~Treude, ``Github actions: The
+  impact on the pull request process,'' {\em Empir. Softw. Eng.}, vol.~28,
+  no.~6, p.~131, 2023.
+
+\bibitem{DBLP:conf/icsm/DecanMMG22}
+A.~Decan, T.~Mens, P.~R. Mazrae, and M.~Golzadeh, ``On the use of github
+  actions in software development repositories,'' in {\em Int. Conf. on
+  Software Maintenance and Evolution}, pp.~235--245, 2022.
+
+\bibitem{xi2025rise}
+Z.~Xi, W.~Chen, X.~Guo, W.~He, Y.~Ding, B.~Hong, M.~Zhang, J.~Wang, S.~Jin,
+  E.~Zhou, {\em et~al.}, ``The rise and potential of large language model based
+  agents: A survey,'' {\em Science China Information Sciences}, vol.~68, no.~2,
+  p.~121101, 2025.
+
+\bibitem{DBLP:conf/icse/ChulaniWY08}
+S.~Chulani, C.~Williams, and A.~Yaeli, ``Software development governance and
+  its concerns,'' in {\em Int. workshop on Software development governance},
+  pp.~3--6, 2008.
+
+\bibitem{DBLP:conf/sigsoft/Herbsleb16}
+J.~D. Herbsleb, ``Building a socio-technical theory of coordination: why and
+  how (outstanding research award),'' in {\em Int. Symposium on Foundations of
+  Software Engineering}, pp.~2--10, 2016.
+
+\bibitem{DBLP:journals/ism/PeltJBO21}
+R.~van Pelt, S.~Jansen, D.~Baars, and S.~Overbeek, ``Defining blockchain
+  governance: {A} framework for analysis and comparison,'' {\em Inf. Syst.
+  Manag.}, vol.~38, no.~1, pp.~21--41, 2021.
+
+\bibitem{DBLP:conf/ease/KeertipatiLS16}
+S.~Keertipati, S.~A. Licorish, and B.~T.~R. Savarimuthu, ``Exploring
+  decision-making processes in python,'' in {\em Int. Conf. on Evaluation and
+  Assessment in Software Engineering}, pp.~43:1--43:10, 2016.
+
+\bibitem{DBLP:journals/computer/ChestermanGHS24}
+S.~Chesterman, Y.~Gao, J.~Hahn, and V.~Sticher, ``The evolution of {AI}
+  governance,'' {\em Computer}, vol.~57, no.~9, pp.~80--92, 2024.
+
+\bibitem{DBLP:journals/nature/RahwanCOBBBCCCJ19}
+I.~Rahwan, M.~Cebri{\'{a}}n, N.~Obradovich, J.~C. Bongard, J.~Bonnefon,
+  C.~Breazeal, J.~W. Crandall, N.~A. Christakis, I.~D. Couzin, M.~O. Jackson,
+  N.~R. Jennings, E.~Kamar, I.~M. Kloumann, H.~Larochelle, D.~Lazer,
+  R.~McElreath, A.~Mislove, D.~C. Parkes, A.~S. Pentland, M.~E. Roberts,
+  A.~Shariff, J.~B. Tenenbaum, and M.~P. Wellman, ``Machine behaviour,'' {\em
+  Nat.}, vol.~568, no.~7753, pp.~477--486, 2019.
+
+\bibitem{DBLP:journals/inffus/ArrietaRSBTBGGM20}
+A.~B. Arrieta, N.~D. Rodr{\'{\i}}guez, J.~D. Ser, A.~Bennetot, S.~Tabik,
+  A.~Barbado, S.~Garc{\'{\i}}a, S.~Gil{-}Lopez, D.~Molina, R.~Benjamins,
+  R.~Chatila, and F.~Herrera, ``Explainable artificial intelligence {(XAI):}
+  concepts, taxonomies, opportunities and challenges toward responsible {AI},''
+  {\em Inf. Fusion}, vol.~58, pp.~82--115, 2020.
+
+\bibitem{DBLP:books/sp/WasowskiB23}
+A.~Wasowski and T.~Berger, {\em Domain-Specific Languages - Effective Modeling,
+  Automation, and Reuse}.
+\newblock Springer, 2023.
+
+\bibitem{DBLP:series/synthesis/2017Brambilla}
+M.~Brambilla, J.~Cabot, and M.~Wimmer, {\em Model-Driven Software Engineering
+  in Practice, Second Edition}.
+\newblock Synthesis Lectures on Software Engineering, Morgan {\&} Claypool
+  Publishers, 2017.
+
+\bibitem{LAZYCONSENSUSWEBSITE}
+``{Lazy Consensus}.''
+  \url{https://www.apache.org/foundation/glossary.html#LazyConsensus}.
+\newblock Accessed: 2025-06-23.
+
+\bibitem{ANTLRWEBSITE}
+``{ANTLR (ANother Tool for Language Recognition)}.''
+  \url{https://www.antlr.org/}.
+\newblock Accessed: 2025-06-23.
+
+\bibitem{DBLP:conf/iclr/JimenezYWYPPN24}
+C.~E. Jimenez, J.~Yang, A.~Wettig, S.~Yao, K.~Pei, O.~Press, and K.~R.
+  Narasimhan, ``Swe-bench: Can language models resolve real-world github
+  issues?,'' in {\em Int. Conf. on Learning Representations}, 2024.
+
+\end{thebibliography}

@@ -1,0 +1,40 @@
+\section{Extended \sib{} Component Ablations}
+\label{app:sib-ablations}
+
+This appendix extends Table~\ref{tab:sib-ablations} with every ablation run during \sib{} development, $10$ rows per CNN architecture and $8$ for DINOv3. Table~\ref{tab:sib-ablations} reports the five rows that isolate architecture-specific gating (SAG), CNN input preprocessing (FDA), spectral decomposition (Haar), content compression ($F_{LL}$ VIB) and subband targeting (the inverse-evidence row).
+
+\paragraph{Ablation methodology.} Each ablation switches off (or, for the inverse-evidence row, replaces) one design choice of a full-model reference trained in the same batch. Each $\Delta$ is the ablation's two-class boundary-tolerant mIoU minus the reference's, per image, pooled over the three held-out cities at high resolution ($n = 450$ paired images). The interval and $p$ come from a paired image bootstrap that resamples $150$ images within each city ($B = 10{,}000$, two-tailed, $p = \min(1, 2(k+1)/(B+1))$ with $k$ replicates past zero). One bootstrap draw is shared by all tests, so intervals of different rows are correlated. Holm correction runs over all $28$ (row, architecture) tests. $10$ of the $28$ tests sit at the bootstrap floor $2/(B+1) \approx 0.0002$, so their $p$ is resolution-limited.
+
+\paragraph{Reference and training differences.} The batch reference differs from the published \sib{} runs: the reference enables intensity-adaptive $\beta$ and content augmentation, which the published runs switch off, and on MAMNet and OGLANet the reference uses early-stopping patience $15$ where the published runs and every ablation use $25$. Each CNN $\Delta$ therefore also carries this patience change. The published configuration minus the reference ranges from $-1.12$ to $+2.80$ mIoU per (architecture, city) and changes sign across cities within OGLANet and DINOv3. Three rows switch more than one flag. The $-$FDA rows also disable the contrast stage. The MAMNet $-$All VIB row also disables intensity-adaptive $\beta$. MAMNet has no run that removes only the $F_{LL}$ VIB, and its \sib{} has no cross-source mixing.
+
+\paragraph{Training and scoring conditions.} Each cell is one training run with no recorded seed, and the intervals resample test images only. The OGLANet ablations and their reference trained on a $900$/$300$/$150$ train/validation/test pool, not the $450$-image protocol of the main tables. The MAMNet and DINOv3 runs record no training count. OGLANet predictions come from a single fp16 inference pass at batch size $8$ and carry the nondeterminism of Appendix~\ref{app:oglanet-dffm}. The MAMNet and OGLANet runs name the held-out city as FDA donor root. OGLANet's trainer does not pass that root to the dataset, and we did not establish whether the MAMNet runs used held-out-city images as donors. Cells are scored from the stored prediction masks. The checkpoints are no longer available, so no cell could be re-inferred, and no probability-based metric is reported.
+
+\begin{table}[h]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\caption{\textbf{Full \sib{} component ablations.} Mean $\Delta$ mIoU against each architecture's batch reference with $95\%$ CI, pooled over the three held-out cities ($n = 450$ paired images). Stars: Holm-adjusted $p$ over $28$ tests, $^{*}\,p<0.05$, $^{**}\,p<0.01$. N/A: component absent from that architecture's \sib{}. --: not run. Uniform $\beta$: no intensity adaptation. Symmetric VIB: the same $\beta$ on $F_{LL}$, $F_{LH}$ and $F_{HL}$. Edge VIB: the VIB on $F_{LH}/F_{HL}$. $-$Haar: one VIB on the undecomposed $F$. Inv.: VIB on $F_{HL}$ in place of $F_{LL}$. $^{\ddagger}$Collapsed run (text).}
+\label{tab:sib-ablations-full}
+\begin{tabular}{l|ccc}
+\toprule
+\textbf{Variant} & \textbf{MAMNet} & \textbf{OGLANet} & \textbf{DINOv3} \\
+\midrule
+Reference (mIoU) & $73.60$ {\scriptsize$[72.17,\,75.03]$} & $67.79$ {\scriptsize$[66.66,\,68.93]$} & $70.13$ {\scriptsize$[68.91,\,71.33]$} \\
+\midrule
+$-$ VIB on $F_{LL}$ & -- & $-1.01^{**}$ {\scriptsize$[-1.52,\,-0.50]$} & $-0.71$ {\scriptsize$[-1.30,\,-0.19]$} \\
+$-$ All VIB & $+0.29$ {\scriptsize$[-0.33,\,+0.94]$} & -- & -- \\
+$-$ Edge VIB & $+0.04$ {\scriptsize$[-0.49,\,+0.60]$} & -- & -- \\
+Uniform $\beta$ & $+0.03$ {\scriptsize$[-0.61,\,+0.70]$} & $-1.57^{**}$ {\scriptsize$[-2.11,\,-1.01]$} & $-0.26$ {\scriptsize$[-0.72,\,+0.22]$} \\
+Symmetric VIB & $-0.76$ {\scriptsize$[-1.37,\,-0.17]$} & $-0.56$ {\scriptsize$[-1.09,\,-0.02]$} & $-0.27$ {\scriptsize$[-0.78,\,+0.23]$} \\
+$-$ Content aug. & $+0.30$ {\scriptsize$[-0.27,\,+0.87]$} & $-1.68^{**}$ {\scriptsize$[-2.21,\,-1.15]$} & $-0.94^{**}$ {\scriptsize$[-1.37,\,-0.51]$} \\
+$-$ Cross-source mixing & N/A & $-2.18^{**}$ {\scriptsize$[-2.80,\,-1.57]$} & $-0.48$ {\scriptsize$[-0.95,\,-0.03]$} \\
+Aug.\ on all subbands & $+0.16$ {\scriptsize$[-0.38,\,+0.74]$} & $-1.43^{**}$ {\scriptsize$[-2.03,\,-0.81]$} & $-0.01$ {\scriptsize$[-0.46,\,+0.44]$} \\
+$-$ SAG & $+0.23$ {\scriptsize$[-0.40,\,+0.87]$} & $-2.06^{**}$ {\scriptsize$[-2.58,\,-1.55]$} & N/A \\
+$-$ FDA, contrast & $-4.42^{**}$ {\scriptsize$[-5.37,\,-3.49]$} & $-0.87$ {\scriptsize$[-1.51,\,-0.23]$} & N/A \\
+$-$ Haar & $+0.11$ {\scriptsize$[-0.59,\,+0.79]$} & $-0.63$ {\scriptsize$[-1.18,\,-0.08]$} & $-23.49^{**\ddagger}$ {\scriptsize$[-24.83,\,-22.09]$} \\
+VIB on $F_{HL}$ (inv.) & $-0.29$ {\scriptsize$[-0.84,\,+0.27]$} & $-1.99^{**}$ {\scriptsize$[-2.53,\,-1.45]$} & $-0.74$ {\scriptsize$[-1.25,\,-0.24]$} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Reading the table.} OGLANet shows the most significant rows: removing the content VIB, uniform $\beta$, removing content augmentation, removing cross-source mixing, augmenting all subbands, removing SAG and compressing $F_{HL}$ in place of $F_{LL}$. On MAMNet only the $-$FDA row is significant. On DINOv3 removing content augmentation and removing the Haar decomposition are significant. The DINOv3 $-$Haar runs predict almost no shadow. On Chicago and Miami the predicted-positive fraction is $0.0000$ against ground-truth fractions of $0.0864$ and $0.0802$, $100\%$ and $99\%$ of test images contain no predicted shadow, and foreground IoU is $0.0$ against the reference's $56.1$ and $49.3$. On Phoenix the fraction is $0.0026$ against $0.0347$, and foreground IoU is $0.2$ against $25.8$. This row therefore compares a collapsed training run with the reference.

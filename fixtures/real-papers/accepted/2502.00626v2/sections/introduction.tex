@@ -1,0 +1,64 @@
+
+
+\section{Introduction}
+
+\label{sec:introduction}
+From laser-cut panels to handcrafting shapes with scissors, cuts pervade daily life. Simulating cuts in thin-walled structures such as leaves, paper, or fabric requires a kinematic representation that precisely resolves time-evolving spatial discontinuities. This is a requirement that is not met by current reduced order modeling (ROM) approaches \cite{barbivc2005real}.
+
+\begin{figure*}
+\includegraphics[width = \linewidth]{figures/new/hand.pdf}
+\vspace{-20pt}
+\caption{We augment the input to our neural field with a generalized winding number, lifting the domain from 2D into 3D. As the cut progresses, the generalized winding number changes accordingly throughout the domain, capturing the family of discontinuities. The neural network takes the lifted input and outputs the basis function. This allows the neural network to learn a continuous function. The discontinuity is captured by the restriction of a continuous function over a 3D domain.}
+\label{fig:hand}
+\end{figure*}
+
+ROM is an acceleration technique for physical simulations that is applicable for scenarios where the \emph{deformation} complexity is low relative to the \emph{geometric} complexity. In ROM, an offline precomputation identifies a truncated set of kinematic modes, which are leveraged in fast ``reduced'' simulation. By computing the dynamics of only a small number of modes, in lieu of a large number of geometric (e.g., mesh) degrees of freedom, ROMs offer speedups by orders of magnitude~\cite{benner2015survey}. 
+
+However, ROM's benefits come at the cost of \emph{precision} and \emph{generalization}. ROMs are currently unable to treat cutting of thin-walled materials, particularly when cut placement may vary, cutting is progressive, or the cut boundary is complex. And yet, since detailed cuts introduce considerable geometric complexity (see Fig.~\ref{fig:teaser}), much could be gained if ROM could separate kinematics from geometry.
+
+To effectively model cuts, ROM simulations would need a novel kinematic basis that spans the deformations induced by cutting and loading the deformable object. ROMs struggle with this, because cutting induces \emph{strict} discontinuities in otherwise continuous displacement fields. 
+
+Current ROMs either lack representation or ``bake in'' the placement of discontinuities, therefore, they do not generalize over cut placement. For instance,  mesh-based ROM mode precomputation ties the basis to the underlying discretization  \cite{sifakis2012fem,Fulton:LSD:2018,shen2021high}. Since progressing or altering a cut changes mesh connectivity, these ROMs cannot reuse the learned basis and must again precompute offline.
+
+% \todopyc{discretization-agnostic basis offers promises because they ... However, ...}\todopyc{when citing previous discretization-agnostic work, please cite wide and tall. chang and modi should not be the only papers in this paragraph. otherwise, we do not want the reviewers to assume this is a paper from UofT. right now, it's way too obvious.} 
+
+Recent work has leveraged continuous neural fields as kinematic basis representations \cite{pan2022neural,chen2023crom,puri2024snf,tao2024neural}. The advantage of these methods is that their precomputation is agnostic to the specific discretization of the domain geometry. However, current neural field techniques have shown limited capacity for representing high-frequency or discontinuous data~\cite{Belhe:2023:DiscontinuityAwareNeuralFields}.
+
+Indeed, efforts to represent discontinuous displacements in neural reduced simulations are nascent. Recently, \citet{chang:2023:licrom} trained on simulation snapshots of a small, manually-selected set of partial cuts, producing a displacement basis that encodes the discontinuities of partial cuts in the neural network's weights. This limits their online reduced simulations to only the cut position seen during training, and limits the precision of the cut boundary due to the neural network's limited capacity to precisely represent a discontinuity along a curve.
+
+
+\paragraph{Contributions}
+We propose a novel neural field construction and ROM approach specifically designed to \emph{precisely} capture \emph{strict} displacement discontinuities for a family of progressively-cut shapes over 2D domains. Our method enables reduced simulations of progressive cutting, for cut placements not seen during training. It embraces both training on existing deformation \emph{data}, or training \emph{data-free} by identifying natural vibration modes. The resulting reduced simulation maintains an explicit representation of cut positions as polylines that may be freely modified as the simulation proceeds, without remeshing or similar data structure updates.
+
+Our mathematical approach is to transform the learning of a discontinuous field---a known challenge case for neural fields---into the learning of an \emph{everywhere continuous} function---a fundamentally easier learning task. In a nutshell, we augment the input coordinates of the neural field with the generalized winding number of any given cut line~\cite{Jacobson:2018:GWN}, effectively lifting the input from two to three dimensions. Lifting creates 3D distance between corresponding sides of the cut, allowing the network to focus on the easy learning of a \emph{continuous} volumetric field. A corresponding restriction operator enables final output \emph{precisely} resolving \emph{strict} discontinuities, even for cuts unseen during training.
+
+Highlighting the key ingredients of \emph{winding} and \emph{lifting}, we call this \emph{Wind Lifter.} After training a volumetric continuous neural field once, we can (re)compute the winding number at runtime, without any training, as a cut line is lengthened, moved, or reshaped. By combining the continuous neural field and the winding graph, we generate a field with precise, strict discontinuities, while maintaining the speed of ROM. 
+
+
+
+
+
+% To efficiently construct this height field, we represent the cuts explicitly as polylines and calculate the generalized winding number field, which enables us to capture continuously evolving discontinuities with minimal computational overhead \zhecheng{try to explain why choose generalized winding number field, first you can say "to represent discontinuity we revert to classic method of winding number field, however it is not as compatible with neural field so we choose GWF". Also maybe you can cite related works of inside outside classification (e.g. occupancy field).}. It has been prooed that the generalized winding number field is a harmonic function with jump boundary conditions at the cut shapes. Consequently, it tracks and represents the evolving spatial discontintuities of the cuts. This ensures that the height field is able to capture the time-varying nature of the cutting process. \zhecheng{overall I like your intuitive explanation of why this encoding helps you to represent cuts, esp in \reffig{fig:showwinding}. However I would avoid using the word "height field" all together. Encoding is total fine as it is what you did and commonly accepted in neural rep community.}
+
+%We represent the cuts explicitly as polylines and compute the GWN with minimal computational overhead~\cite{Jacobson:2018:GWN}.
+
+With Wind Lifter, the discontinuity placement is decoupled from the neural network's weights, and editing the cut geometry is straightforward. Such editing is not possible with traditional neural fields, where the discontinuities are embedded within the network's weights. As a result, our method enables novel applications, such as user-interactive design of cut shapes. 
+
+%It has been proven that the generalized winding number field is a harmonic function with jump boundary conditions at the cut shapes.\todopyc{citation please. so far only citations for chang and modi. very dangerous. big chance to piss off reviewers who will question the scholarly value of this work other than extending of bunch of UofT works.} Consequently, it tracks and represents the evolving spatial discontinuities of the cuts. This ensures that the height field is able to capture the time-varying nature of the cutting process.
+
+In summary, we:
+\begin{itemize}
+    \item introduce Wind Lifter, a generalizable, precise, and easily editable representation of discontinuities in 2D neural fields; 
+    \item integrate this new capability with a discretization-agnostic ROM method to enable reduced simulation of cutting;
+    \item demonstrate simulation results with complex cuts and cut shape generalization unparalleled by prior reduced modeling methods, including an interactive design prototype and a real-world comparison.
+\end{itemize}
+
+
+
+
+
+% With this innovation, we introduce, for the first time, a technique capable of performing reduced-space \zhecheng{I think you didn't setup reduced-space simulation enough earlier, you did reduced space for fast simulation, so earlier you must emphasize that full space cut is hard enough, not to mention reduced space} simulation for continuously evolving cuts. This breakthrough significantly enhances the real-time reduced-space simulation of cutting thin-walled deformable structures, addressing major challenges in geometry representation and time integration.
+
+
+
+

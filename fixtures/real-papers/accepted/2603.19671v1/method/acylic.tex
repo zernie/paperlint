@@ -1,0 +1,351 @@
+\section{LDP Acyclic Pattern Counting}
+\label{sec:pattern}
+
+
+We now move from path counting to the general problem of counting arbitrary acyclic patterns under LDP. 
+To avoid ambiguity, from now on, we refer to the nodes in the graph pattern as vertices, while continuing to use nodes to refer to those in $G$.
+As discussed earlier, a path inherently imposes an ordering on vertices, progressing naturally from the source to the destination. 
+Our path counting mechanisms leverage this property by enumerating paths in a sequential, node-by-node manner. 
+In contrast, acyclic patterns lack such directional structure and thus do not admit a natural vertex order, making it difficult to extend our previously proposed mechanism to this more general problem.
+To overcome this challenge, we first introduce a method to impose a vertex ordering on arbitrary acyclic patterns. 
+Based on this ordering, {we then extend the count aggregation in our LDP path counting mechanism with the idea of recursive subtree counting~\cite{yannakakis1981algorithms} to support general acyclic patterns.}
+Our results show that, for any acyclic pattern with $k$ edges, the mechanism still produces an unbiased estimation.
+
+
+
+\subsection{Ordering Vertices in Acyclic Patterns}
+\label{subsec:preprocess}
+
+Although general acyclic patterns lack a fixed natural orientation, they can be formulated as trees, which admit a conceptual bottom-up orientation, progressing from the leaves to the root.
+Based on this idea, given an acyclic pattern, we first formulate it as a tree by specifying a root, identifying the leaves, and defining parent-child relationships among vertices.
+Notably, the same pattern may admit multiple valid tree formulations. 
+For example, a $k$-line path can be represented as (i) a linear tree with one endpoint as the root and the other as the sole leaf, or (ii) a tree folded at a midpoint with an internal root and two branches terminating at the endpoints.
+% For example, a $k$-line path can be represented as a linear tree with one endpoint as the root and the other as the sole leaf. 
+% Alternatively, it can be folded at a midpoint, using an internal vertex as the root and forming two branches that terminate at the endpoints.
+
+
+After transforming the acyclic pattern into a tree $\mathcal{T}$, we define an ordering over the vertices in $\mathcal{T}$.
+To distinguish them from nodes in the graph, we use $u$ to denote vertices in the tree. 
+The ordering can be determined by a standard depth-first search algorithm, in which each parent vertex is visited after all of its children, and children are visited in lexicographic order.
+% and right children are visited after left children. 
+We denote the ordered vertices in the tree as $(u_0, u_1, \dots, u_k)$, where the subscript indicates the order of each vertex, starting from $0$.
+Furthermore, we use $\mathcal{L}$ to denote the set of subscripts of leaf vertices of $\mathcal{T}$. 
+For a vertex $u_\ell$, let $\mathcal{T}(u_\ell)$ denote the subtree of $\mathcal{T}$ rooted at $u_\ell$.
+\uline{Since there is a correspondence between the tree and the pattern, any subtree $\mathcal{T}(u_\ell)$ is itself an acyclic pattern.}
+Besides, to define the parent-child relationships, let $\mathcal{P}(\ell)$ denote the subscript of $u_\ell$'s parent and let $\mathcal{C}(\ell)$ denote the set of subscripts of immediate children of $u_\ell$. 
+Notably, $\mathcal{T}$ is not necessarily a binary tree; therefore, a vertex may have more than $2$ children.
+
+
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.60\linewidth]{figures/pattern.pdf} % file myfig.svg in figs/
+  \caption{
+  An example of pre-processing a $4$-edge pattern.}
+  \label{fig:pattern}
+\end{figure}
+
+
+
+
+Our mechanism can operate on any valid tree formulation and vertex ordering, as the asymptotic error bounds, communication cost, and computational cost depend only on $k$ and are independent of the specific tree structure. 
+Furthermore, since the tree construction depends only on the pattern and not on the graph $G$, it can be performed entirely as a pre-processing step by the analyzer~$\mathcal{A}$, which then publishes the relevant structural information to all nodes before any local computation.
+Figure~\ref{fig:pattern} illustrates an example of this pre-processing step and the resulting structural information.
+
+
+
+% \red{Figure with all notations}
+
+
+
+
+
+% topologic 
+
+\subsection{Non-Private Acyclic Pattern Counting}
+\label{subsec:non_dp_pattern}
+
+
+With the vertex ordering of the pattern established, we are now ready to introduce our LDP protocol for acyclic pattern counting. 
+Similar to the case of path counting, we begin by studying the non-private solution.
+As mentioned earlier, the acyclic pattern is now represented as a tree, and our goal becomes counting the number of occurrences of this tree within the given graph.
+To achieve this, we adopt a recursive strategy{~\cite{yannakakis1981algorithms}}: the count for the entire tree is computed by first counting its subtrees.
+{To align with our LDP setting, we need to adapt this idea to distributed settings, 
+optimize information aggregation, 
+calibrate noise for privacy, and analyze error correlations to derive the target bound.}
+Specifically, we traverse the vertices of the tree in the previously defined bottom-up order, 
+and at each vertex, we aggregate the counting information from the subtrees rooted at its children that are already computed in earlier steps.
+In the distributed setting, each node in $G$ is responsible for counting the number of subtrees rooted at itself. 
+To do so, it should collect counting information of smaller subtrees rooted at its neighbors.
+Building on these steps, we further employ the random marking technique to ensure that no node appears more than once in any single pattern instance.
+
+
+
+We now present the details of the non-private algorithm. 
+Let $\widehat{\mathcal{X}}_i^{(\ell)}$ denote the output count of node $v_i \in V$ at round~$\ell$.  
+Initially, for all $\ell \in \mathcal{L}$, the count for leaf vertex $u_\ell$ is set to $1$ at every node $v_i$, and each node samples a random mark $r_i \in \{0, 1, \dots, k\}$. 
+In each round $\ell \in \{0, 1, \dots, k\}$, we focus on counting the subtree $\mathcal{T}(u_\ell)$ at nodes with mark $\ell$.
+At this point, the operations performed depend on whether $u_\ell$ is a leaf vertex in $\mathcal{T}$:
+\begin{enumerate}
+    \item If $u_\ell$ is a leaf vertex, no operation is needed, as each node's count is already initialized to $1$.
+    \item If $u_\ell$ is an internal vertex with children, node $v_i$ first collects the subtree counts for each child of $u_\ell$ from its neighbors.
+    More precisely, for each $c \in \mathcal{C}(\ell)$, node $v_i$ computes the number of the subtree $\mathcal{T}(c)$ by summing the counts $\widehat{\mathcal{X}}_j^{(c)}$ from its neighbors $v_j$ with mark $c$. 
+    We denote this sum as $\widehat{\mathcal{Y}}^{(c)}_i$. 
+    After collecting all subtree counts, $v_i$ computes their product to obtain $\widehat{\mathcal{X}}^{(\ell)}_i = \prod_{c \in \mathcal{C}(\ell)} 
+        \widehat{\mathcal{Y}}_i^{(c)}$, representing the count of $\mathcal{T}(u_\ell)$ rooted at $v_i$.  
+\end{enumerate}
+At the end of each round $\ell \notin \mathcal{L}$, nodes with mark $\ell$ send their counts only to neighbors with mark $\mathcal{P}(\ell)$. 
+In the final round $k$, active nodes send their counts to the analyzer.
+The resulting mechanism runs in $k+2-|\mathcal{L}|$ rounds.
+The detailed algorithm for the local client at each node is provided in Algorithm~\ref{alg:pattern_nondp}.
+
+
+\begin{algorithm}
+\small
+\caption{Local client $\widehat{\mathcal{R}}^{(\ell)}$ of $\widehat{\mathcal{M}}_\mathcal{T}$}
+\label{alg:pattern_nondp}
+\SetKwFunction{rnew}{$\widehat{\mathcal{R}}^{(\ell)}$}
+\SetNoFillComment
+
+\ForEach{$i \in \{1, \dots, N\}$}{
+    \ForEach{$\ell \in \mathcal{L}$}{  
+    $\widehat{\mathcal{X}}^{(\ell)}_i \leftarrow 1$
+}
+}
+
+\SetKwProg{Fn}{Function}{:}{}
+\Fn{\rnew{$G_i$, $\mathcal{T}$}}{
+
+\If{$\ell = \text{init}$}{
+    $r_i \gets \textsf{Unif}(0,k)$
+
+     \textbf{Send out} $r_i$ to $\mathcal{N}(i)$ and $\mathcal{A}$
+    }
+  \If{$\ell \in \mathcal{L}$ or $\ell \neq r_i$}{
+    \textbf{Skip}
+    }  
+    \If{$\ell = r_i$}
+    {
+      
+    Received $\widehat{\mathcal{X}}^{(c)}_j$ for each $j \in \mathcal{N}(i)$ and $c \in \mathcal{C}(\ell)$
+      
+      \ForEach{$c \in \mathcal{C}(\ell)$}{
+           $\widehat{\mathcal{Y}}_i^{(c)} \gets \sum_{j \in \mathcal{N}(i)} 
+           \widehat{\mathcal{X}}_j^{(c)} \,
+           \mathbf{1}\{r_j = c\}
+           $
+        }
+
+        $\widehat{\mathcal{X}}^{(\ell)}_i \gets \prod_{c \in \mathcal{C}(\ell)} 
+        \widehat{\mathcal{Y}}_i^{(c)}$
+    }
+ \textbf{Send out} $\widehat{\mathcal{X}}^{(\ell)}_i$ to $\mathcal{N}(i)$ with mark $\mathcal{P}(\ell)$ and $\mathcal{A}$
+   
+}
+\end{algorithm}
+
+
+With the above design, we proactively ensure that each counted acyclic pattern contains no repeated nodes. 
+However, similar to the case of path counting, directly summing the node counts at the final round $k$ leads to an underestimation of the true number of pattern instances $Q_\mathcal{T}$.  
+Specifically, a subgraph $H \subseteq G$ that matches the pattern $\mathcal{T}$ is counted only if each of its $k+1$ nodes receives a mark corresponding to the order of its mapped vertex in $\mathcal{T}$.  
+Thus, the probability that a graph pattern instance is sampled is $(k+1)^{-(k+1)}$.  
+Therefore, the analyzer $\mathcal{A}$ rescales the aggregated counts by a factor of $(k+1)^{k+1}$ and outputs:
+\begin{equation*}
+    \widehat{\mathcal{M}}_\mathcal{T}(G) = (k+1)^{(k+1)} \,
+    \sum_{i=1}^N \widehat{\mathcal{X}}_i^{(k)} \, \mathbf{1}\{r_i =k\}.
+\end{equation*}
+
+
+\begin{lemma}
+\label{lem:pattern_sampling_error}
+    For any graph $G$, $k$-edge pattern $\mathcal{T}$, and parameter $\beta$, 
+the $(k + 2 - |\mathcal{L}|)$-round non-private algorithm $\widehat{\mathcal{M}}_{\mathcal{T}}$ satisfies
+$
+    \mathbb{E}[\widehat{\mathcal{M}}_\mathcal{T}(G)] = Q_\mathcal{T}
+$
+, and with probability at least $1 - \beta$,
+\begin{equation*}
+    |  \widehat{\mathcal{M}}_\mathcal{T}(G)- Q_\mathcal{T}| \leq
+    (k+1) \sqrt{N\beta^{-1}}(d(G)+k+1)^k
+    = O(\sqrt{N} d(G)^k).
+\end{equation*}
+
+\end{lemma}
+
+% Similar to $\widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}$, while this mechanism excludes node repetitions, it underestimates the pattern count by summing up the node outputs in round $k$.
+% Let $H$ be an instance of $S$ in $G$. 
+% It is straightforward that, it will be sampled in our algorithm if for every node $v_i$ in $H$ and its corresponding node $u_j$ in $S$, $r_i = j$. 
+% ...
+
+
+% The result of the $\widehat{\mathcal{M}}_S$ scheme is given by:
+% \begin{equation*}
+% % \label{e:pattern_nondp_count}
+%     \widehat{\mathcal{M}}_S(G) := \frac{1}{\sigma(S)} \,(k+1)^{k+1} \, \sum_{i=1}^N {X}^{(k)}_i.
+% \end{equation*}
+% Importantly, for a subgraph $H \subseteq G$ with $H \cong S$, the node mark assignments of $H$ that lead to $H$ being counted may not be unique. 
+% For example, if $S$ is a $k$-star, any $k$-star instance $H$ will contribute to the result as long as its center has mark $k$ and the $k$ leaves have distinct marks from $0$ to $k{-}1$, regardless of the specific assignment. 
+% As a result, the sampling probability for such an $H$ is $k!/(k+1)^{k+1}$, where $k!$ accounts for the number of valid permutations of node marks in $H$.
+% For general patterns, as discussed earlier, each $H \cong S$ admits exactly $\sigma(S)$ distinct node bijections. 
+% As each bijection corresponds to a valid mark assignment by mapping $u_\ell$ to a node with mark $\ell$, 
+% the probability of sampling $H$ is $\sigma(S)/(k+1)^{k+1}$. 
+% Therefore, we rescale the counting result by a factor of $(k+1)^{k+1}/\sigma(S)$ as in~\eqref{e:pattern_nondp_count} to obtain an unbiased estimator of the true count $Q_S$.
+
+
+
+% Now, let us see more details. First, we denote $\widehat{X}_i^{\ell}$ as ...   At the beginning, each ... is initialized to ... by ... . Besides, each node $v_i$ samples a random mark $r_i \in \{0, 1, \dots, k\}$ and only,,, will be involved in the .... of .... 
+ % At the round of $\ell \in \{0, 1, \dots, k\}$, we focus on the vertex $u_i$ in $\mathcal{T}$ and collect the counting information of subtree $\mathcal{T}(u_i)$. We have separate operations depending on ...Based on whether $u_i$ is a leaf vertex ..
+ 
+% \begin{enumerate}
+%     % \item If $u_\ell$ is a leaf node, no operation will be done since $..$ is already ...
+%     \item If $u_\ell$ children vertex, for any node ..., it should first collect the counting information of subtress of $u_{\ell}$ form its neighbors. More precisely, for every subtree ..., $v_{j}$ will get ...
+%     After collecting all ..., then $v_{j}$ can compute $\mathcal{X}=$...
+%     % the node first sums the counts from neighbors matching each child subscript in $\mathcal{C}(\ell)$, and then takes the product of these sums.
+% \end{enumerate}
+% Please note that, if ..., no... thus we do not indeed really ... thus we totally..., 
+
+% As mentioned before, the acyclic pattern now is regarded as a tree, and we would like to count the tree in the given graph. 
+% Our idea is to do such a counting in a recursive manner, where to count the whole tree, we first count its subtrees. 
+% In another word, we traverse all vertices in the tree in the order we found, i.e., from bottom to top manner.
+% When we visit a vertex, we collect the counting information of the subtree rooted with that vertex.
+% To get that information, we need to utilize the counting information of its subtrees, which have been collected before. 
+% To implement this idea in the distributed setting, each node (party) is responsible to count the number of subtree, which uses that as root vertex. 
+% To get such information, that node should collect some counting information for some smaller patterns from its neighbors. 
+% Besides, we further utilize the random marking technique to avoid node duplication appearing in a graph pattern.
+
+
+% Roughly speaking, our protocol has $k+1$ iterations. In iteration ..., we focus on the sub-pattern $\mathcal{T}(u_i)$ and collect the information of counting $\mathcal{T}(u_i)$ in $G$. More precisely, each node $v_i$ counts how many $\mathcal{T}(u_i)$ in $G$, which uses $v_i$ as the root node.
+% To get such information, $v_i$ should collect some counting information for some smaller patterns of $\mathcal{T}(u_i)$ from its neighbors. 
+% Besides, we further utilize the random marking technique to avoid node duplication appearing in a graph pattern. More precisely, similar to path counting, 
+% in the initialization round, each node $v_i$ samples a random mark $r_i \in \{0, 1, \dots, k\}$ and only,,, will be involved in the .... of 
+% , indicating the round in which it will participate in the computation. 
+
+
+
+
+
+% Note that ${X}^{(:\ell)}_{\mathcal{N}(i)}$ denotes the set of counts received by node $v_i$ from its immediate neighbors in all rounds prior to round~$\ell$, i.e.,
+% \begin{equation*}
+%     {X}^{(:\ell)}_{\mathcal{N}(i)} = \{ {X}^{(t)}_j \mid j \in \mathcal{N}(i),
+%     1 \leq t < \ell \}.
+% \end{equation*}
+
+% We also define ${X}^{(\ell)}_i = 0$ for any round $\ell \neq r_i$. 
+
+
+% The communication pattern in $\widehat{\mathcal{M}}_S$ follows that of $\widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}$, where each node sends its mark or count only to its immediate neighbors and the analyzer $\mathcal{A}$ during the initialization round and its active round. 
+% Notably, computation in rounds $\ell \in \mathcal{L}(S)$ is skipped, as it is implicitly handled during the node mark dissemination.
+% As a result, this algorithm runs for only $k {-} \lambda {+} 1$ rounds, generalizing the $k$-line path counting case where $\lambda = 2$ (e.g., when an intermediate node is chosen as the root).
+
+
+
+% For utility, the following lemma holds for $\mathcal{F}_S$:
+
+
+\subsection{Integrating DP and Efficiency Optimization}
+\label{subsec:pattern_dp}
+
+
+
+% Now, let us discuss how to privatize the output from the local client by applying the Laplace mechanism to the computational results at the nodes. 
+% \red{As mentioned, only $\mathcal{X}$ ... are sent out and each edge will only affect one ... So the problem is reduced to that, given, ...... how to ensure ... satisfies DP. Recall that, when leaf, ... set all 1 thus this step ... So we only need to focus on ... As shown in Algorithm~\ref{???}, }
+
+
+We now discuss how to privatize $\widehat{\mathcal{M}}_\mathcal{T}(G)$ by applying the Laplace mechanism to each node's computation.
+As previously mentioned, each node sends its result to its neighbors in at most one round, and a neighbor uses the received count only if it operates in a later round. 
+Hence, the presence of any edge can affect the computation of at most one node. 
+By parallel composition (Lemma~\ref{lem:pc}), the privacy budget $\varepsilon$ can be assigned to each node $v_i$ at its active round without division.
+The problem then reduces to ensuring each node's output satisfies $\varepsilon$-edge-DP. 
+Since nodes with marks in $\mathcal{L}$ have a fixed output of $1$, we focus only on nodes with marks outside $\mathcal{L}$.
+As shown in Algorithm~\ref{alg:pattern_nondp}, an active node $v_i$ at round $\ell$ aggregates outputs from neighbors in each child round $c$ to compute the sum $\widehat{\mathcal{Y}}^{(c)}_i$. 
+Similar to path counting, any edge from a node with mark $c$ can influence this sum by at most $\| \mathcal{X}^{(c)} \|_\infty$, a public value computed by the analyzer $\mathcal{A}$.
+Since each edge contributes to at most one such sum across all child rounds $c \in \mathcal{C}(\ell)$, the privacy budget $\varepsilon$ need not be divided across them. 
+Accordingly, we modify Line~13 of Algorithm~\ref{alg:pattern_nondp} by adding Laplace noise of scale $\| \mathcal{X}^{(c)} \|_\infty / \varepsilon$, resulting in the private local randomizer $\mathcal{R}^{(\ell)}$. 
+{As in the path counting case, sampling amplification does not apply here either.}
+The resulting edge-LDP mechanism, denoted as $\mathcal{M}_\mathcal{T}$, satisfies the following privacy and utility guarantees:
+
+\begin{theorem}
+\label{the:pattern_privacy}
+For any graph $G$, $k$-edge pattern $\mathcal{T}$, and privacy budget $\varepsilon$, 
+the mechanism $\mathcal{M}_\mathcal{T}$ satisfies $\varepsilon$-edge-LDP.
+\end{theorem}
+For utility, the total error consists of the sampling error shown in Lemma~\ref{lem:pattern_sampling_error}, and the {DP noise} established below.
+
+
+\begin{lemma}
+    \label{lem:pattern_additive_bound}
+    For any graph $G$, $k$-edge pattern $\mathcal{T}$, parameters $\varepsilon$ and $\beta$, 
+$\mathcal{M}_{\mathcal{T}}$ satisfies
+$
+    \mathbb{E}[\mathcal{M}_{\mathcal{T}}(G, \varepsilon)] = 
+    \widehat{\mathcal{M}}_{\mathcal{T}}(G)
+$ 
+under the same node marking $(r_1, \dots, r_N)$, 
+and with probability at least $1 - \beta$,
+\begin{align*}
+    |\mathcal{M}_{\mathcal{T}}(G, \varepsilon) - 
+    \widehat{\mathcal{M}}_{\mathcal{T}}(G)| 
+    &\leq 
+    {k(k+1)} \,
+    \gamma
+    \sqrt{N}
+    (\hat{d}(G) + \gamma \sqrt{\hat{d}(G)} + \gamma)^{k-1} 
+    \\
+    &=  \tilde{O}(\sqrt{N} d(G)^{k-1}),
+\end{align*}
+where $\gamma = (k+1)\sqrt{8\log(6kN/\beta)}/\varepsilon = \tilde{O}(1)$ and $\hat{d}(G) = \max(d(G), \lceil \gamma^2 \rceil)$.
+\end{lemma}
+
+
+By combining Lemma~\ref{lem:pattern_sampling_error} and Lemma~\ref{lem:pattern_additive_bound}, we obtain the overall utility guarantee:
+
+
+
+\begin{theorem}
+\label{the:pattern_bound}
+For any graph $G$, $k$-edge pattern $\mathcal{T}$, parameters $\varepsilon$ and $\beta$,
+the $(k + 2 - |\mathcal{L}|)$-round mechanism $\mathcal{M}_\mathcal{T}$ satisfies 
+$\mathbb{E}[\mathcal{M}_\mathcal{T}(G, \varepsilon)] = Q_\mathcal{T}$,
+and with probability at least $1 - \beta$,
+\begin{align*}
+    |\mathcal{M}_\mathcal{T}(G, \varepsilon) - Q_\mathcal{T}| 
+    \leq
+    (k+1) \sqrt{2N\beta^{-1}}(d(G)+k+1)^k +\\
+      {k(k+1)} \,
+    \gamma
+    \sqrt{N}
+    (\hat{d}(G) + \gamma \sqrt{\hat{d}(G)} + \gamma)^{k-1} 
+    = \tilde{O}(\sqrt{N} d(G)^{k}),
+\end{align*}
+where $\gamma = (k{+}1)\sqrt{8\log(12kN/\beta)}/\varepsilon = \tilde{O}(1) $ and $\hat{d}(G) = \max(d(G), \lceil \gamma^2 \rceil)$.
+\end{theorem}
+
+
+
+
+
+To conclude, $\mathcal{M}_\mathcal{T}$ achieves the same asymptotic utility guarantee as $\mathcal{M}_{\mathrm{k\text{-}pt}}$ while preserving unbiasedness of the output. 
+{Consequently, the same LDP error optimization strategy, i.e., averaging the LDP results across multiple runs, also applies to our general acyclic pattern counting mechanism.
+}
+
+
+
+
+\paragraph{Communication and computation analysis}
+
+The total communication cost of $\mathcal{M}_\mathcal{T}$ is $O(M +N)$, where $O(M)$ arises from inter-node communication and $O(N)$ from communication between the analyzer and nodes. 
+The analyzer requires $O(N)$ computation time, where pattern pre-processing takes constant time. 
+Moreover, each node performs $O(d(G))$ local computation.
+
+\paragraph{Special design for $k$-star counting} 
+
+In $k$-star counting, node duplication can be handled locally by each star center, allowing us to skip the random marking process. 
+For improved performance, we propose a one-round mechanism $\mathcal{M}_{k\star}$ tailored to this case. 
+Specifically, each node $v_i$ first privatizes its degree by adding Laplace noise with scale $2/\varepsilon$, yielding $\tilde{d}(v_i) = d(v_i) + \mathrm{Lap}(2/\varepsilon)$.  
+It then computes the product $\tilde{d}(v_i)(\tilde{d}(v_i) - 1)\cdots(\tilde{d}(v_i) - k + 1)$ and sends the result to the analyzer $\mathcal{A}$,  
+which aggregates all received values and outputs their sum.  
+{To conclude, $\mathcal{M}_{k\star}$ satisfies $\varepsilon$-LDP while achieving the SOTA utility of $\tilde{O}(\sqrt{N}d(G)^{k-1})$~\cite{Imola2021}, with the utility proof deferred to Appendix~A.3 of the full version~\cite{full_version}.
+}
+% \red{Due to space constraints, we provide the technical details in Appendix~{A.1} of the full version~\cite{?}.}
+
+

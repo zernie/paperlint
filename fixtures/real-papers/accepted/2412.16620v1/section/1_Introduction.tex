@@ -1,0 +1,66 @@
+\sloppy
+\section{Introduction}
+\label{sec:introduction}
+
+
+
+Unit testing is a crucial part of the software development lifecycle, significantly enhancing software quality and reliability~\cite{wang_software_2024,zhang2022test}.
+It involves the systematic execution of software to detect potential bugs, verify expected behaviors, and ensure compliance with requirements, thereby enhancing developers' efficiency in development and debugging.
+However, constructing effective test cases manually is both challenging and time-intensive, with studies indicating that developers often spend over 15\% of their time on test generation~\cite{daka_survey_2014}.
+As a result, automated test generation has gained substantial interest among developers and researchers. Numerous approaches have been proposed to reduce manual effort, including symbolic execution testing~\cite{chipounov_s2e_2011, cadar_symbolic_2011}, model-based testing~\cite{dalal_modelbased_1999, offutt_generating_1999}, random testing~\cite{pacheco_randoop_2007, ma_grt_2015}, and search-based testing~\cite{fraser_evosuite_2011, baresi_testful_2010}.
+
+A unit test typically includes two components: (1) a test prefix, i.e., a sequence of statements that manipulate the unit under test to a specific state, and (2) a test assertion, i.e., an oracle that defines the conditions that should be satisfied in that state~\cite{dinella_toga_2022}. 
+In the literature, there are mainly three unit testing tasks based on different perspectives: test generation, assertion generation, and test evolution. 
+First, the test generation task takes a focal method (i.e., the method under test ) as input and generates a unit test that includes both a test prefix and an assertion to ensure the focal method functions correctly~\cite{tufano_unit_2021}.
+Second, the assertion generation task focuses on generating meaningful assert statements for a given focal method and a test prefix to capture potential faults effectively.
+Third, the test evolution task attempts to generate an updated unit test consisting of both prefixes and assertions while incorporating additional inputs, including the original focal method, its unit test, and the updated focal method~\cite{hu_identify_2023}.
+The test evolution task is usually conducted during software evolution, where the focal method adapts to meet new requirements or resolve issues, requiring unit tests to co-evolve to maintain software quality. 
+Overall, these three tasks, i.e., test generation, assertion generation, and test evolution, represent distinct aspects of unit testing across various levels of granularity and scenarios, offering a comprehensive view of unit testing.
+
+
+
+
+
+\textbf{This Paper.}
+Recently, Large Language Models (LLMs) have demonstrated impressive performance on various code-related tasks such as code generation~\cite{li_starcoder_2023, wei_magicoder_2024}, code summarization~\cite{sun_prompt_2023, ahmed_automatic_2024}, and program repair~\cite{ zhang2024systematic,zhang2023survey}. 
+In the domain of unit testing, several studies have explored LLM-based approaches with promising results. 
+For instance, A3Test~\cite{alagarsamy_a3test_2023} fine-tunes a PLBART model specifically for test generation and Zhang et al.~\cite{zhang_exploring_2024} explore the capability of several LLMs for assertion generation. 
+Furthermore, \textsc{Ceprot}~\cite{hu_identify_2023} leverages CodeT5, a pre-trained model designed to learn from source code, to capture semantic correlations effectively in the test evolution task. 
+Despite ongoing research, the literature still lacks a systematic evaluation of LLMs in unit testing, making it difficult for researchers to assess the true capabilities of LLMs in performing various unit testing tasks.
+To fill this gap, we conduct the first large-scale empirical study on LLMs for unit testing, including three unit testing tasks (i.e., test generation, assertion generation, and test evolution) across 37 LLMs with different architectures (i.e., encoder-only, encoder-decoder, and decoder-only) and size (ranging from 60 million to 16 billion parameters). 
+Our study provides a comprehensive evaluation of LLMs on these common unit testing tasks, facilitating future research in this area. 
+Specifically, we address the following three research questions.
+
+\begin{itemize}[leftmargin=1em]
+    \item \textbf{Performance of LLMs on Unit Testing Tasks.}  
+    In RQ1, we evaluate the performance of LLMs on test generation, assertion generation, and test evolution tasks, comparing them to previous state-of-the-art approaches using two types of metrics.
+    \textbf{Results:} LLMs significantly outperform several state-of-the-art approaches such as $ATLAS$ for assertion generation~\cite{watson_learning_2020}, \textsc{AthenaTest} for test generation~\cite{tufano_unit_2021}, and \textsc{Ceprot} for test evolution~\cite{hu_identify_2023}, across nearly all metrics, highlighting their potential in unit testing.
+
+    \item \textbf{Impact of Various Factors on LLMs' Performance.}  
+    In RQ2, we evaluate the effects of model series, architecture, and size on LLMs' performance. 
+    \textbf{Results:} (1) large-scale LLMs consistently outperform smaller ones; (2) decoder-only models achieve the highest performance overall, with encoder-decoder models showing strength at comparable parameter sizes; (3) the CodeLlama~\cite{roziere_code_2024}, DeepSeek-Coder~\cite{guo_deepseek-coder_2024}, and CodeT5p~\cite{wang_codet5_2023+} series models are particularly promising.
+
+    \item \textbf{Comparison between the Fine-tuning and Prompt Engineering Approaches.}
+    In RQ3, we compare the effectiveness of the fine-tuning and prompt engineering approaches across three unit testing tasks. 
+    \textbf{Results:} prompt engineering approach with zero-shot learning produces promising results in test generation and test evolution tasks, indicating its considerable potential capability in common unit testing tasks.
+
+\end{itemize}
+
+\textbf{Novelty \& Contributions.}
+To sum up, the main contributions of this paper are as follows:
+
+\begin{itemize}[leftmargin=1em]
+    \item \textbf{New Dimension.} 
+    We bridge the gap between LLMs and three unit testing tasks: test generation, assertion generation, and test evolution. 
+    Our study not only provides a comprehensive evaluation of LLMs' performance but also highlights the potential of fine-tuning LLMs in unit testing.
+
+    \item \textbf{Extensive Study.}
+    We conduct the first large-scale empirical study on fine-tuning 37 popular LLMs in three unit testing scenarios across five benchmarks and eight metrics, utilizing over 3,000 NVIDIA A100 GPU hours.
+    Our study includes (1) a systematic comparison of LLMs with state-of-the-art methods for unit testing;
+    (2) an in-depth analysis of factors affecting LLMs' performance;
+    and (3) a complete comparison between fine-tuning and prompt engineering approaches.
+
+    \item \textbf{Practical Guidelines.}
+    Based on our extensive findings, we provide practical guidelines to inform and guide future research and practice in applying LLM-based approaches to unit testing tasks.
+\end{itemize}
+

@@ -1,0 +1,35 @@
+% 日本語の実験結果については修正反映済み
+\setlength{\tabcolsep}{3.1pt} % 数値を小さくすると空白が狭くなる
+
+\begin{table*}[ht]
+% \begin{table}[ht]
+    \footnotesize
+    % \tiny
+    \centering
+    \begin{tabular}{lcccc ccccc ccccc}
+        \toprule
+        % Model & Success Rate & Average Turn & Success Average Turn & Average Diff \\
+                \bf{Agent Pattern} & \bf{SR} $^\uparrow$ & \bf{AT} $^\downarrow$ & \bf{AT-SD} $^\downarrow$ & \bf{AII} $^\uparrow$ & \bf{SR1} & \bf{SR2} & \bf{SR3} & \bf{SR4} & \bf{SR5} & \bf{AII1}  & \bf{AII2} & \bf{AII3}  & \bf{AII4} & \bf{AII5} \\
+        % \midrule
+        \cmidrule(l){1-1} \cmidrule(l){2-5} \cmidrule(l){6-10} \cmidrule(l){11-15}
+        Simple & 0.553 & 7.383 & 5.271 & 0.261 & 0.959 & 0.946 & 0.446 & 0.245 & 0.081 & -1.000 & 0.000 & 0.387 & 0.375 & 0.193 \\
+        ProCoT-p4g & 0.760 & 6.310 & 5.145 & 0.417 & 0.986 & \bf{1.000} & 0.804 & 0.642 & 0.339 & -1.000 & - & 0.273 & 0.474 & \bf{0.463} \\
+        ProCoT-p4g-desc & 0.707 & 6.990 & 5.741 & 0.318 & \bf{1.000} & 0.946 & 0.821 & 0.472 & 0.242 & - & 0.000 & \bf{0.500} & 0.536 & 0.170 \\
+        % \cmidrule{1-15}
+        \cmidrule(l){1-1} \cmidrule(l){2-5} \cmidrule(l){6-10} \cmidrule(l){11-15}        ProCoT-rich & 0.830 & \bf{5.707} & \bf{4.827} & 0.216 & \bf{1.000} & \bf{1.000} & \bf{0.893} & 0.774 & 0.468 & - & - & 0.167 & 0.417 & 0.152 \\
+        ProCoT-rich-desc & \bf{0.833} & 6.057 & 5.268 & \bf{0.480} & \bf{1.000} & 0.946 & \bf{0.893} & \bf{0.811} & \bf{0.500} & - & 0.000 & 0.333 & \bf{1.100} & 0.355 \\
+        % Simple & 0.55 & 7.38 & 5.27 & 0.26 & 0.96 & 0.95 & 0.45 & 0.25 & 0.08 & -1.00 & 0.00 & 0.39 & 0.38 & 0.19 \\
+        % ProCoT-p4g & 0.76 & 6.31 & 5.15 & 0.42 & 0.99 & \bf{1.00} & 0.80 & 0.64 & 0.34 & -1.00 & - & 0.27 & 0.47 & \bf{0.46} \\
+        % ProCoT-p4g-desc & 0.71 & 6.99 & 5.74 & 0.32 & \bf{1.00} & 0.95 & 0.82 & 0.47 & 0.24 & - & 0.00 & \bf{0.50} & 0.54 & 0.17 \\
+        % \cmidrule{1-15}
+        % ProCoT-rich & 0.83 & \bf{5.71} & \bf{4.83} & 0.22 & \bf{1.00} & \bf{1.00} & \bf{0.89} & 0.77 & 0.47 & - & - & 0.17 & 0.42 & 0.15 \\
+        % ProCoT-rich-desc & \bf{0.83} & 6.06 & 5.27 & \bf{0.48} & \bf{1.00} & 0.95 & \bf{0.89} & \bf{0.81} & \bf{0.50} & - & 0.00 & 0.33 & \bf{1.10} & 0.36 \\
+        \bottomrule
+    \end{tabular}
+    %\caption{Performance by persuasive agent patterns. SR represents the success rate of persuasion, AT is the average number of turns taken until success, AT-SD refers to AT in successful dialogues only, and AII is the average change in intention in failed dialogues.}
+    \caption{Performance by persuasive agent patterns. SR: success rate of persuasion, AT: average turns until success, AT-SD: AT in successful dialogues only, AII: average intention improvement in failed dialogues.}
+    \label{tab:result}
+\end{table*}
+% \end{table}
+
+\setlength{\tabcolsep}{6pt} % 数値を小さくすると空白が狭くなる

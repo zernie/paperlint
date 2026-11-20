@@ -54,7 +54,7 @@ the findings are italics used for stress. See [optional rules](../../optional-ru
 ## Why it is off by default
 
 The rule is right only for a paper that marks its definitions with the commands it reads. On the
-real-papers corpus (`fixtures/accepted-papers/`, `fixtures/arxiv-papers/`; 114 papers, each with the
+real-papers corpus (`fixtures/real-papers/accepted/`, `fixtures/real-papers/preprints/`; 114 papers, each with the
 files its build recorded spliced in), with the default options, measured 2026-11-19:
 
 |                                                                          | papers    | findings |

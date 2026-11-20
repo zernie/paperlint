@@ -1,0 +1,100 @@
+The primary threat to external validity resides in the selection criteria and
+the representativeness of the collected issues.
+%
+We are certain that all 30 issues are indeed soundness issues because we studied
+each in depth;
+%
+readers can also validate this claim by reviewing the code snippets in our
+supplementary material~\cite{supp} or the issues themselves on GitHub, as the
+dataset size is manageable.
+%
+However, additional soundness issues may exist that were missed due to our
+conservative selection criteria.
+%
+The automatic filtering process relied on GitHub labels;
+%
+although these labels are routinely assigned by \rustc{} developers, some issues
+might not have been properly labeled at the time of collection.
+%
+While we followed the classification used in prior work~\cite{liu2025empiricala}
+to identify labels related to type checking, other relevant labels might have
+been overlooked.
+%
+Moreover, we filtered out issues with labels that appeared irrelevant to
+soundness, but it is possible that a soundness issue also revealed other
+problems and was thus excluded.
+%
+Notably, as mentioned in \cref{sec:method}, 7 issues in the dataset of the
+previous work were excluded by our filtering due to their labels, confirming the
+risk of missing soundness issues.
+%
+Even though we complemented our dataset with these 7 specific issues, other
+soundness issues might have been missed for the same reason.
+%
+Finally, our manual scan retained issues only if they provided clear evidence
+that the expected behavior was rejection, which could exclude less-documented
+cases.
+%
+Nevertheless, even if the dataset is not exhaustive, we believe our findings
+remain valid as they are derived from actual soundness issues.
+
+Regarding this threat, we conducted a lightweight study of issues excluded due
+to the I-ICE label, which indicates that the compiler crashes because of an
+internal compiler error (ICE).
+%
+We found that 181 excluded issues have the I-ICE label, while only one of them
+also has the I-unsound label.
+%
+As a soundness issue is not necessarily marked with I-unsound, this does not
+strictly mean that all except one are not soundness issues.
+%
+That said, we believe this result suggests that most I-ICE issues are unlikely
+to be soundness issues.
+%
+The primary reason is that an ICE prevents code from compiling, while soundness
+issues require code that should not type-check to compile successfully.
+
+Another threat to external validity stems from the exclusion of issues related
+to feature-gated features.
+%
+Inspecting such issues would reveal additional soundness issues, especially
+considering that unstable features likely have more compiler bugs than stable
+features.
+%
+We found that among 223 issues excluded due to an ``F-'' label, 10 issues also
+have I-unsound, corroborating this expectation.
+%
+However, we believe that focusing on soundness issues within stable features
+helps better understand the severity of soundness issues in \rustc{}.
+
+A threat to construct validity concerns the accuracy of our characterization of
+features, symptoms, consequences, and bug status.
+%
+The identification of these attributes is inherently susceptible to researcher
+bias or human error.
+%
+To mitigate this, we employed three strategies.
+%
+First, two authors independently investigated the issues and conducted extensive
+discussions to reach a consensus on the characterization of each issue.
+%
+Second, we cross-referenced each issue with multiple external resources,
+including related issues, PRs, and discussions on the official Rust Zulip
+channels, as well as documents such as the Reference, the FLS, and RFCs.
+%
+Third, we designed objective criteria for bug status and checked the status by
+type-checking each code using the latest \rustc{} release and inspecting issue
+labels and their assigners.
+
+Finally, a threat to conclusion validity lies in the small size of the dataset,
+which limits the generalizability of our findings.
+%
+Nevertheless, we believe our work provides value to the community.
+%
+Our main contribution is reporting that \rustc{} has soundness bugs despite
+Rust's emphasis on type soundness, highlighting the urgent need for research
+community efforts.
+%
+Our in-depth, multidimensional analysis yields actionable insights that
+facilitate future research on testing the Rust type checker and formalizing the
+type system.

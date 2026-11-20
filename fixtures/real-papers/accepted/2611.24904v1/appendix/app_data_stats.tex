@@ -1,0 +1,144 @@
+\section{Per-City Dataset Statistics and Shadow Taxonomy}
+\label{app:data_stats}
+
+This appendix documents the six-category shadow taxonomy referenced in
+Section~\ref{sec:annotation} (\S\ref{app:taxonomy}), the per-city and
+per-resolution distributional statistics that motivate the LOCO design
+(\S\ref{app:perCity}), and the spatial sampling protocol used to draw
+patches within each city (\S\ref{app:sampling}).
+
+\subsection{Shadow Taxonomy}
+\label{app:taxonomy}
+
+Each annotated shadow segment carries one of six type labels. The taxonomy
+is released with the dataset for downstream analyses; the LOCO benchmark
+(\S\ref{sec:loco}) collapses these to a binary mask. Definitions and
+inclusion rules are in Table~\ref{tab:taxonomy}. Annotators applied a
+single inclusion rule across all six types: a region is shadow if it is
+solar-directional and consistent with local scene geometry. Sensor
+artifacts, dark water, and cloud shadows lacking geometric consistency are
+excluded.
+
+\begin{table}[h]
+  \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \caption{
+    \textbf{Six-category shadow taxonomy.}
+    Every annotated segment receives exactly one label.
+    The binary LOCO benchmark merges all six into the foreground class.
+  }
+  \label{tab:taxonomy}
+  \begin{tabular}{@{}p{3.0cm}p{9.5cm}@{}}
+    \toprule
+    \textbf{Category} & \textbf{Definition and inclusion rule} \\
+    \midrule
+    Building / canyon &
+    Cast shadows from buildings and built structures, including narrow
+    inter-building canyons. \\
+    Under-structure &
+    Persistent occlusion shadows beneath elevated structures (bridges,
+    overpasses, awnings, carports). \\
+    Tree-canopy dapple &
+    Shadow patterns cast by tree foliage, including dappled shadow on the
+    ground beneath the canopy. \\
+    Topography-cast &
+    Shadows produced by terrain elevation changes (hills, embankments,
+    cuttings). \\
+    Vehicle-cast &
+    Shadows cast by cars, trucks, and other ground vehicles. \\
+    Thin linear &
+    Shadows from thin vertical structures (poles, fences, antennas, wires)
+    whose width is on the order of a few pixels. \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Per-City and Per-Resolution Statistics}
+\label{app:perCity}
+
+\input{figures/fig_data_stats}
+
+Figure~\ref{fig:stats} reports the distributional properties of the
+benchmark. Four observations bear on the LOCO design and on results
+reported in Section~\ref{sec:evaluation}.
+
+\textbf{Shadow coverage is city-dependent (panel B).}
+Phoenix is dominated by low-coverage patches: $49\%$ of high-resolution
+images contain $5$--$15\%$ shadow area and only $9\%$ exceed $30\%$. Miami
+and Chicago are shifted toward higher coverage ($50\%$ and $31\%$ of
+images above $30\%$ coverage, respectively). Per-image annotation density
+follows the same trend ($29.7$ blobs/image in Phoenix, $48.4$ in Miami,
+$38.6$ in Chicago).
+
+\textbf{Shadow morphology varies by city (panels C, D).}
+Chicago has the largest median tree-canopy blobs ($255$\,px$^2$) and
+under-structure blobs ($193$\,px$^2$), reflecting a denser urban grid with
+mature street trees. Phoenix shows the smallest under-structure blobs
+($72$\,px$^2$) and a vehicle-shadow share of $7\%$, the highest among the
+three cities. Miami's distribution is dominated by tree-canopy shadow
+($47\%$ of segments) consistent with its dense subtropical canopy. Chicago
+is dominated by building shadow ($53\%$).
+
+\textbf{Surface intensity is city-dependent (panel E).}
+Mean grayscale intensity distributions overlap in mean
+($\mu\!\in\![128, 132]$) but differ in spread: Phoenix
+($\sigma\!=\!15$) is roughly half as wide as Miami ($\sigma\!=\!33$). The
+narrow Phoenix distribution is consistent with uniform high-albedo desert
+surfaces; the wide Miami distribution reflects a mix of bright sand,
+asphalt, and dark vegetation.
+
+\textbf{Native resolution affects blob count, not city ranking (panel A).}
+The same $384{\times}384$ ground footprint contains substantially more
+shadow blobs at $0.6$\,m/px than at $0.3$\,m/px ($+85$ to $+100$ blobs in
+the illustrated examples) because the lower-resolution patch covers
+$4{\times}$ more area on the ground. The relative ordering across cities is
+preserved across resolutions.
+
+These statistics establish that the three cities differ along orthogonal
+axes (coverage, morphology, surface intensity) rather than along a single
+appearance axis, supporting the LOCO claim in Section~\ref{sec:design}
+that the protocol measures transfer across genuine appearance shifts.
+
+\subsection{Spatial Sampling Protocol}
+\label{app:sampling}
+
+Patches are drawn from NAIP orthoimagery in two streams: \emph{random}
+patches that provide diverse independent samples, and \emph{paired}
+patches that share ground coordinates across the two native resolutions.
+
+\textbf{Random patches.}
+Within each (city, resolution) pair, target patch counts are distributed
+across NAIP tiles overlapping the city administrative boundary. If the
+target count is at most the tile count, tiles are sampled without
+replacement and each sampled tile contributes one patch; otherwise the
+count is distributed evenly with the remainder allocated to randomly
+chosen tiles. Within each selected tile, a candidate center is sampled
+uniformly inside the tile geometry and accepted only if (i) the point
+lies within the city boundary and (ii) a $384{\times}384$ window centered
+at the point fits entirely inside the tile (a $192$-pixel buffer to all
+edges). Up to $50$ candidates are tried per slot; unfilled slots are
+skipped. The one-patch-per-tile rule limits spatial autocorrelation
+between samples.
+
+\textbf{Paired patches.}
+For each city, $150$ ground coordinates are drawn under the random-patch
+procedure on the mid-resolution stream ($0.6$\,m/px), with the additional
+constraint that each new center is at least $384$ pixels (one patch
+width) from every previously accepted center in the same tile. The
+accepted longitude/latitude coordinates are written to a shared registry
+and reused for the high-resolution stream ($0.3$\,m/px): for each saved
+coordinate, the high-resolution NAIP tile containing the location is
+identified and a $384{\times}384$ window is extracted centered on the
+exact same geographic point. Each paired patch carries a shared
+\texttt{pair\_id} linking its two resolutions. Paired patches support
+resolution-matched analyses; results reported in the main paper use the
+combined random$+$paired pool unless stated otherwise.
+
+\textbf{Reproducibility.}
+Sampling is organized into sequential sessions ($40$ random and $10$
+paired patches per resolution per session), each with a distinct random
+seed. Per-patch metadata (\texttt{city}, \texttt{scale\_gsd\_m},
+\texttt{lon}, \texttt{lat}, \texttt{source\_tile\_id}, \texttt{pair\_id})
+is released with the benchmark, enabling exact patch-level reproduction
+of the train/val/test splits.

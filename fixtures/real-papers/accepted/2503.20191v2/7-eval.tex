@@ -1,0 +1,106 @@
+
+\section{Evaluation}
+\label{sec-eval}
+
+In this section, we present a comprehensive evaluation of \sysname to demonstrate its effectiveness in predicting LLM training performance and optimizing deployment configurations. Our evaluation aims to answer these key questions:
+
+1. How accurate is \sysname in predicting end-to-end runtime of training workloads across models of various sizes, different configurations and deployment environments?  (\sref{sec:eval:fidelity})
+
+2. Can \sysname effectively optimize DLT workload deployment while navigating large configuration spaces? (\sref{sec:eval:opti})
+
+3. How can \sysname scale to large clusters?(\sref{sec:eval:hyperscale})
+
+To answer these questions, we conduct a series of experiments, where we compare \sysname's predictions against real-world measurements and existing state-of-the-art runtime modeling systems. Finally, we also present ablation studies to evaluate the effectiveness and scalability of different components of \sysname (\sref{sec:eval:ablation}).
+
+
+\input{figures-tex/relative_cost}
+
+\subsection{Experimental Setup}
+
+
+\vheading{Baselines} We compare \sysname against a variety of state-of-the-art runtime modeling systems. We consider two analytical modeling frameworks -- Calculon \cite{isaev2023calculon} and AMPed \cite{moolchandani2023amped}, and one domain specific simulator, Proteus \cite{duan2023proteus}. We omit vTrain \cite{bang2023vtrain}, DistSim \cite{lu2023distsim} and Daydream \cite{zhu2020daydream} from comparison due to unavailability of their source code. While DistIR \cite{santhanam2021distir} is available publicly, it only supports modeling the training performance for simple MLP workloads.
+
+
+
+\vheading{Models}  In order to facilitate a direct comparison, we conduct our experiments on the GPT-3 \cite{brown2020language} family of models -- the only workload natively supported by our baselines AMPed and Calculon. We use Megatron-LM \cite{megatron} GPT-3 \cite{brown2020language} 2.7B, 18.4B and 145.6B models in our experiments, with fixed global batch sizes of 256, 512 and 12k respectively (unless otherwise mentioned). The training scripts use HuggingFace Accelerate \cite{hfaccelerate}, Pytorch 2.1.0 \cite{ansel2024pytorch} and bfloat16 mixed precision. We also verify \sysname on a host of models using FSDP and \texttt{torch.compile} (Table \ref{tab:framework_generality}).
+
+\vheading{Hardware} We evaluate the performance of \sysname in three different scenarios -- a 64 GPU NVIDIA H100 DGX \cite{h100} cluster, a 16 GPU V100 \cite{v100} DGX cluster, and a node containing 8 A40 GPUs. Each DGX-H100 server has 8 NVIDIA H100 GPUs with 80GB of High Bandwidth Memory (HBM). GPUs within a server are connected with NVLINK4.0 providing 900GBps bidirectional bandwidth. GPUs across servers are connected via Ethernet with RoCE offering 400Gbps per GPU pair. 
+
+The V100 DGX servers are equipped with 8 GPUs with 40GB HBM memory capacity. Intra-node NVLINK connectivity is in an asymmetric cubemesh topology \cite{v100} with 300GBps links. These machines are connected using a 100GBps Infiniband \cite{infiniband} link. The A40 node uses pairwise NVLINK 4.0 between GPUs. Finally, we run the \sysname prediction pipeline on a CPU-only node (AMD 7513 EPYC, 128 cores, 504GB RAM) for configuration search, an AMD 9334 EPYC processor with 64 cores and 750GB memory for the scaling experiments.
+
+\vheading{Configuration Space} We analyze \sysname's performance on a rich configuration space ($\sim$2000 points for each hardware cluster) formed by the composition of eight different configuration parameters -- mapping to different parallelization strategies and memory/compute optimizations. A summary of all the config knobs and their impact on compute system utilization is listed in \Cref{tab:knob_impacts}. All baseline systems do not support every optimization parameter shown in \Cref{tab:features_systems} and we skip these unsupported configs. Furthermore, we omit \calc and \amped baselines for the Volta architecture because they do not support modeling bfloat16.
+
+
+\vspace{-1em}
+
+\subsection{Prediction Quality}
+\label{sec:eval:fidelity}
+
+We first evaluate \sysname's accuracy in predicting the end-to-end runtime of training workloads across various models, configurations, and deployment setups. We compare \sysname against state-of-the-art: \prot, \calc, and \amped.
+
+\vheading{Accuracy Across Configurations} \Cref{fig:eval:fidelity:pointcloud} illustrates the prediction quality of \sysname across the top one hundred configurations for training GPT3 models on four different deployment setups. \sysname consistently predicts the end-to-end runtime with high fidelity across all configurations and deployment setups. While \prot achieves comparable fidelity on V100 GPUs, it only supports a subset of configuration knobs, limiting its ability to identify top-performing configurations. Moreover, \prot's performance degrades significantly on H100 GPUs, with predictions often deviating by an order of magnitude. This is particularly surprising since \prot performs explicit profiling of kernel execution times on actual GPUs as opposed to all the other systems considered in this experiment. As shown in \Cref{fig:eval:fidelitycdf}, \amped \footnote{We contacted the authors of \prot and \amped to resolve these anomalies but could not arrive at a resolution.} consistently overestimates execution time by 2-3$\times$. Despite \calc and \amped being specialized for GPT3 training with Megatron-LM, they exhibit significantly higher prediction error compared to \sysname. \sysname achieves remarkable fidelity, predicting runtimes within 1\% error margin for $\sim$65\% of configurations on 8 V100 GPUs. This extends to larger deployments, with \sysname maintaining 10\% error margin for $\sim$90\% of configurations even at 64 H100s.
+
+
+\input{figures-tex/error_cdf}
+
+\vheading{Impact on Configuration Selection} \Cref{fig:eval:fidelity:cost} demonstrates how prediction accuracy directly impacts the identification of optimal training configurations. The graph shows the normalized cost (relative to the optimal configuration) of the best configuration selected by each system on actual deployment. \sysname consistently identifies configurations within 2\% of optimal cost across all scenarios, showcasing its ability to effectively navigate complex configuration spaces. In contrast, \prot selects configurations 5-17\% more costly than optimal, with the gap widening for larger models and GPU counts. \calc's consistent underestimation leads to configurations with 10-15\% higher costs, while \amped's overestimation results in configurations up to 56\% more expensive than optimal.
+\sysname's exceptional prediction accuracy across diverse model sizes, GPU configurations, and optimization strategies directly translates to identifying highly efficient training configurations, enabling significant savings in computational resources and associated costs for large-scale deep learning training workloads.
+
+\vheading{Breakdown of Prediction Error} The end-to-end prediction error can broadly be attributed to i) the prediction error of individual kernel runtimes, and ii) loss of detail in the emulation and simulation phases. To better characterize these errors, we compare against an \textit{oracle prediction} --- this is a modified version of \sysname that uses profiled (actual) per-kernel runtimes instead of predicted values from a regressor. The results obtained on a single-node and multi-node V100 setup are summarized in Table \ref{tab:oracle_fidelity}. 
+\input{tables/v100_oracle_fidelity}
+
+We observe that the oracle predictions are highly accurate, falling within 2\% of actual runtime in most cases, while end-to-end error is within 5-6\%. This holds across model sizes, batch sizes and arbitrary parallelism configurations --- demonstrating the importance of capturing detailed traces from emulation and validating the downstream modeling in the simulator.
+
+\vheading{Framework Generality}
+To verify the generality of \sysname's emulation approach, we test the system using training scripts scraped from popular open-source frameworks \cite{deepspeedvisiongithub, hfaccelerate}. Across a wide range of common optimization techniques and model architectures, we find that \sysname's emulation approach runs and produces traces, notably including memory optimization techniques such as ZeRO sharding and CPU offloading which involve host-device transfers (Table \ref{tab:framework_generality}). These \texttt{cudaMemCpy} operations are treated as separate kernels in \sysname, and while the offloaded tensors contain random data, the shapes collected in the trace are faithful to the actual transfer and can be used to make predictions.
+\input{tables/framework_generality}
+
+A key observation from running training scripts in the wild is that extra verification steps can occasionally lead to emulation failures if not disabled --- this is because they attempt to load and check the contents of certain portions of output buffers. We found this to be mitigated by allowing the emulator to \texttt{memcpy} small buffers to mock host-host and host-device transfers, passing most verification checks that inspect metadata (such as a tensor count or rank order).
+
+To further validate the efficacy of \sysname across model architectures, we collect results from a representative vision model, ResNet152 (\Cref{fig:eval:resnet152}) on an 8xA40 node. This specific workload is particularly challenging due to heterogeneous GPU links and the use of \texttt{torch.compile} (Appendix \ref{appendix:predictions}). Despite this, we observe consistent high-fidelity runtime predictions with less than 5\% error over half of all configurations, similar to our experiments with Megatron-LM.
+
+\input{figures-tex/resnet_eager_scaling}
+
+\input{tables/config_search_space}
+
+\subsection{Configuration Search with \sysname}
+\label{sec:eval:opti}
+
+
+We ran a hyperparameter search using our system over the Megatron-LM configuration space for each resource/model specification (\Cref{tab:eval-config-knobs}). The system was configured to use CMA-ES~\cite{cma, hansen2001completely} as the search algorithm. Further, we enabled all of our optimizations: dynamic worker de-duplication, inter+intra trial concurrency, and fidelity-preserving trial pruning (using Megatron-LM specific tactics, detailed in Appendix \ref{appendix:tactics}). The early stopping mechanism was configured to terminate the search if the MFU of the top 5 configs remained the same for 20 consecutive non-OOMing configs.
+
+
+\input{figures-tex/e2e-config-search}
+\vheading{End to end performance} The search completed in under an hour across all resource/model specs (\Cref{fig:config-search-runtime}). %
+Further, the search was able to find configurations very close to if not the same as the optimal across all resource specs (\Cref{fig:config-search-mfu-optimality}).
+
+
+
+
+\subsection{Supporting Hyperscale Workloads}
+\label{sec:eval:hyperscale}
+
+Our experiments thus far have maintained transparency, requiring no domain-specific knowledge of the workload. This also applies to worker deduplication (\Cref{sec:deduplication}) --- in order to identify which workers are duplicates, the system first emulates all workers for at least one iteration. This presents a challenge when attempting to scale \sysname to large clusters with thousands of GPUs.
+
+With some explicit knowledge of the workload, however, we observe that unique workers can be identified ahead of time. For instance, in Megatron-LM, we can calculate which ranks would participate in tensor, data, and pipeline communication using the parallelism configuration (\cref{tab:eval-config-knobs}). This determines the set of unique workers --- specifically, the first data-parallel rank of each communicator group and every pipeline parallel rank. Using this information, we extend \sysname to \textit{selectively launch} unique workers, drastically reducing overheads. 
+
+This optimization enables us to study the behavior of clusters with up to 16K GPUs. Since we did not have access to clusters of this size for profiling collectives, we integrated with ASTRA-sim \cite{won2023astra} for network simulation. First, keeping the parallelism configuration fixed (TP8, PP8, 12K batch size, 64 microbatches), we vary the data-parallel degree (\Cref{fig:eval:h100_dp_scaling_mfu}). The results demonstrate the expected trend of \textbf{\textit{sublinear scaling}} --- as the number of GPUs is scaled, communication overhead dominates and leads to low MFU.
+\input{figures-tex/h100_dp_scaling}
+
+
+In \cref{fig:eval:eager-scaling}, we keep the configuration entirely fixed and scale the global batch size. The largest configuration takes $\sim$25 minutes to run using 8 unique workers, each corresponding to a pipeline parallel rank. While not conducive to an exhaustive config search, these results demonstrate that \sysname can effectively scale to thousands of GPUs.
+
+\subsection{Ablation studies}
+\label{sec:eval:ablation}
+
+
+\vheading{Impact of dynamic worker deduplication} To quantify the impact of dynamic worker deduplication on \sysname's end-to-end runtime, we fix the parallelism configuration and increase the data parallel degree (thereby testing a larger cluster). Any new DP workers added would be redundant from the perspective of emulation --- this allows us to isolate the impact of dynamic worker deduplication. \Cref{fig:ablation-unique-ranks} illustrates the results.
+\input{figures-tex/dedup_trial_skipping}
+
+Without worker deduplication, we observe a significant increase in runtime, with the H100 64 GPU run taking approximately two hours. This is because the system has to emulate and subsequently simulate the execution of every GPU, which results in increased overhead as the number of GPUs increases. In contrast, with dynamic worker deduplication, we observe that the runtime remains approximately the same, with the H100 64 GPU run now taking only 7 minutes -- a 94\% improvement. We attribute this to the following. First, deduplication eliminates both the emulation and simulation of redundant GPUs. Second, scaling certain parallelism configuration knobs does not impact the number of \textit{unique} workers; this can be exploited to improve efficiency.
+
+\vheading{Impact of fidelity-preserving trial pruning} For the configuration search carried out in \Cref{sec:eval:opti}, the trial skipping mechanism skipped around 20-30\% of configurations (\Cref{fig:config-search-heuristic-performance}) across all resource/model specs, thereby playing a considerable role in bringing down the overall search time.
+
+
+\input{tables/h100-32-e2e-ablation}
+\vheading{Impact of optimizations on config search runtime} To evaluate the impact of all optimizations (including the use of the CMA search algorithm) on overall search runtime, we compare against grid search without any heuristic optimizations. As evident in \Cref{tab:eval-h100-32-ablation}, the optimizations significantly reduce the overall search time, bringing it down from over a day to just under 40 minutes. Worker deduplication is a key enabler for this reduction since it reduces the resource usage of each trial, enabling greater concurrency. This is corroborated by the increased OOM rate when running the full set of workers without optimizations. \sysname's applicability to large configuration spaces would not be possible without deduplication and trial pruning.

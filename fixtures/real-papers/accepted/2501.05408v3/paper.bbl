@@ -1,0 +1,510 @@
+\begin{thebibliography}{100}
+
+\bibitem{hwangbo2019learning}
+Jemin Hwangbo, Joonho Lee, Alexey Dosovitskiy, Dario Bellicoso, Vassilios Tsounis, Vladlen Koltun, and Marco Hutter.
+\newblock {L}earning {A}gile and {D}ynamic {M}otor {S}kills for {L}egged {R}obots.
+\newblock {\em Science Robotics}, 2019.
+
+\bibitem{silver2017mastering}
+David Silver, Julian Schrittwieser, Karen Simonyan, Ioannis Antonoglou, Aja Huang, Arthur Guez, Thomas Hubert, Lucas Baker, Matthew Lai, Adrian Bolton, et~al.
+\newblock {M}astering the {G}ame of {G}o {W}ithout {H}uman {K}nowledge.
+\newblock {\em Nature}, 2017.
+
+\bibitem{brown2020language}
+Tom Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared~D Kaplan, Prafulla Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell, et~al.
+\newblock {L}anguage {M}odels are {F}ew-{S}hot {L}earners.
+\newblock In {\em Advances in Neural Information Processing Systems (NeurIPS)}, 2020.
+
+\bibitem{jumper2021highly}
+John Jumper, Richard Evans, Alexander Pritzel, Tim Green, Michael Figurnov, Olaf Ronneberger, Kathryn Tunyasuvunakool, Russ Bates, Augustin {\v{Z}}{\'\i}dek, Anna Potapenko, et~al.
+\newblock {H}ighly {A}ccurate {P}rotein {S}tructure {P}rediction with {A}lpha{F}old.
+\newblock {\em Nature}, 2021.
+
+\bibitem{rombach2022high}
+Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, and Bj{\"o}rn Ommer.
+\newblock {H}igh-{R}esolution {I}mage {S}ynthesis with {L}atent {D}iffusion {M}odels.
+\newblock In {\em Conference on Computer Vision and Pattern Recognition (CVPR)}, 2022.
+
+\bibitem{paszke2019pytorch}
+Adam Paszke, Sam Gross, Francisco Massa, Adam Lerer, James Bradbury, Gregory Chanan, Trevor Killeen, Zeming Lin, Natalia Gimelshein, Luca Antiga, et~al.
+\newblock {P}y{T}orch: {A}n {I}mperative {S}tyle, {H}igh-{P}erformance {D}eep {L}earning {L}ibrary.
+\newblock In {\em Advances in Neural Information Processing Systems (NeurIPS)}, 2019.
+
+\bibitem{frostig2018compiling}
+Roy Frostig, Matthew~James Johnson, and Chris Leary.
+\newblock {C}ompiling {M}achine {L}earning {P}rograms via {H}igh-{L}evel {T}racing.
+\newblock In {\em Conference on Machine Learning and Systems (MLSys)}, 2018.
+
+\bibitem{raina2009large}
+Rajat Raina, Anand Madhavan, Andrew~Y Ng, et~al.
+\newblock {L}arge-{S}cale {D}eep {U}nsupervised {L}earning {U}sing {G}raphics {P}rocessors.
+\newblock In {\em International Conference on Machine Learning (ICML)}, 2009.
+
+\bibitem{vaswani2017attention}
+A~Vaswani.
+\newblock {A}ttention {I}s {A}ll {Y}ou {N}eed.
+\newblock In {\em Advances in Neural Information Processing Systems (NeurIPS)}, 2017.
+
+\bibitem{sutton2018reinforcement}
+Richard~S Sutton and Andrew~G Barto.
+\newblock {\em {R}einforcement {L}earning: {A}n {I}ntroduction}.
+\newblock MIT press, 2018.
+
+\bibitem{rumelhart1986learning}
+David~E Rumelhart, Geoffrey~E Hinton, and Ronald~J Williams.
+\newblock {L}earning {R}epresentations by {B}ack-{P}ropagating {E}rrors.
+\newblock {\em Nature}, 1986.
+
+\bibitem{gu2021efficiently}
+Albert Gu, Karan Goel, and Christopher R{\'e}.
+\newblock {E}fficiently {M}odeling {L}ong {S}equences with {S}tructured {S}tate {S}paces.
+\newblock {\em arXiv preprint arXiv:2111.00396}, 2021.
+
+\bibitem{karp1967organization}
+Richard~M Karp, Raymond~E Miller, and Shmuel Winograd.
+\newblock {T}he {O}rganization of {C}omputations for {U}niform {R}ecurrence {E}quations.
+\newblock {\em Journal of the ACM (JACM)}, 1967.
+
+\bibitem{sutton1988learning}
+Richard~S Sutton.
+\newblock {L}earning to {P}redict by the {M}ethods of {T}emporal {D}ifferences.
+\newblock {\em Machine Learning (Mach. Learn.)}, 1988.
+
+\bibitem{williams1992simple}
+Ronald~J Williams.
+\newblock {S}imple {S}tatistical {G}radient-{F}ollowing {A}lgorithms for {C}onnectionist {R}einforcement {L}earning.
+\newblock {\em Machine learning (Mach. Learn.)}, 1992.
+
+\bibitem{ansel2024pytorch}
+Jason Ansel, Edward Yang, Horace He, Natalia Gimelshein, Animesh Jain, Michael Voznesensky, Bin Bao, Peter Bell, David Berard, Evgeni Burovski, et~al.
+\newblock {P}y{T}orch {2}: {F}aster {M}achine {L}earning {T}hrough {D}ynamic {P}ython {B}ytecode {T}ransformation and {G}raph {C}ompilation.
+\newblock In {\em International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS)}, 2024.
+
+\bibitem{lai2025relax}
+Ruihang Lai, Junru Shao, Siyuan Feng, Steven Lyubomirsky, Bohan Hou, Wuwei Lin, Zihao Ye, Hongyi Jin, Yuchen Jin, Jiawei Liu, Lesheng Jin, Yaxing Cai, Ziheng Jiang, Yong Wu, Sunghyun Park, Prakalp Srivastava, Jared Roesch, Todd~C. Mowry, and Tianqi Chen.
+\newblock {R}elax: {C}omposable {A}bstractions for {E}nd-to-{E}nd {D}ynamic {M}achine {L}earning.
+\newblock In {\em International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS)}, 2025.
+
+\bibitem{abadi2016tensorflow}
+Mart{\'\i}n Abadi, Paul Barham, Jianmin Chen, Zhifeng Chen, Andy Davis, Jeffrey Dean, Matthieu Devin, Sanjay Ghemawat, Geoffrey Irving, Michael Isard, et~al.
+\newblock {T}ensor{F}low: {A} {S}ystem for {L}arge-{S}cale {M}achine {L}earning.
+\newblock In {\em Symposium on Operating Systems Design and Implementation (OSDI)}, 2016.
+
+\bibitem{moritz2018ray}
+Philipp Moritz, Robert Nishihara, Stephanie Wang, Alexey Tumanov, Richard Liaw, Eric Liang, Melih Elibol, Zongheng Yang, William Paul, Michael~I Jordan, et~al.
+\newblock {R}ay: {A} {D}istributed {F}ramework for {E}merging {AI} {A}pplications.
+\newblock In {\em Symposium on Operating Systems Design and Implementation (OSDI)}, 2018.
+
+\bibitem{rhu2016vdnn}
+Minsoo Rhu, Natalia Gimelshein, Jason Clemons, Arslan Zulfiqar, and Stephen~W Keckler.
+\newblock {vDNN}: {V}irtualized {D}eep {N}eural {N}etworks for {S}calable, {M}emory-{E}fficient {N}eural {N}etwork {D}esign.
+\newblock In {\em International Symposium on Microarchitecture (MICRO)}, 2016.
+
+\bibitem{agrawal2019tensorflow}
+Akshay Agrawal, Akshay Modi, Alexandre Passos, Allen Lavoie, Ashish Agarwal, Asim Shankar, Igor Ganichev, Josh Levenberg, Mingsheng Hong, Rajat Monga, et~al.
+\newblock {T}ensor{F}low {E}ager: {A} {M}ulti-{S}tage, {P}ython-{E}mbedded {DSL} for {M}achine {L}earning.
+\newblock In {\em Conference on Machine Learning and Systems (MLSys)}, 2019.
+
+\bibitem{chetlur2014cudnn}
+Sharan Chetlur, Cliff Woolley, Philippe Vandermersch, Jonathan Cohen, John Tran, Bryan Catanzaro, and Evan Shelhamer.
+\newblock {C}u{DNN}: {E}fficient {P}rimitives for {D}eep {L}earning.
+\newblock {\em arXiv preprint arXiv:1410.0759}, 2014.
+
+\bibitem{maas2022telamalloc}
+Martin Maas, Ulysse Beaugnon, Arun Chauhan, and Berkin Ilbeyi.
+\newblock {T}elamalloc: {E}fficient {O}n-{C}hip {M}emory {A}llocation for {P}roduction {M}achine {L}earning {A}ccelerators.
+\newblock In {\em International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS)}, 2022.
+
+\bibitem{liu2024uncovering}
+Siran Liu, Chengxiang Qi, Ying Cao, Chao Yang, Weifang Hu, Xuanhua Shi, Fan Yang, and Mao Yang.
+\newblock {U}ncovering {N}ested {D}ata {P}arallelism and {D}ata {R}euse in {DNN} {C}omputation with {F}ractal{T}ensor.
+\newblock In {\em Symposium on Operating Systems Principles (SOSP)}, 2024.
+
+\bibitem{chen2018tvm}
+Tianqi Chen, Thierry Moreau, Ziheng Jiang, Lianmin Zheng, Eddie Yan, Haichen Shen, Meghan Cowan, Leyuan Wang, Yuwei Hu, Luis Ceze, et~al.
+\newblock {TVM}: {A}n {A}utomated {E}nd-to-{E}nd {O}ptimizing {C}ompiler for {D}eep {L}earning.
+\newblock In {\em Symposium on Operating Systems Design and Implementation (OSDI)}, 2018.
+
+\bibitem{ragan2013halide}
+Jonathan Ragan-Kelley, Connelly Barnes, Andrew Adams, Sylvain Paris, Fr{\'e}do Durand, and Saman Amarasinghe.
+\newblock {H}alide: {A} {L}anguage and {C}ompiler for {O}ptimizing {P}arallelism, {L}ocality, and {R}ecomputation in {I}mage {P}rocessing {P}ipelines.
+\newblock {\em ACM SIGPLAN Notices}, 2013.
+
+\bibitem{Lattner_2021}
+Chris Lattner, Mehdi Amini, Uday Bondhugula, Albert Cohen, Andy Davis, Jacques Pienaar, River Riddle, Tatiana Shpeisman, Nicolas Vasilache, and Oleksandr Zinenko.
+\newblock {MLIR}: {S}caling {C}ompiler {I}nfrastructure for {D}omain {S}pecific {C}omputation.
+\newblock In {\em International Symposium on Code Generation and Optimization (CGO)}, 2021.
+
+\bibitem{vasilache2018tensor}
+Nicolas Vasilache, Oleksandr Zinenko, Theodoros Theodoridis, Priya Goyal, Zachary DeVito, William~S Moses, Sven Verdoolaege, Andrew Adams, and Albert Cohen.
+\newblock {T}ensor {C}omprehensions: {F}ramework-{A}gnostic {H}igh-{P}erformance {M}achine {L}earning {A}bstractions.
+\newblock {\em arXiv preprint arXiv:1802.04730}, 2018.
+
+\bibitem{zheng2023bladedisc}
+Zhen Zheng, Zaifeng Pan, Dalin Wang, Kai Zhu, Wenyi Zhao, Tianyou Guo, Xiafei Qiu, Minmin Sun, Junjie Bai, Feng Zhang, et~al.
+\newblock Bladedisc: {O}ptimizing {D}ynamic {S}hape {M}achine {L}earning {W}orkloads via {C}ompiler {A}pproach.
+\newblock In {\em ACM Conference on Management of Data (SIGMOD)}, 2023.
+
+\bibitem{hessel2021podracer}
+Matteo Hessel, Manuel Kroiss, Aidan Clark, Iurii Kemaev, John Quan, Thomas Keck, Fabio Viola, and Hado van Hasselt.
+\newblock {P}odracer {A}rchitectures for {S}calable {R}einforcement {L}earning.
+\newblock {\em arXiv preprint arXiv:2104.06272}, 2021.
+
+\bibitem{schulman2015high}
+John Schulman, Philipp Moritz, Sergey Levine, Michael Jordan, and Pieter Abbeel.
+\newblock {H}igh-{D}imensional {C}ontinuous {C}ontrol {U}sing {G}eneralized {A}dvantage {E}stimation.
+\newblock {\em arXiv preprint arXiv:1506.02438}, 2015.
+
+\bibitem{van2011numpy}
+Stefan Van Der~Walt, S~Chris Colbert, and Gael Varoquaux.
+\newblock {T}he {N}um{P}y {A}rray: {A} {S}tructure for {E}fficient {N}umerical {C}omputation.
+\newblock {\em Computing in Science \& Engineering (Comput. Sci. Eng.)}, 2011.
+
+\bibitem{baydin2018automatic}
+Atilim~Gunes Baydin, Barak~A Pearlmutter, Alexey~Andreyevich Radul, and Jeffrey~Mark Siskind.
+\newblock {A}utomatic {D}ifferentiation in {M}achine {L}earning: {A} {S}urvey.
+\newblock {\em Journal of Machine Learning Research (JMLR)}, 2018.
+
+\bibitem{verdoolaege2010isl}
+Sven Verdoolaege.
+\newblock {i}sl: {A}n {I}nteger {S}et {L}ibrary for the {P}olyhedral {M}odel.
+\newblock In {\em International Congress on Mathematical Software (ICMS)}, 2010.
+
+\bibitem{bondhugula2008pluto}
+Uday Bondhugula, Albert Hartono, J~Ramanujam, and P~Sadayappan.
+\newblock {P}luto: {A} {P}ractical and {F}ully {A}utomatic {P}olyhedral {P}rogram {O}ptimization {S}ystem.
+\newblock In {\em Conference on Programming Language Design and Implementation (PLDI)}, 2008.
+
+\bibitem{openxla2024}
+Open{XLA} Team.
+\newblock {XLA} ({A}ccelerated {L}inear {A}lgebra), 2024.
+
+\bibitem{dubey2024llama}
+Abhimanyu Dubey, Abhinav Jauhri, Abhinav Pandey, Abhishek Kadian, Ahmad Al-Dahle, Aiesha Letman, Akhil Mathur, Alan Schelten, Amy Yang, Angela Fan, et~al.
+\newblock {T}he {L}lama {3} {H}erd of {M}odels.
+\newblock {\em arXiv preprint arXiv:2407.21783}, 2024.
+
+\bibitem{schulman2017proximal}
+John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov.
+\newblock {P}roximal {P}olicy {O}ptimization {A}lgorithms.
+\newblock {\em arXiv preprint arXiv:1707.06347}, 2017.
+
+\bibitem{ho2020denoising}
+Jonathan Ho, Ajay Jain, and Pieter Abbeel.
+\newblock {D}enoising {D}iffusion {P}robabilistic {M}odels.
+\newblock In {\em Advances in Neural Information Processing Systems (NeurIPS)}, 2020.
+
+\bibitem{ouyang2022training}
+Long Ouyang, Jeffrey Wu, Xu~Jiang, Diogo Almeida, Carroll Wainwright, Pamela Mishkin, Chong Zhang, Sandhini Agarwal, Katarina Slama, Alex Ray, et~al.
+\newblock {T}raining {L}anguage {M}odels to {F}ollow {I}nstructions with {H}uman {F}eedback.
+\newblock In {\em Advances in Neural Information Processing Systems (NeurIPS)}, 2022.
+
+\bibitem{mnih2016asynchronous}
+Volodymyr Mnih, Adria~Puigdomenech Badia, Mehdi Mirza, Alex Graves, Timothy Lillicrap, Tim Harley, David Silver, and Koray Kavukcuoglu.
+\newblock {A}synchronous {M}ethods for {D}eep {R}einforcement {L}earning.
+\newblock In {\em International Conference on Machine Learning (ICML)}, 2016.
+
+\bibitem{zaheer2020big}
+Manzil Zaheer, Guru Guruganesh, Kumar~Avinava Dubey, Joshua Ainslie, Chris Alberti, Santiago Ontanon, Philip Pham, Anirudh Ravula, Qifan Wang, Li~Yang, et~al.
+\newblock {B}ig {B}ird: {T}ransformers for {L}onger {S}equences.
+\newblock In {\em Advances in Neural Information Processing Systems (NeurIPS)}, 2020.
+
+\bibitem{mnih2013playing}
+Volodymyr Mnih, Koray Kavukcuoglu, David Silver, Alex Graves, Ioannis Antonoglou, Daan Wierstra, and Martin Riedmiller.
+\newblock {P}laying {A}tari with {D}eep {R}einforcement {L}earning.
+\newblock {\em arXiv preprint arXiv:1312.5602}, 2013.
+
+\bibitem{lea2017temporal}
+Colin Lea, Michael~D Flynn, Rene Vidal, Austin Reiter, and Gregory~D Hager.
+\newblock {T}emporal {C}onvolutional {N}etworks for {A}ction {S}egmentation and {D}etection.
+\newblock In {\em Conference on Computer Vision and Pattern Recognition (CVPR)}, 2017.
+
+\bibitem{ma2022mega}
+Xuezhe Ma, Chunting Zhou, Xiang Kong, Junxian He, Liangke Gui, Graham Neubig, Jonathan May, and Luke Zettlemoyer.
+\newblock {M}ega: {M}oving {A}verage {E}quipped {G}ated {A}ttention.
+\newblock {\em arXiv preprint arXiv:2209.10655}, 2022.
+
+\bibitem{dai2019transformer}
+Zihang Dai, Zhilin Yang, Yiming Yang, Jaime Carbonell, Quoc~V Le, and Ruslan Salakhutdinov.
+\newblock {T}ransformer-{XL}: {A}ttentive {L}anguage {M}odels {B}eyond a {F}ixed-{L}ength {C}ontext.
+\newblock {\em arXiv preprint arXiv:1901.02860}, 2019.
+
+\bibitem{suhan2021lazytensor}
+Alex Suhan, Davide Libenzi, Ailing Zhang, Parker Schuh, Brennan Saeta, Jie~Young Sohn, and Denys Shabalin.
+\newblock {L}azy{T}ensor: {C}ombining {E}ager {E}xecution with {D}omain-{S}pecific {C}ompilers.
+\newblock {\em arXiv preprint arXiv:2102.13267}, 2021.
+
+\bibitem{yu2018dynamic}
+Yuan Yu, Mart{\'\i}n Abadi, Paul Barham, Eugene Brevdo, Mike Burrows, Andy Davis, Jeff Dean, Sanjay Ghemawat, Tim Harley, Peter Hawkins, et~al.
+\newblock {D}ynamic {C}ontrol {F}low in {L}arge-{S}cale {M}achine {L}earning.
+\newblock In {\em European Conference on Computer Systems (EuroSys)}, 2018.
+
+\bibitem{xla_op_semantics}
+Open{XLA} Team.
+\newblock {O}peration {S}emantics | {XLA}, 2025.
+\newblock OpenXLA Team.
+
+\bibitem{kwon2023efficient}
+Woosuk Kwon, Zhuohan Li, Siyuan Zhuang, Ying Sheng, Lianmin Zheng, Cody~Hao Yu, Joseph Gonzalez, Hao Zhang, and Ion Stoica.
+\newblock {E}fficient {M}emory {M}anagement for {L}arge {L}anguage {M}odel {S}erving with {P}aged{A}ttention.
+\newblock In {\em Symposium on Operating Systems Principles (SOSP)}, 2023.
+
+\bibitem{qin2024mooncake}
+Ruoyu Qin, Zheming Li, Weiran He, Mingxing Zhang, Yongwei Wu, Weimin Zheng, and Xinran Xu.
+\newblock {M}ooncake: {A} {KVC}ache-{C}entric {D}isaggregated {A}rchitecture for {LLM} {S}erving.
+\newblock {\em arXiv preprint arXiv:2407.00079}, 2024.
+
+\bibitem{katharopoulos2020transformers}
+Angelos Katharopoulos, Apoorv Vyas, Nikolaos Pappas, and Fran{\c{c}}ois Fleuret.
+\newblock {T}ransformers {A}re {RNN}s: {F}ast {A}utoregressive {T}ransformers with {L}inear {A}ttention.
+\newblock In {\em International Conference on Machine Learning (ICML)}, 2020.
+
+\bibitem{devlin2019bert}
+Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova.
+\newblock {B}ert: {P}re-{T}raining of {D}eep {B}idirectional {T}ransformers for {L}anguage {U}nderstanding.
+\newblock In {\em Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (NAACL-HLT)}, 2019.
+
+\bibitem{team2024gemma}
+Gemma Team, Morgane Riviere, Shreya Pathak, Pier~Giuseppe Sessa, Cassidy Hardin, Surya Bhupatiraju, L{\'e}onard Hussenot, Thomas Mesnard, Bobak Shahriari, Alexandre Ram{\'e}, et~al.
+\newblock {G}emma {2}: {I}mproving {O}pen {L}anguage {M}odels at a {P}ractical {S}ize.
+\newblock {\em arXiv preprint arXiv:2408.00118}, 2024.
+
+\bibitem{zheng2024sglang}
+Lianmin Zheng, Liangsheng Yin, Zhiqiang Xie, Chuyue~Livia Sun, Jeff Huang, Cody~Hao Yu, Shiyi Cao, Christos Kozyrakis, Ion Stoica, Joseph~E Gonzalez, et~al.
+\newblock Sglang: {E}fficient {E}xecution of {S}tructured {L}anguage {M}odel {P}rograms.
+\newblock In {\em Advances in Neural Information Processing Systems (NeurIPS)}, 2024.
+
+\bibitem{stooke2019rlpyt}
+Adam Stooke and Pieter Abbeel.
+\newblock {R}lpyt: {A} {R}esearch {C}ode {B}ase for {D}eep {R}einforcement {L}earning in {P}y{T}orch.
+\newblock {\em arXiv preprint arXiv:1909.01500}, 2019.
+
+\bibitem{Petrenko2020SampleFE}
+Aleksei Petrenko, Zhehui Huang, T.~Kumar, G.~Sukhatme, and V.~Koltun.
+\newblock {S}ample {F}actory: {E}gocentric {3D} {C}ontrol from {P}ixels at {100000} {FPS} with {A}synchronous {R}einforcement {L}earning.
+\newblock {\em arXiv preprint arXiv:2006.11751}, 2020.
+
+\bibitem{hoffman2020acme}
+Matt Hoffman, Bobak Shahriari, John Aslanides, Gabriel Barth-Maron, Feryal Behbahani, Tamara Norman, Abbas Abdolmaleki, Albin Cassirer, Fan Yang, Kate Baumli, et~al.
+\newblock {A}cme: {A} {R}esearch {F}ramework for {D}istributed {R}einforcement {L}earning.
+\newblock {\em arXiv preprint arXiv:2006.00979}, 2020.
+
+\bibitem{liang2018rllib}
+Eric Liang, Richard Liaw, Robert Nishihara, Philipp Moritz, Roy Fox, Ken Goldberg, Joseph Gonzalez, Michael Jordan, and Ion Stoica.
+\newblock {RL}lib: {A}bstractions for {D}istributed {R}einforcement {L}earning.
+\newblock In {\em International Conference on Machine Learning (ICML)}, 2018.
+
+\bibitem{weng2021tianshou}
+Jiayi Weng, Huayu Chen, Dong Yan, Kaichao You, Alexis Duburcq, Minghao Zhang, Hang Su, and Jun Zhu.
+\newblock {T}ianshou: {A} {H}ighly {M}odularized {D}eep {R}einforcement {L}earning {L}ibrary.
+\newblock {\em arXiv preprint arXiv:2107.14171}, 2021.
+
+\bibitem{rl-games2022}
+Denys Makoviichuk and Viktor Makoviychuk.
+\newblock rl-games: {A} {H}igh-{p}erformance {F}ramework for {R}einforcement {L}earning, 2022.
+
+\bibitem{bou2023torchrl}
+Albert Bou, Matteo Bettini, Sebastian Dittert, Vikash Kumar, Shagun Sodhani, Xiaomeng Yang, Gianni De~Fabritiis, and Vincent Moens.
+\newblock {T}orch{RL}: {A} {D}ata-{D}riven {D}ecision-{M}aking {L}ibrary for {P}y{T}orch.
+\newblock {\em arXiv preprint arXiv:2306.00577}, 2023.
+
+\bibitem{cassirer2021reverb}
+Albin Cassirer, Gabriel Barth-Maron, Eugene Brevdo, Sabela Ramos, Toby Boyd, Thibault Sottiaux, and Manuel Kroiss.
+\newblock {R}everb: {A} {F}ramework for {E}xperience {R}eplay.
+\newblock {\em arXiv preprint arXiv:2102.04736}, 2021.
+
+\bibitem{wang2023gear}
+Hanjing Wang, Man-Kit Sit, Congjie He, Ying Wen, Weinan Zhang, Jun Wang, Yaodong Yang, and Luo Mai.
+\newblock {GEAR}: {A} {GPU}-{C}entric {E}xperience {R}eplay {S}ystem for {L}arge {R}einforcement {L}earning {M}odels.
+\newblock In {\em International Conference on Machine Learning (ICML)}, 2023.
+
+\bibitem{kingma2014adam}
+Diederik~P Kingma.
+\newblock {A}dam: {A} {M}ethod for {S}tochastic {O}ptimization.
+\newblock {\em arXiv preprint arXiv:1412.6980}, 2014.
+
+\bibitem{darken1990note}
+Christian Darken and John Moody.
+\newblock {N}ote on {L}earning {R}ate {S}chedules for {S}tochastic {O}ptimization.
+\newblock In {\em Advances in Neural Information Processing Systems (NeurIPS)}, 1990.
+
+\bibitem{werbos1990backpropagation}
+Paul~J Werbos.
+\newblock {B}ackpropagation through {T}ime: {W}hat {I}t {D}oes and {H}ow to {D}o {I}t.
+\newblock {\em Proceedings of the IEEE}, 1990.
+
+\bibitem{bengio2021flow}
+Emmanuel Bengio, Moksh Jain, Maksym Korablyov, Doina Precup, and Yoshua Bengio.
+\newblock {F}low {N}etwork {B}ased {G}enerative {M}odels for {N}on-{I}terative {D}iverse {C}andidate {G}eneration.
+\newblock In {\em Advances in Neural Information Processing Systems (NeurIPS)}, 2021.
+
+\bibitem{levine2020offline}
+Sergey Levine, Aviral Kumar, George Tucker, and Justin Fu.
+\newblock Offline {R}einforcement {L}earning: {T}utorial, {R}eview, and {P}erspectives on {O}pen {P}roblems.
+\newblock {\em arXiv preprint arXiv:2005.01643}, 2020.
+
+\bibitem{brockman2016openai}
+Greg Brockman, Vicki Cheung, Ludwig Pettersson, Jonas Schneider, John Schulman, Jie Tang, and Wojciech Zaremba.
+\newblock {O}pen{A}i {G}ym.
+\newblock {\em arXiv preprint arXiv:1606.01540}, 2016.
+
+\bibitem{kudo2018sentencepiece}
+Taku Kudo and John Richardson.
+\newblock {S}entence{P}iece: {A} {S}imple and {L}anguage {I}ndependent {S}ubword {T}okenizer and {D}etokenizer for {N}eural {T}ext {P}rocessing.
+\newblock {\em arXiv preprint arXiv:1808.06226}, 2018.
+
+\bibitem{kennedy2001optimizing}
+Ken Kennedy and John~R Allen.
+\newblock {\em Optimizing {C}ompilers for {M}odern {A}rchitectures: {A} {D}ependence-{B}ased {A}pproach}.
+\newblock Morgan Kaufmann Publishers Inc., 2001.
+
+\bibitem{blelloch1990prefix}
+Guy~E Blelloch.
+\newblock Prefix {S}ums and their {A}pplications.
+\newblock 1990.
+
+\bibitem{flynn2005very}
+Michael~J Flynn.
+\newblock {V}ery {H}igh-{S}peed {C}omputing {S}ystems.
+\newblock {\em Proceedings of the IEEE}, 2005.
+
+\bibitem{huang2019gpipe}
+Yanping Huang, Youlong Cheng, Ankur Bapna, Orhan Firat, Dehao Chen, Mia Chen, HyoukJoong Lee, Jiquan Ngiam, Quoc~V Le, Yonghui Wu, et~al.
+\newblock {GP}ipe: {E}fficient {T}raining of {G}iant {N}eural {N}etworks {U}sing {P}ipeline {P}arallelism.
+\newblock In {\em Advances in Neural Information Processing Systems (NeurIPS)}, 2019.
+
+\bibitem{tillet2019triton}
+Philippe Tillet, Hsiang-Tsung Kung, and David Cox.
+\newblock {T}riton: {A}n {I}ntermediate {L}anguage and {C}ompiler for {T}iled {N}eural {N}etwork {C}omputations.
+\newblock In {\em International Workshop on Machine Learning and Programming Languages (MAPL)}, 2019.
+
+\bibitem{benabderrahmane2010polyhedral}
+Mohamed-Walid Benabderrahmane, Louis-No{\"e}l Pouchet, Albert Cohen, and C{\'e}dric Bastoul.
+\newblock {T}he {P}olyhedral {M}odel is {M}ore {W}idely {A}pplicable than {Y}ou {T}hink.
+\newblock In {\em International Conference on Compiler Construction (CC)}, 2010.
+
+\bibitem{grosser2012polly}
+Tobias Grosser, Armin Groesslinger, and Christian Lengauer.
+\newblock {P}olly: {P}erforming {P}olyhedral {O}ptimizations on a {L}ow-{L}evel {I}ntermediate {R}epresentation.
+\newblock {\em Parallel Processing Letters}, 2012.
+
+\bibitem{verdoolaege2012polyhedral}
+Sven Verdoolaege and Tobias Grosser.
+\newblock {P}olyhedral {E}xtraction {T}ool.
+\newblock In {\em International Workshop on Polyhedral Compilation Techniques (IMPACT)}, 2012.
+
+\bibitem{peng2020capuchin}
+Xuan Peng, Xuanhua Shi, Hulin Dai, Hai Jin, Weiliang Ma, Qian Xiong, Fan Yang, and Xuehai Qian.
+\newblock {C}apuchin: {T}ensor-based {GPU} {M}emory {M}anagement for {D}eep {L}earning.
+\newblock In {\em International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS)}, 2020.
+
+\bibitem{wang2018superneurons}
+Linnan Wang, Jinmian Ye, Yiyang Zhao, Wei Wu, Ang Li, Shuaiwen~Leon Song, Zenglin Xu, and Tim Kraska.
+\newblock {S}uper{N}eurons: {D}ynamic {GPU} {M}emory {M}anagement for {T}raining {D}eep {N}eural {N}etworks.
+\newblock In {\em Symposium on Parallelism in Algorithms and Architectures (SPAA)}, 2018.
+
+\bibitem{denning1968working}
+Peter~J Denning.
+\newblock {T}he {W}orking {S}et {M}odel for {P}rogram {B}ehavior.
+\newblock {\em Communications of the ACM (CACM)}, 1968.
+
+\bibitem{grosser2015polyhedral}
+Tobias Grosser, Sven Verdoolaege, and Albert Cohen.
+\newblock {P}olyhedral {AST} {G}eneration is {M}ore than {S}canning {P}olyhedra.
+\newblock {\em ACM Transactions on Programming Languages and Systems (TOPLAS)}, 2015.
+
+\bibitem{agrawal2024taming}
+Amey Agrawal, Nitin Kedia, Ashish Panwar, Jayashree Mohan, Nipun Kwatra, Bhargav Gulavani, Alexey Tumanov, and Ramachandran Ramjee.
+\newblock {T}aming {T}hroughput-{L}atency {T}radeoff in {LLM} {I}nference with {S}arathi-{S}erve.
+\newblock In {\em Symposium on Operating Systems Design and Implementation (OSDI)}, 2024.
+
+\bibitem{huang2022cleanrl}
+Shengyi Huang, Rousslan Fernand~Julien Dossa, Chang Ye, Jeff Braga, Dipam Chakraborty, Kinal Mehta, and Jo{\~A}{\c{G}}o~GM Ara{\~A}{\v{s}}jo.
+\newblock {C}lean{RL}: {H}igh-{Q}uality {S}ingle-{F}ile {I}mplementations of {D}eep {R}einforcement {L}earning {A}lgorithms.
+\newblock {\em Journal of Machine Learning Research (JMLR)}, 2022.
+
+\bibitem{freeman2021brax}
+C~Daniel Freeman, Erik Frey, Anton Raichuk, Sertan Girgin, Igor Mordatch, and Olivier Bachem.
+\newblock {B}rax--{A} {D}ifferentiable {P}hysics {E}ngine for {L}arge {S}cale {R}igid {B}ody {S}imulation.
+\newblock {\em arXiv preprint arXiv:2106.13281}, 2021.
+
+\bibitem{makoviychuk2021isaac}
+Viktor Makoviychuk, Lukasz Wawrzyniak, Yunrong Guo, Michelle Lu, Kier Storey, Miles Macklin, David Hoeller, Nikita Rudin, Arthur Allshire, Ankur Handa, et~al.
+\newblock {I}saac {G}ym: {H}igh {P}erformance {GPU}-{B}ased {P}hysics {S}imulation for {R}obot {L}earning.
+\newblock {\em arXiv preprint arXiv:2108.10470}, 2021.
+
+\bibitem{cudagraphs}
+NVIDIA Corporation.
+\newblock {G}etting {S}tarted with {CUDA} {G}raphs, 2020.
+
+\bibitem{handa2023dextreme}
+Ankur Handa, Arthur Allshire, Viktor Makoviychuk, Aleksei Petrenko, Ritvik Singh, Jingzhou Liu, Denys Makoviichuk, Karl Van~Wyk, Alexander Zhurkevich, Balakumar Sundaralingam, et~al.
+\newblock {D}extreme: {T}ransfer of {A}gile {I}n-{H}and {M}anipulation from {S}imulation to {R}eality.
+\newblock In {\em International Conference on Robotics and Automation (ICRA)}, 2023.
+
+\bibitem{kiran2021deep}
+B~Ravi Kiran, Ibrahim Sobh, Victor Talpaert, Patrick Mannion, Ahmad~A Al~Sallab, Senthil Yogamani, and Patrick P{\'e}rez.
+\newblock {D}eep {R}einforcement {L}earning for {A}utonomous {D}riving: {A} {S}urvey.
+\newblock {\em IEEE Transactions on Intelligent Transportation Systems (T-ITS)}, 2021.
+
+\bibitem{yu2021reinforcement}
+Chao Yu, Jiming Liu, Shamim Nemati, and Guosheng Yin.
+\newblock {R}einforcement {L}earning in {H}ealthcare: {A} {S}urvey.
+\newblock {\em ACM Computing Surveys (CSUR)}, 2021.
+
+\bibitem{silvestre2025rlft}
+Pedro~F. Silvestre and Peter Pietzuch.
+\newblock {S}ystems {O}pportunities for {LLM} {F}ine-{T}uning using {R}einforcement {L}earning.
+\newblock In {\em Workshop on Machine Learning and Systems (EuroMLSys)}, 2025.
+
+\bibitem{krizhevsky2017imagenet}
+Alex Krizhevsky, Ilya Sutskever, and Geoffrey~E Hinton.
+\newblock {I}mage{N}et {C}lassification with {D}eep {C}onvolutional {N}eural {N}etworks.
+\newblock {\em Communications of the ACM (CACM)}, 2017.
+
+\bibitem{shoeybi2019megatron}
+Mohammad Shoeybi, Mostofa Patwary, Raul Puri, Patrick LeGresley, Jared Casper, and Bryan Catanzaro.
+\newblock {M}egatron-{LM}: {T}raining {M}ulti-{B}illion {P}arameter {L}anguage {M}odels {U}sing {M}odel {P}arallelism.
+\newblock {\em arXiv preprint arXiv:1909.08053}, 2019.
+
+\bibitem{dao2022flashattention}
+Tri Dao, Dan Fu, Stefano Ermon, Atri Rudra, and Christopher R{\'e}.
+\newblock {F}lash{A}ttention: {F}ast and {M}emory-{E}fficient {E}xact {A}ttention with {IO}-{A}wareness.
+\newblock In {\em Advances in Neural Information Processing Systems (NeurIPS)}, 2022.
+
+\bibitem{barham2019machine}
+Paul Barham and Michael Isard.
+\newblock {M}achine {L}earning {S}ystems {A}re {S}tuck in a {R}ut.
+\newblock In {\em Workshop on Hot Topics in Operating Systems (HotOS)}, 2019.
+
+\bibitem{zhao2021v}
+Shixiong Zhao, Fanxin Li, Xusheng Chen, Xiuxian Guan, Jianyu Jiang, Dong Huang, Yuhao Qing, Sen Wang, Peng Wang, Gong Zhang, et~al.
+\newblock {vP}ipe: {A} {V}irtualized {A}cceleration {S}ystem for {A}chieving {E}fficient and {S}calable {P}ipeline {P}arallel {DNN} {T}raining.
+\newblock {\em Transactions on Parallel and Distributed Systems (TPDS)}, 2021.
+
+\bibitem{huang2020swapadvisor}
+Chien-Chin Huang, Gu~Jin, and Jinyang Li.
+\newblock {S}wapadvisor: {P}ushing {D}eep {L}earning {B}eyond the {GPU} {M}emory {L}imit via {S}mart {S}wapping.
+\newblock In {\em International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS)}, 2020.
+
+\bibitem{baghdadi2019tiramisu}
+Riyadh Baghdadi, Jessica Ray, Malek~Ben Romdhane, Emanuele Del~Sozzo, Abdurrahman Akkas, Yunming Zhang, Patricia Suriana, Shoaib Kamil, and Saman Amarasinghe.
+\newblock {T}iramisu: {A} {P}olyhedral {C}ompiler for {E}xpressing {F}ast and {P}ortable {C}ode.
+\newblock In {\em International Symposium on Code Generation and Optimization (CGO)}, 2019.
+
+\bibitem{verdoolaege2013polyhedral}
+Sven Verdoolaege, Juan Carlos~Juega, Albert Cohen, Jose Ignacio~Gomez, Christian Tenllado, and Francky Catthoor.
+\newblock {P}olyhedral {P}arallel {C}ode {G}eneration for {CUDA}.
+\newblock {\em ACM Transactions on Architecture and Code Optimization (TACO)}, 2013.
+
+\bibitem{jeong2019speculative}
+Eunji Jeong, Sungwoo Cho, Gyeong-In Yu, Joo~Seong Jeong, Dong-Jin Shin, Taebum Kim, and Byung-Gon Chun.
+\newblock {S}peculative {S}ymbolic {G}raph {E}xecution of {I}mperative {D}eep {L}earning {P}rograms.
+\newblock {\em ACM SIGOPS Operating Systems Review}, 2019.
+
+\bibitem{shen2021nimble}
+Haichen Shen, Jared Roesch, Zhi Chen, Wei Chen, Yong Wu, Mu~Li, Vin Sharma, Zachary Tatlock, and Yida Wang.
+\newblock Nimble: {E}fficiently {C}ompiling {D}ynamic {N}eural {N}etworks for {M}odel {I}nference.
+\newblock In {\em Conference on Machine Learning and Systems (MLSys)}, 2021.
+
+\end{thebibliography}

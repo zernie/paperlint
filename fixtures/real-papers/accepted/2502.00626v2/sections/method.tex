@@ -1,0 +1,42 @@
+\section{Discontinuity Modeling via Restricting Higher-Dimensional Continuous Functions}
+\label{sec:method}
+Our core idea is to constrain a higher-dimensional continuous function (neural field) $B$ onto a height field $H(\mathbf{x})$ that encodes the discontinuities. This height field captures the discontinuities by satisfying the condition
+\[
+\lim_{\mathbf{x} \to \partial\Omega^{+}} H(\mathbf{x}) \neq \lim_{\mathbf{x} \to \partial\Omega^{-}} H(\mathbf{x}).
+\]
+Instead of using just the spatial coordinate $\mathbf{x}$ as input, we lift the input dimension by combining the spatial coordinate with the height field value, resulting in the pair $\left( H(\mathbf{x}), \mathbf{x} \right)$. This lifting ensures that points from both sides, ${\mathbf{x}_1 \to \partial\Omega^{+}}$ and ${\mathbf{x}_2 \to \partial\Omega^{-}}$, are mapped to distinct higher-dimensional positions within the neural field $B$, as shown in \reffig \ref{fig:IllusLifting}. During inference of the continuous function $B$, the two points, which are very close in the rest state (${\mathbf{x}_1 \to \partial\Omega^{+}}$ and ${\mathbf{x}_2 \to \partial\Omega^{-}}$), are mapped sufficiently far apart in the higher dimension $\left( H(\mathbf{x}), \mathbf{x} \right)$ because $H$ lifts them to different heights in the additional dimension.
+
+\begin{figure}
+\centering
+\includegraphics[width=2cm]{example-image-duck}
+\caption{
+Lifting the input of the continuous function.
+} 
+\label{fig:IllusLifting} 
+\centering
+\end{figure}
+
+The benefit of lifting is that it decouples spatial discontinuity from the trainable continuous function $B$. Without lifting, the function $B$ must be very unsmooth at the boundary $\partial \Omega$ to accommodate the discontinuity, which complicates training. However, our method alleviates this problem. By lifting, two positions $ \mathbf{x}_1 \to \partial \Omega^{+} $ and $ \mathbf{x}_2 \to \partial \Omega^{-} $, which are close in $ \Omega $, are mapped to distinct coordinates in a higher dimension. This allows $B$ to remain smooth everywhere, with the discontinuity arising from restricting the function to the discontinuous height field. As a result, training the function becomes easier, as no sharp jumps need to be fit, as shown in \reffig \ref{fig:WhyEasier}. 
+
+
+\begin{figure}
+\centering
+\includegraphics[width=2cm]{example-image-duck}
+\caption{
+The trainable function $B$ is smooth over the higher dimensional domain, making the training process easier. (also show lower MSE in this figure)
+} 
+\label{fig:WhyEasier} 
+\centering
+\end{figure}
+
+
+This height field isn't subject to strict constraints. Any function that satisfies 
+$  \lim_{\mathbf{x} \to \partial \Omega^{+}} H(\mathbf{x}) \neq \lim_{\mathbf{x} \to \partial \Omega^{-}} H(\mathbf{x}) $
+can be used. We use the generalized winding number to construct the height field, as it has been proven to satisfy this property \cite{Feng:2023:WND, Jacobson:2018:GWN, Barill:FW:2018} and is computationally efficient.
+
+
+
+
+
+
+%Since the generalized winding number field naturally captures the jumping boundary condition at the boundaries, the points from both sides of the discontinuities are lifted to different higher dimensional positions within the higher-dimensional nerual field. Therefore, we 

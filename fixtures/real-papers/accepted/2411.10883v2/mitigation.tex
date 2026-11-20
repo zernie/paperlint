@@ -1,0 +1,48 @@
+\section{Potential Mitigations} 
+\label{sec:mitigation}
+
+We propose four general classes of mitigations: (1) redesigning the \textit{syncfs} system call, (2) restricting access to high-resolution timers, (3) detecting suspicious system call queries, and (4) supporting isolation in I/O buffers. 
+% These strategies align with mitigation approaches from prior side-channel attacks that exploit monitored states, such as \textit{procfs}~\cite{jana2012memento}, hardware interrupts~\cite{diao2016no}, and performance counters~\cite{zhang2023s}.
+
+% \cheng{concern\#1}
+
+
+     
+
+ \textbf{Redesigning \textit{syncfs}.} Completely blocking access to \textit{syncfs} could serve as an effective defense against our attacks. However, this would also disrupt legitimate users who depend on \textit{syncfs} to flush multiple file updates to disk. An alternative approach is to limit the frequency of \textit{syncfs} calls, which could diminish the effectiveness of spy applications~\cite{naghibijouybari2018rendered, wang2023danger}. Nonetheless, this strategy might impact legitimate users by potentially reducing \textit{syncfs} functionality and weakening persistence against system failures. Fig.~\ref{fig:limiting_sampling} shows the effect of reduced call frequency on application fingerprinting accuracy in Android.
+We observe that reducing the sampling frequency from 150,000 to 15,000 Hz causes the attack's F1 score to drop significantly, from 93.49\% to 32.99\%. Further limiting the sampling rate to just 15 Hz reduces the attacker's F1 score to 8.1\%, which is nearly equivalent to random guessing (approximately 6.6\%, given the application fingerprinting involves 15 classes). However, since \textit{syncfs} plays a critical role in failure recovery, limiting the frequency of \textit{syncfs} queries may introduce drawbacks, such as an increased risk of data loss or a higher likelihood of file system inconsistencies~\cite{rebello2021can, verma2015failure}.
+
+In addition, since \textit{syncfs} flushes the entire uncommitted page cache to the disk, a redesign to restrict users to flushing only their own page caches could mitigate the risk of cross-application data leakage. 
+Another direction is to leverage hardware support, such as Physical Unclonable Functions (PUFs)~\cite{bai2016puf, bai2021novel} and Trusted Execution Environments (TEEs)~\cite{li2024sok}, to conceal timing leakages.
+
+
+ \begin{figure}[tb]
+    \centering
+    \includegraphics[width=0.4\textwidth]{figures/reduce_sampling.png}
+    % \vspace{-2.0em}
+    \caption{Application fingerprint attack results with limited frequency of \textit{syncfs} calls.}
+    \label{fig:limiting_sampling}
+\end{figure}
+
+
+\textbf{Managing access to high-resolution clock instructions.} Our attacks rely on the high-resolution clock instructions, such as \textit{CNTVCT\_EL0} and \textit{rdtsc} timers, to measure the delay timing of \textit{syncfs}. Blocking access to these clock instructions could hinder such attacks; however, legitimate users also depend on them for precise program measurements. Additionally, even if certain clock instructions are restricted, attackers could exploit alternative low-level timing mechanisms, such as timer interrupts~\cite{schwarz2018keydrown}. Adding noise to these timers to obscure time differences has also been proposed as mitigation, as seen in prior work~\cite{zhang2024timing}. However, this approach incurs overhead, and recent studies~\cite{dutta2023spy} suggest that synthetic timers may still enable attackers to detect timing differences.
+
+
+\textbf{Detecting abnormal \textit{syncfs} usage.} Our attack relies on continuous probing of \textit{syncfs} timing delays, which makes it a promising target for detection. A potential defense is to monitor abnormal \textit{syncfs} invocation patterns, such as periodic or high-frequency calls, by using a daemon process that tracks \textit{syncfs} activity. Prior research~\cite{alazab2020intelligent, salehi2017maar} has demonstrated the effectiveness of detecting malicious applications through API call sequence and return value monitoring, and similar techniques~\cite{ensemblehmd} could be applied here. 
+Detection-based approaches may result in harmful false positives for applications that may naturally require higher frequencies of \textit{syncfs}.  Moreover, to evade such detection, an attacker may attempt to reduce the \textit{syncfs} query rate, trading stealth for reduced signal quality. As shown in Figure~{\ref{fig:limiting_sampling}}, we reduce the sampling rate from the maximum achievable values (150 kHz on Android and 120 kHz on Linux); this reduction comes at the cost of decreased attack success rate, but an attacker may still glean useful information while avoiding detection.  %Moreover, background activity and system noise often prevent \textit{syncfs} operation at these peak rates, further limiting the attacker's ability to maintain a high-resolution signal. However, some leakage may still persist even at lower rates, and setting too sensitive detection thresholds could lead to false positives.
+% We also evaluate whether frequent \textit{syncfs} operations result in noticeable I/O bandwidth or CPU usage, which could potentially be flagged by hardware performance counter-based anomaly detection methods{~\cite{woo2018early}},{~\cite{alam2017performance}}. Our measurements show that opening up to 10 browser tabs leads to CPU utilization below 13\% and I/O traffic under 140 kB/s. Similarly, running up to 10 I/O-intensive microbenchmarks results in CPU usage under 7\% and I/O traffic under 70 kB/s. These low overheads suggest that the attack can evade conventional resource-based detection, highlighting the importance of behavioral monitoring techniques that focus on abnormal API usage patterns.}
+
+% \yicheng{adding the cpu and I/O usage with high syncfs()}
+
+% \yicheng{@Cheng, could I know why need to test resource usage? In those two measurements (web and microbenchmarks), did you query syncfs? Are they attack-free usage? Also, how does those usages go when attacker frequently query syncfs?}
+% \hlc[cyan!40]{
+
+% However, the attacker can try reduce the query rate to make attack more stealthy. Fig. 
+
+% By characterizing the sampling rate of \textit{syncfs} across different platforms, we find that its maximum achievable rate varies by system: the maximum sampling rate reaches 150 kHz on Android and 120 kHz on Linux. However, due to background activity and system noise, an attacker may not always be able to invoke \textit{syncfs} at these peak rates in practice.}
+
+% \hlc[cyan!40]{We also measured CPU utilization and I/O traffic under background noise introduced in two ways: by opening browser tabs and by running an I/O noise microbenchmark. With up to 10 tabs opened in the background, CPU usage remained under 13\% and I/O traffic under 140 kB/s. When running up to 10 I/O workloads in the background, CPU usage was under 7\% and I/O traffic under 70 kB/s.}
+% \hlc[red!40]{\textbf{Detectability of syncfs attack.} We applied 
+
+
+\textbf{Supporting isolation in I/O buffers.} Without changing the functionality of \textit{syncfs}, we can redesign the write-back mechanism with minor changes. In our side channel attacks (§~\ref{subsec:web_finger} and §~\ref{subsec:video_finger}), we leak the write pattern of temporary files. These files do not need to be flushed to the disk since they should only be kept during the session. Therefore, a lightweight design is adding a tag for \textit{open} that prevents the dirty pages of this file from being flushed by \textit{syncfs}. We leave this as future work.

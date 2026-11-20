@@ -1,0 +1,18 @@
+{
+  "cycles": [
+    {
+      "id": "iccv-2025",
+      "venue": {
+        "kind": "named",
+        "name": "ICCV 2025",
+        "url": "https://arxiv.org/abs/2501.02885v2"
+      },
+      "opened": "2025-10-28",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2025-10-28",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

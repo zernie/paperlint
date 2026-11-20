@@ -1,0 +1,164 @@
+%%%%%%%% ICML 2026 EXAMPLE LATEX SUBMISSION FILE %%%%%%%%%%%%%%%%%
+
+\documentclass{article}
+
+% Recommended, but optional, packages for figures and better typesetting:
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{booktabs} % for professional tables
+\usepackage[table]{xcolor}
+
+
+% hyperref makes hyperlinks in the resulting PDF.
+% If your build breaks (sometimes temporarily if a hyperlink spans a page)
+% please comment out the following usepackage line and replace
+% \usepackage{icml2026} with \usepackage[nohyperref]{icml2026} above.
+\usepackage{hyperref}
+
+% Attempt to make hyperref and algorithmic work together better:
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+
+% Use the following line for the initial blind version submitted for review:
+% \usepackage{icml2026}
+% For preprint, use
+% \usepackage[preprint]{icml2026}
+
+% If accepted, instead use the following line for the camera-ready submission:
+\usepackage[accepted]{icml2026}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{multirow}
+\usepackage{booktabs}
+
+
+% if you use cleveref..
+\usepackage[capitalize,noabbrev]{cleveref}
+\usepackage{amsthm}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% THEOREMS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% Todonotes is useful during development; simply uncomment the next line
+%    and comment out the line below the next line to turn off comments
+\usepackage[disable,textsize=tiny]{todonotes}
+% \usepackage[textsize=tiny]{todonotes}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Added by Mehrtash
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \definecolor{my_purple}{HTML}{9903F0}
+% \definecolor{my_blue}{HTML}{0072CE}
+% \newcommand{\nbc}[3]{
+%         {\colorbox{#3}{\scriptsize\textcolor{white}{#1}}}
+%             {\textcolor{#3}{\small$\blacktriangleright$\textit{#2}$\blacktriangleleft$}}
+% }
+% \newcommand{\MH}[1]{\nbc{MH}{#1}{my_purple}}
+
+% \newcommand{\AN}[1]{\nbc{AN}{#1}{my_blue}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% The \icmltitle you define below is probably too long as a header.
+% Therefore, a short form for the running title is supplied here:
+\icmltitlerunning{$f$-Divergence Self-Play for Tabular Anomaly Detection via Large Language Models}
+
+\begin{document}
+
+\twocolumn[
+  \icmltitle{$f$-Divergence Self-Play for Tabular Anomaly Detection \\
+    via Large Language Models}
+
+  % It is OKAY to include author information, even for blind
+  % submissions: the style file will automatically remove it for you
+  % unless you've provided the [accepted] option to the icml2026
+  % package.
+
+  % List of affiliations: The first argument should be a (short)
+  % identifier you will use later to specify author affiliations
+  % Academic affiliations should list Department, University, City, Region, Country
+  % Industry affiliations should list Company, City, Region, Country
+
+  \begin{icmlauthorlist}
+    \icmlauthor{Hoang Tran Vuong}{hust}
+    \icmlauthor{Linh Ngo Van}{hust}
+    \icmlauthor{Dang Nguyen}{deakin}
+    \icmlauthor{Thin Nguyen}{deakin}
+    \icmlauthor{Phuoc Nguyen}{deakin}
+    \icmlauthor{Mehrtash Harandi}{monash}
+    \icmlauthor{Trung Le}{monash}
+  \end{icmlauthorlist}
+
+  \icmlaffiliation{hust}{Hanoi University of Science and Technology, Hanoi, Vietnam}
+  \icmlaffiliation{deakin}{Applied Artificial Intelligence Initiative, Deakin University, Australia}
+  \icmlaffiliation{monash}{Monash University, Clayton, VIC 3800, Australia}
+
+  \icmlcorrespondingauthor{Linh Ngo Van}{linhnv@soict.hust.edu.vn}
+  \icmlcorrespondingauthor{Trung Le}{trunglm@monash.edu}
+
+  \icmlkeywords{Anomaly Detection, Tabular Data, Large Language Models, Self-Play}
+
+  \vskip 0.3in
+]
+
+% this must go after the closing bracket ] following \twocolumn[ ...
+
+% This command actually creates the footnote in the first column listing the
+% affiliations and the copyright notice. The command takes one argument, which
+% is text to display at the start of the footnote. The \icmlEqualContribution
+% command is standard text for equal contribution. Remove it (just {}) if you
+% do not need this facility.
+
+% Use ONE of the following lines. DO NOT remove the command.
+% If you have no special notice, KEEP empty braces:
+\printAffiliationsAndNotice{}  % no special notice (required even if empty)
+% Or, if applicable, use the standard equal contribution text:
+% \printAffiliationsAndNotice{\icmlEqualContribution}
+
+\begin{abstract}
+Anomaly detection in tabular data poses significant challenges due to heterogeneous feature types—mixing numerical, categorical, and textual attributes, which complicate learning meaningful representations of normality. Recent work has applied large language models (LLMs) to this problem by serializing table rows as text sequences, yet these approaches rely on one-shot supervised fine-tuning that offers limited signal to tighten the model's description of normality. We propose DiSPaT, a self-play fine-tuning framework that strengthens the model's understanding of normal data. Building on the theoretical foundation of $f$-divergence minimization, we derive a tight approximation connecting our training objective to reducing the distributional gap between real normal data and model-generated samples. DiSPaT operates through an alternating optimization: at each iteration, the current policy generates synthetic samples that serve as pseudo-anomalies, while a critic discriminator learns to distinguish these from real normal samples; this signal drives policy updates that progressively align the model distribution with the true normal-data distribution. Extensive experiments on diverse benchmarks demonstrate that DiSPaT consistently outperforms prior LLM-based methods, deep learning approaches, and classical unsupervised detectors for tabular anomaly detection.
+\end{abstract}
+
+\input{section/introduction}
+
+\input{section/background}
+
+\input{section/methodology}
+
+\input{section/experiments}
+
+\input{section/conclusion}  
+
+
+\section*{Acknowledgements}
+
+Trung Le was supported by the Air Force Office of Scientific Research under award number FA2386-25-1-4023 and the ARC Discovery Project grant DP250100262. Linh Ngo Van is funded by Vietnam National Foundation for Science and Technology Development (NAFOSTED) under grant number 102.05-2025.16.
+
+\section*{Impact Statement}
+
+This paper presents DiSPaT, an $f$-divergence self-play fine-tuning framework for improving anomaly detection in tabular data. More accurate anomaly detection may be beneficial in applications such as fraud detection, cybersecurity, and monitoring tasks, where identifying unusual patterns reliably is important. Our work is intended to advance machine learning methodology, and we do not feel there are specific negative ethical consequences that must be highlighted here.
+
+% =================================================================
+% REFERENCES
+% =================================================================
+\bibliography{reference}
+\bibliographystyle{icml2026} % Bắt buộc dùng style này
+
+\newpage
+\appendix
+\onecolumn
+\input{section/appendix}
+\end{document}

@@ -1,0 +1,40 @@
+\begin{algorithm}[tb]
+   \caption{CateKV in an individual Head}
+   \label{alg:method}
+\begin{algorithmic}
+   \STATE {\bfseries Input:} $Q, K, V \in \mathbb{R}^{n \times d}$, $q \in \mathbb{R}^{1 \times d}$, head type $H$, observation window size $L_{\text{obs}}$, selected chunk budget $b$, chunk size $cs$, retention ratio $\eta$
+   \STATE {\bfseries Pre-filling Stage:} 
+   
+   \LineComment{Calculating token criticality}
+   
+    \STATE $A = \text{softmax}(Q_{[-L_{\text{obs}}:, :]} K_{[:-L_{\text{obs}}, :]}^T / {\sqrt{d}} )$
+   \STATE $C = \sum_{i=0}^{L_{\text{obs}}} A_{i,:}$
+
+   \LineComment{Divide $C$ into chunks and take maximum}
+   \STATE $C_{\text{chunk}} = \text{BlockMax}(C,cs)$
+
+   \LineComment{Cache keys and values based on the indices of top-k elements}
+   
+   \IF{$H=\text{consistent head}$}  
+   \STATE $i_k = \text{argtopk}(C_{\text{chunk}},b)$
+   \STATE $cache_\text{k}, cache_\text{v} = \text{Cache}(K,V,i_k,L_{\text{obs}})$
+   \ELSE
+   \STATE $i_k = \text{argtopk}(C_{\text{chunk}},n\eta)$
+   \STATE $cache_\text{k}, cache_\text{v} = \text{Cache}(K,V,i_k,L_{\text{obs}})$
+   \ENDIF
+
+   \STATE {\bfseries Decoding Stage:}
+
+   \LineComment{Retrieval keys and values from cache}
+   
+   \IF{$H=\text{consistent head}$} 
+   \STATE $k,v = cache_\text{k}, cache_\text{v}$
+   \ELSE
+   \STATE $k,v = \text{Retrival}(q, cache_\text{k}, cache_\text{v})$
+   \LineComment{all or query-aware}
+   
+   \ENDIF
+   \STATE $output = \text{Attention}(q, k, v)$ 
+\end{algorithmic}
+% \vspace{-0.2cm}
+\end{algorithm}

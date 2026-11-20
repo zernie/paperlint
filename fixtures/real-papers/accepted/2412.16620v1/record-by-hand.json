@@ -1,0 +1,137 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acmart.cls",
+      "role": "preamble"
+    },
+    {
+      "path": "section/1_Introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/2_Background.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/3_Study_Design.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/Model_Selection.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/4_Result_Analysis.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/4_RQ1.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/rq1-TG.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/rq1-AG.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/rq1-TE.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/4_RQ2.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/MI4All.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/4_RQ3.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/rq3-All.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/5_Discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/5_UTBench_Discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/UTBench_result.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/5_Fault_Discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/Bug-Detection.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/5_Metrics_Discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/Metrics_Comparison.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/6_Guideline.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/6_5_Validity.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/7_Conclusion.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "24b68040117f387258554ffafab0d28f29db68a4dfc8b85c222ed532ce1261cb",
+    "acmart.cls": "18f49375ad9ce6d4ab40b8f663f2602b30e5d059878a55b594170da0d88aa052",
+    "section/1_Introduction.tex": "1de88c14992159d9089c96fcd6ad88153b088cf03dd665a7105631df5a5cf3ea",
+    "section/2_Background.tex": "51f8f4ce377f81e754dcdddde01bec22d3c1c0e421ac8cff142fd64c606e0bd5",
+    "section/3_Study_Design.tex": "3f506e9c9dcc7a46bea4bee1b2f8a4447b504bd2e265b4a30f68f7339fc0d695",
+    "table/Model_Selection.tex": "5dffeb141f632b0ab0c5e7bf7eef0e144e163006b1325eda5f83b76e2b093947",
+    "section/4_Result_Analysis.tex": "d8de6a7631ed8d1a6cbea787ae23a3c7285dc3c85bf6989579bc528fb537f37c",
+    "section/4_RQ1.tex": "3b0b4747d126e7f104accfc8a732e5d1ff3b818858e35e4317f320fb10b088e6",
+    "table/rq1-TG.tex": "afb519dc53f9039396177d18126802a7f5e0fe71ca9c5f8784d3880aed57148f",
+    "table/rq1-AG.tex": "ea954ca72821b267581e322bdfe34ec901ae7091115926fd8ad02ea49bab9794",
+    "table/rq1-TE.tex": "5f70bbc63738da6cce171be30db41ed00238b8c423bf24a14869f44caff2d29a",
+    "section/4_RQ2.tex": "aa28176df9741b13cf78763ed219fb7999c96068385a0ed3577eb1cd03ebd71c",
+    "table/MI4All.tex": "1ddaf46b8192453a3611828333016ed2212b0ed26b007cfa62f2d6d2fbed8dbb",
+    "section/4_RQ3.tex": "39814742f8564b0a26ba2ba7b34636025fa919571b438d1873d1135e866b7898",
+    "table/rq3-All.tex": "715bbe35ca65c3d258af92d5ce27439c9400ebc48c185a07c801f0d59bef98e5",
+    "section/5_Discussion.tex": "bc5e58e1d313dc47abf4246ea6585e184b756a034088724dbaf538e177fbd08c",
+    "section/5_UTBench_Discussion.tex": "1b58224fd00c607911b532f06fd8fed084f39c59ad64028eeec71a920a363fe7",
+    "table/UTBench_result.tex": "8ea5fb1c715a10fc160e9e59296516e0b1cc0bc66e55c9ad6efa761153930363",
+    "section/5_Fault_Discussion.tex": "1d7b4b0dfa649cbe22376022a5b457f7bddf534fc78c8e05d67d41681361b683",
+    "table/Bug-Detection.tex": "14e3dd627dbf3d516ff8216a2ef510492ed61a1ac4a1bdadbded6f5855857b71",
+    "section/5_Metrics_Discussion.tex": "513fd041e05094af6a6623f5ffa4be85a62e48fb8adccefc4c67b39fd5044e68",
+    "table/Metrics_Comparison.tex": "170217f13ce21b0459ddba17d99c7e8667011962c5bebc1d2f5376903a0775fd",
+    "section/6_Guideline.tex": "352a75b4c440f35b6f18e752fd393ae265d7b6ae211944fca8d9e3e0f7f57f44",
+    "section/6_5_Validity.tex": "492731c75341352488ee909e69c3e718e916104cec25031128bdd4656f9200af",
+    "section/7_Conclusion.tex": "98921ea3eca1b91fa49776b5497d21e694c80a6edfe873c7f5ba26d68a8276d9"
+  }
+}

@@ -1,0 +1,982 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{61}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{}, \showDOI{}, and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showDOI}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showDOI #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showDOI      \undefined \def \showDOI       #1{#1}\fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[Albrecht et~al\mbox{.}(2009)]%
+        {SP:AlbPatWat09}
+\bibfield{author}{\bibinfo{person}{Martin~R. Albrecht},
+  \bibinfo{person}{Kenneth~G. Paterson}, {and} \bibinfo{person}{Gaven~J.
+  Watson}.} \bibinfo{year}{2009}\natexlab{}.
+\newblock \showarticletitle{Plaintext Recovery Attacks against {SSH}}. In
+  \bibinfo{booktitle}{\emph{2009 {IEEE} Symposium on Security and Privacy}}.
+  \bibinfo{publisher}{{IEEE} Computer Society Press},
+  \bibinfo{address}{Oakland, CA, USA}, \bibinfo{pages}{16--26}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/SP.2009.5}
+\showDOI{\tempurl}
+
+
+\bibitem[Ang et~al\mbox{.}(2025)]%
+        {quic-states-2025}
+\bibfield{author}{\bibinfo{person}{Kian~Kai Ang}, \bibinfo{person}{Guy
+  Farrelly}, \bibinfo{person}{Cheryl Pope}, {and} \bibinfo{person}{Damith~C.
+  Ranasinghe}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{An Automated Blackbox Noncompliance Checker for
+  {QUIC} Server Implementations}.
+\newblock \bibinfo{journal}{\emph{CoRR}}  \bibinfo{volume}{abs/2505.12690}
+  (\bibinfo{year}{2025}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/ARXIV.2505.12690}
+\showDOI{\tempurl}
+\showeprint[arXiv]{2505.12690}
+
+
+\bibitem[Angluin(1987)]%
+        {angluin1987learning}
+\bibfield{author}{\bibinfo{person}{Dana Angluin}.}
+  \bibinfo{year}{1987}\natexlab{}.
+\newblock \showarticletitle{Learning regular sets from queries and
+  counterexamples}.
+\newblock \bibinfo{journal}{\emph{Information and computation}}
+  \bibinfo{volume}{75}, \bibinfo{number}{2} (\bibinfo{year}{1987}),
+  \bibinfo{pages}{87--106}.
+\newblock
+
+
+\bibitem[Argyros et~al\mbox{.}(2016)]%
+        {CCS:ASJKK16}
+\bibfield{author}{\bibinfo{person}{George Argyros}, \bibinfo{person}{Ioannis
+  Stais}, \bibinfo{person}{Suman Jana}, \bibinfo{person}{Angelos~D. Keromytis},
+  {and} \bibinfo{person}{Aggelos Kiayias}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{{SFADiff}: Automated Evasion Attacks and
+  Fingerprinting Using Black-box Differential Automata Learning}. In
+  \bibinfo{booktitle}{\emph{ACM CCS 2016}},
+  \bibfield{editor}{\bibinfo{person}{Edgar~R. Weippl}, \bibinfo{person}{Stefan
+  Katzenbeisser}, \bibinfo{person}{Christopher Kruegel},
+  \bibinfo{person}{Andrew~C. Myers}, {and} \bibinfo{person}{Shai Halevi}}
+  (Eds.). \bibinfo{publisher}{{ACM} Press}, \bibinfo{address}{Vienna, Austria},
+  \bibinfo{pages}{1690--1701}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/2976749.2978383}
+\showDOI{\tempurl}
+
+
+\bibitem[B{\"a}umer et~al\mbox{.}(2024b)]%
+        {2024TLSAttacker}
+\bibfield{author}{\bibinfo{person}{Fabian B{\"a}umer}, \bibinfo{person}{Marcus
+  Brinkmann}, \bibinfo{person}{Nurullah Erinola}, \bibinfo{person}{Sven
+  Hebrok}, \bibinfo{person}{Nico Heitmann}, \bibinfo{person}{Felix Lange},
+  \bibinfo{person}{Marcel Maehren}, \bibinfo{person}{Robert Merget},
+  \bibinfo{person}{Niklas Niere}, \bibinfo{person}{Maximilian Radoy},
+  \bibinfo{person}{Conrad Schmidt}, \bibinfo{person}{J{\"o}rg Schwenk}, {and}
+  \bibinfo{person}{Juraj Somorovsky}.} \bibinfo{year}{2024}\natexlab{b}.
+\newblock \showarticletitle{TLS-Attacker: A Dynamic Framework for Analyzing TLS
+  Implementations}. In \bibinfo{booktitle}{\emph{Proceedings of Cybersecurity
+  Artifacts Competition and Impact Award (ACSAC '24)}} (Hawaii).
+  \bibinfo{publisher}{ACM}.
+\newblock
+\urldef\tempurl%
+\url{https://www.acsac.org/2024/program/artifacts_competition/}
+\showURL{%
+\tempurl}
+
+
+\bibitem[B{\"a}umer et~al\mbox{.}(2024a)]%
+        {USENIX:BauBriSch24}
+\bibfield{author}{\bibinfo{person}{Fabian B{\"a}umer}, \bibinfo{person}{Marcus
+  Brinkmann}, {and} \bibinfo{person}{J{\"o}rg Schwenk}.}
+  \bibinfo{year}{2024}\natexlab{a}.
+\newblock \showarticletitle{Terrapin Attack: Breaking {SSH} Channel Integrity
+  By Sequence Number Manipulation}. In \bibinfo{booktitle}{\emph{USENIX
+  Security 2024}}, \bibfield{editor}{\bibinfo{person}{Davide Balzarotti} {and}
+  \bibinfo{person}{Wenyuan Xu}} (Eds.). \bibinfo{publisher}{{USENIX}
+  Association}, \bibinfo{address}{Philadelphia, PA, USA}.
+\newblock
+\urldef\tempurl%
+\url{https://www.usenix.org/conference/usenixsecurity24/presentation/b%C3%A4umer}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Bellare et~al\mbox{.}(2002)]%
+        {CCS:BelKohNam02}
+\bibfield{author}{\bibinfo{person}{Mihir Bellare}, \bibinfo{person}{Tadayoshi
+  Kohno}, {and} \bibinfo{person}{Chanathip Namprempre}.}
+  \bibinfo{year}{2002}\natexlab{}.
+\newblock \showarticletitle{Authenticated Encryption in {SSH}: Provably Fixing
+  The {SSH} Binary Packet Protocol}. In \bibinfo{booktitle}{\emph{ACM CCS
+  2002}}, \bibfield{editor}{\bibinfo{person}{Vijayalakshmi Atluri}} (Ed.).
+  \bibinfo{publisher}{{ACM} Press}, \bibinfo{address}{Washington, DC, USA},
+  \bibinfo{pages}{1--11}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/586110.586112}
+\showDOI{\tempurl}
+
+
+\bibitem[Bergsma et~al\mbox{.}(2014)]%
+        {CCS:BDKSS14}
+\bibfield{author}{\bibinfo{person}{Florian Bergsma}, \bibinfo{person}{Benjamin
+  Dowling}, \bibinfo{person}{Florian Kohlar}, \bibinfo{person}{J{\"o}rg
+  Schwenk}, {and} \bibinfo{person}{Douglas Stebila}.}
+  \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{Multi-Ciphersuite Security of the {Secure} {Shell}
+  ({SSH}) Protocol}. In \bibinfo{booktitle}{\emph{ACM CCS 2014}},
+  \bibfield{editor}{\bibinfo{person}{Gail-Joon Ahn}, \bibinfo{person}{Moti
+  Yung}, {and} \bibinfo{person}{Ninghui Li}} (Eds.). \bibinfo{publisher}{{ACM}
+  Press}, \bibinfo{address}{Scottsdale, AZ, USA}, \bibinfo{pages}{369--381}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/2660267.2660286}
+\showDOI{\tempurl}
+
+
+\bibitem[Bhargavan and Leurent(2016)]%
+        {NDSS:BhaLeu16}
+\bibfield{author}{\bibinfo{person}{Karthikeyan Bhargavan} {and}
+  \bibinfo{person}{Ga{\"e}tan Leurent}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{Transcript Collision Attacks: Breaking
+  Authentication in {TLS}, {IKE} and {SSH}}. In
+  \bibinfo{booktitle}{\emph{NDSS~2016}}. \bibinfo{publisher}{The Internet
+  Society}, \bibinfo{address}{San Diego, CA, USA}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.14722/ndss.2016.23418}
+\showDOI{\tempurl}
+
+
+\bibitem[Bider(2018)]%
+        {rfc8308}
+\bibfield{author}{\bibinfo{person}{Denis Bider}.}
+  \bibinfo{year}{2018}\natexlab{}.
+\newblock \bibinfo{title}{{Extension Negotiation in the Secure Shell (SSH)
+  Protocol}}.
+\newblock \bibinfo{howpublished}{RFC 8308}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.17487/RFC8308}
+\showDOI{\tempurl}
+
+
+\bibitem[Chlosta et~al\mbox{.}(2021)]%
+        {WISEC:ChlRupHol21}
+\bibfield{author}{\bibinfo{person}{Merlin Chlosta}, \bibinfo{person}{David
+  Rupprecht}, {and} \bibinfo{person}{Thorsten Holz}.}
+  \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{On the challenges of automata reconstruction in LTE
+  networks}. In \bibinfo{booktitle}{\emph{Proceedings of the 14th ACM
+  Conference on Security and Privacy in Wireless and Mobile Networks}} (Abu
+  Dhabi, United Arab Emirates) \emph{(\bibinfo{series}{WiSec '21})}.
+  \bibinfo{publisher}{Association for Computing Machinery},
+  \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{164–174}.
+\newblock
+\showISBNx{9781450383493}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3448300.3469133}
+\showDOI{\tempurl}
+
+
+\bibitem[Daniel et~al\mbox{.}(2018)]%
+        {danielopenvpnstatelearning}
+\bibfield{author}{\bibinfo{person}{Lesly-Ann Daniel}, \bibinfo{person}{Erik
+  Poll}, {and} \bibinfo{person}{Joeri de Ruiter}.}
+  \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Inferring OpenVPN State Machines Using Protocol
+  State Fuzzing}. In \bibinfo{booktitle}{\emph{2018 IEEE European Symposium on
+  Security and Privacy Workshops (EuroS\&PW)}}. \bibinfo{pages}{11--19}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/EuroSPW.2018.00009}
+\showDOI{\tempurl}
+
+
+\bibitem[de~Ruiter(2016)]%
+        {SecITSys:dRu16}
+\bibfield{author}{\bibinfo{person}{Joeri de Ruiter}.}
+  \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{A Tale of the OpenSSL State Machine: A Large-Scale
+  Black-Box Analysis}. In \bibinfo{booktitle}{\emph{Secure IT Systems}},
+  \bibfield{editor}{\bibinfo{person}{Billy~Bob Brumley} {and}
+  \bibinfo{person}{Juha R{\"o}ning}} (Eds.). \bibinfo{publisher}{Springer
+  International Publishing}, \bibinfo{address}{Cham},
+  \bibinfo{pages}{169--184}.
+\newblock
+\showISBNx{978-3-319-47560-8}
+
+
+\bibitem[de~Ruiter and Poll(2015)]%
+        {USENIX:dRuPol15}
+\bibfield{author}{\bibinfo{person}{Joeri de Ruiter} {and} \bibinfo{person}{Erik
+  Poll}.} \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{Protocol State Fuzzing of {TLS} Implementations}.
+  In \bibinfo{booktitle}{\emph{USENIX Security 2015}},
+  \bibfield{editor}{\bibinfo{person}{Jaeyeon Jung} {and}
+  \bibinfo{person}{Thorsten Holz}} (Eds.). \bibinfo{publisher}{{USENIX}
+  Association}, \bibinfo{address}{Washington, DC, USA},
+  \bibinfo{pages}{193--206}.
+\newblock
+\urldef\tempurl%
+\url{https://www.usenix.org/conference/usenixsecurity15/technical-sessions/presentation/de-ruiter}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Dong et~al\mbox{.}(2025)]%
+        {dong2025corecrisis}
+\bibfield{author}{\bibinfo{person}{Yilu Dong}, \bibinfo{person}{Tianchang
+  Yang}, \bibinfo{person}{Abdullah Al~Ishtiaq}, \bibinfo{person}{Syed Md~Mukit
+  Rashid}, \bibinfo{person}{Ali Ranjbar}, \bibinfo{person}{Kai Tu},
+  \bibinfo{person}{Tianwei Wu}, \bibinfo{person}{Md~Sultan Mahmud}, {and}
+  \bibinfo{person}{Syed~Rafiul Hussain}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{{CoreCrisis}: {Threat-Guided} and {Context-Aware}
+  Iterative Learning and Fuzzing of 5G Core Networks}. In
+  \bibinfo{booktitle}{\emph{34th USENIX Security Symposium (USENIX Security
+  25)}}. \bibinfo{pages}{5287--5306}.
+\newblock
+
+
+\bibitem[Ferreira et~al\mbox{.}(2021)]%
+        {10.1145/3452296.3472938}
+\bibfield{author}{\bibinfo{person}{Tiago Ferreira}, \bibinfo{person}{Harrison
+  Brewton}, \bibinfo{person}{Loris D'Antoni}, {and} \bibinfo{person}{Alexandra
+  Silva}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Prognosis: closed-box analysis of network protocol
+  implementations}. In \bibinfo{booktitle}{\emph{Proceedings of the 2021 ACM
+  SIGCOMM 2021 Conference}} (Virtual Event, USA)
+  \emph{(\bibinfo{series}{SIGCOMM '21})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, USA},
+  \bibinfo{pages}{762–774}.
+\newblock
+\showISBNx{9781450383837}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3452296.3472938}
+\showDOI{\tempurl}
+
+
+\bibitem[Fiterau-Brostean et~al\mbox{.}(2020)]%
+        {USENIX:FJMRSS20}
+\bibfield{author}{\bibinfo{person}{Paul Fiterau-Brostean},
+  \bibinfo{person}{Bengt Jonsson}, \bibinfo{person}{Robert Merget},
+  \bibinfo{person}{Joeri de Ruiter}, \bibinfo{person}{Konstantinos Sagonas},
+  {and} \bibinfo{person}{Juraj Somorovsky}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Analysis of {DTLS} Implementations Using Protocol
+  State Fuzzing}. In \bibinfo{booktitle}{\emph{USENIX Security 2020}},
+  \bibfield{editor}{\bibinfo{person}{Srdjan Capkun} {and}
+  \bibinfo{person}{Franziska Roesner}} (Eds.). \bibinfo{publisher}{{USENIX}
+  Association}, \bibinfo{pages}{2523--2540}.
+\newblock
+\urldef\tempurl%
+\url{https://www.usenix.org/conference/usenixsecurity20/presentation/fiterau-brostean}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Fiterau-Brostean et~al\mbox{.}(2023)]%
+        {NDSS:FJST23}
+\bibfield{author}{\bibinfo{person}{Paul Fiterau-Brostean},
+  \bibinfo{person}{Bengt Jonsson}, \bibinfo{person}{Konstantinos Sagonas},
+  {and} \bibinfo{person}{Fredrik T{\r a}quist}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Automata-Based Automated Detection of State Machine
+  Bugs in Protocol Implementations}. In \bibinfo{booktitle}{\emph{NDSS~2023}}.
+  \bibinfo{publisher}{The Internet Society}, \bibinfo{address}{San Diego, CA,
+  USA}.
+\newblock
+
+
+\bibitem[Fiter\u{a}u-Bro\c{s}tean et~al\mbox{.}(2017)]%
+        {SPIN:fiterauSshModelChecking}
+\bibfield{author}{\bibinfo{person}{Paul Fiter\u{a}u-Bro\c{s}tean},
+  \bibinfo{person}{Toon Lenaerts}, \bibinfo{person}{Erik Poll},
+  \bibinfo{person}{Joeri de Ruiter}, \bibinfo{person}{Frits Vaandrager}, {and}
+  \bibinfo{person}{Patrick Verleg}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Model learning and model checking of SSH
+  implementations}. In \bibinfo{booktitle}{\emph{Proceedings of the 24th ACM
+  SIGSOFT International SPIN Symposium on Model Checking of Software}} (Santa
+  Barbara, CA, USA) \emph{(\bibinfo{series}{SPIN 2017})}.
+  \bibinfo{publisher}{Association for Computing Machinery},
+  \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{142–151}.
+\newblock
+\showISBNx{9781450350778}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3092282.3092289}
+\showDOI{\tempurl}
+
+
+\bibitem[Forssen and Cusack(2006)]%
+        {rfc4256}
+\bibfield{author}{\bibinfo{person}{Martin Forssen} {and} \bibinfo{person}{Frank
+  Cusack}.} \bibinfo{year}{2006}\natexlab{}.
+\newblock \bibinfo{title}{{Generic Message Exchange Authentication for the
+  Secure Shell Protocol (SSH)}}.
+\newblock \bibinfo{howpublished}{RFC 4256}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.17487/RFC4256}
+\showDOI{\tempurl}
+
+
+\bibitem[Friedl et~al\mbox{.}(2006)]%
+        {rfc4419}
+\bibfield{author}{\bibinfo{person}{Markus Friedl}, \bibinfo{person}{Niels
+  Provos}, {and} \bibinfo{person}{William~A. Simpson}.}
+  \bibinfo{year}{2006}\natexlab{}.
+\newblock \bibinfo{title}{{Diffie-Hellman Group Exchange for the Secure Shell
+  (SSH) Transport Layer Protocol}}.
+\newblock \bibinfo{howpublished}{RFC 4419}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.17487/RFC4419}
+\showDOI{\tempurl}
+
+
+\bibitem[Garbelini et~al\mbox{.}(2020)]%
+        {sweyntooth}
+\bibfield{author}{\bibinfo{person}{Matheus~E. Garbelini},
+  \bibinfo{person}{Chundong Wang}, \bibinfo{person}{Sudipta Chattopadhyay},
+  \bibinfo{person}{Sun Sumei}, {and} \bibinfo{person}{Ernest Kurniawan}.}
+  \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{{SweynTooth}: Unleashing Mayhem over Bluetooth Low
+  Energy}. In \bibinfo{booktitle}{\emph{2020 USENIX Annual Technical Conference
+  (USENIX ATC 20)}}. \bibinfo{publisher}{USENIX Association},
+  \bibinfo{pages}{911--925}.
+\newblock
+\showISBNx{978-1-939133-14-4}
+\urldef\tempurl%
+\url{https://www.usenix.org/conference/atc20/presentation/garbelini}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Guo et~al\mbox{.}(2019)]%
+        {8913552}
+\bibfield{author}{\bibinfo{person}{Jiaxing Guo}, \bibinfo{person}{Chunxiang
+  Gu}, \bibinfo{person}{Xi Chen}, {and} \bibinfo{person}{Fushan Wei}.}
+  \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Model Learning and Model Checking of IPSec
+  Implementations for Internet of Things}.
+\newblock \bibinfo{journal}{\emph{IEEE Access}}  \bibinfo{volume}{7}
+  (\bibinfo{year}{2019}), \bibinfo{pages}{171322--171332}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/ACCESS.2019.2956062}
+\showDOI{\tempurl}
+
+
+\bibitem[Hansen(2020)]%
+        {hansen2020cryptographic}
+\bibfield{author}{\bibinfo{person}{Torben~Brandt Hansen}.}
+  \bibinfo{year}{2020}\natexlab{}.
+\newblock \emph{\bibinfo{title}{Cryptographic Security of SSH Encryption
+  Schemes}}.
+\newblock PhD thesis. \bibinfo{school}{University of London}.
+\newblock
+
+
+\bibitem[Harris(2006)]%
+        {rfc4432}
+\bibfield{author}{\bibinfo{person}{Ben Harris}.}
+  \bibinfo{year}{2006}\natexlab{}.
+\newblock \bibinfo{title}{{RSA Key Exchange for the Secure Shell (SSH)
+  Transport Layer Protocol}}.
+\newblock \bibinfo{howpublished}{RFC 4432}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.17487/RFC4432}
+\showDOI{\tempurl}
+
+
+\bibitem[Heninger et~al\mbox{.}(2012)]%
+        {USENIX:HDWH12}
+\bibfield{author}{\bibinfo{person}{Nadia Heninger}, \bibinfo{person}{Zakir
+  Durumeric}, \bibinfo{person}{Eric Wustrow}, {and} \bibinfo{person}{J.~Alex
+  Halderman}.} \bibinfo{year}{2012}\natexlab{}.
+\newblock \showarticletitle{Mining Your Ps and Qs: Detection of Widespread Weak
+  Keys in Network Devices}. In \bibinfo{booktitle}{\emph{USENIX Security
+  2012}}, \bibfield{editor}{\bibinfo{person}{Tadayoshi Kohno}} (Ed.).
+  \bibinfo{publisher}{{USENIX} Association}, \bibinfo{address}{Bellevue, WA,
+  USA}, \bibinfo{pages}{205--220}.
+\newblock
+\urldef\tempurl%
+\url{https://www.usenix.org/conference/usenixsecurity12/technical-sessions/presentation/heninger}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Hussain et~al\mbox{.}(2021)]%
+        {CCS:HKICB21}
+\bibfield{author}{\bibinfo{person}{Syed~Rafiul Hussain},
+  \bibinfo{person}{Imtiaz Karim}, \bibinfo{person}{Abdullah~Al Ishtiaq},
+  \bibinfo{person}{Omar Chowdhury}, {and} \bibinfo{person}{Elisa Bertino}.}
+  \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Noncompliance as Deviant Behavior: An Automated
+  Black-box Noncompliance Checker for {4G} {LTE} Cellular Devices}. In
+  \bibinfo{booktitle}{\emph{ACM CCS 2021}},
+  \bibfield{editor}{\bibinfo{person}{Giovanni Vigna} {and}
+  \bibinfo{person}{Elaine Shi}} (Eds.). \bibinfo{publisher}{{ACM} Press},
+  \bibinfo{address}{Virtual Event, Republic of Korea},
+  \bibinfo{pages}{1082--1099}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3460120.3485388}
+\showDOI{\tempurl}
+
+
+\bibitem[Igoe and Solinas(2009)]%
+        {rfc5647}
+\bibfield{author}{\bibinfo{person}{Kevin Igoe} {and} \bibinfo{person}{Jerome
+  Solinas}.} \bibinfo{year}{2009}\natexlab{}.
+\newblock \bibinfo{title}{{AES Galois Counter Mode for the Secure Shell
+  Transport Layer Protocol}}.
+\newblock \bibinfo{howpublished}{RFC 5647}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.17487/RFC5647}
+\showDOI{\tempurl}
+
+
+\bibitem[Isberner et~al\mbox{.}(2014)]%
+        {isberner2014ttt}
+\bibfield{author}{\bibinfo{person}{Malte Isberner}, \bibinfo{person}{Falk
+  Howar}, {and} \bibinfo{person}{Bernhard Steffen}.}
+  \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{The TTT Algorithm: A Redundancy-Free Approach to
+  Active Automata Learning}. In \bibinfo{booktitle}{\emph{Runtime
+  Verification}}, \bibfield{editor}{\bibinfo{person}{Borzoo Bonakdarpour} {and}
+  \bibinfo{person}{Scott~A. Smolka}} (Eds.). \bibinfo{publisher}{Springer
+  International Publishing}, \bibinfo{address}{Cham},
+  \bibinfo{pages}{307--322}.
+\newblock
+\showISBNx{978-3-319-11164-3}
+
+
+\bibitem[Isberner et~al\mbox{.}(2015)]%
+        {isberner2015open}
+\bibfield{author}{\bibinfo{person}{Malte Isberner}, \bibinfo{person}{Falk
+  Howar}, {and} \bibinfo{person}{Bernhard Steffen}.}
+  \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{The Open-Source LearnLib}. In
+  \bibinfo{booktitle}{\emph{Computer Aided Verification}},
+  \bibfield{editor}{\bibinfo{person}{Daniel Kroening} {and}
+  \bibinfo{person}{Corina~S. P{\u{a}}s{\u{a}}reanu}} (Eds.).
+  \bibinfo{publisher}{Springer International Publishing},
+  \bibinfo{address}{Cham}, \bibinfo{pages}{487--495}.
+\newblock
+\showISBNx{978-3-319-21690-4}
+
+
+\bibitem[Karim et~al\mbox{.}(2023)]%
+        {SP:KIHB23}
+\bibfield{author}{\bibinfo{person}{Imtiaz Karim}, \bibinfo{person}{Abdullah~Al
+  Ishtiaq}, \bibinfo{person}{Syed~Rafiul Hussain}, {and} \bibinfo{person}{Elisa
+  Bertino}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{{BLEDiff}: Scalable and Property-Agnostic
+  Noncompliance Checking for {BLE} Implementations}. In
+  \bibinfo{booktitle}{\emph{2023 {IEEE} Symposium on Security and Privacy}}.
+  \bibinfo{publisher}{{IEEE} Computer Society Press}, \bibinfo{address}{San
+  Francisco, CA, USA}, \bibinfo{pages}{3209--3227}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/SP46215.2023.10179330}
+\showDOI{\tempurl}
+
+
+\bibitem[Lee and Yannakakis(1996)]%
+        {533956}
+\bibfield{author}{\bibinfo{person}{D. Lee} {and} \bibinfo{person}{M.
+  Yannakakis}.} \bibinfo{year}{1996}\natexlab{}.
+\newblock \showarticletitle{Principles and methods of testing finite state
+  machines-a survey}.
+\newblock \bibinfo{journal}{\emph{Proc. IEEE}} \bibinfo{volume}{84},
+  \bibinfo{number}{8} (\bibinfo{year}{1996}), \bibinfo{pages}{1090--1123}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/5.533956}
+\showDOI{\tempurl}
+
+
+\bibitem[Lonvick and Lehtinen(2006)]%
+        {rfc4250}
+\bibfield{author}{\bibinfo{person}{Chris~M. Lonvick} {and}
+  \bibinfo{person}{Sami Lehtinen}.} \bibinfo{year}{2006}\natexlab{}.
+\newblock \bibinfo{title}{{The Secure Shell (SSH) Protocol Assigned Numbers}}.
+\newblock \bibinfo{howpublished}{RFC 4250}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.17487/RFC4250}
+\showDOI{\tempurl}
+
+
+\bibitem[Lonvick and Ylonen(2006a)]%
+        {rfc4252}
+\bibfield{author}{\bibinfo{person}{Chris~M. Lonvick} {and}
+  \bibinfo{person}{Tatu Ylonen}.} \bibinfo{year}{2006}\natexlab{a}.
+\newblock \bibinfo{title}{{The Secure Shell (SSH) Authentication Protocol}}.
+\newblock \bibinfo{howpublished}{RFC 4252}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.17487/RFC4252}
+\showDOI{\tempurl}
+
+
+\bibitem[Lonvick and Ylonen(2006b)]%
+        {rfc4254}
+\bibfield{author}{\bibinfo{person}{Chris~M. Lonvick} {and}
+  \bibinfo{person}{Tatu Ylonen}.} \bibinfo{year}{2006}\natexlab{b}.
+\newblock \bibinfo{title}{{The Secure Shell (SSH) Connection Protocol}}.
+\newblock \bibinfo{howpublished}{RFC 4254}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.17487/RFC4254}
+\showDOI{\tempurl}
+
+
+\bibitem[Lonvick and Ylonen(2006c)]%
+        {rfc4251}
+\bibfield{author}{\bibinfo{person}{Chris~M. Lonvick} {and}
+  \bibinfo{person}{Tatu Ylonen}.} \bibinfo{year}{2006}\natexlab{c}.
+\newblock \bibinfo{title}{{The Secure Shell (SSH) Protocol Architecture}}.
+\newblock \bibinfo{howpublished}{RFC 4251}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.17487/RFC4251}
+\showDOI{\tempurl}
+
+
+\bibitem[Lonvick and Ylonen(2006d)]%
+        {rfc4253}
+\bibfield{author}{\bibinfo{person}{Chris~M. Lonvick} {and}
+  \bibinfo{person}{Tatu Ylonen}.} \bibinfo{year}{2006}\natexlab{d}.
+\newblock \bibinfo{title}{{The Secure Shell (SSH) Transport Layer Protocol}}.
+\newblock \bibinfo{howpublished}{RFC 4253}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.17487/RFC4253}
+\showDOI{\tempurl}
+
+
+\bibitem[Maehren et~al\mbox{.}(2025)]%
+        {maehren2025towards}
+\bibfield{author}{\bibinfo{person}{Marcel Maehren}, \bibinfo{person}{Nurullah
+  Erinola}, \bibinfo{person}{Robert Merget}, \bibinfo{person}{J{\"o}rg
+  Schwenk}, {and} \bibinfo{person}{Juraj Somorovsky}.}
+  \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{Towards Internet-Based State Learning of TLS State
+  Machines}. In \bibinfo{booktitle}{\emph{34th USENIX Security Symposium
+  (USENIX Security 25)}}. \bibinfo{pages}{7097--7116}.
+\newblock
+
+
+\bibitem[Miller(2025)]%
+        {ietf-sshm-strict-kex-00}
+\bibfield{author}{\bibinfo{person}{Damien Miller}.}
+  \bibinfo{year}{2025}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{{SSH Strict KEX extension}}}.
+\newblock \bibinfo{type}{Internet-Draft} draft-ietf-sshm-strict-kex-00.
+  \bibinfo{institution}{Internet Engineering Task Force}.
+\newblock
+\urldef\tempurl%
+\url{https://datatracker.ietf.org/doc/draft-ietf-sshm-strict-kex/00/}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{Work in Progress}.
+
+
+\bibitem[Miller et~al\mbox{.}(2024)]%
+        {protocolopenssh}
+\bibfield{author}{\bibinfo{person}{Damien Miller}, \bibinfo{person}{Markus
+  Friedl}, \bibinfo{person}{Mike Frysinger}, \bibinfo{person}{Todd~C. Miller},
+  {and} \bibinfo{person}{Darren Tucker}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{title}{This documents {OpenSSH}'s deviations and extensions
+  to the published {SSH} protocol.}
+\newblock
+\newblock
+\urldef\tempurl%
+\url{https://cvsweb.openbsd.org/cgi-bin/cvsweb/src/usr.bin/ssh/PROTOCOL?rev=1.55}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{Accessed: 2025-04-14}.
+
+
+\bibitem[Moon et~al\mbox{.}(2019)]%
+        {NSDI:MHYBBSWYZ19}
+\bibfield{author}{\bibinfo{person}{Soo-Jin Moon}, \bibinfo{person}{Jeffrey
+  Helt}, \bibinfo{person}{Yifei Yuan}, \bibinfo{person}{Yves Bieri},
+  \bibinfo{person}{Sujata Banerjee}, \bibinfo{person}{Vyas Sekar},
+  \bibinfo{person}{Wenfei Wu}, \bibinfo{person}{Mihalis Yannakakis}, {and}
+  \bibinfo{person}{Ying Zhang}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Alembic: Automated Model Inference for Stateful
+  Network Functions}. In \bibinfo{booktitle}{\emph{16th USENIX Symposium on
+  Networked Systems Design and Implementation (NSDI 19)}}.
+  \bibinfo{publisher}{USENIX Association}, \bibinfo{address}{Boston, MA},
+  \bibinfo{pages}{699--718}.
+\newblock
+\showISBNx{978-1-931971-49-2}
+\urldef\tempurl%
+\url{https://www.usenix.org/conference/nsdi19/presentation/moon}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Paterson and Watson(2010)]%
+        {EC:PatWat10}
+\bibfield{author}{\bibinfo{person}{Kenneth~G. Paterson} {and}
+  \bibinfo{person}{Gaven~J. Watson}.} \bibinfo{year}{2010}\natexlab{}.
+\newblock \showarticletitle{Plaintext-Dependent Decryption: A Formal Security
+  Treatment of {SSH}-{CTR}}. In \bibinfo{booktitle}{\emph{EUROCRYPT~2010}}
+  \emph{(\bibinfo{series}{{LNCS}}, Vol.~\bibinfo{volume}{6110})},
+  \bibfield{editor}{\bibinfo{person}{Henri Gilbert}} (Ed.).
+  \bibinfo{publisher}{Springer Berlin Heidelberg, Germany},
+  \bibinfo{address}{French Riviera}, \bibinfo{pages}{345--361}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1007/978-3-642-13190-5_18}
+\showDOI{\tempurl}
+
+
+\bibitem[Pferscher and Aichernig(2021)]%
+        {FM:PfeAic21}
+\bibfield{author}{\bibinfo{person}{Andrea Pferscher} {and}
+  \bibinfo{person}{Bernhard~K. Aichernig}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Fingerprinting Bluetooth Low Energy Devices via
+  Active Automata Learning}. In \bibinfo{booktitle}{\emph{Formal Methods}},
+  \bibfield{editor}{\bibinfo{person}{Marieke Huisman}, \bibinfo{person}{Corina
+  P{\u{a}}s{\u{a}}reanu}, {and} \bibinfo{person}{Naijun Zhan}} (Eds.).
+  \bibinfo{publisher}{Springer International Publishing},
+  \bibinfo{address}{Cham}, \bibinfo{pages}{524--542}.
+\newblock
+\showISBNx{978-3-030-90870-6}
+
+
+\bibitem[Pferscher and Aichernig(2022)]%
+        {NFM:PfeAic22}
+\bibfield{author}{\bibinfo{person}{Andrea Pferscher} {and}
+  \bibinfo{person}{Bernhard~K. Aichernig}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Stateful Black-Box Fuzzing of Bluetooth Devices
+  Using Automata Learning}. In \bibinfo{booktitle}{\emph{NASA Formal Methods}},
+  \bibfield{editor}{\bibinfo{person}{Jyotirmoy~V. Deshmukh},
+  \bibinfo{person}{Klaus Havelund}, {and} \bibinfo{person}{Ivan Perez}} (Eds.).
+  \bibinfo{publisher}{Springer International Publishing},
+  \bibinfo{address}{Cham}, \bibinfo{pages}{373--392}.
+\newblock
+\showISBNx{978-3-031-06773-0}
+
+
+\bibitem[Rashid et~al\mbox{.}(2024)]%
+        {CCS:RWTITD24}
+\bibfield{author}{\bibinfo{person}{Syed Md.~Mukit Rashid},
+  \bibinfo{person}{Tianwei Wu}, \bibinfo{person}{Kai Tu},
+  \bibinfo{person}{Abdullah~Al Ishtiaq}, \bibinfo{person}{Ridwanul~Hasan
+  Tanvir}, \bibinfo{person}{Yilu Dong}, \bibinfo{person}{Omar Chowdhury}, {and}
+  \bibinfo{person}{Syed~Rafiul Hussain}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{State Machine Mutation-based Testing Framework for
+  Wireless Communication Protocols}. In \bibinfo{booktitle}{\emph{ACM CCS
+  2024}}, \bibfield{editor}{\bibinfo{person}{Bo~Luo}, \bibinfo{person}{Xiaojing
+  Liao}, \bibinfo{person}{Jun Xu}, \bibinfo{person}{Engin Kirda}, {and}
+  \bibinfo{person}{David Lie}} (Eds.). \bibinfo{publisher}{{ACM} Press},
+  \bibinfo{address}{Salt Lake City, UT, USA}, \bibinfo{pages}{2102--2116}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3658644.3690312}
+\showDOI{\tempurl}
+
+
+\bibitem[Rasoamanana et~al\mbox{.}(2022)]%
+        {ESORICS:RasLevDeb22}
+\bibfield{author}{\bibinfo{person}{Aina~Toky Rasoamanana},
+  \bibinfo{person}{Olivier Levillain}, {and} \bibinfo{person}{Herv{\'e}
+  Debar}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Towards a Systematic and Automatic Use of State
+  Machine Inference to Uncover Security Flaws and Fingerprint {TLS} Stacks}. In
+  \bibinfo{booktitle}{\emph{ESORICS~2022, Part~III}}
+  \emph{(\bibinfo{series}{{LNCS}}, Vol.~\bibinfo{volume}{13556})},
+  \bibfield{editor}{\bibinfo{person}{Vijayalakshmi Atluri},
+  \bibinfo{person}{Roberto {Di Pietro}}, \bibinfo{person}{Christian~Damsgaard
+  Jensen}, {and} \bibinfo{person}{Weizhi Meng}} (Eds.).
+  \bibinfo{publisher}{Springer, Cham, Switzerland},
+  \bibinfo{address}{Copenhagen, Denmark}, \bibinfo{pages}{637--657}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1007/978-3-031-17143-7_31}
+\showDOI{\tempurl}
+
+
+\bibitem[Rasool et~al\mbox{.}(2019)]%
+        {rasool2019state}
+\bibfield{author}{\bibinfo{person}{Abdullah Rasool}, \bibinfo{person}{Greg
+  Alp{\'{a}}r}, {and} \bibinfo{person}{Joeri de Ruiter}.}
+  \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{State machine inference of {QUIC}}.
+\newblock \bibinfo{journal}{\emph{CoRR}}  \bibinfo{volume}{abs/1903.04384}
+  (\bibinfo{year}{2019}).
+\newblock
+\showeprint[arXiv]{1903.04384}
+\urldef\tempurl%
+\url{http://arxiv.org/abs/1903.04384}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Remaker and Galbraith(2006)]%
+        {rfc4335}
+\bibfield{author}{\bibinfo{person}{Phillip Remaker} {and}
+  \bibinfo{person}{Joseph Galbraith}.} \bibinfo{year}{2006}\natexlab{}.
+\newblock \bibinfo{title}{{The Secure Shell (SSH) Session Channel Break
+  Extension}}.
+\newblock \bibinfo{howpublished}{RFC 4335}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.17487/RFC4335}
+\showDOI{\tempurl}
+
+
+\bibitem[Rescorla(2018)]%
+        {rfc8446}
+\bibfield{author}{\bibinfo{person}{Eric Rescorla}.}
+  \bibinfo{year}{2018}\natexlab{}.
+\newblock \bibinfo{title}{{The Transport Layer Security (TLS) Protocol Version
+  1.3}}.
+\newblock \bibinfo{howpublished}{RFC 8446}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.17487/RFC8446}
+\showDOI{\tempurl}
+
+
+\bibitem[Sivakorn et~al\mbox{.}(2017)]%
+        {SP:SAPKJ17}
+\bibfield{author}{\bibinfo{person}{Suphannee Sivakorn}, \bibinfo{person}{George
+  Argyros}, \bibinfo{person}{Kexin Pei}, \bibinfo{person}{Angelos~D.
+  Keromytis}, {and} \bibinfo{person}{Suman Jana}.}
+  \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{{HVLearn}: Automated Black-Box Analysis of Hostname
+  Verification in {SSL}/{TLS} Implementations}. In
+  \bibinfo{booktitle}{\emph{2017 {IEEE} Symposium on Security and Privacy}}.
+  \bibinfo{publisher}{{IEEE} Computer Society Press}, \bibinfo{address}{San
+  Jose, CA, USA}, \bibinfo{pages}{521--538}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/SP.2017.46}
+\showDOI{\tempurl}
+
+
+\bibitem[Smeenk et~al\mbox{.}(2015)]%
+        {automatalearning-ecs}
+\bibfield{author}{\bibinfo{person}{Wouter Smeenk}, \bibinfo{person}{Joshua
+  Moerman}, \bibinfo{person}{Frits Vaandrager}, {and} \bibinfo{person}{David~N.
+  Jansen}.} \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{Applying Automata Learning to Embedded Control
+  Software}. In \bibinfo{booktitle}{\emph{Formal Methods and Software
+  Engineering}}, \bibfield{editor}{\bibinfo{person}{Michael Butler},
+  \bibinfo{person}{Sylvain Conchon}, {and} \bibinfo{person}{Fatiha Za{\"i}di}}
+  (Eds.). \bibinfo{publisher}{Springer International Publishing},
+  \bibinfo{address}{Cham}, \bibinfo{pages}{67--83}.
+\newblock
+\showISBNx{978-3-319-25423-4}
+
+
+\bibitem[Somorovsky(2016)]%
+        {CCS:Somorovsky16}
+\bibfield{author}{\bibinfo{person}{Juraj Somorovsky}.}
+  \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{Systematic Fuzzing and Testing of {TLS} Libraries}.
+  In \bibinfo{booktitle}{\emph{ACM CCS 2016}},
+  \bibfield{editor}{\bibinfo{person}{Edgar~R. Weippl}, \bibinfo{person}{Stefan
+  Katzenbeisser}, \bibinfo{person}{Christopher Kruegel},
+  \bibinfo{person}{Andrew~C. Myers}, {and} \bibinfo{person}{Shai Halevi}}
+  (Eds.). \bibinfo{publisher}{{ACM} Press}, \bibinfo{address}{Vienna, Austria},
+  \bibinfo{pages}{1492--1504}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/2976749.2978411}
+\showDOI{\tempurl}
+
+
+\bibitem[Song et~al\mbox{.}(2001)]%
+        {USENIX:SonWagTia01}
+\bibfield{author}{\bibinfo{person}{Dawn~Xiaodong Song},
+  \bibinfo{person}{David~A. Wagner}, {and} \bibinfo{person}{Xuqing Tian}.}
+  \bibinfo{year}{2001}\natexlab{}.
+\newblock \showarticletitle{Timing Analysis of Keystrokes and Timing Attacks on
+  {SSH}}. In \bibinfo{booktitle}{\emph{USENIX Security 2001}},
+  \bibfield{editor}{\bibinfo{person}{Dan~S. Wallach}} (Ed.).
+  \bibinfo{publisher}{{USENIX} Association}, \bibinfo{address}{Washington, DC,
+  USA}.
+\newblock
+\urldef\tempurl%
+\url{http://www.usenix.org/publications/library/proceedings/sec01/song.html}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Stebila and Green(2009)]%
+        {rfc5656}
+\bibfield{author}{\bibinfo{person}{Douglas Stebila} {and}
+  \bibinfo{person}{Jonathan Green}.} \bibinfo{year}{2009}\natexlab{}.
+\newblock \bibinfo{title}{{Elliptic Curve Algorithm Integration in the Secure
+  Shell Transport Layer}}.
+\newblock \bibinfo{howpublished}{RFC 5656}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.17487/RFC5656}
+\showDOI{\tempurl}
+
+
+\bibitem[Stone et~al\mbox{.}(2018)]%
+        {ESORICS:StoChodRu18}
+\bibfield{author}{\bibinfo{person}{Chris~McMahon Stone}, \bibinfo{person}{Tom
+  Chothia}, {and} \bibinfo{person}{Joeri de Ruiter}.}
+  \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Extending Automated Protocol State Learning for the
+  802.11 4-Way Handshake}. In \bibinfo{booktitle}{\emph{ESORICS~2018, Part~I}}
+  \emph{(\bibinfo{series}{{LNCS}}, Vol.~\bibinfo{volume}{11098})},
+  \bibfield{editor}{\bibinfo{person}{Javier L{\'o}pez},
+  \bibinfo{person}{Jianying Zhou}, {and} \bibinfo{person}{Miguel Soriano}}
+  (Eds.). \bibinfo{publisher}{Springer, Cham, Switzerland},
+  \bibinfo{address}{Barcelona, Spain}, \bibinfo{pages}{325--345}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1007/978-3-319-99073-6_16}
+\showDOI{\tempurl}
+
+
+\bibitem[Stone et~al\mbox{.}(2022)]%
+        {CCS:STVHBC22}
+\bibfield{author}{\bibinfo{person}{Chris~McMahon Stone},
+  \bibinfo{person}{Sam~L. Thomas}, \bibinfo{person}{Mathy Vanhoef},
+  \bibinfo{person}{James Henderson}, \bibinfo{person}{Nicolas Bailluet}, {and}
+  \bibinfo{person}{Tom Chothia}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{The Closer You Look, The More You Learn: {A}
+  Grey-box Approach to Protocol State Machine Learning}. In
+  \bibinfo{booktitle}{\emph{ACM CCS 2022}},
+  \bibfield{editor}{\bibinfo{person}{Heng Yin}, \bibinfo{person}{Angelos
+  Stavrou}, \bibinfo{person}{Cas Cremers}, {and} \bibinfo{person}{Elaine Shi}}
+  (Eds.). \bibinfo{publisher}{{ACM} Press}, \bibinfo{address}{Los Angeles, CA,
+  USA}, \bibinfo{pages}{2265--2278}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3548606.3559365}
+\showDOI{\tempurl}
+
+
+\bibitem[Tijssen(2014)]%
+        {tijssen2014automatic}
+\bibfield{author}{\bibinfo{person}{Max Tijssen}.}
+  \bibinfo{year}{2014}\natexlab{}.
+\newblock \bibinfo{title}{Automatic modeling of SSH implementations with state
+  machine learning algorithms}.
+\newblock \bibinfo{howpublished}{Bachelor's thesis, Radboud University
+  Nijmegen}.
+\newblock
+\newblock
+\shownote{Supervised by Erik Poll and Joeri de Ruiter}.
+
+
+\bibitem[Tu et~al\mbox{.}(2024)]%
+        {USENIX:TIRDWW24}
+\bibfield{author}{\bibinfo{person}{Kai Tu}, \bibinfo{person}{Abdullah~Al
+  Ishtiaq}, \bibinfo{person}{Syed Md.~Mukit Rashid}, \bibinfo{person}{Yilu
+  Dong}, \bibinfo{person}{Weixuan Wang}, \bibinfo{person}{Tianwei Wu}, {and}
+  \bibinfo{person}{Syed~Rafiul Hussain}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Logic Gone Astray: {A} Security Analysis Framework
+  for the Control Plane Protocols of {5G} Basebands}. In
+  \bibinfo{booktitle}{\emph{USENIX Security 2024}},
+  \bibfield{editor}{\bibinfo{person}{Davide Balzarotti} {and}
+  \bibinfo{person}{Wenyuan Xu}} (Eds.). \bibinfo{publisher}{{USENIX}
+  Association}, \bibinfo{address}{Philadelphia, PA, USA}.
+\newblock
+\urldef\tempurl%
+\url{https://www.usenix.org/conference/usenixsecurity24/presentation/tu}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Williams(2011)]%
+        {IMA:Williams11}
+\bibfield{author}{\bibinfo{person}{Stephen~C. Williams}.}
+  \bibinfo{year}{2011}\natexlab{}.
+\newblock \showarticletitle{Analysis of the {SSH} Key Exchange Protocol}. In
+  \bibinfo{booktitle}{\emph{13th IMA International Conference on Cryptography
+  and Coding}} \emph{(\bibinfo{series}{{LNCS}}, Vol.~\bibinfo{volume}{7089})},
+  \bibfield{editor}{\bibinfo{person}{Liqun Chen}} (Ed.).
+  \bibinfo{publisher}{Springer Berlin Heidelberg, Germany},
+  \bibinfo{address}{Oxford, UK}, \bibinfo{pages}{356--374}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1007/978-3-642-25516-8_22}
+\showDOI{\tempurl}
+
+
+\bibitem[Yadav and Sadhukhan(2019a)]%
+        {SSCC:YadSad19}
+\bibfield{author}{\bibinfo{person}{Tarun Yadav} {and} \bibinfo{person}{Koustav
+  Sadhukhan}.} \bibinfo{year}{2019}\natexlab{a}.
+\newblock \showarticletitle{Identification of Bugs and Vulnerabilities in TLS
+  Implementation for Windows Operating System Using State Machine Learning}. In
+  \bibinfo{booktitle}{\emph{Security in Computing and Communications}},
+  \bibfield{editor}{\bibinfo{person}{Sabu~M. Thampi}, \bibinfo{person}{Sanjay
+  Madria}, \bibinfo{person}{Guojun Wang}, \bibinfo{person}{Danda~B. Rawat},
+  {and} \bibinfo{person}{Jose~M. Alcaraz~Calero}} (Eds.).
+  \bibinfo{publisher}{Springer Singapore}, \bibinfo{address}{Singapore},
+  \bibinfo{pages}{348--362}.
+\newblock
+\showISBNx{978-981-13-5826-5}
+
+
+\bibitem[Yadav and Sadhukhan(2019b)]%
+        {yadav2018tls}
+\bibfield{author}{\bibinfo{person}{Tarun Yadav} {and} \bibinfo{person}{Koustav
+  Sadhukhan}.} \bibinfo{year}{2019}\natexlab{b}.
+\newblock \showarticletitle{Identification of Bugs and Vulnerabilities in TLS
+  Implementation for Windows Operating System Using State Machine Learning}. In
+  \bibinfo{booktitle}{\emph{Security in Computing and Communications}},
+  \bibfield{editor}{\bibinfo{person}{Sabu~M. Thampi}, \bibinfo{person}{Sanjay
+  Madria}, \bibinfo{person}{Guojun Wang}, \bibinfo{person}{Danda~B. Rawat},
+  {and} \bibinfo{person}{Jose~M. Alcaraz~Calero}} (Eds.).
+  \bibinfo{publisher}{Springer Singapore}, \bibinfo{address}{Singapore},
+  \bibinfo{pages}{348--362}.
+\newblock
+\showISBNx{978-981-13-5826-5}
+
+
+\end{thebibliography}

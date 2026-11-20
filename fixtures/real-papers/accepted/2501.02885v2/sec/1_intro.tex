@@ -1,0 +1,96 @@
+\vspace{-0.3cm}
+\section{Introduction}
+\label{sec:intro}
+
+
+Large language models~(LLMs) have exhibited remarkable performance across various natural language processing tasks~\cite{openai2023chatgpt,yang2024qwen2,dubey2024llama,anthropic2024introducing}.
+Concurrently, transformers for visual tasks~(\eg, ViT~\cite{dosovitskiy2021an}) and cross-modal visual-language models~(VLMs), 
+such as CLIP~\cite{radford2021learning} and BLIP~\cite{li2022blip}, have advanced rapidly.
+Riding the waving of LLMs, multimodal large language models~(MLLMs) are transforming the landscape of computer vision globally~\cite{wang2024videoagent,Qwen2VL,lu2024ovis,wang2024videotree,TanKoala2024}. 
+
+
+MLLMs typically use the visual encoder from VLMs and a new-trained projector to extract a long sequence of visual tokens from images.
+The combined sequence of visual and text tokens is then fed into LLMs for visual understanding~\cite{liu2023llava,cheng2024videollama2,li2023mvbench}.
+However, a video contains hundreds or even thousands of frames. 
+Directly concatenating sequences from multiple frames and feeding them into Video-LLMs poses several challenges: 
+1)~LLMs' limited context length can not accommodate excessively long visual sequences;
+2)~Redundant and duplicate frames can hinder visual perception, as irrelevant frames may cause ``lost-in-the-middle'' issues~\cite{liu2024st,yu2024frame}.
+3)~Edge-deployed LLMs face resource constraints when processing overly long input sequence, and
+4)~Proprietary models charge based on token usage, making excessive frame input costly.
+
+\begin{figure}[t]
+	\centering
+  	\includegraphics[width=0.8\linewidth]{figures/llava_ov_video_mme.pdf}
+	\caption{
+	    Overall accuracy (\%) on Video-MME~(without subtitles) for LLaVA-OneVision, 
+    	comparing uniform sampling and \mname{}\ selected from 128 frame candidates.
+% 		Accuracy (\%) on Video-MME~(w/o subs) for LLaVA-OneVision, uniform sampling and \mname{}\ selected from 128frm.
+	}
+	\label{fig:gain_on_videomme}
+\end{figure}
+
+
+As shown in the empirical example in \cref{fig:gain_on_videomme}, 
+the blue line illustrates that the marginal benefits of increasing the number of frames diminish, 
+with performance even declining when using 64 frames instead of 32 frames. 
+This indicates a law of diminishing marginal utility as the number of frames increases, 
+and additional frames may even have negative effects. 
+Hence, selecting a limited number of key frames is crucial for effective and efficient video understanding. 
+
+
+
+In previous research, uniform frame sampling is a common strategy in Video-LLMs~\cite{miao2023towards,lin2023video,zhang2024video,wang2024internvideo2}. 
+However, it is arbitrary, especially in video question-answering~(VidQA) tasks, 
+as it disregards the current query, potentially missing important key frames and including irrelevant ones. 
+Furthermore, \citet{liang2024keyvideollm,wang2024weakly,yu2024self} have explored using the query to retrieve the most relevant frames.
+However, these point-wise frame selection methods overlook the list-wise relationships among selected frames, including: 
+1)~\emph{Diversity}: Videos often contain many similar frames; redundantly selecting them increases the computational burden during inference with little information gain and may hinder the usage of text information.
+2)~\emph{Sequentiality}: The inherent sequential nature of frames is essential. 
+For instance, when asking, ``What did the chef take \underline{after} adding the spices?'' in a cooking video, frames depicting the steps following the addition of the spices are essential.
+
+
+
+Building on the insights from the above analysis, we emphasize that effective frame selection in Video-LLMs should adhere to three key principles:
+\textbf{query relevance, list-wise diversity, and sequentiality.} 
+Prior research has addressed some of them but has not fully encompassed all of them, particularly the latter two~\cite{jin2024chat,wang2025ViLA,tang2025,hu2025m}.
+Modeling list-wise relationships in subset frame selection presents two main challenges:
+1)~the lack of available supervised list-wise datasets; 
+2)~even if a dataset is constructed to learn a list-wise scoring function, finding the optimal subset with the highest score remains an NP-hard problem that cannot be solved in polynomial time complexity~\cite{bian2020efficient,chen2018fast}.
+
+
+
+In this paper, we propose a training-free, model-agnostic list-wise frame selection method called 
+\underline{M}arkov~\underline{D}ecision \underline{D}eterminantal~\underline{P}oint \underline{P}rocess~with \underline{D}ynamic~\underline{P}rogramming, abbreviated as \mname{}.
+We reuse pretrained VLMs to compute list-wise score for the subset using Determinantal Point Process~(DPP), 
+thereby eliminating the need for collecting a supervised dataset or training a scoring model from scratch.
+DPP was originally introduced to characterize the Pauli exclusion principle, where no two fermions can occupy the same quantum state.
+This repulsion, interpreted as list-wise diversity, is effectively modeled by DPP~\cite{macchi1975coincidence},
+which can obtain a $(1-1/e)$-approximate solution with polynomial complexity~\cite{chen2018fast}.
+%
+In \mname{}, we extend standard DPP to consider query relevance, list-wise diversity, and sequentiality for frame selection in VidQA.
+
+
+
+Specifically, we define a conditional multiple Gaussian kernel~(CMGK) to estimate high-dimensional frame similarities conditioned on the query within the reproducing kernel Hilbert space~(RKHS), rather than using a query-agnostic low-dimensional measure such as cosine similarity. 
+We then apply DPP to the conditional similarity matrix generated by CMGK to capture the relevance of frames to the current query and ensures list-wise diversity among them. 
+To incorporate sequentiality, we partition the video into continuous segments and apply DPP within each segment, conditioned on the selection from the immediately preceding one.
+This process is modeled as a Markov Decision Process~(MDP) to optimize the allocation of the total selection size $k$ across segments, resulting in a solution with pseudo-polynomial time complexity.
+
+
+To evaluate \mname{}, we integrate it as a plug-and-play process at the test time of state-of-the-art~(SOTA) Video-LLMs, including VILA-V1.5~\cite{lin2024vila}, MiniCPM-V2.6~\cite{yao2024minicpm}, LLaVA-OneVision~\cite{li2024llava}, and Ovis2~\cite{ovis2}.
+We conduct extensive experiments on three widely used long-video benchmarks: Video-MME~\cite{fu2024video}, MLVU~\cite{MLVU}, and LongVideoBench~\cite{wu2024longvideobench}.
+Experimental results show significant performance improvements over baseline methods. 
+
+
+Furthermore, we summarize our main contributions:
+\begin{enumerate}
+    \item We demonstrate that effective frame selection should account for query relevance, list-wise diversity, and sequentiality. The proposed \mname{} is the first to address all three aspects comprehensively.
+    \item \mname{} is effective, offering a \((1-1/e)\)-approximate solution to the NP-hard list-wise subset frame selection problem, achieving significant performance improvements over existing baselines.
+    \item \mname{} is efficient, extending DPP methods by optimally allocating the selection capacity \(k\) across the video for VidQA, maintaining pseudo-polynomial time complexity, even though this allocation problem is NP-hard.
+    \item \mname{} is training-free and model-agnostic, enabling seamless plug-and-play integration with various existing Video-LLMs at test time.
+\end{enumerate}
+
+
+
+
+

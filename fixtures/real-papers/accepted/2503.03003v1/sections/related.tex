@@ -1,0 +1,8 @@
+%-------------------------------------------------------------------------------
+\section{Related Work}
+\label{sec:related}
+%-------------------------------------------------------------------------------
+
+\textbf{Models of Computation:} Abstract models like RAM~\cite{ram}, PRAM~\cite{pram}, and Turing machines~\cite{models_of_computation} are widely used to analyze algorithms. The RAM model abstracts sequential computers, while the PRAM model abstracts shared memory multiprocessors. Our \cram model abstracts network processors with two types of memory, parallelism, and programmability.
+
+\textbf{Combinations of CAM and RAM:} Earlier CAM and RAM combinations optimize different metrics. CoolCAM~\cite{coolcam}, cooler TCAM~\cite{coolertcam}, and EaseCAM~\cite{easecam} all reduce power consumption. Liu~\cite{liu} compacts routing tables to reduce cost, power consumption, and thermal dissipation. Luo~\cite{virtual_routers} merges FIBs in virtual routers to reduce TCAM usage. Compaction and merging are orthogonal to our ideas. Other hybrid approaches~\cite{magictcam, extendedtcam, portcatcher, treecam} target tasks such as packet classification. In summary, no existing solution optimizes scalability for IP lookup by leveraging {\em both} TCAM and SRAM.

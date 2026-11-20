@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "usenix-2020-09.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "preamble.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/0_abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/1_introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/2_motivation.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/3_compiler_centri_design.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/4_profiler_tool.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/5_evaluation.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/6_discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/artifact.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "102896328c58e643da52fbb16318dc8033516b48ee5718fe725771c62286d7d0",
+    "usenix-2020-09.sty": "82d1e3c13fd0c64dac74dc6207182f1f30fd33e0ddf38e07c8955dd2807283b0",
+    "preamble.tex": "062a9d5a1e6de6d7bffb70112f7a7c594abe82d78f03b120c64fad0164f868c8",
+    "section/0_abstract.tex": "c7424e72fcc8901b64649016d7461d9ce8dbb09439f158a322bd2db4334d3888",
+    "section/1_introduction.tex": "52d082b0fd88894ae0d3a90968ccf105bb67f3c2cd2c6907d31295473285a46c",
+    "section/2_motivation.tex": "05fa5a9fb16afd6948a6e49f60f4bbfd8fe9d46bc9047af4383ba088dbecb298",
+    "section/3_compiler_centri_design.tex": "2894da1b249e6049fdf0b7f6fc48e6a4b8cb37f89f7cb3797f0360d8fb32d9ef",
+    "section/4_profiler_tool.tex": "c85c0f9875df00ba10d68fd25695a0300e1749f959577e0cd393f08f3121678e",
+    "section/5_evaluation.tex": "8a02f441382215573d20c44e4400e50ec306498c1695e5453553f409d7d49336",
+    "section/6_discussion.tex": "41e72ee978099a345fbd7c8b180d18e073cd20b5e1d491e6f2b46e9b8072a85b",
+    "section/artifact.tex": "dc38f05c762052629d07401ba47360ef53abc3d9fb82a2c9a701a2da7aad51ee"
+  }
+}

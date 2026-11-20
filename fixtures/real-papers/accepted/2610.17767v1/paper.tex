@@ -1,0 +1,150 @@
+\pdfoutput=1
+
+\documentclass[11pt]{article}
+
+\usepackage[final]{acl}
+
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage{tikz}
+\usepackage{makecell}
+\usepackage{siunitx}
+\usepackage{algorithm}
+\usepackage{algpseudocode} %
+\usepackage{multirow}
+
+\usepackage{subcaption} %
+
+\usepackage[T1]{fontenc}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{pifont}
+
+\usepackage[table]{xcolor}
+\definecolor{myred}{HTML}{B22222}
+\definecolor{navyblue}{rgb}{0.0, 0.0, 0.5}
+\hypersetup{colorlinks, 
+            citecolor=myred}
+
+\newcommand{\Ours}{\textsc{\textbf{RPO}}}
+
+\usepackage{inconsolata}
+
+\usepackage{graphicx}
+\usepackage{amsmath}
+
+\usepackage{amsfonts} %
+\usepackage{empheq} %
+\usepackage{mathrsfs}
+\usepackage{enumitem}
+\usepackage{tabularx} %
+\usepackage{ragged2e} %
+\usepackage{threeparttable} %
+\usepackage{float}
+
+\usepackage{tcolorbox}
+\tcbuselibrary{skins}  
+\usepackage{lipsum}
+
+\definecolor{myLightGrayBg}{RGB}{245, 245, 245}  %
+\definecolor{myMediumGrayHeaderBg}{RGB}{220, 220, 220} %
+\definecolor{myDarkGrayBorder}{RGB}{180, 180, 180}   %
+
+\colorlet{currentDefinitionBodyBg}{myLightGrayBg}
+\colorlet{currentDefinitionTitleBg}{myMediumGrayHeaderBg}
+\colorlet{currentDefinitionBorder}{myDarkGrayBorder}
+
+\newtcolorbox{mydefinition}[2][]{%
+  skin=bicolor,                 %
+  colback=currentDefinitionBodyBg,    %
+  colframe=currentDefinitionBorder,   %
+  colbacktitle=currentDefinitionTitleBg, %
+  fonttitle=\bfseries,
+  coltitle=black,                 %
+  title=#2,
+  breakable,
+  enhanced,
+  arc=2mm,                        %
+  boxrule=0.8pt,                  %
+  fuzzy shadow={0pt}{-1pt}{-0.5pt}{0.5pt}{black!20!gray!30!white}, %
+  #1
+}
+
+\usepackage{amsthm}
+
+\newtheorem{definition}{Definition}[section]
+
+\newcommand{\tobefilled}[1]{\textcolor{lightgray}{#1}}
+\newcommand{\taehyeon}[1]{\textcolor{blue}{@taehyeon: #1}}
+\newcommand{\jihwan}[1]{\textcolor{red}{#1}}
+\newcommand{\xmark}{\ding{55}}
+\newcommand{\cmark}{\ding{51}}
+\newcommand{\tmark}{\tikz \draw[line width=0.45mm] (0,0) -- (0.2,0) -- (0.1,0.2) -- cycle;}
+
+\newtcolorbox{takeawaybox}[2][]{
+    colback=blue!5!white,  %
+    colframe=black,        %
+    colbacktitle=black,    %
+    coltitle=white,        %
+    fonttitle=\bfseries,   %
+    title=#2,              %
+    arc=2mm,               %
+    #1
+}
+
+\newcommand{\Autoref}[1]{%
+  \begingroup%
+  \autoref{#1}%
+  \def\algorithmautorefname{Algorithm}%
+  \def\chapterautorefname{Chapter}%
+  \def\sectionautorefname{Section}%
+  \def\subsectionautorefname{Subsection}%
+  \endgroup%
+}
+\newcommand{\Tableautoref}[1]{%
+  \begingroup%
+  \def\figureautorefname{Table}%
+  \endgroup%
+}
+
+\title{Efficiently Learning To Reason or Not to Reason:\\Root-token Policy Optimization for Adaptive Thinking}
+
+\author{
+  Taehyeon~Kim\textsuperscript{$\spadesuit$}\quad
+  Hyunsoo~Lee\textsuperscript{$\spadesuit$}\quad
+  Youngsoo~Jang\textsuperscript{\ddag,}$^{\dag}$\textsuperscript{,}\thanks{Work completed while employed at LG AI Research.}\quad
+  Moontae~Lee\textsuperscript{$\spadesuit$,\S,}\thanks{Corresponding authors.}\\[6pt]
+  \textsuperscript{$\spadesuit$}LG AI Research\quad
+  \textsuperscript{\ddag}UNIST\quad
+  \textsuperscript{\S}University of Illinois Chicago
+}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+Large reasoning models (LRMs) achieve strong performance by externalizing explicit reasoning traces before producing the answer,
+yet suffer from \textit{overthinking} challenge that allocates uniformly heavy computation to queries of varying difficulty. 
+While proprietary models mitigate this via opaque routing, open-source LRMs still lack an efficient mechanism to internalize adaptive reasoning due to both expensive training cost and limited disclosure of training recipes. 
+In response, we introduce \Ours~(\underline{R}oot-token \underline{P}olicy \underline{O}ptimization), a framework that enables LRMs to self-determine when to reason by training only the initial root token (e.g., whether to invoke the \texttt{<think>} tag) via group relative reward and group-wise advantages. 
+By focusing on this pivotal branching point, \Ours~drastically reduces training overhead and VRAM usage. Across multiple model families and scales, \Ours~learns difficulty-aware adaptive thinking at just $\sim$2\% of the training compute of prior adaptive-reasoning methods.
+\end{abstract}
+
+\input{ACL2026/manuscripts/01_introduction}
+\input{ACL2026/manuscripts/02_related_work}
+\input{ACL2026/manuscripts/03_method}
+\input{ACL2026/manuscripts/04_experiment}
+\input{ACL2026/manuscripts/05_analysis}
+\input{ACL2026/manuscripts/06_conclusion}
+
+\section*{Acknowledgments}
+
+We thank Dahyun Lee for providing extensive feedback on our paper.
+
+\bibliography{ACL2026/ref}
+
+\input{ACL2026/appendix/app}
+
+\end{document}

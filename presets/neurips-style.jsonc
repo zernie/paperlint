@@ -23,7 +23,7 @@
 // 🔴 THE NUMBERS ARE MEASURED, NOT COPIED. Built on 2026-11-19 with `paperlint build` on paperlint's
 // TeX Live 2026 (pdfTeX 1.40.29) and banal: the kit's own neurips_2026.tex with its style
 // (`\ProvidesPackage{neurips_2026}[2026-01-29 …]`, sha256 c3fc2894…a7ec4555a, the same bytes as
-// fixtures/arxiv-papers/2611.08971v1/neurips_2026.sty), and the e2e fixture
+// fixtures/real-papers/preprints/2611.08971v1/neurips_2026.sty), and the e2e fixture
 // fixtures/build-e2e/neurips. The style's dimensions were written to the log by a `\typeout` run at
 // \begin{document}, after the style's own:
 //
@@ -40,7 +40,7 @@
 //
 // The planted defects, measured on the same fixture: without `\usepackage{neurips_2026}` the text is
 // Computer Modern (SFRM1000, SFBX1440, …), and so is it with the 1990s «NIPS Macros» saved under the
-// name neurips_2026.sty (as fixtures/arxiv-papers/2611.09818v1 ships it): pdf/fonts, no
+// name neurips_2026.sty (as fixtures/real-papers/preprints/2611.09818v1 ships it): pdf/fonts, no
 // NimbusRomNo9L; in the source, tex/template (no `\usepackage{neurips_2026}`). A bibliography in
 // \footnotesize (banal 8.3): pdf/body-size. `\newgeometry{textwidth=6.5in,textheight=9.5in,top=0.75in}`
 // after \begin{document} built a page with the same size, column, fonts and body size, one page

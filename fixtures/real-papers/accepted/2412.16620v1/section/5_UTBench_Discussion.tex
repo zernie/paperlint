@@ -1,0 +1,28 @@
+\subsection{Discussion of Potential Data Leakage}
+\label{sec:discussion_utbench}
+
+The issue of data leakage, as discussed by Zhang et al.~\cite{zhang2023critical}, poses a critical risk to the evaluation of LLMs in the SE community.
+In this section, we concentrate on the test generation task, for which we employ Defects4J as an evaluation dataset. 
+To mitigate potential data leakage risk, we test LLMs' performance on a real-world industrial dataset\footnote{Due to the confidential policy of the company, we hide the information of internal subjects.}.
+Unlike Defects4J, which partially relies on JUnit 3, the internal dataset adopts a unified Maven architecture with the JUnit 4 testing framework. This setup aligns with mainstream development practices and provides a more accurate measure of LLMs' capability to generate test cases for contemporary Java projects.
+
+
+
+\input{table/UTBench_result}
+
+Table~\ref{tab:discussion_utbench} presents the performance of LLMs on the internal dataset. For simplicity, we select several representative models from both fine-tuned and instruction-based models that perform well on Defects4J dataset. 
+Among fine-tuned models, DeepSeek-Coder-6b achieves the highest performance with a correct rate of 31.14\% and the lowest build error rate of 29.64\%. The encoder-only model UniXcoder performs the lowest, with a correct rate of only 5.39\%, while encoder-decoder models like CodeT5-large and CodeT5p-770m have the lowest syntax error rate at 6.89\% and 3.74\%, respectively. Overall, results on the internal dataset for fine-tuned models closely align with their performance on Defects4J.
+In instruction-based models, GPT-3.5 achieves the best results, ranking highest in correct rate, passing rate, and syntax error rate, at 52.54\%, 54.34\%, and 1.20\%, respectively. Llama3.1-70b and Qwen2-72b generally perform well, occupying second and third places across metrics, with Llama3.1-70b achieving a correct rate of 51.35\% and Qwen2-72b at 42.37\%.  
+
+Instruction-based models generally achieve higher correct rates and lower syntax error rates than fine-tuned models, especially when the model size exceeds 70 billion parameters, showing trends similar to Defects4J dataset. 
+For clarity, we analyze three model groups: (1) fine-tuned models around 7 billion parameters (e.g., DeepSeek-Coder-6b, CodeLlama-7b, StarCoder2-7b, StarCoderBase-7b, CodeGen-6b), (2) instruction-based models around 7 billion parameters (e.g., Llama3.1-8b, Llama3-8b, Qwen2-7b), and (3) instruction-based models exceeding 70 billion parameters (e.g., GPT-3.5, Llama3.1-70b, Qwen2-72b).
+First, the 7-billion-parameter fine-tuned models achieve correct rates between 23.05\% and 31.14\%, averaging 25.27\%. 
+Second, the 7-billion-parameter instruction-based models show a modest improvement, with correct rates between 21.71\% and 32.34\% and an average of 27.50\%, marking an 8.82\% increase. 
+Third, instruction-based models with over 70 billion parameters achieve correct rates between 42.37\% and 52.54\%, with an average of 48.75\%, reflecting substantial improvements of 92.92\% over the 7-billion fine-tuned models and 77.27\% over the 7-billion instruction-based models.
+
+Overall, these results highlight two main insights. First, among models with similar parameter counts, the performance gap between fine-tuned and instruction-based models is relatively modest. Second, as instruction-based models grow in size and capability, the prompt engineering approach shows strong potential to achieve even higher performance levels.
+
+
+\summary{
+While large-scale instruction-based models outperform fine-tuned models overall, instruction-based models with the same parameters scale show slight gains over fine-tuned counterparts. Instruction-based models show promise as they scale in size and capability.
+}

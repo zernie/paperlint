@@ -1,0 +1,61 @@
+
+\section{Cross-container Attack}
+% \yicheng{indetify when colocated container starts and ends. Add one figure to show starts and ends.}
+Container technology is widely utilized by cloud computing service providers, such as Amazon Elastic Container Service (Amazon ECS)~\cite{AWS_docker} and Google Cloud Platform (GCP)~\cite{gcp_docker}. It offers a lightweight, operating system-level virtualization environment for efficient application hosting. In this attack, we investigate whether a spy can breach the isolation between two containers. In particular, we assume the spy resides in a separate container isolated from victim users, while these two containers share the same file system and hardware disks. The spy user continuously calls \textit{syncfs} in her own container while recording its time delay. When the victim process runs, any I/O system calls it performs that modify data or metadata increase the delay observed by the spy. The spy analyzes this delay pattern to infer the victim's file system activities. 
+
+\textbf{Attack setup.} We conduct our experiments on a Linux machine equipped with an Intel i7-11750H CPU, using the NTFS file system with the NTFS3 driver. The NTFS file system was chosen for its better bandwidth performance compared to native Linux file system formats, as presented by our covert channel results in Table~\ref{tb:covert_results}. We use Docker Engine v20.10.17 to create two containers on the Linux machine.
+
+\textbf{Experiment 4: I/O operations impacts on \textit{syncfs} execution in cross-container scenario.} In this experiment, we perform I/O operations in container A while measuring the execution time of \textit{syncfs} in container B. Each operation is repeated 1,000 times, and the average and standard deviation of the \textit{syncfs} execution time are calculated. Table~\ref{tb:latency_measurement_container} summarizes the \textit{syncfs} delay caused by four different I/O operations. Compared to the baseline, all I/O operations increase \textit{syncfs} delay by at least 3.1 times.
+
+\begin{table}[tb]
+\caption{\textit{syncfs} leakages for different I/O operations in cross-container attacks.}
+\small
+\begin{tabular}{|L{2.2cm}|C{1.9cm}|C{1.3cm}|C{1.5cm}|}
+
+\hline
+\textbf{I/O operation}         & \textbf{Affected buffers}              & \textbf{Average latency (cycles)} & \textbf{Standard deviation} \\ \hline \hline
+baseline  & N/A                                    & 1526882                           & 243092                      \\ \hline
+write                          & Page cache, journal and inode   & 19592860                        & 2617313                    \\ \hline
+write(O\_SYNC)                 & journal                          & 4854316                          & 330761                      \\ \hline
+ftruncate                      & journal and inode              & 10548983                          & 1026260                     \\ \hline
+rename                         & journal and inode           & 10616821                          & 1729558                     \\ \hline
+\end{tabular}
+\label{tb:latency_measurement_container}
+
+\end{table}
+
+\begin{tcolorbox}[colback=gray!10,colframe=black,boxrule=0.5pt,arc=2mm,outer arc=2mm,]
+\textit{\textbf{Observation 4}: I/O operations delay \textbf{syncfs} execution time in \textbf{cross-container scenarios}, with different types of operations causing varying levels of impact on \textbf{syncfs} latency.}
+\end{tcolorbox}
+
+\subsection{Detecting the Behavior of Container via \textit{syncfs}} 
+
+Containers must mount required directories during startup and unmount them when stopping, with these actions typically managed by the container runtime. In this section, we introduce a container detection technique leveraging \textit{syncfs}. The spy user profiles the latency pattern of \textit{syncfs} on container A while the victim user launches container B, mounts it to the file system, and runs a C program that sleeps for three seconds. Afterward, the victim stops container B and unmounts it from the file system. Figure~\ref{fig: container detection} presents leakage traces collected by the spy on container A. Two distinct spikes, corresponding to the mount and unmount operations, indicate container B's startup and shutdown, while the middle section represents the program execution.
+
+Our detection method relies on lock contention, with the \textit{s\_umount} semaphore, a reader-writer lock in the superblock data structure, playing a key role. When the attacker and victim share the same disk partition, lock contention arises. In this attack, \textit{syncfs} acquires a reader lock during flushing, while mount and unmount operations acquire a writer lock. As a result, the spikes observed in the demo are caused by lock contention between these operations.
+
+
+ \begin{figure}[tb]
+    \centering
+    \includegraphics[width=0.49\textwidth]{figures/cross_container.png}
+    % \vspace{-2.0em}
+    \caption{Detecting container startup and stop using \textit{syncfs}.}
+    \label{fig: container detection}
+\end{figure}
+\subsection{Cross-container Covert Channel Design} 
+
+
+
+In a containerized environment, the sender and receiver are placed in separate containers, each managing a file within its working directory. We use the Timestamp Counter (TSC) as the synchronization method for the cross-container covert channel attack. Both the sender and receiver initialize a start TSC and begin transmitting messages once the current TSC matches the start TSC. The synchronization method is illustrated in Section~\ref{subsec:covert_design}.
+
+To initiate the transmission, the sender transmits a predefined starting code to mark the beginning of the message. For data encoding, the sender uses direct I/O (\textit{write(O\_SYNC)}) to add a transaction to the journal cache to represent a bit "1" and executes a no-operation loop to represent a bit "0". We select \textit{write(O\_SYNC)} since its average latency is lowest among four operations as shown in Table~\ref{tb:latency_measurement_container}.
+
+Simultaneously, the receiver repeatedly calls \textit{syncfs} in a loop, analyzing the \textit{syncfs} delay pattern to capture and decode the transmitted message. An ending code is appended to signify the termination of the message.
+
+
+\subsection{Cross-container Covert Channel Evaluation} 
+We then evaluate the cross-container covert channel in terms of bandwidth and error rate. In this attack, we achieve a bandwidth of 0.23 Kbps with an error rate of 2.4\%. The bandwidth of the cross-container covert channel is significantly lower compared to the standard covert channel described in Section~\ref{sec:covert_channel}. This reduction is attributed to the virtualization overhead introduced by Docker. For example, the baseline execution time of \textit{syncfs} in the cross-container scenario (when no other I/O operations are performed) is 1,526,882 cycles, which is over 600 times longer than in the same container scenario (2509 cycles as presented in Table~\ref{tb:latency_measurement}).
+
+
+
+

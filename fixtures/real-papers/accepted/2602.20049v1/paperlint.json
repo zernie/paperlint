@@ -1,0 +1,17 @@
+{
+  "cycles": [
+    {
+      "id": "oopsla-2026",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:acm-acmsmall"
+      },
+      "opened": "2026-02-23",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2026-02-23",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

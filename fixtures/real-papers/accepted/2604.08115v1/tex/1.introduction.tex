@@ -1,0 +1,35 @@
+\section{Introduction}
+\begin{figure}[hbt!]
+\centering 
+\includegraphics[width=0.78\linewidth]{figures/new.pdf}
+\caption{Illustration comparing conventional OCR and OCR+\textsc{Revise} processing in a multi-column setting. \textit{Left}: text conflation with merged topics. \textit{Right}: \textsc{Revise} reconstructs separate textual elements into properly structured content.}
+\label{fig:illustrate} 
+\end{figure}
+
+
+
+Recent advances in Natural Language Processing (NLP), particularly with Large Language Models (LLMs)~\cite{minaee2024largelanguagemodelssurvey}, have demonstrated remarkable performance on core tasks such as Question Answering (QA), reasoning and Retrieval Augmented Generation (RAG)~\cite{gao2024retrievalaugmentedgenerationlargelanguage}, thereby substantially broadening their formidable applicability. Moreover, recent research has rapidly expanded towards Document AI, aiming to understand and effectively utilize structured and complex information within real-world documents~\cite{cui2021documentaibenchmarksmodels,hong-etal-2024-intelligent}.
+
+In particular, there is increasing interest in leveraging text extracted via Optical Character Recognition (OCR)~\cite{subramani2021surveydeeplearningapproaches} and document analysis techniques, along with layout information obtained from original documents, to enable LLMs to perform tasks over documents. However, current approaches have primarily focused on specific document understanding tasks~\cite{barboule2025surveyquestionansweringvisually}, leaving the broader goal of effectively preserving original document structure and converting documents into structured assets or databases underexplored. Typically, extracting and storing textual information from image-based documents requires OCR, which inevitably introduces recognition errors due to various factors, such as diverse fonts, deteriorated print quality, and layout complexities. Consequently, employing a simplistic processing pipeline for indexing or retrieving erroneous OCR text often leads to degraded performance. To effectively facilitate these applications, denoising OCR errors remains a critical prerequisite, necessitating a more sophisticated and resilient pipeline in Document AI.
+
+
+
+
+
+
+
+In this paper, we propose \textsc{Revise}, designed to effectively address common OCR errors and accurately restore textual content while preserving the original document structure. To overcome the scarcity of high-quality annotated datasets for OCR error correction, we generate synthetic data using a realistic error injection methodology, in which diverse error patterns are systematically introduced into publicly available datasets. By training over these synthetic datasets, our model can effectively learn representative OCR errors and robustly reconstruct documents in their original forms, thereby enabling the accurate preservation and storage of textual information. Experimental evaluations on downstream tasks, including retrieval and question answering, further demonstrate that \textsc{Revise} maintains strong performance even without explicit OCR-error-correction annotations, showing broad applicability across various document types. Our contributions are as follows:
+
+\begin{itemize} 
+\item Systematically analyzes and categorizes error types frequently encountered in OCR-based real-world document processing scenarios.
+
+
+
+\item Proposes \textsc{Revise}, an effective revision method leveraging synthetic datasets created by realistically emulating error patterns in publicly available datasets.
+
+\item Demonstrates through extensive experiments that \textsc{Revise} significantly improves document retrieval and question answering, while substantially enhancing semantic coherence and readability.
+
+
+\end{itemize}
+
+

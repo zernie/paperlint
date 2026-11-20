@@ -1,0 +1,598 @@
+
+\section{Soundness Proof for the Inference Algorithm}
+
+\subsection{Correspondence between unnormalized MDP and unnormalized Semantics}
+
+\begin{lemma}[Value Correctness]\label{ValueCorrectnessLemma}
+	Let $v \colon \tau$ be a value. Then there exists an ADD for $(v, \TRUE, [])$ that can be lifted to an unnormalized MDP $\mathcal{M}^u_v$ so that for all schedulers $\Theta$ we have 
+	$$Pr^\Theta_{\mathcal{M}^u_v}(\lozenge v') = \begin{cases}
+		1 &, v' = v\\
+		0 &, v' \neq v
+	\end{cases}$$
+\end{lemma}
+\begin{proof}
+	Regardless of the type of $v$, the reduced ADD for $v$ will always consist of only a single leaf node, namely the one with the value $v$. 
+	Thus the unnormalized lifted MDP $\mathcal{M}^u_v$ will consist of a single state labeled $v$ with a single transition, and there is only a single scheduler.
+	The desired property then holds trivially for $\mathcal{M}^u_v$ as we will always reach a state labeled $v$, but never any states with a different label.
+\end{proof}
+
+\begin{lemma}[Substitution Correctness]\label{SubstitutionCorrectnessLemma}
+	For all $x\colon \tau$ and $v \colon \tau$ we have $F_\tau(x) [x \overset{\tau}{\mapsto} v] = v$
+\end{lemma}
+\begin{proof}
+	Proof by induction on $\tau$:
+	\begin{itemize}
+		\item $\tau = \BOOL$: $F_\BOOL(x) [x \overset{\BOOL}{\mapsto} v] = x [x \overset{\BOOL}{\mapsto} v] = v$
+		\item $\tau = \tau_1 \times \tau_2$: Let $v = (v_l, v_r)$, we then get:
+		\begin{align*}
+			F_{\tau_1 \times \tau_2}(x) [x \overset{\tau_1 \times \tau_2}{\mapsto} v] &= (F_{\tau_1 }(x_l),\, F_{ \tau_2}(x_r)) [x \overset{\tau_1 \times \tau_2}{\mapsto} v]\\
+			&=_1 (F_{\tau_1 }(x_l)[x_l \overset{\tau_1}{\mapsto} v_l][x_r \overset{\tau_1}{\mapsto} v_r],\, F_{ \tau_2}(x_r)[x_l \overset{\tau_1}{\mapsto} v_l][x_r \overset{\tau_1}{\mapsto} v_r])\\
+			&=_2 (F_{\tau_1 }(x_l)[x_l \overset{\tau_1}{\mapsto} v_l],\, F_{ \tau_2}(x_r)[x_r \overset{\tau_2}{\mapsto} v_r])\\
+			&=_{IH} (v_l, v_r)\\
+			&= v
+		\end{align*}
+		For $=_1$, one can prove by induction on $\dot{\varphi}$ in a straightforward manner that 
+		$$\dot{\varphi}[x \overset{\tau_1 \times \tau_2}{\mapsto} (v_l,v_r)] = \dot{\varphi}[x_l \overset{\tau_1}{\mapsto} v_l][x_r \overset{\tau_2}{\mapsto} v_r]$$ 
+		holds for general tuples of boolean formulas.
+		The base case follows from the definition of substitution, and the inductive case follows from the inductive hypothesis and the definition of typed substitutions:
+		\begin{align*}
+			(\dot{\varphi}_1,\, \dot{\varphi}_2)[x \overset{\tau_1 \times \tau_2}{\mapsto} (v_l,v_r)]
+			&= (\dot{\varphi}_1[x \overset{\tau_1 \times \tau_2}{\mapsto} (v_l,v_r)],\, \dot{\varphi}_2[x \overset{\tau_1 \times \tau_2}{\mapsto} (v_l,v_r)])\\
+			&=_{IH} (\dot{\varphi}_1[x_l \overset{\tau_1}{\mapsto} v_l][x_r \overset{\tau_2}{\mapsto} v_r],\, \dot{\varphi}_2[x_l \overset{\tau_1}{\mapsto} v_l][x_r \overset{\tau_2}{\mapsto} v_r])\\
+			&= (\dot{\varphi}_1[x_l \overset{\tau_1}{\mapsto} v_l],\, \dot{\varphi}_2[x_l \overset{\tau_1}{\mapsto} v_l])[x_r \overset{\tau_2}{\mapsto} v_r]\\
+			&= (\dot{\varphi}_1,\, \dot{\varphi}_2)[x_l \overset{\tau_1}{\mapsto} v_l][x_r \overset{\tau_2}{\mapsto} v_r]
+		\end{align*}
+		Afterwards $=_2$ follows as $x_r$ will be unaffected by the substitution into $x_l$ and vice versa. 
+	\end{itemize}
+\end{proof}
+
+
+
+\begin{theorem}[Unnormalized Correspondence]\label{UnnormalizedCorrespondence}
+	Let $e$ be a \NDICE expression without function calls 
+	%with free variables $x_1,\dots,x_n$ 
+	and let $\{x_i\colon \tau_i\} \vdash e \colon \tau \leadsto (\dot{\varphi}, \gamma, t)$. Then given any values $\{v_i\colon \tau_i\}$ there exists an ADD for $(\dot{\varphi}[x_i\mapsto v_i], \gamma[x_i\mapsto v_i], t)$ that can be lifted to an unnormalized MDP $\mathcal{M}^u_e$ so that:
+	\begin{itemize}
+		\item for all distributions $d \in \llbracket e[x_i\mapsto v_i] \rrbracket$ there exists a memoryless scheduler $\Theta$ for $\mathcal{M}^u_e$ so that for all values $v$ we have: $d(v) = Pr^\Theta_{\mathcal{M}^u_e}(\lozenge v)$
+		\item for all memoryless schedulers $\Theta$ for $\mathcal{M}^u_e$ there exists a distribution $d \in \llbracket e[x_i\mapsto v_i] \rrbracket$ so that for all values $v$ we have: $d(v) = Pr^\Theta_{\mathcal{M}^u_e}(\lozenge v)$
+	\end{itemize} 
+\end{theorem}
+\begin{proof}
+	Proof by structural induction on $e$:
+	\begin{itemize}
+		\item $e = T$ and $e = F$: Follows directly from \Cref{ValueCorrectnessLemma}\\
+		
+		\item $e = x$: Assume $\Gamma(x) = \tau$.
+		We thus have $\Gamma \vdash x \colon \tau \leadsto (F_\tau(x), \TRUE, [])$.
+		Now let $v_x\colon \tau$ be the value substituted for $x$. 
+		We thus get $\llbracket x[x \mapsto v_x] \rrbracket = \llbracket v_x \rrbracket = \{1|v_x\rangle\}$. 
+		We then apply the substitution to our compilation result to get $(F_\tau(x) [x \overset{\tau}{\mapsto} v_x], \TRUE, []) = (v_x, \TRUE, [])$ via \Cref{SubstitutionCorrectnessLemma}.
+		The rest now follows from \Cref{ValueCorrectnessLemma}.\\
+		
+		\item $e = \FST a$: Here, $a$ is an atomic expression from \AEXP, and thus either a value $v$ or a variable identifier $x$. 
+		We assume that $a$ is a variable $x$, as the case where $a$ is a value $v$ is subsumed by this case. 
+		
+		Assume $\Gamma(x) = \tau_1 \times \tau_2$. 
+		We then get $\Gamma \vdash \FST x \colon \tau_1 \leadsto (F_{\tau_1}(x_l), \TRUE, [])$.
+		Now let $v_x = (v^l_x, v^r_x)$ be the value substituted for $x$, then we get $\llbracket \FST x[x \overset{\tau}{\mapsto} v_x] \rrbracket = \llbracket v^l_r\rrbracket = \{1|v^l_x\rangle\}$.
+		We then apply the substitution to our compilation result to get $(F_{\tau_1}(x_l)[x \overset{\tau}{\mapsto} v_x], \TRUE, []) = (v^l_x, \TRUE, [])$, which can be justified as follows: 
+		\begin{align*}
+			F_{\tau_1}(x_l)[x \overset{\tau}{\mapsto} v_x] 
+			&=_1 F_{\tau_1}(x_l)[x_l \overset{\tau}{\mapsto} v^l_x][x_r \overset{\tau}{\mapsto} v^r_x] \\
+			&=_2 F_{\tau_1}(x_l)[x_l \overset{\tau}{\mapsto} v^l_x] \\
+			&=_3 v^l_x
+		\end{align*}
+		Where $=_1$ has already been shown in the proof of \Cref{SubstitutionCorrectnessLemma}, $=_2$ follows as $x_l$ is unaffected by substitutions into $x_r$, and $=_3$ follows from  \Cref{SubstitutionCorrectnessLemma}.
+		The rest now follows from \Cref{ValueCorrectnessLemma}.\\
+		
+		
+		\item $e = \SND a$: Fully analogous to the case for $\FST a$\\
+		
+		
+		\item $e =(a_1, a_2)$ Similarly to the previous cases, we only show the case where the atomic expressions $a_1$ and $a_2$ are identifiers $x_1$ and $x_2$. 
+		Assume $\Gamma(x_1) = \tau_1$ and $\Gamma(x_2) = \tau_2$. 
+		We then get $\Gamma \vdash (x_1, x_2) \colon \tau_1 \times \tau_2 \leadsto ((F_{\tau_1}(x_1), F_{\tau_2}(x_2)) , \TRUE, [])$.
+		Now let $v_1$ be the value substituted into $x_1$ and $v_2$ be the value substituted into $x_2$, then we get $\llbracket (x_1, x_2)[x_1 \overset{\tau_1}{\mapsto} v_1][x_2 \overset{\tau_2}{\mapsto} v_2] \rrbracket = \llbracket( v_1, v_2)\rrbracket = \{1|( v_1, v_2)\rangle\}$.
+		We then apply the substitution to our compilation result to get $((F_{\tau_1}(x_1), F_{\tau_2}(x_2))[x_1 \overset{\tau_1}{\mapsto} v_1][x_2 \overset{\tau_2}{\mapsto} v_2], \TRUE, []) = ((v_1, v_2), \TRUE, [])$  via \Cref{SubstitutionCorrectnessLemma}. 
+		The rest now follows from \Cref{ValueCorrectnessLemma}.\\
+		
+		
+		\item $e =\FLIP{\theta}$: We have $\llbracket \FLIP{\theta} \rrbracket = \{\theta|\TRUE\rangle + (1-\theta)|\FALSE\rangle\}$ and $\Gamma \vdash \FLIP{\theta} \colon \BOOL \leadsto (f, \TRUE, [f\colon \theta])$. 
+		The reduced and ordered ADD for $(f, \TRUE, [f\colon \theta])$ only has three nodes, an inner node with the variable $f$ and an output node for $\TRUE$ and $\FALSE$ respectively. This ADD will be lifted to the following MDP $\mathcal{M}^u_f$:
+		$$\mathcal{M}^u_f \coloneqq (S, s_{init}, \mathit{Act}, P, AP, L)$$
+		\begin{align*}
+			S &=  \{f, \TRUE, \FALSE\} & s_{init} &= f \\
+			\mathit{Act} &= \{l,r,d\} & P &= \{f\xrightarrow{d,\theta}\TRUE, f\xrightarrow{d,1 - \theta}\FALSE, \TRUE\xrightarrow{d,1}\TRUE, \FALSE \xrightarrow{d,1}\FALSE\} \\
+			AP &= \{A,R, \TRUE, \FALSE\} & L &= \{f \mapsto \emptyset,\, \TRUE \mapsto \{\TRUE, A\},\, \FALSE \mapsto \{\FALSE, A\}\}
+		\end{align*}
+		This MDP only has a single memoryless scheduler $\Theta$, with $Pr^\Theta_{\mathcal{M}_f}(\lozenge \TRUE) = \theta$ and $Pr^\Theta_{\mathcal{M}_f}(\lozenge \FALSE) = 1 - \theta$, which lines up with the only distribution in $\llbracket \FLIP{\theta} \rrbracket$.\\
+		
+		
+		\item $e =\NFLIP$: We have $\llbracket \NFLIP \rrbracket = \{p|\TRUE\rangle + (1-p)|\FALSE\rangle \;|\; p\in [0,1]\}$ and $\Gamma \vdash \NFLIP \colon \BOOL \leadsto (f, \TRUE, [f\colon n])$. 
+		The reduced and ordered ADD for $(f, \TRUE, [f\colon n])$ only has three nodes, an inner node with the variable $f$ and an output node for $\TRUE$ and $\FALSE$ respectively. This ADD will be lifted to the following MDP $\mathcal{M}^u_f$:
+		$$\mathcal{M}^u_f \coloneqq (S, s_{init}, \mathit{Act}, P, AP, L)$$
+		\begin{align*}
+			S &=  \{f, \TRUE, \FALSE\} & s_{init} &= f \\
+			\mathit{Act} &= \{l,r,d\} & P &= \{f\xrightarrow{l,1}\TRUE, f\xrightarrow{r,1}\FALSE, \TRUE\xrightarrow{d,1}\TRUE, \FALSE \xrightarrow{d,1}\FALSE\} \\
+			AP &= \{A,R, \TRUE, \FALSE\} & L &= \{f \mapsto \emptyset,\, \TRUE \mapsto \{\TRUE, A\},\, \FALSE \mapsto \{\FALSE, A\}\}
+		\end{align*}
+		Any memoryless schedulers $\Theta_p$ of this MDP always has the following structure with $p\in [0,1]$:
+		$$ \Theta_p(\FALSE) = \Theta_p(\FALSE) = 1|d\rangle \qquad \Theta_p(f) = p|l\rangle \, + \, (1-p)|r\rangle $$
+		Thus, we have $Pr^{\Theta_p}_{\mathcal{M}_f}(\lozenge \TRUE) = p$ and $Pr^{\Theta_p}_{\mathcal{M}_f}(\lozenge \FALSE) = 1-p$.
+		It is now clear that for each scheduler $\Theta_p$ we can find a matching distributions in $\llbracket \NFLIP \rrbracket$ and vice versa.\\
+		
+		
+		\item $e = \OBSERVE{a}$: Here, $a$ is an atomic expression from \AEXP, and thus either a value $v$ or a variable identifier $x$. 
+		We assume that $a$ is a variable $x$, as the case where $a$ is a value $v$ is subsumed by this case. 
+		
+		Now assume $\Gamma \vdash x \colon \BOOL  \leadsto (F_\BOOL(x), \TRUE, []) = (x, \TRUE, [])$, which allows us to compile the observe statement as $\Gamma \vdash \OBSERVE{x} \colon \BOOL  \leadsto (\TRUE, x, [])$.
+		Now let $v_x\colon \BOOL$ be the value substituted for $x$. 
+		We make a case distinction on $v_x$:
+		\begin{itemize}
+			\item $v_x = \TRUE$: We have $\llbracket \OBSERVE{x}[x\mapsto \TRUE]\rrbracket = \llbracket \OBSERVE{\TRUE}\rrbracket = \{1|\TRUE\rangle\}$.
+			The lifted MDP for the reduced ADD of $(\TRUE, x[x\mapsto \TRUE]\, []) = (\TRUE, \TRUE, [])$ only consists of a single state for $\TRUE$, and thus we trivially have $Pr^{\Theta}_{\mathcal{M}^u_o}(\lozenge \TRUE) = 1$ for all schedulers via \Cref{ValueCorrectnessLemma}.
+			\item $v_x = \FALSE$: We have $\llbracket \OBSERVE{x}[x\mapsto \FALSE]\rrbracket = \llbracket \OBSERVE{\FALSE}\rrbracket = \{0|\TRUE\rangle\}$.
+			The lifted MDP for the reduced ADD of $(\TRUE, [x\mapsto \FALSE]\, []) = (\TRUE, \FALSE, [])$ only consists of a single state for $R$, and thus we trivially have $Pr^{\Theta}_{\mathcal{M}^u_o}(\lozenge \TRUE) = 0$ and $Pr^{\Theta}_{\mathcal{M}^u_o}(\lozenge \FALSE) = 0$ for all schedulers. \\
+		\end{itemize}
+		
+		
+		\item $e = \ITE{a}{e_T}{e_F}$: Here, $a$ is an atomic expression from \AEXP, and thus either a value $v$ or a variable identifier $x$. 
+		We assume that $a$ is a variable $x$, as the case where $a$ is a value $v$ is subsumed by this case. 
+
+		We assume $\Gamma \vdash x \colon \BOOL \leadsto (x, \TRUE, [])$, as well as the compilations $\Gamma \vdash e_T \colon \tau \leadsto (\dot{\varphi}_T,\, \gamma_T,\, t_T)$ and $\Gamma \vdash e_F \colon \tau \leadsto (\dot{\varphi}_F,\, \gamma_F,\, t_F)$.
+		We thus can conclude 
+		$$\Gamma \vdash \ITE{x}{e_T}{e_F} \colon \tau \leadsto ( 
+		(x \overset{\tau}{\land} \dot{\varphi}_T) \overset{\tau}{\lor} (\overline{x} \overset{\tau}{\land} \dot{\varphi}_F), \,
+		(x \land \gamma_T) \lor (\overline{x}\land \gamma_F) ,\,
+		t_T \,@\, t_F)$$
+		Now let $v_x$ be the value substituted for $x$ and assume for the sake of readability that the substitutions on all other free variables have already been preformed.
+		We now make a case distinction on the value of $v_x$.
+		We assume $v_x = \TRUE$, the case for $v_x = \FALSE$ is fully analogous.
+		We thus get $\llbracket ( \ITE{x}{e_T}{e_F})[x \mapsto \TRUE]\rrbracket = \llbracket  \ITE{\TRUE}{e_T}{e_F}\rrbracket = \llbracket e_T\rrbracket$. We further get:
+		\begin{align*}
+			&( 
+			(x \overset{\tau}{\land} \dot{\varphi}_T) \overset{\tau}{\lor} (\overline{x} \overset{\tau}{\land} \dot{\varphi}_F), \,
+			(x \land \gamma_T) \lor (\overline{x}\land \gamma_F) ,\,
+			t_T \,@\, t_F) [x \mapsto \TRUE] \\
+			&= ( 
+			(\TRUE \overset{\tau}{\land} \dot{\varphi}_T) \overset{\tau}{\lor} (\overline{\TRUE} \overset{\tau}{\land} \dot{\varphi}_F), \,
+			(\TRUE \land \gamma_T) \lor (\overline{\TRUE}\land \gamma_F) ,\,
+			t_T \,@\, t_F)\\
+			&= ( 
+			\TRUE \overset{\tau}{\land} \dot{\varphi}_T, \,
+			\TRUE \land \gamma_T ,\,
+			t_T \,@\, t_F)\\
+			&= ( 
+			\dot{\varphi}_T, \,
+			\gamma_T ,\,
+			t_T \,@\, t_F)
+		\end{align*}
+		Note that the final expression above aligns with the compilation result for $e_T$, except for the longer trace of flips. 
+		However, by design of the compilation process none of the variables in $t_F$ occur in the formulas $\dot{\varphi_T}$ and $\gamma_T$, meaning no variable in $t_F$ affects the value of $(\dot{\varphi_T} \,|\, \gamma_T)_{t_T \, @ \, t_F}$.
+		Therefore any ADD for $(\dot{\varphi_T} \,|\, \gamma_T)_{t_T}$ is also an ADD for $(\dot{\varphi_T} \,|\, \gamma_T)_{t_T \, @ \, t_F}$, since any inner node $u$ with $\mathit{var}(u) \in t_F$ will always be a redundant  test.
+		The behavior of the if-statement can thus be fully reduced to the behavior of $e_T$, both in the semantics and the compiled expression.
+		The rest thus follows from the inductive hypothesis for $e_T$.\\
+		
+		
+		\item $e = \LET{x = e_1}{e_2}$:
+		Assume the two compilation judgments $\Gamma \vdash e_1 \colon \tau_1 \leadsto (\dot{\varphi}_1, \gamma_1, t_1)$ and $\Gamma \cup \{x \mapsto \tau_1 \} \vdash e_2 \colon \tau_2 \leadsto (\dot{\varphi}_2, \gamma_2, t_2)$. 
+		We thus get: 
+		$$\Gamma \vdash\LET{x = e_1}{e_2} \colon \tau_2 \leadsto (
+		\varphi_2[x\overset{\tau_1}{\mapsto} \varphi_1], 
+		\gamma_1 \land \gamma_2[x\overset{\tau_1}{\mapsto} \varphi_1],\, 
+		t_1 \,@\, t_2)$$
+		For notational simplicity, we now assume that substitutions to all free variables except for $x$ in $e_2$ have been made in both the expressions and the compiled formulas.
+		
+		By the inductive hypothesis for $e_1$, there exists an ADD $M^u_1$ for $(\dot{\varphi}_1, \gamma_1, t_1)$, so that the distributions generated by the schedulers for the lifted MDP for $M^u_1$ correspond to the distributions in $\llbracket e_1 \rrbracket$.
+		Now consider the compiled formulas for $e_2$, where $x$ has been replaced by some value $v$.
+		Those formulas will always have the form $(\dot{\varphi}_2[x \mapsto v], \gamma_2[x \mapsto v], t_2)$.
+		By the inductive hypothesis for $e_2$, there exists a corresponding ADD $M^u_v$ for each $(\dot{\varphi}_2[x \mapsto v], \gamma_2[x \mapsto v], t_2)$.
+		
+		We now construct the ADD $M^ u_e$ for $e$ by starting with $M^u_1$, and redirecting all edges into terminal nodes with value $v \neq R$ to the root of the corresponding ADD $M^u_v$.
+		We now lift $M^u_e$ to an MDP, and prove the desired property:
+		\begin{itemize}
+			\item Let $d \in \llbracket e \rrbracket$ be a distribution. 
+			Then, by definition of $\llbracket e \rrbracket$ there exist distributions $d_1 \in \llbracket e_1 \rrbracket$ and $\forall v', d_1(v') > 0: \,\exists d_{v'} \in \llbracket e_2[x \mapsto v'] \rrbracket$, so that:
+			$ \forall v : d(v) = \sum\limits_{v',\;d_1(v') > 0} d_1(v') \cdot d_{v'}(v) $.
+			By the inductive hypothesis, there exist (memoryless) schedulers for $M^u_1$ and all the $M^u_v$ so that:
+			\begin{align*}
+				\sum\limits_{v',\;d_1(v') > 0} d_1(v') \cdot d_{v'}(v) &=_{IH} \sum\limits_{v',\;d_1(v') > 0} Pr^{\Theta_1}_{\mathcal{M}^u_1}(\lozenge v') \cdot Pr^{\Theta_{v'}}_{\mathcal{M}^u_{v'}}(\lozenge v)\\
+				&= Pr^{\Theta_e}_{\mathcal{M}^u_e}(\lozenge v)
+			\end{align*}
+			The second equation above can be justified by considering how we constructed $M^u_e$ and it's structure as a DAG:
+			In $M^u_e$, there is (by design) no overlap between any inner nodes of $M^u_1$ and all the $M^u_v$, thus we can build the scheduler $\Theta_e$ by "composing" the (memoryless) schedulers for the individual MDPs.
+			This "composition" of schedulers to construct $\Theta_e$ essentially behaves like $\Theta_1$ while we are in states which belong to $M^u_1$ and like $\Theta_w$ if we are in states which belong to $M^u_w$.
+			Furthermore, any path in $M^u_e$ from the initial state to a state $v$ has to pass through $M^u_1$ within $M^u_e$ first, until $M^u_1$ "terminates" in some value $v'$ with $d_1(v') > 0$ and then continue with $M^u_{v'}$, making this splitting of $\lozenge v$ within $M^u_e$ sound.
+			Notably, there could be some states which are not covered by these schedulers, as we only consider sub-MDPs $\mathcal{M}^u_{w}$ with $d_1(w) > 0$.
+			However, all of those states are unreachable and $\Theta_e$ can soundly pick arbitrary actions for them.
+			\item The second point is analogous to the first point: 
+			We consider a memoryless scheduler for $M^u_e$ and decompose it into memoryless schedulers for $M^u_1$ and all the $M^u_{v'}$.
+			By the inductive hypothesis these schedulers correspond to some distributions generated by $e_1$ and all the $e_2[x \mapsto v']$, which allows us to construct a matching distribution $d_e \in  \llbracket e\rrbracket$.\\
+		\end{itemize}
+		
+		One thing remains to show, namely that the constructed ADD $M^u_e$ is actually an ADD for the compiled formula $(\varphi_2[x\overset{\tau_1}{\mapsto} \varphi_1], 
+		\gamma_1 \land \gamma_2[x\overset{\tau_1}{\mapsto} \varphi_1],\, 
+		t_1 \,@\, t_2)$.
+		It should be clear that $M^u_e$ adheres to the variable ordering defined by $t_1 \,@\, t_2$.
+		Now let $k = len(t_1)$ and let $l = len(t_2)$.
+		We will now consider some boolean vector $b = (b_1,\dots, b_k, b_{k + 1}, \dots, b_{k + l})$ as an assignment from flips in $t_1 \,@\, t_2$ to $\TRUE$ or $\FALSE$. 
+		We will show that the constructed ADD $M^u_e$ evaluated using $b$ returns the same value $v$ as the function for the compiled formulas evaluated with $b$. 
+		To this end, we have to consider the definitions from \Cref{sec:ndice_add}, which define the function for the compiled formulas as follows:
+		$$\left(\varphi_2[x\overset{\tau_1}{\mapsto} \varphi_1] \middle|  
+		\gamma_1 \land \gamma_2[x\overset{\tau_1}{\mapsto} \varphi_1]\right)_{t_1 @ t_2}$$
+		
+		We will begin by dividing $b$ into two vectors $b' = (b_1,\dots, b_k)$ and $b'' = (b_{k+1},\dots, b_{k+l})$.
+		We can now consider $(\dot{\varphi}_1 | \gamma_1)_{t_1} (b')$, which will be either a value $v'$ or the special value $R$.
+		\\
+		
+		Assume now that $(\dot{\varphi}_1 | \gamma_1)_{t_1} (b')$ evaluated to some value $v'$, then we can conclude that $\gamma_1  (b') = \TRUE$ and $\varphi_1  (b') = v'$.
+		Next, we simplify the function for the compiled formulas by substituting the variables from $t_1$ with the values from $b'$, which results in the following equation:
+		$$
+			\left(\varphi_2[x\overset{\tau_1}{\mapsto} \varphi_1] \middle|  
+			\gamma_1 \land \gamma_2[x\overset{\tau_1}{\mapsto} \varphi_1]\right)_{t_1 @ t_2} (b)
+			=
+			\left(\varphi_2[x\overset{\tau_1}{\mapsto} v'] \middle|  
+			\gamma_2[x\overset{\tau_1}{\mapsto} v']\right)_{t_2} (b'')
+		$$
+		Next, we will also partially evaluate the ADD $M^u_e$ with $b'$.
+		If we now consider the structure of $M^u_e$, then we note that we first have to step through the ADD $M^u_1$, which by the inductive hypothesis is an ADD for $(\dot{\varphi}_1 | \gamma_1)_{t_1}$.
+		Thus, evaluating $M^u_1$ with $b'$ will necessarily lead to the output node $v_1$ as well, but in the case of $M^u_e$ this output node has been replaced by the ADD $M^u_{v'}$.
+		Finally, by the inductive hypothesis $M^u_{v'}$ is an ADD for the function $\left(\varphi_2[x\overset{\tau_1}{\mapsto} v'] \middle|  
+		\gamma_2[x\overset{\tau_1}{\mapsto} v']\right)_{t_2}$, which means both $M^u_{v'}$ and this function will return the same value for $b''$.
+		Thus, $M^u_e$ and the compiled formulas for $e$ return the same value for $b$.
+		\\
+		
+		We now consider the case $(\dot{\varphi}_1 | \gamma_1)_{t_1} (b') = R$.
+		We can conclude that $\gamma_1 (b') = \FALSE$, which in particular means $\left(\gamma_1 \land \gamma_2[x\overset{\tau_1}{\mapsto} \varphi_1]\right)(b) = \FALSE$.
+		Therefore, the function for the compiled formulas as a whole will evaluate to $R$.
+		Similarly to the previous case, we can reduce the evaluation of  $M^u_e$ to the ADD $M^u_1$.
+		Again by the inductive hypothesis $M^u_1$ will also reach an output node containing $R$, which remains an output node in $M^u_e$.
+		
+		
+		
+	\end{itemize}
+\end{proof}
+
+
+
+\subsection{Correctness of Normalization and Reduction}
+
+The previous section showed that there exists some ADD for the compiled formula which can be lifted to an unnormalized MDP, so that the unnormalized semantics align with the reachability probabilities by the schedulers in the MDP.
+This section will build towards the actual soundness theorem in two steps:
+We first show that the compiled formulas can be lifted to a normalized MDP which then corresponds to the normalized semantics of the compiled expression.
+Afterwards we show that all reduction operations on ADDs can be applied without changing the maximum reachability probabilities in the MDP, which allows us to use the reduced ADD instead.
+
+	We will not immediately continue with the soundness proof of the \NDICE inference process, but instead we will first introduce the notion of \textit{normalized} MDPs.
+	Normalized MDPs will be a useful tool to allow us to reason about ordinary reachability probabilities instead of conditional reachability probabilities when we consider the soundness of reduction operation on Decision Diagrams relative to the lifted MDP.
+	To this end, normalized MDPs are constructed from \textit{unnormalized} MDPs (see \ref{sec:MDP_inf}) as follows:
+	
+	We first remind ourselves that the ultimate goal of our inference process is to determine probabilities of the form $Pr^{max}_{\mathcal{M}^u_e} (\lozenge v \;|\; \lozenge A)$.
+	Notably, \citet{baier2014computing} showed how these conditional reachability properties can be reduced to ordinary reachability properties by transforming the underlying MDP.
+	However, we will not use their work directly, as our MDPs offer a lot of structure to exploit for an easier transformation.
+	Instead, we use a simplified transformation which was inspired by \citet{junges2021runtime}.
+	
+	The key idea is to re-distribute the probability mass of paths which do not reach an accepting state, to paths which do reach an accepting state.
+	To this end, we will mimic rejection sampling: 
+	Whenever we reach a state $s_r$ with $R\in L(s_r)$ , i.e.\ a state which corresponds to the output $R$ in the ADD, then we "restart the execution" and return to the initial state of the MDP.
+	We thus lift an ADD for $(\dot{\varphi}, \gamma, t)$ to a \textit{normalized} MDP $\mathcal{M}_e$ by lifting it to the \textit{unnormalized} MDP $\mathcal{M}^u_e$, and replacing the transition $s_r \xrightarrow{d, 1} s_r$ with $s_r \xrightarrow{d, 1} s_{init}$.
+	Notably, this minor transformation is sufficient to show that for any memoryless scheduler $\Theta$ we have $Pr^{\Theta}_{\mathcal{M}^u_e} (\lozenge v \;|\; \lozenge A) = Pr^{\Theta}_{\mathcal{M}_e} (\lozenge v)$. 
+	We formally prove this later as Equation~\ref{Equation2}.
+
+
+
+
+\begin{lemma}[Normalized Correspondence]\label{NormalizedCorrespondenceLemma}
+	Let $e$ be a \NDICE expression without function calls 
+	and let $\{x_i\colon \tau_i\} \vdash e \colon \tau \leadsto (\dot{\varphi}, \gamma, t)$. Then given any values $\{v_i\colon \tau_i\}$ there exists an ADD for $(\dot{\varphi}[x_i\mapsto v_i], \gamma[x_i\mapsto v_i], t)$ that can be lifted to a \textit{normalized} MDP $\mathcal{M}_e$ so that for all $v \colon \tau$ we have:
+	$$ Pr^{max}_{M_e} (\lozenge v) = \max \{d(v) \,|\, d \in \llbracket e[x_i\mapsto v_i]\rrbracket_D\}$$
+\end{lemma}
+\begin{proof}
+	This proof will be divided into multiple steps:
+	We first connect the conditional reachability probabilities of memoryless schedulers in the unnormalized MDP to the normalized semantics of the compiled expression via Equation \ref{Equation1}.
+	Afterwards, we show that these conditional reachability probabilities of memoryless schedulers in the unnormalized MDP are equal to ordinary reachability probabilities for memoryless schedulers in the normalized MDP with Equation \ref{Equation2}.
+	Finally, we use the two equations and some standard facts from MDP theory to prove the theorem at the very end.\\
+	
+	By \Cref{UnnormalizedCorrespondence}, there exists an ADD $\mathcal{A}$ for $(\dot{\varphi}[x_i\mapsto v_i], \gamma[x_i\mapsto v_i], t)$ which can be lifted to an unnormalized MDP $\mathcal{M}^u_e$ that corresponds to the unnormalized semantics of $\llbracket e[x_i\mapsto v_i] \rrbracket$.
+	We will begin by showing that the normalized semantics of $e$ are connected to conditional reachability probabilities in $\mathcal{M}^u_e$:
+	
+	Now let $d' \in \llbracket e[x_i\mapsto v_i] \rrbracket_D$ be a normalized distribution, then by the definition of the normalized semantics there is some $d \in \llbracket e[x_i\mapsto v_i] \rrbracket$ with $d'(v) = \frac{1}{d_D} d(v)$.
+	By \Cref{UnnormalizedCorrespondence}, there exists a memoryless scheduler $\Theta$ with $d(v) = Pr^\Theta_{\mathcal{M}^u_e}(\lozenge v)$ for all values $v$.
+	By definition of the normalizing constant $d_D$ for $d$, we have $d_D = \sum_{v} d(v)$, and by construction of $\mathcal{M}^u_e$ we thus have:
+	$$d_D = \sum_{v} d(v) = \sum_{v \neq R} Pr^\Theta_{\mathcal{M}^u_e}(\lozenge v) = Pr^\Theta_{\mathcal{M}^u_e}(\lozenge A)$$
+	We can now make use of $Pr^\Theta_{\mathcal{M}^u_e}(\lozenge v \land \lozenge A) = Pr^\Theta_{\mathcal{M}^u_e}(\lozenge v)$, which follows from the labeling function of $\mathcal{M}^u_e$, to show the following:
+	\begin{align*}
+		d' (v) &= \frac{1}{d_D} d(v)\\ 
+		&= \frac{1}{d_D} Pr^\Theta_{\mathcal{M}^u_e}(\lozenge v)\\ 
+		&= \frac{1}{Pr^\Theta_{\mathcal{M}^u_e}(\lozenge A)} Pr^\Theta_{\mathcal{M}^u_e}(\lozenge v) \\
+		&= \frac{Pr^\Theta_{\mathcal{M}^u_e}(\lozenge v \land \lozenge A) }{Pr^\Theta_{\mathcal{M}^u_e}(\lozenge A)} \\
+		&= Pr^\Theta_{\mathcal{M}^u_e}(\lozenge v \,|\, \lozenge A)
+	\end{align*}
+	Note that in the case of $d_D = Pr^\Theta_{\mathcal{M}^u_e}(\lozenge A) = 0$ both the conditional reachability and the normalized distribution are defined to be $0$.
+	Therefore, for every distribution $d' \in \llbracket e[x_i\mapsto v_i] \rrbracket_D$ there exists a corresponding memoryless scheduler $\Theta$ so that $d'(v)$ lines up with the conditional reachability probabilities for $\Theta$ in $\mathcal{M}^u_e$.
+	Note that we can also prove the opposite direction, i.e. for every memoryless scheduler $\Theta$ there exists a corresponding distribution $d' \in \llbracket e[x_i\mapsto v_i] \rrbracket_D$.
+	This direction follows as \Cref{UnnormalizedCorrespondence} provides a matching distribution in the unnormalized semantics for every memoryless scheduler, and afterwards we can use the same reasoning steps in the opposite direction.
+	Therefore, we arrive at the following equation for all $v\in \llbracket \tau \rrbracket$:
+	\begin{align*}
+		 \max\limits_{\Theta \text{ memoryless}} Pr^{\Theta }_{\mathcal{M}^u_e} (\lozenge v \,|\, \lozenge A) = \max \{d(v) \,|\, d \in \llbracket e[x_i\mapsto v_i]\rrbracket_D\} \tag{I}\label{Equation1}
+	\end{align*}
+	
+	
+	Next up, we will link the conditional reachability probabilities in the unnormalized MDP to the ordinary reachability probabilities in the normalized MDP.
+	To this end, we will once again consider the ADD $\mathcal{A}$, which we previously lifted to the unnormalized MDP $\mathcal{M}^u_e$, and we will now lift it to the normalized MDP $\mathcal{M}_e$.
+	Now consider both $\mathcal{M}^u_e$ and $\mathcal{M}_e$:
+	They share the same states, initial state, labeling function and even the transitions are almost identical.
+	The only difference can be found in states $s_r$ which were lifted from terminal nodes $u$ in the ADD with $\mathit{val}(u) = R$, where $\mathcal{M}^u_e$ has the transition $s_r \xrightarrow{d, 1} s_r$ and $\mathcal{M}_e$ has the transition $s_r \xrightarrow{d, 1}s_{init}$.
+	Furthermore, schedulers simply map states to distributions over actions, and $\mathcal{M}^u_e$ and $\mathcal{M}_e$ share the same set of states and enabled actions for each state.
+	Therefore, we are able to use any memoryless scheduler $\Theta$ for $\mathcal{M}^u_e$ as a memoryless scheduler for $\mathcal{M}_e$.
+	Thus, we will prove that for any memoryless scheduler $\Theta$ and value $v \neq R$ we have:
+	\begin{align*}
+		Pr^{\Theta }_{\mathcal{M}^u_e} (\lozenge v \,|\, \lozenge A) = Pr^{\Theta }_{\mathcal{M}_e} (\lozenge v) \tag{II}\label{Equation2} 
+	\end{align*}
+	%
+	In the following we assume $Pr^{\Theta }_{\mathcal{M}^u_e} (\lozenge A) > 0$ to avoid division by $0$.
+	Should this assumption not hold then both sides of the equation are $0$ and the equation holds trivially.
+	
+	Now let $\Theta$ be some memoryless scheduler for $\mathcal{M}^u_e$ and $\mathcal{M}_e$, and let $v \neq R$ be some value.
+	In order to prove \ref{Equation2}, we will consider a path through the MDP $\mathcal{M}^u_e$ for $\Theta$.
+	All paths start in the initial state, and eventually reach a state which was lifted from a terminal node of the original ADD. 
+	We now distinguish three outcomes for these paths, depending on the kind of trap state of $\mathcal{M}^u_e$ where the path gets trapped:
+	\begin{itemize}
+		\item We can reach a trap state $s_v$ with $v \in L(s_v)$, i.e. we reach a state representing the desired value
+		\item We can reach a trap state $s_a$ with $v \notin L(s_a)$ and $A \in L(s_a)$, i.e. we reach a state representing a different value, but still an accepting run
+		\item We can reach a trap state $s_r$ with $R \in L(s_r)$, i.e. we reach a state representing a rejected run
+	\end{itemize}
+	By construction of $\mathcal{M}^u_e$, these three cases are all mutually exclusive.
+	Notably, $\Theta$ fully resolves the non-determinism in $\mathcal{M}^u_e$, and we can thus associate a probability to each of these outcomes.
+	We write $p_{v}$ for the probability to reach a trap state $s_v$ with $v \in L(s_v)$, and similarly we will define $p_{a}$ and $p_{r}$.
+	With these probabilities defined, we now get:
+	$$ Pr^{\Theta }_{\mathcal{M}^u_e} (\lozenge v \,|\, \lozenge A) 
+	= \frac{Pr^{\Theta }_{\mathcal{M}^u_e} (\lozenge v \land \lozenge A)}{Pr^{\Theta }_{\mathcal{M}^u_e} ( \lozenge A)} 
+	= \frac{Pr^{\Theta }_{\mathcal{M}^u_e} (\lozenge v)}{Pr^{\Theta }_{\mathcal{M}^u_e} ( \lozenge A)} 
+	= \frac{p_{v}}{p_{v} + p_a}$$
+	%
+	Now consider a path through the normalized MDP $\mathcal{M}_e$ for $\Theta$.
+	In particular, note that every path through the normalized MDP $\mathcal{M}_e$ can be divided into multiple runs through the underlying ADD, where every time we end up in a state $s_r$ with $R \in L(s_r)$ we return to the initial state.
+	This process repeats until we reach either a state $s_v$ with $v \in L(s_v)$ representing the desired value or an accepting state $s_a$ with $v \notin L(s_a)$ and $A \in L(s_a)$.
+	Notably, the probabilities to reach such states $s_v$, $s_a$ or $s_r$ on a single root-to-terminal-node path through the underlying ADD are the same as they were for $\mathcal{M}^u_e$, which is reasonable as the inner structure of the unnormalized and normalized MDP are the same.
+	To this end, we once again consider the probabilities $p_{v}$, $p_{a}$ and $p_{r}$.
+	
+	Now consider the paths in $\lozenge v$. 
+	All of these paths are made up by a series of rejected runs through the ADD, i.e. runs that result in the value $R$, followed by a single accepting run.
+	With regard to the MDP, this means these paths may reach a state $s_r$ with $R \in L(s_r)$ arbitrarily often, and then eventually they reach a state $s_v$ with $v \in L(s_v)$. 
+	Therefore, the probability to reach a state labeled with $v$ after reaching a state labeled $R$ exactly $i$ times, can be determined as $p_v \cdot p^i_r$.
+	We can now determine the probability of $\lozenge v$ by considering the sum over all values for $i$.
+	We thus get:
+	\begin{align*}
+		Pr^\Theta_{\mathcal{M}_e}(\lozenge v) &= \sum\limits_{i = 0}^{\infty} p_v \cdot p^i_r \\
+		&=  p_v \cdot \sum\limits_{i = 0}^{\infty}  p^i_r \\
+		&= p_v \cdot \frac{1}{1- p_r} \\
+		&= \frac{p_v}{p_v + p_a}
+	\end{align*}
+	Above we made use of the fact $p_v + p_a + p_r = 1$ which follows from their definition and the structure of the MDP.
+	We now have proven that both sides of Equation~\ref{Equation2} are equal to the same quotient, therefore the equation holds.\\
+	
+	At this point, there is one concern we have not addressed explicitly yet:
+	Are memoryless schedulers truly sufficient?
+	It is well-known that deterministic, memoryless schedulers are sufficient for ordinary reachability probabilities, see for example \citet{forejt2011automated}.
+	However, the same is not the case for conditional reachability probabilities, where sometimes finite memory schedulers are required to maximize conditional reachability probabilities \cite{andres2008conditional}.
+	Nonetheless, for us memoryless schedulers are sufficient in this context as well:
+	 
+	Equation~\ref{Equation1} links the distributions in the normalized semantics to memoryless schedulers, no finite memory schedulers are needed here.
+	Similarly, Equation~\ref{Equation2} links every memoryless scheduler in the normalized MDP to a memoryless scheduler in the unnormalized MDP and vice versa.
+	Thus, all contexts which address conditional reachability probabilities in our work only require memoryless schedulers, and when we maximize ordinary reachability probabilities then memoryless schedulers are already known to be sufficient.
+	Finally, we can connect the things we have shown so far to prove the desired property.
+	\begin{align*}
+		Pr^{max}_{M_e} (\lozenge v) 
+		&=  \max\limits_{\Theta}\; Pr^{\Theta }_{\mathcal{M}_e} (\lozenge v) & \text{Def. of $Pr^{max}$}\\
+		&= \max\limits_{\Theta \text{ memoryless}} Pr^{\Theta }_{\mathcal{M}_e} (\lozenge v)  & \text{memoryless optimality}\\
+		&= \max\limits_{\Theta \text{ memoryless}} Pr^{\Theta }_{\mathcal{M}^u_e} (\lozenge v \,|\, \lozenge A) & \text{Equation \ref{Equation2}} \\
+		&= \max \{d(v) \,|\, d \in \llbracket e[x_i\mapsto v_i]\rrbracket_D\} & \text{Equation \ref{Equation1}}
+	\end{align*}
+\end{proof}
+
+
+\begin{lemma}[Reduction Soundness]\label{ReductionSoundnessLemma}
+	All reduction operations on ADDs preserve optimal maximum reachability when lifted to a normalized MDP
+\end{lemma}
+\begin{proof}
+	Let $M$ be a normalized MDP lifted from some ADD which contains redundancies as defined in \Cref{sec:ndice_add}. 
+	Within this proof, we will use an ADD node $u$ to refer to the corresponding state in the lifted MDP.
+	Now consider $Pr^{max}_M (\lozenge v)$ for some value $v \neq R$.
+	
+	For this proof, we consider reachability properties on MDPs as characterized through \textit{Bellman equations} \cite{forejt2011automated}.
+	To this end, we first need to define $S^0 \coloneqq \{s \in S \,|\, Pr^{max}_M (\lozenge v) = 0\}$ to characterize the set of states from which no state labeled $v$ can be reached.
+	Note that $S^0$ can be determined using graph based algorithms such as e.g. breadth first search, as it suffices to know if transitions are possible, while their probabilities can be ignored \cite{forejt2011automated}.
+	Afterwards, the Bellman equations themselves are defined as follows, where $x(s)$ describes the probability of reaching a state labeled $v$ from the state $s$.
+	$$ x(s) = \begin{cases}
+		1 &, v \in L(s)\\
+		0 &, s \in S^0\\
+		\max\limits_{a \in \mathit{Act(s)}} \sum\limits_{s' \in S} P(s, a)(s') \cdot x(s') &,\text{otherwise}
+	\end{cases}$$
+	$Pr^{max}_M (\lozenge v)$ is then the value for the initial state by the \textit{least} solution to the system of equations described by the Bellman Operator.
+	All reduction operations on ADDs take the same form:
+	They identify a redundant node $u$ in the ADD as defined by the restrictions from \Cref{sec:ndice_add}, and then remove that redundancy by redirecting all edges going into $u$ to a different node $w$. 
+	Here, $w$ is either a duplicate of $u$ in the case of the "no duplicates" rules, or on of the successors of $u$ in the case of the "no redundant tests" rule.
+	
+	The key idea of this proof is to show that the two nodes $u$ and $w$ have the same Bellman equations, which means we can redirect all edges going into $u$ to $w$ without affecting the reachability probability. 
+	Simply put, if the equation for $x(u)$  is the same as the equation for $x(w)$, then it does not matter if other nodes refer to $x(u)$ or $x(w)$ in their Bellman equation, and the redundancies can be removed without affecting the solution to the overall system of equations.
+	We now consider the different reduction operations on ADDs:
+	For the sake of simplicity, we will refer to states in the MDP by the corresponding ADD node they were lifted from.
+	
+	\begin{itemize}
+		\item No-redundant tests: Assume the ADD contains an inner node $u$ with $\mathit{else}(u) = \mathit{then}(u)$, then we remove $u$ and redirect all edges going into $u$ to $\mathit{else}(u)$.
+		
+		We make a case distinction on $u \in S^0$.
+		If we have $u \in S^0$, then $\mathit{else}(u) \in S^0$ also has to hold. 
+		Therefore, we get $x(u) = 0 = x(\mathit{else}(u))$.
+		Now assume $u\notin S^0$:
+		
+		We consider the Bellman equation for $u$, depending on whether $u$ contains a probabilistic or nondeterministic variable:
+		\begin{itemize}
+			\item $u$ is probabilistic with variable $f_\theta$, thus $\mathit{Act(u)} = \{d\}$ with the following Bellman equation:
+			$$x(u) = \theta\cdot x(\mathit{then}(u)) + (1 - \theta)\cdot x(\mathit{else}(u)) = x(\mathit{else}(u))$$
+			\item $u$ is non-deterministic: thus $\mathit{Act(u)} = \{l,r\}$ with the following Bellman equation:
+			$$x(u) = \max \{x(\mathit{then}(u)), \; x(\mathit{else}(u))\} = \max \{x(\mathit{else}(u)),\; x(\mathit{else}(u))\} = x(\mathit{else}(u))$$
+		\end{itemize} 
+		Thus we get $x(u) = x(\mathit{else}(u))$, and we can thus replace $u$ with $\mathit{else}(u)$ in the Bellman Operator equation for all other states, which is equivalent to redirecting the transitions from $u$ to $\mathit{else}(u)$ in the MDP.\\
+		
+		
+		\item No duplicate tests: If for $u \neq w$ with $\mathit{var}(u) = \mathit{var}(w)$, $\mathit{else}(u) = \mathit{else}(w)$ and $\mathit{then}(u) = \mathit{then}(w)$ then we can redirect all edges going into $u$ to $w$.
+		
+		We make a case distinction on $u \in S^0$.
+		If we have $u \in S^0$, then $\mathit{then}(u) \in S^0$ and $\mathit{else}(u) \in S^0$ also have to hold, and we can conclude $w \in S^0$.
+		Therefore, we get $x(u) = 0 = x(w)$.
+		Now assume $u\notin S^0$:
+		
+		We once again make a case distinction on whether $u$ contains a probabilistic or nondeterministic variable, and consider the equations generated by the Bellman Operator:
+		In the probabilistic case, we get $x(u) = \theta \cdot x(\mathit{then}(u)) + (1- \theta)\cdot x(\mathit{else}(u)) = x(w)$, meaning $u$ always behaves exactly like $w$.
+		
+		In the nondeterministic case, we get the equations $x(u) = \max\{x(\mathit{then}(u)),\; x(\mathit{else}(u))\}$ and $x(w) = \max\{x(\mathit{then}(u)),\; x(\mathit{else}(u))\}$.  
+		Once again both states adhere to the same equation. \\
+		
+		
+		\item No duplicate outputs: Given two terminal nodes in the ADD  $u$ and $w$ with $val(u) = val(w)$ and $u \neq w$, we can redirect all edges going into $u$ to $w$.
+		
+		We make a case distinction on the value in the leaf node:
+		\begin{itemize}
+			\item $val(u) = v$: In this case we have $v \in L(u)$ and therefor also $v \in L(w)$.
+			We can therefore conclude $x(u) = 1 = x(w)$.
+			\item $val(u) = v'$ with $v' \neq v$ and $v' \neq R$: In this case $u$ is a trap state and unable to reach a state labeled with $v$.
+			We thus have $u \in S^0$ and $w \in S^0$, meaning we can conclude $x(u) = 0 = x(w)$.
+			Redirecting the edges is thus sound.
+			\item $val(u) = R$: We make a case distinction on $u \in S^0$.
+			If we have $u \in S^0$, then $s_{init} \in S^0$ also has to hold, and we can conclude $w \in S^0$.
+			Therefore, we get $x(u) = 0 = x(w)$.
+			If we have $u\notin S^0$, then we get $x(u) = x(s_{init}) = x(w)$.
+		\end{itemize}
+		
+	\end{itemize}
+\end{proof}
+
+
+\begin{theorem}[Inference Soundness]\label{SoundnessTheoremProof}
+	Let $e$ be a \NDICE expression without function calls 
+	and let $\{x_i\colon \tau_i\} \vdash e \colon \tau \leadsto (\dot{\varphi}, \gamma, t)$. Then for any values $\{v_i\colon \tau_i\}$ the  reduced ADD for the formulas $(\dot{\varphi}[x_i\mapsto v_i],\, \gamma[x_i\mapsto v_i],\, t)$ can be lifted to a normalized MDP $\mathcal{M}_e$ so that:
+	$$ Pr^{max}_{\mathcal{M}_e} (\lozenge v) = \max \{d(v) \,|\, d \in \llbracket e[x_i\mapsto v_i]\rrbracket_D\}$$
+\end{theorem}
+\begin{proof}
+	The existence of some ADD with the desired property is given by \Cref{NormalizedCorrespondenceLemma}. 
+	Using \Cref{ReductionSoundnessLemma}, we can remove redundancies from that ADD until we end up with the reduced ADD, and still preserve the desired property.
+	
+	At this point, we would like to remark that exhaustively applying reduction operations to some ADD will in fact always yield the reduced or canonical ADD.
+	This holds, as every reduction operation removes one node from the ADD, meaning we only need to apply finitely many reductions until we reach an ADD which cannot be reduced.
+	Furthermore, the reduction operations do not change the function represented by the ADD, and also there is only a single reduced ADD for a given function.
+\end{proof}
+
+
+\subsection{Correctness of Function Calls and Program Compilation}\label{ProgramAppendix}
+We will now consider the soundness of our inference method in the presence of functions and function calls.
+To this end we need to consider some preliminary definitions and lemmas:
+
+
+\begin{definition}[Table compatibility]
+	Let $T$ be a function table, let $\Phi$ be a compiled function table, and let $\Gamma$ be a type environment.
+	We call $T$ and $\Phi$ \textit{compatible}, if for every function identifier $\FUNCNAME$ with $\Gamma(\FUNCNAME) = \tau_1 \rightarrow \tau_2$ and $\Phi(\FUNCNAME) = (x_{arg}, \dot{\varphi}, \gamma, t)$, and for every input value $v_x \colon \tau_1$, there exists an ADD for $(\dot{\varphi}[x_{arg}\mapsto v_x],\, \gamma[x_{arg}\mapsto v_x],\, t)$ that can be lifted to an unnormalized MDP $\mathcal{M}^u_e$ so that:
+	\begin{itemize}
+		\item for all distributions $d \in T(\FUNCNAME)(v_x)$ there exists a memoryless scheduler $\Theta$ for $\mathcal{M}^u_e$ so that for all values $v$ we have: $d(v) = Pr^\Theta_{\mathcal{M}^u_e}(\lozenge v)$
+		\item for all memoryless schedulers $\Theta$ for $\mathcal{M}^u_e$ there exists a distribution $d \in T(\FUNCNAME)(v_x)$ so that for all values $v$ we have: $d(v) = Pr^\Theta_{\mathcal{M}^u_e}(\lozenge v)$
+	\end{itemize} 
+\end{definition}
+
+
+\begin{lemma}[Unnormalized Correspondence with Procedure Calls]\label{UnnormalizedCorrespondenceFunctions} 
+	Let $e$ be a \NDICE expression with function calls, $T$ and $\Phi$ be compatible function tables, and let $\{x_i\colon \tau_i\}, \Phi \vdash e \colon \tau \leadsto (\dot{\varphi}, \gamma, t)$. 
+	Then given any values $\{v_i\colon \tau_i\}$ there exists an ADD for $(\dot{\varphi}[x_i\mapsto v_i], \gamma[x_i\mapsto v_i], t)$ that can be lifted to an unnormalized MDP $\mathcal{M}^u_e$ so that:
+	\begin{itemize}
+		\item for all distributions $d \in \llbracket e[x_i\mapsto v_i] \rrbracket^T$ there exists a memoryless scheduler $\Theta$ for $\mathcal{M}^u_e$ so that for all values $v$ we have: $d(v) = Pr^\Theta_{\mathcal{M}^u_e}(\lozenge v)$
+		\item for all memoryless schedulers $\Theta$ for $\mathcal{M}^u_e$ there exists a distribution $d \in \llbracket e[x_i\mapsto v_i] \rrbracket^T$ so that for all values $v$ we have: $d(v) = Pr^\Theta_{\mathcal{M}^u_e}(\lozenge v)$
+	\end{itemize} 
+\end{lemma}
+\begin{proof}
+	Proof by induction on $e$, almost all cases follow exactly as in the proof for \Cref{UnnormalizedCorrespondence}. 
+	This follows as both the semantics as well as the compilation for those statements are fully independent from the function tables, and as such their behavior is completely unchanged.
+	The only additional case is the function call, $\FUNCNAME(x)$, which will be proven as follows:\\
+	
+	Let $e = \FUNCNAME(a)$, where $a$ is an atomic expression from \AEXP, and thus either a value $v$ or a variable identifier $x$. 
+	We assume that $a$ is a variable $x$, as the case where $a$ is a value $v$ is subsumed by this case. 
+	Now assume $\Phi(\FUNCNAME) = (x_{arg}, \dot{\varphi}, \gamma, t)$ and $(\dot{\varphi}', \gamma', t')= \texttt{RefreshFlips}(x_{arg}, \dot{\varphi}, \gamma, t)$, then we get $\Gamma, \Phi \vdash \FUNCNAME(x) \colon \tau \leadsto (\dot{\varphi}'[x_{arg} \mapsto x], \gamma'[x_{arg} \mapsto x], t')$.
+	
+	Now let $v_x$ be the value substituted for $x$, then we get $\llbracket \FUNCNAME(x)[x \mapsto v_x] \rrbracket^T = \llbracket \FUNCNAME(v_x)\rrbracket^T = T(\FUNCNAME)(v_x)$. 
+	Note that by the table compatibility of $T$ and $\Phi$, the desired correspondence property holds for $T(\FUNCNAME)(v_x)$ and $(\dot{\varphi}[x_{arg} \mapsto v_x], \gamma[x_{arg} \mapsto v_x], t)$.
+	
+	Next, we consider the compilation result $(\dot{\varphi}'[x_{arg} \mapsto x], \gamma'[x_{arg} \mapsto x], t')$ in more detail, in particular we observe the following:
+	$$(\dot{\varphi}'[x_{arg} \mapsto x][x\mapsto v_x], \gamma'[x_{arg} \mapsto x][x\mapsto v_x], t') \\
+	= (\dot{\varphi}'[x_{arg} \mapsto v_x], \gamma'[x_{arg} \mapsto v_x], t')$$
+	Finally, note that the only difference between $\dot{\varphi}'$ and $\dot{\varphi}$ as well as $\gamma'$ and $\gamma$ is that the variables were renamed by \texttt{RefreshFlips}.
+	Thus, any ADD for $(\dot{\varphi}[x_{arg} \mapsto v_x], \gamma[x_{arg} \mapsto v_x], t)$ can be transformed into an ADD for $(\dot{\varphi}'[x_{arg} \mapsto v_x], \gamma'[x_{arg} \mapsto v_x], t')$ by simply renaming the variables in the same manner.
+	This allows us to retrieve the correspondence property between $T(\FUNCNAME)(v_x)$ and $(\dot{\varphi}'[x_{arg} \mapsto v_x], \gamma'[x_{arg} \mapsto v_x], t')$ from the correspondence property for $T(\FUNCNAME)(v_x)$ and $(\dot{\varphi}[x_{arg} \mapsto v_x], \gamma[x_{arg} \mapsto v_x], t)$. 
+	Thus the proof is complete.
+\end{proof}
+
+
+\begin{lemma}[Unnormalized Correspondence for Programs]\label{UnnormalizedCorrespondencePrograms}
+	Let $p$ be a \NDICE program, and let $T$ and $\Phi$ be compatible function tables. 
+	Now let $\Gamma, \Phi \vdash p \colon \tau \leadsto (\dot{\varphi}, \gamma, t)$. Then there exists an ADD for $(\dot{\varphi}, \gamma, t)$ that can be lifted to an unnormalized MDP $\mathcal{M}^u_e$ so that:
+	\begin{itemize}
+		\item for all distributions $d \in \llbracket p \rrbracket^T$ there exists a memoryless scheduler $\Theta$ for $\mathcal{M}^u_e$ so that for all values $v$ we have: $d(v) = Pr^\Theta_{\mathcal{M}^u_e}(\lozenge v)$
+		\item for all memoryless schedulers $\Theta$ for $\mathcal{M}_e$ there exists a distribution $d \in \llbracket p \rrbracket^T$ so that for all values $v$ we have: $d(v) = Pr^\Theta_{\mathcal{M}^u_e}(\lozenge v)$
+	\end{itemize} 
+\end{lemma}
+\begin{proof}
+	Proof by induction on $p$:
+	\begin{itemize}
+		\item $p = \bullet e$: 
+		We have $\llbracket \bullet e\rrbracket^T = \llbracket e\rrbracket^T$, and by the rules in \Cref{nDice Function Compilation} we have the compilation judgment $\Gamma, \Phi \vdash \bullet e  \colon \tau \leadsto (\dot{\varphi}, \gamma, t)$ if and only if we have $\Gamma, \Phi \vdash e \colon \tau \leadsto (\dot{\varphi}, \gamma, t)$. 
+		This case thus reduces to the behavior of expressions with function calls, and the rest follows from \Cref{UnnormalizedCorrespondenceFunctions}.\\
+		
+		\item $p = \FUNC{\FUNCNAME (x_1 \colon \tau_1) \colon \tau_2}{e}\; p'$: 
+		Assume that $\Gamma, \Phi \vdash \FUNC{\FUNCNAME (x_1 \colon \tau_1) \colon \tau_2}{e} \leadsto (\dot{\varphi}_\FUNCNAME, \gamma_\FUNCNAME, t_\FUNCNAME)$, and further let $\Phi' = \Phi \cup \{\FUNCNAME \rightarrow (x_1, \dot{\varphi}_\FUNCNAME, \gamma_\FUNCNAME, t_\FUNCNAME)\}$. 
+		Now assume that for the sub-program $p'$ we have $\Gamma\cup \{\FUNCNAME \mapsto \tau_1 \rightarrow \tau_2\}, \Phi' \vdash  p' \colon \tau \leadsto (\dot{\varphi}, \gamma, t)$. 
+		We can then conclude that the program as a whole yields the following compilation judgment:
+		$$\Gamma, \Phi \vdash  \FUNC{\FUNCNAME (x_1 \colon \tau_1) \colon \tau_2}{e}\; p' \colon \tau \leadsto (\dot{\varphi}, \gamma, t)$$
+		Thus the compilation of $p$ essentially reduces to the compilation of $p'$ with the updated compiled function table $\Phi'$. 
+		We can show that the same thing is true for the semantics, i.e. the semantics of $p$ reduce to the semantics of $p'$ with an updated function table.
+		Hence, let $T' = T \cup \{\FUNCNAME \rightarrow \llbracket \FUNC{\FUNCNAME (x_1 \colon \tau_1) \colon \tau_2}{e} \rrbracket^T\}$, and we get:
+		$$\llbracket \FUNC{\FUNCNAME (x_1 \colon \tau_1) \colon \tau_2}{e}\; p' \rrbracket^T = \llbracket p' \rrbracket^{T'}$$
+		This case of the lemma now follows from the inductive hypothesis for $p'$ with the updated function tables $T'$ and $\Phi'$, assuming that we can prove that the updated function tables are compatible. 
+		By assumption, compatibility is given for any function identifier in $T$ and $\Phi$, we thus only need to consider $\FUNCNAME$:
+		
+		Let $v\colon \tau_1$ be an arbitrary input value to $\FUNCNAME$, we then get:
+		$$T'(\FUNCNAME)(v) = \llbracket \FUNC{\FUNCNAME (x_1 \colon \tau_1) \colon \tau_2}{e} \rrbracket^T(v) = \llbracket e[x_1\mapsto v]\rrbracket^T$$
+		We further have $\Phi'(\FUNCNAME) = (x_1, \dot{\varphi}_\FUNCNAME, \gamma_\FUNCNAME, t_\FUNCNAME)$, with $\Gamma, \Phi \vdash \FUNC{\FUNCNAME (x_1 \colon \tau_1) \colon \tau_2}{e} \leadsto (\dot{\varphi}_\FUNCNAME, \gamma_\FUNCNAME, t_\FUNCNAME)$ by definition of $\Phi'$. 
+		Furthermore, with the rules from \Cref{nDice Function Compilation} we can conclude from the compilation of the function $f$ that we must have $\Gamma\cup\{x_1 \colon \tau_1\}, \Phi \vdash e \colon \tau_2 \leadsto (\dot{\varphi}_\FUNCNAME, \gamma_\FUNCNAME, t_\FUNCNAME)$.
+		
+		It remains to show that there is some ADD for $(\dot{\varphi}_f[x_1\mapsto v], \gamma_f[x_1\mapsto v], t_f)$ which can be lifted to an unnormalized MDP so that the schedulers for that MDP correspond to the distributions in $\llbracket e[x_1\mapsto v]\rrbracket^T$.
+		This follows from \Cref{UnnormalizedCorrespondenceFunctions} for $e$, with the compatible function tables $T$ and $\Phi$.
+	\end{itemize}
+\end{proof}
+
+
+\begin{lemma}[Correctness of Program Inference]\label{ProgramSoundnessProof}
+	Let $p$ be a \NDICE program  
+	and  let $\{\}, \{\} \vdash p \colon \tau \leadsto (\dot{\varphi}, \gamma, t)$. 
+	Then the reduced ADD for $(\dot{\varphi}, \gamma, t)$ can be lifted to an normalized MDP $\mathcal{M}_e$ so that:
+	$$ Pr^{max}_{\mathcal{M}_e} (\lozenge v) = \max \left\{d(v) \,|\, d \in \llbracket e\rrbracket^{\{\}}_D \right\}$$
+\end{lemma}
+\begin{proof}
+	The proof is analogous to the proof of \Cref{SoundnessTheoremProof}, and we can simply retrace the steps with the same justifications:
+	\Cref{UnnormalizedCorrespondencePrograms} yields an ADD which can be lifted to an unnormalized MDP that corresponds to the unnormalized semantics of $p$. 
+	We can then argue as in \Cref{NormalizedCorrespondenceLemma} that lifting this ADD to a normalized MDP yields an MDP which satisfies the desired equation.
+	Finally, \Cref{ReductionSoundnessLemma} allows us to soundly reduce the ADD, and we have shown that the reduced ADD can be lifted to a normalized MDP which satisfies the desired equation.
+\end{proof}
+
+
+\begin{theorem}[Inference Soundness]\label{app:ProgramSoundness}
+	Let $p$ be a \NDICE program  
+	and let $\{\}, \{\} \vdash p \colon \tau \leadsto (\dot{\varphi}, \gamma, t)$. 
+	Then the reduced ADD for $(\dot{\varphi}, \gamma, t)$ can be lifted to an unnormalized MDP $\mathcal{M}_p$ so that:
+	$$ Pr^{max}_{M_p} (\lozenge v \,|\, \lozenge A) = \max \left\{d(v) \,|\, d \in \llbracket p\rrbracket^{\{\}}_D\right\}$$
+\end{theorem}
+\begin{proof}
+	Follows directly from \Cref{ProgramSoundnessProof}, as well as the construction of the normalized MDP as argued in the proof of \Cref{NormalizedCorrespondenceLemma}.
+\end{proof}
+
+
+
+
+
+

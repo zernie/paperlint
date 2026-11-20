@@ -1,0 +1,37 @@
+\begin{table}[!htbp]
+\vspace{-2.5mm}
+\caption{
+SDG results (\%) on VLCS. 
+One domain is used as the source domain and the others are used as the target domain.
+}
+\centering
+\renewcommand\arraystretch{0.9}
+\scalebox{0.905}{
+\footnotesize
+\begin{tabular}{l|c|cccc|>{\columncolor{gray!30}}c}
+\hline
+\textbf{Method} &\textbf{Venue} &\textbf{V} &\textbf{L} &\textbf{C} &\textbf{S} &\textbf{Avg.}  \\
+\hline
+Augmix~\cite{hendrycks2019augmix}      
+& ICLR'20     &75.25 &59.52 &45.90 &57.43 &59.53 \\
+ERM~\cite{vapnik2013nature}
+& ICLR'21     &\textbf{76.72} &58.86 &44.95 &57.71 &59.56 \\
+pAdaIn~\cite{nuriel2021permuted}
+& CVPR'21     &76.03 &65.21 &43.17 &57.94 &60.59 \\
+Mixstyle~\cite{zhou2021domain}
+& ICLR'21     &75.73 &61.29 &44.66 &56.57 &59.56 \\
+EFDMix~\cite{zhang2022exact}
+& CVPR'22     &72.35 &61.41 &\underline{52.34} &\underline{63.28} &62.33 \\
+DSU~\cite{li2022uncertainty}
+& ICLR'22     &76.93 &69.20 &46.54 &58.36 &62.76 \\
+ACVC~\cite{cugu2022attention}
+& CVPRW'22    &76.15 &61.23 &47.43 &60.18 &61.25 \\
+MAD~\cite{qu2023modality}
+& CVPR'23     &\underline{76.15} &\underline{69.36} &48.04 &61.74 &\underline{63.82} \\
+\hline
+\textbf{PAPT (Ours)}          & -           &73.16 &\textbf{74.69} &\textbf{69.66} &\textbf{75.96} &\textbf{73.37} \\ 
+\hline
+\end{tabular}}
+\label{tab:vlcs}
+\vspace{-3.5mm}
+\end{table}

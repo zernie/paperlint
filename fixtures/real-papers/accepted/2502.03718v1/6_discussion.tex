@@ -1,0 +1,18 @@
+\section{Discussion}
+\label{sec:discuss}
+
+In this section, we will discuss some limitations of our work.
+
+
+Firstly, {\tool} does not consider path feasibility, which may lead to false positives when raising alarms.
+However, deploying contracts requires gas fees, and attackers generally aim for profit. It is unlikely that attackers would introduce dead loops or unreachable code in their attack contracts. Therefore, we assume that attackers maintain full control over their contracts and ensure all branches are reachable to execute the attack effectively.
+
+Secondly, {\tool} utilizes function signature templates combined with heuristic rules to extract token flow related semantics in \S\ref{lab:semantics}, which is unable to infer those uncommon function signatures. However, attack contracts typically rely on well-established and widely-used DEXes, which lowers the chances of such oversights. Additionally, integrating large language models in future work could help in identifying the semantics and parameter information of these external calls more accurately as illustrated in~\cite{wang2024smartinv}.
+
+Thirdly, {\tool} relies on accurate decompilation and argument recovery, where complex obfuscation techniques may cause Gigahorse to fail. Attackers may also employ unknown evasion techniques to bypass detection. Since attackers rarely disclose their obfuscation methods, existing research in this area is limited. However, attack contracts are typically one-time-use and lack reusability, making obfuscated attack contracts rare. Moreover, adopting obfuscation incurs extra gas costs, further reducing attackers' willingness to use them. Additionally, {\tool} may struggle to recover arguments correctly when dealing with complex dynamic types or custom structures. Due to the EVM stack and low-level operations, recovering function arguments and types remains an open challenge, as highlighted by VarLifter~\cite{li2024varlifter}.
+
+Another limitation is that {\tool} does not account for attacks conducted across multiple transactions. However, it is intuitive that attackers prefer quick attacks executed within a single transaction to avoid state changes in the victim contracts.
+We admit that some attackers would perform deployment and attack within the same block, resulting in an extremely short attack window. Due to the current time constraints of {\tool} in detecting attacks, it may fail to issue timely alerts for such cases, as it relies on Gigahorse for decompiling bytecode, which is time-consuming. 
+In the future, we plan to accelerate analysis by simulating the EVM stack directly and filtering out long or irrelevant paths that do not match attack patterns for faster detection.
+
+

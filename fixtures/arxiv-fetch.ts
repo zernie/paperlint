@@ -1,7 +1,7 @@
 /**
  * Maintenance helper, not run by any test and not an npm script: re-download the exact arXiv
- * sources named in `arxiv-manifest.json` (the papers of `arxiv-papers/`) and `venue-manifest.json`
- * (the accepted papers of `venue-papers/`) and check each against its recorded sha256 — the
+ * sources named in `arxiv-manifest.json` (the papers of `real-papers/preprints/`) and `venue-manifest.json`
+ * (the camera-ready papers of `real-papers/accepted/`) and check each against its recorded sha256 — the
  * provenance of the fixtures.
  *
  *   node --experimental-strip-types fixtures/arxiv-fetch.ts [outDir]

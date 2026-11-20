@@ -1,0 +1,168 @@
+\section{Methodology}\label{sec:method}
+
+\subsection{Overview}\label{subsec:overview}
+\begin{figure*}[ht]
+  \centering
+  \includegraphics[width=0.9\textwidth]{Images/codep_pipeline.pdf}
+  \caption{Workflow of our proposed \method.}
+  \label{fig:pipeline}
+\end{figure*}
+
+Constructing poisoned documents constitutes the most critical yet challenging component of our \method attack framework, as it fundamentally determines: (1) whether the poisoned documents added to the corpus can be consistently retrieved by RAG systems, and (2) their ability to override the LLM's internal knowledge (represented by model weights). We assume the model's training data (encoded in weights) contains only clean library and package names. 
+Drawing inspiration from \citep{poisonedrag}, our approach involves inserting two distinct adversarial sequences: \textbf {Ranking Sequence} and \textbf{Incuding Sequence} into clean documents. These perturbations are designed to specifically target contriever and LLM code generation capabilities, respectively. Note that the insertion positions of these two sequences do not need to be colocated, and maintaining positional alignment is unnecessary for achieving adversarial objectives. The overall framework is illustrated in \autoref{fig:pipeline}.
+
+We subsequently detail the generation mechanisms for both sequences. We refer to the method of constructing the Ranking Sequence as \method-R, and the method of constructing the Inducing Sequence as \method-G. As the names imply, the goals of these two sequences are to influence ranking and generation, respectively. Note that unlike conventional inducing methods that manipulate prompts, our sequences require neither semantic coherence nor low perplexity. Counterintuitively, increased sequence nonsensicality enhances stealth. Even when users manually inspect retrieved documents, the meaningless patterns evade suspicion. 
+This paradigm shift allows us to focus exclusively on optimizing sequence injection efficiency and cross-model transferability, rather than maintaining human-interpretable characteristics.
+
+
+
+
+
+\subsection{Retrieved Documents and Proxy Queries}\label{subsec:doc_query}
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.5\textwidth]{Images/query_demo.pdf}
+  \caption{Pipeline of choosing to-be-poisoned documents. We use proxy queries to get related documents targeting a certain package, and poison documents by increasing the embedding similarity of them to proxy queries.}
+  \label{fig:query_demo}
+\end{figure}
+
+As described in the threat model, one of our key assumptions is that attackers are unaware of the real user queries when performing poisoning attacks. Consequently, attackers can only approximate real-world queries through a large number of proxy queries. The closer the distribution of proxy queries is to that of real user queries, the higher the attack efficiency.
+
+\textbf{Proxy Query Acquisition.} Given a document corpus \( \mathcal{D} \) and proxy query pool \( \mathcal{Q} \), we establish bidirectional retrieval mapping using the embedding model from the local surrogate contriver that retrieves relevant documents from knowledge databases:  
+\[
+\begin{cases} 
+\mathcal{R}(Q_p) = \text{Top-}K \arg\max_{D \in \mathcal{D}} \cos(E(Q_p), E(D)) \\
+\mathcal{R}^{-1}(D) = \{ Q_p \in \mathcal{Q} \mid D \in \mathcal{R}(Q_p) \}
+\end{cases}
+\]
+where \( E(\cdot) \) computes the average embedding vector of
+all tokens in a sequence,  \( K \) defines the retrieval depth. Each document \( D \) is associated with \( \mathcal{Q}_p^{(D)} = \mathcal{R}^{-1}(D) \).
+
+As shown in the \autoref{fig:query_demo}, we first obtain the documents to be poisoned using proxy queries. Then, we trace back to find all the corresponding proxy queries that retrieved these documents. Subsequently, we insert rank sequences to enhance the embedding similarity between the documents and proxy queries. Ultimately, our goal is to improve the embedding similarity between the poisoned documents and the real user queries.
+
+
+\subsection{\method-R: Retrieval-Oriented Document Poisoning}\label{subsec:rank_attack}
+\textbf{Objective.} The gold of \method-R is to maximize the embedding similarity of poisoned document \( D' \) with the proxy queries \( \mathcal{Q}_p \) while maintaining stealthiness.  
+
+\textbf{Gradient-Guided Position-Token Optimization.}
+For each document \( D \), we solve the constrained optimization to get the rank sequence, which is the best perturbation to the document that maximizes the embedding similarity:  
+% \[
+% \Delta^* = \arg\max_{\Delta \in \mathcal{A}} \frac{1}{|\mathcal{Q}_p^{(D)}|} \sum_{Q_p \in \mathcal{Q}_p^{(D)}} \cos(E(D \oplus \Delta), E(Q_p))
+% \]
+\[
+\Delta^* = \arg\max_{\Delta} \frac{1}{|\mathcal{Q}_p^{(D)}|} \sum_{Q_p \in \mathcal{Q}_p^{(D)}} \cos(E(D \oplus \Delta), E(Q_p))
+\]
+subject to:  
+\begin{itemize}
+    \item Position Constraint: \( \Delta \) should be inserted at line-end positions \( \mathcal{P}_{\text{end}} = \{ p_1, ..., p_N \} \)
+    % \item Stealthiness Constraint: \( \Delta \) consists of non-semantic Unicode characters (control/zero-width)
+    \item Length Constraint: \( |\Delta| \leq L_{\text{max}}\)
+\end{itemize}
+
+To efficiently generate high-quality Ranking Sequences, we employ a position-aware beam search strategy that balances exploration of potential outputs with optimization of sequence likelihood. Unlike original beam search, our approach makes full use of code snippets in which sequences can be inserted at arbitrary positions without being noticed.
+
+% We use position-aware \textit{beam search} to enhance the efficiency of generating each Ranking Sequence by exploring multiple possible output sequences and focusing on the most probable ones. Beam search maintains a fixed number of beams (hypotheses). At every time step, each beam is extended by appending tokens with the highest probabilities, ensuring that the final sequence represents the most likely or plausible completion of the given input. At the end of the time step, all candidates are ranked by their embedding similarity, and only the top-k candidates are retained. In effect, this process optimizes for fluency and alignment with the model’s training data.
+
+We adapt an algorithm inspired by HotFlip~\citep{ebrahimi2017hotflip} as shown in Algorithm~\ref{alg:hotflip-pos}. 
+% At first, a fixed set of k candidate beams (partial sequences) is retained at each decoding step. For each beam, we update it by changing tokens with the highest conditional probabilities, weighted by embedding similarity to the input query. Only the top-k candidates proceed to the next step. 
+At first, the initial candidate beams (i.e., candidate sequences) are inserted at the end of each line in $D$, with the number of beams corresponding to the total number of lines. During $N$ iterative rounds, we employ sequence embedding similarity as both the objective function and scoring metric, utilizing gradient information through an algorithm analogous to HotFlip to identify the optimal sequence and its insertion position. While all candidate positions are initially included in the beam, suboptimal positions may be progressively discarded during iterations. This substantially mitigates the additional computational overhead that would otherwise arise from introducing an extra traversal loop to determine the optimal insertion position.
+Note that after constructing the Inducing Sequence in \method-G, we conduct another round of \textbf{reSearch} on the previous Ranking Sequence with a shorter iteration. Because we find that after inserting the Inducing Sequence, the score of the original optimal Ranking Sequence is likely to be affected, and may even drop below the initial one. Therefore, we use the original Ranking Sequence as the initial sequence for the \textbf{reSearch} and set the number of iterations $N'$ to be smaller, as the convergence in the second round is much faster.
+
+\begin{algorithm}
+\caption{Position-Aware Beam Search}
+\label{alg:hotflip-pos}
+\begin{algorithmic}[1]
+\Require 
+    $L$: Maximum sequence length, 
+    $B$: Beam width, 
+    $k_b$: Top candidates per position,
+    $N$: Number of iterations,
+    $\mathit{num\_pos}$: Initial position candidates
+\Ensure 
+    $s^*$: Optimal token sequence,
+    $p^*$: Best insertion position
+\State Initialize beam $\mathcal{B} \gets \emptyset$
+\For{$p \gets 1$ \textbf{to} $\mathit{num\_pos}$}
+    \State $s \gets [\underbrace{0, \ldots, 0}_{L}]$ \Comment{Zero-initialized sequence}
+    \State $\mathit{score} \gets \textsc{ContrieverModel}(s, p)$ \Comment{Initial similarity score}
+    \State Add tuple $(s, p, \mathit{score})$ to $\mathcal{B}$
+\EndFor
+\For{$i \gets 1$ \textbf{to} $N$}
+    \State $\mathcal{C} \gets \emptyset$ \Comment{Candidate container}
+    \For{$(s, p, \mathit{score}) \in \mathcal{B}$}
+        \For{$j \gets 1$ \textbf{to} $L$} \Comment{Position-wise modification}
+            \State $T_j \gets \textsc{GetTopKCandidates}(s, p, j, k_b)$ \Comment{Token replacement candidates}
+            \For{$t \in T_j$}
+                \State $s' \gets \textsc{ReplaceToken}(s, p, j, t)$
+                \State $\mathit{score}' \gets \textsc{ContrieverModel}(s',p)$
+                \State Add $(s', p, \mathit{score}')$ to $\mathcal{C}$
+            \EndFor
+        \EndFor
+    \EndFor
+    \State Sort $\mathcal{C}$ by $\mathit{score}'$ in descending order
+    \State $\mathcal{B} \gets \textsc{TopElements}(\mathcal{C}, B)$ \Comment{Keep top-$B$ candidates}
+\EndFor
+\State $(s^*, p^*) \gets \underset{(s,p,\cdot)\in\mathcal{B}}{\arg\max}\ \textsc{ContrieverModel}(s)$
+\State \Return $s^*, p^*$
+\end{algorithmic}
+\end{algorithm}
+
+The token replacement strategy \textsc{GetTopKCandidates} in Algorithm~\ref{alg:hotflip-pos} leverages gradient directions to approximate optimal substitutions. 
+% 
+The selection process of top $k_b$ candidate tokens $T_j$ can be computed efficiently via matrix multiplication as follows:
+\begin{equation}
+    \Phi_j = \nabla_{e_{w_j}} E(s) \cdot E^\top \in \mathbb{R}^{|V|}
+\end{equation}
+
+where $\nabla_{e_{w_j}} E(s)$ represents the gradient of the similarity score with respect to the $j$-th token's embedding, $E \in \mathbb{R}^{|V|\times d}$ is the embedding matrix. The top-$k_b$ indices from $\Phi_j$ (excluding the original token index) yield the candidate set $T_j$. More details are given in Appendix~\autoref{app:hotflip}
+
+
+
+
+
+\subsection{\method-G: Adversarial Code Suggestion Injection}\label{subsec:gen_attack}
+
+
+
+
+\textbf{Objective.} 
+Maximize generation probability \( P(l^* | x, D') \) for target package \( l^* \) through multilingual suggestions.  
+
+\textbf{Generation of Inductive Suggestions.} In this part, we use a very simple but effective way to generate the inducing sequence. 
+First, we opt for a local proxy open-source LLM, such as Llama-3.2, to generate text sequences. The goal is to make LLM generate the target package names. These inducing sequence is then inserted as code comment right after the declaration lines of packages or libraries in the document code.
+We leverage several of the most popular and outstanding LLMs to generate a set of suggestions. 
+Then we select eight SOTA LLMs that support multiple languages to generate “suggestions”. These suggestions cover multiple aspects, including security, reliability, functionality, stability, and usability. This is because we believe that LLMs have a better understanding of themselves and can generate “suggestions” that they are more likely to trust and accept.
+
+\begin{equation}
+\mathcal{S}_\text{eng} = \bigcup_{M_i \in \mathcal{M}} M_i(p_\text{meta})
+\end{equation}
+
+where $\mathcal{M} = \{M_1,...,M_n\}$ is the set of foundation models (both open/closed-source), $p_\text{meta} =$ ``Suggest comprehensive improvements considering functionality, security, and stability aspects''
+
+
+For better transferability, as well as enhancing the concealment of the inducing sequences, we translate these suggestions into eight common languages (including English, Chinese, and French) and select the version with maximum probability.
+
+\begin{equation}
+    \mathcal{S}_\text{all} = \bigcup_{p \in \mathcal{P}_\text{eng}} \bigcup_{lang \in \mathcal{L}_\text{tgt}} T(p, lang)
+\end{equation}
+
+where $\mathcal{L}_\text{tgt} = \{en, zh, de, ...\}$ represents 8 target languages. All the English suggestions in $\mathcal{S}_\text{all}$ can be found in Appendix ~\autoref{app:multi_suggestion}.
+
+
+   
+\textbf{Teacher-Forcing Probability Optimization.} 
+We employ teacher forcing to compute the generation probability of target package names in LLMs. Specifically, we first establish baseline token positions for both original and target package names using English prototype suggestions. By freezing the prefix sequence preceding the target name's expected position, we calculate the subsequent generation probability through multiplicative accumulation of token-level probabilities. For each suggestion \( s \in \mathcal{S}_{\text{all}} \), we compute the probabilities of generating the target package using teacher forcing, which means that the probabilities are computed by conditioning on the LLM output  q.:  
+\[
+P_{\text{target}}(s) = \prod_{t=1}^{|l^*|} P(y_t = l^*_t | x = [\text{CodeContext}; s], \theta)
+\]
+where \( \theta \) represents the victim LLM's parameters.  
+
+The optimal suggestion \( s^* \) is selected via:  
+\[
+s^* = \arg\max_{s \in \mathcal{S}_{\text{all}}} \left[ P_{\text{target}}(s)  \right]
+% \cdot \exp(-\gamma \cdot \text{Divergence}(s, \text{OriginalCode}))
+\]
+
+Our objective is to determine which suggestion patterns most effectively induce the proxy LLM to recommend the target package over the original implementation. While the actual insertion positions may vary across different suggestions and the computed probabilities might deviate from real-world distributions, this position-aware probability estimation provides sufficient discriminative power for top-1 candidate selection through comparative analysis. To some extent, \method-G is more akin to an indirect prompt injection. By leveraging the instruction-following capabilities of current LLMs, as well as their lack of relevant security alignment, we are able to induce the LLMs to generate code suggestions that deliberately include our target package names.
+
+

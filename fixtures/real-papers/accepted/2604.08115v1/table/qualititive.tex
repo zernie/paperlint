@@ -1,0 +1,26 @@
+
+
+
+\begin{table}[t!]
+\centering
+\renewcommand{\arraystretch}{1.0}
+\resizebox{0.95\columnwidth}{!}{
+\begin{tabular}{lcccccc}
+\toprule
+\multirow{2.6}{*}{\shortstack[l]{\textbf{Category} \\ \textbf{(vs. Baseline)}}} & \multicolumn{3}{c}{VisualMRC} & \multicolumn{3}{c}{DUDE} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+& Win & Lose & Rate & Win & Lose & Rate \\
+\midrule
+Revise$_{meta}$           & 94  & 6    & \cellcolor[HTML]{FF6B6B}{0.94 (1)}     & 86  & 14   & \cellcolor[HTML]{FF8A80}{0.86 (3)}\\
+%\hdashline[0.8pt/1.2pt]
+\; \textit{only} Column         & 74 & 26 & \cellcolor[HTML]{FFABAB}{0.74 (6)} & 89 & 11 & \cellcolor[HTML]{FF8A80}{0.89 (2)}\\
+\; \textit{only} Deletion       & 84 & 16 & \cellcolor[HTML]{FF8A80}{0.84 (3)} & 64 & 36 & \cellcolor[HTML]{FFD7D5}{0.64 (4)} \\
+\; \textit{only} Insertion      & 61 & 39 & \cellcolor[HTML]{FFD7D5}{0.61 (7)} & 59 & 41 & \cellcolor[HTML]{FFECEC}{0.59 (7)} \\
+\; \textit{only} Substitution   & 81 & 19 & \cellcolor[HTML]{FF8A80}{0.81 (4)} & 61 & 39 & \cellcolor[HTML]{FFD7D5}{0.61 (5)} \\
+\; \textit{only} Segmentation   & 92 & 8  & \cellcolor[HTML]{FF6B6B}{0.92 (2)} & 92 & 8  & \cellcolor[HTML]{FF6B6B}{0.92 (1)} \\
+\; \textit{only} Transposition  & 77 & 23 & \cellcolor[HTML]{FFABAB}{0.77 (5)} & 60 & 40 & \cellcolor[HTML]{FFD7D5}{0.60 (6)} \\
+\bottomrule
+\end{tabular}}
+\caption{Win Rate comparison for \textsc{Revise}$_{meta}$ and single correction strategies on VisualMRC and DUDE datasets (better performance indicated by darker shading)}
+\label{tab:qual}
+\end{table}

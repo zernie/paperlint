@@ -1,0 +1,15 @@
+\vspace{-5pt}
+\section{Conclusion}\label{sec:conclusion}
+We introduce \Ours, a root token policy optimization framework for adaptive thinking that updates only the initial gating token while treating the remainder of the rollout as environment output. Precisely, \Ours~turns static \textsc{Long} style generation into a lightweight routing problem, reducing significant training overhead during GRPO.
+Across multiple model families and scales, \Ours~improves the accuracy routing trade-off under most scenarios, achieving lower reasoning per accuracy ratios over expert scientific reasoning and coding as well as math reasoning. 
+Some configurations trace a comparable but not strictly dominating frontier, supporting the use of \Ours~as a controllable routing layer rather than a uniform replacement for SFT.
+
+\vspace{-5pt}
+\section*{Limitations}
+While our work supports diverse LRM families and scales, several limitations suggest avenues for future exploration. First, broader evaluation is needed under advanced benchmark datasets requiring agentic behaviors with tools.
+Second, while root confidence is informative under our branching problem setting, it can be not only sensitive to bucket composition (i.e., easy and hard queries for \Ours), but weakly calibrated towards its query difficulty.
+Third, we focus on a binary routing decision and do not optimize intra mode behaviors such as how long to think or when to stop, which could further improve compute allocation.
+Fourth, \Ours's gain over the SFT operating point is configuration-dependent: on Qwen3-1.7B, the post-SFT routing already saturates the achievable RAR, so \Ours~yields a comparable rather than strictly better operating point; on Qwen3-32B, where we use LoRA tuning and SFT already produces a near-baseline conservative router, \Ours~likewise traces a comparable but not strictly dominating frontier. We therefore position \Ours~as a controllable routing layer to be selected via checkpoint or threshold, rather than a uniform replacement for SFT.
+Finally, due to limited compute, we do not provide a more exhaustive ablation of the RL training dynamics regarding policy optimization to uncover how \Ours~enables such gating behaviors in model aspect or a fully controlled comparison against alternative GRPO variants based on their publicly released checkpoints and exact training recipes.
+While mitigating such behaviors would be valuable, it is beyond the scope of this study. We leave other discussion points including the design of root token choice, and generalizability in Appendix. 
+

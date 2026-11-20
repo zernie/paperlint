@@ -1,0 +1,334 @@
+\begin{lemma}
+% \label{lem:pattern_sampling_error}
+    For any graph $G$, $k$-edge pattern $\mathcal{T}$, and parameter $\beta$, 
+the $(k + 2 - |\mathcal{L}|)$-round non-private algorithm $\widehat{\mathcal{M}}_{\mathcal{T}}$ satisfies
+$
+    \mathbb{E}[\widehat{\mathcal{M}}_\mathcal{T}(G)] = Q_\mathcal{T}
+$
+, and with probability at least $1 - \beta$,
+\begin{equation*}
+    |  \widehat{\mathcal{M}}_\mathcal{T}(G)- Q_\mathcal{T}| \leq
+    (k+1) \sqrt{N\beta^{-1}}(d(G)+k+1)^k
+    = O(\sqrt{N} d(G)^k).
+\end{equation*}
+
+\end{lemma}
+
+
+
+
+\begin{proof}
+
+
+We associate a random variable $I_q$ with each pattern instance in $G$, indexed arbitrarily. 
+Patterns with different valid node markings according to the given tree structure $\mathcal{T}$ are considered different.
+Let $I_q = 1$ if the pattern is sampled in the algorithm with its specific node markings in the pattern, and $I_q = 0$ otherwise.
+Since node mark assignments are independent, we have
+$
+    \rho = \Pr[I_q=1] = {(k+1)^{-(k+1)}},
+$
+and there are a total of $Q_\mathcal{T}$ variables.
+As $\widehat{\mathcal{M}}_\mathcal{T}(G) = \rho^{-1}\sum_q I_q$, the variance of $\widehat{\mathcal{M}}_\mathcal{T}(G)$ can be represented as
+\begin{equation*}
+\operatorname{Var}(\rho^{-1}
+\sum_{q=1}^{Q_\mathcal{T}} I_q)
+   =\rho^{-2} 
+   \sum_{q,{q'} =1}^{Q_\mathcal{T}} 
+   \operatorname{Cov}(I_q, I_{q'}).
+\end{equation*}
+If marked pattern instances corresponding to $q$ and $q'$ share $s$ overlapping nodes, i.e., the same nodes assigned the same marks, then it holds that,
+\begin{equation*}
+    \operatorname{Cov}(I_q, I_{q'}) 
+    \leq \rho^2 \, ((k + 1)^{s}-1).
+\end{equation*}
+The covariance is at most $0$ if $s = 0$.
+When $s \geq 1$, fix the $q$-th pattern, the number of patterns in $G$ that overlap it in exactly $s$ nodes is bounded by 
+\begin{equation*}
+     n(s, k) =\binom{k+1}{s}\,d(G)^{k+1-s}.
+\end{equation*}
+Given that $Q_\mathcal{T} \leq Nd(G)^k$, similar to the proof of Lemma~\ref{lem:k-lp_sampling_bound}, the total variance has:
+\begin{align*}
+     \operatorname{Var}(\rho^{-1}\,
+\sum_{q=1}^{Q_\mathcal{T}} I_q)
+&\leq 
+ \rho^{-2} Q_\mathcal{T} \,
+   \sum_{s=1}^{k+1} n(s, k) \, \rho^2 \, ((k + 1)^{s}-1)
+   \\
+     &\leq  Nd(G)^k (k + 1)^{2} (d(G) + k + 1)^{k}. 
+\end{align*}
+
+
+
+Finally, by Lemma~\ref{lem:che_neq}, with probability of at least $1 - \beta$, 
+\begin{align*}
+   |\widehat{\mathcal{M}}_\mathcal{T}(G)- Q_\mathcal{T}| &\leq
+    (k+1) \sqrt{N\beta^{-1}}(d(G)+k+1)^k\\
+    &= O(\sqrt{N} d(G)^k)
+ .  \qedhere
+\end{align*}
+ 
+\end{proof}
+
+
+
+\begin{theorem}
+% \label{the:pattern_privacy}
+For any graph $G$, $k$-edge pattern $\mathcal{T}$, and privacy budget $\varepsilon$, 
+the mechanism $\mathcal{M}_\mathcal{T}$ satisfies $\varepsilon$-edge-LDP.
+\end{theorem}
+
+
+\begin{proof}
+Similar to the proof of Theorem~\ref{the:k-lp_privacy}, consider any pair of edge-neighboring graphs $G$ and $G'$, which differ by a single edge, denoted $(v_i, v_j)$. 
+This differing edge can affect the computation of at most one node.
+Without loss of generality, assume the computation at node $v_i$ is affected. 
+In this case, we have $r_j \in \mathcal{C}(r_i)$, so the contribution from $v_j$ appears in the values from round $r_j$ during the aggregation at $v_i$ in round $r_i$. Adding Laplace noise with scale $\|\mathcal{X}^{(r_j)}\|_\infty / \varepsilon$ ensures $\varepsilon$-edge-DP for the aggregated result $\mathcal{X}^{(r_i)}$ in round $r_i$.
+All computations at other nodes are unaffected.
+By parallel composition (Lemma~\ref{lem:pc}), the joint results across all rounds satisfy $\varepsilon$-edge-DP. 
+Therefore, $\mathcal{M}_\mathcal{T}$ satisfies $\varepsilon$-edge-LDP.
+\end{proof}
+
+
+
+\begin{lemma}
+    % \label{lem:pattern_additive_bound}
+    For any graph $G$, $k$-edge pattern $\mathcal{T}$, parameters $\varepsilon$ and $\beta$, 
+$\mathcal{M}_{\mathcal{T}}$ satisfies
+$\mathbb{E}[\mathcal{M}_{\mathcal{T}}(G, \varepsilon)] = 
+    \widehat{\mathcal{M}}_{\mathcal{T}}(G)$ 
+under the same node marking $(r_1, \dots, r_N)$, 
+and with probability at least $1 - \beta$,
+\begin{align*}
+    |\mathcal{M}_{\mathcal{T}}(G, \varepsilon) - 
+    \widehat{\mathcal{M}}_{\mathcal{T}}(G)| 
+    &\leq 
+    {k(k+1)} \,
+    \gamma
+    \sqrt{N}
+    (\hat{d}(G) + \gamma \sqrt{\hat{d}(G)} + \gamma)^{k-1} 
+    \\
+    &=  \tilde{O}(\sqrt{N} d(G)^{k-1}),
+\end{align*}
+where $\gamma = (k{+}1)\sqrt{8\log(6kN/\beta)}/\varepsilon = \tilde{O}(1) $ and $\hat{d}(G) = \max(d(G), \lceil \gamma^2 \rceil)$.
+\end{lemma}
+
+
+
+
+\begin{proof}
+
+We first show that $
+    \mathbb{E}[\mathcal{M}_{\mathcal{T}}(G, \varepsilon)] = 
+    \widehat{\mathcal{M}}_{\mathcal{T}}(G)
+$. 
+For any node $v_i$ and round $\ell = r_i$ where $\ell \notin \mathcal{L}$, we have:
+\begin{align}
+    \mathcal{X}^{(\ell)}_i 
+&= \prod_{c \in \mathcal{C}(\ell)}  \mathcal{Y}^{(c)}_i \nonumber \\
+&=
+\label{e:x_pattern_update_rule}
+\prod_{c \in \mathcal{C}(\ell)} 
+\left(
+\sum_{j \in \mathcal{N}(i)} 
+           {\mathcal{X}}_j^{(c)} \,
+           \mathbf{1}\{r_j = c\}
++ 
+\mathrm{Lap}(\frac{1}{\varepsilon}\|\mathcal{X}^{(c)}\|_\infty )
+\right)
+\end{align}
+Let $\widehat{\mathcal{X}}^{(\ell)}_i$ and $\widehat{\mathcal{Y}}^{(c)}_i$ denote the non-private values computed by Algorithm~\ref{alg:pattern_nondp} with the same pattern $\mathcal{T}$ and node markings.
+We first consider nodes $v_i$ whose child rounds all lie in $\mathcal{L}$.
+In that case, we have:
+\begin{equation*}
+    \mathcal{X}^{(\ell)}_i 
+= \prod_{c \in \mathcal{C}(\ell)} 
+\left(
+\sum_{j \in \mathcal{N}(i)} 
+           \mathbf{1}\{r_j = c\}
++ 
+\mathrm{Lap}(\frac{1}{\varepsilon})
+\right).
+\end{equation*}
+Since the Laplace noise has an expectation of $0$, for each $c \in \mathcal{C}(\ell)$, 
+\begin{equation*}
+    \mathbb{E}[\sum_{j \in \mathcal{N}(i)} 
+           \mathbf{1}\{r_j = c\}
++ 
+\mathrm{Lap}(\frac{1}{\varepsilon})] = \sum_{j \in \mathcal{N}(i)} 
+           \mathbf{1}\{r_j = c\}. 
+\end{equation*}
+Because the Laplace noise added for each $c$ is sampled independently and $\sum_{j \in \mathcal{N}(i)} 
+           \mathbf{1}\{r_j = c\}$ is deterministic for fixed node markings, $\mathcal{Y}^{(c)}_i$ across different $c \in \mathcal{C}(\ell)$ are independent. 
+Thus,
+\begin{equation*}
+    \mathbb{E}[\mathcal{X}^{(\ell)}_i] = 
+    \prod_{c \in \mathcal{C}(\ell)} 
+    \sum_{j \in \mathcal{N}(i)} 
+           \mathbf{1}\{r_j = c\} = \widehat{\mathcal{X}}_i^{(\ell)}.
+\end{equation*}
+By structural induction over the tree $\mathcal{T}$, we conclude that for every node $v_i$ with $r_i = \ell \notin \mathcal{L}$, $\mathbb{E}[\mathcal{X}^{(\ell)}_i] = \widehat{\mathcal{X}}^{(\ell)}_i$.
+Therefore, $\mathbb{E}[\mathcal{M}_{\mathcal{T}}(G, \varepsilon)] = 
+\widehat{\mathcal{M}}_{\mathcal{T}}(G)$ as claimed.
+
+
+Then, we bound each node's effective degree, defined as in \eqref{e:eff_deg}.
+For a given $\mathcal{T}$ and node $v_i$ with mark $\ell$, the effective degrees to the parent round $\mathcal{P}(\ell)$ and its child rounds $\mathcal{C}(\ell)$ are used by the mechanism.
+As a result, there are at most $k$ such $c$ values that we need to bound for each $v_i$.
+Following the proof of Lemma~\ref{lem:k-lp_additive_bound}, and applying the multiplicative Chernoff bound, for any node $v_i$ and relevant round $c \in \mathcal{C}(\ell) \cup \mathcal{P}(\ell)$, with probability at least $1 - \beta'$,
+\begin{equation}
+\label{e:pattern_d_bound}
+    d^{(c)}(v_i) \leq d^*(G) = \frac{1}{k+1} \left( \hat{d}(G) + \gamma_1 \sqrt{\hat{d}(G)} \right),
+\end{equation}
+where $\gamma_1 = \sqrt{3(k{+}1)\log(kN/\beta')}$ and $\hat{d}(G) := \max(d(G), \lceil \gamma_1^2 \rceil)$.
+
+
+
+We next derive an upper bound on $\|\mathcal{X}^{(\ell)}\|_\infty$ for $\ell \in \{1, \dots, k\}$, assuming that \eqref{e:pattern_d_bound} holds. 
+For the first part of $\mathcal{Y}_i^{(c)}$, for any node $v_i$ with mark $\ell$ and $c \in \mathcal{C}(\ell)$,
+\begin{equation*}
+   \bigg| \sum_{j \in \mathcal{N}(i)} 
+           {\mathcal{X}}_j^{(c)} \,
+           \mathbf{1}\{r_j = c\} \bigg|
+        \leq 
+        d^*(G) \, \|\mathcal{X}^{(c)}\|_\infty.
+\end{equation*}
+For the second part of $\mathcal{Y}_i^{(c)}$, by the Laplace Concentration Bound with a failure probability of $\beta'/kN$ for each Laplace noise added at each node,
+\begin{equation*}
+    \bigg|\, \mathrm{Lap}(\frac{1}{\varepsilon}\|\mathcal{X}^{(c)}\|_\infty) \bigg|
+    \leq \frac{\gamma_2}{k+1} \|\mathcal{X}^{(c)}\|_\infty,
+\end{equation*}
+with $\gamma_2 = (k+1)\sqrt{8\log(2kN/\beta')}/\varepsilon$. 
+Combining both parts,
+\begin{equation*}
+     |\mathcal{X}^{(\ell)}_i|  
+     \leq 
+     \prod_{c \in \mathcal{C}(\ell)} 
+     (d^*(G) + \frac{\gamma_2}{k+1}) \|\mathcal{X}^{(c)}\|_\infty.
+\end{equation*}
+Recall that for $c \in \mathcal{L}$, we have $\|\mathcal{X}^{(c)}\|_\infty = 1$. 
+By induction, we can conclude that for any $\ell \leq k$, with probability at least $1 - \beta'$,
+\begin{equation}
+\label{e:pattern_round_max}
+   \|\mathcal{X}^{(\ell)}\|_\infty 
+   \leq 
+   (d^*(G) + \frac{\gamma_2}{k+1})^{T_\ell},
+\end{equation} 
+where $T_\ell$ denotes the number of edges in the subtree $\mathcal{T}(u_\ell)$. 
+Moreover, for any node $v_i$ with mark $\ell$ and $c \in \mathcal{C}(\ell)$,
+\begin{equation}
+\label{e:y_max}
+ \mathcal{Y}^{(c)}_i \leq (d^*(G) + \frac{\gamma_2}{k+1})^{T_c + 1}.
+\end{equation}
+
+
+Finally, we bound the additive error introduced by Laplace noise.
+For the Laplace noise of scale $\|\mathcal{X}^{(\ell)}\|_\infty/\varepsilon$ added in round $\mathcal{P}(\ell)$ at any active node, the corresponding multiplicative factor in the final output is, by \eqref{e:pattern_round_max} and \eqref{e:y_max}, upper bounded by
+% by \eqref{e:pattern_round_max} and \eqref{e:y_max}, its multiplicative term in the final output is upper bounded by
+\begin{equation*}
+    (k+1)^{k+1} (d^*(G) + \frac{\gamma_2}{k+1} )^{k -T_\ell-1}.
+\end{equation*}
+As a result, applying the Laplace concentration bound with failure probability $\beta'/kN$ to the sum of all such Laplace noises in a fixed round $\ell$, the error is bounded by
+\begin{align*}
+    % &(k+1)^{k+1} \sum_{i=1}^N \mathrm{Lap}\left(\frac{1}{\varepsilon} \|\mathcal{X}^{(\ell)}\|_\infty 
+    % \left(d^*(G) + \frac{\gamma_2}{k+1} \right)^{k - T_\ell} \right) \\
+    &(k+1)^k \,\gamma_2 \sqrt{N} (d^*(G) + \frac{\gamma_2}{k+1} )^{k - 1} \\
+    &\leq (k+1) \gamma_2 \sqrt{N} (\hat{d}(G) + \gamma_1 \sqrt{\hat{d}(G)} + \gamma_2 )^{k - 1}.
+\end{align*}
+
+Summing over all $k$ rounds, the total additive error is bounded by
+\begin{equation*}
+    |\mathcal{M}_{\mathcal{T}}(G, \varepsilon) - 
+    \widehat{\mathcal{M}}_{\mathcal{T}}(G)| \leq (k+1)k \gamma_2 \sqrt{N} (\hat{d}(G) + \gamma_1 \sqrt{\hat{d}(G)} + \gamma_2 )^{k - 1},
+\end{equation*}
+with probability at least $1 - 2 \beta' - \beta'/N \geq 1 - 3\beta'$.
+Thus, setting $\beta' = \beta/3$ ensures that the above error bound holds with probability at least $1 - \beta$, with
+$\gamma_1 = \sqrt{3(k+1)\log(6kN/\beta)}$, $\gamma_2 = (k+1)\sqrt{8\log(6kN/\beta)}/\varepsilon$, and $\hat{d}(G) = \max(d(G), \lceil \gamma_1^2 \rceil)$.
+In typical settings where $\varepsilon \leq \sqrt{8(k+1)/3}$, we have $\gamma_2 \geq \gamma_1$, so we replace $\gamma_1$ with $\gamma_2$ in the error bound for simplicity.
+Furthermore, since $\hat{d}(G) = O(d(G))$, the error bound is $\tilde{O}(\sqrt{N} d(G)^{k - 1})$. \qedhere
+
+
+
+\end{proof}
+
+\begin{theorem}
+% \label{the:pattern_bound}
+For any graph $G$, $k$-edge pattern $\mathcal{T}$, parameters $\varepsilon$ and $\beta$,
+the $(k + 2 - |\mathcal{L}|)$-round mechanism $\mathcal{M}_\mathcal{T}$ satisfies 
+$\mathbb{E}[\mathcal{M}_\mathcal{T}(G, \varepsilon)] = Q_\mathcal{T}$,
+and with probability at least $1 - \beta$,
+\begin{align*}
+    |\mathcal{M}_\mathcal{T}(G, \varepsilon) - Q_\mathcal{T}| 
+    \leq
+    (k+1) \sqrt{2N\beta^{-1}}(d(G)+k+1)^k +\\
+      {k(k+1)} \,
+    \gamma
+    \sqrt{N}
+    (\hat{d}(G) + \gamma \sqrt{\hat{d}(G)} + \gamma)^{k-1} 
+    = \tilde{O}(\sqrt{N} d(G)^{k}),
+\end{align*}
+where $\gamma = (k{+}1)\sqrt{8\log(12kN/\beta)}/\varepsilon = \tilde{O}(1) $ and $\hat{d}(G) = \max(d(G), \lceil \gamma^2 \rceil)$.
+\end{theorem}
+
+\begin{proof}
+
+Both the unbiasedness and the utility bound follow similarly to the proof of Theorem~\ref{the:k-lp_bound}, by combining Lemma~\ref{lem:pattern_sampling_error} and Lemma~\ref{lem:pattern_additive_bound}. \qedhere
+
+\end{proof}
+
+
+
+\begin{lemma}
+ For any graph $G$, star edge count $k$, parameters $\varepsilon$ and $\beta$, the single-round $k$-star counting mechanism $\mathcal{M}_{k\star}(G, \varepsilon)$ satisfies that, with probability at least $1 - \beta$, 
+ \begin{equation*}
+    |\mathcal{M}_{k\star}(G, \varepsilon) - Q_{k\star }| = \tilde{O}(\sqrt{N}d(G)^{k-1}),
+ \end{equation*}
+where $Q_{k\star}$ denotes the true count of the number of $k$-stars in $G$.
+% , and $\gamma = 2\sqrt{8\log(4N/\beta)}/\varepsilon =\tilde{O}(1)$.
+\end{lemma}
+
+\begin{proof}
+To begin with, the noisy degree at node $v_i$ is
+\begin{equation*}
+    \tilde{d}(v_i) = d(v_i) + \eta_i, 
+\end{equation*}
+where $\eta_i = \mathrm{Lap}(2/\varepsilon)$.
+Applying the Laplace concentration bound with failure probability $\beta/2N$ per node, with probability at least $1 - \beta/2$, 
+$ | \eta_i | \leq \gamma$ for all $i$, where $\gamma = 2\sqrt{8\log(4N/\beta)}/{\varepsilon} = \tilde{O}(1) $. 
+% Since we regard $\gamma = \tilde{O}(1)$, in later analysis we assume $d(G) > \gamma$. 
+
+Let $(x)_k = x(x-1)\cdots(x-k+1)$, and $(x)_0 = 1$. 
+Then,
+\begin{equation*}
+(x+y)_{k}=\sum_{s=0}^{k} \binom{k}{s}\,(x)_{k-s}\,(y)_{s}. 
+\end{equation*}
+Summing up all nodes' results, the total error is 
+\begin{align*}
+|\mathcal{M}_{k\star}(G, \varepsilon) - Q_{k\star }| &= \bigg| \sum_{i=1}^N (d(v_i))_k - (\tilde{d}(v_i))_k \bigg| \\
+& = \bigg|\sum_{i=1}^N\sum_{s=1}^{k} \binom{k}{s}\,(d(v_i))_{k-s}\,(\eta_i)_{s} \bigg| \\
+& = \bigg| \sum_{i=1}^N 
+\eta_i
+\cdot 
+\sum_{s=1}^{k} \binom{k}{s}\,(d(v_i))_{k-s}(\eta_i-1)_{s-1} 
+\bigg|.
+\end{align*}
+Finally, applying the Laplace concentration bound with failure probability $\beta/2N$, with probability at least $1- \beta/2 - \beta/2N \geq 1-\beta$,
+\begin{align*}
+    |\mathcal{M}_{k\star}(G, \varepsilon) - Q_{k\star }| 
+    &\leq \gamma \sqrt{
+    \sum_{i=1}^N
+    \left(
+    \sum_{s=1}^{k} \binom{k}{s}\,(d(v_i))_{k-s}(\eta_i-1)_{s-1}
+    \right)^2 } \\
+    &\leq \gamma \sqrt{N} \cdot \max_i 
+    \left(
+    \sum_{s=1}^{k} \binom{k}{s}\,(d(v_i))_{k-s}(\eta_i-1)_{s-1}
+    \right) \\
+    &\leq \gamma \sqrt{N} \cdot \max_i 
+    \left(
+    \sum_{s=1}^{k} \binom{k}{s}\,d(G)^{k-s}|\gamma+k|^{s-1}
+    \right) \\
+    &= \tilde{O}(\sqrt{N} d(G)^{k-1}). \qedhere
+\end{align*}
+\end{proof}
+
+

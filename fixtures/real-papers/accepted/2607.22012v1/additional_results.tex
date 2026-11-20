@@ -1,0 +1,87 @@
+\begin{table}[h]
+\begin{minipage}{\textwidth}
+    \centering
+    \caption{MSE in OPE for varying ratios of new actions in the target domain} \vspace{1mm}
+    \begin{tabular}{c|cccccc}
+        \toprule
+        ratios of new actions & 0.0   & 0.2    & 0.4    & 0.6    & 0.8  \\
+        \midrule\midrule
+        \textbf{COPE(Ours)}       & \textbf{1.1641} & \textbf{1.1647} & \textbf{0.8066} & \textbf{1.0663} & \textbf{1.0801} \\
+        DR(Target Domain)        & 4.3283 & 4.2225 & 2.3985 & 2.9498 & 3.7964 \\
+        DR(ALL Domain)    & 2.7582 & 2.2401 & 3.5354 & 3.3172 & 1.4530 \\
+        IPS(Target Domain)       & 5.6442 & 4.9797 & 3.6800 & 4.8295 & 6.5302 \\
+        IPS(ALL Domain)   & 2.1763 & 2.2538 & 2.2006 & 2.1881 & 2.9360 \\
+        \hline
+    \end{tabular}
+    \label{table:ope-new-actions}
+    \vspace{-2pt}
+\end{minipage} \\
+\begin{minipage}{\textwidth}
+    \centering
+    \caption{MSE in OPE for varying numbers of users with deterministic logging in the target domain} \vspace{1mm}
+   \begin{tabular}{c|cccccc}
+        \toprule
+        numbers of users with deterministic logging    & 200    & 400    & 600    & 800    & 1000 \\
+        \midrule\midrule
+        \textbf{COPE(Ours)}      & \textbf{1.3238} & \textbf{1.3120} & \textbf{1.2926} & \textbf{1.2125} & \textbf{1.2172} \\
+         DR(Target Domain)        & 2.3200 & 2.8398 & 3.2755 & 3.7992 & 4.4499 \\
+        DR(ALL Domain)    & 2.5240 & 2.7915 & 3.0358 & 2.9843 & 3.3314 \\
+        IPS(Target Domain)       & 3.2026 & 3.9641 & 4.6112 & 5.6947 & 7.0049 \\
+        IPS(ALL Domain)   & 2.1561 & 2.1630 & 2.1906 & 2.2188 & 2.2076 \\
+        \bottomrule
+    \end{tabular}
+    \label{table:ope-deterministic-logging}
+    \vspace{-2pt}
+\end{minipage} \\
+\begin{minipage}{\textwidth}
+    \centering
+    \caption{Test (Relative) Policy Value in OPL for varying ratios of new actions in the target domain} \vspace{1mm}
+    \begin{tabular}{c|cccccc}
+        \toprule
+        ratios of new actions & 0.0   & 0.2    & 0.4    & 0.6    & 0.8  \\ 
+        \midrule\midrule
+        \textbf{COPE-PG(Ours)}      & \textbf{1.4463} & \textbf{1.4060} & \textbf{1.4389} & \textbf{1.3884} & 1.4090 \\
+        DR-PG(Target Domain)        & 1.3518 & 1.3220 & 1.3364 & 1.2663 & 1.3339 \\
+        DR-PG(ALL Domain)    & 1.4308 & 1.3947 & 1.4064 & 1.3420 & \textbf{1.4403} \\
+        IPS-PG(Target Domain)        & 1.3119 & 1.2755 & 1.2899 & 1.2389 & 1.3350 \\
+        IPS-PG(ALL Domain)   & 1.3588 & 1.3198 & 1.3267 & 1.3134 & 1.3246 \\
+        \bottomrule
+    \end{tabular}
+    \label{table:opl-new-actions}
+    \vspace{-2pt}
+\end{minipage} \\
+\begin{minipage}{\textwidth}
+    \centering
+    \caption{Test (Relative) Policy Value in OPL for varying numbers of users with deterministic logging in the target domain} \vspace{1mm}
+    \begin{tabular}{c|cccccc} 
+        \toprule
+        numbers of users with deterministic logging    & 200    & 400    & 600    & 800    & 1000 \\
+        \midrule\midrule
+        \textbf{COPE-PG(Ours)}      & \textbf{1.4408} & \textbf{1.4531} & \textbf{1.4769} & \textbf{1.4669} & 1.4139 \\
+        DR-PG(ALL Domain)   & \textbf{1.4477} & 1.4180 & 1.3954 & 1.4059 & \textbf{1.5115}  \\
+        DR-PG(Target Domain)     & 1.3101 & 1.3014 & 1.3091 & 1.3596 & 1.3013 \\
+        IPS-PG(ALL Domain)  & 1.3381 & 1.3003 & 1.3149 & 1.3625 & 1.4651 \\
+        IPS-PG(Target Domain)    & 1.2795 & 1.2770 & 1.2905 & 1.2765 & 1.2467 \\
+        \bottomrule
+    \end{tabular}
+    \label{table:opl-deterministic-logging}
+    \vspace{-2pt}
+\end{minipage}
+\begin{minipage}{\textwidth}
+    \centering
+    \caption{Test (Relative) Policy Value in OPL for varying $\lambda$ values} \vspace{1mm}
+    \begin{tabular}{c|ccccccc}
+        \toprule
+        lambda values   & 0.0    &  0.2    & 0.4  & 0.6 & 0.8 & 1.0 \\
+        \midrule\midrule
+        \textbf{COPE-PG(Ours)}      & \textbf{1.4713}    & \textbf{1.4646}    & \textbf{1.4739}    & \textbf{1.4502}    & \textbf{1.4780} & \textbf{1.4404} \\
+        DR-PG(ALL Domain)   &  1.3812    & 1.3558    & 1.3475    & 1.3592    & 1.3042    & 1.3657\\
+        DR-PG(Target Domain)  & 1.4639    & 1.4334    & 1.3823    & 1.4374    & 1.3956    & 1.2799\\
+        IPS-PG(ALL Domain)  & 1.3553    & 1.3010    & 1.3133    & 1.2869    & 1.2770    & 1.2755 \\
+        IPS-PG(Target Domain)  & 1.3629    & 1.3580    & 1.3572    & 1.3480    & 1.4390    & 1.3889 \\
+        \bottomrule
+    \end{tabular}
+    \label{table:opl-lambda}
+    \vspace{-2pt}
+\end{minipage}
+\end{table}

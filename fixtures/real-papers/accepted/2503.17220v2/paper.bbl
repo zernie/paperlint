@@ -1,0 +1,448 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{44}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{}, \showDOI{}, and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showDOI}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showDOI #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showDOI      \undefined \def \showDOI       #1{#1}\fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[{Ansible project contributors}(2025)]%
+        {AnsibleLighsail_2025}
+\bibfield{author}{\bibinfo{person}{{Ansible project contributors}}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \bibinfo{title}{{community.aws.lightsail module}}.
+\newblock
+\newblock
+\urldef\tempurl%
+\url{https://docs.ansible.com/ansible/latest/collections/community/aws/lightsail\_module.html}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{[Accessed 20-03-2025]}.
+
+
+\bibitem[Asher-Schapiro and Teixeira(2021)]%
+        {facebook_down_2021}
+\bibfield{author}{\bibinfo{person}{Avi Asher-Schapiro} {and} \bibinfo{person}{Fabio Teixeira}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \bibinfo{title}{{Facebook down: What the outage meant for the developing world}}.
+\newblock
+\newblock
+\urldef\tempurl%
+\url{https://news.trust.org/item/20211005204816-qzjft/}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{[Accessed 04-09-2024]}.
+
+
+\bibitem[Begoug et~al\mbox{.}(2024)]%
+        {begoug2024fine}
+\bibfield{author}{\bibinfo{person}{Mahi Begoug}, \bibinfo{person}{Moataz Chouchen}, \bibinfo{person}{Ali Ouni}, \bibinfo{person}{Eman Abdullah~Alomar}, {and} \bibinfo{person}{Mohamed~Wiem Mkaouer}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Fine-grained just-in-time defect prediction at the block level in Infrastructure-as-Code (IaC)}. In \bibinfo{booktitle}{\emph{Proceedings of the 21st International Conference on Mining Software Repositories}}. \bibinfo{pages}{100--112}.
+\newblock
+
+
+\bibitem[Bessghaier et~al\mbox{.}(2024)]%
+        {bessghaier2024prevalence}
+\bibfield{author}{\bibinfo{person}{Narjes Bessghaier}, \bibinfo{person}{Mahi Begoug}, \bibinfo{person}{Chemseddine Mebarki}, \bibinfo{person}{Ali Ouni}, \bibinfo{person}{Mohammed Sayagh}, {and} \bibinfo{person}{Mohamed~Wiem Mkaouer}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{On the prevalence, co-occurrence, and impact of infrastructure-as-code smells}. In \bibinfo{booktitle}{\emph{2024 IEEE International Conference on Software Analysis, Evolution and Reengineering (SANER)}}. IEEE, \bibinfo{pages}{23--34}.
+\newblock
+
+
+\bibitem[Bui et~al\mbox{.}(2023)]%
+        {bui2023dockercleaner}
+\bibfield{author}{\bibinfo{person}{Quang-Cuong Bui}, \bibinfo{person}{Malte Lauk{\"o}tter}, {and} \bibinfo{person}{Riccardo Scandariato}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{DockerCleaner: Automatic Repair of Security Smells in Dockerfiles}. In \bibinfo{booktitle}{\emph{2023 IEEE International Conference on Software Maintenance and Evolution}}. IEEE, \bibinfo{pages}{160--170}.
+\newblock
+
+
+\bibitem[Durieux(2024)]%
+        {durieux2023parfum}
+\bibfield{author}{\bibinfo{person}{Thomas Durieux}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Empirical study of the docker smells impact on the image size}. In \bibinfo{booktitle}{\emph{Proceedings of the IEEE/ACM 46th Int. Conf. on Software Engineering}}. \bibinfo{pages}{1--12}.
+\newblock
+
+
+\bibitem[{GitLab}(2014)]%
+        {gitlab_outage_2014}
+\bibfield{author}{\bibinfo{person}{{GitLab}}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \bibinfo{title}{{Gitlab.com Downtime 2014-07-07 Postmortem}}.
+\newblock
+\newblock
+\urldef\tempurl%
+\url{https://docs.google.com/document/d/1ScqXAdb6BjhsDzCo3qdPYbt1uULzgZqPO8zHeHHarS0}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{[Accessed 04-09-2024]}.
+
+
+\bibitem[Gonçalves(2023)]%
+        {goncalves2023}
+\bibfield{author}{\bibinfo{person}{João Gonçalves}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \emph{\bibinfo{title}{{Automatic Detection of Security Smells in Terraform}}}.
+\newblock Master's thesis. \bibinfo{school}{Instituto Superior Técnico}.
+\newblock
+\newblock
+\shownote{Available at \url{https://fenix.tecnico.ulisboa.pt/cursos/meic-a/dissertacao/1972678479055768}}.
+
+
+\bibitem[{gooeyblob}(2016)]%
+        {reddit_outage_2016}
+\bibfield{author}{\bibinfo{person}{{gooeyblob}}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \bibinfo{title}{{Why Reddit was down on Aug 11}}.
+\newblock
+\newblock
+\urldef\tempurl%
+\url{https://web.archive.org/web/20221029203405/https://www.reddit.com/r/announcements/comments/4y0m56/why_reddit_was_down_on_aug_11/}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{[Accessed 04-09-2024]}.
+
+
+\bibitem[Goues et~al\mbox{.}(2019)]%
+        {goues2019automated}
+\bibfield{author}{\bibinfo{person}{Claire~Le Goues}, \bibinfo{person}{Michael Pradel}, {and} \bibinfo{person}{Abhik Roychoudhury}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Automated program repair}.
+\newblock \bibinfo{journal}{\emph{Commun. ACM}} \bibinfo{volume}{62}, \bibinfo{number}{12} (\bibinfo{year}{2019}), \bibinfo{pages}{56--65}.
+\newblock
+
+
+\bibitem[Guerriero et~al\mbox{.}(2019)]%
+        {guerriero2019adoption}
+\bibfield{author}{\bibinfo{person}{Michele Guerriero}, \bibinfo{person}{Martin Garriga}, \bibinfo{person}{Damian~A Tamburri}, {and} \bibinfo{person}{Fabio Palomba}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Adoption, support, and challenges of infrastructure-as-code: Insights from industry}. In \bibinfo{booktitle}{\emph{2019 IEEE Int. Conf. on Software Maintenance and Evolution}}. \bibinfo{pages}{580--589}.
+\newblock
+
+
+\bibitem[Hasan et~al\mbox{.}(2020)]%
+        {hasan2020testing}
+\bibfield{author}{\bibinfo{person}{Mohammed~Mehedi Hasan}, \bibinfo{person}{Farzana~Ahamed Bhuiyan}, {and} \bibinfo{person}{Akond Rahman}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Testing practices for infrastructure as code}. In \bibinfo{booktitle}{\emph{Proceedings of the 1st ACM SIGSOFT International Workshop on Languages and Tools for Next-Generation Testing}}. \bibinfo{pages}{7--12}.
+\newblock
+
+
+\bibitem[{HashiCorp}(2025)]%
+        {TerraformLighsail_2025}
+\bibfield{author}{\bibinfo{person}{{HashiCorp}}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \bibinfo{title}{{Resource: aws\_lightsail\_instance}}.
+\newblock
+\newblock
+\urldef\tempurl%
+\url{https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lightsail\_instance}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{[Accessed 20-03-2025]}.
+
+
+\bibitem[Hassan et~al\mbox{.}(2018)]%
+        {hassan2018rudsea}
+\bibfield{author}{\bibinfo{person}{Foyzul Hassan}, \bibinfo{person}{Rodney Rodriguez}, {and} \bibinfo{person}{Xiaoyin Wang}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Rudsea: recommending updates of dockerfiles via software environment analysis}. In \bibinfo{booktitle}{\emph{Proceedings of the 33rd ACM/IEEE International Conference on Automated Software Engineering}}.
+\newblock
+
+
+\bibitem[Hassan et~al\mbox{.}(2024)]%
+        {hassan2024state}
+\bibfield{author}{\bibinfo{person}{Md~Mahadi Hassan}, \bibinfo{person}{John Salvador}, \bibinfo{person}{Shubhra Kanti~Karmaker Santu}, {and} \bibinfo{person}{Akond Rahman}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{State Reconciliation Defects in Infrastructure as Code}.
+\newblock \bibinfo{journal}{\emph{Proceedings of the ACM on Software Engineering}} \bibinfo{volume}{1}, \bibinfo{number}{FSE} (\bibinfo{year}{2024}).
+\newblock
+
+
+\bibitem[Henkel et~al\mbox{.}(2021)]%
+        {henkel2021shipwright}
+\bibfield{author}{\bibinfo{person}{Jordan Henkel}, \bibinfo{person}{Denini Silva}, \bibinfo{person}{Leopoldo Teixeira}, \bibinfo{person}{Marcelo d’Amorim}, {and} \bibinfo{person}{Thomas Reps}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Shipwright: A human-in-the-loop system for dockerfile repair}. In \bibinfo{booktitle}{\emph{2021 IEEE/ACM 43rd International Conference on Software Engineering (ICSE)}}.
+\newblock
+
+
+\bibitem[{Honeycomb}(2021)]%
+        {incident_resolution_honeycomb_2021}
+\bibfield{author}{\bibinfo{person}{{Honeycomb}}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \bibinfo{title}{{Incident Resolution: Do You Remember, the Twenty Fires of September?}}
+\newblock
+\newblock
+\urldef\tempurl%
+\url{https://www.honeycomb.io/blog/incident-resolution-september-retrospective}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{[Accessed 04-09-2024]}.
+
+
+\bibitem[{Jan David Nose}(2023)]%
+        {rust_outage_2023}
+\bibfield{author}{\bibinfo{person}{{Jan David Nose}}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \bibinfo{title}{{DNS Outage on 2023-01-25}}.
+\newblock
+\newblock
+\urldef\tempurl%
+\url{https://blog.rust-lang.org/inside-rust/2023/02/08/dns-outage-portmortem.html}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{[Accessed 04-09-2024]}.
+
+
+\bibitem[Janardhan(2021)]%
+        {Janardhan_2021}
+\bibfield{author}{\bibinfo{person}{Santosh Janardhan}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \bibinfo{title}{More details about the October 4 outage}.
+\newblock
+\newblock
+\urldef\tempurl%
+\url{https://engineering.fb.com/2021/10/05/networking-traffic/outage-details/}
+\showURL{%
+\tempurl}
+
+
+\bibitem[{Khantanjil}(2025)]%
+        {steam_issue_2025}
+\bibfield{author}{\bibinfo{person}{{Khantanjil}}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \bibinfo{title}{{Error: You are missing the following 32-bit libraries, and Steam may not run: libGL.so.1 libdrm.so.2}}.
+\newblock
+\newblock
+\urldef\tempurl%
+\url{https://github.com/ValveSoftware/steam-for-linux/issues/7284}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{[Accessed 21-03-2025]}.
+
+
+\bibitem[Lepiller et~al\mbox{.}(2021)]%
+        {lepiller2021analyzing}
+\bibfield{author}{\bibinfo{person}{Julien Lepiller}, \bibinfo{person}{Ruzica Piskac}, \bibinfo{person}{Martin Sch{\"a}f}, {and} \bibinfo{person}{Mark Santolucito}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Analyzing infrastructure as code to prevent intra-update sniping vulnerabilities}. In \bibinfo{booktitle}{\emph{27th International Conference on Tools and Algorithms for the Construction and Analysis of Systems (TACAS)}}. Springer, \bibinfo{pages}{105--123}.
+\newblock
+
+
+\bibitem[Monperrus(2018a)]%
+        {monperrus2018automatic}
+\bibfield{author}{\bibinfo{person}{Martin Monperrus}.} \bibinfo{year}{2018}\natexlab{a}.
+\newblock \showarticletitle{Automatic software repair: A bibliography}.
+\newblock \bibinfo{journal}{\emph{ACM Computing Surveys (CSUR)}} \bibinfo{volume}{51}, \bibinfo{number}{1} (\bibinfo{year}{2018}), \bibinfo{pages}{1--24}.
+\newblock
+
+
+\bibitem[Monperrus(2018b)]%
+        {repair-living-review}
+\bibfield{author}{\bibinfo{person}{Martin Monperrus}.} \bibinfo{year}{2018}\natexlab{b}.
+\newblock \bibinfo{booktitle}{\emph{The Living Review on Automated Program Repair}}.
+\newblock \bibinfo{type}{{T}echnical {R}eport} hal-01956501. \bibinfo{institution}{HAL/archives-ouvertes.fr}.
+\newblock
+
+
+\bibitem[Opdebeeck et~al\mbox{.}(2022)]%
+        {opdebeeck2022smelly}
+\bibfield{author}{\bibinfo{person}{Ruben Opdebeeck}, \bibinfo{person}{Ahmed Zerouali}, {and} \bibinfo{person}{Coen De~Roover}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Smelly variables in ansible infrastructure code: Detection, prevalence, and lifetime}. In \bibinfo{booktitle}{\emph{Proceedings of the 19th International Conference on Mining Software Repositories}}. \bibinfo{pages}{61--72}.
+\newblock
+
+
+\bibitem[Opdebeeck et~al\mbox{.}(2023)]%
+        {opdebeeck2023control}
+\bibfield{author}{\bibinfo{person}{Ruben Opdebeeck}, \bibinfo{person}{Ahmed Zerouali}, {and} \bibinfo{person}{Coen De~Roover}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Control and data flow in security smell detection for infrastructure as code: Is it worth the effort?}. In \bibinfo{booktitle}{\emph{2023 IEEE/ACM 20th International Conference on Mining Software Repositories}}.
+\newblock
+
+
+\bibitem[{Puppet, Inc.}(2025)]%
+        {array_titles_puppet_2025}
+\bibfield{author}{\bibinfo{person}{{Puppet, Inc.}}} \bibinfo{year}{2025}\natexlab{}.
+\newblock \bibinfo{title}{{Puppet Documentation - Resources: Arrays of Titles}}.
+\newblock
+\newblock
+\urldef\tempurl%
+\url{https://www.puppet.com/docs/puppet/latest/lang_resources.html\#lang\_resource\_syntax-arrays-of-titles}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{[Accessed 21-03-2025]}.
+
+
+\bibitem[Rahman et~al\mbox{.}(2019a)]%
+        {rahman2019systematic}
+\bibfield{author}{\bibinfo{person}{Akond Rahman}, \bibinfo{person}{Rezvan Mahdavi-Hezaveh}, {and} \bibinfo{person}{Laurie Williams}.} \bibinfo{year}{2019}\natexlab{a}.
+\newblock \showarticletitle{A systematic mapping study of infrastructure as code research}.
+\newblock \bibinfo{journal}{\emph{Information and Software Technology}}  \bibinfo{volume}{108} (\bibinfo{year}{2019}), \bibinfo{pages}{65--77}.
+\newblock
+
+
+\bibitem[Rahman et~al\mbox{.}(2019b)]%
+        {rahman2019seven}
+\bibfield{author}{\bibinfo{person}{Akond Rahman}, \bibinfo{person}{Chris Parnin}, {and} \bibinfo{person}{Laurie Williams}.} \bibinfo{year}{2019}\natexlab{b}.
+\newblock \showarticletitle{The seven sins: Security smells in infrastructure as code scripts}. In \bibinfo{booktitle}{\emph{2019 IEEE/ACM 41st International Conference on Software Engineering (ICSE)}}. IEEE, \bibinfo{pages}{164--175}.
+\newblock
+
+
+\bibitem[Rahman et~al\mbox{.}(2021)]%
+        {rahman2021security}
+\bibfield{author}{\bibinfo{person}{Akond Rahman}, \bibinfo{person}{Md~Rayhanur Rahman}, \bibinfo{person}{Chris Parnin}, {and} \bibinfo{person}{Laurie Williams}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Security smells in ansible and chef scripts: A replication study}.
+\newblock \bibinfo{journal}{\emph{ACM Transactions on Software Engineering and Methodology (TOSEM)}} \bibinfo{volume}{30}, \bibinfo{number}{1} (\bibinfo{year}{2021}), \bibinfo{pages}{1--31}.
+\newblock
+
+
+\bibitem[Rahman et~al\mbox{.}(2023)]%
+        {rahman2023security}
+\bibfield{author}{\bibinfo{person}{Akond Rahman}, \bibinfo{person}{Shazibul~Islam Shamim}, \bibinfo{person}{Dibyendu~Brinto Bose}, {and} \bibinfo{person}{Rahul Pandita}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Security misconfigurations in open source kubernetes manifests: An empirical study}.
+\newblock \bibinfo{journal}{\emph{ACM Transactions on Software Engineering and Methodology}} \bibinfo{volume}{32}, \bibinfo{number}{4} (\bibinfo{year}{2023}), \bibinfo{pages}{1--36}.
+\newblock
+
+
+\bibitem[Reis et~al\mbox{.}(2022)]%
+        {reis2022leveraging}
+\bibfield{author}{\bibinfo{person}{Sofia Reis}, \bibinfo{person}{Rui Abreu}, \bibinfo{person}{Marcelo d'Amorim}, {and} \bibinfo{person}{Daniel Fortunato}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Leveraging practitioners’ feedback to improve a security linter}. In \bibinfo{booktitle}{\emph{Proceedings of the 37th IEEE/ACM International Conference on Automated Software Engineering}}. \bibinfo{pages}{1--12}.
+\newblock
+
+
+\bibitem[Saavedra and Ferreira(2022)]%
+        {saavedra2022glitch}
+\bibfield{author}{\bibinfo{person}{Nuno Saavedra} {and} \bibinfo{person}{Jo{\~a}o~F. Ferreira}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{{GLITCH: Automated Polyglot Security Smell Detection in Infrastructure as Code}}. In \bibinfo{booktitle}{\emph{Proceedings of the 37th IEEE/ACM International Conference on Automated Software Engineering}}.
+\newblock
+
+
+\bibitem[Saavedra et~al\mbox{.}(2023)]%
+        {saavedra2023polyglot}
+\bibfield{author}{\bibinfo{person}{Nuno Saavedra}, \bibinfo{person}{Jo{\~a}o Gon{\c{c}}alves}, \bibinfo{person}{Miguel Henriques}, \bibinfo{person}{Jo{\~a}o~F. Ferreira}, {and} \bibinfo{person}{Alexandra Mendes}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{{Polyglot Code Smell Detection for Infrastructure as Code with GLITCH}}. In \bibinfo{booktitle}{\emph{Proceedings of the 38th IEEE/ACM International Conference on Automated Software Engineering}}.
+\newblock
+
+
+\bibitem[Schwarz et~al\mbox{.}(2018)]%
+        {schwarz2018code}
+\bibfield{author}{\bibinfo{person}{Julian Schwarz}, \bibinfo{person}{Andreas Steffens}, {and} \bibinfo{person}{Horst Lichter}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Code smells in infrastructure as code}. In \bibinfo{booktitle}{\emph{2018 11th International Conference on the Quality of Information and Communications Technology (QUATIC)}}. IEEE, \bibinfo{pages}{220--228}.
+\newblock
+
+
+\bibitem[Sharma et~al\mbox{.}(2016)]%
+        {sharma2016does}
+\bibfield{author}{\bibinfo{person}{Tushar Sharma}, \bibinfo{person}{Marios Fragkoulis}, {and} \bibinfo{person}{Diomidis Spinellis}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{Does your configuration code smell?}. In \bibinfo{booktitle}{\emph{Proceedings of the 13th international conference on mining software repositories}}. \bibinfo{pages}{189--200}.
+\newblock
+
+
+\bibitem[Sokolowski et~al\mbox{.}(2024a)]%
+        {sokolowski2024automated}
+\bibfield{author}{\bibinfo{person}{Daniel Sokolowski}, \bibinfo{person}{David Spielmann}, {and} \bibinfo{person}{Guido Salvaneschi}.} \bibinfo{year}{2024}\natexlab{a}.
+\newblock \showarticletitle{Automated Infrastructure as Code Program Testing}.
+\newblock \bibinfo{journal}{\emph{IEEE TSE}} (\bibinfo{year}{2024}).
+\newblock
+
+
+\bibitem[Sokolowski et~al\mbox{.}(2024b)]%
+        {sokolowski2024pipr}
+\bibfield{author}{\bibinfo{person}{Daniel Sokolowski}, \bibinfo{person}{David Spielmann}, {and} \bibinfo{person}{Guido Salvaneschi}.} \bibinfo{year}{2024}\natexlab{b}.
+\newblock \showarticletitle{The PIPr dataset of public infrastructure as code programs}. In \bibinfo{booktitle}{\emph{2024 IEEE/ACM 21st International Conference on Mining Software Repositories (MSR)}}. IEEE, \bibinfo{pages}{498--503}.
+\newblock
+
+
+\bibitem[Solar-Lezama et~al\mbox{.}(2006)]%
+        {solar2006combinatorial}
+\bibfield{author}{\bibinfo{person}{Armando Solar-Lezama}, \bibinfo{person}{Liviu Tancau}, \bibinfo{person}{Rastislav Bodik}, \bibinfo{person}{Sanjit Seshia}, {and} \bibinfo{person}{Vijay Saraswat}.} \bibinfo{year}{2006}\natexlab{}.
+\newblock \showarticletitle{Combinatorial sketching for finite programs}. In \bibinfo{booktitle}{\emph{ASPLOS}}. \bibinfo{pages}{404--415}.
+\newblock
+
+
+\bibitem[Sotiropoulos et~al\mbox{.}(2020)]%
+        {sotiropoulos2020practical}
+\bibfield{author}{\bibinfo{person}{Thodoris Sotiropoulos}, \bibinfo{person}{Dimitris Mitropoulos}, {and} \bibinfo{person}{Diomidis Spinellis}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Practical fault detection in puppet programs}. In \bibinfo{booktitle}{\emph{Proceedings of the ACM/IEEE 42nd International Conference on Software Engineering}}. \bibinfo{pages}{26--37}.
+\newblock
+
+
+\bibitem[{Stack Exchange Network}(2014)]%
+        {stack_exchange_outage_2014}
+\bibfield{author}{\bibinfo{person}{{Stack Exchange Network}}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \bibinfo{title}{{Outage Post-Mortem: August 25th, 2014}}.
+\newblock
+\newblock
+\urldef\tempurl%
+\url{https://web.archive.org/web/20201020103424/https://stackstatus.net/post/96025967369/outage-post-mortem-august-25th-2014}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{[Accessed 04-09-2024]}.
+
+
+\bibitem[{Stack Overflow}(2024)]%
+        {Overflow_2024}
+\bibfield{author}{\bibinfo{person}{{Stack Overflow}}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{title}{{Stack Overflow Developer Survey 2024}}.
+\newblock
+\newblock
+\urldef\tempurl%
+\url{https://survey.stackoverflow.co/2024/}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{[Accessed 03-09-2024]}.
+
+
+\bibitem[Weiss et~al\mbox{.}(2017)]%
+        {weiss2017tortoise}
+\bibfield{author}{\bibinfo{person}{Aaron Weiss}, \bibinfo{person}{Arjun Guha}, {and} \bibinfo{person}{Yuriy Brun}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Tortoise: Interactive system configuration repair}. In \bibinfo{booktitle}{\emph{2017 32nd IEEE/ACM International Conference on Automated Software Engineering (ASE)}}. IEEE, \bibinfo{pages}{625--636}.
+\newblock
+
+
+\bibitem[{Wikimedia}(2017)]%
+        {wikimedia_dataloss_2016}
+\bibfield{author}{\bibinfo{person}{{Wikimedia}}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \bibinfo{title}{{Incidents/2017-01-18 Labs}}.
+\newblock
+\newblock
+\urldef\tempurl%
+\url{https://wikitech.wikimedia.org/wiki/Incidents/2017-01-18_Labs}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{[Accessed 04-09-2024]}.
+
+
+\bibitem[Zerouali et~al\mbox{.}(2023)]%
+        {zerouali2023helm}
+\bibfield{author}{\bibinfo{person}{Ahmed Zerouali}, \bibinfo{person}{Ruben Opdebeeck}, {and} \bibinfo{person}{Coen De~Roover}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Helm charts for Kubernetes applications: Evolution, outdatedness and security risks}. In \bibinfo{booktitle}{\emph{2023 IEEE/ACM 20th International Conference on Mining Software Repositories (MSR)}}.
+\newblock
+
+
+\end{thebibliography}

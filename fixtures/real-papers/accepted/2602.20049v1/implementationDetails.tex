@@ -1,0 +1,234 @@
+\section{Implementation Details and Detailed Experimental Results}\label{app:implementation}
+
+\subsection{Probabilistic State Compression}\label{app:compression}
+
+Our implementation reduces the state space of the lifted MDP by repeatedly applying \Cref{theo:compression} to states which where lifted from (inner) nodes with probabilistic variables. 
+This theorem formally specifies the Compression procedure, and all target states always fulfill the requirements listed in \Cref{theo:compression}.
+The soundness of each compression step follows from the theorem below, and we could apply the theorem exhaustively, but we enforce a maximum number of outgoing transitions for each state in the MDP, which guarantees that the Compression of the MDP as a whole can be completed in linear time relative to the size of the MDP.
+In our implementation, that limit is set at $40$ transitions. 
+
+\begin{theorem}[Probabilistic State Compression]\label{theo:compression}
+	Let $M = (S, s_{init}, \mathit{Act}, P, \mathit{AP}, L)$ be an MDP and let $s_p \in S$ be a state with only one enabled action $\alpha_p$, as well as $s_p \neq s_{init}$, $P(s_p, \alpha_p, s_p) = 0$ and $L(s_p) = \emptyset$. 
+	Now let $M' = (S/ \{s_p\}, s_{init}, \mathit{Act}, P', \mathit{AP}, L)$ be the compressed MDP where we define
+	$$ P'(s, \alpha, s' ) \coloneqq P(s, \alpha, s') + \left(P(s, \alpha, s_p) \cdot P(s_p, \alpha_p, s')\right) $$
+	We then have for all labels $v \in \mathit{AP}$:
+	$$Pr^{max}_{M}(\lozenge v) = Pr^{max}_{M'}(\lozenge v)$$
+\end{theorem}
+\begin{proof}
+	We once again consider the maximum reachability as characterized through Bellman equations \cite{forejt2011automated}. 
+	To this end, we first need to define $S^0_M \coloneqq \{s \in S \,|\, Pr^{max}_M (\lozenge v) = 0\}$ to characterize the set of states from which no state labeled $v$ can be reached.
+	Note that $S^0$ can be determined using graph based algorithms such as e.g. breadth first search, as it suffices to know if transitions are possible, while their probabilities can be ignored\cite{forejt2011automated}.
+	Afterwards, the Bellman equations themselves are defined as follows, where $x(s)$ describes the probability of reaching a state labeled $v$ from the state $s$.
+	$$ x(s) = \begin{cases}
+		1 &, v \in L(s)\\
+		0 &, s \in S^0_M\\
+		\max\limits_{\alpha \in \mathit{Act(s)}} \sum\limits_{s' \in S} P(s, \alpha, s') \cdot x(s') &,\text{otherwise}
+	\end{cases}$$
+	$Pr^{max}_M (\lozenge v)$ is then the value for the initial state by the \textit{least} solution to the system of equations described by the Bellman Operator.
+	We will write $x(s)$ for the Bellman equation for $M$ and $x'(s)$ for the Bellman equation of the compressed MDP $M'$.
+	
+	We will now show that for all states $s \in S/ \{s_p\}$ we have $x(s) = x'(s)$.
+	This is trivial for all states $s$ with $v \in L(s)$ and follows for all states $s\in S^0$ from $S^0_M = S^0_{M'}$.
+	We now consider the remaining case. We first show:
+	\begin{align*}
+		&\sum\limits_{s' \in S} P(s, \alpha, s') \cdot x(s') \\
+		&= P(s, \alpha, s_p) \cdot x(s_p) + \sum\limits_{s' \in S/\{s_p\}} P(s, \alpha, s') \cdot x(s') \\
+		&=_1 P(s, \alpha, s_p) \cdot \sum\limits_{s' \in S} P(s_p, \alpha_p, s') \cdot x(s') + \sum\limits_{s' \in S/\{s_p\}} P(s, \alpha, s') \cdot x(s') \\
+		&=_2 P(s, \alpha, s_p) \cdot \sum\limits_{s' \in S/\{s_p\}} P(s_p, \alpha_p, s') \cdot x(s') + \sum\limits_{s' \in S/\{s_p\}} P(s, \alpha, s') \cdot x(s') \\
+		&= \sum\limits_{s' \in S/\{s_p\}} P(s, \alpha, s_p) \cdot P(s_p, \alpha_p, s') \cdot x(s') + \sum\limits_{s' \in S/\{s_p\}} P(s, \alpha, s') \cdot x(s') \\
+		&= \sum\limits_{s' \in S/\{s_p\}} \left(P(s, \alpha, s') + P(s, \alpha, s_p) \cdot P(s_p, \alpha_p, s')\right) \cdot x(s') \\
+		&= \sum\limits_{s' \in S/\{s_p\}} P'(s, \alpha, s') \cdot x(s') \\
+	\end{align*}
+	In $=_1$ we use that $L(s_p) = \emptyset$, meaning that the Bellman equation for $s_p$ is described by the final rule.
+	We also use that $s_p$ only has a single enabled action, which simplifies the Bellman equation to just a sum as the maximum over all actions is trivially found with $\alpha_p$.
+	Note that $x(s_p) = \sum_{s' \in S} P(s_p, \alpha_p, s') \cdot x(s')$ also holds in the case of $s_p \in S^0_M$, as we then either have $s' \in S^0_M$ or $P(s_p, \alpha_p, s') = 0$ for all states $s' \in S$, meaning the sum as whole will be $0$.
+	Afterwards, $=_2$ follows from $P(s_p, \alpha_p, s_p) = 0$.
+	It now follows:
+	\begin{align*}
+		x(s) & = \max\limits_{\alpha \in \mathit{Act(s)}} \sum\limits_{s' \in S} P(s, \alpha, s') \cdot x(s') \\
+		&= \max\limits_{\alpha \in \mathit{Act(s)}} \sum\limits_{s' \in S/\{s_p\}} P'(s, \alpha, s') \cdot x(s') \\
+	\end{align*}
+	Therefore, the system of equations as defined by $x(s)$ is the same as the system of equations as defined by $x'(s)$ up to renaming of $x(s)$. 
+	Therefore, the least solution to one system of equations is also the least solution for the other system of equations, and we get $x(s) = x'(s)$ for all states $s \in S/\{s_p\}$.
+	Finally, we have $s_p \neq s_{init}$ by assumption, and we can conclude $Pr^{max}_{M}(\lozenge v) = x(s_{init}) = x'(s_{init}) = Pr^{max}_{M'}(\lozenge v)$
+\end{proof}
+
+
+
+\subsection{Reduction to Boolean Inference}\label{app:boolean_reduction}
+In this section we show that we can soundly reduce the semantics of arbitrarily typed programs to boolean programs.
+The key idea is that we wrap the expression $e$ we are interested in into a let statement $\LET{x = e}{ x \leftrightarrow v}$, called the boolean reduction of $e$ for $v$, which essentially evaluates $e$ and then tests if the execution yielded the desired value $v$.
+The idea is that it does not matter if we ask for the maximum probability for $e$ to return a particular value, or for the maximum probability for the boolean reduction of $e$ for $v$ to return $\TRUE$.
+To this end we define a simple equivalence or equality test on values with the following semantics:
+$$ \llbracket v_1 \leftrightarrow v_2 \rrbracket^T \Coloneqq \begin{cases}
+	\TRUE| 1\rangle &, v_1 = v_2 \\
+	\FALSE| 1\rangle &, v_1 \neq v_2 \\
+\end{cases}$$
+With this definition in hand we present \Cref{theo:boolean_reduction}, which relates the (unnormalized) distributions in the semantics of expressions and their boolean reductions to each other.
+Afterwards, \Cref{theo:boolean_reduction_norm} then considers normalized distributions and proves the soundness of this inference approach.
+\begin{lemma}[Unnormalized Boolean Reduction]\label{theo:boolean_reduction}
+	Let $e$ be an \NDICE expression, and let $T$ be a function table.
+	Then for all values $v \in V$ we have:
+	\begin{enumerate}
+		\item $\forall d \in \llbracket e \rrbracket^T \; \exists d' \in \llbracket \LET{x = e}{ x \leftrightarrow v}\rrbracket^T: d(v) = d'(\TRUE) \land \sum\limits_{w \neq v} d(w) = d'(F)$
+		\item $\forall d' \in \llbracket \LET{x = e}{ x \leftrightarrow v} \rrbracket^T \; \exists d \in \llbracket e \rrbracket^T: d(v) = d'(\TRUE) \land \sum\limits_{w \neq v} d(w) = d'(F)$
+	\end{enumerate}
+\end{lemma}
+\begin{proof}
+	Let $v \in V$ be some value.
+	\begin{enumerate}
+		\item Let $d \in \llbracket e \rrbracket^T$ be some distribution.
+		Then, by the semantics of the let-statement in \Cref{fig:semantics} we have
+		$$d' \in \llbracket \LET{x = e}{ x \leftrightarrow v} \rrbracket^T \Leftrightarrow \exists d_1 \in \llbracket e \rrbracket^T: \forall w, d_1(w) > 0: \,\exists d_{w} \in \llbracket x\leftrightarrow v [x \mapsto w] \rrbracket^T: $$
+		$$ \forall u \in V : d'(u) = \sum_{w,\, d_1(w) > 0} d_1(w) \cdot d_{w}(u)$$
+		Note that $\llbracket x\leftrightarrow v[x \mapsto w] \rrbracket^T = \llbracket w\leftrightarrow v \rrbracket^T$ is always a singleton set. 
+		We can therefore pick $d_1$ to be $d$, and pick $d_w$ as the only element of $\llbracket w\leftrightarrow v \rrbracket^T$ to define the distribution $d' \in \llbracket \LET{x = e}{ x \leftrightarrow v} \rrbracket^T$.
+		We first consider both $d(v)$ and $d'(\TRUE)$:
+		\begin{align*}
+			d'(\TRUE) &= \sum_{w,\, d_1(w) > 0} d_1(w) \cdot d_{w}(\TRUE) \\
+			&= \sum_{w,\, d(w) > 0} d(w) \cdot d_{w}(\TRUE) \\
+			&=_1 d(v) \cdot d_{v}(\TRUE) \\
+			&= d(v)
+		\end{align*}
+		Note that the final two equations hold as $d_w(\TRUE) = 0$ for all $w \neq v$, and $d_w(\TRUE) = 1$ for $w = v$ by definition.
+		Finally, notice that $=_1$ holds both if we have have $d(v) > 0$ or not. 
+		If we have $d(v) > 0$, then $=_1$ holds as argued above because $d(v) \cdot d_v(\TRUE)$ is a proper term in the sum and is also the only non-zero summand.
+		If we have $d(v) = 0$, then $=_1$ holds as both sides of the equation are $0$, in particular the sum is zero because all the $d_w(\TRUE)$ are $0$.
+		
+		The second part of the conjunction can be proven similarly.
+		However, this time we have  $d_w(\FALSE) = 0$ for all $w = v$, and $d_w(\FALSE) = 1$ for $w \neq v$, allowing us to show the following equations:
+		\begin{align*}
+			d'(\FALSE) &= \sum_{w,\, d_1(w) > 0} d_1(w) \cdot d_{w}(\FALSE) \\
+			&= \sum_{w,\, d(w) > 0 \land w \neq v} d(w) \cdot d_{w}(\FALSE) \\
+			&= \sum_{ w \neq v} d(w) \cdot d_{w}(\FALSE) \\
+			&= \sum_{ w \neq v} d(w)
+		\end{align*}
+		
+		
+		\item Let $d' \in \llbracket \LET{x = e}{ x \leftrightarrow v} \rrbracket^T$.
+		Therefore, by the semantics of the let-statement as defined in \Cref{fig:semantics} there exists a distribution 
+		$d \in \llbracket e \rrbracket^T$, and for all values $w$ with $d(w) > 0$ there exists a distribution $d_{w} \in \llbracket x\leftrightarrow v [x \mapsto w] \rrbracket^T$ so that 
+		$$ \forall u \in V : d'(u) = \sum_{w,\, d(w) > 0} d(w) \cdot d_{w}(u)$$
+		We now consider $d'(\TRUE)$ and $d(v)$.
+		Once again, we note that $\llbracket x\leftrightarrow v[x \mapsto w] \rrbracket^T = \llbracket w\leftrightarrow v \rrbracket^T$ is always a singleton set, meaning we can simplify this sum in accordance with the semantics of $w\leftrightarrow v$ as follows:
+		$$ d'(\TRUE) = \sum_{w,\, d(w) > 0} d_1(w) \cdot d_{w}(\TRUE) =_2 d(v) \cdot d_v(\TRUE) = d(v) $$
+		These equations are justified very similarly to the case above, where we note that $d_w(\TRUE) = 0$ for all $w \neq v$, and $d_w(\TRUE) = 1$ for $w = v$ by definition.
+		Furthermore, the second part of the conjunction can be proven analogously to $(1)$ as well.
+	\end{enumerate} 
+\end{proof}
+
+
+\begin{theorem}[Normalized Boolean Reduction]\label{theo:boolean_reduction_norm}
+	Let $e$ be an \NDICE expression, and let $T$ be a function table.
+	Then for all values $v \in V$ we have:
+	\begin{enumerate}
+		\item $\forall d \in \llbracket e \rrbracket_D^T \; \exists d' \in \llbracket \LET{x = e}{ x \leftrightarrow v}\rrbracket_D^T: d(v) = d'(\TRUE) \land \sum\limits_{w \neq v} d(w) = d'(F)$
+		\item $\forall d' \in \llbracket \LET{x = e}{ x \leftrightarrow v} \rrbracket_D^T \; \exists d \in \llbracket e \rrbracket_D^T: d(v) = d'(\TRUE) \land \sum\limits_{w \neq v} d(w) = d'(F)$
+	\end{enumerate}
+\end{theorem}
+\begin{proof}
+	The theorem follows directly from \Cref{theo:boolean_reduction}, which correlates the unnormalized distributions in the semantics of both expressions.
+	Afterwards, the normalizing constants for corresponding distributions can also be shown to be equal, which directly proves the required relation between the normalized semantics of both expressions
+\end{proof}
+
+\subsection{Extended Experimental Results}\label{app:extended_results}
+
+\setboolean{useComma}{true}
+
+This section extends the empirical results from \Cref{sec:implementation} with the standard deviation over the reported runtimes, all standard deviations are measured over at least 5 evaluations of the respective benchmark.
+We do not report standard deviations for the sizes of the BDDs, ADDs and MDPs again as their numbers are constant between all runs of a benchmark.
+Below, \Cref{tab:Ndet_extended} extends \Cref{tab:Ndet}.
+
+\begin{table}[H]
+	\caption{Performance of \NDICE on the benchmarks. 
+		The \DICE, \NDICE and Storm columns report the total runtime of the respective algorithm, \NDICE is run with state compression and split into \textit{compilation} and \textit{model checking}.
+		$\NDICE_u$ reports the total inference time without state compression.
+		$\NDICE_u$ reports the total inference time without state compression.
+		The reported time is the mean plus or minus a single standard deviation over 5 runs.
+		All times are in ms, with a timeout (TO) after 20 minutes.
+		}
+	\label{tab:Ndet_extended}
+	\begin{adjustbox}{max width=\textwidth}
+	\begin{tabu}{c | c | ccc | c | c}
+		\toprule
+		Benchmark & \DICE &  $\mathit{compilation}$ & $\textit{checking}$ & \NDICE & $\NDICE_u$ & Storm \\
+		\midrule
+		Runway-7 & - & $8\pm 0.4$ & {$\approx 0 \pm 0$} & {$8 \pm 0.4$} & {$8 \pm 0.4$} & {$18 \pm 2.8$} \\
+		Runway-15 & - & $93 \pm 2.3$ & {$1 \pm $} & {$94 \pm 2$} & {$94 \pm 2 $} & {$131 \pm 2.7$} \\
+		Runway-30 & - & $531 \pm 7$ & {$7 \pm 0.1 $} & {$538 \pm 7.1 $} & {$538 \pm 7.5$ } & {$1\, 620 \pm 14$} \\
+		Runway-40 & - & $999 \pm 8$ & {$11 \pm 0.5 $} & {$1\,010 \pm 8.2$} & {$1\,011 \pm  8.8$} & {$5\,212 \pm 61$} \\
+		Runway-45 & - & $1\,514 \pm 19$ & {$15 \pm 0.4$} & {$1\,529 \pm 18$} & {$1\,530 \pm 20 $} & {$8\,673 \pm 66$} \\
+		
+		\midrule
+		CouponProb-10 & 
+		$721 \pm 11$ &
+		$1\,379 \pm 46$ & {$\approx 0 \pm 0$} & {$1\,379 \pm 46$} & 
+		{$1\,379 \pm 46$} & $5\,894 \pm 106$ \\
+		CouponProb-11 & 
+		$1\,958 \pm 33$ & 
+		$3\,904 \pm 62$ & {$\approx 0 \pm 0$} & {$3\,904 \pm 62$} & 
+		{$3\,904 \pm 62$} & $18\,839 \pm 206$ \\
+		CouponProb-12 & 
+		$5\,798 \pm 161$ & 
+		$10\,484 \pm 216$ & {$\approx 0 \pm 0$} & {$10\,484 \pm 216$} & 
+		{$10\,484 \pm 217$} & $56\,434 \pm 1\,115$ \\
+		CouponProb-13 & 
+		$20\,691 \pm 106$ & 
+		$32\,153 \pm 546$ & {$\approx 0 \pm 0$} & {$32\,153 \pm 546$} & 
+		{$32\,153 \pm 546$} & $171\,358 \pm 442$ \\
+		CouponProb-14 & 
+		$63\,418 \pm 280$ & 
+		$96\,068 \pm 647$ & {$\approx 0 \pm 0$} & {$96\,068 \pm 647$} & 
+		{$96\,068 \pm 647$} & $641\,614 \pm 231\,908$ \\
+		
+		\midrule
+		CouponNdet-6 & 
+				- & $105 \pm 1$ &  {$14 \pm 0.7$} & {$119 \pm 1.3$} & {$120 \pm 1.8$} & $162 \pm 7.6$ \\
+		CouponNdet-7 & 
+				- & $276 \pm 3$ & {$41 \pm 1.8$} & {$317 \pm 2.5$} & {$317 \pm 3.4$} & $607 \pm 25$ \\
+		CouponNdet-8 & 
+				- & $731 \pm 19$ & {$96 \pm 2$} & {$827 \pm 20$} & {$824 \pm 19$} & $2\,208 \pm 99$ \\
+		CouponNdet-9 & 
+				- & $2\,264 \pm 49$ & {$389 \pm 33$} & {$2\,653 \pm 66$} & {$2\,662 \pm 64$} & $8\,110 \pm 23$ \\
+		CouponNdet-10 & 
+				- & $6\,105 \pm 107$ & {$1\,257 \pm 81$} & {$7\,362 \pm 114$} & {$7\,293 \pm 117$} & $25\,862 \pm 388$ \\
+		 
+		\midrule
+		Network-2000 & - & $2\,218 \pm 16$ & {$24 \pm 0.9$} & {$2\,242 \pm 17$} & {$2\,242 \pm 17$} & $25 \pm 0.4$ \\
+		Network-4000 & - & $9\,530 \pm 46$ & {$55 \pm 3$} & {$9\,585 \pm 45$} & {$9\,585 \pm 48$} & $39 \pm 0.4$ \\
+		Network-6000 & - & $22\,270 \pm 98$ & {$84 \pm 1.3$} & {$22\,354 \pm 98$} &{$22\,358 \pm 102$} & $54 \pm 1.1$ \\
+		Network-8000 & - & $40\,763 \pm 98$ & {$122 \pm 6$} & {$40\,885 \pm 97$} & {$40\,885 \pm 98$} & $68 \pm 1.6$ \\
+		Network-10000 & - & $67\,081 \pm 207$ & {$153 \pm 1.7$} & {$67\,234 \pm 255$} & {$67\,243 \pm 214$} & $84 \pm 1.4$ \\
+		
+		\midrule
+		Rabin-50 & - & $324\pm 1.1$ & {$\approx 0 \pm 0$} & {$ 324 \pm 1.1$} & {$ 324 \pm  1.1$} & $17 \pm 4.5$ \\
+		Rabin-100 & - & $1\,962\pm 49$ & {$1 \pm 0$} & {$ 1\,963 \pm  49$} & {$ 1\,963 \pm  49$} & $23 \pm 0.7$ \\
+		Rabin-250 & - & $23\,355\pm 141$ & {$2 \pm 0$} & {$ 23\,357 \pm  141$} & {$ 23\,357 \pm  142$} & $82 \pm 3.5$ \\
+		Rabin-500 & - & $233\,494\pm 1\,759$ & {$6 \pm 0.5$} & {$233\,500 \pm 1\,759$} & {$233\,501 \pm 1\,760$} & $327 \pm 6.9$ \\
+		
+		\midrule 
+		Survey & $1 \pm 0.2$ & $1 \pm 0$ & $\approx 0 \pm 0$ & $1 \pm 0$ & $1 \pm 0$ & $14 \pm 2$  \\
+		Hepar2 & $99 \pm 1$ & $309 \pm 3$ & $\approx 0 \pm 0$ & $309 \pm 3$ & $310 \pm 3$ & $23\,094 \pm 146$ \\
+		Insurance & $580 \pm 4$ & $2\,227 \pm 13$ & $\approx 0 \pm 0$ & $2\,227 \pm 13$ & $2\,232 \pm 14$ & $9\,460 \pm 146$ \\
+		Water & $9\,241 \pm 47$ & $9\,288 \pm 37$ & $\approx 0 \pm 0$ & $9\,288 \pm 37$  & $9\,347 \pm 37$   & $12\,545 \pm 46$ \\
+		Alarm & $160\,104 \pm 367$ & $161\,385 \pm 533$ & $\approx 0 \pm 0$ & $161\,385 \pm 533$ & $161\,385 \pm 532$ & $5\,335 \pm 9$ \\
+		
+		\midrule 
+		Survey-Ndet & - & $1 \pm 0.1$ & $\approx 0 \pm 0$ & $1 \pm 0.1$ & $1 \pm 0.1$ & $14 \pm 0.5$ \\
+		Hepar2-Ndet & - & $280 \pm 2.6$ & $14 \pm 0.4$ & $294 \pm 2.9$ & $295 \pm 3.1$ & $23\,909 \pm 131$ \\
+		Insurance-Ndet & - & $2\,217 \pm 12$ & $\approx 0 \pm 0$ & $2\,217 \pm 12$ & $2\,220 \pm 12$ & $10\,345 \pm 137$ \\
+		Water-Ndet & - & $9\,296 \pm 97$ & $\approx 0 \pm 0$ & $9\,296 \pm 97$ & $9\,298 \pm 98$ & $13\,153 \pm 60$ \\
+		Alarm-Ndet & - & $161\,786 \pm 1\,166$ & $47 \pm 2$ & $161\,633 \pm 1\,167$ & $161\,636 \pm 1\,166$ & $5\,219 \pm 17$ \\
+		
+		\midrule
+		3sat-0 & $19\,511 \pm 72$ & $19\,535 \pm 73$ & {$\approx 0 \pm 0$} & {$19\,535 \pm 73$} & {$19\,535 \pm 73$} & TO \\
+		3sat-25 & - & $19\,528 \pm 29$ & {$43 \pm 1$} & {$19\,571 \pm 29$} & {$19\,571 \pm 31$} & TO \\
+		3sat-50 & - & $19\,544 \pm 58$ & {$69 \pm 0.4$} & {$19\,613 \pm 29$} & {$19\,612 \pm 30$} & TO \\
+		3sat-75 & - & $19\,514 \pm 63$ & {$72 \pm 1.5$} & {$19\,586 \pm 64$} & {$19\,584 \pm 130$} & TO \\
+		3sat-100 & - & $19\,567 \pm 128$ & {$107 \pm 3$} & {$19\,674 \pm 128$} & {$19\,676 \pm 132$} & TO \\
+		\bottomrule 
+	\end{tabu}
+
+\end{adjustbox}
+
+\end{table}

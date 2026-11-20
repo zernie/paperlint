@@ -1,0 +1,337 @@
+\section{\label{sec:property-agnostic}Property-Agnostic Abstractions}
+
+We have so far established that $\scrsf{dns}$ can be modelled as a trCPS. The set of its global control states $(\scrsf{nsconfig}_{s})_{s\in\cal S} \times (\scrsf{resstat}_r)_{r\in\cal R}$, as well as the message alphabet $\mathsf M$, are infinite. A priori, this prevents us from using any reachability results from \Cref{subsubsec:eagerness}. In particular, this is caused by three main factors: (1) an infinite query space, (2) clock valuations, and (3) an unbounded stack.
+
+In this section, we  consider the first two factors and develop ways to bound them, consequently reducing the $\scrsf{dns}$ to an rCPS. Broadly speaking, we will use finite monoids as an abstraction for the query space. To abstract time, we will use a variant of the region abstraction method proposed in \cite{alur1994theory}. In the next section, we will formally define the $\verif$ problem and derive a decision procedure for it.
+
+Let us revisit some basic concepts from algebraic language theory. We first fix a finite alphabet $\Sigma$.
+
+\begin{definition}[Syntactic Congruence]
+	Given a regular language $L\subseteq \Sigma^*$, the \emph{syntactic congruence} with respect to $L$ is the coarsest congruence relation $\sim_L$ on $\Sigma^*$ such that,
+	\[u \sim_L v \iff \forall x,y\in\Sigma^*. (xuy \in L \Leftrightarrow xvy \in L).\]
+\end{definition}
+Observe that, if $u_1 \sim_L v_1$ and $u_2 \sim_L v_2$, then $u_1\cdot u_2 \sim_L v_1\cdot v_2$. Consequently, the quotient structure $\tup{L/\sim_L, \cdot}$ forms a finite monoid \cite{nerode1958synmon,rabinscott1959synmon}, called the \emph{syntactic monoid} of $L$. We denote it by $\scrsf{syn}(L)$. This induces a canonical surjective homomorphism from the free monoid $\Sigma^*$ to $\scrsf{syn}(L)$, called the \emph{syntactic homomorphism} with respect to $L$, denoted by $\eta_L$. The syntactic monoid of a language can be effectively constructed \cite{kozen2012automata} as the transition monoid of its minimal automaton \cite{1957fundamental}.
+
+\subsection{Positive Prefix-Testable Languages}\label{subsec:ppt}
+A regular language $L$ is \emph{prefix-testable} \cite{almeida1995finite,van2013separation}, if membership of $L$ can be tested by inspecting prefixes up to some length, namely if $L$ is a finite Boolean combination of languages of the form $u\Sigma^*$, for a finite word $u$. 
+We will use the \emph{positive} fragment of prefix-testable languages to construct a sound and complete abstraction for the set of domain names $\scrsf{domain}$. A \emph{positive prefix-testable} (PPT) language is a finite combination of languages of the form $u\Sigma^*$, using only the union and intersection operations.\footnote{The class of positive prefix-testable languages is an old player in algebraic language theory, and is a simple example of what is known as a positive variety of regular languages \cite{pin1995variety}. Syntactic congruence for such languages corresponds to the class of ordered monoids. However, unordered monoids suffice for our purposes.}
+
+\begin{example}\label{ex:syntactic-monoid}
+	Given $\Sigma = \{a,b\}$, the language $L_0 = ab\Sigma^* \cup b\Sigma^*$ is a PPT language.~\Cref{subfig:ex-minimal-automata} shows the minimal automaton $\cal A_0$ for the language;~\Cref{subfig:adj-matrix} shows the elements in the syntactic monoid $\synmon{L_0}$, i.e., the transition monoid of $\cal A_0$. This can be constructed by first computing the adjacency matrices $M_a$ and $M_b$ that correspond to the $a-$ and $b-$ labelled edges in the automaton's underlying graph. We then close them under matrix multiplication, such that the transition matrix for the word $w$ is denoted by $M_w$. For instance, the multiplication $M_{aa}\cdot M_{ab}$ yields the matrix $M_{aa}$ again. Since $M_{bb} = M_b\cdot M_b = M_b$, it has not been included in the set.
+	\begin{figure}
+		\centering
+		\subfloat[]{
+			\centering
+			\label{subfig:ex-minimal-automata}
+			\resizebox{0.25\textwidth}{!}{\begin{tikzpicture}
+					[shorten >=1pt,node distance=2cm,on grid,>={Stealth[round]},auto,initial text=,
+					every state/.style={draw=red!50,very thick,fill=red!20}]
+					\node[state,initial]  (q_0)                      {$q_0$};
+					\node (A) [above=of q_0] {$\cal A_0$};
+					\node[state]          (q_1) [right=of q_0] {$q_1$};
+					\node[state,accepting]          (q_2) [below right=of q_1] {$q_2$};
+					\node[state](q_3) [above right=of q_1] {$q_3$};
+					
+					\path[->] (q_0) edge              node              {$a$} (q_1)
+									           edge [bend right=30]             node [swap] {$b$} (q_2)
+					                (q_1)  edge              node              {$a$} (q_3)
+					                           edge              node              {$b$} (q_2)
+					                (q_2) edge [loop below] node        {$a,b$} ()
+					                (q_3) edge [loop above] node {$a,b$} ();
+		\end{tikzpicture}}}\hfill
+	\subfloat[]{
+		\centering
+		\label{subfig:adj-matrix}
+		\resizebox{0.7\textwidth}{!}{\begin{tikzpicture}
+				\node (m_a) at (-2,0) {$M_a = \begin{bmatrix}
+																		0 & 1 & 0 & 0\\
+																		0 & 0 & 0 & 1\\
+																		0 & 0 & 1 & 0\\
+																		0 & 0 & 0 & 1\\
+																	\end{bmatrix},$};
+				\node (m_b) at (2,0) {$M_b = \begin{bmatrix}
+																					0 & 0 & 1 & 0\\
+																					0 & 0 & 1 & 0\\
+																					0 & 0 & 1 & 0\\
+																					0 & 0 & 0 & 1\\
+																				\end{bmatrix},$};
+				\node (m_aa) at (-4,-2) {$M_{aa} = \begin{bmatrix}
+																					0 & 0 & 0 & 1\\
+																					0 & 0 & 0 & 1\\
+																					0 & 0 & 1 & 0\\
+																					0 & 0 & 0 & 1\\
+																				\end{bmatrix},$};
+				\node (m_ab) at (0,-2) {$M_{ab} = \begin{bmatrix}
+																						0 & 0 & 1 & 0\\
+																						0 & 0 & 0 & 1\\
+																						0 & 0 & 1 & 0\\
+																						0 & 0 & 0 & 1\\
+																					\end{bmatrix},$};																			
+				\node (m_ba) at (4,-2) {$M_{ba} = \begin{bmatrix}
+																						0 & 0 & 1 & 0\\
+																						0 & 0 & 1 & 0\\
+																						0 & 0 & 1 & 0\\
+																						0 & 0 & 0 & 1\\
+																					\end{bmatrix}$};
+				\end{tikzpicture}}}
+		\captionsetup{skip=5pt}
+		\caption{\label{fig:syntactic-monoid} Construction of the syntactic monoid for $L_0$.}
+	\end{figure}
+\end{example}
+Notice that in the above example, the transition matrix for any word of length $\geq 3$ is identical to the transition matrix for some word of length $\leq 2$. Below we formally state this property.
+\begin{lemma}\label{lem:almeida}\emph{\cite[\S 3.7.2]{almeida1995finite}}
+	Given a PPT language $L = \bigcup_{j\in J} w_j\Sigma^*$, for a finite set of indices $J$, there exists a natural number $k\in\nat$, such that the following hold:
+	\begin{enumerate}
+		\item the set $\eta_L(\Sigma^k)$ comprises of all the idempotents in $\scrsf{syn}(L)$, and
+		\item  all the idempotents in $\scrsf{syn}(L)$ are left-zeroes
+	\end{enumerate}
+	Moreover, $k = max_{j\in J} |w_j|$ can be computed.
+\end{lemma}
+Intuitively, this means that the transitive closure of the transition relation, from any state in the corresponding automaton, is dictated by the \emph{first} $k$ positions of the input word.
+\begin{example}
+	In the transition monoid $\synmon{L_0}$ from Example \ref{ex:syntactic-monoid} (see also Figure \ref{fig:syntactic-monoid}), the idempotents are the elements $M_b = M_{bb},M_{aa},M_{ab}$, and $M_{ba}$. These idempotents also act as left-zeroes. Indeed, from any state, after reading the first two letters of the input word, the automaton reaches one of the sink states $q_2$ and $q_3$.
+\end{example}
+
+We will now prove a crucial property specific to a subclass of PPT languages that forms the cornerstone of our domain abstraction in the following sections. 
+\begin{lemma}\label{lem:prefix-prefix-singleton-ec}
+		Consider the PPT language $L$ of the form $p\cdot\Sigma^+$ or $p\cdot\Sigma^{\geq 2}$, for some $p\in \Sigma^*$. If $u \preceq p$ is a prefix of $p$, then $u \sim_L u' \implies u = u'$. Moreover, if $L$ is of the form $p\cdot\Sigma^{\geq 2}$, and $u \in p\cdot\Sigma$, then $u \sim_L u' \implies u' \in p\cdot\Sigma$.
+\end{lemma}
+\begin{proof}
+	For the first part, assume that $L$ is of the form $p\cdot\Sigma^+$; the proof for the other case is similar. Since $u \preceq p$, for some letter $a$, the string $uu^{-1}pa \in L$. Moreover, since $u \sim_L u'$, $u'(u^{-1}pa) \in L$. We now consider the size of $u'$ and do a case-by-case analysis:
+	\paragraph{$|u'| > |p|$}
+	It must be that $p \prec u'$, and hence $u' \in L$. But, since $u \sim_L v$ we have $u \in L$, which implies that $p \prec u$. This leads to a contradiction.
+	\paragraph{$|u'| \leq |p|$}
+	This implies that $u' \preceq p$. Now we have $u \preceq p$, $u' \preceq p$ and $u \sim_L u'$. If $u = u'$, we are done. Otherwise, either $u \prec u'$ or $u' \prec u$. Without loss of generality, assume $u \prec u'$. Then there exists $w$ s.t. $u'w \in p\Sigma \subseteq p\Sigma^+$. Since $u \sim_L u'$, we must have that $uw \in L$. But since $u \prec u'$, $|u| < |u'|$, which implies that $|uw| < |u'w| = |p|+1$. This leads to a contradiction.
+	
+	For the second part, since $u \in p\cdot\Sigma$, there exists $a\in \Sigma$ such that $u = p \cdot a$. Moreover, there exists $x \in \Sigma^*$ such that $p\cdot a\cdot x \in L$. Since $u \sim_L u'$, $u'\cdot x \in L$. We now consider the size of $u'$ and do a case-by-case analysis:
+	\paragraph{$|u'| > |p + 1|$}
+	There must exist $b,c\in\Sigma$ and $y\in\Sigma^*$ such that $u' = p\cdot b \cdot c\cdot y$. Using Lemma \ref{lem:almeida}, we know that $\synhom{L}(p\cdot b\cdot c)$ is a left-zero in $\synmon{L}$. Hence, $u' \sim_L p\cdot b\cdot c$. By transitivity, we thus obtain $p\cdot a \sim_L p\cdot b\cdot c$. But clearly, for the empty string $\epsilon$, $p\cdot a\cdot\epsilon \notin L$ but $p \cdot b\cdot c\cdot\epsilon\in L$. This leads to a contradiction.
+	\paragraph{$|u'| < |p + 1|$}
+	This means that $u' \preceq p$. From the first part, we then know that $u = u'$, but by assumption $|u| = p + 1$. This leads to a contradiction.
+	
+	Thus, it must be that $|u'| = p+1$, and hence, $u' \in p\cdot\Sigma$.
+\end{proof}
+
+The above lemma shows that for a language $L$ of the form $p\cdot\Sigma^+$ (and $p\cdot\Sigma^{\geq 2}$), the set $\synhom{L}^{-1}(\synhom{L}(u))$ is a singleton, for $u \preceq p$, i.e., all prefixes of $p$ are syntactically congruent only to themselves, with respect to $L$. Moreover, for $L = p\cdot\Sigma^+$ (or $p\cdot\Sigma^{\geq 2}$) and $u \preceq p$, $\synhom{L}^{-1}(prec(\synhom{L}(u)))$ is the set of prefixes of $u$.
+
+Before we define our abstraction on the query space, we will first introduce a more generalized notion of bisimulation for systems with LTS semantics. We will then show that our abstraction induces this generalized notion of bisimulation on $\scrsf{DNS}$.
+
+
+\subsection{A Generalized Bisimulation}\label{subsec:gen-ker-bis}
+
+Recall the definition of an LTS from  \Cref{subsec:trcps}. Here we define a novel generalization of bisimulation on LTSes, called a \emph{generalized kernel bisimulation}. In contrast to standard notions of bisimulation, a generalized kernel bisimulation consists of equivalence relations on both states \emph{and} transitions such that two equivalent states are \emph{bisimilar} up to their equivalent outgoing transitions. In order to formalize this, we adjust Glushkov's  definition of Mealy automata homomorphisms %
+\cite[p. 3]{glushkov1961abstract}
+to define homomorphisms for LTS.
+
+\begin{definition}[LTS Homomorphism]
+	An \emph{LTS homomorphism} of an LTS $\cal A^1 = \tup{S^1,S^1_{init},A^1,\trans^1}$ onto an LTS $\cal A^2 = \tup{S^2,S_{init}^2,A^2,\trans^2}$ is a product map $H = \tup{h_{state},h_{act}}$ of the surjective maps $h_{state} : S^1 \twoheadrightarrow S^2$ and $h_{act} : A^1 \twoheadrightarrow A^2$, such that the following formulae are valid for any $s^1\in S^1$ and $a^1 \in A^1$,
+	\begin{align*}
+		\forall s'^1.(s^1 \xrightarrow{a^1} s'^1 \in \trans^1 & \implies h_{state}(s^1) \xrightarrow{h_{act}(a^1)} h_{state}(s'^1) \in \trans^2) \\
+		s^1 \in S_{init}^1 & \implies h_{state}(s^1) \in S_{init}^2
+	\end{align*}
+	We write $H : \cal A^1 \rightarrow \cal A^2$ to denote the homomorphism. The set of all homomorphisms is closed under composition. The identity homomorphism is the identity map $id\subsub{\cal A^1} = \tup{id\subsub{S^1},id\subsub{A^1}}$, where $id\subsub{S^1}$ and $id\subsub{A^1}$ are the identity maps on $S^1$ and $A^1$ respectively.
+	
+	\looseness=-1 Given a run $\rho = s_0 \xrightarrow{a_1} s_1 \ldots s_{n-1} \xrightarrow{a_n} s_n$ in $\cal A^1$, we write $H(\rho)$ to denote its pointwise homomorphic image $h_{state}(s_0) \xrightarrow{h_{act}(a_1)} h_{state}(s_1) \ldots h_{state}(s_{n-1}) \xrightarrow{h_{act}(a_n)} h_{state}(s_n)$, which is a run in $\cal A^2$.
+\end{definition}
+
+Essentially, a homomorphism from an LTS $\cal A^1$ to $\cal A^2$ induces an equivalence relation on the set of states and actions. Indeed, we say two states (actions) are equivalent if they have the same image with respect to the function $h_{state}$ ($h_{act}$). Alternatively, $s^1$ ($a^1$) is equivalent to $s'^1$ ($a'^1$) iff $\tup{s^1,s'^1}$ ($\tup{a^1,a'^1}$) is in the \emph{kernel} of the homomorphism $h_{state}$ ($h_{act}$), i.e., $\tup{s^1,s'^1}\in \ker{h_{state}}$ ($\tup{a^1,a'^1}\in \ker{h_{act}}$), where $\ker{f}$ denotes the kernel of a function $f$. Consequently, such an equivalence induces a congruence on the structure $\cal A^1$. We now define a generalized kernel bisimulation on an LTS.
+
+\begin{definition}[Generalized Kernel Bisimulation]\label{def:kernel-bisim}
+	Given an LTS $\cal A^1 = \tup{S^1,S^1_{init},A^1,\trans^1}$, a homomorphism $H$ of $\cal A^1$ to $\cal A^2 = \tup{S^2,S_{init}^2,A^2,\trans^2}$ is called a \emph{generalized kernel bisimulation} on $\cal A^1$ if and only if, for every tuple $\tup{p,p'}\in\ker{h_{state}}$ and all actions $a \in A^1$, if $p \xrightarrow{a} q \in \trans^1$, then $p' \xrightarrow{a'} q' \in \trans^1$, such that $\tup{a,a'}\in \ker{h_{act}}$ and $\tup{q,q'}\in \ker{h_{state}}$.
+	
+	Given two states $p$ and $p'$ in $S^1$, we say $p$ is \emph{kernel bisimilar} to $p'$ with respect to $H$, written $p \sim\subsub{H} p'$, if $H$ is a generalized kernel bisimulation on $\cal A^1$, such that $\tup{p,p'}\in\ker{h_{state}}$.
+\end{definition}
+
+If the generalized kernel bisimulation $H$ is such that $h_{act} = id_{A^1}$ is the identity map on $A^1$, then $\ker{h_{state}}$ is a strong bisimulation \cite[Appendix B]{tech-rpt}. Conversely, for any strong bisimulation  $R \subseteq S^1 \times S^1$ on $\cal A^1$, we define the map $H^{R} = \tup{h_{state}^{R},id_{A^1}}$, where $h_{state}^{R} : S^1 \rightarrow S^1/R$ is the quotient map with respect to the equivalence relation $R$. The map $H^R$ is indeed a homomorphism of $\cal A^1$ onto the LTS $\cal A'^2 = \tup{S^1/R,S_{init}^1/R,A^1,\trans'^1}$ where $\trans'^1 = \{ h_{state}^{R}(p) \xrightarrow{a} h_{state}^{R}(q) \mid p \xrightarrow{a} q \in \trans^1 \}$. Moreover, for any $a \in A^1$,
+\begin{align*}
+	p\sim\subsub{H^R} p' & \Leftrightarrow \tup{p,p'} \in R\\
+	& \Rightarrow (p \xrightarrow{a} q \in \trans^1 \Rightarrow \exists q'. p' \xrightarrow{a} q' \in \trans^1 \wedge \tup{q,q'}\in R)\\
+	& \Leftrightarrow (p \xrightarrow{a} q \in \trans^1 \Rightarrow \exists q'. p' \xrightarrow{a} q' \in \trans^1\\
+	&  \,\,\,\,\wedge \tup{a,a}\in \ker{id\subsub{A^1}} \wedge q\sim\subsub{H^R}q'.
+\end{align*}
+Hence, generalized kernel bisimulation is weaker than strong bisimulation. Below, we state as a corollary, that any two states that are generalized kernel bisimilar have equivalent sets of traces starting from them, upto their homomorphic image.
+
+\begin{lemma}\label{lem:bisim}
+	Consider an LTS $\cal A^1 = \tup{S^1,S^1_{init},A^1,\trans^1}$ and a kernel bisimulation $H : \cal A^1 \rightarrow \cal A^2$. Then for any run $\rho$ in $\cal A^2$ from a state $s'^2$, there exists a run $\rho'$ in $\cal A^1$ from $s^1$, for each $s^1 \in h_{state}^{-1}(s'^2)$, such that $H(\rho') = \rho$.
+\end{lemma}
+\begin{proof}
+	The proof follows by induction, on the length of runs in $\cal A^2$. The base case for runs of length 1 is immediate from the definition of generalized kernel bisimulation.
+\end{proof}
+
+Note that kernel bisimulations have already been introduced and well-studied in the context of category theory \cite{goncharov2014coalgebraic,staton2011relating}. Moreover, it is well-known that they coincide with strong bisimulations in the context of LTSes. Thus, generalized kernel bisimulations essentially generalize kernel bisimulations in the context of LTSes. Hereafter, for brevity, we will refer to generalized kernel bisimulations as just kernel bisimulations.
+
+\subsection{Syntactic Domain Congruence}\label{subsec:syn-domain-congruence}
+
+Recall that every query consists of a domain name and a query type.
+Since there are finitely many query types, the unbounded nature of
+$\scrsf{query}$ arises from the unbounded\footnote{In practice, it is bounded by hardware or pre-defined limits. However, the limits are extremely large. By current standards, the total number of possible queries is $\sum_{i=0}^{253}38^i$, where 253 is the maximum length of a domain name, and each position is labelled by one of 38 valid characters. The total number of possible labels is $\sum_{i=0}^{253}37^i$, as a label is a domain without any periods (.).} cardinality of $\scrsf{domain}$.
+This is because every domain name consists of an unbounded
+sequence of labels, where each label comes from the
+set $\scrsf{label}$ (Example \ref{ex:normal-domain}). In this section, we define a more robust notion of a syntactic congruence over $\scrsf{domain}$ with finitely many equivalence classes that preserves the semantics of $\scrsf{dns}$. In particular, the congruence is preserved not just under concatenation but also domain name rewrites. We shall show that every congruence class is a PPT language over $\scrsf{label}$.
+
+As usual, we fix the zone-file configuration $\cal Z$ for all our computations. Since every domain name is also a string, henceforth, we call a set of domain names a language. To begin with, we build some intuition on how one may abstract the domain names to a finite set.
+
+\subsubsection{Basic Intuition}
+
+As a first approach, we will try to define an equivalence relation on $\scrsf{domain}$ with finitely many equivalence classes, such that any two global configurations in $\scrsf{dns}$ that are equivalent upto their query components, are kernel bisimilar. To do that, we first identify some languages by observing the behaviour of the system,
+\begin{align*}
+	L_{s, t, \ltimes} &= \{d \mid d\in\scrsf{domain},\text{dn}(\cal M (s,\tup{d,t})) \ltimes d\}\\
+	L_{t, rr} &= \{d \mid d\in \scrsf{domain}, d \leftarrow_{t} rr\}
+\end{align*}
+for $s \in \cal S, t \in \scrsf{type}, \ltimes \in \{=,\ni_{\star},<\},$ and $rr\in \cal Z$. Any two domain names $d$ and $d'$ with identical membership relations with the above languages are defined to be equivalent, i.e., $d$ and $d'$ are equivalent if for each of the above languages, say $L$, $d\in L$ iff $d'\in L$. Intuitively, two global configurations in $\scrsf{dns}$ where the corresponding occurrence of domain names are equivalent (we exclude the unsynthesized resource records from this comparison) according to the above relation will either both satisfy the premise for a transition or neither, for example, observe the premises of transitions in Figures \ref{fig:ns-transitions}, \ref{fig:ns-transitions-more}, and \ref{fig:rec-transitions}. Since the above set of languages is finite, there are finitely many equivalence classes. Readers may check that this also induces a kernel bisimilarity on the global configuration space of $\scrsf{dns}$.
+
+Note that this also suffices to ensure kernel bisimilarity in the case of $\rtype{DNAME}$ rewrites. Indeed, by definition, for two equivalent domain names $d$ and $d'$, and a $\rtype{DNAME}$ record $rr$, either they both contain $\text{dn}(rr)$ as a prefix or neither. This means, either both names can undergo the rewrite operation or neither. After the rewrite, both the resulting domain names will have the same prefix up to all the domain names of the records in $\cal Z$. However, a priori it is not clear whether rewrites also preserve the equivalence of the domain names, as the membership in the languages of the form $L_{s,t,\ltimes}$ may now differ. Moreover, a more fundamental concern is that there is no obvious way to effectively represent the above languages.
+
+\subsubsection{Formal Definition}
+We will now define a syntactic congruence on domain names that slightly refines the one sketched above. To begin with, let us denote the set of all labels occuring in the domain names in the records of $\cal Z$ by $\zoneAlph\subseteq\scrsf{label}$. Additionally, we symbolically denote the elements in the complement set $(\scrsf{label}\setminus\zoneAlph)$ by the special label $\zoneAlphCompl$. This finally gives us the finite alphabet, $\dnsAlph = \zoneAlph\cup\{\zoneAlphCompl\}$.
+
+
+
+\begin{definition}[Syntactic Domain Congruence]
+	For every record $rr \in \cal Z$, consider the PPT languages $L_{rr,\text{dn}}$ and $L_{rr,\text{val}}$, such that
+	\noindent\begin{minipage}{.5\linewidth}
+		\begin{equation*}
+			L_{rr,\text{dn}} = \begin{cases}
+				\text{dn}(rr).\dnsAlph^{\geq 2}, & \text{if } \text{dn}(rr) \in (\scrsf{label}^*)_\star\\
+				\text{dn}(rr).\dnsAlph^{+},  & \text{if } \text{dn}(rr) \in (\scrsf{label}^*)\\
+			\end{cases}
+		\end{equation*}
+	\end{minipage}%
+	\begin{minipage}{.5\linewidth}
+		\begin{equation*}
+			L_{rr,\text{val}} = \begin{cases}
+				\text{val}(rr).\dnsAlph^+,  & \text{if } \text{ty}(rr) = \scrsf{ns}\\
+				\dnsAlph^*,  & \text{if } \text{ty}(rr) \neq \scrsf{ns}.
+			\end{cases}
+		\end{equation*}
+	\end{minipage}
+
+	The \emph{syntactic domain congruence} with respect to $\cal Z$ is the congruence relation $\simZ$ on $\dnsAlph^*$ s.t.
+	\[ u \simZ v \iff \forall rr \in \cal Z. (\synhom{L_{rr,\text{dn}}}(u) = \synhom{L_{rr, \text{dn}}}(v) \wedge \synhom{L_{rr,\text{val}}}(u) = \synhom{L_{rr, \text{val}}}(v)). \]
+	We then say that the domains $u$ and $v$ are \emph{syntactically congruent} (with respect to $\cal Z$).
+	
+	Equivalently, $u \simZ v$ iff $\synhomZ (u) = \synhomZ (v)$, where $\synhomZ (w) = \tup{\synhom{L_{rr,j}}(w)}_{rr\in\cal Z,j\in \{\text{dn},\text{val}\}}$. The co-domain of $\synhomZ$ is the product monoid $\prod_{rr\in\cal Z,j\in \{\text{dn},\text{val}\}} \synmon{L_{rr,j}}$, denoted by $\synmonZ$. %
+\end{definition}
+
+Intuitively, the idea is to define a congruence that is sufficiently refined such that two domain names satisfy the conditions required to trigger a transition in $\scrsf{dns}$ if and only if they are congruent to each other; the languages must be carefully chosen to make this happen. Below we show that this is indeed the case. In particular, we show that the syntactic domain congruence refines the monadic relations, defined as languages, from our dicussion above.
+
+\begin{lemma}\label{lem:synt-dom-cong-fundamental}
+	Consider two domain names $d$ and $d'$ such that $d \simZ d'$, then the following hold:
+	\begin{enumerate}
+		\item $\forall rr\in\cal Z. (\text{dn}(rr) \ltimes d \iff \text{dn}(rr) \ltimes d')$, where $\ltimes \in \{=,\ni_{\star},<\}$.
+		\item $\forall t\in\scrsf{type}. \scrsf{rank}(rr,\tup{d,t},z) = \scrsf{rank}(rr,\tup{d',t},z)$, where $z$ is an arbitrary zone in $\cal Z$ and $rr$ is an arbitrary record in $z$.
+		\item $\forall rr\in\cal Z. \text{ty}(rr) = \scrsf{ns} \implies (\text{val}(rr) = d \iff \text{val}(rr) = d')$.
+	\end{enumerate}
+\end{lemma}
+\begin{proof}
+	
+	(1) Without loss of generality, we shall do a case-by-case analysis of the domain name $d$, generalizing $rr \in \cal Z$,
+	\paragraph{$(\ltimes \equiv\,=)$}
+	Trivially, $d = \text{dn}(rr)$ implies $d \preceq \text{dn}(rr)$. Since $d \simZ d'$, then $d \sim_{L_{rr,\text{dn}}} d'$. Using Lemma \ref{lem:prefix-prefix-singleton-ec}, we thus have $d = d'$, which implies $d' = \text{dn}(rr)$.
+	\paragraph{$(\ltimes \equiv\ni_\star)$}
+	Recalling the definition of $\ni_\star$ from Figure \ref{fig:DNS-notation}, we know that $d_\star \in \text{dn}(rr)\ostar{(\dnsAlph)}_\star$ and $\text{dn}(rr) \in (\scrsf{label}^*)_\star$. By definition, $L_{rr,\text{dn}} = \text{dn}(rr).\dnsAlph^{\geq 2}$. Since $d \sim_{L_{rr,\text{dn}}} d'$, using Lemma \ref{lem:prefix-prefix-singleton-ec}, we again have that $d' \in \text{dn}(rr)\cdot{(\dnsAlph)}$, or equivalently, $d'_\star \in \text{dn}(rr)\ostar{(\dnsAlph)}_\star$ (recall the definition of $\cal L_\star$ from~\Cref{subsec:def-not}).
+	\paragraph{$(\ltimes \equiv\,<)$}
+	Recalling the definition of $<$ from Figure \ref{fig:DNS-notation}, $\text{dn}(rr) \subset prec (d)$. Since the underlying monoid is a free monoid, this is equivalent to $\text{dn}(rr) \prec d$. Using Lemma \ref{lem:almeida}, $\synhom{L_{rr,\text{dn}}}(d)$ is thus a left-zero in $\synhom{L_{rr,\text{dn}}}$, which implies that $\synhom{L_{rr,\text{dn}}}(d')$ is also a left-zero in that semigroup. Hence, using Lemma \ref{lem:prefix-prefix-singleton-ec}, $\text{dn}(rr) \prec d'$, or equivalently, $\text{dn}(rr) \subset prec (d')$.
+	
+	(2) It suffices to prove that $\scrsf{match}(rr,\text{dn}(rr)) = \scrsf{match}(rr,d) \iff \scrsf{match}(rr,\text{dn}(rr)) = \scrsf{match}(rr,d')$ and $max_\simeq(\text{dn}(rr), d) = max_\simeq(\text{dn}(rr), d')$. The first formula follows from the arguments in (1).\\
+	To prove the second formula, we must prove that $|prec(\text{dn}(rr)) \cap prec(d)| = |prec(\text{dn}(rr)) \cap prec(d')|$. Since we are working with the free monoid $\cal L$, $prec(\text{dn}(rr)) \cap prec(d)$ essentially contains the prefix-closed set of the largest common prefix of $\text{dn}(rr)$ and $d$. We will show that any common prefix of $\text{dn}(rr)$ and $d$ must be a prefix of $d'$.\\
+	Suppose $d_1$ is a common prefix of $\text{dn}(rr)$ and $d$. Then there must exist an $m\in \synmon{L_{rr,\text{dn}}}$ such that, $\synhom{L_{rr,\text{dn}}}(d_1)\cdot m = \synhom{L_{rr,\text{dn}}}(d) = \synhom{L_{rr,\text{dn}}}(d')$.Hence, there is a prefix $d_2$ ,of $d'$, in $\synhom{L_{rr,\text{dn}}}^{-1}(d_1)$. However, since $d_1$ is a prefix of $\text{dn}(rr)$, it follows from Lemma \ref{lem:prefix-prefix-singleton-ec}, that $d_1 = d_2$. Thus, $d_1$ is a prefix of $d'$ as well.
+	
+	(3) This follows immediately from the definitions and Lemma \ref{lem:prefix-prefix-singleton-ec} using similar arguments as before.
+\end{proof}
+
+The following theorem is a direct corollary of the above lemma,
+\begin{theorem}
+	Consider two domain names $d$ and $d'$ such that $d \simZ d'$, then for every $s\in\cal S$, $t\in\scrsf{type}$, $\ltimes \in \{=,\ni_{\star},<\}$ and $rr\in \cal Z$, it holds that
+	\begin{enumerate}
+		\item $d \in L_{s,t,\ltimes} \iff d' \in L_{s,t,\ltimes}$
+		\item $d \in L_{t,rr} \iff d' \in L_{t,rr}$.
+	\end{enumerate}
+\end{theorem}
+
+Below, we state that the syntactic domain congruence also commutes with $\rtype{DNAME}$ rewrites.
+\begin{lemma}
+	Consider a $\rtype{DNAME}$ resource record $\tup{pre,\scrsf{dname},\sigma, post,b}$, and two syntactically congruent domain names $d$ and $d'$. Then $(post.(pre)^{-1}.d) \simZ (post . (pre)^{-1} . d')$.
+\end{lemma}
+\begin{proof}
+	It suffices to show that $pre \preceq d$ iff $pre \preceq d'$. Since, $pre = \text{dn}(rr)$, for some resource record $rr$, this follows immediately from Lemma \ref{lem:synt-dom-cong-fundamental} (1).
+\end{proof}
+
+The congruence can be naturally extended to a (non-symbolic) domain name $d \in \scrsf{domain}$, where any label in $(\scrsf{label}\setminus\zoneAlph)$ is mapped to $\synhomZ(\zoneAlphCompl)$. Additionally, the root domain $\epsilon$ is mapped to $\synhomZ (\varepsilon)$. Thus, we obtain a monoid homomorphism of the free monoid $\cal L$. We can effectively construct the equivalence classes of the entire set of domain names occuring in $\cal Z$, as shown in the following lemma.
+
+\begin{lemma}
+	Assume that $\cal Z$ has $n$ resource records and that the maximum length of the domain name of a resource record in $\cal Z$ is $c$. Then the class of $ $ abstract domains can be computed in $\cal O (n^{c+1}c^5)$ time.
+\end{lemma}
+\begin{proof}
+    Each resource record in the zone file configuration corresponds to at most two PPT languages, $L_{rr,\text{dn}}$ and $L_{rr,\text{val}}$. There at most $\cal O (n)$ such languages. Due to the nature of these languages, one can show that to compute the corresponding automata we require $\cal O (|\text{dn}(rr)|)$ time. The adjacency matrix for each letter in the alphabet $\dnsAlph$ can be initiated in $\cal O(|\dnsAlph||\text{dn}(rr)|^2)$ time. To compute adjacency matrices, we thus need $O(|\dnsAlph||\text{dn}(rr)|^2)$ time.
+
+    To compute the set of abstract domains, we take the diagonal product over all the languages, for each label, and then compute all concatenations up to the length $c$. Since there are at most $\cal O (n)$ matrices for each label (since there are at most that many languages), we will compute $|\dnsAlph|^cnc$ matrix multiplications in all. Each multiplication takes $\cal O(c^{\sim 3})$ time because the dimensions of a matrix are at most $c\times c$. Therefore, to compute all the domains we need $\cal O(|\dnsAlph|^cnc^4)$ time.
+
+    However, since $|\dnsAlph| \leq nc$, we thus have $\cal O(|\dnsAlph|^cnc^4) = \cal O(n^{c+1}c^5)$.
+\end{proof}
+
+\subsection{Abstract DNS Model}\label{subsec:abstract-model}
+
+Recalling Example \ref{ex:normal-domain}, we have defined an \emph{abstraction} on $\scrsf{domain}_{\cal L}$ with respect to $\cal Z_{\cal L}$, induced by a congruence on $\dnsAlph^*$ such that the quotient structure forms a monoid. The abstraction can be computed using the monoid homomorphism $\synhomZ$.
+
+Using Lemma \ref{lem:notation-functorial}, the homomorphism $\synhomZ$ can be functorially mapped to the map $Z : \scrsf{zfc}\subsub{\cal L} \rightarrow \scrsf{zfc}\subsub{\synmonZ}$. We also observe that, for a zone file configuration $\cal Z' \in \scrsf{zfc}\subsub{\monoid}$ over the monoid $\monoid$, the semantics of the DNS instance $\tup{\scrsf{dns}\subsub{\cal Z'}}$ is functorial in $\monoid$. This is a straightforward extension of Lemma \ref{lem:notation-functorial}, following the constructions described in Sections \ref{subsec:NS-semantics} and \ref{subsec:RR-semantics}. Now, the arbitrarily fixed instance $\scrsf{dns}$, used in Sections \ref{subsec:NS-semantics} and \ref{subsec:RR-semantics}, is defined over the monoid $\cal L$. Hence, the homomorphism $\synhomZ : \cal L \rightarrow \synmonZ$ can be functorially mapped to an LTS homomorphism, $H_{\synhomZ} : \tup{\scrsf{dns}\subsub{\cal Z}} \rightarrow \tup{\abstraction}$. We call $\abstraction$ the \emph{abstraction} of the concrete model $\scrsf{dns}\subsub{\cal Z}$.
+
+
+ 
+
+
+\Cref{fig:dns-abstraction}  shows the \emph{abstract} nameserver transitions in $\abstraction$ from Figures \ref{fig:ns-transitions} and \ref{fig:ns-transitions-more}. Intuitively, in all the states and transitions, every occurrence of a domain name is replaced by its abstraction. %
+
+\begin{figure}
+	\centering
+	\subfloat{
+		\centering
+		\resizebox{0.35\textwidth}{!}{
+			\begin{tikzpicture}[every label/.style={font=\small}]
+				\node (before) [fill=blue!10,draw,rounded corners=2pt, label=north:\emph{Concrete Config}] at (0,0) {$\dfrac{\text{dn}(\cal M (s, \tup{d,t})) = d}{\tup{lookup,\tup{d,t},r} \rightarrow \tup{exact, \tup{d,t}, r}}$};
+				\node (after) [fill=olive!10,draw,rounded corners=2pt, label=south:\emph{Abstract Config}] at (0,-2) {$\dfrac{\text{dn}(\cal M (s, \tup{\synmonZ(d),t})) = \synmonZ(d)}{\tup{lookup,\tup{\synhomZ (d),t},r} \rightarrow \tup{exact, \tup{\synhomZ (d),t}, r}}$};
+				\draw [double distance=2pt, -{Implies}, shorten <= 2pt, shorten >= 2pt] (before) -- (after) node [midway, right] {$\synhomZ$};
+			\end{tikzpicture}}}\hfill
+	\subfloat{
+		\centering
+		\resizebox{0.375\textwidth}{!}{
+			\begin{tikzpicture}[every label/.style={font=\small}]
+				\node (before) [fill=blue!10,draw,rounded corners=2pt, label=north:\emph{Concrete Config}] at (0,0) {$\dfrac{\text{dn}(\cal M (s, \tup{d,t})) \ni_{\star} d}{\tup{lookup,\tup{d,t},r} \rightarrow \tup{wildcard, \tup{d,t}, r}}$};
+				\node (after) [fill=olive!10,draw,rounded corners=2pt, label=south:\emph{Abstract Config}] at (0,-2) {$\dfrac{\text{dn}(\cal M (s, \tup{\synhomZ (d),t})) \ni_{\star} \synhomZ (d)}{\tup{lookup,\tup{\synhomZ (d),t},r} \rightarrow \tup{wildcard, \tup{\synhomZ (d),t}, r}}$};
+				\draw [double distance=2pt, -{Implies}, shorten <= 2pt, shorten >= 2pt] (before) -- (after) node [midway, right] {$\synhomZ$};
+	\end{tikzpicture}}}\qquad
+	\subfloat{
+		\centering
+		\resizebox{\textwidth}{!}{
+			\begin{tikzpicture}[every label/.style={font=\small}]
+				\node (before) [fill=blue!10,draw,rounded corners=2pt, label=north:\emph{Concrete Config}] at (0,0) {$\dfrac{
+						\text{dn}({\cal M}(s,\tup{d,t}))<d,\scrsf{dname}\in\tau(s,\tup{d,t}), d'\in\scrsf{domain}, {\cal T}_{\scrsf{dname}}(s,\tup{d,t})=\{rr\}, rr'=\tup{d,\scrsf{cname},\text{ttl}(rr),\text{val}(rr)\text{dn}(rr)^{-1}d,1}}{\tup{lookup,\tup{d,t},r}\xrightarrow{c_{(d',s),r}!\tup{\scrsf{ansq},\{rr,rr'\}}}\tup{init,\bot,\bot}}$};
+				\node (after) [fill=olive!10,draw,rounded corners=2pt, label=south:\emph{Abstract Config}] at (0,-2.375) {$\dfrac{
+						\text{dn}({\cal M}(s,\tup{\synhomZ (d),t})) \in prec(\synhomZ (d)),\scrsf{dname}\in\tau(s,\tup{\synhomZ (d),t}), m'\in\synmonZ, {\cal T}_{\scrsf{dname}}(s,\tup{\synhomZ (d),t})=\{\synhomZ (rr)\}, rr'=\tup{\synhomZ (d),\scrsf{cname},\text{ttl}(\synhomZ (rr)),m',1}}{\tup{lookup,\tup{\synhomZ(d),t},r}\xrightarrow{c_{(m',s),r}!\tup{\scrsf{ansq},\{\synhomZ (rr),rr'\}}}\tup{init,\bot,\bot}}$};
+				\draw [double distance=2pt, -{Implies}, shorten <= 2pt, shorten >= 2pt] (before) -- (after) node [midway, right] {$\synhomZ$};
+	\end{tikzpicture}}}
+	\captionsetup{skip=8pt}
+	\caption{\label{fig:dns-abstraction}Some abstract $\ns{s}$ transitions; the concrete configurations are written before the arrows and the abstract ones after. For the abstract configuration in the bottom-most transition, we assume $m' \in \text{val}(\synhomZ(rr))\text{dn}(\synhomZ(rr))^{-1}\synhomZ(d)$.}
+\end{figure}
+
+We conclude this section with one of the main contributions of this paper, establishing both the soundness and completeness of our abstraction.
+
+\begin{theorem}[Soundness and Completeness]\label{thm:sound-complete-abstraction}
+	For every run $\rho$ in $\tup{\abstraction}$, there exists a run $\rho'$ in $\tup{\scrsf{dns}\subsub{\cal Z}}$ such that $H_{\synhomZ}(\rho') = \rho$. The converse holds as well.
+\end{theorem}
+\begin{proof}
+	It suffices to show that the LTS homomorphism $H_{\synhomZ}$  is a kernel bisimulation. The statement then follows from Lemma \ref{lem:bisim}.
+\end{proof} 
+
+This theorem shows that the set of runs in the abstraction $\abstraction$ is neither an over-approximation nor an under-approximation, but  captures the exact set of runs in $\scrsf{dns}\subsub{\cal Z}$, up to the homomorphic image with respect to $H_{\synhomZ}$. Using Lemma \ref{lem:eager-dns}, we further have the following corollary.
+
+\begin{corollary}\label{cor:eager-abstraction}
+	$\abstraction$ is eager.
+\end{corollary}
+
+With this, we have obtained a sound and complete abstraction of $\scrsf{dns}$ in the form of a trCPS with finitely many global states. In the rest of this paper, runs refer to the runs in the abstraction $\abstraction$, unless otherwise stated. As the next step, we reduce the semantics of $\abstraction$ to its \emph{untimed model}.
+
+\subsubsection*{Abstracting Time}
+The real-time semantics of the model makes the global configuration space infinite. Since the timer semantics in our model only involve resetting the timer ($[\mathbf{x} \leftarrow \mathbf{k}]$), by checking the expiration of the timer ($x > 0$) and devolution of time ($\xrightarrow{t}$), this immediately allows us to employ a standard region construction \cite{alur1994theory} to our model in order to obtain an untimed symbolic reduction of $\abstraction$. 
+
+As the reachability relation of configurations is preserved under region construction, Theorem \ref{thm:sound-complete-abstraction} also holds for the reduced untimed model. By abuse of notation, we refer to this model as $\abstraction$.

@@ -575,7 +575,7 @@ const TYPESCRIPT_ONLY = [
   "test/*.{js,mjs,cjs}",
   "test/e2e/**/*.{js,mjs,cjs}",
   "test/fixtures/layers/src/**/*.{js,mjs,cjs}",
-  "fixtures/accepted-papers/**/*.{js,mjs,cjs}",
+  "fixtures/real-papers/accepted/**/*.{js,mjs,cjs}",
   "skills/paper-pipeline/scripts/fixtures/**/*.{js,mjs,cjs}",
   "skills/plan-paper-timeline/fixtures/**/*.{js,mjs,cjs}",
 ];
@@ -601,10 +601,11 @@ export default [
     ignores: [
       ".tmp-stages-src-*/",
       "fixtures/.tmp-*/",
-      // Other people's papers (fixtures/arxiv-papers/README.md): judged by the real-papers test against a
+      // Other people's papers (fixtures/real-papers/preprints/README.md): judged by the real-papers test against a
       // baseline, not by this repository's own lint.
-      "fixtures/arxiv-papers/",
-      "fixtures/venue-papers/",
+      "fixtures/real-papers/preprints/",
+      // The camera-ready papers are arXiv ids; the six older accepted papers (names, not ids) stay linted.
+      "fixtures/real-papers/accepted/[0-9]*/",
       "docs/prior-art/repro/",
       "dist/",
       "skills/*/scripts/*.js",
@@ -985,6 +986,11 @@ export default [
   // sets that rule for JavaScript today; being last keeps it that way).
   {
     files: TYPESCRIPT_ONLY,
+    // The collector that chose the accepted papers' second batch, committed as the record of that
+    // run (fixtures/real-papers/accepted/README.md, «Growing this set without bias»): JavaScript
+    // because it is evidence, and it says so at its top for local/js-needs-reason. Rewriting it in
+    // TypeScript, tested, is a change of its own; every other rule still lints it.
+    ignores: ["fixtures/real-papers/accepted/sampling/*.mjs"],
     rules: {
       "no-restricted-syntax": [
         "error",

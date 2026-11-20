@@ -1,0 +1,252 @@
+
+
+\section{Preliminaries}
+
+
+\subsection{Notations}
+
+
+We denote an unweighted, undirected graph as $G = (V, E)$, where $V = \{v_1, v_2, \ldots, v_N\}$ is the set of nodes, and $E \subseteq V \times V$ is the set of edges.
+Self-loops, i.e., edges of the form $(u,u)$, are not allowed.
+Let $N = |V|$ and $M = |E|$ denote the number of nodes and edges in $G$, respectively. 
+For a node $v_i \in V$, 
+let $\mathcal{E}(i)$ be the set of incident edges of node $v_i$, and
+let $\mathcal{N}(i)$ denote the indices of its neighbors, where $\mathcal{N}(i) = \{j \mid (v_i, v_j) \in \mathcal{E}(i)\}$. 
+The degree of $v_i$ is defined as $d(v_{i}) = |\mathcal{N}(i)|$, and $d(G)$ denotes the maximum degree in $G$. 
+If two graphs $G = (V, E)$ and $G' = (V', E')$ differ by exactly one edge $e = (v_i, v_j)$, 
+we write $G \sim_e G'$, or simply $G \sim G'$.
+
+
+
+\subsection{Graph Pattern Counting}
+\label{subsec:prelim_pattern_counting}
+
+
+
+Given any acyclic graph pattern, we use $k$ to denote the number of edges in the pattern. 
+Let $Q: \mathcal{G} \to \mathbb{Z}_{\geq 0}$ be the pattern counting query that returns the number of subgraphs in an input graph $G$.
+A common type of acyclic pattern is a path, which is a sequence of distinct nodes connected by edges. 
+% In traditional graph analytics, path counting is often discussed alongside walk counting.
+In contrast, walks may include repeated nodes, making them computationally easier to count in the non-private setting: walk counting is solvable in polynomial time, whereas path counting is provably \#W[1]-complete~\cite{flum2004parameterized}.
+We refer to a path with $k$ edges as a $k$-line path, and a walk with $k$ edges as a $k$-line walk.
+Note that walk counting is not considered part of acyclic pattern counting, as walks can contain cycles, e.g., a $3$-line walk can form a triangle.
+
+
+% \red{Figure 1 here???}
+
+
+
+% \subsection{Differential Privacy on Graphs}
+
+% \subsection{Local Differential Privacy on Graphs}
+
+% Local DP definition, 
+
+
+
+
+% that are isomorphic to $S$, i.e., 
+% \begin{equation*}
+% Q_S(G) := | \{ H \subseteq G \mid H \cong S\}|,    
+% \end{equation*}
+% where $H \cong S$ means there exists a bijection $\phi: V_S \to V_H$ such that $(u_i,u_j) \in E_S$ if and only if $(\phi(u_i), \phi(u_j)) \in E_H$.
+% We refer to $\phi(u_i)$ as the image of $u_i$ under the bijection $\phi$.
+
+% We use $\sigma(S)$ to denote the symmetry factor of $S$, defined as the number of bijections $\phi_S: V_S \to V_S$ such that $(u,v) \in E_S$ if and only if $(\phi_S(u_i), \phi_S(u_j)) \in E_S$ for all $u_i, u_j \in V_S$.
+% Intuitively, $\sigma(S)$ counts the distinct node relabelings of $V_S$ that leave $S$ unchanged; for example, if $S$ is a path, then $\sigma(S) = 2$.
+% Consequently, if $H \cong S$, there are exactly $\sigma(S)$ bijections $\phi: V_S \to V_H$ satisfying the isomorphism condition.
+
+
+
+% O and regarding both \eps and \beta as a constant 
+
+
+% $\{V_1, V_2, \cdots, V_k\}$ is a partition of $V$ if, $V_i \subseteq V$, $\cup V_i = V$ and any two node subsets are disjoint. 
+% We use $E(V_i, V_j)$ to 
+
+% node set partition
+
+
+
+
+\subsection{Differential Privacy on Graphs}
+
+% Most DP works on graph analytics study the central setting, where a data curator has access to the whole ... He is responsible to ... to make the graph analytical results do not leak some sensitive information.  
+
+% Two graphs are ... node-neighbors 
+
+% Edge neighbors.
+
+% A mechanism is called to be DP mechanism if...
+
+% BY using ... or ..., we have definitions for node-DP or edge-DP.
+
+% DP satisfies several deserived properties...
+
+
+
+Most works on DP in graph analytics operate under the central-DP setting, where a trusted data curator has access to the entire graph dataset. 
+Upon receiving a query, the curator performs analytics and ensures that the output satisfies DP. 
+This guarantees that one cannot distinguish between two neighboring graphs based on the output, thereby preserving privacy.
+Formally, a randomized mechanism is said to satisfy DP if the following holds:
+
+\begin{definition}[Differential Privacy]
+\label{def:dp}
+A randomized mechanism $\mathcal{M}: \mathcal{G} \to \mathcal{K}$ satisfies $\varepsilon$-DP if, for any pair of neighboring graphs $G, G'$ and any measurable subset $\mathcal{S} \subseteq \mathcal{K}$, it holds that
+\begin{equation*}
+    \Pr[\mathcal{M}(G) \in \mathcal{S}] \leq e^{\varepsilon} \Pr[\mathcal{M}(G') \in \mathcal{S}].
+\end{equation*}
+\end{definition}
+
+
+Two graphs $G$ and $G'$ are said to be \textit{node-neighboring} if they differ by exactly one node and all of its incident edges. 
+Similarly, they are \textit{edge-neighboring} if they differ by exactly one edge. 
+Applying these notions to the DP definition yields the concepts of \textit{node-differential privacy} (node-DP) and \textit{edge-differential privacy} (edge-DP)~\cite{hay2009accurate}, respectively. 
+
+DP satisfies several desirable properties, as outlined below.
+
+
+\begin{lemma}[Post-Processing]
+\label{lem:pp}
+Let $\mathcal{M}: \mathcal{G} \to \mathcal{K}$ be a randomized mechanism that satisfies $\varepsilon$-DP. 
+Then for any (possibly randomized) function $\mathcal{F}: \mathcal{K} \to \mathcal{Z}$, the mechanism $\mathcal{F} \circ \mathcal{M}: \mathcal{G} \to \mathcal{Z}$ also satisfies $\varepsilon$-DP. 
+\end{lemma}
+
+\begin{lemma}[Basic Composition] 
+\label{lem:bc}
+Let $\mathcal{M}_1, \mathcal{M}_2, \dots, \mathcal{M}_n$ be a series of randomized mechanisms, 
+where for each $i \in \{1, 2, \dots, n\}$,
+$\mathcal{M}_i: \mathcal{G} \to \mathcal{K}_i$ satisfies $\varepsilon$-DP. 
+The composition mechanism
+$
+\mathcal{M}(G) = (\mathcal{M}_1(G), \dots, \mathcal{M}_n(G))
+$
+satisfies $n\varepsilon$-DP.
+\end{lemma}
+
+\begin{lemma}[Parallel Composition]
+\label{lem:pc}
+Let $\mathcal{M}_1, \mathcal{M}_2, \ldots, \mathcal{M}_n$ be mechanisms, each satisfying $\varepsilon$-DP. 
+If for any pair of neighboring graphs $G$ and $G'$, there exists at most one mechanism $\mathcal{M}_i$ such that $\mathcal{M}_i(G) \neq \mathcal{M}_i(G')$, then the composition mechanism
+$
+\mathcal{M}(G) = (\mathcal{M}_1(G), \dots, \mathcal{M}_n(G))
+$
+satisfies $\varepsilon$-DP.
+\end{lemma}
+
+
+
+A common DP mechanism is the \textit{Laplace mechanism}. 
+Here, for any arbitrary graph query $Q: \mathcal{G} \to \mathcal{R}$, its \textit{global sensitivity} is defined as
+\begin{equation*}
+    \mathrm{GS}_Q := \max_{G, G'} \| Q(G) - Q(G') \|_1,
+\end{equation*}
+where $G$ and $G'$ are any pair of neighboring graphs. Then, the Laplace mechanism is defined as follows:
+\begin{definition}[Laplace Mechanism~\cite{dwork2006calibrating}]
+\label{def:lap_mech}
+Given a graph query $Q: \mathcal{G} \to \mathcal{R}$, the mechanism
+\begin{equation*}
+    \mathcal{M}(G) = Q(G) + \operatorname{Lap}\left(\frac{1}{\varepsilon}\mathrm{GS}_Q\right)
+\end{equation*}
+satisfies $\varepsilon$-DP, where $\operatorname{Lap}(\mathrm{GS}_Q/\varepsilon)$ denotes a Laplace random variable with mean $0$ and scale $\mathrm{GS}_Q/\varepsilon$.
+\end{definition}
+Specifically, computing global sensitivity under node-neighboring or edge-neighboring graphs leads to node-DP or edge-DP guarantees, respectively.
+
+
+
+
+
+\subsection{Local Differential Privacy}
+\label{subsec:ldp}
+
+
+
+In contrast to the central-DP setting, where data analytics is performed centrally by a trusted curator, 
+LDP studies a distributed setting,
+in which each party corresponds to a node with access only to its own information. 
+When performing data analytics tasks, each node first privatizes its data locally, then sends the noisy output to an analyzer for post-processing.
+To guarantee LDP, we must ensure that the collection of messages received by the analyzer satisfies DP, as defined in Definition~\ref{def:dp}.
+More precisely, each node $v_i$ has access to a subgraph $G_i = \left(\{v_i\} \cup \{v_j \mid j \in \mathcal{N}(i)\}, \mathcal{E}(i)\right)$.
+To perform graph analytics,
+each $v_i$ invokes 
+a local randomizer $\mathcal{R}$ on $G_i$, which produces a privatized output $\mathcal{X}_i = \mathcal{R}(G_i)$.
+The analyzer $\mathcal{A}$ then aggregates the local outputs $(\mathcal{X}_1, \mathcal{X}_2, \dots, \mathcal{X}_N)$ to produce the final result.
+A mechanism is said to satisfy $\varepsilon$-LDP if the joint output $(\mathcal{X}_1, \mathcal{X}_2, \dots, \mathcal{X}_N)$ satisfies $\varepsilon$-DP.
+Similar to the central-DP setting, applying node- or edge-neighboring definitions yields notions of \textit{node-LDP} and \textit{edge-LDP}, respectively.
+To date, all existing LDP graph analytics literature~\cite{sun2019analyzing,ye2020towards, ye2020lf,Imola2021, Imola2022,eden2023triangle, he2025robust} has focused on the edge-LDP setting, which is also the focus of our work.
+
+
+
+
+A commonly used mechanism under LDP is RR, in which each node $v_i \in V$ outputs a randomized neighbor list. 
+The analyzer $\mathcal{A}$ can then construct a noisy graph based on the received neighboring lists and perform graph analytics on it.
+Since each edge is shared between two incident nodes, to avoid duplication, the information of edge $(v_i,v_j)$ is reported only by node $v_i$ when $i < j$.
+Specifically, for each node $v_i$, RR takes as input a binary neighbor list $\textbf{a}_i = (a_{i,1}, \dots, a_{i,i-1}) \in \{0, 1\}^{i-1}$, where $a_{i,j}$ is $1$ if $j \in \mathcal{N}(i)$ and $0$ otherwise. 
+For each entry $a_{i,j}$, RR keeps the true bit with probability $p ={e^\varepsilon}/({e^\varepsilon + 1})$ and flips it with probability $q = {1}/({e^\varepsilon + 1})$. 
+This mechanism satisfies $\varepsilon$-edge-LDP.
+
+
+
+
+
+
+\paragraph{Multi-round LDP mechanism}
+% \red{The above model works for some simple queries like edge counting~\cite{} and star-counting~\cite{???}, where we only require... However, for more complex graph analytical tasks,... we require... Here, we have $r$-round communications. In $\ell$-th round with $\ell \in\{1,\dots, r\}$, each node $v_i$ invoke $\mathcal{R}^{(\ell)}$..., where $\mathcal{R}^{(\ell)}$ can utilize the results of all first $\ell-1$ rounds of all parties. To guarantee the while process preserve $\varepsilon$..., for any $\ell$ we ensure ... preserves ..., then by applying composition, we have the whole processes preserves ... }
+
+
+The above basic LDP model is sufficient for simple queries such as edge counting and star counting~\cite{Imola2021}, where the final result can be obtained in a single round. 
+However, more complex graph analytics tasks like triangle counting~\cite{Imola2021, Imola2022,he2025robust} often require collaboration between nodes and the analyzer across multiple rounds of interaction.
+Here, we consider a $k$-round LDP mechanism.
+In round $\ell \in \{1, \dots, k\}$, each node $v_i$ invokes a round-specific randomizer $\mathcal{R}^{(\ell)}$ on its local subgraph $G_i$, possibly incorporating messages released by the other parties in the previous $\ell-1$ rounds.
+Let $\mathcal{X}^{(\ell)}_i$ denote the privatized output of node $v_i$ in round $\ell$, and let the collection of all node messages in round $\ell$ be
+$\mathcal{X}^{(\ell)} = 
+    (\mathcal{X}^{(\ell)}_1, \ldots, \mathcal{X}^{(\ell)}_N)$.
+The mechanism satisfies $\varepsilon$-LDP if the joint messages from all rounds, i.e., $(\mathcal{X}^{(1)}, \dots, \mathcal{X}^{(k)})$, satisfy $\varepsilon$-DP.
+To ensure this, we can allocate the privacy budget across rounds such that each $\mathcal{X}^{(\ell)}$ satisfies $\varepsilon / k$-DP. 
+By applying basic composition (Lemma~\ref{lem:bc}), the entire $k$-round process satisfies $\varepsilon$-DP as required.
+To quantify the communication cost incurred across rounds, we sum the sizes (in bits) of all messages transmitted. 
+For computational cost, we report the total cost incurred across all rounds by the analyzer and by a single node.
+
+
+
+
+
+\subsection{Useful Concentration Bounds}
+The following three lemmas provide high-probability concentration bounds that will be used in the subsequent analysis.
+ 
+\begin{lemma}[Concentration Bound of Laplace Distributions~\cite{chan11continual}]
+\label{lem:con_lap}
+Let $\eta_1, \eta_2, \dots, \eta_k$ be independent random variables with $\eta_i \sim \mathrm{Lap}(b_i)$. Then, for any $\beta > 0$,
+\begin{equation*}
+\label{eq:lap_bound}
+\Pr\left[\bigg| \sum_i \eta_i \bigg| \geq \sqrt{8 \sum_i b_i^2 \cdot \log\frac{2}{\beta}}\right] \leq \beta.
+\end{equation*}
+
+\end{lemma}
+
+ 
+\begin{lemma}[Multiplicative Chernoff Bound~\cite{doerr2019probabilistic}]
+\label{lem:con_cher}
+Let \(X_1,\dots,X_n\) be independent random variables taking values in \([0,1]\).
+Let \(X=\sum_{i=1}^n X_i\).
+For any \(0 < \delta \le 1\),
+\begin{equation*}
+    \Pr[X \ge (1+\delta)\,\mathbb{E}[X]] 
+  \leq \exp(-\frac{1}{3}\delta^{2}\,\mathbb{E}[X]).
+\end{equation*}
+    
+\end{lemma}
+
+\begin{lemma}[Chebyshev’s inequality~\cite{chebyshev1867valeurs}]
+\label{lem:che_neq}
+Let $X$ be a random variable with $\mathbb{E}[X]=\mu$ and $\operatorname{Var}(X)=\sigma^{2}$.  
+For any $k>0$,
+\begin{equation*}
+  \Pr[|X-\mu|\ge k\sigma]\le\frac{1}{k^{2}} .
+\end{equation*}
+\end{lemma}
+
+
+ 
+
+

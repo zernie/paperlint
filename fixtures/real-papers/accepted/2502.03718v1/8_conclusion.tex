@@ -1,0 +1,25 @@
+\section{Conclusion}
+\label{sec:conclu}
+In this work, we propose {\tool}, an effective and efficient static analyzer to identify price manipulation attack contracts solely on the bytecode level.
+Based on the decompiled intermediate representation, with the help of the data-flow-based heuristic arguments recovery algorithm and sensitive path filtering method, {\tool} successively builds the cross-function callsite graph and token flow graph to characterize the control- and data-flow dependency relationships among function calls.
+According to the formally defined rules, {\tool} can achieve 91.6\% recall and $\sim$100\% precision on a ground truth dataset, while also demonstrating robustness against obfuscation techniques. Furthermore, {\tool} has revealed 616 potential price manipulation attack contracts, accounting for \$9.25M financial losses, where only 19 cases were reported publicly. By adopting {\tool} on Ethereum and BSC, {\tool} has raised 14 alarms 99 seconds after the corresponding deployment on average. These alarmed ones have already led to \$641K financial losses, while seven of them are still waiting for their ripe time.
+
+
+\section*{Ethical Consideration}
+
+In RQ1, both $\mathcal{D}_{G}$ and $\mathcal{D}_{L}$ used in our study are sourced from publicly available blockchain service platforms or social media. The attack contracts in  $\mathcal{D}_{G}$ have already been thoroughly verified by security professionals and are no longer capable of causing further economic harm to the DeFi ecosystem.
+
+During our large-scale analysis of deployed contracts in RQ2, {\tool} successfully identified 616 attack contracts, where only 19 cases were reported previously. We tested these contracts on a private blockchain and confirmed that some of them still have the potential to launch profitable attacks.
+We are in the process of contacting the relevant project teams through various channels, including project websites and community platforms. 
+Considering that publicly disclosing the addresses of these attack contracts could attract malicious attempts, this part of the data is excluded from our open-sourced dataset. 
+
+In RQ3, during the real-time monitoring of the Ethereum and Binance Smart Chain, {\tool} has successfully raised 14 alerts. Unfortunately, due to the short window between contract deployment and attack execution for the three cases in Table~\ref{tab:rq3}, attackers were able to launch and obtain profits before we could establish contact with the project teams.
+As for the seven unfinished ones, we have contacted the relevant project teams once after the alarm is raised.
+We strongly encourage stakeholders in the community to integrate tools like {\tool} to prevent or mitigate such kinds of threats. 
+
+\section*{Data Availability}
+
+We have released {\tool} and the ground-truth dataset ($\mathcal{D}_G$) at \url{https://figshare.com/articles/online_resource/SMARTCAT_Artifact/28192028}.
+
+
+

@@ -1,0 +1,16 @@
+\begin{table*}[t]
+\centering
+\begin{tabular}{c p{0.3\textwidth} p{0.4\textwidth}}
+\toprule
+\textbf{Knob} & \textbf{Performance characteristics} & \textbf{Tactic} \\
+\midrule
+Activation recomputation & Reduces memory footprint through smart activation checkpointing 
+ & If a prior config OOMed with activation recomputation enabled, then skip the similar config that only disables activation recomputation and mark its result as OOMed \\ 
+Sequence parallelism & Reduces memory footprint by reducing activation memory with no added communication cost & If a prior config OOMed with sequence parallelism enabled, then skip the similar config that only disables sequence parallelism and mark its result as OOMed \\
+Distributed optimizer & Reduces memory footprint by sharding gradient and optimizer state with added communication cost & If a prior config did not OOM without the distributed optimizer, then skip the similar config that only enables the distributed optimizer and set its runtime to be the same \\
+No. of microbatches & In the absence of pipeline parallelism, hardware utilization is inversely proportional to the number of microbatches \cite{megatron}. & If a prior config did not OOM with number of microbatches $n$ and no pipeline parallelism, then skip the similar config that only increases the number of microbatches and set its runtime to be the same \\
+\bottomrule
+\end{tabular}
+\caption{Summary of fidelity-preserving tactics used in Megatron-LM configuration search experiment}
+\label{table:fidelity-preserving-tactics}
+\end{table*}

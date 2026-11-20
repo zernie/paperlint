@@ -1,0 +1,65 @@
+\section{\label{sec:property-validation-to-reachability}The DNS Verification Problem}
+In this section, we  study the decidability of the DNS verification problem for $\scrsf{dns}\subsub{\cal Z}$. Borrowing notation from  \Cref{subsec:dns-semantics}, we formally define our problem $\verif$ as follows,
+
+
+\paragraph{\textbf{Input}}
+A ZFC $\tup{\cal Z,\Theta} \in \scrsf{zfc}\subsub{\cal L}$ over the free monoid $\cal L$, and a $\mathsf{FO}(<)$ property $\phi$ over strings in $\scrsf{a}^*$, given as the corresponding minimal automaton $\cal F^\phi$, where $\scrsf{a} = \scrsf{raction}_r \uplus \biguplus_{s \in \cal S} \scrsf{saction}_s$.
+\paragraph{\textbf{Output}}
+The decision of the verification problem for $\tup{\scrsf{dns}\subsub{\cal Z}}$, and $\cal F^{\synhomZ(\phi)}$ over $\synhomZ(\scrsf{a})^*$, \new{along with a witness trace}, where $\cal F^{\synhomZ(\phi)}$ is an FA obtained from $\cal F^\phi$ by mapping every transition label $a \in \scrsf{a}$ to  $\synhomZ(a)$. We denote the corresponding problem instance by $\verif(\cal Z, \Theta, \phi)$. 
+
+\new{Note that the $\verif$ problem does not target the correctness of the DNS protocol itself, but rather an instantiation of the protocol for a given zone configuration. 
+	The problem aims to reflect the situation where network administrators already maintain a zone file configuration and would like to  find vulnerabilities in the resulting DNS behaviour.} Intuitively, we want to capture security vulnerabilities as traces of runs in $\scrsf{dns}\subsub{\cal Z}$ characterized by $\mathsf{FO}(<)$-definable
+languages. We will look at some common attack vectors in Section \ref{sec:applications}.
+
+
+
+
+\subsection{The Verification Approach}
+
+Recall from Section \ref{subsec:dns-semantics} that the untimed model $\abstraction$ is an rCPS over the pointed topology $\mathsf T\subsub{\cal Z}$. Using Lemma \ref{lem:rcps-to-pds} and Corollary \ref{cor:eager-abstraction}, we can construct, in polynomial time, a pushdown system $\cal P\subsub{\cal Z}$, such that for any run in $\abstraction$ from an $\mathbf{s}$-configuration to an $\mathbf{s}'$-configuration, there is a trace equivalent run in $\cal P\subsub{\cal Z}$, also from an $\mathbf{s}$-configuration to an $\mathbf{s}'$-configuration. It then immediately follows from Theorem \ref{thm:sound-complete-abstraction} that:
+
+\begin{lemma}
+	$\scrsf{verif}(\cal Z, \Theta,  \phi)$ reduces to the verification problem for the PDS $\cal P\subsub{\cal Z}$ and the FA $\cal F^{\synhomZ(\phi)}$.
+\end{lemma}
+
+\new{It is well-known \cite[Alg. 3]{esparza2000efficient} that the verification problem for a PDS and an FA is in $\mathsf{PTime}$ and $\mathsf{PSpace}$ respectively. Moreover, it is possible to provide a witness trace that satisfies the said property in doubly-exponential time \cite[Section 3.1.4]{reps2005weighted}.} Since $\cal P\subsub{\cal Z}$ is exponential in the size of the input ZFC (due to the exponential blow-up of the local state space of the resolver $\rec{r}$),\footnote{Note that this does not change even after the abstraction as the blow-up appears when we enumerate the caches and server lists in the resolver states.} we have the following result:
+
+\begin{lemma}
+    The set of reachable configurations in $\cal P\subsub{\cal Z}$ can be computed in exponential time in the size of the input $\tup{\cal Z, \Theta}$.
+\end{lemma}
+
+
+We define the \emph{product} of $\cal F^{\synhomZ(\phi)}$ with $\cal P_{\cal Z}$ as the standard product PDS $\cal F^{\synhomZ(\phi)} \times \cal P\subsub{\cal Z}$, such that $(p_1,p_2) \xrightarrow{\tup{\alpha, a, \alpha'}} (q_1,q_2)$ is a transition in $\cal F^{\synhomZ(\phi)} \times \cal P\subsub{\cal Z}$ if and only if $p_1 \xrightarrow{a} q_1$ is a transition in $\cal F^{\synhomZ(\phi)}$ and $p_2 \xrightarrow{\tup{\alpha, a, \alpha'}} q_2$ is a transition in $\cal P\subsub{\cal Z}$. The set of initial states is the product of the set of initial states in $\cal F^{\synhomZ(\phi)}$ and $\cal P\subsub{\cal Z}$. We then call a state $\tup{p_1,p_2}$ in $\cal F^{\synhomZ(\phi)} \times \cal P\subsub{\cal Z}$ \emph{bad} if $p_1$ is a final state in $\cal F^{\synhomZ(\phi)}$. It is straightforward to see that the verification problem for $\cal P\subsub{\cal Z}$ and $\cal F^{\synhomZ(\phi)}$ is equivalent to checking the membership of an $s$-configuration, for a bad state $s$, in the set of reachable configurations of $\cal F^{\synhomZ(\phi)} \times \cal P\subsub{\cal Z}$. Thus, we have the complexity result,
+
+\begin{lemma}\label{lem:complexity}
+    \new{$\verif(\cal Z, \Theta, \phi)$ is $\mathsf{2ExpTime}$. The complexity reduces to $\mathsf{ExpTime}$ if the output of the problem does not require a witness trace.}
+\end{lemma}
+
+\begin{figure}
+    \centering
+    \begin{tikzpicture}[every label/.style={font=\small}]
+        \node (inp) [] at (-1.25, -0.5) {\footnotesize $Input$:};
+        \node (zfc) [fill=red!10,draw,rounded corners=2pt] at (0,0) {$\tup{\cal Z, \Theta}$};
+        \node (zfcabstract) [fill=red!10,draw,rounded corners=2pt] at (2.5,0) {$\tup{Z(\cal Z), \Theta}$};
+        \node (dns) [fill=red!10,draw,rounded corners=2pt] at (5.25,0) {$\abstraction$};
+        \node (pds) [fill=red!10,draw,rounded corners=2pt] at (7.25,0) {$\cal P\subsub{\cal Z}$};
+        \node (propabs) [fill=purple!10,draw,rounded corners=2pt] at (-0.25,-1) {$\cal F^{\phi}$};
+        \node (fa) [fill=purple!10,draw,rounded corners=2pt] at (6.95,-1) {$\cal F^{\synhomZ(\phi)}$};
+        \node (prod) [draw,rounded corners=2pt] at (9,-0.5) {\footnotesize $\cal P\subsub{\cal Z}\times\cal F^{\synhomZ(\phi)}$};
+        \node (final) [draw, rounded corners=2pt, align=center, purple] at (11.25,-0.5) {\footnotesize Is a bad state\\ \footnotesize reachable?};
+        \draw [->] (zfc) -- (zfcabstract) node [midway, above, align=center] {\scriptsize Abstract\\\scriptsize ZFC};
+        \draw [->] (zfcabstract) -- (dns) node [midway, above, align=center] {\scriptsize Construct\\ \scriptsize $\scrsf{dns}$};
+        \draw [->] (dns) -- (pds) node [midway, above, align=center] {\scriptsize Reduce to\\ \scriptsize PDS};
+        \draw [->] (pds) -- (prod);
+        \draw [->] (propabs) -- (fa) node [midway, below, align=center] {\scriptsize Abstract FA};
+        \draw [->] (fa) -- (prod);
+        \draw [double distance=2pt, -{Implies}] (prod) -- (final);
+    \end{tikzpicture}
+    \caption{\new{Overview of our decision procedure.}}
+    \label{fig:procedure}
+\end{figure}
+
+
+\new{Figure~\ref{fig:procedure} provides an overview of our decision procedure. Since our abstraction is effectively defined as a monoid homomorphism ($\synhomZ$), one can deduce a concrete trace by mapping back every configuration in the abstract output (trace) to a canonical concrete configuration. In particular, it suffices to replace every occurrence of a congruence class, under $\synhomZ$, in a configuration by its canonical element. Since every congruence class can be effectively represented by a regular language, the canonical element can be chosen as one of the shortest domain names in the language.\footnote{This choice can be made deterministic by defining an appropriate lexicographic ordering.} Most importantly, the soundness of this procedure follows from the completeness of our abstraction.}
+
+

@@ -1,0 +1,83 @@
+\newpage
+
+\appendices
+
+
+
+\section{Meta-Review}
+\input{contents/meta-review}
+
+
+\section{DataSeal's Formal Security Game}
+
+\noindent1. \textbf{Setup}
+
+\begin{itemize}
+    \setlength{\leftmargini}{0pt}
+    \item Key Generation. The client generates a secret key $sk$ and public key $pk$ using FHE.
+    \item Encoding. The client encodes matrices \( A \) and \( B \), generating encrypted matrices \( M^*_A \) and \( M^*_B \), using a secret checksum \( sk \) and a random scalar \( r \).
+    \item Transmission. The client sends the encrypted matrices to the server for computation.
+\end{itemize}
+
+% \textbf{Key Generation.} The client generates a secret key $sk$ and public key $pk$ using FHE.
+
+% \textbf{Encoding.} The client encodes matrices \( A \) and \( B \), generating encrypted matrices \( M^*_A \) and \( M^*_B \), using a secret checksum \( k \) and a random scalar \( r \).
+
+% \textbf{Transmission.} The client sends the encrypted matrices to the server for computation.
+
+\noindent2. \textbf{Adversary Actions}
+\begin{itemize}
+    \setlength{\leftmargini}{0pt}
+    \item Computation. The adversarial server computes \( C \) (e.g., matrix multiplication \( C = A \cdot B \)) and attempts to generate a forged result \( C' \neq A \cdot B \).
+    \item Forgery Attempt. The adversary sends the client a forged result \( C' \) and corresponding checksums \( v'_1 \) and \( v'_2 \) (based on the fake result).
+\end{itemize}
+
+\noindent3. \textbf{Client Verification}
+\begin{itemize}
+    \setlength{\leftmargini}{0pt}
+    \item The client uses the secret key \( sk \) and scalar \( r \) to recompute the expected checksums \( v_1 \) and \( v_2 \).
+    \item The client accepts the result only if: \( v'_1 = \text{weighted checksum of } C' \), \( v'_2 = r \times v'_1 \).
+\end{itemize}
+
+\noindent4. \textbf{Winning Condition}
+
+The adversary wins if they can generate a forged result \( C' \) with fake checksums \( v'_1, v'_2 \) that the client accepts.
+
+\noindent5. \textbf{Security Definition}
+
+DataSeal is unforgeable if, for any polynomial-time adversary \( \mathcal{A} \), the probability that the client accepts a forged result \( C' \) with valid checksums is negligible:
+    \[
+    \Pr[\text{Client accepts } C' \mid C' \neq A \cdot B] \leq \text{negl}(\lambda)
+    \]
+    where \( \lambda \) is the security parameter (size of \( k \)).
+
+
+\noindent6. \textbf{Summary}
+
+This game captures the unforgeability of the checksums in DataSeal. Without knowledge of the secret key \( k \) and scalar \( r \), the adversary cannot generate valid checksums for a forged result, ensuring the integrity of the computation.
+
+% \subsection{Adversary Actions}
+
+% \textbf{Computation.} The adversarial server computes \( C \) (e.g., matrix multiplication \( C = A \cdot B \)) and attempts to generate a forged result \( C' \neq A \cdot B \).
+
+% \textbf{Forgery Attempt.} The adversary sends the client a forged result \( C' \) and corresponding checksums \( v'_1 \) and \( v'_2 \) (based on the fake result).
+
+% \subsection{Client Verification.}
+
+% The client uses the secret key \( sk \) and scalar \( r \) to recompute the expected checksums \( v_1 \) and \( v_2 \).
+
+% The client accepts the result only if: \( v'_1 = \text{weighted checksum of } C' \), \( v'_2 = r \times v'_1 \).
+
+% \subsection{Winning Condition}
+% The adversary wins if they can generate a forged result \( C' \) with fake checksums \( v'_1, v'_2 \) that the client accepts.
+
+% \subsection{Security Definition}
+% DataSeal is unforgeable if, for any polynomial-time adversary \( \mathcal{A} \), the probability that the client accepts a forged result \( C' \) with valid checksums is negligible:
+% \[
+% \Pr[\text{Client accepts } C' \mid C' \neq A \cdot B] \leq \text{negl}(\lambda)
+% \]
+% where \( \lambda \) is the security parameter (size of \( k \)).
+
+% \subsection{Summary}
+% This game captures the unforgeability of the checksums in DataSeal. Without knowledge of the secret key \( k \) and scalar \( r \), the adversary cannot generate valid checksums for a forged result, ensuring the integrity of the computation.
+% }

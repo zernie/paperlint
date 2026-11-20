@@ -1,0 +1,6 @@
+\begin{figure*}
+    \centering
+    \includegraphics[width=\linewidth]{figures/trace_flow.pdf}
+    \caption{\small \sysname's trace processing pipeline: Starting with unmodified user code, the device emulator captures raw traces containing API calls, kernel launches, and synchronization events across multiple GPU streams. The trace collator merges these per-GPU traces and resolves collective operations, creating a unified job-level trace. The kernel runtime estimator then annotates compute operations with predicted durations. Finally, the event-driven simulator processes this trace to model the complex interactions between compute operations, synchronization events, and communication collectives across streams and devices, producing an accurate timeline of execution.}
+    \label{fig:traceflow}
+\end{figure*}

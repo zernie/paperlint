@@ -1,0 +1,657 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{74}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{}, \showDOI{}, and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showDOI}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showDOI #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showDOI      \undefined \def \showDOI       #1{#1}\fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[upw(2022)]%
+        {upwork}
+ \bibinfo{year}{2022}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Upwork}}.
+\newblock
+\urldef\tempurl%
+\url{https://www.upwork.com/}
+\showURL{%
+Retrieved August 15, 2022 from \tempurl}
+
+
+\bibitem[ai-(2024)]%
+        {ai-slot-machine}
+ \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{AI is plundering the imagination and replacing it with a slot machine}}.
+\newblock
+\urldef\tempurl%
+\url{https://thebulletin.org/2022/10/ai-is-plundering-the-imagination-and-replacing-it-with-a-slot-machine/}
+\showURL{%
+Retrieved March 24, 2024 from \tempurl}
+
+
+\bibitem[tra(2024)]%
+        {tracing}
+ \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{How to Learn to Draw by Tracing}}.
+\newblock
+\urldef\tempurl%
+\url{https://monikazagrobelna.com/2020/08/16/how-to-learn-to-draw-by-tracing/}
+\showURL{%
+Retrieved February 16, 2024 from \tempurl}
+
+
+\bibitem[mid(2024)]%
+        {midjourney}
+ \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Midjourney}}.
+\newblock
+\urldef\tempurl%
+\url{https://midjourney.com/}
+\showURL{%
+Retrieved March 24, 2024 from \tempurl}
+
+
+\bibitem[viz(2024)]%
+        {vizcom}
+ \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Vizcom}}.
+\newblock
+\urldef\tempurl%
+\url{https://app.vizcom.ai/}
+\showURL{%
+Retrieved March 24, 2024 from \tempurl}
+
+
+\bibitem[Anderson et~al\mbox{.}(2024)]%
+        {anderson2024homogenizing}
+\bibfield{author}{\bibinfo{person}{Barrett~R Anderson}, \bibinfo{person}{Jash~Hemant Shah}, {and} \bibinfo{person}{Max Kreminski}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Homogenization Effects of Large Language Models on Human Creative Ideation}. In \bibinfo{booktitle}{\emph{Proceedings of the 16th Conference on Creativity \& Cognition}} (Chicago, IL, USA) \emph{(\bibinfo{series}{C\&C '24})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{413–425}.
+\newblock
+\showISBNx{9798400704857}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3635636.3656204}
+\showDOI{\tempurl}
+
+
+\bibitem[Arkes and Blumer(1985)]%
+        {arkes1985psychology}
+\bibfield{author}{\bibinfo{person}{Hal~R Arkes} {and} \bibinfo{person}{Catherine Blumer}.} \bibinfo{year}{1985}\natexlab{}.
+\newblock \showarticletitle{The psychology of sunk cost}.
+\newblock \bibinfo{journal}{\emph{Organizational behavior and human decision processes}} \bibinfo{volume}{35}, \bibinfo{number}{1} (\bibinfo{year}{1985}), \bibinfo{pages}{124--140}.
+\newblock
+
+
+\bibitem[Benedetti et~al\mbox{.}(2014)]%
+        {benedetti2014painting}
+\bibfield{author}{\bibinfo{person}{Luca Benedetti}, \bibinfo{person}{Holger Winnem{\"o}ller}, \bibinfo{person}{Massimiliano Corsini}, {and} \bibinfo{person}{Roberto Scopigno}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{Painting with Bob: assisted creativity for novices}. In \bibinfo{booktitle}{\emph{Proceedings of the 27th annual ACM symposium on User interface software and technology}}. \bibinfo{pages}{419--428}.
+\newblock
+
+
+\bibitem[Betker et~al\mbox{.}(2023)]%
+        {betker2023improving}
+\bibfield{author}{\bibinfo{person}{James Betker}, \bibinfo{person}{Gabriel Goh}, \bibinfo{person}{Li Jing}, \bibinfo{person}{Tim Brooks}, \bibinfo{person}{Jianfeng Wang}, \bibinfo{person}{Linjie Li}, \bibinfo{person}{Long Ouyang}, \bibinfo{person}{Juntang Zhuang}, \bibinfo{person}{Joyce Lee}, \bibinfo{person}{Yufei Guo}, {et~al\mbox{.}}} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Improving image generation with better captions}.
+\newblock \bibinfo{journal}{\emph{Computer Science. https://cdn. openai. com/papers/dall-e-3. pdf}} \bibinfo{volume}{2}, \bibinfo{number}{3} (\bibinfo{year}{2023}), \bibinfo{pages}{8}.
+\newblock
+
+
+\bibitem[Bordas et~al\mbox{.}(2024)]%
+        {bordas2024switching}
+\bibfield{author}{\bibinfo{person}{Antoine Bordas}, \bibinfo{person}{Pascal Le~Masson}, {and} \bibinfo{person}{Benoit Weil}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Switching perspectives on generative artificial intelligence: a design view for humans-generative AI co-creativity}. In \bibinfo{booktitle}{\emph{R\&D Management Conference 2024}}.
+\newblock
+
+
+\bibitem[Brade et~al\mbox{.}(2023)]%
+        {brade2023promptify}
+\bibfield{author}{\bibinfo{person}{Stephen Brade}, \bibinfo{person}{Bryan Wang}, \bibinfo{person}{Mauricio Sousa}, \bibinfo{person}{Sageev Oore}, {and} \bibinfo{person}{Tovi Grossman}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Promptify: Text-to-image generation through interactive prompt exploration with large language models}. In \bibinfo{booktitle}{\emph{Proceedings of the 36th Annual ACM Symposium on User Interface Software and Technology}}. \bibinfo{pages}{1--14}.
+\newblock
+
+
+\bibitem[Brooks et~al\mbox{.}(2023)]%
+        {brooks2023instructpix2pix}
+\bibfield{author}{\bibinfo{person}{Tim Brooks}, \bibinfo{person}{Aleksander Holynski}, {and} \bibinfo{person}{Alexei~A Efros}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Instructpix2pix: Learning to follow image editing instructions}. In \bibinfo{booktitle}{\emph{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}}. \bibinfo{pages}{18392--18402}.
+\newblock
+
+
+\bibitem[Brown et~al\mbox{.}(2020)]%
+        {brown2020language}
+\bibfield{author}{\bibinfo{person}{Tom Brown}, \bibinfo{person}{Benjamin Mann}, \bibinfo{person}{Nick Ryder}, \bibinfo{person}{Melanie Subbiah}, \bibinfo{person}{Jared~D Kaplan}, \bibinfo{person}{Prafulla Dhariwal}, \bibinfo{person}{Arvind Neelakantan}, \bibinfo{person}{Pranav Shyam}, \bibinfo{person}{Girish Sastry}, \bibinfo{person}{Amanda Askell}, {et~al\mbox{.}}} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Language models are few-shot learners}.
+\newblock \bibinfo{journal}{\emph{Advances in neural information processing systems}}  \bibinfo{volume}{33} (\bibinfo{year}{2020}), \bibinfo{pages}{1877--1901}.
+\newblock
+
+
+\bibitem[Budiu(2014)]%
+        {budiu2014memory}
+\bibfield{author}{\bibinfo{person}{Raluca Budiu}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{Memory recognition and recall in user interfaces}.
+\newblock \bibinfo{journal}{\emph{Nielsen Norman Group}}  \bibinfo{volume}{1} (\bibinfo{year}{2014}).
+\newblock
+
+
+\bibitem[Buxton(2010)]%
+        {buxton2010sketching}
+\bibfield{author}{\bibinfo{person}{Bill Buxton}.} \bibinfo{year}{2010}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Sketching user experiences: getting the design right and the right design}}.
+\newblock \bibinfo{publisher}{Morgan kaufmann}.
+\newblock
+
+
+\bibitem[Cai et~al\mbox{.}(2023)]%
+        {cai2024DesignAID}
+\bibfield{author}{\bibinfo{person}{Alice Cai}, \bibinfo{person}{Steven~R Rick}, \bibinfo{person}{Jennifer~L Heyman}, \bibinfo{person}{Yanxia Zhang}, \bibinfo{person}{Alexandre Filipowicz}, \bibinfo{person}{Matthew Hong}, \bibinfo{person}{Matt Klenk}, {and} \bibinfo{person}{Thomas Malone}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{DesignAID: Using Generative AI and Semantic Diversity for Design Inspiration}. In \bibinfo{booktitle}{\emph{Proceedings of The ACM Collective Intelligence Conference}} (Delft, Netherlands) \emph{(\bibinfo{series}{CI '23})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{1–11}.
+\newblock
+\showISBNx{9798400701139}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3582269.3615596}
+\showDOI{\tempurl}
+
+
+\bibitem[Canny(1986)]%
+        {canny1986computational}
+\bibfield{author}{\bibinfo{person}{John Canny}.} \bibinfo{year}{1986}\natexlab{}.
+\newblock \showarticletitle{A computational approach to edge detection}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on pattern analysis and machine intelligence}} \bibinfo{number}{6} (\bibinfo{year}{1986}), \bibinfo{pages}{679--698}.
+\newblock
+
+
+\bibitem[Cardoso et~al\mbox{.}(2009)]%
+        {cardoso2009design}
+\bibfield{author}{\bibinfo{person}{Carlos Cardoso}, \bibinfo{person}{Petra Badke-Schaub}, {and} \bibinfo{person}{Ana Luz}.} \bibinfo{year}{2009}\natexlab{}.
+\newblock \showarticletitle{Design fixation on non-verbal stimuli: The influence of simple vs. rich pictorial information on design problem-solving}. In \bibinfo{booktitle}{\emph{International Design Engineering Technical Conferences and Computers and Information in Engineering Conference}}, Vol.~\bibinfo{volume}{49057}. \bibinfo{pages}{995--1002}.
+\newblock
+
+
+\bibitem[Cars(2017)]%
+        {youtube}
+\bibfield{author}{\bibinfo{person}{How To~Draw Cars}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \bibinfo{title}{Pro Designer Teaches You How To Create Variations on Your Car Design Themes}.
+\newblock \bibinfo{howpublished}{\url{https://youtu.be/GxFloTllsKE?si=yWYl9w_etZVZPbnK&t=80}}.
+\newblock
+\newblock
+\shownote{Accessed: September 12, 2024}.
+
+
+\bibitem[Chang et~al\mbox{.}(2023)]%
+        {chang2023prompt}
+\bibfield{author}{\bibinfo{person}{Minsuk Chang}, \bibinfo{person}{Stefania Druga}, \bibinfo{person}{Alexander~J Fiannaca}, \bibinfo{person}{Pedro Vergani}, \bibinfo{person}{Chinmay Kulkarni}, \bibinfo{person}{Carrie~J Cai}, {and} \bibinfo{person}{Michael Terry}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{The prompt artists}. In \bibinfo{booktitle}{\emph{Proceedings of the 15th Conference on Creativity and Cognition}}. \bibinfo{pages}{75--87}.
+\newblock
+
+
+\bibitem[Cheng et~al\mbox{.}(2014)]%
+        {cheng2014new}
+\bibfield{author}{\bibinfo{person}{Peiyao Cheng}, \bibinfo{person}{Ruth Mugge}, {and} \bibinfo{person}{Jan~PL Schoormans}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{A new strategy to reduce design fixation: Presenting partial photographs to designers}.
+\newblock \bibinfo{journal}{\emph{Design Studies}} \bibinfo{volume}{35}, \bibinfo{number}{4} (\bibinfo{year}{2014}), \bibinfo{pages}{374--391}.
+\newblock
+
+
+\bibitem[Cherry and Latulipe(2014)]%
+        {cherry2014quantifying}
+\bibfield{author}{\bibinfo{person}{Erin Cherry} {and} \bibinfo{person}{Celine Latulipe}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{Quantifying the creativity support of digital tools through the creativity support index}.
+\newblock \bibinfo{journal}{\emph{ACM Transactions on Computer-Human Interaction (TOCHI)}} \bibinfo{volume}{21}, \bibinfo{number}{4} (\bibinfo{year}{2014}), \bibinfo{pages}{1--25}.
+\newblock
+
+
+\bibitem[Davis et~al\mbox{.}(2019)]%
+        {davis2019creative}
+\bibfield{author}{\bibinfo{person}{Nicholas Davis}, \bibinfo{person}{Safat Siddiqui}, \bibinfo{person}{Pegah Karimi}, \bibinfo{person}{Mary~Lou Maher}, {and} \bibinfo{person}{Kazjon Grace}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Creative Sketching Partner: A Co-Creative Sketching Tool to Inspire Design Creativity.}. In \bibinfo{booktitle}{\emph{ICCC}}. \bibinfo{pages}{358--359}.
+\newblock
+
+
+\bibitem[Davis et~al\mbox{.}(2024)]%
+        {davis2024fashioning}
+\bibfield{author}{\bibinfo{person}{Richard~Lee Davis}, \bibinfo{person}{Thiemo Wambsganss}, \bibinfo{person}{Wei Jiang}, \bibinfo{person}{Kevin~Gonyop Kim}, \bibinfo{person}{Tanja K\"{a}ser}, {and} \bibinfo{person}{Pierre Dillenbourg}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Fashioning Creative Expertise with Generative AI: Graphical Interfaces for Design Space Exploration Better Support Ideation Than Text Prompts}. In \bibinfo{booktitle}{\emph{Proceedings of the CHI Conference on Human Factors in Computing Systems}} (Honolulu, HI, USA) \emph{(\bibinfo{series}{CHI '24})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, Article \bibinfo{articleno}{167}, \bibinfo{numpages}{26}~pages.
+\newblock
+\showISBNx{9798400703300}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3613904.3642908}
+\showDOI{\tempurl}
+
+
+\bibitem[de~Rooij and Biskjaer(2024)]%
+        {rooij2024expecting}
+\bibfield{author}{\bibinfo{person}{A. de Rooij} {and} \bibinfo{person}{M.~Mose Biskjaer}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Expecting the unexpected: A review of surprise in design processes}. In \bibinfo{booktitle}{\emph{DRS2024: Boston, 23–28 June}}, \bibfield{editor}{\bibinfo{person}{C.~Gray}, \bibinfo{person}{E.~Ciliotta~Chehade}, \bibinfo{person}{P.~Hekkert}, \bibinfo{person}{L.~Forlano}, \bibinfo{person}{P.~Ciuccarelli}, {and} \bibinfo{person}{P.~Lloyd}} (Eds.). \bibinfo{address}{Boston, USA}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.21606/drs.2024.333}
+\showDOI{\tempurl}
+
+
+\bibitem[Deldin and Schuknecht(2013)]%
+        {deldin2013asknature}
+\bibfield{author}{\bibinfo{person}{Jon-Michael Deldin} {and} \bibinfo{person}{Megan Schuknecht}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{The AskNature database: enabling solutions in biomimetic design}.
+\newblock In \bibinfo{booktitle}{\emph{Biologically inspired design: Computational methods and tools}}. \bibinfo{publisher}{Springer}, \bibinfo{pages}{17--27}.
+\newblock
+
+
+\bibitem[Dow et~al\mbox{.}(2010)]%
+        {dow2010parallel}
+\bibfield{author}{\bibinfo{person}{Steven~P Dow}, \bibinfo{person}{Alana Glassco}, \bibinfo{person}{Jonathan Kass}, \bibinfo{person}{Melissa Schwarz}, \bibinfo{person}{Daniel~L Schwartz}, {and} \bibinfo{person}{Scott~R Klemmer}.} \bibinfo{year}{2010}\natexlab{}.
+\newblock \showarticletitle{Parallel prototyping leads to better design results, more divergence, and increased self-efficacy}.
+\newblock \bibinfo{journal}{\emph{ACM Transactions on Computer-Human Interaction (TOCHI)}} \bibinfo{volume}{17}, \bibinfo{number}{4} (\bibinfo{year}{2010}), \bibinfo{pages}{1--24}.
+\newblock
+
+
+\bibitem[Fan et~al\mbox{.}(2024)]%
+        {fan2024prompt}
+\bibfield{author}{\bibinfo{person}{Zezhong Fan}, \bibinfo{person}{Xiaohan Li}, \bibinfo{person}{Kaushiki Nag}, \bibinfo{person}{Chenhao Fang}, \bibinfo{person}{Topojoy Biswas}, \bibinfo{person}{Jianpeng Xu}, {and} \bibinfo{person}{Kannan Achan}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Prompt Optimizer of Text-to-Image Diffusion Models for Abstract Concept Understanding}. In \bibinfo{booktitle}{\emph{Companion Proceedings of the ACM Web Conference 2024}} (Singapore, Singapore) \emph{(\bibinfo{series}{WWW '24})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{1530–1537}.
+\newblock
+\showISBNx{9798400701726}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3589335.3651927}
+\showDOI{\tempurl}
+
+
+\bibitem[Gentner(1983)]%
+        {gentner1983structure}
+\bibfield{author}{\bibinfo{person}{Dedre Gentner}.} \bibinfo{year}{1983}\natexlab{}.
+\newblock \showarticletitle{Structure-mapping: A theoretical framework for analogy}.
+\newblock \bibinfo{journal}{\emph{Cognitive science}} \bibinfo{volume}{7}, \bibinfo{number}{2} (\bibinfo{year}{1983}), \bibinfo{pages}{155--170}.
+\newblock
+
+
+\bibitem[Goel(1997)]%
+        {goel1997design}
+\bibfield{author}{\bibinfo{person}{Ashok~K Goel}.} \bibinfo{year}{1997}\natexlab{}.
+\newblock \showarticletitle{Design, analogy, and creativity}.
+\newblock \bibinfo{journal}{\emph{IEEE expert}} \bibinfo{volume}{12}, \bibinfo{number}{3} (\bibinfo{year}{1997}), \bibinfo{pages}{62--70}.
+\newblock
+
+
+\bibitem[Goel et~al\mbox{.}(2012)]%
+        {DANE}
+\bibfield{author}{\bibinfo{person}{Ashok~K Goel}, \bibinfo{person}{Swaroop Vattam}, \bibinfo{person}{Bryan Wiltgen}, {and} \bibinfo{person}{Michael Helms}.} \bibinfo{year}{2012}\natexlab{}.
+\newblock \showarticletitle{Cognitive, collaborative, conceptual and creative—Four characteristics of the next generation of knowledge-based CAD systems: A study in biologically inspired design}.
+\newblock \bibinfo{journal}{\emph{Computer-Aided Design}} \bibinfo{volume}{44}, \bibinfo{number}{10} (\bibinfo{year}{2012}), \bibinfo{pages}{879--900}.
+\newblock
+
+
+\bibitem[Hou et~al\mbox{.}(2024)]%
+        {hou2024c2ideas}
+\bibfield{author}{\bibinfo{person}{Yihan Hou}, \bibinfo{person}{Manling Yang}, \bibinfo{person}{Hao Cui}, \bibinfo{person}{Lei Wang}, \bibinfo{person}{Jie Xu}, {and} \bibinfo{person}{Wei Zeng}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{C2Ideas: Supporting Creative Interior Color Design Ideation with Large Language Model}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2401.12586}} (\bibinfo{year}{2024}).
+\newblock
+
+
+\bibitem[Huang et~al\mbox{.}(2022)]%
+        {huang2022dualface}
+\bibfield{author}{\bibinfo{person}{Zhengyu Huang}, \bibinfo{person}{Yichen Peng}, \bibinfo{person}{Tomohiro Hibino}, \bibinfo{person}{Chunqi Zhao}, \bibinfo{person}{Haoran Xie}, \bibinfo{person}{Tsukasa Fukusato}, {and} \bibinfo{person}{Kazunori Miyata}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{dualface: Two-stage drawing guidance for freehand portrait sketching}.
+\newblock \bibinfo{journal}{\emph{Computational Visual Media}}  \bibinfo{volume}{8} (\bibinfo{year}{2022}), \bibinfo{pages}{63--77}.
+\newblock
+
+
+\bibitem[Iarussi et~al\mbox{.}(2013)]%
+        {iarussi2013drawing}
+\bibfield{author}{\bibinfo{person}{Emmanuel Iarussi}, \bibinfo{person}{Adrien Bousseau}, {and} \bibinfo{person}{Theophanis Tsandilas}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{The drawing assistant: Automated drawing guidance and feedback from photographs}. In \bibinfo{booktitle}{\emph{ACM Symposium on User Interface Software and Technology (UIST)}}. ACM.
+\newblock
+
+
+\bibitem[Jansson and Smith(1991)]%
+        {jansson1991design}
+\bibfield{author}{\bibinfo{person}{David~G Jansson} {and} \bibinfo{person}{Steven~M Smith}.} \bibinfo{year}{1991}\natexlab{}.
+\newblock \showarticletitle{Design fixation}.
+\newblock \bibinfo{journal}{\emph{Design studies}} \bibinfo{volume}{12}, \bibinfo{number}{1} (\bibinfo{year}{1991}), \bibinfo{pages}{3--11}.
+\newblock
+
+
+\bibitem[Jiang et~al\mbox{.}(2022)]%
+        {jiang2022data}
+\bibfield{author}{\bibinfo{person}{Shuo Jiang}, \bibinfo{person}{Jie Hu}, \bibinfo{person}{Kristin~L Wood}, {and} \bibinfo{person}{Jianxi Luo}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Data-driven design-by-analogy: state-of-the-art and future directions}.
+\newblock \bibinfo{journal}{\emph{Journal of Mechanical Design}} \bibinfo{volume}{144}, \bibinfo{number}{2} (\bibinfo{year}{2022}), \bibinfo{pages}{020801}.
+\newblock
+
+
+\bibitem[Jiang et~al\mbox{.}(2021)]%
+        {jiang2021deriving}
+\bibfield{author}{\bibinfo{person}{Shuo Jiang}, \bibinfo{person}{Jianxi Luo}, \bibinfo{person}{Guillermo Ruiz-Pava}, \bibinfo{person}{Jie Hu}, {and} \bibinfo{person}{Christopher~L Magee}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Deriving design feature vectors for patent images using convolutional neural networks}.
+\newblock \bibinfo{journal}{\emph{Journal of Mechanical Design}} \bibinfo{volume}{143}, \bibinfo{number}{6} (\bibinfo{year}{2021}), \bibinfo{pages}{061405}.
+\newblock
+
+
+\bibitem[Joyce(2009)]%
+        {joyce2009blank}
+\bibfield{author}{\bibinfo{person}{Caneel~K Joyce}.} \bibinfo{year}{2009}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{The blank page: Effects of constraint on creativity}}.
+\newblock \bibinfo{publisher}{University of California, Berkeley}.
+\newblock
+
+
+\bibitem[Kang et~al\mbox{.}(2023)]%
+        {kang2023biospark}
+\bibfield{author}{\bibinfo{person}{Hyeonsu~B Kang}, \bibinfo{person}{David Chuan-En Lin}, \bibinfo{person}{Nikolas Martelaro}, \bibinfo{person}{Aniket Kittur}, \bibinfo{person}{Yan-Ying Chen}, {and} \bibinfo{person}{Matthew~K Hong}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{BioSpark: An End-to-End Generative System for Biological-Analogical Inspirations and Ideation}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2312.11388}} (\bibinfo{year}{2023}).
+\newblock
+
+
+\bibitem[Khaliq et~al\mbox{.}(2024)]%
+        {khaliq2024comparison}
+\bibfield{author}{\bibinfo{person}{Mohammed Khaliq}, \bibinfo{person}{Diego Frassinelli}, {and} \bibinfo{person}{Sabine~Schulte im Walde}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Comparison of Image Generation Models for Abstract and Concrete Event Descriptions}. In \bibinfo{booktitle}{\emph{Proceedings of the 4th Workshop on Figurative Language Processing (FigLang 2024)}}. \bibinfo{pages}{15--21}.
+\newblock
+
+
+\bibitem[Kirillov et~al\mbox{.}(2023)]%
+        {kirillov2023segment}
+\bibfield{author}{\bibinfo{person}{Alexander Kirillov}, \bibinfo{person}{Eric Mintun}, \bibinfo{person}{Nikhila Ravi}, \bibinfo{person}{Hanzi Mao}, \bibinfo{person}{Chloe Rolland}, \bibinfo{person}{Laura Gustafson}, \bibinfo{person}{Tete Xiao}, \bibinfo{person}{Spencer Whitehead}, \bibinfo{person}{Alexander~C Berg}, \bibinfo{person}{Wan-Yen Lo}, {et~al\mbox{.}}} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Segment anything}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2304.02643}} (\bibinfo{year}{2023}).
+\newblock
+
+
+\bibitem[Kocienda(2018)]%
+        {kocienda2018creative}
+\bibfield{author}{\bibinfo{person}{Ken Kocienda}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Creative selection: Inside Apple's design process during the golden age of Steve Jobs}}.
+\newblock \bibinfo{publisher}{Pan Macmillan}.
+\newblock
+
+
+\bibitem[Kwon et~al\mbox{.}(2019)]%
+        {kwon2019visual}
+\bibfield{author}{\bibinfo{person}{E Kwon}, \bibinfo{person}{A Pehlken}, \bibinfo{person}{K-D Thoben}, \bibinfo{person}{A Bazylak}, {and} \bibinfo{person}{LH Shu}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Visual similarity to aid alternative-use concept generation for retired wind-turbine blades}.
+\newblock \bibinfo{journal}{\emph{Journal of Mechanical Design}} \bibinfo{volume}{141}, \bibinfo{number}{3} (\bibinfo{year}{2019}), \bibinfo{pages}{031106}.
+\newblock
+
+
+\bibitem[Lawton et~al\mbox{.}(2023)]%
+        {lawton2023drawing}
+\bibfield{author}{\bibinfo{person}{Tomas Lawton}, \bibinfo{person}{Francisco~J Ibarrola}, \bibinfo{person}{Dan Ventura}, {and} \bibinfo{person}{Kazjon Grace}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Drawing with reframer: Emergence and control in co-creative ai}. In \bibinfo{booktitle}{\emph{Proceedings of the 28th International Conference on Intelligent User Interfaces}}. \bibinfo{pages}{264--277}.
+\newblock
+
+
+\bibitem[Lee et~al\mbox{.}(2024)]%
+        {lee2024the}
+\bibfield{author}{\bibinfo{person}{Seung~Won Lee}, \bibinfo{person}{Tae~Hee Jo}, \bibinfo{person}{Semin Jin}, \bibinfo{person}{Jiin Choi}, \bibinfo{person}{Kyungwon Yun}, \bibinfo{person}{Sergio Bromberg}, \bibinfo{person}{Seonghoon Ban}, {and} \bibinfo{person}{Kyung~Hoon Hyun}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{The Impact of Sketch-guided vs. Prompt-guided 3D Generative AIs on the Design Exploration Process}. In \bibinfo{booktitle}{\emph{Proceedings of the CHI Conference on Human Factors in Computing Systems}} (Honolulu, HI, USA) \emph{(\bibinfo{series}{CHI '24})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, Article \bibinfo{articleno}{1057}, \bibinfo{numpages}{18}~pages.
+\newblock
+\showISBNx{9798400703300}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3613904.3642218}
+\showDOI{\tempurl}
+
+
+\bibitem[Lee et~al\mbox{.}(2011)]%
+        {lee2011shadowdraw}
+\bibfield{author}{\bibinfo{person}{Yong~Jae Lee}, \bibinfo{person}{C~Lawrence Zitnick}, {and} \bibinfo{person}{Michael~F Cohen}.} \bibinfo{year}{2011}\natexlab{}.
+\newblock \showarticletitle{Shadowdraw: real-time user guidance for freehand drawing}.
+\newblock \bibinfo{journal}{\emph{ACM Transactions on Graphics (ToG)}} \bibinfo{volume}{30}, \bibinfo{number}{4} (\bibinfo{year}{2011}), \bibinfo{pages}{1--10}.
+\newblock
+
+
+\bibitem[Lewis et~al\mbox{.}(2020)]%
+        {lewis2020retrieval}
+\bibfield{author}{\bibinfo{person}{Patrick Lewis}, \bibinfo{person}{Ethan Perez}, \bibinfo{person}{Aleksandra Piktus}, \bibinfo{person}{Fabio Petroni}, \bibinfo{person}{Vladimir Karpukhin}, \bibinfo{person}{Naman Goyal}, \bibinfo{person}{Heinrich K{\"u}ttler}, \bibinfo{person}{Mike Lewis}, \bibinfo{person}{Wen-tau Yih}, \bibinfo{person}{Tim Rockt{\"a}schel}, {et~al\mbox{.}}} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Retrieval-augmented generation for knowledge-intensive nlp tasks}.
+\newblock \bibinfo{journal}{\emph{Advances in Neural Information Processing Systems}}  \bibinfo{volume}{33} (\bibinfo{year}{2020}), \bibinfo{pages}{9459--9474}.
+\newblock
+
+
+\bibitem[Li et~al\mbox{.}(2017)]%
+        {li2017deep}
+\bibfield{author}{\bibinfo{person}{Chengze Li}, \bibinfo{person}{Xueting Liu}, {and} \bibinfo{person}{Tien-Tsin Wong}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Deep extraction of manga structural lines}.
+\newblock \bibinfo{journal}{\emph{ACM Transactions on Graphics (TOG)}} \bibinfo{volume}{36}, \bibinfo{number}{4} (\bibinfo{year}{2017}), \bibinfo{pages}{1--12}.
+\newblock
+
+
+\bibitem[Liao et~al\mbox{.}(2024)]%
+        {liao2024text}
+\bibfield{author}{\bibinfo{person}{Jiayi Liao}, \bibinfo{person}{Xu Chen}, \bibinfo{person}{Qiang Fu}, \bibinfo{person}{Lun Du}, \bibinfo{person}{Xiangnan He}, \bibinfo{person}{Xiang Wang}, \bibinfo{person}{Shi Han}, {and} \bibinfo{person}{Dongmei Zhang}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Text-to-image generation for abstract concepts}. In \bibinfo{booktitle}{\emph{Proceedings of the AAAI Conference on Artificial Intelligence}}, Vol.~\bibinfo{volume}{38}. \bibinfo{pages}{3360--3368}.
+\newblock
+
+
+\bibitem[Limpaecher et~al\mbox{.}(2013)]%
+        {limpaecher2013real}
+\bibfield{author}{\bibinfo{person}{Alex Limpaecher}, \bibinfo{person}{Nicolas Feltman}, \bibinfo{person}{Adrien Treuille}, {and} \bibinfo{person}{Michael Cohen}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{Real-time drawing assistance through crowdsourcing}.
+\newblock \bibinfo{journal}{\emph{ACM Transactions on Graphics (TOG)}} \bibinfo{volume}{32}, \bibinfo{number}{4} (\bibinfo{year}{2013}), \bibinfo{pages}{1--8}.
+\newblock
+
+
+\bibitem[Lin and Martelaro(2024)]%
+        {lin2023jigsaw}
+\bibfield{author}{\bibinfo{person}{David Chuan-En Lin} {and} \bibinfo{person}{Nikolas Martelaro}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Jigsaw: Supporting Designers to Prototype Multimodal Applications by Assembling AI Foundation Models}. In \bibinfo{booktitle}{\emph{Proceedings of the 2024 CHI Conference on Human Factors in Computing Systems}}.
+\newblock
+
+
+\bibitem[Lin et~al\mbox{.}(2023)]%
+        {lin2023beyond}
+\bibfield{author}{\bibinfo{person}{Zhiyu Lin}, \bibinfo{person}{Upol Ehsan}, \bibinfo{person}{Rohan Agarwal}, \bibinfo{person}{Samihan Dani}, \bibinfo{person}{Vidushi Vashishth}, {and} \bibinfo{person}{Mark Riedl}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Beyond Prompts: Exploring the Design Space of Mixed-Initiative Co-Creativity Systems}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2305.07465}} (\bibinfo{year}{2023}).
+\newblock
+
+
+\bibitem[Linsey et~al\mbox{.}(2012)]%
+        {linsey2012analogy}
+\bibfield{author}{\bibinfo{person}{J.~S. Linsey}, \bibinfo{person}{A.~B. Markman}, {and} \bibinfo{person}{K.~L. Wood}.} \bibinfo{year}{2012}\natexlab{}.
+\newblock \showarticletitle{{Design by Analogy: A Study of the WordTree Method for Problem Re-Representation}}.
+\newblock \bibinfo{journal}{\emph{Journal of Mechanical Design}} \bibinfo{volume}{134}, \bibinfo{number}{4} (\bibinfo{date}{04} \bibinfo{year}{2012}), \bibinfo{pages}{041009}.
+\newblock
+\showISSN{1050-0472}
+\urldef\tempurl%
+\url{https://doi.org/10.1115/1.4006145}
+\showDOI{\tempurl}
+\showeprint{https://asmedigitalcollection.asme.org/mechanicaldesign/article-pdf/134/4/041009/5606684/041009\_1.pdf}
+
+
+\bibitem[Liu et~al\mbox{.}(2023)]%
+        {liu2023generative}
+\bibfield{author}{\bibinfo{person}{Vivian Liu}, \bibinfo{person}{Tao Long}, \bibinfo{person}{Nathan Raw}, {and} \bibinfo{person}{Lydia Chilton}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Generative disco: Text-to-video generation for music visualization}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2304.08551}} (\bibinfo{year}{2023}).
+\newblock
+
+
+\bibitem[Qin et~al\mbox{.}(2020)]%
+        {qin2020u2}
+\bibfield{author}{\bibinfo{person}{Xuebin Qin}, \bibinfo{person}{Zichen Zhang}, \bibinfo{person}{Chenyang Huang}, \bibinfo{person}{Masood Dehghan}, \bibinfo{person}{Osmar~R Zaiane}, {and} \bibinfo{person}{Martin Jagersand}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{U2-Net: Going deeper with nested U-structure for salient object detection}.
+\newblock \bibinfo{journal}{\emph{Pattern recognition}}  \bibinfo{volume}{106} (\bibinfo{year}{2020}), \bibinfo{pages}{107404}.
+\newblock
+
+
+\bibitem[Rombach et~al\mbox{.}(2022)]%
+        {rombach2022high}
+\bibfield{author}{\bibinfo{person}{Robin Rombach}, \bibinfo{person}{Andreas Blattmann}, \bibinfo{person}{Dominik Lorenz}, \bibinfo{person}{Patrick Esser}, {and} \bibinfo{person}{Bj{\"o}rn Ommer}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{High-resolution image synthesis with latent diffusion models}. In \bibinfo{booktitle}{\emph{Proceedings of the IEEE/CVF conference on computer vision and pattern recognition}}. \bibinfo{pages}{10684--10695}.
+\newblock
+
+
+\bibitem[Saharia et~al\mbox{.}(2022)]%
+        {saharia2022palette}
+\bibfield{author}{\bibinfo{person}{Chitwan Saharia}, \bibinfo{person}{William Chan}, \bibinfo{person}{Huiwen Chang}, \bibinfo{person}{Chris Lee}, \bibinfo{person}{Jonathan Ho}, \bibinfo{person}{Tim Salimans}, \bibinfo{person}{David Fleet}, {and} \bibinfo{person}{Mohammad Norouzi}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Palette: Image-to-image diffusion models}. In \bibinfo{booktitle}{\emph{ACM SIGGRAPH 2022 conference proceedings}}. \bibinfo{pages}{1--10}.
+\newblock
+
+
+\bibitem[Sangkloy et~al\mbox{.}(2016)]%
+        {sangkloy2016sketchy}
+\bibfield{author}{\bibinfo{person}{Patsorn Sangkloy}, \bibinfo{person}{Nathan Burnell}, \bibinfo{person}{Cusuh Ham}, {and} \bibinfo{person}{James Hays}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{The sketchy database: learning to retrieve badly drawn bunnies}.
+\newblock \bibinfo{journal}{\emph{ACM Transactions on Graphics (TOG)}} \bibinfo{volume}{35}, \bibinfo{number}{4} (\bibinfo{year}{2016}), \bibinfo{pages}{1--12}.
+\newblock
+
+
+\bibitem[Sarukkai et~al\mbox{.}(2024)]%
+        {sarukkai2024block}
+\bibfield{author}{\bibinfo{person}{Vishnu Sarukkai}, \bibinfo{person}{Lu Yuan}, \bibinfo{person}{Mia Tang}, \bibinfo{person}{Maneesh Agrawala}, {and} \bibinfo{person}{Kayvon Fatahalian}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Block and Detail: Scaffolding Sketch-to-Image Generation}. In \bibinfo{booktitle}{\emph{Proceedings of the 37th Annual ACM Symposium on User Interface Software and Technology}}. \bibinfo{pages}{1--13}.
+\newblock
+
+
+\bibitem[Siddharth and Chakrabarti(2018)]%
+        {siddharth2018evaluating}
+\bibfield{author}{\bibinfo{person}{L Siddharth} {and} \bibinfo{person}{Amaresh Chakrabarti}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Evaluating the impact of Idea-Inspire 4.0 on analogical transfer of concepts}.
+\newblock \bibinfo{journal}{\emph{Ai Edam}} \bibinfo{volume}{32}, \bibinfo{number}{4} (\bibinfo{year}{2018}), \bibinfo{pages}{431--448}.
+\newblock
+
+
+\bibitem[Son et~al\mbox{.}(2024)]%
+        {son2024genquery}
+\bibfield{author}{\bibinfo{person}{Kihoon Son}, \bibinfo{person}{DaEun Choi}, \bibinfo{person}{Tae~Soo Kim}, \bibinfo{person}{Young-Ho Kim}, {and} \bibinfo{person}{Juho Kim}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Genquery: Supporting expressive visual search with generative models}. In \bibinfo{booktitle}{\emph{Proceedings of the CHI Conference on Human Factors in Computing Systems}}. \bibinfo{pages}{1--19}.
+\newblock
+
+
+\bibitem[Vincent and Mann(2002)]%
+        {BioTRIZ}
+\bibfield{author}{\bibinfo{person}{Julian~FV Vincent} {and} \bibinfo{person}{Darrell~L Mann}.} \bibinfo{year}{2002}\natexlab{}.
+\newblock \showarticletitle{Systematic technology transfer from biology to engineering}.
+\newblock \bibinfo{journal}{\emph{Philosophical Transactions of the Royal Society of London. Series A: Mathematical, Physical and Engineering Sciences}} \bibinfo{volume}{360}, \bibinfo{number}{1791} (\bibinfo{year}{2002}), \bibinfo{pages}{159--173}.
+\newblock
+
+
+\bibitem[Wadinambiarachchi et~al\mbox{.}(2024)]%
+        {Wadinambiarachchi2024effects}
+\bibfield{author}{\bibinfo{person}{Samangi Wadinambiarachchi}, \bibinfo{person}{Ryan~M. Kelly}, \bibinfo{person}{Saumya Pareek}, \bibinfo{person}{Qiushi Zhou}, {and} \bibinfo{person}{Eduardo Velloso}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{The Effects of Generative AI on Design Fixation and Divergent Thinking}. In \bibinfo{booktitle}{\emph{Proceedings of the CHI Conference on Human Factors in Computing Systems}} (Honolulu, HI, USA) \emph{(\bibinfo{series}{CHI '24})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, Article \bibinfo{articleno}{380}, \bibinfo{numpages}{18}~pages.
+\newblock
+\showISBNx{9798400703300}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3613904.3642919}
+\showDOI{\tempurl}
+
+
+\bibitem[Wei et~al\mbox{.}(2022)]%
+        {wei2022chain}
+\bibfield{author}{\bibinfo{person}{Jason Wei}, \bibinfo{person}{Xuezhi Wang}, \bibinfo{person}{Dale Schuurmans}, \bibinfo{person}{Maarten Bosma}, \bibinfo{person}{Fei Xia}, \bibinfo{person}{Ed Chi}, \bibinfo{person}{Quoc~V Le}, \bibinfo{person}{Denny Zhou}, {et~al\mbox{.}}} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Chain-of-thought prompting elicits reasoning in large language models}.
+\newblock \bibinfo{journal}{\emph{Advances in Neural Information Processing Systems}}  \bibinfo{volume}{35} (\bibinfo{year}{2022}), \bibinfo{pages}{24824--24837}.
+\newblock
+
+
+\bibitem[Williford et~al\mbox{.}(2023)]%
+        {williford2023exploring}
+\bibfield{author}{\bibinfo{person}{Blake Williford}, \bibinfo{person}{Samantha Ray}, \bibinfo{person}{Jung~In Koh}, \bibinfo{person}{Josh Cherian}, \bibinfo{person}{Paul Taele}, {and} \bibinfo{person}{Tracy Hammond}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Exploring Creativity Support for Concept Art Ideation}. In \bibinfo{booktitle}{\emph{Extended Abstracts of the 2023 CHI Conference on Human Factors in Computing Systems}} (Hamburg, Germany) \emph{(\bibinfo{series}{CHI EA '23})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, Article \bibinfo{articleno}{112}, \bibinfo{numpages}{7}~pages.
+\newblock
+\showISBNx{9781450394222}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3544549.3585684}
+\showDOI{\tempurl}
+
+
+\bibitem[Wu et~al\mbox{.}(2024)]%
+        {wu2024imagine}
+\bibfield{author}{\bibinfo{person}{Shengqiong Wu}, \bibinfo{person}{Hao Fei}, \bibinfo{person}{Hanwang Zhang}, {and} \bibinfo{person}{Tat-Seng Chua}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Imagine that! abstract-to-intricate text-to-image synthesis with scene graph hallucination diffusion}. In \bibinfo{booktitle}{\emph{Proceedings of the 37th International Conference on Neural Information Processing Systems}} (New Orleans, LA, USA) \emph{(\bibinfo{series}{NIPS '23})}. \bibinfo{publisher}{Curran Associates Inc.}, \bibinfo{address}{Red Hook, NY, USA}, Article \bibinfo{articleno}{3468}, \bibinfo{numpages}{20}~pages.
+\newblock
+
+
+\bibitem[Xie et~al\mbox{.}(2014)]%
+        {xie2014portraitsketch}
+\bibfield{author}{\bibinfo{person}{Jun Xie}, \bibinfo{person}{Aaron Hertzmann}, \bibinfo{person}{Wilmot Li}, {and} \bibinfo{person}{Holger Winnem{\"o}ller}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{PortraitSketch: Face sketching assistance for novices}. In \bibinfo{booktitle}{\emph{Proceedings of the 27th annual ACM symposium on User interface software and technology}}. \bibinfo{pages}{407--417}.
+\newblock
+
+
+\bibitem[Xie and Tu(2015)]%
+        {xie2015holistically}
+\bibfield{author}{\bibinfo{person}{Saining Xie} {and} \bibinfo{person}{Zhuowen Tu}.} \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{Holistically-nested edge detection}. In \bibinfo{booktitle}{\emph{Proceedings of the IEEE international conference on computer vision}}. \bibinfo{pages}{1395--1403}.
+\newblock
+
+
+\bibitem[Xie et~al\mbox{.}(2023)]%
+        {xie2023prompt}
+\bibfield{author}{\bibinfo{person}{Yutong Xie}, \bibinfo{person}{Zhaoying Pan}, \bibinfo{person}{Jinge Ma}, \bibinfo{person}{Luo Jie}, {and} \bibinfo{person}{Qiaozhu Mei}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{A prompt log analysis of text-to-image generation systems}. In \bibinfo{booktitle}{\emph{Proceedings of the ACM Web Conference 2023}}. \bibinfo{pages}{3892--3902}.
+\newblock
+
+
+\bibitem[Zamfirescu-Pereira et~al\mbox{.}(2023)]%
+        {zamfirescu2023johnny}
+\bibfield{author}{\bibinfo{person}{JD Zamfirescu-Pereira}, \bibinfo{person}{Richmond~Y Wong}, \bibinfo{person}{Bjoern Hartmann}, {and} \bibinfo{person}{Qian Yang}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Why Johnny can’t prompt: how non-AI experts try (and fail) to design LLM prompts}. In \bibinfo{booktitle}{\emph{Proceedings of the 2023 CHI Conference on Human Factors in Computing Systems}}. \bibinfo{pages}{1--21}.
+\newblock
+
+
+\bibitem[Zhang et~al\mbox{.}(2023b)]%
+        {zhang2023generative}
+\bibfield{author}{\bibinfo{person}{Chengzhi Zhang}, \bibinfo{person}{Weijie Wang}, \bibinfo{person}{Paul Pangaro}, \bibinfo{person}{Nikolas Martelaro}, {and} \bibinfo{person}{Daragh Byrne}.} \bibinfo{year}{2023}\natexlab{b}.
+\newblock \showarticletitle{Generative Image AI Using Design Sketches as input: Opportunities and Challenges}. In \bibinfo{booktitle}{\emph{Proceedings of the 15th Conference on Creativity and Cognition}} (Virtual Event, USA) \emph{(\bibinfo{series}{C\&C '23})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{254–261}.
+\newblock
+\showISBNx{9798400701801}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3591196.3596820}
+\showDOI{\tempurl}
+
+
+\bibitem[Zhang et~al\mbox{.}(2023a)]%
+        {zhang2023adding}
+\bibfield{author}{\bibinfo{person}{Lvmin Zhang}, \bibinfo{person}{Anyi Rao}, {and} \bibinfo{person}{Maneesh Agrawala}.} \bibinfo{year}{2023}\natexlab{a}.
+\newblock \showarticletitle{Adding conditional control to text-to-image diffusion models}. In \bibinfo{booktitle}{\emph{Proceedings of the IEEE/CVF International Conference on Computer Vision}}. \bibinfo{pages}{3836--3847}.
+\newblock
+
+
+\bibitem[Zhang et~al\mbox{.}(2019)]%
+        {zhang2019bertscore}
+\bibfield{author}{\bibinfo{person}{Tianyi Zhang}, \bibinfo{person}{Varsha Kishore}, \bibinfo{person}{Felix Wu}, \bibinfo{person}{Kilian~Q Weinberger}, {and} \bibinfo{person}{Yoav Artzi}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Bertscore: Evaluating text generation with bert}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:1904.09675}} (\bibinfo{year}{2019}).
+\newblock
+
+
+\bibitem[Zhang and Jin(2020)]%
+        {zhang2020unsupervised}
+\bibfield{author}{\bibinfo{person}{Zijian Zhang} {and} \bibinfo{person}{Yan Jin}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{An unsupervised deep learning model to discover visual similarity between sketches for visual analogy support}. In \bibinfo{booktitle}{\emph{International design engineering technical conferences and computers and information in engineering conference}}, Vol.~\bibinfo{volume}{83976}. American Society of Mechanical Engineers.
+\newblock
+
+
+\end{thebibliography}

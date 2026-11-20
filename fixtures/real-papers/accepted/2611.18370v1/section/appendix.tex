@@ -1,0 +1,1004 @@
+
+
+\section{Theory Development} \label{appendix:theory}
+\subsection{All Proofs}
+\begin{proof}[Proof of Theorem~\ref{thm:f_div}] We now prove (i) and (ii)
+
+(i) By definition, we have
+\begin{align*}
+D_{f}\left(\mathbb{P}_{d},\mathbb{P}_{\theta}\right) & =\mathbb{E}_{\mathbb{P}_{\theta}}\left[f\left(\frac{p_{d}\left(\boldsymbol{x},\boldsymbol{y}\right)}{p_{\theta}\left(\boldsymbol{x},\boldsymbol{y}\right)}\right)\right]=\mathbb{E}_{\mathbb{P}_{\theta}}\left[\max_{t}\left\{ \frac{p_{d}\left(\boldsymbol{x},\boldsymbol{y}\right)}{p_{\theta}\left(\boldsymbol{x},\boldsymbol{y}\right)}t-f^{*}\left(t\right)\right\} \right]\\
+\geq & \ \max_{T\in\mathcal{T}}\mathbb{E}_{\mathbb{P}_{\theta}}\left[\frac{p_{d}\left(\boldsymbol{x},\boldsymbol{y}\right)}{p_{\theta}\left(\boldsymbol{x},\boldsymbol{y}\right)}T\left(\boldsymbol{x},\boldsymbol{y}\right)-f^{*}\left(T\left(\boldsymbol{x},\boldsymbol{y}\right)\right)\right]\\
+= & \ \max_{T\in\mathcal{T}}\int\left[p_{\theta}\left(\boldsymbol{x},\boldsymbol{y}\right)\frac{p_{d}\left(\boldsymbol{x},\boldsymbol{y}\right)}{p_{\theta}\left(\boldsymbol{x},\boldsymbol{y}\right)}T\left(\boldsymbol{x},\boldsymbol{y}\right)-p_{\theta}\left(\boldsymbol{x},\boldsymbol{y}\right)f^{*}\left(T\left(\boldsymbol{x},\boldsymbol{y}\right)\right)\right]d\boldsymbol{x}d\boldsymbol{y}\\
+= & \ \max_{T\in\mathcal{T}}\left\{ \mathbb{E}_{\mathbb{P}_{d}}\left[T\left(\boldsymbol{x},\boldsymbol{y}\right)\right]-\mathbb{E}_{\mathbb{P}_{\theta}}\left[f^{*}\left(T\left(\boldsymbol{x},\boldsymbol{y}\right)\right)\right]\right\}
+\end{align*}
+
+(ii) To find out the optimal $t^*=T^*(\boldsymbol{x}, \boldsymbol{y})$ for $\max_{t}\left\{ \frac{p_{d}\left(\boldsymbol{x},\boldsymbol{y}\right)}{p_{\theta}\left(\boldsymbol{x},\boldsymbol{y}\right)}t-f^{*}\left(t\right)\right\} $ , we consider
+\[
+h\left(t\right)=\frac{p_{d}\left(\boldsymbol{x},\boldsymbol{y}\right)}{p_{\theta}\left(\boldsymbol{x},\boldsymbol{y}\right)}t-f^{*}\left(t\right)
+\]
+Since $f$ is differentiable and strictly convex on the interior of its domain, $f^*$ is likewise differentiable with $\nabla f^* = (\nabla f)^{-1}$, and $h$ is concave; setting its derivative to zero yields
+\[
+h^{'}\left(t\right)=\frac{p_{d}\left(\boldsymbol{x},\boldsymbol{y}\right)}{p_{\theta}\left(\boldsymbol{x},\boldsymbol{y}\right)}-\nabla f^{*}\left(t\right)=0
+\]
+Using the property of Fenchel conjugate, we obtain
+\[
+t=\nabla f\left(\nabla f^{*}\left(t\right)\right)=\nabla f\left(\frac{p_{d}\left(\boldsymbol{x},\boldsymbol{y}\right)}{p_{\theta}\left(\boldsymbol{x},\boldsymbol{y}\right)}\right)
+\]
+which leads to
+\[
+T^{*}\left(\boldsymbol{x},\boldsymbol{y}\right)=\nabla f\left(\frac{p_{d}\left(\boldsymbol{x},\boldsymbol{y}\right)}{p_{\theta}\left(\boldsymbol{x},\boldsymbol{y}\right)}\right)
+\]
+Consequently, we obtain
+\begin{align*}
+ & D_{f}\left(\mathbb{P}_{d},\mathbb{P}_{\theta}\right)-\mathbb{E}_{\mathbb{P}_{\theta}}\left[\frac{p_{d}\left(\boldsymbol{x},\boldsymbol{y}\right)}{p_{\theta}\left(\boldsymbol{x},\boldsymbol{y}\right)}T\left(\boldsymbol{x},\boldsymbol{y}\right)-f^{*}\left(T\left(\boldsymbol{x},\boldsymbol{y}\right)\right)\right]\\
+= & \ \mathbb{E}_{\mathbb{P}_{\theta}}\left[\frac{p_{d}\left(\boldsymbol{x},\boldsymbol{y}\right)}{p_{\theta}\left(\boldsymbol{x},\boldsymbol{y}\right)}\left(T^{*}\left(\boldsymbol{x},\boldsymbol{y}\right)-T\left(\boldsymbol{x},\boldsymbol{y}\right)\right)-\left(f^{*}\left(T^{*}\left(\boldsymbol{x},\boldsymbol{y}\right)\right)-f^{*}\left(T\left(\boldsymbol{x},\boldsymbol{y}\right)\right)\right)\right]\\
+= & \ \mathbb{E}_{\mathbb{P}_{d}}\left[T^{*}\left(\boldsymbol{x},\boldsymbol{y}\right)-T\left(\boldsymbol{x},\boldsymbol{y}\right)\right]-\mathbb{E}_{\mathbb{P}_{\theta}}\left[f^{*}\left(T^{*}\left(\boldsymbol{x},\boldsymbol{y}\right)\right)-f^{*}\left(T\left(\boldsymbol{x},\boldsymbol{y}\right)\right)\right]\\
+\leq & \int\left|T\left(\boldsymbol{x},\boldsymbol{y}\right)-T^{*}\left(\boldsymbol{x},\boldsymbol{y}\right)\right|p_{d}\left(\boldsymbol{x,y}\right)d\boldsymbol{x}d\boldsymbol{y}+\int\left|f^{*}\left(T\left(\boldsymbol{x},\boldsymbol{y}\right)\right)-f^{*}\left(T^{*}\left(\boldsymbol{x},\boldsymbol{y}\right)\right)\right|p_{\theta}\left(\boldsymbol{x,y}\right)d\boldsymbol{x}d\boldsymbol{y}\\
+\leq & \int\Vert T-T^{*}\Vert_{\infty}p_{d}\left(\boldsymbol{x,y}\right)d\boldsymbol{x}d\boldsymbol{y}+\int\Vert f^{*}\circ T-f^{*}\circ T^{*}\Vert_{\infty}p_{\theta}\left(\boldsymbol{x,y}\right)d\boldsymbol{x}d\boldsymbol{y}\\
+= & \ \Vert T-T^{*}\Vert_{\infty}+\Vert f^{*}\circ T-f^{*}\circ T^{*}\Vert_{\infty}
+\end{align*}
+Therefore, we have
+\begin{align*}
+ & \mathbb{E}_{\mathbb{P}_{\theta}}\left[\frac{p_{d}\left(\boldsymbol{x},\boldsymbol{y}\right)}{p_{\theta}\left(\boldsymbol{x},\boldsymbol{y}\right)}T\left(\boldsymbol{x},\boldsymbol{y}\right)-f^{*}\left(T\left(\boldsymbol{x},\boldsymbol{y}\right)\right)\right]-D_{f}\left(\mathbb{P}_{d},\mathbb{P}_{\theta}\right)\\
+= & \ \mathbb{E}_{\mathbb{P}_{\theta}}\left[\frac{p_{d}\left(\boldsymbol{x},\boldsymbol{y}\right)}{p_{\theta}\left(\boldsymbol{x},\boldsymbol{y}\right)}\left(T\left(\boldsymbol{x},\boldsymbol{y}\right)-T^{*}\left(\boldsymbol{x},\boldsymbol{y}\right)\right)-\left(f^{*}\left(T\left(\boldsymbol{x},\boldsymbol{y}\right)\right)-f^{*}\left(T^{*}\left(\boldsymbol{x},\boldsymbol{y}\right)\right)\right)\right]\\
+= & \ \mathbb{E}_{\mathbb{P}_{d}}\left[T\left(\boldsymbol{x},\boldsymbol{y}\right)-T^{*}\left(\boldsymbol{x},\boldsymbol{y}\right)\right]-\mathbb{E}_{\mathbb{P}_{\theta}}\left[f^{*}\left(T\left(\boldsymbol{x},\boldsymbol{y}\right)\right)-f^{*}\left(T^{*}\left(\boldsymbol{x},\boldsymbol{y}\right)\right)\right]\\
+\leq & \int\left|T\left(\boldsymbol{x},\boldsymbol{y}\right)-T^{*}\left(\boldsymbol{x},\boldsymbol{y}\right)\right|p_{d}\left(\boldsymbol{x,y}\right)d\boldsymbol{x}d\boldsymbol{y}+\int\left|f^{*}\left(T\left(\boldsymbol{x},\boldsymbol{y}\right)\right)-f^{*}\left(T^{*}\left(\boldsymbol{x},\boldsymbol{y}\right)\right)\right|p_{\theta}\left(\boldsymbol{x,y}\right)d\boldsymbol{x}d\boldsymbol{y}\\
+\leq & \int\Vert T-T^{*}\Vert_{\infty}p_{d}\left(\boldsymbol{x,y}\right)d\boldsymbol{x}d\boldsymbol{y}+\int\Vert f^{*}\circ T-f^{*}\circ T^{*}\Vert_{\infty}p_{\theta}\left(\boldsymbol{x,y}\right)d\boldsymbol{x}d\boldsymbol{y}\\
+= & \ \Vert T-T^{*}\Vert_{\infty}+\Vert f^{*}\circ T-f^{*}\circ T^{*}\Vert_{\infty}
+\end{align*}
+This implies that
+\begin{align*} D_{f}\left(\mathbb{P}_{d},\mathbb{P}_{\theta}\right)-\{\mathbb{E}_{\mathbb{P}_{d}}\left[T\left(\boldsymbol{x},\boldsymbol{y}\right)\right]-\mathbb{E}_{\mathbb{P}_{\theta}}\left[f^{*}\left(T\left(\boldsymbol{x},\boldsymbol{y}\right)\right)\right]\} \leq  \Vert T-T^{*}\Vert_{\infty}+\Vert f^{*}\circ T-f^{*}\circ T^{*}\Vert_{\infty}
+\end{align*}
+Let $\bar{T}^* = \text{argmin}_{T\in \mathcal{T}} {\Vert T-T^{*}\Vert_{\infty}+\Vert f^{*}\circ T-f^{*}\circ T^{*}\Vert_{\infty}}$. We then have the conclusion because
+\begin{align*}
+ & D_{f}\left(\mathbb{P}_{d},\mathbb{P}_{\theta}\right)-\max_{T\in\mathcal{T}}\left\{ \mathbb{E}_{\mathbb{P}_{d}}\left[T\left(\boldsymbol{x},\boldsymbol{y}\right)\right]-\mathbb{E}_{\mathbb{P}_{\theta}}\left[f^{*}\left(T\left(\boldsymbol{x},\boldsymbol{y}\right)\right)\right]\right\} \\
+\leq & \ D_{f}\left(\mathbb{P}_{d},\mathbb{P}_{\theta}\right)-\{\mathbb{E}_{\mathbb{P}_{d}}\left[\bar{T}^{*}\left(\boldsymbol{x},\boldsymbol{y}\right)\right]-\mathbb{E}_{\mathbb{P}_{\theta}}\left[f^{*}\left(\bar{T}^{*}\left(\boldsymbol{x},\boldsymbol{y}\right)\right)\right]\}\\
+\leq & \ \Vert\bar{T}^{*}-T^{*}\Vert_{\infty}+\Vert f^{*}\circ\bar{T}^{*}-f^{*}\circ T^{*}\Vert_{\infty}\\
+= & \ \min_{T\in\mathcal{T}}\left\{ \Vert T-T^{*}\Vert_{\infty}+\Vert f^{*}\circ T-f^{*}\circ T^{*}\Vert_{\infty}\right\}
+\end{align*}
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:fenchel_form}]
+By definition, the Fenchel conjugate of $f$ is:
+\begin{equation*}
+f^*(v) = \sup_{u \in \mathbb{R}} \{uv - f(u)\} = \sup_{u \geq 0} \{uv - g(u)\}
+\end{equation*}
+since $f(u) = +\infty$ for $u < 0$ makes those terms irrelevant in the supremum.
+Let $h(u) = uv - g(u)$ for $u \geq 0$; since $g$ is convex, $h$ is concave with $h'(u) = v - g'(u)$, and strict convexity makes $g'$ strictly increasing from $g'_+(0) = \lim_{u \to 0^+} g'(u) = \sup \partial g(0)$ to $g'_\infty = \lim_{u \to +\infty} g'(u)$.
+
+\textbf{Case 1:} $v \leq g'_+(0)$.
+
+For every $u > 0$, strict convexity gives $g'(u) > g'_+(0) \geq v$, so $h'(u) = v - g'(u) < 0$ and $h$ is strictly decreasing. The supremum is attained at $u^* = 0$:
+\begin{equation*}
+f^*(v) = 0 \cdot v - g(0) = -g(0)
+\end{equation*}
+
+\textbf{Case 2:} $g'_+(0) < v < g'_\infty$.
+
+Then $v$ lies in the range of $g'$, so $g'(u^*) = v$ has a unique solution $u^* > 0$ with $h'(u^*) = 0$; since $h$ is concave, $u^*$ is the maximizer:
+\begin{equation*}
+f^*(v) = \sup_{u \geq 0} \{uv - g(u)\} = u^* v - g(u^*) = g^*(v)
+\end{equation*}
+
+\textbf{Case 3:} $v \geq g'_\infty$.
+
+This is the boundary regime referred to in Theorem~\ref{thm:fenchel_form}. For all $u > 0$, we have $g'(u) < g'_\infty \leq v$, so $h'(u) = v - g'(u) > 0$ and $h$ is strictly increasing; the supremum is therefore the limit $f^*(v) = \lim_{u \to +\infty}(uv - g(u))$. If $v > g'_\infty$, the slope is bounded below by $v - g'_\infty > 0$, so this limit is $+\infty$. If $v = g'_\infty$, it equals $\lim_{u \to +\infty}(g'_\infty u - g(u)) \in (-\infty, +\infty]$; hence the boundary value may be finite (e.g., $g(u) = \sqrt{u^2+1} - 1$ has $g'_\infty = 1$ and $f^*(1) = 1$) or $+\infty$ (as for reverse KL and squared Hellinger).
+
+\textbf{Monotonicity:} For any $v_1 < v_2$ and $u \geq 0$: $uv_1 \leq uv_2$, hence $uv_1 - g(u) \leq uv_2 - g(u)$. Taking supremum: $f^*(v_1) \leq f^*(v_2)$.
+\end{proof}
+
+\begin{proof}[Proof of Proposition~\ref{prop:surrogate}]
+We first establish the closed-form optimum of the KL-regularized problem (\ref{eq:kl_reg}), then substitute the induced critic parameterization into the critic objective (\ref{eq:critic_learning_general}).
+
+Fix a context $\boldsymbol{x}$. Restricting to the support $\mathcal{Y}_{\boldsymbol{x}}=\{\boldsymbol{y}':\pi_{\boldsymbol{\theta}_{k}}(\boldsymbol{y}'\mid\boldsymbol{x})>0\}$ (outside which any finite-objective policy must vanish, since otherwise the KL term diverges), the per-context objective in (\ref{eq:kl_reg}) reads
+\[
+J(\pi)=\sum_{\boldsymbol{y}'\in\mathcal{Y}_{\boldsymbol{x}}}\pi(\boldsymbol{y}'\mid\boldsymbol{x})\,T_{k}(\boldsymbol{x},\boldsymbol{y}')
+-\beta\sum_{\boldsymbol{y}'\in\mathcal{Y}_{\boldsymbol{x}}}\pi(\boldsymbol{y}'\mid\boldsymbol{x})\log\frac{\pi(\boldsymbol{y}'\mid\boldsymbol{x})}{\pi_{\boldsymbol{\theta}_{k}}(\boldsymbol{y}'\mid\boldsymbol{x})}.
+\]
+Since the hypotheses of Theorem~\ref{thm:f_div} ensure that $T_{k}$ is bounded on the support, the normalizing constant
+$Z(\boldsymbol{x})=\sum_{\boldsymbol{y}'\in\mathcal{Y}_{\boldsymbol{x}}}\pi_{\boldsymbol{\theta}_{k}}(\boldsymbol{y}'\mid\boldsymbol{x})\exp(\beta^{-1}T_{k}(\boldsymbol{x},\boldsymbol{y}'))$ satisfies $Z(\boldsymbol{x})\in(0,\infty)$, so the Gibbs optimum below is well defined.
+The reward term is linear in $\pi$ and the negative-entropy term is strictly convex, so $J$ is strictly concave; hence over the probability simplex the first-order stationarity (KKT) condition is sufficient for optimality and the constrained maximizer is unique. Introducing a multiplier $\lambda(\boldsymbol{x})$ for $\sum_{\boldsymbol{y}'}\pi(\boldsymbol{y}'\mid\boldsymbol{x})=1$, the Lagrangian is
+\[
+\mathcal{L}(\pi,\lambda;\boldsymbol{x})=J(\pi)+\lambda(\boldsymbol{x})\Big(\sum_{\boldsymbol{y}'\in\mathcal{Y}_{\boldsymbol{x}}}\pi(\boldsymbol{y}'\mid\boldsymbol{x})-1\Big).
+\]
+Differentiating with respect to a single coordinate $\pi(\boldsymbol{y}'\mid\boldsymbol{x})$ and using the product rule on the entropy term gives the stationarity condition
+\[
+T_{k}(\boldsymbol{x},\boldsymbol{y}')-\beta\Big(\log\frac{\pi(\boldsymbol{y}'\mid\boldsymbol{x})}{\pi_{\boldsymbol{\theta}_{k}}(\boldsymbol{y}'\mid\boldsymbol{x})}+1\Big)+\lambda(\boldsymbol{x})=0.
+\]
+Solving for the log-ratio yields
+\[
+\log\frac{\pi(\boldsymbol{y}'\mid\boldsymbol{x})}{\pi_{\boldsymbol{\theta}_{k}}(\boldsymbol{y}'\mid\boldsymbol{x})}
+=\beta^{-1}T_{k}(\boldsymbol{x},\boldsymbol{y}')+\beta^{-1}\lambda(\boldsymbol{x})-1,
+\]
+and exponentiating gives $\pi(\boldsymbol{y}'\mid\boldsymbol{x})\propto\pi_{\boldsymbol{\theta}_{k}}(\boldsymbol{y}'\mid\boldsymbol{x})\exp(\beta^{-1}T_{k}(\boldsymbol{x},\boldsymbol{y}'))$, which is strictly positive on $\mathcal{Y}_{\boldsymbol{x}}$; hence the non-negativity constraints $\pi(\boldsymbol{y}'\mid\boldsymbol{x})\ge0$ are inactive and require no additional multiplier. Enforcing normalization determines the multiplier and yields the optimum (\ref{eq:optimal_pi}),
+\[
+\pi^{*}(\boldsymbol{y}'\mid\boldsymbol{x})=\frac{1}{Z(\boldsymbol{x})}\pi_{\boldsymbol{\theta}_{k}}(\boldsymbol{y}'\mid\boldsymbol{x})\exp\!\big(\beta^{-1}T_{k}(\boldsymbol{x},\boldsymbol{y}')\big),
+\qquad
+Z(\boldsymbol{x})=\sum_{\boldsymbol{y}'\in\mathcal{Y}_{\boldsymbol{x}}}\pi_{\boldsymbol{\theta}_{k}}(\boldsymbol{y}'\mid\boldsymbol{x})\exp\!\big(\beta^{-1}T_{k}(\boldsymbol{x},\boldsymbol{y}')\big).
+\]
+Inverting this relation expresses the critic as an implicit function of the policy,
+\[
+T_{k}(\boldsymbol{x},\boldsymbol{y}'\mid\boldsymbol{\theta})
+=\beta\log\frac{\pi_{\boldsymbol{\theta}}(\boldsymbol{y}'\mid\boldsymbol{x})}{\pi_{\boldsymbol{\theta}_{k}}(\boldsymbol{y}'\mid\boldsymbol{x})}+\beta\log Z(\boldsymbol{x}).
+\]
+Substituting this parameterization for both the real score $T_{k}(\boldsymbol{x},\boldsymbol{y}\mid\boldsymbol{\theta})$ and the synthetic score $T_{k}(\boldsymbol{x},\boldsymbol{y}'\mid\boldsymbol{\theta})$ into the critic objective (\ref{eq:critic_learning_general}) gives (\ref{eq:final_1}).
+\end{proof}
+
+
+\subsection{Instantiations of $f$-Divergence} \label{sec:app:derive f-divergence}
+
+We present three choices of convex function $g$ that yield well-known $f$-divergences, along with their Fenchel conjugates.
+
+
+\subsubsection{KL Divergence}
+
+\textbf{Definition:} $g(u) = u \log u - u + 1$ for $u > 0$, with $g(0) = 1$.
+
+\textbf{Verification:} We verify that $D_f(P \| Q)$ recovers the KL divergence:
+\begin{align*}
+D_f(P \| Q) &= \int q(u) \cdot \left( \frac{p(u)}{q(u)} \log \frac{p(u)}{q(u)} - \frac{p(u)}{q(u)} + 1 \right) du \nonumber \\
+&= \int p(u) \log \frac{p(u)}{q(u)} \, du - \int p(u) \, du + \int q(u) \, du \nonumber \\
+&= \int p(u) \log \frac{p(u)}{q(u)} \, du - 1 + 1 = D_{KL}(P \| Q)
+\end{align*}
+
+\textbf{Fenchel conjugate:} We compute $g^*(v) = \sup_{u \geq 0} \{ uv - g(u) \}$:
+\begin{equation*}
+g^*(v) = \sup_{u \geq 0} \{ uv - u \log u + u - 1 \}
+\end{equation*}
+Taking the derivative and setting it to zero:
+\begin{equation*}
+\frac{d}{du}(uv - u \log u + u - 1) = v - \log u = 0
+\end{equation*}
+This yields $u^* = e^v > 0$ for all $v \in \mathbb{R}$. Substituting back:
+\begin{align*}
+g^*(v) &= e^v \cdot v - e^v \log(e^v) + e^v - 1  = e^v - 1
+\end{align*}
+
+Since $g'(u) = \log u$, we have $g'_+(0) = \lim_{u \to 0^+} g'(u) = -\infty$ and $g'_\infty = \lim_{u \to +\infty} g'(u) = +\infty$, so the range of $g'$ is all of $\mathbb{R}$ and the interior case applies for every $v$. Thus:
+\begin{equation*}
+f^*(v) = g^*(v) = e^v - 1, \quad \forall \ v \in \mathbb{R}
+\end{equation*}
+
+\subsubsection{Reverse KL Divergence}
+
+\textbf{Definition:} $g(u) = -\log u + u - 1$ for $u > 0$.
+
+\textbf{Verification:} We verify that $D_f(P \| Q)$ recovers the reverse KL divergence:
+\begin{align*}
+D_f(P \| Q) &= \int q(u) \cdot \left( -\log \frac{p(u)}{q(u)} + \frac{p(u)}{q(u)} - 1 \right) du \nonumber \\
+&= -\int q(u) \log \frac{p(u)}{q(u)} \, du + \int p(u) \, du - \int q(u) \, du \nonumber \\
+&= \int q(u) \log \frac{q(u)}{p(u)} \, du + 1 - 1 = D_{KL}(Q \| P)
+\end{align*}
+
+\textbf{Fenchel conjugate:} We compute $g^*(v) = \sup_{u > 0} \{ uv - g(u) \}$:
+\begin{equation*}
+g^*(v) = \sup_{u > 0} \{ uv + \log u - u + 1 \}
+\end{equation*}
+Taking the derivative and setting it to zero:
+\begin{equation*}
+\frac{d}{du}(uv + \log u - u + 1) = v + \frac{1}{u} - 1 = 0 \quad \Rightarrow \quad u^* = \frac{1}{1-v}
+\end{equation*}
+This requires $1 - v > 0$, i.e., $v < 1$. Substituting back:
+\begin{align*}
+g^*(v) &= \frac{v}{1-v} + \log \frac{1}{1-v} - \frac{1}{1-v} + 1 = -\log(1-v)
+\end{align*}
+
+Since $g'(u) = -\frac{1}{u} + 1$, we have $g'_+(0) = -\infty$ and $g'_\infty = \lim_{u \to +\infty} g'(u) = 1$, so the range of $g'$ is $(-\infty, 1)$. Thus:
+\begin{equation*}
+f^*(v) = g^*(v) = -\log(1-v) \ \ (v < 1), \qquad f^*(v) = +\infty \ \ (v \geq 1)
+\end{equation*}
+
+\subsubsection{Squared Hellinger Distance}
+
+\textbf{Definition:} $g(u) = (\sqrt{u} - 1)^2 = u - 2\sqrt{u} + 1$ for $u \geq 0$.
+
+\textbf{Verification:} We verify that $D_f(P \| Q)$ recovers the squared Hellinger distance:
+\begin{align*}
+D_f(P \| Q) &= \int q(u) \cdot \left( \sqrt{\frac{p(u)}{q(u)}} - 1 \right)^2 du \nonumber \\
+&= \int q(u) \cdot \left( \frac{p(u)}{q(u)} - 2\sqrt{\frac{p(u)}{q(u)}} + 1 \right) du \nonumber \\
+&= \int p(u) \, du - 2 \int \sqrt{p(u) q(u)} \, du + \int q(u) \, du \nonumber \\
+&= 2 \left( 1 - \int \sqrt{p(u) q(u)} \, du \right) = H^2(P, Q)
+\end{align*}
+
+\textbf{Fenchel conjugate:} We compute $g^*(v) = \sup_{u \geq 0} \{ uv - g(u) \}$:
+\begin{equation*}
+g^*(v) = \sup_{u \geq 0} \{ uv - u + 2\sqrt{u} - 1 \}
+\end{equation*}
+Let $s = \sqrt{u} \geq 0$, so $u = s^2$. The objective becomes $s^2 v - s^2 + 2s - 1$. Taking the derivative with respect to $s$:
+\begin{equation*}
+\frac{d}{ds}\left( s^2 v - s^2 + 2s - 1 \right) = 2s(v-1) + 2 = 0 \quad \Rightarrow \quad s^* = \frac{1}{1-v}
+\end{equation*}
+This requires $1 - v > 0$, i.e., $v < 1$, ensuring $s^* > 0$. Thus $u^* = (s^*)^2 = \frac{1}{(1-v)^2}$. Substituting back:
+\begin{align*}
+g^*(v) &= \frac{v}{(1-v)^2} - \frac{1}{(1-v)^2} + \frac{2}{1-v} - 1 \nonumber = \frac{v}{1-v}
+\end{align*}
+
+Since $g'(u) = 1 - \frac{1}{\sqrt{u}}$, we have $g'_+(0) = -\infty$ and $g'_\infty = \lim_{u \to +\infty} g'(u) = 1$, so the range of $g'$ is $(-\infty, 1)$. Thus:
+\begin{equation*}
+f^*(v) = g^*(v) = \frac{v}{1-v} \ \ (v < 1), \qquad f^*(v) = +\infty \ \ (v \geq 1)
+\end{equation*}
+
+ 
+\section{Additional Experiment Result}
+
+\subsection{Implementation and Hyperparameter Details}
+\label{sec:app:implementation}
+
+We employ SmolLM-135M, SmolLM-360M, and SmolLM-1.7B as backbone LLMs, which are among the strongest open-weight small-scale models. All models are fine-tuned using the AdamW optimizer~\citep{loshchilov2019adamw} with a linear warmup schedule. Training runs for 2000 steps across most datasets; Fakejob posts requires 20000 steps due to longer convergence time. The learning rate is selected from $\{1\times10^{-3},\,5\times10^{-5}\}$ per dataset. All experiments are conducted on 2$\times$NVIDIA A100 and 2$\times$NVIDIA L40 GPUs. For each dataset, we tune the coefficient $\beta$ and the clamping threshold $\epsilon$ via grid search over the same search space: $\{0.02, 0.05, 0.2, 0.5, 0.8\}$. We construct a validation set using 10\% of the normal training samples together with an equal number of pseudo-anomalies generated by the model, and select $(\beta,\epsilon)$ by AUC-ROC on this validation set. This procedure remains fully unsupervised, as it does not use any real anomaly labels.
+
+Following established benchmarks~\cite{shenkar2022anomaly, xu2023fascinating}, we construct training and test sets by randomly sampling 50\% of normal data for training; the test set comprises the remaining normal instances and all ground-truth anomalies. For the 20 Newsgroups dataset, we follow the configuration outlined in ADBench~\cite{han2022adbench}: we use six top-level categories (computer, recreation, science, miscellaneous, politics, and religion), conduct six experiments with each category as normal and the others as anomalies (downsampled to 5\% of total instances), and report average performance across the six experiments.
+
+We report the model performance using Area Under the Receiver Operating Characteristic Curve (AUC-ROC), F1-score and Area Under the Precision-Recall Curve (AUC-PR). Anomaly scores are computed as negative log-likelihood of serialized token sequences under the fine-tuned model, averaged over $r=21$ random column permutations~\cite{tsai2025anollm}.
+
+\subsection{Training and Inference Cost}
+\label{sec:app:computational}
+
+DiSPaT introduces additional training cost relative to AnoLLM because each self-play iteration evaluates log-probabilities under both the current policy and the reference policy, and trains on both real and synthetic samples. This overhead is expected and is not specific to our method; it is the standard cost of DPO/SPIN-style preference optimization. In our implementation, the per-iteration cost is approximately constant because the amount of real and synthetic data remains fixed across iterations.
+
+Table~\ref{tab:computational_cost} reports wall-clock training time and total FLOPs for DiSPaT and AnoLLM using SmolLM-135M on a single NVIDIA A40 48GB GPU. DiSPaT is consistently more expensive during training, with the gap becoming larger on datasets with longer serialized sequences such as Fakejob. At inference time, however, DiSPaT uses the same $r=21$ permutation protocol as AnoLLM, so both methods incur the same inference cost when the same backbone is used. As discussed in AnoLLM, batched GPU training makes LLM-based methods practically comparable to deep tabular baselines in training time, while inference remains slower than efficient classical baselines because it requires repeated autoregressive likelihood evaluation. This trade-off can be adjusted by reducing $r$, at the cost of some accuracy. Since training is performed once offline, we view the additional training cost as acceptable given the consistent performance gains. One practical direction for reducing deployment cost is to distill a larger self-play-refined model into a smaller backbone, following recent progress in LLM distillation~\citep{yang2024anomaly, hoang2026mcw}.
+
+\begin{table*}[t]
+\centering
+\caption{Training time and total FLOPs of AnoLLM and DiSPaT on six datasets using SmolLM-135M on a single NVIDIA A40 48GB GPU. Training time is reported in minutes.}
+\label{tab:computational_cost}
+\small
+\setlength{\tabcolsep}{8pt}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Dataset} & \textbf{AnoLLM Time} & \textbf{DiSPaT Time} & \textbf{AnoLLM FLOPs} & \textbf{DiSPaT FLOPs} \\
+\midrule
+Ecoli & 4.1 & 28.5 & $1.5 \times 10^{15}$ & $3.7 \times 10^{16}$ \\
+Lymphography & 4.4 & 30.9 & $3.1 \times 10^{15}$ & $1.7 \times 10^{16}$ \\
+20 Newsgroups & 4.7 & 35.2 & $3.2 \times 10^{15}$ & $4.1 \times 10^{16}$ \\
+Vehicle & 6.6 & 48.3 & $6.4 \times 10^{15}$ & $8.4 \times 10^{16}$ \\
+Seismic & 9.7 & 67.6 & $9.8 \times 10^{15}$ & $1.2 \times 10^{17}$ \\
+Fakejob & 98.8 & 671.3 & $8.4 \times 10^{16}$ & $7.7 \times 10^{17}$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Additional Comparison with Recent Baselines}
+\label{sec:app:recent_baselines}
+
+To address the lack of recent baselines, we additionally compare DiSPaT against five recent methods on the 21 datasets shared across all works: MCM~\citep{yin2024mcm}, NPT-AD~\citep{thimonier2024nptad}, DRL~\citep{ye2025drl}, LLM-DAS~\citep{ye2026llmdas}, and CausalTAD~\citep{wang2026causaltad}. Results for MCM, NPT-AD, DRL, and LLM-DAS are taken directly from the reported results in LLM-DAS, while results for CausalTAD are taken directly from the reported results in CausalTAD. Table~\ref{tab:recent_baselines} reports the detailed AUC-ROC scores, along with the average score and the number of datasets on which DiSPaT achieves a higher or equal result.
+
+DiSPaT attains the highest average AUC-ROC, outperforming MCM on 13 datasets with 2 ties, NPT-AD on 10 datasets with 2 ties, DRL on 11 datasets with 2 ties, LLM-DAS on 15 datasets, and CausalTAD on 13 datasets with 2 ties. The average AUC-ROC margin ranges from 2.0\% to 12.2\%, showing that DiSPaT remains competitive against recent methods from ICLR 2024, ICML 2024, ICLR 2025, and ICLR 2026.
+
+LLM-DAS and DiSPaT use LLMs in fundamentally different ways. LLM-DAS treats the LLM as a code generator that synthesizes anomaly-detection pipelines, whereas DiSPaT uses the LLM itself as the detector and refines its generative distribution through self-play. CausalTAD is closer in starting point, as it also builds on AnoLLM, but it focuses on improving the serialization order by injecting causal knowledge and reweighting columns according to their causal importance. DiSPaT instead addresses the training paradigm itself: it follows AnoLLM's random-permutation protocol and replaces one-shot fine-tuning with iterative self-play. These directions are therefore orthogonal and potentially complementary.
+
+\begin{table*}[t]
+\centering
+\caption{Detailed AUC-ROC scores (\%) comparing DiSPaT against recent state-of-the-art baselines across 21 overlapping datasets. The best and second-best results in each row are highlighted in red and blue, respectively. The ``Win/Tie'' row indicates the number of datasets where DiSPaT outperforms or ties with the respective baseline. All baseline results are taken directly from the reported results in LLM-DAS~\citep{ye2026llmdas} and CausalTAD~\citep{wang2026causaltad}.}
+\label{tab:recent_baselines}
+\small
+\renewcommand{\arraystretch}{1.08}
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lcccccc@{}}
+\toprule
+\textbf{Dataset} & \textbf{DiSPaT-360M} & \textbf{MCM} & \textbf{NPT-AD} & \textbf{DRL} & \textbf{LLM-DAS} & \textbf{CausalTAD} \\
+\midrule
+Annthyroid & \textcolor{red}{\textbf{93.1}} & 68.9 & 86.8 & \textcolor{blue}{\textbf{92.4}} & 90.7 & 89.3 \\
+Arr & \textcolor{red}{\textbf{84.3}} & 81.1 & 71.9 & 77.4 & 77.6 & \textcolor{blue}{\textbf{83.6}} \\
+Breast & \textcolor{blue}{\textbf{99.6}} & \textcolor{blue}{\textbf{99.6}} & 98.5 & \textcolor{red}{\textbf{99.7}} & 62.0 & \textcolor{red}{\textbf{99.7}} \\
+Glass & \textcolor{blue}{\textbf{82.3}} & 72.3 & 78.8 & 69.7 & \textcolor{red}{\textbf{91.1}} & 67.1 \\
+Ionosphere & 92.7 & 97.3 & 97.4 & \textcolor{blue}{\textbf{98.4}} & \textcolor{red}{\textbf{99.9}} & 25.2 \\
+Lymphography & \textcolor{red}{\textbf{100.0}} & 92.6 & \textcolor{blue}{\textbf{99.9}} & \textcolor{red}{\textbf{100.0}} & 90.7 & 99.3 \\
+Mammography & 88.4 & 90.5 & 88.7 & \textcolor{blue}{\textbf{94.6}} & \textcolor{red}{\textbf{100.0}} & 87.6 \\
+Musk & \textcolor{red}{\textbf{100.0}} & \textcolor{blue}{\textbf{97.5}} & \textcolor{red}{\textbf{100.0}} & \textcolor{red}{\textbf{100.0}} & 58.2 & \textcolor{red}{\textbf{100.0}} \\
+Optdigits & 95.0 & \textcolor{blue}{\textbf{99.5}} & 93.2 & \textcolor{red}{\textbf{99.7}} & 94.9 & 97.2 \\
+Pendigits & 96.5 & 99.2 & \textcolor{red}{\textbf{99.9}} & \textcolor{blue}{\textbf{99.8}} & 73.9 & 89.2 \\
+Pima & 70.3 & \textcolor{blue}{\textbf{76.4}} & 75.5 & \textcolor{red}{\textbf{76.5}} & 67.8 & 66.7 \\
+Satellite & \textcolor{blue}{\textbf{90.2}} & 79.6 & 80.6 & 83.2 & \textcolor{red}{\textbf{98.4}} & 84.3 \\
+Satimage & \textcolor{blue}{\textbf{99.9}} & \textcolor{blue}{\textbf{99.9}} & \textcolor{red}{\textbf{100.0}} & 99.7 & 99.8 & \textcolor{red}{\textbf{100.0}} \\
+Shuttle & \textcolor{red}{\textbf{100.0}} & 99.8 & 99.3 & \textcolor{blue}{\textbf{99.9}} & 40.2 & \textcolor{red}{\textbf{100.0}} \\
+Speech & 48.2 & 44.1 & 59.3 & 58.2 & \textcolor{red}{\textbf{98.5}} & \textcolor{blue}{\textbf{62.5}} \\
+Thyroid & \textcolor{red}{\textbf{99.3}} & 98.0 & 97.9 & \textcolor{blue}{\textbf{99.1}} & 19.2 & 97.6 \\
+Vertebral & \textcolor{red}{\textbf{80.4}} & 37.7 & 53.5 & 62.2 & 55.9 & \textcolor{blue}{\textbf{63.1}} \\
+Vowels & 95.5 & 65.3 & \textcolor{red}{\textbf{99.4}} & 85.1 & \textcolor{blue}{\textbf{96.6}} & 73.1 \\
+WBC & 95.5 & \textcolor{blue}{\textbf{98.1}} & 96.2 & \textcolor{red}{\textbf{99.6}} & 93.3 & 96.9 \\
+Wine & \textcolor{blue}{\textbf{96.2}} & 95.4 & \textcolor{blue}{\textbf{96.2}} & \textcolor{red}{\textbf{100.0}} & 45.6 & \textcolor{red}{\textbf{100.0}} \\
+Yeast & \textcolor{red}{\textbf{80.3}} & 42.6 & 46.9 & 51.2 & \textcolor{blue}{\textbf{76.7}} & 54.3 \\
+\midrule
+\textbf{Average} & \textcolor{red}{\textbf{89.9}} & 82.6 & 86.6 & \textcolor{blue}{\textbf{87.9}} & 77.7 & 82.7 \\
+\textbf{Win/Tie} & - & 13/2 & 10/2 & 11/2 & 15/0 & 13/2 \\
+\bottomrule
+\end{tabular*}
+\end{table*}
+
+\subsection{Experiment on ODDS Library} \label{sec:app:oods_result}
+
+To complement the mixed-type benchmark reported in the main text, we evaluate DiSPaT 
+on 30 additional numerical datasets from the ODDS library. Detailed per-dataset 
+AUC-ROC, F1, and AUC-PR scores are listed in Tables~\ref{tab:benchmark-results-auc-roc}--\ref{tab:benchmark-results-aucpr}. 
+Baseline results are taken from~\citep{tsai2025anollm} (see table captions for exceptions and implementation notes).
+
+Across these benchmarks, DiSPaT frequently attains top or near-top performance on 
+individual datasets and yields strong average scores across metrics and model scales. 
+The results indicate that the proposed self-play refinement generalizes beyond 
+mixed-type tables and remains competitive on predominantly numerical tasks, supporting 
+the robustness claims made in the Experiments~\ref{4:experiments}. While performance varies across datasets—reflecting inherent differences in data characteristics and anomaly patterns—the consistent improvements over AnoLLM across all three model scales validate the effectiveness of iterative self-play refinement for numerical tabular data.
+
+\newcommand{\best}[1]{\textcolor{red}{\textbf{#1}}}
+\newcommand{\second}[1]{\textcolor{blue}{\textbf{#1}}}
+
+\begin{table*}[t]
+  \caption{Detailed AUC-ROC scores comparing DiSPaT against baselines over 30 datasets in ODDS. The best and second-best results in each row are indicated in red and blue, respectively. All baseline results are reported directly from~\citep{tsai2025anollm}.}
+
+  
+  \label{tab:benchmark-results-auc-roc}
+  \centering
+  \footnotesize
+  \setlength{\tabcolsep}{3.5pt}
+  \renewcommand{\arraystretch}{1.08}
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{lcccccccccccccccccc}
+    \toprule
+    Datasets &
+    \multicolumn{4}{c}{Classical Methods} &
+    \multicolumn{8}{c}{Deep-learning based Methods} &
+    \multicolumn{6}{c}{LLM-based Methods} \\
+    \cmidrule(lr){2-5}\cmidrule(lr){6-13}\cmidrule(lr){14-19}
+    & Iforest & PCA & KNN & ECOD
+    & DeepSVDD & RCA & SLAD & GOAD & NeuTral & ICL & DTE & REPEN
+    & \multicolumn{2}{c}{135M}
+    & \multicolumn{2}{c}{360M}
+    & \multicolumn{2}{c}{1.7B} \\
+    \cmidrule(lr){14-15}\cmidrule(lr){16-17}\cmidrule(lr){18-19}
+    & & & & & & & & & & & & &
+    AnoLLM & DiSPaT &
+    AnoLLM & DiSPaT &
+    AnoLLM & DiSPaT \\
+    \midrule
+
+    Annthyroid & 92.2 & 83.9 & 81.1 & 79.0 & 74.2 & 71.8 & 76.1 & 57.2 & 81.3 & 84.2 & \best{97.7} & 73.6 & 92.7 & 92.9 & 93.1 & 93.1 & 93.0 & \second{94.0} \\
+    Arrhythmia & \second{82.7} & 79.6 & 78.6 & 81.1 & 76.5 & 78.6 & 78.4 & 68.1 & 76.0 & 78.5 & 77.1 & 68.4 & 82.5 & 81.4 & 82.2 & \best{84.3} & 82.4 &  82.4 \\
+    BreastW & \second{99.4} & 98.8 & 99.2 & 99.2 & 97.4 & 98.7 & 98.6 & \second{99.4} & 98.3 & 99.2 & 98.2 & 95.5 & 99.2 & \best{99.6} & 99.3 & \best{99.6} & 99.1 & \second{99.4} \\
+    Cardio & 94.8 & \best{96.6} & 92.1 & 93.5 & 84.2 & 94.8 & 84.0 & 52.4 & 85.9 & 89.4 & 92.0 & 82.9 & 94.0 & \second{94.9} & 87.3 & 91.7 & 86.7 & 87.7 \\
+    Ecoli & 85.6 & 85.6 & 87.7 & 77.6 & 88.7 & 88.3 & 88.2 & 88.1 & 86.0 & 88.7 & 82.1 & 87.0 & 77.7 & 94.9 & 80.4 & \best{96.8} & 79.1 & \second{95.1} \\
+    ForestCover & 87.0 & 94.5 & \best{98.5} & 92.1 & 53.3 & 94.4 & 85.7 & 27.8 & 89.8 & 97.7 & \second{97.8} & 90.2 & 88.1 & 92.2 & 83.5 & 91.3 & 88.7 & 88.9 \\
+    Glass & 80.2 & 71.3 & 84.9 & 69.3 & 82.4 & 71.9 & 79.0 & 57.4 & \best{93.3} & \second{88.7} & 79.9 & 75.5 & 81.9 & 82.6 & 79.7 & 82.3 & 81.8 & 82.5 \\
+    Heart & 81.9 & \best{84.2} & 81.4 & 65.9 & 77.3 & 78.5 & 82.2 & \second{83.8} & 81.1 & 78.7 & 83.1 & 44.9 & 82.0 & 79.7 & 79.9 & 80.7 & 80.3 & 83.3  \\
+    Http & 99.2 & \second{99.9} & \best{100.0} & 97.9 & 99.0 & 99.5 & \second{99.9} & 99.6 & 97.3 & \best{100.0} & 99.5 & 99.4 & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0}  &  \best{100.0} \\
+    Ionosphere & 89.1 & 89.4 & 96.0 & 73.4 & 96.3 & 91.6 & 96.0 & 95.0 & 95.6 & \best{97.0} & \second{96.4} & 54.5 & 90.9 & \second{96.4} & 92.4 & 92.7 & 91.8 & 93.0 \\
+    LETTER & 63.1 & 52.9 & 86.5 & 56.7 & 77.6 & 71.6 & 90.8 & 81.1 & 92.9 & \second{95.9} & 87.2 & 59.7 & \best{96.7} & 83.7 & 86.7 & 80.2 & 77.2 & 84.2 \\
+    Lymphography & 67.3 & 82.6 & 86.0 & 83.0 & 89.9 & 91.9 & 96.4 & 81.7 & 84.7 & 82.7 & 90.9 & 80.8 & 96.8 & \best{100.0} & 99.3 & \best{100.0}  & \second{99.5} & \best{100.0}  \\
+    Mammography & 88.1 & 90.0 & 87.2 & \second{90.6} & 85.7 & 87.3 & 74.0 & 75.6 & 69.0 & 78.2 & 86.4 & 86.3 & \best{91.5} & 87.2 & 87.6 & 88.4 & 87.4 & 88.1 \\
+    Mulcross & \second{99.9} & \best{100.0} & \best{100.0} & 96.0 & \best{100.0} & \best{100.0} & 96.9 & \best{100.0} & 96.8 & \best{100.0} & \best{100.0} & 97.3 & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0}  & \best{100.0} \\
+    Musk & \second{97.1} & \best{100.0} & \best{100.0} & 95.6 & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} & 72.2 & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0}  &  \best{100.0} \\
+    Optdigits & 82.4 & 57.4 & 94.4 & 60.6 & 75.3 & 80.0 & 73.5 & 84.7 & \second{97.9} & 95.5 & 88.8 & 60.7 & \best{98.3} & 94.5 & 93.9 & 95.0 & 88.8 & 95.9  \\
+    Pendigits & 97.1 & 94.2 & \best{99.9} & 92.8 & 83.8 & 96.7 & 93.2 & 22.0 & 96.3 & 97.1 & \second{98.2} & 92.2 & 97.1 & 97.7 & 96.4 & 96.5 & 93.0 & 96.0 \\
+    Pima & 72.0 & 71.1 & \second{74.1} & 58.7 & 59.3 & 70.4 & 58.4 & 66.5 & \best{76.3} & 69.7 & 66.2 & 68.8 & 66.3 &  70.9 & 65.4 & 70.3 & 65.3 & 72.1 \\
+    Satellite & 80.7 & 66.2 & 87.4 & 58.2 & 80.0 & 73.4 & 86.4 & 79.5 & 85.9 & 85.4 & 78.9 & 74.0 & \best{90.2} & 88.7 & 87.7 & \best{90.2} & 85.8 & \second{89.8} \\
+    Satimage-2 & 99.3 & 97.9 & \second{99.9} & 96.5 & 96.1 & 99.8 & 99.7 & 99.4 & 86.1 & 99.7 & 98.8 & 99.8 & \best{100.0} & \second{99.9} & \second{99.9} & \second{99.9} & \second{99.9}  & \best{100.0} \\
+    Seismic & 69.2 & 69.2 & 73.8 & 69.2 & 71.3 & 72.7 & 71.4 & 71.7 & 68.1 & 71.9 & 71.4 & 72.4 & 71.2 & 73.2 & \second{74.6} & \best{75.7} & 74.0 & \second{74.6} \\
+    Shuttle & 99.6 & 99.4 & \second{99.9} & 99.3 & 99.7 & 99.6 & 99.8 & 99.0 & 99.7 & \second{99.9} & 99.8 & 99.2 & \best{100.0} & \second{99.9} & \best{100.0} & \second{99.9} & \second{99.9} & \best{100.0} \\
+    Smtp & 90.5 & 80.9 & \second{93.6} & 88.0 & 78.0 & 84.5 & 92.6 & 91.1 & 89.0 & 88.5 & \best{95.3} & 89.4 & 92.7 & 92.1 & 92.9 & 91.9 & 92.4 & 93.0 \\
+    Speech & 47.8 & 47.1 & 48.6 & 47.1 & 56.3 & 47.2 & 51.1 & 55.0 & \best{60.9} & \second{58.2} & 51.1 & 53.1 & 47.0 & 48.1 & 47.0 & 48.2 & 47.0 & 47.4 \\
+    Thyroid & 98.9 & 98.4 & 97.6 & 97.8 & 86.9 & 96.9 & 94.8 & 68.9 & 88.6 & 98.7 & 99.0 & 90.4 & 97.5 & 97.7 & 98.3 & \best{99.3} & \second{99.1} & \best{99.3} \\
+    Vertebral & 44.6 & 49.4 & 40.6 & 47.4 & 47.8 & 47.8 & 48.3 & 51.6 & 54.5 & 54.3 & 57.0 & 24.7 & 56.5 & \second{63.9} & 40.8 & \best{80.4} & 39.2 & 52.2 \\
+    Vowels & 77.9 & 64.4 & 97.5 & 59.7 & 89.5 & 89.1 & 96.9 & 92.5 & \best{98.8} & 97.9 & \second{98.3} & 75.3 & 98.2 & 96.0 & 93.8 & 95.5 & 93.3 & 94.9 \\
+    WBC & 94.7 & 94.9 & 94.7 & 90.7 & 90.4 & 94.6 & 92.8 & 66.3 & 76.5 & 90.8 & 91.3 & 77.0 & \best{96.4} & 94.8 & 95.2 & 95.5 & \second{95.7} & 95.0 \\
+    Wine & 93.0 & 92.7 & 95.2 & 72.9 & 85.4 & 89.9 & 96.4 & 96.1 & 96.0 & 94.4 & \best{97.4} & 83.5 & 90.9 & \second{97.2} & 85.1 & 96.2 & 87.6 & 96.0 \\
+    Yeast & \best{86.3} & \second{85.0} & 80.2 & 78.7 & 70.6 & 81.6 & 41.6 & 23.5 & 62.9 & 71.3 & 78.1 & 69.9 & 74.4 & 77.8 & 73.0 & 80.3 & 75.4 & 75.7 \\
+    \midrule
+    Average & 84.7 & 82.6 & 87.9 & 79.0 & 81.8 & 84.8 & 84.1 & 74.5 & 85.5 & 87.7 & 87.9 & 76.6 & 88.4 & \second{89.4}  & 86.5 & \best{90.5} & 86.1 & \second{89.4} \\
+    \bottomrule
+  \end{tabular}%
+  }
+\end{table*}
+
+
+\begin{table*}[t]
+  \caption{Detailed F1 scores comparing DiSPaT against baselines over 30 datasets in ODDS. The best and second-best results in each row are indicated in red and blue, respectively. Baseline results are reported from~\citep{tsai2025anollm}, except for AnoLLM (SmolLM-1.7B) which is obtained using the official implementation as they were not available in the original report.}
+  \label{tab:benchmark-results-f1}
+  \centering
+  \footnotesize
+  \setlength{\tabcolsep}{3.5pt}
+  \renewcommand{\arraystretch}{1.08}
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{lcccccccccccccccccc}
+    \toprule
+    Datasets &
+    \multicolumn{4}{c}{Classical Methods} &
+    \multicolumn{8}{c}{Deep-learning based Methods} &
+    \multicolumn{6}{c}{LLM-based Methods} \\
+    \cmidrule(lr){2-5}\cmidrule(lr){6-13}\cmidrule(lr){14-19}
+    & Iforest & PCA & KNN & ECOD
+    & DeepSVDD & RCA & SLAD & GOAD & NeuTral & ICL & DTE & REPEN
+    & \multicolumn{2}{c}{135M}
+    & \multicolumn{2}{c}{360M}
+    & \multicolumn{2}{c}{1.7B} \\
+    \cmidrule(lr){14-15}\cmidrule(lr){16-17}\cmidrule(lr){18-19}
+    & & & & & & & & & & & & &
+    AnoLLM & DiSPaT &
+    AnoLLM & DiSPaT &
+    AnoLLM & DiSPaT \\
+    \midrule
+
+    Annthyroid & 57.4 & 48.7 & 44.0 & 38.8 & 43.6 & 36.7 & 41.8 & 25.7 & 46.8 & 50.1 & \best{78.9} & 33.8 & 58.4 & 59.2 & 59.7 & 62.0 & 62.6 & \second{64.6} \\
+    Arrhythmia & \second{61.2} & 54.2 & 55.4 & 59.1 & 53.3 & 54.2 & 53.6 & 50.3 & 51.5 & 53.3 & 52.1 & 45.2 & \second{61.2} & 60.4 & 60.0 & \best{62.1} & \best{62.1}  & 60.7 \\
+    BreastW & \second{96.9} & 95.9 & 96.3 & 95.4 & 93.6 & 95.9 & 95.1 & 96.6 & 96.7 & 95.9 & 96.3 & 93.5 & 95.8 & \best{97.1} & 96.6 & \best{97.1} & 96.7 & 96.7 \\
+    Cardio & 71.5 & \best{80.8} & 67.6 & 66.6 & 56.4 & 72.6 & 60.2 & 29.4 & 56.8 & 68.9 & 64.4 & 56.1 & \second{73.4} & 72.2 & 66.5 & 65.9 & 63.4 & 64.2 \\
+    Ecoli & \second{75.6} &  \best{77.8} & \best{77.8} & 31.1 & 53.3 &  \best{77.8} & \best{77.8} & \best{77.8} & 51.1 & 71.1 & 66.0 & \second{75.6} & 33.3 & 55.6 & 33.3 & \best{77.8} & 35.6 & \best{77.8} \\
+    ForestCover & 10.9 & 15.8 & 74.5 & 23.8 & 3.5 & 18.9 & 13.6 & 0.1 & 42.6 & \second{76.9} & \best{77.8} & 6.4 & 25.6 & 27.1 & 21.3 & 24.0 & 18.6 & 20.2 \\
+    Glass & 15.6 & 13.3 & 17.8 & 15.6 & 24.4 & 15.6 & 17.8 & 13.3 & \best{42.2} & \second{28.9} & 13.3 & 6.7 & 17.8 & 21.1 & 17.8 & 22.2 & 15.6 & 22.2 \\
+    Heart & \second{91.7} & \best{92.2} & 90.6 & 89.3 & 90.6 & 90.8 & 91.3 & 91.0 & 90.4 & 91.0 & 91.4 & 87.6 & 91.2 & 91.4 & 90.7 & 91.5 & 90.9 & 91.0 \\
+    Http (KDDCUP99) & 10.7 & 92.6 & \best{99.4} & 2.2 & 45.9 & 38.2 & 92.9 & 43.8 & 19.3 & \second{99.3} & 34.9 & 20.4 & 98.9 & 97.0 & 95.8 & 96.2 & 93.4 & 98.2 \\
+    Ionosphere & 79.7 & 78.9 & 89.4 & 66.0 & 89.5 & 83.2 & 89.4 & 85.4 & 88.2 & \best{90.6} & \second{90.0} & 59.5 & 82.1 & 89.7 & 83.8 & 84.4 & 84.3  & 85.7 \\
+    Letter Recognition & 17.6 & 13.6 & 43.4 & 14.6 & 40.4 & 29.0 & 54.8 & 40.4 & 63.6 & \second{72.2} & 58.8 & 16.4 & \best{73.4} & 66.2 & 48.6 & 47.4 & 32.0 & 40.1 \\
+    Lymphography & 23.3 & 56.7 & 66.7 & 40.0 & 56.7 & 66.7 & 66.7 & 66.7 & 63.3 & 66.7 & 66.7 & 66.7 & 76.7 & \best{100.0} & 80.0 & \best{100.0} & \second{83.3} & \second{83.3}  \\
+    Mammography & 41.3 & 47.4 & 40.9 & \second{53.5} & 44.3 & 35.8 & 13.8 & 28.7 & 13.5 & 29.8 & 36.4 & 29.4 & \best{55.1} & 44.2 & 42.8 & 45.4 &  41.5 & 42.5 \\
+    Mulcross & 99.5 & \best{100.0} & \best{100.0} & 74.7 & \best{100.0} & \second{99.9} & 76.0 & \best{100.0} & 85.2 & 99.6 & \best{100.0} & 81.6 & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} \\
+    Musk & \second{61.6} & \best{100.0} & \best{100.0} & 54.6 & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} & 15.0 & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} \\
+    Optdigits & 15.9 & 0.1 & 28.4 & 2.7 & 29.7 & 2.1 & 4.0 & 16.5 & \second{63.9} & 47.1 & 16.4 & 2.0 & \best{72.0} & 50.7 & 44.3 & 46.7 & 34.0 & 63.3 \\
+    Pendigits & 55.1 & 44.2 & \best{91.0} & 42.7 & 44.5 & 53.0 & 35.6 & 0.0 & 46.7 & \second{61.0} & 60.6 & 37.3 & 55.9 & 57.1 & 50.5 & 52.6 & 36.7 & 56.4 \\
+    Pima & 67.2 & 68.8 & \second{69.2} & 57.8 & 57.0 & 67.2 & 58.5 & 62.8 & \best{69.5} & 67.0 & 62.4 & 66.8 & 62.6 & 64.6 & 62.0 & 66.0 & 61.7 & 68.3 \\
+    Satellite & 69.6 & 61.4 & 76.2 & 53.8 & 71.0 & 68.5 & 76.0 & 69.3 & 75.1 & 75.7 & 72.3 & 69.1 & \second{79.8} & \second{79.8} & 77.4 & \best{80.3} & 75.3 & \second{79.8} \\
+    Satimage-2 & 87.3 & 84.8 & 93.5 & 71.8 & 88.4 & 94.9 & 82.5 & \best{95.5} & 5.1 & 91.8 & 50.1 & 91.6 & 95.2 & 94.4 & 94.4 & 94.4 & 92.6  &  \second{95.8} \\
+    Seismic & 25.1 & 26.6 & 29.1 & 28.2 & 25.8 & 32.0 & 28.5 & 29.5 & 19.5 & 29.9 & 23.9 & 30.6 & 27.9 & 33.5 & 31.6 & \best{35.9} & \second{34.1} & 32.4 \\
+    Shuttle & 96.4 & 95.8 & 97.7 & 91.7 & \second{98.3} & 96.9 & 97.5 & 96.5 & 98.2 & \second{98.3} & 97.4 & 93.6 & \second{98.3} & 98.1 & \best{98.4} & 97.8 & \best{98.4} & \best{98.4} \\
+    Smtp (KDDCUP99) & 0.0 & \best{66.7} & \best{66.7} & \best{66.7} & 9.3 & 65.3 & \best{66.7} & \best{66.7} & 60.7 & 49.3 & \best{66.7} & 60.7 & \best{66.7} & \second{65.4} & \best{66.7} & \best{66.7} & \best{66.7} & 65.0 \\
+    Speech & 3.0 & 4.9 & 5.6 & 4.9 & 3.6 & 4.9 & 3.9 & 3.9 & 4.9 & \best{7.5} & 5.2 & 1.3 & \second{6.6} & \second{6.6} & 6.2 & \second{6.6} & \second{6.6} & \second{6.6} \\
+    Thyroid & 78.9 & 72.3 & 64.3 & 62.6 & 55.7 & 60.0 & 63.9 & 41.7 & 35.0 & 77.8 & 80.4 & 34.6 & 68.2 & 78.5 & 72.5 & \best{89.2} & 79.6 & \second{81.7} \\
+    Vertebral & 18.7 & 20.7 & 14.0 & 21.3 & 28.0 & 16.0 & 16.0 & 30.0 & 32.7 & 19.3 & 30.0 & 1.3 & 28.7 & 30.0 & 18.0 & \best{46.7} & 16.7 & \second{33.3} \\
+    Vowels & 24.8 & 20.0 & 68.4 & 22.0 & 54.8 & 42.4 & 71.6 & 46.0 & \second{76.8} & 74.0 & \best{78.0} & 24.4 & 76.0 & 64.8 & 55.6 & 60.0 & 60.0  &  66.0 \\
+    WBC & \second{81.9} & 79.0 & 71.4 & 56.2 & 70.5 & 72.4 & 66.7 & 38.1 & 18.1 & 73.3 & 61.9 & 21.9 & 79.0 & 78.4 & 76.2 & \best{85.7} & 71.4 & 76.2 \\
+    Wine & 70.0 & 62.0 & 70.0 & 38.0 & 42.0 & 60.0 & 72.0 & \second{76.0} & 70.0 & 62.0 & 72.0 & 44.0 & 50.0 & \best{80.0} & 52.0 & 70.0 & 62.0  & 70.0 \\
+    Yeast & \best{48.6} & \second{42.1} & 33.7 & 33.5 & 31.0 & 35.2 & 8.4 & 1.0 & 18.1 & 33.1 & 32.8 & 15.8 & 32.0 & 35.8 & 31.0 & 39.0 & 29.9 & \second{42.1} \\
+    \midrule
+    Average & 51.9 & 57.2 & 64.8 & 46.0 & 53.5 & 56.2 & 56.6 & 50.8 & 53.5 & 65.1 & 61.2 & 43.0 & 64.7 & \second{66.6} & 61.1 & \best{67.8} & 60.2 & 66.1 \\
+    \bottomrule
+  \end{tabular}%
+  }
+\end{table*}
+
+
+\begin{table*}[t]
+  \caption{Detailed AUC-PR scores comparing DiSPaT against baselines over 30 datasets in ODDS. The best and second-best results in each row are indicated in red and blue, respectively. Baseline results are reported from~\citep{tsai2025anollm}, except for AnoLLM (SmolLM-1.7B) which is obtained using the official implementation as they were not available in the original report.}
+  \label{tab:benchmark-results-aucpr}
+  \centering
+  \footnotesize
+  \setlength{\tabcolsep}{3.5pt}
+  \renewcommand{\arraystretch}{1.08}
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{lcccccccccccccccccc}
+    \toprule
+    Datasets &
+    \multicolumn{4}{c}{Classical Methods} &
+    \multicolumn{8}{c}{Deep-learning based Methods} &
+    \multicolumn{6}{c}{LLM-based Methods} \\
+    \cmidrule(lr){2-5}\cmidrule(lr){6-13}\cmidrule(lr){14-19}
+    & Iforest & PCA & KNN & ECOD
+    & DeepSVDD & RCA & SLAD & GOAD & NeuTral & ICL & DTE & REPEN
+    & \multicolumn{2}{c}{135M}
+    & \multicolumn{2}{c}{360M}
+    & \multicolumn{2}{c}{1.7B} \\
+    \cmidrule(lr){14-15}\cmidrule(lr){16-17}\cmidrule(lr){18-19}
+    & & & & & & & & & & & & &
+    AnoLLM & DiSPaT &
+    AnoLLM & DiSPaT &
+    AnoLLM & DiSPaT \\
+    \midrule
+
+    Annthyroid & 64.6 & 55.0 & 46.3 & 40.6 & 44.1 & 38.3 & 46.1 & 28.6 & 43.5 & 55.5 & \best{83.5} & 34.3 & 63.1 & 64.4 & 64.8 & 69.0 & 69.4 & \second{70.8} \\
+    Arrhythmia & \second{66.2} & 61.7 & 55.6 & 62.2 & 56.3 & 56.2 & 55.6 & 51.8 & 50.7 & 55.6 & 56.6 & 41.9 & 63.6 & 65.1 & 64.2 & \best{70.3} & 60.2 & 63.7 \\
+    BreastW & 99.4 & 98.5 & 99.2 & 99.2 & 96.6 & 98.6 & 98.3 & 99.4 & 97.0 & 99.1 & 96.7 & 92.5 & 99.1 & \best{99.6}  & 99.2 & \best{99.6} & 99.2  & \second{99.5} \\
+    Cardio & 78.6 & \best{84.4} & 73.7 & 71.2 & 60.6 & 74.5 & 66.7 & 32.5 & 61.0 & 75.0 & 67.8 & 56.7 & \second{81.1} & 79.1 & 72.6 & 72.2 & 69.2 & 69.6 \\
+    Ecoli & 8.6 & 16.0 & 73.9 & 18.9 & 2.4 & 17.6 & 11.0 & 1.2 & 43.0 & 66.4 & \best{77.7} & 9.3 & 20.6 & 53.6 & 12.7 & 65.4 & 39.3  & \second{77.3} \\
+    ForestCover & 64.9 & 71.0 & 78.6 & 30.6 & 62.1 & 73.9 & 72.8 & \second{79.6} & 47.5 & \best{80.7} & 58.3 & 68.2 & 41.9 & 43.9 & 41.7 & 43.6 & 43.5 & 44.5 \\
+    Glass & 19.8 & 16.7 & 24.2 & 24.2 & 26.3 & 18.7 & 20.8 & 15.0 & \best{48.4} & \second{37.4} & 22.6 & 16.5 & 24.7 & 21.1 & 23.4 & 24.7 & 25.2 & 34.7 \\
+    Heart & 97.2 & \second{97.6} & 97.2 & 94.0 & 96.4 & 96.6 & 97.3 & \best{97.7} & 97.2 & 96.3 & 97.5 & 88.4 & 97.2 & 96.2 & 96.9 & 96.4 & 97.0 & \second{97.6} \\
+    Http (KDDCUP99) & 49.6 & 91.1 & \best{99.5} & 25.4 & 58.8 & 40.3 & 91.0 & 61.8 & 36.4 & \best{99.5} & 58.3 & 53.6 & 97.0 & 96.6 & 95.6 & 96.0 & 92.7 & \second{97.5} \\
+    Ionosphere & 89.8 & 91.2 & 96.7 & 76.9 & 96.7 & 93.2 & 96.9 & 95.8 & 95.9 & \best{97.7} & 97.2 & 53.4 & 93.3 & \second{97.3} & 93.2 & 94.5 & 94.2 & 94.9  \\
+    Letter Recognition & 16.8 & 14.3 & 42.6 & 14.1 & 41.2 & 25.9 & 57.8 & 39.0 & 70.3 & \second{77.3} & 55.0 & 15.1 & \best{79.7} & 50.2 & 19.1 & 46.9 & 29.2  &  45.7 \\
+    Lymphography & 23.2 & 62.4 & 72.0 & 36.5 & 68.0 & 78.3 & 79.5 & 69.7 & 68.1 & 71.8 & 74.7 & 69.7 & 85.6 & \best{100.0} & 93.8 & \best{100.0} &  \second{97.6} & \second{97.6} \\
+    Mammography & 39.2 & 44.3 & 39.9 & \second{54.8} & 44.7 & 31.2 & 12.6 & 23.2 & 9.4 & 28.7 & 37.8 & 26.8 & \best{59.2} & 45.1 & 36.4 & 46.9 & 39.1 & 43.6 \\
+    Mulcross & 98.9 & \best{100.0} & \best{100.0} & 72.2 & \best{100.0} & \best{100.0} & 78.8 & \best{100.0} & 81.6 & \second{99.8} & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} \\
+    Musk & \second{66.6} & \best{100.0} & \best{100.0} & 62.7 & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} & 17.5 & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} & \best{100.0} \\
+    Optdigits & 16.6 & 5.9 & 31.4 & 6.5 & 23.2 & 12.2 & 10.9 & 17.8 & 64.5 & 41.4 & 22.2 & 7.6 & \best{75.0} & 58.1 & 39.8 & 43.5 & 28.8 & \second{66.4} \\
+    Pendigits & 54.4 & 37.6 & \best{95.8} & 39.5 & 41.6 & 51.6 & 29.2 & 2.6 & 40.8 & 65.6 & 50.9 & 31.9 & 62.3 & \second{67.7} & 55.4 & 56.9 & 42.5 &  63.4 \\
+    Pima & 71.4 & 69.6 & \second{71.6} & 62.2 & 60.6 & 69.8 & 60.3 & 66.0 & \best{74.6} & 69.5 & 63.9 & 67.3 & 67.7 & 70.1 & 67.4 & 68.2 & 66.3 & 70.4 \\
+    Satellite & 84.5 & 76.9 & 88.9 & 65.8 & 84.2 & 80.6 & 86.6 & 80.8 & 86.0 & 88.7 & 84.3 & 80.6 & 91.0 & 90.3 & 89.1 & \best{91.5} & 87.1 & \second{91.1} \\
+    Satimage-2 & 93.0 & 90.1 & 98.0 & 74.5 & 90.5 & 97.7 & 90.3 & 98.0 & 8.2 & 96.7 & 52.6 & 95.2 & \best{98.8} & \second{98.1} & 97.4 & \second{98.1} & 96.5 & \best{98.8} \\
+    Seismic & 23.5 & 21.6 & 25.6 & 24.4 & 22.6 & 25.0 & 24.1 & 23.9 & 19.3 & 25.0 & 22.4 & 24.9 & 23.6 & 26.9 & 28.1 & \best{29.1} & 27.9 & \second{28.3} \\
+    Shuttle & 98.4 & 96.2 & 97.2 & 94.6 & 98.7 & 96.0 & 96.8 & 94.9 & 99.4 & 99.5 & 94.6 & 92.8 & \best{99.7} & 98.5 & \second{99.6} & 98.7 & 99.5 & \best{99.7} \\
+    Smtp (KDDCUP99) & 1.0 & 45.4 & 45.9 & 60.8 & 5.8 & 44.1 & 46.9 & 44.1 & 58.2 & 37.7 & 46.7 & 40.3 & \best{65.8} & 62.2 & \second{64.5} & 57.6 & 59.0 & 63.6 \\
+    Speech & 3.5 & 3.7 & 3.8 & 4.0 & 4.2 & 3.7 & 3.6 & 4.0 & 5.2 & \second{5.7} & 4.0 & 3.5 & 3.6 & 4.0 & 3.7 & \best{6.6} & 3.7 & 4.0 \\
+    Thyroid & 78.3 & 79.1 & 69.6 & 63.5 & 56.0 & 64.9 & 68.6 & 40.1 & 33.0 & 82.2 & 86.0 & 38.5 & 69.6 & 82.6 & 74.0 & \best{92.8} & 84.7  & \second{87.9} \\
+    Vertebral & 21.0 & 23.2 & 19.2 & 22.8 & 25.2 & 21.4 & 21.0 & 28.1 & 30.3 & 26.4 & 31.0 & 15.1 & 28.9 & 30.0 & 18.1 & \best{47.7} & 22.2 & \second{31.7} \\
+    Vowels & 22.9 & 16.2 & 76.2 & 15.3 & 60.3 & 45.5 & 76.5 & 54.4 & \best{86.1} & 80.4 & 83.1 & 20.3 & \second{83.9} & 64.7 & 59.9 & 60.0 & 61.4  & 68.0 \\
+    WBC & 84.2 & \second{87.6} & 81.4 & 58.6 & 74.7 & 80.8 & 71.1 & 40.8 & 22.6 & 71.4 & 64.0 & 23.5 & 87.3 & 83.5 & 75.3 & \best{89.0} & 75.8 & 81.4 \\
+    Wine & 67.2 & 65.9 & 71.1 & 32.1 & 51.2 & 51.7 & 78.2 & 78.9 & 77.9 & 73.4 & \best{87.3} & 48.4 & 52.2 & \best{87.3} & 52.9 & 78.1 & 68.1 &  \second{80.3} \\
+    Yeast & \best{44.0} & 34.6 & 29.4 & 32.3 & 29.9 & 30.3 & 10.6 & 7.6 & 16.8 & 26.2 & 28.2 & 18.7 & 30.1 & 29.9 & 30.2 & 34.3 &  26.9 & \second{35.0} \\
+    \midrule
+    Average & 54.9 & 58.6 & 66.8 & 48.0 & 56.1 & 57.3 & 58.7 & 52.6 & 55.8 & 67.7 & 63.5 & 44.4 & 68.2 & 68.8  & 62.3 & \second{69.3} &  63.5 & \best{70.2} \\
+    \bottomrule
+  \end{tabular}%
+  }
+\end{table*}
+
+\subsection{Extended $f$-Divergence Ablation}
+\label{sec:app:full_f_divergence}
+
+Table~\ref{tab:135m-metrics-exact} extends the $f^*$-ablation of Section~\ref{sec:ablation} to all six datasets using SmolLM-135M. The full benchmark corroborates the main-text findings: KL divergence ($f^*(v)=e^v-1$) leads on average across AUC-ROC, F1, and AUC-PR, while Identity ($f^*(v)=v$) lags; Reverse KL and Squared Hellinger sit between them. This ordering is preserved on Seismic and 20 Newsgroups—the advantage of $f$-divergence variants over the Identity (SPIN) objective thus holds across the full benchmark. While isolated per-dataset differences exist—e.g., Squared Hellinger achieves the best F1 on Vehicle insurance—these do not alter the overall ranking, supporting the design choice of KL divergence as the default $f$-divergence in DiSPaT.
+
+
+\begin{table*}[t]
+\centering
+\caption{Performance comparison of SmolLM-135M with different $f$-divergence choices across datasets. Metrics reported are AUC-ROC, F1-score, and AUC-PR.}
+\label{tab:135m-metrics-exact}
+
+\small
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.2} % Tăng khoảng cách dòng lên một chút cho dễ nhìn
+
+\providecommand{\myheader}[1]{\begin{tabular}[c]{@{}c@{}}#1\end{tabular}}
+
+\begin{tabular}{llccccccc}
+\toprule
+\textbf{$f^*$} & \textbf{Metric} & 
+\textbf{\myheader{Fakejob}} & 
+\textbf{Lymphography} & 
+\textbf{\myheader{Vehicle\\insurance}} & 
+\textbf{Ecoli} & 
+\textbf{Seismic} & 
+\textbf{20 Newsgroups} & 
+\textbf{Average} \\
+\midrule
+
+\multirow{3}{*}{$v$} 
+& AUC-ROC & 84.2\% & 99.3\% & 59.0\% & 92.3\% & 73.2\% & 91.3\% & 83.2\% \\
+& F1  & 34.9\% & 83.3\% & 16.9\% & 44.4\% & 32.4\% & 46.4\% & 43.1\% \\
+& AUC-PR  & 30.9\% & 94.4\% & 15.4\% & 37.9\% & 26.6\% & 46.7\% & 42.0\% \\
+\midrule
+
+\multirow{3}{*}{$e^v - 1$} 
+& AUC-ROC & 83.9\% & 100.0\% & 63.8\% & 94.9\% & 73.2\% & 91.9\% & 84.6\% \\
+& F1  & 35.1\% & 100.0\% & 20.2\% & 55.6\% & 33.5\% & 49.4\% & 49.0\% \\
+& AUC-PR  & 30.7\% & 100.0\% & 17.5\% & 53.6\% & 26.9\% & 49.8\% & 46.4\% \\
+\midrule
+
+\multirow{3}{*}{$\dfrac{v}{1-v}$}
+& AUC-ROC & 84.0\% & 100.0\% & 60.5\% & 93.1\% & 73.0\% & 91.9\% & 83.8\% \\
+& F1  & 34.6\% & 100.0\% & 16.8\% & 55.6\% & 32.9\% & 48.6\% & 48.1\% \\
+& AUC-PR  & 30.9\% & 100.0\% & 15.6\% & 51.1\% & 27.0\% & 48.6\% & 45.5\% \\
+\midrule
+
+\multirow{3}{*}{$-\log(1-v)$} 
+& AUC-ROC & 83.8\% & 97.7\% & 62.8\% & 94.9\% & 73.1\% & 91.8\% & 84.0\% \\
+& F1  & 34.4\% & 83.3\% & 23.2\% & 55.6\% & 33.5\% & 48.6\% & 46.4\% \\
+& AUC-PR  & 30.6\% & 89.6\% & 23.2\% & 46.3\% & 26.4\% & 48.1\% & 44.0\% \\
+
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Iteration Curves and Clamping Threshold $\epsilon$}
+\label{sec:app:iteration_epsilon}
+
+\textbf{Iteration Curves.}
+Figure~\ref{fig:iter_f1_auc} shows F1 and AUC-PR scores of DiSPaT (SmolLM-135M) over self-play iterations on four datasets. We observe that all datasets improve over the SFT baseline within a few iterations, though the shape of the curve differs—some rise steadily, others dip then recover. The optimal iteration is dataset-dependent, and several runs peak before the final iteration, which supports using a small, fixed number of iterations as a default and suggests that validation-based iteration selection may be useful in practice. The convergence patterns reflect the iterative refinement process: initial improvements come from learning to distinguish synthetic pseudo-anomalies, while later iterations may show diminishing returns as the model's understanding of normality stabilizes.
+
+\textbf{Clamping Threshold.}
+Figure~\ref{fig:epsilon_ecoli_vehicle} reports F1 and AUC-PR on Ecoli and Vehicle (SmolLM-360M) as the clamping threshold $\epsilon$ varies. Clamping restricts the log-ratio so that synthetic samples with probability ratio close to 1 are not over-penalized as pseudo-anomalies; $\epsilon=0$ applies no clamping and can therefore over-penalize ``good'' synthetic samples, while overly large $\epsilon$ shrinks the effective contrast between normal and synthetic samples in the objective. The figure shows that moderate positive values of $\epsilon$ yield the best performance and that large $\epsilon$ degrades it. The results support the use of a moderate clamping threshold in the main setup and indicate that the method is robust to the exact value within that range.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=1\linewidth]{Figures/combined_f1_auc.pdf}
+    \caption{F1 scores (\%) and AUC-PR scores (\%) of DiSPaT across self-play iterations on four datasets 
+using SmolLM-135M. SFT indicates initial model, and iter-$k$ refers to model after $k$ iterations of training.}
+    \label{fig:iter_f1_auc}
+\end{figure}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=1\linewidth]{Figures/ecoli_vehicle_spaced.pdf}
+    \caption{Effect of clamping threshold $\epsilon$ on F1 scores (\%) and AUC-PR scores (\%) on two datasets using SmolLM-360M.}
+    \label{fig:epsilon_ecoli_vehicle}
+\end{figure}
+
+\subsection{Dataset Information}
+\label{sec:app:dataset_information}
+
+Table~\ref{tab:dataset_statistics_all} summarizes all datasets used in this work. Datasets are drawn from the AnoLLM benchmark~\citep{tsai2025anollm} and the ODDS library~\citep{rayana2016odds}, which may include textual, numerical, or categorical features. Columns report the number of samples, counts of textual features, numerical features, and categorical features, and the number and percentage of anomalies.
+
+\begin{table*}[t]
+\centering
+\caption{Statistics for all datasets used in this work. Datasets are drawn from the AnoLLM benchmark~\citep{tsai2025anollm} and the ODDS library~\citep{rayana2016odds}.}
+\label{tab:dataset_statistics_all}
+
+\small
+\setlength{\tabcolsep}{6pt}
+\renewcommand{\arraystretch}{1.15}
+
+\begin{tabular}{lrrrrr}
+\toprule
+\textbf{Dataset} & \textbf{Samples} & \textbf{Textual} & \textbf{Numerical} & \textbf{Categorical} & \textbf{Anomalies (\%)} \\
+\midrule
+20 Newsgroup      & 11905 & 1 & 0  & 0  & 591 (5.0\%)   \\
+Annthyroid        & 7200   & 0 & 6   & 0 & 534 (7.42\%) \\
+Arrhythmia        & 452    & 0 & 274 & 0 & 66 (15\%)    \\
+BreastW           & 683    & 0 & 9   & 0 & 239 (35\%)   \\
+Cardio            & 1831   & 0 & 21  & 0 & 176 (9.6\%)  \\
+Ecoli             & 336    & 0 & 7   & 0 & 9 (2.6\%)    \\
+Fakejob   & 17880  & 5 & 3   & 8  & 866 (4.8\%)  \\
+ForestCover       & 286048 & 0 & 10  & 0 & 2747 (0.9\%) \\
+Glass             & 214    & 0 & 9   & 0 & 9 (4.2\%)    \\
+Heart             & 224    & 0 & 44  & 0 & 10 (4.4\%)   \\
+Http (KDDCUP99)   & 567479 & 0 & 3   & 0 & 2211 (0.4\%) \\
+Ionosphere        & 351    & 0 & 33  & 0 & 126 (36\%)   \\
+Letter Recognition& 1600   & 0 & 32  & 0 & 100 (6.25\%) \\
+Lymphography      & 148    & 0 & 3   & 15 & 6 (4.1\%)    \\
+Mammography       & 11183  & 0 & 6   & 0 & 260 (2.32\%) \\
+Mulcross          & 262144 & 0 & 4   & 0 & 26214 (10\%) \\
+Musk              & 3062   & 0 & 166 & 0 & 97 (3.2\%)   \\
+Optdigits         & 5216   & 0 & 64  & 0 & 150 (3\%)    \\
+Pendigits         & 6870   & 0 & 16  & 0 & 156 (2.27\%) \\
+Pima              & 768    & 0 & 8   & 0 & 268 (35\%)   \\
+Satellite         & 6435   & 0 & 36  & 0 & 2036 (32\%)  \\
+Satimage-2        & 5803   & 0 & 36  & 0 & 71 (1.2\%)   \\
+Seismic           & 2584   & 0 & 14  & 4  & 170 (6.6\%)  \\
+Shuttle           & 49097  & 0 & 9   & 0 & 3511 (7\%)   \\
+Smtp (KDDCUP99)   & 95156  & 0 & 3   & 0 & 30 (0.03\%)  \\
+Speech            & 3686   & 0 & 400 & 0 & 61 (1.65\%)  \\
+Thyroid           & 3772   & 0 & 6   & 0 & 93 (2.5\%)   \\
+Vehicle & 15420  & 0 & 8   & 24 & 923 (6.0\%)  \\
+Vertebral         & 240    & 0 & 6   & 0 & 30 (12.5\%)  \\
+Vowels            & 1456   & 0 & 12  & 0 & 50 (3.4\%)   \\
+WBC               & 278    & 0 & 30  & 0 & 21 (5.6\%)   \\
+Wine              & 129    & 0 & 13  & 0 & 10 (7.7\%)   \\
+Yeast             & 1364   & 0 & 8   & 0 & 64 (4.7\%)   \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+
+
+\subsection{Examples of Model-Generated Samples}
+\label{sec:app:examples}
+
+We present examples from three datasets: Fakejob (mixed: textual, numerical, categorical), Ecoli (numerical), and Vehicle (mixed: numerical, categorical). For each sample, we first draw a permutation $\pi \in S_d$ and serialize the row accordingly. We then randomly partition the serialized features into \textit{context} and \textit{target} sets. The context features are preserved as the input $\boldsymbol{x}$, while the target features form the continuation $\boldsymbol{y}$ to be generated sequentially. Concretely, the model predicts target features using prompts of the form ``\texttt{feature is value, ...}'', conditioning on the preserved context and on previously generated target features. Because $\pi$ is resampled during training, both the feature ordering and the induced context-continuation split vary across permutations. As a result, the same feature may appear in either the context or the continuation under different permutations, encouraging the model to learn dependencies across many possible orderings.
+
+This variation can be seen directly in Figure~\ref{fig:example_iterations}. In the Fakejob example, iteration~0 uses \texttt{benefits}, \texttt{telecommuting}, and \texttt{has questions} as targets; iteration~1 uses \texttt{company profile}, \texttt{industry}, and \texttt{salary range}; and iteration~2 uses \texttt{description}, \texttt{function}, and \texttt{telecommuting}. The preserved context changes accordingly. The same principle applies to the Ecoli and Vehicle examples below, where different sampled permutations expose different subsets of features as targets at each iteration.
+
+Figure~\ref{fig:example_iterations} shows iterative refinement on mixed features (Fakejob). At iteration 0, the model generates oversimplified values (e.g., \texttt{benefits} = ``\$11'') or incorrect ones (e.g., \texttt{has questions} = -1.0). By iteration 1, values become more structured but lack detail. By iteration 2, some features are correct while others remain generic.
+
+% Define colors for promptbox style (requires xcolor package)
+\definecolor{chosenbg}{RGB}{230,242,255}  % Light blue for chosen/ground truth
+\definecolor{rejectedbg}{RGB}{255,230,230}  % Light red for rejected
+\definecolor{highlight}{RGB}{255,165,0}  % Orange for highlights
+\definecolor{promptbg}{RGB}{245,245,245}  % Light gray for prompt
+
+% Define promptbox environments
+\newcommand{\promptboxchosen}[1]{%
+    \fcolorbox{gray!30}{chosenbg}{%
+        \begin{minipage}{0.48\linewidth}%
+            \vspace{1pt}%
+            \footnotesize#1%
+            \vspace{1pt}%
+        \end{minipage}%
+    }%
+}
+
+\newcommand{\promptboxrejected}[1]{%
+    \fcolorbox{gray!30}{rejectedbg}{%
+        \begin{minipage}{0.48\linewidth}%
+            \vspace{1pt}%
+            \footnotesize#1%
+            \vspace{1pt}%
+        \end{minipage}%
+    }%
+}
+
+\newcommand{\promptbox}[1]{%
+    \fcolorbox{gray!40}{promptbg}{%
+        \begin{minipage}{\linewidth}%
+            \vspace{3pt}%
+            \footnotesize\textbf{Prompt:} #1%
+            \vspace{3pt}%
+        \end{minipage}%
+    }%
+}
+
+\begin{figure*}[t]
+\centering
+
+% Prompt section
+\promptbox{%
+Given context features (job posting attributes), generate target features sequentially.
+}%
+
+\vspace{1pt}
+
+% Iteration 0
+\textbf{Iteration 0:}
+\vspace{1pt}
+
+\promptbox{%
+\texttt{benefits is} [generate], \texttt{telecommuting is} [generate], \texttt{has questions is} [generate].
+}%
+
+\vspace{1pt}
+
+\subfloat[Chosen: ground truth (normal sample)]{%
+\promptboxchosen{%
+\texttt{benefits:} Work With Us and Get... Responsibility: What you do here will have a direct impact on our growth. Flexible working hours: We focus on results, not punching a clock. Paid time off: You get 15 vacation days and 12 company holidays. Location: Centrally located in Bangalore's tallest building... Perks: Business Cards \& T-Shirts, Sodexo Meal Pass, Gym Membership, Movie ticket + Pizza twice a month... [Additional detailed perks]\\
+\texttt{telecommuting:} -0.2\\
+\texttt{has questions:} 1.0
+}%
+}
+\hfill
+\subfloat[Rejected: model generation @Iter 0]{%
+\promptboxrejected{%
+\texttt{benefits:} \textcolor{highlight}{\$11}\\
+\texttt{telecommuting:} -0.2\\
+\texttt{has questions:} \textcolor{highlight}{-1.0}
+}%
+}
+
+\vspace{4pt}
+
+% Iteration 1
+\textbf{Iteration 1:}
+\vspace{1pt}
+
+\promptbox{%
+\texttt{company profile is} [generate], \texttt{industry is} [generate], \texttt{salary range is} [generate].
+}%
+
+\vspace{1pt}
+
+\subfloat[Chosen: ground truth (normal sample)]{%
+\promptboxchosen{%
+\texttt{company profile:} Who are we? Creators Lab is a young creative Branding, Web Design and Digital Marketing Startup based in Bangalore. We are specially focused on helping startups with their branding and design needs. We are also building few revolutionary products. One of them is EnterBox, its Roku for India. We focus on: Brand Strategy, Web Design \& Development, UI/UX Design, Mobile Applications, SEO and Social Media Marketing. [Additional details about team and work culture]\\
+\texttt{industry:} Information Technology and Services\\
+\texttt{salary range:} 120000-300000
+}%
+}
+\hfill
+\subfloat[Rejected: model generation @Iter 1]{%
+\promptboxrejected{%
+\texttt{company profile:} \textcolor{highlight}{Planning Centre}\\
+\texttt{industry:} \textcolor{highlight}{Computer Games}\\
+\texttt{salary range:} \textcolor{highlight}{140000-240000}
+}%
+}
+
+\vspace{4pt}
+
+% Iteration 2
+\textbf{Iteration 2:}
+\vspace{1pt}
+
+\promptbox{%
+\texttt{description is} [generate], \texttt{function is} [generate], \texttt{telecommuting is} [generate].
+}%
+
+\vspace{1pt}
+
+\subfloat[Chosen: ground truth (normal sample)]{%
+\promptboxchosen{%
+\texttt{description:} You're the one we're looking for if... You have incredible design talent. Can design an awesome logo, business card, posters and UI for an app, etc. You believe that good design is about much more than just 1px bevels and subtle gradients. It's all about problem solving. General Purpose: We're looking for a user interface / experience designer to take care of design needs of our client projects and our products. Main Job Tasks: Brainstorm and mock-up ideas, Creating UI concepts with paper sketches, wireframes, Translate business needs into user-focused experiences... [Additional detailed responsibilities]\\
+\texttt{function:} Design\\
+\texttt{telecommuting:} -0.2
+}%
+}
+\hfill
+\subfloat[Rejected: model generation @Iter 2]{%
+\promptboxrejected{%
+\texttt{description:} \textcolor{highlight}{the leading electronic and communications business for the Small and Medium Enterprise business segment around the world}\\
+\texttt{function:} Design\\
+\texttt{telecommuting:} -0.2
+}%
+}
+
+\caption{Iterative refinement of synthetic samples through self-play (Fakejob dataset). At iteration 0, the model generates severely oversimplified values (e.g., \texttt{benefits} = ``\$11'' instead of a detailed description) and incorrect values (e.g., \texttt{has questions} = -1.0 instead of 1.0), clearly marking them as pseudo-anomalies. By iteration 1, the model generates structured values but lacks detail and context coherence (e.g., \texttt{company profile} = ``Planning Centre'' vs. a detailed company description; \texttt{industry} = ``Computer Games'' which mismatches the Design job context). By iteration 2, some features are correctly generated (e.g., \texttt{function}, \texttt{telecommuting}), but textual fields remain generic rather than job-specific. This progression demonstrates how self-play enables the model to learn increasingly subtle distinctions between synthetic and real normal samples.}
+\label{fig:example_iterations}
+\end{figure*}
+
+Figure~\ref{fig:example_ecoli} shows results on numerical features (Ecoli). At iteration 0, the model produces malformed values with formatting errors (e.g., ``0 .'' with trailing punctuation). By iteration 1, values are properly formatted but magnitudes are incorrect. By iteration 2, formatting is correct but subtle discrepancies remain.
+
+\begin{figure*}[t]
+\centering
+
+\promptbox{%
+Given context features (protein sequence scores), generate target features sequentially.
+}%
+
+\vspace{1pt}
+
+\textbf{Iteration 0:}
+\vspace{1pt}
+
+\promptbox{%
+\texttt{Presence of charge on N-terminus of predicted lipoproteins is} [generate], \texttt{von Heijne's method for signal sequence recognition is} [generate], \texttt{McGeoch's method for signal sequence recognition is} [generate].
+}%
+
+\vspace{1pt}
+
+\subfloat[Chosen: ground truth (normal sample)]{%
+\promptboxchosen{%
+\texttt{Presence of charge on N-terminus of predicted lipoproteins:} -0.1\\
+\texttt{von Heijne's method for signal sequence recognition:} -0.5\\
+\texttt{McGeoch's method for signal sequence recognition:} 2.0
+}%
+}
+\hfill
+\subfloat[Rejected: model generation @Iter 0]{%
+\promptboxrejected{%
+\texttt{Presence of charge on N-terminus of predicted lipoproteins:} \textcolor{highlight}{0 .}\\
+\texttt{von Heijne's method for signal sequence recognition:} \textcolor{highlight}{0.1 . Both partial least squares...}\\
+\texttt{McGeoch's method for signal sequence recognition:} \textcolor{highlight}{0.7 .}
+}%
+}
+
+\vspace{4pt}
+
+\textbf{Iteration 1:}
+\vspace{1pt}
+
+\promptbox{%
+\texttt{score of ALOM program after excluding putative cleavable signal regions from the sequence is} [generate], \texttt{score of the ALOM membrane spanning region prediction program is} [generate], \texttt{von Heijne's Signal Peptidase II consensus sequence score is} [generate].
+}%
+
+\vspace{1pt}
+
+\subfloat[Chosen: ground truth (normal sample)]{%
+\promptboxchosen{%
+\texttt{score of ALOM program after excluding putative cleavable signal regions from the sequence:} 1.2\\
+\texttt{score of the ALOM membrane spanning region prediction program:} 1.1\\
+\texttt{von Heijne's Signal Peptidase II consensus sequence score:} -0.2
+}%
+}
+\hfill
+\subfloat[Rejected: model generation @Iter 1]{%
+\promptboxrejected{%
+\texttt{score of ALOM program after excluding putative cleavable signal regions from the sequence:} \textcolor{highlight}{1.7}\\
+\texttt{score of the ALOM membrane spanning region prediction program:} 1.1\\
+\texttt{von Heijne's Signal Peptidase II consensus sequence score:} \textcolor{highlight}{0.5}
+}%
+}
+
+\vspace{4pt}
+
+\textbf{Iteration 2:}
+\vspace{1pt}
+
+\promptbox{%
+\texttt{von Heijne's Signal Peptidase II consensus sequence score is} [generate], \texttt{score of discriminant analysis of the amino acid content of outer membrane and periplasmic proteins is} [generate], \texttt{score of ALOM program after excluding putative cleavable signal regions from the sequence is} [generate].
+}%
+
+\vspace{1pt}
+
+\subfloat[Chosen: ground truth (normal sample)]{%
+\promptboxchosen{%
+\texttt{von Heijne's Signal Peptidase II consensus sequence score:} -0.2\\
+\texttt{score of discriminant analysis of the amino acid content of outer membrane and periplasmic proteins:} 0.2\\
+\texttt{score of ALOM program after excluding putative cleavable signal regions from the sequence:} 1.2
+}%
+}
+\hfill
+\subfloat[Rejected: model generation @Iter 2]{%
+\promptboxrejected{%
+\texttt{von Heijne's Signal Peptidase II consensus sequence score:} -0.2\\
+\texttt{score of discriminant analysis of the amino acid content of outer membrane and periplasmic proteins:} \textcolor{highlight}{1.8}\\
+\texttt{score of ALOM program after excluding putative cleavable signal regions from the sequence:} \textcolor{highlight}{1.7}
+}%
+}
+
+\caption{Iterative refinement on numerical features (Ecoli dataset). At iteration 0, the model generates malformed numerical values with formatting errors (e.g., ``0 .'' with trailing punctuation, or ``0.1 . Both partial least squares...'' with appended text), clearly marking them as pseudo-anomalies. By iteration 1, the model generates properly formatted numbers but with incorrect magnitudes (e.g., 1.7 instead of 1.2, 0.5 instead of -0.2). By iteration 2, while formatting is correct, subtle numerical discrepancies persist (e.g., 1.8 instead of 0.2, 1.7 instead of 1.2), demonstrating progressive refinement in learning numerical distributions.}
+\label{fig:example_ecoli}
+\end{figure*}
+
+Figure~\ref{fig:example_vifd} shows results on mixed numerical and categorical features (Vehicle). At iteration 0, categorical values are incorrect (e.g., ``3Sum'' instead of ``Sedan - Collision'') and numerical values are malformed. By iteration 1, categorical values improve but errors persist. By iteration 2, most categorical values are correct while numerical discrepancies remain.
+
+\begin{figure*}[t]
+\centering
+
+\promptbox{%
+Given context features (insurance claim attributes), generate target features sequentially.
+}%
+
+\vspace{1pt}
+
+\textbf{Iteration 0:}
+\vspace{1pt}
+
+\promptbox{%
+\texttt{age of vehicle is} [generate], \texttt{policy type is} [generate], \texttt{day of week is} [generate], \texttt{week of month claimed is} [generate].
+}%
+
+\vspace{1pt}
+
+\subfloat[Chosen: ground truth (normal sample)]{%
+\promptboxchosen{%
+\texttt{age of vehicle:} 5 years\\
+\texttt{policy type:} Sedan - Collision\\
+\texttt{day of week:} Wednesday\\
+\texttt{week of month claimed:} 0.2
+}%
+}
+\hfill
+\subfloat[Rejected: model generation @Iter 0]{%
+\promptboxrejected{%
+\texttt{age of vehicle:} \textcolor{highlight}{1 to 2 years}\\
+\texttt{policy type:} \textcolor{highlight}{3Sum}\\
+\texttt{day of week:} \textcolor{highlight}{0.4}\\
+\texttt{week of month claimed:} \textcolor{highlight}{0.6}
+}%
+}
+
+\vspace{4pt}
+
+\textbf{Iteration 1:}
+\vspace{1pt}
+
+\promptbox{%
+\texttt{agent type is} [generate], \texttt{policy type is} [generate], \texttt{age of vehicle is} [generate], \texttt{number of cars is} [generate].
+}%
+
+\vspace{1pt}
+
+\subfloat[Chosen: ground truth (normal sample)]{%
+\promptboxchosen{%
+\texttt{agent type:} External\\
+\texttt{policy type:} Sedan - Collision\\
+\texttt{age of vehicle:} 5 years\\
+\texttt{number of cars:} 1 vehicle
+}%
+}
+\hfill
+\subfloat[Rejected: model generation @Iter 1]{%
+\promptboxrejected{%
+\texttt{agent type:} \textcolor{highlight}{Male}\\
+\texttt{policy type:} \textcolor{highlight}{No}\\
+\texttt{age of vehicle:} \textcolor{highlight}{50}\\
+\texttt{number of cars:} 1 vehicle
+}%
+}
+
+\vspace{4pt}
+
+\textbf{Iteration 2:}
+\vspace{1pt}
+
+\promptbox{%
+\texttt{age of vehicle is} [generate], \texttt{week of month claimed is} [generate], \texttt{week of month is} [generate], \texttt{age of policy holder is} [generate].
+}%
+
+\vspace{1pt}
+
+\subfloat[Chosen: ground truth (normal sample)]{%
+\promptboxchosen{%
+\texttt{age of vehicle:} 5 years\\
+\texttt{week of month claimed:} 0.2\\
+\texttt{week of month:} -0.6\\
+\texttt{age of policy holder:} 31 to 35
+}%
+}
+\hfill
+\subfloat[Rejected: model generation @Iter 2]{%
+\promptboxrejected{%
+\texttt{age of vehicle:} \textcolor{highlight}{7 years}\\
+\texttt{week of month claimed:} 0.2\\
+\texttt{week of month:} \textcolor{highlight}{0.2}\\
+\texttt{age of policy holder:} 31 to 35
+}%
+}
+
+\caption{Iterative refinement on mixed categorical and numerical features (Vehicle dataset). At iteration 0, the model generates incorrect categorical values (e.g., ``3Sum'' instead of ``Sedan - Collision'' for policy type, ``1 to 2 years'' instead of ``5 years'' for age of vehicle) and malformed numerical values (e.g., ``0.4'' instead of ``Wednesday'' for day of week, ``0.6'' instead of 0.2 for week of month claimed), clearly marking them as pseudo-anomalies. By iteration 1, categorical values improve but still contain errors (e.g., ``No'' instead of ``Sedan - Collision'' for policy type, ``50'' instead of ``5 years'' for age of vehicle, ``Male'' instead of ``External'' for agent type). By iteration 2, most categorical values are correct, but subtle numerical discrepancies persist (e.g., ``7 years'' instead of ``5 years'' for age of vehicle, ``0.2'' instead of -0.6 for week of month), demonstrating progressive refinement in learning both categorical and numerical distributions.}
+\label{fig:example_vifd}
+\end{figure*}
+
+The sequential approach preserves column names, ensures coherence through conditional generation, and enables iterative refinement via self-play. Examples show progressive improvement from clearly anomalous values at iteration 0 to more realistic but still distinguishable values at later iterations.
+
+
+
+
+\section{Related Works}
+\label{sec:app:related_works}
+
+Tabular anomaly detection has been extensively studied, with methods ranging from classical statistical approaches to recent deep learning models. Classical methods include isolation forest~\cite{liu2008iforest}, empirical-cumulative-distribution-based outlier detector (ECOD)~\cite{li2022ecod}, and $k$-nearest neighbors (KNN)~\cite{ramaswamy2000knn}. Earlier kernel-based novelty-detection research developed explicit geometric data descriptions around the normal region, including hypersphere models with separately adjustable inner and outer margins for imbalanced settings~\citep{le2010optimal}, multiple spherical boundaries for multi-modal normal data~\citep{le2011multiple}, semi-supervised SVDD with fuzzy memberships and entropy for partially labeled data~\citep{le2013fuzzy}, and cutting-plane accelerations for scalable one-class SVM training~\citep{le2015fast}. Deep-learning-based approaches include margin-based methods such as DeepSVDD~\cite{ruff2018deepsvdd} and self-supervised learning methods such as REPEN~\cite{pang2018repen} and SLAD~\cite{xu2023fascinating}. More recent tabular anomaly detectors have substantially strengthened this line of work. MCM~\citep{yin2024mcm} extends masked modeling to tabular anomaly detection and learns multiple masking patterns to capture diverse feature correlations. NPT-AD~\citep{thimonier2024nptad} leverages both feature-feature and sample-sample dependencies through a non-parametric transformer-based reconstruction framework. DRL~\citep{ye2025drl} improves discrimination by remapping samples into a decomposed latent space designed to separate shared normal patterns from anomalous variation. These methods are strong tabular baselines, but they are primarily developed for conventional tabular representations and do not directly exploit the generative and semantic capabilities of LLMs on heterogeneous rows containing text, categorical values, and numerical attributes.
+
+Large language models (LLMs) have recently become an attractive foundation for mixed-type tabular anomaly detection because they can operate on a serialized representation of each row and naturally exploit the semantics of categorical values and raw text~\cite{dinh2022lift, hegselmann2023tabllm}. Previous work demonstrates that LLMs can effectively handle tabular prediction tasks through text serialization~\cite{dinh2022lift}, while few-shot classification on tabular data benefits from serialization strategies that preserve semantic relationships~\cite{hegselmann2023tabllm}. AnoLLM~\cite{tsai2025anollm} applies LLMs to tabular anomaly detection by serializing rows into text templates, discretizing numerical values, and fine-tuning LLMs on normal data via next-token prediction. LLM-DAS~\citep{ye2026llmdas} uses LLMs in a different way: rather than treating the LLM as the detector itself, it uses the LLM as an algorithmist to synthesize detector-specific anomaly-generation programs that strengthen downstream anomaly detectors. CausalTAD~\citep{wang2026causaltad} stays closer to the AnoLLM setting, but focuses on improving the serialization order by injecting causal knowledge and reweighting columns according to their causal importance. In contrast, DiSPaT addresses the training paradigm itself. Rather than relying on one-shot likelihood maximization on normal data, it introduces iterative self-play to refine the model's description of normality through progressively harder model-generated not-normal samples. This distinction is important because our goal is not to redesign the detector architecture or the serialization order, but to strengthen the learning signal available to LLM-based tabular anomaly detection.
+
+Our theoretical framework builds upon foundational works in divergence minimization and self-play optimization. The framework of $f$-divergences provides a general framework for measuring distributional differences~\cite{Csiszar2004, Liese2006}. GAN objectives can be generalized to arbitrary $f$-divergences through variational lower bounds~\cite{nowozin2016f}. We extend this framework to the conditional setting where distributions depend on context, providing explicit approximation bounds. Self-play mechanisms have been successfully applied to language model alignment. SPIN~\cite{chen2024self} introduces a self-play fine-tuning approach where models learn by distinguishing their own generations from ground-truth data, providing a learning signal without external annotations. Direct Preference Optimization (DPO)~\cite{rafailov2024directpreferenceoptimizationlanguage} simplifies preference learning by directly optimizing a binary classification objective. Related ideas on strengthening alignment or mitigating representation bias under indirect or limited supervision also appear in other settings, including neural topic modeling and few-shot continual relation extraction~\citep{hoang2025hicot, pham2025mitigating}. The idea of using synthetic samples as negative examples has been explored in semi-supervised anomaly detection. Synthetic anomalies can be generated via data augmentation~\cite{ruff2019deep}, while deviation networks learn from both normal and synthetic anomalous samples~\cite{pang2019deep}. Synthetic anomalies can also be generated through adversarial perturbations~\cite{ding2022catching}. We adapt these mechanisms to unsupervised tabular anomaly detection by minimizing $f$-divergence between normal data and model-generated distributions, where self-play generates pseudo-anomalies that serve as negative examples, enabling unsupervised learning without requiring anomaly labels or external generators.

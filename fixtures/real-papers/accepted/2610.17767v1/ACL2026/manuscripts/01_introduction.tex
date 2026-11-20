@@ -1,0 +1,51 @@
+\section{Introduction}\label{introduction}
+
+The advent of large reasoning models (LRMs) has redefined the benchmark requiring complex reasoning \cite{guo2025deepseek, jaech2024openai}. 
+The efficacy of LRMs has been attributed to the additional computation allocated at test time through explicit reasoning paths, typically encapsulated within delimiters such as \texttt{<think>} ... \texttt{</think>}. By exploring logical traces, reflecting on internal errors, and self-verifying intermediate steps, these models have achieved breakthroughs in mathematical and symbolic reasoning tasks. These days, this \textit{think-before-answer} paradigm has emerged as the de facto standard.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{ACL2026/figures/0_landing_img.pdf}
+    \caption{Overview of our training pipeline. We generate paired reasoning samples and non-reasoning samples from input queries through the original reasoning model.
+    These samples are self-distilled to manifest adaptive reasoning. Finally, root-token policy optimization (\Ours) is applied to the model, refining the policy by updating only the initial branching token (i.e., root-token) to improve difficulty-aware adaptive reasoning.
+    }
+    \label{fig:landing}
+\end{figure}
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=0.98\linewidth]{ACL2026/figures/1_overview_fig.pdf}
+    \caption{Detailed overview of our training framework. After supervised finetuning (SFT) with self-generated correct samples, \Ours~involves updates only the initial decision token with group normalized rewards and advantages.}
+    \label{fig:overview}
+\end{figure*}
+
+Despite the potential of LRMs, there remains a significant limitation that general LRMs tend to apply this exhaustive explicit reasoning uniformly across all queries, regardless of their intrinsic complexity.
+This results in the \textit{overthinking} problem \cite{feng2025efficient, sui2025stop} where substantial computational resources and latency are wasted on trivial questions. Consequently, a surge of emerging research has been driven into striking a balance between reasoning quality and computational efficiency \cite{Zhang2025AdaptThink, Bao2025Thinkless, wu2025arm, wang2025adareasoner}.
+While proprietary services such as GPT5 \cite{openai2025gpt5} and Claude \cite{Claude3_5SonnetSystemCard} rely on black-box routing to mitigate overthinking, a novel model-centric alternative is required to internalize adaptive reasoning via policy optimization with open dataset for the open-source community.
+
+While adaptive reasoning models that learn when to reason have been explored via policy optimization, these studies have faced the following challenges:
+
+\begin{enumerate}[leftmargin=12pt, itemsep=2pt]
+    \item Training inefficiency. Optimizing over long context trajectories with policy optimization incurs prohibitive VRAM and temporal costs, hindering accessible and iterative development.
+
+    \item Data curation. There is a lack of standardized methods for \textit{baking} difficulty-aware datasets that effectively balance reasoning traces with direct responses across heterogeneous domains.
+
+    \item Initialization gap. Prior works train from scratch or adapt base models, often avoiding adapting the original LRM due to its training sensitivity.
+    
+
+\end{enumerate}
+
+To alleviate these challenges, we propose \Ours~(\underline{R}oot-token \underline{P}olicy \underline{O}ptimization), an efficient training method that enables adaptive reasoning by learning only the initial root token (e.g., the decision to open or close the \texttt{<think>} tag). Our method involves two stages (\Autoref{fig:landing}): (1) offline synthesis which generates paired reasoning and non-reasoning responses via forced chat templates, and (2) \Ours, which restricts gradient updates to the pivotal branching decision. 
+Our design is complementary to recent token-selective RL that updates only a small subset of decision tokens (e.g., high-entropy forking tokens) rather than the full trajectory~\cite{wang2025beyond8020}; \Ours~pushes this idea to the extreme by optimizing only the root routing token (\Autoref{fig:overview}). 
+We demonstrate that \Ours~drastically enhances memory and compute efficiency during training while preserving the model's original capability. 
+
+Our contributions are as follows:
+
+\begin{itemize}[leftmargin=12pt, itemsep=2pt]
+    \item We propose \Ours, a novel framework, termed as root-token optimization to enable adaptive reasoning by optimizing only the initial root-token whether to reason, significantly reducing training overhead as well as efficient difficulty-aware routing (\S\ref{sec:method}).
+
+    \item Our empirical results demonstrate \Ours~enables LRMs learning when to reason over diverse LRM families and scales. We also provide an analysis on calibration for an explicit reasoning knob (e.g., target Think\% or routing threshold for root-token probability) (\S\ref{sec:exp}, \S\ref{sec:Analysis}).
+
+    \item We demonstrate that difficulty-aware policies in mathematical domains elicit adaptive reasoning in broader scientific and code domain (\S\ref{sec:Analysis}).
+\end{itemize}
+

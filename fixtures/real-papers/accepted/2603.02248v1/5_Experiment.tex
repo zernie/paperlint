@@ -1,0 +1,503 @@
+\vspace{-1.5mm}
+\section{Experiments}
+\label{sec:experiments}
+\vspace{-1.5mm}
+
+
+% {\color{red} 
+% \textsection~\ref{sec:exp_parameter_sensitivity}
+% \textsection~\ref{sec:exp_algorithm_execution_time}
+% cite해야 함
+% }
+
+% \vspace{-1mm}
+% \subsection{Experiment Setup}
+% \label{sec:exp_experiment_setup}
+% \vspace{-1mm}
+
+
+\textbf{Hardware and Software Settings.}
+We conducted our experiments on a machine with AMD EPYC 7313 CPU and 2TB of RAM with the OS of Rocky Linux release 8.7 and 4 A100-80GB GPUs.
+
+\textbf{Competitors.}
+\texttt{HELIOS} is compared with the SOTA methods. 
+The early fusion methods include \texttt{Fusion-Retriever} (\citealp{OTT-QA}), \texttt{OTTeR} (\citealp{OTTeR}), and \texttt{DoTTeR} (\citealp{DoTTeR}). 
+The late fusion approaches include \texttt{Iterative-Retriever} (\citealp{OTT-QA}), \texttt{CORE} (\citealp{CORE}), and \texttt{COS} (\citealp{COS}).
+{
+\feditcolor
+Additionally, we include \texttt{HOLMES}~(\citealp{HOLMES}), a graph-based multi-hop QA method originally designed for a distractor setting, in which a question-answering system is presented with exactly 10 candidates before producing an answer.
+}
+
+\textbf{Datasets.}
+We conduct experiments on two datasets: \texttt{OTT-QA} (\citealp{OTT-QA}) and \texttt{MultimodalQA (MMQA)} (\citealp{MultiModalQA}). 
+\texttt{OTT-QA} serves as the primary benchmark, as it is the only dataset designed for open-domain QA over tables and text, comprising 400K tables, 5M passages, and 42K training QA pairs, with 2K QA pairs each for development and testing.
+\texttt{MMQA} is a multi-hop QA dataset spanning images, passages, and tables. 
+While not fully aligned with our task, we use it as a supplementary benchmark to assess generalizability. 
+We exclude image-based questions and conduct experiments in an open setting using its full corpus (10K tables, 210K passages, and 1.3K QA pairs) without reference candidates. More detailed experimental settings are in Appendix~\textsection~\ref{sec:experiment_supp}.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\vspace{-1mm}
+\subsection{Main Results}
+\label{sec:exp_main_results}
+\vspace{-1mm}
+
+
+\begin{table*}[ht]
+    \centering
+    \resizebox{0.9\textwidth}{!}{%
+    \begin{tabular}{l|ccccc|c|c}
+        \hline
+        \textbf{Model}  & \textbf{AR@2}  & \textbf{AR@5} & \textbf{AR@10} & \textbf{AR@20} & \textbf{AR@50} & \textbf{nDCG@50} & \textbf{HITS@4k} \\
+        \hline
+        \texttt{Iterative Retriever}     & --            & --            & --            & --            & --            & --            & 27.2          \\
+        \texttt{Fusion Retriever}        & --            & --            & --            & --            & --            & --            & 52.4          \\
+        \texttt{OTTeR}$^{\dagger}$       & 31.4          & 49.7          & 62.0          & 71.8          & 82.0          & 25.9          & 70.1          \\
+        \texttt{DoTTeR}$^{\dagger}$      & 31.5          & 51.0          & 61.5          & 71.9          & 80.8          & 26.7          & 70.3          \\
+        \texttt{CORE}$^{\dagger}$        & 35.3          & 50.7          & 63.1          & 74.5          & 83.1          & 25.4          & 77.2          \\
+        \texttt{COS}$^{\dagger}$         & 44.4          & 61.6          & 70.8          & 79.5          & 87.8          & 33.6          & 81.8          \\
+        \texttt{COS w/ ColBERT \& bge}$^{\dagger}$         & 49.6          & 68.2          & 78.7          & 85.0          & 91.7          & 36.5          & 85.9          \\
+        \texttt{DoTTeR + COS + LLM}$^{\dagger}$         & 50.0          & 62.4          & 70.0          & 76.2          & 84.7          & 34.7          & --          \\
+        \hline
+        \texttt{HELIOS}           & \textbf{63.3} & \textbf{76.7} & \textbf{85.0} & \textbf{90.4} & \textbf{94.2} & \textbf{47.0} & \textbf{91.8} \\
+        \hline
+    \end{tabular}
+    }
+    \vspace{-3mm}
+    \caption{
+        Retrieval accuracy on  \texttt{OTT-QA}'s dev set. Results marked with ${\dagger}$ indicate reproduced values.
+    }
+    \label{tab:ottqa_retrieval_accuracy} 
+\end{table*}
+
+
+\begin{table}[t]
+    \centering
+    \setlength{\tabcolsep}{2pt}
+    \resizebox{\columnwidth}{!}{%
+        \begin{tabular}{l|ccccc|cc}
+        \hline
+        \textbf{Model}            & \textbf{AR@2}   & \textbf{AR@5}   & \textbf{AR@10}  & \textbf{AR@20}  & \textbf{AR@50} & \textbf{EM} & \textbf{F1}  \\
+        \hline
+        \texttt{COS}$^{\dagger}$ & 50.7            & 59.7            & 67.1            & 72.4            & 79.5            & 	54.4 & 63.7\\
+        % \texttt{COS w ColBERT \& bge}$^{\dagger}$ & 55.1            & 62.7            & 69.2            & 76.3            & 85.1            \\
+        % \hline
+        \texttt{HELIOS}   & \textbf{70.5}   & \textbf{77.8}   & \textbf{81.0}   & \textbf{82.6}   & \textbf{86.2} & \textbf{59.6} & \textbf{69.1} \\
+        \hline
+        \end{tabular}
+    }
+    \vspace{-3mm}
+    \caption{
+        Retrieval and end-to-end QA accuracy on the \texttt{MMQA} dev set.
+    }
+    \label{tab:mmqa_retrieval_accuracy} 
+\end{table}
+
+
+% Metrics
+We evaluate retrieval accuracy using top-$k$ Answer Recall (AR@$k$), nDCG@$k$, and Hits@4K, alongside end-to-end performance metrics: Exact Match (EM) and F1 score. 
+AR@$k$ measures the proportion of queries where the correct answer appears in the top-$k$ retrieved edges \citep{COS}, while nDCG@$k$ measures the ranking quality considering both the relevance and the position of the retrieved edges. 
+Hits@4K evaluates whether the answer span remains within the top 4096 tokens after linearizing ranked edges \citep{OTT-QA}.
+To analyze the impact of retrieval accuracy on question-answering performance, we conduct end-to-end evaluations using EM and F1 scores.
+We select $k \in \{2, 5, 10, 20, 50\}$ based on evaluation protocols of state-of-the-art early and late fusion models \citep{DoTTeR, COS}.
+If $\mathcal{E}_q$ contains fewer edges than the retrieval target, we incorporate edges removed during the star-based LLM refinement stage to ensure a comprehensive assessment.
+
+
+Table~\ref{tab:ottqa_retrieval_accuracy} shows the retrieval accuracy of \texttt{HELIOS} on \texttt{OTT-QA}'s development set.
+\texttt{HELIOS} consistently outperforms all competitors on AR@$k$ across different $k$ values.
+It outperforms the state-of-the-art \texttt{COS} model by an average of 19.0\% in AR, with the performance gap widening as $k$ decreases. 
+At $k=2$, \texttt{HELIOS} achieves as much as 42.6\% higher answer recall than \texttt{COS}. 
+This improvement is further reflected in nDCG@50, where \texttt{HELIOS} exhibits a 39.9\% gain.
+Additionally, the Hits@4K metric shows a 12.2\% improvement over \texttt{COS}.
+We report an enhanced version of \texttt{COS}, denoted as \texttt{COS w/ ColBERT \& bge}, which incorporates \texttt{ColBERT} retrievers and a \texttt{bge} reranker. 
+Since \texttt{HELIOS} employs late-interaction retrieval, which generally outperforms single-embedding retrievers, we ensure \texttt{COS} uses the same retriever and reranker for a fair comparison. 
+While this modification improves nDCG@50 by 8.6\% over the original \texttt{COS}, \texttt{HELIOS} still outperforms the enhanced version of \texttt{COS} by a substantial margin of 28.8\%.
+{\feditcolor
+We also evaluate a baseline that stacks \texttt{DoTTeR} (the SOTA in early fusion), COS (the SOTA in late fusion), and a full-graph prompting approach for LLM-based reasoning to test whether simply combining strong modules yields significant performance gains.
+Despite these strong individual components, this combination significantly underperforms \texttt{HELIOS} by 19.3\% in AR@k and 35.4\% in nDCG@50. 
+This highlights that the key novelty of \texttt{HELIOS} lies in how it addresses the inherent limitations of each retrieval module and integrates them using different levels of granularity—rather than merely stacking the methods together.
+}
+
+
+% Table~\ref{tab:mmqa_retrieval_accuracy} shows the retrieval accuracy of \texttt{HELIOS} and \texttt{COS} on \texttt{MMQA}'s development set.
+% \texttt{HELIOS} maintains its superior performance, achieving an average improvement of 20.9\% in AR across all $k$ values.
+% We claim that this result indicates the robustness of \texttt{HELIOS} across different datasets.
+
+{\feditcolor
+Table~\ref{tab:mmqa_retrieval_accuracy} shows the retrieval accuracy and end-to-end QA performance of \texttt{HELIOS} and \texttt{COS} on the \texttt{MMQA} development set.
+\texttt{HELIOS} maintains its superior performance, achieving an average improvement of 20.9\% in AR across all $k$ values.
+To further assess robustness, we measured end-to-end QA accuracy using GPT-4o as the reader with each method’s top-50 retrieved edges as input. 
+\texttt{HELIOS} demonstrates substantial gains over \texttt{COS}, with improvements of 9.6\% in EM and 8.5\% in F1.
+We claim that this result indicates the robustness of \texttt{HELIOS} across different datasets.
+}
+
+\begin{table}
+    \centering
+    \resizebox{0.75\columnwidth}{!}
+    {%
+        \begin{tabular}{l|cc|cc}
+            \hline
+            \multicolumn{1}{c|}{\multirow
+            {2}{*}{\textbf{Algorithm}}} 
+                                & \multicolumn{2}{c|}{\textbf{Dev}} & \multicolumn{2}{c}{\textbf{Test}} \\
+            \cline{2-5}
+                                & \textbf{EM}  & \textbf{F1} & \textbf{EM}  & \textbf{F1} \\
+            \hline
+            \texttt{OTTeR}               & 37.1              & 42.8                  & 37.3              & 43.1              \\
+            \texttt{DoTTeR}              & 37.8              & 43.9                  & 35.9              & 42.0              \\
+            \texttt{CORE}                & 49.0              & 55.7                  & 47.3              & 54.1              \\
+            \texttt{COS}              & 56.9              & 63.2                  & 54.9              & 61.5              \\
+            \hline
+            \texttt{HELIOS}       & \textbf{59.3}     & \textbf{65.8}         & \textbf{57.0}     & \textbf{64.3}     \\
+            \hline
+        \end{tabular}
+    }
+    \vspace{-3mm}
+    \caption{
+        End-to-end QA accuracy on \texttt{OTT-QA}.
+    }
+    \label{tab:reading_accuracy} 
+    \vspace{-3mm}
+\end{table}
+
+    % End-to-end analysis
+Table~\ref{tab:reading_accuracy} shows the end-to-end QA accuracy of \texttt{HELIOS} and \texttt{COS} on \texttt{OTT-QA}'s development and test sets.
+% To assess the impact of our retrieved results on the reading task, we evaluated the 
+Following \texttt{COS}, we used a \texttt{Fusion-in-Encoder (FiE)} model (\citealp{FiE}) fine-tuned on the \texttt{OTT-QA} dataset. 
+For a fair comparison, we provided the reader with 50 edges, matching the number of edges used in \texttt{COS}.
+The results indicate that compared to the \texttt{COS} model, our approach improved both EM and F1 scores by 4.2\% and 4.1\% on the development set, as well as by 3.8\% and 4.6\% on the test set, respectively.
+
+\begin{figure}[t]
+    \centering
+    \small
+    \begin{tabular}{c@{}c@{}}
+        \includegraphics[width=0.5\columnwidth]{Figures/Plots/dev_em.pdf} & 
+        \includegraphics[width=0.5\columnwidth]{Figures/Plots/dev_f1.pdf} \\
+        \noalign{\vskip -1mm}
+        (a) EM Score & (b) F1 Score \\
+    \end{tabular}
+    \vspace{-3mm}
+    \caption{
+        End-to-end QA accuracy comparison across different readers for dev set of \texttt{OTT-QA}
+    }
+    \label{fig:reading_accuracy_across_diff_readers}
+\end{figure}
+
+\begin{table}[t]
+    \centering
+    \resizebox{0.5\columnwidth}{!}
+    {%
+        \begin{tabular}{l|cc}
+            \hline
+            \textbf{Algorithm} & \textbf{EM} & \textbf{F1} \\
+            \hline
+            \texttt{HOLMES}$^{\dagger}$    & 30.3        & 42.0        \\
+            \texttt{HELIOS}    & \textbf{57.1} & \textbf{66.4} \\
+            \hline
+        \end{tabular}
+    }
+    \vspace{-2mm}
+    \caption{
+        QA Accuracy Comparison with \texttt{HOLMES} in a distractor setting adapted from \texttt{OTT-QA}.
+    }
+    \label{tab:holmes_comparison}
+    \vspace{-3mm}
+\end{table}
+
+{\editcolor Figure~\ref{fig:reading_accuracy_across_diff_readers} presents the end-to-end QA accuracy of \texttt{HELIOS}, \texttt{COS}, and \texttt{COS w/ ColBERT \& bge} across different reader models, including \texttt{Llama-3.1-70B-Instruct} (\citealp{dubey2024llama}) and \texttt{GPT-4o} (\citealp{hurst2024gpt}).
+% Reader에게 줄 때, 그 parameter로 k가 있는데, 그 중에서 가장 높은 결과를 나타내는 k를 각 알고리즘마다 report한다.
+% 우리는 k를 이런 식으로 설정했는데, 그 중에서 k = 10이 가장 높았고, 따라서 그 결과를 리포트한다.
+For each algorithm, we report the results of the value of $k$ that yields the highest performance, where $k\in\{2, 5, 10, 20, 50\}$.
+Detailed results for other values of $k$ are provided in the Appendix~\textsection~\ref{sec:reading_accuracy_supp}.
+\texttt{HELIOS} improved the performance of all readers, achieving an average EM score improvement of 7.5\% and an average F1 score increase of 6.6\% compared to \texttt{COS w/ ColBERT \& bge}.
+% document가 reader를 support한다 는 관계가 이상하다.
+Through these results, we claim that our well-retrieved documents are capable of enhancing the effectiveness of various readers.
+% We claim that these results indicate that our well-retrieved documents effectively support various readers.
+Examples of the prompts for the readers are in Appendix~\textsection~\ref{sec:Prompts}.}
+
+{
+\feditcolor
+We also compare \texttt{HELIOS} with \texttt{HOLMES}, a graph-based multi-hop QA method tailored for distractor settings, to ensure a fair evaluation against existing graph-based approaches.
+Since \texttt{OTT-QA} natively supports only the open-domain setting, we adapt it by constructing, for each question, a candidate set consisting of 10 items: the gold table, the gold passage, and the top eight hard negatives retrieved by \texttt{HELIOS}.
+
+The results in Table~\ref{tab:holmes_comparison} show that \texttt{HELIOS} outperforms \texttt{HOLMES} by 88.4\% in EM and 58.1\% in F1.
+We attribute this substantial performance gap to the following key factors:
+(1) Seed Node Selection: \texttt{HOLMES} selects initial nodes based solely on named entities, which can overlook relevant, non-entity-centric context. 
+\texttt{HELIOS}, by contrast, employs an edge-level, multi-vector retrieval strategy, capturing finer-grained relationships between tables and passages and leading to more accurate seed node retrieval.
+(2) Question-Conditioned LLM Inference: \texttt{HOLMES} extracts triples via an LLM without conditioning on the question, often missing critical details. 
+\texttt{HELIOS} leverages the reasoning ability of its LLM at inference time, ensuring that only query-relevant information is extracted and processed.
+(3) Preserving Table Structure: \texttt{HOLMES} does not retain the structural nuances of tables when extracting triples, which hinders table-specific reasoning (e.g., column-wise aggregation). 
+\texttt{HELIOS}, however, explicitly performs column-wise aggregation in its SLR module, supporting more complex tabular reasoning.
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\vspace{-1mm}
+\subsection{Ablation Study}
+\label{sec:exp_ablation_study}
+\vspace{-1mm}
+
+\begin{table}[t]
+    \centering
+    \setlength{\tabcolsep}{2pt} % 열 간격 조정
+\resizebox{\columnwidth}{!}{%
+    \begin{tabular}{l|ccccc|c|cc}
+        \hline
+        \textbf{Algorithm}      & \textbf{AR@2}     & \textbf{AR@5}     & \textbf{AR@10}    & \textbf{AR@20}    & \textbf{AR@50}    & \textbf{nDCG@50}  & \textbf{EM} & \textbf{F1}   \\
+        \hline
+        \texttt{HELIOS}  & \textbf{63.3}     & 76.7     & 85.0     & \textbf{90.4}     & 94.2              & 47.0 & 59.3 & 65.8 \\
+        \texttt{w/ Finetuned SLR}           & 63.2 & \textbf{76.8} & \textbf{85.1} & 90.3 & \textbf{94.8} & \textbf{47.6}  & \textbf{59.4} & \textbf{65.9}   \\
+        \hline
+        \texttt{w/o QNE}                 & 62.5              & 74.7              & 82.7              & 88.4              & 92.7              & 45.1        & 56.9 & 63.2      \\
+        \texttt{w/o SLR}                 & 60.0              & 75.2              & 84.7              & 90.1              & 94.6     & 46.5   & 59.0  & 65.7            \\
+        \hline
+    \end{tabular}
+    }
+    \vspace{-3mm}
+    \caption{\label{tab:ablation_study}
+        Retrieval accuracy of \texttt{OTT-QA}'s dev set for \texttt{HELIOS}'s design factors.
+    }
+    \vspace{-3mm}
+\end{table}
+
+
+
+% Ablation 대상 & metric
+We performed an ablation study to assess the contribution of query-relevant node expansion (QNE) and star-based LLM refinement (SLR) to retrieval accuracy.
+% We implemented two additional versions of \texttt{HELIOS}. 
+In \texttt{w/o QNE}, we removed the QNE and \texttt{HELIOS} passes the candidate bipartite subgraph $G_c$ directly to the SLR.
+In \texttt{w/o SLR}, the SLR was removed and \texttt{HELIOS} decomposes the expanded graph $G_l$ into a list of edges.
+
+
+    % Ablation analysis
+As in Table~\ref{tab:ablation_study},
+we found that removing the QNE module led to an average performance degradation of 2.1\% in AR across all $k$ values and 4.2\% in nDCG@50.
+Additionally, excluding the QNE module resulted in a 4.2\% decrease in EM and a 4.1\% decrease in F1 scores.
+This highlights QNE’s role in generating query-relevant edges missed by offline entity linking.
+For the \texttt{w/o SLR}, we observed a noticeable drop in AR@2, AR@5, AR@10, AR@20, nDCG@50, EM score, and F1 score, with accuracy decreases of 5.5\%, 2.0\%, 0.4\%, 0.3\%, 1.1\%, 0.5\%, and 0.2\%, respectively.
+This suggests that SLR helps accurately identify query-relevant nodes in complex queries requiring logical inference, particularly when $k$ is small.
+Interestingly, for AR@50, \texttt{w/o SLR} slightly outperformed \texttt{HELIOS} by 0.4\%, likely due to LLM hallucinations.
+% In some cases, \texttt{HELIOS}'s SLR module failed to select the correct query-relevant nodes. 
+Specifically, we observed 12 instances where the LLM failed to select the correct passage despite being provided with the ground truth passage.
+We present the qualitative analysis results in Appendix \textsection~\ref{sec:qualitative_analysis}.
+
+
+To mitigate hallucinations, we fine-tuned the SLR module using a training dataset synthesized with GPT-4o, incorporating tasks such as aggregate query detection, column-wise aggregation, and passage verification. 
+In addition, we modified the prompt to favor false positives over false negatives by explicitly instructing the model to list passages even if only partially relevant. 
+These strategies enabled the fine-tuned SLR to correctly identify the passage in 11 out of 12 previously failed instances. 
+In the remaining case, the model selected the appropriate passage, but it was missing from the provided annotations. Further details are provided in Figure~\ref{fig:qualitative_analysis}(c) of Appendix~\textsection\ref{sec:qualitative_analysis}, and the fine-tuning process is described in Appendix~\textsection\ref{sec:star_based_llm_refinement_finetune}.
+
+
+% 해당 case는 in Figure~\ref{fig:qualitative_analysis}(c) of Appendix \textsection~\ref{sec:qualitative_analysis}.
+% 결과적으로 \texttt{HELIOS}'s SLR module이 ground truth passage를 선택하는 것에 실패했던 12개의 instances 중 11개의 instances에서 정답 passage를 선택하는 것을 확인했다.
+% In the remaining 1 case, the LLM correctly identified the relevant document, but this document was not included in the provided annotations.
+% As a result, the fine-tuned SLR module improved AR@50 by 0.2\% over the \texttt{w/o SLR}. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\vspace{-1mm}
+\subsection{Impact of Granularity to Accuracy}
+\label{sec:exp_granularity_analysis}
+\vspace{-1mm}
+
+
+\begin{table}[t]
+    \centering
+    % 첫 번째 인자로 0.8\columnwidth, 두 번째 인자는 ! 로 설정
+    \setlength{\tabcolsep}{2pt} % 열 간격 조정
+    \resizebox{\columnwidth}{!}{%
+        \begin{tabular}{l|ccccc|c}
+        \hline
+        \textbf{Retrieval Unit}  & \textbf{AR@2} & \textbf{AR@5}  & \textbf{AR@10} & \textbf{AR@20} & \textbf{AR@50} & \textbf{nDCG@50}\\
+        \hline
+        Node            & 29.3      & 47.4      & 58.8      & 68.5      & 79.5      & 23.8      \\
+        Star Graph      & 37.9      & 57.4      & 66.9      & 76.4      & 84.5      & 28.5      \\
+        Edge            & \textbf{49.1}      & \textbf{63.1}      & \textbf{70.6}      & \textbf{77.6}      & \textbf{85.1}      & \textbf{34.2}      \\
+        \hline
+    \end{tabular}
+    }
+    \vspace{-3mm}
+    \caption{
+        Retrieval accuracy across different units
+    }
+    \label{tab:retrieval_unit} 
+\end{table}
+
+
+    % Experiment setting
+We analyzed the impact of retrieval unit granularity on accuracy by comparing three versions of our subgraph retriever:
+(i) Node retriever: Retrieves table segments first, then links related passages via entity linking.
+(ii) Star graph retriever: Retrieves star graphs and integrates them into a graph.
+(iii) Edge retriever: Retrieves edges and integrates them to construct a graph.
+To ensure a fair comparison, we used the \texttt{ColBERTv2} baseline without fine-tuning.
+
+% Analysis
+As shown in Table~\ref{tab:retrieval_unit}, edge-based retrieval consistently outperformed the others. On average across all $k$ values, it exceeded star graph- and node-based retrieval by 6.9\% and 12.4\%, respectively, and for nDCG@50, by 20\% and 43.7\%. 
+This highlights edge-based retrieval's ability to provide richer information while minimizing information loss, striking an effective balance compared to the others.
+
+We further evaluated two refinement strategies using an LLM: a full graph prompt versus individual prompts for each star graph. The latter, which reduced irrelevant information in prompts, improved nDCG@50 by 12.4\% over the full graph setting (41.8), reducing hallucinations risks.
+
+
+
+
+
+
+
+
+
+
+
+
+
+{\editcolor 
+\vspace{-1mm}
+\subsection{Algorithm Execution Time}
+\label{sec:exp_efficiency}
+
+\begin{table}[t]
+    \centering
+    % \setlength{\tabcolsep}{2pt} % 열 간격 조정
+    \resizebox{\columnwidth}{!}{%
+    \begin{tabular}{l|c|c}
+        \hline
+        \textbf{Algorithm}      & \textbf{Execution Time (s)}     & \textbf{nDCG@50}  \\
+        \hline
+        \texttt{DoTTeR} & 0.08    & 26.7 \\
+        \texttt{CORE}  & 4.13     & 25.4 \\
+        \texttt{COS}  & 3.75     & 33.6 \\
+        \texttt{COS w/ ColBERT \& bge}  & 5.46     & 36.5 \\
+        \texttt{HELIOS}  & 5.14     & 47.0 \\
+        \texttt{HELIOS w/ Finetuned SLR} & 4.76 & \textbf{47.6} \\
+        \hline
+        \texttt{w/o SLR}                 & 2.16             & 46.5 \\
+        \texttt{w/o (SLR \& Edge Reranker)} & \textbf{1.11} & 42.1 \\
+        \hline
+    \end{tabular}
+    }
+    \vspace{-3mm}
+    \caption{\label{tab:computational_overhead}
+        Algorithm execution time comparison
+    }
+\end{table}
+
+% \begin{table}[t]
+%     \centering
+%     % \setlength{\tabcolsep}{2pt} % 열 간격 조정
+%     \resizebox{\columnwidth}{!}{%
+%     \begin{tabular}{l|c|c}
+%         \hline
+%         \textbf{Algorithm}      & \textbf{Execution Time (s)}     & \textbf{nDCG@50}  \\
+%         \hline
+%         \texttt{DoTTeR} & 0.08    & 26.7 \\
+%         \texttt{CORE}  & 4.13     & 25.4 \\
+%         \texttt{COS}  & 3.75     & 33.6 \\
+%         \texttt{COS w/ ColBERT \& bge}  & 5.46     & 36.5 \\
+%         \texttt{HELIOS}  & 5.14     & 47.0 \\
+%         \texttt{HELIOS w/ Finetuned SLR} & 4.76 & \textbf{47.6} \\
+%         \hline
+%         \texttt{w/o QNE}                 & --             & 45.1 \\
+%         \texttt{w/o SLR}                 & 2.16             & 46.5 \\
+%         \texttt{w/o (SLR \& Edge Reranker)} & \textbf{1.11} & 42.1 \\
+%         \hline
+%     \end{tabular}
+%     }
+%     \vspace{-3mm}
+%     \caption{\label{tab:computational_overhead}
+%         Algorithm execution time comparison
+%     }
+% \end{table}
+
+As shown in Table~\ref{tab:computational_overhead}, \texttt{HELIOS} finds a sweet spot between the increase in algorithm runtime (1.37$\times$) and the increase in retrieval accuracy (39.9\% nDCG@50).
+We further found out that fine-tuning LLM used in the SLR module can reduce the algorithm runtime to 1.26$\times$ that of \texttt{COS}, while boosting nDCG@50 to 41.7\%. %eliminating the need for few-shot examples.
+Interestingly, runtime of \texttt{HELIOS} can be reduced to 0.57$\times$ that of \texttt{COS} by removing the SLR module, yet it shows a 38.4\% nDCG@50 gain.
+We attribute this to \texttt{HELIOS} employing a beam search algorithm (beam width $b=10$), whereas \texttt{COS} performs expanded query retrieval on all 200 retrieved table segments, corresponding to have a beam width of 20 times larger size.
+% Naively using \texttt{ColBERT} without beam search can lead to a noticeable increase in execution time.
+% We observe that naively incorporating \texttt{ColBERT} retriever and the \texttt{bge} reranker to \texttt{COS} increased its runtime to 5.46 seconds—slower even than \texttt{HELIOS}.
+}
+
+{\feditcolor 
+To provide a clearer view of \texttt{HELIOS}’s accuracy–efficiency trade-off, we additionally compare it against \texttt{DoTTeR}, a single-vector retriever fine-tuned directly on \texttt{OTT-QA}.
+While \texttt{DoTTeR} achieves end‑to‑end latency below 0.1s, its nDCG@50 score is markedly lower than that of \texttt{HELIOS}.
+To push HELIOS’s end‑to‑end latency toward the one‑second mark, we ran an additional ablation in which we removed the SLR module and, in a second step, the edge re‑ranker. 
+The streamlined variant processes a query in just 1.11s, a delay short enough that users perceive the system as “instant,” yet it still delivers a 57.7\% nDCG@50 gain over \texttt{DoTTeR}.
+}
+
+% Despite using ColBERT, it remains faster, as \texttt{COS} expands queries for all 200 retrieved segments, while \texttt{HELIOS} restricts retrieval via beam search (width 10). 
+% Adding ColBERT retrieval and the bge reranker to \texttt{COS} increased execution time by 45.6\%.

@@ -1,0 +1,202 @@
+% This must be in the first 5 lines to tell arXiv to use pdfLaTeX, which is strongly recommended.
+\pdfoutput=1
+% In particular, the hyperref package requires pdfLaTeX in order to break URLs across lines.
+
+\documentclass[11pt]{article}
+
+% Change "review" to "final" to generate the final (sometimes called camera-ready) version.
+% Change to "preprint" to generate a non-anonymous version with page numbers.
+\usepackage[final]{acl}
+% Standard package includes
+\usepackage{times}
+\usepackage{latexsym}
+
+% For proper rendering and hyphenation of words containing Latin characters (including in bib files)
+\usepackage[T1]{fontenc}
+
+% \usepackage[T5]{fontenc}
+% See https://www.latex-project.org/help/documentation/encguide.pdf for other character sets
+
+% This assumes your files are encoded as UTF8
+\usepackage[utf8]{inputenc}
+\usepackage{booktabs}
+% This is not strictly necessary, and may be commented out,
+% but it will improve the layout of the manuscript,
+% and will typically save some space.
+\usepackage{microtype}
+\usepackage{arydshln}
+% This is also not strictly necessary, and may be commented out.
+% However, it will improve the aesthetics of text in
+% the typewriter font.
+\usepackage{inconsolata}
+\usepackage{dashrule}
+
+%Including images in your LaTeX document requires adding
+%additional package(s)
+
+\usepackage{graphicx}
+\usepackage{kotex}
+\usepackage{arydshln}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{colortbl}
+\usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{arydshln}
+\usepackage{algorithm}
+\usepackage {algpseudocode}
+\usepackage{algorithmicx}
+\usepackage{algcompatible}
+\usepackage[colorinlistoftodos]{todonotes}
+
+
+
+\newcommand\blfootnote[1]{%
+  \begingroup
+  \renewcommand\thefootnote{}\footnote{#1}%
+  \addtocounter{footnote}{-1}%
+  \endgroup
+}
+
+
+
+
+
+\title{\textsc{Revise}: A Framework for Revising OCRed text in Practical Information Systems with Data Contamination Strategy}
+
+
+
+
+\author{
+ \textbf{Gyuho Shim\textsuperscript{1$\ast$}},
+ \textbf{Seongtae Hong\textsuperscript{1$\ast$}},
+ \textbf{Heuiseok Lim\textsuperscript{1,2}$^{\dagger}$}
+\\
+ \textsuperscript{1}Department of Computer Science and Engineering, Korea University\\
+ \textsuperscript{2}Human-inspired AI Research,
+\\
+\text{\{gjshim, ghdchlwls123, limhseok\}@korea.ac.kr}}
+
+
+\begin{document}
+\maketitle
+\begin{abstract}
+Recent advances in Large Language Models (LLMs) have significantly improved the field of Document AI, demonstrating remarkable performance on document understanding tasks such as question answering. However, existing approaches primarily focus on solving specific tasks, lacking the capability to structurally organize and manage document information. To address this limitation, we propose \textsc{Revise}, a framework that systematically corrects errors introduced by OCR at the character, word, and structural levels. Specifically, \textsc{Revise} employs a comprehensive hierarchical taxonomy of common OCR errors and a synthetic data generation strategy that realistically simulates such errors to train an effective correction model. Experimental results demonstrate that \textsc{Revise} effectively corrects OCR outputs, enabling more structured representation and systematic management of document contents. Consequently, our method significantly enhances downstream performance in document retrieval and question answering tasks, highlighting the potential to overcome the structural management limitations of existing Document AI frameworks.
+
+
+
+\end{abstract}
+\blfootnote{$\ast$ Equal contributions}
+\blfootnote{$\dagger$ Co-corresponding author}
+
+\input{tex/1.introduction}
+\input{tex/2.related_work}
+\input{tex/3.methods}
+
+\input{tex/4.Experiments}
+\input{tex/5.results}
+\input{tex/6.conclusion}
+
+
+\section*{Limitations}
+In this paper, we propose \textsc{Revise}, a framework designed to address diverse OCR errors  by leveraging large language models trained on synthetic OCR errors generated through a realistic contamination strategy. Despite its effectiveness, the following limitations exist:
+
+\begin{enumerate}
+    \item Our validation primarily used publicly available document datasets and focuses on general error patterns. The approach has not been extensively tested on diverse industrial documents (such as forms or electronic materials) and may not fully capture specialized domain errors or rare error types that emerge in industry-specific contexts. Future work should incorporate real-world examples from operational environments, particularly for complex scenarios like table comprehension.
+
+    \item The current framework targets text-only documents and does not handle mixed content types such as tables, charts, or mathematical equations, which require specialized multimodal processing capabilities.
+    
+    \item While our LLM-based evaluation reduces subjective bias and enhances reproducibility, it does not completely eliminate model biases or prediction uncertainties. Additional human evaluations and composite metrics would better address diverse usage scenarios.
+
+    \item Our error definitions and contamination ratios are based on empirical observations and literature, providing a practical foundation for synthetic data generation. Comprehensive statistical analysis of OCR error distributions would further strengthen the empirical basis of our approach.
+    
+\end{enumerate}
+
+
+
+
+
+
+
+\section*{Acknowledgments}
+
+% 중점연구소, 생성형, 에트리, 명품
+This research was supported by Basic Science Research Program through the National Research Foundation of Korea(NRF) funded by the Ministry of Education(NRF-2021R1A6A1A03045425).
+This work was supported by Institute for Information \& communications Technology Promotion(IITP) grant funded by the Korea government(MSIT) 
+(RS-2024-00398115, Research on the reliability and coherence of outcomes produced by Generative AI).
+This work was supported by Institute for Information \& communications Technology Planning \& Evaluation(IITP) grant funded by the Korea government(MSIT) (No. RS-2022-II220369, (Part 4) Development of AI Technology to support Expert Decision-making that can Explain the Reasons/Grounds for Judgment Results based on Expert Knowledge).
+This work was supported by ICT Creative Consilience Program through the Institute of Information \& Communications Technology Planning \& Evaluation(IITP) grant funded by the Korea government(MSIT)(IITP-2025-RS-2020-II201819).
+
+
+
+
+
+
+\bibliography{custom}
+
+\appendix
+
+
+\section{Contamination Strategy}
+
+% the contamination proportions for each of our error categories are as seen in 
+For our synthetic data contamination process, we carefully calibrated error ratios based on empirical observations of real-world OCR outputs from a range of document types, spanning from well-structured documents to semi-structured document images such as invoices and receipts. 
+\input{table/error_ratio}
+Table~\ref{tab:error_ratio} presents the specific error ratios applied during the contamination process for each error category and level.
+Our contamination ratios were designed to produce synthetic errors at rates comparable to these observed patterns, ensuring that our \textsc{Revise} model was trained on data that closely resembles real-world OCR outputs. 
+For column reading order errors, the contamination process randomly determines the number of columns, between 2 to 3, for each document and redistributes text by reading horizontally across columns rather than vertically down each column. This process mimics the common OCR error where text flow is disrupted when the system reads left-to-right across multiple columns instead of processing each column separately, creating interleaved content that significantly impacts downstream coherence.
+\label{apx:cp}
+
+
+
+
+
+
+\section{Experimental Details}
+\paragraph{OCR Library}
+In our experiments, we utilized EasyOCR, an open-source OCR library, to extract textual information from the original document images. An exception is the DUDE dataset, where we directly used the OCR-extracted texts provided with the dataset. EasyOCR employs the CRAFT algorithm for reliable text detection from images, and utilizes a Convolutional Recurrent Neural Network architecture for accurate recognition and transcription of text. Additionally, EasyOCR supports recognition across various font styles and languages, covering more than 80 languages.
+
+
+\paragraph{Traning}
+The model is trained using the Adam optimizer, configured with a learning rate (LR) of 1e-4. A WarmupDecayLR scheduler is applied to adjust the learning rate. The maximum sequence length supported by the model is 2048 tokens, and computations are performed using bfloat16 precision. Training is conducted for 1 epoch with a batch size of 32. 
+
+
+\paragraph{Hardware}
+The training environment consists of 4 NVIDIA A6000 GPUs, each having 48GB memory capacity, along with CPUs composed of AMD EPYC 7513 processors featuring 32 cores. For inference, a single accelerator is utilized.
+
+\section{Prompts}
+
+
+\paragraph{Instruction Tuning}
+
+The prompt table~\ref{tab:inference_prompt_table} for \textsc{Revise} optimizes OCR error correction by explicitly enumerating primary error categories. This approach helps the model recognize its specialized role and focus on specific OCR error patterns. Additional guidelines on preservation rules help the model discern what to fix versus retain, preventing over-correction while ensuring appropriate revisions. This comprehensive yet focused design enables \textsc{Revise} to effectively correct OCR errors while preserving the document's original meaning and structure.
+
+
+\paragraph{Question Answering}
+
+The prompt table~\ref{tab:inf_prompt} for document understanding tasks was curated to optimize model performance on OCR-processed text by establishing clear formatting guidelines. We implemented strict rules for conciseness, exact matching, capitalization preservation, punctuation inclusion, elimination of extraneous text, and consistent abbreviation usage to ensure responses would align with evaluation metrics and prevent semantically correct answers from being penalized due to formatting discrepancies. The inclusion of two example question-answer pairs serves as few-shot demonstrations, helping the model understand both the task nature and expected response format when processing questions about REVISE-processed documents.
+
+
+
+
+
+
+
+\section{Qualitative Evaluation Prompt}
+\label{apn:QEP} 
+
+In addition to quantitative evaluation, we conduct qualitative evaluations using explicitly designed prompts. Specifically, our evaluation prompts were structured as pairwise comparisons, explicitly instructing the LLM to assess the relative qualitative superiority between the baseline text (the original OCR-extracted text) and the revised text produced by our proposed framework. Each prompt presented the original document image together with both the baseline and revised versions of the text, and guided the LLM to systematically judge the texts according to various qualitative evaluation criteria as listed in Table~\ref{tab:qual_prompt}.
+
+\input{table/train_and_revise_prompt}
+\input{table/task_inference_prompt}
+\input{table/qualititive_prompt}
+
+
+
+
+
+
+
+\end{document}

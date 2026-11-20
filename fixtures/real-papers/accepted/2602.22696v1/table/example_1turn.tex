@@ -1,0 +1,89 @@
+\begin{table*}[ht]
+    \centering
+    \small
+    \begin{tabular}{ll}
+        \toprule
+        \textbf{Background} & 
+        \begin{tabular}{p{11cm}}
+         Nina's birthday is coming up, and her friends want to throw her a surprise party at a local bowling alley. However, Nina's best friend, Chloe, believes that a karaoke night would be a better fit for Nina's personality.  \\
+        \end{tabular}\\
+        \midrule 
+        \textbf{Goal} & 
+        \begin{tabular}{p{11cm}}
+            Persuade Nina's friends to organize a karaoke night\\
+        \end{tabular}\\
+        \midrule
+        \multirow{3}{*}{\textbf{ProCoT-rich-desc (Uni-X)}} & 
+        \begin{tabular}{p{11cm}}
+            \textbf{Strategy:} A-2 Task-related inquiry  \\ 
+        \end{tabular} \\
+         & \begin{tabular}{p{11cm}}
+          \textbf{Utterance:} What do you all think Nina would enjoy most for her birthday—something fun and interactive like karaoke or something more casual like bowling? \\ 
+         \end{tabular}\\
+        \midrule
+        \multirow{3}{*}{\textbf{ProCoT-p4g (Uni-Y)}} & 
+        \begin{tabular}{p{11cm}}
+             \textbf{Strategy:} Emotion appeal \\
+        \end{tabular} \\
+         & \begin{tabular}{p{11cm}}
+          Nina loves singing and expressing herself, so a karaoke night would make her feel truly celebrated and special. \\
+         \end{tabular}\\
+        \midrule
+        \multirow{2}{*}{\textbf{Judge}} & 
+            \begin{tabular}{p{11cm}}
+            \textbf{Experience:} Given the single utterance in each universe, Uni-Y already supplies an argument and emotional appeal toward karaoke, while Uni-X only sets up a question. Thus Uni-Y is measurably more persuasive and aligned with the goal.\\
+            \end{tabular}\\
+         & 
+         \begin{tabular}{p{11cm}}
+              \textbf{Result:} Uni-Y  \\ 
+         \end{tabular} \\
+        \bottomrule
+    \end{tabular}
+    \caption{Example of losing instance at first turn against \textit{ProCoT-p4g}.}
+    \label{tab:example-1turn-lose}
+\end{table*}
+
+\begin{table*}[ht]
+    \centering
+    \small
+    \begin{tabular}{ll}
+        \toprule
+        \textbf{Background} & 
+        \begin{tabular}{p{11cm}}
+         Tom, a marketing manager, is considering investing in big data analysis to improve his company's marketing strategies. His colleague, Jane, is skeptical about the effectiveness of big data analysis and believes that traditional marketing methods are sufficient. Tom wants to persuade Jane of the benefits of big data analysis.  \\
+        \end{tabular}\\
+        \midrule 
+        \textbf{Goal} & 
+        \begin{tabular}{p{11cm}}
+            Persuade Jane to support investing in big data analysis\\
+        \end{tabular}\\
+        \midrule
+        \multirow{3}{*}{\textbf{ProCoT-rich-desc (Uni-X)}} & 
+        \begin{tabular}{p{11cm}}
+            \textbf{Strategy:} A-2 Task-related inquiry  \\ 
+        \end{tabular} \\
+         & \begin{tabular}{p{11cm}}
+          \textbf{Utterance:} What do you think are the biggest strengths of traditional marketing methods, and what concerns you most about using big data analysis? \\ 
+         \end{tabular}\\
+        \midrule
+        \multirow{4}{*}{\textbf{ProCoT-p4g (Uni-Y)}} & 
+        \begin{tabular}{p{11cm}}
+             \textbf{Strategy:} Logical appeal \\
+        \end{tabular} \\
+         & \begin{tabular}{p{11cm}}
+          Big data analysis allows us to identify precise customer trends and preferences, which traditional methods often miss, leading to more effective and targeted marketing strategies. \\
+         \end{tabular}\\
+        \midrule
+        \multirow{2}{*}{\textbf{Judge}} & 
+            \begin{tabular}{p{11cm}}
+            \textbf{Experience:} Although Uni-Y supplies immediate argumentative content, Uni-X sets up a more dialogic, audience-centred approach that is generally regarded as more effective in persuasion, especially at the opening of a conversation. Therefore, Uni-X’s performance is slightly better.\\
+            \end{tabular}\\
+         & 
+         \begin{tabular}{p{11cm}}
+              \textbf{Result:} Uni-X  \\ 
+         \end{tabular} \\
+        \bottomrule
+    \end{tabular}
+    \caption{Example of winning instance at first turn against \textit{ProCoT-p4g}.}
+    \label{tab:example-1turn-win}
+\end{table*}

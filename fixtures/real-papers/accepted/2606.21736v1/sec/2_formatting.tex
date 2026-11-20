@@ -1,0 +1,47 @@
+\section{Related work}
+\subsection{Domain Generalization}
+% Over the last decade, many efforts have been devoted to domain generalization (DG) to address the OOD issue. 
+% Currently, DG methods can mainly be categorized into five dimensions, including domain alignment, meta-learning, data augmentation, disentangled representation learning, and capturing causal relations. 
+% Domain alignment refers to learning domain-invariant representations by removing domain-specific knowledge~\cite{ganin2016domain, cheng2024disentangled}. 
+% Meta-learning improves generalization performance by simulating domain shift through a training procedure that divides the source domain into meta-train and meta-test domains~\cite{dou2019domain, wang2020meta, zhang2021adaptive}. 
+% \cite{carlucci2019domain, shankar2018generalizing} find data augmentation can play a significant role when augmentations can approximate some variations between domains. 
+% \cite{khosla2012undoing, peng2019domain} using disentangled representation learning to disentangle features into a domain-invariant content space and a domain-specific attribute space, thus learning a domain-invariant representation from data across multiple domains.
+% Despite showing encouraging performances on OOD data, their real-world applications are still limited due to the necessity of having data from other domains.
+% In this work, we focus on an extreme case in DG: single domain generalization.
+Over the last decade, many efforts have been devoted to domain generalization (DG) to address the OOD issue. 
+Currently, DG methods can mainly be categorized into five dimensions, including domain alignment~\cite{ganin2016domain, cheng2024disentangled}, meta-learning~\cite{dou2019domain, wang2020meta, zhang2021adaptive}, data augmentation~\cite{carlucci2019domain, shankar2018generalizing}, disentangled representation learning~\cite{khosla2012undoing, peng2019domain}, and capturing causal relations. 
+% Domain alignment refers to learning domain-invariant representations by removing domain-specific knowledge~\cite{ganin2016domain, cheng2024disentangled}. 
+% Meta-learning improves generalization performance by simulating domain shift through a training procedure that divides the source domain into meta-train and meta-test domains~\cite{dou2019domain, wang2020meta, zhang2021adaptive}. 
+% \cite{carlucci2019domain, shankar2018generalizing} find data augmentation can play a significant role when augmentations can approximate some variations between domains. 
+% \cite{khosla2012undoing, peng2019domain} using disentangled representation learning to disentangle features into a domain-invariant content space and a domain-specific attribute space, thus learning a domain-invariant representation from data across multiple domains.
+Despite showing encouraging performances on OOD data, their real-world applications are still limited due to the necessity of having data from other domains.
+% In this work, we focus on an extreme case in DG: single-DG.
+In this work, we focus on an extreme case in DG: single domain generalization (SDG).
+% \subsection{Single Domain Generalization}
+\subsection{Data augmentation for SDG}
+% Single-domain generalization (SDG) focuses on generalizing a model learned from only one source domain to multiple unseen target domains. 
+SDG focuses on generalizing a model learned from only one source domain to multiple unseen target domains. 
+% To address this challenging problem, several methods have designed various data augmentation algorithms to enhance the diversity and informativeness of training data. 
+To address this challenging problem, several methods have designed various data augmentation algorithms to enhance the diversity and informativeness of training data.
+In particular, some works~\cite{qiao2020learning, volpi2019addressing, volpi2018generalizing, zhao2020maximum} have demonstrated that the method of adversarial domain augmentation (ADA) can be highly effective in enhancing the generalization ability and robustness of the model by synthesizing virtual images during the training process. \cite{zhou2021domain, wang2021learning} operate in the style space defined with style statistics, which can be simply applied to any tasks/models. 
+\cite{fan2021adversarially} proposes a generic normalization approach (ASR-Norm) to adapt the data originating from diverse domains when trained with ADA.
+% However, the diversity of generated data that can be achieved through existing methods relying solely on source domain data augmentation is still limited.
+Although these methods construct new domains via data augmentation, these methods are not able to cover an arbitrary style that has a large distribution gap with the source domain. 
+To address this limitation, we leverage the T2I foundation model to generate a wider variety of domain images, aiming for larger diversity.
+% \subsection{Text-guided Synthesis}
+% \subsection{Diffusion-based Inversion}
+
+% \subsection{Denoising diffusion model}
+% Text-to-image diffusion models have recently emerged at the forefront of image generation. 
+\subsection{Text-to-Image model}
+T2I model has been widely studied in the context of GANs~\cite{goodfellow2020generative}, with the key developments including models like DALL-E~\cite{ramesh2021zero} and CogView~\cite{ding2021cogview}, which allows users to synthesize novel scenes with unseen compositions and produce vivid images in a myriad of styles.
+% More recently, remarkable visual results were achieved by leveraging large-scale auto-regressive~\cite{ramesh2021zero} or diffus ion models~\cite{nichol2021glide}. 
+Recently, remarkable visual results have been achieved by leveraging large-scale auto-regressive~\cite{ramesh2021zero} or diffusion models~\cite{nichol2021glide}. 
+\cite{rombach2022high} proposes the latent diffusion model, which applies diffusion model in the latent space of powerful pre-trained autoencoders and uses text with rich semantic information as a condition to guide the generation of images. 
+% Some work~\cite{prabhudesai2023aligning, clark2023directly, xu2024imagereward} fit a neural network reward function using human scores or relative preferences and then finetune the latent diffusion model.
+Some work~\cite{clark2023directly, xu2024imagereward} fit a neural network reward function using human scores or relative preferences and then finetune the latent diffusion model.
+However, re-training a model with an expanded dataset for each new concept is prohibitively expensive. 
+% and fine-tuning diffusion model on a few examples typically leads to catastrophic forgetting.
+Thus, \cite{gal2022image} proposes a method that does not alter the parameters of the latent diffusion model. Instead, they optimize conditional input prompts.
+% In our work, we train domain-specific prompts to replace various styles and use an adversarial training strategy to ensure accurate classification while adding new styles to images. During training, the main body of the diffusion model is frozen.
+% In our work, we leverage the text-to-image foundation model to learn a group of abstract learnable prompts representing diverse domains instead of textual description.

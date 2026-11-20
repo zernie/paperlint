@@ -1,0 +1,1028 @@
+@article{liu2021makes,
+  title={What Makes Good In-Context Examples for GPT-$3 $?},
+  author={Liu, Jiachang and Shen, Dinghan and Zhang, Yizhe and Dolan, Bill and Carin, Lawrence and Chen, Weizhu},
+  journal={arXiv preprint arXiv:2101.06804},
+  year={2021}
+}
+
+
+@article{lu2021fantastically,
+  title={Fantastically ordered prompts and where to find them: Overcoming few-shot prompt order sensitivity},
+  author={Lu, Yao and Bartolo, Max and Moore, Alastair and Riedel, Sebastian and Stenetorp, Pontus},
+  journal={arXiv preprint arXiv:2104.08786},
+  year={2021}
+}
+
+@article{briakou2024translating,
+  title={Translating step-by-step: Decomposing the translation process for improved translation quality of long-form texts},
+  author={Briakou, Eleftheria and Luo, Jiaming and Cherry, Colin and Freitag, Markus},
+  journal={arXiv preprint arXiv:2409.06790},
+  year={2024}
+}
+
+@article{treviso2024xtower,
+  title={xTower: A multilingual LLM for explaining and correcting translation errors},
+  author={Treviso, Marcos and Guerreiro, Nuno M and Agrawal, Sweta and Rei, Ricardo and Pombal, Jos{\'e} and Vaz, Tania and Wu, Helena and Silva, Beatriz and van Stigt, Daan and Martins, Andr{\'e} FT},
+  journal={arXiv preprint arXiv:2406.19482},
+  year={2024}
+}
+@inproceedings{li-etal-2025-enhancing-large,
+    title = "Enhancing Large Language Models for Document-Level Translation Post-Editing Using Monolingual Data",
+    author = "Li, Zongyao  and
+      Rao, Zhiqiang  and
+      Shang, Hengchao  and
+      Guo, Jiaxin  and
+      Li, Shaojun  and
+      Wei, Daimeng  and
+      Yang, Hao",
+    editor = "Rambow, Owen  and
+      Wanner, Leo  and
+      Apidianaki, Marianna  and
+      Al-Khalifa, Hend  and
+      Eugenio, Barbara Di  and
+      Schockaert, Steven",
+    booktitle = "Proceedings of the 31st International Conference on Computational Linguistics",
+    month = jan,
+    year = "2025",
+    address = "Abu Dhabi, UAE",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2025.coling-main.591/",
+    pages = "8830--8840",
+    abstract = "The translation capabilities of neural machine translation (NMT) models based on the encoder-decoder framework are extremely potent. Although Large Language Models (LLMs) have achieved remarkable results in many tasks, they have not reached state-of-the-art performance in NMT. However, traditional NMT still faces significant challenges in areas of document translation such as context consistency, tense, and pronoun resolution, where LLMs inherently possess substantial advantages. Instead of directly using LLMs for translation, employing them for Automatic Post-Editing (APE) to post-edit NMT outputs proves to be a viable option. However, document-level bilingual data is extremely scarce. This paper proposes a method that can effectively leverage the capabilities of LLMs to optimize document translation using only monolingual data. By employing two NMT models in opposite directions (Source-to-Target and Target-to-Source), we generate pseudo-document training data for the training of APE. We have identified and resolved the issue between training and inference mode inconsistency brought about by the pseudo-document training data. The final experimental results demonstrate that by using only document-level monolingual data, we can significantly improve the quality of NMT and greatly enhance issues such as reference and contextual consistency in NMT."
+}
+
+@inproceedings{koneru-etal-2024-contextual,
+    title = "Contextual Refinement of Translations: Large Language Models for Sentence and Document-Level Post-Editing",
+    author = "Koneru, Sai  and
+      Exel, Miriam  and
+      Huck, Matthias  and
+      Niehues, Jan",
+    editor = "Duh, Kevin  and
+      Gomez, Helena  and
+      Bethard, Steven",
+    booktitle = "Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers)",
+    month = jun,
+    year = "2024",
+    address = "Mexico City, Mexico",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2024.naacl-long.148/",
+    doi = "10.18653/v1/2024.naacl-long.148",
+    pages = "2711--2725",
+    abstract = "Large language models (LLMs) have demonstrated considerable success in various natural language processing tasks, but open-source LLMs have yet to attain state-of-the-art performance in Neural Machine Translation (NMT). Nevertheless, their significant performance in tasks demanding a broad understanding and contextual processing shows their potential for translation. To exploit these abilities, we investigate using LLMs for MT and explore recent parameter-efficient fine-tuning techniques. Surprisingly, our initial experiments found that fine-tuning with Q-LoRA for translation purposes led to performance improvements in terms of BLEU but degradation in COMET compared to in-context learning. To overcome this, we propose an alternative approach: adapting LLMs as Automatic Post-Editors (APE) rather than direct translators. Building on the ability of the LLM to handle long sequences, we also propose extending our approach to document-level translation. We show that leveraging Low-Rank-Adapter fine-tuning for APE can yield significant improvements across both sentence and document-level metrics while generalizing to out-of-domain data. Most notably, we achieve a state-of-the-art accuracy rate of 88.7{\%} on the ContraPro test set, which assesses the model`s ability to resolve pronoun ambiguities when translating from English to German. Lastly, during manual post-editing for document-level translation, the source sentences are iteratively annotated, which can be used to refine further translations in the document. Here, we demonstrate that leveraging human corrections can significantly reduce the number of edits required for subsequent translations."
+}
+
+@inproceedings{liu-etal-2024-beyond-human,
+    title = "Beyond Human-Only: Evaluating Human-Machine Collaboration for Collecting High-Quality Translation Data",
+    author = "Liu, Zhongtao  and
+      Riley, Parker  and
+      Deutsch, Daniel  and
+      Lui, Alison  and
+      Niu, Mengmeng  and
+      Shah, Apurva  and
+      Freitag, Markus",
+    editor = "Haddow, Barry  and
+      Kocmi, Tom  and
+      Koehn, Philipp  and
+      Monz, Christof",
+    booktitle = "Proceedings of the Ninth Conference on Machine Translation",
+    month = nov,
+    year = "2024",
+    address = "Miami, Florida, USA",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2024.wmt-1.110/",
+    doi = "10.18653/v1/2024.wmt-1.110",
+    pages = "1095--1106",
+    abstract = "Collecting high-quality translations is crucial for the development and evaluation of machine translation systems. However, traditional human-only approaches are costly and slow. This study presents a comprehensive investigation of 11 approaches for acquiring translation data, including human-only, machine-only, and hybrid approaches. Our findings demonstrate that human-machine collaboration can match or even exceed the quality of human-only translations, while being more cost-efficient. Error analysis reveals the complementary strengths between human and machine contributions, highlighting the effectiveness of collaborative methods. Cost analysis further demonstrates the economic benefits of human-machine collaboration methods, with some approaches achieving top-tier quality at around 60{\%} of the cost of traditional methods. We release a publicly available dataset containing nearly 18,000 segments of varying translation quality with corresponding human ratings to facilitate future research."
+}
+
+@article{yao2023more,
+  title={More Samples or More Prompt Inputs? Exploring Effective In-Context Sampling for LLM Few-Shot Prompt Engineering},
+  author={Yao, Bingsheng and Chen, Guiming and Zou, Ruishi and Lu, Yuxuan and Li, Jiachen and Zhang, Shao and Liu, Sijia and Hendler, James and Wang, Dakuo},
+  journal={arXiv preprint arXiv:2311.09782},
+  year={2023}
+}
+@inproceedings{papineni2002bleu,
+  title={Bleu: a method for automatic evaluation of machine translation},
+  author={Papineni, Kishore and Roukos, Salim and Ward, Todd and Zhu, Wei-Jing},
+  booktitle={Proceedings of the 40th annual meeting of the Association for Computational Linguistics},
+  pages={311--318},
+  year={2002}
+}
+@inproceedings{snover-etal-2006-study,
+    title = "A Study of Translation Edit Rate with Targeted Human Annotation",
+    author = "Snover, Matthew  and
+      Dorr, Bonnie  and
+      Schwartz, Rich  and
+      Micciulla, Linnea  and
+      Makhoul, John",
+    booktitle = "Proceedings of the 7th Conference of the Association for Machine Translation in the Americas: Technical Papers",
+    month = aug # " 8-12",
+    year = "2006",
+    address = "Cambridge, Massachusetts, USA",
+    publisher = "Association for Machine Translation in the Americas",
+    url = "https://aclanthology.org/2006.amta-papers.25/",
+    pages = "223--231",
+    abstract = "We examine a new, intuitive measure for evaluating machine-translation output that avoids the knowledge intensiveness of more meaning-based approaches, and the labor-intensiveness of human judgments. Translation Edit Rate (TER) measures the amount of editing that a human would have to perform to change a system output so it exactly matches a reference translation. We show that the single-reference variant of TER correlates as well with human judgments of MT quality as the four-reference variant of BLEU. We also define a human-targeted TER (or HTER) and show that it yields higher correlations with human judgments than BLEU{---}even when BLEU is given human-targeted references. Our results indicate that HTER correlates with human judgments better than HMETEOR and that the four-reference variants of TER and HTER correlate with human judgments as well as{---}or better than{---}a second human judgment does."
+}
+
+@article{rubin2021learning,
+  title={Learning to retrieve prompts for in-context learning},
+  author={Rubin, Ohad and Herzig, Jonathan and Berant, Jonathan},
+  journal={arXiv preprint arXiv:2112.08633},
+  year={2021}
+}
+
+@inproceedings{wang2022language,
+  title={What language model architecture and pretraining objective works best for zero-shot generalization?},
+  author={Wang, Thomas and Roberts, Adam and Hesslow, Daniel and Le Scao, Teven and Chung, Hyung Won and Beltagy, Iz and Launay, Julien and Raffel, Colin},
+  booktitle={International Conference on Machine Learning},
+  pages={22964--22984},
+  year={2022},
+  organization={PMLR}
+}
+
+@article{wei2021finetuned,
+  title={Finetuned language models are zero-shot learners},
+  author={Wei, Jason and Bosma, Maarten and Zhao, Vincent Y and Guu, Kelvin and Yu, Adams Wei and Lester, Brian and Du, Nan and Dai, Andrew M and Le, Quoc V},
+  journal={arXiv preprint arXiv:2109.01652},
+  year={2021}
+}
+
+@article{zhang2022opt,
+  title={Opt: Open pre-trained transformer language models},
+  author={Zhang, Susan and Roller, Stephen and Goyal, Naman and Artetxe, Mikel and Chen, Moya and Chen, Shuohui and Dewan, Christopher and Diab, Mona and Li, Xian and Lin, Xi Victoria and others},
+  journal={arXiv preprint arXiv:2205.01068},
+  year={2022}
+}
+
+@article{touvron2023llama,
+  title={Llama 2: Open foundation and fine-tuned chat models},
+  author={Touvron, Hugo and Martin, Louis and Stone, Kevin and Albert, Peter and Almahairi, Amjad and Babaei, Yasmine and Bashlykov, Nikolay and Batra, Soumya and Bhargava, Prajjwal and Bhosale, Shruti and others},
+  journal={arXiv preprint arXiv:2307.09288},
+  year={2023}
+}
+
+@article{zhao2023dynamic,
+  title={Dynamic demonstrations controller for in-context learning},
+  author={Zhao, Fei and Pang, Taotian and Wu, Zhen and Ma, Zheng and Huang, Shujian and Dai, Xinyu},
+  year={2023}
+}
+
+
+@inproceedings{chollampatt2020pedra,
+    title = "Can Automatic Post-editing Improve NMT?",
+    author = "Chollampatt, Shamil  and
+      Susanto, Raymond  and
+      Tan, Liling and
+      Szymanska, Ewa",
+    booktitle = "Proceedings of EMNLP",
+    year = "2020",
+}
+
+@inproceedings{demetr-2022,
+author={Marzena Karpinska and Nishant Raj and Katherine Thai and Yixiao Song and Ankita Gupta and Mohit Iyyer},
+booktitle = "Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing",
+Year = "2022",
+Title={DEMETR: Diagnosing Evaluation Metrics for Translation},
+}
+
+@article{ki2024guiding,
+  title={Guiding Large Language Models to Post-Edit Machine Translation with Error Annotations},
+  author={Ki, Dayeon and Carpuat, Marine},
+  journal={arXiv preprint arXiv:2404.07851},
+  year={2024}
+}
+
+@article{raunak2023leveraging,
+  title={Leveraging gpt-4 for automatic translation post-editing},
+  author={Raunak, Vikas and Sharaf, Amr and Wang, Yiren and Awadallah, Hany Hassan and Menezes, Arul},
+  journal={arXiv preprint arXiv:2305.14878},
+  year={2023}
+}
+
+@inproceedings{vu2018automatic,
+  title={Automatic post-editing of machine translation: A neural programmer-interpreter approach},
+  author={Vu, Thuy-Trang and Haffari, Reza},
+  booktitle={Empirical Methods in Natural Language Processing 2018},
+  pages={3048--3053},
+  year={2018},
+  organization={Association for Computational Linguistics (ACL)}
+}
+
+@article{shterionov2020roadmap,
+  title={A roadmap to neural automatic post-editing: an empirical approach},
+  author={Shterionov, Dimitar and Carmo, F{\'e}lix do and Moorkens, Joss and Hossari, Murhaf and Wagner, Joachim and Paquin, Eric and Schmidtke, Dag and Groves, Declan and Way, Andy},
+  journal={Machine Translation},
+  volume={34},
+  pages={67--96},
+  year={2020},
+  publisher={Springer}
+}
+
+@article{chatterjee2019automatic,
+  title={Automatic post-editing for machine translation},
+  author={Chatterjee, Rajen},
+  journal={arXiv preprint arXiv:1910.08592},
+  year={2019}
+}
+
+@article{gois2020learning,
+  title={Learning non-monotonic automatic post-editing of translations from human orderings},
+  author={G{\'o}is, Ant{\'o}nio and Cho, Kyunghyun and Martins, Andr{\'e}},
+  journal={arXiv preprint arXiv:2004.14120},
+  year={2020}
+}
+
+@article{correia2019simple,
+  title={A simple and effective approach to automatic post-editing with transfer learning},
+  author={Correia, Gon{\c{c}}alo M and Martins, Andr{\'e} FT},
+  journal={arXiv preprint arXiv:1906.06253},
+  year={2019}
+}
+
+@inproceedings{voita-etal-2019-context,
+    title = "Context-Aware Monolingual Repair for Neural Machine Translation",
+    author = "Voita, Elena  and
+      Sennrich, Rico  and
+      Titov, Ivan",
+    editor = "Inui, Kentaro  and
+      Jiang, Jing  and
+      Ng, Vincent  and
+      Wan, Xiaojun",
+    booktitle = "Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)",
+    month = nov,
+    year = "2019",
+    address = "Hong Kong, China",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/D19-1081",
+    doi = "10.18653/v1/D19-1081",
+    pages = "877--886",
+    abstract = "Modern sentence-level NMT systems often produce plausible translations of isolated sentences. However, when put in context, these translations may end up being inconsistent with each other. We propose a monolingual DocRepair model to correct inconsistencies between sentence-level translations. DocRepair performs automatic post-editing on a sequence of sentence-level translations, refining translations of sentences in context of each other. For training, the DocRepair model requires only monolingual document-level data in the target language. It is trained as a monolingual sequence-to-sequence model that maps inconsistent groups of sentences into consistent ones. The consistent groups come from the original training data; the inconsistent groups are obtained by sampling round-trip translations for each isolated sentence. We show that this approach successfully imitates inconsistencies we aim to fix: using contrastive evaluation, we show large improvements in the translation of several contextual phenomena in an English-Russian translation task, as well as improvements in the BLEU score. We also conduct a human evaluation and show a strong preference of the annotators to corrected translations over the baseline ones. Moreover, we analyze which discourse phenomena are hard to capture using monolingual data only.",
+}
+
+@inproceedings{chollampatt-etal-2020-automatic,
+    title = "Can Automatic Post-Editing Improve {NMT}?",
+    author = "Chollampatt, Shamil  and
+      Susanto, Raymond Hendy  and
+      Tan, Liling  and
+      Szymanska, Ewa",
+    editor = "Webber, Bonnie  and
+      Cohn, Trevor  and
+      He, Yulan  and
+      Liu, Yang",
+    booktitle = "Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP)",
+    month = nov,
+    year = "2020",
+    address = "Online",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2020.emnlp-main.217",
+    doi = "10.18653/v1/2020.emnlp-main.217",
+    pages = "2736--2746",
+    abstract = "Automatic post-editing (APE) aims to improve machine translations, thereby reducing human post-editing effort. APE has had notable success when used with statistical machine translation (SMT) systems but has not been as successful over neural machine translation (NMT) systems. This has raised questions on the relevance of APE task in the current scenario. However, the training of APE models has been heavily reliant on large-scale artificial corpora combined with only limited human post-edited data. We hypothesize that APE models have been underperforming in improving NMT translations due to the lack of adequate supervision. To ascertain our hypothesis, we compile a larger corpus of human post-edits of English to German NMT. We empirically show that a state-of-art neural APE model trained on this corpus can significantly improve a strong in-domain NMT system, challenging the current understanding in the field. We further investigate the effects of varying training data sizes, using artificial training data, and domain specificity for the APE task. We release this new corpus under CC BY-NC-SA 4.0 license at \url{https://github.com/shamilcm/pedra}.",
+}
+
+@article{do2021review,
+  title={A review of the state-of-the-art in automatic post-editing},
+  author={do Carmo, F{\'e}lix and Shterionov, Dimitar and Moorkens, Joss and Wagner, Joachim and Hossari, Murhaf and Paquin, Eric and Schmidtke, Dag and Groves, Declan and Way, Andy},
+  journal={Machine Translation},
+  volume={35},
+  pages={101--143},
+  year={2021},
+  publisher={Springer}
+}
+
+@inproceedings{correia-martins-2019-simple,
+    title = "A Simple and Effective Approach to Automatic Post-Editing with Transfer Learning",
+    author = "Correia, Gon{\c{c}}alo M.  and
+      Martins, Andr{\'e} F. T.",
+    editor = "Korhonen, Anna  and
+      Traum, David  and
+      M{\`a}rquez, Llu{\'\i}s",
+    booktitle = "Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics",
+    month = jul,
+    year = "2019",
+    address = "Florence, Italy",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/P19-1292",
+    doi = "10.18653/v1/P19-1292",
+    pages = "3050--3056",
+    abstract = "Automatic post-editing (APE) seeks to automatically refine the output of a black-box machine translation (MT) system through human post-edits. APE systems are usually trained by complementing human post-edited data with large, artificial data generated through back-translations, a time-consuming process often no easier than training a MT system from scratch. in this paper, we propose an alternative where we fine-tune pre-trained BERT models on both the encoder and decoder of an APE system, exploring several parameter sharing strategies. By only training on a dataset of 23K sentences for 3 hours on a single GPU we obtain results that are competitive with systems that were trained on 5M artificial sentences. When we add this artificial data our method obtains state-of-the-art results.",
+}
+
+@inproceedings{vidal-etal-2022-automatic,
+    title = "Automatic Post-Editing of {MT} Output Using Large Language Models",
+    author = "Vidal, Blanca  and
+      Llorens, Albert  and
+      Alonso, Juan",
+    editor = "Campbell, Janice  and
+      Larocca, Stephen  and
+      Marciano, Jay  and
+      Savenkov, Konstantin  and
+      Yanishevsky, Alex",
+    booktitle = "Proceedings of the 15th Biennial Conference of the Association for Machine Translation in the Americas (Volume 2: Users and Providers Track and Government Track)",
+    month = sep,
+    year = "2022",
+    address = "Orlando, USA",
+    publisher = "Association for Machine Translation in the Americas",
+    url = "https://aclanthology.org/2022.amta-upg.7",
+    pages = "84--106",
+    abstract = "This presentation will show two experiments conducted to evaluate the adequacy of OpenAI{'}s GPT-3 (as a representative of Large Language Models), for the purposes of post-editing and translating texts from English into Spanish, using a glossary of terms to ensure term consistency. The experiments are motivated by a use case in ULG MT Production, where we need to improve the usage of terminology glossaries in our NMT system. The purpose of the experiments is to take advantage of GPT-3 outstanding capabilities to generate text for completion and editing. We have used the edits end-point to post-edit the output of a NMT system using a glossary, and the completions end-point to translate the source text, including the glossary term list in the corresponding GPT-3 prompt. While the results are promising, they also show that there is room for improvement by fine-tuning the models, working on prompt engineering, and adjusting the requests parameters.",
+}
+
+
+@article{hendy2023good,
+  title={How good are gpt models at machine translation? a comprehensive evaluation},
+  author={Hendy, Amr and Abdelrehim, Mohamed and Sharaf, Amr and Raunak, Vikas and Gabr, Mohamed and Matsushita, Hitokazu and Kim, Young Jin and Afify, Mohamed and Awadalla, Hany Hassan},
+  journal={arXiv preprint arXiv:2302.09210},
+  year={2023}
+}
+
+
+@article{gao2023design,
+  title={How to design translation prompts for ChatGPT: An empirical study},
+  author={Gao, Yuan and Wang, Ruili and Hou, Feng},
+  journal={arXiv preprint arXiv:2304.02182},
+  year={2023}
+}
+
+@article{lu2023error,
+  title={Error analysis prompting enables human-like translation evaluation in large language models: A case study on chatgpt},
+  author={Lu, Qingyu and Qiu, Baopu and Ding, Liang and Xie, Liping and Tao, Dacheng},
+  year={2023},
+  publisher={Preprints}
+}
+
+
+@article{vilar2022prompting,
+  title={Prompting palm for translation: Assessing strategies and performance},
+  author={Vilar, David and Freitag, Markus and Cherry, Colin and Luo, Jiaming and Ratnakar, Viresh and Foster, George},
+  journal={arXiv preprint arXiv:2211.09102},
+  year={2022}
+}
+
+@inproceedings{garcia2023unreasonable,
+  title={The unreasonable effectiveness of few-shot learning for machine translation},
+  author={Garcia, Xavier and Bansal, Yamini and Cherry, Colin and Foster, George and Krikun, Maxim and Johnson, Melvin and Firat, Orhan},
+  booktitle={International Conference on Machine Learning},
+  pages={10867--10878},
+  year={2023},
+  organization={PMLR}
+}
+
+@inproceedings{bojar-etal-2015-findings,
+    title = "Findings of the 2015 Workshop on Statistical Machine Translation",
+    author = "Bojar, Ond{\v{r}}ej  and
+      Chatterjee, Rajen  and
+      Federmann, Christian  and
+      Haddow, Barry  and
+      Huck, Matthias  and
+      Hokamp, Chris  and
+      Koehn, Philipp  and
+      Logacheva, Varvara  and
+      Monz, Christof  and
+      Negri, Matteo  and
+      Post, Matt  and
+      Scarton, Carolina  and
+      Specia, Lucia  and
+      Turchi, Marco",
+    editor = "Bojar, Ond{\v{r}}ej  and
+      Chatterjee, Rajan  and
+      Federmann, Christian  and
+      Haddow, Barry  and
+      Hokamp, Chris  and
+      Huck, Matthias  and
+      Logacheva, Varvara  and
+      Pecina, Pavel",
+    booktitle = "Proceedings of the Tenth Workshop on Statistical Machine Translation",
+    month = sep,
+    year = "2015",
+    address = "Lisbon, Portugal",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/W15-3001",
+    doi = "10.18653/v1/W15-3001",
+    pages = "1--46",
+}
+
+@inproceedings{bojar-etal-2016-findings,
+    title = "Findings of the 2016 Conference on Machine Translation",
+    author = "Bojar, Ond{\v{r}}ej  and
+      Chatterjee, Rajen  and
+      Federmann, Christian  and
+      Graham, Yvette  and
+      Haddow, Barry  and
+      Huck, Matthias  and
+      Jimeno Yepes, Antonio  and
+      Koehn, Philipp  and
+      Logacheva, Varvara  and
+      Monz, Christof  and
+      Negri, Matteo  and
+      N{\'e}v{\'e}ol, Aur{\'e}lie  and
+      Neves, Mariana  and
+      Popel, Martin  and
+      Post, Matt  and
+      Rubino, Raphael  and
+      Scarton, Carolina  and
+      Specia, Lucia  and
+      Turchi, Marco  and
+      Verspoor, Karin  and
+      Zampieri, Marcos",
+    editor = {Bojar, Ond{\v{r}}ej  and
+      Buck, Christian  and
+      Chatterjee, Rajen  and
+      Federmann, Christian  and
+      Guillou, Liane  and
+      Haddow, Barry  and
+      Huck, Matthias  and
+      Yepes, Antonio Jimeno  and
+      N{\'e}v{\'e}ol, Aur{\'e}lie  and
+      Neves, Mariana  and
+      Pecina, Pavel  and
+      Popel, Martin  and
+      Koehn, Philipp  and
+      Monz, Christof  and
+      Negri, Matteo  and
+      Post, Matt  and
+      Specia, Lucia  and
+      Verspoor, Karin  and
+      Tiedemann, J{\"o}rg  and
+      Turchi, Marco},
+    booktitle = "Proceedings of the First Conference on Machine Translation: Volume 2, Shared Task Papers",
+    month = aug,
+    year = "2016",
+    address = "Berlin, Germany",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/W16-2301",
+    doi = "10.18653/v1/W16-2301",
+    pages = "131--198",
+}
+
+@inproceedings{bojar-etal-2017-findings,
+    title = "Findings of the 2017 Conference on Machine Translation ({WMT}17)",
+    author = "Bojar, Ond{\v{r}}ej  and
+      Chatterjee, Rajen  and
+      Federmann, Christian  and
+      Graham, Yvette  and
+      Haddow, Barry  and
+      Huang, Shujian  and
+      Huck, Matthias  and
+      Koehn, Philipp  and
+      Liu, Qun  and
+      Logacheva, Varvara  and
+      Monz, Christof  and
+      Negri, Matteo  and
+      Post, Matt  and
+      Rubino, Raphael  and
+      Specia, Lucia  and
+      Turchi, Marco",
+    editor = "Bojar, Ond{\v{r}}ej  and
+      Buck, Christian  and
+      Chatterjee, Rajen  and
+      Federmann, Christian  and
+      Graham, Yvette  and
+      Haddow, Barry  and
+      Huck, Matthias  and
+      Yepes, Antonio Jimeno  and
+      Koehn, Philipp  and
+      Kreutzer, Julia",
+    booktitle = "Proceedings of the Second Conference on Machine Translation",
+    month = sep,
+    year = "2017",
+    address = "Copenhagen, Denmark",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/W17-4717",
+    doi = "10.18653/v1/W17-4717",
+    pages = "169--214",
+}
+
+@inproceedings{junczys-dowmunt-2017-amu,
+    title = "The {AMU}-{UE}din Submission to the {WMT} 2017 Shared Task on Automatic Post-Editing",
+    author = "Junczys-Dowmunt, Marcin",
+    editor = "Bojar, Ond{\v{r}}ej  and
+      Buck, Christian  and
+      Chatterjee, Rajen  and
+      Federmann, Christian  and
+      Graham, Yvette  and
+      Haddow, Barry  and
+      Huck, Matthias  and
+      Yepes, Antonio Jimeno  and
+      Koehn, Philipp  and
+      Kreutzer, Julia",
+    booktitle = "Proceedings of the Second Conference on Machine Translation",
+    month = sep,
+    year = "2017",
+    address = "Copenhagen, Denmark",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/W17-4774",
+    doi = "10.18653/v1/W17-4774",
+    pages = "639--646",
+}
+
+@inproceedings{tebbifakhr-etal-2018-multi,
+    title = "Multi-source transformer with combined losses for automatic post editing",
+    author = "Tebbifakhr, Amirhossein  and
+      Agrawal, Ruchit  and
+      Negri, Matteo  and
+      Turchi, Marco",
+    editor = "Bojar, Ond{\v{r}}ej  and
+      Chatterjee, Rajen  and
+      Federmann, Christian  and
+      Fishel, Mark  and
+      Graham, Yvette  and
+      Haddow, Barry  and
+      Huck, Matthias  and
+      Yepes, Antonio Jimeno  and
+      Koehn, Philipp  and
+      Monz, Christof  and
+      Negri, Matteo  and
+      N{\'e}v{\'e}ol, Aur{\'e}lie  and
+      Neves, Mariana  and
+      Post, Matt  and
+      Specia, Lucia  and
+      Turchi, Marco  and
+      Verspoor, Karin",
+    booktitle = "Proceedings of the Third Conference on Machine Translation: Shared Task Papers",
+    month = oct,
+    year = "2018",
+    address = "Belgium, Brussels",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/W18-6471",
+    doi = "10.18653/v1/W18-6471",
+    pages = "846--852",
+    abstract = "Recent approaches to the Automatic Post-editing (APE) of Machine Translation (MT) have shown that best results are obtained by neural multi-source models that correct the raw MT output by also considering information from the corresponding source sentence. To this aim, we present for the first time a neural multi-source APE model based on the Transformer architecture. Moreover, we employ sequence-level loss functions in order to avoid exposure bias during training and to be consistent with the automatic evaluation metrics used for the task. These are the main features of our submissions to the WMT 2018 APE shared task, where we participated both in the PBSMT subtask (i.e. the correction of MT outputs from a phrase-based system) and in the NMT subtask (i.e. the correction of neural outputs). In the first subtask, our system improves over the baseline up to -5.3 TER and +8.23 BLEU points ranking second out of 11 submitted runs. In the second one, characterized by the higher quality of the initial translations, we report lower but statistically significant gains (up to -0.38 TER and +0.8 BLEU), ranking first out of 10 submissions.",
+}
+
+@inproceedings{chatterjee-etal-2019-findings,
+    title = "Findings of the {WMT} 2019 Shared Task on Automatic Post-Editing",
+    author = "Chatterjee, Rajen  and
+      Federmann, Christian  and
+      Negri, Matteo  and
+      Turchi, Marco",
+    editor = "Bojar, Ond{\v{r}}ej  and
+      Chatterjee, Rajen  and
+      Federmann, Christian  and
+      Fishel, Mark  and
+      Graham, Yvette  and
+      Haddow, Barry  and
+      Huck, Matthias  and
+      Yepes, Antonio Jimeno  and
+      Koehn, Philipp  and
+      Martins, Andr{\'e}  and
+      Monz, Christof  and
+      Negri, Matteo  and
+      N{\'e}v{\'e}ol, Aur{\'e}lie  and
+      Neves, Mariana  and
+      Post, Matt  and
+      Turchi, Marco  and
+      Verspoor, Karin",
+    booktitle = "Proceedings of the Fourth Conference on Machine Translation (Volume 3: Shared Task Papers, Day 2)",
+    month = aug,
+    year = "2019",
+    address = "Florence, Italy",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/W19-5402",
+    doi = "10.18653/v1/W19-5402",
+    pages = "11--28",
+    abstract = "We present the results from the 5th round of the WMT task on MT Automatic Post-Editing. The task consists in automatically correcting the output of a {``}black-box{''} machine translation system by learning from human corrections. Keeping the same general evaluation setting of the previous four rounds, this year we focused on two language pairs (English-German and English-Russian) and on domain-specific data (In-formation Technology). For both the language directions, MT outputs were produced by neural systems unknown to par-ticipants. Seven teams participated in the English-German task, with a total of 18 submitted runs. The evaluation, which was performed on the same test set used for the 2018 round, shows a slight progress in APE technology: 4 teams achieved better results than last year{'}s winning system, with improvements up to -0.78 TER and +1.23 BLEU points over the baseline. Two teams participated in theEnglish-Russian task submitting 2 runs each. On this new language direction, characterized by a higher quality of the original translations, the task proved to be particularly challenging. None of the submitted runs improved the very high results of the strong system used to produce the initial translations(16.16 TER, 76.20 BLEU).",
+}
+
+@inproceedings{junczys-dowmunt-grundkiewicz-2016-log,
+    title = "Log-linear Combinations of Monolingual and Bilingual Neural Machine Translation Models for Automatic Post-Editing",
+    author = "Junczys-Dowmunt, Marcin  and
+      Grundkiewicz, Roman",
+    editor = {Bojar, Ond{\v{r}}ej  and
+      Buck, Christian  and
+      Chatterjee, Rajen  and
+      Federmann, Christian  and
+      Guillou, Liane  and
+      Haddow, Barry  and
+      Huck, Matthias  and
+      Yepes, Antonio Jimeno  and
+      N{\'e}v{\'e}ol, Aur{\'e}lie  and
+      Neves, Mariana  and
+      Pecina, Pavel  and
+      Popel, Martin  and
+      Koehn, Philipp  and
+      Monz, Christof  and
+      Negri, Matteo  and
+      Post, Matt  and
+      Specia, Lucia  and
+      Verspoor, Karin  and
+      Tiedemann, J{\"o}rg  and
+      Turchi, Marco},
+    booktitle = "Proceedings of the First Conference on Machine Translation: Volume 2, Shared Task Papers",
+    month = aug,
+    year = "2016",
+    address = "Berlin, Germany",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/W16-2378",
+    doi = "10.18653/v1/W16-2378",
+    pages = "751--758",
+}
+
+@inproceedings{zhang-etal-2023-machine,
+    title = "Machine Translation with Large Language Models: Prompting, Few-shot Learning, and Fine-tuning with {QL}o{RA}",
+    author = "Zhang, Xuan  and
+      Rajabi, Navid  and
+      Duh, Kevin  and
+      Koehn, Philipp",
+    editor = "Koehn, Philipp  and
+      Haddow, Barry  and
+      Kocmi, Tom  and
+      Monz, Christof",
+    booktitle = "Proceedings of the Eighth Conference on Machine Translation",
+    month = dec,
+    year = "2023",
+    address = "Singapore",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2023.wmt-1.43",
+    doi = "10.18653/v1/2023.wmt-1.43",
+    pages = "468--481",
+    abstract = "While large language models have made remarkable advancements in natural language generation, their potential in machine translation, especially when fine-tuned, remains under-explored. In our study, we conduct comprehensive experiments, evaluating 15 publicly available language models on machine translation tasks. We compare the performance across three methodologies: zero-shot prompting, few-shot learning, and fine-tuning. Central to our approach is the use of QLoRA, an efficient fine-tuning method. On French-English, QLoRA fine-tuning outperforms both few-shot learning and models trained from scratch. This superiority is highlighted in both sentence-level and document-level translations, with a significant BLEU score improvement of 28.93 over the prompting method. Impressively, with QLoRA, the enhanced performance is achieved by fine-tuning a mere 0.77{\%} of the model{'}s parameters.",
+}
+@article{radford2019language,
+  title={Language models are unsupervised multitask learners},
+  author={Radford, Alec and Wu, Jeffrey and Child, Rewon and Luan, David and Amodei, Dario and Sutskever, Ilya and others},
+  journal={OpenAI blog},
+  volume={1},
+  number={8},
+  pages={9},
+  year={2019}
+}
+
+@article{li2022survey,
+  title={A survey on retrieval-augmented text generation},
+  author={Li, Huayang and Su, Yixuan and Cai, Deng and Wang, Yan and Liu, Lemao},
+  journal={arXiv preprint arXiv:2202.01110},
+  year={2022}
+}
+
+@inproceedings{gu2018search,
+  title={Search engine guided neural machine translation},
+  author={Gu, Jiatao and Wang, Yong and Cho, Kyunghyun and Li, Victor OK},
+  booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume={32},
+  number={1},
+  year={2018}
+}
+
+@article{somers1999example,
+  title={Example-based machine translation},
+  author={Somers, Harold},
+  journal={Machine translation},
+  volume={14},
+  pages={113--157},
+  year={1999},
+  publisher={Springer}
+}
+
+@inproceedings{koehn-senellart-2010-convergence,
+    title = "Convergence of Translation Memory and Statistical Machine Translation",
+    author = "Koehn, Philipp  and
+      Senellart, Jean",
+    editor = "Zhechev, Ventsislav",
+    booktitle = "Proceedings of the Second Joint EM+/CNGL Workshop: Bringing MT to the User: Research on Integrating MT in the Translation Industry",
+    month = nov # " 4",
+    year = "2010",
+    address = "Denver, Colorado, USA",
+    publisher = "Association for Machine Translation in the Americas",
+    url = "https://aclanthology.org/2010.jec-1.4",
+    pages = "21--32",
+    abstract = "We present two methods that merge ideas from statistical machine translation (SMT) and translation memories (TM). We use a TM to retrieve matches for source segments, and replace the mismatched parts with instructions to an SMT system to fill in the gap. We show that for fuzzy matches of over 70{\%}, one method outperforms both SMT and TM baselines.",
+}
+
+@article{vaswani2017attention,
+  title={Attention is all you need},
+  author={Vaswani, A},
+  journal={Advances in Neural Information Processing Systems},
+  year={2017}
+}
+
+@inproceedings{chatterjee-etal-2018-findings,
+    title = "Findings of the {WMT} 2018 Shared Task on Automatic Post-Editing",
+    author = "Chatterjee, Rajen  and
+      Negri, Matteo  and
+      Rubino, Raphael  and
+      Turchi, Marco",
+    editor = "Bojar, Ond{\v{r}}ej  and
+      Chatterjee, Rajen  and
+      Federmann, Christian  and
+      Fishel, Mark  and
+      Graham, Yvette  and
+      Haddow, Barry  and
+      Huck, Matthias  and
+      Yepes, Antonio Jimeno  and
+      Koehn, Philipp  and
+      Monz, Christof  and
+      Negri, Matteo  and
+      N{\'e}v{\'e}ol, Aur{\'e}lie  and
+      Neves, Mariana  and
+      Post, Matt  and
+      Specia, Lucia  and
+      Turchi, Marco  and
+      Verspoor, Karin",
+    booktitle = "Proceedings of the Third Conference on Machine Translation: Shared Task Papers",
+    month = oct,
+    year = "2018",
+    address = "Belgium, Brussels",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/W18-6452",
+    doi = "10.18653/v1/W18-6452",
+    pages = "710--725",
+    abstract = "We present the results from the fourth round of the WMT shared task on MT Automatic Post-Editing. The task consists in automatically correcting the output of a {``}black-box{''} machine translation system by learning from human corrections. Keeping the same general evaluation setting of the three previous rounds, this year we focused on one language pair (English-German) and on domain-specific data (Information Technology), with MT outputs produced by two different paradigms: phrase-based (PBSMT) and neural (NMT). Five teams submitted respectively 11 runs for the PBSMT subtask and 10 runs for the NMT subtask. In the former subtask, characterized by original translations of lower quality, top results achieved impressive improvements, up to -6.24 TER and +9.53 BLEU points over the baseline {``}\textit{do-nothing}{''} system. The NMT subtask proved to be more challenging due to the higher quality of the original translations and the availability of less training data. In this case, top results show smaller improvements up to -0.38 TER and +0.8 BLEU points.",
+}
+
+@inproceedings{khattab2024dspy,
+  title={DSPy: Compiling Declarative Language Model Calls into Self-Improving Pipelines},
+  author={Khattab, Omar and Singhvi, Arnav and Maheshwari, Paridhi and Zhang, Zhiyuan and Santhanam, Keshav and Vardhamanan, Sri and Haq, Saiful and Sharma, Ashutosh and Joshi, Thomas T. and Moazam, Hanna and Miller, Heather and Zaharia, Matei and Potts, Christopher},
+  journal={The Twelfth International Conference on Learning Representations},
+  year={2024}
+}
+@article{khattab2022demonstrate,
+  title={Demonstrate-Search-Predict: Composing Retrieval and Language Models for Knowledge-Intensive {NLP}},
+  author={Khattab, Omar and Santhanam, Keshav and Li, Xiang Lisa and Hall, David and Liang, Percy and Potts, Christopher and Zaharia, Matei},
+  journal={arXiv preprint arXiv:2212.14024},
+  year={2022}
+}
+
+@inproceedings{bhattacharyya2023findings,
+  title={Findings of the WMT 2023 Shared Task on Automatic Post-Editing},
+  author={Bhattacharyya, Pushpak and Chatterjee, Rajen and Freitag, Markus and Kanojia, Diptesh and Negri, Matteo and Turchi, Marco},
+  booktitle={Proceedings of the Eighth Conference on Machine Translation},
+  pages={672--681},
+  year={2023}
+}
+
+@inproceedings{ive-etal-2020-post,
+    title = "A Post-Editing Dataset in the Legal Domain: Do we Underestimate Neural Machine Translation Quality?",
+    author = "Ive, Julia  and
+      Specia, Lucia  and
+      Szoc, Sara  and
+      Vanallemeersch, Tom  and
+      Van den Bogaert, Joachim  and
+      Farah, Eduardo  and
+      Maroti, Christine  and
+      Ventura, Artur  and
+      Khalilov, Maxim",
+    editor = "Calzolari, Nicoletta  and
+      B{\'e}chet, Fr{\'e}d{\'e}ric  and
+      Blache, Philippe  and
+      Choukri, Khalid  and
+      Cieri, Christopher  and
+      Declerck, Thierry  and
+      Goggi, Sara  and
+      Isahara, Hitoshi  and
+      Maegaard, Bente  and
+      Mariani, Joseph  and
+      Mazo, H{\'e}l{\`e}ne  and
+      Moreno, Asuncion  and
+      Odijk, Jan  and
+      Piperidis, Stelios",
+    booktitle = "Proceedings of the Twelfth Language Resources and Evaluation Conference",
+    month = may,
+    year = "2020",
+    address = "Marseille, France",
+    publisher = "European Language Resources Association",
+    url = "https://aclanthology.org/2020.lrec-1.455",
+    pages = "3692--3697",
+    abstract = "We introduce a machine translation dataset for three pairs of languages in the legal domain with post-edited high-quality neural machine translation and independent human references. The data was collected as part of the EU APE-QUEST project and comprises crawled content from EU websites with translation from English into three European languages: Dutch, French and Portuguese. Altogether, the data consists of around 31K tuples including a source sentence, the respective machine translation by a neural machine translation system, a post-edited version of such translation by a professional translator, and - where available - the original reference translation crawled from parallel language websites. We describe the data collection process, provide an analysis of the resulting post-edits and benchmark the data using state-of-the-art quality estimation and automatic post-editing models. One interesting by-product of our post-editing analysis suggests that neural systems built with publicly available general domain data can provide high-quality translations, even though comparison to human references suggests that this quality is quite low. This makes our dataset a suitable candidate to test evaluation metrics. The data is freely available as an ELRC-SHARE resource.",
+    language = "English",
+    ISBN = "979-10-95546-34-4",
+}
+
+@inproceedings{junczys-dowmunt-grundkiewicz-2018-ms,
+    title = "{MS}-{UE}din Submission to the {WMT}2018 {APE} Shared Task: Dual-Source Transformer for Automatic Post-Editing",
+    author = "Junczys-Dowmunt, Marcin  and
+      Grundkiewicz, Roman",
+    editor = "Bojar, Ond{\v{r}}ej  and
+      Chatterjee, Rajen  and
+      Federmann, Christian  and
+      Fishel, Mark  and
+      Graham, Yvette  and
+      Haddow, Barry  and
+      Huck, Matthias  and
+      Yepes, Antonio Jimeno  and
+      Koehn, Philipp  and
+      Monz, Christof  and
+      Negri, Matteo  and
+      N{\'e}v{\'e}ol, Aur{\'e}lie  and
+      Neves, Mariana  and
+      Post, Matt  and
+      Specia, Lucia  and
+      Turchi, Marco  and
+      Verspoor, Karin",
+    booktitle = "Proceedings of the Third Conference on Machine Translation: Shared Task Papers",
+    month = oct,
+    year = "2018",
+    address = "Belgium, Brussels",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/W18-6467",
+    doi = "10.18653/v1/W18-6467",
+    pages = "822--826",
+    abstract = "This paper describes the Microsoft and University of Edinburgh submission to the Automatic Post-editing shared task at WMT2018. Based on training data and systems from the WMT2017 shared task, we re-implement our own models from the last shared task and introduce improvements based on extensive parameter sharing. Next we experiment with our implementation of dual-source transformer models and data selection for the IT domain. Our submissions decisively wins the SMT post-editing sub-task establishing the new state-of-the-art and is a very close second (or equal, 16.46 vs 16.50 TER) in the NMT sub-task. Based on the rather weak results in the NMT sub-task, we hypothesize that neural-on-neural APE might not be actually useful.",
+}
+
+@book{bowker2002computer,
+  title={Computer-aided Translation Technology: A Practical Introduction},
+  author={Bowker, L.},
+  isbn={9780776605388},
+  lccn={2002437124},
+  series={Didactics of translation series},
+  url={https://books.google.es/books?id=ly29-mc6dO0C},
+  year={2002},
+  publisher={University of Ottawa Press}
+}
+
+@inproceedings{knight1994automated,
+  title={Automated postediting of documents},
+  author={Knight, Kevin and Chander, Ishwar},
+  booktitle={AAAI},
+  volume={94},
+  pages={779--784},
+  year={1994}
+}
+
+@article{nagao1984framework,
+  title={A framework of a mechanical translation between Japanese and English by analogy principle},
+  author={Nagao, Makoto},
+  journal={Artificial and human intelligence},
+  pages={351--354},
+  year={1984}
+}
+
+@inproceedings{xu-etal-2020-boosting,
+    title = "Boosting Neural Machine Translation with Similar Translations",
+    author = "Xu, Jitao  and
+      Crego, Josep  and
+      Senellart, Jean",
+    editor = "Jurafsky, Dan  and
+      Chai, Joyce  and
+      Schluter, Natalie  and
+      Tetreault, Joel",
+    booktitle = "Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics",
+    month = jul,
+    year = "2020",
+    address = "Online",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2020.acl-main.144",
+    doi = "10.18653/v1/2020.acl-main.144",
+    pages = "1580--1590",
+    abstract = "This paper explores data augmentation methods for training Neural Machine Translation to make use of similar translations, in a comparable way a human translator employs fuzzy matches. In particular, we show how we can simply present the neural model with information of both source and target sides of the fuzzy matches, we also extend the similarity to include semantically related translations retrieved using sentence distributed representations. We show that translations based on fuzzy matching provide the model with {``}copy{''} information while translations based on embedding similarities tend to extend the translation {``}context{''}. Results indicate that the effect from both similar sentences are adding up to further boost accuracy, combine naturally with model fine-tuning and are providing dynamic adaptation for unseen translation pairs. Tests on multiple data sets and domains show consistent accuracy improvements. To foster research around these techniques, we also release an Open-Source toolkit with efficient and flexible fuzzy-match implementation.",
+}
+
+@article{moslem2023adaptive,
+  title={Adaptive machine translation with large language models},
+  author={Moslem, Yasmin and Haque, Rejwanul and Kelleher, John D and Way, Andy},
+  journal={arXiv preprint arXiv:2301.13294},
+  year={2023}
+}
+
+@inproceedings{li-etal-2024-towards-demonstration,
+    title = "Towards Demonstration-Aware Large Language Models for Machine Translation",
+    author = "Li, Chen  and
+      Zhang, Meishan  and
+      Liu, Xuebo  and
+      Li, Zhaocong  and
+      Wong, Derek  and
+      Zhang, Min",
+    editor = "Ku, Lun-Wei  and
+      Martins, Andre  and
+      Srikumar, Vivek",
+    booktitle = "Findings of the Association for Computational Linguistics: ACL 2024",
+    month = aug,
+    year = "2024",
+    address = "Bangkok, Thailand",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2024.findings-acl.824",
+    doi = "10.18653/v1/2024.findings-acl.824",
+    pages = "13868--13881",
+    abstract = "Tuning-based large language models for machine translation (aka large translation model, LTM) have demonstrated significant performance in the field of machine translation. Despite their success, these models often face difficulties in leveraging demonstrations to further improve their performance. To tackle this challenge, we introduce a novel approach that integrates demonstration-aware training and inference strategies within the framework of tuning-based LTMs, hereby referred to as demonstration-aware LTMs. During training, we enrich the model{'}s learning process by incorporating both sentence- and document-level demonstrations derived from its original training dataset. During inference, the model synergizes its own contextual translations with retrieved high-quality demonstrations, leading to more precise and contextually appropriate outputs. Empirical results reveal that our demonstration-aware LTM not only mitigates the negative impacts traditionally associated with demonstrations but also secures substantial improvements in translation accuracy, particularly in domain-specific and document-level translation tasks. Source code and scripts are freely available at https://github.com/ChenLi0620/Demo-Aware-LLM-MT.",
+}
+
+@inproceedings{zhu-etal-2024-multilingual,
+    title = "Multilingual Machine Translation with Large Language Models: Empirical Results and Analysis",
+    author = "Zhu, Wenhao  and
+      Liu, Hongyi  and
+      Dong, Qingxiu  and
+      Xu, Jingjing  and
+      Huang, Shujian  and
+      Kong, Lingpeng  and
+      Chen, Jiajun  and
+      Li, Lei",
+    editor = "Duh, Kevin  and
+      Gomez, Helena  and
+      Bethard, Steven",
+    booktitle = "Findings of the Association for Computational Linguistics: NAACL 2024",
+    month = jun,
+    year = "2024",
+    address = "Mexico City, Mexico",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2024.findings-naacl.176",
+    doi = "10.18653/v1/2024.findings-naacl.176",
+    pages = "2765--2781",
+    abstract = "Large language models (LLMs) have demonstrated remarkable potential in handling multilingual machine translation (MMT). In this paper, we systematically investigate the advantages and challenges of LLMs for MMT by answering two questions: 1) How well do LLMs perform in translating massive languages? 2) Which factors affect LLMs{'} performance in translation? We thoroughly evaluate eight popular LLMs, including ChatGPT and GPT-4. Our empirical results show that translation capabilities of LLMs are continually involving. GPT-4 has beat the strong supervised baseline NLLB in 40.91{\%} of translation directions but still faces a large gap towards the commercial translation system like Google Translate, especially on low-resource languages. Through further analysis, we discover that LLMs exhibit new working patterns when used for MMT. First, LLM can acquire translation ability in a resource-efficient way and generate moderate translation even on zero-resource languages. Second, instruction semantics can surprisingly be ignored when given in-context exemplars. Third, cross-lingual exemplars can provide better task guidance for low-resource translation than exemplars in the same language pairs. Code will be released at: https://github.com/NJUNLP/MMT-LLM.",
+}
+
+@inproceedings{popovic-2015-chrf,
+    title = "chr{F}: character n-gram {F}-score for automatic {MT} evaluation",
+    author = "Popovi{\'c}, Maja",
+    editor = "Bojar, Ond{\v{r}}ej  and
+      Chatterjee, Rajan  and
+      Federmann, Christian  and
+      Haddow, Barry  and
+      Hokamp, Chris  and
+      Huck, Matthias  and
+      Logacheva, Varvara  and
+      Pecina, Pavel",
+    booktitle = "Proceedings of the Tenth Workshop on Statistical Machine Translation",
+    month = sep,
+    year = "2015",
+    address = "Lisbon, Portugal",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/W15-3049",
+    doi = "10.18653/v1/W15-3049",
+    pages = "392--395",
+}
+
+@inproceedings{sennrich-etal-2016-improving,
+    title = "Improving Neural Machine Translation Models with Monolingual Data",
+    author = "Sennrich, Rico  and
+      Haddow, Barry  and
+      Birch, Alexandra",
+    editor = "Erk, Katrin  and
+      Smith, Noah A.",
+    booktitle = "Proceedings of the 54th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+    month = aug,
+    year = "2016",
+    address = "Berlin, Germany",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/P16-1009",
+    doi = "10.18653/v1/P16-1009",
+    pages = "86--96",
+}
+@inproceedings{freitag-etal-2019-ape,
+    title = "{APE} at Scale and Its Implications on {MT} Evaluation Biases",
+    author = "Freitag, Markus  and
+      Caswell, Isaac  and
+      Roy, Scott",
+    editor = "Bojar, Ond{\v{r}}ej  and
+      Chatterjee, Rajen  and
+      Federmann, Christian  and
+      Fishel, Mark  and
+      Graham, Yvette  and
+      Haddow, Barry  and
+      Huck, Matthias  and
+      Yepes, Antonio Jimeno  and
+      Koehn, Philipp  and
+      Martins, Andr{\'e}  and
+      Monz, Christof  and
+      Negri, Matteo  and
+      N{\'e}v{\'e}ol, Aur{\'e}lie  and
+      Neves, Mariana  and
+      Post, Matt  and
+      Turchi, Marco  and
+      Verspoor, Karin",
+    booktitle = "Proceedings of the Fourth Conference on Machine Translation (Volume 1: Research Papers)",
+    month = aug,
+    year = "2019",
+    address = "Florence, Italy",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/W19-5204",
+    doi = "10.18653/v1/W19-5204",
+    pages = "34--44",
+    abstract = "In this work, we train an Automatic Post-Editing (APE) model and use it to reveal biases in standard MT evaluation procedures. The goal of our APE model is to correct typical errors introduced by the translation process, and convert the {``}translationese{''} output into natural text. Our APE model is trained entirely on monolingual data that has been round-trip translated through English, to mimic errors that are similar to the ones introduced by NMT. We apply our model to the output of existing NMT systems, and demonstrate that, while the human-judged quality improves in all cases, BLEU scores drop with forward-translated test sets. We verify these results for the WMT18 English to German, WMT15 English to French, and WMT16 English to Romanian tasks. Furthermore, we selectively apply our APE model on the output of the top submissions of the most recent WMT evaluation campaigns. We see quality improvements on all tasks of up to 2.5 BLEU points.",
+}
+
+@inproceedings{specia-etal-2017-translation,
+    title = "Translation Quality and Productivity: A Study on Rich Morphology Languages",
+    author = "Specia, Lucia  and
+      Harris, Kim  and
+      Blain, Fr{\'e}d{\'e}ric  and
+      Burchardt, Aljoscha  and
+      Macketanz, Viviven  and
+      Skadin, Inguna  and
+      Negri, Matteo  and
+      Turchi, Marco",
+    editor = "Kurohashi, Sadao  and
+      Fung, Pascale",
+    booktitle = "Proceedings of Machine Translation Summit XVI: Research Track",
+    month = sep # " 18 {--} " # sep # " 22",
+    year = "2017",
+    address = "Nagoya Japan",
+    url = "https://aclanthology.org/2017.mtsummit-papers.5",
+    pages = "55--71",
+}
+
+
+@inproceedings{negri2018online,
+  title={Online neural automatic post-editing for neural machine translation},
+  author={Negri, Matteo and Turchi, Marco and Bertoldi, Nicola and Federico, Marcello},
+  booktitle={Proceedings of the Fifth Italian Conference on Computational Linguistics (CLiC-it 2018)},
+  year={2018}
+}
+
+@inproceedings{zhechev2012machine,
+  title={Machine translation infrastructure and post-editing performance at Autodesk},
+  author={Zhechev, Ventsislav},
+  booktitle={Workshop on Post-Editing Technology and Practice},
+  year={2012}
+}

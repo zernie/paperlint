@@ -1,0 +1,63 @@
+
+
+
+\section{Experimental Results}
+
+
+\input{table/bertscore}
+\subsection{Understanding Evaluation}
+
+\paragraph{Retrieval Performance}
+
+
+
+
+
+
+
+Table \ref{tab:retrieval} presents a comparative analysis of various OCR error revisions and their impact on embedding-based text retrieval performance using the VisualMRC and DUDE datasets. We evaluate our approach by comparing the original OCR output against two correction strategies: (1) six individual error-specific models, and (2) our integrated \textsc{Revise}$_{meta}$ model that addresses multiple error types simultaneously.
+The \textsc{Revise}$_{meta}$ approach consistently achieves average Recall improvements of 1.3\% and 17.3\% for the two datasets, respectively. This improvement is attributed to its ability to correct a variety of OCR errors comprehensively, thereby allowing the embedding model to capture more accurate contextual information that better aligns with the given query.
+
+Notably, even when a revision targets a single error type, the \textit{Segmentation} revision yields significant performance gains. This suggests that correcting spacing and segmentation errors, which are commonly observed in OCR documents, substantially enhances the model's capacity to discern contextual semantics. However, we observe that some single error type models occasionally underperform compared to the baseline, which can be attributed to an over-correction behavior. When a specialized model encounters datasets with limited instances of its target error type, it may still attempt to apply corrections where none are needed, inadvertently introducing new errors or disrupting otherwise correct text. This highlights the importance of error type prevalence matching between training data and target datasets.
+
+In the case of the DUDE dataset, applying solely the \textit{Column reordering} operation increases the average Recall from 25.34\% to 30.76\%, marking the highest improvement among the single-revision methods. This result is attributable to the DUDE dataset's highly regular column-based layout and consistent text composition. Owing to these structural properties, merely correcting column alignment can yield substantial gains in retrieval performance.
+
+
+
+Overall, \textsc{Revise} demonstrates that effective learning and correction of diverse OCR error types is possible without requiring additional annotated data. By leveraging publicly available text corpora supplemented with synthetic augmentation, our approach can substantially enhance embedding-based retrieval performance. Furthermore, these results indicate that applying tailored strategies based on error types and dataset characteristics can yield even more optimal outcomes.
+
+
+\paragraph{Similarity Assessment}
+
+
+
+
+As shown in Table~\ref{bertscore}, the application of our proposed integrated refinement approach \textsc{Revise}$_{meta}$ consistently improves the BERTScore across all datasets when compared to the untouched OCR output. In particular, for DocVQA, which handles free-form queries where contextual relevance is essential, detailed corrections such as \textit{Segmentation} yield significant improvements. For more structured datasets such as CORD and FUNSD, our approach of combining multiple error corrections achieves the best overall performance. These results suggest that our methodology not only mitigates OCR error but also enables the embedding model to capture finely expressed contextual information, thereby enhancing semantic consistency and overall quality. 
+
+
+
+
+
+\subsection{Question Answering}
+
+
+
+Table~\ref{qa_table} presents a comparison of the QA performance with and without our proposed REVISE framework. While our main experiments primarily center around evaluating how accurately the OCR outputs can be restored, we conduct an additional analysis on QA performance to examine how improvements in quality ultimately contribute to enhanced document understanding by LLMs.
+
+\input{table/QA}
+
+For both evaluation datasets, we confirmed that our \textsc{Revise}$_{meta}$ approach consistently excelled at answering questions. On VisualMRC, the Gemma-2-9b-it and Llama-3.1-8B models achieved performance gains of 2.6\% and 0.8\%, respectively. On the CORD dataset, the Gemma and Llama models improved by 1.4\% and 0.4\% in F1 score, respectively. Given that the datasets evaluated here primarily involve relatively short and simple-form answers, we anticipate an even greater performance gap in tasks requiring more abstractive responses. 
+
+Overall, these results demonstrate that improvements through our \textsc{Revise} can directly or indirectly enhance large language models' document comprehension capabilities, highlighting its effectiveness as a task-independent post-OCR correction approach applicable across diverse document understanding scenarios.
+
+
+
+
+\subsection{Qualititve Analysis}
+
+
+
+To evaluate the revised documents qualitatively, we measure the Win Rate based on a frontier LLM. This approach extends the evaluation methodology previously proposed by \citet{zheng2023judging}. Specifically, we provide the document image along with both the original OCR-extracted text and the REVISE-corrected texts to the LLM, instructing it to assess the relative preference between these two texts. The evaluation prompts explicitly guide the LLM to determine superiority based on various qualitative criteria such as coherence, clarity, and effectiveness in information delivery~\footnote{We use GPT-4o-mini to evaluate a consistent set of 100 randomly selected samples across all revision strategies. Detailed prompts used for this evaluation are provided in Appendix~\ref{apn:QEP}.}.
+\input{table/qualititive}
+Table~\ref{tab:qual} presents the Win Rate results measured respectively for each revision strategy across the two domains, VisualMRC and DUDE. First, examining the \textsc{Revise}$_{meta}$, we observe Win Rates of 94\% on VisualMRC and 86\% on DUDE. These outcomes indicate that the composite revision strategy, trained to address all error types, substantially contributes to overall document quality improvement. Overall, each revision strategy outperforms the baseline consistently across both datasets. Particularly, the single revision strategy \textit{Segmentation} achieves notably high Win Rates in both domains, highlighting the significance of restructuring textual segmentation to enhance document coherence and readability. Furthermore, varying performances observed across revision types underline that outcomes may differ based on the characteristics of the evaluated documents and the particular revision strategies applied. Collectively, our results demonstrate that the proposed approach yields clearly enhanced qualitative performance, complementing quantitative evaluation outcomes.
+

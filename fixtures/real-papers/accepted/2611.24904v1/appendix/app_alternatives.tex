@@ -1,0 +1,215 @@
+\section{Alternative Explanations for the LOCO Gap}
+\label{app:alternatives}
+
+This appendix reports the protocol, full results and caveats of the four
+tests that address alternative explanations of the gap: training-set scale
+(\S\ref{app:ladder}), appearance shortcuts (\S\ref{app:aug-stress}),
+fine-tuning of the encoder (\S\ref{app:frozen}), and the pretraining and
+fine-tuning regime (\S\ref{app:armL-expA}).  All four use two-class
+boundary-tolerant mIoU ($\pm 2$\,px) at high resolution.
+
+\subsection{Training-set scale}
+\label{app:ladder}
+
+Increasing the LOCO training set from $225$ to $900$ images narrows the gap by
+$0.80$ mIoU ($95\%$ CI $[0.46, 1.14]$) and leaves the upper bound significantly
+ahead in every $900$-image cell.
+
+\paragraph{Protocol.} We train the Vanilla LOCO model and the within-city upper
+bound of MAMNet, OGLANet and DINOv3 on $225$, $450$ and $900$ training images
+(rungs), for three held-out cities and three seeds.  A held-out city contains
+$450$ high-resolution training images, so at rung $900$ the LOCO model trains on
+$900$ images and its upper bound on $450$; we report that quantity as the
+budget-asymmetric gap.  Every model selects its checkpoint on $150$ validation
+images at every rung, and every gap is paired per image on the same $150$ test
+images per city.  Per-rung and per-architecture intervals resample cells
+($B{=}10{,}000$).
+
+\begin{table}[h]
+\centering
+\caption{\textbf{Gap by rung.} Upper bound minus LOCO, mean over cells with a
+cell-level bootstrap $95\%$ CI and the number of cells in parentheses.  Rung
+$900$ is the budget-asymmetric gap.  Collapsed models are excluded (see below).}
+\label{tab:ladder}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccc}
+\toprule
+& Rung 225 & Rung 450 & Rung 900 \\
+\midrule
+MAMNet & $7.31$ $[6.01, 8.51]$ (9) & $6.68$ $[4.92, 8.97]$ (9) & $6.48$ $[4.98, 8.18]$ (9) \\
+OGLANet & $7.44$ $[4.32, 9.81]$ (8) & $7.31$ $[5.77, 8.88]$ (9) & $5.81$ $[4.74, 7.26]$ (9) \\
+DINOv3 & $4.31$ $[3.61, 5.30]$ (7) & $4.15$ $[2.79, 5.63]$ (9) & $4.20$ $[2.38, 6.41]$ (9) \\
+\midrule
+All & $6.48$ $[5.22, 7.66]$ (24) & $6.04$ $[5.00, 7.20]$ (27) & $5.50$ $[4.51, 6.53]$ (27) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Per-cell gaps and contrasts.} Every per-cell gap differs from zero
+after Holm correction (largest raw $p = 0.0388$).  All are positive except one
+rung-$225$ cell, OGLANet/Phoenix seed 1, where LOCO exceeds the upper bound by
+$2.24$ mIoU ($p = 0.003$).  The $225$-to-$900$ contrast is $0.80$ mIoU ($95\%$ CI $[0.46, 1.14]$), the $450$-to-$900$
+contrast $0.55$ mIoU ($95\%$ CI $[0.32, 0.77]$), and the
+$225$-to-$450$ contrast $0.14$ mIoU ($95\%$ CI $[-0.17, 0.44]$) ($p = 0.41$).
+These contrasts pool per-image differences of differences across
+(architecture, city, seed) triples and resample images, so their intervals treat
+images as independent within a triple.
+
+\paragraph{Collapsed models.} We exclude a gap when its LOCO or upper-bound
+model predicts shadow on more than half of the valid region, pooled over the
+cell's images.  We set this threshold from the ground truth: shadow occupies at
+most $0.086$ of the valid region in any city, so a model above the threshold has
+foreground IoU of at most $17.2$.  The rule excludes three rung-$225$ gaps
+(OGLANet/Phoenix seed 2, DINOv3/Miami seed 0, DINOv3/Phoenix seed 0) and none at
+rungs $450$ or $900$.  With these gaps included, the rung-$225$ mean is $2.12$
+($[-4.39, 6.81]$, $27$ cells, $3$ sign changes); the other rungs are unchanged.
+
+\paragraph{Appearance alignment.} The grayscale histogram matching of
+\S\ref{sec:feature-space} improves none of the $27$ ladder models it was applied
+to.  One of them is the collapsed DINOv3/Miami rung-$225$ seed-$0$ model, whose
+matched prediction is degenerate.  This count carries no interval or
+$p$-value.
+
+\paragraph{Scope.} The ladder covers high resolution, Vanilla training and
+budgets up to $900$ images, the most our three cities supply.
+
+\subsection{Training-time appearance augmentation}
+\label{app:aug-stress}
+
+\paragraph{Protocol.} We retrain both the LOCO model and its within-city upper
+bound with one strong appearance-only augmentation (colour, illumination,
+contrast, blur and noise; geometry preserved) on the $9$ high-resolution
+(architecture, held-out city) cells at $450$ training images, with one to three
+seeds per side.  The gap here is LOCO minus upper bound, so negative values
+mean LOCO is below its upper bound.  Before the grid ran, we fixed the rule: a
+cell's gap counts as changed if augmentation moves it by more than twice that
+cell's standard deviation of the Vanilla gap over three seeds.
+
+\begin{table}[h]
+\centering
+\caption{\textbf{Appearance augmentation, per cell.} Gap = LOCO minus upper
+bound (mIoU points).  SD: Vanilla gap standard deviation over three seeds.
+Threshold $= 2\times$SD.  $|\Delta|$: absolute change of the gap under
+augmentation.  Seeds: augmented LOCO/upper.}
+\label{tab:aug-stress}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llccccccc}
+\toprule
+Arch. & City & Vanilla gap & SD & Aug.\ gap & Threshold & $|\Delta|$ & Seeds & Changed \\
+\midrule
+MAMNet & Chicago & $-4.52$ & $0.90$ & $-3.76$ & $1.80$ & $0.75$ & 1/1 & no \\
+MAMNet & Miami & $-5.68$ & $1.57$ & $-6.33$ & $3.13$ & $0.65$ & 2/1 & no \\
+MAMNet & Phoenix & $-9.83$ & $4.26$ & $-5.62$ & $8.52$ & $4.21$ & 3/1 & no \\
+OGLANet & Chicago & $-9.08$ & $2.47$ & $-7.64$ & $4.95$ & $1.43$ & 3/2 & no \\
+OGLANet & Miami & $-8.33$ & $0.95$ & $-7.06$ & $1.90$ & $1.27$ & 1/1 & no \\
+OGLANet & Phoenix & $-4.50$ & $0.24$ & $1.80$ & $0.48$ & $6.30$ & 1/1 & yes \\
+DINOv3 & Chicago & $-3.77$ & $0.90$ & $-3.15$ & $1.80$ & $0.62$ & 1/1 & no \\
+DINOv3 & Miami & $-1.92$ & $0.84$ & $-3.93$ & $1.68$ & $2.01$ & 1/1 & yes \\
+DINOv3 & Phoenix & $-6.76$ & $1.43$ & $-1.25$ & $2.86$ & $5.51$ & 2/1 & yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Result.} Six of nine gaps do not change (Table~\ref{tab:aug-stress}).
+The mean gap over the nine cells moves from $-6.04$ to $-4.11$ mIoU, and the
+most negative augmented gap is OGLANet/Chicago at $-7.64$.  On OGLANet/Phoenix the
+augmented LOCO model exceeds its upper bound by $1.80$ mIoU, against a Vanilla
+gap of $-4.50$ with a seed SD of $0.24$.  In the three changed cells, most of the
+change comes from the LOCO side (LOCO mIoU $+3.56$, $-2.20$ and $+5.79$ on
+OGLANet/Phoenix, DINOv3/Miami and DINOv3/Phoenix).
+
+\paragraph{Robustness of the verdicts.} Rerunning every model that reached the
+100-epoch limit with a 200-epoch limit leaves all nine verdicts unchanged; on
+DINOv3 the longer run also changes the learning-rate schedule.  Replicating
+OGLANet/Phoenix at three seeds per side, one augmented upper-bound seed
+collapsed (foreground IoU $1.31$); without it the augmented gap is $+1.43$ and
+the cell still counts as changed.
+
+\paragraph{Caveats.} The rule compares against the Vanilla seed spread and
+carries no confidence interval, $p$-value or multiplicity correction.  Seed
+counts on the augmented side are one to three and unequal.  The test uses one
+augmentation strength, so an unchanged gap is not attributable to a weak dose.
+Phoenix has the largest Vanilla seed variance of the three cities and also
+ranks first on 12 of 20 appearance-distance measures; with three cities, those two
+explanations of the Phoenix changes cannot be separated.  OGLANet cells here are
+inferred at batch size 1, as are the Vanilla cells they are compared with.
+CrossEarth was added to the project after this test ran and is not included.
+
+\subsection{Frozen DINOv3 encoder}
+\label{app:frozen}
+
+Freezing the DINOv3 encoder leaves a gap in all three cities, so fine-tuning the encoder on
+the source cities is not necessary for the gap. We freeze the DINOv3 encoder
+(dinov3\_vits16) and train only the decoder, for both the LOCO model and the within-city
+upper bound, on $450$ training images at high resolution with one seed.
+
+\paragraph{Gap.} The upper-minus-LOCO gap is $7.103$ mIoU ($95\%$ CI $[5.876, 8.348]$) in
+Chicago, $2.669$ ($[1.729, 3.599]$) in Miami and $2.754$ ($[1.652, 3.939]$) in Phoenix, each
+Holm $p < 10^{-4}$ over the three cities, and the city mean is $4.175$ (two-class
+boundary-tolerant mIoU at $K{=}2$, 150 paired test images per city). Images with empty
+ground-truth foreground (11, 38 and 21 of 150) are retained on both sides of each gap. With
+one seed, these gaps carry no seed-to-seed interval, and we do not test them against the
+fine-tuned DINOv3 gap of $4.15$ (Appendix~\ref{app:ladder}).
+
+\paragraph{Decoder retraining with a frozen encoder.} Retraining the decoder on target
+labels with the encoder held fixed gives per-city median per-image recovery ratios $R$ of
+$-2.674$ (Chicago), $-7.087$ (Miami) and $-0.956$ (Phoenix) when the decoder is
+reinitialized; in Chicago and Miami the retrained decoder predicted background only and
+scored below the LOCO model. Initializing the decoder from the LOCO checkpoint gives
+$R = 0.743$, $0.602$ and $0.646$. With the encoder frozen, the decoder is the only trained
+component, so recovery through the decoder is expected by construction, and this
+experiment does not locate the failure; Appendix~\ref{app:armL-expA} tests the locus. Both
+runs differ from Experiment~A of Section~\ref{sec:architecture-locus} in the frozen encoder,
+and the second also in the decoder initialization, so their $R$ values are not comparable
+with Table~\ref{tab:locus-summary}. Images whose upper-minus-LOCO IoU difference is below
+$0.02$ are excluded, leaving 128, 93 and 107 of 150, and per-image $R$ values were not
+stored, so the medians carry no interval.
+
+\subsection{Pretraining and fine-tuning regime}
+\label{app:armL-expA}
+
+\paragraph{Design.} DINOv3 differs from our CNNs in self-supervised
+pretraining and a low fine-tuning learning rate.  We separate the two on MAMNet
+with a ResNet-50 encoder in a $2\times2$ design: ImageNet-1k supervised or DINO
+self-supervised pretraining, each fine-tuned at learning rate $10^{-4}$ (high) or
+$10^{-5}$ (low), for three held-out cities and three seeds at $450$ training
+images.  We run Experiments~A (decoder reinitialized and retrained on held-out
+labels) and B (encoder retrained) of \S\ref{sec:architecture-locus} on every
+cell and report the per-image recovery ratio $R$, pooled over cities and seeds
+with an image-cluster bootstrap ($B{=}10{,}000$).  Images whose headroom (upper
+minus LOCO) is below $0.02$ are excluded because $R$'s denominator vanishes; this
+removes $31\%$ to $41\%$ of images per version.
+
+\paragraph{Experiment B.} Encoder retraining recovers all four versions: median
+$R$ is $0.82$ ($95\%$ CI $[0.79, 0.86]$) for supervised/high, $0.85$
+($[0.81, 0.88]$) for supervised/low, $0.87$ ($[0.84, 0.90]$) for
+self-supervised/high and $0.80$ ($[0.76, 0.83]$) for self-supervised/low.  The
+self-supervised/low version recovers less than supervised/high (mean per-image
+difference $-0.13$, $[-0.22, -0.05]$, Holm $p = 0.005$) and than
+self-supervised/high ($-0.16$, $[-0.24, -0.08]$, Holm $p < 0.001$), and is level
+with supervised/low ($-0.04$, $[-0.10, +0.04]$, $p = 0.32$); Holm is over these
+three contrasts.  The main effects of pretraining ($-0.003$) and learning rate
+($-0.018$) on median $R$ are small.
+
+\paragraph{Experiment A.} Decoder retraining gives median $R$ of $0.64$
+($[0.59, 0.67]$) for supervised/high, $-0.14$ ($[-0.24, -0.03]$) for
+supervised/low, $0.58$ ($[0.54, 0.60]$) for self-supervised/high and $0.12$
+($[0.03, 0.18]$) for self-supervised/low.  The two low-learning-rate versions
+recover less through the decoder.  In this design the retrained decoder uses
+the cell's own fine-tuning learning rate, and $29$ of the $36$ Experiment~A
+cells reach the 30-epoch budget, so the low Experiment~A values may reflect a
+slower decoder rather than the regime.
+
+\paragraph{Encoder drift.} The whole-encoder relative $L_2$ change from
+initialization has median $0.017$ (supervised/low) and $0.032$
+(self-supervised/low), against $0.019$ for the fine-tuned DINOv3 LOCO encoders,
+and $0.22$ and $0.38$ for the two high-learning-rate versions.  Drift tracks the
+learning rate rather than the pretraining objective.
+
+\paragraph{Caveats.} The design varies the pretraining objective at fixed data:
+DINO-ResNet-50 is pretrained on ImageNet-1k ($1.28$M images) and DINOv3 on
+LVD-1689M, and no public self-supervised CNN closes that gap, so pretraining
+scale remains confounded.  Experiments~A and B use held-out-city labels and are
+diagnostic, not a deployable adaptation.  The design covers one architecture.

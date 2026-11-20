@@ -1,0 +1,174 @@
+\input{figures/pipeline}
+
+\section{Overview}
+Given raw RF signals and the positions of all antennas across multiple antenna planes, \name{} aims to reconstruct the surface geometry of the object by predicting a signed distance function (SDF), without requiring any additional information.
+\name{} consists of five main components, illustrated in Fig.~\ref{fig:pipeline}:
+(1) We begin with point sampling. Unlike the ray-based sampling used in vision-based methods~\cite{mildenhall2021nerf}, we propose a {\bf lensless sampling} strategy that aligns with the physical nature of radar sensing.
+Details are provided in Sec.~\ref{sec:lens-less-sampling}.
+(2) The sampled points are passed through three sub-networks to predict the scene's geometry, reflective properties, and radar signal power.
+(3) Using these predictions, along with surface normals (computed as gradients of the SDF), reflection directions, and power decay, we perform {\bf physics-based RF volumetric rendering} for each antenna, as described in Sec.~\ref{sec:volumetric_rendering}.
+To correctly compute opacity and transmittance under the lensless setting, we introduce a novel {\bf lensless alpha blending strategy}, detailed in Sec.~\ref{sec:lens-less-sampling}.
+(4) Next, we apply a matched filter (MF), defined in Eq.~\ref{eq:mf-sm}, to compute the reflected power at each sampled point and generate the rendered MF heatmap.
+This step converts high-frequency time-domain signals into a lower-dimensional spatial representation of the scene.
+(5) Finally, we apply an L2 loss to minimize the discrepancy between the rendered heatmap and the ground truth, enabling end-to-end optimization of the entire framework via backpropagation.
+
+
+\section{Physics-based RF Volumetric Rendering}
+\label{sec:volumetric_rendering}
+We begin this section with a simple ray-tracing-based sampling strategy.
+Assume we sample a single ray emitted from a receiver antenna located at $\mathbf{x_{ant}}$ in the direction $\omega_r$. A point $\mathbf{x}$ along the ray can then be represented as $\mathbf{x} = \mathbf{x_{ant}} + u\mathbf{r}$, where \( u \) is the sampling distance along the ray, and \( \mathbf{r} \) is the unit direction vector opposite to \( \omega_r \).
+We first present \textit{Signal Tracing}, which computes the frequency and phase shift of the signal.
+Then, we introduce \textit{Signal Amplitude Rendering}, which "renders" the amplitude term of the received signal.
+
+\subsection{Signal Tracing}
+\label{sec:signaltracing}
+The Signal Tracing generates expected signal responses for all possible propagation paths based on a hypothesized scene or spatial configuration.
+Simulating the received signal corresponds to modeling the received chirp at each individual antenna.
+Using the single-reflector expression in Eq.~\ref{eq:fmcw}, the reference signal for a scene with multiple reflectors is the superposition of contributions from all reflectors.
+However, in practice, there are no explicit ``reflectors''; instead, we are dealing with a continuous 3D scene.
+We treat every point \( \mathbf{x} \) in the computational space \( \Omega_\text{pts} \) as a potential reflector, regardless of whether it lies in free space or on the surface of an object.
+Instead, volume density and reflective properties are encoded in the amplitude term \( A(\mathbf{x}) \).
+The received signal is expressed in Eq.~\ref{eq:ref_sim} and is implemented in parallel on the GPU.
+Implementation details are provided in Appendix~\ref{sec:app-mf} and \ref{sec:app-alg}..
+\begin{equation}
+\label{eq:ref_sim}
+s(\mathbf{x_{ant}}, t) = \sum_{\mathbf{x} \in \Omega_\text{pts}} A_{\text{rx}}(\mathbf{x})\, e^{-j 2\pi k \tau_{\mathbf{x}} t} \, e^{-j 2\pi f \tau_{\mathbf{x}}},
+\end{equation}
+
+\subsection{Signal Amplitude Tracing}
+The amplitude of the reflected radio frequency signal is influenced by several factors, including surface geometry, material reflectivity, reflection angle, and power decay due to propagation distance.
+Unlike vision-based NeRF rendering~\cite{mildenhall2021nerf}, radar sensing involves a \textbf{round-trip} path, requiring us to model both the incoming ray from the transmitter and the outgoing ray to the receiver.
+
+Given the opaque density~\cite{wang2021neus} \( \rho(u) \), the \textit{accumulated transmittance} along the incoming path can be computed as
+\(
+T(u) = \exp\left(-\int_0^u \rho(v)\, \mathrm{d}v\right).
+\)
+However, due to the round-trip path of radar signals, the effective accumulated transmittance becomes \( T(u)^2 \), meaning that only a fraction \( T(u)^2 \) of the signal remains after returning to the receiver.
+
+By combining volumetric rendering, reflectivity, the reflection angle and power decay as defined in Eq.~\ref{eq:reflection_angle}, the amplitude of the reflected signal at the receiver antenna (rx), assuming a symmetric return path along the same ray, is given by:
+\begin{equation}
+\label{eq:signal_amp_tracing}
+A_{\text{rx}} (\mathbf{x}_{\text{ant}}, \omega_r) = \mathbf{a}(u)\, (\omega_o \cdot \omega_r)\, \gamma(u)\, T(u)^2\, \rho(u)\, \mathbf{A}'_{\text{tx}}\, \mathrm{d}t,
+\end{equation}
+where \( \mathbf{a}(u) \) is the reflectivity at distance \( u \),
+\( \omega_o \) is the outgoing direction computed as
+\(
+\omega_o = \omega_i - 2(\mathbf{n} \cdot \omega_i)\mathbf{n},
+\)
+with \( \omega_i \) being the incoming direction and \( \mathbf{n} \) the surface normal (obtained from the gradient of the SDF),  \(\gamma\) is the power decay,
+and \( \mathbf{A}'_{\text{tx}} \) is the transmitted input power.
+The proportional constant, $a$, in Eq.~\ref{eq:reflection_angle} remains fixed across all points on the ray.
+Therefore,  without loss of generality, we absorb this constant into the transmitted amplitude term \( A_{\text{tx}} \), and define an effective transmitted amplitude \( A'_{\text{tx}} \).
+
+\noindent{\bf Opaque density representation}
+To represent volume density and accumulated transmittance, we start from the SDF.
+The scene is defined by an SDF \( f : \mathbb{R}^3 \to \mathbb{R} \), which maps a spatial location \( \mathbf{x} \in \mathbb{R}^3 \) to its signed distance from the nearest surface of the object.
+This function is parameterized by a MLP.
+The object surface \( S \) is defined as the zero-level set of the SDF.
+
+Following \citep{wang2021neus}, we use the S-density function \( \phi_s(f(\mathbf{x})) \), defined as the derivative of the sigmoid function \( \Phi_s(f(\mathbf{x})) \).
+The opaque density \( \rho(u) \) is computed based on the rate of change of the occupancy field \( \Phi_s \) along the ray direction.
+
+\noindent{\bf Signal representation}
+We employ a separate MLP that takes the 3D spatial position \( \mathbf{x} \) as input to predict the reflection coefficient \( \mathbf{a} \).
+The effective input amplitude \( \mathbf{A}'_{\text{tx}} \) is treated as a learnable global parameter, since the transmitted amplitude is fixed and consistent across all experiments.
+
+\noindent{\bf Discretization}
+We adopt the same discretization scheme as in~\cite{wang2021neus}, using alpha-blending for opaque density and transmittance estimation.
+The surface normal \( \mathbf{n} \) is computed as the gradient of the SDF.
+
+\noindent{\bf Integration}
+According to Eq.~\ref{eq:ref_sim}, the signal received at each antenna is computed as an integration over the amplitude defined in Eq.~\ref{eq:signal_amp_tracing}.
+To evaluate this integral, we apply Monte Carlo sampling by tracing \( N_{\text{ray}} \) rays per antenna across space.
+
+However, when combining all components, the overall computational complexity becomes prohibitively high.
+Assuming we sample \( N_{\text{z}} \) depth points along each ray, and trace \( N_{\text{ray}} \) rays for each antenna.
+The MLP network incurs a computational cost of \( C_{\text{mlp}} \).
+The complexity of the signal tracing step for both forward and backpropagation is given by
+\begin{equation}
+\label{eq:lens_sample_complexity}
+\mathcal{O}(N_{\text{ray}} N_{\text{z}} N_{\text{ant}}C_{\text{mlp}}).
+\end{equation}
+In practice, to achieve 1mm resolution,
+the number of voxels becomes very large.
+If the synthetic aperture antenna array contains on the order of \( 10^5 \) antennas, the total computation quickly reaches unrealistic limits.
+Even with GPU acceleration, a single forward pass in this setting has previously taken over one hour to compute.
+This scale far exceeds the number of available GPU threads and makes backpropagation-based learning infeasible under this brute-force computation strategy.
+
+\section{Lensless Sampling \& Lensless Alpha Blending}
+\label{sec:lens-less-sampling}
+To make volumetric rendering computationally feasible,
+we observe that the previous Monte Carlo sampling strategy contains significant redundancy.
+Specifically, rays emitted from different antennas frequently intersect at the same spatial locations, leading to duplicated computations.
+A straightforward solution might be to adopt uniform grid-based sampling in 3D space.
+However, this approach fails to preserve the structure of transmittance accumulation along individual rays, which is critical for accurate signal modeling.
+
+To address both redundancy and physical correctness, we propose lensless sampling. The key insight is to share the computation of opaque density and accumulated transmittance across different antennas, where \(\rho(u)\) and \(T(u)\) only need to be computed once for each position, for all antenna rays that intersect the pose.
+
+\noindent{\bf Primary Ray}
+We first sample parallel rays aligned with the radar's primary direction \( \omega_p \).
+The starting points \( \mathbf{x}_{\text{apr}} \) of these rays are sampled within the antenna aperture, and points are then sampled along each ray.
+Initially, we ignore the fact that \( \rho(u) \) and \( T(u) \) depend on the real ray direction, effectively replacing all individual receive directions \( \omega_r \) with the shared primary direction \( \omega_p \).
+The sampled points are formulated as $\mathbf{x}=\mathbf{x_{apr}}+u\mathbf{p}$, making the assumption that these values are shared across all rays that pass through the same spatial location.
+Specifically, for each position, we compute \( \rho(u) \) and \( T(u) \) by using \cite{wang2021neus} once and reuse them for all antennas.
+We choose the radar’s primary direction as the ray direction in order to minimize the discrepancy between the approximate and the actual rays emitted from the antennas.
+
+\input{figures/lens-less-sampling-v2-fig}
+
+\noindent{\bf Lensless Alpha Blending}
+\label{sec:lenslessapprox}
+Neglecting the dependencies of \( \rho(u) \) and \( T(u) \) on the ray direction can, in principle, lead to inaccuracies.
+However, we prove in Appendix \ref{sec:app-alpha-blending-alpha} that when computing
+\(
+\alpha_i = 1 - \exp\left(-\int_{u_i}^{u_{i+1}} \rho(u) \, \mathrm{d}u\right),
+\)
+the influence of the ray direction cancels out, and \( \alpha_i \) remains identical to the value computed along the primary ray.
+
+Furthermore, for the accumulated transmittance, we can show that, starting from the logistic distribution, the difference in \( T(u) \) across different ray directions is equal to the difference in sigmoid-SDF values at the ray origins.  Details of the derivation are provided in Appendix~\ref{sec:app-alpha-blending-trans}.
+Formally, the transmittance along a real ray direction \( T(u') \) can be efficiently derived from the transmittance along the primary ray direction \( T(u) \) by adjusting with the sigmoid-SDF values at the respective ray origins, rather than computing a ray-dependent product of accumulated alpha values:
+\begin{equation}
+\label{eq:lens-less-transmittance}
+    T(u') = T(u) - \Phi_s(f(\mathbf{x}(u_s))) + \Phi_s(f(\mathbf{x}(u'_s))),
+\end{equation}
+where \( \Phi_s(\cdot) \) denotes the cumulative density function (CDF) of logistic distribution, and \( \mathbf{x}(u_s) \), \( \mathbf{x}(u'_s) \) are the starting points of the respective rays.
+\input{figures/main_results}
+The power decay term \( \gamma \), as well as the time and phase components, are computed deterministically using the actual rays.
+Additionally, the Sigmoid-SDF value at the ray origin, used to correct accumulated transmittance, is \textit{excluded from backpropagation}, ensuring computational efficiency.
+
+\noindent{\bf Signal Tracing Bank}
+In Eq.~\ref{eq:mf-sm}, we iterate over sampled points, and for each point, we perform signal tracing across all antennas.
+Within each signal tracing operation, we again loop over all sampled points along the ray.
+Although these computations are unavoidable, we can significantly reduce the computational burden by leveraging the fact that the matched filter contains no trainable parameters.
+This allows us to reuse signal tracing results of most antennas from previous iterations.
+During training, we implement a memory bank mechanism.
+We divide the antenna aperture into patches, analogous to convolutional processing.
+In each training iteration, signal tracing is performed only for antennas within a single patch, while the signal tracing results for antennas in the other patches are retrieved from the memory bank.
+After each iteration, the memory bank is updated with the newly computed results for the current patch.
+
+\noindent{\bf Computational complexity}
+By reusing the primary rays, we only need to evaluate the shared opaque density and accumulated transmittance \( \mathcal{O}( N_{\text{ray}} N_{\text{z}}C_{\text{mlp}}) \) times for both the forward and backward passes.
+The lensless approximation affects only the forward computation, and with the introduction of the Signal Tracing Bank, the effective antenna size becomes constant per iteration.
+Thus, the overall learnable component complexity is reduced to \( \mathcal{O}( N_{\text{ray}} N_{\text{z}} C_{\text{mlp}}) \).
+For the deterministic components of signal tracing and matched filtering, the computation time remains bounded by \( \mathcal{O}( N_{\text{ray}} N_{\text{z}} N_{\text{t}}) \) for both forward and backward propagation.
+This results in a total complexity that is significantly lower than the original formulation given in Eq.~\ref{eq:lens_sample_complexity}.
+
+\input{figures/speed_mem_fig}Fig.~\ref{fig:speed-mem} presents the latency and GPU memory usage across different sampling configurations.
+The baseline is chosen with \( N_{\text{ray}} = 1024 \), \( N_{\text{z}} = 32 \), and a patch size of 3200 antennas for the Signal Tracing Bank.
+Without lensless sampling, training becomes infeasible due to the excessive memory demand of simultaneously processing \( N_{\text{ant}}  N_{\text{ray}} N_{\text{z}} \) sample points.
+The Signal Tracing Bank drastically reduces both training time and memory consumption.
+We adopt this baseline configuration for all experiments to ensure efficiency.
+
+\section{Optimization}
+\label{sec:opt}
+
+\noindent{\bf Dynamic loss masking}
+Simply minimizing the difference between the rendered radar image and the ground truth using an L2 loss is not effective in radar imaging.
+This is because radar measurements are based on reflected signals, which are affected not only by the presence of volume density but also by the reflection direction.
+This means that a weak signal response in the rendered radar image can be caused by two distinct factors:
+(1) low volume density at the sampled location, or
+(2) high volume density with the signal being reflected away from the receiver due to geometric misalignment.
+This inherent ambiguity makes direct supervision unreliable.
+
+To address this, we introduce a masking strategy during training.
+If a sampled point has exhibited high matched filter response in any previous iteration but produces low power in the current iteration, we treat it as unreliable and exclude it from the loss computation.
+This prevents penalizing the model for physically valid signal paths that fail to reflect back to the receiver.

@@ -1,0 +1,160 @@
+% \documentclass[sigconf]{acmart}
+\documentclass[acmsmall]{acmart}
+
+%%
+%% \BibTeX command to typeset BibTeX logo in the docs
+\AtBeginDocument{%
+  \providecommand\BibTeX{{%
+    Bib\TeX}}}
+
+
+
+% \setcopyright{cc}
+% \setcctype{by}
+% % See YOUR completed rightsreview form confirmation email for the exact code to be used for setcopyright and setcctype code strings, these are unique for every paper.
+% \acmJournal{PACMMOD}
+% \acmYear{2026} \acmVolume{4}
+% \acmNumber{3} \acmArticle{129}
+% % XXX is your article id# -- be sure to use exact code from ACM rightsreview, do not use the v10pmc prefix)
+% \acmMonth{6} \acmPrice{}
+% \acmDOI{10.1145/3802006}
+% % See YOUR completed rightsreview form confirmation email for the assigned DOI to your article -- this is where the article will live when published in the ACM DL.
+
+
+\setcopyright{cc}
+\setcctype{by}
+\acmJournal{PACMMOD}
+\acmYear{2026} \acmVolume{4} \acmNumber{3 (SIGMOD)} \acmArticle{129}
+\acmMonth{6} \acmDOI{10.1145/3802006}
+
+
+% Articles V4mod001-V4mod080 use
+\received{October 2025}
+\received[revised]{January 2026}
+\received[accepted]{February 2026}
+
+
+\begin{CCSXML}
+<ccs2012>
+   <concept>
+       <concept_id>10002978.10003018</concept_id>
+       <concept_desc>Security and privacy~Database and storage security</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10002951.10002952</concept_id>
+       <concept_desc>Information systems~Data management systems</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+ </ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Security and privacy~Database and storage security}
+\ccsdesc[500]{Information systems~Data management systems}
+
+\keywords{Differential privacy, Motif counting}
+
+
+\usepackage{graphicx}
+\usepackage{amsthm}
+\let\Bbbk\relax
+\usepackage{amssymb} 
+\usepackage{amsmath}
+\usepackage{color}
+\usepackage{array}
+\usepackage{mathtools}
+\usepackage{enumitem}
+\usepackage{changepage}
+\usepackage{multirow}
+\usepackage{appendix}
+\usepackage{tabularx}
+\usepackage[normalem]{ulem}
+\usepackage{svg} 
+\usepackage{placeins} 
+\usepackage{subcaption}
+\usepackage{colortbl}
+\usepackage{threeparttable}
+\usepackage{marginnote}
+
+
+\newif\ifincludeappendix
+
+% \newtheorem{definition}{Definition}
+% \newtheorem{lemma}{Lemma}
+% \newtheorem{example}{Example}
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e}
+\newcommand{\blue}[1]{\textcolor{blue}{#1}}
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+\newcommand{\green}[1]{\textcolor{green}{#1}}
+\newcommand{\orange}[1]{\textcolor{orange}{#1}}
+\newcommand{\tocomplete}[1]{\textcolor{purple}{#1}}
+
+
+
+\includeappendixtrue
+
+\begin{document}
+
+\title{Acyclic Graph Pattern Counting under Local Differential Privacy}
+
+
+\author{Yihua Hu}
+\affiliation{%
+  \institution{Nanyang Technological University}
+  \city{Singapore}
+  \country{Singapore}
+}
+\email{yihua001@e.ntu.edu.sg}
+
+\author{Kuncan Wang}
+\affiliation{%
+  \institution{Nanyang Technological University}
+  \city{Singapore}
+  \country{Singapore}
+}
+\email{kuncan001@e.ntu.edu.sg}
+
+\author{Wei Dong}
+\authornote{Wei Dong is the corresponding author.}
+\affiliation{%
+  \institution{Nanyang Technological University}
+  \city{Singapore}
+  \country{Singapore}
+}
+\email{wei_dong@ntu.edu.sg}
+
+\renewcommand{\shortauthors}{Yihua Hu, Kuncan Wang, and Wei Dong}
+
+
+\input{abstract}
+
+\maketitle
+
+
+\input{intro}
+\input{relatedwork} 
+\input{preliminaries}
+\input{strawman} 
+\input{method/intro}
+\input{method/linepath}
+\input{method/acylic}
+\input{exp/experiment}
+\input{futurework}
+\input{ack}
+
+\newpage
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{ref}
+
+% \newpage
+% \appendix 
+% \input{appendix/appendix}
+
+\ifincludeappendix
+  \newpage
+  \appendix
+  \input{appendix/appendix}
+\fi
+
+
+\end{document}

@@ -1,0 +1,655 @@
+\setcounter{table}{0} % restart table count
+\renewcommand{\thetable}{A\arabic{table}}
+\renewcommand{\thefigure}{A\arabic{figure}}
+\setcounter{figure}{0}
+
+
+\section{LayerNorm Blindness to explain TLCM}
+\input{sections/5_layernorm_blindness}
+\label{appendix:layernorm_blindness}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{figures/rmsnorm.pdf}
+    \caption{TLCM is consistently found on models with different approaches to LayerNorm. Gemma 2 with post-LayerNorm has more pronounced TLCM. OLMo 2, which replaces pre-LayerNorm entirely exhibits TLCM. For visual clarity, we plot $\operatorname{clamp}(\mathbf{M}, -0.2, 0.2)$ and zero the diagonals.}
+    \label{fig:rmsnorm}
+\end{figure}
+
+\section{Jacobian Eigendecomposition Locates Corrected Subspaces}
+\label{appendix:jacobian_epairs_correct}
+
+We restate notation for convenience.
+
+\textbf{Notation.} Consider $\mathbf{b}'_t$ to be the function representing transformer layer $i+1$. We can linearize this function by computing the Jacobian $\nabla \mathbf{b}'_t(0) = \mathbf{J} \in \mathbb{R}^{d_\text{model} \times d_\text{model}}$ of the transformer layer, such that $\mathbf{b}'_t(\mathbf{\Delta}) \approx \mathbf{b}_t +\mathbf{J}\mathbf{\Delta}$. Finally, let $\overline{\mathbf{J}} := \frac{1}{2}(\mathbf{J} + \mathbf{J}^\top)$ be the symmetrized Jacobian.
+
+\textbf{Claim}. The eigenvectors of $\overline{\mathbf{J}}$ with negative eigenvalues correspond to the corrected subspace, with the eigenvalue dictating the correction strength. In a similar vein, we argue that the positive eigenvalue eigenvectors are reinforced proportional to their eigenvalue. Finally, eigenvectors with near zero eigenvalue are mostly untouched by this layer.
+
+
+
+\textbf{Proof.} An input perturbation to layer $i+1$ is ``corrected'' if $\operatorname{cossim}(\mathbf{b}'_t(\mathbf{\Delta}) - \mathbf{b}_t, \mathbf{\Delta}) < 0$. Observe that this condition is true if and only if $\langle \mathbf{\mathbf{b}'_t(\mathbf{\Delta}) - \mathbf{b}_t}, \mathbf{\Delta} \rangle < 0$. For a small enough perturbation, the condition is equivalent to $\langle \mathbf{J\Delta}, \mathbf{\Delta} \rangle < 0$. Because $\langle \mathbf{J\Delta}, \mathbf{\Delta} \rangle = \langle \mathbf{\Delta}, \mathbf{J\Delta} \rangle$, the condition becomes:
+
+\begin{align}
+\langle \mathbf{J\Delta}, \mathbf{\Delta} \rangle = \frac{1}{2}\left(\langle \mathbf{J\Delta}, \mathbf{\Delta} \rangle + \langle \mathbf{\Delta}, \mathbf{J\Delta} \rangle\right) = \langle \frac{1}{2}(\mathbf{J} + \mathbf{J}^\top)\mathbf{\Delta}, \mathbf{\Delta} \rangle = \langle \mathbf{\overline{J}\Delta}, \mathbf{\Delta} \rangle < 0 \label{eq:sym_jacobian}
+\end{align}
+
+Moreover, by the spectral theorem, $\overline{\mathbf{J}}$ has an eigendecomposition $\overline{\mathbf{J}} = \mathbf{QVQ^\top}$ with unitary eigenvector matrix $\mathbf{Q} \in \mathbb{R}^{d_\text{m} \times d_\text{m}}$ and eigenvalues are $\operatorname{diag}(\mathbf{V})$. Plugging this into inequality \ref{eq:sym_jacobian}:
+
+\begin{align}
+\langle \overline{\mathbf{J}} \mathbf{\Delta}, \mathbf{\Delta} \rangle = \langle \mathbf{QVQ^\top} \mathbf{\Delta}, \mathbf{\Delta} \rangle &= \mathbf{\Delta}^\top \mathbf{QVQ^\top} \mathbf{\Delta} = (\mathbf{Q}^\top \mathbf{\Delta})^\top \mathbf{V} (\mathbf{Q}^\top \mathbf{\Delta}) < 0 \label{eq:neg_evals}
+\end{align}
+
+In summary, we have reduced our original condition for a corrected perturbation, $\operatorname{cossim}(\mathbf{b}'_t(\mathbf{\Delta}) - \mathbf{b}_t, \mathbf{\Delta}) < 0$, into something more tractable to analyze: $(\mathbf{Q}^\top \mathbf{\Delta})^\top \mathbf{V} (\mathbf{Q}^\top \mathbf{\Delta}) < 0$. Observe that $\mathbf{Q}^\top \mathbf{\Delta} \in \mathbb{R}^{d_\text{model}}$ is a vector of the perturbation projected into the Jacobian's eigenvector space. In, \ref{eq:neg_evals}, each projected component is squared and multiplied by the corresponding eigenvalue. Thus, if a perturbation decomposes heavily onto an eigenvector with a negative eigenvalue, our original condition for "correction" will be satisfied. \qed
+
+% We can apply this insight to TLCM. Concretely, consider the perturbation from earlier, $\mathbf{a}_t$. We can project $\mathbf{a}_t$ into eigenvector space to obtain $\mathbf{q} = \mathbf{Q}^\top\mathbf{a}_t$. Observe that entry $\mathbf{q}_i$ is the projection onto the $i$-th eigenvector with eigenvalue $\lambda_i$. Suppose we consider the top eigenvectors, namely those with the top fifty $|\mathbf{q}_i|^2$ values; these fifty directions account for $15+$\% of the variance of $\mathbf{a}_t$. Then, we can plot the distribution of the corresponding $\lambda_i$ to understand how TLCM interacts with the top components of $\mathbf{a}_t$.
+
+% From the derivation in \ref{eq:neg_evals}, we have
+% \begin{align}
+% \langle \overline{\mathbf{J}} \mathbf{a}_t, \mathbf{a}_t \rangle = (\mathbf{Q}^\top \mathbf{a}_t)^\top \mathbf{V} (\mathbf{Q}^\top \mathbf{a}_t) = \mathbf{q^\top V q} = \sum_i \lambda_i |\mathbf{q}_i|^2 \label{eq:main_sum}
+% \end{align}
+
+
+
+% Thus, if $\sum_i \lambda_i |\mathbf{q}_i|^2 < 0$, $\mathbf{a}_t$ is being corrected. Additionally, any individual $\lambda_i |\mathbf{q}|^2_i < 0$ corresponds to an individual direction that is being corrected, specifically the $i$-th eigenvector, with correction strength $\lambda_i$.
+
+
+\section{Likelihood of Negative Cosine Similarity}
+
+\subsection{Random Normal IID Vectors}
+\label{appendix:random_normal_iid_vectors}
+Consider two random vectors: $\mathbf{u}, \mathbf{v} \sim \mathcal{N}(\mathbf{0}, \sigma^2 \mathbf{I}_d)$.
+
+\begin{align*}
+\mathbb{E}[\operatorname{cossim}(\mathbf{u}, \mathbf{v})] &= \mathbb{E}\left[\frac{\langle \mathbf{u}, \mathbf{v} \rangle}{\|\mathbf{u}\|_2 \|\mathbf{v}\|_2}\right]\\
+&= \mathbb{E}\left[ \frac{\sum_i \mathbf{u}_{i} \mathbf{v}_{i}}{\sqrt{\sum_i \mathbf{u}_i^2} \sqrt{\sum_i \mathbf{v}_i^2}} \right]\\
+&= \mathbb{E}\left[ \sum_j \frac{\mathbf{u}_j}{\sqrt{\sum_i \mathbf{u}_i^2}} \frac{\mathbf{v}_j}{\sqrt{\sum_i \mathbf{v}_i^2}} \right]\\
+&= \sum_j \mathbb{E}\left[ \frac{\mathbf{u}_j}{\sqrt{\sum_i \mathbf{u}_i^2}} \right] \mathbb{E}\left[ \frac{\mathbf{v}_j}{\sqrt{\sum_i \mathbf{v}_i^2}}\right]\\
+&= 0
+\end{align*}
+
+The last expectations must be 0 because $\frac{\mathbf{u}_j}{\sqrt{\sum_i \mathbf{u}_i^2}}$ is distributed the same as $\frac{-\mathbf{u}_j}{\sqrt{\sum_i \mathbf{u}_i^2}}$. To calculate the variance, first observe the following fact:
+
+\begin{align*}
+\mathbb{E}\left[ \sum_{j=1}^d  \frac{\mathbf{u}_j^2}{\sum_i \mathbf{u}_i^2} \right] = 1 \\
+\sum_{j=1}^d \mathbb{E}\left[   \frac{\mathbf{u}_j^2}{\sum_i \mathbf{u}_i^2} \right] = 1 \\
+d\mathbb{E}\left[   \frac{\mathbf{u}_1^2}{\sum_i \mathbf{u}_i^2} \right] = 1\\ \mathbb{E}\left[   \frac{\mathbf{u}_1^2}{\sum_i \mathbf{u}_i^2} \right] = \frac{1}{d}
+\end{align*}
+
+Using this identity, the variance is:
+
+\begin{align*}
+\operatorname{Var}[\operatorname{cossim}(\mathbf{u}, \mathbf{v})] &= \mathbb{E}[\operatorname{cossim}(\mathbf{u}, \mathbf{v})^2]\\
+&= \mathbb{E}\left[ \frac{(\sum_i \mathbf{u}_{i} \mathbf{v}_{i})(\sum_i \mathbf{u}_{i} \mathbf{v}_{i})}{\sum_i \mathbf{u}_i^2 \sum_i \mathbf{v}_i^2} \right]\\
+&= \mathbb{E}\left[ \frac{\sum_{i,j} \mathbf{u}_{i} \mathbf{v}_{i} \mathbf{u}_{j} \mathbf{v}_{j}}{\sum_i \mathbf{u}_i^2 \sum_i \mathbf{v}_i^2} \right]\\
+&= \mathbb{E}\left[ \frac{\sum_{i} \mathbf{u}_{i}^2 \mathbf{v}_{i}^2}{\sum_i \mathbf{u}_i^2 \sum_i \mathbf{v}_i^2} \right]\\
+&= \sum_{j=1}^d \mathbb{E}\left[ \frac{\mathbf{u}_j^2}{\sum_i \mathbf{u}_i^2} \right] \mathbb{E}\left[ \frac{\mathbf{v}_j^2}{\sum_i \mathbf{v}_i^2} \right]\\
+&= \sum_{j=1}^d \frac{1}{d} \cdot \frac{1}{d} = \frac{1}{d}\\
+\end{align*}
+
+
+\subsection{Experimental Mean and Standard Deviation}
+\label{appendix:empirical_mean_and_variance}
+
+% \subsubsection{Layer Contributions are Anisotropic}
+
+We find that the contributions of a particular layer are anisotropic; they cluster around approximately 500-800 of the 4096 dimensions of Llama's residual stream.
+
+Specifically, we isolate the contribution vector for layer $i$ across 4096 tokens from wikitext: $\{\mathbf{c}_{i, t_1}, \mathbf{c}_{i, t_2}, \ldots, \mathbf{c}_{i, t_{4096}} \}$. After computing the SVD of each set, we plot percent variance explained by top $n$ principal components vs. $n$ in Figure \ref{fig:contributions_pca}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/contributions_pca.pdf}
+    \caption{Percent variance explained by the top $n$ principal components vs $n$, graphed on the blue line. The orange line is what we would expect if contributions were isotropic. For layers where TLCM is most active (4 to 20), the first 500-800 principal components explain 80\% of the variance in contributions, demonstrating that contributions are anisotropic. }
+    \label{fig:contributions_pca}
+\end{figure}
+
+% \subsubsection{Adjacent Layer Cosine Similarity}
+Due to this anisotropy, we calculate the statistical significance of the TLCM cutoff ($-0.1$ cosine similarity) empirically. We compute the mean and variance of cosine similarity across contributions of adjacent layers on \textit{different} tokens. More formally, we compute the mean and variance of $\operatorname{cossim}(\mathbf{c}_{i,t_1}, \mathbf{c}_{i+1, t_2})$ for $t_1 \neq t_2$ and $4 \leq i < 20$. We find it has has mean $-0.00375$ and standard deviation is $0.03267$, meaning that our cutoff of $-0.1$ is conservatively a $3\sigma$ event; most TLCM events occur at lower cosine similarities ($-0.15$ to $-0.25$).
+
+We plot these distributions by layer in Figure \ref{fig:inter_layer_cossim}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{figures/inter_layer_cossim.pdf}
+    \caption{The empirical distribution of $\operatorname{cossim}(\mathbf{c}_{i,t_1}, \mathbf{c}_{i+1, t_2}), t_1 \neq t_2$ across 2000 tokens for layers $4 \leq i < 20$, corresponding to approximately 2 million samples per histogram. The red dotted line corresponds to the mean.}
+    \label{fig:inter_layer_cossim}
+\end{figure}
+
+
+\section{Details on Jacobian Experiments}
+\label{appendix:jacobians_details}
+
+
+\subsubsection{Jacobian Sanity Check}
+
+We have approximated our response function $\mathbf{b}_t'$ using the Taylor expansion.
+
+\begin{align*}
+\mathbf{b}_t'(\mathbf{\Delta}) &= \mathbf{b}_t'(0) + \mathbf{J}\mathbf{\Delta} + \mathcal{O}(\mathbf{\Delta}^2)%\\
+\end{align*}
+% \mathbf{b}_t'(\mathbf{\Delta}) - \mathbf{b}_t'(0) - \mathbf{J}\mathbf{\Delta} &= \mathcal{O}(\mathbf{\Delta}^2)\\
+% \|\mathbf{b}_t'(\mathbf{\Delta}) - \mathbf{b}_t'(0) - \mathbf{J}\mathbf{\Delta}\| &= \mathcal{O}(\|\mathbf{\Delta}\|^2)\\
+% \frac{\|\mathbf{b}_t'(\mathbf{\Delta}) - \mathbf{b}_t'(0) - \mathbf{J}\mathbf{\Delta}\|}{\|\mathbf{J}\mathbf{\Delta}\|} &= \mathcal{O}(\|\mathbf{\Delta}\|)
+% \end{align}
+
+Here we aim to confirm that the Jacobian is appropriately representative of the transformer layer within a reasonable regime. Observe that the error of this approximation is $\mathbf{b}_t'(\mathbf{\Delta}) - \mathbf{b}_t'(0) - \mathbf{J}\mathbf{\Delta}$, and we thus denote the percent error of the approximation as follows:
+
+$$\operatorname{err}(\mathbf{\Delta}) = \frac{\|\mathbf{b}_t'(\mathbf{\Delta}) - \mathbf{b}_t'(0) - \mathbf{J}\mathbf{\Delta}\|}{\|\mathbf{b}_t'(\mathbf{\Delta}) - \mathbf{b}_t'(0)\|}$$
+
+We plot the percent error error of this approximation across 46 randomly selected TLCM Jacobians for different values of $\mathbf{\Delta} = \alpha \mathbf{a}_t$, $\alpha \in \{-0.5, -0.4, -0.3, \ldots, 0.3, 0.4, 0.5\}$. Shown in Figure \ref{fig:jacobian_sanity_check}, we find that the Jacobian is a good approximation within this regime. For $|\alpha| < 0.1$, there is consistently around 5\% error, which we believe is sufficient for our Jacobian-based analysis in Sec. \ref{sec:jacobian-selective}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/jacobian_sanity_check.pdf}
+    \caption{The transformer layer Jacobian approximation has consistently around 5\% error for perturbations ($|\alpha| < 0.1$) to the following layer, making it useful for decomposing directions as described in Sec. \ref{sec:jacobian-selective}.}
+    \label{fig:jacobian_sanity_check}
+\end{figure}
+
+
+\newpage
+
+\section{Extended Details on TLCM Existence}
+\label{appendix:extended-details-on-tlcm-existence}
+
+In Figure \ref{fig:matrix_figures}, we plot TLCM's existence across many HuggingFace models using the same technique as described in Sec. \ref{sec:tlcm-exists} of the main body.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{figures/matrix_figures.pdf}
+    \caption{We plot $\operatorname{clamp}(\mathbf{M}, -0.2, 0.2)$ for four models, zeroing diagonal entries. We computed $\mathbf{M}$ across a variety of models, pulled from Huggingface Transformers.}
+    \label{fig:matrix_figures}
+\end{figure}
+
+We previously demonstrated that MLPs exhibit anti-correlations with each other, while attentions do not. We additionally find that MLPs correct attentions (both within and between transformer layers) and that attentions correct MLPs from prior layers. This could be due to a common low-dimensional subspace used by both units for communication. Thus, MLPs correct both prior attention and MLPs; attentions correct just prior MLPs. Altogether, this suggests that MLPs are more responsible for TLCM's correction, but both units are involved.
+
+Specifically, we plot $\mathbf{M}_{\text{attn}\times\text{MLP}} = \frac{1}{n}\sum_t \mathbf{M}_{\text{attn}\times\text{MLP},t}$ where $$\mathbf{M}_{\text{attn}\times\text{MLP},t}[i,j] := \operatorname{cossim}(\operatorname{Attn}_i(\mathbf{x}_{i, t}), \operatorname{MLP}_j(\mathbf{x}_{j,t}))$$ See Figure \ref{fig:m_attn_cross_mlp}. 
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.6\linewidth]{figures/m_attn_cross_mlp.pdf}
+    \caption{MLPs correct prior attentions, and attentions correct prior MLPs.}
+    \label{fig:m_attn_cross_mlp}
+\end{figure}
+
+\section{Extended Details on TLCM Adaptivity}
+\label{appendix:tlcm_adaptivity}
+
+\subsection{TLCM is Adaptive Across Layers}
+% \label{appendix:correction_adaptability_curves}
+
+In Figure \ref{fig:adaptable_correction_full}, we plot TLCM's adaptive correction across different layers using the same technique as described in Sec. \ref{sec:tlcm-exists}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{figures/adaptable_correction_full.pdf}
+    \caption{TLCM correction strength varies approximately linearly with the prior layer's contribution. We plot 5 random corrections across a variety of layers in Llama 3.1 8B.}
+    \label{fig:adaptable_correction_full}
+\end{figure}
+
+\subsection{TLCM Correction Capacity Diminishes at High $\alpha$}
+
+In Sec. \ref{sec:tlcm-adaptive}, we find that TLCM increases its correction as the prior layer is scaled. However, we find that as we scale the prior layer to extremely large values ($\alpha > 2$), the correction capacity of TLCM starts to diminish. One possible explanation is that at large enough perturbation magnitudes, the correction mechanism saturates. This observation is relevant to model steering interventions, in which a chosen feature vector is manually contributed to the residual stream and may need to exceed the correction capacity to take effect. See Figure \ref{fig:correction_diminishes} for plots of the correction beginning to diminish.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{figures/correction_diminishes.pdf}
+    \caption{As we increase the previous layer more dramatically, we see TLCM's correction begin to diminish, aside from some outliers. For each layer, we sample 5 random TLCM curves and compute at $\alpha$ increments of $0.2$.}
+    \label{fig:correction_diminishes}
+\end{figure}
+
+\pagebreak
+
+\section{OLMo Training Checkpoint Experiment Details}
+On a corpus of about 500 tokens of PyTorch instructional content, we compute $\mathbf{M}$ on a handful of training checkpoints, shown in Figure \ref{fig:olmo_checkpoints}.
+
+The corpus is below; beyond a high enough number of tokens, we find this to have little effect on the cosine similarity matrices and thus also the figures.
+
+
+\begin{examplebox}
+\begin{lstlisting}
+**Using Convolutional Layers in PyTorch**
+=====================================================
+
+Convolutional layers are a fundamental component of convolutional neural networks (CNNs) used for image classification, object detection, and other computer vision tasks. In PyTorch, convolutional layers are implemented using the `nn.Conv2d` module.
+
+**Creating a Convolutional Layer**
+-------------------------------
+
+To create a convolutional layer in PyTorch, you can use the following code:
+
+```python
+import torch
+import torch.nn as nn
+
+# Define the convolutional layer
+conv_layer = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding)
+```
+
+*   `in_channels`: The number of input channels (e.g., 3 for RGB images).
+*   `out_channels`: The number of output channels (e.g., 64 for a feature map).
+*   `kernel_size`: The size of the convolutional kernel (e.g., 3x3).
+*   `stride`: The stride of the convolutional kernel (e.g., 1).
+*   `padding`: The amount of padding to apply (e.g., 1).
+
+**Example Usage**
+-----------------
+
+Here's an example of using a convolutional layer in a PyTorch model:
+
+```python
+import torch
+import torch.nn as nn
+
+class ConvNet(nn.Module):
+    def __init__(self):
+        super(ConvNet, self).__init__()
+        self.conv_layer = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1)
+
+    def forward(self, x):
+        return torch.relu(self.conv_layer(x))
+
+# Initialize the model and input tensor
+model = ConvNet()
+input_tensor = torch.randn(1, 3, 224, 224)
+
+# Forward pass
+output = model(input_tensor)
+\end{lstlisting}
+\end{examplebox}
+
+\begin{figure}
+    \centering
+    \includegraphics[trim={2.5mm 1mm 2mm 1mm},clip,width=\textwidth]{figures/olmo_checkpoints.pdf}
+    \caption{In OLMo 7B, TLCM emerges progressively during pretraining, with initial manifestation around step 135,500 (0.5T tokens). These four plots show $\mathbf{M}$ computed at different training checkpoints of OLMo 7B, with the rightmost plot representing the fully pretrained model. For visual clarity, we plot $\operatorname{clamp}(\mathbf{M}, -0.2, 0.2)$ and zero the diagonals.}
+    \label{fig:olmo_checkpoints}
+\end{figure}
+
+
+\begin{figure}
+    \centering
+    \includegraphics[trim={2.5mm 1mm 2mm 1mm},clip,width=\textwidth]{figures/olmo2_1B_checkpoints.pdf}
+    \caption{In OLMo 2 1B, TLCM also emerges progressively during pretraining. We plot figures at different step numbers and number of tokens (1, 2, 3, or 4 trillion tokens).}
+    \label{fig:olmo2_1B_checkpoints}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[trim={2.5mm 1mm 2mm 1mm},clip,width=\textwidth]{figures/olmo2_7B_checkpoints.pdf}
+    \caption{In OLMo 2 7B, TLCM also emerges progressively during pretraining. We plot figures at different step numbers and number of tokens.}
+    \label{fig:olmo2_7B_checkpoints}
+\end{figure}
+
+\pagebreak
+\section{Token-Level Correction Statistics}
+
+\subsection{Experiment Prompts}
+
+We use the following prompts to generate data for our experiment in Sec. \ref{sec:tlcm-tokens}:
+
+\begin{examplebox}
+\small
+Write a blog post about the impact of remote work on urban real estate trends. \\
+Write an essay on the psychological effects of social media on teenagers. \\
+Write a report detailing the advancements in renewable energy technologies over the last decade. \\
+Write an article about the rise of plant-based diets and their environmental benefits. \\
+Write a memo to employees explaining the new company policy on cybersecurity measures. \\
+Write a letter to a local council advocating for improved recycling facilities in the community. \\
+Write a proposal for implementing a mindfulness program in elementary schools to enhance student well-being. \\
+Write a blog post about the evolution of smart home technology and its implications for privacy. \\
+Write an essay discussing the ethical considerations of genetic editing technologies. \\
+Write a report on the economic impacts of the COVID-19 pandemic on small businesses. \\
+Write an article about the significance of the James Webb Space Telescope's latest findings. \\
+Write a memo outlining the steps for a successful digital transformation in a manufacturing company. \\
+Write a letter to a senator expressing concerns about the proposed changes to healthcare laws. \\
+Write a proposal for a community garden project to promote local food production and community engagement. \\
+Write a blog post about the latest trends in artificial intelligence and machine learning. \\
+Write an essay on the role of art therapy in mental health recovery. \\
+Write a report assessing the potential of hydrogen fuel as an alternative energy source. \\
+Write an article highlighting the importance of biodiversity conservation in combating climate change. \\
+Write a memo to staff regarding the integration of a new project management software. \\
+Write a letter to an editor expressing opinions on the local government's transportation plan. \\
+Write a proposal for a telemedicine service to increase healthcare access in rural areas. \\
+Write a blog post discussing the future of space tourism and its possible timeline. \\
+Write an essay exploring the cultural significance of indigenous music. \\
+Write a report on the trends in global unemployment rates and their implications for economic policy. \\
+Write an article about the benefits and challenges of homeschooling. \\
+Write a memo describing the company's strategy to address the upcoming industry regulations. \\
+Write a letter to a non-profit organization offering to partner on an environmental initiative. \\
+Write a proposal for an employee wellness program that includes both physical and mental health activities. \\
+Write a blog post analyzing the impact of blockchain technology on financial services. \\
+Write an essay on the historical impact of major pandemics on societal structures. \\
+Write a report on the viability of vertical farming in urban environments. \\
+Write an article about the challenges of maintaining data privacy in the age of IoT. \\
+Write a memo to update company leadership on the progress of the quarterly goals. \\
+Write a letter to a school board proposing the introduction of coding classes in middle schools. \\
+Write a proposal for a local government initiative to support small businesses during economic downturns. \\
+Write a blog post about the techniques and benefits of sustainable agriculture. \\
+Write an essay on the influence of classical music on modern genres. \\
+Write a report on consumer behavior changes in the automotive industry towards electric vehicles. \\
+Write an article about the role of youth activism in shaping public policy.
+\end{examplebox}
+
+Continued on the next page.
+
+\begin{examplebox}
+\small
+Write a memo detailing guidelines for handling customer data under new privacy laws. \\
+Write a letter to the editor about the importance of public parks and open spaces. \\
+Write a proposal for a new arts festival aiming to showcase local and international talent.\\
+Write a blog post on the role of robotics in healthcare and potential ethical dilemmas. \\
+Write an essay about the impact of climate change on marine ecosystems.\\
+Write a report on strategies for managing workplace diversity in a global company. \\
+Write an article on the resurgence of interest in vinyl records and analog music. \\
+Write a memo to department heads about managing remote teams effectively.\\
+Write a letter to a city planner regarding the need for improved pedestrian pathways.\\
+Write a proposal for implementing a bike-sharing program in a mid-sized city. \\
+Write a blog post about the future trends in education technology and their implications for learning. \\
+Write a blog post about the growing popularity of mindfulness apps and their effectiveness. \\
+Write an essay on the resurgence of traditional farming techniques in modern agriculture. \\
+Write a report on the adoption of electric vehicles in major cities around the world. \\
+Write an article about the psychological benefits of outdoor activities. \\
+Write a memo to management detailing the steps to achieve carbon neutrality in the workplace by 2030. \\
+Write a letter to a philanthropic organization requesting funding for a community tech hub. \\
+Write a proposal for a series of workshops aimed at teaching digital literacy to seniors. \\
+Write a blog post analyzing the impact of virtual reality on entertainment and media. \\
+Write an essay discussing the philosophical implications of artificial intelligence surpassing human intelligence. \\
+Write a report on the state of child nutrition programs in public schools. \\
+Write an article about the role of drones in modern agriculture and their environmental impact. \\
+Write a memo regarding the implementation of a flexible work schedule to enhance employee productivity. \\
+Write a letter to a government official advocating for stricter air pollution regulations. \\
+Write a proposal for a new public library with advanced digital resources. \\
+Write a blog post about the importance of cybersecurity in the age of cloud computing. \\
+Write an essay exploring the historical role of spices in global trade. \\
+Write a report on the effectiveness of recent public health campaigns on smoking cessation. \\
+Write an article on the growing trend of micro-living and tiny homes. \\
+Write a memo introducing a new internal team dedicated to innovation and strategic initiatives. \\
+Write a letter to parents outlining the new curriculum changes in a local school district. \\
+Write a proposal for a mobile health clinic to serve underserved areas. \\
+Write a blog post about the use of big data in personalized medicine. \\
+Write an essay on the evolution of language in the digital age. \\
+Write a report detailing the economic impact of cultural festivals on local communities. \\
+Write an article on the significance of urban green spaces for mental health. \\
+Write a memo to staff about upcoming training opportunities in advanced analytics. \\
+Write a letter to the editor discussing the need for more inclusive sports programs in schools. \\
+Write a proposal for an annual technology conference focusing on sustainability innovations. \\
+Write a blog post about the effects of music therapy on Alzheimer's patients. \\
+Write an essay examining the influence of video games on cognitive development. \\
+Write a report on the future of nuclear energy and its role in combating climate change. \\
+Write an article about the revival of handcrafts and their market in the modern economy. \\
+Write a memo outlining the benefits of adopting a four-day workweek. \\
+Write a letter to a university proposing a partnership for a community-based research project. \\
+Write a proposal for developing a pedestrian-friendly zone in the downtown area. \\
+Write a blog post on innovative approaches to waste management in urban settings. \\
+Write an essay about the socio-economic impacts of migration on urban development. \\
+Write a report on the adoption and regulation of cryptocurrencies in different countries. \\
+Write an article on how to prepare pets for the arrival of a new baby. \\
+Write a memo discussing the integration of virtual assistants into customer service. \\
+Write a letter to a historical society proposing a project to digitize and preserve ancient manuscripts. \\
+Write a proposal for a fitness program aimed at improving the health of office workers. \\
+Write a blog post about the role of augmented reality in modern education. \\
+Write an essay on the impact of global trade policies on developing economies. \\
+Write a report analyzing the trends in youth sports and their benefits to communities. \\
+Write an article about the ethical considerations in wildlife photography. \\
+Write a memo to update the company on the progress of the diversity and inclusion initiative. \\
+Write a letter to an NGO outlining a proposal for a joint clean water project in rural areas. \\
+Write a proposal for a digital art exhibition featuring interactive installations. \\
+Write a blog post discussing the future of autonomous public transit systems and their societal impacts.
+\end{examplebox}
+
+\subsection{Correction Counts}
+
+Each tuple follows the format: (token, average TLCM activation count). We remove a few hundred tokens from the middle of this distribution due to space constraints. We assess pairwise differences in mean activation counts using two-sided Welch's $t$-tests on per-occurrence TLCM activation counts, allowing unequal variances across tokens.
+
+
+\begin{table}[h!]
+\centering
+\caption{Llama 3.1 8B Instruct: Top 50 tokens with the highest average number of TLCM activations. For each token, we list the average number of times a TLCM activations occurs on the given token, aggregated across 100 long documents. Finally, we list the standard error of the mean and the number of occurrences of the token across the corpus.}
+\label{table:token_correction_counts_llama_top}
+\begin{tabular}{llll}
+\toprule
+\textbf{Token} & \textbf{Mean Activations} & \textbf{Std err. of mean} & \textbf{\# occurrences} \\
+\midrule
+\texttt{202} & 16.66 & 0.16 & 265 \\
+\texttt{ Jul} & 14.00 & 0.00 & 100 \\
+\texttt{26} & 13.90 & 0.04 & 112 \\
+\texttt{]$\backslash$n} & 13.15 & 0.12 & 131 \\
+\texttt{Today} & 13.00 & 0.00 & 100 \\
+\texttt{$\backslash$n$\backslash$n} & 12.88 & 0.11 & 485 \\
+\texttt{,$\backslash$n$\backslash$n} & 12.85 & 0.16 & 26 \\
+\texttt{ $\$$} & 12.62 & 0.19 & 55 \\
+\texttt{<space>} & 12.58 & 0.07 & 1276 \\
+\texttt{ Name} & 12.54 & 0.10 & 100 \\
+\texttt{ at} & 12.44 & 0.24 & 41 \\
+\texttt{$\backslash$n} & 12.41 & 0.10 & 228 \\
+\texttt{[} & 12.23 & 0.08 & 164 \\
+\texttt{assistant} & 12.20 & 0.08 & 100 \\
+\texttt{ State} & 12.15 & 0.32 & 26 \\
+\texttt{]} & 12.08 & 0.14 & 49 \\
+\texttt{$\backslash$t} & 12.07 & 0.20 & 68 \\
+\texttt{Date} & 12.03 & 0.24 & 30 \\
+\texttt{ Address} & 12.03 & 0.26 & 35 \\
+\texttt{user} & 12.00 & 0.00 & 100 \\
+\texttt{]$\backslash$n$\backslash$n} & 12.00 & 0.19 & 39 \\
+\texttt{ Date} & 11.99 & 0.14 & 204 \\
+\texttt{4} & 11.92 & 0.12 & 338 \\
+\texttt{Your} & 11.81 & 0.12 & 103 \\
+\texttt{ over} & 11.74 & 0.26 & 35 \\
+\texttt{<space><space><space>} & 11.68 & 0.19 & 57 \\
+\texttt{-} & 11.68 & 0.13 & 112 \\
+\texttt{$\%$} & 11.65 & 0.14 & 52 \\
+\texttt{:} & 11.58 & 0.08 & 606 \\
+\texttt{ D} & 11.46 & 0.23 & 28 \\
+\texttt{ high} & 11.46 & 0.23 & 39 \\
+\texttt{ from} & 11.44 & 0.14 & 109 \\
+\texttt{ make} & 11.44 & 0.20 & 50 \\
+\texttt{ you} & 11.43 & 0.15 & 96 \\
+\texttt{ access} & 11.40 & 0.15 & 89 \\
+\texttt{ take} & 11.37 & 0.21 & 30 \\
+\texttt{ between} & 11.30 & 0.26 & 27 \\
+\texttt{ [} & 11.28 & 0.12 & 108 \\
+\texttt{City} & 11.24 & 0.30 & 38 \\
+\texttt{ not} & 11.23 & 0.17 & 52 \\
+\texttt{ well} & 11.23 & 0.15 & 70 \\
+\texttt{ need} & 11.22 & 0.19 & 55 \\
+\texttt{Thank} & 11.19 & 0.18 & 27 \\
+\texttt{1} & 11.18 & 0.07 & 295 \\
+\texttt{ your} & 11.10 & 0.13 & 100 \\
+\texttt{ such} & 11.05 & 0.10 & 157 \\
+\texttt{ up} & 11.03 & 0.27 & 39 \\
+\texttt{ Knowledge} & 11.00 & 0.00 & 100 \\
+\texttt{Write} & 11.00 & 0.00 & 100 \\
+\texttt{ long} & 11.00 & 0.27 & 26 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\caption{Llama 3.1 8B Instruct: Top 50 tokens with the lowest average number of TLCM activations. For each token, we list the average number of times a TLCM activations occurs on the given token, aggregated across 100 long documents. Finally, we list the standard error of the mean and the number of occurrences of the token across the corpus.}
+\label{table:token_correction_counts_llama_bottom}
+\begin{tabular}{llll}
+\toprule
+\textbf{Token} & \textbf{Mean Activations} & \textbf{Std err. of mean} & \textbf{\# occurrences} \\
+\midrule
+\texttt{ program} & 8.52 & 0.13 & 97 \\
+\texttt{ coding} & 8.50 & 0.24 & 26 \\
+\texttt{ report} & 8.49 & 0.28 & 35 \\
+\texttt{ guidelines} & 8.44 & 0.26 & 27 \\
+\texttt{ AI} & 8.42 & 0.19 & 57 \\
+\texttt{ home} & 8.41 & 0.27 & 34 \\
+\texttt{ efficiency} & 8.41 & 0.24 & 37 \\
+\texttt{ art} & 8.38 & 0.30 & 32 \\
+\texttt{ This} & 8.37 & 0.07 & 155 \\
+\texttt{ organizations} & 8.33 & 0.22 & 36 \\
+\texttt{ community} & 8.33 & 0.09 & 160 \\
+\texttt{ization} & 8.23 & 0.27 & 39 \\
+\texttt{**:} & 8.22 & 0.06 & 601 \\
+\texttt{ media} & 8.22 & 0.22 & 60 \\
+\texttt{ regulations} & 8.22 & 0.19 & 51 \\
+\texttt{-being} & 8.20 & 0.20 & 59 \\
+\texttt{ engagement} & 8.17 & 0.16 & 63 \\
+\texttt{ environmental} & 8.17 & 0.20 & 42 \\
+\texttt{-based} & 8.15 & 0.23 & 40 \\
+\texttt{ sustainable} & 8.15 & 0.11 & 89 \\
+\texttt{ urban} & 8.14 & 0.14 & 70 \\
+\texttt{ learning} & 8.12 & 0.18 & 80 \\
+\texttt{ infrastructure} & 8.12 & 0.20 & 49 \\
+\texttt{ IoT} & 8.10 & 0.25 & 31 \\
+\texttt{ should} & 8.08 & 0.14 & 59 \\
+\texttt{ interactive} & 8.08 & 0.25 & 26 \\
+\texttt{ diversity} & 8.07 & 0.24 & 28 \\
+\texttt{ classical} & 8.07 & 0.24 & 30 \\
+\texttt{ challenges} & 8.07 & 0.13 & 92 \\
+\texttt{ cities} & 8.03 & 0.18 & 40 \\
+\texttt{ mindfulness} & 8.00 & 0.29 & 33 \\
+\texttt{ indigenous} & 8.00 & 0.17 & 27 \\
+\texttt{ agriculture} & 7.96 & 0.21 & 50 \\
+\texttt{ VR} & 7.93 & 0.26 & 29 \\
+\texttt{ workshops} & 7.93 & 0.25 & 28 \\
+\texttt{ By} & 7.92 & 0.11 & 77 \\
+\texttt{ therapy} & 7.89 & 0.24 & 37 \\
+\texttt{ trends} & 7.89 & 0.27 & 27 \\
+\texttt{ innovative} & 7.89 & 0.25 & 27 \\
+\texttt{ innovation} & 7.89 & 0.18 & 35 \\
+\texttt{ proposal} & 7.86 & 0.42 & 37 \\
+\texttt{ cognitive} & 7.85 & 0.22 & 26 \\
+\texttt{ inclusive} & 7.66 & 0.17 & 41 \\
+\texttt{ sustainability} & 7.63 & 0.23 & 35 \\
+\texttt{ tourism} & 7.52 & 0.23 & 27 \\
+\texttt{ Cities} & 7.33 & 0.22 & 27 \\
+\texttt{ting} & 7.03 & 0.05 & 102 \\
+\texttt{ blog} & 6.50 & 0.55 & 28 \\
+\texttt{system} & 3.00 & 0.00 & 100 \\
+\texttt{$\texttt{<|begin\_of\_text|>}$} & 0.00 & 0.00 & 100 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+
+
+\begin{table}[h!]
+\centering
+\caption{Gemma 2 2B Instruct: Top 50 tokens with the highest average number of TLCM activations. For each token, we list the average number of times a TLCM activations occurs on the given token, aggregated across 100 long documents. Finally, we list the standard error of the mean and the number of occurrences of the token across the corpus.}
+\label{table:token_correction_counts_gemma_top}
+\begin{tabular}{llll}
+\toprule
+\textbf{Token} & \textbf{Mean Activations} & \textbf{Std err. of mean} & \textbf{\# occurrences} \\
+\midrule
+\texttt{<space>} & 17.89 & 0.06 & 623 \\
+\texttt{4} & 17.31 & 0.11 & 366 \\
+\texttt{6} & 17.09 & 0.13 & 160 \\
+\texttt{$\backslash$t} & 16.56 & 0.26 & 68 \\
+\texttt{2} & 16.56 & 0.06 & 1066 \\
+\texttt{'} & 16.48 & 0.14 & 242 \\
+\texttt{]} & 16.39 & 0.13 & 218 \\
+\texttt{<space><space>} & 16.36 & 0.09 & 657 \\
+\texttt{7} & 16.17 & 0.32 & 35 \\
+\texttt{<space><space><space><space>} & 16.00 & 0.27 & 57 \\
+\texttt{$\%$} & 15.63 & 0.29 & 57 \\
+\texttt{3} & 15.61 & 0.08 & 424 \\
+\texttt{$\backslash$n} & 15.58 & 0.05 & 1289 \\
+\texttt{5} & 15.43 & 0.12 & 183 \\
+\texttt{-} & 15.42 & 0.08 & 840 \\
+\texttt{0} & 15.32 & 0.06 & 627 \\
+\texttt{],} & 15.27 & 0.41 & 33 \\
+\texttt{Thank} & 15.22 & 0.13 & 27 \\
+\texttt{$\backslash$n$\backslash$n} & 15.16 & 0.06 & 1915 \\
+\texttt{ $\$$} & 15.09 & 0.25 & 55 \\
+\texttt{ such} & 15.06 & 0.13 & 157 \\
+\texttt{1} & 15.02 & 0.13 & 434 \\
+\texttt{Today} & 15.00 & 0.00 & 100 \\
+\texttt{9} & 14.96 & 0.44 & 50 \\
+\texttt{.} & 14.87 & 0.04 & 3713 \\
+\texttt{ Address} & 14.74 & 0.17 & 34 \\
+\texttt{ recent} & 14.61 & 0.29 & 33 \\
+\texttt{"} & 14.59 & 0.30 & 49 \\
+\texttt{).} & 14.57 & 0.28 & 49 \\
+\texttt{ Date} & 14.49 & 0.04 & 204 \\
+\texttt{:} & 14.49 & 0.10 & 476 \\
+\texttt{ long} & 14.46 & 0.37 & 26 \\
+\texttt{)} & 14.37 & 0.22 & 84 \\
+\texttt{ them} & 14.27 & 0.35 & 60 \\
+\texttt{Date} & 14.17 & 0.18 & 30 \\
+\texttt{[} & 14.14 & 0.14 & 166 \\
+\texttt{ members} & 14.10 & 0.43 & 30 \\
+\texttt{ sense} & 13.97 & 0.30 & 30 \\
+\texttt{ (} & 13.90 & 0.17 & 195 \\
+\texttt{ modern} & 13.81 & 0.32 & 32 \\
+\texttt{ "} & 13.79 & 0.23 & 43 \\
+\texttt{City} & 13.76 & 0.30 & 38 \\
+\texttt{ over} & 13.71 & 0.27 & 34 \\
+\texttt{ years} & 13.70 & 0.35 & 40 \\
+\texttt{ at} & 13.68 & 0.35 & 41 \\
+\texttt{ Name} & 13.66 & 0.14 & 100 \\
+\texttt{ countries} & 13.59 & 0.36 & 37 \\
+\texttt{assistant} & 13.55 & 0.14 & 100 \\
+\texttt{ world} & 13.52 & 0.28 & 54 \\
+\texttt{ led} & 13.50 & 0.28 & 44 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+
+\begin{table}[h!]
+\centering
+\caption{Gemma 2 2B Instruct: Top 50 tokens with the lowest average number of TLCM activations. For each token, we list the average number of times a TLCM activations occurs on the given token, aggregated across 100 long documents. Finally, we list the standard error of the mean and the number of occurrences of the token across the corpus.}
+\label{table:token_correction_counts_gemma_bottom}
+\begin{tabular}{llll}
+\toprule
+\textbf{Token} & \textbf{Mean Activations} & \textbf{Std err. of mean} & \textbf{\# occurrences} \\
+\midrule
+\texttt{ sustainable} & 10.25 & 0.18 & 89 \\
+\texttt{ spaces} & 10.24 & 0.29 & 46 \\
+\texttt{ plan} & 10.23 & 0.39 & 39 \\
+\texttt{ EV} & 10.23 & 0.26 & 26 \\
+\texttt{ several} & 10.22 & 0.31 & 27 \\
+\texttt{ understanding} & 10.22 & 0.33 & 32 \\
+\texttt{ growing} & 10.21 & 0.24 & 38 \\
+\texttt{ online} & 10.21 & 0.17 & 43 \\
+\texttt{ reduced} & 10.19 & 0.28 & 26 \\
+\texttt{ learning} & 10.19 & 0.20 & 80 \\
+\texttt{ environmental} & 10.14 & 0.18 & 42 \\
+\texttt{ training} & 10.14 & 0.27 & 59 \\
+\texttt{ create} & 10.10 & 0.22 & 69 \\
+\texttt{ implementing} & 10.10 & 0.35 & 30 \\
+\texttt{ mental} & 10.09 & 0.21 & 53 \\
+\texttt{ AI} & 10.09 & 0.21 & 57 \\
+\texttt{ indigenous} & 10.07 & 0.29 & 27 \\
+\texttt{ local} & 10.07 & 0.16 & 110 \\
+\texttt{ significant} & 10.06 & 0.16 & 143 \\
+\texttt{ comprehensive} & 10.05 & 0.22 & 39 \\
+\texttt{ together} & 10.04 & 0.41 & 26 \\
+\texttt{ blog} & 10.00 & 0.07 & 28 \\
+\texttt{ address} & 10.00 & 0.33 & 41 \\
+\texttt{ innovative} & 9.96 & 0.29 & 27 \\
+\texttt{ promoting} & 9.94 & 0.24 & 47 \\
+\texttt{ post} & 9.94 & 0.22 & 31 \\
+\texttt{ develop} & 9.89 & 0.25 & 35 \\
+\texttt{ benefits} & 9.87 & 0.19 & 105 \\
+\texttt{ VR} & 9.86 & 0.28 & 29 \\
+\texttt{ community} & 9.83 & 0.17 & 160 \\
+\texttt{ awareness} & 9.80 & 0.41 & 30 \\
+\texttt{ prioritize} & 9.79 & 0.29 & 28 \\
+\texttt{ promote} & 9.74 & 0.15 & 102 \\
+\texttt{ progress} & 9.72 & 0.38 & 29 \\
+\texttt{ following} & 9.70 & 0.31 & 27 \\
+\texttt{ clear} & 9.69 & 0.33 & 26 \\
+\texttt{ concerns} & 9.67 & 0.32 & 48 \\
+\texttt{ approach} & 9.65 & 0.34 & 34 \\
+\texttt{ complex} & 9.61 & 0.27 & 38 \\
+\texttt{ By} & 9.58 & 0.17 & 77 \\
+\texttt{ challenges} & 9.53 & 0.25 & 92 \\
+\texttt{ improved} & 9.52 & 0.28 & 33 \\
+\texttt{ interactive} & 9.42 & 0.38 & 26 \\
+\texttt{ enhance} & 8.97 & 0.34 & 35 \\
+\texttt{ improve} & 8.91 & 0.20 & 70 \\
+\texttt{ explore} & 8.74 & 0.29 & 39 \\
+\texttt{ feedback} & 8.70 & 0.28 & 27 \\
+\texttt{ mitigate} & 7.88 & 0.37 & 26 \\
+\texttt{Write} & 7.00 & 0.00 & 100 \\
+\texttt{<bos>} & 1.00 & 0.00 & 100 \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,20 @@
+\begin{table}[htbp]
+\centering
+\caption{Contriever transferability comparison on GPT-4o-mini.}
+\label{tab:contriever_transfer}
+\begin{threeparttable}
+\resizebox{0.5\textwidth}{!}{%
+\begin{tabular}{l>{\columncolor{asr}}c>{\columncolor{rank}}cc>{\columncolor{asr}}c>{\columncolor{rank}}c>{\columncolor{asr}}c>{\columncolor{rank}}c>{\columncolor{asr}}c>{\columncolor{rank}}c}
+\toprule
+\multirow{2}{*}{Dependency} & \multicolumn{3}{c}{gte-base-en-v1.5} & \multicolumn{2}{c}{all-mpnet-base-v2} & \multicolumn{2}{c}{bge-base-en-v1.5} & \multicolumn{2}{c}{e5-base-v2}\\
+\cmidrule(lr){2-4} \cmidrule(lr){5-6} \cmidrule(lr){7-8} \cmidrule(lr){9-10} 
+ & ASR & P@k &\#Queries & ASR & P@k & ASR & P@k & ASR & P@k\\
+\midrule
+pandas (pandas\_v2)    &\textbf{0.360}   & \textbf{6.87} &4.20   &0.302 &3.33   &0.012 &1.74 &0.151 &2.51   \\
+scipy (full\_scipy)     &\textbf{0.235}    &\textbf{5.35}  &3.24  &0.000 &2.47  &0.176 &2.35  &0.000 &1.65   \\
+sklearn (sckit-learn*)   &\textbf{0.452}   &\textbf{7.39} &4.20  &0.129 &3.45  &0.000 &2.61  &0.000 &2.97   \\
+\bottomrule
+\end{tabular}
+}
+\end{threeparttable}
+\end{table}

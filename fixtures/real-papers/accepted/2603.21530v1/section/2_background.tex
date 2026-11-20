@@ -1,0 +1,41 @@
+% 读这篇paper应该要具有的背景知识
+
+ % 1. DBMS testing
+ % 2. mcts
+\label{sec:background}
+ 
+% \subsection{DBMS Testing}
+
+% % \textcolor{red}{Ref the figure!}
+
+% Automated testing of DBMSs, particularly for logic bug detection, typically operates within a structured, iterative pipeline. This process is designed to systematically explore the vast state space of the DBMS to uncover incorrect behaviors without prior knowledge of expected outcomes, thereby addressing the fundamental \textit{test oracle problem}.
+
+% The pipeline commences by programmatically generating a database schema using a sequence of Data Definition Language (DDL) statements. This involves creating tables with diverse data types and complex constraints (e.g., \texttt{CREATE TABLE}, \texttt{CREATE VIEW}). Subsequently, this schema is populated with carefully selected data via Data Manipulation Language (DML) statements, primarily \texttt{INSERT}. The data generation strategy often emphasizes boundary values, \texttt{NULL}s, and duplicates to construct a non-trivial database state that is likely to trigger edge cases in the system's logic.
+
+% The core of the pipeline is the generation and execution of a complex Data Query Language (DQL) query, typically a \texttt{SELECT} statement, which probes the query processor and optimizer. To validate the correctness of its result, a differential testing oracle is employed. This involves transforming the original query into one or more semantically equivalent variants (e.g., using Ternary Logic Partitioning) and executing them. The pipeline then verifies that the results from these variants are consistent with each other. Any detected inconsistency indicates a potential logic bug. This entire cycle—schema generation, data population, query execution, and validation—is repeated continuously to maximize code coverage and bug discovery.
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[scale=0.48]{figure/overview_v2.pdf}
+    \caption{The overview of MIST.}
+    \label{fig:framework}
+\end{figure*}
+
+\subsection{DBMS Testing}
+
+DBMS testing is a critical process for ensuring the correctness and reliability of database systems, which serve as the backbone of modern data-driven applications. The goal of DBMS testing is to systematically generate SQL test cases that exercise various functional components of the system, including the parser, optimizer, executor, and storage engine, to uncover potential bugs before deployment. 
+
+A typical SQL test case consists of three essential components, as illustrated in Figure~\ref{fig:intro_case}: \textit{Data Definition Language (DDL)} statements that define the database schema (e.g., \texttt{CREATE TABLE} to create tables with specific columns and constraints), \textit{Data Manipulation Language (DML)} statements that populate the database with test data (e.g., \texttt{INSERT} to add records), and \textit{Data Query Language (DQL)} statements that query the database to trigger various execution paths (e.g., \texttt{SELECT} with complex predicates, joins, and aggregations). The interplay of these three components enables comprehensive testing of the DBMS under diverse scenarios. The effectiveness of DBMS testing is measured by \textit{code coverage}, which quantifies how thoroughly the test cases exercise different execution paths in the system. Higher coverage indicates that more code regions have been tested, thereby increasing the likelihood of discovering bugs hidden in less frequently executed paths.
+
+\subsection{Monte Carlo Tree Search}
+
+Monte Carlo Tree Search (MCTS)~\cite{kocsis2006bandit} is a powerful heuristic search algorithm for navigating decision-making problems, particularly those characterized by vast and complex search spaces. Its effectiveness has been demonstrated in a variety of domains~\cite{swiechowski2023monte,zhou2021learned,kartal2019action}. The core of MCTS is an iterative process that asymmetrically grows a search tree by focusing on the most promising regions. Each iteration involves four fundamental steps:
+
+\begin{itemize}
+    \item \textbf{Selection:} Starting from the root, the algorithm recursively selects child nodes with the highest utility value until a leaf node is reached. This selection strategy, often guided by the Upper Confidence Bound (UCB) formula, strategically balances the trade-off between exploiting known promising paths and exploring less-visited nodes.
+    \item \textbf{Expansion:} Once a leaf node is selected, the tree is expanded by creating one or more child nodes corresponding to new, unexplored actions or states.
+    \item \textbf{Simulation:} From a newly expanded node, a lightweight simulation, often called a "rollout," is executed. This typically involves making random or semi-random choices until a terminal state is reached, providing an estimated outcome or value.
+    \item \textbf{Backpropagation:} The result from the simulation is then propagated back up the tree, updating the statistics (such as visit counts and value estimates) of all nodes along the path from the expanded node to the root.
+\end{itemize}
+
+By repeating this cycle, MCTS intelligently allocates computational resources to the most valuable parts of the search space, making it an ideal technique for optimization problems where exhaustive search is infeasible.

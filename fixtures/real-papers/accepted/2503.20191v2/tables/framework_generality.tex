@@ -1,0 +1,14 @@
+\begin{table}[htbp]
+\vspace{1em}
+\begin{tabular}{m{0.2\linewidth} m{0.3\linewidth} p{0.4\linewidth}}
+    \toprule
+    \textbf{Framework} & \textbf{Optimizations} & \textbf{Models} \\
+    \midrule
+    DeepSpeed & ZeRO 1-3, \newline Act. Offload & \multirow{3}{\linewidth}{ResNet, DenseNet, MobileNet, VGG, BERT, GPT, Llama, T5, ViT} \\
+    \cmidrule{1-2}
+    PyTorch & \texttt{torch.compile}, FSDP, DDP \\
+    \bottomrule
+\end{tabular}
+\caption{Frameworks and models tested with \sysname emulation, in addition to Megatron-LM.}
+\label{tab:framework_generality}
+\end{table}

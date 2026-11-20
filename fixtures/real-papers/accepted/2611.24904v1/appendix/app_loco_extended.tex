@@ -1,0 +1,358 @@
+\section{Full Per-Cell LOCO Results}
+\label{app:loco-full}
+\label{app:loco_extended} %
+
+This appendix reports the full per-cell breakdown of the $158$ LOCO test
+cells summarized in Table~\ref{tab:loco-main}. Tables~\ref{tab:loco-full-mamnet}--\ref{tab:loco-full-dinov3}
+cover the $126$ cells of MAMNet, OGLANet and DINOv3 under Vanilla and the six training-time methods, and
+Table~\ref{tab:loco-full-hr} the $32$ high-resolution SAR, BSM and CrossEarth cells.  Each table reports, for each (architecture, method, held-out city, native resolution)
+cell, the within-city upper-bound mIoU, the LOCO mIoU, the per-image mean
+$\Delta$ to the upper bound, the $95\%$ paired-bootstrap confidence interval
+on $\Delta$, and the two-tailed bootstrap $p$-value
+($B = 10{,}000$ resamples on per-image $\Delta$ values). All values are
+two-class boundary-tolerant mIoU ($\pm 2$\,px, Appendix~\ref{app:metric}).
+$p < .0002$ indicates the bootstrap resolution floor; cells marked $\dagger$
+are not significant at $\alpha = 0.05$.
+Tables~\ref{tab:loco-per-city}--\ref{tab:loco-method-summary} report pooled
+summaries of the $126$ cells by held-out city, native resolution, and method.
+
+\paragraph{Cell provenance and caveats.} The high-resolution MAMNet cells and
+the high-resolution OGLANet SegDeSiC cells are $450$-image retrains that match
+the training budget of the other high-resolution cells; every mid-resolution
+cell is the published run at its published budget.  Each cell is one training
+seed.  OGLANet cells are single inference passes at the published batch size;
+OGLANet inference is nondeterministic (Appendix~\ref{app:oglanet-dffm}), with
+cell means varying by up to $0.42$ mIoU over repeated passes, and the intervals do not include this.  SAR
+rows are the Vanilla cell's per-image values plus SAR's within-pass change
+(Appendix~\ref{sec:sar}).  BSM DINOv3/Chicago collapsed in training and has no
+row.  CrossEarth cells are compared against CrossEarth's own upper bound.  The
+intervals in Figure~\ref{fig:teaser} come from the same paired image bootstrap
+over the $450$ high-resolution test images per architecture; the four
+architectures share bootstrap draws, so overlapping intervals there are not a
+test between architectures, and no multiplicity correction is applied.
+
+\subsection{Per-Cell Tables}
+
+\begin{table}[h]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{
+\textbf{Full per-cell LOCO results: MAMNet.}
+$n = 150$ paired test images per cell. Upper, LOCO in mIoU (\%); $\Delta$ in
+mIoU points; CI is the $95\%$ paired-bootstrap interval on $\Delta$.
+$\dagger$: not significant at $\alpha = 0.05$.
+}
+\label{tab:loco-full-mamnet}
+\begin{tabular}{@{}llcrrrcr@{}}
+\toprule
+\textbf{Method} & \textbf{City} & \textbf{Res.} & \textbf{Upper} & \textbf{LOCO} & $\Delta$ & \textbf{95\% CI} & $p$ \\
+\midrule
+Vanilla   & Chicago & HR & 86.31 & 80.45 & $-5.87$  & $[-6.89,\,-4.88]$   & $<\!.0002$ \\
+          & Chicago & MR & 86.35 & 83.22 & $-3.13$  & $[-3.96,\,-2.39]$   & $<\!.0002$ \\
+          & Miami   & HR & 79.11 & 74.67 & $-4.44$  & $[-6.04,\,-2.93]$   & $<\!.0002$ \\
+          & Miami   & MR & 78.89 & 76.75 & $-2.14$  & $[-3.23,\,-1.13]$   & $<\!.0002$ \\
+          & Phoenix & HR & 73.75 & 64.23 & $-9.52$  & $[-11.50,\,-7.53]$  & $<\!.0002$ \\
+          & Phoenix & MR & 85.64 & 83.40 & $-2.24$  & $[-3.50,\,-1.07]$   & $<\!.0002$ \\
+\cmidrule(l){1-8}
+FDA       & Chicago & HR & 86.31 & 79.77 & $-6.54$  & $[-7.82,\,-5.31]$   & $<\!.0002$ \\
+          & Chicago & MR & 86.35 & 82.88 & $-3.47$  & $[-4.19,\,-2.75]$   & $<\!.0002$ \\
+          & Miami   & HR & 79.11 & 73.10 & $-6.01$  & $[-7.73,\,-4.35]$   & $<\!.0002$ \\
+          & Miami   & MR & 78.89 & 75.71 & $-3.18$  & $[-4.31,\,-2.06]$   & $<\!.0002$ \\
+          & Phoenix & HR & 73.75 & 67.89 & $-5.86$  & $[-7.61,\,-4.16]$   & $<\!.0002$ \\
+          & Phoenix & MR & 85.64 & 82.64 & $-2.99$  & $[-4.45,\,-1.63]$   & $<\!.0002$ \\
+\cmidrule(l){1-8}
+SegDeSiC  & Chicago & HR & 86.31 & 82.01 & $-4.30$  & $[-5.19,\,-3.40]$   & $<\!.0002$ \\
+          & Chicago & MR & 86.35 & 81.50 & $-4.85$  & $[-5.64,\,-4.08]$   & $<\!.0002$ \\
+          & Miami   & HR & 79.11 & 70.15 & $-8.96$  & $[-11.88,\,-6.26]$  & $<\!.0002$ \\
+          & Miami   & MR & 78.89 & 75.99 & $-2.90$  & $[-4.12,\,-1.79]$   & $<\!.0002$ \\
+          & Phoenix & HR & 73.75 & 63.54 & $-10.21$ & $[-12.33,\,-8.12]$  & $<\!.0002$ \\
+          & Phoenix & MR & 85.64 & 83.49 & $-2.15$  & $[-3.22,\,-1.12]$   & $<\!.0002$ \\
+\cmidrule(l){1-8}
+IIM       & Chicago & HR & 86.31 & 79.25 & $-7.06$  & $[-8.15,\,-6.00]$   & $<\!.0002$ \\
+          & Chicago & MR & 86.35 & 82.31 & $-4.04$  & $[-4.91,\,-3.23]$   & $<\!.0002$ \\
+          & Miami   & HR & 79.11 & 67.95 & $-11.16$ & $[-13.33,\,-9.14]$  & $<\!.0002$ \\
+          & Miami   & MR & 78.89 & 74.52 & $-4.37$  & $[-5.74,\,-3.12]$   & $<\!.0002$ \\
+          & Phoenix & HR & 73.75 & 49.69 & $-24.06$ & $[-26.70,\,-21.37]$ & $<\!.0002$ \\
+          & Phoenix & MR & 85.64 & 77.85 & $-7.78$  & $[-9.87,\,-5.80]$   & $<\!.0002$ \\
+\cmidrule(l){1-8}
+MRFP+     & Chicago & HR & 86.31 & 74.81 & $-11.50$ & $[-12.93,\,-10.10]$ & $<\!.0002$ \\
+          & Chicago & MR & 86.35 & 81.29 & $-5.06$  & $[-5.91,\,-4.26]$   & $<\!.0002$ \\
+          & Miami   & HR & 79.11 & 70.87 & $-8.24$  & $[-10.87,\,-5.73]$  & $<\!.0002$ \\
+          & Miami   & MR & 78.89 & 67.09 & $-11.80$ & $[-13.84,\,-9.85]$  & $<\!.0002$ \\
+          & Phoenix & HR & 73.75 & 55.16 & $-18.59$ & $[-21.14,\,-16.01]$ & $<\!.0002$ \\
+          & Phoenix & MR & 85.64 & 78.94 & $-6.70$  & $[-8.49,\,-5.00]$   & $<\!.0002$ \\
+\cmidrule(l){1-8}
+FADA      & Chicago & HR & 86.31 & 77.89 & $-8.42$  & $[-9.50,\,-7.36]$   & $<\!.0002$ \\
+          & Chicago & MR & 86.35 & 80.03 & $-6.32$  & $[-7.40,\,-5.33]$   & $<\!.0002$ \\
+          & Miami   & HR & 79.11 & 65.27 & $-13.84$ & $[-16.62,\,-11.24]$ & $<\!.0002$ \\
+          & Miami   & MR & 78.89 & 72.35 & $-6.54$  & $[-7.88,\,-5.24]$   & $<\!.0002$ \\
+          & Phoenix & HR & 73.75 & 61.79 & $-11.96$ & $[-13.97,\,-10.01]$ & $<\!.0002$ \\
+          & Phoenix & MR & 85.64 & 76.41 & $-9.23$  & $[-10.94,\,-7.55]$  & $<\!.0002$ \\
+\cmidrule(l){1-8}
+ISW       & Chicago & HR & 86.31 & 74.65 & $-11.66$ & $[-12.65,\,-10.65]$ & $<\!.0002$ \\
+          & Chicago & MR & 86.35 & 71.26 & $-15.09$ & $[-16.98,\,-13.26]$ & $<\!.0002$ \\
+          & Miami   & HR & 79.11 & 68.04 & $-11.07$ & $[-13.37,\,-8.93]$  & $<\!.0002$ \\
+          & Miami   & MR & 78.89 & 69.34 & $-9.55$  & $[-11.40,\,-7.84]$  & $<\!.0002$ \\
+          & Phoenix & HR & 73.75 & 50.47 & $-23.28$ & $[-25.81,\,-20.66]$ & $<\!.0002$ \\
+          & Phoenix & MR & 85.64 & 76.04 & $-9.59$  & $[-11.22,\,-8.05]$  & $<\!.0002$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{
+\textbf{Full per-cell LOCO results: OGLANet.}
+Conventions as in Table~\ref{tab:loco-full-mamnet}.
+}
+\label{tab:loco-full-oglanet}
+\begin{tabular}{@{}llcrrrcr@{}}
+\toprule
+\textbf{Method} & \textbf{City} & \textbf{Res.} & \textbf{Upper} & \textbf{LOCO} & $\Delta$ & \textbf{95\% CI} & $p$ \\
+\midrule
+Vanilla   & Chicago & HR & 79.12 & 68.47 & $-10.66$ & $[-12.08,\,-9.21]$  & $<\!.0002$ \\
+          & Chicago & MR & 80.77 & 65.08 & $-15.70$ & $[-17.66,\,-13.81]$ & $<\!.0002$ \\
+          & Miami   & HR & 73.89 & 66.18 & $-7.71$  & $[-10.20,\,-5.35]$  & $<\!.0002$ \\
+          & Miami   & MR & 74.19 & 70.73 & $-3.45$  & $[-4.76,\,-2.24]$   & $<\!.0002$ \\
+          & Phoenix & HR & 66.15 & 61.18 & $-4.98$  & $[-6.23,\,-3.72]$   & $<\!.0002$ \\
+          & Phoenix & MR & 75.39 & 70.32 & $-5.07$  & $[-6.42,\,-3.76]$   & $<\!.0002$ \\
+\cmidrule(l){1-8}
+FDA       & Chicago & HR & 79.12 & 71.07 & $-8.05$  & $[-9.10,\,-6.97]$   & $<\!.0002$ \\
+          & Chicago & MR & 80.77 & 60.19 & $-20.58$ & $[-22.54,\,-18.63]$ & $<\!.0002$ \\
+          & Miami   & HR & 73.89 & 67.30 & $-6.59$  & $[-8.34,\,-4.89]$   & $<\!.0002$ \\
+          & Miami   & MR & 74.19 & 69.82 & $-4.36$  & $[-5.63,\,-3.17]$   & $<\!.0002$ \\
+          & Phoenix & HR & 66.15 & 63.27 & $-2.88$  & $[-4.07,\,-1.69]$   & $<\!.0002$ \\
+          & Phoenix & MR & 75.39 & 70.09 & $-5.30$  & $[-6.65,\,-4.01]$   & $<\!.0002$ \\
+\cmidrule(l){1-8}
+SegDeSiC  & Chicago & HR & 79.12 & 68.99 & $-10.13$ & $[-11.72,\,-8.52]$  & $<\!.0002$ \\
+          & Chicago & MR & 80.77 & 59.40 & $-21.37$ & $[-23.64,\,-19.13]$ & $<\!.0002$ \\
+          & Miami   & HR & 73.89 & 60.69 & $-13.20$ & $[-16.02,\,-10.49]$ & $<\!.0002$ \\
+          & Miami   & MR & 74.19 & 69.91 & $-4.28$  & $[-5.62,\,-3.03]$   & $<\!.0002$ \\
+          & Phoenix & HR & 66.15 & 60.77 & $-5.38$  & $[-6.72,\,-4.09]$   & $<\!.0002$ \\
+          & Phoenix & MR & 75.39 & 70.27 & $-5.12$  & $[-6.59,\,-3.68]$   & $<\!.0002$ \\
+\cmidrule(l){1-8}
+IIM       & Chicago & HR & 79.12 & 70.01 & $-9.11$  & $[-10.43,\,-7.79]$  & $<\!.0002$ \\
+          & Chicago & MR & 80.77 & 62.21 & $-18.56$ & $[-20.84,\,-16.34]$ & $<\!.0002$ \\
+          & Miami   & HR & 73.89 & 66.36 & $-7.53$  & $[-9.50,\,-5.61]$   & $<\!.0002$ \\
+          & Miami   & MR & 74.19 & 69.13 & $-5.06$  & $[-6.50,\,-3.76]$   & $<\!.0002$ \\
+          & Phoenix & HR & 66.15 & 55.25 & $-10.90$ & $[-12.30,\,-9.50]$  & $<\!.0002$ \\
+          & Phoenix & MR & 75.39 & 70.28 & $-5.11$  & $[-6.43,\,-3.86]$   & $<\!.0002$ \\
+\cmidrule(l){1-8}
+MRFP+     & Chicago & HR & 79.12 & 63.82 & $-15.30$ & $[-16.93,\,-13.68]$ & $<\!.0002$ \\
+          & Chicago & MR & 80.77 & 52.27 & $-28.50$ & $[-30.86,\,-26.14]$ & $<\!.0002$ \\
+          & Miami   & HR & 73.89 & 57.30 & $-16.59$ & $[-19.17,\,-13.99]$ & $<\!.0002$ \\
+          & Miami   & MR & 74.19 & 66.64 & $-7.54$  & $[-9.09,\,-6.08]$   & $<\!.0002$ \\
+          & Phoenix & HR & 66.15 & 58.03 & $-8.13$  & $[-9.63,\,-6.59]$   & $<\!.0002$ \\
+          & Phoenix & MR & 75.39 & 67.26 & $-8.14$  & $[-9.65,\,-6.69]$   & $<\!.0002$ \\
+\cmidrule(l){1-8}
+FADA      & Chicago & HR & 79.12 & 66.17 & $-12.96$ & $[-14.49,\,-11.43]$ & $<\!.0002$ \\
+          & Chicago & MR & 80.77 & 53.43 & $-27.35$ & $[-29.43,\,-25.30]$ & $<\!.0002$ \\
+          & Miami   & HR & 73.89 & 65.20 & $-8.69$  & $[-11.19,\,-6.19]$  & $<\!.0002$ \\
+          & Miami   & MR & 74.19 & 69.17 & $-5.02$  & $[-6.43,\,-3.72]$   & $<\!.0002$ \\
+          & Phoenix & HR & 66.15 & 60.26 & $-5.89$  & $[-7.28,\,-4.47]$   & $<\!.0002$ \\
+          & Phoenix & MR & 75.39 & 68.71 & $-6.69$  & $[-8.06,\,-5.40]$   & $<\!.0002$ \\
+\cmidrule(l){1-8}
+ISW       & Chicago & HR & 79.12 & 64.19 & $-14.93$ & $[-16.27,\,-13.56]$ & $<\!.0002$ \\
+          & Chicago & MR & 80.77 & 59.74 & $-21.03$ & $[-23.13,\,-18.95]$ & $<\!.0002$ \\
+          & Miami   & HR & 73.89 & 67.78 & $-6.11$  & $[-7.66,\,-4.57]$   & $<\!.0002$ \\
+          & Miami   & MR & 74.19 & 64.81 & $-9.38$  & $[-10.96,\,-7.86]$  & $<\!.0002$ \\
+          & Phoenix & HR & 66.15 & 59.69 & $-6.46$  & $[-8.03,\,-4.91]$   & $<\!.0002$ \\
+          & Phoenix & MR & 75.39 & 66.98 & $-8.42$  & $[-9.56,\,-7.29]$   & $<\!.0002$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{
+\textbf{Full per-cell LOCO results: DINOv3.}
+Conventions as in Table~\ref{tab:loco-full-mamnet}.
+}
+\label{tab:loco-full-dinov3}
+\begin{tabular}{@{}llcrrrcr@{}}
+\toprule
+\textbf{Method} & \textbf{City} & \textbf{Res.} & \textbf{Upper} & \textbf{LOCO} & $\Delta$ & \textbf{95\% CI} & $p$ \\
+\midrule
+Vanilla   & Chicago & HR & 80.27 & 67.26 & $-13.01$ & $[-14.37,\,-11.67]$ & $<\!.0002$ \\
+          & Chicago & MR & 83.63 & 75.23 & $-8.40$  & $[-9.71,\,-7.17]$   & $<\!.0002$ \\
+          & Miami   & HR & 76.00 & 72.61 & $-3.39$  & $[-5.36,\,-1.67]$   & $<\!.0002$ \\
+          & Miami   & MR & 75.76 & 68.11 & $-7.65$  & $[-9.24,\,-6.16]$   & $<\!.0002$ \\
+          & Phoenix & HR & 67.82 & 65.24 & $-2.58$  & $[-4.30,\,-0.88]$   & $.0028$ \\
+          & Phoenix & MR & 81.85 & 71.52 & $-10.33$ & $[-12.00,\,-8.61]$  & $<\!.0002$ \\
+\cmidrule(l){1-8}
+FDA       & Chicago & HR & 80.27 & 72.26 & $-8.01$  & $[-9.15,\,-6.92]$   & $<\!.0002$ \\
+          & Chicago & MR & 83.63 & 75.70 & $-7.94$  & $[-8.85,\,-7.04]$   & $<\!.0002$ \\
+          & Miami   & HR & 76.00 & 70.81 & $-5.19$  & $[-6.30,\,-4.04]$   & $<\!.0002$ \\
+          & Miami   & MR & 75.76 & 71.95 & $-3.81$  & $[-5.15,\,-2.62]$   & $<\!.0002$ \\
+          & Phoenix & HR & 67.82 & 58.72 & $-9.10$  & $[-11.21,\,-6.97]$  & $<\!.0002$ \\
+          & Phoenix & MR & 81.85 & 67.01 & $-14.84$ & $[-16.56,\,-13.13]$ & $<\!.0002$ \\
+\cmidrule(l){1-8}
+SegDeSiC  & Chicago & HR & 80.27 & 75.52 & $-4.75$  & $[-6.10,\,-3.35]$   & $<\!.0002$ \\
+          & Chicago & MR & 83.63 & 77.30 & $-6.33$  & $[-7.44,\,-5.32]$   & $<\!.0002$ \\
+          & Miami   & HR & 76.00 & 71.18 & $-4.82$  & $[-6.76,\,-3.10]$   & $<\!.0002$ \\
+          & Miami   & MR & 75.76 & 70.72 & $-5.04$  & $[-6.60,\,-3.63]$   & $<\!.0002$ \\
+          & Phoenix & HR & 67.82 & 68.04 & $+0.22$  & $[-1.22,\,+1.66]$   & $.7644^{\dagger}$ \\
+          & Phoenix & MR & 81.85 & 75.13 & $-6.72$  & $[-8.10,\,-5.37]$   & $<\!.0002$ \\
+\cmidrule(l){1-8}
+IIM       & Chicago & HR & 80.27 & 77.43 & $-2.85$  & $[-4.04,\,-1.69]$   & $<\!.0002$ \\
+          & Chicago & MR & 83.63 & 73.58 & $-10.05$ & $[-11.68,\,-8.54]$  & $<\!.0002$ \\
+          & Miami   & HR & 76.00 & 72.23 & $-3.78$  & $[-5.75,\,-2.06]$   & $<\!.0002$ \\
+          & Miami   & MR & 75.76 & 69.42 & $-6.34$  & $[-7.98,\,-4.79]$   & $<\!.0002$ \\
+          & Phoenix & HR & 67.82 & 56.51 & $-11.31$ & $[-13.57,\,-9.01]$  & $<\!.0002$ \\
+          & Phoenix & MR & 81.85 & 79.52 & $-2.33$  & $[-3.79,\,-0.86]$   & $.0034$ \\
+\cmidrule(l){1-8}
+MRFP+     & Chicago & HR & 80.27 & 77.46 & $-2.81$  & $[-3.67,\,-1.94]$   & $<\!.0002$ \\
+          & Chicago & MR & 83.63 & 78.92 & $-4.71$  & $[-5.72,\,-3.78]$   & $<\!.0002$ \\
+          & Miami   & HR & 76.00 & 73.20 & $-2.80$  & $[-4.13,\,-1.52]$   & $<\!.0002$ \\
+          & Miami   & MR & 75.76 & 72.21 & $-3.55$  & $[-4.98,\,-2.17]$   & $<\!.0002$ \\
+          & Phoenix & HR & 67.82 & 60.78 & $-7.04$  & $[-9.30,\,-4.72]$   & $<\!.0002$ \\
+          & Phoenix & MR & 81.85 & 73.47 & $-8.37$  & $[-9.99,\,-6.84]$   & $<\!.0002$ \\
+\cmidrule(l){1-8}
+FADA      & Chicago & HR & 80.27 & 70.15 & $-10.12$ & $[-11.56,\,-8.62]$  & $<\!.0002$ \\
+          & Chicago & MR & 83.63 & 63.10 & $-20.54$ & $[-22.32,\,-18.83]$ & $<\!.0002$ \\
+          & Miami   & HR & 76.00 & 71.43 & $-4.57$  & $[-5.64,\,-3.59]$   & $<\!.0002$ \\
+          & Miami   & MR & 75.76 & 66.73 & $-9.03$  & $[-10.80,\,-7.36]$  & $<\!.0002$ \\
+          & Phoenix & HR & 67.82 & 62.81 & $-5.01$  & $[-6.66,\,-3.39]$   & $<\!.0002$ \\
+          & Phoenix & MR & 81.85 & 67.56 & $-14.29$ & $[-16.02,\,-12.60]$ & $<\!.0002$ \\
+\cmidrule(l){1-8}
+ISW       & Chicago & HR & 80.27 & 57.60 & $-22.68$ & $[-24.35,\,-20.92]$ & $<\!.0002$ \\
+          & Chicago & MR & 83.63 & 61.66 & $-21.98$ & $[-23.39,\,-20.55]$ & $<\!.0002$ \\
+          & Miami   & HR & 76.00 & 59.86 & $-16.15$ & $[-18.16,\,-14.19]$ & $<\!.0002$ \\
+          & Miami   & MR & 75.76 & 58.01 & $-17.75$ & $[-19.91,\,-15.59]$ & $<\!.0002$ \\
+          & Phoenix & HR & 67.82 & 55.68 & $-12.14$ & $[-13.87,\,-10.43]$ & $<\!.0002$ \\
+          & Phoenix & MR & 81.85 & 61.41 & $-20.44$ & $[-21.91,\,-18.90]$ & $<\!.0002$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\clearpage
+
+\begin{table}[h]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{
+\textbf{Full per-cell LOCO results: SAR, BSM and CrossEarth} (high resolution).
+Conventions as in Table~\ref{tab:loco-full-mamnet}.  CrossEarth cells are
+measured against CrossEarth's own upper bound.
+}
+\label{tab:loco-full-hr}
+\begin{tabular}{@{}llcrrrcr@{}}
+\toprule
+\textbf{Arch.} & \textbf{Method} & \textbf{City} & \textbf{Upper} & \textbf{LOCO} & $\Delta$ & \textbf{95\% CI} & $p$ \\
+\midrule
+MAMNet & SAR & Chicago & 86.31 & 80.45 & $-5.87$ & $[-6.89,\,-4.88]$ & $<\!.0002$ \\
+ &  & Miami & 79.11 & 74.66 & $-4.45$ & $[-6.05,\,-2.93]$ & $<\!.0002$ \\
+ &  & Phoenix & 73.75 & 64.22 & $-9.53$ & $[-11.51,\,-7.54]$ & $<\!.0002$ \\
+\cmidrule(l){1-8}
+OGLANet & SAR & Chicago & 79.12 & 68.70 & $-10.42$ & $[-11.99,\,-8.79]$ & $<\!.0002$ \\
+ &  & Miami & 73.89 & 66.36 & $-7.53$ & $[-10.00,\,-5.13]$ & $<\!.0002$ \\
+ &  & Phoenix & 66.15 & 61.18 & $-4.98$ & $[-6.28,\,-3.66]$ & $<\!.0002$ \\
+\cmidrule(l){1-8}
+DINOv3 & SAR & Chicago & 80.27 & 67.25 & $-13.02$ & $[-14.38,\,-11.67]$ & $<\!.0002$ \\
+ &  & Miami & 76.00 & 72.61 & $-3.39$ & $[-5.36,\,-1.67]$ & $<\!.0002$ \\
+ &  & Phoenix & 67.82 & 65.24 & $-2.58$ & $[-4.30,\,-0.88]$ & $.0028$ \\
+\cmidrule(l){1-8}
+MAMNet & BSM & Chicago & 86.31 & 78.09 & $-8.22$ & $[-9.37,\,-7.08]$ & $<\!.0002$ \\
+ &  & Miami & 79.11 & 72.59 & $-6.52$ & $[-8.21,\,-4.92]$ & $<\!.0002$ \\
+ &  & Phoenix & 73.75 & 67.70 & $-6.05$ & $[-7.74,\,-4.45]$ & $<\!.0002$ \\
+\cmidrule(l){1-8}
+OGLANet & BSM & Chicago & 79.12 & 61.73 & $-17.40$ & $[-19.54,\,-15.30]$ & $<\!.0002$ \\
+ &  & Miami & 73.89 & 60.65 & $-13.24$ & $[-15.85,\,-10.70]$ & $<\!.0002$ \\
+ &  & Phoenix & 66.15 & 64.58 & $-1.57$ & $[-2.92,\,-0.29]$ & $.0156$ \\
+\cmidrule(l){1-8}
+DINOv3 & BSM & Miami & 76.00 & 69.74 & $-6.27$ & $[-8.52,\,-4.29]$ & $<\!.0002$ \\
+ &  & Phoenix & 67.82 & 62.66 & $-5.16$ & $[-6.94,\,-3.36]$ & $<\!.0002$ \\
+\cmidrule(l){1-8}
+CrossEarth & Vanilla & Chicago & 85.01 & 82.66 & $-2.35$ & $[-3.11,\,-1.57]$ & $<\!.0002$ \\
+ &  & Miami & 78.48 & 72.61 & $-5.87$ & $[-7.20,\,-4.59]$ & $<\!.0002$ \\
+ &  & Phoenix & 72.89 & 70.55 & $-2.34$ & $[-3.53,\,-1.09]$ & $<\!.0002$ \\
+\cmidrule(l){1-8}
+CrossEarth & FDA & Chicago & 85.01 & 82.55 & $-2.46$ & $[-3.44,\,-1.41]$ & $.0002$ \\
+ &  & Miami & 78.48 & 71.49 & $-6.99$ & $[-8.51,\,-5.55]$ & $<\!.0002$ \\
+ &  & Phoenix & 72.89 & 71.35 & $-1.53$ & $[-2.60,\,-0.44]$ & $.0068$ \\
+\cmidrule(l){1-8}
+CrossEarth & SIB & Chicago & 85.01 & 79.31 & $-5.70$ & $[-6.54,\,-4.88]$ & $<\!.0002$ \\
+ &  & Miami & 78.48 & 73.93 & $-4.55$ & $[-5.72,\,-3.48]$ & $<\!.0002$ \\
+ &  & Phoenix & 72.89 & 69.80 & $-3.08$ & $[-4.26,\,-1.90]$ & $<\!.0002$ \\
+\cmidrule(l){1-8}
+CrossEarth & SAR & Chicago & 85.01 & 82.66 & $-2.35$ & $[-3.11,\,-1.57]$ & $<\!.0002$ \\
+ &  & Miami & 78.48 & 72.61 & $-5.88$ & $[-7.21,\,-4.60]$ & $<\!.0002$ \\
+ &  & Phoenix & 72.89 & 70.55 & $-2.34$ & $[-3.53,\,-1.09]$ & $<\!.0002$ \\
+\cmidrule(l){1-8}
+CrossEarth & BSM & Chicago & 85.01 & 81.42 & $-3.59$ & $[-4.41,\,-2.81]$ & $<\!.0002$ \\
+ &  & Miami & 78.48 & 74.76 & $-3.73$ & $[-4.67,\,-2.79]$ & $<\!.0002$ \\
+ &  & Phoenix & 72.89 & 71.06 & $-1.83$ & $[-3.21,\,-0.40]$ & $.0108$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Pooled Summaries}
+
+\begin{table}[h]
+\centering
+\small
+\caption{
+\textbf{LOCO degradation by held-out city,} pooled across architectures and
+methods ($n = 42$ cells per city).
+}
+\label{tab:loco-per-city}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Held-out city} & $\Delta_{\text{mean}}$ & $\Delta_{\text{best}}$ & $\Delta_{\text{worst}}$ & \textit{Sig./42} \\
+\midrule
+Chicago & $-11.33$ & $-2.81$  & $-28.50$ & $42/42$ \\
+Miami   & $-7.23$ & $-2.14$  & $-17.75$ & $42/42$ \\
+Phoenix & $-8.50$ & $+0.22$  & $-24.06$ & $41/42$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\small
+\caption{
+\textbf{LOCO degradation by native resolution,} pooled across architectures,
+methods, and held-out cities ($n = 63$ cells per resolution).
+}
+\label{tab:loco-per-resolution}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Resolution} & $\Delta_{\text{mean}}$ & $\Delta_{\text{best}}$ & $\Delta_{\text{worst}}$ & \textit{Sig./63} \\
+\midrule
+High-res ($0.3$\,m/px) & $-8.99$ & $+0.22$ & $-24.06$ & $62/63$ \\
+Mid-res  ($0.6$\,m/px) & $-9.04$ & $-2.14$ & $-28.50$ & $63/63$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\small
+\caption{
+\textbf{Method-level safety summary,} pooled across architectures, cities,
+and resolutions ($n = 18$ cells per method). Vanilla (no adaptation) is the
+no-intervention reference. The worst cell is MRFP+ on OGLANet/Chicago at mid
+resolution ($-28.50$) and the best is SegDeSiC on DINOv3/Phoenix at high
+resolution ($+0.22$, not significant).
+}
+\label{tab:loco-method-summary}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Method} & \textit{Sig./18} & $\Delta_{\text{mean}}$ & $\Delta_{\text{best}}$ & $\Delta_{\text{worst}}$ \\
+\midrule
+Vanilla   & $18$ & $-6.68$  & $-2.14$ & $-15.70$ \\
+FDA       & $18$ & $-6.93$  & $-2.88$ & $-20.58$ \\
+SegDeSiC  & $17$ & $-6.68$  & $+0.22$ & $-21.37$ \\
+IIM       & $18$ & $-8.41$  & $-2.33$ & $-24.06$ \\
+MRFP+     & $18$ & $-9.74$  & $-2.80$ & $-28.50$ \\
+FADA      & $18$ & $-10.36$ & $-4.57$ & $-27.35$ \\
+ISW       & $18$ & $-14.32$ & $-6.11$ & $-23.28$ \\
+\bottomrule
+\end{tabular}
+\end{table}

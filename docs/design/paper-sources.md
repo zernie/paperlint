@@ -150,7 +150,7 @@ Each planted paper of `fixtures/paper-sources/` carries `tex-truth.json`, writte
 `test/e2e/tex/paper-sources.e2e.ts` builds it with `pdflatex -recorder` and `bibtex` and snapshots the
 record the build writes. `-u` re-records; a TeX that answers differently fails. The unit tests of the
 consumers lay that file at `_build/sources.json` (`test/recorded-fixture.ts`). The accepted papers of
-`fixtures/accepted-papers/` carry theirs the same way (`test/e2e/tex/accepted-papers-record.e2e.ts`).
+`fixtures/real-papers/accepted/` carry theirs the same way (`test/e2e/tex/accepted-papers-record.e2e.ts`).
 The files are the numbers; this document does not copy them.
 
 ## 9. Decisions

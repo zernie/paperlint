@@ -1,0 +1,1229 @@
+% !TEX root = ./main.tex
+
+\DeclareMathAlphabet{\mathpzc}{OT1}{pzc}{m}{it}
+
+%%%%    TODONOTES    %%%%
+\newcommand{\todoin}[1]{\todo[inline]{#1}}
+\newcommand{\todoinline}[1]{\todoin{#1}}
+
+\newcommand{\genericcomment}[3]{\todo[color=#1,size=\tiny,fancyline,author=#2]{#3}\xspace}
+\newcommand{\genericcommentin}[3]{\todo[inline,color=#1,size=\footnotesize,author=#2]{#3}\xspace}
+\newcommand{\genericatsomebody}[2]{\colorbox{#1}{\textbf{@#2}}}
+
+\newcommand{\lv}[1]{\genericcomment{violet!35}{Lena}{#1}\xspace}
+\newcommand{\lvin}[1]{\genericcommentin{violet!35}{Lena}{#1}\xspace}
+\newcommand{\atlv}{\genericatsomebody{violet!35}{Lena}\xspace}
+
+\newcommand{\tg}[1]{\todo[color=cyan!30,size=\tiny,fancyline,author=Tobias]{#1}\xspace}
+\newcommand{\tgin}[1]{\todo[inline,color=cyan!30,size=\footnotesize,author=Tobias]{#1}\xspace}
+\newcommand{\attg}{\colorbox{cyan!30}{\textbf{@Tobias}}}
+
+\newcommand{\blk}[1]{\todo[color=orange!60,size=\tiny,fancyline,author=Benjamin]{#1}\xspace}
+\newcommand{\blkin}[1]{\todo[inline,color=orange!60,size=\footnotesize,author=Benjamin]{#1}\xspace}
+\newcommand{\atblk}{\colorbox{orange!60}{\textbf{@Benjamin}}}
+
+
+
+%%%% FONTS %%%%
+
+\newcommand{\sfsymbol}[1]{\textsf{\upshape {#1}}}
+\newcommand{\ttsymbol}[1]{\texttt{\upshape {#1}}}
+
+
+
+%%%% PBLIMP Specifics %%%%
+\newcommand{\Varso}{\sfsymbol{Vars}_o}
+\newcommand{\Varsu}{\sfsymbol{Vars}_u}
+
+
+
+%%%% Standards %%%%
+
+\newcommand{\sk}{\mathfrak{s}} % stack
+\newcommand{\hh}{\mathfrak{h}} % heap
+\newcommand{\skhh}{(\sk,\hh)} % generic state
+%\newcommand{\Stacks}{\mathcal{S}}
+\newcommand{\Stacks}{\mathsf{Stacks}}
+%\newcommand{\Heaps}{\mathcal{H}}
+\newcommand{\Heaps}{\mathsf{Heaps}}
+\newcommand{\emptyheap}{\hh_\emptyset}
+\newcommand{\singleheap}[2]{\{ #1 \,\mapsto\, #2\}}
+\newcommand{\loc}{\ell}
+\newcommand{\val}{\vala}
+\newcommand{\vala}{v}
+\newcommand{\valb}{w}
+\newcommand{\Loc}{L}
+\newcommand{\disjoint}{\mathrel{\bot}}
+%\newcommand{\States}{\Sigma}
+\newcommand{\States}{\mathsf{States}}
+\newcommand{\To}{\rightarrow}
+\newcommand{\true}{\mathsf{true}}
+\newcommand{\false}{\mathsf{false}}
+\newcommand{\mydot}{\text{{\Large\textbf{.}}~}}
+\newcommand{\guard}{\varphi}
+\newcommand{\heapSize}{\sfsymbol{\textbf{size}}}
+
+%%%% Operational Semantics %%%
+\newcommand{\transitionRelation}{\mathrel{{\large \rightsquigarrow}}}
+\newcommand{\transition}[2]{#1  \transitionRelation  #2 }
+\newcommand{\noTransition}[2]{#1 \not\transitionRelation #2}
+\newcommand{\transitionRelationClosure}{\transitionRelation^{*}}
+\newcommand{\configuration}[2]{\left\langle #1, #2 \right\rangle}
+\newcommand{\toState}[2]{#1 ~ {}{\large \transitionRelationClosure}{} ~ #2}
+\newcommand{\notToState}[2]{#1 \mathrel{{\large \not\transitionRelation}^{*}} #2}
+\newcommand{\nonTermination}{\uparrow}
+\newcommand{\abort}{\textbf{abort}}
+\newcommand{\evaluateExpr}[2]{#2(#1)}
+\newcommand{\updateHeap}[2]{\left[ h \mid #2 \right]}
+\newcommand{\terminated}{\ensuremath{\downarrow}}
+\newcommand{\terminatedState}[1]{\configuration{\terminated}{#1}}
+
+
+%%%%    Shortcuts    %%%%
+
+\newcommand{\qif}{\quad\textnormal{if}~}
+\newcommand{\tif}{~\textnormal{if}~}
+
+\newcommand{\qiff}{\quad\textnormal{iff}\quad}
+\newcommand{\qqiff}{\qquad\textnormal{iff}\qquad}
+\newcommand{\lqiff}{\textnormal{iff}\quad}
+\newcommand{\lqqiff}{\textnormal{iff}\qquad}
+
+\newcommand{\qand}{\quad\textnormal{and}\quad}
+\newcommand{\qqand}{\qquad\textnormal{and}\qquad}
+
+\newcommand{\qor}{\quad\textnormal{or}\quad}
+\newcommand{\qqor}{\qquad\textnormal{or}\qquad}
+
+\newcommand{\qimplies}{\quad\textnormal{implies}\quad}
+\newcommand{\qqimplies}{\qquad\textnormal{implies}\qquad}
+\newcommand{\lqimplies}{\textnormal{implies}\quad}
+\newcommand{\lqqimplies}{\textnormal{implies}\qquad}
+
+\newcommand{\pprec}{\mathrel{{\prec}\hspace{-.5ex}{\prec}}}
+\newcommand{\ppprec}{~{}\pprec{}~}
+
+
+\newcommand{\morespace}[1]{~{}#1{}~}
+\newcommand{\qmorespace}[1]{\quad{}#1{}\quad}
+\newcommand{\qqmorespace}[1]{\qquad{}#1{}\qquad}
+\newcommand{\ppreceq}{~{}\preceq{}~}
+\newcommand{\ssucceq}{~{}\succeq{}~}
+\newcommand{\eeq}{~{}={}~}
+\newcommand{\ttriangleq}{~{}\triangleq{}~}
+\newcommand{\defeq}{\coloneqq}
+\newcommand{\ddefeq}{~{}\coloneqq{}~}
+\newcommand{\neeq}{~{}\neq{}~}
+\newcommand{\qeq}{\quad{}={}\quad}
+\newcommand{\qqeq}{\qquad{}={}\qquad}
+\newcommand{\lleq}{~{}\leq{}~}
+\newcommand{\LL}{~{}<{}~}
+\newcommand{\GG}{~{}>{}~}
+\newcommand{\ggeq}{~{}\geq{}~}
+\newcommand{\ssqsubseteq}{~{}\sqsubseteq{}~}
+\newcommand{\iimplies}{~{}\implies{}~}
+\newcommand{\mmodels}{~{}\models{}~}
+\newcommand{\nnotmodels}{~{}\not\models{}~}
+\newcommand{\iin}{~{}\in{}~}
+\newcommand{\nnotin}{~{}\not\in{}~}
+\newcommand{\ttimes}{\morespace{\times}}
+\newcommand{\tto}{\morespace{\to}}
+
+\newcommand{\ttriangleright}{\morespace{\triangleright}}
+\newcommand{\qtriangleright}{\qmorespace{\triangleright}}
+\newcommand{\qqtriangleright}{\qqmorespace{\triangleright}}
+
+\newcommand{\qedtriangle}{\hfill $\triangle$}
+
+\newcommand{\RSL}{\sfsymbol{RSL}\xspace}
+\newcommand{\SL}{\sfsymbol{SL}\xspace}
+
+%%%%    SYMBOLS    %%%%
+\newcommand{\cmark}{{\large\ding{51}}}
+\newcommand{\xmark}{}%{\scriptsize\ding{55}}}
+
+%%%%    LOGICS    %%%%
+\newcommand{\slemp}{\sfsymbol{\textbf{emp}}}
+\newcommand{\emp}{\iverson{\slemp}}
+\newcommand{\iemp}{\iiverson{\slemp}}
+%\newcommand{\tree}[1]{\iverson{\sfsymbol{\textbf{\text{tree}(\(\boldsymbol{#1}\))}}}}
+%\newcommand{\bst}[1]{\iverson{\sfsymbol{\textbf{\text{bst}(\(\boldsymbol{#1}\))}}}}
+%\newcommand{\elem}[1]{\iverson{\sfsymbol{\textbf{\text{elem}(\(\boldsymbol{#1}\))}}}}
+%\newcommand{\contains}[1]{\iverson{\sfsymbol{\textbf{\text{contains}(\(\boldsymbol{#1}\))}}}}
+%\newcommand{\dll}[2]{\iverson{\sfsymbol{\textbf{\text{dll}(\(\boldsymbol{#1, #2}\))}}}}
+%\newcommand{\rroot}[2]{\iverson{\sfsymbol{\textbf{\text{root}(\(\boldsymbol{#1, #2}\))}}}}
+%\newcommand{\suc}[2]{\iverson{\sfsymbol{\textbf{\text{succ}(\(\boldsymbol{#1, #2}\))}}}}
+\newcommand{\slsingleton}[2]{{#1 \mapsto #2}}
+\newcommand{\slvalidpointer}[1]{{#1 \mapsto \,{-}\,}}
+
+\newcommand{\singleton}[2]{\iverson{#1 \mapsto #2}}
+\newcommand{\containsPointer}[2]{\iverson{#1 \hookrightarrow #2}}
+\newcommand{\notContainsPointer}[2]{\iverson{#1 \not\hookrightarrow #2}}
+\newcommand{\validpointer}[1]{\iverson{#1 \mapsto \,{-}\,}}
+
+\newcommand{\isingleton}[2]{\iiverson{#1 \mapsto #2}}
+\newcommand{\icontainsPointer}[2]{\iiverson{#1 \hookrightarrow #2}}
+\newcommand{\inotContainsPointer}[2]{\iiverson{#1 \not\hookrightarrow #2}}
+\newcommand{\ivalidpointer}[1]{\iiverson{#1 \mapsto \,{-}\,}}
+
+\newcommand{\sepcon}{\mathbin{{\star}}} 
+\newcommand{\sepadd}{\mathbin{{\oplus}}}
+\newcommand{\ssepadd}{\morespace{\sepadd}}
+\newcommand{\sepimp}{\mathbin{\text{\raisebox{-0.1ex}{$\boldsymbol{{-}\hspace{-.55ex}{-}}$}}\hspace{-1ex}\text{\raisebox{0.13ex}{\rotatebox{-17}{$\star$}}}}}
+\newcommand{\sepmon}{\mathbin{\text{\raisebox{-0.0ex}{$\boldsymbol{{-}\hspace{-.55ex}{-}}$}}\hspace{-0.3ex}\text{$\ominus$}}}
+\newcommand{\ssepmon}{\morespace{\sepmon}}
+\newcommand{\nil}{\textit{nil}}
+\newcommand{\nt}[1]{\textit{numtree}\left(#1\right)}
+
+\newcommand{\emprun}[1]{\ensuremath{\underline{#1}}}
+%\newcommand{\pureemp}[1]{\ensuremath{\left\langle #1 \wedge \slemp \right\rangle}}
+\newcommand{\pureemp}[1]{\emprun{\iiverson{#1}}}
+
+%%%% Potential function %%%%
+
+\newcommand{\htree}[1]{\iverson{\sfsymbol{\textbf{\(\hat{\text{tree}}(\boldsymbol{#1})\)}}}}
+\newcommand{\hsuc}[2]{\iverson{\sfsymbol{\textbf{\(\hat{\text{succ}}(\boldsymbol{#1, #2})\)}}}}
+\newcommand{\pii}[1]{\sfsymbol{\(\boldsymbol{\vartheta(#1)}\)}}
+\newcommand{\sigmaa}[1]{\sfsymbol{\(\boldsymbol{\sigma(#1)}\)}}
+\newcommand{\hpii}[1]{\sfsymbol{\(\boldsymbol{\hat{\vartheta}(#1)}\)}}
+\newcommand{\hsigmaa}[1]{\sfsymbol{\(\boldsymbol{\hat{\sigma}(#1)}\)}}
+
+
+
+%%%%    WP-STYLE TRANSFORMERS    %%%%
+
+\newcommand{\hoare}[3]{\left\langle \,{#1}\vphantom{#3}\, \right\rangle \mathrel{#2} \left\langle \, {#3}\vphantom{#1} \, \right\rangle}
+\newcommand{\partialhoare}[3]{\left\langle \,{#1}\vphantom{#3}\, \right\rangle \mathrel{\widetilde{#2}} \left\langle \, {#3}\vphantom{#1} \, \right\rangle}
+
+% general transformer
+\newcommand{\transformersymbol}{\mathcal{T}}
+\newcommand{\boldtransformersymbol}{\boldsymbol{\transformersymbol}}
+\newcommand{\transformer}[2]{\transformersymbol \, \left\llbracket {#1} \right\rrbracket \, \left( {#2} \right)}
+\newcommand{\transformerC}[1]{\transformersymbol \, \left\llbracket {#1} \right\rrbracket}
+
+% weakest preexpectation
+\newcommand{\wpsymbol}{\sfsymbol{wp}}
+\newcommand{\boldwpsymbol}{\textbf{\sfsymbol{wp}}}
+\let\weierwp\wp
+\renewcommand{\wp}[2]{\wpsymbol \left\llbracket {#1} \right\rrbracket \left( {#2} \right)}
+\newcommand{\wpC}[1]{\wpsymbol \, \left\llbracket {#1} \right\rrbracket}
+\newcommand{\cemphwp}[2]{\cemph{\wpsymbol} \, \left\llbracket {#1} \right\rrbracket \, \left( {#2} \right)}
+
+\newcommand{\wpk}[3]{\wpsymbol^{= #3} \, \left\llbracket {#1} \right\rrbracket \, \left( {#2} \right)}
+
+% angelic weakest preexpectation
+\newcommand{\awpsymbol}{\sfsymbol{awp}}
+\newcommand{\boldawpsymbol}{\textbf{\sfsymbol{awp}}}
+\newcommand{\awp}[2]{\awpsymbol \, \left\llbracket {#1} \right\rrbracket \, \left( {#2} \right)}
+\newcommand{\awpC}[1]{\awpsymbol \, \left\llbracket {#1} \right\rrbracket}
+\newcommand{\cemphawp}[2]{\cemph{\awpsymbol} \, \left\llbracket {#1} \right\rrbracket \, \left( {#2} \right)}
+
+% weakest liberal preexpectation
+\newcommand{\wlpsymbol}{\sfsymbol{wlp}}
+\newcommand{\boldwlpsymbol}{\textbf{\sfsymbol{wlp}}}
+\newcommand{\wlp}[2]{\wlpsymbol \, \left\llbracket {#1} \right\rrbracket \, \left( {#2} \right)}
+\newcommand{\cemphwlp}[2]{\cemph{\wlpsymbol} \, \left\llbracket {#1} \right\rrbracket \, \left( {#2} \right)}
+\newcommand{\wlpC}[1]{\wlpsymbol \, \left\llbracket {#1} \right\rrbracket}
+
+% angelic weakest liberal preexpectation
+\newcommand{\awlpsymbol}{\sfsymbol{awlp}}
+\newcommand{\boldawlpsymbol}{\textbf{\sfsymbol{awlp}}}
+\newcommand{\awlp}[2]{\awlpsymbol \, \left\llbracket {#1} \right\rrbracket \, \left( {#2} \right)}
+\newcommand{\awlpC}[1]{\awlpsymbol \, \left\llbracket {#1} \right\rrbracket}
+\newcommand{\cemphawlp}[2]{\cemph{\awlpsymbol} \, \left\llbracket {#1} \right\rrbracket \, \left( {#2} \right)}
+
+% expected runtime transformer
+\newcommand{\ertsymbol}{\sfsymbol{ert}}
+\newcommand{\boldertsymbol}{\textbf{\sfsymbol{ert}}}
+\newcommand{\ert}[2]{\ertsymbol \, \left\llbracket {#1} \right\rrbracket \, \left( {#2} \right)}
+\newcommand{\ertC}[1]{\ertsymbol \, \left\llbracket {#1} \right\rrbracket}
+\newcommand{\ertk}[3]{\ertsymbol^{#3} \, \left\llbracket {#1} \right\rrbracket \, \left( {#2} \right)}
+
+% conditional weakest preexpectation
+\newcommand{\cwpsymbol}{\sfsymbol{cwp}}
+\newcommand{\qcwpsymbol}{\sfsymbol{\underline{cw}p}}
+
+%\newcommand{\conditionalPair}[2]{{\let\oldarraystretch\arraystretch}\renewcommand{\arraystretch}{1}~\holter{~\raisebox{0ex}{${#1}$}~}{~\raisebox{0.25ex}{${#2}$}~}~\renewcommand{\arraystretch}{\oldarraystretch}}
+
+\newcommand{\conditionalPair}[2]{\inlineConditionalPair{#1}{#2}}
+\newcommand{\smallconditionalPair}[2]{\inlineConditionalPair{\text{\scriptsize $#1$}}{\text{\scriptsize $#2$}}}
+
+\newcommand{\tikzholtpoltconditionalPair}[2]{%
+    \tikz[baseline=(center)]{
+\node[inner xsep=.3em, inner ysep=.3em, outer sep=0em] (todotted) {$\displaystyle{#1}$};
+\node[inner xsep=.3em, inner ysep=.3em, outer sep=0em, below=0em of todotted, yshift=-0em] (todotted2) {$\displaystyle#2$};
+\node (upperbox) [inner sep=0em, outer sep=0em, draw=none, fit = (todotted.north west) (todotted2.north west) (todotted.south east) (todotted2.north east)] {};
+\node (lowerbox) [inner sep=0em, outer sep=0em, draw=none, fit = (todotted.south west) (todotted2.north west) (todotted.south east) (todotted2.south east)] {};
+\draw[use as bounding box, draw=none] ($(upperbox.north west) + (-.1em, -.2em)$) rectangle ($(lowerbox.south east) + (.1em, .2em)$);
+\node (center) at ($(upperbox.south) + (0, -0.5ex)$) {};
+\draw[semithick] (upperbox.north west) -- (upperbox.south west) -- (upperbox.south east) -- (lowerbox.south east);
+    }%
+}%
+
+
+\newcommand{\inlineConditionalPair}[2]{%
+    \tikz[baseline=(center)]{
+\node[inner xsep=.1em, inner ysep=.2em, outer sep=0em, draw=none, auto] (todotted) {\small $#1\!\!$};
+\node[inner xsep=.1em, inner ysep=.2em, outer sep=0em, right=.5em of todotted, yshift=-.3em, draw=none, auto] (todotted2) {\small $#2$};
+\draw[use as bounding box, draw=none] ($(todotted.north west) + (0, -.3em)$) rectangle ($(todotted2.south east) + (0, .3em)$);
+\node (center) at ($(todotted.base)!0.5!(todotted2.base)$) {};
+\draw (todotted.south west) -- (todotted.south east) -- (todotted2.north west) -- (todotted2.north east);
+    }%
+}%
+
+\newcommand{\boldcwpsymbol}{\textbf{\sfsymbol{cwp}}}
+\newcommand{\cwponearg}[2]{\cwpsymbol \, \left\llbracket {#1} \right\rrbracket \, \left( {#2} \right)}
+\newcommand{\cwp}[3]{\cwponearg{#1}{\inlineConditionalPair{#2}{#3}}}
+\newcommand{\cwpC}[1]{\cwpsymbol \, \left\llbracket {#1} \right\rrbracket}
+
+\newcommand{\qcwp}[2]{\qcwpsymbol \, \left\llbracket {#1} \right\rrbracket \, \left( {#2} \right)}
+\newcommand{\qcwpC}[1]{\qcwpsymbol \, \left\llbracket {#1} \right\rrbracket}
+
+% conditional weakest liberal preexpectation
+\newcommand{\cwlpsymbol}{\sfsymbol{cwlp}}
+\newcommand{\qcwlpsymbol}{\sfsymbol{\underline{cwl}p}}
+\newcommand{\boldcwlpsymbol}{\textbf{\sfsymbol{cwlp}}}
+\newcommand{\cwlponearg}[2]{\cwlpsymbol \, \left\llbracket {#1} \right\rrbracket \, \left( {#2} \right)}
+\newcommand{\cwlp}[3]{\cwlponearg{#1}{\inlineConditionalPair{#2}{#3}}}
+\newcommand{\cwlpC}[1]{\cwlpsymbol \, \left\llbracket {#1} \right\rrbracket}
+
+\newcommand{\qcwlp}[2]{\qcwlpsymbol \, \left\llbracket {#1} \right\rrbracket \, \left( {#2} \right)}
+\newcommand{\qcwlpC}[1]{\qcwlpsymbol \, \left\llbracket {#1} \right\rrbracket}
+
+
+% mixed-sign wp
+
+\newcommand{\littlebigLbag}{\raisebox{-.1em}{\text{\Large $\Lbag$}}}
+\newcommand{\littlebigRbag}{\raisebox{-.1em}{\text{\text{\Large $\Rbag$}}}}
+\newcommand{\bigLbag}{\raisebox{-.2em}{\text{\LARGE $\Lbag$}}}
+\newcommand{\bigRbag}{\raisebox{-.2em}{\text{\text{\LARGE $\Rbag$}}}}
+\newcommand{\BigLbag}{\raisebox{-.2em}{\text{\huge $\Lbag$}}}
+\newcommand{\BigRbag}{\raisebox{-.2em}{\text{\text{\huge $\Rbag$}}}}
+\newcommand{\hugeLbag}{\raisebox{-.4em}{\text{\Huge $\Lbag$}}}
+\newcommand{\hugeRbag}{\raisebox{-.4em}{\text{\text{\Huge $\Rbag$}}}}
+
+%\newcommand{\wpp}[3]{\ensuremath{\wpsymbol\left[{#1}\right]\iwpair{#2}{#3}}}
+\newcommand{\wpp}[2]{\wpsymbol \, \left\llbracket{#1} \right\rrbracket \, \left(#2\right)}
+
+\newcommand{\iwpsymbol}{\ensuremath{{\textnormal{\textsf{iwp}}}}}
+\newcommand{\boldiwpsymbol}{\ensuremath{\boldsymbol{{\textnormal{\textbf{\textsf{iwp}}}}}}}
+\newcommand{\iwponearg}[2]{\iwpsymbol \, \left\llbracket{#1} \right\rrbracket \, \left({#2}\right)}
+\newcommand{\iwp}[3]{\iwpsymbol \, \left\llbracket{#1} \right\rrbracket \, \EqPair{#2}{#3}}
+\newcommand{\iwpC}[1]{\iwpsymbol \, \left\llbracket {#1} \right\rrbracket}
+\newcommand{\boldiwp}[3]{\boldsymbol{\boldiwpsymbol \, \left\llbracket{#1} \right\rrbracket \, \EqPair{#2}{#3}}}
+
+
+
+%%%%    PGCL PROGRAMS    %%%%
+\newcommand{\SKIP}{\ttsymbol{skip}}
+\newcommand{\EMPTY}{\ensuremath{\textnormal{\texttt{empty}}}}
+\newcommand{\HALT}{\ensuremath{\textnormal{\texttt{halt}}}}
+\newcommand{\ABORT}{\ensuremath{\textnormal{\texttt{abort}}}}
+\newcommand{\DIVERGE}{\ensuremath{\textnormal{\texttt{diverge}}}}
+\newcommand{\TICKsymbol}{\ensuremath{\textnormal{\texttt{tick}}}}
+\newcommand{\TICK}[1]{\ensuremath{\TICKsymbol\left({#1}\right)}}
+
+
+%\newcommand{\OBSERVE}[1]{\ensuremath{\textnormal{\texttt{observe}} ~ {#1}}}
+\newcommand{\ASSUME}[1]{\ensuremath{\textnormal{\texttt{assume}} \, \left({#1}\right)}}
+\newcommand{\ASSERT}[1]{\ensuremath{\textnormal{\texttt{assert}} \, \left({#1}\right)}}
+\newcommand{\CALL}[1]{\ensuremath{\textnormal{\texttt{call}} ~ {#1}}}
+
+\newcommand{\AssignSymbol}{\coloneqq}
+\newcommand{\ASSIGN}[2]{\ensuremath{#1 \AssignSymbol #2}}
+\newcommand{\CHOOSE}[2]{\ASSIGN{#1}{\texttt{choose}\left(#2\right)}}
+\newcommand{\BMODEL}[2]{\ensuremath{\mathit{Pr}_{#1}\left(#2\right)}}
+\newcommand{\SMODEL}[2]{\ensuremath{#1\left(#2\right)}}
+\newcommand{\UNIFASSIGN}[3]{\ensuremath{\ASSIGN{#1}{\ttsymbol{Unif} \left(#2,#3\right)}}}
+
+\newcommand{\AppAssignSymbol}{\mathrel{\textnormal{\texttt{:}}\hspace{-.1em}{\approx}}}
+\newcommand{\PASSIGN}[2]{\ensuremath{#1 \AppAssignSymbol\hspace{.1em} #2}}
+
+% hpGCL
+\newcommand{\ALLOC}[2]{\ensuremath{{#1} \AssignSymbol \mathtt{alloc}\left( #2 \right)}}
+% \newcommand{\dereference}[1]{\relationrightproject{\,#1\,}}
+\newcommand{\ADDRESS}[1]{\langle#1\rangle}
+\newcommand{\dereference}[1]{\ADDRESS{#1}}
+\newcommand{\HASSIGN}[2]{\ensuremath{\dereference{#1} \AssignSymbol #2}}
+\newcommand{\ASSIGNH}[2]{\ensuremath{#1 \AssignSymbol \dereference{#2}}}
+\newcommand{\HASSIGNH}[2]{\ensuremath{\dereference{#1} \AssignSymbol \dereference{#2}}}
+\newcommand{\LOOKUP}[2]{\ASSIGNH{#1}{#2}}
+\newcommand{\MUTATE}[2]{\HASSIGN{#1}{#2}}
+\newcommand{\FREE}[1]{\ensuremath{\mathtt{free}(#1)}}
+
+
+\newcommand{\COMPOSE}[2]{\ensuremath{{#1}{\,\fatsemi}~ {#2}}}
+\newcommand{\PCHOICE}[3]{\ensuremath{\left\{\, {#1} \,\right\}\mathrel{\left[{#2}\right]}\left\{\, {#3} \,\right\}}}
+\newcommand{\NDCHOICE}[2]{\ensuremath{\left\{\, {#1} \,\right\}\mathrel{\Box}\left\{\, {#2} \,\right\}}}
+\newcommand{\NDBRACK}{\ensuremath{\left.\right\}\mathrel{\Box}\left\{\right.}}
+
+
+\newcommand{\IFSYMBOL}{\ensuremath{\textnormal{\texttt{if}}}}
+\newcommand{\IF}[1]{\ensuremath{\IFSYMBOL\,\left(\, {#1} \,\right)\,\{}}
+\newcommand{\ELSESYMBOL}{\ensuremath{\textnormal{\texttt{else}}}}
+\newcommand{\ELSE}{\ensuremath{\}\,\ELSESYMBOL\,\{}}
+\newcommand{\ITE}[3]{\ensuremath{\IFSYMBOL\;{#1}\;\texttt{then}\; #2 \; \ELSESYMBOL\; #3  }}
+%\newcommand{\ITE}[3]{\ensuremath{\textttt{if}, {#1} \texttt{then} {#2} \,\ELSESYMBOL {#3} \,\right\}}}
+\newcommand{\INFER}[3]{\ensuremath{\texttt{infer}\,\left(\, {#1} \,\right)\,\left\{\, {#2} \,\right\}\,\ELSESYMBOL\,\left\{\, {#3} \,\right\}}}
+\newcommand{\ELIF}[1]{\ensuremath{\}\, \ELSESYMBOL\, \IFSYMBOL\, \left(\, {#1} \,\right)\,\{}}
+
+
+\newcommand{\observefail}{\text{\lightning}}
+\newcommand{\observesymbol}{\textnormal{\texttt{observe}}}
+\newcommand{\OBSERVE}[1]{\ensuremath{\observesymbol (#1)}}
+\newcommand{\OBSERVEASSIGN}[2]{\ensuremath{#1 \coloneqq \observesymbol \,\left(#2\right)}}
+
+\newcommand{\WHILESYMBOL}{\ensuremath{\textnormal{\texttt{while}}}}
+\newcommand{\WHILE}[1]{\ensuremath{\WHILESYMBOL \, \left(\, {#1} \,\right)\left\{\right.}}
+
+\newcommand{\WHILEDO}[2]{\ensuremath{\WHILESYMBOL \, \left(\, {#1} \,\right)\left\{\, {#2} \,\right\}}}
+
+\newcommand{\PROCEDURE}{\ensuremath{\textnormal{\texttt{\textbf{proc}}}}~}
+
+%\newcommand{\BOUNDEDWHILE}[3]{\ensuremath{\WHILE^{<{#1}}\:(#2)\:\{#3\}}}
+\newcommand{\BOUNDEDWHILE}[3]{\ensuremath{\WHILESYMBOL^{{#1}}\:(#2)\:\{#3\}}}
+
+
+%%% LOGIC NAMES %%%
+\newcommand{\QSL}{\textnormal{\sfsymbol{QSL}}\xspace} 
+
+
+
+%%%%    SETS    %%%%
+\newcommand{\PBLIMP}{\sfsymbol{\mbox{P-BLIMP}}\xspace}   % Programs
+\newcommand{\gcl}{\textnormal{\sfsymbol{GCL}}\xspace}   % Programs
+\newcommand{\pgcl}{\textnormal{\sfsymbol{pGCL}}\xspace}   % Programs
+\newcommand{\cpgcl}{\textnormal{\sfsymbol{cpGCL}}\xspace}   % Programs
+\newcommand{\hpgcl}{\textnormal{\sfsymbol{hpGCL}}\xspace}   % Programs
+\newcommand{\boldgcl}{\textnormal{\textbf{\sfsymbol{GCL}}}\xspace}   % Programs
+\newcommand{\boldhpgcl}{\textnormal{\textbf{\sfsymbol{hpGCL}}}\xspace}   % Programs
+\newcommand{\boldpgcl}{\textnormal{\textbf{\sfsymbol{pGCL}}}\xspace}   % Programs
+\newcommand{\boldcpgcl}{\textnormal{\textbf{\sfsymbol{cpGCL}}}\xspace}   % Programs
+\newcommand{\Vars}{\ensuremath{\mathsf{Vars}}\xspace}   % Variables
+\newcommand{\Vals}{\ensuremath{\mathsf{Vals}}\xspace}    % Values
+%\newcommand{\Vals}{\ensuremath{\Nats}\xspace}    % Values
+\newcommand{\Locs}{\ensuremath{\mathsf{{Loc}}\xspace}}    % memory locations
+
+\newcommand{\ppdl}{\textnormal{\sfsymbol{PPDL}}\xspace}
+
+
+\newcommand{\Nats}{\ensuremath{\mathbb{N}}\xspace}
+\newcommand{\Ints}{\ensuremath{\mathbb{Z}}\xspace}
+\newcommand{\Rats}{\ensuremath{\mathbb{Q}}\xspace}
+\newcommand{\Reals}{\ensuremath{\mathbb{R}}\xspace}
+\newcommand{\PosReals}{\mathbb{R}_{\geq 0}}
+\newcommand{\StrictPosReals}{\mathbb{R}_{> 0}}
+\newcommand{\PosRealsInf}{\mathbb{R}_{\geq 0}^\infty}
+\newcommand{\PosRats}{\mathbb{Q}_{\geq 0}}
+\newcommand{\PosRatsInf}{\mathbb{Q}_{\geq 0}^\infty}
+
+\newcommand{\Preds}{\pot{\States}}
+%\newcommand{\States}{\Sigma}
+%\newcommand{\Confs}{\mathbb{K}}
+\newcommand{\Confs}{\textsf{Conf}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Ebounded}{\mathbb{E}_{\leq {\, \exists b}}}
+\newcommand{\Eone}{\mathbb{E}_{\leq 1}}
+\newcommand{\Epm}{\ensuremath{\mathbb{E}_{{\pm}}}}
+\newcommand{\A}{\mathbb{A}}
+\newcommand{\Api}[1][\potent]{\A_{#1}}
+\newcommand{\T}{\mathbb{T}}
+%\newcommand{\C}{\mathbb{C}}
+\newcommand{\Cone}{\mathbb{C}_{\leq 1}}
+\newcommand{\Scheds}{\sfsymbol{Scheds}}
+
+
+\newcommand{\Pairs}{\ensuremath{\mathbb{P}}}
+\newcommand{\EqPairs}{\ensuremath{\mathbb{I\hspace{-.15ex}E}}}
+
+\newcommand{\iwpair}[2]{({#1} \leftsliceeq {#2})}
+\newcommand{\EqPair}[2]{\Lbag{#1} \leftsliceeq {#2}\Rbag} 
+\newcommand{\littlebigEqPair}[2]{\littlebigLbag{#1} ~{}\mathrel{\text{\large$\leftsliceeq$}}{}~ {#2}\littlebigRbag}
+\newcommand{\bigEqPair}[2]{\bigLbag{#1} ~{}\mathrel{\text{\large$\leftsliceeq$}}{}~ {#2}\bigRbag}
+\newcommand{\BigEqPair}[2]{\BigLbag{#1} ~{}\mathrel{\text{\large$\leftsliceeq$}}{}~ {#2}\BigRbag}
+\newcommand{\hugeEqPair}[2]{\hugeLbag{#1} ~{}\mathrel{\text{\Large$\leftsliceeq$}}{}~ {#2}\hugeRbag}
+
+
+
+\newcommand{\DExprs}{\ensuremath{\mathsf{PGuards}}\xspace}    % Distribution Expression
+\newcommand{\dists}[1]{\ensuremath{\mathcal{D}\left({#1}\right)}}
+\newcommand{\Valdists}{\dists{\Vals}}
+
+
+
+
+
+%%%%    Functions    %%%%
+
+\newcommand{\dom}[1]{\sfsymbol{dom}\left({#1}\right)}
+\newcommand{\iverson}[1]{\left[ {#1} \right]}
+\newcommand{\iiverson}[1]{\ensuremath{\Lbag #1 \Rbag}}
+\newcommand{\ket}[1]{\left|\, {#1} \right\rangle}
+\newcommand{\bigiverson}[1]{\vphantom{\big(}\iverson{#1}\vphantom{\big)}}
+\newcommand{\Min}[2]{\min\left\{\,{#1},\: {#2}\,\right\}}
+\newcommand{\cemphMin}[2]{\cemph{\min}\left\{\,{#1},\: {#2}\,\right\}}
+\newcommand{\Max}[2]{\max\left\{\,{#1},\: {#2}\,\right\}}
+%\newcommand{\Exp}[2]{\sfsymbol{Exp}_{#1}\left( {#2} \right)}
+\newcommand{\Exp}[2]{\int_\States \; {#2} \; d \,{#1} }
+\newcommand{\ExpVals}[2]{\int_\Vals \; {#2} \; d \,{#1} }
+\newcommand{\ExpNoSet}[2]{\int \; {#2} \; d \,{#1} }
+\newcommand{\ERT}[2]{\sfsymbol{ERT}\left\llbracket #1 \right\rrbracket_{#2}}
+\newcommand{\positive}[1]{\tensor*[^{+}]{#1}{}}
+\newcommand{\negative}[1]{\tensor*[^{-}]{#1}{}}
+
+\newcommand{\pos}[1]{(#1)^{+}}
+
+%\newcommand{\Exp}[2]{\int_\States {#2} \: d {#1} }
+
+\newcommand{\subst}[2]{\left[ {#1} \middle/ {#2}\right]}
+\newcommand{\statesubst}[2]{\left[ {#1} \mapsto {#2}\right]}
+
+
+\newcommand{\monus}{% Don't redefine it if available
+	\mathbin{% We want a binary operation
+		\vphantom{+}% The same height as a plus or minus
+		\text{% Change size in sub/superscripts
+			\mathsurround=0pt % To be on the safe side
+			\ooalign{% Superimpose the two symbols
+				\noalign{\kern-.5ex}% but the dot is raised a bit
+				\hidewidth$\smash{\cdot}$\hidewidth\cr % Dot
+				\noalign{\kern.5ex}% Backup for vertical alignment
+				$-$\cr % Minus
+			}%
+		}%
+	}%
+}
+
+%\newcommand{\charfun}[4]{\tensor*[^{#2}_{{#1}{#3}}]{\Phi}{_{{#4}}}}
+%\newcommand{\charfun}[4]{\tensor*[^{#1}_{{\langle #2, #3 \rangle}}]{\Phi}{_{{#4}}}}
+%\newcommand{\charfun}[4]{\charfunn{#1}{#2}{#3}{#4}{}}
+\newcommand{\charfun}[1]{\Phi_{#1}}
+\newcommand{\aertcharfun}[1]{\Psi_{#1}}
+%\newcommand{\charfunn}[5]{\tensor*[^{#1}_{\ifthenelse{\equal{#2}{}\and\equal{#3}{}}{}{\langle #2, #3 \rangle}}]{\Phi}{_{{#4}}^{{#5}}}}
+%
+%\newcommand{\charfunnoguard}[2]{\tensor*[^{#1}]{\Phi}{_{{#2}}}}
+%\newcommand{\charfunnoguardn}[3]{\tensor*[^{#1}]{\Phi}{_{{#2}}^{{#3}}}}
+
+\newcommand{\charwp}[3]{\charfun{\wpsymbol}{#1}{#2}{#3}}
+\newcommand{\charwlp}[3]{\charfun{\wlpsymbol}{#1}{#2}{#3}}
+\newcommand{\charawp}[3]{\charfun{\awpsymbol}{#1}{#2}{#3}}
+\newcommand{\charawlp}[3]{\charfun{\awlpsymbol}{#1}{#2}{#3}}
+\newcommand{\charert}[3]{\charfun{\ertsymbol}{#1}{#2}{#3}}
+\newcommand{\chariwp}[3]{\charfun{\iwpsymbol}{#1}{#2}{#3}}
+\newcommand{\charcwp}[3]{\charfun{\cwpsymbol}{#1}{#2}{#3}}
+\newcommand{\charcwlp}[3]{\charfun{\cwlpsymbol}{#1}{#2}{#3}}
+
+\newcommand{\charwpn}[4]{\charfunn{\wpsymbol}{#1}{#2}{#3}{#4}}
+\newcommand{\charwlpn}[4]{\charfunn{\wlpsymbol}{#1}{#2}{#3}{#4}}
+\newcommand{\charawpn}[4]{\charfunn{\awpsymbol}{#1}{#2}{#3}{#4}}
+\newcommand{\charawlpn}[4]{\charfunn{\awlpsymbol}{#1}{#2}{#3}{#4}}
+\newcommand{\chariwpn}[4]{\charfunn{\iwpsymbol}{#1}{#2}{#3}{#4}}
+\newcommand{\charertn}[4]{\charfunn{\ertsymbol}{#1}{#2}{#3}{#4}}
+\newcommand{\charcwpn}[4]{\charfunn{\cwpsymbol}{#1}{#2}{#3}{#4}}
+\newcommand{\charcwlpn}[4]{\charfunn{\cwlpsymbol}{#1}{#2}{#3}{#4}}
+
+
+
+%\newcommand{\eval}[1]{\ensuremath{\llbracket {#1} \rrbracket}}
+\newcommand{\probof}[2]{\ensuremath{\llbracket {#1} \colon {#2} \rrbracket}}
+\newcommand{\pot}[1]{\mathcal{P}\left({#1}\right)}
+
+\newcommand{\sem}[3]{\left\llbracket #1 \right\rrbracket_{#2}^{#3}}
+
+
+\newcommand{\varsf}[1]{\sfsymbol{Vars}\left( #1 \right)}
+\newcommand{\modC}[1]{\sfsymbol{Mod}\left( #1 \right)}
+\newcommand{\notmod}{\mathrel{\not\mathrel{\Cap}}}
+\newcommand{\nnotmod}{~{}\notmod{}~}
+
+
+
+
+
+
+%%%% Standards %%%%
+
+%%%% Operational %%%%
+\newcommand{\ms}{\sigma}
+\newcommand{\ma}{a}
+\newcommand{\msched}{\mathfrak{S}}
+
+\newcommand{\MDP}{\mathcal{M}}
+\newcommand{\MS}{\mathcal{S}}
+\newcommand{\MA}{\textsf{Act}}
+\newcommand{\MP}{\textsf{prob}}
+\newcommand{\MI}{\ms_{\text{init}}}
+\renewcommand{\MR}{\textsf{rew}}
+
+
+\newcommand{\MDPInit}[1]{\MDP[#1]}
+\newcommand{\MSCHED}{\textsf{Sched}}
+
+\newcommand{\mstep}[2]{\xrightarrow[#1]{#2}}
+\newcommand{\qmstep}[2]{\quad\mstep{#1}{#2}\quad}
+
+\newcommand{\conf}[3]{#1,\, #2,\, #3}
+\newcommand{\term}{\mathpzc{term}}
+\newcommand{\sink}{\mathpzc{sink}}
+\newcommand{\fail}{\mathpzc{fault}}
+\newcommand{\tconf}[2]{\conf{\term}{#1}{#2}}
+
+\newcommand{\MPOP}{\mathpzc{prob}}
+\newcommand{\MROP}{\mathpzc{rew}}
+\newcommand{\MDPOP}[1]{\mathpzc{M}\llbracket #1 \rrbracket}
+
+\newcommand{\mpath}{\pi}
+\newcommand{\mpaths}[2]{\textsf{Paths}_{=#1}(#2)}
+
+\newcommand{\rt}{\ensuremath{{\textnormal{\textsf{rt}}}}}
+\newcommand{\rtt}[2]{\ensuremath{\rt\llbracket #1 \rrbracket(#2)}}
+\newcommand{\oprt}{\ensuremath{{\textnormal{\textsf{oprt}}}}}
+\newcommand{\oprtt}[2]{\ensuremath{{\oprt\llbracket #1 \rrbracket(#2)}}}
+\newcommand{\eert}{\ensuremath{{\textnormal{\textsf{eert}}}}}
+\newcommand{\eertt}[2]{\ensuremath{{\eert\llbracket #1 \rrbracket(#2)}}}
+
+%\newcommand{\sched}{\mathfrak{s}}
+%\newcommand{\conf}[6]{\left\langle #1,\, #2,\, #3,\, #4,\, #5,\, #6 \right\rangle}
+%\newcommand{\mdp}[4]{\left( #1,\, #2,\, #3,\, #4 \right)}
+%\newcommand{\MC}[3]{\left( #1,\, #2,\, #3 \right)}
+%\newcommand{\mdpstate}[2]{\left\langle #1,\, #2 \right\rangle}
+%\newcommand{\opmdp}[2]{\mathcal{M}^{#1, #2}}
+%\newcommand{\opmc}[3]{\mathcal{M}^{#1, #2}_{#3}}
+%\newcommand{\mc}[3]{\left\langle #1,\, #2,\, #3 \right\rangle}
+%\newcommand{\comptree}[2]{\mathcal{T}^{#1, #2}}
+%\newcommand{\sink}[2]{\mathpzc{success}, #1, #2}
+
+%\newcommand{\undesired}{\dagger}
+
+\newcommand{\mdps}{\sigma}
+\newcommand{\mdpinit}{\mdps_{\textsf{init}}}
+
+\newcommand{\mdpsched}{\mathfrak{S}}
+\newcommand{\mdppath}{\pi}
+\newcommand{\mdpa}{a}
+\newcommand{\mdpactions}{\textsf{Act}}
+
+\newcommand{\mdpprob}[1]{\MDPP\left(#1\right)}
+
+
+%\newcommand{\MDPI}[1]{\MDP_{#1}}
+\newcommand{\ExpRew}[1]{\textsf{ExpRew}\left(#1\right)}
+
+
+\newcommand{\ooprel}[2]{~\xrightarrow[#2]{#1}~}
+\newcommand{\oprel}[1]{~\xrightarrow{#1}~}
+\newcommand{\opdrel}{\oprel{}}
+\newcommand{\opnrel}[1]{~\xrightarrow[#1]{}~}
+\newcommand{\qoprel}[1]{\quad{\oprel{#1}}\quad}
+\newcommand{\qopnrel}[1]{\quad{\opnrel{#1}}\quad}
+\newcommand{\qopdrel}{\quad{\opdrel}\quad}
+
+\newcommand{\reward}[1]{\MDPR(#1)}
+
+
+
+
+
+%%%%    Shortcuts    %%%%
+
+\newcommand{\iffq}{\lqiff}
+\newcommand{\iffqq}{\lqqiff}
+\newcommand{\impliesq}{\lqimplies}
+\newcommand{\impliesqq}{\lqqimplies}
+
+\newcommand{\impliedbyq}{\textnormal{implied by}\quad}
+\newcommand{\impliedbyqq}{\textnormal{implied by}\qquad}
+
+
+\newcommand{\cppreceq}{\blacktrianglelefteq}
+\newcommand{\ccppreceq}{~{}~{}\cppreceq{}~{}~}
+
+\newcounter{blacktrianglelefteq}
+\newcommand{\blacktrianglelefteq}{%
+\mathrel{\stepcounter{blacktrianglelefteq}%
+\begin{tikzpicture}%
+\node[inner sep=0pt,outer ysep=0.125em, draw=none] (\theblacktrianglelefteq) {$\blacktriangleleft$};
+\draw[use as bounding box, draw=none] ($(\theblacktrianglelefteq.north west) + (0em, -.125em)$) rectangle ($(\theblacktrianglelefteq.south east) + (0, 0.0625em)$);
+\draw[] ($(\theblacktrianglelefteq.south west) + (.075em, 0em)$) -- ($(\theblacktrianglelefteq.south east) + (-0.075em, 0em)$);
+\end{tikzpicture}%
+}%
+}
+\newcommand{\ctpreceq}{\trianglelefteq}
+\newcommand{\cctpreceq}{~{}~{}\ctpreceq{}~{}~}
+
+\newcounter{leftsliceeq}
+\newcommand{\leftsliceeq}{%
+\mathrel{\stepcounter{leftsliceeq}%
+\begin{tikzpicture}%
+\node[inner sep=0pt,outer sep=0em, draw=none] (\theleftsliceeq) {$\leftslice$};
+\draw[use as bounding box, draw=none] ($(\theleftsliceeq.north west) + (0em, -.125em)$) rectangle ($(\theleftsliceeq.south east) + (0, 0.0625em)$);
+\draw[] ($(\theleftsliceeq.south west) + (.05em, 0.2em)$) -- ($(\theleftsliceeq.south east) + (-0.225em, -0.00em)$);
+\end{tikzpicture}%
+}%
+}
+
+\newcommand{\pprecsim}{~{}\precsim{}~}
+\newcommand{\ssuccsim}{~{}\succsim{}~}
+\newcommand{\ssimeq}{~{}\simeq{}~}
+\newcommand{\vvee}{~{}\vee{}~}
+\newcommand{\wwedge}{~{}\wedge{}~}
+\newcommand{\cvee}{\,\vee\,}
+\newcommand{\cwedge}{\,\wedge\,}
+\newcommand{\qvee}{\quad{}\vee{}\quad}
+\newcommand{\qwedge}{\quad{}\wedge{}\quad}
+\newcommand{\qqvee}{\qquad{}\vee{}\qquad}
+\newcommand{\qqwedge}{\qquad{}\wedge{}\qquad}
+\newcommand{\nneq}{~{}\neq{}~}
+\newcommand{\aapprox}{~{}\approx{}~}
+\newcommand{\pprecapprox}{~\:{}\precapprox{}\:~}
+\newcommand{\ssqsupseteq}{~{}\sqsupseteq{}~}
+\newcommand{\ssubseteq}{~{}\subseteq{}~}
+\newcommand{\ssubset}{~{}\subset{}~}
+\newcommand{\ssetminus}{~{}\setminus{}~}
+\newcommand{\ccup}{~{}\cup{}~}
+\newcommand{\ccap}{~{}\cap{}~}
+\newcommand{\pplus}{~{}+{}~}
+\newcommand{\rtmin}{\ensuremath{\sqcap}}
+\newcommand{\rrtmin}{~{}\ensuremath{\sqcap}~{}}
+\newcommand{\mminus}{~{}-{}~}
+\newcommand{\ooplus}{~{}\oplus{}~}
+\newcommand{\oodot}{~{}\odot{}~}
+\newcommand{\qmid}{\quad{}|{}\quad}
+
+
+\newcommand{\rta}{\ensuremath{f}}
+\newcommand{\rtb}{\ensuremath{g}}
+\newcommand{\rtc}{\ensuremath{u}}
+\newcommand{\inv}{\ensuremath{I}}
+
+\newcommand{\arta}{\ensuremath{X}}
+\newcommand{\artb}{\ensuremath{Y}}
+\newcommand{\artc}{\ensuremath{Z}}
+\newcommand{\ainv}{\ensuremath{J}}
+
+\newcommand{\preda}{\ensuremath{\varphi}} % predicates
+\newcommand{\predb}{\ensuremath{\psi}} 
+\newcommand{\predc}{\ensuremath{\vartheta}} 
+\newcommand{\predd}{\ensuremath{\xi}} 
+
+
+\newcommand{\pp}{\ensuremath{p}} % probabilities
+\newcommand{\qq}{\ensuremath{q}} % probabilities
+
+
+\newcommand{\nicepar}[1]{\vcenter{\hbox{$\displaystyle #1$}}}
+
+\newcommand{\bigtag}[1]{\tag*{$\left( \text{#1} \right)$}}
+
+\newcommand{\suppreceq}{{\textstyle\sup_{\preceq}}}
+\newcommand{\infpreceq}{{\textstyle\inf_{\preceq}}}
+\newcommand{\supctpreceq}{{\textstyle\sup_{\ctpreceq}}}
+\newcommand{\supcppreceq}{{\textstyle\sup_{\scalebox{0.75}{$\cppreceq$}}}}
+
+
+
+
+
+\newcommand{\setcomp}[2]{\left\{\, {#1} ~\middle|~ {#2} \,\right\}}
+
+\newcommand{\doublehrule}{\hrule\vspace{2pt}\hrule}
+%\newcommand{\doublehrule}{\hrulefill\vspace{2pt}\hrulefill}
+
+\definecolor{webgreen}{rgb}{0,.5,0}
+
+\newcommand{\black}[1]{\textcolor{black}{#1}}
+\newcommand{\gray}[1]{\textcolor{gray}{#1}}
+\newcommand{\lgray}[1]{\textcolor{lightgray}{#1}}
+\newcommand{\green}[1]{\textcolor{webgreen}{#1}}
+\newcommand{\red}[1]{\textcolor{Maroon}{#1}}
+%\colorlet{myblue}{DodgerBlue3}
+\newcommand{\blue}[1]{\textcolor{myblue}{#1}}
+\newcommand{\orange}[1]{\textcolor{DarkOrange3}{#1}}
+\newcommand{\brown}[1]{\textcolor{webbrown}{#1}}
+\newcommand{\darkorchid}[1]{\textcolor{HotPink4}{#1}}
+%\newcommand{\annocolor}[1]{\textcolor{DarkOrange3}{#1}}
+%\newcommand{\annocolor}[1]{\cemph{#1}}
+\newcommand{\definize}[1]{\blue{#1}}
+\newcommand{\theoremize}[1]{{#1}}
+%\colorlet{cemphcolor}{HotPink4}
+%\definecolor{mydarkorange}{RGB}{253,97,0}
+\definecolor{mydarkorange}{RGB}{220,80,0}
+\colorlet{cemphcolor}{mydarkorange}
+%\colorlet{cemphcolor}{Maroon}
+\newcommand{\cemph}[1]{\textcolor{cemphcolor}{#1}}
+
+\newcommand{\underdot}[1]{%
+    \tikz[baseline=(todotted.base)]{
+\node[inner sep=1pt,outer sep=0pt] (todotted) {#1};
+\draw[densely dotted] (todotted.south west) -- (todotted.south east);
+    }%
+}%
+
+\newcommand{\cloze}[1]{\underdot{\hphantom{$#1$}}}
+
+
+\newcommand{\ruletext}[1]{\textsf{#1}}
+
+\newcommand{\annocolor}[1]{\textcolor{DodgerBlue3}{#1}}
+\newcommand{\aannocolor}[1]{\textcolor{webgreen}{#1}}
+%\newcommand{\annocolor}[1]{\textcolor{blue}{#1}}
+\newcommand{\annotate}[1]{{\annocolor{\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+\newcommand{\sndannotate}[1]{{\annocolor{\vphantom{G'} \qquad{#1}}}}
+\newcommand{\starannotate}[1]{{\annocolor{{\talloblong}\!{\talloblong}\:\vphantom{G'} {#1}}}}
+\newcommand{\aertstarannotate}[1]{{\aannocolor{\!\!\hspace{-0.0ex}{}^{\aannocolor{{\text{\tiny $\potent$}}}}{\talloblong}\!{\talloblong}\:\vphantom{G'} {#1}}}}
+\newcommand{\phiannotate}[1]{{\annocolor{\!\!\hspace{-.15ex}{}^{\annocolor{\Phi}}\!\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+
+\newcommand{\psiannotate}[1]{{\aannocolor{\!\!\hspace{-.15ex}{}^{\aannocolor{\Psi}}\!\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+
+\newcommand{\bowtieannotate}[1]{\annocolor{\!\!\hspace{-.35ex}{}^{\annocolor{{\bowtie}}}{\!\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+
+\newcommand{\preceqannotate}[1]{\annocolor{\!\!\hspace{-.25ex}{}^{\annocolor{{\preceq}}}{\!\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+
+\newcommand{\geqannotate}[1]{\annocolor{\!\!\hspace{-.1ex}{}^{\annocolor{\text{\rotatebox{-90}{$\geq$}}}}{\!\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+
+\newcommand{\mutannotate}[1]{\annocolor{\!\!\hspace{-1.3ex}{}^{\annocolor{{\text{\tiny $\ruletext{mut}$}}}}{\!\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+
+\newcommand{\lkpannotate}[1]{\annocolor{\!\!\hspace{-1.3ex}{}^{\annocolor{{\text{\tiny $\ruletext{lkp}$}}}}{\!\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+
+\newcommand{\succeqannotate}[1]{\annocolor{\!\!\hspace{-.25ex}{}^{\annocolor{{\succeq}}}{\!\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+
+\newcommand{\eqannotate}[1]{\annocolor{\!\!\hspace{-.1ex}{}^{\annocolor{{=}}}{\!\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+
+\newcommand{\frameannotate}[2]{{\annocolor{\!\!\hspace{-2.25ex}{}^{\annocolor{\text{\tiny $\ruletext{frame}$}}}_{#2}\!\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+
+\newcommand{\unframeannotate}[2]{{\annocolor{\!\!\hspace{-4.0ex}{}^{\annocolor{\text{\tiny $\ruletext{unframe}$}}}_{#2}\!\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+
+\newcommand{\framelkpannotate}[1]{{\annocolor{\!\!\hspace{-2.25ex}{}^{\annocolor{\text{\tiny $\ruletext{frame}$}}}_{\text{\tiny $\ruletext{lkp}$}}\!\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+
+
+
+\newcommand{\framemutannotate}[1]{{\annocolor{\!\!\hspace{-2.25ex}{}^{\annocolor{\text{\tiny $\ruletext{frame}$}}}_{\text{\tiny $\ruletext{mut}$}}\!\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+
+\newcommand{\auxvarannotate}[1]{{\annocolor{\!\!\hspace{-0.90ex}{}^{\annocolor{\text{\tiny $\ruletext{aux}$}}}\!\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+
+\newcommand{\ldotannotate}[1]{{\annocolor{\!\!\hspace{-0.5ex}{}^{\annocolor{\text{\tiny $\ldots$}}}\!\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+
+\newcommand{\ertannotate}[1]{{\annocolor{\!\!\hspace{-0.5ex}{}^{\annocolor{\text{\tiny $\ertsymbol$}}}\!\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+
+
+\newcommand{\aertannotate}[1]{{\aannocolor{\!\!\hspace{0.1ex}{}^{\aannocolor{\text{\tiny $\potent$}}}\!\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+
+\newcommand{\wpannotate}[1]{{\annocolor{\!\!\hspace{-0.75ex}{}^{\annocolor{\text{\tiny $\wpsymbol$}}}\!\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+
+\newcommand{\wlpannotate}[1]{{\annocolor{\!\!\hspace{-0.75ex}{}^{\annocolor{\text{\tiny $\wlpsymbol$}}}\!\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+
+\newcommand{\phantannotate}[1]{{\annocolor{\vphantom{\!\!{\fatslash}\!\!{\fatslash}~~}\vphantom{G'} {#1}}}}
+
+
+
+
+
+\newcommand{\aaertannotate}[1]{{\aannocolor{\!\!\hspace{-1.3ex}{}^{\aannocolor{\text{\tiny $\aertsymbol$}}}\!\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+
+\newcommand{\aannotate}[1]{{\aannocolor{\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+
+\newcommand{\asucceqannotate}[1]{\aannocolor{\!\!\hspace{-.25ex}{}^{\aannocolor{{\succeq}}}{\!\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+
+
+\newcommand{\aframeannotate}[1]{{\aannocolor{\!\!\hspace{-2.25ex}{}^{\aannocolor{\text{\tiny $\ruletext{frame}$}}}\!\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+
+\newcommand{\aunframeannotate}[1]{{\aannocolor{\!\!\hspace{-4.0ex}{}^{\aannocolor{\text{\tiny $\ruletext{unframe}$}}}\!\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+
+
+\newcommand{\amutannotate}[1]{\aannocolor{\!\!\hspace{-1.3ex}{}^{\aannocolor{{\text{\tiny $\ruletext{mut}$}}}}{\!\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+
+\newcommand{\astarannotate}[1]{{\aannocolor{{\talloblong}\!{\talloblong}\:\vphantom{G'} {#1}}}}
+
+
+\newcommand{\aphantannotate}[1]{{\aannocolor{\vphantom{\!\!{\fatslash}\!\!{\fatslash}~~}\vphantom{G'} {#1}}}}
+
+
+\newcommand{\alkpannotate}[1]{\aannocolor{\!\!\hspace{-1.3ex}{}^{\aannocolor{{\text{\tiny $\ruletext{lkp}$}}}}{\!\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+
+
+\newcommand{\aauxvarannotate}[1]{{\aannocolor{\!\!\hspace{-0.90ex}{}^{\aannocolor{\text{\tiny $\ruletext{aux}$}}}\!\!\!{\fatslash}\!\!{\fatslash}~~\vphantom{G'} {#1}}}}
+
+
+% helpers
+\newcommand{\phwhere}{\phantom{\text{where }}}
+\newcommand{\phand}{\phantom{\text{and }}}
+
+\newcommand{\exprog}[1]{\ensuremath{C_\textnormal{\ref*{#1}}}}
+\newcommand{\subexprog}[2]{\ensuremath{C_\textnormal{\ref*{#1}~\ref*{#2}.}}}
+
+\newcounter{computationarrowsone}
+\newcounter{computationarrowstwo}
+\newcommand{\tikzcomputationarrow}[4]{%
+	\stepcounter{computationarrowsone}
+	\stepcounter{computationarrowstwo}
+	\draw [decorate,-{Stealth[scale=1]}] (#1,#2) -- (#3,#4);%
+	\node (\thecomputationarrowsone) at (#1,#2) {};%
+	\fill (\thecomputationarrowsone) + (-.06,0) circle [radius=1.75pt];%
+	\node (\thecomputationarrowstwo) at (#3,#4) {};%
+	\fill (\thecomputationarrowstwo) + (.06,0) circle [radius=1.75pt];}
+	
+\newcommand{\tikzbendleftcomputationarrow}[4]{%
+	\stepcounter{computationarrowsone}
+	\stepcounter{computationarrowstwo}
+	\draw (#1,#2) edge[decorate,-{Stealth[scale=1]},bend left] (#3,#4);%
+	\node (\thecomputationarrowsone) at (#1,#2) {};%
+	\fill (\thecomputationarrowsone) + (-.06,0) circle [radius=1.75pt];%
+	\node (\thecomputationarrowstwo) at (#3,#4) {};%
+	\fill (\thecomputationarrowstwo) + (.06,0) circle [radius=1.75pt];}
+	
+\newcommand{\tikzbendrightcomputationarrow}[4]{%
+	\stepcounter{computationarrowsone}
+	\stepcounter{computationarrowstwo}
+	\draw (#1,#2) edge[decorate,-{Stealth[scale=1]},bend right] (#3,#4);%
+	\node (\thecomputationarrowsone) at (#1,#2) {};%
+	\fill (\thecomputationarrowsone) + (-.06,0) circle [radius=1.75pt];%
+	\node (\thecomputationarrowstwo) at (#3,#4) {};%
+	\fill (\thecomputationarrowstwo) + (.06,0) circle [radius=1.75pt];}
+	
+\newcommand{\tikzpossiblecomputationarrow}[4]{%
+	\stepcounter{computationarrowsone}
+	\stepcounter{computationarrowstwo}
+	\draw [decorate,-{Stealth[scale=1]},dashdotted] (#1,#2) -- (#3,#4);%
+	\node (\thecomputationarrowsone) at (#1,#2) {};%
+	\fill (\thecomputationarrowsone) + (-.06,0) circle [radius=1.75pt];%
+	\node (\thecomputationarrowstwo) at (#3,#4) {};%
+	\fill (\thecomputationarrowstwo) + (.06,0) circle [radius=1.75pt];}
+
+%\newcommand{\drule}[3]{\left( \text{#1} \right)~~\frac{~~{#2}~~}{~~{#3}~~}}
+\newcommand{\drule}[3]{\infer[\left( \textnormal{#1} \right)]{~~~~{#3}~~~~}{~~~~{#2}~~~~}}
+\newcommand{\drulecomma}[3]{\infer[\left( \textnormal{#1} \right)~,]{~~~~{#3}~~~~}{~~~~{#2}~~~~}}
+\newcommand{\druledot}[3]{\infer[\left( \textnormal{#1} \right)~.]{~~~~{#3}~~~~}{~~~~{#2}~~~~}}
+\newcommand{\drulenolabel}[2]{\infer{~~{#2}~~}{~~{#1}~~}}
+
+
+\newcommand{\confto}{\vdash}
+\newcommand{\cconfto}{~{}\confto{}~}
+\newcommand{\conftor}{\mathrel{{\confto}^*}}
+\newcommand{\cconftor}{~{}\conftor{}~}
+\newcommand{\conftok}[1]{\mathrel{{\confto}^{#1}}}
+\newcommand{\cconftok}[1]{~{}\conftok{#1}{}~}
+\newcommand{\conftosched}[1]{\confto_{#1}}
+\newcommand{\cconftosched}[1]{~{}\conftosched{#1}{}~}
+\newcommand{\conftoschedr}[1]{\mathrel{\confto_{#1}^*}}
+\newcommand{\cconftoschedr}[1]{~{}\conftoschedr{#1}{}~}
+\newcommand{\xconfto}[1]{\stackrel{#1}{\confto}}
+\newcommand{\xxconfto}[1]{~{}\xconfto{#1}{}~}
+
+\newcommand{\phantoma}{\phantom{\textsf{a}}}
+\newcommand{\phantoml}{\phantom{\textsf{l}}}
+\newcommand{\phantomal}{\phantom{\textsf{al}}}
+
+\newcommand{\pautoref}[1]{\textnormal{\autoref{#1}} on p.~\pageref{#1}}
+\newcommand{\pthref}[1]{\textnormal{\thref{#1}} on p.~\pageref{#1}}
+\newcommand{\psubthref}[2]{\textnormal{\subthref{#1}{#2}} on p.~\pageref{#1:#2}}
+
+
+
+
+
+
+
+%%%%    Symbols    %%%%
+
+\newcounter{sarrow}
+\newcommand\xrsquigarrow[1]{%
+\stepcounter{sarrow}%
+\begin{tikzpicture}[decoration=snake]
+\node (\thesarrow) {\strut{#1}};
+\draw[->, decorate] (\thesarrow.south west) -- (\thesarrow.south east);
+\end{tikzpicture}%
+}
+
+\newcommand{\lfp}{\ensuremath{\textnormal{\sfsymbol{lfp}}~}}
+\newcommand{\gfp}{\ensuremath{\textnormal{\sfsymbol{gfp}}~}}
+
+
+
+
+
+
+%%%%% TERRIBLE HACKS %%%%%
+
+\newcommand{\lowerpenalties}{\allowdisplaybreaks\predisplaypenalty=0\clubpenalty=0\widowpenalty=0\displaywidowpenalty=0\brokenpenalty=0{}}
+
+\newcommand{\restorepenalties}{\allowdisplaybreaks[0]\predisplaypenalty=10000\clubpenalty=150\widowpenalty=150\displaywidowpenalty=50\brokenpenalty=100{}}
+
+\newcommand{\unlowerpenalties}{\restorepenalties}
+
+
+
+
+
+%%%%% TERRIBLE HACKS FROM THE INTERNET %%%%%
+
+\makeatletter
+\newlength{\negph@wd}
+\DeclareRobustCommand{\negphantom}[1]{%
+  \ifmmode
+    \mathpalette\negph@math{#1}%
+  \else
+    \negph@do{#1}%
+  \fi
+}
+\newcommand{\negph@math}[2]{\negph@do{$\m@th#1#2$}}
+\newcommand{\negph@do}[1]{%
+  \settowidth{\negph@wd}{#1}%
+  \hspace*{-\negph@wd}%
+}
+\makeatother
+
+
+
+
+% From the ACTA paper
+
+
+\newcommand{\Configs}{\mathbb{K}}
+
+
+\newcommand{\kleeneT}{\ensuremath{\textnormal T}\xspace}
+\newcommand{\Tp}{\ensuremath{\T_p}\xspace}
+\newcommand{\Tps}{\ensuremath{\Tp^*}\xspace}
+\newcommand{\ExpN}[3]{\ensuremath{\textnormal E_{#1}^{#3}\left({#2}\right)}\xspace}
+\renewcommand{\Pr}{\textnormal{Pr}}
+\newcommand{\covsymbol}{\mathnormal{\mathsf{Cov}}}
+\newcommand{\Cov}[4]{\covsymbol_{\llbracket #1 \rrbracket (#2) }\left( {#3},\, {#4} \right)}
+\newcommand{\cCov}[3]{\covsymbol\left( {#1},\, {#2} \mathrel{|} {#3} \right)}
+
+\newcommand{\toppr}{\ensuremath{\bot_{\textnormal{pr}}}}
+\newcommand{\topnd}{\ensuremath{\bot_{\textnormal{nd}}}}
+\newcommand{\topter}{\ensuremath{\bot_{\textnormal{ter}}}}
+
+\newcommand{\Problem}[1]{\mathcal{#1}}
+\newcommand{\cProblem}[1]{\overline{\text{\footnotesize{$\Problem{#1}$}}}}
+
+\newcommand{\HP}{\Problem{H}\xspace}
+\newcommand{\cHP}{\cProblem{H}\xspace}
+\newcommand{\UHP}{\,\Problem{UH}\xspace}
+\newcommand{\cUHP}{\,\cProblem{UH}\xspace}
+\newcommand{\COF}{\Problem{COF}\xspace}
+\newcommand{\cCOF}{\cProblem{COF}\xspace}
+\newcommand{\AST}{\ensuremath{\Problem{AST}}\xspace}
+\newcommand{\cAST}{\ensuremath{\cProblem{AST}}\xspace}
+\newcommand{\UAST}{\ensuremath{\Problem{U\hspace{-1pt}AST}}\xspace}
+\newcommand{\cUAST}{\ensuremath{\cProblem{U\hspace{-1pt}AST}}\xspace}
+\newcommand{\PAST}{\ensuremath{\Problem{P\hspace{-2pt}AST}}\xspace}
+\newcommand{\cPAST}{\ensuremath{\cProblem{P\hspace{-2pt}AST}}\xspace}
+\newcommand{\UPAST}{\ensuremath{\Problem{UP\hspace{-2pt}AST}}\xspace}
+\newcommand{\cUPAST}{\ensuremath{\cProblem{UP\hspace{-2pt}AST}}\xspace}
+\newcommand{\EXP}{\ensuremath{\Problem{E\hspace{-1pt}XP}}}
+\newcommand{\LEXP}{\ensuremath{\Problem{LE\hspace{-1pt}XP}}}
+\newcommand{\REXP}{\ensuremath{\Problem{RE\hspace{-1pt}XP}}}
+\newcommand{\FEXP}{\ensuremath{\Problem{F\hspace{-.5pt}E\hspace{-1pt}XP}}}
+\newcommand{\DCOVAR}{\ensuremath{\Problem{DCOV\hspace{-.5ex}AR}}}
+\newcommand{\LCOVAR}{\ensuremath{\Problem{LCOV\hspace{-.5ex}AR}}}
+\newcommand{\RCOVAR}{\ensuremath{\Problem{RCOV\hspace{-.5ex}AR}}}
+\newcommand{\LVAR}{\ensuremath{\Problem{LV\hspace{-.5ex}AR}}}
+\newcommand{\RVAR}{\ensuremath{\Problem{RV\hspace{-.5ex}AR}}}
+\newcommand{\COVAR}{\ensuremath{\Problem{COV\hspace{-.5ex}AR}}}
+\newcommand{\VAR}{\ensuremath{\Problem{V\hspace{-.5ex}AR}}}
+\newcommand{\INFCOVAR}{\ensuremath{{}^{\infty}\Problem{COV\hspace{-.5ex}AR}}}
+\newcommand{\INFVAR}{\ensuremath{{}^\infty\Problem{V\hspace{-.5ex}AR}}}
+\newcommand{\LRTVAR}{\ensuremath{\Problem{L\hspace{-.25ex}R\hspace{-.25ex}TV\hspace{-.5ex}AR}}}
+\newcommand{\RRTVAR}{\ensuremath{\Problem{R\hspace{-.25ex}R\hspace{-.25ex}TV\hspace{-.5ex}AR}}}
+\newcommand{\RTVAR}{\ensuremath{\Problem{R\hspace{-.25ex}TV\hspace{-.5ex}AR}}}
+\newcommand{\INFRTVAR}{\ensuremath{{}^\infty\Problem{R\hspace{-.25ex}TV\hspace{-.5ex}AR}}}
+
+\newcommand{\leqm}{\mathrel{\:{\leq}_{\textnormal{m}}}}
+\newcommand{\leqT}{\mathrel{\:{\leq}_{\textnormal{T}}}}
+\newcommand{\equivm}{\mathrel{\:{\equiv}_{\textnormal{m}}}}
+\newcommand{\equivT}{\mathrel{\:{\equiv}_{\textnormal{T}}}}
+
+\newcommand{\LLL}[1]{\ensuremath{\textnormal{L}\big(#1\big)}\xspace}
+\newcommand{\RRR}[1]{\ensuremath{\textnormal{R}\big(#1\big)}\xspace}
+
+
+% For aert part
+\newcommand{\aertsymbol}{\ensuremath{{\textnormal{\textsf{aert}}}}}
+% \newcommand{\aert}[4]{\aertsymbol_{#1} \left\llbracket{#2} \right\rrbracket \EqPair{#3}{#4}}
+\newcommand{\aert}[3]{\aertOne{#1}{#2}{#3}} % does not use the pairs anymore
+\newcommand{\aertOne}[3]{\aertsymbol_{#1}  \left\llbracket{#2} \right\rrbracket \left({#3}\right)}
+\newcommand{\aertfunction}[2]{\aertsymbol_{#1}  \left\llbracket{#2}\right\rrbracket}
+\newcommand{\boldaertsymbol}{\ensuremath{\boldsymbol{{\textnormal{\textbf{\textsf{aert}}}}}}}
+
+\newcommand{\potent}{\ensuremath{\pi}}
+
+\newcommand{\iwpOne}[2]{\iwpsymbol \left\llbracket{#1} \right\rrbracket \left({#2}\right)}
+\newcommand{\iwpfunction}[1]{\iwpsymbol \left\llbracket{#1} \right\rrbracket}
+\newcommand{\ertfunction}[1]{\ertsymbol \left\llbracket{#1} \right\rrbracket}
+\newcommand{\wpfunction}[1]{\wpsymbol \left\llbracket{#1} \right\rrbracket}
+
+
+% First and second component
+\newcommand{\co}[1]{\ensuremath{\text{first} \left(#1\right)}}
+\newcommand{\second}[1]{\ensuremath{\text{second} \left(#1\right)}}
+
+%Least fixpoint
+\newcommand{\lfpX}[1]{\ensuremath{\text{lfp}\ X . #1}}
+
+% Program components
+\newcommand{\askip}{\ensuremath{{\textnormal{\textsf{skip}}}}}
+\newcommand{\diverge}{\ensuremath{{\textnormal{\textsf{diverge}}}}}
+\newcommand{\assign}{\ensuremath{x \coloneqq E}}
+\newcommand{\tick}{\ensuremath{{\textnormal{\textsf{tick(n)}}}}}
+\newcommand{\randassign}{\ensuremath{x \colonapprox \mu}}
+\newcommand{\ifelse}{\ensuremath{\ensuremath{{\textnormal{\textsf{if}}}}(\varphi)\{C_1\} \ensuremath{{\textnormal{\textsf{ else}}}} \{C_2\}}}
+\newcommand{\prob}{\ensuremath{\{C_1\}[p]\{C_2\}}}
+\newcommand{\concat}{\ensuremath{C_1 ; C_2}}
+\newcommand{\while}{\ensuremath{\ensuremath{{\textnormal{\textsf{while}}}} (\varphi)\{C'\}}}
+\newcommand{\whilepl}[2]{\ensuremath{\ensuremath{{\textnormal{\textsf{while}}}}(#1)\{#2\}}}
+
+\newcommand{\ifC}[1]{\textnormal{\textsf{if}}(\varphi)\{#1\}}
+
+
+%Characteristic functions
+\newcommand{\charaert}[2]{\ensuremath{\prescript{\aertsymbol_{\pi}}{<\varphi,C'>}{\phi_{#1} \left(#2\right)}}}
+\newcommand{\charaertno}[2]{\ensuremath{\prescript{\aertsymbol_{\pi}}{<\varphi,C'>}{\phi_{#1} #2}}}
+\newcommand{\chariwpno}[2]{\ensuremath{\prescript{\iwpsymbol_{\pi}}{<\varphi,C'>}{\phi_{#1} #2}}}
+\newcommand{\chariwpnosh}[2]{\ensuremath{\prescript{\iwpsymbol_{\pi}}{}{\phi_{#1} #2}}}
+
+\newcommand{\charaertn}[3]{\ensuremath{\prescript{\aertsymbol_{\pi}}{<\varphi,C'>}{\phi^{#1}_{#2} #3}}}
+
+% char without <phi,C> for readibility
+\newcommand{\charaertnsh}[3]{\ensuremath{\prescript{\aertsymbol_{\pi}}{}{\phi^{#1}_{#2} (#3)}}}
+\newcommand{\charaertsh}[2]{\ensuremath{\prescript{\aertsymbol_{\pi}}{}{\phi_{#1}#2}}}
+\newcommand{\charwpnsh}[3]{\ensuremath{\prescript{\wpsymbol}{}{\phi^{#1}_{#2} \left(#3\right)}}}
+\newcommand{\charertnsh}[3]{\ensuremath{\prescript{\ertsymbol}{}{\phi^{#1}_{#2} \left(#3\right)}}}
+\newcommand{\charertsh}[2]{\ensuremath{\prescript{\ertsymbol}{}{\phi_{#1} \left(#2\right)}}}
+\newcommand{\chariwpnsh}[3]{\ensuremath{\prescript{\iwpsymbol}{}{\phi^{#1}_{#2} #3}}}
+
+\newcommand{\charaertnColor}[3]{\ensuremath{\prescript{\genColor{\aertsymbol_{\pi}}}{<\varphi,C'>}{\phi^{#1}_{#2} #3}}}
+\newcommand{\charwpnColor}[3]{\ensuremath{\prescript{\genColor{\wpsymbol}}{<\varphi,C'>}{\phi^{#1}_{#2} \left(#3\right)}}}
+\newcommand{\charertnColor}[3]{\ensuremath{\prescript{\genColor{\ertsymbol}}{<\varphi,C'>}{\phi^{#1}_{#2} \left(#3\right)}}}
+\newcommand{\chariwpnColor}[3]{\ensuremath{\prescript{\genColor{\iwpsymbol}}{<\varphi,C'>}{\phi^{#1}_{#2} #3}}}
+
+
+\newcommand{\charwpfunct}[1]{\ensuremath{\prescript{\wpsymbol}{<\varphi,C'>}{\phi_{#1}}}}
+\newcommand{\charertfunct}[1]{\ensuremath{\prescript{\ertsymbol}{<\varphi,C'>}{\phi_{#1}}}}
+\newcommand{\charertfunctsh}[1]{\ensuremath{\prescript{\ertsymbol}{}{\phi_{#1}}}}
+\newcommand{\charaertfunctsh}[2]{\ensuremath{\prescript{\aertsymbol_{\pi}}{}{\phi_{\EqPair{#1}{#2}}}}}
+
+\newcommand{\randassignRule}[1]{\ensuremath{\lambda \sigma .\text{\, } \int_{Vals} \left( \lambda v.\text{\, }#1\left(\sigma[x \to v ] \right) \right) d \mu_\sigma}}
+\newcommand{\randassignshort}[1]{\ensuremath{\vartheta \left(#1\right) }}
+
+\newcommand{\Sup}{\reflectbox{\textnormal{\textsf{\fontfamily{phv}\selectfont S}}}\hspace{.2ex}}
+\newcommand{\Inf}{\raisebox{.6\depth}{\rotatebox{-30}{\textnormal{\textsf{\fontfamily{phv}\selectfont \reflectbox{J}}}}\hspace{-.1ex}}}
+
+% for texts, backslash because empty space is deleted
+\newcommand{\pGCL}{\text{pGCL}}
+
+\newcommand{\ie}{i.e.\xspace}
+\newcommand{\Ie}{I.\,e.\xspace}
+\newcommand{\eg}{e.\,g.\xspace}
+\newcommand{\Eg}{E.\,g.\xspace} 
+
+\newcommand{\True}{\ensuremath{\mathit{true}}}
+\newcommand{\False}{\ensuremath{\mathit{false}}}
+
+\newcommand{\kapit}[1]{\ensuremath{\textnormal{\textsc{#1}}} \ }
+
+
+% colored EqPairs
+\newcommand{\EqPairColor}[2]{\textcolor{red!55!black}{\Lbag{#1} \leftsliceeq {#2}\Rbag}}
+\newcommand{\aertColor}[4]{\textcolor{red!55!black}{\aertsymbol_{#1} \left\llbracket{#2} \right\rrbracket \EqPair{#3}{#4}}}
+\newcommand{\genColor}[1]{\textcolor{red!55!black}{#1}}
+% commands in program listings -> use \annotate{} instead
+\newcommand{\comm}[1]{\textcolor{darkgray}{// #1}}
+
+\newcommand{\potex}[1]{\max\{#1,0\}}
+
+% Renamed: were charwpn etc.
+\newcommand{\charwpnnew}[3]{\ensuremath{\prescript{\wpsymbol}{<\varphi,C'>}{\phi^{#1}_{#2} \left(#3\right)}}}
+\newcommand{\charertnnew}[3]{\ensuremath{\prescript{\ertsymbol}{<\varphi,C'>}{\phi^{#1}_{#2} \left(#3\right)}}}
+\newcommand{\chariwpnnew}[3]{\ensuremath{\prescript{\iwpsymbol}{<\varphi,C'>}{\phi^{#1}_{#2} #3}}}
+
+\newcommand{\charwpnew}[2]{\ensuremath{\prescript{\wpsymbol}{<\varphi,C'>}{\phi_{#1} \left(#2\right)}}}
+\newcommand{\charertnew}[2]{\ensuremath{\prescript{\ertsymbol}{<\varphi,C'>}{\phi_{#1} \left(#2\right)}}}
+\newcommand{\chariwpnew}[2]{\ensuremath{\prescript{\iwpsymbol_{\pi}}{<\varphi,C'>}{\phi_{#1} \left(#2\right)}}}
+
+% Spacing
+\newcommand{\qqquad}{\quad \quad \quad}
+\newcommand{\qqqquad}{\quad \quad \quad \quad}
+\newcommand{\qqqqquad}{\quad \quad \quad \quad \quad}
+
+
+% Programs
+\newcommand{\procfont}[1]{\textit{#1}}
+
+\newcommand{\listtraverse}[1]{C}
+
+\newcommand{\listinsert}[1]{\ensuremath{\procfont{Insert(#1)}}}
+\newcommand{\arraycopy}[3]{\ensuremath{\procfont{ArrayCopy(#1,\, #2,\, #3)}}}
+\newcommand{\arraydelete}[2]{\ensuremath{\procfont{DeleteArray(#1,\, #2)}}}
+
+\newcommand{\ahead}{A}
+\newcommand{\aoff}{o}
+\newcommand{\asize}{s}
+
+% Special Expectations
+\newcommand{\expfont}[1]{\textsf{#1}}
+\newcommand{\elist}[2]{\expfont{list}\left( #1,\, #2 \right)}
+\newcommand{\esize}[2]{\expfont{listsize}\left( #1,\, #2 \right)}
+
+\newcommand{\earray}[2]{\expfont{array}\left(#1,\, #2\right)}
+
+\newcommand{\lh}{H}
+\newcommand{\ls}{len}
+\newcommand{\lpre}{pre}
+\newcommand{\lend}{end}
+\newcommand{\lsucc}{succ}
+%\newcommand{\dllold}[4]{\expfont{dll\textcolor{red}{o}}\left(#1,\, #2, \, #3, \, #4\right)}
+\newcommand{\dll}[5]{\expfont{dll}\left(#1,\, #2, \, #3, \, #4, \, #5 \right)}
+
+%FindAny
+\newcommand{\procsample}{\procfont{Sample}}
+\newcommand{\procrank}{\procfont{Rank}}
+\newcommand{\procremove}[1]{\procfont{remove} \left( #1 \right)}
+\newcommand{\procdelete}[1]{\procfont{delete} \left( #1 \right)}
+\newcommand{\procadd}[1]{\procfont{add} \left( #1 \right)}
+\newcommand{\procinsert}[1]{\procfont{insert} \left( #1 \right)}
+\newcommand{\procfindany}{\procfont{FindAny}}
+\newcommand{\varrank}{rank}
+\newcommand{\varany}{any}
+\newcommand{\varremove}{x}
+\newcommand{\varadd}{y}
+\newcommand{\varnew}{N}
+\newcommand{\varvalnew}{v_N}
+\newcommand{\varvalrem}{v_x}
+\newcommand{\varvalany}{v_{any}}
+\newcommand{\varvaladd}{v_y}
+\newcommand{\varcur}{c}
+\newcommand{\varvalcur}{v_c}
+\newcommand{\varsamplen}{\ell}
+\newcommand{\varlistelem}{y}
+
+\newcommand{\poww}[1]{\textsf{pow2}\left( #1 \right)}
+\newcommand{\nextpoww}[1]{\textsf{nextpow2}\left( #1 \right)}
+
+\newcommand{\inputvec}[1]{\overline{#1}}
+
+\newcommand{\proclistinsert}[1]{\procfont{ListInsert}\left( #1\right)}
+\newcommand{\procrandlistinsert}[1]{\procfont{RandInsert}\left( #1\right)}
+
+
+\newcommand{\BOOL}{\ensuremath{\texttt{Bool}}}
+\newcommand{\VAL}{\ensuremath{\mathit{Val}}}
+\newcommand{\VARS}{\ensuremath{\mathit{Var}}}
+\newcommand{\TRUE}{\ensuremath{\texttt{T}}}
+\newcommand{\FALSE}{\ensuremath{\texttt{F}}}
+
+\newcommand{\AEXP}{\ensuremath{\mathit{aexp}}}
+\newcommand{\FST}{\ensuremath{\texttt{fst}\,}}
+\newcommand{\SND}{\ensuremath{\texttt{snd}\,}}
+\newcommand{\LET}[2]{\ensuremath{\texttt{let}\; #1 \;\texttt{in}\; #2}}
+\newcommand{\FLIP}[1]{\ensuremath{\texttt{flip} \left(#1\right) }}
+\newcommand{\NFLIP}{\ensuremath{\texttt{nflip}\left(\right) }}
+%\newcommand{\FUNC}[2]{\ensuremath{\texttt{fun}  #1  \left{ {#2} \right} }}
+\newcommand{\FUNC}[2]{\ensuremath{\texttt{fun} \; #1 \; \left\{\, #2 \,\right\} } }
+\newcommand{\FUNCNAME}{\mathit{func}}
+
+
+
+
+\newcommand{\NDICE}{\sfsymbol{\mbox{noDice}}\xspace}
+\newcommand{\DICE}{\sfsymbol{\mbox{Dice}}\xspace}

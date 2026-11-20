@@ -1,0 +1,34 @@
+\begin{table}[ht]
+% \centering
+\caption{Programming Language Package Management Comparison}
+\label{tab:package_compare}
+\begin{threeparttable}
+\resizebox{0.5\textwidth}{!}{%
+\begin{tabular}{@{} 
+  l 
+  l 
+  >{\arraybackslash}m{2.2cm} 
+  >{\RaggedRight\arraybackslash}m{2.3cm}  
+  l
+@{}}
+\toprule
+\textbf{Language} & \textbf{Platform ($*$)} & \textbf{Installation} & \textbf{Debug Info} & \textbf{Attack Risk} \\ 
+\midrule
+Python & PyPI (low) & \texttt{pip install} & \small{\texttt{Module Not Found Error}} & $\bigstar\bigstar\bigstar\bigstar\bigstar$ \\ 
+
+Java & Maven (medium) & \texttt{mvn dependency} & \small{\texttt{Class Not Found Exception}} & $\bigstar\bigstar$ \\ 
+
+JavaScript & npm (low) & \texttt{npm install} & \small{\texttt{Cannot find module}} & $\bigstar\bigstar\bigstar$ \\ 
+
+Rust & Crates.io (high) & \texttt{cargo add} & \small{\texttt{unresolved import}} & $\bigstar\bigstar\bigstar\bigstar$ \\ 
+
+C/C++ & Conan/vcpkg (low) & \texttt{conan install} & \small{\texttt{undefined reference}} & $\bigstar$ \\ 
+\bottomrule
+\end{tabular}
+}
+\begin{tablenotes}
+\item[$*$]  \small{Security level of the official platform or third-party software repository.}
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+

@@ -1,0 +1,151 @@
+\clearpage
+\appendix
+
+\section{Additional Measurement Results from Commercial MEC Deployments}
+\label{appnd:measurements}
+
+This appendix presents additional measurement results from our commercial MEC deployment studies that complement the findings presented in \autoref{sec:motivation}.
+
+\subsection{End-to-End Latency of Augmented Reality }
+\label{appnd:ar}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/measurement-contention-results/ran-contention/ar/e2e_latency_cdf.pdf}
+    \caption{End-to-end latency for the augmented reality application without edge resource contention across MEC deployments in three cities. The dotted red line indicates the SLO.}
+    \label{fig:motive-e2e-ar-ran}
+\end{figure}
+
+\autoref{fig:motive-e2e-ar-ran} shows that augmented reality (AR) exhibits a similar long-tail latency distribution as smart stadium during periods of low network activity. 
+Since AR requires lower uplink throughput than smart stadium, only about \percent{5} of requests miss their SLO across all three cities. 
+However, under high network activity (\dallas-Busy), wireless resource contention causes over \percent{98} of requests to violate their SLO.
+
+\subsection{Effect of Compute Contention on End-to-End Latency}
+\label{appnd:compute-contention}
+
+We show the remaining results under compute resource contention for smart stadium in \nanjing and \seoul and augmented reality in all three cities.
+
+\label{appnd:compute-contention-ss}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/measurement-contention-results/compute-contention/video-transcoding/Nanjing/e2e_latency_cdf.pdf}
+    \vspace{-2em}
+    \caption{End-to-end latency for smart stadium under different levels of compute resource contention in \nanjing. The dotted red line indicates the SLO.}
+    \label{fig:motive-e2e-transcoding-compute-nanjing}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/measurement-contention-results/compute-contention/video-transcoding/Seoul/e2e_latency_cdf.pdf}
+        \vspace{-2em}
+ 
+    \caption{End-to-end latency for smart stadium under different levels of compute resource contention in \seoul. The dotted red line indicates the SLO.}
+    \label{fig:motive-e2e-transcoding-compute-seoul}
+\end{figure}
+
+
+\mypara{End-to-end latency of smart stadium.}
+\autoref{fig:motive-e2e-transcoding-compute-nanjing} and \autoref{fig:motive-e2e-transcoding-compute-seoul} further confirm the effect of CPU resource contention on the end-to-end latency of CPU-intensive applications like smart stadium.
+As CPU load increases, more requests exceed their SLO requirements and suffer from long tail latency.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/measurement-contention-results/compute-contention/ar/Dallas/e2e_latency_cdf.pdf}
+        \vspace{-2em}
+
+    \caption{End-to-end latency for augmented reality under different levels of compute resource contention in \dallas.}
+    \label{fig:motive-e2e-ar-compute-dallas}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/measurement-contention-results/compute-contention/ar/Nanjing/e2e_latency_cdf.pdf}
+    \vspace{-2em}
+
+    \caption{End-to-end latency for augmented reality under different levels of compute resource contention in \nanjing.}
+    \label{fig:motive-e2e-ar-compute-nanjing}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/measurement-contention-results/compute-contention/ar/Seoul/e2e_latency_cdf.pdf}
+    \vspace{-2em}
+
+    \caption{End-to-end latency for augmented reality under different levels of compute resource contention in \seoul.}
+    \label{fig:motive-e2e-ar-compute-seoul}
+\end{figure}
+
+
+\mypara{End-to-end latency of augmented reality.}
+To further validate the impact of GPU contention on the end-to-end latency of GPU-intensive applications such as augmented reality, we run experiments in \dallas, \nanjing, and \seoul under varying levels of GPU load. 
+We implement a GPU stressor using CUDA to emulate different contention levels. 
+As shown in \autoref{fig:motive-e2e-ar-compute-dallas}, \autoref{fig:motive-e2e-ar-compute-nanjing}, and \autoref{fig:motive-e2e-ar-compute-seoul}, higher stress levels lead to more requests exceeding their SLOs and experiencing longer tail latencies.
+
+
+\subsection{Variability of Network Latency} 
+\label{appnd:latency-variability}
+
+\begin{figure*}[]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+    \includegraphics[width=\columnwidth]{figures/measurement-decompose-appendix/Nanjing/total_latency_boxplot.pdf}
+    \caption{\nanjing}
+    \label{fig:motive-decompose-nanjing}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+    \includegraphics[width=\columnwidth]{figures/measurement-decompose-appendix/Seoul/total_latency_boxplot.pdf}
+    \caption{\seoul}
+    \label{fig:motive-decompose-seoul}
+    \end{subfigure}
+    \caption{Network latency variability for uplink and downlink transmissions across different data sizes in \nanjing and \seoul.}
+    \label{fig:motive-decompose-combined}
+\end{figure*}
+
+\begin{minipage}{\columnwidth}
+\autoref{fig:motive-decompose-combined} reveals consistent asymmetry in both \nanjing and \seoul. 
+As request size grows, uplink latency shows pronounced variability, whereas downlink latency remains largely stable. 
+This resembles our observation that uplink paths suffer from high variability, while downlink paths maintain relative stability.
+\end{minipage}
+
+\section{Deadline-aware Proactive Edge Resource Scheduling Algorithm}
+\label{appnd:edge-scheduling-algo}
+
+\begin{algorithm}[htbp]
+\small
+\DontPrintSemicolon
+\caption{\modified{Deadline-aware proactive edge resource scheduling.}}
+\label{alg:edge-proactive-sched}
+\modified{\textbf{Notation:} $r$ denotes a request; $a$ denotes the application that serves $r$; $\texttt{type}(r) \in \{\textsc{cpu}, \textsc{gpu}\}$.\;}
+
+\modified{\BlankLine
+\If{$t^{edge}_{budget}(r) \le 0$}{
+\texttt{drop}(r)\;
+\Return\;
+}
+
+\BlankLine
+$urgency(r) \leftarrow t^{edge}_{budget}(r) / SLO_a$\;
+
+\BlankLine
+\eIf{$\texttt{type}(r)=\textsc{cpu}$}{
+    \If{$urgency(r) < 0.1$}{
+        \If{\texttt{now} $- t_{last\_cpu\_alloc}(a) \ge \ms{100}$}{
+        \texttt{assign\_one\_more\_core}(a)\;
+        $t_{last\_cpu\_alloc}(a) \leftarrow \texttt{now}$\;
+        }
+    }
+    \If{$\texttt{cpu\_util}(a) < 60\%$}{
+    \texttt{reclaim\_one\_core}(a)\;
+    }
+}{
+    $prio(r) \leftarrow \texttt{map\_urgency\_to\_prio}(urgency(r))$\;
+    \texttt{set\_cuda\_stream\_priority}(r,\ prio(r))\;
+}
+
+\BlankLine
+\texttt{process\_request}(r)\;
+}
+\end{algorithm}

@@ -1,0 +1,127 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "algorithm.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "algorithmic.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "fancyhdr.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "icml2025.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "sections/abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/related_work.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/method.tex",
+      "role": "body"
+    },
+    {
+      "path": "Algorithm/method.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/ruler-128k-eviction.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/experiments.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/longbench_3.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/cv_minference_quest.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/efficiency.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/ackownledgement.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/impact_statement.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/appendix.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/ruler8k-256k.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/ruler-128k-appendix.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/longbench_all.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/larger_model.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "daa6faa3946b306b5efa989e448ea8e77773d970090bb692d0cbc694d79f9ea6",
+    "algorithm.sty": "93fd0eb31c112eb405833db8f1d7f5d238c7e691b1c05680d7276e68f36d564a",
+    "algorithmic.sty": "48d18794a5d97c0479a588cc2eac0917992feb9da83acc4631b8f55757d80f9b",
+    "fancyhdr.sty": "b56ec4434b9f4607529a4b23dc68ad8d4b94f1f631c8cddaf7da78140d53a5ea",
+    "icml2025.sty": "a176cdb6c9a39dde2cba05731d79ac02d2fe078b8c5edad1a2b8ddac4fd43d36",
+    "sections/abstract.tex": "b088e8b772c47122a6aa04ebde6b9423c58b0bbfd1550cc61ecc3140d3858951",
+    "sections/introduction.tex": "b109a888044d63b2a8dc06a759e49819ae584485cf9e0865ad56653a5298202e",
+    "sections/related_work.tex": "2a513453d1fb27b3e92f84ef7cf5923676990d977f81a786e81711b65adbc203",
+    "sections/method.tex": "fef4d46f2ed7c48bcec15471b8a5343be8ce9aea6fee9b0c9f1af7117714a4c0",
+    "Algorithm/method.tex": "68460172731e77133c936a8a8469b29550ab00cfc638a12ee5558954d41a12de",
+    "Tables/ruler-128k-eviction.tex": "668cd493edb078ed9c78f5f10adfcdd66de1234db3b70c13e3f0c9ce6b97fb0c",
+    "sections/experiments.tex": "8ec4ef96745cb674b3e9be0c0c74f550d1956ca65c82d0edfc7afabf4a102b60",
+    "Tables/longbench_3.tex": "6351db5925781d444d45a3d7e6d1006757a274411777c41b5ba9e39bc67c78c6",
+    "Tables/cv_minference_quest.tex": "c28a3073748caf4ebab6bd0163ab06ce680c88d303d12f07aa4cf2e31c6f33d3",
+    "Tables/efficiency.tex": "0fbe624516ac108051240ade9d43b01fcdd96d728db65ebd797dc625266185c9",
+    "sections/conclusion.tex": "e4748c243f95e26c3a42a44519215eee9e2d9982391bc6e94ee600028ad9487b",
+    "sections/ackownledgement.tex": "adb75e1801d3a635612b1cba21287c48d505d0a48b240cf985c8da4b7f2d39e0",
+    "sections/impact_statement.tex": "cdaa76cfca9b364aef44006570bc0e004814383fb41bb4c0bea9d51d3ac53376",
+    "sections/appendix.tex": "df5249de5c1a70a95fa80a7f8c32c3bd5b255a219f0d43a6facfbab2f9fca3e7",
+    "Tables/ruler8k-256k.tex": "94176e806a3ad395c0818c2a453244fa4fed05d622eed993d91db2c56a228c3b",
+    "Tables/ruler-128k-appendix.tex": "507dc85b0a7e605dc85a4c41d47b5721d9b3f8a3fc12fa8e7f1cab1ba66db5ef",
+    "Tables/longbench_all.tex": "b6b77cfd575d8c0226490c0ff630b44b2dd130a182af2e443a9e7c007ae6ca44",
+    "Tables/larger_model.tex": "da45d1687ea919219771c2bb28d746373d429b4547b54a56c4e9dffd4b0fd2fa"
+  }
+}

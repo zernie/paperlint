@@ -1,0 +1,93 @@
+
+\subsection{Histogram Matching Intervention}
+\label{app:pixel-intervention}
+
+This appendix expands on the pixel-space test reported in Section~\ref{sec:feature-space}, which rules out input-preprocessing as a recovery strategy under LOCO.
+
+\textbf{Procedure.} For each (architecture, holdout city) cell under vanilla LOCO, we compute the aggregate intensity histogram (the mean of the three channels) of the source-city training images. We map each test image's intensity CDF onto this histogram, restore each pixel's ratio between its channels and its intensity, and run the trained model on the transformed image with no parameter changes. The intervention is parameter-free, applied at test time, and isolates the pixel-statistics hypothesis: if LOCO failure lives at the pixel level, aligning the marginal pixel distribution should recover at least part of the within-city upper bound.
+
+\textbf{Recovery and inflation.} Section~\ref{sec:feature-space} reports the per-architecture median recovery ratio $R$; all three medians lie in $[-2.72, -1.55]$ with $95\%$ CIs below zero. At the median, matched images lie $2.5$ to $3.7$ times as far from the upper bound as the LOCO predictions. False-positive pixel counts rise on $5$ of the $9$ cells and fall on the other $4$. The largest rise is on MAMNet/Chicago, from $201$K LOCO false positives to $15.4$M after matching ($76\times$). Counts are pooled over the $150$ test images with the boundary-tolerant band of the original scorer. $R$ excludes images whose upper-minus-LOCO IoU is below $0.02$ or undefined, and OGLANet values carry the nondeterminism of Appendix~\ref{app:oglanet-dffm}.
+
+\textbf{Implication.} The destruction is uniform and large: $0$ of $9$ cells improve, and the inflation pattern indicates the model's features are tied to the joint distribution of intensity, texture, and spatial pattern in source-city imagery. Marginal pixel-distribution alignment breaks this coupling without replacing it. Any recovery strategy that operates only on input statistics (gamma correction, contrast normalization, single-channel histogram standardization) faces the same structural problem.
+
+\subsection{Selective-Prediction Gap: Per-Cell Details}
+\label{app:sp-details}
+
+This appendix expands the SP-gap analysis of Section~\ref{sec:sp-gap}, which characterizes the LOCO failure as class-asymmetric foreground-confidence collapse.
+
+\textbf{Bootstrap procedure.} For each of the $63$ LOCO cells (architecture $\times$ method $\times$ holdout city, high-resolution only), we compute per-image risk-coverage curves on three pixel populations: foreground (\texttt{gt\_pos}, confidence $= p$), background (\texttt{gt\_bg}, confidence $= 1-p$), and all pixels (confidence $= \max(p, 1-p)$). The SP gap is $\text{AURC}_{\text{LOCO}} - \text{AURC}_{\text{upper}}$; image-level paired bootstrap ($B = 1{,}000$) gives $95\%$ CIs on the gap. Cells are paired by image because both upper and LOCO models evaluate on the same $150$ test images per cell.
+
+\textbf{Class-asymmetry distribution.} The pooled means reported in Section~\ref{sec:sp-gap} (foreground gap $+0.136$, background gap $+0.006$) reflect a stable per-cell pattern: the foreground gap exceeds the background gap in $55$ of $63$ cells (sign-test $p = 4.9 \times 10^{-10}$). The per-method breakdown shown in Figure~\ref{fig:diagnostics}(b) confirms the asymmetry holds for every adaptation method individually; no method produces a foreground gap smaller than its background gap on average.
+
+\textbf{Logit and ECE corroboration.} Two independent per-pixel measurements track the same asymmetry. At the logit level, true-positive logits drop by $0.85$ nats on average while false-positive logits drop by $0.15$ nats; the asymmetry holds in $55$ of $63$ cells. Expected calibration error rises by $0.064$ on predicted-positive pixels and is unchanged ($-0.001$) on predicted-negative pixels; the rise is larger on the predicted-positive side in $44$ of $54$ cells (nine cells excluded for insufficient predicted-positive coverage on the calibration split). The three measurements (AURC gap, logit drift, ECE rise) are independent in the sense that they depend on different functions of the prediction distribution, and all three identify the foreground-class population as the locus of degradation.
+
+\subsection{Cross-Entropy AURC Under-Reporting}
+\label{app:zeroone-ce}
+
+This appendix details the methodological finding that standard $0/1$ evaluation under-reports the LOCO calibration failure by $2.3\times$, motivating the cross-entropy framing in Section~\ref{sec:sp-gap}.
+
+\textbf{Why $0/1$-AURC misses the calibration component.} The standard AURC measures per-pixel $0/1$ error: a pixel is correct if its predicted class matches the ground truth, regardless of the predicted probability. Two models that produce identical rank orderings of pixels by confidence yield identical $0/1$ risk-coverage curves, even if one assigns probability $0.99$ to a correct pixel and the other assigns $0.55$. The $0/1$-AURC is invariant to any monotonic rescaling of the probability outputs.
+
+Cross-entropy AURC replaces $0/1$ error with per-pixel cross-entropy: $-\log p$ on foreground pixels and $-\log(1-p)$ on background pixels. CE-AURC depends on the probability values themselves, not just rank order, and therefore detects calibration collapse that leaves the rank ordering intact.
+
+\textbf{Result.} The pooled CE-AURC gap exceeds the pooled $0/1$-AURC gap by a factor of $2.3\times$ on the foreground population ($+0.315$ against $+0.136$). The cell-level direction is consistent: $60$ of $63$ cells have $\text{gap}_{\text{CE}} > \text{gap}_{0/1}$ (one-sided paired Wilcoxon $p = 2.3 \times 10^{-11}$).
+
+\textbf{Implication.} Practitioners who evaluate selective deployment on $0/1$ metrics alone observe less than half of the calibration degradation that cross-entropy scoring measures; the rest is hidden by the rank-invariance of $0/1$ scoring. The under-reporting is not an artifact of the bootstrap or the bin width: it is a structural property of the metric.
+
+\subsection{Coverage-Threshold Recovery and Calibration}
+\label{app:sp-recovery}
+
+This appendix details the operating-point recovery analysis and the failure of standard post-hoc calibration that together motivate the deployment-time component of \sib{} (Section~\ref{sec:sib-design}).
+
+\textbf{Recoverable-threshold definition.} For each cell we define $c^* = \max\{c : \text{err}_{\text{LOCO}}^{\text{sel}}(c) \leq \text{err}_{\text{upper}}(c{=}1.0) + 0.005\}$, the largest coverage at which the LOCO selective error on the foreground population matches the within-city full-coverage error within a $0.5\%$ tolerance. Image-level paired bootstrap on the per-image error stack gives a $95\%$ CI on $c^*$. A finite $c^*$ exists in $59$ of $63$ cells. The four exceptions are all on Phoenix under aggressive adaptation methods (IIM, ISW, MRFP$^+$); on these cells, no selective-prediction threshold recovers within-city quality.
+
+\textbf{Required threshold magnitude.} Among the $59$ recoverable cells, the median $c^*$ corresponds to discarding $25\%$ of foreground pixels. On Phoenix the median is $40\%$.
+
+\textbf{Method-ranking stability.} We rank the seven methods (Vanilla and six adaptation methods) on the per-method mean foreground SP gap, separately for each of the three architectures, and compute Kendall's coefficient of concordance across the three rankings: $W = 0.79$ ($p = 0.027$, chi-square approximation over $7$ methods). FDA has the smallest pooled gap ($+0.05$) and ISW the largest ($+0.22$), and the pooled ordering is FDA $<$ Vanilla $<$ FADA $<$ SegDeSiC $<$ IIM $<$ MRFP$^+$ $<$ ISW. FDA ranks first on all three architectures, and ISW and MRFP$^+$ each rank between fifth and seventh. On MAMNet, IIM, ISW and MRFP$^+$ reach $+0.22$, $+0.23$ and $+0.25$.
+
+\textbf{Post-hoc temperature scaling fails under cross-source-city transfer.} Standard practice for calibration repair is to fit a single temperature $T$ on a labeled validation set. We test this directly: per cell, fit $T$ on the source-city validation split (the only labeled data available pre-deployment), apply to the held-out city. The recovery is indistinguishable from no calibration (paired Wilcoxon against zero recovery, $p = 0.19$); on $26$ of $63$ cells, the fitted-on-source temperature actively degrades held-out performance. Coverage thresholding is the only label-free recipe we identify that recovers within-city quality on the held-out city.
+
+\subsection{INRIA Cross-Task Replication}
+\label{app:inria}
+
+This appendix details the cross-task replication on INRIA building footprint extraction~\cite{inria}, used in Section~\ref{sec:sp-gap} to test whether the SP-gap findings reflect properties of geographic LOCO or of shadow appearance.
+
+\textbf{Dataset and protocol.} INRIA provides 5{,}000$\times$5{,}000-pixel aerial tiles at $0.3$\,m GSD over five cities; we use Austin, Chicago, and Vienna to match the three-city LOCO structure of \shadow. From each city's labeled tiles we sample $750$ non-overlapping $384\times384$ patches under a fixed seed, split into $450$ training, $150$ validation, and $150$ test images: identical sample sizes to \shadow's per-city splits at high resolution. Patches with more than $30\%$ nodata are rejected before sampling. The three LOCO folds (holdout Austin, Chicago, Vienna) follow the same train-on-two/test-on-one structure as Section~\ref{sec:loco}.
+
+\textbf{Training matched to shadow.} We train MAMNet from scratch using the identical hyperparameters as the shadow MAMNet (Adam $\text{lr} = 10^{-4}$, batch $8$, $100$ epochs, $\text{ReduceLROnPlateau}$ with patience $3$, early stopping patience $10$, ImageNet-pretrained $4$-channel ResNet-$34$ encoder with the contrast channel initialized from RGB mean, MAMNet auxiliary loss with weight $0.4$, $\pm 2$\,px boundary tolerance). No hyperparameter is re-tuned for the new task. The class-balancing weight is recomputed from building label frequency using the same formula applied to shadow frequency. The resulting upper-bound mIoU lands in $[0.74, 0.81]$ across cities, confirming the model is not in a data-starved regime for the task.
+
+\textbf{Replication outcomes.} Pooling the three shadow MAMNet-vanilla cells with the three INRIA MAMNet-vanilla cells gives $n = 6$ for the cross-task test, where the smallest $p$-value any sign test can return is $0.016$. Three findings transfer cleanly at the cell level: the foreground SP gap, the foreground-vs-background asymmetry, and the cross-entropy under-reporting each go in the same direction on all $6$ cells, with cell-level effect sizes Cohen's $d > 1.1$ and sign-test $p = 0.016$ each. The predicted-positive logit erosion transfers in direction on $5$ of $6$ cells (Wilcoxon $p = 0.031$, $d = 1.5$). One signature does not transfer: the direction of class-stratified ECE flips between tasks. On INRIA Vienna, ECE rises by $0.138$ on predicted-negative pixels and only $0.034$ on predicted-positive pixels, the opposite of the shadow pattern.
+
+\textbf{Interpretation.} The class-stratified ECE direction is task-dependent, tracking which class is the population majority (sparse foreground in shadow, dense in INRIA), rather than reflecting a property of geographic LOCO. The other findings depend on properties of the foreground class under shift and replicate across both task semantics. We therefore retain the foreground-asymmetry, under-reporting, logit-erosion, and recoverability claims as properties of geographic LOCO across dense prediction, and explicitly scope the class-stratified ECE result to shadow.
+
+\subsection{Component-Retraining Experiments}
+\label{app:locus-retraining}
+
+This appendix details the two controlled retraining experiments underlying Section~\ref{sec:architecture-locus}, which localize the recoverable failure component to the decoder for DINOv3, the encoder for OGLANet, and both for MAMNet.
+
+\textbf{Experiment A (decoder retraining).} For each (architecture, holdout city) pair under vanilla LOCO, we freeze the encoder weights, reinitialize the decoder, and retrain only the decoder for $30$ epochs on a randomly sampled $25\%$ of the holdout-city training set ($\approx 110$ images). The encoder receives no gradient updates. The retrained model is evaluated on the held-out city's $150$ test images by per-image foreground IoU with a boundary-tolerant band.
+
+\textbf{Experiment B (encoder retraining).} The inverse setup: freeze the decoder, reset the encoder to its pretrained initialization (ImageNet for the CNN encoders, original DINOv3 weights for the ViT), and retrain only the encoder on the same $25\%$ subset. The decoder receives no gradient updates.
+
+\textbf{Recovery ratio and exclusion.} Recovery is measured by the per-image ratio $R$. To avoid division by zero on images where the within-city gap is negligible, we exclude images with $\text{IoU}^{\text{upper}} - \text{IoU}^{\text{LOCO}} < 0.02$. Pooling per architecture across the three holdout cities, we obtain $335$--$351$ valid $R$ values per architecture per experiment. Image-cluster bootstrap ($B = 10{,}000$) gives the medians and CIs reported in Section~\ref{sec:architecture-locus}; the error bars of Figure~\ref{fig:diagnostics}(c) come from a separate bootstrap ($B = 1{,}000$) of the same per-image values. Each cell is one training run, and OGLANet values carry the nondeterminism of Appendix~\ref{app:oglanet-dffm}. The pattern, summarized in Table~\ref{tab:locus-summary}, shows the central architecture-dependent locus claim: each architecture is recovered by one experiment and harmed or unaffected by the other.
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{6pt}
+\caption{\textbf{Recovery ratio $R$ per architecture, both experiments.} Median per-image $R$ with image-cluster bootstrap $95\%$ CI. Decoder retraining (Exp.~A) recovers DINOv3 and MAMNet but not OGLANet; encoder retraining (Exp.~B) recovers MAMNet and OGLANet but actively harms DINOv3.}
+\label{tab:locus-summary}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Architecture} & \textbf{Exp.~A: decoder} & \textbf{Exp.~B: encoder} \\
+\midrule
+DINOv3   & $0.69\ [0.60,\ 0.74]$ & $-0.13\ [-0.27,\ -0.03]$ \\
+MAMNet   & $0.67\ [0.63,\ 0.72]$ & $0.88\ [0.83,\ 0.90]$    \\
+OGLANet  & $0.12\ [0.05,\ 0.21]$ & $0.86\ [0.80,\ 0.89]$    \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Why DINOv3's encoder retraining harms.} The negative DINOv3 Exp.~B result reflects tight encoder-decoder coupling: the LOCO decoder was trained jointly with a pretrained ViT encoder that barely moved during fine-tuning (whole-encoder relative $L_2$ change of $0.019$ from initialization, Appendix~\ref{app:armL-expA}). Resetting the encoder to its pretrained initialization changes the feature distribution slightly, and the frozen decoder cannot adapt to the new feature space. The performance drops below the LOCO baseline because the decoder is calibrated to a feature space the new encoder no longer produces.
+
+\textbf{Implication for adaptation method choice.} The architecture-dependent locus directly explains the catastrophic failures in Table~\ref{tab:loco-main}. MRFP$^+$ perturbs encoder features uniformly without targeting OGLANet's encoder-locus failure, so it costs OGLANet $-14.0$ mIoU against $-4.9$ on DINOv3. ISW whitens encoder feature covariance, which corrupts the pretrained representation DINOv3 depends on, so it costs DINOv3 $-18.5$ mIoU against $-11.1$ on OGLANet. The architecture-dependent recovery component predicts which adaptation methods will fail catastrophically on a given architecture before the method is run.

@@ -1,0 +1,133 @@
+We collected \rustc{}'s soundness issues reported between January 1, 2022, and
+September 1, 2025, focusing on issues pertinent to recent compiler releases.
+%
+This timeframe aligns with the two most recent \textit{editions} (boundaries for
+introducing backward-incompatible changes) of the language:
+%
+Rust 2021, released on October 21, 2021, and Rust 2024, released on February 20,
+2025.
+%
+Consequently, our target timeframe encompasses over three and a half years,
+corresponding to the active use of the Rust 2021 and 2024 editions.
+
+% Each edition is introduced through a specific compiler release that stabilizes
+% new language features.
+%
+% with \rustc{} 1.56.0, with \rustc{} 1.85.0
+
+Since the issue tracker of the official GitHub repository for \rustc{} contains
+various kinds of issues, we filtered for soundness issues through automatic
+filtering based on the labels assigned to each issue and manual inspection.
+%
+We initially collected issues related to type checking by utilizing the area
+labels (prefixed with ``A-''), which indicate the issue-relevant compiler area,
+component, or language feature.
+%
+Specifically, we retained issues with the fourteen labels classified as
+type-related ones by previous work~\cite{liu2025empiricala}:
+%
+A-type-system, A-inference, A-closures, A-coercions, A-const-generics, A-DSTs,
+A-zst, A-trait-system, A-impl-trait, A-trait-objects, A-auto-traits,
+A-implied-bounds, A-coinduction, and A-coherence.
+%
+This yielded 969 issues.
+
+% To collect soundness bug issues within this timeframe, we scraped issue
+% metadata from the Rustc GitHub repository.
+%
+% For example, the A-trait-system label identifies issues related to the Rust
+% trait system.
+%
+% Using the GitHub REST API, we automatically collected metadata for all issues
+% within our target timeframe marked with at least one of these 14 labels.
+
+Since this set still includes issues other than soundness (e.g., bugs in
+documentation or non-bugs like feature proposals), we further refined the
+dataset using two criteria.
+%
+First, we kept only issues marked with either C-bug or I-unsound, which
+signifies that the issue is a bug report or related to type soundness.
+%
+Second, we filtered out issues marked with specific labels indicating
+irrelevance to soundness, which we categorize as follows:
+%
+\begin{itemize}[leftmargin=*]
+  %
+  \item Documentation and tool issues: A-docs, A-rustdoc, A-rustdoc-json,
+    A-rustdoc-ui, T-rustdoc, and A-clippy, which represent wrong documentation
+    or issues in external tools.
+  %
+  \item Diagnostics issues: A-diagnostics, A-suggestion-diagnostics,
+    NLL-diagnostics, and const-generics-bad-diagnostics, which are pertinent to
+    the quality of error messages.
+  %
+  \item Alternative symptoms: I-crash, I-ICE, I-hang, I-compilemem,
+    I-compiletime, and A-codegen, which represent symptoms like compiler crashes
+    or performance issues.
+  %
+  \item Non-bugs: C-tracking-issue, C-feature-request, and C-enhancement, which
+    track discussions on certain features or represent feature proposals.
+  %
+  \item Feature-gated features: labels prefixed with ``F-,'' which designate
+    issues relevant only to language features guarded by feature gates.
+  %
+\end{itemize}
+%
+This filtering process reduced the initial dataset to 320 issues.
+
+Then, we manually investigated each issue to determine whether it is a soundness
+issue based on two criteria.
+%
+First, we retained an issue only if it contained a Rust code snippet that the
+reporter claimed the compiler should reject.
+%
+Second, we excluded issues where the buggy behavior was not caused by the
+compiler, e.g., those caused by breaking changes in the standard library.
+%
+Through this manual inspection, we identified 27 soundness issues.
+
+Finally, we checked whether each issue was a duplicate of another based on
+discussions among \rustc{} developers in the issue tracker.
+%
+We identified 4 issues as duplicates of others already within our dataset and
+subsequently excluded them.
+%
+Additionally, 2 issues were duplicates of issues reported before 2022;
+%
+we chose to retain these, as their inclusion does not introduce redundancy
+within our specific timeframe (see \cref{tab:issues} for these issues and their
+original issue numbers).
+%
+This resulted in a dataset of 23 unique soundness issues.
+
+% We manually inspected the issue description and examined the authors' claims
+% regarding the expected behavior.
+
+After the collection, we compared our dataset with that of Liu et
+al.~\cite{liu2025empiricala}, which classifies 22 issues as soundness issues.
+%
+Our inspection shows that only 4 issues overlap across the two datasets, while
+19 are unique to ours and 18 are unique to the previous study.
+%
+Among the 19 issues unique to ours, 4 fall outside the timeframe of the previous
+study, 2 were classified under other bug categories, 3 were treated as
+duplicates, and 10 were excluded, although we could not find the reasons for
+their exclusion in their paper or artifact.
+%
+This shows that our study provides a more comprehensive view of soundness
+issues, beyond an incremental contribution.
+%
+Among the 18 issues unique to the previous study, 8 have type-unrelated area
+labels, 1 lacks both C-bug and I-unsound labels, 8 have ``F-'' labels, and 1 is
+a duplicate.
+%
+We investigated the 9 issues (8 with type-unrelated labels and 1 with no
+C-bug/I-unsound label) and found that 7 satisfy our manual inspection criteria
+(a Rust code snippet that is claimed the compiler should reject, and buggy
+behavior caused by the compiler).
+%
+Therefore, we complemented our dataset with these 7 issues, resulting in the
+final dataset of 30 issues.
+%
+See \cref{tab:issues} for the issues that overlap with or were added from the
+previous study.

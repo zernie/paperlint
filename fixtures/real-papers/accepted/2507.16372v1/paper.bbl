@@ -1,0 +1,360 @@
+\begin{thebibliography}{68}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Hart(2024)]{musk_ban_apple}
+Robert Hart.
+\newblock X fact checks elon musk after he blasts apple-openai partnership as ‘creepy’ privacy nightmare.
+\newblock https://www.forbes.com/sites/roberthart/2024/06/11/x-fact-checks-elon-musk-after-he-blasts-apple-openai-partnership-as-creepy-privacy-nightmare/, 2024.
+
+\bibitem[Dubey et~al.(2024)Dubey, Jauhri, Pandey, Kadian, Al-Dahle, Letman, Mathur, Schelten, Yang, Fan, et~al.]{dubey2024llama}
+Abhimanyu Dubey, Abhinav Jauhri, Abhinav Pandey, Abhishek Kadian, Ahmad Al-Dahle, Aiesha Letman, Akhil Mathur, Alan Schelten, Amy Yang, Angela Fan, et~al.
+\newblock The llama 3 herd of models.
+\newblock \emph{arXiv preprint arXiv:2407.21783}, 2024.
+
+\bibitem[Lin et~al.(2024)Lin, Hu, Zhang, Chen, Fang, Chen, Li, Vepakomma, and Gao]{lin2024splitlora}
+Zheng Lin, Xuanjie Hu, Yuxin Zhang, Zhe Chen, Zihan Fang, Xianhao Chen, Ang Li, Praneeth Vepakomma, and Yue Gao.
+\newblock Splitlora: A split parameter-efficient fine-tuning framework for large language models.
+\newblock \emph{arXiv preprint arXiv:2407.00952}, 2024.
+
+\bibitem[Mei et~al.(2025)Mei, Zhuang, Miao, Yang, Jia, and Vinayak]{mei2024helix}
+Yixuan Mei, Yonghao Zhuang, Xupeng Miao, Juncheng Yang, Zhihao Jia, and Rashmi Vinayak.
+\newblock Helix: Distributed serving of large language models via max-flow on heterogeneous gpus.
+\newblock In \emph{Proceedings of International Conference on Architectural Support for Programming Languages and Operating Systems, {ASPLOS} 2025}, 2025.
+
+\bibitem[Zhang et~al.(2024{\natexlab{a}})Zhang, Cao, Shen, and Cui]{zhang2024edgeshard}
+Mingjin Zhang, Jiannong Cao, Xiaoming Shen, and Zeyang Cui.
+\newblock Edgeshard: Efficient llm inference via collaborative edge computing.
+\newblock \emph{arXiv preprint arXiv:2405.14371}, 2024{\natexlab{a}}.
+
+\bibitem[whi(2023)]{white_house_order}
+Fact sheet: President biden issues executive order on safe, secure, and trustworthy artificial intelligence.
+\newblock https://www.whitehouse.gov/briefing-room/statements-releases/2023/10/30/fact-sheet-president-biden-issues-executive-order-on-safe-secure-and-trustworthy-artificial-intelligence/, 2023.
+
+\bibitem[Azaria and Mitchell(2023)]{azaria-mitchell-2023-internal}
+Amos Azaria and Tom Mitchell.
+\newblock The internal state of an {LLM} knows when it`s lying.
+\newblock In \emph{Findings of the Association for Computational Linguistics: EMNLP 2023}, pages 967--976, December 2023.
+\newblock \doi{10.18653/v1/2023.findings-emnlp.68}.
+
+\bibitem[Chen et~al.(2024{\natexlab{a}})Chen, Liu, Chen, Gu, Wu, Tao, Fu, and Ye]{chen2024inside}
+Chao Chen, Kai Liu, Ze~Chen, Yi~Gu, Yue Wu, Mingyuan Tao, Zhihang Fu, and Jieping Ye.
+\newblock {INSIDE}: {LLM}s' internal states retain the power of hallucination detection.
+\newblock In \emph{The Twelfth International Conference on Learning Representations}, 2024{\natexlab{a}}.
+
+\bibitem[Su et~al.(2024)Su, Wang, Ai, Hu, Wu, Zhou, and Liu]{su-etal-2024-unsupervised}
+Weihang Su, Changyue Wang, Qingyao Ai, Yiran Hu, Zhijing Wu, Yujia Zhou, and Yiqun Liu.
+\newblock Unsupervised real-time hallucination detection based on the internal states of large language models.
+\newblock In \emph{Findings of the Association for Computational Linguistics ACL 2024}, pages 14379--14391, Bangkok, Thailand and virtual meeting, August 2024. Association for Computational Linguistics.
+
+\bibitem[Kossen et~al.(2024)Kossen, Han, Razzak, Schut, Malik, and Gal]{DBLP:journals/corr/abs-2406-15927}
+Jannik Kossen, Jiatong Han, Muhammed Razzak, Lisa Schut, Shreshth~A. Malik, and Yarin Gal.
+\newblock Semantic entropy probes: Robust and cheap hallucination detection in llms.
+\newblock \emph{CoRR}, abs/2406.15927, 2024.
+\newblock \doi{10.48550/ARXIV.2406.15927}.
+
+\bibitem[Ye et~al.(2024)Ye, Xu, Li, and Allen-Zhu]{ye2024physics}
+Tian Ye, Zicheng Xu, Yuanzhi Li, and Zeyuan Allen-Zhu.
+\newblock Physics of language models: Part 2.1, grade-school math and the hidden reasoning process.
+\newblock \emph{arXiv preprint arXiv:2407.20311}, 2024.
+
+\bibitem[Li et~al.(2024)Li, Yao, Zhang, and Li]{li2024safety}
+Shen Li, Liuyi Yao, Lan Zhang, and Yaliang Li.
+\newblock Safety layers of aligned large language models: The key to llm security.
+\newblock \emph{arXiv preprint arXiv:2408.17003}, 2024.
+
+\bibitem[Lamparth and Reuel(2024)]{lamparth2024analyzing}
+M~Lamparth and A~Reuel.
+\newblock Analyzing and editing inner mechanisms of backdoored language 353 models.
+\newblock In \emph{The 2024 ACM Conference on Fairness, Accountability, and Transparency (FAccT)}, page 354, 2024.
+
+\bibitem[Dong et~al.(2025)Dong, Xue, Chen, Holland, Meng, Li, Liu, and Zhu]{dong2024trojaningplugins}
+Tian Dong, Minhui Xue, Guoxing Chen, Rayne Holland, Yan Meng, Shaofeng Li, Zhen Liu, and Haojin Zhu.
+\newblock The philosopher’s stone: Trojaning plugins of large language models.
+\newblock In \emph{Network and Distributed System Security Symposium, {NDSS} 2025}. The Internet Society, 2025.
+
+\bibitem[Zou et~al.(2023)Zou, Phan, Chen, Campbell, Guo, Ren, Pan, Yin, Mazeika, Dombrowski, et~al.]{zou2023representation}
+Andy Zou, Long Phan, Sarah Chen, James Campbell, Phillip Guo, Richard Ren, Alexander Pan, Xuwang Yin, Mantas Mazeika, Ann-Kathrin Dombrowski, et~al.
+\newblock Representation engineering: A top-down approach to ai transparency.
+\newblock \emph{arXiv preprint arXiv:2310.01405}, 2023.
+
+\bibitem[Burns et~al.(2023)Burns, Ye, Klein, and Steinhardt]{burns2023discovering}
+Collin Burns, Haotian Ye, Dan Klein, and Jacob Steinhardt.
+\newblock Discovering latent knowledge in language models without supervision.
+\newblock In \emph{The Eleventh International Conference on Learning Representations}, 2023.
+
+\bibitem[Chen et~al.(2024{\natexlab{b}})Chen, Hu, Liu, and Sun]{chen2024states}
+Junhao Chen, Shengding Hu, Zhiyuan Liu, and Maosong Sun.
+\newblock States hidden in hidden states: Llms emerge discrete state representations implicitly.
+\newblock \emph{arXiv preprint arXiv:2407.11421}, 2024{\natexlab{b}}.
+
+\bibitem[Song and Raghunathan(2020)]{song2020information}
+Congzheng Song and Ananth Raghunathan.
+\newblock Information leakage in embedding models.
+\newblock In \emph{Proceedings of the 2020 ACM SIGSAC conference on computer and communications security}, pages 377--390, 2020.
+
+\bibitem[Morris et~al.(2023)Morris, Kuleshov, Shmatikov, and Rush]{morris-etal-2023-text}
+John Morris, Volodymyr Kuleshov, Vitaly Shmatikov, and Alexander Rush.
+\newblock Text embeddings reveal (almost) as much as text.
+\newblock In \emph{Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing}, pages 12448--12460, Singapore, December 2023. Association for Computational Linguistics.
+\newblock \doi{10.18653/v1/2023.emnlp-main.765}.
+
+\bibitem[Zhang et~al.(2024{\natexlab{b}})Zhang, Morris, and Shmatikov]{zhang2024extracting}
+Collin Zhang, John~X. Morris, and Vitaly Shmatikov.
+\newblock Extracting prompts by inverting {LLM} outputs.
+\newblock In \emph{Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing, {EMNLP} 2024}, pages 14753--14777. Association for Computational Linguistics, 2024{\natexlab{b}}.
+
+\bibitem[Tishby and Zaslavsky(2015)]{infobottleneck17}
+Naftali Tishby and Noga Zaslavsky.
+\newblock Deep learning and the information bottleneck principle.
+\newblock In \emph{2015 IEEE Information Theory Workshop (ITW)}, pages 1--5, 2015.
+\newblock \doi{10.1109/ITW.2015.7133169}.
+
+\bibitem[Pan et~al.(2020)Pan, Zhang, Ji, and Yang]{pan_sp20}
+Xudong Pan, Mi~Zhang, Shouling Ji, and Min Yang.
+\newblock Privacy risks of general-purpose language models.
+\newblock In \emph{2020 IEEE Symposium on Security and Privacy (SP)}, pages 1314--1331, 2020.
+\newblock \doi{10.1109/SP40000.2020.00095}.
+
+\bibitem[Li et~al.(2023{\natexlab{a}})Li, Xu, and Song]{li2023sentence}
+Haoran Li, Mingshi Xu, and Yangqiu Song.
+\newblock Sentence embedding leaks more information than you expect: Generative embedding inversion attack to recover the whole sentence.
+\newblock \emph{arXiv preprint arXiv:2305.03010}, 2023{\natexlab{a}}.
+
+\bibitem[Morris et~al.(2024)Morris, Zhao, Chiu, Shmatikov, and Rush]{morris2024language}
+John~Xavier Morris, Wenting Zhao, Justin~T Chiu, Vitaly Shmatikov, and Alexander~M Rush.
+\newblock Language model inversion.
+\newblock In \emph{The Twelfth International Conference on Learning Representations}, 2024.
+
+\bibitem[Deng et~al.(2021)Deng, Wang, Li, Wang, Shang, Liu, Rajasekaran, and Ding]{DBLP:conf/emnlp/DengWLWSLRD21}
+Jieren Deng, Yijue Wang, Ji~Li, Chenghong Wang, Chao Shang, Hang Liu, Sanguthevar Rajasekaran, and Caiwen Ding.
+\newblock {TAG:} gradient attack on transformer-based language models.
+\newblock In \emph{Findings of the Association for Computational Linguistics: {EMNLP} 2021}, pages 3600--3610, 2021.
+\newblock \doi{10.18653/V1/2021.FINDINGS-EMNLP.305}.
+
+\bibitem[Feng et~al.(2024)Feng, Ma, Wang, Chegne, Ma, Abuadbba, and Bai]{feng2024uncovering}
+Xinguo Feng, Zhongkui Ma, Zihan Wang, Eu~Joe Chegne, Mengyao Ma, Alsharif Abuadbba, and Guangdong Bai.
+\newblock Uncovering gradient inversion risks in practical language model training.
+\newblock In \emph{Proceedings of the 2024 on ACM SIGSAC Conference on Computer and Communications Security}, pages 3525--3539, 2024.
+
+\bibitem[Chen et~al.(2024{\natexlab{c}})Chen, Qin, Yang, Zhou, Fan, Du, and Xu]{ccs24unveiling}
+Guanzhong Chen, Zhenghan Qin, Mingxin Yang, Yajie Zhou, Tao Fan, Tianyu Du, and Zenglin Xu.
+\newblock Unveiling the vulnerability of private fine-tuning in split-based frameworks for large language models: A bidirectionally enhanced attack.
+\newblock In \emph{Proceedings of the 2024 on ACM SIGSAC Conference on Computer and Communications Security}, page 2904–2918. Association for Computing Machinery, 2024{\natexlab{c}}.
+\newblock ISBN 9798400706363.
+\newblock \doi{10.1145/3658644.3690295}.
+
+\bibitem[Zhou et~al.(2024)Zhou, Yu, Zhang, Xu, Huang, and Li]{zhou-etal-2024-alignment}
+Zhenhong Zhou, Haiyang Yu, Xinghua Zhang, Rongwu Xu, Fei Huang, and Yongbin Li.
+\newblock How alignment and jailbreak work: Explain {LLM} safety through intermediate hidden states.
+\newblock In \emph{Findings of the Association for Computational Linguistics: EMNLP 2024}, pages 2461--2488, November 2024.
+\newblock \doi{10.18653/v1/2024.findings-emnlp.139}.
+
+\bibitem[OpenAI(2024)]{openai_business_datause}
+OpenAI.
+\newblock Enterprise privacy at openai - does openai review my business data?
+\newblock \url{https://openai.com/enterprise-privacy/}, 2024.
+
+\bibitem[Borzunov et~al.(2023)Borzunov, Baranchuk, Dettmers, Riabinin, Belkada, Chumachenko, Samygin, and Raffel]{borzunov-etal-2023-petals}
+Alexander Borzunov, Dmitry Baranchuk, Tim Dettmers, Maksim Riabinin, Younes Belkada, Artem Chumachenko, Pavel Samygin, and Colin Raffel.
+\newblock Petals: Collaborative inference and fine-tuning of large models.
+\newblock In \emph{Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 3: System Demonstrations)}, pages 558--568, July 2023.
+\newblock \doi{10.18653/v1/2023.acl-demo.54}.
+
+\bibitem[Sun et~al.(2023)Sun, Sun, Liu, Chowdhury, Lu, and Jha]{sun2023sp}
+Zhichuang Sun, Ruimin Sun, Changming Liu, Amrita~Roy Chowdhury, Long Lu, and Somesh Jha.
+\newblock Shadownet: A secure and efficient on-device model inference system for convolutional neural networks.
+\newblock In \emph{2023 IEEE Symposium on Security and Privacy (SP)}, pages 1596--1612, 2023.
+\newblock \doi{10.1109/SP46215.2023.10179382}.
+
+\bibitem[Zhang et~al.(2024{\natexlab{c}})Zhang, Gong, Cai, Yuan, Liu, Li, Guo, and Chen]{Zhang:2024:odml}
+Z.~Zhang, C.~Gong, Y.~Cai, Y.~Yuan, B.~Liu, D.~Li, Y.~Guo, and X.~Chen.
+\newblock No privacy left outside: On the (in-)security of tee-shielded dnn partition for on-device ml.
+\newblock In \emph{2024 IEEE Symposium on Security and Privacy (SP)}, pages 55--55, may 2024{\natexlab{c}}.
+
+\bibitem[Ni et~al.(2021)Ni, Qu, Lu, Dai, {\'A}brego, Ma, Zhao, Luan, Hall, Chang, et~al.]{ni2021large}
+Jianmo Ni, Chen Qu, Jing Lu, Zhuyun Dai, Gustavo~Hern{\'a}ndez {\'A}brego, Ji~Ma, Vincent~Y Zhao, Yi~Luan, Keith~B Hall, Ming-Wei Chang, et~al.
+\newblock Large dual encoders are generalizable retrievers.
+\newblock \emph{arXiv preprint arXiv:2112.07899}, 2021.
+
+\bibitem[Jin et~al.(2025)Jin, Yu, Huang, Zeng, Wang, Hua, Zhao, Mei, Meng, Ding, Yang, Du, and Zhang]{concept2025coling}
+Mingyu Jin, Qinkai Yu, Jingyuan Huang, Qingcheng Zeng, Zhenting Wang, Wenyue Hua, Haiyan Zhao, Kai Mei, Yanda Meng, Kaize Ding, Fan Yang, Mengnan Du, and Yongfeng Zhang.
+\newblock Exploring concept depth: How large language models acquire knowledge at different layers?
+\newblock In \emph{Proceedings of the 2025 Joint International Conference on Computational Linguistics, Language Resources and Evaluation (LREC-COLING 2025)}, 2025.
+
+\bibitem[Huang et~al.(2024)Huang, Chen, and Shu]{huang2024authorship}
+Baixiang Huang, Canyu Chen, and Kai Shu.
+\newblock Authorship attribution in the era of llms: Problems, methodologies, and challenges.
+\newblock \emph{arXiv preprint arXiv:2408.08946}, 2024.
+
+\bibitem[Ji et~al.(2024)Ji, Chen, Ishii, Cahyawijaya, Bang, Wilie, and Fung]{ji2024llm}
+Ziwei Ji, Delong Chen, Etsuko Ishii, Samuel Cahyawijaya, Yejin Bang, Bryan Wilie, and Pascale Fung.
+\newblock {LLM} internal states reveal hallucination risk faced with a query.
+\newblock In \emph{Proceedings of the 7th BlackboxNLP Workshop: Analyzing and Interpreting Neural Networks for NLP}, pages 88--104, Miami, Florida, US, November 2024. Association for Computational Linguistics.
+\newblock \doi{10.18653/v1/2024.blackboxnlp-1.6}.
+
+\bibitem[Abdelnabi et~al.(2025)Abdelnabi, Fay, Cherubin, Salem, Fritz, and Paverd]{taskdrift_satml25}
+Sahar Abdelnabi, Aideen Fay, Giovanni Cherubin, Ahmed Salem, Mario Fritz, and Andrew Paverd.
+\newblock Get my drift? catching llm task drift with activation deltas.
+\newblock In \emph{SaTML}, 2025.
+
+\bibitem[Du et~al.(2023)Du, Yue, Chow, Wang, Huang, and Sun]{dpforward_ccs23}
+Minxin Du, Xiang Yue, Sherman S.~M. Chow, Tianhao Wang, Chenyu Huang, and Huan Sun.
+\newblock Dp-forward: Fine-tuning and inference on language models with differential privacy in forward pass.
+\newblock In \emph{Proceedings of the 2023 {ACM} {SIGSAC} Conference on Computer and Communications Security, {CCS} 2023}, pages 2665--2679. {ACM}, 2023.
+
+\bibitem[Zhao and Bilen(2023)]{dc_dm2023}
+Bo~Zhao and Hakan Bilen.
+\newblock Dataset condensation with distribution matching.
+\newblock In \emph{Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision. 2023}, 2023.
+
+\bibitem[Hui et~al.(2024)Hui, Yang, Cui, Yang, Liu, Zhang, Liu, Zhang, Yu, Lu, et~al.]{hui2024qwen2}
+Binyuan Hui, Jian Yang, Zeyu Cui, Jiaxi Yang, Dayiheng Liu, Lei Zhang, Tianyu Liu, Jiajun Zhang, Bowen Yu, Keming Lu, et~al.
+\newblock Qwen2. 5-coder technical report.
+\newblock \emph{arXiv preprint arXiv:2409.12186}, 2024.
+
+\bibitem[ContactDoctor(2024)]{ContactDoctorBioMedicalLlama38B}
+ContactDoctor.
+\newblock Bio-medical: A high-performance biomedical language model.
+\newblock https://huggingface.co/ContactDoctor/Bio-Medical-Llama-3-8B, 2024.
+
+\bibitem[AI(2024)]{llama31}
+Meta AI.
+\newblock Introducing llama 3.1: Our most capable models to date.
+\newblock https://ai.meta.com/blog/meta-llama-3-1/, 2024.
+
+\bibitem[Xiao et~al.(2023)Xiao, Liu, Zhang, and Muennighoff]{bge_embedding}
+Shitao Xiao, Zheng Liu, Peitian Zhang, and Niklas Muennighoff.
+\newblock C-pack: Packaged resources to advance general chinese embedding, 2023.
+
+\bibitem[Muennighoff et~al.(2022)Muennighoff, Tazi, Magne, and Reimers]{muennighoff2022mteb}
+Niklas Muennighoff, Nouamane Tazi, Lo{\"\i}c Magne, and Nils Reimers.
+\newblock Mteb: Massive text embedding benchmark.
+\newblock \emph{arXiv preprint arXiv:2210.07316}, 2022.
+\newblock \doi{10.48550/ARXIV.2210.07316}.
+
+\bibitem[Leaderboard(2024)]{mteb_leaderboard}
+MTEB Leaderboard.
+\newblock Massive text embedding benchmark (mteb) leaderboard.
+\newblock https://huggingface.co/spaces/mteb/leaderboard, 2024.
+
+\bibitem[Loshchilov and Hutter(2019)]{loshchilov2018decoupled}
+Ilya Loshchilov and Frank Hutter.
+\newblock Decoupled weight decay regularization.
+\newblock In \emph{International Conference on Learning Representations}, 2019.
+
+\bibitem[Virtanen et~al.(2020)Virtanen, Gommers, Oliphant, Haberland, Reddy, Cournapeau, Burovski, Peterson, Weckesser, Bright, {van der Walt}, Brett, Wilson, Millman, Mayorov, Nelson, Jones, Kern, Larson, Carey, Polat, Feng, Moore, {VanderPlas}, Laxalde, Perktold, Cimrman, Henriksen, Quintero, Harris, Archibald, Ribeiro, Pedregosa, {van Mulbregt}, and {SciPy 1.0 Contributors}]{2020SciPy-NMeth}
+Pauli Virtanen, Ralf Gommers, Travis~E. Oliphant, Matt Haberland, Tyler Reddy, David Cournapeau, Evgeni Burovski, Pearu Peterson, Warren Weckesser, Jonathan Bright, St{\'e}fan~J. {van der Walt}, Matthew Brett, Joshua Wilson, K.~Jarrod Millman, Nikolay Mayorov, Andrew R.~J. Nelson, Eric Jones, Robert Kern, Eric Larson, C~J Carey, {\.I}lhan Polat, Yu~Feng, Eric~W. Moore, Jake {VanderPlas}, Denis Laxalde, Josef Perktold, Robert Cimrman, Ian Henriksen, E.~A. Quintero, Charles~R. Harris, Anne~M. Archibald, Ant{\^o}nio~H. Ribeiro, Fabian Pedregosa, Paul {van Mulbregt}, and {SciPy 1.0 Contributors}.
+\newblock {{SciPy} 1.0: Fundamental Algorithms for Scientific Computing in Python}.
+\newblock \emph{Nature Methods}, 17:\penalty0 261--272, 2020.
+\newblock \doi{10.1038/s41592-019-0686-2}.
+
+\bibitem[Vsevolodovna(2023)]{ai_medical_dataset}
+Ruslan~Magana Vsevolodovna.
+\newblock Ai medical dataset, 2023.
+\newblock URL \url{https://github.com/ruslanmv/ai-medical-chatbot}.
+
+\bibitem[{Amod}(2024)]{amod_2024}
+{Amod}.
+\newblock mental\_health\_counseling\_conversations (revision 9015341), 2024.
+\newblock URL \url{https://huggingface.co/datasets/Amod/mental_health_counseling_conversations}.
+
+\bibitem[Luo et~al.(2023)Luo, Xu, Zhao, Sun, Geng, Hu, Tao, Ma, Lin, and Jiang]{luo2023wizardcoder}
+Ziyang Luo, Can Xu, Pu~Zhao, Qingfeng Sun, Xiubo Geng, Wenxiang Hu, Chongyang Tao, Jing Ma, Qingwei Lin, and Daxin Jiang.
+\newblock Wizardcoder: Empowering code large language models with evol-instruct, 2023.
+
+\bibitem[Hendrycks et~al.(2021{\natexlab{a}})Hendrycks, Basart, Kadavath, Mazeika, Arora, Guo, Burns, Puranik, He, Song, and Steinhardt]{hendrycksapps2021}
+Dan Hendrycks, Steven Basart, Saurav Kadavath, Mantas Mazeika, Akul Arora, Ethan Guo, Collin Burns, Samir Puranik, Horace He, Dawn Song, and Jacob Steinhardt.
+\newblock Measuring coding challenge competence with apps.
+\newblock \emph{NeurIPS}, 2021{\natexlab{a}}.
+
+\bibitem[bigcode(2025)]{codemodelleaderboard}
+bigcode.
+\newblock Big code models leaderboard.
+\newblock https://huggingface.co/spaces/bigcode/bigcode-models-leaderboard, 2025.
+
+\bibitem[Su(2023)]{qkvbias}
+Jianlin Su.
+\newblock The magical effect of the bias term: Rope + bias = better length extrapolation.
+\newblock \url{https://spaces.ac.cn/archives/9577}, 2023.
+
+\bibitem[Rajani et~al.(2023)Rajani, Tunstall, Beeching, Lambert, Rush, and Wolf]{no_robots}
+Nazneen Rajani, Lewis Tunstall, Edward Beeching, Nathan Lambert, Alexander~M. Rush, and Thomas Wolf.
+\newblock No robots.
+\newblock \url{https://huggingface.co/datasets/HuggingFaceH4/no_robots}, 2023.
+
+\bibitem[Dettmers et~al.(2023)Dettmers, Pagnoni, Holtzman, and Zettlemoyer]{qlora}
+Tim Dettmers, Artidoro Pagnoni, Ari Holtzman, and Luke Zettlemoyer.
+\newblock {QL}o{RA}: Efficient finetuning of quantized {LLM}s.
+\newblock In \emph{Thirty-seventh Conference on Neural Information Processing Systems (NeurIPS)}, 2023.
+
+\bibitem[Raffel et~al.(2020)Raffel, Shazeer, Roberts, Lee, Narang, Matena, Zhou, Li, and Liu]{raffel2020exploring}
+Colin Raffel, Noam Shazeer, Adam Roberts, Katherine Lee, Sharan Narang, Michael Matena, Yanqi Zhou, Wei Li, and Peter~J Liu.
+\newblock Exploring the limits of transfer learning with a unified text-to-text transformer.
+\newblock \emph{Journal of machine learning research}, 21\penalty0 (140):\penalty0 1--67, 2020.
+
+\bibitem[Hendrycks et~al.(2021{\natexlab{b}})Hendrycks, Burns, Basart, Zou, Mazeika, Song, and Steinhardt]{hendrycks2021measuring}
+Dan Hendrycks, Collin Burns, Steven Basart, Andy Zou, Mantas Mazeika, Dawn Song, and Jacob Steinhardt.
+\newblock Measuring massive multitask language understanding.
+\newblock In \emph{ICLR}, 2021{\natexlab{b}}.
+
+\bibitem[Li et~al.(2023{\natexlab{b}})Li, Yang, Liu, Wang, Hu, Yi, and Xu]{DBLP:conf/nips/LiYLWHYX23}
+Ziang Li, Mengda Yang, Yaxin Liu, Juan Wang, Hongxin Hu, Wenzhe Yi, and Xiaoyang Xu.
+\newblock {GAN} you see me? enhanced data reconstruction attacks against split inference.
+\newblock In \emph{Advances in Neural Information Processing Systems 36: Annual Conference on Neural Information Processing Systems 2023, NeurIPS 2023}, 2023{\natexlab{b}}.
+
+\bibitem[Chen et~al.(2024{\natexlab{d}})Chen, Qin, Yang, Zhou, Fan, Du, and Xu]{chen2024unveiling_ccs24}
+Guanzhong Chen, Zhenhan Qin, Mingxin Yang, Yajie Zhou, Tao Fan, Tianyu Du, and Zenglin Xu.
+\newblock Unveiling the vulnerability of private fine-tuning in split-based frameworks for large language models: A bidirectionally enhanced attack.
+\newblock In \emph{Proceedings of the 2024 {ACM} {SIGSAC} Conference on Computer and Communications Security, {CCS} 2024}. {ACM}, 2024{\natexlab{d}}.
+
+\bibitem[Hu et~al.(2024)Hu, Wang, Dong, and Xue]{sp24unlearninversion}
+Hongsheng Hu, Shuo Wang, Tian Dong, and Minhui Xue.
+\newblock Learn what you want to unlearn: Unlearning inversion attacks against machine unlearning.
+\newblock In \emph{2024 IEEE Symposium on Security and Privacy (SP)}, pages 3257--3275, may 2024.
+\newblock \doi{10.1109/SP54263.2024.00248}.
+
+\bibitem[Zheng(2023)]{zheng2023input}
+Fei Zheng.
+\newblock Input reconstruction attack against vertical federated large language models.
+\newblock \emph{arXiv preprint arXiv:2311.07585}, 2023.
+
+\bibitem[Yang et~al.(2024)Yang, Zhang, Zhao, Li, and Liu]{yang2024lookefficientsecureondevice}
+Huan Yang, Deyu Zhang, Yudong Zhao, Yuanchun Li, and Yunxin Liu.
+\newblock A first look at efficient and secure on-device llm inference against kv leakage, 2024.
+
+\bibitem[Wu et~al.(2025)Wu, Zhang, Wang, Niu, Zhang, Wu, and Zhang]{wu2025promptleakkvcache}
+Guanlong Wu, Zheng Zhang, Weili Wang, Jianyu Niu, Yao Zhang, Ye~Wu, and Yinqian Zhang.
+\newblock I know what you asked: Prompt leakage via kv-cache sharing in multi-tenant llm serving.
+\newblock In \emph{Network and Distributed System Security Symposium, {NDSS} 2025}. The Internet Society, 2025.
+
+\bibitem[Qu et~al.(2025)Qu, Zhou, Wu, Xiao, Yuan, Li, and Zhang]{pia_coll_sp25}
+Wenjie Qu, Yuguang Zhou, Yongji Wu, Tingsong Xiao, Binhang Yuan, Yiming Li, and Jiaheng Zhang.
+\newblock { Prompt Inversion Attack against Collaborative Inference of Large Language Models }.
+\newblock In \emph{2025 IEEE Symposium on Security and Privacy (SP)}, pages 1602--1619. IEEE Computer Society, May 2025.
+\newblock \doi{10.1109/SP61157.2025.00160}.
+
+\bibitem[Luo et~al.(2025)Luo, Yu, and Xiao]{luo2025prompt}
+Xinjian Luo, Ting Yu, and Xiaokui Xiao.
+\newblock Prompt inference attack on distributed large language model inference frameworks.
+\newblock \emph{arXiv preprint arXiv:2503.09291}, 2025.
+
+\bibitem[Sev-Snp(2020)]{sev2020strengthening}
+AMD Sev-Snp.
+\newblock Strengthening vm isolation with integrity protection and more.
+\newblock \emph{White Paper, January}, 53:\penalty0 1450--1465, 2020.
+
+\bibitem[Nertney(2023)]{h100-whitepaper}
+Rob Nertney.
+\newblock {Confidential Compute on NVIDIA Hopper H100}.
+\newblock \url{https://images.nvidia.cn/aem-dam/en-zz/Solutions/data-center/HCC-Whitepaper-v1.0.pdf}, 2023.
+
+\bibitem[Chen et~al.(2024{\natexlab{e}})Chen, Li, Huang, Yang, Li, Li, and Luo]{chen2024seeing}
+Lu~Chen, Shaofeng Li, Benhao Huang, Fan Yang, Zheng Li, Jie Li, and Yuan Luo.
+\newblock Seeing is not always believing: The space of harmless perturbations.
+\newblock \emph{arXiv preprint arXiv:2402.02095}, 2024{\natexlab{e}}.
+
+\end{thebibliography}

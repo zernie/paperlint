@@ -1,0 +1,117 @@
+\begin{figure}[t]
+% \centering
+% ========== Subfigure (a) ==========
+\begin{subfigure}[t]{0.38\textwidth}
+\begin{minipage}{\linewidth}   % 这里一定用 \linewidth！！
+\begin{lstlisting}[language=SQL, basicstyle=\ttfamily, frame=single,  breaklines=true]
+CREATE TABLE products (
+    id INTEGER,
+    name TEXT,
+    price REAL
+);
+INSERT INTO products VALUES 
+            (1, 'Laptop', 999.99),
+            (2, 'Phone', 499.99);
+SELECT name, price 
+FROM products 
+WHERE price > 10;
+\end{lstlisting}
+\end{minipage}
+\caption{Simple query with limited testing coverage.}
+\label{fig:challenge_semantic}
+\end{subfigure}
+% }
+% \hfill
+% ========== Subfigure (b) ==========
+\begin{subfigure}[t]{0.38\textwidth}
+% \centering
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[language=SQL, basicstyle=\ttfamily, frame=single, escapechar=@]
+CREATE TABLE employees (
+  id INTEGER,
+  details @\textcolor{red}{STRUCT<age: INTEGER>}@
+);
+INSERT INTO employees VALUES (1, 5);
+
+SELECT * 
+FROM products 
+WHERE name @\textcolor{red}{REGEXP\_MATCHES}@('^A')
+@\textcolor{red}{CROSS JOIN}@ cities c @\textcolor{red}{ON}@ c.id=1;
+\end{lstlisting}
+\end{minipage}
+\caption{Query violating syntax rules on DuckDB (errors highlighted in \textcolor{red}{red}).}
+\label{fig:challenge_syntax}
+\end{subfigure}
+% \hfill
+% ========== Subfigure (c) ==========
+% \begin{subfigure}[t]{0.4\textwidth}
+% \centering
+% \begin{minipage}{\textwidth}
+% \begin{tikzpicture}[scale=0.8]
+% \begin{axis}[
+%     xlabel={Number of Test Cases},
+%     ylabel={Branch Coverage},
+%     xmin=0, xmax=1500,
+%     ymin=0, ymax=50000,
+%     xtick={0,300,600,900,1200,1500},
+%     ytick={0,10000,20000,30000,40000,50000},
+%     legend pos=south east,
+%     ymajorgrids=true,
+%     grid style=dashed,
+%     width=1.1\textwidth,
+%     height=0.94\textwidth,
+%     every axis plot/.append style={thick},
+%     tick label style={font=\small},
+%     label style={font=\small},
+%     legend style={font=\small,
+%        at={(0.55,0.29)}, % (x,y) 0~1 范围
+%         anchor=south west
+%     },
+% ]
+
+% % DuckDB
+% \addplot[color=blue, mark=o, mark size=1pt]
+% coordinates {
+%     (0,0)(50,6447)(100,12894)(150,19341)(200,25788)(250,32235)
+%     (300,38680)(350,39170)(400,39660)(450,40150)(500,40640)(550,40996)
+%     (600,39996)(650,40090)(700,40184)(750,40278)(800,40321)(850,40321)
+%     (900,40321)(950,40380)(1000,40439)(1050,40498)(1100,40557)(1150,40576)
+%     (1200,40576)(1250,40610)(1300,40644)(1350,40678)(1400,40712)(1450,40777)
+%     (1500,40777)
+% };
+% \addlegendentry{DuckDB}
+
+% % PostgreSQL
+% \addplot[color=red, mark=square, mark size=1pt]
+% coordinates {
+%     (0,0)(50,38850)(100,44685)(150,46520)(200,46608)(250,46696)
+%     (300,46819)(350,46881)(400,46942)(450,46957)(500,46972)(550,47016)
+%     (600,47060)(650,47064)(700,47068)(750,47074)(800,47080)(850,47085)
+%     (900,47090)(950,47094)(1000,47097)(1050,47108)(1100,47118)(1150,47119)
+%     (1200,47120)(1250,47128)(1300,47135)(1350,47142)(1400,47149)(1450,47149)
+%     (1500,47149)
+% };
+% \addlegendentry{PostgreSQL}
+
+% % SQLite
+% \addplot[color=green!60!black, mark=triangle, mark size=1.5pt]
+% coordinates {
+%     (0,0)(50,9166)(100,10583)(150,10999)(200,11011)(250,11023)
+%     (300,11024)(350,11025)(400,11028)(450,11031)(500,11032)(550,11033)
+%     (600,11039)(650,11042)(700,11044)(750,11045)(800,11045)(850,11047)
+%     (900,11049)(950,11050)(1000,11051)(1050,11052)(1100,11053)(1150,11053)
+%     (1200,11054)(1250,11056)(1300,11057)(1350,11062)(1400,11066)(1450,11068)
+%     (1500,11069)
+% };
+% \addlegendentry{SQLite}
+
+% \end{axis}
+% \end{tikzpicture}
+% \end{minipage}
+% \caption{Line coverage plateau.}
+% \label{fig:challenge_plateau}
+% \end{subfigure}
+\caption{Illustrating challenges in LLM-based DBMS test case generation with Qwen2.5-7B.}
+\label{fig:challenges}
+\end{figure}
+

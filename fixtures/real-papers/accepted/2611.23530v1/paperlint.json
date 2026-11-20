@@ -1,0 +1,17 @@
+{
+  "cycles": [
+    {
+      "id": "emnlp-2026",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:emnlp-2026"
+      },
+      "opened": "2026-11-17",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2026-11-17",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+\section{Related Work}
+
+% Head 2
+\subsection{Simulating Cutting of Deformable Bodies}
+
+A common approach towards simulating cutting is refining and adapting the mesh to capture discontinuities. This approach needs to balance various considerations, such as the number of newly generated elements \cite{Bielser:2000:ISSC, Mor:2000:MSTM}, the quality of the cut details \cite{Busaryev:2013:AFS}, and material information \cite{Chen:2014:refine}. While this approach is intuitive to model, practical implementation is challenging. Remeshing can \Revision{be} challenging to implement \cite{zhang2019amrex} and computationally expensive \cite{obiols2023adarnet}. By contrast, our approach takes a mesh-free approach through neural fields and completely bypasses the need to remesh.
+
+Hybrid Lagrangian-Eulerian methods like the material point method \cite{jiang2016material} handle cutting without remeshing by employing a combination of grid and particle representations. However, the particle-based representation lacks precise surface definition, resulting in artifacts such as numerical fractures and imprecise cutting \cite{su2022ulmpm,fan2025hybrid}.
+
+% \zhecheng{personally I would mention MPM (cite Fanfu's cloth MPM paper) to represent all the lagrangian rep formulation works, MPM naturally support cutting as it is all particle}
+% \todoChangy{hmmm not sure I agree with this point, I think they also do need some special handling (as in https://dl.acm.org/doi/pdf/10.1145/3306346.3322949) as the background grid will blur everything out, but yes I should include some discussion on MPM}
+% \zhecheng{right, they are hybrid, but you get my point, the geometry itself is lagrangian, just the physics is eulerian}
+
+
+Extended finite element methods (XFEM) \cite{Moes:1999:XFEM, Kaufmann:2019:enrich, Koschier:2017:RobustXFEM, xfemCutting2024} maintain a fixed mesh and resolve discontinuities using discontinuous ``enrichment functions.'' Our method also resolves  discontinuities using a discontinuous basis. However, unlike XFEM, our approach does not depend on a background mesh, separating the kinematic and geometric representations. This separation enables the simulation of shapes with intricate thin details (see Figure \ref{fig:teaser}) and multiple cuts intersecting localized region corresponding to one mesh triangle or grid cell, situations that can challenge XFEM. Moreover, our separation allows for fast, reduced-order modeling, whereas XFEM solves partial differential equations (PDEs) in maximal degrees of freedom. 
+% \todopyc{i don't see any triangle or grid. I suggest delete this part. could be confusing}.
+% \todopyc{the discussion with XFEM is super interesting. i would end this discussion saying our approach is completely mesh-free. AND very importantly, our approach is a reduced-order model so simulation is very fast... this also naturally connects with section 2.2}
+
+\subsection{Neural Methods for Simulation}
+
+Neural networks have demonstrated efficiency in various areas of physics-based simulation, including deformable simulation \citep{CHEN:CROM-MPM:2023, Feng:2024:NAH, lyu2024accelerate}, fluid simulation \citep{kim2019deep, deng2023neural, 10.1145/3641519.3657438, tao2024neural}, and collision modeling and handling \citep{Romero:LCCHSD:2021, yang2020learning, Cai:2022:CSDF}, among others.
+
+Among all neural methods for physics-based simulation, our approach aligns most closely with reduced-space simulation techniques, which accelerate simulations by finding a reduced basis. These bases can either be mesh-dependent \citep{Fulton:LSD:2018, shen2021high} or mesh-independent \citep{chang:2023:licrom}, and can be data-based (derived from simulation sequences) \citep{chen2023crom, zong2023neural} or data-free (derived from domain geometry) \citep{Sharp:2023:datafree, Modi:2024:Simplicits}. 
+
+However, \emph{none of the data-free methods accommodate cutting during simulation}. Of the data-based methods, \citet{chang:2023:licrom} is able to reproduce only the cut seen during training, that cut being encoded in the neural network weights. By contrast, our method supports procedural cuts without requiring simulation snapshots for training.
+
+For instance, when the reduced basis is computed without simulation data \citep{Modi:2024:Simplicits}, the training process depends solely on sampling the domain. This approach fails to distinguish between an undamaged shape and one with a zero-volume cut, rendering it incapable of representing discontinuities in data-free training scenarios. To address these limitations, our method expressly represents lines of discontinuity and introduces a function representation capable of capturing evolving cut geometries even for zero-volume cuts.
+
+In the context of discontinuity modeling with neural fields \cite{liu20242d}, \citet{Belhe:2023:DiscontinuityAwareNeuralFields} align feature fields from a triangle mesh to discontinuities, which is effective for compressing 2D physics simulation data. However, their approach learns a feature field defined on a mesh, requiring (re)meshing of the domain if discontinuities are placed, extended, or moved. This dependency makes their method unsuitable for modeling a family of discontinuities necessary for progressive cutting, or allowing cut placement and geometry to be edited interactively. Our approach allows for this broader functionality by separating the representation of the continuous field and the discontinuity.
+
+\subsection{Inside/Outside Descriptors}
+\zhecheng{given the new name for this related work, we probably need a bit more of context. In fact now I think about it, I feel like the only representation that can do a "jump in value at boundary", "support represent partial cut state" is GWN, is this true?}
+Modelling discontinuities inherently requires querying whether a point is on
+one side or the other. Signed distance fields (SDFs) and occupancy functions \cite{mescheder2019occupancy} both come to mind. Both rely on a level set to represent a boundary. However, these approaches represent insideness \zhecheng{interior?} only for closed domains \zhecheng{because they essentially only learn the surface levelset in the ambient space, so it means we have to threshold a volumetric function to get the true surface levelset, then we can get an indicator function that is \emph{sharp/jump condition}. because SDf and occupancy function logits are still continuous and smooth cross the 0 levelset}, whereas a cut may be partial or incomplete, i.e., a curve of discontinuity need not be a closed curve. Indeed, an open curve of discontinuity may evolve in time to close up, further begging for a richer representation. 
+
+The winding number is a fundamental concept in mathematics, particularly in complex analysis, geometry, and topology. It measures how many times a closed curve winds around a given point in the plane, by integrating the ``angle of projection'' along the curve with relation to the query point. As a field over all points on the plane it is piecewise constant with jump conditions across the curve~\cite{Reinhart1960TheWN, 10.1145/368637.368653}, making it a natural candidate for ``strict'' insideness tests. \citet{Jacobson:2018:GWN} proposed its generalization (GWN) to open curves, where \Revision{it} is harmonic with jump conditions across the curve, thereby serving as a  ``soft'' insideness test. The GWN has been implemented for point clouds \cite{Barill:FW:2018} and curved surfaces \cite{Feng:2023:WND}, and applied to garment modeling \cite{Hu:2018:TMW, chi2021garmentnets}, geometry processing \cite{Rui2023GCNO, Zhou:2016:MASG}, and computer vision \cite{Mueller:CVPR:2021}. 
+Our work leverages the GWN to represent discontinuities. 
+
+%implementing them on triangle meshes. While their approach is mathematically valuable for extending our method to non-planar rest shapes, its discretization-specific nature and reliance on remeshing as the curve evolves pose significant challenges for direct integration into our framework.
+
+%Building on this, \citet{Spainhour2024_arxiv} proposed a generalized algorithm for computing exact winding numbers for parametric curves, inspiring our approach for handling cuts defined by Bézier curves. This formulation enables precise modeling of discontinuities while avoiding the limitations of mesh-based implementations.
+
+

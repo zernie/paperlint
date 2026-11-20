@@ -1,0 +1,93 @@
+%%
+%% If your work has an appendix, this is the place to put it.
+\appendix
+\newpage
+\section{Research Methods}
+
+\subsection{\textsc{GetTopKCandidates}}\label{app:hotflip}
+The token replacement strategy \textsc{GetTopKCandidates} in the Algorithm \autoref{alg:hotflip-pos} in \autoref{subsec:rank_attack} leverages gradient directions to approximate optimal substitutions. Given a token sequence $s$ with length $L$, let $w_j$ denote the token at position $j$, and $e_{w_j} \in \mathbb{R}^d$ its corresponding embedding vector. For similarity score function $E(s)$, the selection process of top $k_b$ candidate tokens $T_j$ is formalized as follows:
+
+\textbf{Gradient computing}:
+\begin{equation}
+    \nabla_{e_{w_j}} E(s) = \frac{\partial E(s)}{\partial e_{w_j}} \in \mathbb{R}^d
+\end{equation}
+where $\nabla_{e_{w_j}} E(s)$ represents the gradient of the similarity score with respect to the $j$-th token's embedding. This gradient vector indicates the direction in embedding space that would maximally increase $E(s)$.
+
+\textbf{Projection Criterion}: For each candidate token $t \in V$ (vocabulary), compute the directional derivative along the replacement vector $(e_t - e_{w_j})$:
+
+\begin{equation}
+    \phi(t|j) = \nabla_{e_{w_j}} E(s)^\top (e_t - e_{w_j}) 
+\end{equation}
+
+\textbf{Simplified Scoring}: Since $e_{w_j}$ is constant for position $j$, we reduce the computation to:
+
+\begin{equation}
+    \phi(t|j) = \underbrace{\nabla_{e_{w_j}} E(s)^\top e_t}_{\text{target term}} - \underbrace{\nabla_{e_{w_j}} E(s)^\top e_{w_j}}_{\text{constant offset}}
+\end{equation}
+
+The top-$k_b$ candidates at position $j$ are selected by:
+
+\begin{equation}
+    T_j = \underset{t \in V\setminus\{w_j\}}{\text{top-}k_b} \ \phi(t|j)
+\end{equation}
+
+\textbf{Theoretical Justification}: This approximation derives from the first-order Taylor expansion of the score function around $e_{w_j}$:
+
+\begin{equation}
+    Score(s') \approx E(s) + \nabla_{e_{w_j}} E(s)^\top (e_t - e_{w_j})
+\end{equation}
+
+where $s'$ denotes the modified sequence after replacing $w_j$ with $t$. Maximizing this approximation directly corresponds to our projection criterion.
+
+In practice, the scores of candidate tokens can be computed efficiently via matrix multiplication:
+
+\begin{equation}
+    \Phi_j = \nabla_{e_{w_j}} E(s) \cdot E^\top \in \mathbb{R}^{|V|}
+\end{equation}
+
+where $E \in \mathbb{R}^{|V|\times d}$ is the embedding matrix. The top-$k_b$ indices from $\Phi_j$ (excluding the original token index) yield the candidate set $T_j$.
+
+
+\subsection{Multilingual Inductive Suggestions}\label{app:multi_suggestion}
+In \autoref{tab:multi_suggestion} we show all the English candidate inductive suggestions we use in the evaluation, as suggestions in other languages are the same.
+\input{tables/multi_suggestions}
+% \subsection{Part Two}
+
+\subsection{Real-world Demo}\label{app:vscode}
+
+Here we present a concrete example demonstrating how Copilot in VSCode could be misled into suggesting malicious packages through manipulated reference documentation, as shown in \autoref{fig:vscode}. In our experiment, we queried the model regarding a data processing task potentially related to \textit{numpy} library functionality. By intentionally manipulating the reference code documentation, we successfully induced Copilot to recommend a solution containing a malicious dependency. This vulnerability poses significant risks as inexperienced developers might directly implement these AI-suggested code snippets and subsequently install the compromised package through pip install commands without proper validation.
+
+\begin{figure*}[ht]
+  \centering
+  \includegraphics[width=1\textwidth]{Images/vscode.png}
+  \caption{A real-world demo demonstrating how Copilot in VSCode could be misled into suggesting a hijacked package (\texttt{numpy} to \texttt{cumpy}) import statement through manipulated reference documentation.}
+  \label{fig:vscode}
+\end{figure*}
+
+
+\begin{figure*}[ht]
+  \centering
+  \includegraphics[width=1\textwidth]{Images/cursor_matplotlib_safe.png}
+  \caption{A real-world demo demonstrating how Cursor Agent code suggestion includes hijacked package (\texttt{matplotlib} to \texttt{matplotlib\_safe}) import statement.}
+  \label{fig:cursor}
+\end{figure*}
+
+\begin{figure*}[ht]
+  \centering
+  \includegraphics[width=1\textwidth]{Images/yuanbao_ds.png}
+  \caption{A real-world demo demonstrating that Tencent Yuanbao web-chat LLM (DeepSeek-r1) provides help regarding debug info in Python and suggests controlled package (\texttt{faiss} to \texttt{faiss\_full}) import statement with only one single poisoned page implanted (The suggested package is crafted and not real).}
+  \label{fig:yuanbao}
+\end{figure*}
+
+\subsection{Prompts for LLMs}\label{app:prompt}
+Here we show the full prompt where we ask LLM for code suggestions, with the \textit{[context]} and \textit{[question]} from the specific query.
+\begin{tcolorbox}
+'You are a helpful programmer, please help me answer the following questions with the following relevant contexts. I hope you understand the task description and give a {language} code example. If you cannot find the answer to the question, just say "I don\'t know". \\ Contexts: [context] \\ Task description: [question] \\ Answer:'
+\end{tcolorbox}
+
+\subsection{Dataset Composition}\label{app:dataset}
+
+\input{tables/lang_description}
+
+
+\input{tables/dataset_source}

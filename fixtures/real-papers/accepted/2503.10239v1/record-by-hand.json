@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "usenix-2020-09.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "package.tex",
+      "role": "body"
+    },
+    {
+      "path": "tex-introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "tex-background.tex",
+      "role": "body"
+    },
+    {
+      "path": "tex-evaluation.tex",
+      "role": "body"
+    },
+    {
+      "path": "tex-lessons.tex",
+      "role": "body"
+    },
+    {
+      "path": "tex-related.tex",
+      "role": "body"
+    },
+    {
+      "path": "tex-conclusion.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "4c0e47ee9d56e2a88c15839b83bb81831d6aa6942d2936508a1e8a51cf742f15",
+    "usenix-2020-09.sty": "2278c83173e084a00fcf76d3227acb971f5137ecea993a5b4e13a9b2bd67b45e",
+    "package.tex": "576557db39ee03162f3456b6611f6bdc560f587f8cd1276c9b11d2d7c1aa952f",
+    "tex-introduction.tex": "0a88cd83a97a0719b68fa597abfab0792430ef1ff37c056330123ef370785f1b",
+    "tex-background.tex": "2d59680181055279513e194298c7a9c74ba8591d66258c930d007727d28e7b5e",
+    "tex-evaluation.tex": "b24312f0d4e814d6172d235907d72af272e59f0a4f3c7a03802b86189e8f1ccb",
+    "tex-lessons.tex": "42267a42c9b77a60c0043d1ea679bdb0a88cc014d8c2e345ec3bfc56b6151a27",
+    "tex-related.tex": "e98ceedba66ba7216b7ab3a6d1ac4acfd00950b5fb20225b4f4a210da9188501",
+    "tex-conclusion.tex": "2602294c146efeb6d3778532da6bb3dfee381c0cc65f8e6e41b562d731a5848d"
+  }
+}

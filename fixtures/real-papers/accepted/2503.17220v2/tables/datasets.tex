@@ -1,0 +1,18 @@
+\begin{table}[]
+    \centering
+    \scriptsize
+    \caption{Dataset metrics.}
+    \label{tab:datasets}
+    \begin{tabular}{rccccc}
+        \toprule
+        & \textbf{Ansible} & \textbf{Puppet} & \textbf{Chef} & \textbf{Terraform} & \textbf{Tortoise} \\
+        \midrule
+        All scripts                                   & 108,511 & 17,311 & 70,942 & 41,550 & 13 \\
+        Without test and library scripts              & 99,934  & 15,725 & 40,372 & 40,972 & 13 \\
+        Without duplicates                            & 69,524  & 12,973 & 19,846 & 31,687 & 13 \\
+        \makecell[r]{\textbf{Curated dataset} \\ (Parsable by \name)}  
+                                                     & 64,011  & 12,753 & 19,716 & 30,566 & 13 \\
+        \textbf{Benchmark}                            & 12,358  & 4,868  & 3,568  & 1,300  & 13 \\
+        \bottomrule
+    \end{tabular}
+\end{table}

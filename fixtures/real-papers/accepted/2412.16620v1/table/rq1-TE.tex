@@ -1,0 +1,27 @@
+\begin{wraptable}{l}{0.5\textwidth}
+\centering
+\footnotesize
+\caption{Comparisons of LLMs with previous approaches on the test evolution task. The best results among all LLMs are \textbf{bolded}, and the second-best results are \uline{underlined}.}
+\label{tab:tu_comparisons_llm}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Apporaches/LLMs} & \textbf{EM} & \textbf{BLEU} & \textbf{CodeBLEU}  \ \\
+\midrule
+KNN & 3.9\% & - & 37.6\% \\
+NMT & 5.0\% & - & 32.3\% \\ 
+\textsc{Ceprot} & 12.3\% & - & 63.1\% \\
+\midrule
+CodeBERT & 6.15\% & 37.72\% & 46.42\% \\
+GraphCodeBERT & 12.69\% & 63.49\% & 67.37\% \\
+UniXcoder & 10.58\% & 58.03\% & 63.12\% \\
+CodeT5-base & 12.88\% & 78.31\% & 78.31\% \\
+CodeT5p-220m & 17.12\% & 81.54\% & 81.54\% \\
+PLBART-base & 12.88\% & 77.88\% & 78.45\% \\
+CodeGPT & 15.38\% & 79.77\% & 81.58\% \\
+StarCoder2-15b & 29.04\% & 83.45\% & 84.71\% \\
+CodeLlama-13b & \uline{34.62\%} & \textbf{85.20\%} & \uline{86.13\%} \\
+DeepSeek-Coder-6b & \textbf{35.58\%} & \uline{84.48\%} & \textbf{86.35\%} \\
+
+\bottomrule
+\end{tabular}
+\end{wraptable}

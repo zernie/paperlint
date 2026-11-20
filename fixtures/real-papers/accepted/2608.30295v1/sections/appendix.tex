@@ -1,0 +1,208 @@
+\newpage
+\appendix
+\onecolumn
+\section{Further Observations}
+\label{appendix-consistency}
+
+We expanded our exploration of sequential consistency to a wider selection of models, primarily focusing on the popular models mentioned in the main text: Llama-3-8B-1M~\cite{llama3-8b}, Llama-3.1-8B~\cite{llama3-1}, Phi-3-128K~\cite{phi}, and Yi-9B-200K~\cite{yi}. In Figure~\ref{fig:appendix-consistency}, we visualized the attention weights heatmap for these four models, illustrating the presence of both consistent and adaptive heads across various layers. This visualization supports the generality of our observations. Consistent with the setup described in the main text, the heatmap in the figure comprises attention weights associated with the last 20 query tokens during the pre-filling stage and all query tokens during the decoding stage, employing a causal mask. And the samples are randomly excerpted from the WikiText-2~\cite{wikitext} dataset.
+
+
+\section{Experiment Details}
+\subsection{Implementation Details of Experiments}
+\label{appendix-exp-detail}
+During the identification stage of CateKV, we employed an observation window and temporarily excluded initial tokens and recent tokens from the context window. We set $L_{obs}$ to 64, while $L_{init}$ and $L_{rec}$ were defined as 1/32 and 1/128 of the sparse budget, respectively. We constructed the reference dataset based on the Variable Tracking task from the RULER Benchmark, which comprises 100 samples, each with a length of 128K, distinct from the test set. The sparse budget was set at 2048. According to the performance on the reference dataset, we selected the most appropriate percentile threshold $k$ and scaling factor $\alpha$ for each model. For the percentile threshold $k$, Llama3 and Llama3.1 were set at 0.996 and 0.984, respectively, while other models were set at 0.99. For the scaling factor $\alpha$, Llama3.1, and Yi were set at 0.8, while other models were assigned a value of 1.0.
+
+For the baseline methods, we configured the observation windows of SnapKV~\cite{snapkv} and PyramidKV~\cite{pyramidkv} to 32 and set the $\beta$ in PyramidKV to 20. For StreamingLLM~\cite{streamingllm}, the initial tokens were set to 128. Regarding Duoattention\cite{duoattention}, we conducted experiments using the attention patterns provided by their code available on GitHub.
+
+\subsection{Additional Results on RULER}
+\label{appendix-ruler}
+\subsubsection{Performance of different context lengths on RULER}
+We also conducted evaluations on various context lengths within the RULER benchmark. The Table ~\ref{tab:ruler8k-256k} presents the performance of CateKV on tasks with context lengths from 8K to 256K. CateKV is comparable to full attention in terms of all lengths and average results and even shows slight improvements in performance at certain lengths when $r=0.4$ and $\eta=1.0$.
+\input{Tables/ruler8k-256k}
+
+\subsubsection{Combine with KV Retrieval Methods}
+We combine CateKV with Quest~\cite{quest} and ShadowKV~\cite{shadowkv} and compare their performance with the baseline under the same computational budget at a length of 128K. The results are shown in Table~\ref{tab:ruler-128k-appendix}. CateKV helps reduce the memory usage of Quest and ShadowKV and significantly outperforms KV Eviction methods in terms of accuracy with the same computational load.
+\input{Tables/ruler-128k-appendix}
+
+\subsection{Full Longbench Results}
+\label{appendix-longbench}
+We present the complete experimental results for the Longbench in Table~\ref{tab:longbench-all}. We integrate CateKV with both the Full Attention and KV retrieval methods, Quest\cite{quest} and ShadowKV\cite{shadowkv}, and evaluate its performance on all 21 tasks in Longbench. The results showed that this integration did not lead to any significant drop in per-task accuracy, and the average accuracy even outperformed the original methods, despite retaining only 42\% of the KV cache size. For around half of the tasks, the combination of CateKV with the original methods leads to a slight improvement in performance.
+
+\input{Tables/longbench_all}
+
+\subsection{Additional Results in Needle In A Hystack}
+\label{appendix-niah}
+
+Figure~\ref{appendix-niah} displays the performance of the Llama3.1-8B, Phi-3-Mini-128K, and Yi-9B-200K models on the 'Needle In A Haystack' task. Compared to full attention, CateKV shows varied performance across different context windows and needle depths, but maintains overall comparable performance. This suggests that CateKV does not significantly affect the models' capacity to access and retrieve long-context semantic information.
+
+\subsection{Additional Results on Larger Models}
+We evaluated the performance of CateKV on larger models, setting the context length according to the maximum supported by each model—128k for Qwen2.5-32B and Yi-34B-200K, and 16k for Phi-4-14B. As shown in Table~\ref{tab:larger_models}, CateKV scales effectively, achieving near full-attention accuracy on the 30B and 14B models, outperforming baseline methods such as SnapKV and PyramidKV.
+
+\input{Tables/larger_model}
+% \begin{figure}[t]
+%    \centering
+%    \subfigure{
+%     \includegraphics[width=0.48\linewidth]{Figures/efficiency_memory.pdf}
+%         \label{fig:efficiency_memory}
+%    }
+%    \hfill
+%     \subfigure{
+%     \includegraphics[width=0.48\linewidth]{Figures/efficiency_latency.pdf}
+%         \label{fig:efficiency_latency}
+%     }
+%     % \vspace{-0.3cm}
+%     \caption{Comparison of decoding efficiency between \shortname and full attention. We compare the memory usage (a) and decoding latency (b) across different context lengths. OOM indicates that the GPU memory limit (80G) is exceeded; corresponding data is obtained by extrapolation. (can be found in Appendix)
+%     % Our method achieves up to 2.45$\times$ memory reduction for MHA and 1.65$\times$ for GQA models, along with up to 2.13$\times$ latency reduction for MHA and 1.5$\times$ for GQA models.
+%     }
+%     \vspace{-0.5cm}
+%     \label{fig:efficiency_decoding}
+% \end{figure}
+
+% \begin{figure}[t]
+%    \centering
+%    \subfigure{
+%     \includegraphics[width=0.46\linewidth]{Figures/niah-llama3.1-full.pdf}
+%         \label{fig:niah-llama3.1-full}
+%    }
+%    \hfill
+%     \subfigure{
+%     \includegraphics[width=0.46\linewidth]{Figures/niah-llama3.1-catekv.pdf}
+%         \label{fig:niah-llama3.1-catekv}
+%     }
+%     \caption{Llama-3.1-8B-Instruct}
+%     \vspace{-0.3cm}
+%     \label{fig:niah-llama3.1}
+% \end{figure}
+
+% \subsection{Efficiency Across Different Context Lengths}
+% \label{appendix-context-length}
+% We compared the decoding efficiency of CateKV and full attention at different context lengths, as shown in Figure~\ref{fig:efficiency_decoding}. As the context length increases, both the model's latency and memory usage increase linearly, but CateKV exhibits a smaller slope compared to full attention. The longer the input context, the greater the reductions in memory and latency, ultimately approaching an upper bound, which theoretically would be $1/(r*\eta)$.
+
+% \input{Tables/longbench_new}
+
+% \input{Tables/3method}
+% \subsubsection{Different identification scores}
+% \label{different_methods_ablation}
+% In Section~\ref{identification_method}, we introduce three scores for identifying consistent heads. We applied methods based on these scores to the same reference dataset to generate head classification masks and evaluated them on RULER-128K. Table~\ref{tab:3method} presents the results of the three methods under consistency ratios ranging from 0.3 to 0.5. While all three methods achieve performance comparable to full attention, the CV score-based method demonstrates superior performance.
+
+% \begin{figure}[t]
+%    \centering
+%    \subfigure[Llama-3-8B-1M]{
+%     \includegraphics[width=0.90\linewidth]{Figures/llama3_consistency.pdf}
+%     \label{fig:llama3-consistency}
+%    }
+%    \vspace{0.01cm}
+%    \subfigure[Llama-3.1-8B]{
+%     \includegraphics[width=0.90\linewidth]{Figures/llama3.1_consistency.pdf}
+%     \label{fig:llama3.1_consistency}
+%    }
+%    \vspace{0.01cm}  % Space between rows
+%    \subfigure[Phi-3-Mini-128K]{
+%     \includegraphics[width=0.90\linewidth]{Figures/Phi_consistency.pdf}
+%     \label{fig:Phi_consistency}
+%    }
+%    \vspace{0.01cm}
+%    \subfigure[Yi-9B-200K]{
+%     \includegraphics[width=0.9\linewidth]{Figures/Yi_consistency.pdf}
+%     \label{fig:Yi_consistency}
+%    }
+%     \caption{Sequential consistency in Llama-3-8B-1M~\cite{llama3-8b}, Llama-3.1-8B~\cite{llama3-1}, Phi-3-Mini-128K~\cite{phi} and Yi-9B-200K~\cite{yi}}
+%     \vspace{-0.01cm}
+%     \label{fig:appendix-consistency}
+% \end{figure}
+
+
+
+\begin{figure}[t]
+   \centering
+   \subfigure[Llama-3-8B-1M]{
+    \includegraphics[width=0.90\linewidth]{Figures/llama3_consistency.pdf}
+    \label{fig:llama3-consistency}
+   }
+   \vspace{0.01cm}
+   \subfigure[Llama-3.1-8B]{
+    \includegraphics[width=0.90\linewidth]{Figures/llama3.1_consistency.pdf}
+    \label{fig:llama3.1_consistency}
+   }
+   \vspace{0.01cm}  % Space between rows
+   \subfigure[Phi-3-Mini-128K]{
+    \includegraphics[width=0.90\linewidth]{Figures/Phi_consistency.pdf}
+    \label{fig:Phi_consistency}
+   }
+   \vspace{0.01cm}
+   \subfigure[Yi-9B-200K]{
+    \includegraphics[width=0.9\linewidth]{Figures/Yi_consistency.pdf}
+    \label{fig:Yi_consistency}
+   }
+    \caption{Sequential consistency in Llama-3-8B-1M, Llama-3.1-8B, Phi-3-Mini-128K and Yi-9B-200K}
+    \vspace{-0.01cm}
+    \label{fig:appendix-consistency}
+\end{figure}
+
+\begin{figure}[t]
+   \centering
+   \subfigure[Llama-3.1-8B-Instruct]{
+    \includegraphics[width=0.45\linewidth]{Figures/niah-llama3.1-full.pdf}
+    \label{fig:niah-llama3.1-full}
+   }
+   \hfill
+   \subfigure[Llama-3.1-8B-Instruct w/ CateKV]{
+    \includegraphics[width=0.45\linewidth]{Figures/niah-llama3.1-catekv.pdf}
+    \label{fig:niah-llama3.1-catekv}
+   }
+   \vspace{0.2cm}  % Space between rows
+   \subfigure[Phi-3-mini-128k-instruct]{
+    \includegraphics[width=0.45\linewidth]{Figures/niah-phi-full-2.pdf}
+    \label{fig:niah-phi-full}
+   }
+   \hfill
+   \subfigure[Phi-3-mini-128k-instruct w/ CateKV]{
+    \includegraphics[width=0.45\linewidth]{Figures/niah-phi-catekv-2.pdf}
+    \label{fig:niah-phi-catekv}
+   }
+   \subfigure[Yi-9B-200k]{
+    \includegraphics[width=0.45\linewidth]{Figures/niah-yi-full.pdf}
+    \label{fig:niah-yi-full}
+   }
+   \hfill
+   \subfigure[Yi-9B-200k w/ CateKV]{
+    \includegraphics[width=0.45\linewidth]{Figures/niah-yi-catekv.pdf}
+    \label{fig:niah-yi-catekv}
+   }
+    \caption{NIAH Results on Llama-3.1-8B-Instruct\cite{llama3-1},  Phi-3-mini-128k-instruct~\cite{phi} and Yi-9B-200k~\cite{yi}}
+    \vspace{-0.3cm}
+    \label{fig:appendix-niah}
+\end{figure}
+
+% \begin{figure}[t]
+% \begin{center}
+%     \includegraphics[width=0.98\textwidth]{Figures/tasks_lengths.pdf}
+%     \caption{Consistent pattern across different tasks and context lengths for a single head. 15 samples were randomly selected from 5 tasks and 3 different context lengths in the RULER benchmark. The visualization shows a portion of the attention heatmap from Layer 3, Head 7 of the LLama3-8B model. For each plot, the first 10 rows correspond to the attention heatmap of the last 10 query tokens during the pre-filling stage, while the remaining rows correspond to the query tokens during the decoding stage.}
+%     \vspace{-0.3cm}
+%     \label{fig:tasks_lengths}
+% \end{center}
+% \end{figure}
+
+% \begin{figure}[t]
+% \begin{center}
+%     \includegraphics[width=0.9\textwidth]{Figures/Similar_focus.pdf}
+%     \caption{Similar attention focus across different consistent heads. The attention heatmaps for several heads with consistent patterns in Longchat-7B are presented, applied to the same input. The highlighted regions in these heatmaps show a strong similarity.}
+%     \vspace{-0.3cm}
+%     \label{fig:similar_focus}
+% \end{center}
+% \end{figure}
+
+% \begin{figure}[t]
+% \begin{center}
+%     \includegraphics[rwidth=0.45\textwidth]{Figures/latency_breakdown.pdf}
+%     \caption{Latency breakdown of attention layer under different adaptive head ratios. Latencies for consistent heads, adaptive heads, and other operations (index extraction and merging) when tested on LLaMA-3-8B with an input length of 128K. The values represent the total latency in the attention layer for generating 100 tokens.}
+%     \vspace{-0.3cm}
+%     \label{fig:latency_breakdown}
+% \end{center}
+% \end{figure}
+
+% \input{Tables/task_aware}
+
+
+
+

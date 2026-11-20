@@ -1,0 +1,28 @@
+\vspace{-1em}
+\section{Workload Tuning with \syssearchname}
+
+\sysname's transparent emulation enables efficient exploration of the vast configuration space of DLT configs. While prior approaches require explicit modeling of each optimization technique, our emulation-based design naturally captures the impact of any configuration change through its low-level tracing. We leverage this capability to build an automated configuration search system that can rapidly evaluate different training recipes without requiring GPU resources.
+
+The key insight is that by operating at the accelerator API level, \sysname can accurately predict the performance impact of configuration changes without needing to understand their semantic meaning. This allows us to treat configuration search as a black-box optimization problem, evaluating arbitrary combinations of parallelization strategies and system optimizations through lightweight emulation. The system takes as input a configuration space specification (defining the parallelization strategies and optimization knobs to explore), a resource specification (describing the target GPU cluster), and the training script. It then orchestrates concurrent trials that use \sysname to evaluate different configurations, continuously refining the search based on predicted performance using standard hyperparameter optimization techniques such as Bayesian optimization \cite{baysianoptimization} or Covariance Matrix Adaptation Evolution Strategy (CMA-ES) \cite{cma}.
+
+\vspace{-1em}
+
+\subsection{Concurrent Trial Scheduling} 
+
+While \sysname's emulation engine provides a cheap way to evaluate different configurations, the search process can still be prohibitively slow if done sequentially. This necessitates careful resource management to enable the concurrent evaluation of multiple configurations. We solve this problem by developing a CPU scheduler that distributes the emulation of concurrent trials across CPU cores.
+
+Since \sysname relies on wall-clock measurements for host-side overheads, concurrent trials would be affected by interference if they contend for CPU resources. To avoid this, we i) pin individual worker processes to CPU cores, and ii) run each emulated worker to completion before switching.
+
+Second, we tackle memory pressure through careful process management. Each emulated GPU rank initially requires a complete copy of the user libraries (for instance, PyTorch runtime stack), which can quickly exhaust system memory when running several concurrent trials. We address this using Python's \textit{forkserver} mechanism to maintain a single copy of user libraries across workers, reducing memory footprint.
+
+\input{figures-tex/point_cloud}
+
+
+\subsection{Fidelity-Preserving Trial Pruning}
+
+While concurrent execution improves throughput, we can further accelerate the search by intelligently pruning or skipping configurations that are guaranteed to perform worse than already evaluated ones. The key challenge is determining when such skips preserve prediction fidelity without missing potentially optimal configurations.
+
+We develop a domain-aware trial scheduler that leverages known relationships between training configurations. For instance, if a configuration with activation recomputation enabled leads to out-of-memory (OOM) errors, we can safely skip evaluating the same configuration with recomputation disabled, as it will necessarily consume more memory and thus OOM. These relationships form a partial ordering over configurations based on their resource consumption.
+
+The trial scheduler maintains a history of evaluated configurations and employs a set of conservative tactics to identify configurations that are dominated by previously seen ones. Pruning using this configuration history is \textit{fidelity-preserving}, meaning that no potentially optimal configuration is skipped while still achieving significant reductions in search time.
+

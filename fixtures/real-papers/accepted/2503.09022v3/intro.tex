@@ -1,0 +1,65 @@
+\section{Introduction}
+\begin{figure}[!t]
+\centering
+\subfloat{\includegraphics[width=0.97\columnwidth]{fig/overview.pdf}}
+
+\caption{Outline of our attack setting. In collaborative inference, the LLM’s transformer blocks are distributed across collaborating participants, each holding a portion of the model. In this figure, 'ACT' represents the intermediate activation transmitted between participants. User 3 is a malicious participant who records the intermediate activation received from User 2, completing the computation as usual. After inference, User 3 then attempts to reconstruct the input prompt using the recorded activation. }
+\label{fig:concept}
+\vspace{-1em}
+\end{figure}
+
+
+Large language models (LLMs) (\eg, GPT-4~\cite{gpt4}), have demonstrated exceptional abilities in various domains. The model scale of LLMs has expanded extensively in recent years.
+Many LLMs with hundreds of billions of parameters, such as Llama2-70B~\cite{llama2} and OPT-175B~\cite{opt}, have been released.
+The practical usage of LLMs is hindered by high memory and computational requirements. For instance, OPT-175B demands over 350 GB of GPU memory for inference. Deploying LLMs necessitates many expensive GPUs, making them unaffordable for most developers. This requirement heavy burden significantly hinders the widespread deployment of LLMs in practice.
+
+Recent studies have been conducted to democratize LLM's access. They can be mainly divided into two categories: offloading and collaborative inference. Offloading-based systems~\cite{sheng2023flexgen,llamacpp,song2023powerinfer} reduce demand on GPU memory by leveraging CPU memory to store model weights that exceed GPU’s capacity. 
+However, they suffer from significant serving latency due to frequent transmission of large model weights (\eg, gigabytes in size) between CPU and GPU. Collaborative inference~\cite{PETALS,PETALS2,jiang2023hexgen} is an alternative to offloading, which addresses this challenge. In collaborative inference, participants connect their underutilized GPUs to a pool. 
+ Each participant hosts a subset of consecutive LLM layers, receives the preceding layers' activation, computes the hosted layers, and sends the calculated activation to the subsequent participant for follow-up computations. Similar to BitTorrent~\cite{bittorrent}, LLM users benefit from other peoples' GPUs while they can also contribute their own GPUs to the pool. 
+The data transmission volume of collaborative inference is typically orders of magnitude smaller than that of offloading, leading to much lower overhead.  Several reports~\cite{speed_petals1,speed_petals2} have pointed out that collaborative inference can output about five tokens per second, similar to human typing speed, which is acceptable in the real world. 
+
+Collaborative inference has recently attracted much attention from industry and academia~\cite{PETALS,yuan2022decentralized,jiang2023hexgen,miao2023sdpipe}.
+Multiple companies are building collaborative inference platforms to meet the demand for AI computing power. For example, Huggingface~\cite{Huggingface} and Yandex research~\cite{Yandex} built PETALS~\cite{PETALS,PETALS2}, enabling users to share their underutilized GPUs through the network to offer people access to cheap computing power.   An influential open source project LocalAI~\cite{localai} also added support to collaborative inference to reduce cost and enhance efficiency~\cite{localai_deml}. Meanwhile, the startup Nesa~\cite{NESA} has combined collaborative inference with blockchain technology to improve censorship resistance. In academia, extensive research~\cite{jiang2023hexgen,yuan2022decentralized,miao2023sdpipe,skyserve} has focused on enhancing the efficiency and scalability of collaborative inference. Additionally, several studies~\cite{edgecloud2,edgecloud3,edgecloud1} have explored the specific case of LLM collaborative inference in edge cloud environments.
+
+However, due to the complex nature of the internet, malicious users are likely to exist. For example, a recent work~\cite{luposition} (ICML'24) studied the risk of poisoning under collaborative fine-tuning. In particular, there are two potential threats collaborative inference systems may encounter: (1) \emph{utility threats} that \revise{a malicious client might intentionally delay processing to increase inference latency or alter the activations sent to subsequent participants, thereby manipulating the generated text} and (2) \emph{privacy threats} that infer sensitive information from the activation received from the previous participant.  
+This paper mainly focuses on the privacy threats in LLM collaborative inference since input prompts often contain sensitive information (\eg, personal names and contact details) and high-quality LLM prompts themselves hold significant commercial value~\cite{promptmarket}. 
+
+
+
+To the best of our knowledge, there is no research regarding the privacy threats in collaborative LLM inference. Nevertheless, we notice that some techniques, including attribute inference attack~\cite{pan2020privacy,li2022you,lyu2020differentially} and embedding inversion attack~\cite{song2020information, Generative-embedding-inversion-attack, Sentence_inference_attack}, are closely related to it. These attacks have similar threat models with collaborative inference where the attacker is given embedding/activation. Specifically, attribute inference attacks can accurately infer various sensitive categorized attributes (\eg, location and gender) from language embedding with high accuracy. However, \emph{they are unlikely to practically threaten LLM collaborative inference}, since  LLM input prompts are typically long and often contain multiple different values for a single attribute, making the attack results confusing. This naturally mitigates the threat of attribute inference. 
+
+Embedding inversion attack directly recovers input text from embeddings and has been shown to recover a certain proportion of input from BERT~\cite{devlin2018bert} embeddings. However, we reveal that embedding inversion attacks achieve low accuracy in recovering prompts from LLM activations. The fundamental challenge comes from \emph{strong non-linearity} of LLMs due to deep depth and large size. We discover in our experiments that the non-linearity of LLM strengthens with the increase of model depth. The strong non-linearity leads to the existence of \emph{numerous input embedding vectors corresponding to similar output activations}, most of which map to meaningless text. The recovered results of embedding inversion attacks on LLMs often fall into these local minima.  
+The ineffectiveness of existing attacks towards collaborative LLM inference makes whether these systems are susceptible to privacy threats remains unclear. 
+
+In this paper, to validate the severity of privacy threats in LLM collaborative inference, we define and reveal the prompt inversion attack (\textbf{PIA}),  where a malicious participant intends to recover the input prompt through the activation transmitted by its previous participant. 
+In particular, clients mostly request for open source LLMs or parameter-efficiently fine-tuned LLMs when using collaborative inference in practice.  
+Accordingly, we consider two representative PIA settings: white-box and grey-box. In the white-box setting, the adversary is assumed to have information about all model parameters; while in the grey-box setting, the adversary only knows the parameters of the base model and his own part of fine-tuned weight.
+
+Under the white-box setting, we design a two-phase attack pipeline, \ie, constrained optimization with adaptive discretization, to resolve the challenge of numerous semantically meaningless local minima due to LLM's strong non-linearity.
+%, circumventing drawbacks of existing technique.
+Specifically, in the first \emph{constrained optimization} phase, we optimize the input embedding with a constraint term derived from the LLM's embedding matrix. 
+This constraint enforces the optimized embedding to be close to the ground truth.
+In the second \emph{adaptive discretization} phase, we first construct an optimal attack scheme by adaptively recovering tokens based on activation. However, it inevitably has intractable complexity. We accelerate it by reducing the token candidate set based on the previously optimized embedding. Besides, to enhance the readability of recovered text, we design \emph{semantic speculation} technique based on language prior. 
+ For grey-box PIA, due to the lack of knowledge of LoRA parameters, the attacker has to jointly reconstruct the input prompt and estimate the LoRA parameters. We extend our prior white-box PIA method by developing an alternative optimization-based strategy. Our approach iteratively optimizes the generated token and LoRA parameters, making PIA feasible under the grey-box setting.
+
+
+
+
+To reveal the threats of PIA, we conduct extensive experiments on multiple benchmark datasets (\ie, Skytrax~\cite{skytrax}, CMS\cite{cms}, and ECHR~\cite{echr}) and representative LLMs (\ie, Llama-2-70B~\cite{llama2}, Llama-65B~\cite{llama}, and OPT-66B~\cite{opt}). In particular, we have two critical observations: \textbf{(1)} PIA could achieve surprisingly high recovery accuracy on LLMs. 
+For example, our method achieves a $88.4\%$ accuracy on the Skytrax dataset and Llama-65B model for the most challenging last participant setting for four participants, whereas the best baseline method adapted from Li et al.~\cite{Generative-embedding-inversion-attack} only achieves $22.8\%$ accuracy. \textbf{(2)} PIA remains highly effective under the grey-box setting. For example, on the Guanaco-65B model fine-tuned on Llama, we achieve a token accuracy of $85.4\%$. These findings demonstrate the vital privacy threat of our attack against the collaborative inference of LLMs.
+
+
+We also explore whether potential defenses can practically reduce our PIA threats. In general, we find that classical defenses either severely harm generation quality or incur unbearable overhead. For example, our method still retains $79.5\%$ accuracy under the defense of obfuscating activation with Gaussian noises of $\sigma=1$. It further confirms the threats of our PIA attacks.
+
+
+
+In conclusion, our main contributions are four-fold. \textbf{(1)} We explore the privacy risks of LLMs under the collaborative inference setting. In particular, we reveal that similar existing techniques (\eg, embedding inversion attacks) are ineffective under this emerging yet practical scenario. 
+
+\textbf{(2)} We formulate and design prompt inversion attack (PIA) to demonstrate the severity of privacy threats in LLM collaborative inference. It is designed under both white-box and grey-box settings and is resistant to potential defenses. 
+
+\textbf{(3)} We provide theoretical insights of our method. Specifically, we present the construction of an theoretically optimal PIA method and further accelerate it to derive our scheme.  We also discover and prove the fundamental weakness of gradient vanishing in previous works [19] as part of our design insights. 
+
+\textbf{(4)} We conduct extensive experiments on benchmark datasets, which verifies the threats of our attack. 
+Our white-box attack can achieve nearly perfect recovery of the input prompt, obtaining $88.4\%$ token accuracy under the most challenging case. It significantly outperforms the best baseline (with $22.8\%$ accuracy). We also show that our method can achieve a high $85\%$ token accuracy under the grey-box setting.
+
+

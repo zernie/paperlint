@@ -1,0 +1,55 @@
+
+% \subsection{Experimental Setup}
+% \label{sec:setup}
+% Our experimental platform utilized Google Cloud service with n2d-standard-2, which has 2 cores and 8 GB RAM. Our software environment included the Microsoft SEAL 4.1 \cite{sealcrypto} library for homomorphic encryption running in Ubuntu Linux 20.04 LTS. We use the same settings for clients. For the TEE, we use the same settings with the Confidential VM service enabled, thus enabling the AMD SEV TEE.
+
+
+% \subsection{Compared Schemes}
+
+% We compared FHE+MAC ~\cite{chatel2022verifiable}, FHE+ZKP\cite{fhe-zkp}, and FHE+TEE ~\cite{sev2020strengthening} with our DataSeal across various applications, including matrix multiplication, addition, matrix squaring, and neural networks. Additionally, we evaluate DataSeal compared to Trusted Execution Environment (TEE), specifically AMD's Secure Encrypted Virtualization (SEV)~\cite{sev2020strengthening}. Despite AMD SEV providing neither complete integrity protection nor verifiability, the comparison is still useful to gauge DataSeal's performance against the state-of-the-art TEE performance.  
+
+% \subsection{Workloads}
+% We assess DataSeal performance across three types of computation: kernels, microbenchmarks, and end-to-end neural networks. We use the BGV method, which is provided by Microsoft Seal 4.1. \cite{sealcrypto}. 
+
+% \paragraph{Matrix Operations} The first workload type is matrix operations, consisting of {\em Matrix Multiplications} and {\em Matrix Addition}. Both are highly used kernels in machine learning and high-performance computing. Matrix addition is useful to reveal how much overheads DataSeal adds relative to computation, while matrix multiplication is useful to reveal how DataSeal overheads scale as the input size grows. 
+
+% \paragraph{Neural Network Micro-benchmarks} We evaluate {\em Convolution}, which is often used in neural network for feature extraction, and {\em Polynomial Activation}, which is useful for evaluating DataSeal's impact on neural network activation. In the latter case,  we perform a square which is used for activation for FHE encrypted DNN \cite{ranaldi2022crypto}.
+
+% \begin{figure*}[ht]
+% \centering
+%     \centering
+%     \includegraphics[width=\linewidth]{figures/res_2_1.pdf}
+%     \captionsetup{skip=2pt}
+%        %\vspace{0.1in}
+%     \caption{Overhead comparison of various schemes on matrix operations. The y-axis represents the running overhead, calculated by subtracting the FHE-only running time from each scheme's running time and then dividing this by the FHE-only running time.}
+%     \label{fig:matrix-overhead-all}
+%     %\vspace{-0.1in}
+% \end{figure*}
+
+% \paragraph{End-to-end Neural Networks} We evaluate two NNs: LeNet-5~\cite{lecun1998gradient} and AlexNet~\cite{krizhevsky2017imagenet}. LeNet-5 is a classic convolutional neural network model, consisting of two sets of convolutional and average pooling layers, a flattening convolutional layer, and two dense layers. We tested this structure on the MNIST dataset, a widely used collection of 60,000 $28\times28$ pixel images of handwritten digits. AlexNet is an eight-layer deep neural network with five initial convolutional layers (some paired with pooling layers) followed by three fully connected layers, utilizes average pooling implementable via convolution. We test AlexNet on the CIFAR-10 dataset, which consists of 60,000 32x32 color images across 10 classes. AlexNet, like LeNet-5, is frequently used in FHE-based learning applications. Representative Neural networks like AlexNet and LeNet-5 are commonly employed in FHE-based learning~\cite{lou2020autoprivacy,CryptoNets:ICML2016,CryptoDL:arxiv17,FCryptoNets:arxiv19,GAZELLE:USENIX18,al2020towards}.    
+
+
+\subsection{Experimental Setup}
+\label{sec:setup}
+Our experimental platform used Google Cloud's n2d-standard-2 (2 cores, 8 GB RAM) with Ubuntu Linux 20.04 LTS. We employed Microsoft SEAL 4.1 \cite{sealcrypto} for homomorphic encryption. The same setup was used for clients, with the addition of AMD SEV TEE for the Confidential VM service.
+
+\subsection{Compared Schemes}
+We compared FHE+MAC \cite{chatel2022verifiable}, FHE+ZKP \cite{fhe-zkp}, and FHE+TEE \cite{sev2020strengthening} with our DataSeal across various applications, including matrix operations and neural networks. Additionally, DataSeal was evaluated against AMD SEV TEE \cite{sev2020strengthening} to gauge performance.
+
+\subsection{Workloads}
+We assessed DataSeal across three types of computation: kernels, microbenchmarks, and end-to-end neural networks using the BGV method provided by Microsoft SEAL 4.1 \cite{sealcrypto}.
+
+\noindent\textbf{Matrix Operations.} We evaluated {\em Matrix Multiplications} and {\em Matrix Addition}, commonly used in machine learning and HPC. Matrix addition reveals DataSeal's overhead relative to computation, while matrix multiplication shows how overhead scales with input size. 
+
+\noindent\textbf{Neural Network Micro-benchmarks.} We evaluated linear operation {\em Convolution}, used for feature extraction in neural networks. For {\em Polynomial Activation}, we use square activation for FHE encrypted DNN \cite{ranaldi2022crypto}.
+
+
+\begin{figure*}[ht]
+\centering
+    \includegraphics[width=0.9\linewidth]{figures/res_2_1_new.pdf}
+    \captionsetup{skip=2pt}
+    \caption{Overhead comparison of various schemes on matrix operations. The y-axis represents the running overhead, calculated by subtracting the FHE-only running time from each scheme's running time and then dividing this by the FHE-only running time.}
+    \label{fig:matrix-overhead-all}
+\end{figure*}
+
+\noindent\textbf{End-to-end Neural Networks.} We evaluated LeNet-5 \cite{lecun1998gradient} on the MNIST dataset and AlexNet \cite{krizhevsky2017imagenet} on the CIFAR-10 dataset. LeNet-5 includes convolutional and dense layers, while AlexNet features deep convolutional and fully connected layers. Both are representative models in FHE-based learning \cite{lou2020autoprivacy, CryptoNets:ICML2016, CryptoDL:arxiv17, GAZELLE:USENIX18, al2020towards, xue2024cryptotrain, xue2022audit, lou2019she, Lou2020AutoQ, lou2020falcon, lou2021hemet}.

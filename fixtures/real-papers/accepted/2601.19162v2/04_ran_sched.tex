@@ -1,0 +1,65 @@
+\section{RAN Resource Management}
+\label{sec:ran_sched}
+
+This section presents the design of our SLO-aware RAN resource management, which operates at the RAN's MAC layer that makes a decision on RAN resource allocation.
+
+\subsection{Identifying Application Requests}
+\label{sec:request-identify}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/request-bsr-relationship/request_bsr.pdf}
+    \tightcaption{Correlation between bytes reported in BSR and application requests.}
+    \label{fig:bsr-correlation}
+\end{figure}
+
+As described in~\autoref{sec:challenges}, RAN protocol layers lack visibility into packet payloads, preventing direct identification of application request boundaries.
+Even if payload access were available (\eg once the I/Q samples are demodulated into user data bits at the Packet Data Convergence Protocol (PDCP) layer), parsing application-layer data would violate the strict timing requirements of MAC scheduling, which must complete decisions within \us{500} or \ms{1} to meet 5G timing requirement.
+
+\modified{\mypara{Our approach.}
+Our key observation is that control signals from the UE to the RAN's MAC layer, particularly Buffer Status Reports (BSR), exhibit strong correlation with application-level requests.
+As shown in \autoref{fig:bsr-correlation}, when a UE generates a new application request, additional data enters its uplink buffer, causing a noticeable increase in the reported BSR value.
+This provides a MAC-layer signal that reveals request boundaries without requiring payload inspection.
+
+We leverage this correlation to detect application request boundaries through BSR increases.
+Specifically, the MAC layer identifies a new request boundary when the UE's reported BSR exhibits a step increase compared to the previous report.
+We define the request start time, $t_{start}$, as the timestamp when the MAC scheduler receives the first BSR report reflecting this increase.
+
+This approach achieves per-request granularity when requests arrive with inter-generation times exceeding the BSR update interval.
+Under high sending rates or bursty workloads, multiple requests may be generated within a single BSR interval, appearing as one aggregated increase in the BSR.
+In such cases, the MAC layer treats these as a single \emph{request group} sharing one $t_{start}$, and our scheduling decisions apply at the group level.
+
+To handle multiple traffic types on the same UE (\eg traffic from different applications running concurrently), we leverage 5G logical channel groups (LCGs), which allow UEs to report separate BSRs per LCG to the MAC scheduler.
+By configuring uplink traffic into different LCGs based on SLO classes, the scheduler can track buffer status and infer $t_{start}$ per traffic class rather than per UE.
+
+Note that control signaling operates independently of user data transmission.
+The 5G protocol assigns higher priority to BSR transmission than to user data, ensuring that the MAC scheduler can observe buffer state changes even under heavy traffic conditions.}
+
+\subsection{Deadline-aware RAN Scheduling}
+\label{sec:mac-scheduling}
+
+Once the MAC layer identifies the start time of a new request, it computes the remaining time budget as:
+\begin{equation}
+    t^{RAN}_{budget} = \text{SLO} - (t_{current} - t_{start})
+\end{equation}
+
+With this information, the scheduler needs to decide how to allocate wireless resources across competing requests.
+
+A 5G MAC layer allocates wireless resources\footnote{Physical Resource Blocks in 5G terminology} based on conventional metrics such as proportional fairness, which considers factors like channel quality and historical average throughput to balance efficiency and fairness among UEs.
+However, these approaches do not account for application SLO requirements.
+
+Unlike prior designs~\cite{xu2022tutti,arma:mobisys25} that emphasize fairness between LC and BE requests, our scheduler explicitly prioritizes LC requests based on their remaining time budgets.
+This design choice stems from a key observation: the subsequent compute stage at the edge server introduces additional latency that the RAN cannot accurately observe or account for due to limited visibility and coordination across operators.
+Therefore, our scheduler aims to minimize deadline violations for LC requests while ensuring starvation freedom for BE requests when resources remain available.
+
+To achieve this, we allocate resources to LC requests as quickly as possible, preserving sufficient time budget for the compute stage to meet end-to-end deadlines.
+Among competing LC requests, our scheduler prioritizes requests with the smallest remaining time budget.
+This ensures that requests approaching their deadlines receive higher priority, with already-violated requests receiving maximum priority to prevent buffer blocking.
+
+\mypara{Ensuring starvation freedom for BE requests.}
+While prioritizing LC requests, our design ensures that BE requests remain starvation-free through two mechanisms.
+\modified{First, we assign higher priority to Scheduling Request (SR)-triggered resource allocations.
+In standard 5G MAC scheduling, when a UE has not received resources for an extended period, it sends an SR, a control signal that requests uplink grants from the MAC scheduler.
+Our scheduler assigns these SR-triggered allocations higher priority than regular scheduling decisions (even higher than LC requests), ensuring that BE UEs maintain forward progress.
+Since SR-triggered allocations are small (typically 1--2\% of the wireless resources available for a slot), they do not impact LC request performance.
+Second, we implement dynamic priority reset: when an LC request completes transmission (detected when its BSR reaches zero), we immediately reset the UE's priority to zero, allowing BE UEs to fully utilize available resources and ensuring efficient bandwidth utilization.}

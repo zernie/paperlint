@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "usenix2019_v3.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "tex/intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "tex/bkg-and-motivation.tex",
+      "role": "body"
+    },
+    {
+      "path": "tex/analysis.tex",
+      "role": "body"
+    },
+    {
+      "path": "tex/overview.tex",
+      "role": "body"
+    },
+    {
+      "path": "tex/body.tex",
+      "role": "body"
+    },
+    {
+      "path": "tex/evaluation.tex",
+      "role": "body"
+    },
+    {
+      "path": "tex/related.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "2e0315c26f9181af4918a61f0a110d35b9bab03aa62a122d2f68c2dc67868464",
+    "usenix2019_v3.sty": "2278c83173e084a00fcf76d3227acb971f5137ecea993a5b4e13a9b2bd67b45e",
+    "tex/intro.tex": "55cf79ad597577d9439f8cc9033acb6f4f5b044f8b8f4106c9aa57a0d68278ad",
+    "tex/bkg-and-motivation.tex": "81444f9880658ae2bb97bc7937427e92d3bbd1e2bc78436fd041008ec807caf1",
+    "tex/analysis.tex": "8deef29a39835469f2f965f69a40e833ec498b9c4a957b7b51f7662d09980aa2",
+    "tex/overview.tex": "c3f15b1612f1be903e51461bcd436496dc0c000573d62677096738ee7e8d132b",
+    "tex/body.tex": "78e96d23c7097df43c794b879d0e1a5b691409b213c8b220da0858ba298b30e7",
+    "tex/evaluation.tex": "dac8a9156bd57ac77afaea14d52d2f372cd455b4023db21bd52b754c8c76df4a",
+    "tex/related.tex": "c497be3c899ff0aa18a1dfed55a5ac1b5df1f5ef45ad271e2fa8aa3c2dec801c"
+  }
+}

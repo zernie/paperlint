@@ -1,0 +1,87 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acmart.cls",
+      "role": "preamble"
+    },
+    {
+      "path": "preamble.tex",
+      "role": "body"
+    },
+    {
+      "path": "commands.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/000-abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/010-introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/020-background.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/021-authenticationprotocol.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/030-methodology.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/040-keys.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/050-signatures.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/060-related-work.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/070-countermeasures.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/080-conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/090-ack.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "cef8ee972138b641bba46400ace21c0b45d9367a2fc3183ef585e5ea0c3d7765",
+    "acmart.cls": "6895475b24fe526c12831f5cc1d16f37218ce5d65161f811dde4bce8dc4551b9",
+    "preamble.tex": "406cfe0b9441dbb8ba44e09f8a4a47c4581fdcae2653e6aa13c865fd738232a6",
+    "commands.tex": "ad1d5a4e702f274e84979d5a7e8b2081b8d023089270bb106ec4c98e87502a99",
+    "sections/000-abstract.tex": "3c24cb76d08734429db2abbff78c1df662beb0093dab025501d8c8d585a300bd",
+    "sections/010-introduction.tex": "bd22ac06a5fb284d1429ba016eb6bfa569b4b0f2de4037381db2a06d9eb01a8a",
+    "sections/020-background.tex": "8239ebe15c2a8a0bed982409b020286100fff740d48d164fe40b6e0a41092ce4",
+    "sections/021-authenticationprotocol.tex": "2c9259bef25f101c1275d6a7fa17789d1532e8bdfbefcd987db1f6f39d9f6b23",
+    "sections/030-methodology.tex": "2ca1fe551da0ee220fbcae99cea84dbf8103408a9c75ef81560cb1dfb7d24352",
+    "sections/040-keys.tex": "7a7120f7ffc4a62950d001a772fe34c74ac56d88d98562a90cc2a3ce51debe53",
+    "sections/050-signatures.tex": "72b120118bffc4ffa131e320d542d5048b0f402887c55abb9de75acac845e002",
+    "sections/060-related-work.tex": "97e8f2935302d307999e507127847625716fd1302b215f86ba48aa5badadaa28",
+    "sections/070-countermeasures.tex": "f0ccaf14cb68859c4a2caf3d3705310a53e53ad2554db6c4fc5cc8994df16cb1",
+    "sections/080-conclusion.tex": "1fd0135ea4fba4acf154977c81617e5f44fe7267308b96658d1b8f808520c6a2",
+    "sections/090-ack.tex": "b4919549798dc88cd7670c4fc1aede0194580e2b102eeb04455b57c39823b955"
+  }
+}

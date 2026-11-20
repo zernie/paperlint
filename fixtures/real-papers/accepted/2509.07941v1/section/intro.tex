@@ -1,0 +1,45 @@
+\section{Introduction}\label{sec:intro}
+As LLM capabilities continue to advance, their performance on increasingly complex tasks demonstrates remarkable progress~\citep{deepseekr1}. Code generation, as one of the core competencies of large language models, assists both novice programmers and experienced developers by providing code snippets, framework suggestions, and dependency declaration recommendations, indicating LLMs' growing comprehension and generation capabilities in coding tasks~\citep{coderag,codex,deepseekcoder,wang2021codet5}. However, due to the heightened demands for algorithmic logic and data structure understanding in code generation tasks, the produced code often contains functional flaws and security vulnerabilities~\citep{code_llm_safety}. These outputs typically serve as initial prototypes requiring manual debugging and iterative refinement before achieving successful compilation and execution. The emergence of Retrieval-Augmented Generation (RAG) technology significantly enhances code generation efficiency by providing LLMs with extensive relevant documentation, while retrieved code manuals from databases help ensure correctness and security~\citep{coderag}. Nevertheless, Retrieval-Augmented Code Generation (RACG) introduces new attack surfaces alongside its improvements~\citep{code_rag_safety}.
+
+RAG poisoning represents a prevalent attack vector against RAG systems, where adversaries inject malicious documents into databases (typically populated by web crawlers) to manipulate LLM outputs into generating erroneous or harmful responses. Current RAG poisoning research~\citep{rag_attack4_badrag_iclr_reject,poisonedrag} primarily focuses on simple QA tasks and lacks mechanisms to ensure poisoned documents get reliably retrieved under unknown queries, significantly limiting attack success rates and practical impact. Both RAG poisoning and jailbreaking techniques~\citep{gcg,paulus2024advprompter,remiss} face a fundamental challenge: overriding the model's internal knowledge with external document knowledge, assuming the training data remains largely uncontaminated. Existing studies demonstrate that subverting model knowledge becomes relatively straightforward through prompt manipulation, particularly for neutral factual queries, as LLM safety alignment mechanisms cannot (and should not) comprehensively address such knowledge-based responses. Moreover, current RAG poisoning approaches often assume prior knowledge of user queries for targeted poisoning, further reducing real-world applicability.
+
+
+This paper first exposes a novel attack surface in RACG targeting malicious dependency recommendations. Our research is driven by two key motivations. First, we aim to identify security alignment weaknesses in widely used code LLMs. Second, we aim to investigate the tension between LLMs' tendency to monopolise dependencies, favoring a small set of popular packages, and the associated security risks arising from insufficiently vetted third-party dependencies in software supply chains. As demonstrated in ~\autoref{fig:demo}, the attacker first selects target dependencies (common Python/Rust packages like \texttt{matplotlib} and \texttt{regex}), then identifies relevant clean documents for poisoning. The attacker plants poisoned documentation (e.g., GitHub, StackOverflow) indexed by RAG and uploads malicious packages to mainstream repositories (e.g., PyPI). When users query the target LLM about dependency-related coding issues, the RAG system retrieves and incorporates relevant documents (including poisoned ones) as contextual prompts. Crucially, our poisoned documents achieve higher retrieval rankings than the clean ones. Even with a limited poisoned context, they successfully induce the LLM to recommend targeted dependencies in code snippets, often without any explanatory warnings. This attack exploits a dual trust chain: the LLM's inherent trust in RAG-retrieved documents, and users' blind trust in LLM suggestions. Such software supply chain vulnerabilities became practical only with RACG's emergence, as previous malicious packages in third-party repositories lacked sufficient exposure, while LLMs traditionally recommended only mainstream dependencies.
+
+Constructing effective poisoned documents presents two understudied challenges: First, constructing poisoned documents that achieve higher rankings than their counterparts and other clean documents under unknown queries. Second, ensuring a limited poisoned context can effectively induce diverse LLMs (both open/closed-source) to recommend specific dependencies. These requirements demand poisoned documents exhibiting transferability across three dimensions: user queries, retrieval models, and target LLMs. 
+
+
+
+To address these challenges, we propose \textit{ImportSnare}, a framework combining two orthogonal attack vectors:
+(1) \textbf{Ranking Sequences}: Position-aware beam search generates Unicode perturbations that maximize semantic similarity to proxy queries, boosting retrieval rankings while evading human inspection.
+(2) \textbf{Inducing Sequences}: Multilingual inductive suggestions, refined through LLM self-paraphrasing, embed subtle package recommendations (e.g., \texttt{matplotlib\_safe}) as innocuous code comments.
+
+
+Our evaluation across Python, Rust, and JavaScript ecosystems demonstrates \textit{ImportSnare}'s alarming effectiveness against state-of-the-art LLMs (including DeepSeek-r1 and GPT-4o). 
+% 
+\textit{ImportSnare} achieves success rates exceeding 50\% for popular libraries such as \texttt{matplotlib} and \texttt{seaborn}, and can still succeed with poisoning ratios of the whole RAG database as low as 0.01\%, while preserving code functionality and stealth. 
+Notably, the framework adapts to both synthetic (e.g., \texttt{pandas\_v2}) and real-world malicious packages (e.g., typosquatted \texttt{requstss}), exhibiting cross-platform transferability across RAG systems (LlamaIndex, LangGraph) and LLM architectures. To catalyze defense research, we release a multilingual benchmark suite and datasets.
+
+% Conclusion
+Our findings underscore an urgent need to rethink security protocols for LLM-RAG systems, where the consequences of compromised outputs, from supply chain attacks to critical infrastructure breaches, demand immediate attention. To summarize, this work makes four key contributions:
+
+\begin{itemize}
+    \item \textbf{New Risk Exposure.} First systematic study revealing dependency hijacking risks in RACG via dual trust exploitation.
+    \item \textbf{A New Attack Framework.} \textit{ImportSnare} empirically demonstrates how weak safety alignment in code generation enables weaponization of retrieved content.
+    \item \textbf{Comprehensive Validation.} Through large-scale experiments, we validate the attack’s practicality, stealth, and transferability, raising urgent concerns for LLM-powered development tools.
+    \item \textbf{Benchmark and Datasets.} We release a dataset for benchmarking and evaluating LLM/RAG safety in code generation, fostering future research on defense mechanisms.
+
+\end{itemize}
+
+% 
+
+\begin{figure*}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{Images/codep_attack_demo.pdf}
+  \caption{Attack chain of our proposed directed dependency hijacking risk in RACG.}
+  \label{fig:demo}
+\end{figure*}
+
+
+\textbf{Availability.} Our datasets and artifacts are available to facilitate
+future research and reproducibility in our project homepage.

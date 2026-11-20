@@ -1,0 +1,21 @@
+% Related work
+
+\section{Related Work}
+\label{sec:rel_work}
+
+\mypar{Memory management in DL} Prior work has explored gradient accumulation~\cite{zhao2021v} and swapping~\cite{rhu2016vdnn,huang2020swapadvisor} to reduce memory pressure. \sys transparently integrates these ideas at a program level through transformations (tiling) and scheduling (loads and evicts). Recomputation~\cite{wang2018superneurons, peng2020capuchin} of intermediate activations can also reduce peak memory usage. \sys{} does not currently offer automatic recomputation.
+
+
+\mypar{Polyhedral model in DL} Tensor comprehensions~\cite{vasilache2018tensor} and Tiramisu~\cite{baghdadi2019tiramisu} optimize tensor computations through polyhedral loop fusions, tilings, and parallelization. PPCG~\cite{verdoolaege2013polyhedral} is a C-to-CUDA compiler that performs similar loop optimizations and manages memory across the GPU hierarchy. In general, these approaches use the polyhedral model for kernel-level optimizations, while \sys{} employs it for whole-program execution scheduling and memory management.
+
+\mypar{DL compilers} TVM~\cite{chen2018tvm} and Triton~\cite{tillet2019triton} are kernel-level compilers but do not use the polyhedral model. Each introduces a domain-specific language for expressing and optimizing low-level tensor computations. MLIR~\cite{Lattner_2021} is a more general compiler infrastructure, which can be used to build domain-specific compilers, including for DL~\cite{openxla2024}. \sys{} can leverage these systems for kernel code-generation.
+
+
+
+\mypar{Support for dynamic tensor shapes} 
+JANUS~\cite{jeong2019speculative} and PyTorch~2~\cite{ansel2024pytorch} have some support for dynamic DL compilation through a combination of symbolic tensor shapes, speculative compilation, and assertions that trigger recompilation. These approaches, however, suffer from recompilation overheads when shapes change. Relax~\cite{lai2025relax} targets compilation for model inference but requires user annotations for dynamic shapes. 
+Nimble~\cite{shen2021nimble} and DISC~\cite{zheng2023bladedisc} support dynamic tensor shapes through runtime adaptation. Nimble uses an interpreted approach, while DISC compiles just-in-time.
+While prior approaches support dynamic shapes, \sys{} is the first system to focus on dynamic dependencies, offering a complete solution with symbolic automatic differentiation, and ahead-of-time whole-program optimization, scheduling, and memory planning with dynamic dependencies.
+
+
+% End

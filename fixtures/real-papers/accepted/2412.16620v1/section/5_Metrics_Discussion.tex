@@ -1,0 +1,19 @@
+\subsection{Discussion of Metrics Comparison}
+\label{sec:metrics_comparison}
+
+In addition to runtime-based metrics, we incorporate text-based metrics to assess LLMs' performance in the test generation task on the $Methods2Test_{filter}$ dataset. Notably, we include a syntax error rate, a measure that provides valuable insights without requiring code execution.
+
+\input{table/Metrics_Comparison}
+
+As presented in Table~\ref{tab:metrics_compirason}, all LLMs perform significantly worse on text-based metrics, with EM scores ranging from only 0.04\% to 0.55\%, a stark contrast to their performance on runtime-based metrics. 
+In terms of BLEU and CodeBLEU scores, LLMs still underperform, with a BLEU score range from 5.56\% to 12.65\% and a CodeBLEU score range from 18.23\% to 25.11\%, remaining unexpectedly low compared to their performance on the other two tasks.
+Despite the low EM scores, the generated code maintains a relatively low syntax error rate, ranging from 4.96\% to 15.47\%, similar to results observed on Defects4J. Interestingly, decoder-only models also perform well in syntax error rate, likely due to the Methods2Test dataset’s filtering process, which removes overly long inputs.
+
+We attribute this lack of correlation to the diversity of the test cases. As mentioned in Section~\ref{sec:dataset}, half of the focal methods in the Methods2Test dataset include at least two related test cases, reflecting real-world development practices. For example, the focal method \texttt{`public Collection<Attribute> encode();'} in the Methods2Test dataset has eight associated test cases, each testing the method across different specific encoding types and verifying that the correct collection is returned. 
+Although we remove duplicate test cases, the overall distribution remains unchanged. This may explain why LLMs perform poorly on text-based metrics yet relatively well on runtime-based metrics: the generated test cases may test the focal method from perspectives different from those in the ground truth.
+These findings indicate that, given the diversity of test cases and the real-world development context, runtime-based metrics are more suitable than text-based metrics for evaluating the effectiveness of automated test generation approaches.
+
+
+\summary{
+LLMs may perform poorly on text-based metrics due to the diversity of test cases. Considering realistic development scenarios, it is recommended to use runtime-based metrics to evaluate the effectiveness of the automated test generation approaches.
+}

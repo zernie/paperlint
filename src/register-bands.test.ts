@@ -1,5 +1,5 @@
 /**
- * The register band rules on REAL papers — the accepted ones in `fixtures/accepted-papers/`, and
+ * The register band rules on REAL papers — the accepted ones in `fixtures/real-papers/accepted/`, and
  * variants derived from their sources, one change each:
  *
  * - every anchor the AIDC preset records is re-measured from its fixture and must equal the preset's
@@ -43,7 +43,7 @@ import { withRecord } from "../test/recorded-fixture.ts";
 import { useTempDir, writeTree } from "../test/support.ts";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
-const CORPUS = join(ROOT, "fixtures", "accepted-papers");
+const CORPUS = join(ROOT, "fixtures", "real-papers", "accepted");
 
 /** The AIDC preset, resolved as a paper extending it would resolve it. */
 const aidc = (() => {

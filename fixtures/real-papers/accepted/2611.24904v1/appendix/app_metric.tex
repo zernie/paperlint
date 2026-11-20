@@ -1,0 +1,80 @@
+\section{Metric Definition}
+\label{app:metric}
+
+This appendix formalizes the boundary-tolerant mIoU used as the primary
+metric in Section~\ref{sec:loco}: the $\pm 2$-pixel don't-care band, the
+per-image IoU on the valid region, the aggregation across images, and the
+rule for degenerate cases.
+
+\textbf{Don't-care band.}
+For a binary ground-truth mask $Y \in \{0,1\}^{H \times W}$ and a tolerance
+$K = 2$ pixels, let $\mathcal{B}_K$ be an elliptical structuring element of
+radius $K$ (OpenCV \texttt{MORPH\_ELLIPSE}, kernel size
+$(2K+1) \times (2K+1)$). The don't-care band $B$ and the valid evaluation
+mask $V$ are
+\begin{equation}
+B = \text{dilate}(Y; \mathcal{B}_K) \setminus \text{erode}(Y; \mathcal{B}_K),
+\qquad
+V = \neg B.
+\label{eq:band}
+\end{equation}
+Pixels inside $\text{erode}(Y; \mathcal{B}_K)$ are ``definite shadow''; pixels
+outside $\text{dilate}(Y; \mathcal{B}_K)$ are ``definite background''; pixels
+in $B$ are excluded from numerator and denominator alike, so errors inside
+the band are neither rewarded nor penalized. Setting $K = 0$ recovers the
+strict variant ($B = \emptyset$, $V$ covers the whole image).
+
+\textbf{Boundary-tolerant IoU.}
+For a binary prediction $\hat{Y}$, the per-image foreground IoU on the valid
+region is
+\begin{equation}
+\text{IoU}^{\text{tol}}_K(\hat{Y}, Y) =
+\frac{\sum_{p \in V} \mathbb{1}\!\left[\hat{Y}_p = 1 \,\wedge\, Y_p = 1\right]}
+     {\sum_{p \in V} \mathbb{1}\!\left[\hat{Y}_p = 1 \,\vee\, Y_p = 1\right]}.
+\label{eq:iou-tol}
+\end{equation}
+The background IoU $\text{IoU}^{\text{tol,bg}}_K$ is defined in the same way with the two
+labels exchanged. Throughout the paper, ``mIoU'' denotes the two-class mean,
+$\tfrac{1}{2}\big(\text{IoU}^{\text{tol}}_K + \text{IoU}^{\text{tol,bg}}_K\big)$, computed per
+image; we report the foreground IoU of Equation~\ref{eq:iou-tol} separately where a statement
+concerns the shadow class alone.
+
+\textbf{Aggregation.}
+We report the per-image mean across the $N = 150$ test images per cell,
+\begin{equation}
+\text{mIoU}^{\text{tol}}_K = \frac{1}{N} \sum_{i=1}^{N}
+\tfrac{1}{2}\Big(\text{IoU}^{\text{tol}}_K(\hat{Y}_i, Y_i) + \text{IoU}^{\text{tol,bg}}_K(\hat{Y}_i, Y_i)\Big).
+\label{eq:miou}
+\end{equation}
+We do not micro-pool TP/FP/FN counts across images. Per-image macro
+aggregation gives each patch equal weight regardless of shadow coverage,
+which matters because coverage varies by city (Appendix~\ref{app:perCity});
+under micro-pooling, coverage-heavy patches would dominate the cell mean and
+conflate geographic transfer with shadow-mass distribution. Per-image
+scalars are also required by the paired-bootstrap protocol in
+Section~\ref{sec:loco}: the bootstrap resamples per-image $\Delta$ values to
+construct cell-level confidence intervals.
+
+\textbf{Degenerate cases.}
+Two cases require an explicit rule. \emph{(i)~Components consumed by the
+band.} If a connected shadow component is thin or small enough that
+$\text{erode}(Y; \mathcal{B}_K)$ removes it entirely, the component
+contributes zero pixels to both numerator and denominator and is silently
+dropped from Equation~\ref{eq:iou-tol}. We track such components in the
+size-stratified ``tiny'' bin (Appendix~\ref{app:loco_extended}); under
+$K = 2$ this affects components narrower than $\sim\!5$ pixels in any
+direction. \emph{(ii)~No foreground in $V$.} If an image has no shadow on
+$V$, the IoU denominator is zero; we assign $\text{IoU} = 1$ when the
+prediction also has no positives on $V$ (perfect agreement) and
+$\text{IoU} = 0$ otherwise. This case affects $13.0\%$ of test images
+in \shadow{} ($117$ of $900$ at $K = 2$) and follows the standard convention in binary segmentation.
+
+\textbf{Rationale for the $\pm 2$-pixel tolerance.}
+Annotators draw boundaries on the pixel grid and SAM-proposed boundaries
+inherit the same quantization, but the true projected shadow edge depends
+on the sub-pixel position of the occluder and the sun angle, so pixel-exact
+boundary agreement is unachievable in principle. At $0.3$\,m/px, two pixels
+correspond to $\sim\!0.6$\,m on the ground --- smaller than the typical
+width of a tree trunk or roof eave, comparable to the annotator-quantization
+scale on gold images, and well below the scale of genuine geometric errors
+that LOCO transfer should expose. Every number in the paper uses $K = 2$.

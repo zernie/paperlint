@@ -1,0 +1,11 @@
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\linewidth]{fig3_2.jpeg}
+  \caption{\textbf{Diagnostic framework.}
+\textbf{(a)} Risk-coverage curves on foreground pixels (MAMNet, Phoenix held out): LOCO accumulates $\Delta$AURC$=+0.26$ over the upper bound; FDA narrows it. Bands: 95\% bootstrap CIs. \emph{Inset:} foreground gap replicates on INRIA building footprints under matched LOCO (C/M/P: Chicago/Miami/Phoenix; A/C/V: Austin/Chicago/Vienna).
+\textbf{(b)} Per-method AURC gap across $9$ cells ($3$ architectures $\times$ $3$ cities): the gap is class-asymmetric, concentrated on foreground (coral) with a pooled background gap (black) $24\times$ smaller over the $63$ cells of the $7$ methods.
+\textbf{(c)} Per-image recovery ratio $R$ under decoder (Exp~A) vs.\ encoder (Exp~B) retraining: the DINOv3$\leftrightarrow$OGLANet sign reversal shows the failure locus is architecture-dependent.
+LOCO: leave-one-city-out; AURC: area under risk-coverage.}
+  \label{fig:diagnostics}
+\end{figure*}

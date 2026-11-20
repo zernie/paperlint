@@ -1,0 +1,27 @@
+\begin{table*}[htbp]
+\centering
+\small
+\caption{Performance of different LLMs on the internal dataset. The best results among all LLMs are \textbf{bolded}, and the second-best results are \uline{underlined}.}
+\label{tab:discussion_utbench}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{LLMs} & \textbf{Correct} & \textbf{Passing} & \textbf{Failing} & \textbf{Build Error} & \textbf{Syntax Error} \\
+\midrule
+UniXcoder         & 5.39\%  & 6.59\%  & \textbf{1.95\%}  & 74.10\%  & 17.37\% \\
+CodeT5-large      & 14.07\% & 16.32\% & 10.03\% & 66.77\%  & 6.89\%  \\
+CodeT5p-770m      & 18.56\% & 19.61\% & 5.54\%  & 71.11\%  & \uline{3.74\%}  \\
+DeepSeek-Coder-6b & 31.14\% & 31.59\% & 2.84\%  & \textbf{29.64\%}  & 35.93\% \\
+CodeLlama-7b      & 25.00\% & 25.45\% & \uline{2.10\%}  & 34.28\%  & 38.17\% \\  
+StarCoder2-7b     & 23.05\% & 24.40\% & 6.59\%  & 42.66\%  & 26.35\% \\
+StarCoderBase-7b  & 23.65\% & 27.10\% & 2.40\%  & 42.96\%  & 27.54\% \\
+CodeGen-6b        & 23.50\% & 23.95\% & \uline{2.10\%}  & 35.78\%  & 38.17\% \\
+\midrule
+GPT-3.5           & \textbf{52.54\%} & \textbf{54.34\%} & 12.43\% & \uline{32.04\%}  & \textbf{1.20\%}  \\
+Llama3.1-8b       & 21.71\% & 22.01\% & 17.96\% & 51.50\%  & 8.53\% \\
+Llama3.1-70b      & \uline{51.35\%} & \uline{52.40\%} & 10.48\% & {32.63\%}  & 4.49\% \\
+Llama3-8b         & 28.44\% & 29.94\% & 10.33\% & 54.34\%  & 5.39\%  \\
+Qwen2-7b          & 32.34\% & 32.49\% & 10.03\% & {50.90\%}  & 6.59\% \\
+Qwen2-72b         & 42.37\% & 44.61\% & 7.63\% & 42.37\%  & 5.39\%  \\
+\bottomrule
+\end{tabular}
+\end{table*}

@@ -1,0 +1,38 @@
+\begin{table}[t]
+	\centering
+	\setlength\tabcolsep{2.0pt}
+	\begin{tabular}{lccccccc}
+		\toprule
+	                  & \textit{Qry.} & \textit{Div.} & \textit{Seq.} & \textit{HDS} & \textit{TFMA} & Acc. \\ 
+		\midrule
+	VILA-8B (+ Uniform)    & \nocheckmark  & \nocheckmark & \nocheckmark  & \nocheckmark & \checkmark & 47.5 \\
+	\ + RGB Histogram      & \nocheckmark  & \nocheckmark & \nocheckmark  & \nocheckmark & \checkmark & 45.9 \\
+	\ + Edges Change       & \nocheckmark  & \nocheckmark & \nocheckmark  & \nocheckmark & \checkmark & 47.3 \\
+	\ + Optical Flow       & \nocheckmark  & \nocheckmark & \nocheckmark  & \nocheckmark & \checkmark & 46.7 \\
+	\ + Katna              & \nocheckmark  & \nocheckmark & \nocheckmark  & \nocheckmark & \checkmark & 45.7 \\
+	\ + \textsc{SeViLA}    
+						  & \semicheckmark & \semicheckmark & \semicheckmark  & \nocheckmark & \nocheckmark &  49.0 \\
+	\ + \textsc{Frame-Voyager}           
+						   & \checkmark    & \semicheckmark  & \semicheckmark & \nocheckmark & \nocheckmark & 50.5 \\
+		\hdashline
+	\ + SigLIP 	           & \checkmark    & \nocheckmark & \nocheckmark  & \nocheckmark & \checkmark & 50.6 \\
+	\ + \mname{} w. MGK    & \nocheckmark  & \checkmark   & \checkmark  & \checkmark & \checkmark & 48.9 \\
+	\ + DPP w. CMGK  	   & \checkmark    & \checkmark   & \nocheckmark  & \checkmark & \checkmark & 51.8 \\
+	\ + \mname{} w. cos. sim. & \checkmark & \checkmark   & \checkmark  & \nocheckmark & \checkmark & 50.2 \\
+		\rowcolor{gray!30}
+	\ \textbf{+ \mname}    & \checkmark    & \checkmark   & \checkmark    & \checkmark & \checkmark & \textbf{53.3} \\	
+		\bottomrule
+	\end{tabular}
+	\caption{
+		Results (\%) of various frame selection methods and ablation variants of \mname{} on Video-MME ($wo\ subs$), based on VILA. 
+		Indicators: query relevance~(\textit{Qry}), list-wise diversity~(\textit{Div}), list-wise sequentiality~(\textit{Seq}), high-dimensional RKHS similarity (\textit{HDS}), and a tuning-free, model-agnostic design~(\textit{TFMA}).
+%		\textit{Qry}: whether considering query relevance;
+%		\textit{Div}: whether considering list-wise diversity;
+%		\textit{Seq}: whether considering list-wise sequentiality;
+%		\textit{HDS}: whether employ high-dimensional similarity in RKHS;
+%		\textit{TFMA}: whether tuning-free and model-agnostic for Video-LLMs.
+	}
+	\label{tab:abl}
+\end{table}
+
+

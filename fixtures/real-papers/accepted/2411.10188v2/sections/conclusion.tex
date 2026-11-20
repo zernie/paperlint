@@ -1,0 +1,30 @@
+\section{Limitations and Conclusion}
+
+A formal framework with a decision procedure for the \scrsf{dnsverif} problem 
+is essential to achieving a secure, reliable DNS infrastructure.
+Aside from being of theoretical interest in the context of infinite-state systems, 
+this work provides a foundation for the advancement of automated verification tools for \emph{and} eliminates the costly $(\text{Break and Fix})^*$ cycle with DNS security analysis.
+
+\new{
+We have demonstrated our framework for two applications. 
+However,
+in principle, we can model all the static vulnerabilities considered by GRoot \cite[Table 1]{groot}, including rewrite blackholing (Section~\ref{subsec:rewrite-black}), rewrite loop, and answer inconsistency.  
+This is immediate as every property defined in GRoot is an $\mathsf{LTL}$-property, which is equivalent to $\mathsf{FO}(<)$ over traces.
+Additionally, our framework is capable of modeling all the attacks considered by DNSMaude~\cite[Table 4]{dnsmaude}, including those covered by GRoot and amplification attacks (Section~\ref{subsec:amplification}). However, our current model also presents several limitations.
+}
+
+\new{\paragraph{Multiple Resolvers}
+We are currently limited to having a single resolver in our model. A promising direction for future work would be to consider multiple concurrent resolvers in the system. While our abstraction on the query space would still be sound and complete, the underlying topology would then have two pushdown systems (the resolvers) communicating with each other over a lossy bag channel, which violates the confluence criterion from \cite{heussner2010reachability,heussner2012reachability}.}
+
+
+\new{\paragraph{Dynamic Updates}
+We have adopted the semantics considered by DNSMaude, which subsumes that of GRoot. In particular, our framework currently does not support the query type $\scrsf{IXFR}$, meant for incremental zone transfers. This type is responsible for updating the DNS records stored by a nameserver. Under some conditions, such queries force two-way reliable (TCP) communication between nameservers (which are finite-state systems themselves). The resulting network topology now allows a non-lossy cycle and thus yields the undecidability of the corresponding state-reachability problem, which in turn  implies the undecidability of the $\verif$ problem. More details on this kind of behaviour can be found in \cite{rfc1995}.
+
+Further model-specific investigation is needed to remove the above limitations, which is outside the scope of this paper. Finally, the $\mathsf{2ExpTime}$ complexity upper bound of our procedure is rather pessimistic. Hence,  empirical results are necessary to prove the practicality of our approach. At this point, our contribution is primarily theoretical, and significant engineering work will be required to design and implement these techniques. Conducting an experimental evaluation of our approach remains a challenging future task.}
+
+
+
+
+
+
+

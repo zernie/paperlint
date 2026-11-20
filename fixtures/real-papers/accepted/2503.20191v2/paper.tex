@@ -1,0 +1,66 @@
+\documentclass[sigplan,twocolumn]{acmart}
+\settopmatter{printfolios=false,printacmref=false}
+\input{package}
+
+\pagestyle{empty}
+\newboolean{publicversion}
+\setboolean{publicversion}{true}
+
+\date{}
+
+\input{macros}
+
+\input{0-abstract}
+
+\begin{document}
+\acmYear{2026}\copyrightyear{2026}
+\setcopyright{cc}
+\setcctype[4.0]{by}
+\acmConference[EUROSYS '26]{European Conference on Computer Systems}{April 27--30, 2026}{Edinburgh, Scotland Uk}
+\acmBooktitle{European Conference on Computer Systems (EUROSYS '26), April 27--30, 2026, Edinburgh, Scotland Uk}
+\acmDOI{10.1145/3767295.3769366}
+\acmISBN{979-8-4007-2212-7/26/04}
+
+\title{\sysname: Optimizing Deep Learning Training Workloads using GPU Runtime Emulation}
+
+
+\author{
+Srihas~Yarlagadda$^{\dag*\text{1}}$\enskip
+Amey~Agrawal$^{\text{*1}}$\enskip
+Elton~Pinto$^{\text{*1}}$\enskip
+Hakesh~Darapaneni$^{\dag\text{1}}$\enskip
+Mitali Meratwal$^{\dag\text{1}}$\enskip
+Shivam~Mittal$^{\dag\text{1}}$\enskip
+Pranavi~Bajjuri$^{\dag\text{1}}$\enskip
+Srinivas~Sridharan$^{\text{2}}$\enskip
+Alexey~Tumanov$^{\text{1}}$
+}
+
+\affiliation{\vspace{1mm} $^{\text{1}}$Georgia Institute of Technology\enskip
+$^{\text{2}}$NVIDIA Inc. \country{}}
+
+\thanks{Equal technical contribution. Srihas Yarlagadda and Elton Pinto led the development on \sysname and \syssearchname respectively, Amey Agrawal was responsible for the overall system design. $^\dag$ Work done while at Georgia Institute of Technology.}
+
+ 
+\maketitle
+\renewcommand{\shortauthors}{Yarlagadda, Agrawal, Pinto et al.}
+\input{1-intro}
+\input{2-background}
+\input{3-motivation}
+\input{4-design}
+\input{5-config-search}
+\input{6-impl}
+\input{7-eval}
+\input{8-discussion}
+\input{9-related}
+\input{10-conc}
+\input{11-ack}
+
+\bibliographystyle{plain}
+\bibliography{main}
+
+\newpage
+
+\input{11-appendix}
+
+\end{document}

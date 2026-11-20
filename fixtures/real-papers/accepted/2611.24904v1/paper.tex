@@ -1,0 +1,122 @@
+\documentclass{article}
+
+    \PassOptionsToPackage{numbers, compress}{natbib}
+
+ \usepackage{amsmath}
+
+\usepackage[eandd, final]{neurips_2026}
+
+\usepackage[utf8]{inputenc} %
+\usepackage[T1]{fontenc}    %
+\usepackage{url}            %
+\usepackage{booktabs}       %
+\usepackage{amsfonts}       %
+\usepackage{nicefrac}       %
+\usepackage{microtype}      %
+\usepackage{xcolor}         %
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[pagebackref,breaklinks,colorlinks,citecolor=black,linkcolor=red]{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{array}
+\usepackage{wrapfig}
+\usepackage{enumitem}
+\usepackage{xspace}
+
+\newcommand{\shadow}{\textsc{ShadowTransfer}\xspace}
+\newcommand{\loco}{\textsc{LOCO}\xspace}
+\newcommand{\sib}{\textsc{SIB}\xspace}
+\newcommand{\eg}{\emph{e.g.}\xspace}
+\newcommand{\ie}{\emph{i.e.}\xspace}
+\newcommand{\etal}{\emph{et al.}\xspace}
+\newcommand{\red}[1]{\textcolor{red}{#1}}          %
+\newcommand{\todo}[1]{\textbf{\textcolor{orange}{[TODO: #1]}}}  %
+
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+
+\title{ShadowTransfer: A Geographic Transfer Benchmark\\
+for Overhead Shadow Detection}
+
+\author{
+Shagun Mittal \quad\quad Raymond A. Yeh\thanks{Equal senior advising} \quad\quad Satish Ukkusuri\footnotemark[1]\\
+Purdue University\\
+\texttt{\{mittal53, rayyeh, sukkusur\}@purdue.edu}
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Overhead aerial imagery feeds dense-prediction pipelines that are routinely trained in one geographic region and deployed in another, yet no benchmark measures how shadow detection models transfer across regions. Existing overhead shadow datasets either lack a geographic transfer protocol or rely on automatically generated labels. We introduce \shadow, a benchmark of $4{,}500$ human-verified shadow masks across three U.S.\ cities at two native resolutions, paired with a leave-one-city-out evaluation protocol. %
+Under vanilla training, holding out the test city costs $3.5$ to $7.8$ mIoU across four architectures, the gap remains significant when the training set grows from $225$ to $900$ images, and six of eight adaptation methods degrade more than vanilla training on average.
+We propose a three-probe framework that diagnoses where and how the transfer breaks: the failure operates in feature space, beyond the reach of pixel-histogram matching, shows up as a confidence collapse on shadow pixels while background confidence stays intact, and is recoverable by retraining different architectural components depending on the model: encoder for some, decoder for others. These findings replicate on INRIA building footprints, suggesting they describe geographic transfer beyond shadows. 
+Guided by the diagnosis, we build Spectral Information Bottleneck (SIB), a plug-in module with one component per finding. Across the $9$ (architecture, held-out city) cells, \sib{} has the smallest mean gap to the within-city upper bound of the ten methods we evaluate ($6.42$ mIoU), level with FDA. 
+The benchmark, LOCO protocol, code, and trained models are released to support reproducible evaluation of geographic transfer in overhead dense prediction.
+\end{abstract}
+
+\input{sections/intro}
+
+\input{sections/related}
+
+\input{sections/benchmark}
+
+\input{sections/evaluation}
+
+\input{sections/sib}
+
+\input{sections/conclusion}
+
+\begin{ack}
+This work received no external funding. This work used Delta at the National Center for Supercomputing Applications (NCSA) through allocation CIS260282 from the Advanced Cyberinfrastructure Coordination Ecosystem: Services \& Support (ACCESS) program~\cite{boerner2023access}, which is supported by U.S.\ National Science Foundation grants \#2138259, \#2138286, \#2138307, \#2137603, and \#2138296. This research used the Delta advanced computing and data resource, which is supported by the National Science Foundation (award OAC 2005572) and the State of Illinois. Delta is a joint effort of the University of Illinois Urbana-Champaign and its National Center for Supercomputing Applications. The authors declare no competing interests.
+\end{ack}
+
+\clearpage
+\bibliographystyle{unsrt}
+\bibliography{ref}  %
+
+\clearpage
+
+\appendix
+
+\input{appendix/app_datasheet}
+
+\input{appendix/app_annotation}
+
+\input{appendix/app_data_stats}
+
+\input{appendix/app_splits}
+
+\input{appendix/app_metric}
+
+\input{appendix/app_training}
+
+\input{appendix/app_loco_extended}
+
+\input{appendix/app_eval}
+
+\input{appendix/app_alternatives}
+
+\input{appendix/app_seo}
+
+\input{appendix/app_sib_impl}
+
+\input{appendix/app_sib_comparison}
+
+\input{appendix/app_sib_ablation}
+
+\input{appendix/app_sib_coverage}
+
+\end{document}

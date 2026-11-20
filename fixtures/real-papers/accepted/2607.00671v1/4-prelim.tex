@@ -1,0 +1,108 @@
+\section{Preliminaries}  
+
+% In this section, we introduce the key notations.
+% and definitions used throughout this paper.
+
+\subsection{Problem Formulation} \label{sec:notions}
+% \stitle{MLNC.}
+Given a graph \( G = (V, E) \) with the adjacency matrix \( \v{A} \in \mathbb{R}^{n \times n} \), where \( n = |V| \) and \( e = |E| \) are the total number of nodes and edges. Each node \( v_i \in V \) is associated with a feature vector \( \v{x}_i \in \mathbb{R}^f \), and all these feature vectors constitute the feature matrix \( \v{X} \in \mathbb{R}^{n \times f} = [\v{x}_1, \v{x}_2, \ldots, \v{x}_n]^T \) of the graph \( G \). 
+Among all the nodes, \( n_l \) of \( n \) are labeled while the remaining \( n_u \) of \( n \) are not. 
+For every node \( v_i \) in the labeled dataset \( D_l = \{ (v_i, y^{\text{seq}}_i) \ | \ 1 \leq i \leq n_l \)\}, it also contains a set of labels \( y^{\text{seq}}_i \subseteq \mathbf{Y} \) drawn from the given label space \( \mathbf{Y} = \{ y_1, y_2, \ldots, y_k \} \) with \( k \) possible class labels at most. Furthermore, the label sets for the rest of the unlabeled nodes \( D_u = \{ v_i \ | \ n_l + 1 \leq i \leq n_l + n_u \} \) are not available. The goal of MLNC on graphs under the semi-supervised learning setting is to learn a model \( h: V \rightarrow 2^\mathbf{Y} \) with training data \( D = D_l \cup D_u \) by taking both graph structure \( \v{A} \) and node feature \( \v{X} \) into consideration.
+Moreover, we denote the nodes with label $y_j\in\rmY$ ($1 \leq j \leq k$), as a node set $Y_j = \{ v_1, v_2, \ldots, v_{m_j}\}$, where $m_j$ is the number of nodes belong to label $y_j$.
+% \syfC{check $Y$ notations across paper,主要是给label set一个定义}
+
+\subsection{Decomposition of MLNC Pipeline} \label{sec:pipe}
+% \stitle{}
+% Before delving into detailed discussions,
+% In this section, we decompose the pipeline of MLNC.
+% into two parts: the shared backbone and the classification head.
+% \syf{Check the forw and back process}
+Since MLNC is considered as correlated multiple binary classification problems on graphs, each determining the presence or absence of a certain label~\citep{zhang2013review}.
+If a multi-label task is modeled as unrelated single-label tasks, it not only wastes the information brought by the other labels but also squanders model parameters. 
+Therefore, almost all the multi-label methods adopt a common style which utilize a graph encoder $\Phi_{\theta}$ as the backbone to explore both the individual information of multiple labels and their correlation information. 
+% Thus, the first process is that 
+The graph encoder $\Phi_{\theta}$ takes in the graph structure $\v{A}$ and the node feature $\v{X}$ and generate node embeddings $\v{Z} \in \mathbb{R}^{n \times d}$ as
+\begin{equation} \label{eq:gnn}
+    \v{Z} = \Phi_{\theta}(\v{A}, \v{X}),
+\end{equation}
+where backbone $\Phi_{\theta}$ parameterized by $\theta$ can be any existing GNNs, such as GCN~\citep{kipf2017semisupervised}, GAT~\citep{2017Graph}, GraphSAGE~\citep{hamilton2017inductive}.
+ % during the second process,
+
+Thereafter, the node embeddings $\v{Z}$ are further mapped into different label spaces by multiple shallow classifiers $\Psi = \{ \psi_1, \psi_2, \ldots, \psi_k \}$ with fewer parameters. 
+For each label $y_j$, the objective is to train a classifier $\psi_j$ that computes the prediction $\tilde{\vy}_j\in\mathbb{R}^{n}$ as 
+\begin{equation} \label{eq:clasifier}
+    \tilde{\vy}_j =  \psi_j(\v{Z}).
+\end{equation}
+By considering both Eqs.~\ref{eq:gnn} and \ref{eq:clasifier} simultaneously, we observe that  Eq.~\ref{eq:gnn} is designed to generate node representations that are \emph{shared} across all labels (\ie, all classifiers) for subsequent tasks such as label prediction. In contrast, Eq.~\ref{eq:clasifier} is specific to the label $y_j$ and is utilized \emph{privately} by the corresponding classifier $\psi_j$ for label prediction. Consequently, the architecture of the entire framework can be delineated into two main components: the \emph{shared component} and the \emph{private component}, with $\v{Z}$ serving as the central bridge of the two components.
+
+
+
+\eat{
+Thereafter, the node embeddings $\v{Z}$ are further mapped into different label spaces by multiple shallow classifiers $\Psi = \{ \psi_1, \psi_2, \ldots, \psi_k \}$ with fewer parameters.
+Here, for simplicity, we use a simple linear transformation as $\psi_j$ with parameter $\v{W}_j\in\mathbb{R}^{}$ with $i \in \{1, 2, \ldots, k\}$. 
+For each label $y_j$, the goal is to learn a $\v{W}_j$ that maximizes the satisfaction of
+\begin{equation}
+    {y_j} =  \v{W}_j\v{Z}.
+\end{equation}
+% where $Z_j$ denotes the embeddings for all the nodes
+
+% \zeminC{下面这一部分可能需要移动到我们模型分析中，他不属于之前的方法。}
+
+Assuming that $\v{W}_j$ is a square matrix and invertible, then the 
+$\v{W}_j$ we aim to learn should satisfies the following equation:
+\begin{equation} \label{eq:l&r}
+    \v{Z} = {\v{W}_j}^{-1}y_j.
+\end{equation}
+In particular, Eq.~\ref{eq:l&r} can be explained as: for each label $i$, the left part (\ie, $\v{Z}$) is the prediction, while the right part (\ie, ${\v{W}_j}^{-1}y_j$) is the ``ground-truth'' of label $i$. 
+% We require the prediction to approach the ground-truth.
+In other words, we hope that the node embeddings \(\v{Z}\) is close to the $k$ ``ground truth'' of \(\v{Z}\), denoted as \(\v{Z}_{GT}^i={\v{W}_j}^{-1}y_j\) for all \(i \in \{1,2,...,k\}\).
+
+% \zeminC{上面为什么要给他起一个新的名字Z？是因为下文经常用到这个Z？}
+
+By combining Eqs.~\ref{eq:gnn} and \ref{eq:l&r}, the goal of MLNC is to maximizes the satisfaction of 
+\begin{equation} \label{eq:goal}
+    \Phi_{\theta}(\v{A}, \v{X}) = {\v{W}_j}^{-1}y_j, \quad i \in \{1,2,...,k\}.
+\end{equation}
+Consequently, the architecture of the entire framework is delineated into two main sectors: the \emph{shared component} and the \emph{private component}, with $\v{Z}$ serving as the central point of convergence:
+}
+% The entirety of the right side of the equation~\ref{eq:l&r} can be considered as the ground truth of \(Z\), denoted as \(Z_{GT}^i\). 
+% In the formulation presented in Eq.~\ref{eq:goal}, the equation's left-hand side can be interpreted as the component of the model that is universally shared among the labels. Conversely, the right-hand side pertains specifically to each label, encapsulating label-specific information. 
+% Crucially, it is the left-hand side, or the global GNN backbone, that facilitates the interaction among the multiple labels. 
+% This interaction is crucial for understanding the dynamics between the labels, independent of the label-specific information represented on the right-hand side. 
+% Consequently, the architecture of the entire framework is delineated into two main sectors: the \emph{shared component} and the \emph{private component}, with $\v{Z}$ serving as the central point of convergence:
+% For enhanced clarity, we delineate the concepts of the shared and private components as follows:
+\begin{definition}[Shared component in MLNC] \label{def:shared}
+The shared component in MLNC boils down to the GNN backbone, parameterized by $\theta$, which can be denoted as $\Phi_{\theta}(\v{A}, \v{X})$. This component is to encode nodes collectively to generate embeddings $\v{Z}$, irrespective of their associated labels. 
+\end{definition}
+% \begin{definition}[Shared backbone $\Phi$] \label{def:shared}
+% The shared backbone parameterized by $\theta$ is defined as $\Phi_{\theta}(A, X)$, where the nodes are encoded together no matter which labels they belong to. 
+% This part of the framework \textbf{generates} the node embeddings $Z$.
+% \end{definition}
+\begin{definition}[Private components in MLNC] \label{def:indHead}
+The private components in MLNC boils down to the classification head for each label $y_j$, denoted as $\psi_j$, corresponding to the operations ${\v{W}_j}^{-1}\v{Y}_j$. This component is tasked with calibrating the node embeddings $\v{Z}$ for label-specific prediction.
+\end{definition}
+
+% From one perspective, graph data is processed through the graph encoder $\Phi_{\theta}$, which is universally applied across multi-label data, to produce node embeddings $\v{Z}$. Concurrently, our objective is to align the node embeddings $\v{Z}$ as closely as possible with each label-specific ground truth ${\v{W}_j}^{-1}\v{Y}_j$. This dual approach ensures that while the embeddings are generated in a label-agnostic manner, they are subsequently refined for label-specific classification tasks, bridging the gap between universal representation and individual label prediction.
+
+
+% On one hand, graph data, through the graph encoder $\Phi_{\theta}$ that shared by multi-labels data, produces node embeddings $Z$.
+% On the other hand, we aim for the node embeddings $Z$ to be as similar as possible to every \(Z_{GT}^i\), which is induced by the each label.
+
+
+
+
+% Specifically, we give the following two definitions to help the analysis of the overall framework. 
+% % give the definition of the source of the influence 
+% On one hand, graph data, through the graph encoder$\Phi_{\theta}$ that shared by multi-label, produces node embeddings $Z$.
+% \begin{definition}[Shared backbone $\Phi$] \label{def:shared}
+% The shared backbone parameterized by $\theta$ is defined as $\Phi_{\theta}(A, X)$, where the nodes are encoded together no matter which labels they belong to. 
+% This part of the framework \textbf{generates} the node embeddings $Z$.
+% \end{definition}
+
+% On the other hand, we aim for the node embeddings $Z$ to be as similar as possible to every \(Z_{GT}^i\), which is induced by the multiple labels.
+% \begin{definition}[Individual classification heads $\Omega$] \label{def:indHead}
+% For each label $y_j$, we define its corresponding ${W_j}^{-1}y_j$ as a individual classification head $\Omega_j$.
+% This part of the framework \textbf{calibrates} the node embeddings $Z$.
+% \end{definition}
+
+% Combining these two parts

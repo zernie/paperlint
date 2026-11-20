@@ -1,0 +1,57 @@
+
+
+\begin{tikzpicture}
+\begin{axis}[
+    xlabel={$n$ (squared-matrix size)},
+    ylabel={Time in Seconds},
+    legend pos=north west,
+    grid=both,
+    ymode=log,
+    log basis y={10},
+    % xmin=1, xmax=100
+    % ymin=0, ymax=1
+]
+\addplot table {
+n   BFV-only
+1 0.012425
+2 0.023026
+3 0.064818
+4 0.081294
+5 0.147221
+6 0.177364
+7 0.279486
+8 0.309416
+15 1.13883
+16 1.217204
+23 2.654363
+24 2.72545
+31 4.658252
+32 4.796133
+63 18.747126
+64 19.295382
+};
+\addlegendentry{BFV-only}
+
+\addplot table {
+n   BFV+TEE
+1 34.01410794
+2 52.11393579
+3 166.3416385
+4 168.7312548
+5 326.8801758
+6 404.6062005
+7 633.6239655
+8 692.7311247
+15 2561.091895
+16 2675.093939
+23 5840.931042
+24 6005.233377
+31 10424.66384
+32 10660.36887
+63 41230.62255
+64 42685.80832
+};
+\addlegendentry{BFV+TEE}
+
+\end{axis}
+\end{tikzpicture}

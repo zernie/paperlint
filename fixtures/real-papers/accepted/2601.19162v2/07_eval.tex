@@ -1,0 +1,304 @@
+\section{Evaluation}
+\label{sec:eval}
+
+We evaluate \sys{} on our private 5G MEC testbed that emulates commercial deployments with real applications. 
+
+\subsection{Experimental Setup}
+\label{sec:eval-setup}
+
+\mypara{Testbed setup.} 
+Our 5G MEC testbed consists of a UE emulator (Amari UE Simbox~\cite{amari-uesim}), two x86 servers, and a USRP X310~\cite{usrp-x310} radio unit.
+\textbf{Server-1} acts as the RAN, running srsRAN~\cite{srsran} and Open5GS~\cite{open5gc} with Intel Xeon Silver 4310 CPU, 128 GB memory, and Ubuntu 22.04.
+We configure the RAN in TDD mode with 80 MHz bandwidth and 2$\times$2 MIMO on band 78, representing typical 5G deployments.
+\textbf{Server-2} serves as the edge server with NVIDIA L4 GPU~\cite{nvidia-l4}, Intel Xeon Gold 6430 CPU (32 cores), 256 GB memory, and Ubuntu 24.04, reflecting commercial MEC offerings~\cite{www-outpost}.
+To emulate CPU contention, we disable hyper-threading and use 24 cores.
+Servers are connected via 25 GbE.
+
+
+\mypara{Applications.}
+We implement three LC applications (\autoref{tbl:apps}) and one BE application. 
+All LC applications are video-based, and we treat each video frame as a single request.
+
+\noindent\textit{\textbf{Smart stadium (SS)}} (SLO: \ms{100})~\cite{www-orange-5gstadium,www-red5perfect5G-in-venue}: 5G-enabled cameras upload high-resolution 4K video streams to the edge server, which transcodes each stream into multiple lower-bit-rate versions and delivers them to subscribing clients.
+In our evaluation, we use the same UE to emulate both the camera and subscribing clients.
+This represents a CPU-intensive workload for live streaming services.
+We stream videos over RTP and implement transcoding using FFmpeg's H.264 codec.
+We use a video from the AdaPool dataset~\cite{stergiou2021adapool}, re-encoded as a 4K 60 fps stream at \Mbps{20}.
+
+\noindent\textit{\textbf{Augmented reality (AR)}} (SLO: \ms{100})~\cite{mao2019delay,padmanabhan2023gemel}: AR devices stream videos over RTP to the edge server, which performs object detection using a YOLO model~\cite{yolo:cvpr16} and sends annotated results back to the AR devices.
+This represents a GPU-intensive workload for computer vision applications.
+We use a video from the MOT dataset~\cite{leal2015motchallenge}, re-encoded as a 1080p 30 fps stream at \Mbps{8}.
+
+\noindent\textit{\textbf{Video conferencing (VC)}} (SLO: \ms{150})~\cite{www-zoom-latency,www-wikipedia-audio-latency}: Client devices with limited connectivity send low-quality video streams to the edge server, which enhances them using super-resolution and streams the enhanced video back to the clients.
+This represents a GPU-intensive video enhancement workload.
+We stream videos over RTP and implement super-resolution using the Real-ESRGAN model~\cite{wang2021realesrgan}.
+We use a video from the ICME-VSR dataset~\cite{naderi2025icme}, re-encoded as a 320p 30 fps stream at \Kbps{800}.
+
+\noindent\textit{\textbf{File transfer (FT)}} (No SLO): Client devices transfer files with dummy content to a remote server (not the edge server) to simulate best-effort traffic.
+
+
+\mypara{Application workloads.}
+To evaluate the impact of workload characteristics on \sys{}, we use two types of workloads:
+
+\noindent \textit{\textbf{Static}}:
+To evaluate how \sys{} performs under sustained heavy load on both compute resources and the RAN, we design a static workload that creates continuous pressure on the system.
+We use 12 concurrent UEs: 2 for smart stadium, 2 for augmented reality, 2 for video conferencing, and 6 for file transfer.
+The LC UEs continuously send video frames at their respective target rates.
+The transcoding task of SS converts videos into three fixed resolutions (2K, 1080p, 720p), while AR performs object detection using the YOLOv8 medium model~\cite{yolov8}.
+FT keeps sending \mbyte{3} files repeatedly.
+
+\modified{\noindent \textit{\textbf{Dynamic}}: 
+To evaluate how \sys{} handles bursty requests and resource contention, we design a dynamic workload with fluctuating demand.
+We use 2 UEs for SS, but the transcoding task randomly varies the number of target resolutions (between 2 and 4), creating fluctuating compute demand.
+For AR and VC, we vary the number of UEs sending requests dynamically between 0 and 2.}
+To amplify computational bursts, AR uses the larger YOLOv8 large model~\cite{yolov8}.
+We use 6 UEs for FT, and each UE repeatedly uploads files with sizes uniformly chosen between \kbyte{1} and \mbyte{10}.
+%\end{packeditemize}
+
+\mypara{Baselines.} 
+We compare the performance of \sys{} against three baselines: (1) Default scheduler (\textbf{Default}), (2) \textbf{\tutti{}}, and (3) \textbf{\arma{}}.
+For the default scheduler, the RAN uses the PF scheduler, while the edge server employs the default Linux scheduler (EEVDF~\cite{eevdf}) for CPU processes and the hardware scheduler in the L4 GPU for GPU tasks. 
+For \tutti{} and \arma{}, since neither considers edge resource scheduling, we pair them with the default scheduler at the edge server.
+\modified{To ensure a fair comparison, we implement early drop (\autoref{sec:proactive-resource-allocation}) at the edge server for all baselines based on application queue length: we set the queue length to 10 and drop incoming requests when the queue exceeds this threshold.}
+
+\subsection{Performance under Static Workloads}
+\label{sec:eval-e2e-static}
+
+\begin{figure}[]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/e2e-latency-steady-workload/combined_slo_comparison.pdf}
+    \tightcaption{SLO satisfaction rate under static workload.}
+    \label{fig:slo-statistics-steady-workload}
+\end{figure}
+
+\begin{figure}[]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/e2e-latency-steady-workload/combined_cdf_comparison.pdf}
+    \tightcaption{End-to-end latency (ms) under static workload.}
+    \label{fig:cdf-steady-workload}
+\end{figure}
+
+
+We first evaluate \sys{} under static workloads that create sustained pressure on both network and compute resources.
+
+\mypara{SLO satisfaction.}
+Across all three applications, \sys{} exceeds 90\% SLO satisfaction and outperforms the baselines (\autoref{fig:slo-statistics-steady-workload}).
+For SS, \sys{} reaches 91\% versus $<$6\% for baselines; for VC, \sys{} maintains 96\% compared to only 5--35\% for baselines.
+For AR, contention is modest under the static workload, so the headroom is smaller: \sys{} improves SLO satisfaction by about 8\% points over \tutti{} and about 26\% points over Default.
+
+\mypara{Tail latency.}
+\sys{} substantially reduces tail latency (\autoref{fig:cdf-steady-workload}): for smart stadium, P99 latency drops by 89$\times$, 5.6$\times$, and 84$\times$ relative to the Default, \tutti{}, and \arma{}, respectively.
+For AR, \sys{} reduces P99 latency by 2.9$\times$, 2$\times$, and 15.6$\times$ relative to the Default, \tutti{}, and \arma{}, respectively.
+For VC, \sys{} shows a smaller tail-latency gain ($\approx$2$\times$) because its uplink demand is low; VC is primarily impacted by compute contention rather than network latency.
+
+\begin{figure}[]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/network-latency-performance/steady-workload/network_latency_cdf_combined.pdf}
+    \tightcaption{Network latency (ms) under static workload.}
+    \label{fig:network-latency-steady-workload}
+\end{figure}
+
+\begin{figure}[]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/processing-time-performance/steady-workload/total_time_cdf_combined.pdf}
+    \tightcaption{Processing latency (ms) under static workload.}
+    \label{fig:processing-latency-steady-workload}
+\end{figure}
+
+\mypara{Why baselines fall short.}
+The latency breakdown pinpoints the root causes.
+\textbf{\textit{Network}} (\autoref{fig:network-latency-steady-workload}).
+Default and \arma{} rely on PF at the RAN, which allocates resources fairly across LC and BE UEs. 
+This allows BE flows to occupy uplink resources that LC traffic urgently needs and starve LC apps. 
+Uplink-heavy workloads suffer most: for SS, tail network latency approaches \second{10}, leading to about \percent{90} of requests missing their SLO. 
+\tutti{} also causes over \percent{50} SLO violations at network side for SS because it depends on server-side notifications to infer request start times; this delay prevents timely acceleration of urgent requests, leading to SLO violations.
+\textbf{\textit{Edge server}} (\autoref{fig:processing-latency-steady-workload}).
+All baselines ignore the effect of compute contention. 
+Consequently, \tutti{} sees $\sim$\percent{70} of SS requests misses SLO deadlines under CPU contention, and across Default, \tutti{}, and \arma{}, video conferencing experiences $\sim$50--\percent{90} SLO violations dominated by GPU contention.
+Notably, for smart stadium, Default and \arma{} exhibit fewer processing-side SLO violations not because they handle compute contention, but because severe uplink congestion causes requests to backlog at the UE sending buffer.
+When this buffer is full, some requests are dropped, which in turn lowers CPU load at the server.
+
+\mypara{Why \arma{} performs much poorer for AR.}
+Under resource pressure, \arma{}'s RAN scheduler and reallocates uplink resources away from AR to prioritize SS; as a result, AR receives fewer grants and its uplink waiting time increases. 
+This raises AR's \textit{network} latency significantly (AR in \autoref{fig:network-latency-steady-workload}). 
+A second-order effect further hurts \textit{compute}: as AR grants resume, many backlogged AR requests arrive at the server nearly simultaneously, creating a burst that inflates queueing and causes deadline misses (AR in \autoref{fig:processing-latency-steady-workload}). 
+
+
+\subsection{Performance under Dynamic Workloads}
+\label{sec:eval-e2e-dynamic}
+
+
+\begin{figure}[]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/e2e-latency-dynamic-workload/combined_slo_comparison.pdf}
+    \tightcaption{SLO satisfaction rate under dynamic workload.}
+    \label{fig:slo-statistics-dynamic-workload}
+\end{figure}
+
+\begin{figure}[]
+    \centering
+        \includegraphics[width=\columnwidth]{figures/e2e-latency-dynamic-workload/combined_cdf_comparison.pdf}
+        \tightcaption{E2E latency (ms) under dynamic workload.}
+    \label{fig:cdf-dynamic-workload}
+\end{figure}
+
+We evaluate \sys{} under dynamic workloads that create bursty traffic patterns and fluctuating compute demands, emulating real-world edge environments with varying workloads.
+
+\mypara{SLO satisfaction.}
+\sys{} maintains over \percent{90} SLO satisfaction across all three LC applications under dynamic workloads (\autoref{fig:slo-statistics-dynamic-workload}), demonstrating robust performance even with fluctuating demands.
+For SS, \sys{} achieves \percent{95.3} satisfaction compared to \percent{4.7} (Default), \percent{4.6} (\arma{}) and \percent{55} (\tutti{}), while for AR, \sys{} sustains \percent{91.2} \vs only \percent{59.3} (Default), \percent{16.4} (\arma{}) and \percent{60.4} (\tutti{}).
+For VC, the gap is smaller (\percent{90.4} \vs 65--\percent{75} for baselines) because VC has low uplink demand and is affected mainly by GPU  contention rather than network latency. 
+Under dynamic workloads, VC only misses deadlines during GPU bursts (\ie when all AR and VC clients issue requests concurrently) so SLO violations are concentrated in those burst windows, keeping the overall gap modest.
+
+\mypara{Tail latency.}
+\sys{} keeps tail latency within reasonable bounds, with delays rarely exceeding SLO targets by large margins (\autoref{fig:cdf-dynamic-workload}).
+For SS, \sys{} reduces P99 latency by 87$\times$ compared to the default scheduler, while achieving 3.2$\times$ and 122$\times$ improvements over \tutti{} and \arma{}, respectively.
+For AR, \sys{} reduces P99 latency by 3.2$\times$ \vs Default, 3.3$\times$ \vs \tutti{}, and 31$\times$ \vs \arma{}. 
+For VC, P99 improves by $\sim$2$\times$; as in the static case, low uplink demand leaves VC compute-bound, so gains are smaller.
+
+
+\begin{figure}[]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/network-latency-performance/dynamic-workload/network_latency_cdf_combined.pdf}
+    \vspace{-2em}
+    \caption{Network latency (ms) under dynamic workload.}
+    %\vspace{0.5em}
+    \label{fig:network-latency-dynamic-workload}
+\end{figure}
+
+\begin{figure}[]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/processing-time-performance/dynamic-workload/total_time_cdf_combined.pdf}
+    \tightcaption{Processing latency (ms) under dynamic workload.}
+    \label{fig:processing-latency-dynamic-workload}
+\end{figure}
+
+\mypara{Why baselines fall short.}
+To make the causes explicit, we similarly decompose end-to-end latency.
+\textbf{\textit{Network}} (\autoref{fig:network-latency-dynamic-workload}). 
+The reasons mirror the static case: Default and \arma{} use PF at the RAN, allowing BE flows to take uplink resources urgently needed by LC traffic, starving LC apps; \tutti{} depends on delayed server-side start inference, so it cannot accelerate urgent requests in time.
+\textbf{\textit{Edge server}} (\autoref{fig:processing-latency-dynamic-workload}). 
+The key difference in the dynamic setting is burstiness. 
+Each burst overloads the edge server, creating long queues and around \percent{30} deadline misses for all baselines due to compute contention, which ignore compute contention. 
+In contrast, \sys{} proactively controls backlog (\eg by dropping a small fraction of hopeless requests) to relieve pressure and keep queues short, thereby preventing burst-induced misses.
+
+\subsection{Impact on Best Effort Applications}
+\label{sec:eval-e2e-be}
+
+\begin{figure}[]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/file-transfer-performance/smec/throughput_timeline.pdf}
+    \tightcaption{Throughput (Mbps) for each file transfer application while running static (left) and dynamic (right) LC workloads.}
+    \vspace{1em}
+    \label{fig:file-transfer-performance}
+\end{figure}
+
+To verify that \sys{} does not starve BE traffic, we measure the average throughput of all BE UEs under both static and dynamic workloads (\autoref{fig:file-transfer-performance}). 
+In both cases, BE UEs fairly share the remaining bandwidth, around 1.8 Mbps under static workload and 3 Mbps under dynamic workload, and no UE experiences prolonged starvation throughout the experiments.
+
+
+\subsection{Impact of Edge Resource Schedulers}
+
+\begin{figure*}[]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/proactive-vs-reactive/steady-workload/total_time_cdf_combined.pdf}
+        \caption{Static workload}
+        \label{fig:proactive-vs-reactive-static-workload}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/proactive-vs-reactive/dynamic-workload/total_time_cdf_combined.pdf}
+        \caption{Dynamic workload}
+        \label{fig:proactive-vs-reactive-dynamic-workload}
+    \end{subfigure}
+    \vspace{1em}
+    \tightcaption{Processing latency (ms) at edge server with different resource schedulers.}
+    \label{fig:proactive-vs-reactive-combined}
+\end{figure*}
+
+We evaluate the impact of different edge resource schedulers by comparing Default, PARTIES~\cite{parties:asplos19}, and \sys{}'s edge scheduler under static and dynamic workloads.
+All experiments use \sys{}'s RAN scheduler to isolate edge effects, with processing latency as the primary metric (\autoref{fig:proactive-vs-reactive-combined}).
+\label{sec:eval-server-schedulers}
+
+\mypara{Static workload.}
+\sys{} reduces SLO violations across all applications and lowers P99 processing latency by 1.5--4$\times$ \vs Default and PARTIES (\autoref{fig:proactive-vs-reactive-static-workload}).
+PARTIES achieves reasonable performance for SS due to static workload but suffers from delayed feedback effects that inflate tail latency.
+For AR and VC, PARTIES underperforms Default by sometimes prioritizing both LC applications simultaneously, amplifying GPU interference.
+
+\mypara{Dynamic workload.}
+\sys{} maintains superior SLO satisfaction and 2--4$\times$ lower P99 latency than baselines (\autoref{fig:proactive-vs-reactive-dynamic-workload}).
+PARTIES shows 10\% more SLO violations compared to static workload due to increased variability.
+Default and PARTIES perform poorly for AR and VC because they lack deadline awareness and accurate early drop, causing queue buildup and widespread SLO violations during bursts.
+
+\subsection{Microbenchmarks}
+\label{sec:eval-micro-benchmarks}
+
+To complement our end-to-end evaluation, we conduct a set of microbenchmarks to evaluate the effectiveness of key components of \sys{}.
+
+\subsubsection{Accuracy of Request Start Time Estimation} 
+\label{sec:eval-micro-benchmarks-request-start-time-estimation}
+
+We evaluate the RAN scheduler's accuracy in estimating request start times using P99 absolute error (\autoref{fig:remaining-time-accuracy}). 
+\sys{} achieves much lower error than \tutti{} and \arma{}. 
+They infer request start times only after the edge server observes part of a request and notifies their RAN scheduler.
+When uplink resources are not promptly allocated to LC applications, the server observes requests much later, and the notification to the RAN scheduler is delayed, causing large start-time estimation errors.
+For example, for SS, \arma{} shows \second{10} of P99 error in both static and dynamic workloads, while \tutti{} incurs hundreds of milliseconds of P99 error.
+By contrast, \sys{} relies on 5G control messages without any coordination with the edge server, making its estimation accurate and independent of uplink delays with only \ms{10} of P99 error.
+
+\begin{figure}[]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/ran-remaining-time-accuracy/remaining_time_error.pdf}
+    \tightcaption{Accuracy of request start time estimation.}
+    %\vspace{1em}
+    \label{fig:remaining-time-accuracy}
+\end{figure}
+
+\subsubsection{Accuracy of Latency Estimation}
+\label{sec:eval-micro-benchmarks-network-and-processing-time-estimation}
+
+\begin{figure}[]
+    \centering
+    \begin{subfigure}[b]{0.48\columnwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/network-estimation-accuracy/network_estimation_error.pdf}
+        \caption{Network latency estimation}
+        \label{fig:network-estimation-accuracy}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\columnwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/processing-time-estimation/processing_time_estimation_error_req.pdf}
+        \caption{Processing time estimation}
+        \label{fig:processing-time-estimation-accuracy}
+    \end{subfigure}
+    \vspace{1em}
+    \tightcaption{Accuracy of network and processing latency estimation.}
+    \label{fig:estimation-accuracy}
+\end{figure}
+
+We evaluate the accuracy of network and processing time estimation, which directly determines scheduling precision (\autoref{fig:estimation-accuracy}). 
+\textit{\textbf{Network latency prediction}} is highly accurate, with errors typically within \ms{5} across all LC applications (\autoref{fig:network-estimation-accuracy}).
+The error mainly stems from downlink transmission latency differences between ACK packets and actual responses. 
+Our compensation mechanism (\autoref{sec:reference-time}) mitigates part of this difference, but a small residual error remains.
+\textit{\textbf{Processing time estimation}} is also sufficiently accurate, with most requests showing errors within \ms{10} (\autoref{fig:processing-time-estimation-accuracy}). 
+Larger errors stem from inherent per-request variance (\eg key frames in SS, complex scenes in AR) and amplified variance under compute contention.
+Despite these errors, the prediction accuracy ensures that the majority of requests complete within their SLOs.
+
+\subsubsection{Effect of Early Drop}
+\label{sec:eval-micro-benchmarks-early-drop}
+
+\begin{figure}[]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/smec-drop-performance/drop_performance_comparison.pdf}
+    \tightcaption{SLO satisfaction rate with and without early drops.}
+    \vspace{-1em}
+    \label{fig:smec-drop-performance}
+\end{figure}
+
+Lastly, we evaluate the effectivenss of the early drop mechanism by measuring SLO satisfaction under both static and dynamic workloads (\autoref{fig:smec-drop-performance}). 
+Early drop consistently improves performance across both workloads.
+Under the static workload, where bursts are rare and mainly come from VC's sporadic traffic, early drop provides around 18\% points improvement primarily for VC.
+Under the dynamic workload, where overloads are frequent, especially for GPU-heavy AR and VC, early drop brings over 20\% points improvement by discarding overly-urgent requests, freeing resources for requests likely to meet their deadlines. 

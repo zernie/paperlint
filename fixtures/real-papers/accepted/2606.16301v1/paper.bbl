@@ -1,0 +1,422 @@
+\begin{thebibliography}{64}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Amari et~al.(2021)Amari, Ba, Grosse, Li, Nitanda, Suzuki, Wu, and
+  Xu]{Preconditioning_generalization}
+Amari, S.-i., Ba, J., Grosse, R.~B., Li, X., Nitanda, A., Suzuki, T., Wu, D.,
+  and Xu, J.
+\newblock When does preconditioning help or hurt generalization?
+\newblock In \emph{International Conference on Learning Representations}, 2021.
+
+\bibitem[Arjovsky et~al.(2019)Arjovsky, Bottou, Gulrajani, and Lopez-Paz]{irm}
+Arjovsky, M., Bottou, L., Gulrajani, I., and Lopez-Paz, D.
+\newblock Invariant risk minimization.
+\newblock \emph{arXiv preprint arXiv:1907.02893}, 2019.
+
+\bibitem[Balles \& Hennig(2018)Balles and Hennig]{dissecting}
+Balles, L. and Hennig, P.
+\newblock Dissecting adam: The sign, magnitude and variance of stochastic
+  gradients.
+\newblock In \emph{International Conference on Machine Learning}, pp.\
+  404--413. PMLR, 2018.
+
+\bibitem[Beery et~al.(2018)Beery, Van~Horn, and Perona]{terra}
+Beery, S., Van~Horn, G., and Perona, P.
+\newblock Recognition in terra incognita.
+\newblock In \emph{Proceedings of the European conference on computer vision
+  (ECCV)}, pp.\  456--473, 2018.
+
+\bibitem[Blanchard et~al.(2021)Blanchard, Deshmukh, Dogan, Lee, and Scott]{mtl}
+Blanchard, G., Deshmukh, A.~A., Dogan, U., Lee, G., and Scott, C.
+\newblock Domain generalization by marginal transfer learning.
+\newblock \emph{Journal of machine learning research}, 22\penalty0
+  (2):\penalty0 1--55, 2021.
+
+\bibitem[Cha et~al.(2022)Cha, Lee, Park, and Chun]{miro}
+Cha, J., Lee, K., Park, S., and Chun, S.
+\newblock Domain generalization by mutual-information regularization
+  with pre-trained models.
+\newblock In Avidan, S., Brostow, G., Ciss{\'e}, M., Farinella, G.~M., and
+  Hassner, T. (eds.), \emph{Computer Vision -- ECCV 2022}, pp.\  440--457,
+  Cham, 2022. Springer Nature Switzerland.
+
+\bibitem[Dennis \& Mor{\'e}(1977)Dennis and Mor{\'e}]{Quasi-Newton_Method}
+Dennis, Jr, J.~E. and Mor{\'e}, J.~J.
+\newblock Quasi-newton methods, motivation and theory.
+\newblock \emph{SIAM review}, 19\penalty0 (1):\penalty0 46--89, 1977.
+
+\bibitem[Duchi et~al.(2011)Duchi, Hazan, and Singer]{adagrad}
+Duchi, J., Hazan, E., and Singer, Y.
+\newblock Adaptive subgradient methods for online learning and stochastic
+  optimization.
+\newblock \emph{Journal of machine learning research}, 12\penalty0 (7), 2011.
+
+\bibitem[Fang et~al.(2013)Fang, Xu, and Rockmore]{vlcs}
+Fang, C., Xu, Y., and Rockmore, D.~N.
+\newblock Unbiased metric learning: On the utilization of multiple datasets and
+  web images for softening bias.
+\newblock In \emph{Proceedings of the IEEE International Conference on Computer
+  Vision}, pp.\  1657--1664, 2013.
+
+\bibitem[Foret et~al.(2021)Foret, Kleiner, Mobahi, and Neyshabur]{sam}
+Foret, P., Kleiner, A., Mobahi, H., and Neyshabur, B.
+\newblock Sharpness-aware minimization for efficiently improving
+  generalization.
+\newblock In \emph{International Conference on Learning Representations}, 2021.
+
+\bibitem[Ganin et~al.(2016)Ganin, Ustinova, Ajakan, Germain, Larochelle,
+  Laviolette, March, and Lempitsky]{dann}
+Ganin, Y., Ustinova, E., Ajakan, H., Germain, P., Larochelle, H., Laviolette,
+  F., March, M., and Lempitsky, V.
+\newblock Domain-adversarial training of neural networks.
+\newblock \emph{Journal of machine learning research}, 17\penalty0
+  (59):\penalty0 1--35, 2016.
+
+\bibitem[Gulrajani \& Lopez-Paz(2021)Gulrajani and Lopez-Paz]{domainbed}
+Gulrajani, I. and Lopez-Paz, D.
+\newblock In search of lost domain generalization.
+\newblock In \emph{International Conference on Learning Representations}, 2021.
+
+\bibitem[He et~al.(2016{\natexlab{a}})He, Zhang, Ren, and Sun]{imagenet}
+He, K., Zhang, X., Ren, S., and Sun, J.
+\newblock Deep residual learning for image recognition.
+\newblock In \emph{Proceedings of the IEEE Conference on Computer Vision and
+  Pattern Recognition (CVPR)}, June 2016{\natexlab{a}}.
+
+\bibitem[He et~al.(2016{\natexlab{b}})He, Zhang, Ren, and Sun]{resnet}
+He, K., Zhang, X., Ren, S., and Sun, J.
+\newblock Deep residual learning for image recognition.
+\newblock In \emph{Proceedings of the IEEE conference on computer vision and
+  pattern recognition}, pp.\  770--778, 2016{\natexlab{b}}.
+
+\bibitem[Hemati et~al.(2023)Hemati, Zhang, Estiri, and Chen]{hessian_align}
+Hemati, S., Zhang, G., Estiri, A., and Chen, X.
+\newblock Understanding hessian alignment for domain generalization.
+\newblock In \emph{Proceedings of the IEEE/CVF International Conference on
+  Computer Vision}, pp.\  19004--19014, 2023.
+
+\bibitem[Hinton et~al.(2012)Hinton, Srivastava, and Swersky]{rmsprop}
+Hinton, G., Srivastava, N., and Swersky, K.
+\newblock Neural networks for machine learning lecture 6a overview of
+  mini-batch gradient descent.
+\newblock \emph{Cited on}, 14\penalty0 (8):\penalty0 2, 2012.
+
+\bibitem[Huang et~al.(2020)Huang, Wang, Xing, and Huang]{rsc}
+Huang, Z., Wang, H., Xing, E.~P., and Huang, D.
+\newblock Self-challenging improves cross-domain generalization.
+\newblock In Vedaldi, A., Bischof, H., Brox, T., and Frahm, J.-M. (eds.),
+  \emph{Computer Vision -- ECCV 2020}, pp.\  124--140, Cham, 2020. Springer
+  International Publishing.
+
+\bibitem[Ioffe \& Szegedy(2015)Ioffe and Szegedy]{Batch_Normalization}
+Ioffe, S. and Szegedy, C.
+\newblock Batch normalization: Accelerating deep network training by reducing
+  internal covariate shift.
+\newblock In \emph{International conference on machine learning}, pp.\
+  448--456. pmlr, 2015.
+
+\bibitem[Kingma(2014)]{adam}
+Kingma, D.~P.
+\newblock Adam: A method for stochastic optimization.
+\newblock \emph{arXiv preprint arXiv:1412.6980}, 2014.
+
+\bibitem[Koyama \& Yamaguchi(2020)Koyama and Yamaguchi]{iga}
+Koyama, M. and Yamaguchi, S.
+\newblock When is invariance useful in an out-of-distribution generalization
+  problem?
+\newblock \emph{arXiv preprint arXiv:2008.01883}, 2020.
+
+\bibitem[Krueger et~al.(2021)Krueger, Caballero, Jacobsen, Zhang, Binas, Zhang,
+  Priol, and Courville]{vrex}
+Krueger, D., Caballero, E., Jacobsen, J.-H., Zhang, A., Binas, J., Zhang, D.,
+  Priol, R.~L., and Courville, A.
+\newblock Out-of-distribution generalization via risk extrapolation (rex).
+\newblock In Meila, M. and Zhang, T. (eds.), \emph{Proceedings of the 38th
+  International Conference on Machine Learning}, volume 139 of
+  \emph{Proceedings of Machine Learning Research}, pp.\  5815--5826. PMLR,
+  18--24 Jul 2021.
+\newblock URL \url{https://proceedings.mlr.press/v139/krueger21a.html}.
+
+\bibitem[Li et~al.(2017)Li, Yang, Song, and Hospedales]{pacs}
+Li, D., Yang, Y., Song, Y.-Z., and Hospedales, T.~M.
+\newblock Deeper, broader and artier domain generalization.
+\newblock In \emph{Proceedings of the IEEE international conference on computer
+  vision}, pp.\  5542--5550, 2017.
+
+\bibitem[Li et~al.(2018{\natexlab{a}})Li, Yang, Song, and Hospedales]{mldg}
+Li, D., Yang, Y., Song, Y.-Z., and Hospedales, T.
+\newblock Learning to generalize: Meta-learning for domain generalization.
+\newblock In \emph{Proceedings of the AAAI conference on artificial
+  intelligence}, volume~32, 2018{\natexlab{a}}.
+
+\bibitem[Li et~al.(2018{\natexlab{b}})Li, Pan, Wang, and Kot]{mmd}
+Li, H., Pan, S.~J., Wang, S., and Kot, A.~C.
+\newblock Domain generalization with adversarial feature learning.
+\newblock In \emph{Proceedings of the IEEE conference on computer vision and
+  pattern recognition}, pp.\  5400--5409, 2018{\natexlab{b}}.
+
+\bibitem[Li et~al.(2018{\natexlab{c}})Li, Gong, Tian, Liu, and Tao]{cdann}
+Li, Y., Gong, M., Tian, X., Liu, T., and Tao, D.
+\newblock Domain generalization via conditional invariant representations.
+\newblock In \emph{Proceedings of the AAAI conference on artificial
+  intelligence}, volume~32, 2018{\natexlab{c}}.
+
+\bibitem[Liu et~al.(2020)Liu, Bai, Jiang, Chen, and Wang]{gsnr}
+Liu, J., Bai, Y., Jiang, G., Chen, T., and Wang, H.
+\newblock Understanding why neural networks generalize well through gsnr of
+  parameters.
+\newblock In \emph{8th International Conference on Learning Representations,
+  ICLR 2020, Addis Ababa, Ethiopia, April 26-30, 2020}. OpenReview.net, 2020.
+\newblock URL \url{https://openreview.net/forum?id=HyevIJStwH}.
+
+\bibitem[Loshchilov \& Hutter(2019)Loshchilov and Hutter]{adamw}
+Loshchilov, I. and Hutter, F.
+\newblock Decoupled weight decay regularization.
+\newblock In \emph{International Conference on Learning Representations}, 2019.
+
+\bibitem[Mahajan et~al.(2021)Mahajan, Tople, and Sharma]{matchdg}
+Mahajan, D., Tople, S., and Sharma, A.
+\newblock Domain generalization using causal matching.
+\newblock In \emph{International conference on machine learning}, pp.\
+  7313--7324. PMLR, 2021.
+
+\bibitem[Mansilla et~al.(2021)Mansilla, Echeveste, Milone, and
+  Ferrante]{gradsurg}
+Mansilla, L., Echeveste, R., Milone, D.~H., and Ferrante, E.
+\newblock Domain generalization via gradient surgery.
+\newblock In \emph{Proceedings of the IEEE/CVF international conference on
+  computer vision}, pp.\  6630--6638, 2021.
+
+\bibitem[Matsuura \& Harada(2020)Matsuura and Harada]{vlcs_fast_conv}
+Matsuura, T. and Harada, T.
+\newblock Domain generalization using a mixture of multiple latent domains.
+\newblock In \emph{Proceedings of the AAAI conference on artificial
+  intelligence}, volume~34, pp.\  11749--11756, 2020.
+
+\bibitem[McInnes et~al.(2018)McInnes, Healy, and Melville]{umap}
+McInnes, L., Healy, J., and Melville, J.
+\newblock Umap: Uniform manifold approximation and projection for dimension
+  reduction.
+\newblock \emph{arXiv preprint arXiv:1802.03426}, 2018.
+
+\bibitem[Michalkiewicz et~al.(2023)Michalkiewicz, Faraki, Yu, Chandraker, and
+  Baktashmotlagh]{dg_dropout}
+Michalkiewicz, M., Faraki, M., Yu, X., Chandraker, M., and Baktashmotlagh, M.
+\newblock Domain generalization guided by gradient signal to noise ratio of
+  parameters.
+\newblock In \emph{Proceedings of the IEEE/CVF International Conference on
+  Computer Vision}, pp.\  6177--6188, 2023.
+
+\bibitem[Montavon et~al.(2012)Montavon, Orr, and M{\"u}ller]{Newton_method}
+Montavon, G., Orr, G., and M{\"u}ller, K.-R.
+\newblock \emph{Neural networks: tricks of the trade}, volume 7700.
+\newblock springer, 2012.
+
+\bibitem[Muandet et~al.(2013)Muandet, Balduzzi, and Sch{\"o}lkopf]{Dg2013}
+Muandet, K., Balduzzi, D., and Sch{\"o}lkopf, B.
+\newblock Domain generalization via invariant feature representation.
+\newblock In \emph{International conference on machine learning}, pp.\  10--18.
+  PMLR, 2013.
+
+\bibitem[Nakkiran et~al.(2019)Nakkiran, Kaplun, Kalimeris, Yang, Edelman,
+  Zhang, and Barak]{spurious_early_2}
+Nakkiran, P., Kaplun, G., Kalimeris, D., Yang, T., Edelman, B.~L., Zhang, F.,
+  and Barak, B.
+\newblock Sgd on neural networks learns functions of increasing complexity.
+\newblock In \emph{Proceedings of the 33rd International Conference on Neural
+  Information Processing Systems}, pp.\  3496--3506, 2019.
+
+\bibitem[Nam et~al.(2021)Nam, Lee, Park, Yoon, and Yoo]{sagnet}
+Nam, H., Lee, H., Park, J., Yoon, W., and Yoo, D.
+\newblock Reducing domain gap by reducing style bias.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision
+  and Pattern Recognition (CVPR)}, pp.\  8690--8699, June 2021.
+
+\bibitem[Parascandolo et~al.(2021)Parascandolo, Neitz, Orvieto, Gresele, and
+  Sch{\"o}lkopf]{and-mask}
+Parascandolo, G., Neitz, A., Orvieto, A., Gresele, L., and Sch{\"o}lkopf, B.
+\newblock Learning explanations that are hard to vary.
+\newblock In \emph{International Conference on Learning Representations}, 2021.
+
+\bibitem[Peng et~al.(2019)Peng, Bai, Xia, Huang, Saenko, and Wang]{domainnet}
+Peng, X., Bai, Q., Xia, X., Huang, Z., Saenko, K., and Wang, B.
+\newblock Moment matching for multi-source domain adaptation.
+\newblock In \emph{Proceedings of the IEEE/CVF international conference on
+  computer vision}, pp.\  1406--1415, 2019.
+
+\bibitem[P{\'e}rez et~al.(2019)P{\'e}rez, Louis, and Camargo]{spurious_early}
+P{\'e}rez, G.~V., Louis, A.~A., and Camargo, C.~Q.
+\newblock Deep learning generalizes because the parameter-function map is
+  biased towards simple functions.
+\newblock In \emph{7th International Conference on Learning Representations,
+  ICLR 2019}, 2019.
+
+\bibitem[Rame et~al.(2022)Rame, Dancette, and Cord]{fishr}
+Rame, A., Dancette, C., and Cord, M.
+\newblock Fishr: Invariant gradient variances for out-of-distribution
+  generalization.
+\newblock In Chaudhuri, K., Jegelka, S., Song, L., Szepesvari, C., Niu, G., and
+  Sabato, S. (eds.), \emph{Proceedings of the 39th International Conference on
+  Machine Learning}, volume 162 of \emph{Proceedings of Machine Learning
+  Research}, pp.\  18347--18377. PMLR, 17--23 Jul 2022.
+\newblock URL \url{https://proceedings.mlr.press/v162/rame22a.html}.
+
+\bibitem[Robbins \& Monro(1951)Robbins and Monro]{sgd}
+Robbins, H. and Monro, S.
+\newblock {A Stochastic Approximation Method}.
+\newblock \emph{The Annals of Mathematical Statistics}, 22\penalty0
+  (3):\penalty0 400 -- 407, 1951.
+\newblock \doi{10.1214/aoms/1177729586}.
+\newblock URL \url{https://doi.org/10.1214/aoms/1177729586}.
+
+\bibitem[Sagawa et~al.(2020)Sagawa, Koh, Hashimoto, and Liang]{groupdro}
+Sagawa, S., Koh, P.~W., Hashimoto, T.~B., and Liang, P.
+\newblock Distributionally robust neural networks.
+\newblock In \emph{International Conference on Learning Representations}, 2020.
+
+\bibitem[Shah et~al.(2020{\natexlab{a}})Shah, Tamuly, Raghunathan, Jain, and
+  Netrapalli]{simple_bias}
+Shah, H., Tamuly, K., Raghunathan, A., Jain, P., and Netrapalli, P.
+\newblock The pitfalls of simplicity bias in neural networks.
+\newblock \emph{Advances in Neural Information Processing Systems},
+  33:\penalty0 9573--9585, 2020{\natexlab{a}}.
+
+\bibitem[Shah et~al.(2020{\natexlab{b}})Shah, Tamuly, Raghunathan, Jain, and
+  Netrapalli]{spurious_early_1}
+Shah, H., Tamuly, K., Raghunathan, A., Jain, P., and Netrapalli, P.
+\newblock The pitfalls of simplicity bias in neural networks.
+\newblock \emph{Advances in Neural Information Processing Systems},
+  33:\penalty0 9573--9585, 2020{\natexlab{b}}.
+
+\bibitem[Shahtalebi et~al.(2021)Shahtalebi, Gagnon-Audet, Laleh, Faramarzi,
+  Ahuja, and Rish]{sand-mask}
+Shahtalebi, S., Gagnon-Audet, J.-C., Laleh, T., Faramarzi, M., Ahuja, K., and
+  Rish, I.
+\newblock Sand-mask: An enhanced gradient masking strategy for the discovery of
+  invariances in domain generalization, 2021.
+\newblock URL \url{https://arxiv.org/abs/2106.02266}.
+
+\bibitem[Shi et~al.(2022)Shi, Seely, Torr, Siddharth, Hannun, Usunier, and
+  Synnaeve]{fish}
+Shi, Y., Seely, J., Torr, P., Siddharth, N., Hannun, A., Usunier, N., and
+  Synnaeve, G.
+\newblock Gradient matching for domain generalization.
+\newblock In \emph{International Conference on Learning Representations}, 2022.
+
+\bibitem[Sun \& Saenko(2016)Sun and Saenko]{coral}
+Sun, B. and Saenko, K.
+\newblock Deep coral: Correlation alignment for deep domain adaptation.
+\newblock In \emph{Computer Vision--ECCV 2016 Workshops: Amsterdam, The
+  Netherlands, October 8-10 and 15-16, 2016, Proceedings, Part III 14}, pp.\
+  443--450. Springer, 2016.
+
+\bibitem[Vapnik(1999)]{erm}
+Vapnik, V.~N.
+\newblock An overview of statistical learning theory.
+\newblock \emph{IEEE transactions on neural networks}, 10\penalty0
+  (5):\penalty0 988--999, 1999.
+
+\bibitem[Venkateswara et~al.(2017)Venkateswara, Eusebio, Chakraborty, and
+  Panchanathan]{officehome}
+Venkateswara, H., Eusebio, J., Chakraborty, S., and Panchanathan, S.
+\newblock Deep hashing network for unsupervised domain adaptation.
+\newblock In \emph{Proceedings of the IEEE conference on computer vision and
+  pattern recognition}, pp.\  5018--5027, 2017.
+
+\bibitem[Wang et~al.(2023)Wang, Zhang, Lei, and Zhang]{dg_sam}
+Wang, P., Zhang, Z., Lei, Z., and Zhang, L.
+\newblock Sharpness-aware gradient matching for domain generalization.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision
+  and Pattern Recognition}, pp.\  3769--3778, 2023.
+
+\bibitem[Wang et~al.(2020)Wang, Li, and Kot]{i-mixup_3}
+Wang, Y., Li, H., and Kot, A.~C.
+\newblock Heterogeneous domain generalization via domain mixup.
+\newblock In \emph{ICASSP 2020-2020 IEEE International Conference on Acoustics,
+  Speech and Signal Processing (ICASSP)}, pp.\  3622--3626. IEEE, 2020.
+
+\bibitem[Xiao et~al.(2017)Xiao, Rasul, and Vollgraf]{Fashion_MNIST}
+Xiao, H., Rasul, K., and Vollgraf, R.
+\newblock Fashion-mnist: a novel image dataset for benchmarking machine
+  learning algorithms, 2017.
+
+\bibitem[Xu et~al.(2020)Xu, Zhang, Ni, Li, Wang, Tian, and Zhang]{i-mixup_1}
+Xu, M., Zhang, J., Ni, B., Li, T., Wang, C., Tian, Q., and Zhang, W.
+\newblock Adversarial domain adaptation with domain mixup.
+\newblock In \emph{Proceedings of the AAAI conference on artificial
+  intelligence}, volume~34, pp.\  6502--6509, 2020.
+
+\bibitem[Yan et~al.(2020)Yan, Song, Li, Zou, and Ren]{i-mixup_2}
+Yan, S., Song, H., Li, N., Zou, L., and Ren, L.
+\newblock Improve unsupervised domain adaptation with mixup training.
+\newblock \emph{arXiv preprint arXiv:2001.00677}, 2020.
+
+\bibitem[Yao et~al.(2021)Yao, Gholami, Shen, Mustafa, Keutzer, and
+  Mahoney]{adahessian}
+Yao, Z., Gholami, A., Shen, S., Mustafa, M., Keutzer, K., and Mahoney, M.
+\newblock Adahessian: An adaptive second order optimizer for machine learning.
+\newblock In \emph{proceedings of the AAAI conference on artificial
+  intelligence}, volume~35, pp.\  10665--10673, 2021.
+
+\bibitem[Ye(2024)]{precondition_3}
+Ye, Q.
+\newblock Preconditioning for accelerated gradient descent optimization and
+  regularization.
+\newblock \emph{arXiv preprint arXiv:2410.00232}, 2024.
+
+\bibitem[Ye et~al.(2024)Ye, Zheng, Cao, Ma, and Zhang]{spurious_survey}
+Ye, W., Zheng, G., Cao, X., Ma, Y., and Zhang, A.
+\newblock Spurious correlations in machine learning: A survey.
+\newblock \emph{arXiv preprint arXiv:2402.12715}, 2024.
+
+\bibitem[Zaheer et~al.(2018)Zaheer, Reddi, Sachan, Kale, and Kumar]{yogi}
+Zaheer, M., Reddi, S., Sachan, D., Kale, S., and Kumar, S.
+\newblock Adaptive methods for nonconvex optimization.
+\newblock \emph{Advances in neural information processing systems}, 31, 2018.
+
+\bibitem[Zhang et~al.(2021)Zhang, Marklund, Dhawan, Gupta, Levine, and
+  Finn]{arm}
+Zhang, M., Marklund, H., Dhawan, N., Gupta, A., Levine, S., and Finn, C.
+\newblock Adaptive risk minimization: learning to adapt to domain shift.
+\newblock In \emph{Proceedings of the 35th International Conference on Neural
+  Information Processing Systems}, pp.\  23664--23678, 2021.
+
+\bibitem[Zhang et~al.(2024)Zhang, Fan, Yao, Zhang, and Wang]{domain-inspired}
+Zhang, R., Fan, Z., Yao, J., Zhang, Y., and Wang, Y.
+\newblock Domain-inspired sharpness-aware minimization under domain shifts.
+\newblock In \emph{The Twelfth International Conference on Learning
+  Representations}, 2024.
+
+\bibitem[Zhang et~al.(2023{\natexlab{a}})Zhang, Xu, Yu, Dong, Tian, and
+  Cui]{dg_opt}
+Zhang, X., Xu, R., Yu, H., Dong, Y., Tian, P., and Cui, P.
+\newblock Flatness-aware minimization for domain generalization.
+\newblock In \emph{Proceedings of the IEEE/CVF International Conference on
+  Computer Vision (ICCV)}, pp.\  5189--5202, October 2023{\natexlab{a}}.
+
+\bibitem[Zhang et~al.(2023{\natexlab{b}})Zhang, Xu, Yu, Zou, and Cui]{gam}
+Zhang, X., Xu, R., Yu, H., Zou, H., and Cui, P.
+\newblock Gradient norm aware minimization seeks first-order flatness and
+  improves generalization.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision
+  and Pattern Recognition}, pp.\  20247--20257, 2023{\natexlab{b}}.
+
+\bibitem[Zhou et~al.(2021)Zhou, Yang, Qiao, and Xiang]{mixstyle}
+Zhou, K., Yang, Y., Qiao, Y., and Xiang, T.
+\newblock Domain generalization with mixstyle.
+\newblock In \emph{International Conference on Learning Representations}, 2021.
+
+\bibitem[Zhuang et~al.(2020)Zhuang, Tang, Ding, Tatikonda, Dvornek,
+  Papademetris, and Duncan]{adabelief}
+Zhuang, J., Tang, T., Ding, Y., Tatikonda, S.~C., Dvornek, N., Papademetris,
+  X., and Duncan, J.
+\newblock Adabelief optimizer: Adapting stepsizes by the belief in observed
+  gradients.
+\newblock \emph{Advances in neural information processing systems},
+  33:\penalty0 18795--18806, 2020.
+
+\end{thebibliography}

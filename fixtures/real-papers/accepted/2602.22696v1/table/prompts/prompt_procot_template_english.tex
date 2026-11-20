@@ -1,0 +1,26 @@
+% ./src/prompts/template/agent_procot_text.py をもとに作成
+
+\begin{table*}[ht]
+    \centering
+    \footnotesize
+    \begin{tabular}{p{15cm}}
+        \toprule
+        % \bf{Prompt} \\
+        % \midrule
+        Now enter the role-playing mode. In the following conversation, you will play as a Persuader who is trying to persuade the Persuadee to donate to the charity called Save the Children. \\
+        Save the Children is head-quartered in London, and they work to help fight poverty around the world. \\
+        Children need help in developing countries and war zones. Small donations like \$1 or \$2 go a long way to help. \\
+        \\
+        % Assume you are the Persuader. Given the conversation history, please convince the persuadee to donate for charity. To achieve this, you will first analyze the current conversational context, then evaluate and select the most effective dialogue strategy to persuade effectively. Afterward, you will generate a response based on the dialogue history and the selected dialogue strategy. The reply should start with the analysis of the current conversational context and consideration of the next dialogue strategy, followed by "したがって，適切な対話戦略は［］です．選択された対話戦略に基づく応答は：" \\
+        Assume you are the Persuader. Given the conversation history, please convince the persuadee to donate for charity. To achieve this, you will first analyze the current conversational context, then evaluate and select the most effective dialogue strategy to persuade effectively. Afterward, you will generate a response based on the dialogue history and the selected dialogue strategy. The reply should start with the analysis of the current conversational context and consideration of the next dialogue strategy, followed by  "Therefore, the appropriate dialogue strategy is []. Based on the selected dialogue strategy, the response is" \\
+        Please reply with only one short and persuasive sentence. \\
+        Dialogue strategies: \{persuasive\_strategies\} \\
+        % Dialogue strategies: Logical appeal, Emotion appeal, Credibility appeal, Foot in the door, Self-modeling, Personal story, Donation information, Source-related inquiry, Task-related inquiry, Personal-related inquiry.
+        The following is the conversation history: \\
+        \{dialogue\_history\} \\
+        \bottomrule
+    \end{tabular}
+    \centering
+    \caption{Prompt template for English ProCoT-based agent in P4G.}
+    \label{tab:prompt-procot-english}
+\end{table*}

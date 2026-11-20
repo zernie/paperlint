@@ -1,0 +1,312 @@
+\documentclass[english,acmsmall, screen, nonacm]{acmart}
+\usepackage{xcolor}
+\usepackage{array}
+\usepackage{fancybox}
+\usepackage{calc}
+\usepackage{mathtools}
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage{resizegather}
+\usepackage{wrapfig}
+\usepackage{caption}
+\usepackage{tikz}
+\usetikzlibrary{positioning,fit,calc,arrows.meta, automata}
+\usepackage{tcolorbox}
+\usepackage{enumerate}
+\usepackage{algorithm2e}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{etoolbox}
+
+
+\makeatletter
+
+\providecommand{\tabularnewline}{\\}
+
+\theoremstyle{plain}
+\newtheorem{thm}{\protect\theoremname}
+\theoremstyle{definition}
+\theoremstyle{remark}
+\newtheorem{rem}[thm]{\protect\remarkname}
+
+\usepackage{etoolbox}
+\usepackage{url}
+\usepackage[obeyFinal,textwidth=40px,textsize=footnotesize]{todonotes}
+\usepackage{multirow}
+\newrobustcmd{\tup}[1]{\langle #1 \rangle}
+\newrobustcmd{\scrsf}[1]{\text{\scriptsize{\ensuremath{\mathsf{\uppercase{#1}}}}}}
+\newrobustcmd{\ns}[1]{\mathsf{NS}_{#1}}
+\newrobustcmd{\rec}[1]{\mathsf{Res}_{#1}}
+\newrobustcmd{\dn}[1]{\todo[color=yellow]{#1}}
+\newrobustcmd{\dni}[1]{\textcolor{magenta}{[DN: {#1}]}}
+\newrobustcmd{\swap}{\mathsf{swap}}
+\newrobustcmd{\drop}{\mathsf{drop}}
+\newrobustcmd{\save}{\mathsf{save}}
+\newrobustcmd{\push}{\mathsf{push}}
+\newrobustcmd{\pop}{\mathsf{pop}}
+\newrobustcmd{\nop}{\mathsf{nop}}
+\newrobustcmd{\ec}[1]{{#1}_{\sim_{\cal{Z}}}}
+\newrobustcmd{\cal}{\mathcal}
+\newrobustcmd{\merge}{\!\mid\!}
+\newrobustcmd{\ecmerge}{\!\mid\!\mid\!}
+\newrobustcmd{\zoneAlph}{\Sigma_{_{\cal Z}}}
+\newrobustcmd{\zoneAlphCompl}{other}
+\newrobustcmd{\dnsAlph}{\Sigma_{_{\scrsf{dns}}}}
+\newrobustcmd{\simZ}{\sim_{_{\cal Z}}}
+\newrobustcmd{\synhom}[1]{\eta_{#1}}
+\newrobustcmd{\synmon}[1]{\scrsf{syn}(#1)}
+\newrobustcmd{\synhomZ}{\synhom{_{_{\cal Z}}}}
+\newrobustcmd{\synmonZ}{\scrsf{syn}_{_{\cal Z}}}
+\newrobustcmd{\dnsZ}{\scrsf{dns}_{_{\cal Z}}}
+\newrobustcmd{\ch}{\mathsf{ch}}
+\newrobustcmd{\trans}{\scrsf{trans}}
+\newrobustcmd{\subsub}[1]{_{_{#1}}}
+\newrobustcmd{\reach}{\scrsf{reach}}
+\newrobustcmd{\rat}{\mathbb{Q}}
+\newrobustcmd{\nat}{\mathbb{N}}
+\newrobustcmd{\config}[1]{\scrsf{config}(#1)}
+\newrobustcmd{\monoid}{\cal M}
+\newrobustcmd{\abstraction}{\scrsf{dns}\subsub{Z(\cal Z)}}
+\newcommand{\ostar}{\mathbin{\mathpalette\make@circled\star}}
+\newcommand{\make@circled}[2]{%
+	\ooalign{$\m@th#1\smallbigcirc{#1}$\cr\hidewidth$\m@th#1#2$\hidewidth\cr}%
+}
+\newcommand{\smallbigcirc}[1]{%
+	\vcenter{\hbox{\scalebox{0.77778}{$\m@th#1\bigcirc$}}}%
+}
+\renewcommand{\ker}[1]{\text{ker}(#1)}
+\lstdefinestyle{dnszonestyle}{ backgroundcolor={},
+	basicstyle=\ttfamily\scriptsize, 
+	basicstyle=\sffamily\scriptsize, breakatwhitespace=false,
+	breaklines=true,
+	captionpos=b,
+	keepspaces=true,
+	numbers=none, %
+	showspaces=false,
+	showstringspaces=false, showtabs=false,
+	tabsize=2, moredelim=**[is][\color{orange}]{@}{@}, }
+\lstdefinelanguage{DNSZone}{
+	morecomment=[l]{---} %
+}
+\newrobustcmd{\bottom}{\!\!\!\dashv}
+\newrobustcmd{\verif}{\scrsf{dnsverif}}
+
+\input{setup/packages}
+\input{setup/macro}
+
+\makeatother
+
+\usepackage{babel}
+\providecommand{\definitionname}{Definition}
+\providecommand{\examplename}{Example}
+\providecommand{\remarkname}{Remark}
+\providecommand{\theoremname}{Theorem}
+
+
+\begin{document}
+	\title{Reachability Analysis of the Domain Name System}
+	
+	
+	\author{Dhruv Nevatia}
+	\email{dhruv.nevatia@inf.ethz.ch}
+	\orcid{0009-0008-0845-6754}
+	
+	\author{Si Liu}
+	\email{si.liu@inf.ethz.ch}
+	\orcid{0003-3578-7432}
+	
+	\author{David Basin}
+	\email{basin@inf.ethz.ch}
+	\orcid{0003-2952-939X}
+	
+	\affiliation{
+		\institution{ETH Zurich}
+		\country{Switzerland}
+	}
+	
+	\input{sections/abstract}
+	
+	\begin{CCSXML}
+		<ccs2012>
+		<concept>
+		<concept_id>10002978.10002986.10002990</concept_id>
+		<concept_desc>Security and privacy~Logic and verification</concept_desc>
+		<concept_significance>500</concept_significance>
+		</concept>
+		<concept>
+		<concept_id>10002978.10003014.10011610</concept_id>
+		<concept_desc>Security and privacy~Denial-of-service attacks</concept_desc>
+		<concept_significance>500</concept_significance>
+		</concept>
+		<concept>
+		<concept_id>10003752.10003766.10003770</concept_id>
+		<concept_desc>Theory of computation~Automata over infinite objects</concept_desc>
+		<concept_significance>500</concept_significance>
+		</concept>
+		<concept>
+		<concept_id>10003752.10003766.10003776</concept_id>
+		<concept_desc>Theory of computation~Regular languages</concept_desc>
+		<concept_significance>500</concept_significance>
+		</concept>
+		<concept>
+		<concept_id>10003033.10003039.10003051</concept_id>
+		<concept_desc>Networks~Application layer protocols</concept_desc>
+		<concept_significance>500</concept_significance>
+		</concept>
+		<concept>
+		<concept_id>10003033.10003039.10003041.10003043</concept_id>
+		<concept_desc>Networks~Formal specifications</concept_desc>
+		<concept_significance>500</concept_significance>
+		</concept>
+		</ccs2012>
+	\end{CCSXML}
+	
+	\ccsdesc[500]{Security and privacy~Logic and verification}
+	\ccsdesc[500]{Security and privacy~Denial-of-service attacks}
+	\ccsdesc[500]{Networks~Application layer protocols}
+	\ccsdesc[500]{Networks~Formal specifications}
+	\ccsdesc[500]{Theory of computation~Automata over infinite objects}
+	\ccsdesc[500]{Theory of computation~Regular languages}
+	
+	
+	\keywords{DNS, Formal Semantics, Bisimulation, Reachability Analysis}
+	
+	\maketitle
+	
+	\input{sections/introduction}
+	\input{sections/prereq}
+	\input{sections/formal-model}
+	\input{sections/translate-to-lcs}
+	\input{sections/reduction-to-reachability}
+	\input{sections/evaluation}
+	\input{sections/related-work}
+	\input{sections/conclusion}
+	\input{sections/acknowledgements}
+	
+	\clearpage
+	\bibliographystyle{ACM-Reference-Format}
+	\bibliography{ref,nobi}
+
+
+
+
+\clearpage
+\appendix
+
+
+
+\section{Transitions in $\scrsf{dns}$}\label{appx:transitions}
+
+\subsection{Authoritative Nameserver Transitions\label{appx:ns-full-trans}}
+
+\begin{figure*}[h]
+	$\scrsf{trans}_{s}:=$
+	
+	\begin{gather}
+		\begin{align*}
+			\tup{init,\bot,\bot} & \xrightarrow{c_{r,(dn,s)}?q}\tup{lookup,q,r}\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace\thinspace r\in\mathcal{R},q\in\scrsf{query},dn\in\scrsf{domain}\\
+			\tup{lookup,q,r} & \begin{cases}
+				\xrightarrow{in}\tup{exact,q,r} & \text{dn}({\cal M}(s,q))=\text{dn}(q)\\
+				\xrightarrow{in}\tup{wildcard,q,r} & \text{dn}(q)\in_{*}\text{dn}({\cal M}(s,q))\\
+				\xrightarrow{c_{(dn,s),r}!\tup{\scrsf{ansq},\{rr,rr'\}}}\tup{init,\bot,\bot} & \text{dn}({\cal M}(s,q))<\text{dn}(q),\scrsf{dname}\in\tau(s,q)\\
+				& \text{where, }\\
+				& dn\in\scrsf{domain}\\
+				& {\cal T}_{\scrsf{dname}}(s,q)=\{rr\}\\
+				& rr'=\tup{\text{dn}(q),\scrsf{cname},\text{ttl}(rr),d,1}\\
+				& d=\text{dn}(q)_{|q|}\cdots\text{dn}(q)_{|\text{dn}(rr)|+1}\cdot\text{val}(rr)\\
+				\xrightarrow{c_{(dn,s),r}!\tup{\scrsf{ref},{\cal G}(s,q)}}\tup{init,\bot,\bot} & \text{dn}({\cal M}(s,q))<\text{dn}(q),dn\in\scrsf{domain},\scrsf{dname}\not\in\tau(s,q),\scrsf{ns}\in\tau(s,q),\scrsf{soa}\not\in\tau(s,q)\\
+				\xrightarrow{c_{(dn,s),r}!\tup{\scrsf{nxdomain},\emptyset}}\tup{init,\bot,\bot} & \text{otherwise for }dn\in\scrsf{domain}
+			\end{cases}\\
+			\tup{exact,q,r} & \begin{cases}
+				\xrightarrow{c_{(dn,s),r}!\tup{\scrsf{ans},{\cal T}(s,q)}}\tup{init,\bot,\bot} & \text{ty}(q)=\scrsf{cname}\in\tau(s,q),\\
+				& \scrsf{ns}\not\in\tau(s,q)\vee\scrsf{soa}\in\tau(s,q),|{\cal T}(s,q)|=1\\
+				& dn\in\scrsf{domain}\\
+				\xrightarrow{c_{(dn,s),r}!\tup{\scrsf{ans},{\cal T}(s,q)}}\tup{init,\bot,\bot} & \scrsf{cname}\neq\text{ty}(q)\in\tau(s,q),\\
+				& \scrsf{ns}\not\in\tau(s,q)\vee\scrsf{soa}\in\tau(s,q)\\
+				& dn\in\scrsf{domain}\\
+				\xrightarrow{c_{(dn,s),r}!\tup{\scrsf{ansq},{\cal T}_{\scrsf{cname}}(s,q)}}\tup{init,\bot,\bot} & \text{ty}(q)\not\in\tau(s,q),\scrsf{cname}\in\tau(s,q),\\
+				& \scrsf{ns}\not\in\tau(s,q)\vee\scrsf{soa}\in\tau(s,q),{\cal T}_{\scrsf{cname}}(s,q)=\{rr\}\\
+				& dn\in\scrsf{domain}\\
+				\xrightarrow{c_{(dn,s),r}!\tup{\scrsf{ref},{\cal G}(s,q)}}\tup{init,\bot,\bot} & \scrsf{ns}\in\tau(s,q),\scrsf{soa}\not\in\tau(s,q),dn\in\scrsf{domain}\\
+				\xrightarrow{c_{(dn,s),r}!\tup{\scrsf{ans},\emptyset}}\tup{init,\bot,\bot} & \text{otherwise for }dn\in\scrsf{domain}
+			\end{cases}\\
+			\tup{wildcard,q,r} & \begin{cases}
+				\xrightarrow{c_{(dn,s),r}!\tup{\scrsf{ans},R}}\tup{init,\bot,\bot} & \text{ty}(q)\in\tau(s,q),dn\in\scrsf{domain}\\
+				& \text{where, }\\
+				& R={\cal T}_{\text{ty}(q)}(s,q)\cup\{\tup{\text{dn}(q),\text{ty}(rr),\text{ttl}(rr),\text{val}(rr),1}\\
+				& \mid rr\in{\cal T}_{\text{ty}(q)}(s,q)\}\\
+				\xrightarrow{c_{(dn,s),r}!\tup{\scrsf{ansq},\{rr,rr'\}}}\tup{init,\bot,\bot} & \text{ty}(q)\not\in\tau(s,q),\scrsf{cname}\in\tau(s,q),dn\in\scrsf{domain}\\
+				& \text{where, }\\
+				& {\cal M}(s,q)=\{rr\}\\
+				& rr'=\tup{\text{dn}(q),\text{ty}(rr),\text{ttl}(rr),\text{val}(rr),1}\\
+				\xrightarrow{c_{(dn,s),r}!\tup{\scrsf{ans},\emptyset}}\tup{init,\bot,\bot} & \text{otherwise for }dn\in\scrsf{domain}
+			\end{cases}
+		\end{align*}
+	\end{gather}
+	
+	\caption{\label{fig:ns-transitions-old}Transitions in $\ns{s}$}
+\end{figure*}
+
+\newpage
+
+\subsection{Recursive Resolver Transitions\label{appx:rec-full-trans}}
+
+\begin{figure}[h]
+	$\scrsf{trans}_{r}\coloneqq$
+	
+	\begin{gather}
+		\begin{align*}
+			\tup{init,sl} & \xrightarrow{\tup{\epsilon,in,q}}\tup{query,sl}\\
+			\tup{query,sl} & \begin{cases}
+				\xrightarrow[\nu(rr) > 0]{\tup{q_1\,\,\bottom,in,\varepsilon}} & \tup{init,sl},\\
+				& \text{if }\text{dn}(q_{1})\leftarrow_{\text{ty}(q_{1})}rr\\
+				\xrightarrow[\nu(rr) > 0]{\tup{q_1q_2,\ch_{r,\text{val}(rr)}!q_{2},\varepsilon}} & \tup{wait,sl},\\
+				& \text{if }\text{dn}(q_{1})\leftarrow_{\scrsf{a}}rr\\
+				\xrightarrow[\nu(rr) > 0]{\tup{q_1,in,\tup{d,\text{ty}(q_1)}}} & \tup{query,sl},\\
+				& \text{if }\text{dn}(q_{1})\leftarrow_{\scrsf{dname}}rr,rr\in cache\\
+				& d=\text{dn}(q_{1})_{|q_{1}|}\cdots\text{dn}(q_{1})_{|\text{dn}(rr)|+1}\cdot\text{val}(rr)\\
+				\xrightarrow[\nu(rr) > 0]{\tup{q_1, \ch_{r,\text{val}(rr)}!q_{1}, q_1}} & \tup{wait,sl},\\
+				& \text{if }ns\leftarrow_{\scrsf{a}}rr\\
+				& ns = sl[min_{sl[i] < \text{dn}(q_1)} i]\\
+				\xrightarrow{\tup{q_1, in, \tup{ns,\scrsf{a}} \cdot q_1}} & \tup{query,sl},\\
+				& \text{if }\{rr\mid ns\leftarrow_{\scrsf{a}}rr,rr\in cache\}=\emptyset\\
+				& ns = sl[min_{sl[i] < \text{dn}(q_1)} i]\\
+				\xrightarrow{\tup{q_1, \ch_{r,s}!q_1, q_1}} & \tup{wait,sl},\\
+				& \text{if }sl = [], s \in \Theta
+			\end{cases}\\
+			\tup{wait,sl} & \begin{cases}
+				\xrightarrow[{[(x_{rr})_{rr\in R}\leftarrow (\text{ttl}(rr))_{rr\in R}]}]{\tup{q_1, \ch_{s,r}?\tup{\scrsf{ans},R},q_1}} & \tup{query,sl}\\
+				\xrightarrow[{[(x_{rr})_{rr\in R}\leftarrow (\text{ttl}(rr))_{rr\in R}]}]{\tup{q_1,\ch_{s,r}?\tup{\scrsf{ansq},R},q_1}} & \tup{query,sl}\\
+				\xrightarrow[{[(x_{rr})_{rr\in R}\leftarrow (\text{ttl}(rr))_{rr\in R}]}]{\tup{q_1,\ch_{s,r}?\tup{\scrsf{ref},R},q_1}} & \tup{query,list \odot sl},\\
+				& list \in Lin(Val(R))\\
+				\xrightarrow{\tup{q_1, \ch_{s,r}?\tup{\scrsf{nxdomain},\emptyset}, q_1}} & \tup{query,sl[1\ldots |sl|]}
+			\end{cases}
+		\end{align*}
+	\end{gather}
+	\begin{align*}
+		\leftarrow_{{\cal T}} & \coloneqq\{(dn,rr)\mid\text{dn}(rr)\leq dn,\text{ty}(rr)\in{\cal T}\}\subseteq\scrsf{domain}\times\scrsf{record}\\
+		Val(R) & \coloneqq \{\text{val}(rr)\mid rr\in R,\text{ty}(rr)=\scrsf{ns}\} \subseteq \scrsf{domain}\\
+		Lin(V) & \coloneqq \{m_1\ldots m_{|V|} \in V^{|V|} \mid m_i \neq m_j, 0 \leq i < j < |V| \}
+	\end{align*}
+	
+	\caption{Transitions in $\rec{r}$}
+\end{figure}
+
+\newpage
+
+\section{Strong Bisimulation}\label{appx:strong-bisim}
+
+For the sake of completeness, we provide the definition of a strong bisimulation on an LTS, as stated in \cite{milner1989communication}.
+
+\begin{definition}\label{def:strong-bisim}
+	
+	Given an LTS $\cal A^1 = \tup{S^1,S^1_{init},A^1,\trans^1}$, an equivalence relation $R \subseteq S^1 \times S^1$ on $\cal A^1$ is called a \emph{strong bisimulation} on $\cal A^1$ if and only if, for every tuple $\tup{p,p'}\in R$ and all actions $a \in A^1$, if $p \xrightarrow{a} q \in \trans^1$, then $p' \xrightarrow{a} q' \in \trans^1$, such that $\tup{q,q'}\in R$.
+	
+\end{definition}
+
+It is straightforward to see that, if a generalised kernel bisimulation $H$ on the LTS $\cal A^1$ is such that $h_{act} = id_{A^1}$ is the identity map on $A^1$, i.e., every action label is only related to itself, then the relation $\ker{h_{state}}$ is a strong bisimulation.
+
+\end{document}

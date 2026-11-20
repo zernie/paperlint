@@ -1,0 +1,477 @@
+%%
+%% This is file `sample-sigconf.tex',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% samples.dtx  (with options: `all,proceedings,bibtex,sigconf')
+%% 
+%% IMPORTANT NOTICE:
+%% 
+%% For the copyright see the source file.
+%% 
+%% Any modified versions of this file must be renamed
+%% with new filenames distinct from sample-sigconf.tex.
+%% 
+%% For distribution of the original source see the terms
+%% for copying and modification in the file samples.dtx.
+%% 
+%% This generated file may be distributed as long as the
+%% original source files, as listed above, are part of the
+%% same distribution. (The sources need not necessarily be
+%% in the same archive or directory.)
+%%
+%%
+%% Commands for TeXCount
+%TC:macro \cite [option:text,text]
+%TC:macro \citep [option:text,text]
+%TC:macro \citet [option:text,text]
+%TC:envir table 0 1
+%TC:envir table* 0 1
+%TC:envir tabular [ignore] word
+%TC:envir displaymath 0 word
+%TC:envir math 0 word
+%TC:envir comment 0 0
+%%
+%% The first command in your LaTeX source must be the \documentclass
+%% command.
+%%
+%% For submission and review of your manuscript please change the
+%% command to \documentclass[manuscript, screen, review]{acmart}.
+%%
+%% When submitting camera ready or to TAPS, please change the command
+%% to \documentclass[sigconf]{acmart} or whichever template is required
+%% for your publication.
+%%
+%%
+%\documentclass[sigconf]{acmart}
+% arxiv:
+\documentclass[sigconf,nonacm]{acmart}
+
+%%
+%% \BibTeX command to typeset BibTeX logo in the docs
+\AtBeginDocument{%
+  \providecommand\BibTeX{{%
+    Bib\TeX}}}
+
+% %% Rights management information.  This information is sent to you
+% %% when you complete the rights form.  These commands have SAMPLE
+% %% values in them; it is your responsibility as an author to replace
+% %% the commands and values with those provided to you when you
+% %% complete the rights form.
+% \setcopyright{acmlicensed}
+% \copyrightyear{2025}
+% \acmYear{2025}
+% \acmDOI{XXXXXXX.XXXXXXX}
+% %% These commands are for a PROCEEDINGS abstract or paper.
+% \acmConference[ISSTA '25]{International Symposium on Software Testing and Analysis}{June 25--28,
+%   2025}{Trondheim, Norway}
+% %%
+% %%  Uncomment \acmBooktitle if the title of the proceedings is different
+% %%  from ``Proceedings of ...''!
+% %%
+% %%\acmBooktitle{Woodstock '18: ACM Symposium on Neural Gaze Detection,
+% %%  June 03--05, 2018, Woodstock, NY}
+% \acmISBN{978-1-4503-XXXX-X/2018/06}
+
+\copyrightyear{2025}
+\acmYear{2025}
+\setcopyright{cc}
+\setcctype{by}
+\acmConference[ISSTA Companion '25]{34th ACM SIGSOFT International Symposium on Software Testing and Analysis}{June 25--28, 2025}{Trondheim, Norway}
+\acmBooktitle{34th ACM SIGSOFT International Symposium on Software Testing and Analysis (ISSTA Companion '25), June 25--28, 2025, Trondheim, Norway}\acmDOI{10.1145/3713081.3731735}
+\acmISBN{979-8-4007-1474-0/2025/06}
+
+%NUNO
+\def\name{{\sc InfraFix}}
+\newcommand{\TODO}[1]{\textcolor{red}{#1}\GenericWarning{}{LaTeX Warning: TODO: #1}}\newcommand\todo\TODO
+\newcommand{\newc}[1]{\textcolor{blue}{#1}}
+\newcommand{\remove}[1]{\textcolor{blue}{#1}}
+\usepackage{makecell}
+\usepackage[inline]{enumitem}
+
+%%
+%% Submission ID.
+%% Use this when submitting an article to a sponsored event. You'll
+%% receive a unique submission ID from the organizers
+%% of the event, and this ID should be used as the parameter to this command.
+%%\acmSubmissionID{123-A56-BU3}
+
+%%
+%% For managing citations, it is recommended to use bibliography
+%% files in BibTeX format.
+%%
+%% You can then either use BibTeX with the ACM-Reference-Format style,
+%% or BibLaTeX with the acmnumeric or acmauthoryear sytles, that include
+%% support for advanced citation of software artefact from the
+%% biblatex-software package, also separately available on CTAN.
+%%
+%% Look at the sample-*-biblatex.tex files for templates showcasing
+%% the biblatex styles.
+%%
+
+%%
+%% The majority of ACM publications use numbered citations and
+%% references.  The command \citestyle{authoryear} switches to the
+%% "author year" style.
+%%
+%% If you are preparing content for an event
+%% sponsored by ACM SIGGRAPH, you must use the "author year" style of
+%% citations and references.
+%% Uncommenting
+%% the next command will enable that style.
+%%\citestyle{acmauthoryear}
+
+
+%%
+%% end of the preamble, start of the body of the document source.
+\begin{document}
+
+%%
+%% The "title" command has an optional parameter,
+%% allowing the author to define a "short title" to be used in page headers.
+\title{\name: Technology-Agnostic Repair of Infrastructure as Code}
+
+%%
+%% The "author" command and its associated commands are used to define
+%% the authors and their affiliations.
+%% Of note is the shared affiliation of the first two authors, and the
+%% "authornote" and "authornotemark" commands
+%% used to denote shared contribution to the research.
+\author{Nuno Saavedra}
+\email{nuno.saavedra@tecnico.ulisboa.pt}
+\affiliation{%
+  \institution{INESC-ID/IST, University of Lisbon}
+  \city{Lisbon}
+  \country{Portugal}
+}
+
+\author{João F. Ferreira}
+\email{joao@joaoff.com}
+\affiliation{%
+  \institution{INESC-ID/IST, University of Lisbon}
+  \city{Lisbon}
+  \country{Portugal}
+}
+
+\author{Alexandra Mendes}
+\email{alexandra@archimendes.com}
+\affiliation{%
+  \institution{INESC TEC, Faculty of Engineering, University of Porto}
+  \city{Porto}
+  \country{Portugal}
+}
+
+%%
+%% By default, the full list of authors will be used in the page
+%% headers. Often, this list is too long, and will overlap
+%% other information printed in the page headers. This command allows
+%% the author to define a more concise list
+%% of authors' names for this purpose.
+\renewcommand{\shortauthors}{Saavedra et al.}
+
+%%
+%% The abstract is a short summary of the work to be presented in the
+%% article.
+\begin{abstract}
+Infrastructure as Code (IaC) enables scalable and automated IT infrastructure management but is prone to errors that can lead to security vulnerabilities, outages, and data loss. While prior research has focused on detecting IaC issues, Automated Program Repair (APR) remains underexplored, largely due to the lack of suitable specifications. In this work, we propose \name, the first technology-agnostic framework for repairing IaC scripts. 
+Unlike prior approaches, \name\ allows APR techniques to be guided by diverse information sources.
+%Unlike prior approaches that rely on specific specification sources, \name\ allows APR techniques to be guided by diverse information sources, making it adaptable across multiple IaC technologies. 
+Additionally, we introduce a novel approach for generating repair scenarios, enabling large-scale evaluation of APR techniques for IaC. We implement and evaluate \name\ using an SMT-based repair module and a state inference module that uses system calls, demonstrating its effectiveness across 254,288 repair scenarios with a success rate of 95.7\%. Our work provides a foundation for advancing APR in IaC by enabling researchers to experiment with new state inference and repair techniques using \name\ and to evaluate their approaches at scale with our repair scenario generation method.
+\end{abstract}
+
+%%
+%% The code below is generated by the tool at http://dl.acm.org/ccs.cfm.
+%% Please copy and paste the code instead of the example below.
+%%
+\begin{CCSXML}
+<ccs2012>
+   % <concept>
+   %     <concept_id>10011007.10011006.10011071</concept_id>
+   %     <concept_desc>Software and its engineering~Software configuration management and version control systems</concept_desc>
+   %     <concept_significance>500</concept_significance>
+   %     </concept>
+   <concept>
+        <concept_id>10011007.10011074.10011092.10011782</concept_id>
+       <concept_desc>Software and its engineering~Automatic programming</concept_desc>
+       <concept_significance>500</concept_significance>
+    </concept>
+ </ccs2012>
+\end{CCSXML}
+
+%\ccsdesc[500]{Software and its engineering~Software configuration management and version control systems}
+\ccsdesc[500]{Software and its engineering~Automatic programming}
+
+%%
+%% Keywords. The author(s) should pick words that accurately describe
+%% the work being presented. Separate the keywords with commas.
+\keywords{Infrastructure as Code, Automated Program Repair, DevOps}
+
+%\received{20 February 2007}
+%\received[revised]{12 March 2009}
+%\received[accepted]{5 June 2009}
+
+%%
+%% This command processes the author and affiliation and title
+%% information and builds the first part of the formatted document.
+\maketitle
+
+\section{Introduction}
+
+Infrastructure as Code (IaC) is the process of managing IT infrastructure via programmable configuration files. As IT infrastructure scales, the cost of maintenance and the risk of manual misconfigurations due to human error drastically increases. 
+It becomes impracticable to fully manage IT infrastructures manually and, for that reason, IaC has progressively gained more adoption. 
+
+Despite the benefits provided by IaC, such as faster, more reliable, and predictable deployments, errors in these critical pieces of code can lead to security vulnerabilities~\cite{rahman2019seven,rahman2021security,reis2022leveraging,saavedra2022glitch,saavedra2023polyglot,opdebeeck2023control}, application outages~\cite{gitlab_outage_2014,stack_exchange_outage_2014,reddit_outage_2016,incident_resolution_honeycomb_2021,rust_outage_2023}, and data losses~\cite{wikimedia_dataloss_2016}, which undermine the stability and reliability of %essential 
+services and ultimately lead to financial losses or even the loss of human lives. For example, in October 2021, aid workers in conflict zones like Syria were using WhatsApp to communicate about where bombings were taking place, so they could move safely through the country~\cite{facebook_down_2021}. However, during Facebook’s outage, which was triggered by a misconfiguration in their internal backbone network that disconnected Facebook's services and tools~\cite{Janardhan_2021}, the aid workers were unable to communicate.
+
+Given this, it is crucial to understand how we can detect and prevent errors in IaC. Currently, the IaC research community is primarily focused on error detection~\cite{saavedra2022glitch,saavedra2023polyglot,rahman2021security,reis2022leveraging,hassan2024state,begoug2024fine,sotiropoulos2020practical,opdebeeck2022smelly,rahman2023security,lepiller2021analyzing,schwarz2018code,sharma2016does,bessghaier2024prevalence,opdebeeck2023control,zerouali2023helm}. Only a few studies have taken the additional step of exploring Automated Program Repair (APR) in IaC~\cite{weiss2017tortoise,hassan2018rudsea}, and most of these efforts focus on static repair rules that do not depend on program-specific specifications~\cite{bui2023dockercleaner,henkel2021shipwright,durieux2023parfum}. Since most APR techniques use weak specifications, such as test suites~\cite{goues2019automated,repair-living-review, monperrus2018automatic}, 
+%we believe that 
+the development of APR in IaC is being hindered by the lack of adoption of testing practices for IaC, 
+as noted in prior work
+%a problem identified in the literature~
+\cite{guerriero2019adoption,sokolowski2024automated,rahman2019systematic,sokolowski2024pipr}.
+
+In light of IaC's limited testability, two potential avenues to enable advancements in APR for this domain are:
+\begin{enumerate*}
+\item exploring and improving testing practices for IaC\,---\,some research has been conducted in this direction~\cite{hasan2020testing,sokolowski2024automated,sokolowski2024pipr};
+\item finding different types of specifications for IaC scripts that APR techniques can rely on. 
+\end{enumerate*}
+We focus our attention on the second avenue. Previous works have presented different types of specifications for IaC~\cite{hassan2018rudsea,weiss2017tortoise}. In one of these works, Weiss et al. developed a technique called \emph{imperative configuration repair}, which enables automatic repair of IaC scripts guided by a series of shell commands~\cite{weiss2017tortoise}. Since a common workflow adopted by sysadmins involves using the shell to identify and test required changes to IaC scripts, Weiss et al. used these commands as the specification that guides their APR technique. They implemented their technique in a tool called Tortoise~\cite{weiss2017tortoise}.
+
+Building on these ideas, we propose \name, a technology-agnostic framework for repairing IaC scripts. While previous approaches rely on specific information sources, such as shell commands, as specifications, \name\ is more general by allowing researchers to develop APR techniques guided by specifications derived from diverse information sources. Both the APR technique used and the sources can be adapted by modifying the repair and state inference modules, respectively. 
+Moreover, \name\ overcomes the limitations of previous APR approaches that were not designed to support multiple IaC technologies simultaneously. According to the 2024 Stack Overflow Developer Survey~\cite{Overflow_2024}, the IaC landscape is highly fragmented, with adoption rates that vary significantly between technologies. For example, even though Ansible (7.9\%) and Terraform (10.6\%) are widely used technologies, others such as Puppet (1.2\%), Chef (0.7\%) and Nix (2.7\%) still have considerable adoption rates. Given this diversity, a technology-agnostic approach is highly desirable.
+
+%\paragraph{Contributions.}
+We make the following contributions:
+%\begin{enumerate}
+\begin{enumerate*}
+    \item We propose \name, the first technology-agnostic framework that can automatically repair IaC scripts. Our implementation includes an example of an SMT-based repair module and a state inference module.
+    \item We introduce a novel approach for the generation of repair scenarios that can be used to evaluate APR approaches for IaC. We use this approach to evaluate our implementation of \name\ in 254,288 different repair scenarios, achieving a successful repair rate of 95.7\%.
+\end{enumerate*}
+%\end{enumerate}
+
+%\subsection*{Tool Availability}
+\textbf{Tool Availability.} A replication package with all the datasets of IaC scripts used to create repair scenarios, the scripts used to run our generation approach, and the source code of the implementation of \name\ is available at: \url{https://doi.org/10.5281/zenodo.15061764}. A video describing and demonstrating \name\ is available at: \url{https://youtu.be/ETSW0n9DcdU}. \name\ is open-source and available at: \url{https://github.com/sr-lab/GLITCH/tree/issta2025}.
+
+\section{InfraFix}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{figures/InfraFix.pdf}
+    \caption{Overview of \name's architecture.}
+    \label{fig:overview}
+\end{figure}
+
+This section presents \name's technology-agnostic design and modules. Figure~\ref{fig:overview} shows an overview of \name's architecture. \name\ starts by taking as input information that describes the desired state of the configured system and then infers the corresponding system state from it (\S~\ref{sec:state_inference}). The framework then receives as input the IaC script to be repaired, which can currently be written in Ansible, Puppet, Chef, or Terraform, and translates it into a normalized intermediate representation (IR) (\S~\ref{sec:tech-agnostic}). Finally, the normalized IR is repaired according to the desired system state, and the changes are propagated back to the original IaC script (\S~\ref{sec:repair}).
+
+\subsection{State Inference Module}
+\label{sec:state_inference}
+
+% Here I talk about what a state inference engine can be
+A state inference module creates the specification that guides the repair of the IaC script. This module receives as input information about the system, such as logs or system calls, and a list of resources affected by that information and infers the desired system state.
+A \emph{system state} is a list of resource states. A resource state consists of the resource's identifier and a dictionary with the attributes of the resource. 
+% Talk about how declarative scripts contribute to this
+Due to the declarative nature of IaC scripts, system states are a suitable specification to guide APR techniques.
+%
+We can use different sources of information to infer states, such as system calls from executed shell commands~\cite{weiss2017tortoise}, cloud logs such as AWS CloudTrail or Google Cloud Audit Logs, or GitHub issues. %, or other relevant data.
+
+The current implementation of \name\ extends Weiss et al.'s approach, providing a state inference module that uses system calls to get a list of files affected by a sysadmin's shell commands. The module then uses that list to retrieve the attributes of those files from the file system.
+%
+Importantly, \name\ is flexible and can be easily extended with other valuable approaches.
+For example, consider the scenario where a sysadmin is asked to install Steam\footnote{Steam is a video game digital distribution service managed by Valve.} on all Linux machines in a gaming convention. The sysadmin develops an Ansible script that installs the \emph{steam} package on these machines. However, when trying to deploy the script, it returns the following error:
+
+\begin{scriptsize}
+\begin{verbatim}
+Error: You are missing the following 32-bit libraries, and Steam may not run:
+libGL.so.1  libdrm.so.2
+\end{verbatim}
+\end{scriptsize}
+
+This error is a real-world error that affected many Linux users~\cite{steam_issue_2025}. Given this error message, a state inference module can produce the following system state:
+\begin{center}
+\begin{scriptsize}
+\begin{tabular}{cc}
+package:steam \{ state $\rightarrow$ present & package:libgl1-mesa-dri:i386 \{ state $\rightarrow$ present \\ \multicolumn{2}{c}{package:libgl1:i386 \{ state $\rightarrow$ present}\\
+\end{tabular}
+\end{scriptsize}   
+\end{center}
+
+The inferred system state ensures that the packages required to overcome the error are installed. This system state could guide an APR technique to fix the original Ansible script.
+
+% Then I talk a bit about the implementation we did of a state inference engine
+%For this paper, similar to the work by Weiss et al.~\cite{weiss2017tortoise}, we developed a state inference module that uses system calls to get a list of files affected by a sysadmin's shell commands. The module then uses that list to retrieve the attributes of those files from the file system.
+
+\subsection{Technology-Agnostic Approach}
+\label{sec:tech-agnostic}
+% Here I talk about GLITCH's IR and the normalization step
+
+To ensure \name\ is technology-agnostic, we need to address two main challenges:
+\begin{enumerate*}
+% Syntax
+    \item \textbf{Syntactic structure:} Different IaC technologies may use different configuration languages. Dealing simultaneously with different configuration languages requires an abstraction that overcomes the different syntactic structures.
+% Naming
+    \item \textbf{Naming:} Depending on the IaC technology, attributes, reserved values, or resource types with the same semantic meaning may have different names. For instance, in Chef, links and directories are managed using distinct resources, whereas in Ansible and Puppet, files, links, and directories are all handled within the same \emph{file} module.
+\end{enumerate*}
+
+Overcoming these two aspects enables APR techniques to operate consistently across technologies. For example, once the naming is unified, APR can apply the same transformations to the \emph{file} module in Ansible and Puppet as in the \emph{link} and \emph{directory} modules in Chef. Similarly, abstracting control structures such as conditionals and blocks allows to treat them uniformly.
+
+\subsubsection{GLITCH's Intermediate Representation} 
+
+\name\ addresses the challenge of syntactic differences by leveraging GLITCH's Intermediate Representation (IR).
+GLITCH is a framework that enables automated technology-agnostic code smell detection for IaC scripts~\cite{saavedra2022glitch,saavedra2023polyglot}.
+GLITCH employs an IR into which the scripts of multiple technologies are transformed, and on which analysis techniques are defined to identify code smells.
+%GLITCH employs an IR into which the scripts of multiple technologies are transformed. 
+%Subsequently, the analysis techniques are defined to identify code smells within the IR. 
+GLITCH's IR follows an object-oriented approach with a hierarchical structure and is able to capture similar concepts from different IaC technologies. 
+
+To support APR, we extended GLITCH's IR to support structured expressions. GLITCH's original IR encoded all expressions as a single string. For example, a sum previously represented as the string \emph{"x + y"} is now expressed in our extended IR as a \emph{Sum} node containing two \emph{Variable Reference} nodes. This allows APR techniques to manipulate the values of expressions and pinpoint the location of values in the original IaC script to modify their textual representation. Figure~\ref{fig:overview} shows a graph-based visualization of how our GLITCH's extended IR models a snippet of an IaC script. For a more detailed description of GLITCH's IR, we refer to GLITCH's original paper by Saavedra and Ferreira~\cite{saavedra2022glitch}.
+
+\subsubsection{Normalization Database}
+
+%\name\ incorporates a database in its pipeline that enables the normalization of resource types, attribute names, and reserved attribute values based on their semantics. 
+\name\ uses a database to normalize resource types, attribute names, and reserved attribute values based on their semantics. 
+If two types of resources in different technologies exhibit the same behavior, they will be mapped to the same type, meaning they will share the same string in the normalized intermediate representation.
+The same happens between two semantically equivalent pairs of attribute names and values. For example, in Figure~\ref{fig:overview}, the attribute \emph{ensure} is normalized to \emph{state}, its equivalent in Ansible. The chosen normalization names are arbitrary, but must remain consistent across technologies.
+
+% Why this is cool
+The normalization database reduces the cost of supporting semantically equivalent functionality across different technologies. For deterministic APR techniques, it eliminates code duplication. For machine learning APR techniques, training on the normalized IR enables models to possibly generalize across supported technologies. It also expands the available data, allowing scripts from multiple technologies to be used for both training and evaluation.
+
+% One may argue...
+%One might argue that only standard system resources share enough overlap across IaC technologies to justify normalization. However, since these technologies configure the same types of resources, configuration requirements naturally create commonalities, making the normalization process broadly applicable. 
+While only standard system resources may seem to justify normalization, common configuration needs across IaC tools create natural overlaps, making the normalization process broadly applicable.
+%\,---\,e.g., Ansible's \emph{community.aws.lightsail} and Terraform's \emph{aws\_lightsail\_instance}.
+For example, the \emph{community.aws.lightsail} module in Ansible~\cite{AnsibleLighsail_2025} overlaps significantly with the \emph{aws\_lightsail\_instance} resource in Terraform~\cite{TerraformLighsail_2025}.
+
+\subsection{Repair Module}
+\label{sec:repair}
+
+% Here I talk about what can the repair module be
+The repair module takes as input the normalized IR of an IaC script and a system state, and is responsible for repairing the normalized IR to align with the desired specification.
+% Explain how the changes are back propagated
+The repair is applied to the normalized IR and then propagated back to the original IaC script. This process first reverses the normalization rules and then uses information about the location of modified components in the IR, namely the line and column positions, to update their textual representation in the original script.
+
+% Then I talk a bit about the implementation we did of a Repair Module
+% Similar to the approach of Tortoise but we did:
+% Overcome problem with variables (let)
+% Sketching
+% Branching
+We integrate the SMT-based approach of Weiss et al.~\cite{weiss2017tortoise} into~\name, but we extend it to support repairs for other types of resources other than files. We adopt this approach as it represents the state-of-the-art in APR for IaC.
+Currently, this module supports the repair of the following resources: files, packages, services and users in Ansible, Puppet, and Chef; AWS IAM roles, AWS EC2 instances, and AWS S3 buckets in Terraform and Ansible. We selected these types of resources because they are shared across the supported IaC technologies and rank among the most frequently used, as evidenced by the statistics provided in our replication package.
+Furthermore, we improved the approach of Weiss et al. by incorporating support for conditional branching, attribute sketching~\cite{solar2006combinatorial}, and direct handling of attributes without requiring preprocessing of IaC scripts, thus expanding the spectrum of potential repairs. 
+
+\section{Evaluation}
+In this section, we describe the datasets used to evaluate \name, introduce our automated repair scenario generation method, and assess \name’s effectiveness in repairing IaC scripts.
+
+\subsection{Datasets}
+
+\input{tables/datasets}
+
+To evaluate \name, we use
+the Ansible and Chef datasets provided by Saavedra and Ferreira~\cite{saavedra2022glitch}, the Puppet datasets provided by Rahman et al.~\cite{rahman2019seven}, and the Terraform dataset provided by Gonçalves~\cite{goncalves2023}. We use these datasets since they have been previously used for large-scale empirical studies on IaC.
+We also included in our evaluation the Puppet files used to evaluate Tortoise~\cite{weiss2017tortoise}.
+Subsequently, we curated the IaC scripts in the selected datasets based on the following criteria:
+\begin{enumerate*}
+    \item Test or library scripts are discarded. 
+    %This includes scripts in Ansible within a folder \emph{test}, in Puppet within a folder \emph{spec}, and in Chef within a folder \emph{spec}, \emph{lib}, or \emph{libraries}.
+    \item If two files contain the same content, only one is kept.
+    \item Files that are not parsable by \name\ due to errors are discarded.
+\end{enumerate*}
+After applying all the criteria, we obtain five curated datasets. To obtain our evaluation benchmarks, we filter out all files that do not contain at least one resource currently supported by \name.
+Table~\ref{tab:datasets} shows the number of scripts in the datasets after each step. 
+
+\subsection{Automated Generation of Repair Scenarios}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{figures/InfraFixEvaluation.pdf}
+    \caption{Overview of the method for automated evaluation of APR approaches for IaC.}
+    \label{fig:evaluation}
+\end{figure}
+
+To perform a comprehensive evaluation of \name, we need to generate repair scenarios for each file in our benchmarks.
+Manually generating repair scenarios is time-consuming, rendering it unfeasible for large-scale empirical evaluations. For this reason, we created a novel method to automatically generate them. Figure~\ref{fig:evaluation} shows an overview of our method.
+
+First, we transform the IaC script into the normalized GLITCH's IR.
+Then, we employ a state inference module that takes the IR as input to determine the possible system state(s) resulting from applying the original IaC script. We note that multiple potential system states may arise when it is not possible to statically determine which branch of a conditional statement will be executed.
+After obtaining the possible system states, we apply a sequence of mutations to each state, obtaining a set of desired system states.
+These mutations simulate potentially desired modifications to the system state.
+Mutations involve modifying the attributes of the resources in the state of the system with arbitrary yet valid values. 
+
+Each desired system state corresponds to a repair scenario.
+For each scenario, we execute \name\ with the normalized IR and the desired system state. Since \name\ can generate multiple possible solutions, we consider the repair successful if any of the fixed GLITCH's IR results in a system state equivalent to the desired one. If \name\ raises an error, the scenario is marked as erroneous. If there is a timeout without finding any solutions, we consider the repair scenario to be timed out. Otherwise, we consider it failed. The timeout threshold is set to 120 seconds.
+
+\subsection{Results}
+
+\input{tables/results}
+
+% We successfully generated repair scenarios for 7,833 out of 12,358, 125 out of 4,868, 2,069 out of 3,568, 736 out of 1300, and 13 out of 13 files in the Ansible, Puppet, Chef, Terraform, and Tortoise benchmarks respectively.
+We successfully generated repair scenarios for 7,833/12,358 (Ansible), 125/4,868 (Puppet), 2,069/3,568 (Chef), 736/1,300 (Terraform), and 13/13 (Tortoise) files.
+Failures were due to two main reasons: (1) although these files contained supported resources, their names could not be statically resolved to strings; and (2) the resources were defined within other constructs, such as function calls or classes, that were not invoked or instantiated within the same script. As a result, these resources could not be included in the inferred system state for those files.
+%\todo{For the remaining files, we investigated why no repair scenarios were generated. We identified two main reasons: (1) although these files contained supported resources, their names could not be statically resolved to strings; and (2) the resources were defined within other constructs, such as function calls or classes, that were not invoked or instantiated within the same script. As a result, these resources could not be included in the inferred system state for those files.}
+%From these files, w
+
+We generated 183,825 repair scenarios for Ansible, 4,868 for Puppet, 61,357 for Chef, 3,544 for Terraform, and 1,161 for Tortoise. The experiments were conducted on a machine with an Intel Xeon Silver 4110 CPU @ 2.10GHz and 64GB of RAM. We used 32 cores to parallelize the evaluation with all repair scenarios of a single file being handled by the same process.
+Table~\ref{tab:test_results} shows the results obtained for each benchmark. 
+%
+\name\ passed 95.8\%, 79.5\%, 96.5\%, 100.0\%, and 91.4\% of the repair scenarios in the Ansible, Puppet, Chef, Terraform, and Tortoise benchmarks, respectively.
+Upon manually examining the repair scenarios, we found most failures were due to: (1) references to undefined variables assigned to attributes or other variables, (2) attributes containing shared variable references that, when modified, unintentionally affect multiple attributes, and (3) defining multiple resources within the same construct using an array as title~\cite{array_titles_puppet_2025}.
+
+%In our evaluation, 
+We do not compare with Tortoise, as it is deprecated due to missing dependencies. We contacted the first and second authors of Tortoise~\cite{weiss2017tortoise}, who confirmed that these dependencies are no longer available, making it impossible to compare Tortoise with new APR tools and techniques for IaC. Future work in this area requires a new state-of-the-art tool, for which we propose \name.
+
+\section{Related Work}
+
+%\todo{Tortoise}
+
+%\todo{Intro}
+Due to space constraints, we focus on repair techniques specific to IaC.
+% DOCKERCLEANER: Automatic Repair of Security Smells in Dockerfiles
+% Parfum: Detection and Automatic Repair of Dockerfile Smells
+%In terms of APR focused on IaC, 
+Bui et al.~\cite{bui2023dockercleaner} and Durieux et al.~\cite{durieux2023parfum} developed tools for automated detection and repair of code smells in Dockerfiles. %These works share similarities with ours in their attempt to repair IaC scripts. 
+These works are similar to ours in their attempt to repair IaC scripts. 
+However, they focus on code smells, while we consider a wider range of issues.
+% Shipwright: A human-in-the-loop system for dockerfile repair
+Henkel et al. used machine learning to infer repair rules based on build log analysis. They developed a tool, called Shipwright, with the inferred rules to repair Dockerfiles that fail to build~\cite{henkel2021shipwright}. %Shipwright repairs IaC scripts that do not adhere to their intended specification. 
+%The main difference between Shipwright and \name\ lies in the fact that Shipwright relies on inferred and pre-defined rules, whereas our technique leverages information from which the system state can be inferred to guide the repair.
+%The main difference between Shipwright and \name\ is that Shipwright relies on inferred and pre-defined rules, while our technique uses information to infer the system state and guide the repair.
+The main difference is that Shipwright uses pre-defined and inferred rules, while \name\ infers system state to guide repairs.
+% Rudsea: recommending updates of dockerfiles via software environment analysis
+Hassan et al. proposed RUDSEA, an approach that automatically recommends updates to Dockerfiles based on changes in the source code and build configuration files~\cite{hassan2018rudsea}. Weiss et al. proposed Tortoise, a tool that implements a technique called \emph{imperative configuration repair}, which enables automatic repair of IaC scripts guided by a series of shell commands~\cite{weiss2017tortoise}.
+Similarly to RUDSEA, Tortoise is focused on a single IaC technology. Our approach is more general, both in terms of resources and IaC technologies supported. 
+In fact, the specifications used by RUDSEA
+%to guide repair 
+could be used with 
+%our approach, 
+\name,
+provided that a state inference module is implemented.
+
+\section{Conclusion}
+%We introduce \name, the first technology-agnostic framework for Automated Program Repair (APR) in Infrastructure as Code (IaC). 
+We introduce \name, the first technology-agnostic framework for APR in IaC. 
+Beyond supporting multiple IaC technologies, \name\ enables researchers to explore diverse state inference and repair techniques. 
+%Additionally, we present a novel 
+We also propose a novel
+method for generating repair scenarios that facilitate large-scale evaluation of APR solutions for IaC. To demonstrate \name’s capabilities, we implement an SMT-based repair module and a state inference module that uses system calls. Our evaluation shows that \name\ effectively repairs IaC scripts across multiple scenarios. By providing a flexible APR framework and a scalable evaluation methodology, our work establishes a foundation for future advancements in IaC repair. 
+Future work will focus on seamlessly integrating it into sysadmins' workflows by enabling it to operate in the background, automatically suggesting fixes, for instance, through pull requests. We will also extend \name\ with more repair and state inference modules, and support for additional technologies and resource types.
+
+\begin{acks}
+We would like to thank Margarida Ferreira for her help with string encoding, Aaron Weiss and Arjun Guha for their assistance with Tortoise, Vasco Manquinho and Inês Lynce for their feedback, and Bruno Saavedra for his help with the video.
+%This work was supported by Fundação para a Ciência e a Tecnologia (FCT) under grant BD/04736/2023, and projects UIDB/50021/2020 (DOI: 10.54499/UIDB/\\50021/2020), LA/P/0063/2020 (DOI: 10.54499/LA/P/0063/2020), and the `InfraGov' project, with ref. n. 2024.07411.IACDC (DOI: 10.54499/\\2024.07411.IACDC), funded by the `Plano de Recuperação e Resiliência (PRR)' under the investment `RE-C05-i08 - Ciência Mais Digital', measure `RE-C05-i08.M04' (in accordance with the FCT Notice No. 04/C05 i08/2024), framed within the financing agreement signed between the `Estrutura de Missão Recuperar Portugal (EMRP)' and the FCT as an intermediary beneficiary.
+This work was supported by Fundação para a Ciência e a Tecnologia (FCT): N. Saavedra by grant BD/04736/2023;
+N. Saavedra and J.\,F. Ferreira by
+projects UIDB/50021/2020 (DOI: 10.54499/UIDB/50021/2020) and the `InfraGov' project, with ref. n. 2024.07411.IACDC (DOI: 10.54499/2024.07411.IACDC), funded by the `Plano de Recuperação e Resiliência (PRR)' under the investment `RE-C05-i08 - Ciência Mais Digital', measure `RE-C05-i08.M04' (in accordance with the FCT Notice No. 04/C05 i08/2024), framed within the financing agreement signed between the `Estrutura de Missão Recuperar Portugal (EMRP)' and the FCT as an intermediary beneficiary.
+A. Mendes was financed by National Funds through the Portuguese funding agency, FCT, within project LA/P/0063/2020 (DOI: 10.54499/LA/P/0063/2020).
+
+
+
+\end{acks}
+
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+\end{document}
+\endinput
+%%
+%% End of file `sample-sigconf.tex'.

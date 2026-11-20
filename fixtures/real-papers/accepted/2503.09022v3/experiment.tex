@@ -1,0 +1,407 @@
+\begin{table*}[h]
+\centering
+\scalebox{1.2}{
+\begin{tabular}{|l|cc|ccc|cccc|}
+% \hline
+\hline
+     Participant number        & \multicolumn{2}{c|}{3}     & \multicolumn{3}{c|}{4}                              & \multicolumn{4}{c|}{5}                                                       \\ \hline
+Position     & \multicolumn{1}{c|}{2} & 3 & \multicolumn{1}{c|}{2} & \multicolumn{1}{c|}{3} & 4 & \multicolumn{1}{c|}{2} & \multicolumn{1}{c|}{3} & \multicolumn{1}{c|}{4} & 5 \\ \hline
+Layer number & \multicolumn{1}{c|}{27}  &  54 & \multicolumn{1}{c|}{20}  & \multicolumn{1}{c|}{40}  &  60 & \multicolumn{1}{c|}{16}  & \multicolumn{1}{c|}{32}  & \multicolumn{1}{c|}{48}  & 64  \\ \hline
+Token accuracy     & \multicolumn{1}{c|}{0.9165}  &  0.8896 & \multicolumn{1}{c|}{0.9202}  & \multicolumn{1}{c|}{0.9045}  & 0.8838  & \multicolumn{1}{c|}{0.9320}  & \multicolumn{1}{c|}{0.9098}  & \multicolumn{1}{c|}{0.8987}  & 0.8745  \\ \hline
+BLEU         & \multicolumn{1}{c|}{0.8899}  & 0.8492  & \multicolumn{1}{c|}{0.8956}  & \multicolumn{1}{c|}{0.8694}  & 0.8428  & \multicolumn{1}{c|}{0.9145}  & \multicolumn{1}{c|}{0.8803}  & \multicolumn{1}{c|}{0.8573}  &0.8377   \\ \hline
+NERR         & \multicolumn{1}{c|}{0.7101}  & 0.6680  & \multicolumn{1}{c|}{0.7533} &  \multicolumn{1}{c|}{0.6881} & 0.6605 & \multicolumn{1}{c|}{0.7730
+}  & \multicolumn{1}{c|}{0.6945
+}  & \multicolumn{1}{c|}{0.6752
+} & 0.6550    \\ 
+%\hline
+\hline
+\end{tabular}
+}
+\caption{Evaluation of white-box PIA under different participant number and attacker positions on Skytrax~\cite{skytrax} dataset. }
+\label{tab:main_results}
+
+\end{table*}
+
+\begin{table}[!t]
+\centering
+\scalebox{0.95}{
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+               & \makecell{Song et al. \\ ~\cite{song2020information}} 
+               & \makecell{Li et al.\\ ~\cite{Generative-embedding-inversion-attack}}
+               & \makecell{Morris et al.\\~\cite{morris2023language} 
+               }
+               & Ours   \\ \hline
+Token accuracy & 0.0040                                                 & 0.2277                                                                 & 0.1476        & \textbf{0.8838} \\ \hline
+BLEU           & 0.0021                                                 & 0.1867                                                                 & 0.1293        & \textbf{0.8428} \\ \hline
+NERR           & 0                                                      & 0.1098                                                                 & 0.0642        & \textbf{0.6605} \\ \hline
+\end{tabular}
+}
+\caption{Comparison with baselines on Skytrax dataset.}
+\vspace{-1em}
+\label{fig:baseline}
+\end{table}
+
+
+\begin{table*}[t]
+\centering
+\scalebox{1}{
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+  & \makecell{Naive optimization \\+ naive discretization} & \makecell{Constrained optimization \\+ naive discretization} & \makecell{Naive optimization \\+ adaptive discretization} & \makecell{\textbf{Constrained optimization} \\\textbf{+ adaptive discretization}} \\ \hline
+Token accuracy &       0.3846                                    &                0.5485                                 &         0.6509                                     &                0.8838                                    \\ \hline
+BLEU     &        0.2820                                   &        0.4961                                         &     0.5736                                         &    0.8428                                                \\ \hline
+NERR     &           0.0399                                &          0.1901                                       &        0.2667                                      &     0.6605                                               \\ \hline
+\end{tabular}
+}
+\caption{Evaluation on different components in our method on Skytrax~\cite{skytrax} dataset.  ``Constrained optimization + adaptive discretization" is our final solution.  }
+\label{tab:contribution_results}
+\vspace{-1em}
+\end{table*}
+
+\section{Experiments}
+In this section, we present a comprehensive set of experiments designed to rigorously evaluate the accuracy of our prompt inversion attack for collaborative inference under both white-box and grey-box scenarios. We also dive into the reason why each of our design components works. We provide in-depth analysis to elucidate the rationale behind the functionality of each design component.
+
+\subsection{Setup}
+\noindent
+\textbf{Participant number and attacker position.} 
+In our experiments, we typically assume the involvement of 4 participants for inference on a specific prompt by default, unless stated otherwise. 
+%The system concurrently processes many prompts through multiple participant groups.
+Multiple prompts may be served simultaneously by different participant groups. We also explore scenarios with 3 and 5 participants. 
+By default, we consider the most challenging scenario for the attacker, where the attacker is positioned as the last participant. In this case, the attacker is required to invert the highest number of layers, adding difficulties to the attack.
+
+
+
+\noindent \textbf{Datasets.} 
+Following~\cite{pan2020privacy,Sentence_inference_attack}, we utilize 3 datasets from different domains for our evaluation: Skytrax~\cite{skytrax}, CMS~\cite{cms}, and ECHR Law~\cite{echr}. Skytrax is composed of airline reviews from 2006 to 2019 for popular airlines around the world. The CMS dataset records medical information on services and procedures documented by physicians and other healthcare professionals. The ECHR Law dataset contains approximately 11,500 cases recorded in the European Court of Human Rights. Each case in the dataset provides a brief description of legal facts. For each dataset, we evaluate on 150 prompts and compute the average result.
+
+%OpenGen is composed of 3,000 two-sentence chunks randomly sampled from the WikiText-103~\cite{merity2016pointer} validation set. The C4 news dataset consists of 15GB news crawled from the internet. The essays dataset consists of homework essays written by students from the IvyPanda essay database~\cite{ivy2024panda}. Unless otherwise mentioned, we use the OpenGen dataset as it is the most popular one. 
+
+%Following~\cite{pmlr-v202-kirchenbauer23a,yoo2023advancing} on watermarking texts generated by LLMs, we utilize the following datasets for our evaluation: OpenGen~\cite{krishna2023paraphrasing}, C4 news dataset~\cite{raffel2020exploring}, and Essays dataset ~\cite{essaysdataset}. In particular, OpenGen is composed of 3,000 two-sentence chunks randomly sampled from the WikiText-103~\cite{merity2016pointer} validation set. The C4 news dataset consists of 15GB news crawled from the internet. The essays dataset consists of homework essays written by students from the IvyPanda essay database~\cite{ivy2024panda}. Unless otherwise mentioned, we use the OpenGen dataset as it is the most popular one. 
+
+
+
+\noindent \textbf{Large language models.}
+We invert 3 LLMs in our experiments, including Llama-65B~\cite{llama}, Llama-2-70B~\cite{llama2}, and OPT-66B~\cite{opt}. Llama-65B is an auto-regressive model trained on 1.4T tokens from the 20 languages with the most speakers. Llama-2-70B, trained on a larger training-set (2T tokens), has better context learning ability showed in 4096 token context length. OPT-66B was the largest unrestricted open-sourced pre-trained transformer language model at March 2022, which roughly matched the size and performance of GPT-3 class of models.
+We leverage Llama-7B as our oracle model for the semantic-based candidate set generation in our adaptive discretization procedure. 
+%We conduct our major experiments with state-of-the-art public large language models: LLaMA-2-7B~\cite{touvron2023llama}, Vicuna-7B~\cite{zheng2023judging}, and Falcon-7B~\cite{almazrouei2023falcon}. By default, we use LLaMA-2-7B~\cite{touvron2023llama} as it is more popular than the other two.
+
+
+
+\noindent \textbf{Metrics. }
+We employ three metrics to evaluate how attacks invert the input text, including \textbf{token accuracy}, \textbf{BLEU}~\cite{bleu}, and \textbf{NERR} (named entity recovered ratio)~\cite{nerr}. The first metric measures the ratio of correct tokens at the correct positions in the recovered text. The second metric measures the overlap between the original text and the recovered text, which focuses more on detecting redundant information in recovered text. In addition, we employ the third metric to measure the proportion of keywords (specifically, the key nouns, names, and entities) completely recovered from the model's activations. All three metrics satisfy that higher values indicate inversion results closer to the ground truth, which is better. 
+%We utilize \textbf{Perplexity}~\cite{perplexity}, measured on the Vicuna-13B model, to assess the text quality. This metric is commonly employed in NLP domain. Smaller perplexity usually indicates a better quality. 
+
+%We use \textbf{Match rate} to measure how much proportion of generated text can exactly extract embedded watermark bit string without error. We use \textbf{edit distance} to quantify the attacker's change to the watermarked text. Edit distance (Levenshtein distance)~\cite{navarro2001guided} measures the difference between two texts defined as the minimum number of single-token edits (insertions, deletions, or substitutions) required to change one text into the other. Additionally, to measure theoretical robustness, we define the metric \textbf{robust bound} for a dataset as the average robust bound computed by Algorithm \ref{alg:boundcompute} for each generated text. For text quality, following the work in~\cite{pmlr-v202-kirchenbauer23a}, we use perplexity (PPL) computed by a large oracle model GPT-3.5 (text-davinci-003)~\cite{ouyang2022training}.  
+
+
+\noindent \textbf{Hyperparameters. }
+% {\color{red} TBD}
+We set default hyperparameters as optimization learning rate $\beta=0.1$, constraint coefficient $\lambda=0.1$, optimization iteration number $N=2000$, embedding-based candidate size $K=10$, and semantic-based candidate size $Y=10$. For grey-box  attack, the learning rate for LoRA adapter is $10^{-3}$, and the iteration number is 5.
+%In our experiments, we adopt a default setting with bias $\delta = 7$ and a hash token number $h = 1$. We investigate token generation for a length $T = 200$, embedding a 12-bit bit string , i.e., $b=12$, which we randomly sample for each paragraph.  To establish a provable robustness bound, we set the error probability $\lambda$ to $10^{-3}$. For selecting the BCH code in Algorithm~\ref{alg:encode}, we determine a minimum code rate $R = 0.45$. Given our default embedding of $12$-bit bit string, we opt for the BCH code scheme with  $(n, k, t) = (23,12,3)$. Throughout this section, the term ``bit length'' refers to the length of the bit string that we intend to embed into a text using Algorithm~\ref{alg:encode} i.e. $b$. We conduct extensive ablation studies to evaluate the impact of each hyperparameter on our method. 
+
+
+
+%\noindent
+%\textbf{Hardware.}
+%Our experiments are conducted on a server equipped with 4 NVIDIA  A100 GPUs.
+
+%All of our experiments are conducted on a server with 80 Intel Xeon @2.1GHz CPUs, and 4 V100-32GB GPUs.
+
+
+
+\subsection{Main Results of White-box PIA}
+
+ \begin{figure*}[t]
+
+ \centering
+\subfloat[]{\includegraphics[width=0.3\textwidth]{fig/KY-F1.pdf}} \hspace{+2mm}
+\subfloat[]{\includegraphics[width=0.3\textwidth]{fig/KY-BLEU.pdf}}   \hspace{+2mm}
+\subfloat[]{\includegraphics[width=0.3\textwidth]{fig/KY-NERR.pdf}} 
+
+ \caption{Impacts of different $K$ and different $Y$  on Skytrax~\cite{skytrax} dataset.}
+\vspace{-1em}
+ \label{fig:KY}
+ \end{figure*}
+ 
+\noindent
+\textbf{Our method achieves high inversion accuracy. } 
+%To demonstrate the impact of bit length, we designed a series of experiments. 
+%Initially, we investigated the effect of bit length on the match rate. 
+To assess the performance of our method under diverse settings, we evaluate all possible attacker positions for different participant numbers 3, 4, and 5 on the Skytrax dataset while keeping other hyper-parameters as default. The results are depicted in Table~\ref{tab:main_results}. We find that token accuracy is consistently high ($>0.87$) across different settings, demonstrating the versatility of our attack. 
+For example, in the case of the last participant among 4 participants, the attacker needs to invert 60 layers for the Llama-65B model. Our method achieves a high token accuracy of 0.884 in this scenario. Our method also consistently achieves a high BLEU ($>0.8$) and NERR ($>0.65$). Note that keywords (\eg, geographic name) often consist of multiple tokens, and NERR only counts when the keyword is completely recovered without any error. The effectiveness of the attack marginally diminishes as the attacker is placed in a more backward position. The decline is primarily attributed to the fact that the attacker needs to invert more preceding layers. The non-linearity of the targeted model increases with the layer numbers, making the optimization problem more difficult. In summary, white-box PIA has yielded highly accurate recovery results, even in the most difficult scenarios.
+
+
+\noindent
+\textbf{Our method maintains high efficiency across different models and datasets. }
+To showcase the generalizability of our method, 
+%we conducted experiments across different LLMs and different datasets including Skytrax, CMS, and ECHR law from three domains. 
+we conduct experiments across different LLMs and different datasets.
+The results are presented in Table~\ref{fig:dataset} and Table~\ref{fig:model} in Appendix. Our method yields similar performance across different models. For example, our attack achieves a high token accuracy on Llama2-70B up to 0.9275. Our method also achieves strong performance on datasets from different domains. On CMS dataset from medical domain and ECHR law dataset, we also achieve token accuracy higher than 0.9. These results indicate our method generalizes well across various settings.
+
+
+\noindent \textbf{Our method outperforms baselines.} To further evaluate the effectiveness of our approach, we compare with baselines including Song et al. ~\cite{song2020information}, Li et al.~\cite{Generative-embedding-inversion-attack}, and Morris et al.~\cite{morris2023language}. For introduction of these baselines, please refer to Section~\ref{sec:inversion}. We conduct experiments with hyperparameters  under  default settings. The results are shown in Table~\ref{fig:baseline}.  It demonstrates that our method is capable of inverting input prompts with near-perfect accuracy, significantly outperforming existing baselines. 
+%in experimental settings, where baseline performance is notably modest. 
+The major reason for our method outperforming generation-based inversion attacks~\cite{Generative-embedding-inversion-attack,morris2023language} is that, during generation, they only feed the inversion target information to the decoder at the initial phase. When the generation length gets longer, the generated content becomes less related  with the inversion target, the recover error accumulates. Besides, our method outperforms~\cite{song2020information} since our attack does not suffer from gradient vanishing, while our adoption of \textit{constrained optimization} and \textit{adaptive discretization} significantly improves the optimization quality and recovering accuracy in discretization, respectively. 
+
+\noindent\textbf{Impact of our design components.} 
+To further understand the effectiveness of individual components of our attack, we also explore replacing the two components of our method with the previously mentioned simple methods (\textit{naive optimization} and \textit{naive discretization}). The results are reported in Table~\ref{tab:contribution_results}. We observe that both two components of our attack are quite crucial and effective. When we adopt the simple methods at both the optimization and discretization phases, the inversion can only achieve 0.3846 in token accuracy. By adopting \textit{constrained optimization} at the optimization phase, the inversion token accuracy improves to 0.5485 (+ 42.6\%). This shows the benefit of constraining $\hat{v}$ to be near $E(\hat{x})$ during the optimization procedure. On the other hand, \textit{adaptive discretization} also greatly boosts the overall inversion performance; it further increases the token accuracy of 0.5485 when only adopting \textit{constrained optimization} to 0.8838, increasing another 61.2\%. This improvement can be attributed to the adaptive discretization policy, the \textit{activation calibration}, and the \textit{semantic speculation}. The results in Table~\ref{tab:main_results} demonstrate that our optimization and discretization are crucial to achieving strong PIA results.
+%These results clearly show that both \textit{constrained optimization} and \textit{Adaptive Discretization} are crucial components for achieving strong PIA results.
+
+
+
+
+%More comprehensive discussion can be found in Appendix~\ref{appendix:ccs20_vanish_theory}.
+
+%In fact they are originally designed for inversions on relatively shallow embedding models(e.g. BERT~\cite{}), and recovering short sentences(e.g. \cite{Generative-embedding-inversion-attack} mainly evaluated themselves on PersonalChat dataset with average sentence length 11.7). 
+%The techniques in \cite{song2020information} is also based on optimization similar with ours, but they achieve much inferior results,   barely recovering any tokens under our attack scenario. There are multiple reasons, the first one is their softmax function causes gradient vanishing as we analyzed thoroughly in Appendix~\ref{appendix:ccs20_vanish_theory}, leading to highly ineffective optimization. Also there design on optimization goal and discretization is quite rough, in contrast  we carefully analyzed the problem and proposed constrained optimization and adaptive discretization to solve the problem. \cite{Generative-embedding-inversion-attack} is based on training a generative decoder model to output the inversion results, it is designed for single sentence inversion, while in our scenario we often study paragraphs more than 100 tokens. The drawbacks of generative-based inversion approaches is that their generation procedure only leverages the information of grountruth activation by mapping it as the initial tokens for generation. During generation, they do not calibrate their generated output with the Ground-truth activation thus their approach lacks the feedback signal from the Ground-truth activation. Thus, they may be able to recover some tokens at the start of the paragraph, but when the generation length gets longer, the generation is mainly determined by the previous generated tokens which contain many error tokens, and becomes more and more unlikely to recover correct tokens.
+
+
+
+
+
+%\begin{table*}[h]
+%\centering
+%\begin{tabular}{|c|c|c|c|}
+%\hline
+%token accuracy     & Y=0    & Y=10   & Y=20   \\ \hline
+%K=0  & NA     & 0.0964 & 0.0966 \\ \hline
+%K=10 & 0.6723 & 0.8838 & 0.8740 \\ \hline
+%K=20 & 0.6812 & 0.8866 & 0.8909 \\ \hline
+%\end{tabular}
+
+%\begin{tabular}{|c|c|c|c|}
+%\hline
+%BLEU      & Y=0    & Y=10   & Y=20   \\ \hline
+%K=0  & NA     & 0.058
+
+ %& 0.0598
+ %\\ \hline
+%K=10 & 0.6159 & 0.8450
+% & 0.8380 \\ \hline
+%K=20 & 0.6248
+% & 0.8596 & 0.8637
+% \\ \hline
+%\end{tabular}
+
+
+%\begin{tabular}{|c|c|c|c|}
+%\hline
+%NERR     & Y=0    & Y=10   & Y=20   \\ \hline
+%K=0  & NA     & 0.0142
+% & 0.0029
+% \\ \hline
+%K=10 & 0.3087
+% & 0.6735 & 0.6835 \\ \hline
+%K=20 & 0.3283
+% & 0.6769  & 0.6898
+% \\ \hline
+%\end{tabular}
+%\caption{This tables shows the impact of different $K$ and different $Y$ on F1-score.}
+%\label{tab:ablation_k_y}
+%\end{table*}
+
+
+
+%\begin{table*}[h]
+%\begin{tabular}{|c|c|c|c|c|}
+%\hline
+%Method   & \makecell{Without Clip \\+ Without Loss Constraint} & \makecell{With Clip \\+ Without Loss Constraint} & \makecell{Without Clip \\+ With Loss Constraint} & \makecell{With Clip \\+ With Loss Constraint} \\ \hline
+%token accuracy &                                           &                                                 &                                              &                                                  \\ \hline
+%BLEU     &                                           &                                                 &                                              &                                                    \\ \hline
+%NERR     &                                           &                                                 &                                              &                                                    \\ \hline
+%\end{tabular}
+%\label{tab:contribution_results}
+%\caption{Ablation study on constrained optimization}
+%\end{table*}
+
+%\begin{figure}
+%    \begin{subfigure}{0.48\columnwidth}
+%        \centering
+%        \includegraphics[width=\linewidth]{fig/alpha.pdf}
+%        \caption{$\lambda$}
+%        \label{fig:alpha}
+%    \end{subfigure} \hfil
+%    \begin{subfigure}{0.48\columnwidth}
+%    \centering
+%      \includegraphics[width=\linewidth]{fig/lr.pdf}
+%        \caption{$\beta$}
+%        \label{fig:lr}
+%    \end{subfigure}\vspace{-0.1in}
+%\caption{The impact of $\lambda$ and learning rate $\beta$ on token accuracy.}
+%\vspace{-5mm}
+%\label{fig:alpha_beta}
+%\end{figure}
+
+
+ \begin{figure*}[t]
+ \centering
+
+ \subfloat[\label{fig:alpha}]{\includegraphics[width=0.33\textwidth]{fig/alpha.pdf}}
+  \subfloat[\label{fig:lr}]{\includegraphics[width=0.33\textwidth]{fig/lr.pdf}}
+  \subfloat[\label{fig:epoch}]{\includegraphics[width=0.33\textwidth]{fig/epoch.pdf}}
+
+ \caption{These figures show the impact of constraint coefficient $\lambda$, learning rate $\beta$, and optimization iteration number $N$ on inversion results, which is tested on Skytrax~\cite{skytrax} dataset.}
+ \label{fig:optimization_results}
+ \vspace{-1em}
+ \end{figure*}
+
+
+
+% \begin{figure}[h]
+% \centering
+% \includegraphics[width=0.4\textwidth]{fig/datasets.pdf}
+% \caption{This figure shows the Token accuracy on three different datasets.}
+% \label{fig:dataset}
+% \end{figure}
+
+
+
+
+
+% \begin{figure}[h]
+% \centering
+% \includegraphics[width=0.4\textwidth]{fig/models.pdf}
+% \caption{This figure shows the Token accuracy on three different models.}
+% \label{fig:model}
+% \end{figure}
+
+
+
+% \begin{figure}[h]
+% \centering
+% \includegraphics[width=0.4\textwidth]{fig/baselines.pdf}
+% \caption{This figure shows the token accuracy on different baselines.}
+% \label{fig:baseline}
+% \end{figure}
+
+
+\subsection{Ablation Study}
+
+\noindent\textbf{Impact of constraint  coefficient $\lambda$.} To demonstrate its impact on inversion accuracy, we conduct experiments with $\lambda$ set at $[0,0.0005,0.001,0.0015,0.002,0.0025,0.005,0.01]$, while all other parameters are in default settings. Figure~\ref{fig:alpha}  presents the results of the influence of coefficient $\lambda$. When $\lambda$ increases from 0, the corresponding token accuracy of inversion firstly increases then decreases. We speculate that when $\lambda$ is relatively small, increasing $\lambda$ results in a stronger constraint to $\hat{v}$, improving the optimization result. 
+However, when $\lambda$ becomes too large in the initial phase of optimization, the loss becomes overly concentrated on the second constraint term, ignoring the original optimization goal of making the intermediate activations nearer, which causes the optimization stuck in poor local minima.
+%At $\lambda=0.001$ it reaches the best performance token accuracy 0.8838, therefore we choose it as our default $\lambda$.
+
+%\vspace{0.3em}
+
+%\noindent
+\noindent\textbf{Impact of learning rate $\beta$.} To demonstrate the impact of learning rate $\beta$ on inversion accuracy, we conduct experiments with $\beta$ ranging from $\{0.01,0.02,0.05,0.1,0.2,0.5,1\}$, while keeping other hyperparameters at their default settings. The results are reported in Figure \ref{fig:lr}. When $\beta$ is small, as $\beta$ increases, the inversion token accuracy increases. We speculate that when $\beta$ is too small, the optimization proceeds too slowly, resulting in sub-optimal inversion with the same number of iterations. Also, when $\beta$ is too large, increasing $\beta$ will cause token accuracy to drop. 
+This is because  the optimization oscillates when $\beta$ is excessively large, due to excessively large iteration steps making the convergence difficult.
+
+%\vspace{0.3em}
+%\noindent
+\noindent\textbf{Impact of optimization iteration number $N$.} To explore the influence of optimization iteration number $N$ on inversion accuracy, we conduct experiments with $N$ ranging from $\{500,1000,2000,3000,5000\}$, while keeping other hyperparameters at their default settings. The results are presented in Figure \ref{fig:epoch}. When $N$ is small, inversion token accuracy significantly increases with the increase of $N$; when $N$ is quite big, increasing $N$ has negligible impact on the inversion token accuracy. This means small iteration number is not enough for the optimization to converge; when $N$ is big enough for the optimization to converge, further optimizing can hardly improve the final inversion result. 
+
+
+%\vspace{0.3em}
+%\noindent
+\noindent\textbf{Impact of candidate set size $K$ and $Y$.} To demonstrate the impact of candidate set size $K$ and $Y$ on inversion accuracy, we conduct experiments with $K$ and $Y$ both ranging from $\{0,10,20\}$, while keeping other hyperparameters at their default settings. The results are presented in Figure~\ref{fig:KY}. We can draw multiple conclusions from the figure: (1) If we only use the set $S_s$ ($K=0$), the inversion accuracy is quite low. The reason is that only selecting $S_s$ as the candidate set neglects embedding information obtained during optimization; (2) if we only use the set $S_e$ ($Y=0$), the inversion is also sub-optimal. We guess that only leveraging $S_e$ neglects semantic coherence and can not correctly recover under the case of ground-truth not belonging to $S_e$ set.  We present more fine-grained results and analysis on this point in Section~\ref{sec:divein}; 
+(3) when $K\ge 10$ or $Y\ge 10$, further increasing $K$ and $Y$ has negligible improvement on the inversion result. It is mostly because the correct token is already in one of the top-10 of $S_e$ and $S_s$ in the most cases, otherwise the token is in the corner case that it does not appear in both two set. In either cases, doubling the candidate size has negligible benefits.
+
+
+%({\color{red} K=10 and Y=10, discretization time cost = 242s; while K=20 and Y=20, discretization time cost = 468s, on 4 tesla A100 GPU}) we pick $K=10$ and $Y=10$. 
+
+
+%It can be observed that when $N$ is small, inversion token accuracy significantly increases with the increase of $N$. For example, token accuracy increases 0.15 by increasing $N$ from 500 to 1000. However, when $N$ is big enough, increasing $N$ has negligible impact on the inversion token accuracy. This is because, when $N$ is small, it is not enough for the optimization to converge to local minima, therefore the result is sub-optimal. When $N$ is big enough, it already converges to its local minima, further optimizing will not improve the final inversion result.
+
+\subsection{Main Results of Grey-box PIA}
+\begin{table}[t]
+\centering
+\scalebox{0.9}{
+\begin{tabular}{|l|c|c|c|}
+\hline
+         & Guanaco (65B) & Medalpaca(30B) & Llama-HH (30B) \\\hline
+Token accuracy &     0.8544
+        &       0.9049             &    0.8985               \\ \hline
+BLEU     &     0.8192
+        &     0.8879               &       0.8540            \\ \hline
+NERR     &    0.5927
+         &     0.6079
+              &         0.6152
+          \\ \hline
+\end{tabular}
+}
+\caption{Results for grey-box inversion attacks on three LoRA models on Skytrax~\cite{skytrax} dataset.}
+\vspace{-2em}
+\label{tab:grey}
+\end{table}
+
+For exploring the effectiveness of grey-box attack, we conduct experiments on LoRA fine-tuned models including Guanaco-65B~\cite{guanaco}, Medalpaca-lora-30B~\cite{medalpaca}, Llama-HH-lora-30B~\cite{HH}. Here we use some 30B models because the number of open source 65B fine-tuned models is few.  Guanaco models are open-source fine-tuned chat-bots obtained through 4-bit QLoRA~\cite{guanaco} tuning of Llama base models on the OASST1~\cite{oasst1} dataset. MedAlpaca~\cite{medalpaca} are specifically fine-tuned Llama models for medical question-answering and dialogue applications, which are fine-tuned on CMS~\cite{cms} dataset.  Llama-HH is a helpful and harmless natural language assistant fine-tuned on Llama by collecting human preference data and applying the techniques of preference modeling
+ and RLHF~\cite{rlhf}. For hyperparameters, we mostly follow the white-box  settings.  For optimization on LoRA weight $\theta_{A_1},\theta_{B_1},\ldots, \theta_{A_{a-1}},\theta_{B_{a-1}}$, we use learning rate of  $10^{-3}$ and take 5 iterations. We also use the default Skytrax dataset for Guanaco and Llama-HH models since they are designed as general chat-bots. For Medalpaca, we use the CMS dataset for evaluation since it is specifically fine-tuned for medical usage.
+
+As shown in Table~\ref{tab:grey}, our grey-box attack achieves satisfying inversion results on different models. Concretely, it achieves over 85\%  token accuracy on all LoRA models under the default setting of inverting 60 layers, which is only marginally lower than that of our white-box method. This verifies the capability of our attack under the more challenging grey-box attack setting.
+
+%\subsection{Diving Into Attack Mechanism}
+%\label{sec:divein}
+%In this section, we explore why our design components work in-depth. We aim to answer the following questions:
+
+
+%\noindent
+%\textbf{Q1:} Why does \textit{constraining optimization}  improve the attack?
+
+
+%\noindent
+%\textbf{Q2:} Why does \textit{adaptive discretization} improve the attack? 
+
+
+
+
+
+
+%\begin{figure}[t]
+%\centering
+%\includegraphics[width=0.4\textwidth]{fig/L2_dist.pdf}
+%  \vspace{-0.5em}
+%\caption{Distribution of $L_2$ distance between $E(x)$ and $\hat{v}$ on constrained optimization and naive optimization.}
+%\vspace{-1em}
+%\label{fig:opt_l2}
+%\end{figure}
+
+%\begin{figure}[t]
+%\centering
+%\includegraphics[width=0.4\textwidth]{fig/error_token.pdf}
+%\vspace{-1em}
+%\caption{Impact of error token ratio on activation calibration accuracy. }
+%\vspace{-1.5em}
+%\label{fig:error_token}
+%\end{figure}
+
+
+
+%\noindent
+%\textbf{A1:}
+%To answer the first question, we design an additional experiment. We randomly sample 10 sentences from Skytrax~\cite{skytrax} dataset. For each sentence, we randomly start constrained optimization and naive optimization from 1,000 random initialized embedding vectors. Then, we measure the $L_2$ distance between each pair of optimized embedding and its ground-truth. The distance distribution of constrained optimization and naive optimization is illustrated in Figure~\ref{fig:opt_l2}.  
+
+%From Figure~\ref{fig:opt_l2}, we can identify that under constrained optimization, with overwhelming probability, the $L_2$ distance between optimized embedding $\hat{v}$ and ground-truth $E(x)$ is lower than 2. However, under naive optimization, with overwhelming probability, the $L_2$ distance between optimized embedding $\hat{v}$ and ground-truth  $E(x)$ is greater than 10. These results verify that, without applying our constraint during optimization, randomly initialized optimization will fall into local minima far away from the ground-truth embedding $E(x)$ with high probability, resulting in low token recovery accuracy. Our constraint term encourages the optimized embedding to be close to the ground-truth one (by filtering out local minima that are far away from the ground-truth),  significantly improving the recovery accuracy.
+
+
+
+
+%\noindent \textbf{A2:} To explore the mechanism of \textit{adaptive discretization} in depth, we gather several statistics by measuring inversions on multiple paragraphs: the probability of a ground-truth token being the nearest token to the optimized embedding, the probability of a ground-truth token belonging to the two candidate sets and their union, respectively, and the probability of the ground-truth token ranking highest during the \textit{activation calibration} procedure. 
+
+%As shown in Table~\ref{tab:q2tab1} in Appendix, the probability of a ground-truth token being the nearest token to the optimized embedding is around $55\%$. 
+%This low proportion indicates that without activation calibration, relying solely on information from constrained optimization to greedily recover input prompt (i.e., \emph{naive discretization}) will result in poor recovery accuracy. 
+%Another finding from Table~\ref{tab:q2tab1} is that, the probability of a ground-truth token belonging to either the $S_e$ or $S_s$ candidate set is less than 70\%. However, combining these two candidate sets results in a probability of the ground-truth token belonging to their union of 90\%. If a ground-truth token does not appear in our candidate set, it cannot be recovered. Therefore, merging the two candidate sets significantly increases the chance of the ground-truth token belonging to the final candidate set, thereby greatly enhancing token recovery.
+
+
+%When the ground-truth token is already in the candidate set, results in Table~\ref{tab:q2tab1} tell us that,  the token gets recovered with extremely high probability ( $\ge 99\%$ ) by \textit{activation calibration}. This verifies the effectiveness of our \textit{activation calibration} mechanism. 
+
+
+%However, sometimes the recovery of previous tokens contains a certain number of errors. To further showcase the power of our \textit{activation calibration}, we explore how the ratio of previous erroneous tokens affects the recovery probability of \textit{activation calibration}. We conduct the experiment by truncating the first 100 tokens from each sentence, randomly introducing some errors into these tokens, and using \textit{activation calibration} to recover the 101st token. We eliminate the influence of optimization process by directly setting the candidate set as the top 10 nearest tokens to the ground-truth embedding, ensuring the ground-truth embedding belonging to the candidate set.
+
+
+
+%From the results in Figure~\ref{fig:error_token} we can infer that, \textit{activation calibration} is quite robust against previous token errors. With token error ratio $\le 10\%$, our \textit{activation calibration} almost achieves perfect recovery ( $\ge 95\%$). Even under large error ratios like $30\%$ and $40\%$, the accuracy of \textit{activation calibration} is still high, over $80\%$. The accuracy may not drop by a large margin until the error ratio increasing up to $50\%$. This phenomenon indicates even under unlucky cases that the recovery of previous tokens containing $30-40\%$ error, these error tokens will not severely harm the correctness of subsequent token recovery.
+
+
+
+
+
+
+ 
+
+
+
+
+
+

@@ -1,0 +1,260 @@
+\section{Method}
+
+\begin{figure}[t]
+\begin{center}
+    \includegraphics[width=0.48\textwidth]{Figures/sequential_consistency.pdf}
+    \caption{Visualization of attention weight heatmaps for consistent heads and adaptive heads in the LongChat-7B model using a randomly selected text segment. In these figures, the vertical axis represents the attention of the head across different queries, with the first 20 rows corresponding to the last 20 queries during the pre-filling stage, while the subsequent rows depict the attention weights across consecutive decoding steps. These two types of heads exist in layers and popular models (Appendix~\ref{appendix-consistency}).}
+    \vspace{-0.5cm}
+    \label{fig:sequential_consistency}
+\end{center}
+\end{figure}
+
+% To effectively explore the consistency of individual attention heads across consecutive decoding steps and their relationship with the pre-filling stage, we randomly selected a text segment from wikitext~\cite{wikitext} as input for the LongChat-7B ~\cite{longchat} model to observe the attention patterns during decoding.
+
+% Numerous related works~\cite{snapkv,minference} have utilized the final few tokens as an observation window to obtain global information during the pre-filling stage. To facilitate subsequent discussions, we denote the size of this observation window as $L_{obs}$ and refer to the attention matrix based on the observation window as the observation matrix. 
+% Figure~\ref{fig:sequential_consistency} illustrates the attention heat map based on the observation window ($L_{obs}=10$) during the pre-filling stage, as well as the attention heat maps across all decoding steps for two types of attention heads. 
+
+% We observe that for some attention heads, the attention is concentrated on a few critical tokens, which exhibit clear consistency across various decoding steps. Moreover, these critical tokens can be identified through the attention weights within the observation window during the pre-filling stage. This consistency allows us to guide the decoding process using information derived from the pre-filling stage.
+
+% In contrast, other attention heads exhibit attention weight distributions that vary significantly across decoding steps, maintaining a consistently broader attention scope and placing less emphasis on specific tokens at each step. For these heads, it is essential to retain most of the KV pairs to ensure prediction accuracy. 
+% Additionally, we can leverage the sequential consistency in their attention patterns to reduce part of the attention search space, focusing the attention on more relevant and useful information.
+\subsection{Sequential Consistency of Attention Heads}
+\label{seq_consistency}
+
+In this paragraph, we present an interesting observation about the attention patterns across the pre-filling and decoding stages. To illustrate this, we randomly selected a text segment from Wikitext~\cite{wikitext} as input for the LongChat-7B~\cite{longchat} model, examining how attention weights evolve throughout the generation process.
+Figure~\ref{fig:sequential_consistency} illustrates the attention heatmaps during the pre-filling and decoding stages for two types of attention heads. We observe that for certain attention heads, attention is concentrated on a few critical tokens, which show clear consistency across both the pre-filling and decoding stages. This consistency allows us to identify critical tokens during the pre-filling stage, which can then guide the decoding process and help reduce computational costs. In contrast, other attention heads exhibit attention distributions that vary significantly across decoding steps, maintaining a broader attention scope without focusing on specific tokens at each step. For these heads, it is crucial to retain most of the KV pairs to ensure accurate predictions. For clarity, we provide the further claims for these two types of attention heads:
+
+% \begin{itemize}
+%   \item \textbf{Consistent heads} are attention heads that focus on a consistent and limited number of critical tokens across decoding steps.
+%   \item \textbf{Adaptive heads} are attention heads with variable attention weights across different decoding steps, and attempting to apply consistent patterns to them would negatively affect the model's output.
+% \end{itemize}
+
+\begin{itemize}
+  \item \textbf{Consistent heads} are attention heads that exhibit stable attention patterns of sequential consistency, focusing on a limited set of tokens across all decoding steps.
+  \item \textbf{Adaptive heads} are attention heads characterized by variable attention distributions across decoding steps, which do not exhibit stable patterns and require a larger attention space for flexible token interactions.
+\end{itemize}
+
+\subsection{How to Identify Consistent and Adaptive Heads?}
+\label{identification_method}
+% Building upon our observations, the attention patterns of consistent heads can be identified in the pre-filling stage. To accurately classify consistent and adaptive heads, we propose three distinct, theoretically grounded scores derived from the observation matrix at this stage.
+
+% \begin{figure}[t]
+% \begin{center}
+%     \includegraphics[width=0.45\textwidth]{Figures/sample_similarity.pdf}
+%     \caption{Head Classification Results for 5 Random Samples in Wikitext103 using the Dynamic Identification Method on the  LLaMA-3-8B-Instruct-1048K Model. Each row represents the classification of 8 heads in a layer, with a total of 32 layers. The proportion of consistent heads is 60\%. From the figure, we can clearly observe significant similarity in head classification results across different samples.\jhy{(jhy:Placeholder figure; alternative methods are needed to visualize similarity.}}
+%     \label{fig:sample_similarity}
+% \end{center}
+% \end{figure}
+
+% \paragraph{Sample-Specific Dynamic Identification Method} 
+% In the pre-filling stage, a common approach to obtain global information is by observing a small part of the attention weights. In this work, we set an observation window that contains the last portion of the input, with a length of \(L_{\text{obs}}\). Additionally, since initial and recent tokens are typically important but do not influence the identification process, we temporarily exclude them during the identification phase. Their respective lengths are denoted as \(L_{\text{init}}\) and \(L_{\text{rec}}\).
+
+\paragraph{Observation matrix} 
+% In the pre-filling stage, a common approach~\cite{snapkv,minference} to obtain global information is by observing a small part of the attention weights. Our observations presented in Section~\ref{seq_consistency} also substantiate this point. In this work, we set an observation window that contains the last portion of the input tokens, with a length of \(L_{\text{obs}}\). Additionally, since initial and recent tokens are typically important, but do not influence the identification process, we temporarily exclude them during the identification phase. Their respective lengths are denoted as \(L_{\text{init}}\) and \(L_{\text{rec}}\). 
+
+As can be seen in Figure~\ref{fig:sequential_consistency}, the attention weights of the last query tokens at the pre-filling stage effectively reflect the attention patterns. To save the computational cost, we set an observation window that contains the last query tokens of the input to identify head types and critical tokens.
+% This approach has also been proven effective in similar works~\cite{snapkv,minference}. 
+Additionally, since initial and recent tokens are typically important but do not influence the classification process, we temporarily exclude them during the identification phase. Formally, let \(L_{\text{init}}\), \(L_{\text{rec}}\) and \(L_{\text{obs}}\) respectively denote the lengths of the initial tokens, recent tokens, and the observation window. Then, consider a head within a sample at the pre-filling stage, where the input includes the query \( Q\), key \(K\), and value \(V \in \mathbb{R}^{n \times d} \), with \( n \) representing the input length and \( d \) representing the head dimension in the attention mechanism. We define the observation matrix $A$ within the observation window, as follows:
+\begin{align}\label{eq:observation-matrix}
+    A = \text{softmax}\left(\frac{Q_{[-L_{\text{obs}}:, :]} K_{[L_{\text{init}}:-L_{\text{rec}}, :]}^T}{\sqrt{d}}\right),
+\end{align}
+where $A\in \mathbb{R}^{L_{\text{obs}} \times \left(n-L_{\text{rec}}-L_{\text{init}}\right)}$.
+In the following, we will identify consistent heads based on the characteristics of $A$.
+
+% For clarity, We also define \( L_{c}=n-L_{init}-L_{rec} \) to represent the length of the context window.
+
+% \paragraph{Cosine Similarity(CS) Score}
+% A fundamental characteristic of a consistent head is the high degree of attention consistency across sequences, which can be effectively quantified using cosine similarity. To mitigate the influence of atypical attention distributions (such as instances where attention is concentrated on a very limited number of tokens) on the consistency evaluation, we first binarize the attention for each token within the observation window using a percentile-based threshold \( k \). 
+% \[
+% B_{i,j} = \mathbb{I}\left( A_{i,j} \geq a_{(k,i)} \right)
+% \]
+% where \( \mathbb{I} \) is the indicator function, and \( a_{(k,i)} = \text{Quantile}_{k}(A_{i,\cdot}) \) represents the \( k \)-th percentile element in the \( i \)-th row of matrix \( A \).
+
+% Subsequently, we calculate the cosine similarity between these binarized attention vectors and the mean attention vector. By averaging these similarity values, we derive the cosine similarity score for this head, denoted as $score_{cos}$.
+
+% \[
+% u_{j} = \mathbb{I}\left( \frac{1}{L_{obs}} \sum_{i=1}^{L_{obs}} A_{i,j} \geq a_{k} \right)
+% \]
+
+% where \( a_{k} \) is the \( k \)-th element of the mean attention vector.
+
+% \[
+% score_{CS} = \frac{1}{m} \sum_{i=1}^{m} \frac{B_{i} \cdot u}{\|B_{i}\| \, \|u\|}
+% \]
+
+% \paragraph{Non-Critical Token Ratio(NCTR) Score}
+% In a consistent attention head, the interactions between different tokens exhibit not only mutual consistency but also a concentration on a limited subset of critical tokens. To evaluate whether a reduced search space can satisfy the internal attention requirements of the head, we quantify the number of tokens within the context window that are not designated as critical. Similar to cosine similarity–based identification methods, we first binarize the observation matrix and then compute the non-critical token ratio as a score.
+% % \[
+% % s_{j} = \sum_{i=1}^{L_{obs}} B_{i,j}
+% % \]
+% % \[
+% % score_{NCTR} = \frac{1}{L_{c}} \sum_{j=1}^{L_c} \mathbb{I}\left( s_j = 0 \right)
+% % \]
+% \[
+% score_{NCTR} = \frac{1}{L_{c}} \sum_{j=1}^{L_c} \mathbb{I}\left( \sum_{i=1}^{L_{obs}} B_{i,j} = 0 \right)
+% \]
+
+\begin{figure}[t]
+\begin{center}
+\includegraphics[width=0.48\textwidth]{Figures/static.pdf}
+    \caption{(a) High similarity of classification results across samples. We calculate the overlap rate between the classification results of 200 randomly selected WikiText samples and the overall classification result with $r=0.3$.  All samples exhibit an overlap rate exceeding 80\% with the overall result. (b) Frequency of adaptive head identification for Llama-3B model in a reference dataset with $r=0.3$. The frequency distribution is highly concentrated, enabling the determination of a fixed head type based on these results. }
+    \vspace{-0.5cm}
+    \label{fig:static}
+\end{center}
+\end{figure}
+
+\paragraph{Coefficient of Variation (CV) Score}
+% To simultaneously evaluate the consistency and concentration of attention within the observation matrix, we propose a coefficient of variation score. Since the coefficient of variation is highly sensitive to the magnitude of values, we also binarize the observation matrix first. We continue to employ a percentile-based threshold \( k\) to reduce the influence of the mean and introduce a scaling factor \( \alpha \) to prevent the omission of values near the threshold.
+Empirically, consistent heads exhibit two primary features in their observation matrices: a high degree of similarity among different rows and a small subset of columns that is sufficient to recall most of the attention weights. Inspired by this aspect, we propose a coefficient-of-variation-based score to measure the concentration and similarity of attention within observation matrices $A$. Since the coefficient of variation~\cite{cv} is highly sensitive to the magnitude of values, we first binarize the observation matrix with a percentile-based threshold \( k\) and a scaling factor \( \alpha \).
+\begin{align}\label{eq:binarization}
+    B = \mathbb{I}\left( A \geq \Phi(k,\alpha) \right) \in \mathbb{R}^{L_{\text{obs}} \times \left(n-L_{\text{rec}}-L_{\text{init}}\right)}
+\end{align}
+% with \( a_{(k,\alpha)}=\text{Quantile}_{k}(A)\ \times \alpha \)
+where \( \mathbb{I} \) is the indicator function, and \( \Phi(k,\alpha) = \text{Quantile}_{k}(A) \times \alpha \) represents the \( k \)-th percentile element in the matrix \( A \), scaled by a factor of \( \alpha \). Then after binarization, we derive a frequency vector 
+\( C \) to quantify the number of times each token that is identified as critical, reflecting the similarity and concentration of attention weights:
+\begin{align}\label{eq:frequency-vector}
+C = \sum_{i=0}^{L_{\text{obs}}} B_{i,:}\in \mathbb{R}^{\left(n-L_{\text{rec}}-L_{\text{init}}\right)} 
+\end{align}
+Now, we can obtain the score based on the coefficient of variation for an attention head of a sample as follows:
+\begin{align}\label{eq:cv-score}
+\text{score} = \frac{\sqrt{\frac{1}{\left(n-L_{\text{rec}}-L_{\text{init}}\right)} \sum_{i} (C_i - \mu(C))^2}}{\mu(C)} 
+\end{align}
+where \(\mu(C) = \frac{1}{\left(n-L_{\text{rec}}-L_{\text{init}}\right)} \sum_{i} C_i\) is the mean. With the above equations, we can compute a score for each head under a sample. Then, for a specific LLM, we can obtain a score matrix \( S \in \mathbb{R}^{l \times h}\) for all heads, where \(l\) and \(h\) represent the number of layers in the model and the number of heads in a layer, respectively. For a statistic head identification rule, let $r$ denote the proportion of adaptive heads, and \( \Gamma(r) \) represents the percentile threshold based on \( r \). We can use the threshold to control the token eviction ratio. Then, we distinguish the head types of a specific sample as follows
+\begin{align}\label{eq:head-classification}
+\text{Head}_{i,j} = 
+\begin{cases} 
+\text{consistent head}, & \text{if } S_{i,j} > \Gamma(r) \\
+\text{adaptive head}, & \text{if } S_{i,j} \leq \Gamma(r) 
+\end{cases}.
+\end{align}
+
+% Comparing these three scores, we consider that the CV score is the most effective because a higher coefficient of variation indicates that frequencies are concentrated on the same tokens, reflecting both consistency and attention aggregation. In Section~\ref{different_methods_ablation}, we validate this by demonstrating the performance of methods based on these three scores. In subsequent experiments, we use the CV score to identify consistent heads.
+
+% Next, we define a threshold to determine which positions are relatively important for the current attention. The threshold is given by 
+% \[ 
+% \text{threshold} = v_{\beta} \times \alpha \]
+% where \( v_{\beta} \) is the value at the \( \beta \)-th percentile of \( A_{\text{obs}} \), and \( \alpha \) is a scaling factor. Here, \( \beta \) is a hyperparameter referred to as the high-attention percentile.
+
+% We can obtain a binary matrix \( A_{\text{obs}}' \) and a frequency vector \( c \) as follows:
+% \[
+% A_{\text{obs}}' = A_{\text{obs}} > \text{threshold} 
+% \]
+% \[
+% c = \sum_{k=0}^{L_{obs}} A_{\text{obs}}'[k,:]
+% \] 
+% Now, we can measure the concentration of attention within the head by calculating the coefficient of variation (CV) of \( c \):
+% \[
+% \text{CV}(c) = \frac{\sqrt{\frac{1}{n} \sum_{k=1}^{n} (c_k - \mu(c))^2}}{\mu(c)}
+% \]
+% where \(\mu(c) = \frac{1}{n} \sum_{k=1}^{n} c_k\)
+
+\input{Algorithm/method}
+
+\paragraph{Reference-Based Static Identification}
+Although head identification can be performed dynamically for each sample, it is actually expensive for memory management along with the change of samples at the pre-filling stage. Therefore, it is better to determine a fixed head type for the model, which can be directly used for inference. Surprisingly, we observe that the same head does exhibit similar attention patterns across different samples, and the identification results based on CV scores are highly consistent. This inspires us to use a reference dataset to calculate the frequency of each head being identified as the consistent head, and then derive the final model-wise identification result based on the adaptive head ratio $r$, as shown in Figure~\ref{fig:static}, which comes to the final form of our method (termed as \emph{CateKV}). After determining the type of each head, we retain only the most important KV pairs for consistent heads, while for adaptive heads, we preserve a majority based on the predefined retention ratio \( \eta \). Specifically,
+we select the top-$k$ KV pairs in chunks, enabling seamless integration with retrieval-based methods. For the GQA model, the observation matrix \( A \) is computed as the mean of \( A \) of the heads in a group. 
+% In adaptive heads, we employ the Quest as the KV retrieval method during the decoding stage here. 
+The CateKV acceleration for LLMs is shown in Algorithm~\ref{alg:method}.
+% Under the same identification method, we find that the classification results across samples are very similar. Thus, we can use a reference dataset to calculate the frequency of each head being identified as the consistent head, and then derive the final model-wise classification result based on the consistent head ratio \( r \).
+% After calculating the scores for each head in each layer, we perform binary classification of head \( j \) in layer \( i \) using a sparse percentile threshold \( \tau_d \):
+
+% \paragraph{Similarity-Based Static Identification Method}
+% Although the dynamic identification method allows for determining the head type for each sample individually, it introduces additional overhead during the pre-filling stage of inference. Moreover, because the dynamic identification method requires hyperparameters to determine the threshold, it is not very convenient for deployment. We observed that different samples consistently exhibit similar results in head classification. Figure~\ref{fig:sample_similarity} shows the classification results for 5 random samples in wikitext-103 under the dynamic method. Based on this observation, we propose a similarity-based static identification method to get model-wise head classification results.
+
+% In the static method, we use Wikitext-103 as our reference dataset. We concatenate all the samples in reference dataset and then perform truncation to construct our dataset, with the dataset size set to \( M \). We then use the dynamic identification method on all samples to obtain the frequency of consistent heads. Finally, we apply a sparse percentile threshold \( \tau_s \) to perform the final classification.
+% \[
+% H = \frac{1}{M} \sum_{k=1}^{M} H_k
+% \]
+
+% \[
+% \text{head\_s}_{i,j} = 
+% \begin{cases} 
+% \text{consistent head}, & \text{if } \text{H}_{i,j} > \tau_s \\
+% \text{adaptive head}, & \text{if } 
+% \text{H}_{i,j} \leq \tau_s 
+% \end{cases}
+% \]
+% Here, \( H \in \mathbb{R}^{l \times h} \) represents the dynamic identification results, where \( l \) is the number of layers and \( h \) is the number of attention heads per layer. \( H \) is a binary matrix, where 1 indicates that the corresponding position is identified as a consistent head.
+
+
+\begin{figure}[t]
+\begin{center}
+    \includegraphics[width=0.42\textwidth]{Figures/4method.pdf}
+    \caption{Attention weight recall curves for four methods. The curves show the attention recall for each attention head, calculated on four patterns: consistent, streaming, quest, and top-k, on a 128k-length example. The attention recall values are obtained by the mean of all decoding steps and sorted in descending order for all heads. The sparse budget is set to 2048, and the chunk size is 8. The results indicate that the consistent pattern outperforms the streaming pattern in terms of overall attention recall, and approaches the performance of the quest pattern that requires additional computation.}
+    \vspace{-0.3cm}
+    \label{fig:4method}
+\end{center}
+\end{figure}
+
+% \subsection{Relations with KV Eviction and Retrieval Methods}
+% As shown in Figure~\ref{fig:intro1}, the KV Eviction method assumes that the criticality of the tokens can be directly derived from prior knowledge in the pre-filling stage and remains useful throughout the decoding stage, while the KV Retrieval method suggests that the criticality can change with different query tokens. Both methods focus on a particular attention pattern within the model, but neither of them is always accurate. By further exploring the model's internal characteristics, we find that consistent heads and adaptive heads exhibit these two patterns, respectively, and we can distinguish them using a reference-based approach. Therefore, we can easily combine these two methods to leverage their advantages in efficiency and accuracy. A detailed discussion can be found in Section~\ref{combination}.
+
+% \subsection{Consistent Head vs. Streaming Head}
+% Related works~\cite{razorattention, duoattention} classify attention heads into Retrieval Heads and Streaming Heads, which is similar to our method. In this section, we discuss the relationship between these two classifications and the advantages of our method.
+% \input{Tables/ruler-128k-eviction}
+% % \paragraph{Differences and Connections between Streaming Heads and Consistent Heads}
+% \paragraph{Differences}
+% Both Consistent Heads and Streaming Heads exploit distinctive attention patterns within the model. However, consistent Heads emphasize the overall similarity of attention across different sequences, while Streaming Heads prioritize whether initial and recent tokens cover most of the attention. In the process of identifying consistent Heads, CateKV considers the initial and recent tokens to be consistently important, classifying based on the remaining tokens. This is in contrast to the classification approach used for Streaming Heads. The attention map in Figure~\ref{fig:streaming} shows that there is no direct correlation between these two types. 
+
+% \paragraph{Advantages}
+% Consistent Heads incorporate additional priors from the pre-filling stage, enhancing their overall precision. In the right panel of Figure~\ref{fig:streaming}, we present attention weight recall curves for all attention heads, comparing the consistent and streaming patterns within the same example. The consistent pattern outperforms the streaming pattern and approaches the attention weight recall levels of the KV Retrieval method, such as Quest~\cite{quest}. As the proportion of streaming heads increases, attention recall declines noticeably. Therefore, the high precision of the consistent pattern can be combined with streaming-based methods to achieve a higher compression ratio.
+
+\subsection{Theory Analysis}
+In this part, we present an analysis of the theoretical bound on the eviction performance of CateKV.
+
+\textbf{Lemma 1:} Let $G$ represent the hypothesis class derived from the CV-based function, $F$ denote the real-valued function class induced by the binary cross-entropy loss applied to $G$, and let $N$ denote the sample size of the reference-based dataset. Then, with probability at least $1 - \delta$, the following Rademacher complexity bound holds:
+
+\begin{align}
+    \forall f \in F, \, &P_{\text{head}}\left( \mathbb{E}[f] - \frac{1}{N} \sum_{n=1}^{N} f_n \leq 2 \mathcal{R}_N(F) \right) \nonumber \\
+    &\quad + \sqrt{\frac{2 \log{\frac{2}{\delta}}}{2N}} \geq 1 - \delta.
+\end{align}
+
+where $\mathcal{R}_N(F)$ is the conditional Rademacher average.
+
+Let \( P_1 \) and \( P_2 \) denote the probabilities of correctly classified consistent heads and adaptive heads, respectively, while \( \bar{P}_1 \) and \( \bar{P}_2 \) represent the probabilities of misclassified consistent heads and adaptive heads, respectively. It is assumed that \( P_1 + P_2 = P_{\text{head}} \) and \( \bar{P}_1 + \bar{P}_2 = 1 - P_{\text{head}} \). The probability in the above lemma can then be decomposed through a fine-grained analysis as follows.
+
+
+% \textbf{Theorem 1:} Let $\eta_1$, $\eta_2$ denote the retention ratios of consistent heads and adaptive heads, respectively, and $\eta_1^*$, $\eta_2^*$ denote their optimal retention ratios correspondingly. Define the retention accuracy for different cases $r_{i,j} = \eta_i^* \mathbb{1}[\eta_j > \eta_i^*] + \eta_j (1 - \mathbb{1}[\eta_j > \eta_i^*])$ by comparing the retention budgets with the optimal budgets, and the hypothesis that the query attention score is the best description in order holds with probability $\lambda$. Then, the token retention accuracy has the following inequalities,
+
+\textbf{Theorem 1:} Let \( \eta_1 \) and \( \eta_2 \) denote the retention ratios for consistent heads and adaptive heads, respectively, while \( \eta_1^* \) and \( \eta_2^* \) represent their corresponding optimal retention ratios. Define the retention accuracy for different cases $r_{i,j} = \eta_i^* \mathbb{I}[\eta_j > \eta_i^*] + \eta_j (1 - \mathbb{I}[\eta_j > \eta_i^*])$ by comparing the retention budgets with the optimal budgets. Additionally, assume that the hypothesis asserting the query attention score provides the best description in order with probability \( \lambda \). Then, the token retention accuracy satisfies:
+
+\begin{align}
+    P_{\text{token}} &= \lambda \left( r_{1,1} P_1 + r_{2,2} P_2 + r_{2,1} \bar{P}_1 + r_{1,2} \bar{P}_2 \right) \nonumber \\
+    &\geq \lambda \left( \min(r_{2,1}, r_{1,2}) + \left[ \min(r_{1,1}, r_{2,2}) \right. \right. \nonumber \\
+    &\quad \left. \left. - \min(r_{2,1}, r_{1,2}) \right] P_{\text{head}} \right).
+\end{align}
+
+% \[
+% P_{\text{token}} = \lambda \left( r_{1,1} P_1 + r_{2,2} P_2 + r_{2,1} \bar{P}_1 + r_{1,2} \bar{P}_2 \right) \geq \lambda \left( \min(r_{2,1}, r_{1,2}) + \left[\min(r_{1,1}, r_{2,2}) - \min(r_{2,1}, r_{1,2})\right] P_{\text{head}} \right).
+% \]
+
+\textbf{Remark 1:} From the above theorem, three critical factors influence the worst-case token retention accuracy (i.e., the lower bound):
+\begin{itemize}
+    \item \( \lambda \): The effectiveness of identifying an efficient measure to characterize token correlation by the score order, with as high a probability of correctness as possible.
+    \item Budget control: The ability to appropriately set the retention budget in order to maximize gains by reducing the majority of tokens when heads are correctly classified, while simultaneously mitigating the negative impact when heads are misclassified.
+    \item \( P_{\text{head}} \): The accuracy of the CV-based method in classifying the head type during token reduction, which directly impacts the overall performance.
+\end{itemize}
+
+
+% \textbf{Remark 1:} From the above theorem, three critical factors matter with respect to the worst-token retention accuracy (i.e., the lower bound):
+% \begin{itemize}
+%     \item $\lambda$, whether we can find an effective and efficient measure to characterize the token correlation by score order that is correct with as high a probability as possible.
+%     \item Budget control, whether we can set the proper budget that maximizes the gain by reducing most tokens when heads are correctly classified, while simultaneously weakening the negative effect when heads are misclassified.
+%     \item $P_{\text{head}}$, whether the CV-based method can classify the head type as accurately as possible during token reduction.
+% \end{itemize}
+
+
+\input{Tables/ruler-128k-eviction}
+
+\subsection{Further Discussion of CateKV}
+% As shown in Figure~\ref{fig:intro1}, the KV eviction method assumes that the criticality of the tokens can be directly derived from prior knowledge at the pre-filling stage and remains useful throughout the decoding stage, while the KV Retrieval method suggests that the criticality can change with different query tokens. Our observations suggest that neither of these approaches is continuously optimal on its own; rather, a combined usage of both methods is more effective. In this section, we offer an alternative perspective to justify the rationale behind our approach.
+To show the distinction and effectiveness of attention patterns discovered from the sequential consistency, Figure~\ref{fig:4method} compares attention weight recall for our consistent pattern, streaming pattern~\cite{streamingllm}, Quest pattern~\cite{quest}, and the upper-bound top-k pattern under the same sparse budget. As can be seen, all methods exhibit a gap compared to the upper bound, indicating some information loss with current sparse attention approaches. Therefore, retaining most KV pairs for certain heads is important for maintaining accuracy. On the other hand, the attention recall of the consistent pattern closely approximates that of the Quest pattern, applying the consistent pattern to heads with sequential consistency can help KV retrieval methods reduce memory usage and the cost of selecting critical tokens. Related works~\cite{razorattention, duoattention} classify attention heads into Retrieval Heads and Streaming Heads, which is similar to our method. However, from an attention recall perspective, the streaming pattern is only effective for a small fraction of heads, otherwise deviating significantly from full attention. This highlights that the consistent pattern achieves a higher compression rate than the streaming pattern. We will discuss the comparison and integration with these methods in the experimental section.
+% \subsection{Consistent Head vs. Streaming Head}
+% Related works~\cite{razorattention, duoattention} classify attention heads into Retrieval Heads and Streaming Heads, which is similar to our method. In this section, we discuss the relationship between these two classifications and the advantages of our method.
+% \input{Tables/ruler-128k-eviction}
+% % \paragraph{Differences and Connections between Streaming Heads and Consistent Heads}
+% \paragraph{Differences}
+% Both Consistent Heads and Streaming Heads exploit distinctive attention patterns within the model. However, consistent Heads emphasize the overall similarity of attention across different sequences, while Streaming Heads prioritize whether initial and recent tokens cover most of the attention. In the process of identifying consistent Heads, CateKV considers the initial and recent tokens to be consistently important, classifying based on the remaining tokens. This is in contrast to the classification approach used for Streaming Heads. The attention map in Figure~\ref{fig:streaming} shows that there is no direct correlation between these two types. 
+
+% \paragraph{Advantages}
+% Consistent Heads incorporate additional priors from the pre-filling stage, enhancing their overall precision. In the right panel of Figure~\ref{fig:streaming}, we present attention weight recall curves for all attention heads, comparing the consistent and streaming patterns within the same example. The consistent pattern outperforms the streaming pattern and approaches the attention weight recall levels of the KV Retrieval method, such as Quest~\cite{quest}. As the proportion of streaming heads increases, attention recall declines noticeably. Therefore, the high precision of the consistent pattern can be combined with streaming-based methods to achieve a higher compression ratio.

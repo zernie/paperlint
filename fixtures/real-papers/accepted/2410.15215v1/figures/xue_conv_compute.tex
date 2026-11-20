@@ -1,0 +1,40 @@
+\begin{tikzpicture}
+\begin{axis}[
+    width=6cm, % Set the width of the plot to the text width of the subfigure
+    height=6cm, % You can adjust the height as needed
+    xlabel={$n$ (squared-matrix size)},
+    % ylabel={Time in Seconds},
+    legend pos=north east,
+    grid=both,
+    % xmin=1, xmax=40,
+    % ymin=0, ymax=20
+]
+
+\addplot table {
+n	vFHE
+2	0.461980986
+4	0.2984274668
+6	0.2669423964
+8	0.161980986
+16	0.1307445017
+24	0.0876042098
+32	0.04035748995
+64	0.02035748995
+};
+\addlegendentry{FHE-DataSeal}
+
+\addplot table {
+n	vFHE
+2	2.242175
+4	2.885201
+6	2.969147
+8	3.514811
+16	5.646459
+24	8.066486
+32	9.459037
+64	15.386741
+};
+\addlegendentry{FHE-MAC}
+
+\end{axis}
+\end{tikzpicture}
