@@ -175,7 +175,9 @@ describe("the staging plan", () => {
       reason: "no main .tex found",
     });
   });
+});
 
+describe("renaming the main file", () => {
   test("a wrapper's \\input of the main file is rewritten to paper", () => {
     const plan = stagingPlan([
       file("00README.XXX", "doc.tex toplevelfile"),

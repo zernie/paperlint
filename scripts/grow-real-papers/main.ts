@@ -22,15 +22,18 @@ import {
 } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import * as R from "remeda";
 import { z } from "zod";
 import { isMain } from "../../skills/paper-pipeline/scripts/consumer.mjs";
 import { presetsDir } from "../../src/package-dirs.ts";
 import {
   collect,
+  CountedSchema,
+  ProbeLineSchema,
   QueriesSchema,
-  summary,
   type Counted,
   type ProbeLine,
+  type SlotEnd,
 } from "./collect.ts";
 import { throttledGet } from "./http.ts";
 import type { KeptPaper } from "./paper.ts";
@@ -49,27 +52,38 @@ export type Args = Readonly<{
   write: string | null;
 }>;
 
-/** The command line, or what is wrong with it. */
-export function argsOf(argv: readonly string[], now: number): Args | string {
-  const value = (flag: string): string | undefined =>
-    argv.includes(flag) ? (argv[argv.indexOf(flag) + 1] ?? "") : undefined;
-  const known = ["--only", "--minutes", "--deadline", "--queries", "--write"];
-  const unknown = argv.filter((a) => a.startsWith("--") && !known.includes(a));
-  if (unknown.length > 0) return `unknown option ${unknown.join(", ")}`;
-  const minutes = value("--minutes");
-  const deadline = value("--deadline");
+const KNOWN = ["--only", "--minutes", "--deadline", "--queries", "--write"];
+
+/** The value after a flag: undefined when the flag is absent, "" when it has none. */
+const valueOf = (argv: readonly string[], flag: string): string | undefined =>
+  argv.includes(flag) ? (argv[argv.indexOf(flag) + 1] ?? "") : undefined;
+
+/** The earlier of `--minutes` from now and `--deadline`; Infinity when neither is given. */
+const deadlineOf = (argv: readonly string[], now: number): number | string => {
+  const minutes = valueOf(argv, "--minutes");
+  const deadline = valueOf(argv, "--deadline");
   const limits = [
     minutes === undefined ? Infinity : now + Number(minutes) * 60_000,
     deadline === undefined ? Infinity : Date.parse(deadline),
   ];
-  if (limits.some((t) => Number.isNaN(t)) || [minutes, deadline].includes(""))
-    return "--minutes takes a number and --deadline an ISO date";
-  const write = value("--write");
+  return limits.some((t) => Number.isNaN(t)) || [minutes, deadline].includes("")
+    ? "--minutes takes a number and --deadline an ISO date"
+    : Math.min(...limits);
+};
+
+/** The command line, or what is wrong with it. */
+export function argsOf(argv: readonly string[], now: number): Args | string {
+  const unknown = argv.filter((a) => a.startsWith("--") && !KNOWN.includes(a));
+  if (unknown.length > 0) return `unknown option ${unknown.join(", ")}`;
+  const deadline = deadlineOf(argv, now);
+  if (typeof deadline === "string") return deadline;
+  const write = valueOf(argv, "--write");
   if (write === "") return "--write takes the fixtures directory to stage into";
   return {
-    queries: value("--queries") ?? join(FIXTURES, SAMPLING, "queries.json"),
-    only: value("--only")?.split(",") ?? null,
-    deadline: Math.min(...limits),
+    queries:
+      valueOf(argv, "--queries") ?? join(FIXTURES, SAMPLING, "queries.json"),
+    only: valueOf(argv, "--only")?.split(",") ?? null,
+    deadline,
     write: write === undefined ? null : resolve(write),
   };
 }
@@ -77,13 +91,14 @@ export function argsOf(argv: readonly string[], now: number): Args | string {
 const json = (v: unknown): string => `${JSON.stringify(v, null, 2)}\n`;
 const readJson = (path: string, fallback: unknown): unknown =>
   existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : fallback;
-const Entries = z.array(z.looseObject({ arxiv_id: z.string() }));
+const Entries = z.array(CountedSchema);
+const Notes = z.record(z.string(), z.unknown());
 const logLines = (path: string): readonly ProbeLine[] =>
   existsSync(path)
     ? readFileSync(path, "utf8")
         .split("\n")
         .filter((l) => l !== "")
-        .map((l) => JSON.parse(l) as ProbeLine)
+        .map((l) => ProbeLineSchema.parse(JSON.parse(l)))
     : [];
 
 /** What `run` needs from the world. */
@@ -96,92 +111,90 @@ export type World = Readonly<{
   presets: string;
 }>;
 
-/** Runs the walk; prints what it decided; with `--write`, stages as it goes. Returns the exit code. */
-export async function run(args: Args, world: World): Promise<number> {
+/** Writes one decided candidate into `out`: its log line, and when kept its files and entries. */
+function stage(out: string, line: ProbeLine, paper?: KeptPaper): void {
+  const sampling = join(out, SAMPLING);
+  mkdirSync(sampling, { recursive: true });
+  appendFileSync(
+    join(sampling, "probe-log.jsonl"),
+    `${JSON.stringify(line)}\n`,
+  );
+  if (paper === undefined) return;
+  const dir = join(out, "real-papers", "accepted", paper.id);
+  for (const [path, body] of paper.files) {
+    mkdirSync(dirname(join(dir, path)), { recursive: true });
+    writeFileSync(join(dir, path), body);
+  }
+  const notes = join(sampling, "staging-notes.json");
+  writeFileSync(
+    notes,
+    json({ ...Notes.parse(readJson(notes, {})), [paper.id]: paper.note }),
+  );
+  const manifest = join(out, "venue-manifest.json");
+  writeFileSync(
+    manifest,
+    json([...Entries.parse(readJson(manifest, [])), paper.entry]),
+  );
+}
+
+/** Everything a run reads before it starts: the counts, the ids to skip, the log so far. */
+function load(args: Args, world: World) {
   const dirs = [
     ...new Set(
-      [world.fixtures, ...(args.write === null ? [] : [args.write])].map((d) =>
-        resolve(d),
-      ),
+      [world.fixtures, args.write ?? world.fixtures].map((d) => resolve(d)),
     ),
   ];
-  const manifests = dirs.map((d) => join(d, "venue-manifest.json"));
-  const entries = [
-    ...new Map(
-      manifests
-        .flatMap((p) => Entries.parse(readJson(p, [])))
-        .map((e) => [
-          e.arxiv_id,
-          e as Counted & Readonly<Record<string, unknown>>,
-        ]),
-    ).values(),
-  ];
-  const queries = QueriesSchema.parse(readJson(args.queries, null));
+  const entries = R.uniqueBy(
+    dirs.flatMap((d) =>
+      Entries.parse(readJson(join(d, "venue-manifest.json"), [])),
+    ),
+    (e) => e.arxiv_id,
+  );
   const preprints = Entries.parse(
     readJson(join(world.fixtures, "arxiv-manifest.json"), []),
   );
-  const out = args.write;
-  const lines: ProbeLine[] = dirs.flatMap((d) =>
-    logLines(join(d, SAMPLING, "probe-log.jsonl")),
-  );
-  const added: (typeof entries)[number][] = [];
-  const emit = (line: ProbeLine, paper?: KeptPaper): void => {
-    lines.push(line);
-    world.log(
-      `#${String(line.rank)} ${line.id} ${line.series} ${String(line.year)}: ${line.outcome} — ${line.reason}`,
-    );
-    if (paper !== undefined) {
-      added.push(paper.entry as (typeof entries)[number]);
-      for (const path of paper.files.keys()) world.log(`    stage ${path}`);
-    }
-    if (out === null) return;
-    const sampling = join(out, SAMPLING);
-    mkdirSync(sampling, { recursive: true });
-    appendFileSync(
-      join(sampling, "probe-log.jsonl"),
-      `${JSON.stringify(line)}\n`,
-    );
-    if (paper === undefined) return;
-    const dir = join(out, "real-papers", "accepted", paper.id);
-    for (const [path, body] of paper.files) {
-      mkdirSync(dirname(join(dir, path)), { recursive: true });
-      writeFileSync(join(dir, path), body);
-    }
-    const notesPath = join(sampling, "staging-notes.json");
-    const notes = z
-      .record(z.string(), z.unknown())
-      .parse(readJson(notesPath, {}));
-    writeFileSync(notesPath, json({ ...notes, [paper.id]: paper.note }));
-    const manifest = join(out, "venue-manifest.json");
-    writeFileSync(
-      manifest,
-      json([...Entries.parse(readJson(manifest, [])), paper.entry]),
-    );
-  };
-  const ends = await collect({
-    queries,
-    only: args.only,
+  return {
+    queries: QueriesSchema.parse(readJson(args.queries, null)),
     entries,
     otherIds: new Set(preprints.map((e) => baseId(e.arxiv_id))),
-    logged: [...lines],
+    logged: dirs.flatMap((d) => logLines(join(d, SAMPLING, "probe-log.jsonl"))),
     shipped: new Set(
       readdirSync(world.presets)
         .filter((f) => f.endsWith(".jsonc"))
         .map((f) => f.replace(/\.jsonc$/, "")),
     ),
+  };
+}
+
+const endLine = (e: SlotEnd): string =>
+  `${e.slot}: ${e.ended} at rank ${String(e.walkedTo)}${e.error === undefined ? "" : ` (${e.error})`}`;
+
+/** Runs the walk; prints what it decided; with `--write`, stages as it goes. Returns the exit code. */
+export async function run(args: Args, world: World): Promise<number> {
+  const before = load(args, world);
+  const added: Counted[] = [];
+  const emit = (line: ProbeLine, paper?: KeptPaper): void => {
+    world.log(
+      `#${String(line.rank)} ${line.id} ${line.series} ${String(line.year)}: ${line.outcome} — ${line.reason}`,
+    );
+    if (paper !== undefined) {
+      added.push(paper.entry);
+      for (const path of paper.files.keys()) world.log(`    stage ${path}`);
+    }
+    if (args.write !== null) stage(args.write, line, paper);
+  };
+  const ends = await collect({
+    ...before,
+    only: args.only,
     get: world.get,
     outOfTime: () => world.now() > args.deadline,
     emit,
   });
-  for (const e of ends)
-    world.log(
-      `${e.slot}: ${e.ended} at rank ${String(e.walkedTo)}${e.error === undefined ? "" : ` (${e.error})`}`,
-    );
-  world.log(summary(queries, [...entries, ...added], lines));
+  for (const e of ends) world.log(endLine(e));
   world.log(
-    out === null
+    args.write === null
       ? `dry run: ${String(added.length)} paper(s) would be added; nothing written (--write DIR stages them)`
-      : `staged ${String(added.length)} paper(s) into ${out}`,
+      : `staged ${String(added.length)} paper(s) into ${args.write}`,
   );
   return 0;
 }

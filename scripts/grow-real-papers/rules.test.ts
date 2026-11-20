@@ -113,6 +113,60 @@ describe("rule 2: the licence", () => {
   });
 });
 
+const CLASS_REJECTED: readonly (readonly [string, string, string, string])[] = [
+  ["a missing class", "neurips", "", "template: class null, not article"],
+  [
+    "no class where a class decides",
+    "ieee",
+    "",
+    "template: class null, not IEEEtran",
+  ],
+  [
+    "the class without the style package",
+    "neurips",
+    "\\documentclass{article}",
+    "template: class article without the venue style package (/^(neurips|nips)_20\\d\\d$/)",
+  ],
+  [
+    "the style in review mode",
+    "acl",
+    "\\documentclass{article}\\usepackage[review]{acl}",
+    "template: style acl in review/submission mode [review]",
+  ],
+  [
+    "the class in review mode",
+    "acm",
+    "\\documentclass[sigconf,review]{acmart}",
+    "template: class acmart in review mode [sigconf,review]",
+  ],
+  [
+    "a class neither alternative takes",
+    "acm_or_ieee",
+    "\\documentclass{article}",
+    "template: class article, not acmart",
+  ],
+];
+
+const CLASS_KEPT: readonly (readonly [string, string, object])[] = [
+  [
+    "neurips",
+    "\\documentclass{article}\\usepackage[final]{neurips_2025}",
+    { ok: true, style: "neurips_2025", styleOpts: "final" },
+  ],
+  ["ieee", "\\documentclass[conference]{IEEEtran}", { ok: true }],
+  ["acm_or_ieee", "\\documentclass[conference]{IEEEtran}", { ok: true }],
+  ["acm_or_ieee", "\\documentclass[sigconf]{acmart}", { ok: true }],
+  [
+    "usenix",
+    "\\documentclass{article}\\usepackage{usenix2019_v3}",
+    {
+      ok: true,
+      style: "usenix2019_v3",
+      styleOpts: "",
+    },
+  ],
+];
+
 describe("rule 3: the class and style", () => {
   test("the preamble: class, options and packages, comments ignored", () => {
     const main = [
@@ -137,70 +191,19 @@ describe("rule 3: the class and style", () => {
     expect(stripComments("a\\% b % c")).toBe("a\\% b ");
   });
 
-  const pre = (main: string) => preambleOf(main);
-  test.each([
-    ["a missing class", "neurips", "", "template: class null, not article"],
-    [
-      "no class where a class decides",
-      "ieee",
-      "",
-      "template: class null, not IEEEtran",
-    ],
-    [
-      "the class without the style package",
-      "neurips",
-      "\\documentclass{article}",
-      "template: class article without the venue style package (/^(neurips|nips)_20\\d\\d$/)",
-    ],
-    [
-      "the style in review mode",
-      "acl",
-      "\\documentclass{article}\\usepackage[review]{acl}",
-      "template: style acl in review/submission mode [review]",
-    ],
-    [
-      "the class in review mode",
-      "acm",
-      "\\documentclass[sigconf,review]{acmart}",
-      "template: class acmart in review mode [sigconf,review]",
-    ],
-    [
-      "a class neither alternative takes",
-      "acm_or_ieee",
-      "\\documentclass{article}",
-      "template: class article, not acmart",
-    ],
-  ])("rejects %s", (_, spec, main, reason) => {
+  test.each(CLASS_REJECTED)("rejects %s", (_, spec, main, reason) => {
     // Guards: each class reason, prefixed as the log records it.
-    expect(judgeClass(spec, pre(main))).toEqual({ ok: false, reason });
+    expect(judgeClass(spec, preambleOf(main))).toEqual({ ok: false, reason });
   });
 
-  test.each([
-    [
-      "neurips",
-      "\\documentclass{article}\\usepackage[final]{neurips_2025}",
-      { ok: true, style: "neurips_2025", styleOpts: "final" },
-    ],
-    ["ieee", "\\documentclass[conference]{IEEEtran}", { ok: true }],
-    ["acm_or_ieee", "\\documentclass[conference]{IEEEtran}", { ok: true }],
-    ["acm_or_ieee", "\\documentclass[sigconf]{acmart}", { ok: true }],
-    [
-      "usenix",
-      "\\documentclass{article}\\usepackage{usenix2019_v3}",
-      {
-        ok: true,
-        style: "usenix2019_v3",
-        styleOpts: "",
-      },
-    ],
-  ])("keeps a camera-ready of %s", (spec, main, verdict) => {
+  test.each(CLASS_KEPT)("keeps a camera-ready of %s", (spec, main, verdict) => {
     // Guards: the clean case of each kind of spec (style, class, either side of an either).
-    expect(judgeClass(spec, pre(main))).toEqual(verdict);
+    expect(judgeClass(spec, preambleOf(main))).toEqual(verdict);
   });
 
   test("an unknown classSpec is a broken queries.json", () => {
     // Guards: a typo in queries.json stops the run instead of rejecting every paper.
-    expect(() => judgeClass("neurps", pre(""))).toThrow(
+    expect(() => judgeClass("neurps", preambleOf(""))).toThrow(
       "queries.json: unknown classSpec neurps",
     );
   });

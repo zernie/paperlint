@@ -43,27 +43,28 @@ export const QueriesSchema = z.object({
 export type Queries = Readonly<z.infer<typeof QueriesSchema>>;
 
 /** The part of a manifest entry the counts read. */
-export type Counted = Readonly<{
-  arxiv_id: string;
-  field?: string;
-  series?: string;
-  year?: number;
-}>;
+export const CountedSchema = z.looseObject({
+  arxiv_id: z.string(),
+  field: z.string().optional(),
+  series: z.string().optional(),
+  year: z.number().optional(),
+});
+export type Counted = Readonly<z.infer<typeof CountedSchema>>;
 
 /** One line of `probe-log.jsonl`: every candidate that reached a rule, kept or with its reason. */
-export type ProbeLine = Readonly<{
-  id: string;
-  field: string;
-  series: string;
-  year: number;
-  rank: number;
-  query: string;
-  source: "arxiv-comment" | "semantic-scholar";
-  acceptance: "arxiv-comment" | "s2-venue-listing";
-  outcome: "kept" | "rejected";
-  reason: string;
-  [detail: string]: unknown;
-}>;
+export const ProbeLineSchema = z.looseObject({
+  id: z.string(),
+  field: z.string(),
+  series: z.string(),
+  year: z.number(),
+  rank: z.number(),
+  query: z.string(),
+  source: z.enum(["arxiv-comment", "semantic-scholar"]),
+  acceptance: z.enum(["arxiv-comment", "s2-venue-listing"]),
+  outcome: z.enum(["kept", "rejected"]),
+  reason: z.string(),
+});
+export type ProbeLine = Readonly<z.infer<typeof ProbeLineSchema>>;
 
 /** How a venue edition's walk ended. */
 export type SlotEnd = Readonly<{
@@ -90,8 +91,9 @@ export type Walk = Readonly<{
   emit: (line: ProbeLine, paper?: KeptPaper) => void | Promise<void>;
 }>;
 
-const edition = (s: Readonly<{ series?: string; year?: number }>): string =>
-  `${String(s.series)} ${String(s.year)}`;
+const edition = (
+  s: Readonly<{ series?: string | undefined; year?: number | undefined }>,
+): string => `${String(s.series)} ${String(s.year)}`;
 export const slotKey = (s: Slot): string =>
   `${s.field}/${s.series} ${String(s.year)}`;
 
@@ -151,8 +153,6 @@ function judgeStaged(
   const size = judgeSize(plan.size);
   if (!size.ok) return { reason: size.reason };
   return { preamble, ...R.omit(cls, ["ok"]) };
-}
-    : { preamble, style: cls.style, styleOpts: cls.styleOpts ?? "" };
 }
 
 /** Rules 2 to 4, and the staging, for a candidate that passed rule 1. */
@@ -309,43 +309,4 @@ export async function collect(w: Walk): Promise<readonly SlotEnd[]> {
     if (end.ended === "time") break;
   }
   return ends;
-}
-
-const reasonKey = (r: string): string =>
-  r
-    .replace(/[0-9]+ bytes|\(.*?\)|\[.*?\]|\d{4}/g, "")
-    .trim()
-    .slice(0, 60);
-
-/** The three commonest rejection reasons of a field, with their counts. */
-const topReasons = (lines: readonly ProbeLine[], field: string): string =>
-  Object.entries(
-    R.countBy(
-      lines.filter((l) => l.field === field && l.outcome === "rejected"),
-      (l) => reasonKey(l.reason),
-    ),
-  )
-    .toSorted((a, b) => b[1] - a[1])
-    .slice(0, 3)
-    .map(([k, n]) => `${k} (${String(n)})`)
-    .join("; ");
-
-/** The per-field table of a run: kept against quota, candidates probed, yield, top 3 reasons. */
-export function summary(
-  queries: Queries,
-  entries: readonly Counted[],
-  lines: readonly ProbeLine[],
-): string {
-  const rows = Object.entries(queries.quotas).map(([f, quota]) => {
-    const kept = entries.filter((e) => e.field === f).length;
-    const probed = new Set(lines.filter((l) => l.field === f).map((l) => l.id))
-      .size;
-    const pct = probed === 0 ? "0" : ((100 * kept) / probed).toFixed(1);
-    return `| ${f} | ${String(kept)} / ${String(quota)} | ${String(probed)} | ${pct}% | ${topReasons(lines, f)} |`;
-  });
-  return [
-    "| field | kept / quota | probed | yield | top 3 rejection reasons |",
-    "| --- | --- | ---: | ---: | --- |",
-    ...rows,
-  ].join("\n");
 }
