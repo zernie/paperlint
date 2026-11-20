@@ -1,18 +1,18 @@
 ---
 name: pc-panel-review
-description: Use when asking "what would the program committee decide?" / "simulate the reviewers" / "what's this paper's accept probability?" / "red-team this paper" / "what would Reviewer 2 attack?" on a drafted paper + artifact. Spawns N independent reviewers with DISTINCT lenses (one actually RUNS the artifact, one is a skimming genre/register reviewer, one is the hostile Reviewer 2), then synthesizes a PC-chair meta-review into an accept/reject prediction reported as min/median/max, a calibrated probability, and consensus must-fixes (or none). Takes tighten-paper's structural verdict and cold-read-diff's whole-paper report as inputs — the panel cannot feel reader fatigue on its own. The third and last step of the final review. Before the final review, a red-team request runs the hostile seat (Reviewer 2) alone, without the readability inputs. Also runs the VENUE-FIT seat alone for a CFP-fit spot-check. NOT the submit checklist (harden-paper).
+description: Use when asking "what would the program committee decide?" / "simulate the reviewers" / "what's this paper's accept probability?" / "red-team this paper" / "what would Reviewer 2 attack?" on a drafted paper + artifact. Spawns N independent reviewers with DISTINCT lenses (one actually RUNS the artifact, one is a skimming genre/register reviewer, one is the hostile Reviewer 2), then synthesizes a PC-chair meta-review into an accept/reject prediction reported as min/median/max, a calibrated probability, and consensus must-fixes (or none). Takes tighten-paper's structural verdict and cold-read-diff's whole-paper report as inputs — the panel cannot feel reader fatigue on its own. The third and last step of the final review. Before the final review, a red-team request runs the hostile seat (Reviewer 2) alone, without the readability inputs. Also runs the VENUE-FIT seat alone for a CFP-fit spot-check, and the PRIOR-REVIEWS seat alone while drafting ("did we really answer the last reviewers?"). NOT the submit checklist (harden-paper).
 allowed-tools: [Read, Write, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:c0b27cf6767dde05 compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:0f74ef7b0488f6e2 compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
 
 # pc-panel-review — model the whole PC, not one reviewer
 
 > The whole PC (N independent lenses incl. an artifact-runner) + a chair meta-review, run once as the
-> last step of the final review (`paper-pipeline`, "The final review"). Two seats also run alone:
-> the hostile seat, before the final review only (**Hostile-seat mode**, below), and **Venue-fit mode**
-> (below), a spot-check against a named venue's CFP rubric, recorded as `venue-fit`. Neither is
-> recorded as the panel.
+> last step of the final review (`paper-pipeline`, "The final review"). Three seats also run alone:
+> the hostile seat, before the final review only (**Hostile-seat mode**, below), the prior-reviews seat
+> while drafting (**Prior-reviews mode**, below), and **Venue-fit mode** (below), a spot-check against a
+> named venue's CFP rubric, recorded as `venue-fit`. None is recorded as the panel.
 
 A real decision is made by **2–4 reviewers with different priorities + a meta-review** that weighs
 consensus over any single voice. This skill runs that. The payoff over a single review: a **must-fix
@@ -77,11 +77,12 @@ prose-only read can.
      code for
      circularity (echoing stored fields vs recomputing); grep all files (incl. data + compiled
      caches) for anonymization leaks; scope the badge (Available / Functional / Reproduced).
-   - **Prior-reviews reviewer (MANDATORY when the attempt before this one was rejected with
-     reviews)** — the rejection's `"desk": false` outcome in `paperlint.json` names the points file
-     (`outcome.points`). `cycle/prior-reviews-answered` already decides that every point has an
-     answer and that each `where` is a `\section` of the paper; do not re-count that. Give this
-     reviewer the points file beside the paper, and it judges what no rule can: whether the section an
+   - **Prior-reviews reviewer (MANDATORY when
+     `node ${CLAUDE_SKILL_DIR}/scripts/prior-reviews.js <paper-dir>` prints `required`)** — the
+     script reads the same function as `cycle/prior-reviews-answered`, so the seat sits exactly when
+     that rule fires, and it prints the points file. Do not decide from `paperlint.json` by eye. The rule
+     already decides that every point has an answer and that each `where` is a `\section` of the
+     paper; do not re-count that. Give this reviewer the points file beside the paper, and it judges what no rule can: whether the section an
      answer names really answers the quoted point, and whether a `declined` reason would satisfy the
      reviewer who raised it. Each answer that does not is a must-fix, named by its point id.
    - **Security/ethics reviewer** (security venues) — threat model soundness, responsible disclosure,
@@ -182,6 +183,12 @@ read, because readability is not its job. It is one reviewer, so it predicts no 
 consensus must-fixes. Its report goes under `reviews/`, and the author decides each finding there
 (`fixed`, or `wontfix` with a `note` giving his reason; `review/frontmatter`). Once the final review
 starts, the hostile seat runs only inside the panel.
+
+## Prior-reviews mode (one seat, while drafting)
+While the paper is being revised for the next attempt, the prior-reviews seat of step 3 runs alone, on
+the current text and the points file `scripts/prior-reviews.js` prints; it runs only when that script
+says `required`. It gets no readability inputs and predicts no decision. Its report goes under
+`reviews/`, decided per finding like Hostile-seat mode. In the final review it sits inside the panel.
 
 ## Venue-fit mode (single-lens spot-check — the merged `venue-review-sim`)
 When a full panel is overkill and you just want to predict **"given THIS venue's criteria, bar, and
