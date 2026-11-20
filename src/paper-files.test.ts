@@ -25,14 +25,102 @@ import {
   narrowToOwners,
   ownedPatterns,
   ownedScopes,
+  paperFiles,
+  papersScope,
+  rebaseGlob,
   ruleOwners,
   scopeToOwned,
 } from "./paper-files.ts";
+import { FRAGMENT_FILES } from "./paper-includes.ts";
+
 import { lintReport } from "../test/lint-report.ts";
 import { z } from "zod";
 
 /** What `calculateConfigForFile` answers for a file inside the config's scope, read for its rules. */
 const Computed = z.object({ rules: z.record(z.string(), z.unknown()) });
+
+describe("the papers the config claims (#582)", () => {
+  it("🔴 GUARD: with papers named, every file a block of paperlint's own claims is one of theirs", () => {
+    // A block written the old way, `**/paper.tex`, would claim a copy of a paper kept inside it (a
+    // review snapshot, a build copy) as a paper of its own. The fragment block is scoped per paper
+    // by name instead (includeBlocks), so its glob is not a paper's.
+    const claimed = ownedPatterns(
+      buildConfig(
+        {},
+        texLanguage,
+        papersScope(["/w/papers/p", "/w/papers/q"], "/w"),
+      ),
+    ).filter((g) => !FRAGMENT_FILES.includes(g));
+    expect(
+      claimed.filter(
+        (g) => !g.startsWith("papers/p/") && !g.startsWith("papers/q/"),
+      ),
+    ).toEqual([]);
+    expect(claimed).toContain("papers/q/paper.tex");
+  });
+
+  it("names each paper relative to ESLint's cwd, glob characters escaped, and puts its files under it", () => {
+    const scope = papersScope(
+      ["/w/papers/p", "/w/papers/[draft] x*", "/w"],
+      "/w",
+    );
+    expect(paperFiles(scope, "reviews/*.md")).toEqual([
+      "papers/p/reviews/*.md",
+      "papers/\\[draft\\] x\\*/reviews/*.md",
+      "reviews/*.md",
+    ]);
+    expect(paperFiles({ kind: "any" }, "paper.tex")).toEqual(["**/paper.tex"]);
+  });
+});
+
+describe("a paper's own settings read from its folder (#582)", () => {
+  it.each([
+    ["the same folder", "papers/a/paper.tex", "/w", ["papers/a/paper.tex"]],
+    [
+      "a paper's own folder",
+      "papers/a/paper.tex",
+      "/w/papers/a",
+      ["paper.tex"],
+    ],
+    ["another paper's folder", "papers/a/paper.tex", "/w/papers/b", []],
+    ["a folder above cwd", "papers/a/paper.tex", "/", ["w/papers/a/paper.tex"]],
+    [
+      "any folder",
+      "**/siblings/README.md",
+      "/w/papers/a",
+      ["**/siblings/README.md"],
+    ],
+  ])(
+    "rebases a cwd-relative glob onto a block's basePath: %s",
+    (_, glob, base, want) => {
+      expect(rebaseGlob(glob, "/w", base)).toEqual(want);
+    },
+  );
+
+  it("a paper's own block gets its paper's files, relative to its folder, and none of another paper's", () => {
+    const own = buildConfig(
+      {},
+      texLanguage,
+      papersScope(["/w/papers/a"], "/w"),
+    );
+    const scope = papersScope(["/w/papers/a"], "/w");
+    const block = (basePath: string) =>
+      narrowToOwners(
+        { basePath, rules: { "paper/stages": "warn" } },
+        ruleOwners(own),
+        scope,
+      );
+    expect(block("/w/papers/a")).toEqual([
+      {
+        basePath: "/w/papers/a",
+        files: ["PIPELINE-STATUS.md"],
+        rules: { "paper/stages": "warn" },
+      },
+    ]);
+    // ESLint refuses an empty `files`, so a block that can reach no claimed file is not emitted.
+    expect(block("/w/papers/b")).toEqual([]);
+  });
+});
 
 const dirs: string[] = [];
 afterEach(() => {

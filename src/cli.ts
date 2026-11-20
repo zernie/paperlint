@@ -24,7 +24,7 @@
  * replaced it: silently breaking someone else's workflow is worse than asking them to fix a line.
  */
 import { ESLint, type Linter } from "eslint";
-import { readFileSync, existsSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
 import { stripVTControlCharacters } from "node:util";
 import { spawnSync } from "node:child_process";
@@ -119,11 +119,15 @@ import type { PortalKind, SupportedPortal } from "./domain/submission.ts";
 import type { PortalSite } from "./ports/submission-portal.ts";
 import type { CheckReferences } from "./ports/check-references.ts";
 import {
+  ANY_PAPER,
   narrowToOwners,
   ownedPatterns,
+  paperFiles,
+  papersScope,
   ruleOwners,
   scopeToOwned,
 } from "./paper-files.ts";
+import type { PaperScope } from "./paper-files.ts";
 import {
   paperPreset,
   settingsProblemLine,
@@ -214,6 +218,7 @@ import {
 } from "./folder-layout-rule.ts";
 import { folderLayoutHook } from "./folder-layout-hook.ts";
 import { paperFolderOf, writtenPath } from "./domain/paper-folder.ts";
+import { papersReached, type PaperTree } from "./domain/paper-dirs.ts";
 import {
   NOTICE_HOOKS,
   collector,
@@ -573,7 +578,11 @@ const TALK_RULE_DEPS = {
 export function buildConfig(
   opts: PaperlintConfig = {},
   texLanguage: unknown,
+  // The papers whose own files the blocks claim (`PaperScope`): any folder for the config's shape,
+  // the real papers for `paperlint lint`, so a copy kept inside one is claimed by no block (#582).
+  papers: PaperScope = ANY_PAPER,
 ): ConfigBlock[] {
+  const own = (glob: string): readonly string[] => paperFiles(papers, glob);
   const paperRules = { ...typography.rules };
   // The reference rules judge `_build/references.json`, and only on `paper.tex`.
   const texPaperRules = {
@@ -614,7 +623,7 @@ export function buildConfig(
       },
     },
     {
-      files: ["**/PIPELINE-STATUS.md"],
+      files: own("PIPELINE-STATUS.md"),
       // Every paper folder has one: the rules about the folder itself (its stages, its frozen
       // sources, its name) are judged here, once per paper.
       plugins: {
@@ -654,7 +663,7 @@ export function buildConfig(
       },
     },
     {
-      files: ["**/reviews/*.md"],
+      files: own("reviews/*.md"),
       plugins: { markdown, review: reviewFrontmatter },
       ...md,
       // A review's frontmatter is a record, validated by paperlint's JSON Schema
@@ -664,7 +673,7 @@ export function buildConfig(
     {
       // A sibling card says how much of the competing paper was read (`read:`). The cards are
       // written by this package's analyze-sibling-paper skill; its README is an index, not a card.
-      files: ["**/siblings/*.md"],
+      files: own("siblings/*.md"),
       ignores: ["**/siblings/README.md"],
       plugins: { markdown, sibling: siblingFrontmatter },
       ...md,
@@ -676,7 +685,7 @@ export function buildConfig(
   // corpus without a single `.tex` would be refusing to work where work is possible.
   if (texLanguage)
     cfg.push({
-      files: ["**/paper.tex"],
+      files: own("paper.tex"),
       plugins: {
         tex: {
           languages: { latex: texLanguage },
@@ -760,9 +769,11 @@ export function buildConfig(
   // PIPELINE-STATUS.md than beside paper.tex, and ESLint throws on a rule its plugin lacks.
   cfg.push(
     ...fragments,
-    ...(opts.rules ?? []).flatMap((b) => narrowToOwners(b, owners)),
+    ...(opts.rules ?? []).flatMap((b) => narrowToOwners(b, owners, papers)),
   );
-  return cfg;
+  // With no paper to claim, an own block's `files` is empty, and ESLint refuses an empty `files`: the
+  // block goes, and nothing is linted, which the run then says (#582).
+  return cfg.filter((b) => b.files === undefined || b.files.length > 0);
 }
 
 /**
@@ -928,16 +939,34 @@ export async function silentOptionalRules(
   return [...turnedOn].filter((id) => !reached.has(id));
 }
 
-/**
- * The paper directories `paths` reach: each directory and the papers under it. A FILE named on the
- * command line belongs to the paper it sits in.
- */
-function paperDirs(paths: readonly string[]): readonly string[] {
-  const dirs = paths.map((p) =>
-    existsSync(p) && statSync(p).isFile() ? dirname(p) : p,
+/** The disk as the paper-reach rule sees it (`src/domain/paper-dirs.ts`). */
+const PAPER_TREE: PaperTree = {
+  ...nodeFiles,
+  subfolders: (dir) => {
+    try {
+      return readdirSync(dir, { withFileTypes: true })
+        .filter(
+          (e) =>
+            e.isDirectory() &&
+            !e.name.startsWith(".") &&
+            e.name !== "node_modules" &&
+            e.name !== ESCAPE_HATCH,
+        )
+        .map((e) => join(dir, e.name));
+    } catch {
+      return [];
+    }
+  },
+};
+
+/** The papers `paths` reach: a file counts as the folder it sits in (#582). */
+const paperDirs = (paths: readonly string[]): readonly string[] =>
+  papersReached(
+    paths.map((p) =>
+      resolve(existsSync(p) && statSync(p).isFile() ? dirname(p) : p),
+    ),
+    PAPER_TREE,
   );
-  return [...new Set(dirs.flatMap((p) => [p, ...papersIn(p)]))];
-}
 
 /**
  * Every linted paper's rules, as ESLint blocks scoped to that paper, in two groups: what its venue
@@ -2515,11 +2544,16 @@ async function paperEslint(
     ? paperBodies(paperDirs([...paths, ...papersRoots(cfg)]), RECORD_DEPS)
     : [];
 
+  const cwd = lintRoot(cfg.root, paths);
+  // The papers whose own files the config names: the ones `paths` reach and the project's. A copy of
+  // a paper kept inside it (a review snapshot, a build copy) is in no such list, so no block claims
+  // it (#582).
+  const claimed = papersScope(paperDirs([...paths, ...papersRoots(cfg)]), cwd);
   const eslint = new ESLint({
-    cwd: lintRoot(cfg.root, paths),
+    cwd,
     overrideConfigFile: true,
     overrideConfig: eslintConfig([
-      ...buildConfig(opts, texLanguage),
+      ...buildConfig(opts, texLanguage, claimed),
       ...includeBlocks(bodies),
     ]),
     fix,

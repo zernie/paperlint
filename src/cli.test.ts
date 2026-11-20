@@ -824,6 +824,128 @@ test("lint: a path that shares nothing with the project but the filesystem root 
   );
 });
 
+/** A scorecard that fails `paper/stages`: its stage names a PDF that does not exist. */
+const FAILING_STATUS =
+  "---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/none.pdf\n    bytes: 1\n---\n";
+
+test("lint: a copy of a paper inside it (a review snapshot, a build copy) is not linted as a paper (#582)", async () => {
+  const dir = writeTree(join(root, "lint-copies"), {
+    "paperlint.json": JSON.stringify({ papersDir: "papers" }),
+    "papers/p/paper.tex": "% P\n",
+    "papers/p/PIPELINE-STATUS.md": "---\n---\n",
+    "papers/p/reviews/2026-11-20-second-opinion/paper.tex": "% P\n",
+    "papers/p/reviews/2026-11-20-second-opinion/PIPELINE-STATUS.md":
+      FAILING_STATUS,
+    "papers/p/research/data/cut/runs/a/paper.tex": "% P\n",
+    "papers/p/research/data/cut/runs/a/PIPELINE-STATUS.md": FAILING_STATUS,
+  });
+  const r = await cli(["lint"], dir);
+  assert.deepEqual(
+    { code: r.code, copies: /second-opinion|runs\/a/.test(r.out) },
+    { code: 0, copies: false },
+  );
+});
+
+test.each([
+  ["a review card", "archive/p/reviews/r.md"],
+  ["its reviews/ folder", "archive/p/reviews"],
+])(
+  "lint: %s named outside the papers directory is judged as its paper's own (#582)",
+  async (_, path) => {
+    const dir = writeTree(
+      join(root, `lint-owner-${path.replaceAll("/", "-")}`),
+      {
+        "paperlint.json": JSON.stringify({ papersDir: "papers" }),
+        "archive/p/paper.tex": "% P\n",
+        "archive/p/PIPELINE-STATUS.md": "---\n---\n",
+        // A finding without a status: the review schema refuses it.
+        "archive/p/reviews/r.md": "---\nfindings:\n  - id: 1\n---\n# R\n",
+        // A snapshot of the paper beside the card: the paper still owns the card.
+        "archive/p/reviews/snapshot/paper.tex": "% P\n",
+        "archive/p/reviews/snapshot/PIPELINE-STATUS.md": FAILING_STATUS,
+      },
+    );
+    const r = await cli(["lint", path], dir);
+    assert.deepEqual(
+      {
+        code: r.code,
+        card: /archive\/p\/reviews\/r\.md/.test(r.out),
+        snapshot: /reviews\/snapshot/.test(r.out),
+      },
+      { code: 1, card: true, snapshot: false },
+    );
+  },
+);
+
+test("lint: a review card of a paper with only its source, outside the papers directory, is judged (#582)", async () => {
+  const dir = writeTree(join(root, "lint-owner-source-only"), {
+    "paperlint.json": JSON.stringify({ papersDir: "papers" }),
+    "archive/p/paper.tex": "% P\n",
+    "archive/p/reviews/r.md": "---\nfindings:\n  - id: 1\n---\n# R\n",
+  });
+  const r = await cli(["lint", "archive/p/reviews/r.md"], dir);
+  assert.deepEqual(
+    { code: r.code, card: /archive\/p\/reviews\/r\.md/.test(r.out) },
+    { code: 1, card: true },
+  );
+});
+
+test("lint: a copy straight under a paper is not linted as a paper (#582)", async () => {
+  // The layout rule reports the stray `old/` itself; what must not happen is the copy's own
+  // scorecard being judged as a second paper's.
+  const dir = writeTree(join(root, "lint-direct-copy"), {
+    "paperlint.json": JSON.stringify({ papersDir: "papers" }),
+    "papers/p/paper.tex": "% P\n",
+    "papers/p/PIPELINE-STATUS.md": "---\n---\n",
+    "papers/p/old/paper.tex": "% P\n",
+    "papers/p/old/PIPELINE-STATUS.md": FAILING_STATUS,
+  });
+  const r = await cli(["lint", "papers/p"], dir);
+  assert.equal(/papers\/p\/old\/PIPELINE-STATUS\.md/.test(r.out), false);
+});
+
+test("lint: a paper more than one folder below a named folder is found and judged (#582)", async () => {
+  const dir = writeTree(join(root, "lint-deep-container"), {
+    "paperlint.json": JSON.stringify({ papersDir: "papers" }),
+    "archive/2025/p/paper.tex": "% P\n",
+    "archive/2025/p/PIPELINE-STATUS.md": FAILING_STATUS,
+  });
+  const r = await cli(["lint", "archive"], dir);
+  assert.deepEqual(
+    { code: r.code, deep: /archive\/2025\/p\/PIPELINE-STATUS\.md/.test(r.out) },
+    { code: 1, deep: true },
+  );
+});
+
+test("lint: `lint .` from the project root reaches papers outside papersDir (#582)", async () => {
+  // The root holds paperlint.json, the project's settings, and is no paper: the walk goes on.
+  const dir = writeTree(join(root, "lint-project-root"), {
+    "paperlint.json": JSON.stringify({ papersDir: "papers" }),
+    "papers/p/paper.tex": "% P\n",
+    "papers/p/PIPELINE-STATUS.md": "---\n---\n",
+    "archive/2025/q/paper.tex": "% P\n",
+    "archive/2025/q/PIPELINE-STATUS.md": FAILING_STATUS,
+  });
+  const r = await cli(["lint", "."], dir);
+  assert.deepEqual(
+    { code: r.code, q: /archive\/2025\/q\/PIPELINE-STATUS\.md/.test(r.out) },
+    { code: 1, q: true },
+  );
+});
+
+test("lint: the same failing scorecard as the paper's own is reported, so the test above can fail (#582)", async () => {
+  const dir = writeTree(join(root, "lint-own-status"), {
+    "paperlint.json": JSON.stringify({ papersDir: "papers" }),
+    "papers/p/paper.tex": "% P\n",
+    "papers/p/PIPELINE-STATUS.md": FAILING_STATUS,
+  });
+  const r = await cli(["lint"], dir);
+  assert.deepEqual(
+    { code: r.code, own: /papers\/p\/PIPELINE-STATUS\.md/.test(r.out) },
+    { code: 1, own: true },
+  );
+});
+
 /**
  * `new` at a terminal: stdin and stdout claim to be TTYs (a preload), and each prompt is answered
  * when it appears — a pipe written all at once is swallowed by the first question.
