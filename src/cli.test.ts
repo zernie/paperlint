@@ -852,13 +852,16 @@ test.each([
 ])(
   "lint: %s named outside the papers directory is judged as its paper's own (#582)",
   async (_, path) => {
-    const dir = writeTree(join(root, `lint-owner-${path.replaceAll("/", "-")}`), {
-      "paperlint.json": JSON.stringify({ papersDir: "papers" }),
-      "archive/p/paper.tex": "% P\n",
-      "archive/p/PIPELINE-STATUS.md": "---\n---\n",
-      // A finding without a status: the review schema refuses it.
-      "archive/p/reviews/r.md": "---\nfindings:\n  - id: 1\n---\n# R\n",
-    });
+    const dir = writeTree(
+      join(root, `lint-owner-${path.replaceAll("/", "-")}`),
+      {
+        "paperlint.json": JSON.stringify({ papersDir: "papers" }),
+        "archive/p/paper.tex": "% P\n",
+        "archive/p/PIPELINE-STATUS.md": "---\n---\n",
+        // A finding without a status: the review schema refuses it.
+        "archive/p/reviews/r.md": "---\nfindings:\n  - id: 1\n---\n# R\n",
+      },
+    );
     const r = await cli(["lint", path], dir);
     assert.deepEqual(
       { code: r.code, card: /archive\/p\/reviews\/r\.md/.test(r.out) },
@@ -866,6 +869,33 @@ test.each([
     );
   },
 );
+
+test("lint: a copy straight under a paper is not linted as a paper (#582)", async () => {
+  // The layout rule reports the stray `old/` itself; what must not happen is the copy's own
+  // scorecard being judged as a second paper's.
+  const dir = writeTree(join(root, "lint-direct-copy"), {
+    "paperlint.json": JSON.stringify({ papersDir: "papers" }),
+    "papers/p/paper.tex": "% P\n",
+    "papers/p/PIPELINE-STATUS.md": "---\n---\n",
+    "papers/p/old/paper.tex": "% P\n",
+    "papers/p/old/PIPELINE-STATUS.md": FAILING_STATUS,
+  });
+  const r = await cli(["lint", "papers/p"], dir);
+  assert.equal(/papers\/p\/old\/PIPELINE-STATUS\.md/.test(r.out), false);
+});
+
+test("lint: a paper more than one folder below a named folder is found and judged (#582)", async () => {
+  const dir = writeTree(join(root, "lint-deep-container"), {
+    "paperlint.json": JSON.stringify({ papersDir: "papers" }),
+    "archive/2025/p/paper.tex": "% P\n",
+    "archive/2025/p/PIPELINE-STATUS.md": FAILING_STATUS,
+  });
+  const r = await cli(["lint", "archive"], dir);
+  assert.deepEqual(
+    { code: r.code, deep: /archive\/2025\/p\/PIPELINE-STATUS\.md/.test(r.out) },
+    { code: 1, deep: true },
+  );
+});
 
 test("lint: the same failing scorecard as the paper's own is reported, so the test above can fail (#582)", async () => {
   const dir = writeTree(join(root, "lint-own-status"), {

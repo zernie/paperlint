@@ -24,7 +24,7 @@
  * replaced it: silently breaking someone else's workflow is worse than asking them to fix a line.
  */
 import { ESLint, type Linter } from "eslint";
-import { readFileSync, existsSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
 import { stripVTControlCharacters } from "node:util";
 import { spawnSync } from "node:child_process";
@@ -42,7 +42,14 @@ import {
   formatStructure,
   asEslintResults,
 } from "./structure.ts";
-import { buildPapers, papersIn, anyFailed, remedyFor, MAIN } from "./build.ts";
+import {
+  buildPapers,
+  papersIn,
+  anyFailed,
+  remedyFor,
+  MAIN,
+  PAPER_MARKERS,
+} from "./build.ts";
 import {
   FRAGMENT_FILES,
   includeBlocks,
@@ -949,8 +956,40 @@ function paperDirs(paths: readonly string[]): readonly string[] {
       ? dir
       : (paperFolderOf(join(dir, STATUS_FILE), nodeFiles) ?? dir);
   });
-  return [...new Set(dirs.flatMap((p) => [p, ...papersIn(p)]))];
+  return [
+    ...new Set(
+      dirs.flatMap((p) => (isPaper(p) ? [p] : [p, ...papersUnder(p)])),
+    ),
+  ];
 }
+
+/** A folder with a paper's own file or settings at its top. */
+const isPaper = (dir: string): boolean =>
+  PAPER_MARKERS.some((m) => existsSync(join(dir, m)));
+
+/** The folders a walk for papers enters: not hidden, not installed packages, not `extra/`. */
+function subfolders(dir: string): readonly string[] {
+  try {
+    return readdirSync(dir, { withFileTypes: true })
+      .filter(
+        (e) =>
+          e.isDirectory() &&
+          !e.name.startsWith(".") &&
+          e.name !== "node_modules" &&
+          e.name !== ESCAPE_HATCH,
+      )
+      .map((e) => join(dir, e.name));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * The papers below `dir`, at any depth. The walk stops at each paper it finds, so nothing inside a
+ * paper is searched: a copy kept in one (a review snapshot, a build copy) is never a paper (#582).
+ */
+const papersUnder = (dir: string): readonly string[] =>
+  subfolders(dir).flatMap((d) => (isPaper(d) ? [d] : papersUnder(d)));
 
 /**
  * Every linted paper's rules, as ESLint blocks scoped to that paper, in two groups: what its venue
