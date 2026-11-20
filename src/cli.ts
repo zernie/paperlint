@@ -2249,6 +2249,7 @@ const SIMPLE: Readonly<
       { ...a, sub: a.paths[0], operands: a.paths.slice(1) },
       {
         ...UPLOAD_RULE_DEPS,
+        ruleEntry: uploadRuleEntry,
         hosts: ARTIFACT_HOSTS,
         env: (name) => process.env[name],
         now: isoNow,
@@ -2284,6 +2285,31 @@ const SIMPLE: Readonly<
       },
     ),
 };
+
+/**
+ * `artifact/upload-current`'s entry for the paper in `dir`, as ESLint computes it for the paper's
+ * `PIPELINE-STATUS.md`, where the rule runs, under the config `paperlint lint` run there would use: one answer for the rule and the commands,
+ * whichever shape the settings take (a `rules` object, a list of blocks, the project's or the
+ * paper's). Undefined when the rule is not on there or the config does not read; lint says why.
+ */
+async function uploadRuleEntry(dir: string): Promise<unknown> {
+  const cfg = readConfig(parseArgs(["lint"]), {
+    log: () => {},
+    err: () => {},
+    cwd: dir,
+  });
+  if (cfg.code !== undefined) return undefined;
+  const engine = await paperEslint(cfg, [dir], {
+    loadTexLanguage: loadLatexLanguage,
+    fix: false,
+    stats: false,
+  });
+  if (!engine.ok) return undefined;
+  const computed = ComputedConfig.parse(
+    await engine.value.eslint.calculateConfigForFile(join(dir, STATUS_FILE)),
+  );
+  return computed?.rules?.["artifact/upload-current"];
+}
 
 /** Every artifact host paperlint has an adapter for: a new host is its folder and one line here. */
 const ARTIFACT_HOSTS: Readonly<Record<string, ArtifactHost>> = {

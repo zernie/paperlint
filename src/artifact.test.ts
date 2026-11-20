@@ -15,6 +15,7 @@ import {
   uploadRecordText,
   type UploadRecord,
 } from "./domain/artifact-upload.ts";
+import { isRecord } from "./domain/record.ts";
 import { err, ok } from "./domain/result.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import type { ArtifactHost, HostedFile } from "./ports/artifact-host.ts";
@@ -80,6 +81,13 @@ const input = (i: Partial<ArtifactInput>): ArtifactInput => ({
   ...i,
 });
 
+/** `artifact/upload-current` in a paperlint.json's `rules` object; undefined for anything else. */
+const entryIn = (text: string | Uint8Array | undefined): unknown => {
+  const json = typeof text === "string" ? jsonOrText(text) : undefined;
+  const rules = isRecord(json) ? json["rules"] : undefined;
+  return isRecord(rules) ? rules["artifact/upload-current"] : undefined;
+};
+
 /** The record file as JSON, or its text when it is not JSON (a broken record planted by a test). */
 const jsonOrText = (text: string): unknown => {
   try {
@@ -106,6 +114,8 @@ async function run(
     codec: sourcesCodec,
     latex: latexReader,
     hosts: { h: fakeHost(o.held ?? ok(HOSTED), asked, o.can) },
+    // The rule's entry as lint's config would give it: here, from the paper's own `rules` object.
+    ruleEntry: (dir) => Promise.resolve(entryIn(tree[`${dir}/paperlint.json`])),
     env: (n) => o.env?.[n],
     now: () => NOW,
     cwd: CWD,

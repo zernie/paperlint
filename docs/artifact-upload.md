@@ -61,8 +61,10 @@ npx paperlint artifact record artifact.zip --url https://osf.io/abcde/ papers/my
 
 No network. Hashes the zip (sha256 and md5), reads the numbers file, and writes the record with the
 current time. The numbers file is `--numbers <file>` (relative to the paper), else the `numbers`
-option of `artifact/upload-current` in the paper's own `paperlint.json` (a block in the root
-`paperlint.json` is not read here). `--host <name>` names the host; without it, a url an adapter
+option of `artifact/upload-current` where `paperlint lint` turns it on for that paper: the command
+asks ESLint for the rule's options on the paper's `PIPELINE-STATUS.md`, so a `rules` object, a list
+of blocks, the root `paperlint.json` and the paper's own all count the same as they do for lint, and
+the record goes to the rule's `record` path. `--host <name>` names the host; without it, a url an adapter
 recognises names its host (`osf.io` → `osf`), and any other is `other`. The zip is relative to where
 the command runs; the paper folder defaults to the current one. Exit 2, and nothing written, when
 the zip, the url or the numbers are missing, or the url is not one.

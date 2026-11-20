@@ -27,7 +27,6 @@ import {
   type UploadRecord,
 } from "./domain/artifact-upload.ts";
 import { lookUpToken } from "./domain/portal-token.ts";
-import { isRecord } from "./domain/record.ts";
 import { err, ok, type Result } from "./domain/result.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import type { ArtifactHost, HostedFile } from "./ports/artifact-host.ts";
@@ -37,7 +36,6 @@ import {
   type UploadOptions,
   type UploadRuleDeps,
 } from "./artifact-upload-rule.ts";
-import { readPaperSettings } from "./paper-settings.ts";
 
 export interface ArtifactInput {
   readonly sub: string | undefined;
@@ -59,18 +57,22 @@ export interface ArtifactDeps extends UploadRuleDeps {
   readonly cwd: string;
   readonly log: (line: string) => void;
   readonly err: (line: string) => void;
+  /** The rule's entry (`[severity, options]`) as lint's config gives it for the paper in `dir`, or undefined. */
+  readonly ruleEntry: (dir: string) => Promise<unknown>;
 }
 
 const RULE = "artifact/upload-current";
 
-/** The rule's options as the paper's own `paperlint.json` gives them; the defaults when it gives none. */
-export function paperUploadOptions(
+/**
+ * The rule's options where lint turns it on for the paper in `dir`, as ESLint computes them for the
+ * file the rule runs on (`ruleEntry`), so the commands and lint read one answer whatever shape the settings
+ * take; the defaults when the rule is not on there.
+ */
+export async function paperUploadOptions(
   dir: string,
-  deps: Pick<ArtifactDeps, "files">,
-): UploadOptions {
-  const s = readPaperSettings(deps.files, dir);
-  const rules = s.ok ? s.value?.rules : null;
-  const entry = isRecord(rules) ? rules[RULE] : undefined;
+  deps: Pick<ArtifactDeps, "ruleEntry">,
+): Promise<UploadOptions> {
+  const entry = await deps.ruleEntry(dir);
   return uploadOptions(Array.isArray(entry) ? entry[1] : undefined);
 }
 
@@ -103,7 +105,10 @@ function numbersOf(
 }
 
 /** The zip and the paper's numbers, or the line that says why there are none. */
-function prepare(i: ArtifactInput, d: ArtifactDeps): Result<Prepared, string> {
+async function prepare(
+  i: ArtifactInput,
+  d: ArtifactDeps,
+): Promise<Result<Prepared, string>> {
   const [zipArg, dirArg] = i.operands;
   if (zipArg === undefined)
     return err(
@@ -113,7 +118,7 @@ function prepare(i: ArtifactInput, d: ArtifactDeps): Result<Prepared, string> {
   const bytes = d.files.readBytes(callerPath(zip));
   if (bytes === null) return err(`no file ${zipArg}`);
   const paperDir = resolve(d.cwd, dirArg ?? ".");
-  const o = paperUploadOptions(paperDir, d);
+  const o = await paperUploadOptions(paperDir, d);
   const numbers = numbersOf(paperDir, i.numbers ?? o.numbers, d);
   if (!numbers.ok) return numbers;
   const recordPath = resolve(paperDir, o.record);
@@ -162,8 +167,8 @@ const hostNamed = (url: string, d: ArtifactDeps): string =>
   Object.entries(d.hosts).find(([, h]) => h.targetOf(url) !== null)?.[0] ??
   "other";
 
-function record(i: ArtifactInput, d: ArtifactDeps): number {
-  const p = prepare(i, d);
+async function record(i: ArtifactInput, d: ArtifactDeps): Promise<number> {
+  const p = await prepare(i, d);
   if (!p.ok) return fail(p.error, d);
   if (i.url === null) return fail("where is it? pass --url <url>", d);
   return write(
@@ -229,10 +234,13 @@ interface Plan {
 }
 
 /** The upload `i` asks for, printed, or why it cannot be made. */
-function plan(i: ArtifactInput, d: ArtifactDeps): Result<Plan, string> {
+async function plan(
+  i: ArtifactInput,
+  d: ArtifactDeps,
+): Promise<Result<Plan, string>> {
   const h = uploader(i, d);
   if (!h.ok) return h;
-  const p = prepare(i, d);
+  const p = await prepare(i, d);
   if (!p.ok) return p;
   const old = readRecord(p.value.recordPath, d);
   const target = i.node ?? (old.ok ? h.value.targetOf(old.value.url) : null);
@@ -269,7 +277,7 @@ async function send(x: Plan, token: string, d: ArtifactDeps): Promise<number> {
 }
 
 async function upload(i: ArtifactInput, d: ArtifactDeps): Promise<number> {
-  const x = plan(i, d);
+  const x = await plan(i, d);
   if (!x.ok) return fail(x.error, d);
   const token = tokenFor(x.value.host, d);
   if (i.save)
@@ -353,7 +361,10 @@ async function check(
 
 async function show(i: ArtifactInput, d: ArtifactDeps): Promise<number> {
   const dir = resolve(d.cwd, i.operands[0] ?? ".");
-  const r = readRecord(resolve(dir, paperUploadOptions(dir, d).record), d);
+  const r = readRecord(
+    resolve(dir, (await paperUploadOptions(dir, d)).record),
+    d,
+  );
   if (!r.ok) return fail(r.error, d);
   const rec = r.value;
   d.log(`${rec.host} ${rec.url}`);
