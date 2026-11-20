@@ -6,6 +6,7 @@ import {
   fixedDownload,
   memoryFiles,
   memoryListEntries,
+  memoryListTree,
   memoryCopyFile,
   memoryMoveFile,
   memoryWorkspace,
@@ -58,4 +59,12 @@ test("memoryListEntries: each name directly under a directory, a file or a direc
     { name: "a.md", kind: "file" },
     { name: "out", kind: "dir" },
   ]);
+});
+
+test("memoryListTree: every file under a folder, relative and sorted; none under it is null", () => {
+  const files = memoryFiles({ "/a/z.md": "", "/a/p/b.md": "", "/ab/c": "" });
+  const tree = memoryListTree(files);
+  // Guards: a sibling whose name only starts like the folder (`/ab`) is not under it.
+  assert.deepEqual(tree(absolutePath("/a")), ["p/b.md", "z.md"]);
+  assert.equal(tree(absolutePath("/none")), null);
 });

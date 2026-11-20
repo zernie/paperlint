@@ -73,7 +73,6 @@ describe("paperlint new — paperlint.json", () => {
       from: "package",
     });
     const s = settingsOf(join(papers, "demo"));
-    expect(s["extends"]).toBeNull();
     expect(String(s["$comment"])).toMatch(/paperlint:agenticdev-2026/);
     expect(parsePaperSettings(s)).toEqual({
       ok: true,
@@ -88,6 +87,7 @@ describe("paperlint new — paperlint.json", () => {
         authors: null,
         fields: null,
         cycles: null,
+        artifact: null,
       },
     });
   });

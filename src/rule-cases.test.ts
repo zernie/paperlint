@@ -10,7 +10,7 @@
  * `EXEMPT` with the reason; a case for a rule that is not registered fails too. A `_build/` file a
  * rule reads is planted as the build would write it — no pdflatex, no network.
  */
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -813,7 +813,61 @@ const CHANGES_AT = `${P}/versions/beta-2027/changes.yaml`;
 const DECLARED_CUT =
   '- type: cut\n  before: "We measured 63 repositories."\n  why: too long\n  reader_loses: the sample size\n  drops: ["63"]\n';
 
+/** A paper whose paperlint.json declares `artifact`, with the artifact's own files. */
+const withArtifact = (
+  artifact: Readonly<Record<string, unknown>>,
+  files: Readonly<Record<string, string>> = {},
+): Record<string, string> =>
+  paper(tex("x"), {
+    [`${P}/paperlint.json`]: JSON.stringify({ extends: null, artifact }),
+    ...files,
+  });
+/** The artifact in `extra/`, a folder the layout never judges. */
+const ARTIFACT_DIR = "extra/artifact";
+const LIST = "submission/artifact-files.txt";
+const ARTIFACT_FILES: Readonly<Record<string, string>> = {
+  [`${P}/${ARTIFACT_DIR}/README.md`]: "# artifact\n",
+  [`${P}/${ARTIFACT_DIR}/LICENSE`]: "MIT\n",
+  [`${P}/${ARTIFACT_DIR}/data/prompts/a.md`]: "a\n",
+};
+const REQUIRED = ["README", "LICENSE"];
+const PROMISES = { prompts: "**/prompts/*.md" };
+
 const CASES: Readonly<Record<string, RuleCases>> = {
+  // A paper that requires README and LICENSE of an artifact holding only a README.
+  "artifact/required-files": {
+    reports: {
+      tree: withArtifact(
+        { dir: ARTIFACT_DIR, required: REQUIRED },
+        { [`${P}/${ARTIFACT_DIR}/README.md`]: "# artifact\n" },
+      ),
+      file: `${P}/PIPELINE-STATUS.md`,
+      severity: 2,
+      line: 1,
+    },
+    // The same artifact with its LICENSE.
+    silent: withArtifact(
+      { dir: ARTIFACT_DIR, required: REQUIRED },
+      ARTIFACT_FILES,
+    ),
+  },
+  // A promise of prompts the artifact does not hold.
+  "artifact/promised": {
+    reports: {
+      tree: withArtifact(
+        { dir: ARTIFACT_DIR, promises: PROMISES },
+        { [`${P}/${ARTIFACT_DIR}/README.md`]: "# artifact\n" },
+      ),
+      file: `${P}/PIPELINE-STATUS.md`,
+      severity: 2,
+      line: 1,
+    },
+    // The same promise in a committed list of a zip wrapped in one folder, the prompts there.
+    silent: withArtifact(
+      { files: LIST, promises: PROMISES },
+      { [`${P}/${LIST}`]: "artifact/\nartifact/data/prompts/a.md\n" },
+    ),
+  },
   "cycle/changes-since-approved": {
     reports: {
       tree: paper(tex("The rest is as before."), {
@@ -1629,11 +1683,13 @@ type Message = z.infer<typeof LintResults>[number]["messages"][number] & {
 /** `paperlint lint --json` over the tree, in-process through the CLI: every message, by file. */
 async function lintTree(
   tree: Record<string, string | Uint8Array>,
+  emptyDirs: readonly string[] = [],
 ): Promise<Message[]> {
   const dir = writeTree(useTempDir("paperlint-rule-cases-"), {
     "package.json": '{"name":"consumer","private":true}',
     ...tree,
   });
+  emptyDirs.forEach((d) => mkdirSync(join(dir, d), { recursive: true }));
   const out: string[] = [];
   await run(["lint", "--json"], {
     cwd: dir,
@@ -1930,6 +1986,83 @@ describe("cycle/camera-ready-source, before the camera-ready is frozen", () => {
           (m) => m.ruleId === "cycle/camera-ready-source",
         ),
       ).toEqual([]);
+    },
+  );
+});
+
+const STATUS_AT = `${P}/PIPELINE-STATUS.md`;
+/** What the artifact rules say about `tree` (`emptyDirs` made too), as `file:line rule message`. */
+const said = async (
+  tree: Record<string, string>,
+  emptyDirs: readonly string[] = [],
+) =>
+  (await lintTree(tree, emptyDirs))
+    .filter((m) => (m.ruleId ?? "").startsWith("artifact/"))
+    .map((m) => `${m.file}:${String(m.line)} ${m.ruleId ?? ""} ${m.message}`);
+
+describe("the artifact rules through real ESLint: each message, both halves", () => {
+  it(
+    "🔴 a folder that does not exist: each rule says what it cannot check",
+    { timeout: CASE_TIMEOUT_MS },
+    async () => {
+      expect(
+        await said(
+          withArtifact({
+            dir: ARTIFACT_DIR,
+            required: ["README"],
+            promises: PROMISES,
+          }),
+        ),
+      ).toEqual([
+        `${STATUS_AT}:1 artifact/required-files the artifact folder ${ARTIFACT_DIR} ("artifact.dir" in paperlint.json, relative to the paper) does not exist or is not a folder, so its required names cannot be checked`,
+        `${STATUS_AT}:1 artifact/promised the artifact folder ${ARTIFACT_DIR} ("artifact.dir" in paperlint.json, relative to the paper) does not exist or is not a folder, so its promises cannot be checked`,
+      ]);
+    },
+  );
+
+  it(
+    "🔴 a folder that exists and is empty: the name missing and the promise matching nothing, not the folder",
+    { timeout: CASE_TIMEOUT_MS },
+    async () => {
+      expect(
+        await said(
+          withArtifact({
+            dir: ARTIFACT_DIR,
+            required: ["README"],
+            promises: PROMISES,
+          }),
+          [`${P}/${ARTIFACT_DIR}`],
+        ),
+      ).toEqual([
+        `${STATUS_AT}:1 artifact/required-files the artifact (${ARTIFACT_DIR}) has no top-level README — any extension counts (README.md, README.txt, README); "artifact.required" in paperlint.json asks for one`,
+        `${STATUS_AT}:1 artifact/promised the artifact promise "prompts" (**/prompts/*.md) matches no path of the artifact (${ARTIFACT_DIR}): the paper says the artifact holds it — add the files, or correct the glob in "artifact.promises"`,
+      ]);
+    },
+  );
+});
+
+describe("the artifact rules through real ESLint: a committed list of paths", () => {
+  it(
+    "🔴 a list that does not exist, and one that names no file",
+    { timeout: CASE_TIMEOUT_MS },
+    async () => {
+      const declared = { files: LIST, required: ["README"] };
+      expect(await said(withArtifact(declared))).toEqual([
+        `${STATUS_AT}:1 artifact/required-files the artifact's list of paths ${LIST} ("artifact.files" in paperlint.json, relative to the paper) does not exist, so its required names cannot be checked`,
+      ]);
+      expect(
+        await said(withArtifact(declared, { [`${P}/${LIST}`]: "artifact/\n" })),
+      ).toEqual([
+        `${STATUS_AT}:1 artifact/required-files the artifact's list of paths ${LIST} names no file, so its required names cannot be checked — write one path per line, relative to the artifact's root, as \`zipinfo -1\` or \`find . -type f\` print them`,
+      ]);
+    },
+  );
+
+  it(
+    "a paper that declares no artifact: silent, the rules on by default all the same",
+    { timeout: CASE_TIMEOUT_MS },
+    async () => {
+      expect(await said(paper(tex("x")))).toEqual([]);
     },
   );
 });

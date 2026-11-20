@@ -4,7 +4,7 @@
  * One file name at two levels, one schema (lib/paper-config.mjs → SETTINGS_KEYS):
  *
  *   paperlint.json                 the project (optional): papersDir, rules, defaults
- *   <paper>/paperlint.json         this paper: { extends, kind, pdf, rules, identity, talk, submission, authors, fields } —
+ *   <paper>/paperlint.json         this paper: { extends, kind, pdf, rules, identity, talk, submission, authors, fields, artifact } —
  *                                  or `cycles`, from whose current attempt extends, kind and submission
  *                                  are DERIVED (src/domain/cycle.ts); the two forms do not mix
  *   a venue preset                 `paperlint:<name>` (shipped) or `./x.jsonc` (src/presets.ts)
@@ -47,6 +47,7 @@ import {
   venueCycleOf,
   type Cycles,
 } from "./domain/cycle.ts";
+import { parsePaperArtifact, type PaperArtifact } from "./domain/artifact.ts";
 
 /** What one paper declares. Every absent field is null. */
 export interface PaperSettings {
@@ -84,6 +85,8 @@ export interface PaperSettings {
    * attempt's — derived, never written beside it. Never the root's.
    */
   readonly cycles: Cycles | null;
+  /** Where the paper's reproduction artifact is and what the paper promises it holds (`artifact/contents`); null when absent. Never the root's. */
+  readonly artifact: PaperArtifact | null;
 }
 
 /** Why a paper's settings cannot be read. */
@@ -240,11 +243,14 @@ export function parsePaperSettings(
   if (!rest.ok) return rest;
   const cycles = cyclesField(json);
   if (!cycles.ok) return cycles;
+  const artifact = parsePaperArtifact(json["artifact"]);
+  if (!artifact.ok) return artifact;
   const flat = {
     ...fields.value,
     ...rest.value,
     identity: identity.value,
     cycles: cycles.value,
+    artifact: artifact.value,
   };
   return ok(
     cycles.value === null ? flat : { ...flat, ...derived(cycles.value) },
@@ -321,6 +327,18 @@ const NO_DEFAULTS: Defaults = {
   identity: null,
 };
 
+/** A paper that declares nothing. */
+const NO_SETTINGS: PaperSettings = {
+  ...NO_DEFAULTS,
+  rules: null,
+  talk: null,
+  submission: null,
+  authors: null,
+  fields: null,
+  cycles: null,
+  artifact: null,
+};
+
 /** Both lists, joined without repeats; null when neither side has one. */
 const joined = (
   a: readonly string[] | null,
@@ -334,26 +352,13 @@ function merge(
   paper: PaperSettings | null,
 ): PaperSettings | null {
   const r = root ?? NO_DEFAULTS;
-  const p = paper ?? {
-    ...NO_DEFAULTS,
-    rules: null,
-    talk: null,
-    submission: null,
-    authors: null,
-    fields: null,
-    cycles: null,
-  };
+  const p = paper ?? NO_SETTINGS;
   const merged: PaperSettings = {
+    ...p,
     extends: p.extends ?? r.extends,
     kind: p.kind ?? r.kind,
     pdf: p.pdf ?? r.pdf,
-    rules: p.rules,
     identity: joined(r.identity, p.identity),
-    talk: p.talk,
-    submission: p.submission,
-    authors: p.authors,
-    fields: p.fields,
-    cycles: p.cycles,
   };
   return paper === null && Object.values(merged).every((v) => v === null)
     ? null

@@ -147,6 +147,8 @@ export const SETTINGS_KEYS: Readonly<Record<string, string>> = Object.freeze({
     'the paper\'s answers to the venue\'s own form fields, keyed as the preset\'s "submission_fields" names them: { "topics": ["<an option>"], "paper_type": "<one option>", "pc_conflicts": { "<pc email>": "<conflict type>" }, … } — checked against those fields, every required one filled, then sent by paperlint submission new and update. Set only in a paper\'s own paperlint.json; in the root paperlint.json it is an error',
   cycles:
     "the paper's attempts at venues, oldest first: [{ id, venue, kind, opened, phase?, deadlines, submission?, outcome }] — extends, kind and submission are then the current attempt's, and the cycle/ rules judge the record. Set only in a paper's own paperlint.json; in the root paperlint.json it is an error",
+  artifact:
+    'the paper\'s reproduction artifact and what it must hold: { "dir": "<folder>" or "files": "<committed list of its paths>", "required"?: ["README", "LICENSE"], "promises"?: { "<label>": "<glob>" } } — artifact/required-files, artifact/promised. Set only in a paper\'s own paperlint.json; in the root paperlint.json it is an error',
   scripts: "how skill prose names the scripts — consumer.mjs",
   timezone: "the zone deadline anchors are written in — consumer.mjs",
   contactEmail: "the polite-pool address for citation lookups — consumer.mjs",
@@ -162,6 +164,7 @@ export const PAPER_ONLY_KEYS: readonly string[] = Object.freeze([
   "authors",
   "fields",
   "cycles",
+  "artifact",
 ]);
 
 /** The keys that only mean something for the whole project: refused in a paper's `paperlint.json`. */
