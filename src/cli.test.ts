@@ -897,6 +897,22 @@ test("lint: a paper more than one folder below a named folder is found and judge
   );
 });
 
+test("lint: `lint .` from the project root reaches papers outside papersDir (#582)", async () => {
+  // The root holds paperlint.json, the project's settings, and is no paper: the walk goes on.
+  const dir = writeTree(join(root, "lint-project-root"), {
+    "paperlint.json": JSON.stringify({ papersDir: "papers" }),
+    "papers/p/paper.tex": "% P\n",
+    "papers/p/PIPELINE-STATUS.md": "---\n---\n",
+    "archive/2025/q/paper.tex": "% P\n",
+    "archive/2025/q/PIPELINE-STATUS.md": FAILING_STATUS,
+  });
+  const r = await cli(["lint", "."], dir);
+  assert.deepEqual(
+    { code: r.code, q: /archive\/2025\/q\/PIPELINE-STATUS\.md/.test(r.out) },
+    { code: 1, q: true },
+  );
+});
+
 test("lint: the same failing scorecard as the paper's own is reported, so the test above can fail (#582)", async () => {
   const dir = writeTree(join(root, "lint-own-status"), {
     "paperlint.json": JSON.stringify({ papersDir: "papers" }),

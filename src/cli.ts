@@ -42,14 +42,7 @@ import {
   formatStructure,
   asEslintResults,
 } from "./structure.ts";
-import {
-  buildPapers,
-  papersIn,
-  anyFailed,
-  remedyFor,
-  MAIN,
-  PAPER_MARKERS,
-} from "./build.ts";
+import { buildPapers, papersIn, anyFailed, remedyFor, MAIN } from "./build.ts";
 import {
   FRAGMENT_FILES,
   includeBlocks,
@@ -777,7 +770,9 @@ export function buildConfig(
     ...fragments,
     ...(opts.rules ?? []).flatMap((b) => narrowToOwners(b, owners, papers)),
   );
-  return cfg;
+  // With no paper to claim, an own block's `files` is empty, and ESLint refuses an empty `files`: the
+  // block goes, and nothing is linted, which the run then says (#582).
+  return cfg.filter((b) => b.files === undefined || b.files.length > 0);
 }
 
 /**
@@ -944,10 +939,11 @@ export async function silentOptionalRules(
 }
 
 /**
- * The paper directories `paths` reach: each directory and the papers under it. A file or a folder
- * named inside a paper (a review card, its `reviews/`) belongs to the paper it sits in, found the way
- * the hooks find it (`paperFolderOf`), so that paper's rules and own files are the ones claimed
- * (#582). A folder that holds papers is kept as it is.
+ * The papers `paths` reach. A named paper is itself. A file or a folder named inside a paper (a review
+ * card, its `reviews/`) belongs to the paper it sits in, found the way the hooks find it
+ * (`paperFolderOf`). Any other folder (the project root, a papers directory, an archive) stands for the
+ * papers below it, at any depth, and is not a paper itself: its `paperlint.json`, if any, is the
+ * project's, not a paper's (#582).
  */
 function paperDirs(paths: readonly string[]): readonly string[] {
   const dirs = paths.map((p) => {
@@ -956,16 +952,16 @@ function paperDirs(paths: readonly string[]): readonly string[] {
       ? dir
       : (paperFolderOf(join(dir, STATUS_FILE), nodeFiles) ?? dir);
   });
-  return [
-    ...new Set(
-      dirs.flatMap((p) => (isPaper(p) ? [p] : [p, ...papersUnder(p)])),
-    ),
-  ];
+  return [...new Set(dirs.flatMap((p) => (isPaper(p) ? [p] : papersUnder(p))))];
 }
 
-/** A folder with a paper's own file or settings at its top. */
+/**
+ * A folder with a paper's own file at its top: `paper.tex` or `PIPELINE-STATUS.md`. Not
+ * `paperlint.json` alone, which is also the project's settings: the project root is no paper, and a
+ * walk from it goes on (#582).
+ */
 const isPaper = (dir: string): boolean =>
-  PAPER_MARKERS.some((m) => existsSync(join(dir, m)));
+  [MAIN, STATUS_FILE].some((m) => existsSync(join(dir, m)));
 
 /** The folders a walk for papers enters: not hidden, not installed packages, not `extra/`. */
 function subfolders(dir: string): readonly string[] {
