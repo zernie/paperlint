@@ -3,10 +3,13 @@
  * over the entries of `venue-manifest.json`, the field quotas of `accepted/sampling/queries.json` and
  * the directory names of `accepted/`. `balance.test.ts` runs it on planted defects and on the real
  * files. What it cannot see: whether the kept papers were the FIRST passing candidates in the fixed
- * order (that is `sampling/probe-log.jsonl`, read by a person or rerun by `sampling/sample.mjs`).
+ * order (that is `sampling/probe-log.jsonl`, read by a person or rerun by `scripts/grow-real-papers/main.ts`).
  */
 import * as R from "remeda";
 import { z } from "zod";
+// The collector's own rules: at most PER_EDITION papers per venue edition, and the licences a paper
+// may be redistributed under, as arXiv's metadata spells them.
+import { LICENCES, PER_EDITION } from "../../scripts/grow-real-papers/rules.ts";
 
 /**
  * The part of a `venue-manifest.json` entry this check reads. Everything but the id and the
@@ -27,15 +30,6 @@ export const EntrySchema = z.object({
 });
 export type Entry = Readonly<z.infer<typeof EntrySchema>>;
 
-/** At most this many papers per venue edition, over every entry. */
-export const PER_EDITION = 5;
-
-/** The licences a paper may be redistributed under, as arXiv's metadata spells them. */
-export const LICENCES: ReadonlySet<string> = new Set([
-  "http://creativecommons.org/licenses/by/4.0/",
-  "http://creativecommons.org/licenses/by-sa/4.0/",
-  "http://creativecommons.org/publicdomain/zero/1.0/",
-]);
 
 /** An `accepted/` directory named by an arXiv id; the six older papers are named by words. */
 const isArxivDir = (name: string): boolean =>
