@@ -218,6 +218,7 @@ import {
 } from "./folder-layout-rule.ts";
 import { folderLayoutHook } from "./folder-layout-hook.ts";
 import { paperFolderOf, writtenPath } from "./domain/paper-folder.ts";
+import { papersReached, type PaperTree } from "./domain/paper-dirs.ts";
 import {
   NOTICE_HOOKS,
   collector,
@@ -938,54 +939,34 @@ export async function silentOptionalRules(
   return [...turnedOn].filter((id) => !reached.has(id));
 }
 
-/**
- * The papers `paths` reach. A named paper is itself. A file or a folder named inside a paper (a review
- * card, its `reviews/`) belongs to the paper it sits in, found the way the hooks find it
- * (`paperFolderOf`). Any other folder (the project root, a papers directory, an archive) stands for the
- * papers below it, at any depth, and is not a paper itself: its `paperlint.json`, if any, is the
- * project's, not a paper's (#582).
- */
-function paperDirs(paths: readonly string[]): readonly string[] {
-  const dirs = paths.map((p) => {
-    const dir = resolve(existsSync(p) && statSync(p).isFile() ? dirname(p) : p);
-    // The paper that owns the path comes first, so a snapshot kept beside a review card never
-    // stands in for the paper the card belongs to (#582).
-    return paperFolderOf(join(dir, STATUS_FILE), nodeFiles) ?? dir;
-  });
-  return [...new Set(dirs.flatMap((p) => (isPaper(p) ? [p] : papersUnder(p))))];
-}
+/** The disk as the paper-reach rule sees it (`src/domain/paper-dirs.ts`). */
+const PAPER_TREE: PaperTree = {
+  ...nodeFiles,
+  subfolders: (dir) => {
+    try {
+      return readdirSync(dir, { withFileTypes: true })
+        .filter(
+          (e) =>
+            e.isDirectory() &&
+            !e.name.startsWith(".") &&
+            e.name !== "node_modules" &&
+            e.name !== ESCAPE_HATCH,
+        )
+        .map((e) => join(dir, e.name));
+    } catch {
+      return [];
+    }
+  },
+};
 
-/**
- * A folder with a paper's own file at its top: `paper.tex` or `PIPELINE-STATUS.md`. Not
- * `paperlint.json` alone, which is also the project's settings: the project root is no paper, and a
- * walk from it goes on (#582).
- */
-const isPaper = (dir: string): boolean =>
-  [MAIN, STATUS_FILE].some((m) => existsSync(join(dir, m)));
-
-/** The folders a walk for papers enters: not hidden, not installed packages, not `extra/`. */
-function subfolders(dir: string): readonly string[] {
-  try {
-    return readdirSync(dir, { withFileTypes: true })
-      .filter(
-        (e) =>
-          e.isDirectory() &&
-          !e.name.startsWith(".") &&
-          e.name !== "node_modules" &&
-          e.name !== ESCAPE_HATCH,
-      )
-      .map((e) => join(dir, e.name));
-  } catch {
-    return [];
-  }
-}
-
-/**
- * The papers below `dir`, at any depth. The walk stops at each paper it finds, so nothing inside a
- * paper is searched: a copy kept in one (a review snapshot, a build copy) is never a paper (#582).
- */
-const papersUnder = (dir: string): readonly string[] =>
-  subfolders(dir).flatMap((d) => (isPaper(d) ? [d] : papersUnder(d)));
+/** The papers `paths` reach: a file counts as the folder it sits in (#582). */
+const paperDirs = (paths: readonly string[]): readonly string[] =>
+  papersReached(
+    paths.map((p) =>
+      resolve(existsSync(p) && statSync(p).isFile() ? dirname(p) : p),
+    ),
+    PAPER_TREE,
+  );
 
 /**
  * Every linted paper's rules, as ESLint blocks scoped to that paper, in two groups: what its venue

@@ -877,6 +877,19 @@ test.each([
   },
 );
 
+test("lint: a review card of a paper with only its source, outside the papers directory, is judged (#582)", async () => {
+  const dir = writeTree(join(root, "lint-owner-source-only"), {
+    "paperlint.json": JSON.stringify({ papersDir: "papers" }),
+    "archive/p/paper.tex": "% P\n",
+    "archive/p/reviews/r.md": "---\nfindings:\n  - id: 1\n---\n# R\n",
+  });
+  const r = await cli(["lint", "archive/p/reviews/r.md"], dir);
+  assert.deepEqual(
+    { code: r.code, card: /archive\/p\/reviews\/r\.md/.test(r.out) },
+    { code: 1, card: true },
+  );
+});
+
 test("lint: a copy straight under a paper is not linted as a paper (#582)", async () => {
   // The layout rule reports the stray `old/` itself; what must not happen is the copy's own
   // scorecard being judged as a second paper's.
