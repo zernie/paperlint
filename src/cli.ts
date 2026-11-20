@@ -189,6 +189,8 @@ import preregCoverage from "#eslint-rules/prereg-coverage";
 import { CYCLE_RULE_LEVELS, cycleRules } from "./cycle-rules.ts";
 import { EDITION_RULE_LEVELS, editionRules } from "./edition-rule.ts";
 import { ARTIFACT_RULE_LEVELS, artifactRules } from "./artifact-rules.ts";
+import { copiesIn } from "./domain/paper-copies.ts";
+import { absolutePath } from "./domain/paths.ts";
 import { changesRules } from "./changes-rule.ts";
 import { latexDiff, withTexBin } from "./adapters/latexdiff/index.ts";
 import { runVersions } from "./versions-command.ts";
@@ -2515,17 +2517,41 @@ async function paperEslint(
     ? paperBodies(paperDirs([...paths, ...papersRoots(cfg)]), RECORD_DEPS)
     : [];
 
+  const cwd = lintRoot(cfg.root, paths);
   const eslint = new ESLint({
-    cwd: lintRoot(cfg.root, paths),
+    cwd,
     overrideConfigFile: true,
     overrideConfig: eslintConfig([
       ...buildConfig(opts, texLanguage),
       ...includeBlocks(bodies),
+      // LAST, so no un-ignore above reaches into a copy (#582).
+      ...copiesIgnored(paperDirs(paths), cwd),
     ]),
     fix,
     stats,
   });
   return { ok: true, value: { eslint, opts, bodies } };
+}
+
+/**
+ * One block ignoring every copy of a paper inside it — a review snapshot, a build copy
+ * (src/domain/paper-copies.ts) — as folders relative to ESLint's `cwd`; none when there is none. Only
+ * a folder with a paper's own file at its top is a paper whose copies are looked for: a papers
+ * directory or the project root holds whole papers, and they are not copies.
+ */
+function copiesIgnored(
+  dirs: readonly string[],
+  cwd: string,
+): readonly ConfigBlock[] {
+  const names = { config: CONFIG_FILE, markers: [MAIN, STATUS_FILE] };
+  const ignores = dirs
+    .filter((d) => names.markers.some((m) => existsSync(join(d, m))))
+    .flatMap((d) =>
+      copiesIn(nodeListTree(absolutePath(d)) ?? [], names).map(
+        (copy) => `${relative(cwd, join(d, copy))}/`,
+      ),
+    );
+  return ignores.length === 0 ? [] : [{ ignores }];
 }
 
 /**

@@ -824,6 +824,44 @@ test("lint: a path that shares nothing with the project but the filesystem root 
   );
 });
 
+/** A scorecard that fails `paper/stages`: its stage names a PDF that does not exist. */
+const FAILING_STATUS =
+  "---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/none.pdf\n    bytes: 1\n---\n";
+
+test("lint: a copy of a paper inside it (a review snapshot, a build copy) is not linted as a paper (#582)", async () => {
+  const dir = writeTree(join(root, "lint-copies"), {
+    "paperlint.json": JSON.stringify({ papersDir: "papers" }),
+    "papers/p/paper.tex": "% P\n",
+    "papers/p/PIPELINE-STATUS.md": "---\n---\n",
+    "papers/p/reviews/2026-11-20-second-opinion/paper.tex": "% P\n",
+    "papers/p/reviews/2026-11-20-second-opinion/PIPELINE-STATUS.md":
+      FAILING_STATUS,
+    "papers/p/research/data/cut/runs/a/paper.tex": "% P\n",
+    "papers/p/research/data/cut/runs/a/PIPELINE-STATUS.md": FAILING_STATUS,
+  });
+  const r = await cli(["lint"], dir);
+  assert.deepEqual(
+    { code: r.code, copies: /second-opinion|runs\/a/.test(r.out) },
+    { code: 0, copies: false },
+  );
+});
+
+test("lint: a folder inside a paper with its own paperlint.json is still linted (#582)", async () => {
+  const dir = writeTree(join(root, "lint-nested-paper"), {
+    "paperlint.json": JSON.stringify({ papersDir: "papers" }),
+    "papers/p/paper.tex": "% P\n",
+    "papers/p/PIPELINE-STATUS.md": "---\n---\n",
+    "papers/p/part/paperlint.json": "{}",
+    "papers/p/part/paper.tex": "% P\n",
+    "papers/p/part/PIPELINE-STATUS.md": FAILING_STATUS,
+  });
+  const r = await cli(["lint"], dir);
+  assert.deepEqual(
+    { code: r.code, nested: /part\/PIPELINE-STATUS\.md/.test(r.out) },
+    { code: 1, nested: true },
+  );
+});
+
 /**
  * `new` at a terminal: stdin and stdout claim to be TTYs (a preload), and each prompt is answered
  * when it appears — a pipe written all at once is swallowed by the first question.
