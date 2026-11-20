@@ -159,9 +159,7 @@ const numbersFound = (body: string) => {
   return judgeParagraphNumbers(
     latexReader.bodyProse(src),
     DEFAULT_MAX_PARAGRAPH_NUMBERS,
-  ).map(
-    (f) => f.data,
-  );
+  ).map((f) => f.data);
 };
 
 describe("tex/max-paragraph-numbers", () => {
@@ -173,9 +171,9 @@ describe("tex/max-paragraph-numbers", () => {
       { numbers: 11, max: 10, head: "We ran 1 and 2.5 and 30% and…" },
     ]);
     // Guards: a citation key and a reference are not quantities.
-    expect(
-      numbersFound(`${ten} See \\cite{k2024} and \\ref{sec:1}.`),
-    ).toEqual([]);
+    expect(numbersFound(`${ten} See \\cite{k2024} and \\ref{sec:1}.`)).toEqual(
+      [],
+    );
     // A place typed by hand is a number like any other; written with \\ref it is not.
     expect(numbersFound(`${ten} See Section 3.2.`)).toEqual([
       { numbers: 11, max: 10, head: "We ran 1 and 2.5 and 30% and…" },
@@ -184,7 +182,8 @@ describe("tex/max-paragraph-numbers", () => {
   });
 
   /** Ten numbers a reader sees, none of them a `\num…` macro. */
-  const TEN = "We ran 1 and 2 and 3 and 4 and 5 and 6 and 7 and 8 and 9 and 10 times.";
+  const TEN =
+    "We ran 1 and 2 and 3 and 4 and 5 and 6 and 7 and 8 and 9 and 10 times.";
 
   it("🔴 a `\\num…` macro in the paragraph's prose counts: the eleventh fires", () => {
     expect(numbersFound(`${TEN} Then \\numFoo{} more.`)).toEqual([
