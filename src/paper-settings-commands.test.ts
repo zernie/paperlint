@@ -98,6 +98,24 @@ describe("🔴 an optional rule that reaches no paper — judged against the PRO
   });
 });
 
+describe("paperlint lint — `rules` in a paper's paperlint.json as a list of blocks (#582)", () => {
+  it("turns a rule on for that paper alone, globs relative to the paper", async () => {
+    const root = project({
+      "papers/a/paperlint.json": JSON.stringify({
+        rules: [
+          {
+            files: ["paper.tex"],
+            rules: { "pdf/last-page-balance": "error" },
+          },
+        ],
+      }),
+    });
+    const r = await lint(root);
+    expect(rulesIn(r.out, "a")).toContain("pdf/last-page-balance");
+    expect(rulesIn(r.out, "b")).not.toContain("pdf/last-page-balance");
+  });
+});
+
 describe("paperlint lint — `rules` in a paper's paperlint.json", () => {
   it("turns an optional rule on for that paper alone", async () => {
     const root = project({
