@@ -212,7 +212,34 @@ describe("a run with --write", () => {
       asked,
     ]);
   });
+});
 
+describe("a run with --write that stops halfway", () => {
+  test("a paper whose files fail to write is not logged as kept, so a rerun judges it again", async () => {
+    const s = setup("broken");
+    const out = join(s.root, "staged");
+    // A file where the paper's directory must go makes staging its files fail.
+    writeTree(out, { "real-papers/accepted/k1v1": "" });
+    await expect(run(s.args(out), s.world)).rejects.toThrow();
+    const log = join(
+      out,
+      "real-papers",
+      "accepted",
+      "sampling",
+      "probe-log.jsonl",
+    );
+    const outcomes = readFileSync(log, "utf8")
+      .trim()
+      .split("\n")
+      .map((l) =>
+        z.object({ id: z.string(), outcome: z.string() }).parse(parseJson(l)),
+      );
+    // Guards: only the decision whose staging finished is in the log.
+    expect(outcomes).toEqual([{ id: "pre1v2", outcome: "rejected" }]);
+  });
+});
+
+describe("a run with --write into fixtures/", () => {
   test("a second paper adds to the staged notes and manifest", async () => {
     const s = setup("inplace");
     const out = join(s.root, "fixtures");

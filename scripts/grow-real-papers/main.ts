@@ -111,29 +111,33 @@ export type World = Readonly<{
   presets: string;
 }>;
 
-/** Writes one decided candidate into `out`: its log line, and when kept its files and entries. */
+/**
+ * Writes one decided candidate into `out`: when kept, its files and entries first; its log line
+ * last, so a run that stops halfway leaves no logged decision whose files are missing.
+ */
 function stage(out: string, line: ProbeLine, paper?: KeptPaper): void {
   const sampling = join(out, SAMPLING);
   mkdirSync(sampling, { recursive: true });
+  if (paper !== undefined) {
+    const dir = join(out, "real-papers", "accepted", paper.id);
+    for (const [path, body] of paper.files) {
+      mkdirSync(dirname(join(dir, path)), { recursive: true });
+      writeFileSync(join(dir, path), body);
+    }
+    const notes = join(sampling, "staging-notes.json");
+    writeFileSync(
+      notes,
+      json({ ...Notes.parse(readJson(notes, {})), [paper.id]: paper.note }),
+    );
+    const manifest = join(out, "venue-manifest.json");
+    writeFileSync(
+      manifest,
+      json([...Entries.parse(readJson(manifest, [])), paper.entry]),
+    );
+  }
   appendFileSync(
     join(sampling, "probe-log.jsonl"),
     `${JSON.stringify(line)}\n`,
-  );
-  if (paper === undefined) return;
-  const dir = join(out, "real-papers", "accepted", paper.id);
-  for (const [path, body] of paper.files) {
-    mkdirSync(dirname(join(dir, path)), { recursive: true });
-    writeFileSync(join(dir, path), body);
-  }
-  const notes = join(sampling, "staging-notes.json");
-  writeFileSync(
-    notes,
-    json({ ...Notes.parse(readJson(notes, {})), [paper.id]: paper.note }),
-  );
-  const manifest = join(out, "venue-manifest.json");
-  writeFileSync(
-    manifest,
-    json([...Entries.parse(readJson(manifest, [])), paper.entry]),
   );
 }
 
