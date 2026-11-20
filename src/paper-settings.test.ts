@@ -36,6 +36,7 @@ describe("parsePaperSettings", () => {
         authors: null,
         fields: null,
         cycles: null,
+        artifact: null,
       },
     });
     expect(parsePaperSettings({})).toEqual({
@@ -51,6 +52,7 @@ describe("parsePaperSettings", () => {
         authors: null,
         fields: null,
         cycles: null,
+        artifact: null,
       },
     });
   });
@@ -69,6 +71,7 @@ describe("parsePaperSettings", () => {
         authors: null,
         fields: null,
         cycles: null,
+        artifact: null,
       },
     });
   });
@@ -191,6 +194,7 @@ const UNSET = {
   authors: null,
   fields: null,
   cycles: null,
+  artifact: null,
 };
 
 describe("readPaperSettings — the root paperlint.json's defaults, the paper's file over them", () => {
@@ -252,6 +256,7 @@ describe("readPaperSettings — the root paperlint.json's defaults, the paper's 
       authors: null,
       fields: null,
       cycles: null,
+      artifact: null,
     });
   });
 });
@@ -304,6 +309,7 @@ describe("paperRules — `rules` in paperlint.json", () => {
     authors: null,
     fields: null,
     cycles: null,
+    artifact: null,
   });
 
   it("no rules: none", () => {
@@ -390,6 +396,25 @@ describe("talk in a paper's paperlint.json", () => {
   it("refuses a talk it cannot parse, naming the key", () => {
     const r = parsePaperSettings({ talk: { mode: "zoom" } });
     expect(r.ok ? "" : r.error).toMatch(/"talk.mode"/);
+  });
+});
+
+describe("artifact in a paper's paperlint.json", () => {
+  it("🔴 is parsed into the paper's settings", () => {
+    const r = parsePaperSettings({
+      artifact: { dir: "artifact", promises: { prompts: "**/prompts/*.md" } },
+    });
+    expect(r.ok && r.value.artifact).toEqual({
+      dir: "artifact",
+      promises: { prompts: "**/prompts/*.md" },
+    });
+  });
+
+  it("🔴 refuses an artifact it cannot parse, naming the key", () => {
+    expect(parsePaperSettings({ artifact: { dir: "/abs" } })).toEqual({
+      ok: false,
+      error: `"artifact.dir" must be a folder relative to the paper, got "/abs"`,
+    });
   });
 });
 

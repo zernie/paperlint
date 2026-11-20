@@ -4,7 +4,7 @@
  * One file name at two levels, one schema (lib/paper-config.mjs → SETTINGS_KEYS):
  *
  *   paperlint.json                 the project (optional): papersDir, rules, defaults
- *   <paper>/paperlint.json         this paper: { extends, kind, pdf, rules, identity, talk, submission, authors, fields } —
+ *   <paper>/paperlint.json         this paper: { extends, kind, pdf, rules, identity, talk, submission, authors, fields, artifact } —
  *                                  or `cycles`, from whose current attempt extends, kind and submission
  *                                  are DERIVED (src/domain/cycle.ts); the two forms do not mix
  *   a venue preset                 `paperlint:<name>` (shipped) or `./x.jsonc` (src/presets.ts)
@@ -47,6 +47,7 @@ import {
   venueCycleOf,
   type Cycles,
 } from "./domain/cycle.ts";
+import { parsePaperArtifact, type PaperArtifact } from "./domain/artifact.ts";
 
 /** What one paper declares. Every absent field is null. */
 export interface PaperSettings {
@@ -84,6 +85,8 @@ export interface PaperSettings {
    * attempt's — derived, never written beside it. Never the root's.
    */
   readonly cycles: Cycles | null;
+  /** Where the paper's reproduction artifact is and what the paper promises it holds (`artifact/contents`); null when absent. Never the root's. */
+  readonly artifact: PaperArtifact | null;
 }
 
 /** Why a paper's settings cannot be read. */
@@ -142,11 +145,14 @@ export function identityField(
       );
 }
 
-/** `rules` (checked for shape only), `talk`, `submission` and `authors`, each null when absent; `fields` as written. */
+/** `rules` (checked for shape only), `talk`, `submission`, `authors` and `artifact`, each null when absent; `fields` as written. */
 function rulesAndTalk(
   json: Readonly<Record<string, unknown>>,
 ): Result<
-  Pick<PaperSettings, "rules" | "talk" | "submission" | "authors" | "fields">,
+  Pick<
+    PaperSettings,
+    "rules" | "talk" | "submission" | "authors" | "fields" | "artifact"
+  >,
   string
 > {
   const rules = json["rules"];
@@ -159,15 +165,18 @@ function rulesAndTalk(
   const submission = parsePaperSubmission(json["submission"]);
   if (!submission.ok) return submission;
   const authors = parsePaperAuthors(json["authors"]);
-  return authors.ok
+  if (!authors.ok) return authors;
+  const artifact = parsePaperArtifact(json["artifact"]);
+  return artifact.ok
     ? ok({
         rules: rules ?? null,
         talk: talk.value,
         submission: submission.value,
         authors: authors.value,
         fields: json["fields"] ?? null,
+        artifact: artifact.value,
       })
-    : authors;
+    : artifact;
 }
 
 /** The keys the current cycle supplies: writing one beside `cycles` is a second source for it. */
@@ -342,6 +351,7 @@ function merge(
     authors: null,
     fields: null,
     cycles: null,
+    artifact: null,
   };
   const merged: PaperSettings = {
     extends: p.extends ?? r.extends,
@@ -354,6 +364,7 @@ function merge(
     authors: p.authors,
     fields: p.fields,
     cycles: p.cycles,
+    artifact: p.artifact,
   };
   return paper === null && Object.values(merged).every((v) => v === null)
     ? null
