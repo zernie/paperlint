@@ -182,4 +182,11 @@ describe("prior-reviews.ts — the runner on a real folder", () => {
     const r = runNode(SCRIPT, [dir], { cwd: "/" });
     expect(r).toEqual({ status: 0, stdout: `${REQUIRED.line}\n`, stderr: "" });
   });
+  it("no argument: the usage on stderr, exit 2", () => {
+    expect(runNode(SCRIPT, [], { cwd: "/" })).toEqual({
+      status: 2,
+      stdout: "",
+      stderr: "usage: node prior-reviews.js <paper-dir>\n",
+    });
+  });
 });
