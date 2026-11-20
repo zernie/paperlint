@@ -7,8 +7,8 @@
  */
 import { join } from "node:path";
 import { callerPath } from "#src/caller-path";
-import { readCycles } from "#src/cycle-rules";
 import type { Files } from "#src/ports/files";
+import { readPaperSettings } from "#src/paper-settings";
 import { priorReviewsOf } from "#src/prior-reviews-rule";
 
 /** What the command prints, and its exit code. */
@@ -22,10 +22,13 @@ export function seatVerdict(
   dir: string,
   deps: { readonly files: Files },
 ): SeatVerdict {
-  const cycles = readCycles(dir, deps);
-  if (!cycles.ok)
-    return { code: 2, line: `prior-reviews: paperlint.json: ${cycles.error}` };
-  const prior = cycles.value === null ? null : priorReviewsOf(cycles.value);
+  // readPaperSettings, as the lint run reads the file: a file that does not parse, or cycles it cannot
+  // hold, is an error here, never a "not required" (readCycles alone reads broken JSON as no cycles).
+  const settings = readPaperSettings(deps.files, dir);
+  if (!settings.ok)
+    return { code: 2, line: `prior-reviews: ${settings.error.why}` };
+  const cycles = settings.value?.cycles ?? null;
+  const prior = cycles === null ? null : priorReviewsOf(cycles);
   if (prior === null)
     return {
       code: 0,

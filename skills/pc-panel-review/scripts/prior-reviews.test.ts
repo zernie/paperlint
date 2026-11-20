@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { memoryFiles } from "#src/adapters/memory/index";
 import { runNode, useTempDir, writeTree } from "../../../test/support.ts";
-import { readCycles } from "#src/cycle-rules";
+import { readPaperSettings } from "#src/paper-settings";
 import { main, seatVerdict } from "./prior-reviews-core.ts";
 
 const SCRIPT = join(
@@ -61,7 +61,7 @@ const paper = (cycles: readonly object[] | undefined, points = true) =>
 const verdict = (cycles: readonly object[] | undefined, points = true) =>
   seatVerdict(PAPER, { files: paper(cycles, points) });
 
-/** A record whose one cycle has no id, venue or dates: readCycles refuses it. */
+/** A record whose one cycle has no id, venue or dates: the settings reader refuses it. */
 const BROKEN = JSON.stringify({ cycles: [{}] });
 
 const REQUIRED = {
@@ -113,14 +113,28 @@ describe("seatVerdict — the seat sits when the rule fires", () => {
     expect(verdict([REVIEWED])).toEqual(NOT_REQUIRED);
   });
 
-  it("🔴 cycles the record cannot hold: exit 2 with readCycles' reason", () => {
-    const files = memoryFiles({ [`${PAPER}/paperlint.json`]: BROKEN });
-    const read = readCycles(PAPER, { files });
+  it('🔴 a paperlint.json that does not parse: exit 2 with readPaperSettings\' reason, never "not required"', () => {
+    const files = memoryFiles({
+      [`${PAPER}/paperlint.json`]: '{ "cycles": [], }',
+    });
+    const read = readPaperSettings(files, PAPER);
     expect({ read: read.ok, verdict: seatVerdict(PAPER, { files }) }).toEqual({
       read: false,
       verdict: {
         code: 2,
-        line: `prior-reviews: paperlint.json: ${read.ok ? "" : read.error}`,
+        line: `prior-reviews: ${read.ok ? "" : read.error.why}`,
+      },
+    });
+  });
+
+  it("🔴 cycles the record cannot hold: exit 2 with the settings' reason", () => {
+    const files = memoryFiles({ [`${PAPER}/paperlint.json`]: BROKEN });
+    const read = readPaperSettings(files, PAPER);
+    expect({ read: read.ok, verdict: seatVerdict(PAPER, { files }) }).toEqual({
+      read: false,
+      verdict: {
+        code: 2,
+        line: `prior-reviews: ${read.ok ? "" : read.error.why}`,
       },
     });
   });
