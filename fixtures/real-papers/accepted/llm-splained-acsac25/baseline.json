@@ -10,9 +10,9 @@
     "paper/refs-checked and bib/reachable-entry are silent: biblatex with biber, so bibtex never ran and the record lists no database. When bib/reachable-entry read the .bib files the paper declares (2026-09-29) it counted 55 entries with no doi, url, arXiv id or \\url."
   ],
   "findings": {
+    "paper/allowed-files-only": 3,
     "paper/leading-zero": 2,
     "pdf/measured": 1,
-    "tex/claim-provenance": 11,
-    "paper/allowed-files-only": 3
+    "tex/claim-provenance": 12
   }
 }

@@ -6,7 +6,7 @@
   "findings": {
     "paper/allowed-files-only": 2,
     "pdf/measured": 1,
-    "tex/claim-provenance": 40,
+    "tex/claim-provenance": 41,
     "tex/venue-leftover": 2
   }
 }

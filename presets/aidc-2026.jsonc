@@ -97,7 +97,7 @@
   //   relation markers  anchors 39.4–112.8  band 25.4–135.0
   // and, as a percent of the body's sentences (tex/negated-sentences). All four rules are off by
   // default and judge these bands only when a paper turns on the set paperlint:writing:
-  //   negated sentences anchors 5.2–17.8%   band 2.9–21.8%
+  //   negated sentences anchors 5.2–17.8%   band 2.9–21.7%
   "register": {
     "anchors": [
       {
@@ -106,7 +106,7 @@
         "contrast_frames": 1,
         "claim_emphasis": 8,
         "relation_markers": 31,
-        "sentences": 402,
+        "sentences": 405,
         "negated_sentences": 21,
       },
       {
@@ -124,7 +124,7 @@
         "contrast_frames": 4,
         "claim_emphasis": 1,
         "relation_markers": 84,
-        "sentences": 460,
+        "sentences": 461,
         "negated_sentences": 82,
       },
       {
