@@ -145,14 +145,11 @@ export function identityField(
       );
 }
 
-/** `rules` (checked for shape only), `talk`, `submission`, `authors` and `artifact`, each null when absent; `fields` as written. */
+/** `rules` (checked for shape only), `talk`, `submission` and `authors`, each null when absent; `fields` as written. */
 function rulesAndTalk(
   json: Readonly<Record<string, unknown>>,
 ): Result<
-  Pick<
-    PaperSettings,
-    "rules" | "talk" | "submission" | "authors" | "fields" | "artifact"
-  >,
+  Pick<PaperSettings, "rules" | "talk" | "submission" | "authors" | "fields">,
   string
 > {
   const rules = json["rules"];
@@ -165,18 +162,15 @@ function rulesAndTalk(
   const submission = parsePaperSubmission(json["submission"]);
   if (!submission.ok) return submission;
   const authors = parsePaperAuthors(json["authors"]);
-  if (!authors.ok) return authors;
-  const artifact = parsePaperArtifact(json["artifact"]);
-  return artifact.ok
+  return authors.ok
     ? ok({
         rules: rules ?? null,
         talk: talk.value,
         submission: submission.value,
         authors: authors.value,
         fields: json["fields"] ?? null,
-        artifact: artifact.value,
       })
-    : artifact;
+    : authors;
 }
 
 /** The keys the current cycle supplies: writing one beside `cycles` is a second source for it. */
@@ -249,11 +243,14 @@ export function parsePaperSettings(
   if (!rest.ok) return rest;
   const cycles = cyclesField(json);
   if (!cycles.ok) return cycles;
+  const artifact = parsePaperArtifact(json["artifact"]);
+  if (!artifact.ok) return artifact;
   const flat = {
     ...fields.value,
     ...rest.value,
     identity: identity.value,
     cycles: cycles.value,
+    artifact: artifact.value,
   };
   return ok(
     cycles.value === null ? flat : { ...flat, ...derived(cycles.value) },
@@ -330,6 +327,18 @@ const NO_DEFAULTS: Defaults = {
   identity: null,
 };
 
+/** A paper that declares nothing. */
+const NO_SETTINGS: PaperSettings = {
+  ...NO_DEFAULTS,
+  rules: null,
+  talk: null,
+  submission: null,
+  authors: null,
+  fields: null,
+  cycles: null,
+  artifact: null,
+};
+
 /** Both lists, joined without repeats; null when neither side has one. */
 const joined = (
   a: readonly string[] | null,
@@ -343,28 +352,13 @@ function merge(
   paper: PaperSettings | null,
 ): PaperSettings | null {
   const r = root ?? NO_DEFAULTS;
-  const p = paper ?? {
-    ...NO_DEFAULTS,
-    rules: null,
-    talk: null,
-    submission: null,
-    authors: null,
-    fields: null,
-    cycles: null,
-    artifact: null,
-  };
+  const p = paper ?? NO_SETTINGS;
   const merged: PaperSettings = {
+    ...p,
     extends: p.extends ?? r.extends,
     kind: p.kind ?? r.kind,
     pdf: p.pdf ?? r.pdf,
-    rules: p.rules,
     identity: joined(r.identity, p.identity),
-    talk: p.talk,
-    submission: p.submission,
-    authors: p.authors,
-    fields: p.fields,
-    cycles: p.cycles,
-    artifact: p.artifact,
   };
   return paper === null && Object.values(merged).every((v) => v === null)
     ? null

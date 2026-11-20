@@ -1989,17 +1989,18 @@ describe("cycle/camera-ready-source, before the camera-ready is frozen", () => {
   );
 });
 
-describe("the artifact rules through real ESLint: each message, both halves", () => {
-  const STATUS_AT = `${P}/PIPELINE-STATUS.md`;
-  const said = async (
-    tree: Record<string, string>,
-    emptyDirs: readonly string[] = [],
-  ) =>
-    (await lintTree(tree, emptyDirs))
-      .filter((m) => (m.ruleId ?? "").startsWith("artifact/"))
-      .map((m) => `${m.file}:${String(m.line)} ${m.ruleId ?? ""} ${m.message}`);
-  const LIST = "submission/artifact-files.txt";
+const STATUS_AT = `${P}/PIPELINE-STATUS.md`;
+const LIST = "submission/artifact-files.txt";
+/** What the artifact rules say about `tree` (`emptyDirs` made too), as `file:line rule message`. */
+const said = async (
+  tree: Record<string, string>,
+  emptyDirs: readonly string[] = [],
+) =>
+  (await lintTree(tree, emptyDirs))
+    .filter((m) => (m.ruleId ?? "").startsWith("artifact/"))
+    .map((m) => `${m.file}:${String(m.line)} ${m.ruleId ?? ""} ${m.message}`);
 
+describe("the artifact rules through real ESLint: each message, both halves", () => {
   it(
     "🔴 a folder that does not exist: each rule says what it cannot check",
     { timeout: CASE_TIMEOUT_MS },
@@ -2038,7 +2039,9 @@ describe("the artifact rules through real ESLint: each message, both halves", ()
       ]);
     },
   );
+});
 
+describe("the artifact rules through real ESLint: a committed list of paths", () => {
   it(
     "🔴 a list that does not exist, and one that names no file",
     { timeout: CASE_TIMEOUT_MS },

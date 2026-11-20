@@ -8,6 +8,70 @@ import {
   parsePaperArtifact,
 } from "./artifact.ts";
 
+/** A bad shape, and the one line that refuses it. */
+const REFUSED: readonly (readonly [string, unknown, string])[] = [
+  [
+    "not an object",
+    "artifact",
+    `"artifact" must be an object with a "dir" or a "files"`,
+  ],
+  [
+    "an unknown key",
+    { dir: "a", include: ["x"] },
+    `"artifact" has an unknown key "include" — known: dir, files, required, promises`,
+  ],
+  [
+    "neither dir nor files",
+    { promises: {} },
+    `"artifact" needs exactly one of "dir" (the artifact's folder) or "files" (a committed list of its paths), got neither`,
+  ],
+  [
+    "both dir and files",
+    { dir: "a", files: "a.txt" },
+    `"artifact" needs exactly one of "dir" (the artifact's folder) or "files" (a committed list of its paths), got both`,
+  ],
+  [
+    "an absolute dir",
+    { dir: "/srv/artifact" },
+    `"artifact.dir" must be a path relative to the paper, got "/srv/artifact"`,
+  ],
+  [
+    "an empty files",
+    { files: "" },
+    `"artifact.files" must be a path relative to the paper, got ""`,
+  ],
+  [
+    "a required name with a folder",
+    { dir: "a", required: ["docs/README"] },
+    `"artifact.required" must be a list of top-level names without an extension ("README", "LICENSE"), got ["docs/README"]`,
+  ],
+  [
+    "a required name with an extension",
+    { dir: "a", required: ["README.md"] },
+    `"artifact.required" must be a list of top-level names without an extension ("README", "LICENSE"), got ["README.md"]`,
+  ],
+  [
+    "promises as a list",
+    { dir: "a", promises: ["**/*.md"] },
+    `"artifact.promises" must be an object of label → glob`,
+  ],
+  [
+    "an empty glob",
+    { dir: "a", promises: { prompts: "" } },
+    `"artifact.promises" entry "prompts" must be a non-empty glob relative to the artifact's root, got ""`,
+  ],
+  [
+    "a glob that is not a string",
+    { dir: "a", promises: { prompts: 3 } },
+    `"artifact.promises" entry "prompts" must be a non-empty glob relative to the artifact's root, got 3`,
+  ],
+  [
+    "an empty label",
+    { dir: "a", promises: { "": "*.md" } },
+    `"artifact.promises" entry "" must be a non-empty glob relative to the artifact's root, got "*.md"`,
+  ],
+];
+
 describe("parsePaperArtifact", () => {
   it("is null when the paper declares no artifact", () => {
     expect(parsePaperArtifact(undefined)).toEqual({ ok: true, value: null });
@@ -41,68 +105,7 @@ describe("parsePaperArtifact", () => {
     });
   });
 
-  it.each<[string, unknown, string]>([
-    [
-      "not an object",
-      "artifact",
-      `"artifact" must be an object with a "dir" or a "files"`,
-    ],
-    [
-      "an unknown key",
-      { dir: "a", include: ["x"] },
-      `"artifact" has an unknown key "include" — known: dir, files, required, promises`,
-    ],
-    [
-      "neither dir nor files",
-      { promises: {} },
-      `"artifact" needs exactly one of "dir" (the artifact's folder) or "files" (a committed list of its paths), got neither`,
-    ],
-    [
-      "both dir and files",
-      { dir: "a", files: "a.txt" },
-      `"artifact" needs exactly one of "dir" (the artifact's folder) or "files" (a committed list of its paths), got both`,
-    ],
-    [
-      "an absolute dir",
-      { dir: "/srv/artifact" },
-      `"artifact.dir" must be a path relative to the paper, got "/srv/artifact"`,
-    ],
-    [
-      "an empty files",
-      { files: "" },
-      `"artifact.files" must be a path relative to the paper, got ""`,
-    ],
-    [
-      "a required name with a folder",
-      { dir: "a", required: ["docs/README"] },
-      `"artifact.required" must be a list of top-level names without an extension ("README", "LICENSE"), got ["docs/README"]`,
-    ],
-    [
-      "a required name with an extension",
-      { dir: "a", required: ["README.md"] },
-      `"artifact.required" must be a list of top-level names without an extension ("README", "LICENSE"), got ["README.md"]`,
-    ],
-    [
-      "promises as a list",
-      { dir: "a", promises: ["**/*.md"] },
-      `"artifact.promises" must be an object of label → glob`,
-    ],
-    [
-      "an empty glob",
-      { dir: "a", promises: { prompts: "" } },
-      `"artifact.promises" entry "prompts" must be a non-empty glob relative to the artifact's root, got ""`,
-    ],
-    [
-      "a glob that is not a string",
-      { dir: "a", promises: { prompts: 3 } },
-      `"artifact.promises" entry "prompts" must be a non-empty glob relative to the artifact's root, got 3`,
-    ],
-    [
-      "an empty label",
-      { dir: "a", promises: { "": "*.md" } },
-      `"artifact.promises" entry "" must be a non-empty glob relative to the artifact's root, got "*.md"`,
-    ],
-  ])("refuses %s", (_, v, why) => {
+  it.each(REFUSED)("refuses %s", (_, v, why) => {
     // Guards: each bad shape is refused with the one line naming the key and what it must be.
     expect(parsePaperArtifact(v)).toEqual({ ok: false, error: why });
   });
