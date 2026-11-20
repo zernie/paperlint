@@ -1373,21 +1373,21 @@ const CASES: Readonly<Record<string, RuleCases>> = {
   // below): its cases turn it on in the paper's paperlint.json, as study/declare-sample's do.
   "tex/max-paragraph-words": {
     reports: {
-      tree: paper(tex(wordsParagraph(151)), MAX_PARAGRAPH_WORDS_ON),
+      tree: paper(tex(wordsParagraph(251)), MAX_PARAGRAPH_WORDS_ON),
       file: TEX_FILE,
       severity: 1,
       line: 3,
     },
-    silent: paper(tex(wordsParagraph(150)), MAX_PARAGRAPH_WORDS_ON),
+    silent: paper(tex(wordsParagraph(250)), MAX_PARAGRAPH_WORDS_ON),
   },
   "tex/max-paragraph-numbers": {
     reports: {
-      tree: paper(tex(numbersParagraph(9)), CEILINGS_ON),
+      tree: paper(tex(numbersParagraph(11)), CEILINGS_ON),
       file: TEX_FILE,
       severity: 1,
       line: 3,
     },
-    silent: paper(tex(numbersParagraph(8)), CEILINGS_ON),
+    silent: paper(tex(numbersParagraph(10)), CEILINGS_ON),
   },
   "tex/max-sentence-words": {
     reports: {
@@ -1842,10 +1842,10 @@ describe("tex/max-paragraph-words is off by default", () => {
 });
 
 describe("the other two ceilings are off by default", () => {
-  it("nine numbers and a 56-word sentence produce nothing under the default config", async () => {
+  it("eleven numbers and a 56-word sentence produce nothing under the default config", async () => {
     const ids = async (tree: Record<string, string>) =>
       (await lintTree(tree)).map((m) => m.ruleId);
-    const body = `${numbersParagraph(9)} ${longSentence(56)}`;
+    const body = `${numbersParagraph(11)} ${longSentence(56)}`;
     const off = await ids(paper(tex(body)));
     expect(off).not.toContain("tex/max-paragraph-numbers");
     expect(off).not.toContain("tex/max-sentence-words");
