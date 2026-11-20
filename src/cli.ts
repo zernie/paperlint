@@ -2293,9 +2293,11 @@ const SIMPLE: Readonly<
  * paper's). Undefined when the rule is not on there or the config does not read; lint says why.
  */
 async function uploadRuleEntry(dir: string): Promise<unknown> {
+  // Quiet: a config that does not read is lint's to report, not this command's.
+  const quiet = (): void => {};
   const cfg = readConfig(parseArgs(["lint"]), {
-    log: () => {},
-    err: () => {},
+    log: quiet,
+    err: quiet,
     cwd: dir,
   });
   if (cfg.code !== undefined) return undefined;
