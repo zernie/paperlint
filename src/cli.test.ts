@@ -860,12 +860,19 @@ test.each([
         "archive/p/PIPELINE-STATUS.md": "---\n---\n",
         // A finding without a status: the review schema refuses it.
         "archive/p/reviews/r.md": "---\nfindings:\n  - id: 1\n---\n# R\n",
+        // A snapshot of the paper beside the card: the paper still owns the card.
+        "archive/p/reviews/snapshot/paper.tex": "% P\n",
+        "archive/p/reviews/snapshot/PIPELINE-STATUS.md": FAILING_STATUS,
       },
     );
     const r = await cli(["lint", path], dir);
     assert.deepEqual(
-      { code: r.code, card: /archive\/p\/reviews\/r\.md/.test(r.out) },
-      { code: 1, card: true },
+      {
+        code: r.code,
+        card: /archive\/p\/reviews\/r\.md/.test(r.out),
+        snapshot: /reviews\/snapshot/.test(r.out),
+      },
+      { code: 1, card: true, snapshot: false },
     );
   },
 );

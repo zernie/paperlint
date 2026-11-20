@@ -948,9 +948,9 @@ export async function silentOptionalRules(
 function paperDirs(paths: readonly string[]): readonly string[] {
   const dirs = paths.map((p) => {
     const dir = resolve(existsSync(p) && statSync(p).isFile() ? dirname(p) : p);
-    return papersIn(dir).length > 0
-      ? dir
-      : (paperFolderOf(join(dir, STATUS_FILE), nodeFiles) ?? dir);
+    // The paper that owns the path comes first, so a snapshot kept beside a review card never
+    // stands in for the paper the card belongs to (#582).
+    return paperFolderOf(join(dir, STATUS_FILE), nodeFiles) ?? dir;
   });
   return [...new Set(dirs.flatMap((p) => (isPaper(p) ? [p] : papersUnder(p))))];
 }
