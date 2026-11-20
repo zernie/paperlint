@@ -65,16 +65,18 @@ export async function* arxivCandidates(
   maxPages: number,
 ): AsyncGenerator<Found> {
   const seen = new Set<string>();
-  for (const query of slot.queries)
+  for (const query of slot.queries) {
+    let failed = false; // the page's error is its query's last item; then the slot ends
     for await (const e of searchPages(get, slot, query, maxPages)) {
-      if ("searchError" in e) {
-        yield e;
-        return;
+      failed = "searchError" in e;
+      if ("searchError" in e) yield e;
+      else if (!seen.has(e.id)) {
+        seen.add(e.id);
+        yield { ...e, rank: seen.size, query };
       }
-      if (seen.has(e.id)) continue;
-      seen.add(e.id);
-      yield { ...e, rank: seen.size, query };
     }
+    if (failed) return;
+  }
 }
 
 /** One query's results, page after page, until a short page or `maxPages`. */
