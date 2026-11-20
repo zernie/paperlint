@@ -880,6 +880,22 @@ test("artifact upload --save runs after a yes naming its folder and sha256, once
   ).toBe(null);
 });
 
+test("artifact upload --save with a flag before the subcommand is a send too: refused without a yes, and it uses a yes up", () => {
+  const before = "npx paperlint artifact --to osf upload a.zip papers/p --save";
+  // Guards: the CLI reads the subcommand wherever the flags put it, so the hook must too.
+  expect(withZip([], before)).toMatch(/^Not run: this uploads/u);
+  const yes = question(
+    "q1",
+    `Upload a.zip (paper folder /w/papers/p, sha256 ${ZIP_SHA})?`,
+    "Yes, upload it",
+  );
+  // Guards: it runs on a yes, and an earlier one of its kind used that yes.
+  expect(withZip(yes, before)).toBe(null);
+  expect(withZip([...yes, ...bash("b1", before)])).toMatch(
+    /^Not run: this uploads/u,
+  );
+});
+
 test("artifact upload --save of a file that is not there, or words that do not parse: refused, nothing to ask about", () => {
   // Guards: a missing file has no sha256 to ask about.
   expect(

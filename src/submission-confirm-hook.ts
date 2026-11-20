@@ -132,10 +132,17 @@ function allLeaves(
   ];
 }
 
-/** Where a `paperlint artifact upload … --save` stands in one command's words; -1 for none. */
+/**
+ * Where a `paperlint artifact … upload … --save` stands in one command's words; -1 for none. The CLI
+ * reads the subcommand wherever the flags leave it (`artifact --to osf upload …`), so any `upload`
+ * after `artifact` counts here; `readUpload`, the CLI's own parser, then reads the words, and words
+ * it cannot read cleanly are refused rather than let through.
+ */
 const uploadAt = (l: ShellLeaf): number =>
   l.hasFlag("save")
-    ? l.args.findIndex((x, i) => x === "artifact" && l.args[i + 1] === "upload")
+    ? l.args.findIndex(
+        (x, i) => x === "artifact" && l.args.slice(i + 1).includes("upload"),
+      )
     : -1;
 
 /** A `paperlint submission new|update` with `--save` or `--submit`, or an upload that saves, in the words of one command. */
