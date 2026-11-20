@@ -92,6 +92,29 @@ describe("shipped presets", () => {
       url: "https://conf.researchr.org/home/ase-2026/agenticdev-2026",
     });
   });
+
+  it("paperlint:agent-2027 records its HotCRP form: a required Submission Type and the attachments field", () => {
+    const r = resolve("paperlint:agent-2027");
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.value.submissionFields).toEqual({
+      source: "portal",
+      url: "https://icse2027-agent.hotcrp.com/api/searchcompletion",
+      read: "2026-11-20",
+      fields: {
+        SubTyp: {
+          kind: "choice",
+          required: true,
+          label: "Submission Type",
+          options: [
+            "Full paper (up to 8 pages, including references)",
+            "Short paper (up to 5 pages, including references)",
+          ],
+        },
+        Att: { kind: "attachments", required: false, label: null },
+      },
+    });
+  });
 });
 
 describe("shipped presets: paperlint:msr-2027", () => {
