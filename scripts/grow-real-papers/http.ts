@@ -11,6 +11,12 @@ export type Clock = Readonly<{
   sleep: (ms: number) => Promise<void>;
 }>;
 
+/** The real clock. */
+export const realClock: Clock = {
+  now: Date.now,
+  sleep: (ms) => new Promise<void>((done) => setTimeout(done, ms)),
+};
+
 export const USER_AGENT =
   "paperlint-fixtures/1.0 (+https://github.com/zernie/paperlint)";
 

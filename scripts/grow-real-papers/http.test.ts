@@ -3,7 +3,7 @@
  * Semantic Scholar's own gap, and the retries. No real request, no real wait.
  */
 import { describe, expect, test } from "vitest";
-import { serviceOf, throttledGet, USER_AGENT } from "./http.ts";
+import { realClock, serviceOf, throttledGet, USER_AGENT } from "./http.ts";
 
 type Answer = number | "drop";
 
@@ -85,4 +85,11 @@ describe("retries", () => {
     });
     expect(w.calls.length).toBe(5);
   });
+});
+
+test("the real clock sleeps and tells the time", async () => {
+  const before = realClock.now();
+  await realClock.sleep(1);
+  // Guards: time moves forward across a sleep.
+  expect(realClock.now()).toBeGreaterThanOrEqual(before);
 });

@@ -35,7 +35,7 @@ import {
   type ProbeLine,
   type SlotEnd,
 } from "./collect.ts";
-import { throttledGet } from "./http.ts";
+import { realClock, throttledGet } from "./http.ts";
 import type { KeptPaper } from "./paper.ts";
 import { baseId, type Get } from "./sources.ts";
 
@@ -205,13 +205,9 @@ if (isMain(import.meta.url)) {
     console.error(args);
     process.exit(2);
   }
-  const clock = {
-    now: Date.now,
-    sleep: (ms: number) => new Promise<void>((done) => setTimeout(done, ms)),
-  };
   process.exit(
     await run(args, {
-      get: throttledGet(fetch, clock),
+      get: throttledGet(fetch, realClock),
       now: Date.now,
       log: console.log,
       fixtures: FIXTURES,
