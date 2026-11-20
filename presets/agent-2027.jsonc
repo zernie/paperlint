@@ -45,6 +45,39 @@
   // «Submission link» on the call's page: HotCRP.
   "portal": { "kind": "hotcrp", "url": "https://icse2027-agent.hotcrp.com" },
 
+  // The form's own fields, read 2026-11-20 with an author's token from
+  // https://icse2027-agent.hotcrp.com/api/searchcompletion (HTTP 200). Verbatim, the completions
+  // that name the form's fields:
+  //   «has:SubTyp»
+  //   «SubTyp:"Full paper (up to 8 pages, including references)"»
+  //   «SubTyp:"Short paper (up to 5 pages, including references)"»
+  //   «has:Att» «Att:{comparator}» «Att:{filename}»
+  // No `topic:` completion, so the form offers no topics. `SubTyp`'s label and that it is required
+  // come from the portal: a dry run of `paperlint submission new` answered «Submission Type: Entry
+  // required to complete submission». `Att` is a file field: has/comparator/filename are exactly the
+  // search examples of HotCRP's attachments option
+  // (https://github.com/kohler/hotcrp/blob/master/src/options/o_attachments.php, `search_examples`,
+  // read 2026-11-20), so its kind is `attachments`; paperlint sends no files, and the command says it
+  // stays on the site. The completions carry no title for it, so it has no `label`, and the portal's
+  // answer named only Submission Type, so it is not marked required.
+  "submission_fields": {
+    "source": "portal",
+    "url": "https://icse2027-agent.hotcrp.com/api/searchcompletion",
+    "read": "2026-11-20",
+    "fields": {
+      "SubTyp": {
+        "kind": "choice",
+        "required": true,
+        "label": "Submission Type",
+        "options": [
+          "Full paper (up to 8 pages, including references)",
+          "Short paper (up to 5 pages, including references)",
+        ],
+      },
+      "Att": { "kind": "attachments" },
+    },
+  },
+
   // The portal's reading (2026-11-08): `"sub":1795262399` on https://icse2027-agent.hotcrp.com/deadlines,
   // shown as «Saturday Nov 21, 2026, 6:59:59 AM EST» = 2026-11-21T11:59:59Z = the end of 20 Nov AoE,
   // the call's extended date. Extended from `"sub":1794657599`, «Saturday Nov 14, 2026, 6:59:59 AM
