@@ -39,17 +39,16 @@ an `artifact` without `required` — the rule then has nothing to judge.
 
 ## Options / preset fields
 
-No rule options. It reads only the paper's own `artifact` ([configuration](../../configuration.md#a-papers-paperlintjson)):
-
-| key        | what it is                                                                                                                                                                                    |
-| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `dir`      | the artifact's folder, relative to the paper — usually `repro`                                                                                                                                |
-| `files`    | instead of `dir`: a committed text file, relative to the paper, listing the artifact's paths one per line, as `zipinfo -1` or `find . -type f` print them, for a bundle that is not committed |
-| `required` | the names the artifact's top level must hold, without an extension: `["README", "LICENSE"]`                                                                                                   |
+No rule options. It reads only the paper's own `artifact` ([configuration](../../configuration.md#a-papers-paperlintjson)).
+`dir` is the artifact's folder, relative to the paper (usually `repro`); `files`, instead, is a
+committed text file listing the artifact's paths one per line, as `zipinfo -1` or `find . -type f`
+print them, for a bundle that is not committed; `required` lists the top-level names without an
+extension (`["README", "LICENSE"]`).
 
 Exactly one of `dir` and `files`. In a list, blank lines and folder entries (`data/`) are skipped
-and a leading `./` is dropped; paths are relative to the artifact's root, so a zip whose entries sit
-under one folder is listed without it.
+and a leading `./` is dropped. A single wrapper folder is looked through: when every path sits in
+one folder and no file stands beside it (`repo-main/…` from GitHub's Download ZIP, Zenodo's and
+OSF's archives), the top level is that folder's.
 
 ## What it does not check
 

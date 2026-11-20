@@ -399,23 +399,16 @@ describe("talk in a paper's paperlint.json", () => {
   });
 });
 
-describe("artifact in a paper's paperlint.json", () => {
-  it("🔴 is parsed into the paper's settings", () => {
-    const r = parsePaperSettings({
-      artifact: { dir: "artifact", promises: { prompts: "**/prompts/*.md" } },
-    });
-    expect(r.ok && r.value.artifact).toEqual({
-      source: { kind: "dir", path: "artifact" },
-      required: [],
-      promises: { prompts: "**/prompts/*.md" },
-    });
+it("🔴 artifact: parsed into the paper's settings, or refused naming the key", () => {
+  const r = parsePaperSettings({ artifact: { files: "a.txt" } });
+  expect(r.ok && r.value.artifact).toEqual({
+    source: { kind: "files", path: "a.txt" },
+    required: [],
+    promises: {},
   });
-
-  it("🔴 refuses an artifact it cannot parse, naming the key", () => {
-    expect(parsePaperSettings({ artifact: { dir: "/abs" } })).toEqual({
-      ok: false,
-      error: `"artifact.dir" must be a path relative to the paper, got "/abs"`,
-    });
+  expect(parsePaperSettings({ artifact: { dir: "/abs" } })).toEqual({
+    ok: false,
+    error: `"artifact.dir" must be a path relative to the paper, got "/abs"`,
   });
 });
 

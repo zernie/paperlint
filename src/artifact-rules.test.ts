@@ -36,11 +36,8 @@ describe("the artifact rules", () => {
     expect(counts(DECLARED)).toEqual([1, 1]);
   });
 
-  it("judged once per paper: silent on any other file", () => {
+  it("silent on any file but PIPELINE-STATUS.md, and on a paperlint.json that does not parse", () => {
     expect(counts(DECLARED, "paper.tex")).toEqual([0, 0]);
-  });
-
-  it("silent on a paperlint.json that does not parse — pdf/profile says so", () => {
     expect(counts("{")).toEqual([0, 0]);
   });
 

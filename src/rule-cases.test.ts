@@ -824,6 +824,7 @@ const withArtifact = (
   });
 /** The artifact in `extra/`, a folder the layout never judges. */
 const ARTIFACT_DIR = "extra/artifact";
+const LIST = "submission/artifact-files.txt";
 const ARTIFACT_FILES: Readonly<Record<string, string>> = {
   [`${P}/${ARTIFACT_DIR}/README.md`]: "# artifact\n",
   [`${P}/${ARTIFACT_DIR}/LICENSE`]: "MIT\n",
@@ -861,10 +862,10 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       severity: 2,
       line: 1,
     },
-    // The same promise, with the prompts there.
+    // The same promise in a committed list of a zip wrapped in one folder, the prompts there.
     silent: withArtifact(
-      { dir: ARTIFACT_DIR, promises: PROMISES },
-      ARTIFACT_FILES,
+      { files: LIST, promises: PROMISES },
+      { [`${P}/${LIST}`]: "artifact/\nartifact/data/prompts/a.md\n" },
     ),
   },
   "cycle/changes-since-approved": {
@@ -1990,7 +1991,6 @@ describe("cycle/camera-ready-source, before the camera-ready is frozen", () => {
 });
 
 const STATUS_AT = `${P}/PIPELINE-STATUS.md`;
-const LIST = "submission/artifact-files.txt";
 /** What the artifact rules say about `tree` (`emptyDirs` made too), as `file:line rule message`. */
 const said = async (
   tree: Record<string, string>,
@@ -2055,24 +2055,6 @@ describe("the artifact rules through real ESLint: a committed list of paths", ()
       ).toEqual([
         `${STATUS_AT}:1 artifact/required-files the artifact's list of paths ${LIST} names no file, so its required names cannot be checked — write one path per line, relative to the artifact's root, as \`zipinfo -1\` or \`find . -type f\` print them`,
       ]);
-    },
-  );
-
-  it(
-    "a list that names what is required and promised: silent",
-    { timeout: CASE_TIMEOUT_MS },
-    async () => {
-      expect(
-        await said(
-          withArtifact(
-            { files: LIST, required: REQUIRED, promises: PROMISES },
-            {
-              [`${P}/${LIST}`]:
-                "./README.md\n./LICENSE.txt\n./data/prompts/a.md\n",
-            },
-          ),
-        ),
-      ).toEqual([]);
     },
   );
 

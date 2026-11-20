@@ -1,21 +1,12 @@
 /**
- * THE ARTIFACT RULES — a paper's reproduction artifact holds what the paper's own `paperlint.json`
- * says it must (`src/domain/artifact.ts`):
+ * THE ARTIFACT RULES — the artifact holds what the paper's own `paperlint.json` says it must
+ * (`src/domain/artifact.ts`): `artifact/required-files` (each `artifact.required` name at its top
+ * level) and `artifact/promised` (each `artifact.promises` glob matches a path). The paths are every
+ * file under `artifact.dir` (the `ListTree` port) or the lines of the committed list `artifact.files`.
  *
- *   artifact/required-files   error  each name in `artifact.required` is at the artifact's top level
- *                                    (README answered by README.md, readme.txt, README)
- *   artifact/promised         error  each glob in `artifact.promises` matches a path of the artifact
- *
- * ── WHAT THEY READ ───────────────────────────────────────────────────────────────
- * The paper's `paperlint.json` (`artifact`), then the artifact's paths: every file under
- * `artifact.dir` (the `ListTree` port), or the lines of the committed list `artifact.files`, for a
- * bundle that is not committed. Both are judged by the same matching, so a folder and its list agree.
- *
- * ── WHO SPEAKS WHEN THERE IS NOTHING TO JUDGE ───────────────────────────────────
- * On by default, and silent for a paper that declares no `artifact`, as the talk rules are for a
- * paper without `talk`: each judges only what the paper declared (`required`, `promises`). A
- * `paperlint.json` that does not parse: silent, `pdf/profile` says why. A folder that is missing, or
- * a list that is missing or names nothing: each rule says so, naming what it could not check.
+ * On by default and silent for a paper that declares nothing they read, as the talk rules are for a
+ * paper without `talk`; silent on a `paperlint.json` that does not parse (`pdf/profile` says why). A
+ * missing folder, or a list missing or empty: each rule says so, naming what it could not check.
  */
 import { basename, dirname, resolve } from "node:path";
 import { callerPath } from "./caller-path.ts";
@@ -77,11 +68,20 @@ function listing(
     : { kind: "paths", paths };
 }
 
-/** What each rule judges, once the paths are known; the declared part it reads, empty when none. */
-const JUDGES: Readonly<
+/** The three messages about where the paths come from, naming what `what` could not be checked. */
+const sourceMessages = (what: string): Readonly<Record<string, string>> => ({
+  noDir: `the artifact folder {{path}} ("artifact.dir" in paperlint.json, relative to the paper) does not exist or is not a folder, so ${what} cannot be checked`,
+  noList: `the artifact's list of paths {{path}} ("artifact.files" in paperlint.json, relative to the paper) does not exist, so ${what} cannot be checked`,
+  emptyList: `the artifact's list of paths {{path}} names no file, so ${what} cannot be checked — write one path per line, relative to the artifact's root, as \`zipinfo -1\` or \`find . -type f\` print them`,
+});
+
+/** Each rule: its page's line, its messages, whether the paper declared what it reads, and its judgement over the paths. */
+const RULES: Readonly<
   Record<
     ArtifactRuleName,
     {
+      readonly description: string;
+      readonly messages: Readonly<Record<string, string>>;
       readonly declared: (a: PaperArtifact) => boolean;
       readonly judge: (
         a: PaperArtifact,
@@ -91,6 +91,13 @@ const JUDGES: Readonly<
   >
 > = {
   "required-files": {
+    description:
+      "each name the paper's artifact.required lists is at the top level of the artifact, with any extension",
+    messages: {
+      ...sourceMessages("its required names"),
+      missing:
+        'the artifact ({{where}}) has no top-level {{name}} — any extension counts ({{name}}.md, {{name}}.txt, {{name}}); "artifact.required" in paperlint.json asks for one',
+    },
     declared: (a) => a.required.length > 0,
     judge: (a, paths) =>
       missingRequired(a.required, paths).map((name) => ({
@@ -99,6 +106,13 @@ const JUDGES: Readonly<
       })),
   },
   promised: {
+    description:
+      "each glob the paper's artifact.promises lists matches a path of the artifact",
+    messages: {
+      ...sourceMessages("its promises"),
+      broken:
+        'the artifact promise "{{label}}" ({{glob}}) matches no path of the artifact ({{where}}): the paper says the artifact holds it — add the files, or correct the glob in "artifact.promises"',
+    },
     declared: (a) => Object.keys(a.promises).length > 0,
     judge: (a, paths) =>
       brokenPromises(a.promises, paths).map(([label, glob]) => ({
@@ -116,7 +130,7 @@ export function artifactFindings(
 ): readonly Finding[] {
   const settings = readPaperSettings(deps.files, dir);
   const a = settings.ok ? (settings.value?.artifact ?? null) : null;
-  const { declared, judge } = JUDGES[name];
+  const { declared, judge } = RULES[name];
   if (a === null || !declared(a)) return [];
   const l = listing(dir, a, deps);
   return l.kind === "paths"
@@ -124,46 +138,11 @@ export function artifactFindings(
     : [{ messageId: l.kind, data: { path: l.path } }];
 }
 
-/** The three messages about where the paths come from, naming what `what` could not be checked. */
-const sourceMessages = (what: string): Readonly<Record<string, string>> => ({
-  noDir: `the artifact folder {{path}} ("artifact.dir" in paperlint.json, relative to the paper) does not exist or is not a folder, so ${what} cannot be checked`,
-  noList: `the artifact's list of paths {{path}} ("artifact.files" in paperlint.json, relative to the paper) does not exist, so ${what} cannot be checked`,
-  emptyList: `the artifact's list of paths {{path}} names no file, so ${what} cannot be checked — write one path per line, relative to the artifact's root, as \`zipinfo -1\` or \`find . -type f\` print them`,
-});
-
-const META: Readonly<
-  Record<
-    ArtifactRuleName,
-    Pick<ArtifactRuleModule["meta"], "messages"> & {
-      readonly description: string;
-    }
-  >
-> = {
-  "required-files": {
-    description:
-      "each name the paper's artifact.required lists is at the top level of the artifact, with any extension",
-    messages: {
-      ...sourceMessages("its required names"),
-      missing:
-        'the artifact ({{where}}) has no top-level {{name}} — any extension counts ({{name}}.md, {{name}}.txt, {{name}}); "artifact.required" in paperlint.json asks for one',
-    },
-  },
-  promised: {
-    description:
-      "each glob the paper's artifact.promises lists matches a path of the artifact",
-    messages: {
-      ...sourceMessages("its promises"),
-      broken:
-        'the artifact promise "{{label}}" ({{glob}}) matches no path of the artifact ({{where}}): the paper says the artifact holds it — add the files, or correct the glob in "artifact.promises"',
-    },
-  },
-};
-
 function rule(
   name: ArtifactRuleName,
   deps: ArtifactRuleDeps,
 ): ArtifactRuleModule {
-  const meta = META[name];
+  const meta = RULES[name];
   return {
     meta: {
       type: "problem",

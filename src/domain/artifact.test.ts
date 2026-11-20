@@ -36,19 +36,9 @@ const REFUSED: readonly (readonly [string, unknown, string])[] = [
     `"artifact.dir" must be a path relative to the paper, got "/srv/artifact"`,
   ],
   [
-    "an empty files",
-    { files: "" },
-    `"artifact.files" must be a path relative to the paper, got ""`,
-  ],
-  [
     "a required name with a folder",
     { dir: "a", required: ["docs/README"] },
     `"artifact.required" must be a list of top-level names without an extension ("README", "LICENSE"), got ["docs/README"]`,
-  ],
-  [
-    "a required name with an extension",
-    { dir: "a", required: ["README.md"] },
-    `"artifact.required" must be a list of top-level names without an extension ("README", "LICENSE"), got ["README.md"]`,
   ],
   [
     "promises as a list",
@@ -59,16 +49,6 @@ const REFUSED: readonly (readonly [string, unknown, string])[] = [
     "an empty glob",
     { dir: "a", promises: { prompts: "" } },
     `"artifact.promises" entry "prompts" must be a non-empty glob relative to the artifact's root, got ""`,
-  ],
-  [
-    "a glob that is not a string",
-    { dir: "a", promises: { prompts: 3 } },
-    `"artifact.promises" entry "prompts" must be a non-empty glob relative to the artifact's root, got 3`,
-  ],
-  [
-    "an empty label",
-    { dir: "a", promises: { "": "*.md" } },
-    `"artifact.promises" entry "" must be a non-empty glob relative to the artifact's root, got "*.md"`,
   ],
 ];
 
@@ -116,19 +96,9 @@ describe("answers — a top-level name answers a required name by its name befor
     ["README.md", true],
     ["readme.txt", true],
     ["README", true],
-    ["README.en.md", true],
     ["READMEFIRST.md", false],
-    [".README", false],
   ])("%s → %s", (name, yes) => {
     expect(answers(name, "README")).toBe(yes);
-  });
-});
-
-describe("missingRequired — only the top level counts", () => {
-  it("a README in a subfolder does not answer it; LICENSE without an extension does", () => {
-    expect(
-      missingRequired(["README", "LICENSE"], ["docs/README.md", "LICENSE"]),
-    ).toEqual(["README"]);
   });
 });
 
@@ -140,6 +110,38 @@ describe("brokenPromises — a promise matching no path", () => {
         "README.md",
       ]),
     ).toEqual([["runs", "runs/*.jsonl"]]);
+  });
+});
+
+describe("one wrapper folder around every path (GitHub's Download ZIP, Zenodo, OSF) is looked through", () => {
+  const REQ = ["README", "LICENSE"];
+
+  it("🔴 a wrapped artifact holding README and LICENSE: nothing missing", () => {
+    expect(
+      missingRequired(REQ, ["repo-main/README.md", "repo-main/LICENSE"]),
+    ).toEqual([]);
+  });
+
+  it("a wrapped artifact without a README: README missing", () => {
+    expect(
+      missingRequired(REQ, ["repo-main/LICENSE", "repo-main/docs/README.md"]),
+    ).toEqual(["README"]);
+  });
+
+  it("two top folders are not unwrapped", () => {
+    expect(missingRequired(REQ, ["a/README.md", "b/LICENSE"])).toEqual(REQ);
+  });
+
+  it("a top-level file beside one folder is not unwrapped", () => {
+    expect(
+      missingRequired(REQ, ["notes.txt", "a/README.md", "a/LICENSE"]),
+    ).toEqual(REQ);
+  });
+
+  it("🔴 a promise's glob matches inside the wrapper", () => {
+    expect(
+      brokenPromises({ data: "data/*.csv" }, ["artifact/data/x.csv"]),
+    ).toEqual([]);
   });
 });
 

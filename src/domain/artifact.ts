@@ -11,7 +11,8 @@
  * `files` is for a bundle that is not committed (a gitignored zip): its paths as `zipinfo -1` or
  * `find` writes them, relative to the artifact's root. A required name is matched without its
  * extension and case (`README` is answered by README.md, readme.txt, README), and a promise's glob
- * by `path.matchesGlob`, the same way whichever form lists the paths. `artifact/required-files` and
+ * by `path.matchesGlob`, the same way whichever form lists the paths; one folder wrapped around
+ * every path is looked through (`unwrapSingleRoot`). `artifact/required-files` and
  * `artifact/promised` judge them. The keys #205 plans for assembling a bundle (`include`, `exclude`,
  * `scrub`) are left free.
  */
@@ -20,9 +21,10 @@ import { err, ok, type Result } from "./result.ts";
 import { isRecord } from "./record.ts";
 
 /** Where the artifact's paths come from: its folder, or a committed list of them. */
-export type ArtifactSource =
-  | { readonly kind: "dir"; readonly path: string }
-  | { readonly kind: "files"; readonly path: string };
+export interface ArtifactSource {
+  readonly kind: "dir" | "files";
+  readonly path: string;
+}
 
 /** What a paper says its artifact is. */
 export interface PaperArtifact {
@@ -44,12 +46,28 @@ const stemOf = (name: string): string =>
 export const answers = (name: string, want: string): boolean =>
   stemOf(name) === want.toLowerCase();
 
+/**
+ * `paths` without the one folder every one of them sits in, when they all do and no file stands
+ * beside it (`repo-main/…` of GitHub's Download ZIP, Zenodo's and OSF's archives); else as they are.
+ * Pure.
+ */
+export const unwrapSingleRoot = (
+  paths: readonly string[],
+): readonly string[] => {
+  const firsts = [...new Set(paths.map((p) => p.split("/", 1).join("")))];
+  // With exactly one first segment, joining the list gives it.
+  const root = firsts.join("");
+  const wrapped =
+    firsts.length === 1 && paths.every((p) => p.startsWith(`${root}/`));
+  return wrapped ? paths.map((p) => p.slice(root.length + 1)) : paths;
+};
+
 /** The required names `paths` (relative to the artifact's root) do not hold at its top level. Pure. */
 export const missingRequired = (
   required: readonly string[],
   paths: readonly string[],
 ): readonly string[] => {
-  const top = paths.filter((p) => !p.includes("/"));
+  const top = unwrapSingleRoot(paths).filter((p) => !p.includes("/"));
   return required.filter((want) => !top.some((name) => answers(name, want)));
 };
 
@@ -57,10 +75,12 @@ export const missingRequired = (
 export const brokenPromises = (
   promises: Readonly<Record<string, string>>,
   paths: readonly string[],
-): readonly (readonly [string, string])[] =>
-  Object.entries(promises).filter(
-    ([, glob]) => !paths.some((p) => matchesGlob(p, glob)),
+): readonly (readonly [string, string])[] => {
+  const under = unwrapSingleRoot(paths);
+  return Object.entries(promises).filter(
+    ([, glob]) => !under.some((p) => matchesGlob(p, glob)),
   );
+};
 
 /**
  * A committed list of paths → the files it names, relative to the artifact's root: one per line,

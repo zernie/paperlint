@@ -9,7 +9,7 @@ import { nodeListTree } from "./list-tree.io.ts";
 const root = useTempDir("paperlint-list-tree-");
 
 describe("nodeListTree", () => {
-  it("lists every file at any depth, relative and sorted; folders are not files", () => {
+  it("lists every file at any depth, relative and sorted; folders are not files; an empty folder is []", () => {
     mkdirSync(join(root, "a", "prompts", "deep"), { recursive: true });
     mkdirSync(join(root, "a", "empty"));
     writeFileSync(join(root, "a", "README.md"), "");
@@ -22,18 +22,11 @@ describe("nodeListTree", () => {
       "prompts/b.md",
       "prompts/deep/c.md",
     ]);
+    expect(nodeListTree(absolutePath(join(root, "a", "empty")))).toEqual([]);
   });
 
-  it("is empty for a folder that holds nothing", () => {
-    mkdirSync(join(root, "bare"));
-    expect(nodeListTree(absolutePath(join(root, "bare")))).toEqual([]);
-  });
-
-  it("is null for a folder that does not exist", () => {
+  it("is null for a folder that does not exist, a file, or a path through one", () => {
     expect(nodeListTree(absolutePath(join(root, "none")))).toBeNull();
-  });
-
-  it("is null for a path that is a file, or that goes through one", () => {
     writeFileSync(join(root, "f"), "");
     expect(nodeListTree(absolutePath(join(root, "f")))).toBeNull();
     expect(nodeListTree(absolutePath(join(root, "f", "x")))).toBeNull();

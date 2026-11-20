@@ -47,7 +47,8 @@ No rule options. It reads the paper's own `artifact` — `dir` or `files`, as
 [`artifact/required-files`](required-files.md) describes them, and `promises`: label → glob. A glob
 is matched with Node's `path.matchesGlob` against every file of the folder (or every line of the
 list), so the folder and its list give the same answer; `*` and `**` do not match a dot-file or a
-dot-folder unless the glob names the dot (`.github/**`).
+dot-folder unless the glob names the dot (`.github/**`). A single wrapper folder around every
+path is looked through, as for `required`.
 
 ## What it does not check
 
