@@ -20,6 +20,8 @@ export const nodeListTree: ListTree = (dir) =>
   isDir(dir)
     ? readdirSync(dir, { recursive: true, withFileTypes: true })
         .filter((d) => d.isFile())
-        .map((d) => relative(dir, join(d.parentPath, d.name)).split(sep).join("/"))
+        .map((d) =>
+          relative(dir, join(d.parentPath, d.name)).split(sep).join("/"),
+        )
         .toSorted()
     : null;

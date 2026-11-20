@@ -132,10 +132,10 @@ describe("missingRequired — only the top level counts", () => {
 describe("brokenPromises — a promise matching no path", () => {
   it("names the label and the glob of each promise that matches nothing", () => {
     expect(
-      brokenPromises(
-        { prompts: "**/prompts/*.md", runs: "runs/*.jsonl" },
-        ["prompts/a.md", "README.md"],
-      ),
+      brokenPromises({ prompts: "**/prompts/*.md", runs: "runs/*.jsonl" }, [
+        "prompts/a.md",
+        "README.md",
+      ]),
     ).toEqual([["runs", "runs/*.jsonl"]]);
   });
 });
