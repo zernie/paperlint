@@ -1344,3 +1344,82 @@ describe("an edition's deadlines fall within [year − 2, year + 1]", () => {
     ).toEqual([]);
   });
 });
+
+describe("a venue's artifact bar (`artifact_bar`)", () => {
+  const ICSE_BAR = {
+    source: "call",
+    url: "https://conf.researchr.org/track/icse-2027/icse-2027-artifact-evaluation",
+    read: "2026-11-20",
+    files: ["README", "LICENSE"],
+    venue: "ICSE 2027",
+    preset: "icse-2027",
+  };
+  const bar = (spec: string, extra: Record<string, string> = {}) => {
+    const r = resolve(spec, extra);
+    return r.ok ? r.value.artifactBar : r.error;
+  };
+
+  it("🔴 paperlint:icse-2027 records what its artifact-evaluation call asks the artifact to hold", () => {
+    // Guards: the files, the call's URL and the day it was read, and that the bar is ICSE's own.
+    expect(bar("paperlint:icse-2027")).toEqual(ICSE_BAR);
+  });
+
+  it("🔴 paperlint:agent-2027 has no artifact track: its bar is its parent's, ICSE 2027's, and says so", () => {
+    expect(bar("paperlint:agent-2027")).toEqual(ICSE_BAR);
+  });
+
+  it("a preset with no bar along its chain or its parents has none", () => {
+    expect(bar("paperlint:agenticdev-2026")).toBeNull();
+    expect(bar("paperlint:acm-sigconf")).toBeNull();
+  });
+
+  it("a workshop's own bar wins over its parent's", () => {
+    const own = {
+      source: "call",
+      url: "https://example.org/artifacts",
+      read: "2026-11-01",
+      files: ["README"],
+    };
+    expect(
+      bar("./w-2027.jsonc", {
+        "/work/papers/p/w-2027.jsonc": venue({
+          extends: "paperlint:ieee-conference",
+          workshop: true,
+          parent: "paperlint:icse-2027",
+          artifact_bar: own,
+        }),
+      }),
+    ).toEqual({ ...own, venue: "Our Workshop 2027", preset: "w-2027" });
+  });
+
+  it("a venue extending one with a bar keeps it, named as itself", () => {
+    expect(
+      bar("./mine.jsonc", {
+        "/work/papers/p/mine.jsonc": venue(
+          { extends: "paperlint:icse-2027" },
+          "Mine",
+        ),
+      }),
+    ).toEqual({ ...ICSE_BAR, venue: "Mine", preset: "mine" });
+  });
+
+  it.each([
+    ["a file with a folder in it", { files: ["docs/README"] }],
+    ["no files", { files: [] }],
+    ["a source other than the call", { source: "portal" }],
+  ])("🔴 the schema refuses %s", (_, body) => {
+    const r = resolve("./v.jsonc", {
+      "/work/papers/p/v.jsonc": venue({
+        extends: "paperlint:ieee-conference",
+        artifact_bar: {
+          source: "call",
+          url: "https://example.org/artifacts",
+          read: "2026-11-01",
+          files: ["README"],
+          ...body,
+        },
+      }),
+    });
+    expect(r.ok ? "resolved" : r.error.kind).toBe("broken");
+  });
+});

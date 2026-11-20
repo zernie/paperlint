@@ -36,6 +36,7 @@ import {
 } from "./domain/talk.ts";
 import type { VenuePortal } from "./domain/submission.ts";
 import type { Reading } from "./domain/deadline.ts";
+import type { ArtifactBar } from "./domain/artifact.ts";
 import {
   RESERVED_FIELD_KEYS,
   reservedKey,
@@ -237,6 +238,8 @@ export interface PresetFile {
   readonly deadlines: readonly Reading[] | null;
   /** The fields the edition's submission form asks, as read; null when the file records none. */
   readonly submissionFields: VenueFields | null;
+  /** What the edition's artifact call asks the artifact to hold, as read; null when the file records none. */
+  readonly artifactBar: ArtifactBar | null;
 }
 
 /**
@@ -315,6 +318,7 @@ interface PresetBodyJson {
   readonly portal?: VenuePortal;
   readonly deadlines?: readonly Reading[];
   readonly submission_fields?: SubmissionFieldsJson;
+  readonly artifact_bar?: ArtifactBar;
 }
 
 /** A preset's `submission_fields` after the schema accepted it. */
@@ -526,11 +530,21 @@ function deadlinesOf(
 const portalBlocks = (
   j: PresetJson,
   file: string,
-): Pick<PresetFile, "portal" | "deadlines" | "submissionFields"> => ({
+): Pick<
+  PresetFile,
+  "portal" | "deadlines" | "submissionFields" | "artifactBar"
+> => ({
   portal: portalOf(j.portal),
   deadlines: deadlinesOf(j.deadlines, file),
   submissionFields: submissionFieldsOf(j.submission_fields, file),
+  artifactBar: artifactBarOf(j.artifact_bar),
 });
+
+/** A preset's `artifact_bar`, or null when it records none. */
+const artifactBarOf = (b: ArtifactBar | undefined): ArtifactBar | null =>
+  b === undefined
+    ? null
+    : { source: b.source, url: b.url, read: b.read, files: b.files };
 
 /**
  * The text of one preset file → the typed file, or an Error naming every problem. The ONE parser
