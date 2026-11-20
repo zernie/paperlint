@@ -44,8 +44,8 @@ export const file = (path: string, text: string): ArchiveFile => ({
   bytes: Buffer.from(text, "latin1"),
 });
 
-export const text = (f: ArchiveFile | undefined): string =>
-  f === undefined ? "<missing>" : Buffer.from(f.bytes).toString("latin1");
+export const text = (f: ArchiveFile): string =>
+  Buffer.from(f.bytes).toString("latin1");
 
 /** A main file: a class, a document, and whatever body is given. */
 export const mainTex = (

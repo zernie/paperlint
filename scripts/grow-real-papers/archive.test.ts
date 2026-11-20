@@ -189,14 +189,14 @@ describe("renaming the main file", () => {
     expect(
       plan.ok && {
         edits: plan.edits,
-        wrap: text(plan.staged.find((f) => f.path === "wrap.tex")),
+        wrap: plan.staged.filter((f) => f.path === "wrap.tex").map(text),
       },
     ).toEqual({
       edits: [
         "\\input{doc} to \\input{paper}",
         "\\include{doc.tex} to \\include{paper.tex}",
       ],
-      wrap: "\\input{paper}\\include{paper.tex}\\input{other}",
+      wrap: ["\\input{paper}\\include{paper.tex}\\input{other}"],
     });
     const already = stagingPlan([
       file("paper.tex", mainTex("")),

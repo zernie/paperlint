@@ -252,3 +252,17 @@ describe("the command", () => {
     ]);
   });
 });
+
+describe("a run whose search fails", () => {
+  test("prints the edition's error", async () => {
+    const s = setup("fails");
+    const world: World = { ...s.world, get: fakeGet([]).get };
+    // Guards: a failed search still ends the run cleanly.
+    expect(await run(s.args(null), world)).toBe(0);
+    // Guards: the edition's end names the error.
+    expect(s.out).toEqual([
+      'nlp/ACL 2025: search error at rank 0 (co:"ACL 2025" page 0: 404)',
+      "dry run: 0 paper(s) would be added; nothing written (--write DIR stages them)",
+    ]);
+  });
+});
