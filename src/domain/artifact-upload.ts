@@ -67,6 +67,25 @@ export const uploadRecordText = (r: UploadRecord): string =>
 export const md5Hex = (bytes: Uint8Array): string =>
   createHash("md5").update(bytes).digest("hex");
 
+/**
+ * `used`, plus every macro of `values` that a used macro's definition names, at any depth
+ * (`repoCount` defined as `\nRepos` prints `nRepos` too). `usesIn` reads the names a definition
+ * uses. The set only grows and is bounded by `values`, so a cycle of definitions ends.
+ */
+export const printedThrough = (
+  values: ReadonlyMap<string, string>,
+  used: ReadonlySet<string>,
+  usesIn: (definition: string) => readonly string[],
+): ReadonlySet<string> => {
+  const next = new Set([
+    ...used,
+    ...[...used].flatMap((k) =>
+      usesIn(values.get(k) ?? "").filter((u) => values.has(u)),
+    ),
+  ]);
+  return next.size === used.size ? used : printedThrough(values, next, usesIn);
+};
+
 /** What the paper prints now that the upload was not built for: keys it lacked, keys with another value. */
 export interface Drift {
   readonly added: readonly string[];

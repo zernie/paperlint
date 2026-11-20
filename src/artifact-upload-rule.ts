@@ -19,6 +19,7 @@ import {
   DEFAULT_RECORD,
   drift,
   parseUploadRecord,
+  printedThrough,
   type UploadRecord,
 } from "./domain/artifact-upload.ts";
 import { fieldOf } from "./domain/record.ts";
@@ -94,9 +95,10 @@ export function printedNumbers(
     const src = textAt(dir, f, deps);
     return src === null ? [] : deps.latex.macrosUsed(src);
   });
+  const values = new Map(defined.map((d) => [d.name, d.value]));
   return ok({
-    values: new Map(defined.map((d) => [d.name, d.value])),
-    used: new Set(used),
+    values,
+    used: printedThrough(values, new Set(used), deps.latex.macrosUsed),
   });
 }
 

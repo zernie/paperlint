@@ -114,6 +114,37 @@ test("more than three keys of a kind: the rest is counted, not listed", () => {
   ]);
 });
 
+test("a number the paper prints through another macro counts: a change under an alias is found, at any depth", () => {
+  const numbers =
+    "\\newcommand{\\nRepos}{64}\n\\newcommand{\\repoCount}{\\nRepos}\n\\newcommand{\\shown}{\\repoCount{} repos}\n\\newcommand{\\loopA}{\\loopB}\n\\newcommand{\\loopB}{\\loopA}\n";
+  const paper =
+    "\\documentclass{article}\n\\begin{document}\n\\shown, \\loopA.\n\\end{document}\n";
+  const atUpload = {
+    nRepos: "63",
+    repoCount: "\\nRepos",
+    shown: "\\repoCount{} repos",
+    loopA: "\\loopB",
+    loopB: "\\loopA",
+  };
+  const files = {
+    [`${DIR}/paper.tex`]: paper,
+    [`${DIR}/numbersdef.tex`]: numbers,
+    [`${DIR}/${RECORD}`]: record(atUpload),
+  };
+  // Guards: only \shown is printed; \nRepos, two definitions down, changed; a cycle ends.
+  expect(findings(files)).toEqual([
+    {
+      messageId: "stale",
+      data: {
+        count: 1,
+        date: "2026-11-01",
+        url: "https://osf.io/abcde/",
+        detail: "1 changed (nRepos)",
+      },
+    },
+  ]);
+});
+
 test("silent when the record holds every value the paper prints", () => {
   const now = { ...AT_UPLOAD, nRepos: "64", nA: "1", nB: "2", nC: "3" };
   // Guards: a current record makes no finding, whatever unused macros differ.
