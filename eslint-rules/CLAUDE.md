@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:75393007efd6bb96 compiled from eslint-rules/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:a24e4a23a4caaf86 compiled from eslint-rules/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -43,3 +43,7 @@ the checks push every paper toward a blog post.
 ### Lint Rule Over Script
 
 **Guidance only** — A check over a syntax tree is a lint rule, not a script. It fires in the editor on save, gets the AST for free, and has a suppression syntax people already know. A script is for corpus-wide questions — index connectivity, ratios across many files. When the work has to run a program, a script may do the work and write facts to a JSON file, and a rule judges that file: the verdict still lands in the engine.
+
+### A Rule Is Configured The Eslint Way
+
+**Guidance only** — Provisional, pending #599 (the author is not sure it is right). A rule's own switches (what to require, a threshold, a file to compare) come from its options where it is turned on: `["warn", { … }]`. A new rule is not on by default and silent until some key of `paperlint.json` is declared: that hides a check behind a setting nobody sees in the rule list. A fact several rules share about a paper (its venue, cycles, artifact, talk) reaches them through ESLint's `settings`, filled once by `buildConfig` from `paperlint.json`; a rule does not open `paperlint.json` itself. A rule whose subject IS `paperlint.json` (it validates the config) is exempt. Where an outside service varies (an artifact host, a portal), the rule reads a file of facts a command wrote and never the service; the services are adapters behind a port, as `src/ports/submission-portal.ts` and `src/adapters/hotcrp/` are, and eslint-plugin-import's `settings["import/resolver"]` is the ESLint precedent. About 25 existing rules predate this; #599 decides whether to move them, narrow this rule, or drop it and allow a rule to read `paperlint.json`. The author proposed this on 2026-11-21.
