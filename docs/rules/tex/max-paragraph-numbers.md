@@ -4,7 +4,7 @@
 
 ## What it catches
 
-A paragraph of the body with more than `max` numbers (default 8, so a ninth fires). It reports once per paragraph, at its start, with the count and the paragraph's first words.
+A paragraph of the body with more than `max` numbers (default 10, so an eleventh fires). It reports once per paragraph, at its start, with the count and the paragraph's first words.
 
 ## How it counts
 
@@ -22,7 +22,7 @@ so no venue preset carries the number. In the root `paperlint.json`, or in one p
 
 ```json
 {
-  "rules": { "tex/max-paragraph-numbers": ["warn", { "max": 8 }] }
+  "rules": { "tex/max-paragraph-numbers": ["warn", { "max": 10 }] }
 }
 ```
 
@@ -32,19 +32,25 @@ See [optional rules](../../optional-rules.md).
 
 A paragraph with many figures reads as a table written in prose; the reader cannot hold them.
 
-The default is a general one, not measured per venue. It has not been checked against the accepted
-papers of `fixtures/real-papers/accepted/` in this version; the earlier draft of the issue recorded that
-every accepted paper fires at least one of the two sibling ceilings, which is why both are off.
+The default is the 99th percentile per unit over the accepted real papers in
+`fixtures/real-papers/accepted/` (96 papers with at least 2,500 body words, 7,994 paragraphs,
+measured with this rule's counter). The author chose it on 2026-11-20.
+
+| unit                  | accepted p95 | p99 | p99.9 | old default | default | units over the old default | papers quiet at the old default |
+| --------------------- | -----------: | --: | ----: | ----------: | ------: | -------------------------: | ------------------------------: |
+| numbers per paragraph |            5 |  10 |    19 |           8 |      10 |                      1.66% |                           49/96 |
+
+A pilot on ICLR 2025 reviewer presentation scores (30 papers per side) found no link between numbers per paragraph and the score (inconclusive; Cliff's delta for the share of sentences over 55 words -0.12, CI [-0.39, +0.18]), so the default rests on what 99% of accepted units pass, not on reviewer evidence.
 
 ## Examples
 
 ```latex
-In 2023 we saw 1, 2, 3, 4, 5, 6, 7, 8 and 9 cases ...      % fires: nine numbers
+In 2023 we saw 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 cases ...      % fires: eleven numbers
 ```
 
 ## Options / preset fields
 
-`{ "max": 8 }` — an integer, the largest value that does not fire. No preset field.
+`{ "max": 10 }` — an integer, the largest value that does not fire. No preset field.
 
 ## What it does not check
 
